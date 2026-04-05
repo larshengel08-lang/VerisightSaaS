@@ -62,14 +62,18 @@ export default async function CampaignPage({ params }: Props) {
   }
 
   const scanLabel = stats.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'
-  const MIN_N = 5
-  const hasEnoughData = responses.length >= MIN_N
+  // Minimumdrempels — onder deze grenzen zijn uitspraken statistisch onbetrouwbaar
+  // en bestaat het risico dat individuele respondenten indirect herleidbaar zijn.
+  const MIN_N_PATTERNS = 10   // minimum voor patroonanalyse en grafieken
+  const MIN_N_DISPLAY  = 5    // minimum om überhaupt scores te tonen
+  const hasEnoughData  = responses.length >= MIN_N_PATTERNS
+  const hasMinDisplay  = responses.length >= MIN_N_DISPLAY
 
   return (
     <div>
       {/* Breadcrumb + header */}
       <div className="mb-6">
-        <Link href="/" className="text-sm text-gray-400 hover:text-gray-600">
+        <Link href="/dashboard" className="text-sm text-gray-400 hover:text-gray-600">
           ← Alle campaigns
         </Link>
         <div className="flex items-start justify-between mt-2">
@@ -104,9 +108,26 @@ export default async function CampaignPage({ params }: Props) {
         />
       </div>
 
-      {!hasEnoughData && (
+      {/* Anonimiteits- en betrouwbaarheidswaarschuwing */}
+      {!hasMinDisplay && responses.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-800 mb-6">
+          <strong>Let op:</strong> Met minder dan {MIN_N_DISPLAY} responses zijn scores niet betrouwbaar
+          en bestaat het risico dat individuele respondenten herleidbaar zijn. Nodig meer respondenten uit
+          voordat je conclusies trekt.
+        </div>
+      )}
+      {hasMinDisplay && !hasEnoughData && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800 mb-6">
-          Minimaal {MIN_N} responses nodig voor patroonanalyse en grafieken (nu: {responses.length}).
+          <strong>Beperkte statistische betrouwbaarheid</strong> — patroonanalyse en grafieken worden
+          zichtbaar vanaf {MIN_N_PATTERNS} responses (nu: {responses.length}). Scores zijn indicatief;
+          trek nog geen definitieve conclusies op groepsniveau.
+        </div>
+      )}
+      {hasEnoughData && (
+        <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs text-blue-700 mb-6">
+          Scores zijn gebaseerd op de Zelfdeterminatietheorie (Van den Broeck et al., 2010).
+          Resultaten zijn indicatief en dienen als input voor gesprek — niet als objectief oordeel over individuen.
+          Individuele scores zijn alleen zichtbaar voor geautoriseerde HR-medewerkers.
         </div>
       )}
 

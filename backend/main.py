@@ -18,6 +18,21 @@ from __future__ import annotations
 
 import os
 from contextlib import asynccontextmanager
+
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+
+_SENTRY_DSN = os.getenv("SENTRY_DSN")
+if _SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        integrations=[FastApiIntegration(), SqlalchemyIntegration()],
+        traces_sample_rate=0.2,   # 20% van requests getraceerd
+        environment=os.getenv("ENVIRONMENT", "production"),
+        # Zorg dat PII niet in Sentry belandt
+        send_default_pii=False,
+    )
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated, Any
@@ -58,13 +73,11 @@ from backend.scoring import (
 # Optional OpenAI enrichment (only used for open text; graceful fallback)
 # ---------------------------------------------------------------------------
 
-try:
-    from openai import OpenAI, AuthenticationError, RateLimitError, APIConnectionError
-    _openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", ""))
-    _openai_available = bool(os.getenv("OPENAI_API_KEY"))
-except ImportError:
-    _openai_client = None
-    _openai_available = False
+# OpenAI-integratie tijdelijk uitgeschakeld (AVG — EU-werknemersdata mag niet
+# zonder expliciete toestemming naar een Amerikaanse verwerker).
+# Herinschakelen vereist: expliciete toestemming in surveyflow + DPA met OpenAI.
+_openai_client = None
+_openai_available = False
 
 
 # ---------------------------------------------------------------------------
@@ -160,6 +173,15 @@ async def serve_survey(
 
     if not respondent:
         raise HTTPException(status_code=404, detail="Ongeldige survey-link.")
+
+    # Controleer of token verlopen is (90 dagen geldig)
+    if hasattr(respondent, "token_expires_at") and respondent.token_expires_at:
+        if respondent.token_expires_at < datetime.now(timezone.utc):
+            raise HTTPException(
+                status_code=410,
+                detail="Deze survey-link is verlopen. Neem contact op met jouw HR-afdeling.",
+            )
+
     if respondent.completed:
         return templates.TemplateResponse(
             request,

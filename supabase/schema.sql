@@ -51,8 +51,21 @@ create table if not exists public.respondents (
   sent_at           timestamptz,
   opened_at         timestamptz,
   completed         boolean default false,
-  completed_at      timestamptz
+  completed_at      timestamptz,
+  -- Token vervalt 90 dagen na aanmaken (AVG opslagbeperking + security)
+  token_expires_at  timestamptz default (now() + interval '90 days')
 );
+
+-- Voeg token_expires_at toe aan bestaande tabel indien nog niet aanwezig
+do $$ begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'respondents' and column_name = 'token_expires_at'
+  ) then
+    alter table public.respondents
+      add column token_expires_at timestamptz default (now() + interval '90 days');
+  end if;
+end $$;
 
 create table if not exists public.survey_responses (
   id                        uuid primary key default gen_random_uuid(),

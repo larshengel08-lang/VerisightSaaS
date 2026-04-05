@@ -17,12 +17,12 @@ export default function LandingPage() {
             <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
               Inloggen
             </Link>
-            <Link
-              href="/signup"
+            <a
+              href="mailto:hallo@verisight.nl"
               className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
             >
-              Gratis starten →
-            </Link>
+              Vraag een demo aan →
+            </a>
           </div>
         </div>
       </header>
@@ -45,12 +45,12 @@ export default function LandingPage() {
             direct toepasbaar in het dashboard.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/signup"
+            <a
+              href="mailto:hallo@verisight.nl"
               className="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-8 py-3.5 rounded-xl text-base transition-colors"
             >
-              Start gratis proefperiode
-            </Link>
+              Plan een kennismakingsgesprek
+            </a>
             <a
               href="#hoe-het-werkt"
               className="bg-white/10 hover:bg-white/20 text-white font-semibold px-8 py-3.5 rounded-xl text-base transition-colors border border-white/10"
@@ -58,7 +58,7 @@ export default function LandingPage() {
               Bekijk hoe het werkt
             </a>
           </div>
-          <p className="text-sm text-slate-500 mt-5">14 dagen gratis · Geen creditcard vereist · AVG-conform</p>
+          <p className="text-sm text-slate-500 mt-5">Vroege toegang · Gehost in Europa · Privacy-first</p>
         </div>
 
         {/* Dashboard preview */}
@@ -189,7 +189,7 @@ export default function LandingPage() {
               {
                 step: '02',
                 title: 'Medewerkers vullen in',
-                desc: 'Een gevalideerde vragenlijst op basis van de Zelfdeterminatietheorie (SDT). Anoniem, mobiel-vriendelijk, in gemiddeld 8 minuten ingevuld.',
+                desc: 'Een vragenlijst op basis van de Zelfdeterminatietheorie (SDT). Vertrouwelijk, mobiel-vriendelijk, in circa 8–12 minuten ingevuld.',
               },
               {
                 step: '03',
@@ -281,8 +281,8 @@ export default function LandingPage() {
                 price: '€199',
                 desc: 'Voor kleine HR-teams die willen starten met data-gedreven exitanalyse.',
                 features: ['1 organisatie', '3 actieve campaigns', 'Onbeperkt respondenten', 'PDF-rapporten', 'E-mail support'],
-                cta: 'Start gratis',
-                href: '/signup',
+                cta: 'Vraag een demo aan',
+                href: 'mailto:hallo@verisight.nl',
                 highlight: false,
               },
               {
@@ -290,8 +290,8 @@ export default function LandingPage() {
                 price: '€499',
                 desc: 'Voor groeiende organisaties met meerdere afdelingen of entiteiten.',
                 features: ['5 organisaties', 'Onbeperkt campaigns', 'Onbeperkt respondenten', 'PDF-rapporten + API', 'Prioriteit support'],
-                cta: 'Start gratis',
-                href: '/signup',
+                cta: 'Vraag een demo aan',
+                href: 'mailto:hallo@verisight.nl',
                 highlight: true,
               },
               {
@@ -346,14 +346,14 @@ export default function LandingPage() {
             Klaar om verloop inzichtelijk te maken?
           </h2>
           <p className="text-slate-400 mb-8 text-lg">
-            Start vandaag met een gratis proefperiode van 14 dagen. Geen creditcard vereist.
+            Wij zijn nu in vroege toegang. Plan een kennismakingsgesprek en ontdek wat Verisight voor jouw organisatie kan betekenen.
           </p>
-          <Link
-            href="/signup"
+          <a
+            href="mailto:hallo@verisight.nl"
             className="inline-block bg-blue-600 hover:bg-blue-500 text-white font-semibold px-10 py-4 rounded-xl text-base transition-colors"
           >
-            Maak een gratis account aan →
-          </Link>
+            Plan een kennismakingsgesprek →
+          </a>
           <p className="text-slate-600 text-sm mt-4">
             Al een account?{' '}
             <Link href="/login" className="text-slate-400 hover:text-white transition-colors underline">
