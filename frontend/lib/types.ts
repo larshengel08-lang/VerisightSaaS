@@ -2,7 +2,10 @@
 
 export type ScanType = 'exit' | 'retention'
 export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
-export type MemberRole = 'owner' | 'member'
+// owner  = Verisight-beheerder (volledige toegang)
+// member = intern Verisight (zelfde rechten als owner)
+// viewer = HR-klant (alleen lezen: dashboard + PDF)
+export type MemberRole = 'owner' | 'member' | 'viewer'
 export type Preventability = 'REDBAAR' | 'MOGELIJK_REDBAAR' | 'NIET_REDBAAR'
 
 export interface Organization {

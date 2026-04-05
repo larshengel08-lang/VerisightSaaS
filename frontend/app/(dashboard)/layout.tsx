@@ -13,6 +13,16 @@ export default async function DashboardLayout({
 
   if (!user) redirect('/login')
 
+  // Bepaal of deze gebruiker beheerrechten heeft (owner/member)
+  // of alleen leesrechten (viewer = HR-klant)
+  const { data: memberships } = await supabase
+    .from('org_members')
+    .select('role')
+    .eq('user_id', user.id)
+
+  const isAdmin = !memberships?.length
+    || memberships.some(m => m.role === 'owner' || m.role === 'member')
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top navigatiebalk */}
@@ -24,7 +34,8 @@ export default async function DashboardLayout({
             </Link>
             <nav className="hidden sm:flex items-center gap-1">
               <NavLink href="/dashboard">Campaigns</NavLink>
-              <NavLink href="/beheer">Setup</NavLink>
+              {/* Setup is alleen zichtbaar voor Verisight-beheerders, niet voor HR-klanten */}
+              {isAdmin && <NavLink href="/beheer">Setup</NavLink>}
             </nav>
           </div>
           <div className="flex items-center gap-3">

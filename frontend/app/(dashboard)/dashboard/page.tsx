@@ -9,6 +9,15 @@ export default async function DashboardHomePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  // Rol bepalen voor conditionele UI
+  const { data: memberships } = await supabase
+    .from('org_members')
+    .select('role')
+    .eq('user_id', user.id)
+
+  const isAdmin = !memberships?.length
+    || memberships.some(m => m.role === 'owner' || m.role === 'member')
+
   const { data: stats } = await supabase
     .from('campaign_stats')
     .select('*')
@@ -25,16 +34,19 @@ export default async function DashboardHomePage() {
             Overzicht van alle actieve en gesloten surveys
           </p>
         </div>
-        <Link
-          href="/beheer"
-          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-        >
-          + Nieuwe campaign →
-        </Link>
+        {/* Alleen Verisight-beheerders kunnen een nieuwe campaign aanmaken */}
+        {isAdmin && (
+          <Link
+            href="/beheer"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+          >
+            + Nieuwe campaign →
+          </Link>
+        )}
       </div>
 
       {campaigns.length === 0 ? (
-        <EmptyState />
+        isAdmin ? <AdminEmptyState /> : <ViewerEmptyState />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {campaigns.map(c => (
@@ -108,7 +120,8 @@ function KpiCell({ label, value }: { label: string; value: string | number }) {
   )
 }
 
-function EmptyState() {
+// Lege staat voor Verisight-beheerders: stap-voor-stap setup
+function AdminEmptyState() {
   return (
     <div className="bg-white rounded-xl border border-dashed border-gray-200 p-10">
       <div className="max-w-lg mx-auto">
@@ -123,13 +136,11 @@ function EmptyState() {
             Volg deze drie stappen om je eerste ExitScan te starten.
           </p>
         </div>
-
         <div className="space-y-4 mb-8">
           <Step number={1} title="Maak een organisatie aan" description="Registreer de naam en het e-mailadres van de HR-contactpersoon." />
           <Step number={2} title="Maak een campaign aan" description="Kies ExitScan of RetentieScan en geef de campaign een naam." />
           <Step number={3} title="Nodig respondenten uit" description="Voer e-mailadressen in of genereer anonieme survey-links." />
         </div>
-
         <div className="text-center">
           <Link
             href="/beheer"
@@ -138,6 +149,32 @@ function EmptyState() {
             Starten →
           </Link>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// Lege staat voor HR-klanten: wachten op Verisight-begeleider
+function ViewerEmptyState() {
+  return (
+    <div className="bg-white rounded-xl border border-dashed border-gray-200 p-10">
+      <div className="max-w-md mx-auto text-center">
+        <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-50 rounded-2xl text-2xl mb-4">
+          ⏳
+        </div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">
+          Jouw ExitScan wordt opgezet
+        </h2>
+        <p className="text-sm text-gray-500 leading-relaxed mb-6">
+          Jouw Verisight-begeleider zet de campaign voor je op en stuurt de uitnodigingen uit.
+          Zodra de eerste responses binnenkomen, zie je hier de resultaten.
+        </p>
+        <p className="text-xs text-gray-400">
+          Vragen? Stuur een mail naar{' '}
+          <a href="mailto:hallo@verisight.nl" className="text-blue-500 hover:underline">
+            hallo@verisight.nl
+          </a>
+        </p>
       </div>
     </div>
   )

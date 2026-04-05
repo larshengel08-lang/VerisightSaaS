@@ -11,7 +11,7 @@ export default function LandingPage() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
             <a href="#hoe-het-werkt" className="hover:text-blue-600 transition-colors">Hoe het werkt</a>
             <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
-            <a href="#prijzen" className="hover:text-blue-600 transition-colors">Prijzen</a>
+            <a href="#tarieven" className="hover:text-blue-600 transition-colors">Tarieven</a>
           </nav>
           <div className="flex items-center gap-3">
             <Link href="/login" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">
@@ -126,7 +126,7 @@ export default function LandingPage() {
       <section className="bg-gray-50 border-b border-gray-100 py-6">
         <div className="max-w-6xl mx-auto px-6 text-center">
           <p className="text-sm text-gray-500">
-            Gebruikt door HR-teams bij organisaties met <strong className="text-gray-700">50–5.000 medewerkers</strong> · AVG-conform · Gehost in Europa
+            Voor HR-teams bij organisaties met <strong className="text-gray-700">200–1.000 medewerkers</strong> · AVG-conform · Gehost in Europa
           </p>
         </div>
       </section>
@@ -183,8 +183,8 @@ export default function LandingPage() {
             {[
               {
                 step: '01',
-                title: 'Maak een campaign aan',
-                desc: 'Kies ExitScan voor vertrekkende medewerkers of RetentieScan voor huidig personeel. Genereer gepersonaliseerde survey-links in één klik.',
+                title: 'Wij zetten de scan op',
+                desc: 'Na een kort intake-gesprek configureren wij de ExitScan of RetentieScan voor jouw organisatie en verzorgen de uitnodigingen.',
               },
               {
                 step: '02',
@@ -193,8 +193,8 @@ export default function LandingPage() {
               },
               {
                 step: '03',
-                title: 'Inzichten in je dashboard',
-                desc: 'Risicoscores per medewerker, organisatiefactoren, patroonanalyse en concrete aanbevelingen. Exporteerbaar als professioneel PDF-rapport.',
+                title: 'Inzichten en debrief',
+                desc: 'Je ontvangt toegang tot het dashboard met risicoscores, patroonanalyse en aanbevelingen. Wij lichten de resultaten toe in een debrief-gesprek.',
               },
             ].map((item, i) => (
               <div key={i} className="relative">
@@ -253,7 +253,7 @@ export default function LandingPage() {
             { icon: '🔍', title: 'Patroonanalyse', desc: 'Zie welke afdelingen of functieniveaus structureel het hoogste risico lopen.' },
             { icon: '📄', title: 'PDF-rapporten', desc: 'Professionele rapportage voor management, directie of ondernemingsraad. Eén klik.' },
             { icon: '🔒', title: 'Privacy-first', desc: 'AVG-conform, geanonimiseerde data, volledig gehost in Europa (Supabase EU).' },
-            { icon: '🚀', title: 'Binnen 10 minuten live', desc: 'Maak een campaign aan, genereer links en verstuur. Geen implementatietraject.' },
+            { icon: '🤝', title: 'Begeleid traject', desc: 'Wij zetten de scan op, verzorgen de uitnodigingen en lichten de resultaten toe. Geen implementatietraject.' },
             { icon: '📈', title: 'Wetenschappelijk fundament', desc: 'Gebaseerd op de Zelfdeterminatietheorie (Van den Broeck et al., 2010).' },
           ].map((f, i) => (
             <div key={i} className="bg-white border border-gray-200 rounded-2xl p-6 hover:border-blue-200 hover:shadow-sm transition-all">
@@ -265,76 +265,50 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Prijzen ───────────────────────────────────────────────── */}
-      <section id="prijzen" className="bg-gray-50 py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-14">
+      {/* ── Tarieven ──────────────────────────────────────────────── */}
+      <section id="tarieven" className="bg-gray-50 py-20">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Transparante prijzen
+              Tarieven op maat
             </h2>
-            <p className="text-gray-500">Geen verborgen kosten. Maandelijks opzegbaar.</p>
+            <p className="text-gray-500 max-w-xl mx-auto">
+              Elke organisatie is anders. Wij stellen een passend aanbod samen
+              op basis van jouw situatie, aantal medewerkers en gewenste scan.
+            </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {[
-              {
-                name: 'Starter',
-                price: '€199',
-                desc: 'Voor kleine HR-teams die willen starten met data-gedreven exitanalyse.',
-                features: ['1 organisatie', '3 actieve campaigns', 'Onbeperkt respondenten', 'PDF-rapporten', 'E-mail support'],
-                cta: 'Vraag een demo aan',
-                href: 'mailto:hallo@verisight.nl',
-                highlight: false,
-              },
-              {
-                name: 'Pro',
-                price: '€499',
-                desc: 'Voor groeiende organisaties met meerdere afdelingen of entiteiten.',
-                features: ['5 organisaties', 'Onbeperkt campaigns', 'Onbeperkt respondenten', 'PDF-rapporten + API', 'Prioriteit support'],
-                cta: 'Vraag een demo aan',
-                href: 'mailto:hallo@verisight.nl',
-                highlight: true,
-              },
-              {
-                name: 'Enterprise',
-                price: 'Op maat',
-                desc: 'Voor grote organisaties met specifieke eisen rondom integratie en beveiliging.',
-                features: ['Onbeperkt organisaties', 'White-label optie', 'SSO / SAML', 'SLA garantie', 'Dedicated support'],
-                cta: 'Neem contact op',
-                href: 'mailto:hallo@verisight.nl',
-                highlight: false,
-              },
-            ].map((plan, i) => (
-              <div
-                key={i}
-                className={`rounded-2xl p-7 border ${plan.highlight
-                  ? 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-200'
-                  : 'bg-white border-gray-200'}`}
-              >
-                <div className={`text-sm font-bold uppercase tracking-wide mb-1 ${plan.highlight ? 'text-blue-200' : 'text-blue-600'}`}>
-                  {plan.name}
+
+          {/* Wat zit erin */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-8">
+            <h3 className="text-base font-semibold text-gray-900 mb-6">Wat is altijd inbegrepen</h3>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                { icon: '⚙️', text: 'Volledige campaign setup door Verisight' },
+                { icon: '📧', text: 'Professionele uitnodigingen per e-mail' },
+                { icon: '📊', text: 'Dashboard met risicoscores en factoranalyse' },
+                { icon: '📄', text: 'PDF-rapport met aanbevelingen' },
+                { icon: '🤝', text: 'Debrief-gesprek ter toelichting van de resultaten' },
+                { icon: '🔒', text: 'AVG-conforme verwerking, data gehost in Europa' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-xl">{item.icon}</span>
+                  <span className="text-sm text-gray-700">{item.text}</span>
                 </div>
-                <div className={`text-3xl font-bold mb-1 ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>
-                  {plan.price}
-                  {plan.price !== 'Op maat' && <span className={`text-sm font-normal ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>/mnd</span>}
-                </div>
-                <p className={`text-sm mb-6 ${plan.highlight ? 'text-blue-100' : 'text-gray-500'}`}>{plan.desc}</p>
-                <ul className="space-y-2.5 mb-8">
-                  {plan.features.map(f => (
-                    <li key={f} className={`flex items-center gap-2 text-sm ${plan.highlight ? 'text-blue-50' : 'text-gray-600'}`}>
-                      <span className={plan.highlight ? 'text-blue-200' : 'text-blue-500'}>✓</span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href={plan.href}
-                  className={`block text-center font-semibold py-2.5 px-4 rounded-xl text-sm transition-colors ${plan.highlight
-                    ? 'bg-white text-blue-600 hover:bg-blue-50'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                >
-                  {plan.cta}
-                </Link>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="text-center">
+            <a
+              href="mailto:hallo@verisight.nl"
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl text-base transition-colors"
+            >
+              Vraag een offerte aan →
+            </a>
+            <p className="text-sm text-gray-400 mt-3">
+              Gemiddeld antwoord binnen één werkdag
+            </p>
           </div>
         </div>
       </section>

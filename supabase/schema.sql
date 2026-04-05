@@ -25,7 +25,10 @@ create table if not exists public.org_members (
   id         uuid primary key default gen_random_uuid(),
   org_id     uuid references public.organizations(id) on delete cascade not null,
   user_id    uuid references auth.users(id) on delete cascade not null,
-  role       text not null default 'member' check (role in ('owner', 'member')),
+  -- owner  = Verisight-beheerder (volledige toegang, kan campaigns aanmaken)
+  -- member = toekomstig intern gebruik
+  -- viewer = HR-klant (alleen lezen: dashboard + PDF downloaden)
+  role       text not null default 'member' check (role in ('owner', 'member', 'viewer')),
   created_at timestamptz default now(),
   unique(org_id, user_id)
 );
@@ -57,6 +60,17 @@ create table if not exists public.respondents (
   -- E-mailadres voor uitnodigingsmail (optioneel, nooit zichtbaar in dashboard)
   email             text
 );
+
+-- Voeg 'viewer' toe aan de role-constraint als die er nog niet in zit
+do $$ begin
+  -- Drop de oude constraint en vervang door een die viewer toestaat
+  alter table public.org_members
+    drop constraint if exists org_members_role_check;
+  alter table public.org_members
+    add constraint org_members_role_check
+    check (role in ('owner', 'member', 'viewer'));
+exception when others then null;
+end $$;
 
 -- Voeg nieuwe kolommen toe aan bestaande tabel indien nog niet aanwezig
 do $$ begin
@@ -122,8 +136,10 @@ alter table public.campaigns        enable row level security;
 alter table public.respondents      enable row level security;
 alter table public.survey_responses enable row level security;
 
--- ── Hulpfunctie ──────────────────────────────────────────────────────────────
+-- ── Hulpfuncties ─────────────────────────────────────────────────────────────
 
+-- is_org_member: iedereen die lid is van de org (owner, member, viewer)
+-- Gebruik voor SELECT-policies (lezen is voor alle rollen toegestaan)
 create or replace function public.is_org_member(org_id uuid)
 returns boolean
 language sql
@@ -134,6 +150,22 @@ as $$
     select 1 from public.org_members
     where org_members.org_id = $1
       and org_members.user_id = auth.uid()
+  );
+$$;
+
+-- is_org_manager: alleen owner en member (niet viewer)
+-- Gebruik voor INSERT/UPDATE-policies (schrijven is alleen voor beheerders)
+create or replace function public.is_org_manager(org_id uuid)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from public.org_members
+    where org_members.org_id = $1
+      and org_members.user_id = auth.uid()
+      and org_members.role in ('owner', 'member')
   );
 $$;
 
@@ -176,26 +208,32 @@ create policy "authenticated_can_insert_membership"
   with check (auth.uid() is not null);
 
 -- Campaigns
-drop policy if exists "org_members_can_select_campaigns" on public.campaigns;
-drop policy if exists "org_members_can_insert_campaigns" on public.campaigns;
-drop policy if exists "org_members_can_update_campaigns" on public.campaigns;
+drop policy if exists "org_members_can_select_campaigns"  on public.campaigns;
+drop policy if exists "org_members_can_insert_campaigns"  on public.campaigns;
+drop policy if exists "org_members_can_update_campaigns"  on public.campaigns;
+drop policy if exists "org_managers_can_insert_campaigns" on public.campaigns;
+drop policy if exists "org_managers_can_update_campaigns" on public.campaigns;
 
+-- Alle leden (ook viewers) mogen campaigns zien
 create policy "org_members_can_select_campaigns"
   on public.campaigns for select
   using (public.is_org_member(organization_id));
 
-create policy "org_members_can_insert_campaigns"
+-- Alleen managers (owner/member) mogen campaigns aanmaken en aanpassen
+create policy "org_managers_can_insert_campaigns"
   on public.campaigns for insert
-  with check (public.is_org_member(organization_id));
+  with check (public.is_org_manager(organization_id));
 
-create policy "org_members_can_update_campaigns"
+create policy "org_managers_can_update_campaigns"
   on public.campaigns for update
-  using (public.is_org_member(organization_id));
+  using (public.is_org_manager(organization_id));
 
 -- Respondents
-drop policy if exists "org_members_can_select_respondents" on public.respondents;
-drop policy if exists "org_members_can_insert_respondents" on public.respondents;
+drop policy if exists "org_members_can_select_respondents"  on public.respondents;
+drop policy if exists "org_members_can_insert_respondents"  on public.respondents;
+drop policy if exists "org_managers_can_insert_respondents" on public.respondents;
 
+-- Alle leden mogen respondenten zien (voor dashboard)
 create policy "org_members_can_select_respondents"
   on public.respondents for select
   using (
@@ -206,13 +244,14 @@ create policy "org_members_can_select_respondents"
     )
   );
 
-create policy "org_members_can_insert_respondents"
+-- Alleen managers mogen respondenten aanmaken
+create policy "org_managers_can_insert_respondents"
   on public.respondents for insert
   with check (
     exists (
       select 1 from public.campaigns c
       where c.id = campaign_id
-        and public.is_org_member(c.organization_id)
+        and public.is_org_manager(c.organization_id)
     )
   );
 
