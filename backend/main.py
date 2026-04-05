@@ -112,7 +112,12 @@ app = FastAPI(
 _FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[_FRONTEND_URL, "http://localhost:3000", "http://localhost:3001"],
+    allow_origins=[
+        _FRONTEND_URL,
+        "http://localhost:3000",
+        "http://localhost:3001",
+    ],
+    allow_origin_regex=r"https://.*\.vercel\.app",  # alle Vercel preview URLs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
