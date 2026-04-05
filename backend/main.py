@@ -45,15 +45,18 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
+from backend.email import send_hr_notification, send_survey_invite
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
 from backend.schemas import (
     CampaignCreate,
     CampaignRead,
     CampaignStats,
+    InviteSendResult,
     OrganizationCreate,
     OrganizationRead,
     RespondentBatchCreate,
     RespondentRead,
+    SendInviteItem,
     SurveySubmit,
     SurveyResponseRead,
 )
@@ -315,6 +318,24 @@ async def submit_survey(
     respondent.completed_at = datetime.now(timezone.utc)
     db.commit()
 
+    # Stuur notificatie naar HR-beheerder van de organisatie
+    try:
+        campaign_obj = respondent.campaign
+        org = campaign_obj.organization
+        total_completed = sum(1 for r in campaign_obj.respondents if r.completed)
+        total_invited   = len(campaign_obj.respondents)
+        send_hr_notification(
+            to_email        = org.contact_email,
+            campaign_name   = campaign_obj.name,
+            campaign_id     = campaign_obj.id,
+            total_completed = total_completed,
+            total_invited   = total_invited,
+        )
+    except Exception as exc:
+        # Notificatie-fout mag nooit de survey-response blokkeren
+        import logging
+        logging.getLogger(__name__).warning("HR-notificatie mislukt: %s", exc)
+
     return {"status": "ok", "message": "Bedankt voor het invullen van de survey."}
 
 
@@ -410,12 +431,16 @@ async def add_respondents(
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
 
+    from datetime import timezone as _tz
+    _expires = datetime.now(timezone.utc).replace(tzinfo=None)
+
     respondents = [
         Respondent(
             campaign_id       = campaign.id,
             department        = r.department,
             role_level        = r.role_level,
             annual_salary_eur = r.annual_salary_eur,
+            email             = r.email,
         )
         for r in body.respondents
     ]
@@ -423,6 +448,21 @@ async def add_respondents(
     db.commit()
     for r in respondents:
         db.refresh(r)
+
+    # Stuur uitnodigingsmails indien gewenst
+    if body.send_invites:
+        for respondent, req in zip(respondents, body.respondents):
+            if req.email:
+                sent = send_survey_invite(
+                    to_email=req.email,
+                    campaign_name=campaign.name,
+                    token=respondent.token,
+                    scan_type=campaign.scan_type,
+                )
+                if sent:
+                    respondent.sent_at = datetime.now(timezone.utc)
+        db.commit()
+
     return respondents
 
 
@@ -440,6 +480,59 @@ async def list_respondents(
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
     return campaign.respondents
+
+
+@app.post("/api/campaigns/{campaign_id}/send-invites", response_model=InviteSendResult)
+async def send_invites(
+    campaign_id: str,
+    body: list[SendInviteItem],
+    db: Session = Depends(get_db),
+) -> InviteSendResult:
+    """
+    Stuur uitnodigingsmails naar een lijst van {token, email} paren.
+    Wordt aangeroepen vanuit het dashboard direct na het aanmaken van respondenten.
+    Geen API-key vereist — tokens zijn UUIDs en daarmee al moeilijk te raden.
+    """
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+
+    sent = 0
+    failed = 0
+    skipped = 0
+
+    for item in body:
+        if not item.email:
+            skipped += 1
+            continue
+
+        # Zoek respondent op via token (verificatie dat token bij deze campaign hoort)
+        respondent = db.query(Respondent).filter(
+            Respondent.token == item.token,
+            Respondent.campaign_id == campaign_id,
+        ).first()
+
+        if not respondent:
+            failed += 1
+            continue
+
+        ok = send_survey_invite(
+            to_email=item.email,
+            campaign_name=campaign.name,
+            token=item.token,
+            scan_type=campaign.scan_type,
+        )
+
+        if ok:
+            respondent.sent_at = datetime.now(timezone.utc)
+            sent += 1
+        else:
+            failed += 1
+
+    if sent > 0:
+        db.commit()
+
+    return InviteSendResult(sent=sent, failed=failed, skipped=skipped)
 
 
 # ---------------------------------------------------------------------------

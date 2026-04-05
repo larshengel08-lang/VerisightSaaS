@@ -106,11 +106,15 @@ class Respondent(Base):
     role_level: Mapped[str | None] = mapped_column(String(50), nullable=True)
     annual_salary_eur: Mapped[float | None] = mapped_column(Float, nullable=True)
 
+    # E-mailadres voor uitnodiging (optioneel — nooit getoond in dashboard)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
     # Tracking
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     opened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed: Mapped[bool] = mapped_column(Boolean, default=False)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     campaign: Mapped["Campaign"] = relationship(back_populates="respondents")
     response: Mapped["SurveyResponse | None"] = relationship(back_populates="respondent", uselist=False)

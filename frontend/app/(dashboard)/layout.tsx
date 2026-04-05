@@ -24,7 +24,7 @@ export default async function DashboardLayout({
             </Link>
             <nav className="hidden sm:flex items-center gap-1">
               <NavLink href="/dashboard">Campaigns</NavLink>
-              <NavLink href="/beheer">Beheer</NavLink>
+              <NavLink href="/beheer">Setup</NavLink>
             </nav>
           </div>
           <div className="flex items-center gap-3">

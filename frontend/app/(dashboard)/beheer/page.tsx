@@ -30,57 +30,74 @@ export default async function BeheerPage() {
 
   const campaigns = (campaignsRaw ?? []) as Campaign[]
 
+  // Bepaal welke stappen al klaar zijn voor de voortgangsindicator
+  const step1Done = orgs.length > 0
+  const step2Done = campaigns.length > 0
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Beheer</h1>
-      <p className="text-sm text-gray-500 mb-8">
-        Organisaties, campaigns en respondenten beheren
+      <h1 className="text-2xl font-bold text-gray-900 mb-1">Setup</h1>
+      <p className="text-sm text-gray-500 mb-6">
+        Volg de stappen om een survey te starten.
       </p>
+
+      {/* Voortgangsindicator */}
+      <div className="flex items-center gap-2 mb-8">
+        <StepBadge n={1} label="Organisatie" done={step1Done} />
+        <div className="h-px w-6 bg-gray-200" />
+        <StepBadge n={2} label="Campaign" done={step2Done} />
+        <div className="h-px w-6 bg-gray-200" />
+        <StepBadge n={3} label="Uitnodigen" done={false} />
+      </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
 
-        {/* Nieuwe organisatie */}
-        <section className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">
-            Nieuwe organisatie
-          </h2>
-          <NewOrgForm />
+        {/* Stap 1: Organisatie */}
+        <section className={`bg-white rounded-xl border p-6 ${step1Done ? 'border-green-200' : 'border-gray-200'}`}>
+          <SectionHeader n={1} title="Organisatie aanmaken" done={step1Done} />
+          {step1Done ? (
+            <div className="space-y-1">
+              {orgs.map(o => (
+                <div key={o.id} className="flex items-center gap-2 text-sm text-gray-700">
+                  <span className="text-green-500">✓</span>
+                  <span className="font-medium">{o.name}</span>
+                  <span className="text-gray-400 text-xs">({o.slug})</span>
+                </div>
+              ))}
+              <div className="pt-2 border-t border-gray-100 mt-2">
+                <p className="text-xs text-gray-400 mb-2">Nog een organisatie toevoegen:</p>
+                <NewOrgForm />
+              </div>
+            </div>
+          ) : (
+            <NewOrgForm />
+          )}
         </section>
 
-        {/* Nieuwe campaign */}
-        <section className="bg-white rounded-xl border border-gray-200 p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">
-            Nieuwe campaign
-          </h2>
+        {/* Stap 2: Campaign */}
+        <section className={`bg-white rounded-xl border p-6 ${step2Done ? 'border-green-200' : 'border-gray-200'}`}>
+          <SectionHeader n={2} title="Campaign aanmaken" done={step2Done} />
           {orgs.length === 0 ? (
-            <p className="text-sm text-gray-400">
-              Maak eerst een organisatie aan.
-            </p>
+            <LockedStep message="Maak eerst een organisatie aan (stap 1)." />
           ) : (
             <NewCampaignForm orgs={orgs} />
           )}
         </section>
 
-        {/* Respondenten toevoegen */}
+        {/* Stap 3: Respondenten */}
         <section className="bg-white rounded-xl border border-gray-200 p-6 lg:col-span-2">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">
-            Respondenten toevoegen
-          </h2>
+          <SectionHeader n={3} title="Respondenten uitnodigen" done={false} />
           {campaigns.length === 0 ? (
-            <p className="text-sm text-gray-400">
-              Maak eerst een campaign aan.
-            </p>
+            <LockedStep message="Maak eerst een campaign aan (stap 2)." />
           ) : (
             <AddRespondentsForm campaigns={campaigns} />
           )}
         </section>
 
-        {/* Bestaande campaigns tabel */}
+        {/* Bestaande campaigns */}
         {campaigns.length > 0 && (
           <section className="bg-white rounded-xl border border-gray-200 p-6 lg:col-span-2">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">
-              Bestaande campaigns
-            </h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-4">Jouw campaigns</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -123,6 +140,41 @@ export default async function BeheerPage() {
           </section>
         )}
       </div>
+    </div>
+  )
+}
+
+function StepBadge({ n, label, done }: { n: number; label: string; done: boolean }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0
+        ${done ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+        {done ? '✓' : n}
+      </div>
+      <span className={`text-xs font-medium hidden sm:block ${done ? 'text-green-600' : 'text-gray-500'}`}>
+        {label}
+      </span>
+    </div>
+  )
+}
+
+function SectionHeader({ n, title, done }: { n: number; title: string; done: boolean }) {
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <div className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0
+        ${done ? 'bg-green-500 text-white' : 'bg-blue-600 text-white'}`}>
+        {done ? '✓' : n}
+      </div>
+      <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+    </div>
+  )
+}
+
+function LockedStep({ message }: { message: string }) {
+  return (
+    <div className="flex items-center gap-2 text-sm text-gray-400 bg-gray-50 rounded-lg px-4 py-3">
+      <span>🔒</span>
+      <span>{message}</span>
     </div>
   )
 }

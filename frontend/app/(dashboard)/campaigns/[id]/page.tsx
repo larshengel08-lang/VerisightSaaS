@@ -180,12 +180,38 @@ export default async function CampaignPage({ params }: Props) {
 
       {/* Respondenten */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 className="text-sm font-semibold text-gray-700 mb-4">Respondenten</h2>
-        <RespondentTable
-          respondents={respondents}
-          responses={responses}
-          scanType={stats.scan_type}
-        />
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-700">Respondenten</h2>
+          {respondents.length > 0 && (
+            <Link
+              href="/beheer"
+              className="text-xs text-blue-600 hover:underline"
+            >
+              + Meer uitnodigen
+            </Link>
+          )}
+        </div>
+        {respondents.length === 0 ? (
+          <div className="text-center py-10 border border-dashed border-gray-200 rounded-xl">
+            <div className="text-3xl mb-3">📨</div>
+            <p className="text-sm font-medium text-gray-700 mb-1">Nog geen respondenten</p>
+            <p className="text-xs text-gray-400 mb-4">
+              Nodig medewerkers uit via e-mail of genereer anonieme survey-links.
+            </p>
+            <Link
+              href="/beheer"
+              className="inline-block bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Respondenten toevoegen →
+            </Link>
+          </div>
+        ) : (
+          <RespondentTable
+            respondents={respondents}
+            responses={responses}
+            scanType={stats.scan_type}
+          />
+        )}
       </div>
     </div>
   )

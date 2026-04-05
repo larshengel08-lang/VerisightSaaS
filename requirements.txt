@@ -28,5 +28,8 @@ openai>=1.30.0
 # Utilities
 python-dotenv>=1.0.0
 
+# E-mail (uitnodigingen + notificaties)
+resend>=2.0.0
+
 # Monitoring & error tracking
 sentry-sdk[fastapi]>=2.0.0

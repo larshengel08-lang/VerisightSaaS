@@ -53,10 +53,12 @@ create table if not exists public.respondents (
   completed         boolean default false,
   completed_at      timestamptz,
   -- Token vervalt 90 dagen na aanmaken (AVG opslagbeperking + security)
-  token_expires_at  timestamptz default (now() + interval '90 days')
+  token_expires_at  timestamptz default (now() + interval '90 days'),
+  -- E-mailadres voor uitnodigingsmail (optioneel, nooit zichtbaar in dashboard)
+  email             text
 );
 
--- Voeg token_expires_at toe aan bestaande tabel indien nog niet aanwezig
+-- Voeg nieuwe kolommen toe aan bestaande tabel indien nog niet aanwezig
 do $$ begin
   if not exists (
     select 1 from information_schema.columns
@@ -64,6 +66,12 @@ do $$ begin
   ) then
     alter table public.respondents
       add column token_expires_at timestamptz default (now() + interval '90 days');
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'respondents' and column_name = 'email'
+  ) then
+    alter table public.respondents add column email text;
   end if;
 end $$;
 

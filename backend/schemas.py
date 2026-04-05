@@ -80,6 +80,7 @@ class RespondentCreate(BaseModel):
     department: Optional[str] = Field(None, max_length=100)
     role_level: Optional[str] = Field(None, max_length=50)
     annual_salary_eur: Optional[float] = Field(None, gt=0, lt=1_000_000)
+    email: Optional[EmailStr] = None  # voor uitnodigingsmail
 
 
 class RespondentRead(OrmBase):
@@ -90,11 +91,25 @@ class RespondentRead(OrmBase):
     role_level: Optional[str]
     completed: bool
     completed_at: Optional[datetime]
+    sent_at: Optional[datetime]
 
 
 class RespondentBatchCreate(BaseModel):
     """Create multiple respondents in one API call."""
     respondents: list[RespondentCreate] = Field(..., min_length=1, max_length=500)
+    send_invites: bool = True  # stuur direct uitnodigingsmail als e-mail opgegeven
+
+
+class InviteSendResult(BaseModel):
+    sent: int
+    failed: int
+    skipped: int  # geen e-mailadres
+
+
+class SendInviteItem(BaseModel):
+    """Één token + e-mailadres voor de send-invites route."""
+    token: str
+    email: Optional[EmailStr] = None
 
 
 # ---------------------------------------------------------------------------

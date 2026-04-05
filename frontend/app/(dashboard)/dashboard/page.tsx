@@ -29,7 +29,7 @@ export default async function DashboardHomePage() {
           href="/beheer"
           className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
         >
-          + Nieuwe campaign
+          + Nieuwe campaign →
         </Link>
       </div>
 
@@ -110,18 +110,49 @@ function KpiCell({ label, value }: { label: string; value: string | number }) {
 
 function EmptyState() {
   return (
-    <div className="bg-white rounded-xl border border-dashed border-gray-300 p-12 text-center">
-      <div className="text-4xl mb-3">📋</div>
-      <h2 className="text-base font-semibold text-gray-700 mb-1">Nog geen campaigns</h2>
-      <p className="text-sm text-gray-400 mb-4">
-        Maak je eerste organisatie en campaign aan via Beheer.
-      </p>
-      <Link
-        href="/beheer"
-        className="inline-block bg-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        Naar Beheer
-      </Link>
+    <div className="bg-white rounded-xl border border-dashed border-gray-200 p-10">
+      <div className="max-w-lg mx-auto">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-50 rounded-2xl text-2xl mb-4">
+            🚀
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            Welkom bij Verisight
+          </h2>
+          <p className="text-sm text-gray-500">
+            Volg deze drie stappen om je eerste ExitScan te starten.
+          </p>
+        </div>
+
+        <div className="space-y-4 mb-8">
+          <Step number={1} title="Maak een organisatie aan" description="Registreer de naam en het e-mailadres van de HR-contactpersoon." />
+          <Step number={2} title="Maak een campaign aan" description="Kies ExitScan of RetentieScan en geef de campaign een naam." />
+          <Step number={3} title="Nodig respondenten uit" description="Voer e-mailadressen in of genereer anonieme survey-links." />
+        </div>
+
+        <div className="text-center">
+          <Link
+            href="/beheer"
+            className="inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Starten →
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Step({ number, title, description }: { number: number; title: string; description: string }) {
+  return (
+    <div className="flex gap-4 items-start">
+      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+        {number}
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-gray-800">{title}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{description}</p>
+      </div>
     </div>
   )
 }
