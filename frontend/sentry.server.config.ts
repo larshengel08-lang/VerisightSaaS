@@ -7,6 +7,6 @@ if (SENTRY_DSN) {
     dsn: SENTRY_DSN,
     environment: process.env.NODE_ENV,
     tracesSampleRate: 0.2,
-    send_default_pii: false,
+    sendDefaultPii: false,
   })
 }
