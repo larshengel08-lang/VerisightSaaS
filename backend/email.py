@@ -41,18 +41,22 @@ except ImportError:
 def _send(*, to: str, subject: str, html: str) -> bool:
     """Verstuur één e-mail. Retourneert True bij succes."""
     if not _RESEND_AVAILABLE:
+        print(f"[EMAIL] NIET verzonden — geen RESEND_API_KEY. Aan: {to} | Onderwerp: {subject}", flush=True)
         logger.info("E-mail NIET verzonden (geen RESEND_API_KEY). Aan: %s | Onderwerp: %s", to, subject)
         return False
     try:
-        _resend.Emails.send({
+        print(f"[EMAIL] Versturen naar {to} via {_EMAIL_FROM} ...", flush=True)
+        result = _resend.Emails.send({
             "from":    _EMAIL_FROM,
             "to":      [to],
             "subject": subject,
             "html":    html,
         })
+        print(f"[EMAIL] Succes: {result}", flush=True)
         logger.info("E-mail verzonden naar %s: %s", to, subject)
         return True
     except Exception as exc:
+        print(f"[EMAIL] FOUT bij verzenden naar {to}: {exc}", flush=True)
         logger.error("E-mail verzending mislukt naar %s: %s", to, exc)
         return False
 
