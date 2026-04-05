@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bedankt — RetentionPulse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand: #2563EB;
+      --success: #16A34A;
+      --text: #111827;
+      --muted: #6B7280;
+      --border: #E5E7EB;
+      --bg: #F9FAFB;
+      --white: #FFFFFF;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 60px 48px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,.08);
+    }
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--brand);
+      letter-spacing: -.5px;
+      margin-bottom: 32px;
+    }
+    .icon-wrap {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 28px;
+      font-size: 36px;
+    }
+    .icon-wrap.success { background: #DCFCE7; }
+    .icon-wrap.already { background: #FEF9C3; }
+
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 14px;
+    }
+    p {
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 32px 0;
+    }
+    .footer-note {
+      font-size: 12px;
+      color: #9CA3AF;
+    }
+    @media (max-width: 480px) {
+      .card { padding: 40px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">RetentionPulse</div>
+
+    {% if already_done %}
+    <div class="icon-wrap already">ℹ️</div>
+    <h1>Al ingevuld</h1>
+    <p>
+      Je hebt deze survey al eerder ingevuld. Je antwoorden zijn opgeslagen.
+      <br /><br />
+      Heb je vragen? Neem contact op met de HR-afdeling.
+    </p>
+    {% else %}
+    <div class="icon-wrap success">✅</div>
+    <h1>Bedankt voor je deelname!</h1>
+    <p>
+      Je antwoorden zijn anoniem opgeslagen en worden meegenomen in de organisatieanalyse.
+      <br /><br />
+      Jouw input helpt de organisatie een betere werkgever te zijn. Dit venster kan je sluiten.
+    </p>
+    {% endif %}
+
+    <div class="divider"></div>
+    <p class="footer-note">
+      🔒 Alle antwoorden worden vertrouwelijk en anoniem verwerkt conform de AVG-privacywetgeving.<br />
+      Aangeboden door <strong>RetentionPulse</strong> — HR-verloopanalyse.
+    </p>
+  </div>
+</body>
+</html>

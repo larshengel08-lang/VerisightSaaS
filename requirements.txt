@@ -1,0 +1,29 @@
+# RetentionPulse — Python dependencies
+# Install with: pip install -r requirements.txt
+
+# Web framework
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+
+# Database — SQLAlchemy ORM + PostgreSQL driver (Supabase)
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# Template engine (survey HTML)
+# Pinned to 3.1.4 — 3.1.5+ introduced a dict-in-cache-key bug with Starlette 1.0
+jinja2==3.1.4
+python-multipart>=0.0.9
+aiofiles>=23.2.0
+
+# Data validation
+pydantic[email]>=2.7.0
+
+# PDF-rapportage
+reportlab>=4.2.0
+matplotlib>=3.9.0
+
+# AI enrichment (open text only — optioneel)
+openai>=1.30.0
+
+# Utilities
+python-dotenv>=1.0.0

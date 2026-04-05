@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Omgevingsvariabelen — credentials nooit committen
+.env
+backend/.env
+
+# Database (SQLite — vervangen door Supabase, maar voor zekerheid)
+*.db
+*.sqlite3
+data/*.db
+
+# Gegenereerde bestanden
+*.pdf
+!RetentionPulse_Demo_Rapport.pdf
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+
+# Node (frontend heeft eigen .gitignore)
+frontend/node_modules/
+frontend/.next/
