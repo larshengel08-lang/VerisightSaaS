@@ -4,12 +4,11 @@ import Link from 'next/link'
 import type { CampaignStats } from '@/lib/types'
 import { RiskBadge } from '@/components/ui/risk-badge'
 
-export default async function HomePage() {
+export default async function DashboardHomePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Haal campaigns op via de campaign_stats view
   const { data: stats } = await supabase
     .from('campaign_stats')
     .select('*')
@@ -57,7 +56,6 @@ function CampaignCard({ campaign: c }: { campaign: CampaignStats }) {
       href={`/campaigns/${c.campaign_id}`}
       className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all group"
     >
-      {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <span className="inline-block text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded mb-1">
@@ -70,14 +68,12 @@ function CampaignCard({ campaign: c }: { campaign: CampaignStats }) {
         <span className={`ml-2 w-2 h-2 rounded-full flex-shrink-0 mt-1 ${c.is_active ? 'bg-green-400' : 'bg-gray-300'}`} />
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-3 gap-2 mb-3">
         <KpiCell label="Uitgenodigd" value={c.total_invited} />
         <KpiCell label="Ingevuld" value={c.total_completed} />
         <KpiCell label="Respons" value={`${completionPct}%`} />
       </div>
 
-      {/* Respons progress bar */}
       <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-3">
         <div
           className="h-full bg-blue-500 rounded-full"
@@ -85,7 +81,6 @@ function CampaignCard({ campaign: c }: { campaign: CampaignStats }) {
         />
       </div>
 
-      {/* Risicoscore */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-500">Gem. risico</span>
         {avgRisk ? (

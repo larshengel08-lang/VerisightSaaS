@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const [email,    setEmail]    = useState('')
@@ -25,7 +26,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/')
+    router.push('/dashboard')
     router.refresh()
   }
 
@@ -35,9 +36,9 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <span className="text-2xl font-bold text-blue-600 tracking-tight">
+          <Link href="/" className="text-2xl font-bold text-blue-600 tracking-tight">
             Verisight
-          </span>
+          </Link>
           <p className="mt-2 text-sm text-gray-500">Operator Dashboard</p>
         </div>
 
@@ -92,7 +93,13 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-gray-400 mt-4">
+          Nog geen account?{' '}
+          <Link href="/signup" className="text-blue-600 hover:underline">
+            Gratis registreren
+          </Link>
+        </p>
+        <p className="text-center text-xs text-gray-400 mt-3">
           Verisight v2.0 · Vertrouwelijk platform
         </p>
       </div>

@@ -19,11 +19,11 @@ export default async function DashboardLayout({
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link href="/" className="text-lg font-bold text-blue-600 tracking-tight">
+            <Link href="/dashboard" className="text-lg font-bold text-blue-600 tracking-tight">
               Verisight
             </Link>
             <nav className="hidden sm:flex items-center gap-1">
-              <NavLink href="/">Campaigns</NavLink>
+              <NavLink href="/dashboard">Campaigns</NavLink>
               <NavLink href="/beheer">Beheer</NavLink>
             </nav>
           </div>
