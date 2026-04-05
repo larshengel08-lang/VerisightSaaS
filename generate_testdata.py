@@ -1,5 +1,5 @@
-"""
-RetentionPulse — Testdata Generator
+﻿"""
+Verisight — Testdata Generator
 ======================================
 Genereert realistische synthetische responses voor de demo-campaign.
 Draai met:  python generate_testdata.py

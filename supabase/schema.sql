@@ -1,5 +1,5 @@
--- ============================================================
--- RetentionPulse — Supabase Schema
+﻿-- ============================================================
+-- Verisight — Supabase Schema
 -- Uitvoeren in: Supabase Dashboard → SQL Editor
 -- Volledig idempotent: veilig meerdere keren uitvoeren
 -- ============================================================

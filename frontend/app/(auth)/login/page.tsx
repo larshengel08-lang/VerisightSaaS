@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -36,7 +36,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <span className="text-2xl font-bold text-blue-600 tracking-tight">
-            RetentionPulse
+            Verisight
           </span>
           <p className="mt-2 text-sm text-gray-500">Operator Dashboard</p>
         </div>
@@ -93,7 +93,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          RetentionPulse v2.0 · Vertrouwelijk platform
+          Verisight v2.0 · Vertrouwelijk platform
         </p>
       </div>
     </div>

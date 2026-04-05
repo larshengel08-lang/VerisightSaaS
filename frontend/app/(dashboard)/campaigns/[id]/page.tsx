@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+﻿import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
@@ -222,7 +222,7 @@ function PdfDownloadButton({ campaignId, campaignName }: { campaignId: string; c
     <a
       href={`${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'}/api/campaigns/${campaignId}/report-public`}
       className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5"
-      download={`RetentionPulse_${campaignName.replace(/ /g, '_')}.pdf`}
+      download={`Verisight_${campaignName.replace(/ /g, '_')}.pdf`}
     >
       ⬇ PDF-rapport
     </a>

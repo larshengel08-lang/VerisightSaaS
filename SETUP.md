@@ -1,4 +1,4 @@
-# RetentionPulse — Installatiegids
+﻿# Verisight — Installatiegids
 
 Twee diensten draaien samen:
 - **Backend** — FastAPI (Python) op poort `8000`: scoring engine + survey-formulieren
@@ -19,7 +19,7 @@ Twee diensten draaien samen:
 ## Stap 1 — Supabase project aanmaken
 
 1. Ga naar [supabase.com](https://supabase.com) en maak een gratis account
-2. Klik **New project** → kies een naam (bijv. `retentionpulse`) en regio (EU)
+2. Klik **New project** → kies een naam (bijv. `Verisight`) en regio (EU)
 3. Wacht tot het project actief is (~1 minuut)
 
 ### Database-schema uitvoeren
@@ -59,7 +59,7 @@ postgresql://postgres.[project-ref]:[jouw-wachtwoord]@aws-0-eu-central-1.pooler.
 ## Stap 2 — Backend instellen (FastAPI)
 
 ```bash
-cd RetentionPulse
+cd Verisight
 ```
 
 ### Omgevingsvariabelen
@@ -179,14 +179,14 @@ Open twee terminals:
 
 **Terminal 1 — Backend:**
 ```bash
-cd RetentionPulse
+cd Verisight
 .venv\Scripts\activate   # Windows
 uvicorn backend.main:app --reload --port 8000
 ```
 
 **Terminal 2 — Frontend:**
 ```bash
-cd RetentionPulse/frontend
+cd Verisight/frontend
 npm run dev
 ```
 
@@ -200,7 +200,7 @@ npm run dev
 2. **New project → Deploy from GitHub repo**
 3. Stel de omgevingsvariabelen in (DATABASE_URL, SUPABASE_SERVICE_ROLE_KEY, etc.)
 4. Railway detecteert automatisch `requirements.txt` en gebruikt `uvicorn`
-5. Noteer de Railway-URL (bijv. `https://retentionpulse-backend.railway.app`)
+5. Noteer de Railway-URL (bijv. `https://Verisight-backend.railway.app`)
 
 ### Frontend → Vercel
 
@@ -215,15 +215,15 @@ npm run dev
 ### Supabase CORS instellen
 
 In Supabase → **Authentication → URL Configuration**:
-- **Site URL**: jouw Vercel-URL (bijv. `https://retentionpulse.vercel.app`)
-- **Redirect URLs**: `https://retentionpulse.vercel.app/**`
+- **Site URL**: jouw Vercel-URL (bijv. `https://Verisight.vercel.app`)
+- **Redirect URLs**: `https://Verisight.vercel.app/**`
 
 ---
 
 ## Bestandsstructuur
 
 ```
-RetentionPulse/
+Verisight/
 ├── backend/
 │   ├── main.py           # FastAPI app + endpoints
 │   ├── scoring.py        # SDT + org factor scoring engine

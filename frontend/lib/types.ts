@@ -1,4 +1,4 @@
-// RetentionPulse — gedeelde TypeScript types
+﻿// Verisight — gedeelde TypeScript types
 
 export type ScanType = 'exit' | 'retention'
 export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'

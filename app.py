@@ -1,5 +1,5 @@
-"""
-RetentionPulse — AI-powered Exit Analysis & Retention Intelligence Platform
+﻿"""
+Verisight — AI-powered Exit Analysis & Retention Intelligence Platform
 MVP v1.1 | Survey-Format + Validated Scoring Edition
 """
 
@@ -306,7 +306,7 @@ def export_csv(analyses: list) -> str:
 
 def main():
     st.set_page_config(
-        page_title="RetentionPulse",
+        page_title="Verisight",
         page_icon="🫀",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -348,7 +348,7 @@ def main():
 
     st.markdown("""
     <div class="rp-header">
-        <h1>🫀 RetentionPulse</h1>
+        <h1>🫀 Verisight</h1>
         <p>AI-powered Exit Analyse &amp; Retentie Intelligence Platform voor HR Business Partners</p>
     </div>
     """, unsafe_allow_html=True)
@@ -388,7 +388,7 @@ def main():
         """, unsafe_allow_html=True)
 
         st.divider()
-        st.caption("RetentionPulse MVP v1.1 | © 2025")
+        st.caption("Verisight MVP v1.1 | © 2025")
 
     # ── Session State ────────────────────────────────────────────────────────
     if "analyses"    not in st.session_state: st.session_state.analyses    = []
@@ -802,7 +802,7 @@ def main():
             st.download_button(
                 label="⬇️ Exporteer alle analyses (CSV)",
                 data=export_csv(analyses),
-                file_name=f"retentionpulse_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+                file_name=f"Verisight_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
                 mime="text/csv",
             )
 

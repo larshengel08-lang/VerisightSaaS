@@ -1,5 +1,5 @@
-"""
-RetentionPulse — Operator Dashboard
+﻿"""
+Verisight — Operator Dashboard
 ======================================
 Streamlit app voor HR-operators en platformbeheerders.
 
@@ -42,7 +42,7 @@ from backend.scoring import (
 # ---------------------------------------------------------------------------
 
 st.set_page_config(
-    page_title="RetentionPulse Dashboard",
+    page_title="Verisight Dashboard",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -123,7 +123,7 @@ def _survey_url(token: str) -> str:
 # ---------------------------------------------------------------------------
 
 with st.sidebar:
-    st.markdown("## 🔵 RetentionPulse")
+    st.markdown("## 🔵 Verisight")
     st.markdown("**Operator Dashboard**")
     st.divider()
 
@@ -160,7 +160,7 @@ with st.sidebar:
             selected_campaign: Campaign = camp_options[selected_camp_name]
 
     st.divider()
-    st.caption("RetentionPulse v2.0  |  © 2025")
+    st.caption("Verisight v2.0  |  © 2025")
 
 # ---------------------------------------------------------------------------
 # Tabs
@@ -430,7 +430,7 @@ with col_pdf:
         try:
             from backend.report import generate_campaign_report
             pdf_bytes = generate_campaign_report(selected_campaign.id, db)
-            filename  = f"RetentionPulse_{selected_campaign.name.replace(' ', '_')}.pdf"
+            filename  = f"Verisight_{selected_campaign.name.replace(' ', '_')}.pdf"
             st.download_button(
                 label="📄 Klik om op te slaan",
                 data=pdf_bytes,

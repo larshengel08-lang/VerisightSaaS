@@ -1,11 +1,11 @@
-@echo off
-REM RetentionPulse — Streamlit Operator Dashboard
-REM Run from the RetentionPulse project root folder
+﻿@echo off
+REM Verisight — Streamlit Operator Dashboard
+REM Run from the Verisight project root folder
 
 cd /d "%~dp0"
 
 echo.
-echo  RetentionPulse Dashboard starting...
+echo  Verisight Dashboard starting...
 echo  Dashboard: http://localhost:8501
 echo.
 

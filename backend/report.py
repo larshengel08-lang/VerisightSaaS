@@ -1,5 +1,5 @@
-"""
-RetentionPulse — PDF-rapportgenerator
+﻿"""
+Verisight — PDF-rapportgenerator
 ========================================
 Genereert een professioneel 6-pagina rapport per campaign.
 
@@ -410,7 +410,7 @@ def _make_header_footer(org_name: str, camp_name: str, generated: str):
         # Kopnaam links
         canvas.setFont("Helvetica-Bold", 8)
         canvas.setFillColor(BRAND)
-        canvas.drawString(1.5 * cm, PAGE_H - 1.8 * cm, "RetentionPulse")
+        canvas.drawString(1.5 * cm, PAGE_H - 1.8 * cm, "Verisight")
 
         # Campaign rechts
         canvas.setFont("Helvetica", 8)
@@ -531,8 +531,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     doc = BaseDocTemplate(
         buf,
         pagesize=A4,
-        title=f"RetentionPulse — {camp.name}",
-        author="RetentionPulse",
+        title=f"Verisight — {camp.name}",
+        author="Verisight",
         subject=scan_lbl,
     )
 
@@ -547,7 +547,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     # ==================================================================== #
 
     story.append(Spacer(1, 2.5 * cm))
-    story.append(Paragraph("RetentionPulse", STYLES["cover_sub"]))
+    story.append(Paragraph("Verisight", STYLES["cover_sub"]))
     story.append(Spacer(1, 0.4 * cm))
     story.append(Paragraph(camp.name, STYLES["cover_title"]))
     story.append(Spacer(1, 0.6 * cm))

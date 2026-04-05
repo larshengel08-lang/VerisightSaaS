@@ -1,5 +1,5 @@
-"""
-RetentionPulse — Scoring Engine
+﻿"""
+Verisight — Scoring Engine
 ================================
 All HR-methodological logic lives here. No I/O, no DB, no web framework.
 Pure functions: input dict → output dict.

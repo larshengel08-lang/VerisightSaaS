@@ -1,4 +1,4 @@
-# Platform Blueprint — Verloopinzichten Platform
+﻿# Platform Blueprint — Verloopinzichten Platform
 **Versie 1.0 | Datum: April 2025**
 **Status: Werkdocument — fundament voor alle verdere ontwikkeling**
 
@@ -619,6 +619,6 @@ FASE 4 — Intelligentie
 
 ---
 
-*Blueprint v1.0 — RetentionPulse / Verloopinzichten Platform*
+*Blueprint v1.0 — Verisight / Verloopinzichten Platform*
 *Alle schalen gebaseerd op gepubliceerde, peer-reviewed instrumenten.*
 *Zie literatuurverwijzingen per sectie voor bronnen.*

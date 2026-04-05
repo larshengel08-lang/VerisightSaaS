@@ -1,5 +1,5 @@
-"""
-RetentionPulse — FastAPI Backend
+﻿"""
+Verisight — FastAPI Backend
 ===================================
 Entrypoint: uvicorn backend.main:app --reload
 
@@ -87,7 +87,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="RetentionPulse API",
+    title="Verisight API",
     version="2.0.0",
     description="HR verloopanalyse platform — ExitScan & RetentieScan",
     lifespan=lifespan,
@@ -502,7 +502,7 @@ async def download_report_public(
         pdf_bytes = generate_campaign_report(campaign_id, db)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF-generatie mislukt: {e}")
-    filename = f"RetentionPulse_{campaign.name.replace(' ', '_')}.pdf"
+    filename = f"Verisight_{campaign.name.replace(' ', '_')}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -531,7 +531,7 @@ async def download_report(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF-generatie mislukt: {e}")
 
-    filename = f"RetentionPulse_{campaign.name.replace(' ', '_')}.pdf"
+    filename = f"Verisight_{campaign.name.replace(' ', '_')}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",

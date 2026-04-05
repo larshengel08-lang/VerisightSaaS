@@ -1,5 +1,5 @@
-"""
-RetentionPulse — Pydantic Schemas
+﻿"""
+Verisight — Pydantic Schemas
 ===================================
 Request / response models for the FastAPI layer.
 Keeps API contract separate from ORM models.

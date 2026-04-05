@@ -1,9 +1,9 @@
-"""
-RetentionPulse — Database Setup
+﻿"""
+Verisight — Database Setup
 =================================
 SQLAlchemy engine + session factory.
 
-Default: SQLite at data/retentionpulse.db  (file auto-created on first run)
+Default: SQLite at data/Verisight.db  (file auto-created on first run)
 Production: set DATABASE_URL env var to a PostgreSQL/Supabase connection string.
 
 Pool strategy:
@@ -35,7 +35,7 @@ load_dotenv(_ROOT / ".env")
 # Config
 # ---------------------------------------------------------------------------
 
-_DEFAULT_DB_PATH = _ROOT / "data" / "retentionpulse.db"
+_DEFAULT_DB_PATH = _ROOT / "data" / "Verisight.db"
 _DEFAULT_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 DATABASE_URL: str = os.getenv(

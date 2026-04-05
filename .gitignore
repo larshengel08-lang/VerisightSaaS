@@ -1,4 +1,4 @@
-# Python
+﻿# Python
 __pycache__/
 *.py[cod]
 *.pyo
@@ -19,7 +19,7 @@ data/*.db
 
 # Gegenereerde bestanden
 *.pdf
-!RetentionPulse_Demo_Rapport.pdf
+!Verisight_Demo_Rapport.pdf
 
 # OS
 .DS_Store

@@ -1,4 +1,4 @@
-# RetentionPulse — Python dependencies
+﻿# Verisight — Python dependencies
 # Install with: pip install -r requirements.txt
 
 # Web framework
