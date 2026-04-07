@@ -51,18 +51,20 @@ ORG_FACTOR_KEYS = [
     "culture",      # C2  psychological safety / fit
     "growth",       # C3  career / development
     "compensation", # C4  pay / benefits
-    "workload",     # C5  JD-R demands (inverse: high score = high load)
+    "workload",     # C5  JD-R demands (positief geformuleerd: hoge score = lage werkdruk = laag risico)
     "role_clarity", # C6  role ambiguity/conflict
 ]
 
-# Gallup 2023 + JD-R weighting for retention risk score
-# management ×2.5 is the headline Gallup finding
+# Factorgewichten — expert judgment gebaseerd op richting in de literatuur
+# (o.a. Gallup engagement-onderzoek, JD-R model). Leiderschap en SDT komen
+# consistent als sterkste voorspellers naar voren. Gewichten worden empirisch
+# gekalibreerd zodra voldoende eigendata beschikbaar is.
 SCAN_WEIGHTS: dict[str, float] = {
     "leadership":   2.5,
     "culture":      1.5,
     "growth":       1.5,
     "compensation": 1.0,
-    "workload":     1.0,   # raw score is load; inverted before weighting
+    "workload":     1.0,
     "role_clarity": 1.0,
 }
 
@@ -80,6 +82,9 @@ DEFAULT_ROLE_MULTIPLIER = 1.00
 # Risk thresholds
 RISK_HIGH   = 7.0
 RISK_MEDIUM = 4.5
+
+# Scoring model version — bump when weights or formulas change (important for historical comparison)
+SCORING_VERSION = "v1.0"
 
 # ---------------------------------------------------------------------------
 # Text anonymisation (AVG/GDPR)
@@ -201,8 +206,9 @@ def compute_retention_risk(
 
     Model:
       1. Each org factor is converted to a risk contribution.
-         For workload: risk = raw_score (high load = high risk).
-         For all others: risk = 11 - score (low satisfaction = high risk).
+         All factors (including workload): risk = 11 - score (low satisfaction = high risk).
+         Workload questions are positively formulated ("werkdruk was acceptabel"),
+         so high score = low load = low risk — same formula applies.
       2. SDT risk contributes as an additional weighted component (weight = 2.0).
       3. Weighted sum is normalised to 0-10.
 
@@ -218,12 +224,12 @@ def compute_retention_risk(
     weights = dict(SCAN_WEIGHTS)  # copy
 
     # Org factor risk contributions
+    # Alle factoren: hoge tevredenheidsscore = laag risico → risk = 11 - score
+    # Werkbelasting: vragen zijn positief geformuleerd ("werkdruk was acceptabel"),
+    # dus hoge score = lage werkdruk = laag risico. Zelfde formule als andere factoren.
     for factor in ORG_FACTOR_KEYS:
         score = org_scores.get(factor, 5.5)
-        if factor == "workload":
-            risk = score  # already high = bad
-        else:
-            risk = round(11.0 - score, 2)
+        risk = round(11.0 - score, 2)
         factor_risks[factor] = round(risk, 2)
         weighted[factor] = round(risk * weights[factor], 2)
 
@@ -621,7 +627,7 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
     # Identify top risks (factors with risk > threshold)
     top_risks = sorted(
         [
-            (f, round(11.0 - factor_averages[f], 2) if f != "workload" else factor_averages[f])
+            (f, round(11.0 - factor_averages[f], 2))
             for f in ORG_FACTOR_KEYS
             if f in factor_averages
         ],

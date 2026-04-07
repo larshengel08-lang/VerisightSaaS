@@ -1,6 +1,9 @@
 ﻿# Platform Blueprint — Verloopinzichten Platform
 **Versie 1.0 | Datum: April 2025**
-**Status: Werkdocument — fundament voor alle verdere ontwikkeling**
+**Status: Toekomstvisie — beschrijft de volledige productrichting**
+
+> **v1-implementatie:** Zie `ARCHITECTURE.md` voor wat er nu staat en `ROADMAP.md` voor de fasering.
+> Dit document beschrijft het einddoel. Niet alles hierin is gebouwd of gepland voor de komende fase.
 
 ---
 

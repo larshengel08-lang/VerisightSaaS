@@ -31,7 +31,7 @@ export default function LandingPage() {
       <section className="bg-slate-900 text-white">
         <div className="max-w-6xl mx-auto px-6 py-24 md:py-32 text-center">
           <div className="inline-flex items-center gap-2 bg-blue-600/20 border border-blue-500/30 text-blue-300 text-xs font-semibold px-3 py-1.5 rounded-full mb-6">
-            <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+            <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
             ExitScan — voor organisaties die grip willen krijgen op vertrekredenen
           </div>
           <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">
@@ -71,42 +71,70 @@ export default function LandingPage() {
                 app.verisight.nl/dashboard
               </div>
             </div>
-            {/* Mock dashboard — inzichten voor HR en management */}
-            <div className="p-6 bg-gray-50">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-5 w-48 bg-gray-800 rounded font-bold text-gray-900 text-sm flex items-center px-2">
-                  Inzichten voor HR en management
+            {/* Mock dashboard — single campaign, realistic first-use view */}
+            <div className="bg-white">
+              {/* Campaign header */}
+              <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-100">
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-600">ExitScan</span>
+                    <span className="text-xs text-green-600 font-medium">● Actief</span>
+                  </div>
+                  <p className="text-sm font-bold text-gray-900">Uitstroom 2026 — Uw organisatie</p>
                 </div>
-                <span className="text-xs text-gray-400 bg-green-100 text-green-700 font-semibold px-2 py-1 rounded-full">● Actief</span>
+                <span className="text-xs text-gray-400 italic">Illustratief voorbeeld</span>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+
+              {/* KPI row */}
+              <div className="grid grid-cols-4 gap-0 border-b border-gray-100">
                 {[
-                  { name: 'ExitScan Q1 2026', dept: 'Operaties', invited: 18, completed: 14, theme: 'Leiderschap', band: 'HOOG' },
-                  { name: 'ExitScan Q4 2025', dept: 'Sales', invited: 12, completed: 9, theme: 'Ontwikkeling', band: 'MIDDEN' },
-                  { name: 'ExitScan Q3 2025', dept: 'Finance', invited: 8, completed: 8, theme: 'Werkbelasting', band: 'LAAG' },
-                ].map((c, i) => (
-                  <div key={i} className="bg-white rounded-xl border border-gray-200 p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-600">
-                          ExitScan
-                        </span>
-                        <div className="text-xs font-semibold text-gray-800 mt-1">{c.name}</div>
-                        <div className="text-xs text-gray-400">{c.dept}</div>
-                      </div>
-                      <span className={`text-xs font-semibold px-1.5 py-0.5 rounded mt-1 ${c.band === 'HOOG' ? 'bg-red-100 text-red-700' : c.band === 'MIDDEN' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
-                        {c.band}
-                      </span>
+                  { label: 'Responses',    value: '14/18',  sub: '78% respons' },
+                  { label: 'Gem. risico',  value: '7.2/10', sub: 'HOOG', highlight: 'red' },
+                  { label: 'Vermijdbaar',  value: '68%',    sub: 'van vertrek', highlight: 'amber' },
+                  { label: 'Gem. diensttijd', value: '2.4j', sub: 'bij vertrek' },
+                ].map((k, i) => (
+                  <div key={i} className={`px-4 py-3 text-center ${i < 3 ? 'border-r border-gray-100' : ''}`}>
+                    <div className={`text-base font-bold ${k.highlight === 'red' ? 'text-red-600' : k.highlight === 'amber' ? 'text-amber-600' : 'text-gray-900'}`}>
+                      {k.value}
                     </div>
-                    <div className="grid grid-cols-2 gap-1 mb-2">
-                      <div className="text-center"><div className="text-sm font-bold text-gray-900">{c.completed}/{c.invited}</div><div className="text-xs text-gray-400">Responses</div></div>
-                      <div className="text-center"><div className="text-sm font-bold text-gray-900">{c.theme}</div><div className="text-xs text-gray-400">Hoofdthema</div></div>
-                    </div>
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.round(c.completed/c.invited*100)}%` }} />
-                    </div>
+                    <div className="text-xs text-gray-400 mt-0.5">{k.label}</div>
                   </div>
                 ))}
+              </div>
+
+              {/* Theme risk bars */}
+              <div className="px-5 py-4">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Risico per thema</p>
+                <div className="space-y-2.5">
+                  {[
+                    { label: 'Leiderschap',       risk: 8.1, band: 'HOOG',   pct: 81 },
+                    { label: 'Groei & Ontwikkeling', risk: 6.4, band: 'MIDDEN', pct: 64 },
+                    { label: 'Cultuur',            risk: 5.9, band: 'MIDDEN', pct: 59 },
+                    { label: 'Werkbelasting',      risk: 3.1, band: 'LAAG',   pct: 31 },
+                  ].map((t) => (
+                    <div key={t.label} className="flex items-center gap-3">
+                      <span className="text-xs text-gray-600 w-36 shrink-0">{t.label}</span>
+                      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${t.band === 'HOOG' ? 'bg-red-400' : t.band === 'MIDDEN' ? 'bg-amber-400' : 'bg-green-400'}`}
+                          style={{ width: `${t.pct}%` }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-gray-700 w-8 text-right">{t.risk}</span>
+                      <span className={`text-xs font-semibold w-14 text-right ${t.band === 'HOOG' ? 'text-red-600' : t.band === 'MIDDEN' ? 'text-amber-600' : 'text-green-600'}`}>
+                        {t.band}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Key insight callout */}
+              <div className="mx-5 mb-5 bg-amber-50 border border-amber-100 rounded-lg px-4 py-2.5 flex items-center gap-2">
+                <span className="text-amber-500 text-sm">⚠</span>
+                <p className="text-xs text-amber-800 font-medium">
+                  68% van het vertrek was mogelijk te voorkomen — leiderschap is het prioritaire aandachtspunt.
+                </p>
               </div>
             </div>
           </div>
@@ -143,7 +171,7 @@ export default function LandingPage() {
             {
               icon: '💸',
               title: 'Verloop kost meer dan je denkt',
-              desc: 'Gemiddeld €15.000–€45.000 per vertrekkende medewerker aan werving, onboarding en productiviteitsverlies.',
+              desc: 'Gemiddeld €15.000–€45.000 per vertrekkende medewerker aan werving, onboarding en productiviteitsverlies (SHRM / Josh Bersin Institute).',
             },
             {
               icon: '📉',
@@ -272,11 +300,12 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Tarieven op maat
+              Eén trajectprijs — alles inbegrepen
             </h2>
             <p className="text-gray-500 max-w-xl mx-auto">
-              Elke organisatie is anders. Wij stellen een passend aanbod samen
-              op basis van jouw situatie, aantal medewerkers en scope.
+              Geen abonnement, geen verborgen kosten. Je betaalt eenmalig per ExitScan-traject.
+              De prijs is afhankelijk van de omvang van je organisatie en het aantal medewerkers.
+              Vraag een offerte aan — gemiddeld antwoord binnen één werkdag.
             </p>
           </div>
 

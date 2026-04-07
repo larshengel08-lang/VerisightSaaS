@@ -70,6 +70,7 @@ from backend.scoring import (
     detect_patterns,
     get_recommendations,
     ORG_FACTOR_KEYS,
+    SCORING_VERSION,
 )
 
 # ---------------------------------------------------------------------------
@@ -234,9 +235,17 @@ async def submit_survey(
         raise HTTPException(status_code=409, detail="Survey al ingevuld.")
 
     # --- Scoring ---
-    sdt_scores = compute_sdt_scores(payload.sdt_raw)
-    org_scores  = compute_org_scores(payload.org_raw)
-    risk_result = compute_retention_risk(sdt_scores, org_scores)
+    try:
+        sdt_scores = compute_sdt_scores(payload.sdt_raw)
+        org_scores  = compute_org_scores(payload.org_raw)
+        risk_result = compute_retention_risk(sdt_scores, org_scores)
+    except Exception as exc:
+        sentry_sdk.capture_exception(exc, extras={
+            "token": payload.token,
+            "campaign_id": str(respondent.campaign_id),
+            "flow": "survey_scoring",
+        })
+        raise HTTPException(status_code=500, detail="Scoringsberekening mislukt. De survey is niet opgeslagen.")
 
     # Preventability (exit only)
     preventability_result: dict[str, Any] = {}
@@ -316,12 +325,28 @@ async def submit_survey(
         preventability        = preventability_result.get("preventability"),
         replacement_cost_eur  = replacement_cost_eur,
         full_result           = full_result,
+        scoring_version       = SCORING_VERSION,
     )
+
+    # AVG data minimalisatie: jaarlijks salaris is niet langer nodig na scoring.
+    # De replacement_cost_eur is berekend en opgeslagen; het bronsalaris wordt verwijderd.
+    if respondent.annual_salary_eur is not None:
+        respondent.annual_salary_eur = None
+
     db.add(response_row)
 
     respondent.completed    = True
     respondent.completed_at = datetime.now(timezone.utc)
-    db.commit()
+    try:
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        sentry_sdk.capture_exception(exc, extras={
+            "token": payload.token,
+            "campaign_id": str(respondent.campaign_id),
+            "flow": "survey_persist",
+        })
+        raise HTTPException(status_code=500, detail="Opslaan van survey-antwoorden mislukt. Probeer opnieuw.")
 
     # Stuur notificatie naar HR-beheerder van de organisatie
     try:
@@ -337,9 +362,15 @@ async def submit_survey(
             total_invited   = total_invited,
         )
     except Exception as exc:
-        # Notificatie-fout mag nooit de survey-response blokkeren
+        # Notificatie-fout mag nooit de survey-response blokkeren,
+        # maar moet wel zichtbaar zijn in Sentry.
         import logging
         logging.getLogger(__name__).warning("HR-notificatie mislukt: %s", exc)
+        sentry_sdk.capture_message(
+            f"HR-notificatie mislukt na survey-submit: {exc}",
+            level="warning",
+            extras={"campaign_id": str(respondent.campaign_id)},
+        )
 
     return {"status": "ok", "message": "Bedankt voor het invullen van de survey."}
 
@@ -533,11 +564,37 @@ async def send_invites(
             sent += 1
         else:
             failed += 1
+            sentry_sdk.capture_message(
+                "Survey-uitnodiging kon niet worden verzonden",
+                level="warning",
+                extras={
+                    "campaign_id": campaign_id,
+                    "token": item.token,
+                    "flow": "send_invites",
+                },
+            )
 
     if sent > 0:
         db.commit()
 
+    if failed > 0 and sent == 0:
+        # Alle mails mislukt — escaleer naar error
+        sentry_sdk.capture_message(
+            f"Alle {failed} uitnodigingen mislukt voor campaign {campaign_id}",
+            level="error",
+            extras={"campaign_id": campaign_id, "flow": "send_invites_total_failure"},
+        )
+
     return InviteSendResult(sent=sent, failed=failed, skipped=skipped)
+
+
+# ---------------------------------------------------------------------------
+# Campaign lifecycle management
+# ---------------------------------------------------------------------------
+# Sluit-actie en herinnerings-actie zijn verplaatst naar Next.js server actions.
+# Sluiten gaat direct via Supabase (RLS bewaakt schrijftoegang).
+# Heruitzenden gaat via /api/campaigns/{id}/send-invites na auth-check in server action.
+# ---------------------------------------------------------------------------
 
 
 # ---------------------------------------------------------------------------
@@ -621,6 +678,10 @@ async def download_report_public(
         from backend.report import generate_campaign_report
         pdf_bytes = generate_campaign_report(campaign_id, db)
     except Exception as e:
+        sentry_sdk.capture_exception(e, extras={
+            "campaign_id": campaign_id,
+            "flow": "report_generation_public",
+        })
         raise HTTPException(status_code=500, detail=f"PDF-generatie mislukt: {e}")
     filename = f"Verisight_{campaign.name.replace(' ', '_')}.pdf"
     return Response(

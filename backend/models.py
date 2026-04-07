@@ -191,6 +191,9 @@ class SurveyResponse(Base):
 
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
+    # Scoring model version — allows comparison when weights/formulas change
+    scoring_version: Mapped[str] = mapped_column(String(10), nullable=False, default="v1.0")
+
     respondent: Mapped["Respondent"] = relationship(back_populates="response")
 
     def __repr__(self) -> str:

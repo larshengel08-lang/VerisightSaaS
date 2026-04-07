@@ -5,16 +5,26 @@ interface Props {
   respondents: Respondent[]
   responses: (SurveyResponse & { respondents: Respondent })[]
   scanType: string
+  /** Wanneer false (n < 5) worden individuele risicoscores verborgen — AVG herleidbaarheidsdrempel */
+  hasMinDisplay: boolean
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
-export function RespondentTable({ respondents, responses, scanType }: Props) {
+export function RespondentTable({ respondents, responses, scanType, hasMinDisplay }: Props) {
   const responseMap = new Map(responses.map(r => [r.respondent_id, r]))
   const pending = respondents.filter(r => !r.completed)
 
   return (
     <div className="space-y-4">
+      {/* Waarschuwing als scores verborgen zijn */}
+      {!hasMinDisplay && responses.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+          Individuele scores worden pas getoond vanaf 5 ingevulde responses (nu: {responses.length}).
+          Dit beschermt de anonimiteit van respondenten.
+        </div>
+      )}
+
       {/* Tabel */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -24,8 +34,10 @@ export function RespondentTable({ respondents, responses, scanType }: Props) {
               <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Afdeling</th>
               <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Niveau</th>
               <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Status</th>
-              <th className="text-right py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Risico</th>
-              {scanType === 'exit' && (
+              {hasMinDisplay && (
+                <th className="text-right py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Risico</th>
+              )}
+              {hasMinDisplay && scanType === 'exit' && (
                 <th className="text-right py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Vermijdbaar</th>
               )}
             </tr>
@@ -47,17 +59,19 @@ export function RespondentTable({ respondents, responses, scanType }: Props) {
                       <span className="text-xs text-gray-400">⏳ Open</span>
                     )}
                   </td>
-                  <td className="py-2 px-3 text-right">
-                    {resp?.risk_score ? (
-                      <div className="flex items-center justify-end gap-1.5">
-                        <span className="font-semibold text-gray-800">
-                          {resp.risk_score.toFixed(1)}
-                        </span>
-                        <RiskBadge band={resp.risk_band ?? undefined} />
-                      </div>
-                    ) : '–'}
-                  </td>
-                  {scanType === 'exit' && (
+                  {hasMinDisplay && (
+                    <td className="py-2 px-3 text-right">
+                      {resp?.risk_score ? (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <span className="font-semibold text-gray-800">
+                            {resp.risk_score.toFixed(1)}
+                          </span>
+                          <RiskBadge band={resp.risk_band ?? undefined} />
+                        </div>
+                      ) : '–'}
+                    </td>
+                  )}
+                  {hasMinDisplay && scanType === 'exit' && (
                     <td className="py-2 px-3 text-right text-xs text-gray-500">
                       {resp?.preventability?.replace('_', ' ') ?? '–'}
                     </td>

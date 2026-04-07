@@ -5,6 +5,7 @@ import { RiskCharts } from '@/components/dashboard/risk-charts'
 import { FactorTable } from '@/components/dashboard/factor-table'
 import { RecommendationList } from '@/components/dashboard/recommendation-list'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
+import { CampaignActions } from './campaign-actions'
 import type { CampaignStats, SurveyResponse, Respondent } from '@/lib/types'
 import { FACTOR_LABELS } from '@/lib/types'
 
@@ -69,6 +70,14 @@ export default async function CampaignPage({ params }: Props) {
   const hasEnoughData  = responses.length >= MIN_N_PATTERNS
   const hasMinDisplay  = responses.length >= MIN_N_DISPLAY
 
+  // Health indicator berekeningen
+  const invitesNotSent   = respondents.filter(r => !r.sent_at && !r.completed).length
+  const completionRate   = stats.total_invited > 0
+    ? (stats.total_completed / stats.total_invited) * 100 : 0
+  const incompleteScores = responses.filter(r => !r.org_scores || !r.sdt_scores).length
+  // Respondenten die de survey nog niet hebben ingevuld (ongeacht uitnodigingsstatus)
+  const pendingCount = stats.total_invited - stats.total_completed
+
   return (
     <div>
       {/* Breadcrumb + header */}
@@ -88,7 +97,14 @@ export default async function CampaignPage({ params }: Props) {
             </div>
             <h1 className="text-2xl font-bold text-gray-900">{stats.campaign_name}</h1>
           </div>
-          <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
+          <div className="flex flex-col items-end gap-2">
+            <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
+            <CampaignActions
+              campaignId={id}
+              isActive={stats.is_active}
+              pendingCount={pendingCount}
+            />
+          </div>
         </div>
       </div>
 
@@ -107,6 +123,29 @@ export default async function CampaignPage({ params }: Props) {
           value={hasEnoughData ? `${computeAvoidableRate(responses)}%` : '–'}
         />
       </div>
+
+      {/* Campaign health indicator */}
+      <CampaignHealthIndicator
+        totalInvited={stats.total_invited}
+        totalCompleted={stats.total_completed}
+        completionRate={completionRate}
+        invitesNotSent={invitesNotSent}
+        incompleteScores={incompleteScores}
+        isActive={stats.is_active}
+        hasEnoughData={hasEnoughData}
+        hasMinDisplay={hasMinDisplay}
+      />
+
+      {/* Pre-flight checklist (alleen zichtbaar als campaign nog actief is) */}
+      {stats.is_active && (
+        <PreflightChecklist
+          totalInvited={stats.total_invited}
+          totalCompleted={stats.total_completed}
+          invitesNotSent={invitesNotSent}
+          incompleteScores={incompleteScores}
+          hasMinDisplay={hasMinDisplay}
+        />
+      )}
 
       {/* Anonimiteits- en betrouwbaarheidswaarschuwing */}
       {!hasMinDisplay && responses.length > 0 && (
@@ -210,6 +249,7 @@ export default async function CampaignPage({ params }: Props) {
             respondents={respondents}
             responses={responses}
             scanType={stats.scan_type}
+            hasMinDisplay={hasMinDisplay}
           />
         )}
       </div>
@@ -321,4 +361,195 @@ function computeAvoidableRate(responses: SurveyResponse[]) {
   const avoidable = responses.filter(r => r.preventability === 'REDBAAR').length
   if (!total) return 0
   return Math.round((avoidable / total) * 100)
+}
+
+// ── Campaign Health Indicator ────────────────────────────────────────────────
+
+function CampaignHealthIndicator({
+  totalInvited,
+  totalCompleted,
+  completionRate,
+  invitesNotSent,
+  incompleteScores,
+  isActive,
+  hasEnoughData,
+  hasMinDisplay,
+}: {
+  totalInvited: number
+  totalCompleted: number
+  completionRate: number
+  invitesNotSent: number
+  incompleteScores: number
+  isActive: boolean
+  hasEnoughData: boolean
+  hasMinDisplay: boolean
+}) {
+  const checks: { label: string; ok: boolean; warn?: boolean; detail?: string }[] = [
+    {
+      label: 'Uitnodigingen verstuurd',
+      ok: invitesNotSent === 0,
+      warn: invitesNotSent > 0,
+      detail: invitesNotSent > 0 ? `${invitesNotSent} respondent(en) hebben nog geen uitnodiging ontvangen` : undefined,
+    },
+    {
+      label: 'Minimum responses bereikt',
+      ok: hasMinDisplay,
+      warn: !hasMinDisplay && totalCompleted > 0,
+      detail: !hasMinDisplay ? `${totalCompleted} van min. 5 vereist voor weergave` : undefined,
+    },
+    {
+      label: 'Voldoende data voor analyse',
+      ok: hasEnoughData,
+      warn: hasMinDisplay && !hasEnoughData,
+      detail: !hasEnoughData ? `${totalCompleted} van min. 10 vereist voor patroonanalyse` : undefined,
+    },
+    {
+      label: 'Alle scores volledig',
+      ok: incompleteScores === 0,
+      warn: incompleteScores > 0,
+      detail: incompleteScores > 0 ? `${incompleteScores} response(s) met ontbrekende scores` : undefined,
+    },
+  ]
+
+  const errors  = checks.filter(c => !c.ok && !c.warn)
+  const warnings = checks.filter(c => c.warn)
+  const allOk   = errors.length === 0 && warnings.length === 0
+
+  if (totalInvited === 0) return null
+
+  return (
+    <div className={`rounded-xl border px-4 py-3 mb-4 ${
+      allOk ? 'bg-green-50 border-green-200' :
+      errors.length > 0 ? 'bg-red-50 border-red-200' :
+      'bg-amber-50 border-amber-200'
+    }`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className={`text-xs font-semibold ${
+          allOk ? 'text-green-700' : errors.length > 0 ? 'text-red-700' : 'text-amber-700'
+        }`}>
+          Campaign status
+        </span>
+        <span className={`text-xs font-bold ${
+          allOk ? 'text-green-600' : errors.length > 0 ? 'text-red-600' : 'text-amber-600'
+        }`}>
+          {allOk ? '✓ Alles in orde' : errors.length > 0 ? '✗ Actie vereist' : `⚠ ${warnings.length} aandachtspunt${warnings.length > 1 ? 'en' : ''}`}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1">
+        {checks.map(check => (
+          <span key={check.label} className="flex items-center gap-1 text-xs" title={check.detail}>
+            <span className={check.ok ? 'text-green-600' : check.warn ? 'text-amber-600' : 'text-red-600'}>
+              {check.ok ? '✓' : check.warn ? '⚠' : '✗'}
+            </span>
+            <span className={`${
+              check.ok ? 'text-green-700' : check.warn ? 'text-amber-700' : 'text-red-700'
+            }`}>
+              {check.label}
+              {check.detail && <span className="text-gray-500"> — {check.detail}</span>}
+            </span>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Pre-flight Checklist ─────────────────────────────────────────────────────
+
+function PreflightChecklist({
+  totalInvited,
+  totalCompleted,
+  invitesNotSent,
+  incompleteScores,
+  hasMinDisplay,
+}: {
+  totalInvited: number
+  totalCompleted: number
+  invitesNotSent: number
+  incompleteScores: number
+  hasMinDisplay: boolean
+}) {
+  if (totalInvited === 0) return null
+
+  const items: { label: string; auto: boolean; checked: boolean; note?: string }[] = [
+    {
+      label: 'Testsurvey doorlopen als respondent (eigen mailadres)',
+      auto: false,
+      checked: false,
+    },
+    {
+      label: 'Alle uitnodigingen verstuurd',
+      auto: true,
+      checked: invitesNotSent === 0,
+      note: invitesNotSent > 0 ? `${invitesNotSent} nog niet verstuurd` : undefined,
+    },
+    {
+      label: 'Bedankpagina gecontroleerd na test-invul',
+      auto: false,
+      checked: false,
+    },
+    {
+      label: 'Testrapport gegenereerd en score gecontroleerd',
+      auto: false,
+      checked: hasMinDisplay,
+      note: !hasMinDisplay ? 'Wacht op min. 5 responses' : undefined,
+    },
+    {
+      label: 'Mailtemplate gecontroleerd (naam, organisatie, link)',
+      auto: false,
+      checked: false,
+    },
+    {
+      label: 'Geen incomplete scores in responses',
+      auto: true,
+      checked: incompleteScores === 0,
+      note: incompleteScores > 0 ? `${incompleteScores} response(s) met ontbrekende scores` : undefined,
+    },
+    {
+      label: 'Sentry actief en getest op deze omgeving',
+      auto: false,
+      checked: false,
+    },
+  ]
+
+  return (
+    <details className="bg-white border border-gray-200 rounded-xl mb-4 group">
+      <summary className="flex items-center justify-between px-4 py-3 cursor-pointer text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl">
+        <span>🛫 Pre-flight checklist</span>
+        <span className="text-xs font-normal text-gray-400 group-open:hidden">
+          {items.filter(i => i.auto && i.checked).length}/{items.length} automatisch OK
+        </span>
+      </summary>
+      <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+        <p className="text-xs text-gray-500 mb-3">
+          Doorloop deze lijst vóórdat je de campaign live deelt met een klant.
+          Automatische checks (<span className="font-mono bg-gray-100 px-1 rounded">auto</span>) worden real-time bijgewerkt.
+          Handmatige checks vink je zelf af.
+        </p>
+        <ul className="space-y-2">
+          {items.map((item, i) => (
+            <li key={i} className="flex items-start gap-2.5 text-sm">
+              <span className={`mt-0.5 flex-shrink-0 w-4 h-4 rounded border text-xs flex items-center justify-center font-bold
+                ${item.auto && item.checked ? 'bg-green-100 border-green-400 text-green-600' :
+                  item.auto && !item.checked ? 'bg-amber-100 border-amber-400 text-amber-600' :
+                  'border-gray-300 bg-gray-50 text-gray-400'}`}>
+                {item.auto ? (item.checked ? '✓' : '!') : '○'}
+              </span>
+              <span className="flex-1">
+                <span className={item.auto && item.checked ? 'text-gray-400 line-through' : 'text-gray-700'}>
+                  {item.label}
+                </span>
+                {item.note && (
+                  <span className="ml-1.5 text-xs text-amber-600">({item.note})</span>
+                )}
+                {item.auto && (
+                  <span className="ml-1.5 text-xs font-mono bg-gray-100 text-gray-400 px-1 rounded">auto</span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </details>
+  )
 }

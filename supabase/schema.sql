@@ -89,6 +89,17 @@ do $$ begin
   end if;
 end $$;
 
+-- Voeg scoring_version toe aan bestaande survey_responses indien nog niet aanwezig
+do $$ begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'survey_responses' and column_name = 'scoring_version'
+  ) then
+    alter table public.survey_responses
+      add column scoring_version text not null default 'v1.0';
+  end if;
+end $$;
+
 create table if not exists public.survey_responses (
   id                        uuid primary key default gen_random_uuid(),
   respondent_id             uuid unique references public.respondents(id) on delete cascade not null,
@@ -112,7 +123,9 @@ create table if not exists public.survey_responses (
   preventability            text,
   replacement_cost_eur      numeric,
   full_result               jsonb default '{}',
-  submitted_at              timestamptz default now()
+  submitted_at              timestamptz default now(),
+  -- Versie van het scoringsmodel (bump bij gewichtswijzigingen voor historische vergelijking)
+  scoring_version           text not null default 'v1.0'
 );
 
 -- ============================================================
@@ -296,7 +309,12 @@ create trigger on_org_created
 -- VIEW: campaign_stats
 -- ============================================================
 
-create or replace view public.campaign_stats as
+-- security_invoker = true: view runs with caller's permissions so RLS on
+-- campaigns / respondents / survey_responses is applied. Without this option
+-- Supabase would run the view as the view-creator (security definer), bypassing
+-- RLS and leaking campaign data across tenants.
+-- Requires PostgreSQL 15 — Supabase EU Frankfurt ✓
+create or replace view public.campaign_stats with (security_invoker = true) as
 select
   c.id                                                as campaign_id,
   c.name                                              as campaign_name,
