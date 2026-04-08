@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { NewOrgForm } from '@/components/dashboard/new-org-form'
 import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
-import { AddRespondentsForm } from '@/components/dashboard/add-respondents-form'
 import type { Organization, Campaign } from '@/lib/types'
 
 export default async function BeheerPage() {
@@ -84,61 +83,52 @@ export default async function BeheerPage() {
           )}
         </section>
 
-        {/* Stap 3: Respondenten */}
+        {/* Stap 3: Respondenten uitnodigen — per campaign */}
         <section className="bg-white rounded-xl border border-gray-200 p-6 lg:col-span-2">
           <SectionHeader n={3} title="Respondenten uitnodigen" done={false} />
           {campaigns.length === 0 ? (
             <LockedStep message="Maak eerst een campaign aan (stap 2)." />
           ) : (
-            <AddRespondentsForm campaigns={campaigns} />
+            <div className="space-y-2">
+              <p className="text-xs text-gray-500 mb-3">
+                Ga naar een actieve campaign om respondenten toe te voegen en uitnodigingen te versturen.
+              </p>
+              {campaigns.filter(c => c.is_active).length === 0 && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                  Geen actieve campaigns. Maak een nieuwe campaign aan via stap 2.
+                </p>
+              )}
+              {campaigns.map(c => (
+                <div key={c.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                        {c.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'}
+                      </span>
+                      <span className={`text-xs font-medium ${c.is_active ? 'text-green-600' : 'text-gray-400'}`}>
+                        {c.is_active ? '● Actief' : '○ Gesloten'}
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium text-gray-800 truncate">{c.name}</p>
+                    <p className="text-xs text-gray-400">
+                      Aangemaakt {new Date(c.created_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                  </div>
+                  <a
+                    href={`/campaigns/${c.id}`}
+                    className={`ml-4 flex-shrink-0 text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                      c.is_active
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-gray-100 text-gray-400 cursor-default pointer-events-none'
+                    }`}
+                  >
+                    {c.is_active ? 'Beheer →' : 'Gesloten'}
+                  </a>
+                </div>
+              ))}
+            </div>
           )}
         </section>
-
-        {/* Bestaande campaigns */}
-        {campaigns.length > 0 && (
-          <section className="bg-white rounded-xl border border-gray-200 p-6 lg:col-span-2">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Jouw campaigns</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Naam</th>
-                    <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Type</th>
-                    <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Status</th>
-                    <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Aangemaakt</th>
-                    <th className="text-right py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {campaigns.map(c => (
-                    <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="py-2 px-3 font-medium text-gray-800">{c.name}</td>
-                      <td className="py-2 px-3 text-gray-500">
-                        {c.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'}
-                      </td>
-                      <td className="py-2 px-3">
-                        <span className={`text-xs font-medium ${c.is_active ? 'text-green-600' : 'text-gray-400'}`}>
-                          {c.is_active ? '● Actief' : '○ Gesloten'}
-                        </span>
-                      </td>
-                      <td className="py-2 px-3 text-gray-400 text-xs">
-                        {new Date(c.created_at).toLocaleDateString('nl-NL')}
-                      </td>
-                      <td className="py-2 px-3 text-right">
-                        <a
-                          href={`/campaigns/${c.id}`}
-                          className="text-xs text-blue-600 hover:underline"
-                        >
-                          Bekijken →
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
       </div>
     </div>
   )
