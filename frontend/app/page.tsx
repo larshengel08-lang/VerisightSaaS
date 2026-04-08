@@ -350,15 +350,6 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* Prijsonderbouwing */}
-          <div className="bg-white border border-gray-200 rounded-2xl px-6 py-4 mb-6 text-sm text-gray-600 leading-relaxed">
-            <strong className="text-gray-800">Hoe is de prijs opgebouwd?</strong>{' '}
-            De trajectprijs dekt de volledige opzet, uitnodigingen, rapportgeneratie en kwaliteitscheck —
-            gemiddeld 4–6 uur per traject. De prijs ligt bewust onder de vervangingskosten van één medewerker
-            (gemiddeld €15.000–€25.000): als de ExitScan één preventabel vertrek zichtbaar maakt, verdient
-            het traject zichzelf terug.
-          </div>
-
           {/* Wat zit erin */}
           <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6">
             <h3 className="text-base font-semibold text-gray-900 mb-6">Altijd inbegrepen</h3>
