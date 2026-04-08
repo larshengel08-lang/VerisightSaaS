@@ -77,6 +77,14 @@
       font-size: 12px;
       color: #9CA3AF;
     }
+    .close-hint {
+      margin-top: 24px;
+      font-size: 13px;
+      color: #9CA3AF;
+    }
+    .close-hint strong {
+      color: #6B7280;
+    }
     @media (max-width: 480px) {
       .card { padding: 40px 24px; }
     }
@@ -90,23 +98,25 @@
     <div class="icon-wrap already">ℹ️</div>
     <h1>Al ingevuld</h1>
     <p>
-      Je hebt deze survey al eerder ingevuld. Je antwoorden zijn opgeslagen.
+      Je hebt deze survey al eerder ingevuld — je antwoorden zijn al meegenomen in de analyse.
       <br /><br />
-      Heb je vragen? Neem contact op met de HR-afdeling.
+      Heb je vragen over de survey of de verwerking van je gegevens?
+      Neem contact op met de HR-afdeling van je organisatie.
     </p>
     {% else %}
     <div class="icon-wrap success">✅</div>
     <h1>Bedankt voor je deelname!</h1>
     <p>
       Je antwoorden zijn vertrouwelijk opgeslagen en worden meegenomen in de organisatieanalyse.
-      <br /><br />
-      Jouw input helpt de organisatie een betere werkgever te zijn. Dit venster kan je sluiten.
+      Jouw input helpt de organisatie een betere werkgever te zijn.
     </p>
+    <p class="close-hint">Je kunt dit venster nu sluiten.</p>
     {% endif %}
 
     <div class="divider"></div>
     <p class="footer-note">
-      🔒 Alle antwoorden worden vertrouwelijk verwerkt. Resultaten worden uitsluitend gedeeld op gegroepeerd niveau, conform de AVG-privacywetgeving.<br />
+      🔒 Alle antwoorden worden vertrouwelijk verwerkt. Resultaten worden uitsluitend gedeeld op
+      gegroepeerd niveau, conform de AVG-privacywetgeving.<br />
       Aangeboden door <strong>Verisight</strong> — HR-verloopanalyse.
     </p>
   </div>

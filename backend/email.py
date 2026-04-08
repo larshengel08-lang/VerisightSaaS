@@ -156,9 +156,14 @@ def send_survey_invite(
         <!-- Footer -->
         <tr>
           <td style="background:#F9FAFB;padding:20px 36px;border-top:1px solid #F3F4F6;">
-            <p style="font-size:11px;color:#9CA3AF;margin:0;">
+            <p style="font-size:11px;color:#9CA3AF;margin:0 0 6px;">
               Aangeboden door <strong>Verisight</strong> · HR-verloopanalyse ·
               Gehost in Europa · AVG-conform verwerking
+            </p>
+            <p style="font-size:11px;color:#D1D5DB;margin:0;">
+              Wil je geen uitnodigingen meer ontvangen? Neem contact op met de HR-afdeling
+              van je organisatie of stuur een e-mail naar
+              <a href="mailto:privacy@verisight.nl" style="color:#D1D5DB;">privacy@verisight.nl</a>.
             </p>
           </td>
         </tr>
