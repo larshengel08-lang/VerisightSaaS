@@ -99,10 +99,10 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-4">
-          Nog geen account?{' '}
-          <Link href="/signup" className="text-blue-600 hover:underline">
-            Gratis registreren
-          </Link>
+          Nog geen toegang?{' '}
+          <a href="mailto:hallo@verisight.nl" className="text-blue-600 hover:underline">
+            Neem contact op
+          </a>
         </p>
         <p className="text-center text-xs text-gray-400 mt-3">
           Verisight v2.0 · Vertrouwelijk platform

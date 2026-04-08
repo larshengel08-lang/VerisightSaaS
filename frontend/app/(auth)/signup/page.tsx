@@ -75,7 +75,7 @@ export default function SignupPage() {
           <Link href="/" className="text-2xl font-bold text-blue-600 tracking-tight">
             Verisight
           </Link>
-          <p className="mt-2 text-sm text-gray-500">14 dagen gratis · Geen creditcard</p>
+          <p className="mt-2 text-sm text-gray-500">Toegang op uitnodiging</p>
         </div>
 
         {/* Card */}
