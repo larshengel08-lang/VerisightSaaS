@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import { RiskBadge } from '@/components/ui/risk-badge'
 import type { Respondent, SurveyResponse } from '@/lib/types'
 
@@ -11,9 +14,31 @@ interface Props {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
+/** Leesbare labels voor preventability-codes uit de database */
+const PREVENTABILITY_LABELS: Record<string, string> = {
+  REDBAAR:          'Redbaar',
+  MOGELIJK_REDBAAR: 'Mogelijk redbaar',
+  NIET_REDBAAR:     'Niet redbaar',
+}
+
 export function RespondentTable({ respondents, responses, scanType, hasMinDisplay }: Props) {
+  const [copied, setCopied] = useState(false)
   const responseMap = new Map(responses.map(r => [r.respondent_id, r]))
   const pending = respondents.filter(r => !r.completed)
+
+  const pendingLinks = pending.map(r => `${API_BASE}/survey/${r.token}`).join('\n')
+
+  async function copyLinks() {
+    try {
+      await navigator.clipboard.writeText(pendingLinks)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Fallback: selecteer textarea
+      const el = document.getElementById('pending-links-textarea') as HTMLTextAreaElement | null
+      el?.select()
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -35,10 +60,26 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
               <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Niveau</th>
               <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Status</th>
               {hasMinDisplay && (
-                <th className="text-right py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Risico</th>
+                <th className="text-right py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                  Risico
+                  <span
+                    className="ml-1 text-gray-300 cursor-help"
+                    title="Risicoschaal 1–10: hogere score = meer verlooprisico. HOOG ≥ 7, MIDDEN 4.5–7, LAAG < 4.5"
+                  >
+                    ⓘ
+                  </span>
+                </th>
               )}
               {hasMinDisplay && scanType === 'exit' && (
-                <th className="text-right py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Vermijdbaar</th>
+                <th className="text-right py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                  Vermijdbaar
+                  <span
+                    className="ml-1 text-gray-300 cursor-help"
+                    title="Redbaar = vertrek was waarschijnlijk te voorkomen. Mogelijk redbaar = onduidelijk. Niet redbaar = persoonlijke of externe reden."
+                  >
+                    ⓘ
+                  </span>
+                </th>
               )}
             </tr>
           </thead>
@@ -56,7 +97,7 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
                     {r.completed ? (
                       <span className="text-xs text-green-600 font-medium">✓ Ingevuld</span>
                     ) : (
-                      <span className="text-xs text-gray-400">⏳ Open</span>
+                      <span className="text-xs text-gray-400">⏳ Nog niet gestart</span>
                     )}
                   </td>
                   {hasMinDisplay && (
@@ -73,7 +114,9 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
                   )}
                   {hasMinDisplay && scanType === 'exit' && (
                     <td className="py-2 px-3 text-right text-xs text-gray-500">
-                      {resp?.preventability?.replace('_', ' ') ?? '–'}
+                      {resp?.preventability
+                        ? (PREVENTABILITY_LABELS[resp.preventability] ?? resp.preventability.replaceAll('_', ' '))
+                        : '–'}
                     </td>
                   )}
                 </tr>
@@ -86,13 +129,22 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
       {/* Openstaande links */}
       {pending.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-            Openstaande survey-links ({pending.length})
-          </h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Openstaande survey-links ({pending.length})
+            </h3>
+            <button
+              onClick={copyLinks}
+              className="text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors"
+            >
+              {copied ? '✓ Gekopieerd!' : '📋 Kopieer alle links'}
+            </button>
+          </div>
           <textarea
+            id="pending-links-textarea"
             readOnly
             className="w-full font-mono text-xs bg-blue-50 border border-blue-200 rounded-lg p-3 h-28 resize-none focus:outline-none"
-            value={pending.map(r => `${API_BASE}/survey/${r.token}`).join('\n')}
+            value={pendingLinks}
           />
         </div>
       )}

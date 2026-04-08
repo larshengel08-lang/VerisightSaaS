@@ -2,6 +2,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { LogoutButton } from '@/components/ui/logout-button'
+import { MobileNav } from '@/components/ui/mobile-nav'
 
 export default async function DashboardLayout({
   children,
@@ -28,7 +29,9 @@ export default async function DashboardLayout({
       {/* Top navigatiebalk */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
+            {/* Hamburger voor mobiel */}
+            <MobileNav isAdmin={isAdmin} />
             <Link href="/dashboard" className="text-lg font-bold text-blue-600 tracking-tight">
               Verisight
             </Link>
@@ -39,7 +42,7 @@ export default async function DashboardLayout({
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-400 hidden sm:block truncate max-w-[180px]">
+            <span className="text-xs text-gray-400 hidden sm:block truncate max-w-[160px]">
               {user.email}
             </span>
             <LogoutButton />

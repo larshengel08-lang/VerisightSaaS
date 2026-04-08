@@ -20,11 +20,16 @@ export function RiskCharts({ distribution, riskScores }: Props) {
     { name: 'Laag',   value: distribution.LAAG,    color: COLORS.LAAG },
   ].filter(d => d.value > 0)
 
-  // Histogram bins 1–10
-  const bins = Array.from({ length: 9 }, (_, i) => ({
-    range: `${i + 1}–${i + 2}`,
-    count: riskScores.filter(s => s >= i + 1 && s < i + 2).length,
-  }))
+  // Histogram bins 1–10 (9 bins: 1-2, 2-3, …, 9-10 incl.)
+  const bins = Array.from({ length: 9 }, (_, i) => {
+    const lo = i + 1
+    const hi = i + 2
+    return {
+      range: `${lo}–${hi}`,
+      // Laatste bin (9–10) is inclusief de bovengrens zodat score=10 niet valt buiten het histogram
+      count: riskScores.filter(s => s >= lo && (i === 8 ? s <= hi : s < hi)).length,
+    }
+  })
 
   const avg = riskScores.length
     ? riskScores.reduce((a, b) => a + b, 0) / riskScores.length

@@ -18,8 +18,14 @@ interface CampaignActionsProps {
 }
 
 export function CampaignActions({ campaignId, isActive, pendingCount }: CampaignActionsProps) {
-  const [loading, setLoading] = useState<'close' | 'resend' | null>(null)
-  const [error, setError]     = useState<string | null>(null)
+  const [loading,  setLoading]  = useState<'close' | 'resend' | null>(null)
+  const [error,    setError]    = useState<string | null>(null)
+  const [toast,    setToast]    = useState<string | null>(null)
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(null), 4000)
+  }
 
   async function handleClose() {
     if (!confirm(
@@ -43,7 +49,9 @@ export function CampaignActions({ campaignId, isActive, pendingCount }: Campaign
       setError(`Sluiten mislukt: ${supabaseError.message}`)
       return
     }
-    window.location.reload()
+
+    showToast('Campaign gesloten. Pagina wordt vernieuwd…')
+    setTimeout(() => window.location.reload(), 1500)
   }
 
   async function handleResend() {
@@ -55,7 +63,6 @@ export function CampaignActions({ campaignId, isActive, pendingCount }: Campaign
     setError(null)
     setLoading('resend')
 
-    // Server action — auth wordt server-side geverifieerd
     const result = await resendPendingAction(campaignId)
 
     setLoading(null)
@@ -66,10 +73,10 @@ export function CampaignActions({ campaignId, isActive, pendingCount }: Campaign
     }
 
     const msg = result.sent > 0
-      ? `${result.sent} uitnodiging(en) verstuurd.${result.failed ? ` ${result.failed} mislukt.` : ''}`
+      ? `✓ ${result.sent} uitnodiging(en) verstuurd.${result.failed ? ` ${result.failed} mislukt.` : ''}`
       : 'Geen openstaande respondenten met e-mailadres gevonden.'
-    alert(msg)
-    if (result.sent > 0) window.location.reload()
+    showToast(msg)
+    if (result.sent > 0) setTimeout(() => window.location.reload(), 2000)
   }
 
   if (!isActive) return null
@@ -95,6 +102,14 @@ export function CampaignActions({ campaignId, isActive, pendingCount }: Campaign
           {loading === 'close' ? 'Sluiten…' : 'Sluit campaign'}
         </button>
       </div>
+
+      {/* Toast melding */}
+      {toast && (
+        <div className="bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg">
+          {toast}
+        </div>
+      )}
+
       {error && (
         <p className="text-xs text-red-600 max-w-xs text-right">{error}</p>
       )}
