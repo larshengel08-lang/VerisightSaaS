@@ -161,7 +161,7 @@ export default function LandingPage() {
             Zonder gestructureerde data blijven vertrekredenen vaag en patronen onzichtbaar.
           </p>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-6 mb-10">
           {[
             {
               icon: '📝',
@@ -185,6 +185,20 @@ export default function LandingPage() {
               <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
             </div>
           ))}
+        </div>
+
+        {/* ROI-kader */}
+        <div className="bg-blue-50 border border-blue-100 rounded-2xl px-8 py-6 flex flex-col sm:flex-row items-center gap-6">
+          <div className="text-4xl flex-shrink-0">🧮</div>
+          <div>
+            <p className="text-sm font-semibold text-blue-900 mb-1">Rekensom voor HR en directie</p>
+            <p className="text-sm text-blue-800 leading-relaxed">
+              Een organisatie van 300 medewerkers heeft bij 10% verloop gemiddeld 30 vertrekkers per jaar.
+              Eén voorkomen vertrek bespaart al snel €15.000–€25.000 aan werving en inwerktijd.
+              De ExitScan kost minder dan de vervangingskosten van één medewerker —
+              en geeft inzicht in álle exits, niet alleen de opvallende.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -303,23 +317,59 @@ export default function LandingPage() {
               Eén trajectprijs — alles inbegrepen
             </h2>
             <p className="text-gray-500 max-w-xl mx-auto">
-              Geen abonnement, geen verborgen kosten. Je betaalt eenmalig per ExitScan-traject.
-              De prijs is afhankelijk van de omvang van je organisatie en het aantal medewerkers.
-              Vraag een offerte aan — gemiddeld antwoord binnen één werkdag.
+              Geen abonnement, geen verborgen kosten. Je betaalt eenmalig per ExitScan-traject,
+              afhankelijk van de omvang van je organisatie.
             </p>
           </div>
 
+          {/* Prijstiers */}
+          <div className="grid sm:grid-cols-3 gap-4 mb-8">
+            {[
+              { range: '200–400', label: 'medewerkers', price: '1.750', note: '~20–40 exits/jaar' },
+              { range: '400–700', label: 'medewerkers', price: '2.250', note: '~40–70 exits/jaar', highlight: true },
+              { range: '700–1.000', label: 'medewerkers', price: '2.950', note: '~70–100 exits/jaar' },
+            ].map((tier, i) => (
+              <div
+                key={i}
+                className={`rounded-2xl border p-6 text-center ${
+                  tier.highlight
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : 'bg-white border-gray-200'
+                }`}
+              >
+                <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${tier.highlight ? 'text-blue-200' : 'text-gray-400'}`}>
+                  {tier.range} {tier.label}
+                </div>
+                <div className={`text-3xl font-bold mb-1 ${tier.highlight ? 'text-white' : 'text-gray-900'}`}>
+                  €{tier.price}
+                </div>
+                <div className={`text-xs ${tier.highlight ? 'text-blue-200' : 'text-gray-400'}`}>
+                  {tier.note}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Prijsonderbouwing */}
+          <div className="bg-white border border-gray-200 rounded-2xl px-6 py-4 mb-6 text-sm text-gray-600 leading-relaxed">
+            <strong className="text-gray-800">Hoe is de prijs opgebouwd?</strong>{' '}
+            De trajectprijs dekt de volledige opzet, uitnodigingen, rapportgeneratie en kwaliteitscheck —
+            gemiddeld 4–6 uur per traject. De prijs ligt bewust onder de vervangingskosten van één medewerker
+            (gemiddeld €15.000–€25.000): als de ExitScan één preventabel vertrek zichtbaar maakt, verdient
+            het traject zichzelf terug.
+          </div>
+
           {/* Wat zit erin */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-8">
-            <h3 className="text-base font-semibold text-gray-900 mb-6">Altijd inbegrepen — geen verborgen kosten</h3>
+          <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-6">Altijd inbegrepen</h3>
             <div className="grid sm:grid-cols-2 gap-4">
               {[
                 { icon: '⚙️', text: 'Volledige scan-opzet door Verisight' },
-                { icon: '📧', text: 'Uitnodigingen en opvolging verzorgd' },
+                { icon: '📧', text: 'Uitnodigingen en 2 automatische herinneringen' },
                 { icon: '📊', text: 'Dashboard met thema- en patroonanalyse' },
                 { icon: '📄', text: 'Adviesrapport met aanbevelingen' },
-                { icon: '🤝', text: 'Debrief-gesprek ter toelichting van de resultaten' },
                 { icon: '🔒', text: 'AVG-conforme verwerking, data gehost in Europa' },
+                { icon: '📈', text: 'Betrouwbaarheids- en responsduiding in rapport' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <span className="text-xl">{item.icon}</span>
@@ -327,6 +377,18 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Add-on */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 mb-8 flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-sm font-semibold text-gray-800">Optioneel: live toelichting</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                60 minuten online sessie voor duiding van het rapport — geschikt voor HR-directeur of MT.
+                Geen actieplan, wel prioritering en context.
+              </p>
+            </div>
+            <div className="text-lg font-bold text-gray-900 flex-shrink-0">+ €350</div>
           </div>
 
           {/* CTA */}
@@ -338,7 +400,7 @@ export default function LandingPage() {
               Vraag een offerte aan →
             </a>
             <p className="text-sm text-gray-400 mt-3">
-              Gemiddeld antwoord binnen één werkdag
+              Gemiddeld antwoord binnen één werkdag · Prijzen excl. btw
             </p>
           </div>
         </div>
