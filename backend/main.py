@@ -126,6 +126,48 @@ app.add_middleware(
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
+EXIT_REASON_CODE_MAP = {
+    "leiderschap": "P1",
+    "cultuur": "P2",
+    "groei": "P3",
+    "beloning": "P4",
+    "werkdruk": "P5",
+    "rolonduidelijkheid": "P6",
+    "beter_aanbod": "PL1",
+    "carriere_switch": "PL2",
+    "ondernemerschap": "PL3",
+    "persoonlijk": "S1",
+    "gezondheid": "S1",
+    "verhuizing": "S2",
+    "partner_verhuisd": "S2",
+    "studie": "S3",
+    "pensioen": "S3",
+}
+
+
+def _render_survey_status(
+    request: Request,
+    *,
+    status_code: int,
+    title: str,
+    heading: str,
+    message: str,
+    hint: str | None = None,
+    tone: str = "info",
+) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request,
+        "survey-status.html",
+        context={
+            "title": title,
+            "heading": heading,
+            "message": message,
+            "hint": hint,
+            "tone": tone,
+        },
+        status_code=status_code,
+    )
+
 
 # ---------------------------------------------------------------------------
 # Global DB error handler — geeft 503 terug bij verbindingsfouten
@@ -181,14 +223,27 @@ async def serve_survey(
     respondent = db.query(Respondent).filter(Respondent.token == token).first()
 
     if not respondent:
-        raise HTTPException(status_code=404, detail="Ongeldige survey-link.")
+        return _render_survey_status(
+            request,
+            status_code=404,
+            title="Survey-link ongeldig",
+            heading="Deze survey-link klopt niet",
+            message="De link is ongeldig of niet meer actief. Controleer of je de volledige link hebt geopend.",
+            hint="Neem contact op met de HR-afdeling van je organisatie als je een nieuwe uitnodiging nodig hebt.",
+            tone="warning",
+        )
 
     # Controleer of token verlopen is (90 dagen geldig)
     if hasattr(respondent, "token_expires_at") and respondent.token_expires_at:
         if respondent.token_expires_at < datetime.now(timezone.utc):
-            raise HTTPException(
+            return _render_survey_status(
+                request,
                 status_code=410,
-                detail="Deze survey-link is verlopen. Neem contact op met jouw HR-afdeling.",
+                title="Survey-link verlopen",
+                heading="Deze survey-link is verlopen",
+                message="Om privacy- en beveiligingsredenen is deze persoonlijke link niet meer geldig.",
+                hint="Neem contact op met de HR-afdeling van je organisatie als je de survey alsnog wilt invullen.",
+                tone="warning",
             )
 
     if respondent.completed:
@@ -204,6 +259,17 @@ async def serve_survey(
         db.commit()
 
     campaign = respondent.campaign
+    if not campaign.is_active:
+        return _render_survey_status(
+            request,
+            status_code=410,
+            title="Survey gesloten",
+            heading="Deze survey is gesloten",
+            message="Deze campagne accepteert geen nieuwe inzendingen meer. Eerder ingevulde antwoorden blijven wel meegenomen in de rapportage.",
+            hint="Heb je vragen over de uitkomsten of verwerking van je gegevens, neem dan contact op met de HR-afdeling van je organisatie.",
+            tone="info",
+        )
+
     enabled_modules = campaign.enabled_modules or ORG_FACTOR_KEYS
 
     return templates.TemplateResponse(
@@ -233,6 +299,12 @@ async def submit_survey(
         raise HTTPException(status_code=404, detail="Ongeldige token.")
     if respondent.completed:
         raise HTTPException(status_code=409, detail="Survey al ingevuld.")
+    if not respondent.campaign.is_active:
+        raise HTTPException(status_code=410, detail="Deze survey is gesloten en accepteert geen nieuwe inzendingen meer.")
+
+    exit_reason_code = payload.exit_reason_code
+    if not exit_reason_code and payload.exit_reason_category:
+        exit_reason_code = EXIT_REASON_CODE_MAP.get(payload.exit_reason_category)
 
     # --- Scoring ---
     try:
@@ -307,7 +379,7 @@ async def submit_survey(
         respondent_id         = respondent.id,
         tenure_years          = payload.tenure_years,
         exit_reason_category  = payload.exit_reason_category,
-        exit_reason_code      = payload.exit_reason_code,
+        exit_reason_code      = exit_reason_code,
         stay_intent_score     = payload.stay_intent_score,
         sdt_raw               = payload.sdt_raw,
         sdt_scores            = sdt_scores,

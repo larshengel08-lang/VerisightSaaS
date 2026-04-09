@@ -331,7 +331,7 @@ def compute_preventability(
             "preventability_label": "Redbaar",
             "reasoning": (
                 f"Lage scores op: {', '.join(triggers)}. "
-                "Gerichte interventie had vertrek mogelijk voorkomen."
+                "Dit wijst op werkfactoren die waarschijnlijk beter beïnvloedbaar waren."
             ),
         }
 
@@ -516,7 +516,7 @@ def get_recommendations(
 # Pattern detection (aggregate — min n=5 for GDPR-safe reporting)
 # ---------------------------------------------------------------------------
 
-MIN_AGGREGATE_N = 5
+MIN_AGGREGATE_N = 10
 
 FACTOR_LABELS_NL: dict[str, str] = {
     "leadership":   "Leiderschap",

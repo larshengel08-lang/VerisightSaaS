@@ -1,8 +1,13 @@
 ﻿import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { RiskCharts } from '@/components/dashboard/risk-charts'
+import dynamic from 'next/dynamic'
 import { FactorTable } from '@/components/dashboard/factor-table'
+
+const RiskCharts = dynamic(
+  () => import('@/components/dashboard/risk-charts').then(m => m.RiskCharts),
+  { ssr: false },
+)
 import { RecommendationList } from '@/components/dashboard/recommendation-list'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { CampaignActions } from './campaign-actions'

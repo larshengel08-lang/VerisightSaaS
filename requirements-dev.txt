@@ -1,0 +1,6 @@
+# Verisight — development-only dependencies
+# Install with: pip install -r requirements-dev.txt
+# (na requirements.txt)
+
+# Testing
+pytest>=9.0.0

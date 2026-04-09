@@ -68,7 +68,7 @@ export function RecommendationList({ factorAverages }: Props) {
     .filter(f => f in factorAverages)
     .map(f => {
       const score   = factorAverages[f]
-      const riskVal = f === 'workload' ? score : 11 - score
+      const riskVal = 11 - score
       const band    = riskVal >= 7 ? 'HOOG' : riskVal >= 4.5 ? 'MIDDEN' : 'LAAG'
       return { factor: f, score, riskVal, band, recs: RECOMMENDATIONS[f]?.[band] ?? [] }
     })

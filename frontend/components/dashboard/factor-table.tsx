@@ -13,7 +13,7 @@ export function FactorTable({ factorAverages }: Props) {
     .filter(f => f in factorAverages)
     .map(f => {
       const score    = factorAverages[f]
-      const riskVal  = f === 'workload' ? score : 11 - score
+      const riskVal  = 11 - score
       const urgency  = riskVal >= 7 ? 'URGENT' : riskVal >= 4.5 ? 'AANDACHT' : 'OK'
       return { factor: f, score, riskVal, urgency }
     })

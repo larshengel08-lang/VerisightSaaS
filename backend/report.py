@@ -1,7 +1,7 @@
 ﻿"""
 Verisight — PDF-rapportgenerator
 ========================================
-Genereert een professioneel 6-pagina rapport per campaign.
+Genereert een professioneel 7-pagina rapport per campaign.
 
 Pagina-indeling
 ---------------
@@ -214,26 +214,34 @@ def _fig_to_image(fig: plt.Figure, width_cm: float = 14.0) -> Image:
 # ---------------------------------------------------------------------------
 
 
-def _risk_gauge_image(score: float, band: str) -> Image:
-    fig, ax = plt.subplots(figsize=(5, 0.7))
+def _risk_gauge_image(score: float, band: str, benchmark: float | None = None) -> Image:
+    fig, ax = plt.subplots(figsize=(5, 1.1))
     ax.set_xlim(1, 10)
-    ax.set_ylim(0, 1)
+    ax.set_ylim(0, 1.3)
     ax.axis("off")
 
-    # Achtergrond zones
-    ax.barh(0.5, 3.5, left=1,   height=0.4, color=MPL_LOW,  alpha=0.25)
-    ax.barh(0.5, 2.5, left=4.5, height=0.4, color=MPL_MED,  alpha=0.25)
-    ax.barh(0.5, 3.0, left=7.0, height=0.4, color=MPL_HIGH, alpha=0.25)
+    # Achtergrond zones — clear demarcation at 4.5 and 7.0
+    ax.barh(0.65, 3.5, left=1,   height=0.5, color=MPL_LOW,  alpha=0.30)
+    ax.barh(0.65, 2.5, left=4.5, height=0.5, color=MPL_MED,  alpha=0.30)
+    ax.barh(0.65, 3.0, left=7.0, height=0.5, color=MPL_HIGH, alpha=0.30)
 
-    # Naald
+    # Naald — dikkere lijn, kleur passend bij band
     color = {"HOOG": MPL_HIGH, "MIDDEN": MPL_MED, "LAAG": MPL_LOW}.get(band, MPL_BRAND)
-    ax.plot([score, score], [0.15, 0.85], color=color, lw=3, zorder=5)
-    ax.scatter([score], [0.5], color=color, s=60, zorder=6)
+    ax.plot([score, score], [0.25, 1.05], color=color, lw=4, zorder=5, solid_capstyle="round")
+    ax.scatter([score], [0.65], color=color, s=100, zorder=6)
 
-    for x, lbl in [(2.75, "LAAG"), (5.75, "MIDDEN"), (8.5, "HOOG")]:
-        ax.text(x, 0.5, lbl, ha="center", va="center", fontsize=7, color="#6B7280", fontweight="bold")
+    # Zone labels — groter en vetter
+    for x, lbl, col in [(2.75, "LAAG", MPL_LOW), (5.75, "MIDDEN", MPL_MED), (8.5, "HOOG", MPL_HIGH)]:
+        ax.text(x, 0.65, lbl, ha="center", va="center", fontsize=8, color=col, fontweight="bold")
 
-    ax.text(score, 0.03, f"{score:.1f}", ha="center", va="bottom", fontsize=8, color=color, fontweight="bold")
+    # Score label direct onder de naald
+    ax.text(score, 0.08, f"{score:.1f}", ha="center", va="bottom", fontsize=10, color=color, fontweight="bold")
+
+    # Optionele benchmark lijn
+    if benchmark is not None:
+        ax.plot([benchmark, benchmark], [0.30, 1.00], color="#9CA3AF", lw=1.5, linestyle="--", zorder=4)
+        ax.text(benchmark, 1.10, "benchmark", ha="center", va="bottom", fontsize=7, color="#9CA3AF")
+
     return _fig_to_image(fig, width_cm=10)
 
 
@@ -277,7 +285,7 @@ def _factor_bar_image(factor_avgs: dict[str, float], width_cm: float = 12.0) -> 
     factors = [f for f in ORG_FACTOR_KEYS if f in factor_avgs]
     labels  = [FACTOR_LABELS_NL.get(f, f) for f in factors]
     scores  = [factor_avgs[f] for f in factors]
-    risks   = [round(11.0 - s if f != "workload" else s, 1) for f, s in zip(factors, scores)]
+    risks   = [round(11.0 - s, 1) for f, s in zip(factors, scores)]
 
     sorted_pairs = sorted(zip(labels, scores, risks), key=lambda x: x[2], reverse=True)
     labels_s  = [p[0] for p in sorted_pairs]
@@ -422,9 +430,10 @@ def _make_header_footer(org_name: str, camp_name: str, generated: str):
         canvas.setLineWidth(0.5)
         canvas.line(1.5 * cm, 1.5 * cm, PAGE_W - 1.5 * cm, 1.5 * cm)
 
-        # Paginanummer
+        # Paginanummer + versie
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(MUTED)
+        canvas.drawString(1.5 * cm, 1.0 * cm, "ExitScan v1.0  ·  Verisight")
         canvas.drawCentredString(PAGE_W / 2, 1.0 * cm, f"Pagina {doc.page}")
         canvas.drawRightString(PAGE_W - 1.5 * cm, 1.0 * cm, f"Gegenereerd {generated}")
 
@@ -586,7 +595,95 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     kpi_table.setStyle(kpi_style)
     story.append(kpi_table)
 
-    story.append(Spacer(1, 2.0 * cm))
+    # Trend-indicator: vergelijk met vorige campagne van dezelfde organisatie (indien beschikbaar)
+    try:
+        from backend.models import Respondent as _Respondent
+        prev_camp = (
+            db.query(Campaign)
+            .filter(
+                Campaign.organization_id == org.id,
+                Campaign.id != camp.id,
+                Campaign.is_active == False,  # noqa: E712
+            )
+            .order_by(Campaign.id.desc())
+            .first()
+        )
+        if prev_camp:
+            prev_respondents = prev_camp.respondents
+            prev_completed   = [r for r in prev_respondents if r.completed]
+            prev_responses   = [r.response for r in prev_completed if r.response]
+            prev_scores      = [r.risk_score for r in prev_responses if r.risk_score]
+            if prev_scores and avg_risk is not None:
+                prev_avg   = round(sum(prev_scores) / len(prev_scores), 2)
+                delta      = round(avg_risk - prev_avg, 1)
+                arrow      = "↑" if delta > 0 else "↓" if delta < 0 else "→"
+                delta_text = f"{arrow} {abs(delta):.1f} vs. vorige campagne"
+                delta_color = colors.HexColor("#FCA5A5") if delta > 0 else colors.HexColor("#86EFAC")
+                trend_data  = [["Trend", delta_text]]
+                trend_style = TableStyle([
+                    ("BACKGROUND",   (0, 0), (-1, 0), colors.HexColor("#1D4ED8")),
+                    ("BACKGROUND",   (0, 1), (-1, 1), colors.HexColor("#1E40AF")),
+                    ("TEXTCOLOR",    (0, 0), (-1, -1), WHITE),
+                    ("FONTNAME",     (0, 0), (-1, 0), "Helvetica"),
+                    ("FONTNAME",     (0, 1), (-1, 1), "Helvetica-Bold"),
+                    ("FONTSIZE",     (0, 0), (-1, 0), 9),
+                    ("FONTSIZE",     (0, 1), (-1, 1), 14),
+                    ("ALIGN",        (0, 0), (-1, -1), "CENTER"),
+                    ("VALIGN",       (0, 0), (-1, -1), "MIDDLE"),
+                    ("TOPPADDING",   (0, 0), (-1, 0), 8),
+                    ("BOTTOMPADDING",(0, 0), (-1, 0), 6),
+                    ("TOPPADDING",   (0, 1), (-1, 1), 10),
+                    ("BOTTOMPADDING",(0, 1), (-1, 1), 12),
+                    ("GRID",         (0, 0), (-1, -1), 0.5, colors.HexColor("#3B82F6")),
+                ])
+                trend_table = Table(trend_data, colWidths=[content_width])
+                trend_table.setStyle(trend_style)
+                story.append(Spacer(1, 0.3 * cm))
+                story.append(trend_table)
+    except Exception:
+        pass  # Trend-indicator is optioneel — geen foutmelding tonen
+
+    story.append(Spacer(1, 1.5 * cm))
+
+    # Executive summary op voorblad — alleen bij voldoende data (n ≥ 10)
+    if has_pattern and factor_avgs:
+        # Top 3 sterkste factoren (hoogste score = meest positief)
+        all_factors = {**{f: factor_avgs.get(f, 5.5) for f in ORG_FACTOR_KEYS}}
+        sorted_factors = sorted(all_factors.items(), key=lambda x: x[1])
+        top_risks_cover    = sorted_factors[:3]   # laagste scores = hoogste risico
+        top_strengths_cover = sorted_factors[-3:]  # hoogste scores = sterkste punten
+
+        exec_rows = [["Samenvatting (n={})".format(n_completed), ""]]
+        for factor, score in reversed(top_strengths_cover):
+            label = FACTOR_LABELS_NL.get(factor, factor)
+            exec_rows.append([f"✓  {label}", f"{score:.1f}"])
+        for factor, score in top_risks_cover:
+            label = FACTOR_LABELS_NL.get(factor, factor)
+            exec_rows.append([f"⚠  {label}", f"{score:.1f}"])
+        if avoidable_pct is not None:
+            exec_rows.append([f"Mogelijk beinvloedbaar vertrek", f"{avoidable_pct:.0f}%"])
+
+        exec_style = TableStyle([
+            ("SPAN",        (0, 0), (1, 0)),
+            ("BACKGROUND",  (0, 0), (-1, 0), colors.HexColor("#1E3A8A")),
+            ("TEXTCOLOR",   (0, 0), (-1, 0), WHITE),
+            ("FONTNAME",    (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("FONTSIZE",    (0, 0), (-1, 0), 9),
+            ("FONTNAME",    (0, 1), (-1, -1), "Helvetica"),
+            ("FONTSIZE",    (0, 1), (-1, -1), 9),
+            ("TEXTCOLOR",   (0, 1), (-1, -1), WHITE),
+            ("ALIGN",       (1, 0), (1, -1), "RIGHT"),
+            ("TOPPADDING",  (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("LINEBELOW",   (0, 0), (-1, 0), 0.5, colors.HexColor("#3B82F6")),
+        ])
+        exec_table = Table(exec_rows, colWidths=[content_width * 0.78, content_width * 0.22])
+        exec_table.setStyle(exec_style)
+        story.append(exec_table)
+        story.append(Spacer(1, 1.0 * cm))
+
     story.append(Paragraph(f"Gegenereerd op {now_str}", STYLES["cover_meta"]))
     story.append(Paragraph(
         "Vertrouwelijk — uitsluitend bestemd voor geautoriseerde gebruikers.",
@@ -621,10 +718,22 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(Spacer(1, 0.4 * cm))
 
     # Risico-meter
+    BENCHMARK_SCORE = 5.1
     if avg_risk:
         band_label = "HOOG" if avg_risk >= 7 else "MIDDEN" if avg_risk >= 4.5 else "LAAG"
         story.append(Paragraph("Risicometer (gemiddeld)", STYLES["sub_title"]))
-        story.append(_risk_gauge_image(avg_risk, band_label))
+        story.append(_risk_gauge_image(avg_risk, band_label, benchmark=BENCHMARK_SCORE))
+        story.append(Paragraph(
+            "<i>Ter referentie: de indicatieve MKB-benchmark ligt op 5.1/10 (Verisight, intern, 2025).</i>",
+            ParagraphStyle(
+                "benchmark_note",
+                fontName="Helvetica-Oblique",
+                fontSize=8,
+                leading=11,
+                textColor=MUTED,
+                spaceAfter=4,
+            ),
+        ))
         story.append(Spacer(1, 0.3 * cm))
 
     # Risicodistributie tabel
@@ -669,16 +778,20 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         )
     if avoidable_pct is not None:
         findings.append(
-            f"<b>{avoidable_pct:.0f}% van het verloop</b> is als redbaar geclassificeerd — "
-            "gerichte interventie had deze uitstroom mogelijk voorkomen."
+            f"<b>{avoidable_pct:.0f}% van het verloop</b> is als mogelijk beinvloedbaar geclassificeerd — "
+            "dit wijst op werkfactoren die om nadere analyse vragen."
         )
     if camp.scan_type == "exit" and avoidable_cost > 0:
         findings.append(
-            f"De geschatte <b>vermijdbare vervangingskosten</b> bedragen "
+            f"De geschatte <b>mogelijk beinvloedbare vervangingskosten</b> bedragen "
             f"<b>€ {avoidable_cost:,.0f}</b> (SHRM/Bersin-multipliers)."
         )
+        findings.append(
+            "<i><font size='8' color='#6B7280'>Berekening: gemiddelde vervangingskosten per medewerker × aantal reddbare vertrekkers. "
+            "Multiplier: 0.5–2.0× jaarsalaris afhankelijk van functieniveau (SHRM, 2022; Bersin, 2013).</font></i>"
+        )
     if not findings:
-        findings.append("Onvoldoende data voor patroonanalyse (min. 5 responses vereist).")
+        findings.append("Onvoldoende data voor patroonanalyse (minimaal 10 responses vereist).")
 
     for f in findings:
         story.append(Paragraph(f"• {f}", STYLES["body"]))
@@ -723,12 +836,14 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         sdt_rows = [["Dimensie", "Score", "Interpretatie"]]
         for dim, (label, desc) in sdt_desc.items():
             score = sdt_avgs.get(dim, 5.5)
-            if score >= 7.0:
-                interpret = "Goed — behoeftebevrediging aanwezig."
-            elif score >= 4.5:
+            if score > 7.0:
+                interpret = "Goed — basisbehoeften overwegend vervuld."
+            elif score >= 5.5:
+                interpret = "Voldoende — geen acute zorgen."
+            elif score >= 4.0:
                 interpret = "Matig — aandacht gewenst."
             else:
-                interpret = "Onvoldoende — behoeftefrustatie risico."
+                interpret = "Laag — behoeftefrustatie aanwezig. Directe aandacht vereist."
             sdt_rows.append([label, f"{score:.1f} / 10", interpret])
 
         sdt_ts = TableStyle([
@@ -752,9 +867,32 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         sdt_table = Table(sdt_rows, colWidths=[content_width * 0.22, content_width * 0.15, content_width * 0.63])
         sdt_table.setStyle(sdt_ts)
         story.append(sdt_table)
+
+        # Dynamische interpretatie op basis van laagst scorende dimensie
+        lowest_dim = min(sdt_avgs.items(), key=lambda x: x[1]) if sdt_avgs else None
+        if lowest_dim:
+            dim_name, dim_score = lowest_dim
+            dim_interp_map = {
+                "autonomy":    (
+                    "Autonomie scoort het laagst. Dit wijst op beperkte regelruimte en "
+                    "beïnvloedt motivatie en betrokkenheid direct."
+                ),
+                "competence":  (
+                    "Competentie scoort het laagst. Medewerkers ervaren onvoldoende ruimte om "
+                    "hun vaardigheden effectief in te zetten, wat het zelfvertrouwen ondermijnt."
+                ),
+                "relatedness": (
+                    "Verbondenheid scoort het laagst. De sociale basis op het werk voelt "
+                    "kwetsbaar — dit verhoogt het verlooprisico ook wanneer andere factoren positief zijn."
+                ),
+            }
+            interp_text = dim_interp_map.get(dim_name, "")
+            if interp_text:
+                story.append(Spacer(1, 0.25 * cm))
+                story.append(Paragraph(interp_text, STYLES["body"]))
     else:
         story.append(Paragraph(
-            "Onvoldoende responses voor SDT-rapportage (minimaal 5 vereist).",
+            "Onvoldoende responses voor SDT-rapportage (minimaal 10 vereist).",
             STYLES["body"],
         ))
 
@@ -773,31 +911,33 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(Spacer(1, 0.3 * cm))
 
     if has_pattern and factor_avgs:
-        # Radar + balk naast elkaar
-        radar_img = _radar_image(factor_avgs, width_cm=7.5)
-        bar_img   = _factor_bar_image(factor_avgs, width_cm=9.5)
-
-        if radar_img and bar_img:
-            chart_data  = [[radar_img, bar_img]]
-            chart_table = Table(chart_data, colWidths=[content_width * 0.43, content_width * 0.57])
-            chart_table.setStyle(TableStyle([
-                ("ALIGN",   (0, 0), (-1, -1), "CENTER"),
-                ("VALIGN",  (0, 0), (-1, -1), "TOP"),
-                ("LEFTPADDING",  (0, 0), (-1, -1), 0),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
-            ]))
-            story.append(chart_table)
-            story.append(Spacer(1, 0.4 * cm))
+        # Staafdiagram op volledige breedte (radar verwijderd — minder leesbaar)
+        bar_img = _factor_bar_image(factor_avgs, width_cm=15.0)
+        story.append(bar_img)
+        story.append(Spacer(1, 0.4 * cm))
 
         # Scoretabel
         story.append(Paragraph("Scoretabel per factor", STYLES["sub_title"]))
+        story.append(Paragraph(
+            "<i>Toelichting: De score (1–10) geeft de gemiddelde beleving van medewerkers weer — "
+            "hogere score is positiever. De risicowaarde geeft het gewogen verlooprisico aan — "
+            "hogere risicowaarde betekent meer urgentie.</i>",
+            ParagraphStyle(
+                "score_explanation",
+                fontName="Helvetica-Oblique",
+                fontSize=8,
+                leading=11,
+                textColor=MUTED,
+                spaceAfter=4,
+            ),
+        ))
         score_rows = [["Factor", "Score (1–10)", "Risicowaarde", "Urgentie"]]
         for factor in ORG_FACTOR_KEYS:
             if factor not in factor_avgs:
                 continue
             score    = factor_avgs[factor]
-            risk_val = round(11 - score if factor != "workload" else score, 1)
-            if risk_val >= 7.0:
+            risk_val = round(11 - score, 1)
+            if risk_val >= 6.0:
                 urgency = "URGENT"
             elif risk_val >= 4.5:
                 urgency = "AANDACHT"
@@ -827,8 +967,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             [f for f in ORG_FACTOR_KEYS if f in factor_avgs], start=1
         ):
             sc       = factor_avgs[factor]
-            risk_val = round(11 - sc if factor != "workload" else sc, 1)
-            c = RISK_HIGH if risk_val >= 7.0 else RISK_MED if risk_val >= 4.5 else RISK_LOW
+            risk_val = round(11 - sc, 1)
+            c = RISK_HIGH if risk_val >= 6.0 else RISK_MED if risk_val >= 4.5 else RISK_LOW
             score_ts.add("TEXTCOLOR", (3, row_idx), (3, row_idx), c)
 
         score_table = Table(
@@ -839,7 +979,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         story.append(score_table)
     else:
         story.append(Paragraph(
-            "Onvoldoende responses voor organisatierapportage (minimaal 5 vereist).",
+            "Onvoldoende responses voor organisatierapportage (minimaal 10 vereist).",
             STYLES["body"],
         ))
 
@@ -888,17 +1028,71 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                 )
                 reason_table.setStyle(reason_ts)
                 story.append(reason_table)
+
+                # ── Push/Pull/Situationeel verdeling (Item 13) ────────────
+                exit_reason_counts = pattern.get("exit_reason_counts", {})
+                if exit_reason_counts:
+                    push_n  = sum(v for k, v in exit_reason_counts.items() if k.startswith("P") and not k.startswith("PL"))
+                    pull_n  = sum(v for k, v in exit_reason_counts.items() if k.startswith("PL"))
+                    situ_n  = sum(v for k, v in exit_reason_counts.items() if k.startswith("S"))
+                    total_n = push_n + pull_n + situ_n
+                    if total_n > 0:
+                        push_pct = round(push_n / total_n * 100)
+                        pull_pct = round(pull_n / total_n * 100)
+                        situ_pct = round(situ_n / total_n * 100)
+                        story.append(Spacer(1, 0.3 * cm))
+                        story.append(Paragraph(
+                            f"<b>Push-factoren (intern):</b> {push_pct}%  |  "
+                            f"<b>Pull-factoren (extern):</b> {pull_pct}%  |  "
+                            f"<b>Situationeel:</b> {situ_pct}%",
+                            ParagraphStyle(
+                                "factor_dist",
+                                fontName="Helvetica",
+                                fontSize=9,
+                                leading=13,
+                                textColor=TEXT,
+                                spaceAfter=4,
+                            ),
+                        ))
+
                 story.append(Spacer(1, 0.5 * cm))
+
+                # ── Anonymized quotes (Item 14) ────────────────────────────
+                quotes = [
+                    r.open_text_raw
+                    for r in responses
+                    if r.open_text_raw and r.open_text_raw.strip()
+                ]
+                if len(quotes) >= 3:
+                    story.append(Paragraph("Stemmen uit de survey", STYLES["sub_title"]))
+                    shown = quotes[:4]
+                    for i, q in enumerate(shown):
+                        q_trimmed = q[:120] + ("…" if len(q) > 120 else "")
+                        story.append(Paragraph(
+                            f"<i>— {q_trimmed}</i>",
+                            ParagraphStyle(
+                                f"quote_{i}",
+                                fontName="Helvetica-Oblique",
+                                fontSize=9,
+                                leading=13,
+                                textColor=MUTED,
+                                leftIndent=12,
+                                spaceAfter=4,
+                            ),
+                        ))
+                        if i < len(shown) - 1:
+                            story.append(Spacer(1, 0.1 * cm))
+                    story.append(Spacer(1, 0.3 * cm))
 
             # Preventability
             prev_counts = pattern.get("preventability_counts", {})
             prev_img    = _preventability_image(prev_counts)
             if prev_img:
-                story.append(Paragraph("Vermijdbaarheid vertrek", STYLES["sub_title"]))
+                story.append(Paragraph("Indicatie beinvloedbaarheid vertrek", STYLES["sub_title"]))
                 story.append(Paragraph(
                     "Classificatie op basis van het Avoidable Turnover Framework "
                     "(Holtom et al., 2008): combinatie van vertrekreden, blijfbereidheid "
-                    "en SDT/org-factorscores.",
+                    "en SDT/org-factorscores. Deze classificatie is indicatief en geen causale vaststelling.",
                     STYLES["body"],
                 ))
 
@@ -924,12 +1118,19 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
         # Afdeling-risico
         dept_risks = pattern.get("department_avg_risk", {})
+        # Bouw een n-telling per afdeling
+        dept_n_counts: dict[str, int] = {}
+        for r in responses:
+            dept_key = r.respondent.department or "Onbekend"
+            dept_n_counts[dept_key] = dept_n_counts.get(dept_key, 0) + 1
+
         if dept_risks:
             story.append(Spacer(1, 0.4 * cm))
             story.append(Paragraph("Risico per afdeling", STYLES["sub_title"]))
-            dept_rows = [["Afdeling", "Gem. risicoscore"]]
+            dept_rows = [["Afdeling", "n", "Gem. risicoscore"]]
             for dept, score in sorted(dept_risks.items(), key=lambda x: x[1], reverse=True):
-                dept_rows.append([dept, f"{score:.1f} / 10"])
+                n_dept = dept_n_counts.get(dept, 0)
+                dept_rows.append([dept, str(n_dept), f"{score:.1f} / 10"])
             dept_ts = TableStyle([
                 ("BACKGROUND",   (0, 0), (-1, 0), BRAND),
                 ("TEXTCOLOR",    (0, 0), (-1, 0), WHITE),
@@ -939,27 +1140,121 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                 ("GRID",         (0, 0), (-1, -1), 0.5, BORDER),
                 ("TOPPADDING",   (0, 0), (-1, -1), 5),
                 ("BOTTOMPADDING",(0, 0), (-1, -1), 5),
-                ("ALIGN",        (1, 1), (1, -1), "CENTER"),
-                ("FONTNAME",     (1, 1), (1, -1), "Helvetica-Bold"),
+                ("ALIGN",        (1, 1), (2, -1), "CENTER"),
+                ("FONTNAME",     (2, 1), (2, -1), "Helvetica-Bold"),
             ])
             for row_idx, (dept, score) in enumerate(
                 sorted(dept_risks.items(), key=lambda x: x[1], reverse=True), start=1
             ):
                 c = RISK_HIGH if score >= 7 else RISK_MED if score >= 4.5 else RISK_LOW
-                dept_ts.add("TEXTCOLOR", (1, row_idx), (1, row_idx), c)
+                dept_ts.add("TEXTCOLOR", (2, row_idx), (2, row_idx), c)
 
-            for row_idx, (dept, score) in enumerate(
-                sorted(dept_risks.items(), key=lambda x: x[1], reverse=True), start=1
-            ):
-                c = RISK_HIGH if score >= 7 else RISK_MED if score >= 4.5 else RISK_LOW
-                dept_ts.add("TEXTCOLOR", (1, row_idx), (1, row_idx), c)
-
-            dept_table = Table(dept_rows, colWidths=[content_width * 0.6, content_width * 0.4])
+            dept_table = Table(dept_rows, colWidths=[content_width * 0.55, content_width * 0.10, content_width * 0.35])
             dept_table.setStyle(dept_ts)
             story.append(dept_table)
+
+        # ── Diensttijd segmentatie (Item 11) ──────────────────────────────
+        tenure_buckets: dict[str, list[float]] = {
+            "< 1 jaar": [], "1–3 jaar": [], "3–5 jaar": [], "5+ jaar": [],
+        }
+        for r in responses:
+            tenure = r.tenure_years
+            if tenure is None:
+                continue
+            risk = r.risk_score
+            if risk is None:
+                continue
+            if tenure < 1.0:
+                tenure_buckets["< 1 jaar"].append(risk)
+            elif tenure < 3.0:
+                tenure_buckets["1–3 jaar"].append(risk)
+            elif tenure < 5.0:
+                tenure_buckets["3–5 jaar"].append(risk)
+            else:
+                tenure_buckets["5+ jaar"].append(risk)
+
+        has_tenure_data = any(len(v) > 0 for v in tenure_buckets.values())
+        if has_tenure_data:
+            story.append(Spacer(1, 0.4 * cm))
+            story.append(Paragraph("Vertrek naar diensttijd", STYLES["sub_title"]))
+            tenure_rows = [["Diensttijd", "n", "Gem. risicoscore"]]
+            for label, scores_list in tenure_buckets.items():
+                n_t = len(scores_list)
+                avg_t = round(sum(scores_list) / n_t, 1) if n_t > 0 else None
+                tenure_rows.append([
+                    label,
+                    str(n_t),
+                    f"{avg_t:.1f} / 10" if avg_t is not None else "–",
+                ])
+            tenure_ts = TableStyle([
+                ("BACKGROUND",   (0, 0), (-1, 0), BRAND),
+                ("TEXTCOLOR",    (0, 0), (-1, 0), WHITE),
+                ("FONTNAME",     (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE",     (0, 0), (-1, -1), 9),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#F0F9FF"), WHITE]),
+                ("GRID",         (0, 0), (-1, -1), 0.5, BORDER),
+                ("TOPPADDING",   (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING",(0, 0), (-1, -1), 5),
+                ("ALIGN",        (1, 1), (2, -1), "CENTER"),
+                ("FONTNAME",     (2, 1), (2, -1), "Helvetica-Bold"),
+            ])
+            for row_idx, (lbl, scores_list) in enumerate(tenure_buckets.items(), start=1):
+                if scores_list:
+                    avg_t = sum(scores_list) / len(scores_list)
+                    c = RISK_HIGH if avg_t >= 7 else RISK_MED if avg_t >= 4.5 else RISK_LOW
+                    tenure_ts.add("TEXTCOLOR", (2, row_idx), (2, row_idx), c)
+            tenure_table = Table(tenure_rows, colWidths=[content_width * 0.55, content_width * 0.10, content_width * 0.35])
+            tenure_table.setStyle(tenure_ts)
+            story.append(tenure_table)
+
+        # ── Functieniveau segmentatie (Item 12) ───────────────────────────
+        ROLE_LEVEL_ORDER = ["uitvoerend", "specialist", "senior", "manager"]
+        role_risks: dict[str, list[float]] = {}
+        for r in responses:
+            rl = r.respondent.role_level
+            if not rl:
+                continue
+            risk = r.risk_score
+            if risk is None:
+                continue
+            role_risks.setdefault(rl, []).append(risk)
+
+        if role_risks:
+            story.append(Spacer(1, 0.4 * cm))
+            story.append(Paragraph("Vertrek naar functieniveau", STYLES["sub_title"]))
+            role_rows = [["Functieniveau", "n", "Gem. risicoscore"]]
+            ordered_roles = sorted(
+                role_risks.items(),
+                key=lambda x: ROLE_LEVEL_ORDER.index(x[0]) if x[0] in ROLE_LEVEL_ORDER else 99,
+            )
+            for rl, scores_list in ordered_roles:
+                n_r   = len(scores_list)
+                avg_r = round(sum(scores_list) / n_r, 1) if n_r > 0 else None
+                role_rows.append([rl.capitalize(), str(n_r), f"{avg_r:.1f} / 10" if avg_r is not None else "–"])
+            role_ts = TableStyle([
+                ("BACKGROUND",   (0, 0), (-1, 0), BRAND),
+                ("TEXTCOLOR",    (0, 0), (-1, 0), WHITE),
+                ("FONTNAME",     (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE",     (0, 0), (-1, -1), 9),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#F0F9FF"), WHITE]),
+                ("GRID",         (0, 0), (-1, -1), 0.5, BORDER),
+                ("TOPPADDING",   (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING",(0, 0), (-1, -1), 5),
+                ("ALIGN",        (1, 1), (2, -1), "CENTER"),
+                ("FONTNAME",     (2, 1), (2, -1), "Helvetica-Bold"),
+            ])
+            for row_idx, (rl, scores_list) in enumerate(ordered_roles, start=1):
+                if scores_list:
+                    avg_r = sum(scores_list) / len(scores_list)
+                    c = RISK_HIGH if avg_r >= 7 else RISK_MED if avg_r >= 4.5 else RISK_LOW
+                    role_ts.add("TEXTCOLOR", (2, row_idx), (2, row_idx), c)
+            role_table = Table(role_rows, colWidths=[content_width * 0.55, content_width * 0.10, content_width * 0.35])
+            role_table.setStyle(role_ts)
+            story.append(role_table)
+
     else:
         story.append(Paragraph(
-            "Onvoldoende responses voor patroonrapportage (minimaal 5 vereist).",
+            "Onvoldoende responses voor patroonrapportage (minimaal 10 vereist).",
             STYLES["body"],
         ))
 
@@ -972,8 +1267,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(Paragraph("Aanbevelingen", STYLES["section_title"]))
     story.append(Paragraph(
         "Onderstaande aanbevelingen zijn gegenereerd op basis van de factorscores "
-        "en urgentiebanden. Prioriteer de URGENT-items — deze hebben de grootste "
-        "impact op verlooppreventie.",
+        "en urgentiebanden. Begin met de hoogste risicowaarden.",
         STYLES["body"],
     ))
     story.append(Spacer(1, 0.4 * cm))
@@ -981,14 +1275,16 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     if has_pattern and top_risks:
         factor_risks_dict = {f: score for f, score in top_risks}
         recs = get_recommendations(factor_risks_dict)
+        dept_risks_for_recs = pattern.get("department_avg_risk", {})
+        top_dept_by_risk = sorted(dept_risks_for_recs.items(), key=lambda x: x[1], reverse=True)
 
-        for factor, risk_score in top_risks:
+        for idx, (factor, risk_score) in enumerate(top_risks):
             label = FACTOR_LABELS_NL.get(factor, factor)
             factor_recs = recs.get(factor, [])
             if not factor_recs:
                 continue
 
-            if risk_score >= 7.0:
+            if risk_score >= 6.0:
                 badge_text  = "URGENT"
                 badge_color = RISK_HIGH
                 badge_bg    = colors.HexColor("#FEE2E2")
@@ -1043,16 +1339,38 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             rec_table = Table(rec_data, colWidths=[content_width])
             rec_table.setStyle(rec_ts)
             story.append(rec_table)
+
+            # Afdeling-link voor de top 2 risicofactoren (Item 10)
+            if idx < 2 and top_dept_by_risk:
+                high_depts = [d for d, s in top_dept_by_risk if s > 5.0][:2]
+                if high_depts:
+                    dept_note = "Hoogste risico: " + ", ".join(
+                        f"{d} (gem. {dept_risks_for_recs[d]:.1f}/10)"
+                        for d in high_depts
+                    )
+                    story.append(Paragraph(
+                        f"<i>{dept_note}</i>",
+                        ParagraphStyle(
+                            f"dept_link_{idx}",
+                            fontName="Helvetica-Oblique",
+                            fontSize=8,
+                            leading=11,
+                            textColor=MUTED,
+                            leftIndent=12,
+                            spaceAfter=2,
+                        ),
+                    ))
+
             story.append(Spacer(1, 0.3 * cm))
     else:
         story.append(Paragraph(
             "Onvoldoende responses voor gepersonaliseerde aanbevelingen "
-            "(minimaal 5 vereist).",
+            "(minimaal 10 vereist).",
             STYLES["body"],
         ))
 
     # Disclaimer
-    story.append(Spacer(1, 0.5 * cm))
+    story.append(Spacer(1, 0.3 * cm))
     disclaimer = (
         "<i>Methodologische verantwoording: SDT-scores gebaseerd op de Work-related "
         "Basic Need Satisfaction schaal (Van den Broeck et al., 2010). Organisatiefactoren "
@@ -1061,6 +1379,170 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         "Alle analyses zijn anoniem en voldoen aan de AVG.</i>"
     )
     story.append(Paragraph(disclaimer, STYLES["caption"]))
+
+    story.append(PageBreak())
+
+    # ==================================================================== #
+    # PAGINA 7 — METHODIEK & VERANTWOORDING                                #
+    # ==================================================================== #
+
+    story.append(Paragraph("Methodiek & Verantwoording", STYLES["section_title"]))
+    story.append(Paragraph(
+        "Dit rapport is opgebouwd op basis van gevalideerde wetenschappelijke instrumenten. "
+        "De relatieve weging van factoren is gebaseerd op de richting van bevindingen in de literatuur. "
+        "Onderstaande toelichting maakt de onderzoekslogica transparant.",
+        STYLES["body"],
+    ))
+    story.append(Spacer(1, 0.4 * cm))
+
+    # ── Hoe werkt de risicoscore? ────────────────────────────────────────
+    story.append(Paragraph("Hoe wordt de risicoscore berekend?", STYLES["sub_title"]))
+    story.append(Paragraph(
+        "Elke respondent krijgt een risicoscore op een schaal van 1 tot 10. "
+        "Een hogere score betekent meer signalen van ontevredenheid of frictie in de werkomgeving. "
+        "De score is indicatief en bedoeld als gespreksinput, niet als causale voorspelling of objectief oordeel. "
+        "De score is een gewogen gemiddelde van zeven factoren:",
+        STYLES["body"],
+    ))
+    story.append(Spacer(1, 0.2 * cm))
+
+    weight_rows = [
+        ["Factor", "Gewicht", "Richting in literatuur"],
+        ["Leiderschap", "2.5 ×", "Consistent sterkste voorspeller vrijwillig verloop (o.a. LMX-onderzoek)"],
+        ["SDT Werkbeleving", "2.0 ×", "Cross-dimensionale impact op motivatie en retentie"],
+        ["Cultuur", "1.5 ×", "Psychologische veiligheid gerelateerd aan retentie (Edmondson, 1999)"],
+        ["Groei & Ontwikkeling", "1.5 ×", "Belangrijke driver voor ontwikkelingsgerichte medewerkers (JD-R)"],
+        ["Beloning", "1.0 ×", "Hygiënefactor — drempelwaarde-effect"],
+        ["Werkbelasting", "1.0 ×", "Mediator; minder directe invloed dan leiderschapsfactoren (JD-R)"],
+        ["Rolhelderheid", "1.0 ×", "Basale verwachting (Rizzo, House & Lirtzman, 1970)"],
+    ]
+    w_ts = TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
+        ("TEXTCOLOR",     (0, 0), (-1, 0), WHITE),
+        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE",      (0, 0), (-1, -1), 8.5),
+        ("ROWBACKGROUNDS",(0, 1), (-1, -1), [colors.HexColor("#F0F9FF"), WHITE]),
+        ("GRID",          (0, 0), (-1, -1), 0.5, BORDER),
+        ("TOPPADDING",    (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("ALIGN",         (1, 1), (1, -1), "CENTER"),
+        ("FONTNAME",      (1, 1), (1, -1), "Helvetica-Bold"),
+    ])
+    w_table = Table(
+        weight_rows,
+        colWidths=[content_width * 0.28, content_width * 0.12, content_width * 0.60],
+    )
+    w_table.setStyle(w_ts)
+    story.append(w_table)
+    story.append(Spacer(1, 0.4 * cm))
+
+    # ── Risicobanden ──────────────────────────────────────────────────────
+    story.append(Paragraph("Wat betekenen de risicobanden?", STYLES["sub_title"]))
+    band_rows = [
+        ["Band", "Score", "Betekenis voor de organisatie"],
+        ["LAAG",   "< 4.5",   "Medewerker ervoer de werkomgeving overwegend positief. "
+                               "Vertrek hangt minder samen met interne factoren."],
+        ["MIDDEN", "4.5–7.0", "Gemengd beeld. Aandachtspunten aanwezig, maar geen acute alarmsignalen. "
+                               "Gerichte verbetering kan retentie versterken."],
+        ["HOOG",   "≥ 7.0",   "Medewerker ervoer de werkomgeving structureel negatief. "
+                               "Dit wijst op meerdere interne aandachtspunten die nader onderzocht moeten worden."],
+    ]
+    band_ts = TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
+        ("TEXTCOLOR",     (0, 0), (-1, 0), WHITE),
+        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE",      (0, 0), (-1, -1), 8.5),
+        ("ROWBACKGROUNDS",(0, 1), (-1, -1), [colors.HexColor("#F0F9FF"), WHITE]),
+        ("GRID",          (0, 0), (-1, -1), 0.5, BORDER),
+        ("TOPPADDING",    (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("ALIGN",         (0, 1), (1, -1), "CENTER"),
+        ("FONTNAME",      (0, 1), (1, -1), "Helvetica-Bold"),
+        ("TEXTCOLOR",     (0, 1), (1, 1), RISK_LOW),
+        ("TEXTCOLOR",     (0, 2), (1, 2), RISK_MED),
+        ("TEXTCOLOR",     (0, 3), (1, 3), RISK_HIGH),
+        ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
+    ])
+    band_table = Table(
+        band_rows,
+        colWidths=[content_width * 0.14, content_width * 0.13, content_width * 0.73],
+    )
+    band_table.setStyle(band_ts)
+    story.append(band_table)
+    story.append(Spacer(1, 0.4 * cm))
+
+    # ── Wat betekent elke factor? ─────────────────────────────────────────
+    story.append(Paragraph("Wat betekent elke factor?", STYLES["sub_title"]))
+    factor_explanations = [
+        ("Leiderschap", "LMX-7 (Graen & Uhl-Bien, 1995)",
+         "Meet de kwaliteit van de relatie tussen medewerker en leidinggevende: feedback, "
+         "interesse in ontwikkeling en vertrouwen. Zwak leiderschap is de meest genoemde "
+         "vermijdbare vertrekoorzaak."),
+        ("Cultuur", "Psychological Safety Scale (Edmondson, 1999)",
+         "Meet of medewerkers zich vrij voelden fouten toe te geven, vragen te stellen en "
+         "afwijkende meningen te uiten. Lage cultuurscores correleren sterk met verborgen "
+         "problemen en hoog verloop."),
+        ("Groei & Ontwikkeling", "JD-R Resources-component",
+         "Meet of er voldoende leer- en groeimogelijkheden waren en of de organisatie "
+         "investeerde in loopbaanontwikkeling. Gebrek aan perspectief is een primaire "
+         "oorzaak van verloop bij jonge medewerkers."),
+        ("Beloning", "Job Satisfaction Survey (Spector, 1985)",
+         "Meet ervaren marktconformiteit, eerlijkheid en aansluiting van de totale "
+         "arbeidsvoorwaarden. Beloning werkt als hygiënefactor: te laag veroorzaakt "
+         "vertrek, maar 'goed genoeg' leidt niet automatisch tot loyaliteit."),
+        ("Werkbelasting", "JD-R Demands-component",
+         "Meet of de werkdruk haalbaar was en of er voldoende hersteltijd was. "
+         "Vragen zijn positief geformuleerd: hoge score = werkdruk als acceptabel ervaren = lager risico."),
+        ("Rolhelderheid", "Role Conflict & Ambiguity Scale (Rizzo et al., 1970)",
+         "Meet of taken en verwachtingen duidelijk waren. Lage rolhelderheid leidt tot "
+         "stress, lagere prestaties en hogere vertrekintentie."),
+    ]
+
+    for fname, source, explanation in factor_explanations:
+        story.append(Paragraph(
+            f"<b>{fname}</b> <font color='#6B7280' size='8'>({source})</font>",
+            STYLES["body_bold"],
+        ))
+        story.append(Paragraph(explanation, STYLES["body"]))
+        story.append(Spacer(1, 0.15 * cm))
+
+    story.append(Spacer(1, 0.3 * cm))
+
+    # ── Statistische betrouwbaarheid ──────────────────────────────────────
+    story.append(Paragraph("Statistische betrouwbaarheid", STYLES["sub_title"]))
+    story.append(Paragraph(
+        "Scores, patroonanalyse en grafieken worden alleen getoond bij minimaal 10 responses. "
+        "Bij kleinere groepen zijn de uitkomsten te gevoelig voor toeval en herleidbaarheid. "
+        "Alle zichtbare uitkomsten blijven indicatief en dienen als gespreksinput — niet als statistische conclusie. "
+        "Alle resultaten worden uitsluitend op gegroepeerd niveau gedeeld, conform de AVG.",
+        STYLES["body"],
+    ))
+
+    story.append(Spacer(1, 0.5 * cm))
+
+    # Bronnenlijst
+    story.append(Paragraph("Bronnen", STYLES["sub_title"]))
+    refs = [
+        "Bakker, A. B., & Demerouti, E. (2007). The Job Demands-Resources model. <i>Journal of Managerial Psychology, 22</i>(3), 309–328.",
+        "Deci, E. L., & Ryan, R. M. (2000). The 'what' and 'why' of goal pursuits. <i>Psychological Inquiry, 11</i>(4), 227–268.",
+        "Edmondson, A. C. (1999). Psychological safety and learning behavior in work teams. <i>Administrative Science Quarterly, 44</i>(2), 350–383.",
+        "Gallup (2023). <i>State of the Global Workplace Report.</i> Washington D.C.: Gallup Press. (Aangehaald voor richting in factorweging; geen peer-reviewed bron.)",
+        "Graen, G. B., & Uhl-Bien, M. (1995). Relationship-based approach to leadership. <i>The Leadership Quarterly, 6</i>(2), 219–247.",
+        "Holtom, B. C., et al. (2008). Turnover and retention research. <i>Academy of Management Annals, 2</i>(1), 231–274.",
+        "Rizzo, J. R., House, R. J., & Lirtzman, S. I. (1970). Role conflict and ambiguity in complex organizations. <i>Administrative Science Quarterly, 15</i>(2), 150–163.",
+        "Spector, P. E. (1985). Measurement of human service staff satisfaction. <i>American Journal of Community Psychology, 13</i>(6), 693–713.",
+        "Van den Broeck, A., et al. (2010). Capturing autonomy, competence, and relatedness at work. <i>Journal of Occupational and Organizational Psychology, 83</i>(4), 981–1002.",
+    ]
+    for ref in refs:
+        story.append(Paragraph(f"• {ref}", ParagraphStyle(
+            "ref",
+            fontName="Helvetica",
+            fontSize=7.5,
+            leading=11,
+            textColor=MUTED,
+            spaceAfter=3,
+            leftIndent=8,
+        )))
 
     # ── Build ──────────────────────────────────────────────────────────────
     doc.build(story)

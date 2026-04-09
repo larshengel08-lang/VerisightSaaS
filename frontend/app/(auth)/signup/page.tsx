@@ -152,7 +152,10 @@ export default function SignupPage() {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          Door je te registreren ga je akkoord met onze voorwaarden en ons privacybeleid.
+          Door je te registreren ga je akkoord met onze{' '}
+          <Link href="/voorwaarden" className="underline hover:text-gray-600">voorwaarden</Link>
+          {' '}en ons{' '}
+          <Link href="/privacy" className="underline hover:text-gray-600">privacybeleid</Link>.
         </p>
       </div>
     </div>

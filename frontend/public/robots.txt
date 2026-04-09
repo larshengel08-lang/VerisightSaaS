@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /beheer
+Disallow: /campaigns
+Disallow: /api/
+
+Sitemap: https://www.verisight.nl/sitemap.xml
