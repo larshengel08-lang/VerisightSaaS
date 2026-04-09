@@ -5,11 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ campaign_name }} — Verisight</title>
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
   <style>
     /* ── Reset & tokens ─────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,7 +28,7 @@
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 15px;
       line-height: 1.6;
       color: var(--text);
@@ -875,7 +870,7 @@
     return valid;
   }
 
-  // ── localStorage persistence ─────────────────────────────────────────────
+// ── sessionStorage persistence ───────────────────────────────────────────
   // Slaat antwoorden en huidige stap op bij elke navigatie.
   // Herstelt automatisch bij herbezoek (bijv. na refresh).
   // Sleutel: verisight_survey_{token} — per respondent uniek.
@@ -901,7 +896,7 @@
     form.querySelectorAll('textarea').forEach(ta => {
       if (ta.name && ta.value) saved.data[ta.name] = ta.value;
     });
-    try { localStorage.setItem(key, JSON.stringify(saved)); } catch (e) {}
+try { sessionStorage.setItem(key, JSON.stringify(saved)); } catch (e) {}
   }
 
   function restoreFromStorage() {
@@ -909,7 +904,7 @@
     if (!key) return false;
     let parsed;
     try {
-      const raw = localStorage.getItem(key);
+const raw = sessionStorage.getItem(key);
       if (!raw) return false;
       parsed = JSON.parse(raw);
     } catch (e) { return false; }
@@ -939,7 +934,7 @@
   function clearStorage() {
     const key = _storageKey();
     if (!key) return;
-    try { localStorage.removeItem(key); } catch (e) {}
+try { sessionStorage.removeItem(key); } catch (e) {}
   }
   // ─────────────────────────────────────────────────────────────────────────
 

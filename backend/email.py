@@ -34,30 +34,38 @@ except ImportError:
     _RESEND_AVAILABLE = False
 
 
+def _mask_email(address: str) -> str:
+    if "@" not in address:
+        return "[redacted]"
+    local, domain = address.split("@", 1)
+    if len(local) <= 2:
+        masked_local = "*" * len(local)
+    else:
+        masked_local = f"{local[0]}***{local[-1]}"
+    return f"{masked_local}@{domain}"
+
+
 # ---------------------------------------------------------------------------
 # Interne helper
 # ---------------------------------------------------------------------------
 
 def _send(*, to: str, subject: str, html: str) -> bool:
-    """Verstuur één e-mail. Retourneert True bij succes."""
+    """Verstuur een e-mail. Retourneert True bij succes."""
+    safe_to = _mask_email(to)
     if not _RESEND_AVAILABLE:
-        print(f"[EMAIL] NIET verzonden — geen RESEND_API_KEY. Aan: {to} | Onderwerp: {subject}", flush=True)
-        logger.info("E-mail NIET verzonden (geen RESEND_API_KEY). Aan: %s | Onderwerp: %s", to, subject)
+        logger.info("E-mail niet verzonden (geen RESEND_API_KEY). Aan: %s", safe_to)
         return False
     try:
-        print(f"[EMAIL] Versturen naar {to} via {_EMAIL_FROM} ...", flush=True)
-        result = _resend.Emails.send({
+        _resend.Emails.send({
             "from":    _EMAIL_FROM,
             "to":      [to],
             "subject": subject,
             "html":    html,
         })
-        print(f"[EMAIL] Succes: {result}", flush=True)
-        logger.info("E-mail verzonden naar %s: %s", to, subject)
+        logger.info("E-mail verzonden naar %s", safe_to)
         return True
     except Exception as exc:
-        print(f"[EMAIL] FOUT bij verzenden naar {to}: {exc}", flush=True)
-        logger.error("E-mail verzending mislukt naar %s: %s", to, exc)
+        logger.error("E-mail verzending mislukt naar %s: %s", safe_to, exc)
         return False
 
 

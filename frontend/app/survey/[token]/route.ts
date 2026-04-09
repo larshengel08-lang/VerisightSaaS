@@ -16,6 +16,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   const { token } = await params
   const res = await fetch(`${BACKEND}/survey/${token}`, {
     headers: { 'Accept': 'text/html' },
+    cache: 'no-store',
   })
   const html = await res.text()
   return new Response(html, {
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     headers: { 'Content-Type': req.headers.get('content-type') ?? 'application/x-www-form-urlencoded' },
     body,
     redirect: 'manual',
+    cache: 'no-store',
   })
 
   // Backend stuurt redirect na submit — volg die door

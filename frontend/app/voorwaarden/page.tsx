@@ -18,7 +18,7 @@ export default function VoorwaardenPage() {
         <h2>1. Definities</h2>
         <ul>
           <li>
-            <strong>Verisight:</strong> de dienst en software aangeboden door Lars van den Hengel.
+            <strong>Verisight:</strong> de dienst en software voor ExitScan, rapportage en gerelateerde begeleiding.
           </li>
           <li>
             <strong>Klant:</strong> de organisatie die ExitScan afneemt.

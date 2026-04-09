@@ -17,8 +17,9 @@ export default function PrivacyPage() {
       <section>
         <h2>1. Wie is Verisight?</h2>
         <p>
-          Verisight is een dienst van Lars van den Hengel in Nederland. Verisight helpt HR-teams om
-          vertrekredenen beter te begrijpen via een begeleid ExitScan-traject met dashboard en rapportage.
+          Verisight is een in Nederland gevestigde dienst voor begeleide uitstroomanalyse. Verisight helpt
+          HR-teams om vertrekredenen beter te begrijpen via een begeleid ExitScan-traject met dashboard en
+          rapportage.
           Voor vragen over privacy kun je mailen naar{' '}
           <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>.
         </p>

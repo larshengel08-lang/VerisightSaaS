@@ -13,16 +13,19 @@ const navLinks = [
 
 const deliverables = [
   {
+    eyebrow: 'Patronen',
     title: 'Heldere vertrekredenen',
     description:
       'Je ziet niet alleen dat mensen vertrekken, maar ook welke redenen steeds terugkomen en waar HR waarschijnlijk kan bijsturen.',
   },
   {
+    eyebrow: 'Overzicht',
     title: 'Patronen per team of thema',
     description:
       'Je krijgt overzicht op organisatieniveau: bijvoorbeeld leiderschap, groei, cultuur of werkbelasting.',
   },
   {
+    eyebrow: 'Output',
     title: 'Dashboard, rapport en toelichting',
     description:
       'Je ontvangt een dashboard, een managementrapport en een persoonlijke toelichting op de belangrijkste aandachtspunten.',
@@ -31,16 +34,19 @@ const deliverables = [
 
 const frictionPoints = [
   {
+    eyebrow: 'Signaal 01',
     title: 'Exitgesprekken blijven los zand',
     description:
       'Notities uit gesprekken zijn lastig te vergelijken. Daardoor blijven terugkerende oorzaken van vertrek onzichtbaar.',
   },
   {
+    eyebrow: 'Signaal 02',
     title: 'De echte schade zie je te laat',
     description:
       'Als patronen pas opvallen na meerdere exits, zijn kosten voor werving, inwerken en productiviteit vaak al gemaakt.',
   },
   {
+    eyebrow: 'Signaal 03',
     title: 'HR krijgt vragen zonder harde basis',
     description:
       'Management wil weten wat er speelt, maar zonder structuur blijft het vaak bij indrukken in plaats van bruikbare inzichten.',
@@ -56,18 +62,21 @@ const fitSignals = [
 const processSteps = [
   {
     step: '01',
+    eyebrow: 'Intake',
     title: 'Korte intake en inrichting',
     description:
       'We stemmen af hoe jullie uitstroom eruitziet, richten ExitScan in en bepalen hoe uitnodigingen worden verstuurd.',
   },
   {
     step: '02',
+    eyebrow: 'Veldwerk',
     title: 'Versturen en verzamelen',
     description:
       'Vertrekkende medewerkers ontvangen een vertrouwelijke, mobiel leesbare vragenlijst. Jouw team hoeft daar geen extra tooling voor te beheren.',
   },
   {
     step: '03',
+    eyebrow: 'Uitleg',
     title: 'Analyse en persoonlijke toelichting',
     description:
       'Je ontvangt een dashboard, een rapport en een gesprek waarin we uitleggen wat de uitkomsten betekenen en waar je het beste kunt beginnen.',
@@ -76,31 +85,37 @@ const processSteps = [
 
 const resultCards = [
   {
+    eyebrow: 'Dashboard',
     title: 'Dashboard met groepsinzichten',
     description:
       'Zie welke vertrekredenen en werkfactoren terugkomen op organisatie- of afdelingsniveau.',
   },
   {
+    eyebrow: 'Rapport',
     title: 'Managementrapport in gewone taal',
     description:
       'Een rapport met hoofdbevindingen, aandachtspunten en concrete aanbevelingen voor HR en management.',
   },
   {
+    eyebrow: 'Nuance',
     title: 'Respons- en betrouwbaarheidsduiding',
     description:
       'Je ziet niet alleen de uitkomst, maar ook wanneer voorzichtigheid nodig is door beperkte aantallen.',
   },
   {
+    eyebrow: 'Begeleiding',
     title: 'Volledig begeleid traject',
     description:
       'Geen losse tool die je zelf moet uitvinden. Wij begeleiden de uitvoering van uitnodiging tot toelichting.',
   },
   {
+    eyebrow: 'Publiek',
     title: 'Publieke privacy- en voorwaardenpagina',
     description:
       'Je kunt intern direct verwijzen naar publieke informatie over privacy, hosting en voorwaarden.',
   },
   {
+    eyebrow: 'Vervolg',
     title: 'Uitbreidbaar na ExitScan',
     description:
       'Als de basis staat, kan Verisight later worden uitgebreid met retentieonderzoek voor zittende medewerkers.',
@@ -108,10 +123,22 @@ const resultCards = [
 ]
 
 const trustItems = [
-  'Voor HR-teams bij organisaties met 200 tot 1.000 medewerkers',
-  'Data gehost in Europa en publieke privacyverklaring beschikbaar',
-  'Volledig begeleid traject in plaats van een losse self-service tool',
-  'Methodiek gebaseerd op gevalideerde arbeids- en organisatiepsychologie',
+  {
+    title: 'Gericht op HR-teams',
+    description: 'Voor organisaties met 200 tot 1.000 medewerkers.',
+  },
+  {
+    title: 'Data in Europa',
+    description: 'Publieke privacyverklaring en heldere juridische pagina’s beschikbaar.',
+  },
+  {
+    title: 'Begeleid traject',
+    description: 'Geen losse self-service tool die HR zelf moet optuigen.',
+  },
+  {
+    title: 'Methodische basis',
+    description: 'Opzet vanuit gevalideerde arbeids- en organisatiepsychologie.',
+  },
 ]
 
 const faqs = [
@@ -159,6 +186,29 @@ const includedItems = [
   'Persoonlijke toelichting op de uitkomsten',
   'Privacy- en betrouwbaarheidsduiding in de rapportage',
 ]
+
+function AccentTile({ tone }: { tone: 'blue' | 'red' | 'amber' | 'emerald' }) {
+  const styles = {
+    blue: 'border-blue-200 bg-blue-50',
+    red: 'border-red-200 bg-red-50',
+    amber: 'border-amber-200 bg-amber-50',
+    emerald: 'border-emerald-200 bg-emerald-50',
+  }
+
+  const dotStyles = {
+    blue: 'bg-blue-700',
+    red: 'bg-red-500',
+    amber: 'bg-amber-500',
+    emerald: 'bg-emerald-500',
+  }
+
+  return (
+    <div className={`relative flex h-12 w-12 items-center justify-center rounded-2xl border ${styles[tone]}`}>
+      <div className={`h-4 w-4 rounded-full ${dotStyles[tone]}`} />
+      <div className="absolute right-2 top-2 h-2 w-2 rounded-full bg-white/80" />
+    </div>
+  )
+}
 
 export default function LandingPage() {
   return (
@@ -230,14 +280,19 @@ export default function LandingPage() {
                 versturen uitnodigingen, analyseren de antwoorden en leveren een dashboard, rapport en
                 persoonlijke toelichting op.
               </p>
-              <div className="mt-8 flex flex-wrap justify-center gap-3 text-sm font-medium text-slate-700">
+              <div className="mt-10 grid gap-4 text-left md:grid-cols-3">
                 {deliverables.map((item) => (
-                  <span
+                  <div
                     key={item.title}
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm"
+                    className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]"
                   >
-                    {item.title}
-                  </span>
+                    <AccentTile tone="blue" />
+                    <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
+                      {item.eyebrow}
+                    </p>
+                    <p className="mt-2 text-base font-semibold text-slate-950">{item.title}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+                  </div>
                 ))}
               </div>
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -347,16 +402,18 @@ export default function LandingPage() {
         </section>
 
         <section className="border-y border-slate-200 bg-slate-50 py-6">
-          <div className="mx-auto grid max-w-6xl gap-4 px-5 text-sm text-slate-700 sm:grid-cols-2 lg:grid-cols-4 sm:px-6">
+          <div className="mx-auto grid max-w-6xl gap-4 px-5 sm:grid-cols-2 lg:grid-cols-4 sm:px-6">
             {trustItems.map((item) => (
-              <div key={item} className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-                {item}
+              <div key={item.title} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                <AccentTile tone="emerald" />
+                <p className="mt-4 text-sm font-semibold text-slate-950">{item.title}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 py-20 sm:px-6">
+        <section className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Waarom organisaties starten</p>
             <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">
@@ -368,9 +425,11 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-6 md:grid-cols-3">
+          <div className="mt-12 grid gap-5 md:grid-cols-3">
             {frictionPoints.map((item) => (
-              <div key={item.title} className="rounded-3xl border border-red-100 bg-red-50 p-6">
+              <div key={item.title} className="rounded-3xl border border-red-100 bg-red-50 p-6 shadow-sm">
+                <AccentTile tone="red" />
+                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-red-700">{item.eyebrow}</p>
                 <h3 className="text-lg font-semibold text-slate-950">{item.title}</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-700">{item.description}</p>
               </div>
@@ -387,7 +446,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="bg-slate-950 py-20 text-white" id="aanpak">
+        <section className="bg-slate-950 py-16 text-white md:py-20" id="aanpak">
           <div className="mx-auto max-w-6xl px-5 sm:px-6">
             <div className="mx-auto max-w-3xl text-center">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-300">Aanpak</p>
@@ -399,9 +458,11 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
+            <div className="mt-12 grid gap-5 md:grid-cols-3">
               {processSteps.map((item) => (
                 <div key={item.step} className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                  <AccentTile tone="blue" />
+                  <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">{item.eyebrow}</p>
                   <p className="text-5xl font-bold text-blue-400/30">{item.step}</p>
                   <h3 className="mt-4 text-xl font-semibold">{item.title}</h3>
                   <p className="mt-3 text-sm leading-7 text-slate-300">{item.description}</p>
@@ -434,7 +495,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 py-20 sm:px-6" id="resultaten">
+        <section className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:py-20" id="resultaten">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Wat je krijgt</p>
             <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">
@@ -448,6 +509,8 @@ export default function LandingPage() {
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {resultCards.map((card) => (
               <div key={card.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <AccentTile tone="amber" />
+                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">{card.eyebrow}</p>
                 <h3 className="text-lg font-semibold text-slate-950">{card.title}</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-600">{card.description}</p>
               </div>
@@ -455,7 +518,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="bg-slate-50 py-20" id="tarieven">
+        <section className="bg-slate-50 py-16 md:py-20" id="tarieven">
           <div className="mx-auto max-w-5xl px-5 sm:px-6">
             <div className="mx-auto max-w-3xl text-center">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Tarieven</p>
@@ -477,6 +540,9 @@ export default function LandingPage() {
                       : 'border-slate-200 bg-white text-slate-900'
                   }`}
                 >
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-current/10 bg-white/10">
+                    <div className={`h-4 w-4 rounded-full ${tier.featured ? 'bg-white' : 'bg-blue-700'}`} />
+                  </div>
                   <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${tier.featured ? 'text-blue-100' : 'text-slate-500'}`}>
                     {tier.range}
                   </p>
@@ -524,7 +590,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-5xl px-5 py-20 sm:px-6">
+        <section className="mx-auto max-w-5xl px-5 py-16 sm:px-6 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Veelgestelde vragen</p>
             <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">
@@ -544,7 +610,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="bg-slate-950 py-20 text-white" id="kennismaking">
+        <section className="bg-slate-950 py-16 text-white md:py-20" id="kennismaking">
           <div className="mx-auto max-w-5xl px-5 sm:px-6">
             <div className="grid gap-8 lg:grid-cols-[1fr_0.9fr]">
               <div>

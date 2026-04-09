@@ -29,7 +29,7 @@ const securityHeaders = [
       // Supabase API + auth
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verisight-production.up.railway.app",
       // Next.js inline scripts + Google Fonts
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob:",

@@ -35,8 +35,6 @@ class OrganizationRead(OrmBase):
     id: str
     name: str
     slug: str
-    contact_email: str
-    api_key: str
     is_active: bool
     created_at: datetime
 

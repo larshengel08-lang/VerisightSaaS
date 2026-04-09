@@ -111,14 +111,19 @@ app = FastAPI(
 )
 
 _FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+_ADDITIONAL_CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("ADDITIONAL_CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         _FRONTEND_URL,
         "http://localhost:3000",
         "http://localhost:3001",
+        *_ADDITIONAL_CORS_ORIGINS,
     ],
-    allow_origin_regex=r"https://.*\.vercel\.app",  # alle Vercel preview URLs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -176,10 +181,9 @@ def _render_survey_status(
 
 @app.exception_handler(OperationalError)
 async def db_operational_error_handler(request: Request, exc: OperationalError):
-    msg = str(exc.orig) if exc.orig else str(exc)
     return JSONResponse(
         status_code=503,
-        content={"detail": "Database tijdelijk niet beschikbaar. Probeer het over enkele seconden opnieuw.", "db_error": msg[:200]},
+        content={"detail": "Database tijdelijk niet beschikbaar. Probeer het over enkele seconden opnieuw."},
     )
 
 
@@ -198,11 +202,7 @@ async def db_general_error_handler(request: Request, exc: SQLAlchemyError):
 @app.get("/api/health")
 async def health() -> dict[str, str]:
     db_ok = check_db_connection()
-    return {
-        "status": "ok" if db_ok else "degraded",
-        "version": "2.0.0",
-        "database": "connected" if db_ok else "unreachable",
-    }
+    return {"status": "ok" if db_ok else "degraded"}
 
 
 @app.get("/survey/complete", response_class=HTMLResponse)
@@ -313,7 +313,6 @@ async def submit_survey(
         risk_result = compute_retention_risk(sdt_scores, org_scores)
     except Exception as exc:
         sentry_sdk.capture_exception(exc, extras={
-            "token": payload.token,
             "campaign_id": str(respondent.campaign_id),
             "flow": "survey_scoring",
         })
@@ -414,7 +413,6 @@ async def submit_survey(
     except Exception as exc:
         db.rollback()
         sentry_sdk.capture_exception(exc, extras={
-            "token": payload.token,
             "campaign_id": str(respondent.campaign_id),
             "flow": "survey_persist",
         })
@@ -594,14 +592,19 @@ async def list_respondents(
 async def send_invites(
     campaign_id: str,
     body: list[SendInviteItem],
+    x_api_key: Annotated[str, Header()],
     db: Session = Depends(get_db),
 ) -> InviteSendResult:
     """
     Stuur uitnodigingsmails naar een lijst van {token, email} paren.
     Wordt aangeroepen vanuit het dashboard direct na het aanmaken van respondenten.
-    Geen API-key vereist — tokens zijn UUIDs en daarmee al moeilijk te raden.
+    Vereist een geldige organisatie-API-key; opgeslagen respondentdata blijft leidend.
     """
-    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    org = _get_org_by_api_key(x_api_key, db)
+    campaign = db.query(Campaign).filter(
+        Campaign.id == campaign_id,
+        Campaign.organization_id == org.id,
+    ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
 
@@ -610,22 +613,21 @@ async def send_invites(
     skipped = 0
 
     for item in body:
-        if not item.email:
-            skipped += 1
-            continue
-
-        # Zoek respondent op via token (verificatie dat token bij deze campaign hoort)
         respondent = db.query(Respondent).filter(
             Respondent.token == item.token,
             Respondent.campaign_id == campaign_id,
         ).first()
 
-        if not respondent:
+        if not respondent or not respondent.email:
             failed += 1
             continue
 
+        if item.email and item.email != respondent.email:
+            skipped += 1
+            continue
+
         ok = send_survey_invite(
-            to_email=item.email,
+            to_email=respondent.email,
             campaign_name=campaign.name,
             token=item.token,
             scan_type=campaign.scan_type,
@@ -641,7 +643,6 @@ async def send_invites(
                 level="warning",
                 extras={
                     "campaign_id": campaign_id,
-                    "token": item.token,
                     "flow": "send_invites",
                 },
             )
@@ -736,32 +737,6 @@ async def campaign_stats(
 # ---------------------------------------------------------------------------
 # PDF-rapport
 # ---------------------------------------------------------------------------
-
-@app.get("/api/campaigns/{campaign_id}/report-public")
-async def download_report_public(
-    campaign_id: str,
-    db: Session = Depends(get_db),
-) -> Response:
-    """Publiek PDF-endpoint — voor gebruik vanuit Next.js dashboard (geen API-key)."""
-    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
-    if not campaign:
-        raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
-    try:
-        from backend.report import generate_campaign_report
-        pdf_bytes = generate_campaign_report(campaign_id, db)
-    except Exception as e:
-        sentry_sdk.capture_exception(e, extras={
-            "campaign_id": campaign_id,
-            "flow": "report_generation_public",
-        })
-        raise HTTPException(status_code=500, detail=f"PDF-generatie mislukt: {e}")
-    filename = f"Verisight_{campaign.name.replace(' ', '_')}.pdf"
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
-
 
 @app.get("/api/campaigns/{campaign_id}/report")
 async def download_report(

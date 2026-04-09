@@ -27,6 +27,26 @@ export async function resendPendingAction(campaignId: string): Promise<ResendRes
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { sent: 0, failed: 0, skipped: 0, error: 'Niet ingelogd.' }
 
+  const { data: campaign, error: campaignError } = await supabase
+    .from('campaigns')
+    .select('organization_id')
+    .eq('id', campaignId)
+    .single()
+
+  if (campaignError || !campaign) {
+    return { sent: 0, failed: 0, skipped: 0, error: 'Campaign niet gevonden of niet toegankelijk.' }
+  }
+
+  const { data: org, error: orgError } = await supabase
+    .from('organizations')
+    .select('api_key')
+    .eq('id', campaign.organization_id)
+    .single()
+
+  if (orgError || !org?.api_key) {
+    return { sent: 0, failed: 0, skipped: 0, error: 'Autorisatie voor backend-uitnodigingen ontbreekt.' }
+  }
+
   // Get pending respondents — RLS ensures only own-org data is returned
   const { data: respondents, error: fetchError } = await supabase
     .from('respondents')
@@ -42,7 +62,10 @@ export async function resendPendingAction(campaignId: string): Promise<ResendRes
   try {
     const resp = await fetch(`${apiUrl}/api/campaigns/${campaignId}/send-invites`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': org.api_key,
+      },
       body: JSON.stringify(respondents.map(r => ({ token: r.token, email: r.email }))),
       // Server-side fetch: geen browser CORS-restrictie, directe backend-aanroep
       cache: 'no-store',

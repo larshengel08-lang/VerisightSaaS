@@ -7,8 +7,6 @@ interface Props {
   campaignName: string
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
-
 export function PdfDownloadButton({ campaignId, campaignName }: Props) {
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState<string | null>(null)
@@ -18,7 +16,7 @@ export function PdfDownloadButton({ campaignId, campaignName }: Props) {
     setError(null)
 
     try {
-      const url = `${API_BASE}/api/campaigns/${campaignId}/report-public`
+      const url = `/api/campaigns/${campaignId}/report`
       const resp = await fetch(url)
 
       if (!resp.ok) {
