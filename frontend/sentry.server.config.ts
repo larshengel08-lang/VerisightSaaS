@@ -1,12 +1,3 @@
-import * as Sentry from '@sentry/nextjs'
-
-const SENTRY_DSN = process.env.SENTRY_DSN
-
-if (SENTRY_DSN) {
-  Sentry.init({
-    dsn: SENTRY_DSN,
-    environment: process.env.NODE_ENV,
-    tracesSampleRate: 0.2,
-    sendDefaultPii: false,
-  })
-}
+// Sentry is tijdelijk uitgeschakeld in de frontend-build totdat
+// @sentry/nextjs weer expliciet is geinstalleerd en geconfigureerd.
+export {}
