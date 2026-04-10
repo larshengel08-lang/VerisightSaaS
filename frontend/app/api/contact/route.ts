@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     !isNonEmptyString(body.work_email, 5) ||
     !isNonEmptyString(body.organization, 2) ||
     !isNonEmptyString(body.employee_count, 2) ||
-    !isNonEmptyString(body.current_question, 10)
+    !isNonEmptyString(body.current_question, 5)
   ) {
     return NextResponse.json({ detail: 'Vul alle verplichte velden volledig in.' }, { status: 400 })
   }

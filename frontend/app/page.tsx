@@ -242,8 +242,8 @@ export default function LandingPage() {
               <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">Een vaste trajectprijs voor ExitScan, met één optionele verdieping.</h2>
               <p className="mt-4 text-lg leading-8 text-slate-600">Heldere standaardprijs, geen abonnement en tijdelijk early-adoptertarief voor de eerste organisaties.</p>
             </div>
-            <div className="mt-12">
-              <div className="mx-auto max-w-xl rounded-[2rem] border border-blue-700 bg-blue-700 px-8 py-10 text-center text-white shadow-xl">
+            <div className="mt-12 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="rounded-[2rem] border border-blue-700 bg-blue-700 px-8 py-10 text-center text-white shadow-xl">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-100">{baseOffer.title}</p>
                 <p className="mt-4 text-sm font-semibold uppercase tracking-[0.22em] text-blue-100">Standaardprijs</p>
                 <p className="mt-2 text-3xl font-bold text-blue-100/70 line-through">{baseOffer.price}</p>
@@ -253,6 +253,22 @@ export default function LandingPage() {
                 <p className="mt-5 text-sm leading-6 text-blue-50">
                   Geschikt voor organisaties die losse exitgesprekken willen omzetten naar één vergelijkbaar organisatiebeeld met dashboard en rapport.
                 </p>
+              </div>
+              <div className="rounded-[2rem] border border-slate-200 bg-white px-8 py-10 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Optionele add-on</p>
+                {optionalAddOns.map(([title, description, note]) => (
+                  <div key={title}>
+                    <div className="mt-4 inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                      Alleen toevoegen als extra verdieping nodig is
+                    </div>
+                    <h3 className="mt-5 text-2xl font-bold text-slate-950">{title}</h3>
+                    <p className="mt-3 text-base leading-8 text-slate-600">{description}</p>
+                    <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4">
+                      <p className="text-sm font-semibold text-blue-950">Meerprijs: EUR 950</p>
+                      <p className="mt-2 text-sm leading-6 text-blue-900">{note.replace('Meerprijs: EUR 950. ', '')}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -272,18 +288,6 @@ export default function LandingPage() {
                     ].map((item) => (
                       <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">{item}</div>
                     ))}
-                  </div>
-                  <div className="mt-6">
-                    <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Optionele add-on</h4>
-                    <div className="mt-3 space-y-3">
-                      {optionalAddOns.map(([title, description, note]) => (
-                        <div key={title} className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4 text-sm">
-                          <p className="font-semibold text-blue-950">{title}</p>
-                          <p className="mt-2 leading-6 text-slate-700">{description}</p>
-                          <p className="mt-2 text-xs leading-5 text-blue-800">{note}</p>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 </div>
                 <div className="rounded-3xl border border-blue-200 bg-blue-50 p-6">

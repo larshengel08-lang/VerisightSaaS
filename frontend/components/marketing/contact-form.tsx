@@ -36,6 +36,18 @@ export function ContactForm() {
     setSuccessMessage(null)
     setErrorMessage(null)
 
+    if (
+      form.name.trim().length < 2 ||
+      form.workEmail.trim().length < 5 ||
+      form.organization.trim().length < 2 ||
+      form.employeeCount.trim().length < 2 ||
+      form.currentQuestion.trim().length < 5
+    ) {
+      setErrorMessage('Vul naam, werk e-mail, organisatie, omvang en een korte vraag of context in.')
+      setLoading(false)
+      return
+    }
+
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
@@ -55,7 +67,11 @@ export function ContactForm() {
       const payload = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        setErrorMessage(payload.detail ?? 'Je aanvraag kon niet worden verzonden. Probeer het later opnieuw of mail naar hallo@verisight.nl.')
+        setErrorMessage(
+          payload.detail === 'Vul alle verplichte velden volledig in.'
+            ? 'Vul naam, werk e-mail, organisatie, omvang en een korte vraag of context in.'
+            : payload.detail ?? 'Je aanvraag kon niet worden verzonden. Probeer het later opnieuw of mail naar hallo@verisight.nl.',
+        )
         return
       }
 
@@ -186,7 +202,7 @@ export function ContactForm() {
           disabled={loading}
           className="inline-flex items-center justify-center rounded-2xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? 'Plan mijn gesprek...' : 'Plan mijn gesprek'}
+          {loading ? 'Verstuur bericht...' : 'Verstuur bericht'}
         </button>
       </div>
     </form>
