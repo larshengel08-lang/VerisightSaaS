@@ -51,7 +51,15 @@ class CampaignCreate(BaseModel):
     @field_validator("enabled_modules")
     @classmethod
     def validate_modules(cls, v: list[str] | None) -> list[str] | None:
-        valid = {"leadership", "culture", "growth", "compensation", "workload", "role_clarity"}
+        valid = {
+            "leadership",
+            "culture",
+            "growth",
+            "compensation",
+            "workload",
+            "role_clarity",
+            "segment_deep_dive",
+        }
         if v is not None:
             invalid = set(v) - valid
             if invalid:

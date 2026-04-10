@@ -5,7 +5,7 @@ import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
 import { AddRespondentsForm } from '@/components/dashboard/add-respondents-form'
 import { InviteClientUserForm } from '@/components/dashboard/invite-client-user-form'
 import { ClientAccessList } from '@/components/dashboard/client-access-list'
-import type { Organization, Campaign, OrgInvite } from '@/lib/types'
+import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Organization, type Campaign, type OrgInvite } from '@/lib/types'
 
 export default async function BeheerPage() {
   const supabase = await createClient()
@@ -143,7 +143,8 @@ export default async function BeheerPage() {
             <div className="space-y-5">
               <p className="text-sm text-gray-500">
                 Gebruik bij voorkeur een klantbestand met e-mailadressen en optionele segmentvelden. Dat maakt de
-                setup sneller, netter en beter herhaalbaar dan losse handmatige invoer.
+                setup sneller, netter en beter herhaalbaar dan losse handmatige invoer. Als je Segment deep dive
+                hebt aangezet, zijn afdeling en functieniveau sterk aanbevolen.
               </p>
 
               {campaigns.filter(campaign => campaign.is_active).length === 0 && (
@@ -171,6 +172,11 @@ export default async function BeheerPage() {
                         </span>
                       </div>
                       <p className="text-sm font-medium text-gray-800 truncate">{campaign.name}</p>
+                      {hasCampaignAddOn(campaign, 'segment_deep_dive') && (
+                        <p className="mt-1 text-xs font-medium text-blue-700">
+                          Add-on actief: {REPORT_ADD_ON_LABELS.segment_deep_dive}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-400">
                         Aangemaakt{' '}
                         {new Date(campaign.created_at).toLocaleDateString('nl-NL', {

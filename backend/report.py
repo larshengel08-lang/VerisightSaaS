@@ -502,6 +502,128 @@ def _build_exit_hypotheses(
     return hypotheses
 
 
+SEGMENT_DEEP_DIVE_KEY = "segment_deep_dive"
+ROLE_LEVEL_LABELS_NL = {
+    "uitvoerend": "Uitvoerend",
+    "specialist": "Specialist",
+    "senior": "Senior specialist",
+    "manager": "Manager",
+    "director": "Director",
+    "c_level": "C-level",
+}
+
+
+def _campaign_has_add_on(campaign: Campaign, add_on_key: str) -> bool:
+    return add_on_key in (campaign.enabled_modules or [])
+
+
+def _segment_group_label(segment_type: str, raw_value: str) -> str:
+    if segment_type == "role_level":
+        return ROLE_LEVEL_LABELS_NL.get(raw_value, raw_value.capitalize())
+    return raw_value
+
+
+def _segment_type_label(segment_type: str) -> str:
+    return {
+        "department": "Afdeling",
+        "role_level": "Functieniveau",
+        "tenure": "Diensttijd",
+    }.get(segment_type, segment_type)
+
+
+def _segment_note(delta: float) -> str:
+    if delta >= 1.0:
+        return "Duidelijk hoger frictiesignaal dan organisatieniveau."
+    if delta >= 0.5:
+        return "Merkbaar hoger frictiesignaal dan organisatieniveau."
+    if delta <= -1.0:
+        return "Duidelijk lager frictiesignaal dan organisatieniveau."
+    if delta <= -0.5:
+        return "Merkbaar lager frictiesignaal dan organisatieniveau."
+    return "Ligt dicht bij het organisatieniveau."
+
+
+def _build_segment_deep_dive_data(
+    responses: list[SurveyResponse],
+    org_avg_risk: float | None,
+) -> dict[str, Any]:
+    coverage = {"department": 0, "role_level": 0, "tenure": 0}
+    group_store: dict[str, dict[str, list[SurveyResponse]]] = {
+        "department": {},
+        "role_level": {},
+        "tenure": {},
+    }
+
+    for response in responses:
+        if response.respondent.department:
+            coverage["department"] += 1
+        if response.respondent.role_level:
+            coverage["role_level"] += 1
+        if response.tenure_years is not None:
+            coverage["tenure"] += 1
+
+        if response.risk_score is None:
+            continue
+
+        department = response.respondent.department or None
+        if department:
+            group_store["department"].setdefault(department, []).append(response)
+
+        role_level = response.respondent.role_level or None
+        if role_level:
+            group_store["role_level"].setdefault(role_level, []).append(response)
+
+        tenure = response.tenure_years
+        if tenure is not None:
+            if tenure < 1.0:
+                tenure_bucket = "< 1 jaar"
+            elif tenure < 3.0:
+                tenure_bucket = "1-3 jaar"
+            elif tenure < 5.0:
+                tenure_bucket = "3-5 jaar"
+            else:
+                tenure_bucket = "5+ jaar"
+            group_store["tenure"].setdefault(tenure_bucket, []).append(response)
+
+    rows: list[dict[str, Any]] = []
+    if org_avg_risk is None:
+        return {"coverage": coverage, "rows": rows}
+
+    for segment_type, groups in group_store.items():
+        for raw_label, items in groups.items():
+            if len(items) < MIN_SEGMENT_N:
+                continue
+
+            avg_risk = round(sum(float(item.risk_score or 0) for item in items) / len(items), 2)
+            factor_signal_scores: list[tuple[str, float]] = []
+            for factor in ORG_FACTOR_KEYS:
+                factor_values = [
+                    float(item.org_scores[factor])
+                    for item in items
+                    if item.org_scores and item.org_scores.get(factor) is not None
+                ]
+                if not factor_values:
+                    continue
+                avg_factor = sum(factor_values) / len(factor_values)
+                factor_signal_scores.append((factor, round(11.0 - avg_factor, 2)))
+
+            top_factor_labels = [
+                FACTOR_LABELS_NL.get(factor, factor)
+                for factor, _score in sorted(factor_signal_scores, key=lambda item: item[1], reverse=True)[:2]
+            ]
+            rows.append({
+                "segment_type": segment_type,
+                "segment_label": _segment_group_label(segment_type, raw_label),
+                "n": len(items),
+                "avg_risk": avg_risk,
+                "delta_vs_org": round(avg_risk - org_avg_risk, 2),
+                "top_factor_labels": top_factor_labels,
+            })
+
+    rows.sort(key=lambda item: (abs(item["delta_vs_org"]), item["avg_risk"], item["n"]), reverse=True)
+    return {"coverage": coverage, "rows": rows[:6]}
+
+
 # ---------------------------------------------------------------------------
 # Header/Footer callbacks
 # ---------------------------------------------------------------------------
@@ -607,6 +729,11 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     top_cluster  = _top_factor_cluster(top_risks)
     strong_work_signal_pct = pattern.get("strong_work_signal_pct") if has_pattern else None
     any_work_signal_pct = pattern.get("any_work_signal_pct") if has_pattern else None
+    has_segment_deep_dive = _campaign_has_add_on(camp, SEGMENT_DEEP_DIVE_KEY)
+    segment_deep_dive = _build_segment_deep_dive_data(
+        responses=responses,
+        org_avg_risk=pattern.get("avg_risk_score") if has_pattern else avg_risk,
+    ) if has_segment_deep_dive else {"coverage": {}, "rows": []}
 
     # Replacement cost totaal (exit only)
     total_cost = sum(
@@ -1512,6 +1639,116 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             role_table.setStyle(role_ts)
             story.append(role_table)
 
+        if has_segment_deep_dive:
+            story.append(Spacer(1, 0.5 * cm))
+            story.append(Paragraph("Segment deep dive", STYLES["sub_title"]))
+            story.append(Paragraph(
+                "Deze add-on vergelijkt subgroepen expliciet met het organisatieniveau. "
+                "Zo zie je scherper waar frictie zich concentreert en welke thema's daar relatief het meest opvallen.",
+                STYLES["body"],
+            ))
+
+            coverage = segment_deep_dive.get("coverage", {})
+            coverage_rows = [[
+                "Metadata",
+                "Bekend in responses",
+            ]]
+            coverage_specs = [
+                ("Afdeling", coverage.get("department", 0)),
+                ("Functieniveau", coverage.get("role_level", 0)),
+                ("Diensttijd", coverage.get("tenure", 0)),
+            ]
+            for label, count in coverage_specs:
+                coverage_rows.append([label, f"{count} van {n_completed}"])
+
+            coverage_table = Table(
+                coverage_rows,
+                colWidths=[content_width * 0.45, content_width * 0.55],
+            )
+            coverage_table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#DBEAFE")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), BRAND_DARK),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#F8FBFF"), WHITE]),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ]))
+            story.append(coverage_table)
+
+            deep_dive_rows = segment_deep_dive.get("rows", [])
+            if deep_dive_rows:
+                story.append(Spacer(1, 0.25 * cm))
+                story.append(Paragraph(
+                    "Onderstaande groepen wijken het meest af van de gemiddelde frictiescore van de organisatie.",
+                    STYLES["body"],
+                ))
+                table_rows = [[
+                    "Segment",
+                    "Groep",
+                    "n",
+                    "Gem. frictiescore",
+                    "Vs. org",
+                    "Relatief opvallende thema's",
+                ]]
+                for row in deep_dive_rows:
+                    delta = row["delta_vs_org"]
+                    delta_prefix = "+" if delta > 0 else ""
+                    highlights = ", ".join(row["top_factor_labels"]) if row["top_factor_labels"] else None
+                    table_rows.append([
+                        _segment_type_label(row["segment_type"]),
+                        row["segment_label"],
+                        str(row["n"]),
+                        f"{row['avg_risk']:.1f} / 10",
+                        f"{delta_prefix}{delta:.1f}",
+                        (
+                            f"{highlights}. {_segment_note(delta)}"
+                            if highlights else
+                            _segment_note(delta)
+                        ),
+                    ])
+
+                deep_dive_table = Table(
+                    table_rows,
+                    colWidths=[
+                        content_width * 0.13,
+                        content_width * 0.18,
+                        content_width * 0.07,
+                        content_width * 0.14,
+                        content_width * 0.10,
+                        content_width * 0.38,
+                    ],
+                )
+                deep_dive_style = TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, 0), BRAND),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8.5),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#F8FBFF"), WHITE]),
+                    ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("ALIGN", (2, 1), (4, -1), "CENTER"),
+                    ("FONTNAME", (3, 1), (4, -1), "Helvetica-Bold"),
+                ])
+                for row_idx, row in enumerate(deep_dive_rows, start=1):
+                    risk_color = RISK_HIGH if row["avg_risk"] >= 7 else RISK_MED if row["avg_risk"] >= 4.5 else RISK_LOW
+                    delta_color = RISK_HIGH if row["delta_vs_org"] >= 0.5 else RISK_LOW if row["delta_vs_org"] <= -0.5 else MUTED
+                    deep_dive_style.add("TEXTCOLOR", (3, row_idx), (3, row_idx), risk_color)
+                    deep_dive_style.add("TEXTCOLOR", (4, row_idx), (4, row_idx), delta_color)
+                deep_dive_table.setStyle(deep_dive_style)
+                story.append(deep_dive_table)
+            else:
+                story.append(Spacer(1, 0.25 * cm))
+                story.append(Paragraph(
+                    "Voor deze campagne waren nog te weinig consistente subgroepen beschikbaar om contrasten betrouwbaar uit te lichten. "
+                    "De add-on is wel geactiveerd, maar vraagt in de praktijk voldoende responses en nette metadata per respondent.",
+                    STYLES["body"],
+                ))
+
     else:
         story.append(Paragraph(
             "Onvoldoende responses voor patroonrapportage (minimaal 10 vereist).",
@@ -1873,6 +2110,14 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         "Alle resultaten worden uitsluitend op gegroepeerd niveau gedeeld, conform de AVG.",
         STYLES["body"],
     ))
+
+    if has_segment_deep_dive:
+        story.append(Paragraph(
+            "Bij de add-on Segment deep dive worden subgroepen expliciet afgezet tegen het organisatieniveau. "
+            "Die vergelijking blijft beschrijvend: de verdieping laat zien waar frictie relatief sterker of zwakker terugkomt, "
+            "maar bewijst geen oorzaak.",
+            STYLES["body"],
+        ))
 
     story.append(Spacer(1, 0.5 * cm))
 

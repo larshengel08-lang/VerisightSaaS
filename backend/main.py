@@ -104,6 +104,20 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 _IS_SQLITE = DATABASE_URL.startswith("sqlite")
 
 
+def _resolve_survey_modules(enabled_modules: list[str] | None) -> list[str]:
+    """Return only factor modules for the survey itself.
+
+    Campaign-level add-ons, such as segment verdieping in the report, should
+    never suppress factor questions in the survey. When no explicit factor
+    subset is configured, the full default factor set remains active.
+    """
+    if not enabled_modules:
+        return ORG_FACTOR_KEYS
+
+    factor_modules = [module for module in enabled_modules if module in ORG_FACTOR_KEYS]
+    return factor_modules or ORG_FACTOR_KEYS
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Alleen tabellen aanmaken bij SQLite (lokale dev zonder Supabase)
@@ -549,7 +563,7 @@ async def serve_survey(
             tone="info",
         )
 
-    enabled_modules = campaign.enabled_modules or ORG_FACTOR_KEYS
+    enabled_modules = _resolve_survey_modules(campaign.enabled_modules)
 
     return templates.TemplateResponse(
         request,

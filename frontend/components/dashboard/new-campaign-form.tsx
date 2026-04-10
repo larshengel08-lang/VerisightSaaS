@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import type { Organization } from '@/lib/types'
-import { FACTOR_LABELS } from '@/lib/types'
+import { FACTOR_LABELS, REPORT_ADD_ON_DESCRIPTIONS, REPORT_ADD_ON_LABELS } from '@/lib/types'
 
 const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity']
+const REPORT_ADD_ONS = ['segment_deep_dive'] as const
 
 interface Props { orgs: Organization[] }
 
@@ -20,6 +21,8 @@ export function NewCampaignForm({ orgs }: Props) {
   const [success,  setSuccess]  = useState(false)
   const router = useRouter()
   const supabase = createClient()
+  const hasSelectedFactorSubset = modules.some(module => ORG_FACTORS.includes(module))
+  const hasSegmentDeepDive = modules.includes('segment_deep_dive')
 
   function toggleModule(m: string) {
     setModules(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
@@ -93,8 +96,8 @@ export function NewCampaignForm({ orgs }: Props) {
       {/* Modules */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Modules{' '}
-          <span className="font-normal text-gray-400 text-xs">(leeg = alle 6 ingeschakeld)</span>
+          Surveymodules{' '}
+          <span className="font-normal text-gray-400 text-xs">(leeg = alle 6 factoren ingeschakeld)</span>
         </label>
         <div className="grid grid-cols-2 gap-1.5">
           {ORG_FACTORS.map(f => (
@@ -109,6 +112,44 @@ export function NewCampaignForm({ orgs }: Props) {
             </label>
           ))}
         </div>
+        <p className="mt-2 text-xs leading-5 text-gray-400">
+          Laat dit leeg als je de volledige ExitScan wilt draaien. Beperk alleen factoren als je bewust een kortere of aangepaste campagne wilt opzetten.
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Rapport-add-ons
+          <span className="ml-1 font-normal text-gray-400 text-xs">(optioneel)</span>
+        </label>
+        <div className="space-y-3">
+          {REPORT_ADD_ONS.map(addOn => (
+            <label key={addOn} className="flex items-start gap-3 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={modules.includes(addOn)}
+                onChange={() => toggleModule(addOn)}
+                className="mt-1 rounded"
+              />
+              <span>
+                <span className="block font-medium text-gray-900">{REPORT_ADD_ON_LABELS[addOn]}</span>
+                <span className="block text-xs leading-5 text-gray-500">
+                  {REPORT_ADD_ON_DESCRIPTIONS[addOn]}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+        {hasSegmentDeepDive && (
+          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+            Segment deep dive gebruikt bestaande metadata in het rapport. Zorg daarom bij de respondentimport bij voorkeur voor ingevulde kolommen <code className="font-mono">email</code>, <code className="font-mono">department</code> en <code className="font-mono">role_level</code>. Zonder afdeling en functieniveau blijft de verdieping beperkter.
+          </p>
+        )}
+        {!hasSelectedFactorSubset && hasSegmentDeepDive && (
+          <p className="mt-2 text-xs text-blue-800">
+            De add-on wijzigt de survey niet: alle standaard factoren blijven actief en het rapport krijgt extra segmentanalyse.
+          </p>
+        )}
       </div>
 
       {error   && <p className="text-sm text-red-600">{error}</p>}

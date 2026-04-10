@@ -55,6 +55,10 @@ export function InviteClientUserForm({ orgs }: Props) {
         Nodig een klantgebruiker uit voor dashboardtoegang. Nieuwe gebruikers ontvangen een activatiemail;
         bestaande gebruikers worden direct gekoppeld aan de organisatie.
       </p>
+      <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-3 text-xs leading-5 text-blue-900">
+        De activatiemail is ook de accountstart. Nieuwe gebruikers hoeven dus niet eerst zelf een apart account aan te maken:
+        na klikken op de link krijgen ze toegang tot het dashboard met dit e-mailadres.
+      </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Organisatie</label>
@@ -107,7 +111,14 @@ export function InviteClientUserForm({ orgs }: Props) {
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {success && <p className="text-sm text-green-600">{success}</p>}
+      {success && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-3 text-sm text-green-700">
+          <p>{success}</p>
+          <p className="mt-1 text-xs text-green-700">
+            Nieuwe gebruiker? Die start het account via de activatiemail. Daarna kan later via <span className="font-medium">Wachtwoord vergeten</span> een vast wachtwoord worden ingesteld.
+          </p>
+        </div>
+      )}
 
       <button type="submit" disabled={loading || !orgId} className={btnCls}>
         {loading ? 'Bezig...' : 'Klanttoegang versturen'}

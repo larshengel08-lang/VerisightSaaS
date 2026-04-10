@@ -2,6 +2,7 @@
 
 export type ScanType = 'exit' | 'retention'
 export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
+export type CampaignAddOn = 'segment_deep_dive'
 // owner  = Verisight-beheerder (volledige toegang)
 // member = intern Verisight (zelfde rechten als owner)
 // viewer = HR-klant (alleen lezen: dashboard + PDF)
@@ -123,4 +124,20 @@ export const EXIT_REASON_LABELS: Record<string, string> = {
   S1:  'Persoonlijke omstandigheid',
   S2:  'Verhuizing / partner',
   S3:  'Studie / pensioen',
+}
+
+export const REPORT_ADD_ON_LABELS: Record<CampaignAddOn, string> = {
+  segment_deep_dive: 'Segment deep dive',
+}
+
+export const REPORT_ADD_ON_DESCRIPTIONS: Record<CampaignAddOn, string> = {
+  segment_deep_dive:
+    'Extra segmentanalyse in het rapport, met scherpere uitsplitsing naar afdeling, functieniveau en diensttijd. Werkt het best als department en role_level zijn aangeleverd.',
+}
+
+export function hasCampaignAddOn(
+  campaign: Pick<Campaign, 'enabled_modules'> | null | undefined,
+  addOn: CampaignAddOn,
+) {
+  return campaign?.enabled_modules?.includes(addOn) ?? false
 }

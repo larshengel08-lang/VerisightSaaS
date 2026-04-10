@@ -41,11 +41,11 @@ const faqs = [
   ['Zijn antwoorden herleidbaar naar individuen?', 'De output is bedoeld voor groepsinzichten. Privacy, minimum aantallen en zorgvuldige interpretatie worden expliciet meegenomen.'],
 ] as const
 
-const pricingTiers = [
-  ['200 - 400 medewerkers', 'EUR 1.750', 'Vaak passend bij ongeveer 20 tot 40 exits per jaar'],
-  ['400 - 700 medewerkers', 'EUR 2.250', 'Vaak passend bij ongeveer 40 tot 70 exits per jaar'],
-  ['700 - 1.000 medewerkers', 'EUR 2.950', 'Vaak passend bij ongeveer 70 tot 100 exits per jaar'],
-] as const
+const baseOffer = {
+  title: 'ExitScan',
+  price: 'EUR 2.950',
+  note: 'Vaste trajectprijs voor inrichting, analyse en rapportage',
+}
 
 const contactExpectations = [
   'Een reactie binnen ongeveer 1 werkdag',
@@ -53,6 +53,14 @@ const contactExpectations = [
   'Een eerste inschatting of ExitScan nu passend is',
   'Helderheid over timing, aanpak en prijs',
 ]
+
+const optionalAddOns = [
+  [
+    'Segment deep dive',
+    'Extra segmentanalyse in het rapport, met scherpere uitsplitsing naar afdeling, functieniveau en diensttijd. Je ziet explicieter welke subgroepen afwijken van het organisatieniveau.',
+    'Meerprijs: EUR 950. Werkt het best als afdeling en functieniveau netjes zijn aangeleverd in het respondentbestand.',
+  ],
+] as const
 
 function AccentTile({ tone }: { tone: 'blue' | 'red' | 'amber' | 'emerald' }) {
   const styles = {
@@ -230,18 +238,18 @@ export default function LandingPage() {
           <div className="mx-auto max-w-5xl px-5 sm:px-6">
             <div className="mx-auto max-w-3xl text-center">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Tarieven</p>
-              <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">Een vaste trajectprijs voor inrichting, analyse en toelichting.</h2>
-              <p className="mt-4 text-lg leading-8 text-slate-600">Vaste prijs, geen abonnement, geen verborgen kosten achteraf.</p>
+              <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">Een vaste trajectprijs voor ExitScan, met één optionele verdieping.</h2>
+              <p className="mt-4 text-lg leading-8 text-slate-600">Vaste prijs, geen abonnement en één duidelijke add-on als je scherpere segmentanalyse wilt.</p>
             </div>
-            <div className="mt-12 grid gap-4 md:grid-cols-3">
-              {pricingTiers.map(([range, price, note], index) => (
-                <div key={range} className={`rounded-3xl border p-6 text-center ${index === 1 ? 'border-blue-700 bg-blue-700 text-white shadow-lg' : 'border-slate-200 bg-white text-slate-900'}`}>
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-current/10 bg-white/10"><div className={`h-4 w-4 rounded-full ${index === 1 ? 'bg-white' : 'bg-blue-700'}`} /></div>
-                  <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${index === 1 ? 'text-blue-100' : 'text-slate-500'}`}>{range}</p>
-                  <p className="mt-4 text-4xl font-bold">{price}</p>
-                  <p className={`mt-3 text-sm leading-6 ${index === 1 ? 'text-blue-100' : 'text-slate-600'}`}>{note}</p>
-                </div>
-              ))}
+            <div className="mt-12">
+              <div className="mx-auto max-w-xl rounded-[2rem] border border-blue-700 bg-blue-700 px-8 py-10 text-center text-white shadow-xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-100">{baseOffer.title}</p>
+                <p className="mt-4 text-5xl font-bold">{baseOffer.price}</p>
+                <p className="mt-3 text-sm leading-6 text-blue-100">{baseOffer.note}</p>
+                <p className="mt-5 text-sm leading-6 text-blue-50">
+                  Geschikt voor organisaties die losse exitgesprekken willen omzetten naar één vergelijkbaar organisatiebeeld met dashboard en rapport.
+                </p>
+              </div>
             </div>
             <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
               <div className="grid gap-8 lg:grid-cols-[1fr_0.8fr]">
@@ -261,6 +269,18 @@ export default function LandingPage() {
                       <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">{item}</div>
                     ))}
                   </div>
+                  <div className="mt-6">
+                    <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-500">Optionele add-on</h4>
+                    <div className="mt-3 space-y-3">
+                      {optionalAddOns.map(([title, description, note]) => (
+                        <div key={title} className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4 text-sm">
+                          <p className="font-semibold text-blue-950">{title}</p>
+                          <p className="mt-2 leading-6 text-slate-700">{description}</p>
+                          <p className="mt-2 text-xs leading-5 text-blue-800">{note}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 <div className="rounded-3xl border border-blue-200 bg-blue-50 p-6">
                   <p className="text-sm font-semibold uppercase tracking-wide text-blue-900">Past vaak goed bij</p>
@@ -268,7 +288,7 @@ export default function LandingPage() {
                   <p className="mt-5 text-sm font-semibold uppercase tracking-wide text-blue-900">Eerst bespreken als</p>
                   <p className="mt-3 text-sm leading-7 text-slate-700">Je uitstroom nog erg beperkt is, of als je eigenlijk een breder medewerkeronderzoek zoekt in plaats van een uitstroomanalyse.</p>
                   <a href="#kennismaking" className="mt-6 inline-flex rounded-2xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-800">Plan een verkennend gesprek</a>
-                  <p className="mt-3 text-sm text-slate-600">Prijzen exclusief btw. Reactie meestal binnen 1 werkdag.</p>
+                  <p className="mt-3 text-sm text-slate-600">Prijs exclusief btw. Reactie meestal binnen 1 werkdag.</p>
                   <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                     <p className="text-xs font-semibold text-amber-800">Beschikbaarheid Q2 2026</p>
                     <p className="mt-1 text-xs leading-5 text-amber-700">We begeleiden maximaal 4 trajecten per kwartaal. Momenteel nog 2 plekken beschikbaar.</p>

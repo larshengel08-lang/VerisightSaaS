@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Campaign } from '@/lib/types'
+import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Campaign } from '@/lib/types'
 
 const ROLE_LEVELS = [
   { value: '', label: '— niet opgegeven —' },
@@ -57,6 +57,11 @@ export function AddRespondentsForm({ campaigns }: Props) {
   )
 
   const [campaignId, setCampaignId] = useState(activeCampaigns[0]?.id ?? campaigns[0]?.id ?? '')
+  const selectedCampaign = useMemo(
+    () => campaigns.find(campaign => campaign.id === campaignId) ?? null,
+    [campaignId, campaigns],
+  )
+  const hasSegmentDeepDive = hasCampaignAddOn(selectedCampaign, 'segment_deep_dive')
   const [mode, setMode] = useState<Mode>('emails')
 
   const [emailInput, setEmailInput] = useState('')
@@ -255,6 +260,19 @@ export function AddRespondentsForm({ campaigns }: Props) {
           </select>
         </div>
 
+        {hasSegmentDeepDive && (
+          <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            <p className="font-semibold mb-1">{REPORT_ADD_ON_LABELS.segment_deep_dive} staat aan voor deze campaign</p>
+            <p className="text-blue-800">
+              Voor deze rapportverdieping zijn <code className="font-mono">department</code> en <code className="font-mono">role_level</code>
+              {' '}sterk aanbevolen. Diensttijd wordt al uit de survey gehaald; de rest van de segmentanalyse valt of staat met nette metadata per respondent.
+            </p>
+            <p className="mt-2 text-blue-800">
+              Aan te leveren Excel-kolommen: <code className="font-mono">email</code> (verplicht), <code className="font-mono">department</code> en <code className="font-mono">role_level</code> (sterk aanbevolen), <code className="font-mono">annual_salary_eur</code> (optioneel).
+            </p>
+          </div>
+        )}
+
         {mode === 'emails' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -356,6 +374,13 @@ export function AddRespondentsForm({ campaigns }: Props) {
               <code className="font-mono">annual_salary_eur</code> meesturen. Upload een <code className="font-mono">.csv</code>
               {' '}of <code className="font-mono">.xlsx</code> bestand.
             </p>
+            {hasSegmentDeepDive && (
+              <p className="mt-2 text-xs leading-relaxed text-blue-800">
+                Voor {REPORT_ADD_ON_LABELS.segment_deep_dive.toLowerCase()} zijn ingevulde kolommen <code className="font-mono">department</code>
+                {' '}en <code className="font-mono">role_level</code> sterk aanbevolen. Zonder die velden blijft het rapport beperkter op subgroepniveau.
+                Gebruik bij voorkeur exact deze kolommen: <code className="font-mono">email</code>, <code className="font-mono">department</code>, <code className="font-mono">role_level</code>, <code className="font-mono">annual_salary_eur</code>.
+              </p>
+            )}
             <a
               href="/templates/verisight-respondenten-template.xlsx"
               download
