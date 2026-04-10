@@ -8,17 +8,16 @@ interface Props {
   respondents: Respondent[]
   responses: (SurveyResponse & { respondents: Respondent })[]
   scanType: string
-  /** Wanneer false (n < 5) worden individuele risicoscores verborgen — AVG herleidbaarheidsdrempel */
+  /** Wanneer false (n < 5) worden individuele frictiescores verborgen vanwege herleidbaarheidsrisico. */
   hasMinDisplay: boolean
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
-/** Leesbare labels voor preventability-codes uit de database */
 const PREVENTABILITY_LABELS: Record<string, string> = {
-  REDBAAR:          'Redbaar',
-  MOGELIJK_REDBAAR: 'Mogelijk redbaar',
-  NIET_REDBAAR:     'Niet redbaar',
+  STERK_WERKSIGNAAL: 'Sterk werksignaal',
+  GEMENGD_WERKSIGNAAL: 'Gemengd werksignaal',
+  BEPERKT_WERKSIGNAAL: 'Beperkt werksignaal',
 }
 
 export function RespondentTable({ respondents, responses, scanType, hasMinDisplay }: Props) {
@@ -34,7 +33,6 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Fallback: selecteer textarea
       const el = document.getElementById('pending-links-textarea') as HTMLTextAreaElement | null
       el?.select()
     }
@@ -42,42 +40,40 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
 
   return (
     <div className="space-y-4">
-      {/* Waarschuwing als scores verborgen zijn */}
       {!hasMinDisplay && responses.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
-          Individuele scores worden pas getoond vanaf 5 ingevulde responses (nu: {responses.length}).
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Individuele frictiescores worden pas getoond vanaf 5 ingevulde responses (nu: {responses.length}).
           Dit beschermt de anonimiteit van respondenten.
         </div>
       )}
 
-      {/* Tabel */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Token</th>
-              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Afdeling</th>
-              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Niveau</th>
-              <th className="text-left py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">Status</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Token</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Afdeling</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Niveau</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Status</th>
               {hasMinDisplay && (
-                <th className="text-right py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                  Risico
+                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Frictiescore
                   <span
-                    className="ml-1 text-gray-300 cursor-help"
-                    title="Risicoschaal 1–10: hogere score = meer verlooprisico. HOOG ≥ 7, MIDDEN 4.5–7, LAAG < 4.5"
+                    className="ml-1 cursor-help text-gray-300"
+                    title="Frictieschaal 1-10: hogere score = sterker signaal van ervaren werkfrictie. HOOG >= 7, MIDDEN 4.5-7, LAAG < 4.5."
                   >
-                    ⓘ
+                    i
                   </span>
                 </th>
               )}
               {hasMinDisplay && scanType === 'exit' && (
-                <th className="text-right py-2 px-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                  Vermijdbaar
+                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Werksignaal
                   <span
-                    className="ml-1 text-gray-300 cursor-help"
-                    title="Redbaar = vertrek was waarschijnlijk te voorkomen. Mogelijk redbaar = onduidelijk. Niet redbaar = persoonlijke of externe reden."
+                    className="ml-1 cursor-help text-gray-300"
+                    title="Dit label vat samen hoe sterk de antwoorden wijzen op beinvloedbare werkfactoren rondom vertrek. Het is een signaal, geen harde diagnose."
                   >
-                    ⓘ
+                    i
                   </span>
                 </th>
               )}
@@ -88,35 +84,31 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
               const resp = responseMap.get(r.id)
               return (
                 <tr key={r.id} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="py-2 px-3 font-mono text-xs text-gray-400">
-                    {r.token.slice(0, 8)}…
-                  </td>
-                  <td className="py-2 px-3 text-gray-600">{r.department ?? '–'}</td>
-                  <td className="py-2 px-3 text-gray-600">{r.role_level ?? '–'}</td>
-                  <td className="py-2 px-3">
+                  <td className="px-3 py-2 font-mono text-xs text-gray-400">{r.token.slice(0, 8)}...</td>
+                  <td className="px-3 py-2 text-gray-600">{r.department ?? '-'}</td>
+                  <td className="px-3 py-2 text-gray-600">{r.role_level ?? '-'}</td>
+                  <td className="px-3 py-2">
                     {r.completed ? (
-                      <span className="text-xs text-green-600 font-medium">✓ Ingevuld</span>
+                      <span className="text-xs font-medium text-green-600">Ingevuld</span>
                     ) : (
-                      <span className="text-xs text-gray-400">⏳ Nog niet gestart</span>
+                      <span className="text-xs text-gray-400">Nog niet gestart</span>
                     )}
                   </td>
                   {hasMinDisplay && (
-                    <td className="py-2 px-3 text-right">
+                    <td className="px-3 py-2 text-right">
                       {resp?.risk_score ? (
                         <div className="flex items-center justify-end gap-1.5">
-                          <span className="font-semibold text-gray-800">
-                            {resp.risk_score.toFixed(1)}
-                          </span>
+                          <span className="font-semibold text-gray-800">{resp.risk_score.toFixed(1)}</span>
                           <RiskBadge band={resp.risk_band ?? undefined} />
                         </div>
-                      ) : '–'}
+                      ) : '-'}
                     </td>
                   )}
                   {hasMinDisplay && scanType === 'exit' && (
-                    <td className="py-2 px-3 text-right text-xs text-gray-500">
+                    <td className="px-3 py-2 text-right text-xs text-gray-500">
                       {resp?.preventability
                         ? (PREVENTABILITY_LABELS[resp.preventability] ?? resp.preventability.replaceAll('_', ' '))
-                        : '–'}
+                        : '-'}
                     </td>
                   )}
                 </tr>
@@ -126,24 +118,23 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
         </table>
       </div>
 
-      {/* Openstaande links */}
       {pending.length > 0 && (
         <div className="mt-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Openstaande survey-links ({pending.length})
             </h3>
             <button
               onClick={copyLinks}
-              className="text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors"
+              className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-700"
             >
-              {copied ? '✓ Gekopieerd!' : '📋 Kopieer alle links'}
+              {copied ? 'Gekopieerd' : 'Kopieer alle links'}
             </button>
           </div>
           <textarea
             id="pending-links-textarea"
             readOnly
-            className="w-full font-mono text-xs bg-blue-50 border border-blue-200 rounded-lg p-3 h-28 resize-none focus:outline-none"
+            className="h-28 w-full resize-none rounded-lg border border-blue-200 bg-blue-50 p-3 font-mono text-xs focus:outline-none"
             value={pendingLinks}
           />
         </div>

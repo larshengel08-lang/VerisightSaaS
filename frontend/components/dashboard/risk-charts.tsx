@@ -15,9 +15,9 @@ const COLORS = { HOOG: '#DC2626', MIDDEN: '#F59E0B', LAAG: '#16A34A' }
 
 export function RiskCharts({ distribution, riskScores }: Props) {
   const pieData = [
-    { name: 'Hoog',   value: distribution.HOOG,   color: COLORS.HOOG },
-    { name: 'Midden', value: distribution.MIDDEN,  color: COLORS.MIDDEN },
-    { name: 'Laag',   value: distribution.LAAG,    color: COLORS.LAAG },
+    { name: 'Hoog signaal', value: distribution.HOOG, color: COLORS.HOOG },
+    { name: 'Middensignaal', value: distribution.MIDDEN, color: COLORS.MIDDEN },
+    { name: 'Laag signaal', value: distribution.LAAG, color: COLORS.LAAG },
   ].filter(d => d.value > 0)
 
   // Histogram bins 1–10 (9 bins: 1-2, 2-3, …, 9-10 incl.)

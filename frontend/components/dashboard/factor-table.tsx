@@ -30,7 +30,7 @@ export function FactorTable({ factorAverages }: Props) {
       {rows.map(row => (
         <div key={row.factor} className="flex items-center gap-3">
           {/* Naam */}
-          <span className="text-sm text-gray-700 w-36 flex-shrink-0">
+          <span className="text-sm text-gray-700 w-44 flex-shrink-0">
             {FACTOR_LABELS[row.factor]}
           </span>
 
@@ -49,8 +49,8 @@ export function FactorTable({ factorAverages }: Props) {
           </div>
 
           {/* Score */}
-          <span className="text-sm font-semibold text-gray-800 w-8 text-right">
-            {row.score.toFixed(1)}
+          <span className="text-sm font-semibold text-gray-800 w-20 text-right">
+            {row.riskVal.toFixed(1)}
           </span>
 
           {/* Badge */}

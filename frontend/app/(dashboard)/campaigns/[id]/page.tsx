@@ -116,15 +116,15 @@ export default async function CampaignPage({ params }: Props) {
         <KpiCard label="Ingevuld"     value={stats.total_completed} />
         <KpiCard label="Respons"      value={`${stats.completion_rate_pct ?? 0}%`} />
         <KpiCard
-          label="Gem. risico"
+          label="Gem. frictiescore"
           value={stats.avg_risk_score ? `${stats.avg_risk_score.toFixed(1)}/10` : '–'}
           accent={stats.avg_risk_score ? true : false}
-          tooltip="Risicoschaal 1–10: hogere score = meer verlooprisico. HOOG ≥ 7 · MIDDEN 4.5–7 · LAAG < 4.5"
+          tooltip="Frictieschaal 1–10: hogere score = sterker signaal van ervaren werkfrictie. HOOG ≥ 7 · MIDDEN 4.5–7 · LAAG < 4.5."
         />
         <KpiCard
-          label="Vermijdbaar"
-          value={hasEnoughData ? `${computeAvoidableRate(responses)}%` : '–'}
-          tooltip="Percentage vertrekgevallen waarbij het vertrek mogelijk te voorkomen was (op basis van push-factoren en verblijfsintentie)"
+          label="Sterk werksignaal"
+          value={hasEnoughData ? `${computeStrongWorkSignalRate(responses)}%` : '–'}
+          tooltip="Percentage responses waarbij de antwoorden relatief sterk wijzen op beïnvloedbare werkfactoren rondom vertrek."
         />
       </div>
 
@@ -180,7 +180,7 @@ export default async function CampaignPage({ params }: Props) {
         <>
           <div className="grid lg:grid-cols-2 gap-6 mb-6">
             <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h2 className="text-sm font-semibold text-gray-700 mb-4">Risicodistributie</h2>
+              <h2 className="text-sm font-semibold text-gray-700 mb-4">Signaalverdeling</h2>
               <RiskCharts
                 distribution={riskDistribution}
                 riskScores={responses.map(r => r.risk_score).filter(Boolean) as number[]}
@@ -214,9 +214,9 @@ export default async function CampaignPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Aanbevelingen */}
+          {/* Focusvragen */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-            <h2 className="text-sm font-semibold text-gray-700 mb-4">Prioritaire aanbevelingen</h2>
+            <h2 className="text-sm font-semibold text-gray-700 mb-4">Prioritaire focusvragen</h2>
             <RecommendationList factorAverages={factorData.orgAverages} />
           </div>
         </>
@@ -357,11 +357,11 @@ function computeFactorAverages(responses: SurveyResponse[]) {
   }
 }
 
-function computeAvoidableRate(responses: SurveyResponse[]) {
+function computeStrongWorkSignalRate(responses: SurveyResponse[]) {
   const total    = responses.filter(r => r.preventability).length
-  const avoidable = responses.filter(r => r.preventability === 'REDBAAR').length
+  const strongSignal = responses.filter(r => r.preventability === 'STERK_WERKSIGNAAL').length
   if (!total) return 0
-  return Math.round((avoidable / total) * 100)
+  return Math.round((strongSignal / total) * 100)
 }
 
 // ── Campaign Health Indicator ────────────────────────────────────────────────

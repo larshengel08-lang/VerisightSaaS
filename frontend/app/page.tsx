@@ -277,8 +277,8 @@ export default function LandingPage() {
                       'Inrichting van het ExitScan-traject',
                       'Uitnodigingen en twee herinneringen voor respondenten',
                       'Dashboard met terugkerende vertrekpatronen',
-                      'Managementrapport met aanbevelingen en nuance',
-                      'Persoonlijke toelichting op de uitkomsten',
+                      'Managementrapport met focusvragen en nuance',
+                      'Zelfstandig leesbare output voor HR en MT',
                       'Publieke privacy- en voorwaardenpagina voor interne afstemming',
                     ].map((item) => (
                       <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">{item}</div>

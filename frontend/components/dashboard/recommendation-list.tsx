@@ -1,59 +1,47 @@
 import { FACTOR_LABELS } from '@/lib/types'
 
-// Aanbevelingen gespiegeld van backend/scoring.py
-const RECOMMENDATIONS: Record<string, Record<string, string[]>> = {
+const FOCUS_QUESTIONS: Record<string, Record<string, string[]>> = {
   leadership: {
     HOOG: [
-      'Implementeer direct een 1:1 check-in structuur (wekelijks, 30 min).',
-      'Start leiderschapstraject gericht op coachend management (SDT-based).',
-      'Overweeg 360°-feedback voor direct leidinggevenden binnen 30 dagen.',
+      'Wat vertellen vertrekkers over de relatie met hun leidinggevende?',
+      'In welke teams lijkt dit het sterkst te spelen?',
     ],
     MIDDEN: [
-      'Plan kwartaalgesprekken over ontwikkeling en werkbeleving.',
-      'Introduceer concrete feedbackmomenten in bestaande teamoverleggen.',
+      'Worden feedback en ontwikkeling voldoende concreet besproken?',
     ],
-    LAAG: ['Leiderschapskwaliteit scoort goed — periodiek monitoren volstaat.'],
   },
   culture: {
     HOOG: [
-      'Voer cultuuraudit uit (psychologische veiligheid — Edmondson-instrument).',
-      'Stel actieplan op voor inclusie en respect op de werkplek.',
+      'Voelen medewerkers zich vrij om problemen of afwijkende meningen te delen?',
+      'Zijn er teams waar dit patroon duidelijk sterker terugkomt?',
     ],
-    MIDDEN: ['Organiseer team-sessies rondom waarden en gedragsnormen.'],
-    LAAG:   ['Cultuurscores positief — bewaken bij organisatieveranderingen.'],
+    MIDDEN: ['Welke situaties lijken de psychologische veiligheid onder druk te zetten?'],
   },
   growth: {
     HOOG: [
-      'Stel binnen 30 dagen persoonlijk ontwikkelplan op voor iedere medewerker.',
-      'Introduceer mentoring- en interne mobiliteitsprogramma.',
-      'Maak loopbaanpaden zichtbaar en bespreekbaar.',
+      'Weten medewerkers welke volgende stap binnen de organisatie realistisch is?',
+      'Waar zit de grootste kloof tussen verwachting en ervaren perspectief?',
     ],
-    MIDDEN: ['Evalueer of L&D-budget effectief wordt ingezet.'],
-    LAAG:   ['Groeimogelijkheden worden gewaardeerd — behoud huidige aanpak.'],
+    MIDDEN: ['Hoe zichtbaar en bespreekbaar zijn groeipaden nu echt?'],
   },
   compensation: {
     HOOG: [
-      'Voer marktconforme beloningsscan uit (benchmark extern).',
-      'Communiceer transparant over beloningsstructuur en groeipaden.',
+      'Hoe wordt beloning intern ervaren ten opzichte van vergelijkbare functies?',
     ],
-    MIDDEN: ['Evalueer arbeidsvoorwaarden bij volgende CAO-ronde of budgetcyclus.'],
-    LAAG:   ['Beloning wordt als marktconform ervaren — geen directe actie vereist.'],
+    MIDDEN: ['Speelt vooral de hoogte van beloning, of ook de uitleg en transparantie?'],
   },
   workload: {
     HOOG: [
-      'Urgent: analyseer werklastklachten en stel capaciteitsmaatregelen in.',
-      'Voer JD-R resources-scan uit — zijn er voldoende taakhulpbronnen?',
+      'Is de werkbelasting structureel of vooral piekgebonden?',
+      'Waar lijkt onvoldoende herstelruimte mee te spelen?',
     ],
-    MIDDEN: ['Monitor werklastbeleving maandelijks via korte pulse-meting.'],
-    LAAG:   ['Werkbelasting in balans — handhaven huidige aanpak.'],
+    MIDDEN: ['Welke teams ervaren de hoogste druk en waardoor komt dat?'],
   },
   role_clarity: {
     HOOG: [
-      'Herschrijf functiebeschrijvingen en bespreek deze individueel.',
-      'Introduceer RACI-model voor cruciale processen.',
+      'Waar zijn verwachtingen, verantwoordelijkheden of prioriteiten onvoldoende helder?',
     ],
-    MIDDEN: ['Verhelder taken en verantwoordelijkheden in teamoverleg.'],
-    LAAG:   ['Rolhelderheid goed — geen actie vereist.'],
+    MIDDEN: ['Welke rolonduidelijkheid komt het vaakst terug in gesprekken of feedback?'],
   },
 }
 
@@ -67,45 +55,39 @@ export function RecommendationList({ factorAverages }: Props) {
   const items = ORG_FACTORS
     .filter(f => f in factorAverages)
     .map(f => {
-      const score   = factorAverages[f]
-      const riskVal = 11 - score
-      const band    = riskVal >= 7 ? 'HOOG' : riskVal >= 4.5 ? 'MIDDEN' : 'LAAG'
-      return { factor: f, score, riskVal, band, recs: RECOMMENDATIONS[f]?.[band] ?? [] }
+      const score = factorAverages[f]
+      const signalValue = 11 - score
+      const band = signalValue >= 7 ? 'HOOG' : signalValue >= 4.5 ? 'MIDDEN' : 'LAAG'
+      return { factor: f, score, signalValue, band, questions: FOCUS_QUESTIONS[f]?.[band] ?? [] }
     })
-    .sort((a, b) => b.riskVal - a.riskVal)
-    .filter(item => item.recs.length > 0)
+    .sort((a, b) => b.signalValue - a.signalValue)
+    .filter(item => item.questions.length > 0)
 
   const bandStyle: Record<string, { wrapper: string; badge: string }> = {
-    HOOG:   { wrapper: 'border-red-200 bg-red-50',     badge: 'bg-red-100 text-red-700' },
+    HOOG: { wrapper: 'border-red-200 bg-red-50', badge: 'bg-red-100 text-red-700' },
     MIDDEN: { wrapper: 'border-amber-200 bg-amber-50', badge: 'bg-amber-100 text-amber-700' },
-    LAAG:   { wrapper: 'border-green-200 bg-green-50', badge: 'bg-green-100 text-green-700' },
+    LAAG: { wrapper: 'border-green-200 bg-green-50', badge: 'bg-green-100 text-green-700' },
   }
 
   return (
     <div className="space-y-3">
       {items.map(item => (
-        <div
-          key={item.factor}
-          className={`rounded-lg border p-4 ${bandStyle[item.band].wrapper}`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-gray-800">
-              {FACTOR_LABELS[item.factor]}
-            </span>
+        <div key={item.factor} className={`rounded-lg border p-4 ${bandStyle[item.band].wrapper}`}>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-sm font-semibold text-gray-800">{FACTOR_LABELS[item.factor]}</span>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">
-                risico {item.riskVal.toFixed(1)}/10
-              </span>
-              <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${bandStyle[item.band].badge}`}>
+              <span className="text-xs text-gray-500">signaal {item.signalValue.toFixed(1)}/10</span>
+              <span className={`rounded px-1.5 py-0.5 text-xs font-bold ${bandStyle[item.band].badge}`}>
                 {item.band === 'HOOG' ? 'URGENT' : item.band === 'MIDDEN' ? 'AANDACHT' : 'OK'}
               </span>
             </div>
           </div>
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Focusvragen</div>
           <ul className="space-y-1">
-            {item.recs.map((rec, i) => (
-              <li key={i} className="text-sm text-gray-700 flex gap-2">
-                <span className="text-gray-400 flex-shrink-0">•</span>
-                <span>{rec}</span>
+            {item.questions.map((question, i) => (
+              <li key={i} className="flex gap-2 text-sm text-gray-700">
+                <span className="flex-shrink-0 text-gray-400">•</span>
+                <span>{question}</span>
               </li>
             ))}
           </ul>

@@ -6,7 +6,7 @@ export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
 // member = intern Verisight (zelfde rechten als owner)
 // viewer = HR-klant (alleen lezen: dashboard + PDF)
 export type MemberRole = 'owner' | 'member' | 'viewer'
-export type Preventability = 'REDBAAR' | 'MOGELIJK_REDBAAR' | 'NIET_REDBAAR'
+export type Preventability = 'STERK_WERKSIGNAAL' | 'GEMENGD_WERKSIGNAAL' | 'BEPERKT_WERKSIGNAAL'
 
 export interface Organization {
   id: string
@@ -82,9 +82,9 @@ export interface OrgMember {
 // Scoring constanten (gespiegeld van Python backend)
 export const FACTOR_LABELS: Record<string, string> = {
   leadership:   'Leiderschap',
-  culture:      'Cultuur & Veiligheid',
-  growth:       'Groei & Ontwikkeling',
-  compensation: 'Beloning',
+  culture:      'Psychologische veiligheid & cultuurmatch',
+  growth:       'Groeiperspectief',
+  compensation: 'Beloning & voorwaarden',
   workload:     'Werkbelasting',
   role_clarity: 'Rolhelderheid',
   autonomy:     'Autonomie',
