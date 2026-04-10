@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Campaign } from '@/lib/types'
+import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Campaign, type Organization } from '@/lib/types'
 
 const ROLE_LEVELS = [
   { value: '', label: '— niet opgegeven —' },
@@ -18,6 +18,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
 interface Props {
   campaigns: Campaign[]
+  organizations: Organization[]
 }
 
 type Mode = 'emails' | 'bulk' | 'upload'
@@ -48,7 +49,7 @@ interface ImportResponse {
   emails_sent: number
 }
 
-export function AddRespondentsForm({ campaigns }: Props) {
+export function AddRespondentsForm({ campaigns, organizations }: Props) {
   const router = useRouter()
 
   const activeCampaigns = useMemo(
@@ -60,6 +61,10 @@ export function AddRespondentsForm({ campaigns }: Props) {
   const selectedCampaign = useMemo(
     () => campaigns.find(campaign => campaign.id === campaignId) ?? null,
     [campaignId, campaigns],
+  )
+  const organizationById = useMemo(
+    () => Object.fromEntries(organizations.map(organization => [organization.id, organization.name])),
+    [organizations],
   )
   const hasSegmentDeepDive = hasCampaignAddOn(selectedCampaign, 'segment_deep_dive')
   const [mode, setMode] = useState<Mode>('emails')
@@ -253,7 +258,7 @@ export function AddRespondentsForm({ campaigns }: Props) {
           >
             {campaigns.map(campaign => (
               <option key={campaign.id} value={campaign.id}>
-                {campaign.name} ({campaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'})
+                {organizationById[campaign.organization_id] ?? 'Onbekende organisatie'} — {campaign.name} ({campaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'})
                 {campaign.is_active ? '' : ' — gesloten'}
               </option>
             ))}

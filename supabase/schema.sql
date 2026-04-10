@@ -245,6 +245,7 @@ grant execute on function public.accept_org_invites_for_current_user() to authen
 drop policy if exists "org_members_can_select_org"       on public.organizations;
 drop policy if exists "authenticated_can_insert_org"     on public.organizations;
 drop policy if exists "owners_can_update_org"            on public.organizations;
+drop policy if exists "owners_can_delete_org"            on public.organizations;
 
 create policy "org_members_can_select_org"
   on public.organizations for select
@@ -256,6 +257,17 @@ create policy "authenticated_can_insert_org"
 
 create policy "owners_can_update_org"
   on public.organizations for update
+  using (
+    exists (
+      select 1 from public.org_members
+      where org_members.org_id = id
+        and org_members.user_id = auth.uid()
+        and org_members.role = 'owner'
+    )
+  );
+
+create policy "owners_can_delete_org"
+  on public.organizations for delete
   using (
     exists (
       select 1 from public.org_members
