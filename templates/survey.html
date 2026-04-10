@@ -194,6 +194,35 @@
       box-shadow: 0 2px 8px rgba(37,99,235,.3);
     }
 
+    .checkbox-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .checkbox-option {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      background: var(--white);
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .checkbox-option:hover {
+      border-color: #93C5FD;
+      background: #F8FBFF;
+    }
+    .checkbox-option input[type="checkbox"] {
+      margin-top: 3px;
+      accent-color: var(--brand);
+    }
+    .helper-text {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
     /* ── Select / Input ──────────────────────────────────────── */
     select, input[type="number"], textarea {
       width: 100%;
@@ -376,7 +405,7 @@
 
   <div class="privacy-note">
     <span class="icon">🔒</span>
-    <span>Je antwoorden worden vertrouwelijk verwerkt en alleen op gegroepeerd niveau gerapporteerd. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat totdat je verzendt of het concept wist.</span>
+    <span>Je antwoorden worden vertrouwelijk verwerkt en alleen op gegroepeerd niveau gerapporteerd. De uitkomsten zijn bedoeld als groepsinzichten en gespreksinput, niet als individueel oordeel of harde voorspelling. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat totdat je verzendt of het concept wist.</span>
   </div>
   <div class="draft-actions">
     <button type="button" class="btn btn-ghost" id="clear-draft-btn">Wis lokaal opgeslagen concept</button>
@@ -446,12 +475,12 @@
 
         <div class="question-block" id="qblock-stay">
           <div class="question-text">
-            Als de organisatie anders had gehandeld — had je dan mogelijk besloten te blijven?
+            In hoeverre denk je dat andere keuzes vanuit de organisatie je besluit hadden kunnen beïnvloeden?
           </div>
           <div class="likert-wrap">
             <div class="likert-labels">
-              <span>Nee, absoluut niet</span>
-              <span>Ja, zeker wel</span>
+              <span>Vrijwel niet</span>
+              <span>In sterke mate</span>
             </div>
             <div class="likert-options">
               {% for i in range(1, 6) %}
@@ -463,6 +492,38 @@
             </div>
           </div>
           <div class="field-error">Selecteer een antwoord.</div>
+        </div>
+
+        <div class="question-block" id="qblock-contributing-reasons">
+          <div class="question-text">
+            Welke andere factoren speelden ook mee in je vertrek? <span style="color:var(--muted);font-weight:400;">(optioneel, maximaal 2)</span>
+          </div>
+          <div class="checkbox-grid" data-max="2">
+            {% set additional_reason_options = [
+              ("leiderschap", "Leiderschap / mijn direct leidinggevende"),
+              ("cultuur", "Organisatiecultuur of werksfeer"),
+              ("groei", "Onvoldoende doorgroeimogelijkheden"),
+              ("beloning", "Beloning of arbeidsvoorwaarden"),
+              ("werkdruk", "Werkdruk of werkstress"),
+              ("rolonduidelijkheid", "Rolonduidelijkheid of tegenstrijdige verwachtingen"),
+              ("beter_aanbod", "Beter aanbod elders"),
+              ("carriere_switch", "Carrièreswitch"),
+              ("ondernemerschap", "Eigen onderneming"),
+              ("verhuizing", "Verhuizing"),
+              ("partner_verhuisd", "Partner verhuisd of mantelzorg"),
+              ("studie", "Studie of opleiding"),
+              ("pensioen", "Pensioen"),
+              ("gezondheid", "Gezondheid"),
+              ("persoonlijk", "Overige persoonlijke reden"),
+            ] %}
+            {% for option_value, option_label in additional_reason_options %}
+            <label class="checkbox-option">
+              <input type="checkbox" name="contributing_reasons" value="{{ option_value }}" />
+              <span>{{ option_label }}</span>
+            </label>
+            {% endfor %}
+          </div>
+          <div class="field-error">Selecteer maximaal 2 meespelende factoren.</div>
         </div>
       </div>
       <div class="nav-row">
@@ -573,7 +634,7 @@
 
         <!-- Culture / Psychological Safety -->
         {% if "culture" in enabled_modules %}
-        <p style="font-weight:600;font-size:14px;margin:20px 0 16px;color:var(--text);">Cultuur &amp; veiligheid</p>
+        <p style="font-weight:600;font-size:14px;margin:20px 0 16px;color:var(--text);">Psychologische veiligheid &amp; cultuurmatch</p>
         {% set culture_items = [
           ("culture_1", "Ik voelde me vrij om fouten toe te geven in dit team."),
           ("culture_2", "Ik kon moeilijke vragen stellen of afwijkende meningen uiten zonder negatieve gevolgen."),
@@ -599,7 +660,7 @@
 
         <!-- Growth -->
         {% if "growth" in enabled_modules %}
-        <p style="font-weight:600;font-size:14px;margin:20px 0 16px;color:var(--text);">Groei &amp; ontwikkeling</p>
+        <p style="font-weight:600;font-size:14px;margin:20px 0 16px;color:var(--text);">Groeiperspectief</p>
         {% set growth_items = [
           ("growth_1", "Er waren voldoende mogelijkheden om te leren en te groeien binnen mijn functie."),
           ("growth_2", "De organisatie investeerde in mijn persoonlijke en professionele ontwikkeling."),
@@ -625,7 +686,7 @@
 
         <!-- Compensation -->
         {% if "compensation" in enabled_modules %}
-        <p style="font-weight:600;font-size:14px;margin:20px 0 16px;color:var(--text);">Beloning &amp; arbeidsvoorwaarden</p>
+        <p style="font-weight:600;font-size:14px;margin:20px 0 16px;color:var(--text);">Beloning &amp; voorwaarden</p>
         {% set compensation_items = [
           ("compensation_1", "Mijn salaris was marktconform voor de werkzaamheden die ik uitvoerde."),
           ("compensation_2", "De totale arbeidsvoorwaarden (inclusief secundaire) sloten aan bij mijn verwachtingen."),
@@ -867,6 +928,18 @@
       }
     });
 
+    stepEl.querySelectorAll(".checkbox-grid[data-max]").forEach(group => {
+      const max = parseInt(group.dataset.max || "0", 10);
+      const checked = group.querySelectorAll("input[type='checkbox']:checked").length;
+      const block = group.closest(".question-block");
+      if (max > 0 && checked > max) {
+        block?.classList.add("has-error");
+        valid = false;
+      } else {
+        block?.classList.remove("has-error");
+      }
+    });
+
     return valid;
   }
 
@@ -892,6 +965,12 @@
     form.querySelectorAll('select').forEach(sel => {
       if (sel.name && sel.value) saved.data[sel.name] = sel.value;
     });
+    // Collect checkboxes
+    form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      if (!cb.name) return;
+      saved.data[cb.name] = saved.data[cb.name] || [];
+      if (cb.checked) saved.data[cb.name].push(cb.value);
+    });
     // Collect textarea
     form.querySelectorAll('textarea').forEach(ta => {
       if (ta.name && ta.value) saved.data[ta.name] = ta.value;
@@ -914,6 +993,13 @@ const raw = sessionStorage.getItem(key);
 
     // Restore radio buttons
     Object.entries(data).forEach(([name, val]) => {
+      if (Array.isArray(val)) {
+        val.forEach(entry => {
+          const checkbox = form.querySelector(`input[type="checkbox"][name="${name}"][value="${entry}"]`);
+          if (checkbox) checkbox.checked = true;
+        });
+        return;
+      }
       const radio = form.querySelector(`input[type="radio"][name="${name}"][value="${val}"]`);
       if (radio) radio.checked = true;
       // Restore selects
@@ -1000,6 +1086,7 @@ try { sessionStorage.removeItem(key); } catch (e) {}
     // Collect all form data
     const fd = new FormData(form);
     const data = Object.fromEntries(fd.entries());
+    const contributingReasons = fd.getAll("contributing_reasons").filter(Boolean);
 
     // Build structured payload
     const sdt_keys = ["B1","B2","B3","B4","B5","B6","B7","B8","B9","B10","B11","B12"];
@@ -1022,6 +1109,13 @@ try { sessionStorage.removeItem(key); } catch (e) {}
     uwes_keys.forEach(k => { if (data[k]) uwes_raw[k] = parseInt(data[k]); });
     ti_keys.forEach(k => { if (data[k]) ti_raw[k] = parseInt(data[k]); });
 
+    const pull_factors_raw = {};
+    contributingReasons.forEach(reason => {
+      if (reason && reason !== data.exit_reason_category) {
+        pull_factors_raw[reason] = 1;
+      }
+    });
+
     const payload = {
       token:                    data.token,
       tenure_years:             data.tenure_years ? parseFloat(data.tenure_years) : null,
@@ -1029,7 +1123,7 @@ try { sessionStorage.removeItem(key); } catch (e) {}
       stay_intent_score:        data.stay_intent_score ? parseInt(data.stay_intent_score) : null,
       sdt_raw,
       org_raw,
-      pull_factors_raw:         {},
+      pull_factors_raw,
       open_text:                data.open_text || null,
       uwes_raw,
       turnover_intention_raw:   ti_raw,

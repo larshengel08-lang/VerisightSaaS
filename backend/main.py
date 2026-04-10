@@ -368,6 +368,15 @@ async def submit_survey(
     exit_reason_code = payload.exit_reason_code
     if not exit_reason_code and payload.exit_reason_category:
         exit_reason_code = EXIT_REASON_CODE_MAP.get(payload.exit_reason_category)
+    contributing_reason_codes = [
+        mapped_code
+        for mapped_code in (
+            EXIT_REASON_CODE_MAP.get(reason_key, reason_key)
+            for reason_key in payload.pull_factors_raw.keys()
+        )
+        if mapped_code and mapped_code != exit_reason_code
+    ]
+    normalized_contributing_reasons = {code: 1 for code in contributing_reason_codes}
 
     # --- Scoring ---
     try:
@@ -389,6 +398,7 @@ async def submit_survey(
             stay_intent_score=payload.stay_intent_score or 3,
             sdt_scores=sdt_scores,
             org_scores=org_scores,
+            contributing_reason_codes=contributing_reason_codes,
         )
 
     # Replacement cost (exit only — if salary known)
@@ -431,6 +441,7 @@ async def submit_survey(
         "org_scores":            org_scores,
         "risk_result":           risk_result,
         "preventability_result": preventability_result,
+        "contributing_reason_codes": contributing_reason_codes,
         "recommendations":       recommendations,
         "uwes_score":            uwes_score,
         "turnover_intention_score": ti_score,
@@ -447,7 +458,7 @@ async def submit_survey(
         sdt_scores            = sdt_scores,
         org_raw               = payload.org_raw,
         org_scores            = org_scores,
-        pull_factors_raw      = payload.pull_factors_raw,
+        pull_factors_raw      = normalized_contributing_reasons,
         open_text_raw         = open_text_clean,
         open_text_analysis    = open_text_analysis,
         uwes_raw              = payload.uwes_raw,
@@ -777,6 +788,7 @@ async def campaign_stats(
             "risk_score":         resp.risk_score,
             "preventability":     resp.preventability,
             "exit_reason_code":   resp.exit_reason_code,
+            "contributing_reason_codes": list((resp.pull_factors_raw or {}).keys()),
             "department":         resp.respondent.department,
             "role_level":         resp.respondent.role_level,
         }

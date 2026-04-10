@@ -147,7 +147,7 @@ class SurveySubmit(BaseModel):
     # Module C — org factors (dict of all answered items)
     org_raw: dict[str, int] = Field(default_factory=dict)
 
-    # Module D — pull factors (optional)
+    # Module D — meespelende redenen naast de hoofdreden (optional)
     pull_factors_raw: dict[str, int] = Field(default_factory=dict)
 
     # Module E — open text
@@ -177,6 +177,21 @@ class SurveySubmit(BaseModel):
         for key, val in v.items():
             if val not in range(1, 6):
                 raise ValueError(f"Item {key}: waarde {val} buiten bereik (1-5).")
+        return v
+
+    @field_validator("pull_factors_raw")
+    @classmethod
+    def validate_contributing_reasons(cls, v: dict[str, int]) -> dict[str, int]:
+        valid = {
+            "leiderschap", "cultuur", "groei", "beloning", "werkdruk", "rolonduidelijkheid",
+            "beter_aanbod", "carriere_switch", "ondernemerschap",
+            "verhuizing", "partner_verhuisd", "studie", "pensioen", "gezondheid", "persoonlijk",
+        }
+        invalid = set(v.keys()) - valid
+        if invalid:
+            raise ValueError(f"Ongeldige aanvullende vertrekreden(en): {invalid}")
+        if len(v) > 2:
+            raise ValueError("Selecteer maximaal 2 aanvullende vertrekredenen.")
         return v
 
 

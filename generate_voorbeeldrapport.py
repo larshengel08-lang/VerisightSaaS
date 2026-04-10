@@ -34,11 +34,12 @@ from backend.scoring import (
 # Configuratie
 # ---------------------------------------------------------------------------
 
-N_RESPONSES = 35
-RANDOM_SEED = 2026
+N_UITGENODIGD  = 51   # uitgenodigden — geeft ~69% responsrate
+N_RESPONSES    = 35   # ingevuld (35 / 51 = 68.6%)
+RANDOM_SEED    = 2026
 random.seed(RANDOM_SEED)
 
-DEMO_ORG_NAME = "TechBouw B.V."
+DEMO_ORG_NAME      = "TechBouw B.V."
 DEMO_CAMPAIGN_NAME = "ExitScan Q1 2026"
 
 # ---------------------------------------------------------------------------
@@ -88,6 +89,14 @@ STAY_INTENT_MAP = {
     "werkdruk":             [2, 3, 4],
     "pull_aanbod":          [1, 2],
     "persoonlijk":          [1, 1, 2],
+}
+
+CONTRIBUTING_REASON_MAP = {
+    "leiderschap_probleem": ["P3", "P6"],
+    "groei_frustratie": ["P1", "P4"],
+    "werkdruk": ["P6", "P1"],
+    "pull_aanbod": ["P3", "P4"],
+    "persoonlijk": [],
 }
 
 # ---------------------------------------------------------------------------
@@ -189,8 +198,28 @@ def main() -> None:
 
     print(f"Organisatie:   {org.name}")
     print(f"Demo-campagne: {DEMO_CAMPAIGN_NAME}")
-    print(f"Genereer {N_RESPONSES} synthetische respondenten...\n")
+    print(f"Uitgenodigden: {N_UITGENODIGD}  |  Ingevuld: {N_RESPONSES}  |  Respons: {N_RESPONSES/N_UITGENODIGD*100:.1f}%\n")
 
+    # ── Stap 1: Aangemeld maar niet ingevuld (non-responders) ─────────────
+    n_non_responders = N_UITGENODIGD - N_RESPONSES
+    for _ in range(n_non_responders):
+        respondent = Respondent(
+            id=str(uuid.uuid4()),
+            campaign_id=camp.id,
+            department=random.choice(DEPARTMENTS),
+            role_level=random.choice(ROLE_LEVELS),
+            annual_salary_eur=float(random.choice(SALARIES)),
+            sent_at=datetime.now(timezone.utc),
+            opened_at=None,
+            completed=False,
+            completed_at=None,
+        )
+        db.add(respondent)
+
+    print(f"  {n_non_responders} non-responders aangemaakt (niet ingevuld)")
+    print(f"  Genereer {N_RESPONSES} ingevulde responses...\n")
+
+    # ── Stap 2: Ingevulde responses ────────────────────────────────────────
     for i in range(N_RESPONSES):
         profile = _pick_profile()
         dept    = random.choice(DEPARTMENTS)
@@ -212,6 +241,7 @@ def main() -> None:
             stay_intent_score=stay,
             sdt_scores=sdt_scores,
             org_scores=org_scores,
+            contributing_reason_codes=CONTRIBUTING_REASON_MAP.get(profile["name"], []),
         )
 
         rc = compute_replacement_cost(salary, role)
@@ -249,7 +279,7 @@ def main() -> None:
             sdt_scores=sdt_scores,
             org_raw=org_raw,
             org_scores=org_scores,
-            pull_factors_raw={},
+            pull_factors_raw={code: 1 for code in CONTRIBUTING_REASON_MAP.get(profile["name"], [])},
             open_text_raw=anonymize_text(text) if text else None,
             uwes_raw={},
             uwes_score=None,
@@ -271,7 +301,7 @@ def main() -> None:
         )
 
     db.commit()
-    print(f"\nAlle {N_RESPONSES} respondenten opgeslagen. Rapport genereren...")
+    print(f"\n{N_UITGENODIGD} respondenten totaal opgeslagen ({N_RESPONSES} ingevuld). Rapport genereren...")
 
     # Genereer PDF
     pdf_bytes = generate_campaign_report(camp.id, db)

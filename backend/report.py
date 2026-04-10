@@ -6,11 +6,11 @@ Genereert een professioneel 7-pagina rapport per campaign.
 Pagina-indeling
 ---------------
   1. Voorblad        — campagne, organisatie, datum, KPI-snapshot
-  2. Management Summary — sleutelbevindingen, risicodistributie
+  2. Management Summary — sleutelbevindingen, signaalverdeling
   3. SDT Basisbehoeften — autonomie, competentie, verbondenheid
-  4. Organisatiefactoren — radar, scoretabel, top-risico's
+  4. Organisatiefactoren — scoretabel, signaalwaarden, focusvragen
   5. Patronen & vertrekreden (exit) / bevlogenheid (retention)
-  6. Aanbevelingen   — per factor, per urgentieband
+  6. Werkhypothesen & vervolgstappen
 
 Gebruik
 -------
@@ -58,6 +58,7 @@ from backend.scoring import (
     FACTOR_LABELS_NL,
     ORG_FACTOR_KEYS,
     EXIT_REASON_LABELS_NL,
+    MIN_SEGMENT_N,
     detect_patterns,
     get_recommendations,
 )
@@ -210,11 +211,11 @@ def _fig_to_image(fig: plt.Figure, width_cm: float = 14.0) -> Image:
 
 
 # ---------------------------------------------------------------------------
-# Grafiek: risico-balk (horizontale meter)
+# Grafiek: frictiemeter (horizontale meter)
 # ---------------------------------------------------------------------------
 
 
-def _risk_gauge_image(score: float, band: str, benchmark: float | None = None) -> Image:
+def _risk_gauge_image(score: float, band: str) -> Image:
     fig, ax = plt.subplots(figsize=(5, 1.1))
     ax.set_xlim(1, 10)
     ax.set_ylim(0, 1.3)
@@ -236,11 +237,6 @@ def _risk_gauge_image(score: float, band: str, benchmark: float | None = None) -
 
     # Score label direct onder de naald
     ax.text(score, 0.08, f"{score:.1f}", ha="center", va="bottom", fontsize=10, color=color, fontweight="bold")
-
-    # Optionele benchmark lijn
-    if benchmark is not None:
-        ax.plot([benchmark, benchmark], [0.30, 1.00], color="#9CA3AF", lw=1.5, linestyle="--", zorder=4)
-        ax.text(benchmark, 1.10, "benchmark", ha="center", va="bottom", fontsize=7, color="#9CA3AF")
 
     return _fig_to_image(fig, width_cm=10)
 
@@ -313,9 +309,9 @@ def _factor_bar_image(factor_avgs: dict[str, float], width_cm: float = 12.0) -> 
         )
 
     patches = [
-        mpatches.Patch(color=MPL_HIGH, label="Hoog risico (score < 3)"),
-        mpatches.Patch(color=MPL_MED,  label="Midden risico"),
-        mpatches.Patch(color=MPL_LOW,  label="Laag risico (score > 5.5)"),
+        mpatches.Patch(color=MPL_HIGH, label="Hoog aandachtssignaal"),
+        mpatches.Patch(color=MPL_MED,  label="Gemengd signaal"),
+        mpatches.Patch(color=MPL_LOW,  label="Beperkt signaal"),
     ]
     ax.legend(handles=patches, fontsize=7, loc="lower right")
     ax.set_facecolor("white")
@@ -330,8 +326,12 @@ def _factor_bar_image(factor_avgs: dict[str, float], width_cm: float = 12.0) -> 
 
 
 def _preventability_image(counts: dict[str, int], width_cm: float = 7.0) -> Image | None:
-    vals   = [counts.get("REDBAAR", 0), counts.get("MOGELIJK_REDBAAR", 0), counts.get("NIET_REDBAAR", 0)]
-    labels = ["Redbaar", "Mogelijk\nredbaar", "Niet redbaar"]
+    vals   = [
+        counts.get("STERK_WERKSIGNAAL", 0),
+        counts.get("GEMENGD_WERKSIGNAAL", 0),
+        counts.get("BEPERKT_WERKSIGNAAL", 0),
+    ]
+    labels = ["Sterk\nwerksignaal", "Gemengd\nsignaal", "Beperkt\nsignaal"]
     colors_list = [MPL_LOW, MPL_MED, MPL_MUTED]
     if sum(vals) == 0:
         return None
@@ -398,6 +398,108 @@ def _risk_color(score: float) -> colors.Color:
     elif score >= 4.5:
         return RISK_MED
     return RISK_LOW
+
+
+def _top_factor_cluster(top_risks: list[tuple[str, float]], delta: float = 0.4) -> list[tuple[str, float]]:
+    if not top_risks:
+        return []
+    lead_score = top_risks[0][1]
+    return [(factor, score) for factor, score in top_risks if lead_score - score <= delta]
+
+
+def _dedupe_quotes(quotes: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for quote in quotes:
+        normalized = " ".join((quote or "").strip().lower().split())
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        result.append(quote.strip())
+    return result
+
+
+def _select_relevant_quotes(
+    quotes: list[str],
+    top_factors: list[str],
+    top_reason_codes: list[str],
+    max_quotes: int = 4,
+) -> list[str]:
+    keyword_map = {
+        "leadership": ["leidinggevende", "manager", "feedback", "beslissing", "transparantie"],
+        "culture": ["cultuur", "team", "veilig", "waarden", "samenwerking"],
+        "growth": ["groei", "ontwikkeling", "loopbaan", "doorgroe", "perspectief"],
+        "compensation": ["salaris", "beloning", "arbeidsvoorwaarden"],
+        "workload": ["werkdruk", "belasting", "druk", "hersteltijd"],
+        "role_clarity": ["verwachting", "rol", "duidelijk", "verantwoordelijkheid"],
+        "P1": ["leidinggevende", "manager", "feedback"],
+        "P2": ["cultuur", "team", "veilig"],
+        "P3": ["groei", "ontwikkeling", "perspectief"],
+        "P4": ["salaris", "beloning"],
+        "P5": ["werkdruk", "stress"],
+        "P6": ["rol", "verwachting", "duidelijk"],
+    }
+    selected: list[str] = []
+    for quote in _dedupe_quotes(quotes):
+        q_lower = quote.lower()
+        if any(any(keyword in q_lower for keyword in keyword_map.get(key, [])) for key in top_factors + top_reason_codes):
+            selected.append(quote)
+        if len(selected) >= max_quotes:
+            break
+    if len(selected) < max_quotes:
+        for quote in _dedupe_quotes(quotes):
+            if quote not in selected:
+                selected.append(quote)
+            if len(selected) >= max_quotes:
+                break
+    return selected[:max_quotes]
+
+
+def _build_exit_hypotheses(
+    top_risks: list[tuple[str, float]],
+    top_exit_reasons: list[dict[str, Any]],
+    top_contributing_reasons: list[dict[str, Any]],
+    factor_avgs: dict[str, float],
+) -> list[dict[str, str]]:
+    hypotheses: list[dict[str, str]] = []
+    primary_reason_by_factor = {
+        "leadership": "P1",
+        "culture": "P2",
+        "growth": "P3",
+        "compensation": "P4",
+        "workload": "P5",
+        "role_clarity": "P6",
+    }
+    relevant_contributing_labels = [item["label"] for item in top_contributing_reasons[:3]]
+
+    for factor, risk_value in top_risks[:3]:
+        label = FACTOR_LABELS_NL.get(factor, factor)
+        matching_primary = next(
+            (item for item in top_exit_reasons if item["code"] == primary_reason_by_factor.get(factor)),
+            None,
+        )
+        support = []
+        if matching_primary:
+            support.append(f"Deze reden komt ook terug als hoofdreden ({matching_primary['count']} responses).")
+        if relevant_contributing_labels:
+            labels = ", ".join(relevant_contributing_labels[:2])
+            support.append(f"Meespelende factoren ({labels}) laten zien dat het patroon waarschijnlijk multicausaal is.")
+
+        support_text = " ".join(support)
+
+        hypotheses.append({
+            "title": f"Hypothese: {label} vraagt verdiepende validatie",
+            "body": (
+                f"De score op {label.lower()} behoort tot de sterkste aandachtssignalen "
+                f"(signaalwaarde {risk_value:.1f}). "
+                + (support_text if support_text else "Dit signaal verdient vooral verificatie in gesprek voordat er actie wordt bepaald.")
+            ).strip(),
+            "question": (
+                f"Toets in gesprek of {label.lower()} structureel meespeelt, bij welke groepen dit vooral speelt, "
+                "en welke concrete situaties medewerkers hierbij bedoelen."
+            ),
+        })
+    return hypotheses
 
 
 # ---------------------------------------------------------------------------
@@ -491,6 +593,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             "risk_score":       r.risk_score,
             "preventability":   r.preventability,
             "exit_reason_code": r.exit_reason_code,
+            "contributing_reason_codes": list((r.pull_factors_raw or {}).keys()),
             "department":       r.respondent.department,
             "role_level":       r.respondent.role_level,
         }
@@ -501,18 +604,14 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     factor_avgs  = pattern.get("factor_averages", {}) if has_pattern else {}
     top_risks    = pattern.get("top_risk_factors", []) if has_pattern else []
     sdt_avgs     = {d: factor_avgs.get(d, 5.5) for d in ["autonomy", "competence", "relatedness"]}
+    top_cluster  = _top_factor_cluster(top_risks)
+    strong_work_signal_pct = pattern.get("strong_work_signal_pct") if has_pattern else None
+    any_work_signal_pct = pattern.get("any_work_signal_pct") if has_pattern else None
 
     # Replacement cost totaal (exit only)
     total_cost = sum(
         r.replacement_cost_eur for r in responses if r.replacement_cost_eur
     )
-
-    # Avoidable cost (alleen REDBAAR)
-    avoidable_n = pattern.get("preventability_counts", {}).get("REDBAAR", 0) if has_pattern else 0
-    avg_rep_cost = total_cost / n_completed if n_completed and total_cost else 0
-    avoidable_cost = round(avg_rep_cost * avoidable_n)
-
-    avoidable_pct = pattern.get("avoidable_rate_pct") if has_pattern else None
 
     # ── PDF opbouwen ───────────────────────────────────────────────────────
     buf = io.BytesIO()
@@ -565,7 +664,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
     # KPI-blokken op voorblad
     kpi_data = [
-        ["Uitgenodigden", "Ingevuld", "Respons", "Gem. risico"],
+        ["Uitgenodigden", "Ingevuld", "Respons", "Gem. frictiescore"],
         [
             str(n_invited),
             str(n_completed),
@@ -660,8 +759,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         for factor, score in top_risks_cover:
             label = FACTOR_LABELS_NL.get(factor, factor)
             exec_rows.append([f"⚠  {label}", f"{score:.1f}"])
-        if avoidable_pct is not None:
-            exec_rows.append([f"Mogelijk beinvloedbaar vertrek", f"{avoidable_pct:.0f}%"])
+        if strong_work_signal_pct is not None:
+            exec_rows.append([f"Sterk werkfactorsignaal", f"{strong_work_signal_pct:.0f}%"])
 
         exec_style = TableStyle([
             ("SPAN",        (0, 0), (1, 0)),
@@ -707,24 +806,24 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         f"{n_invited} uitgenodigde medewerkers deel (respons: {completion}%). "
     )
     if avg_risk:
-        band_str = {"HOOG": "hoog", "MIDDEN": "gemiddeld", "LAAG": "laag"}.get(
+        band_str = {"HOOG": "hoog", "MIDDEN": "middelhoog", "LAAG": "laag"}.get(
             ("HOOG" if avg_risk >= 7 else "MIDDEN" if avg_risk >= 4.5 else "LAAG"), ""
         )
         intro += (
-            f"De gemiddelde risicoscore bedraagt <b>{avg_risk:.1f} op 10</b>, "
-            f"wat duidt op een <b>{band_str}</b> verlooprisico."
+            f"De gemiddelde frictiescore bedraagt <b>{avg_risk:.1f} op 10</b>. "
+            f"Dat wijst op een <b>{band_str}</b> signaalniveau van ervaren frictie in de werkomgeving rondom vertrek."
         )
     story.append(Paragraph(intro, STYLES["body"]))
     story.append(Spacer(1, 0.4 * cm))
 
     # Risico-meter
-    BENCHMARK_SCORE = 5.1
     if avg_risk:
         band_label = "HOOG" if avg_risk >= 7 else "MIDDEN" if avg_risk >= 4.5 else "LAAG"
-        story.append(Paragraph("Risicometer (gemiddeld)", STYLES["sub_title"]))
-        story.append(_risk_gauge_image(avg_risk, band_label, benchmark=BENCHMARK_SCORE))
+        story.append(Paragraph("Frictiemeter (gemiddeld)", STYLES["sub_title"]))
+        story.append(_risk_gauge_image(avg_risk, band_label))
         story.append(Paragraph(
-            "<i>Ter referentie: de indicatieve MKB-benchmark ligt op 5.1/10 (Verisight, intern, 2025).</i>",
+            "<i>De frictiescore is een interne samenvatting van ervaren werkfrictie rondom vertrek. "
+            "Gebruik deze score als gesprekssamenvatting, niet als externe benchmark of voorspelling.</i>",
             ParagraphStyle(
                 "benchmark_note",
                 fontName="Helvetica-Oblique",
@@ -737,12 +836,12 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         story.append(Spacer(1, 0.3 * cm))
 
     # Risicodistributie tabel
-    story.append(Paragraph("Verdeling risicobanden", STYLES["sub_title"]))
+    story.append(Paragraph("Verdeling signaalbanden", STYLES["sub_title"]))
     dist_data = [
-        ["Risicoband", "Aantal", "Percentage"],
-        ["Hoog (7–10)", str(band_counts["HOOG"]),  f"{band_counts['HOOG']  / max(n_completed,1) * 100:.0f}%"],
-        ["Midden (4.5–7)", str(band_counts["MIDDEN"]), f"{band_counts['MIDDEN'] / max(n_completed,1) * 100:.0f}%"],
-        ["Laag (1–4.5)", str(band_counts["LAAG"]),  f"{band_counts['LAAG']  / max(n_completed,1) * 100:.0f}%"],
+        ["Signaalband", "Aantal", "Percentage"],
+        ["Hoog signaal (7–10)", str(band_counts["HOOG"]),  f"{band_counts['HOOG']  / max(n_completed,1) * 100:.0f}%"],
+        ["Middensignaal (4.5–7)", str(band_counts["MIDDEN"]), f"{band_counts['MIDDEN'] / max(n_completed,1) * 100:.0f}%"],
+        ["Laag signaal (1–4.5)", str(band_counts["LAAG"]),  f"{band_counts['LAAG']  / max(n_completed,1) * 100:.0f}%"],
     ]
     dist_style = TableStyle([
         ("BACKGROUND",   (0, 0), (-1, 0), BRAND),
@@ -770,25 +869,28 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(Paragraph("Sleutelbevindingen", STYLES["sub_title"]))
     findings = []
 
-    if has_pattern and top_risks:
-        top_factor, top_score = top_risks[0]
+    if has_pattern and top_cluster:
+        if len(top_cluster) == 1:
+            top_factor, top_score = top_cluster[0]
+            findings.append(
+                f"<b>{FACTOR_LABELS_NL.get(top_factor, top_factor)}</b> geeft het sterkste aandachtssignaal "
+                f"(signaalwaarde {top_score:.1f}/10)."
+            )
+        else:
+            labels = ", ".join(FACTOR_LABELS_NL.get(factor, factor) for factor, _ in top_cluster)
+            findings.append(
+                f"<b>{labels}</b> liggen dicht bij elkaar en vormen samen de sterkste aandachtssignalen. "
+                "Behandel deze volgorde niet als harde rangorde."
+            )
+    if strong_work_signal_pct is not None:
         findings.append(
-            f"<b>{FACTOR_LABELS_NL.get(top_factor, top_factor)}</b> is het grootste risicothema "
-            f"(risicowaarde {top_score:.1f}/10)."
+            f"Bij <b>{strong_work_signal_pct:.0f}% van het vertrek</b> is sprake van een sterk signaal van beïnvloedbare werkfactoren. "
+            "Dit is een hypothese-indicatie, geen causale vaststelling."
         )
-    if avoidable_pct is not None:
+    if any_work_signal_pct is not None:
         findings.append(
-            f"<b>{avoidable_pct:.0f}% van het verloop</b> is als mogelijk beinvloedbaar geclassificeerd — "
-            "dit wijst op werkfactoren die om nadere analyse vragen."
-        )
-    if camp.scan_type == "exit" and avoidable_cost > 0:
-        findings.append(
-            f"De geschatte <b>mogelijk beinvloedbare vervangingskosten</b> bedragen "
-            f"<b>€ {avoidable_cost:,.0f}</b> (SHRM/Bersin-multipliers)."
-        )
-        findings.append(
-            "<i><font size='8' color='#6B7280'>Berekening: gemiddelde vervangingskosten per medewerker × aantal reddbare vertrekkers. "
-            "Multiplier: 0.5–2.0× jaarsalaris afhankelijk van functieniveau (SHRM, 2022; Bersin, 2013).</font></i>"
+            f"Bij <b>{any_work_signal_pct:.0f}% van het vertrek</b> is ten minste een gemengd signaal van werkinvloed zichtbaar. "
+            "Gebruik dit vooral om vervolgvragen te prioriteren."
         )
     if not findings:
         findings.append("Onvoldoende data voor patroonanalyse (minimaal 10 responses vereist).")
@@ -804,8 +906,9 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
     story.append(Paragraph("SDT Basisbehoeften", STYLES["section_title"]))
     story.append(Paragraph(
-        "Op basis van de W-BNS schaal (Van den Broeck et al., 2010; Deci et al., 2001). "
-        "Scores < 4.5 duiden op een significante behoeftefrustatie; > 7.0 is positief.",
+        "Dit vraagblok is geïnspireerd op de Basic Psychological Need Satisfaction at Work-literatuur "
+        "(Van den Broeck et al., 2010; Deci et al., 2001) en gebruikt verkorte, aangepaste items. "
+        "Scores < 4.5 wijzen op duidelijke frictie; > 7.0 is overwegend positief.",
         STYLES["body"],
     ))
     story.append(Spacer(1, 0.3 * cm))
@@ -828,8 +931,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             ),
             "relatedness": (
                 "Verbondenheid",
-                "De kwaliteit van de sociale relaties op het werk. Lage verbondenheid "
-                "vergroot het verlooprisico, ook wanneer andere factoren positief zijn.",
+                    "De kwaliteit van de sociale relaties op het werk. Lage verbondenheid "
+                    "gaat vaak samen met meer werkfrictie, ook wanneer andere factoren positiever zijn.",
             ),
         }
 
@@ -883,7 +986,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                 ),
                 "relatedness": (
                     "Verbondenheid scoort het laagst. De sociale basis op het werk voelt "
-                    "kwetsbaar — dit verhoogt het verlooprisico ook wanneer andere factoren positief zijn."
+                    "kwetsbaar — dit vergroot de kans dat andere fricties harder doorwerken."
                 ),
             }
             interp_text = dim_interp_map.get(dim_name, "")
@@ -904,8 +1007,9 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
     story.append(Paragraph("Organisatiefactoren", STYLES["section_title"]))
     story.append(Paragraph(
-        "Gebaseerd op LMX-7 (Graen & Uhl-Bien, 1995), Edmondson Psychological Safety (1999), "
-        "JD-R model (Bakker & Demerouti, 2007) en JSS (Spector, 1985).",
+        "Deze vraagblokken zijn gebaseerd op verkorte, aangepaste items uit o.a. LMX-, "
+        "psychologische veiligheid-, JD-R- en tevredenheidsliteratuur. De uitkomsten zijn bedoeld als "
+        "praktische signalen, niet als volledige schaalafname of diagnostisch oordeel.",
         STYLES["body"],
     ))
     story.append(Spacer(1, 0.3 * cm))
@@ -920,8 +1024,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         story.append(Paragraph("Scoretabel per factor", STYLES["sub_title"]))
         story.append(Paragraph(
             "<i>Toelichting: De score (1–10) geeft de gemiddelde beleving van medewerkers weer — "
-            "hogere score is positiever. De risicowaarde geeft het gewogen verlooprisico aan — "
-            "hogere risicowaarde betekent meer urgentie.</i>",
+            "hogere score is positiever. De signaalwaarde laat zien waar relatief de meeste werkfrictie zit — "
+            "hogere signaalwaarde betekent meer aandacht, niet automatisch meer bewijs.</i>",
             ParagraphStyle(
                 "score_explanation",
                 fontName="Helvetica-Oblique",
@@ -931,7 +1035,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                 spaceAfter=4,
             ),
         ))
-        score_rows = [["Factor", "Score (1–10)", "Risicowaarde", "Urgentie"]]
+        score_rows = [["Factor", "Score (1–10)", "Signaalwaarde", "Urgentie"]]
         for factor in ORG_FACTOR_KEYS:
             if factor not in factor_avgs:
                 continue
@@ -977,6 +1081,92 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         )
         score_table.setStyle(score_ts)
         story.append(score_table)
+
+        if len(top_cluster) > 1:
+            cluster_labels = ", ".join(FACTOR_LABELS_NL.get(factor, factor) for factor, _ in top_cluster)
+            story.append(Spacer(1, 0.2 * cm))
+            story.append(Paragraph(
+                f"<i>Nuance bij de rangorde: {cluster_labels} liggen qua signaalwaarde dicht bij elkaar. "
+                "Lees dit daarom als een cluster van aandachtspunten, niet als een harde eerste-tweede-derde plek.</i>",
+                ParagraphStyle(
+                    "ranking_note",
+                    fontName="Helvetica-Oblique",
+                    fontSize=8,
+                    leading=11,
+                    textColor=MUTED,
+                    spaceAfter=4,
+                ),
+            ))
+
+        # ── Focusvragen per factor (alleen URGENT / AANDACHT) ─────────────
+        FOCUS_QUESTIONS: dict[str, str] = {
+            "leadership":   "Wat vertellen vertrekkers over de relatie met hun leidinggevende? "
+                            "Herkennen leidinggevenden dit beeld, en in welke teams speelt dit het sterkst?",
+            "culture":      "Voelden medewerkers zich vrij om problemen te benoemen zonder gevolgen? "
+                            "Waar zit het verschil tussen afdelingen of teams?",
+            "growth":       "Zijn er concrete groeipaden zichtbaar en bespreekbaar? "
+                            "Weten medewerkers wat hun volgende stap kan zijn binnen de organisatie?",
+            "compensation": "Hoe verhouden de arbeidsvoorwaarden zich tot de markt? "
+                            "Communiceert de organisatie hier actief over, of blijft dit impliciet?",
+            "workload":     "Is de werkdruk structureel of piekgebonden? "
+                            "Zijn er afdelingen of rollen waar dit significant zwaarder weegt?",
+            "role_clarity": "Zijn taken, verwachtingen en verantwoordelijkheden voor iedereen helder? "
+                            "Hoe worden nieuwe medewerkers hierin begeleid?",
+        }
+
+        urgent_factors = [
+            (f, factor_avgs[f])
+            for f in ORG_FACTOR_KEYS
+            if f in factor_avgs and round(11 - factor_avgs[f], 1) >= 4.5
+        ]
+        urgent_factors.sort(key=lambda x: x[1])  # laagste score eerst
+
+        if urgent_factors:
+            story.append(Spacer(1, 0.5 * cm))
+            story.append(Paragraph("Focusvragen per aandachtspunt", STYLES["sub_title"]))
+            story.append(Paragraph(
+                "<i>Onderstaande vragen zijn afgeleid van de factorscores. "
+                "Ze zijn bedoeld als gespreksaanzet voor MT of leidinggevenden — "
+                "niet als conclusie.</i>",
+                ParagraphStyle(
+                    "focus_note",
+                    fontName="Helvetica-Oblique",
+                    fontSize=8,
+                    leading=11,
+                    textColor=MUTED,
+                    spaceAfter=4,
+                ),
+            ))
+            for factor, score in urgent_factors:
+                risk_val = round(11 - score, 1)
+                label = FACTOR_LABELS_NL.get(factor, factor)
+                question = FOCUS_QUESTIONS.get(factor, "")
+                if not question:
+                    continue
+                urgency_color = RISK_HIGH if risk_val >= 6.0 else RISK_MED
+                fq_data = [[
+                    Paragraph(
+                        f"<b>{label}</b>  <font color='#6B7280' size='8'>"
+                        f"score {score:.1f} · signaalwaarde {risk_val:.1f}</font>",
+                        STYLES["body_bold"],
+                    ),
+                ], [
+                    Paragraph(question, STYLES["body"]),
+                ]]
+                fq_ts = TableStyle([
+                    ("BACKGROUND",    (0, 0), (-1, 0), BRAND_LIGHT),
+                    ("BACKGROUND",    (0, 1), (-1, 1), WHITE),
+                    ("GRID",          (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
+                    ("TOPPADDING",    (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                    ("LEFTPADDING",   (0, 0), (-1, -1), 8),
+                    ("RIGHTPADDING",  (0, 0), (-1, -1), 8),
+                    ("LINEAFTER",     (0, 0), (0, -1), 2.5, urgency_color),
+                ])
+                fq_table = Table(fq_data, colWidths=[content_width])
+                fq_table.setStyle(fq_ts)
+                story.append(fq_table)
+                story.append(Spacer(1, 0.2 * cm))
     else:
         story.append(Paragraph(
             "Onvoldoende responses voor organisatierapportage (minimaal 10 vereist).",
@@ -992,8 +1182,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     if camp.scan_type == "exit":
         story.append(Paragraph("Patronen & Vertrekreden", STYLES["section_title"]))
         story.append(Paragraph(
-            "Gebaseerd op het Push-Pull model (Mitchell & Lee, 2001) en het "
-            "Avoidable Turnover Framework (Holtom et al., 2008).",
+            "Deze pagina combineert hoofdredenen, meespelende factoren en een indicatieve duiding van werkinvloed. "
+            "De uitkomsten helpen om patronen te verkennen, niet om één causale vertrekverklaring vast te stellen.",
             STYLES["body"],
         ))
     else:
@@ -1006,7 +1196,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             # Vertrekreden tabel
             top_reasons = pattern.get("top_exit_reasons", [])
             if top_reasons:
-                story.append(Paragraph("Top vertrekreden", STYLES["sub_title"]))
+                story.append(Paragraph("Hoofdredenen van vertrek", STYLES["sub_title"]))
                 reason_rows = [["Code", "Reden", "Aantal"]]
                 for item in top_reasons:
                     reason_rows.append([item["code"], item["label"], str(item["count"])])
@@ -1031,42 +1221,71 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
                 # ── Push/Pull/Situationeel verdeling (Item 13) ────────────
                 exit_reason_counts = pattern.get("exit_reason_counts", {})
+                total_n = 0
                 if exit_reason_counts:
                     push_n  = sum(v for k, v in exit_reason_counts.items() if k.startswith("P") and not k.startswith("PL"))
                     pull_n  = sum(v for k, v in exit_reason_counts.items() if k.startswith("PL"))
                     situ_n  = sum(v for k, v in exit_reason_counts.items() if k.startswith("S"))
                     total_n = push_n + pull_n + situ_n
-                    if total_n > 0:
-                        push_pct = round(push_n / total_n * 100)
-                        pull_pct = round(pull_n / total_n * 100)
-                        situ_pct = round(situ_n / total_n * 100)
-                        story.append(Spacer(1, 0.3 * cm))
-                        story.append(Paragraph(
-                            f"<b>Push-factoren (intern):</b> {push_pct}%  |  "
-                            f"<b>Pull-factoren (extern):</b> {pull_pct}%  |  "
-                            f"<b>Situationeel:</b> {situ_pct}%",
-                            ParagraphStyle(
-                                "factor_dist",
-                                fontName="Helvetica",
-                                fontSize=9,
-                                leading=13,
-                                textColor=TEXT,
-                                spaceAfter=4,
-                            ),
-                        ))
+                if total_n > 0:
+                    push_pct = round(push_n / total_n * 100)
+                    pull_pct = round(pull_n / total_n * 100)
+                    situ_pct = round(situ_n / total_n * 100)
+                    story.append(Spacer(1, 0.3 * cm))
+                    story.append(Paragraph(
+                        f"<b>Interne werkgerelateerde redenen:</b> {push_pct}%  |  "
+                        f"<b>Externe alternatieven:</b> {pull_pct}%  |  "
+                        f"<b>Persoonlijk / situationeel:</b> {situ_pct}%",
+                        ParagraphStyle(
+                            "factor_dist",
+                            fontName="Helvetica",
+                            fontSize=9,
+                            leading=13,
+                            textColor=TEXT,
+                            spaceAfter=4,
+                        ),
+                    ))
+
+                contributing_reasons = pattern.get("top_contributing_reasons", [])
+                if contributing_reasons:
+                    story.append(Spacer(1, 0.3 * cm))
+                    story.append(Paragraph("Meespelende factoren", STYLES["sub_title"]))
+                    contrib_rows = [["Reden", "Aantal"]]
+                    for item in contributing_reasons[:4]:
+                        contrib_rows.append([item["label"], str(item["count"])])
+                    contrib_table = Table(
+                        contrib_rows,
+                        colWidths=[content_width * 0.78, content_width * 0.22],
+                    )
+                    contrib_table.setStyle(TableStyle([
+                        ("BACKGROUND", (0, 0), (-1, 0), BRAND),
+                        ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
+                        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#F0F9FF"), WHITE]),
+                        ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
+                        ("ALIGN", (1, 1), (1, -1), "CENTER"),
+                        ("TOPPADDING", (0, 0), (-1, -1), 5),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                    ]))
+                    story.append(contrib_table)
+                    story.append(Spacer(1, 0.3 * cm))
 
                 story.append(Spacer(1, 0.5 * cm))
 
                 # ── Anonymized quotes (Item 14) ────────────────────────────
-                quotes = [
-                    r.open_text_raw
-                    for r in responses
-                    if r.open_text_raw and r.open_text_raw.strip()
-                ]
+                quotes = _select_relevant_quotes(
+                    [
+                        r.open_text_raw
+                        for r in responses
+                        if r.open_text_raw and r.open_text_raw.strip()
+                    ],
+                    [factor for factor, _ in top_risks[:3]],
+                    [item["code"] for item in top_reasons],
+                    max_quotes=4,
+                )
                 if len(quotes) >= 3:
                     story.append(Paragraph("Stemmen uit de survey", STYLES["sub_title"]))
-                    shown = quotes[:4]
-                    for i, q in enumerate(shown):
+                    for i, q in enumerate(quotes):
                         q_trimmed = q[:120] + ("…" if len(q) > 120 else "")
                         story.append(Paragraph(
                             f"<i>— {q_trimmed}</i>",
@@ -1080,7 +1299,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                                 spaceAfter=4,
                             ),
                         ))
-                        if i < len(shown) - 1:
+                        if i < len(quotes) - 1:
                             story.append(Spacer(1, 0.1 * cm))
                     story.append(Spacer(1, 0.3 * cm))
 
@@ -1088,22 +1307,22 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             prev_counts = pattern.get("preventability_counts", {})
             prev_img    = _preventability_image(prev_counts)
             if prev_img:
-                story.append(Paragraph("Indicatie beinvloedbaarheid vertrek", STYLES["sub_title"]))
+                story.append(Paragraph("Signaal van beïnvloedbare werkfactoren", STYLES["sub_title"]))
                 story.append(Paragraph(
-                    "Classificatie op basis van het Avoidable Turnover Framework "
-                    "(Holtom et al., 2008): combinatie van vertrekreden, blijfbereidheid "
-                    "en SDT/org-factorscores. Deze classificatie is indicatief en geen causale vaststelling.",
+                    "Deze classificatie combineert hoofdreden, aanvullende redenen, ervaren invloed van organisatiegedrag "
+                    "en werkgerelateerde scores. De uitkomst is indicatief en benoemt alleen hoe sterk de antwoorden wijzen "
+                    "op beïnvloedbare werkfactoren rondom vertrek.",
                     STYLES["body"],
                 ))
 
                 prev_table_data = [[prev_img, ""]]
                 prev_table_data[0][1] = Table([
-                    [Paragraph("<b>Redbaar</b>", STYLES["body"]),
-                     Paragraph(f"{prev_counts.get('REDBAAR', 0)} responses", STYLES["body"])],
-                    [Paragraph("<b>Mogelijk redbaar</b>", STYLES["body"]),
-                     Paragraph(f"{prev_counts.get('MOGELIJK_REDBAAR', 0)} responses", STYLES["body"])],
-                    [Paragraph("<b>Niet redbaar</b>", STYLES["body"]),
-                     Paragraph(f"{prev_counts.get('NIET_REDBAAR', 0)} responses", STYLES["body"])],
+                    [Paragraph("<b>Sterk werkfactorsignaal</b>", STYLES["body"]),
+                     Paragraph(f"{prev_counts.get('STERK_WERKSIGNAAL', 0)} responses", STYLES["body"])],
+                    [Paragraph("<b>Gemengd signaal</b>", STYLES["body"]),
+                     Paragraph(f"{prev_counts.get('GEMENGD_WERKSIGNAAL', 0)} responses", STYLES["body"])],
+                    [Paragraph("<b>Beperkt signaal</b>", STYLES["body"]),
+                     Paragraph(f"{prev_counts.get('BEPERKT_WERKSIGNAAL', 0)} responses", STYLES["body"])],
                 ], colWidths=[content_width * 0.30, content_width * 0.22])
 
                 side_table = Table(
@@ -1126,8 +1345,19 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
         if dept_risks:
             story.append(Spacer(1, 0.4 * cm))
-            story.append(Paragraph("Risico per afdeling", STYLES["sub_title"]))
-            dept_rows = [["Afdeling", "n", "Gem. risicoscore"]]
+            story.append(Paragraph("Frictiescore per afdeling", STYLES["sub_title"]))
+            story.append(Paragraph(
+                f"<i>Alleen afdelingen met minimaal {MIN_SEGMENT_N} responses worden getoond om ruis en schijnprecisie te beperken.</i>",
+                ParagraphStyle(
+                    "segment_note_dept",
+                    fontName="Helvetica-Oblique",
+                    fontSize=8,
+                    leading=11,
+                    textColor=MUTED,
+                    spaceAfter=4,
+                ),
+            ))
+            dept_rows = [["Afdeling", "n", "Gem. frictiescore"]]
             for dept, score in sorted(dept_risks.items(), key=lambda x: x[1], reverse=True):
                 n_dept = dept_n_counts.get(dept, 0)
                 dept_rows.append([dept, str(n_dept), f"{score:.1f} / 10"])
@@ -1175,10 +1405,25 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
         has_tenure_data = any(len(v) > 0 for v in tenure_buckets.values())
         if has_tenure_data:
+            filtered_tenure = {label: vals for label, vals in tenure_buckets.items() if len(vals) >= MIN_SEGMENT_N}
+        else:
+            filtered_tenure = {}
+        if filtered_tenure:
             story.append(Spacer(1, 0.4 * cm))
             story.append(Paragraph("Vertrek naar diensttijd", STYLES["sub_title"]))
-            tenure_rows = [["Diensttijd", "n", "Gem. risicoscore"]]
-            for label, scores_list in tenure_buckets.items():
+            story.append(Paragraph(
+                f"<i>Alleen groepen met minimaal {MIN_SEGMENT_N} responses worden getoond.</i>",
+                ParagraphStyle(
+                    "segment_note_tenure",
+                    fontName="Helvetica-Oblique",
+                    fontSize=8,
+                    leading=11,
+                    textColor=MUTED,
+                    spaceAfter=4,
+                ),
+            ))
+            tenure_rows = [["Diensttijd", "n", "Gem. frictiescore"]]
+            for label, scores_list in filtered_tenure.items():
                 n_t = len(scores_list)
                 avg_t = round(sum(scores_list) / n_t, 1) if n_t > 0 else None
                 tenure_rows.append([
@@ -1198,7 +1443,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                 ("ALIGN",        (1, 1), (2, -1), "CENTER"),
                 ("FONTNAME",     (2, 1), (2, -1), "Helvetica-Bold"),
             ])
-            for row_idx, (lbl, scores_list) in enumerate(tenure_buckets.items(), start=1):
+            for row_idx, (lbl, scores_list) in enumerate(filtered_tenure.items(), start=1):
                 if scores_list:
                     avg_t = sum(scores_list) / len(scores_list)
                     c = RISK_HIGH if avg_t >= 7 else RISK_MED if avg_t >= 4.5 else RISK_LOW
@@ -1219,12 +1464,27 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                 continue
             role_risks.setdefault(rl, []).append(risk)
 
-        if role_risks:
+        filtered_role_risks = {
+            role: vals for role, vals in role_risks.items() if len(vals) >= MIN_SEGMENT_N
+        }
+
+        if filtered_role_risks:
             story.append(Spacer(1, 0.4 * cm))
             story.append(Paragraph("Vertrek naar functieniveau", STYLES["sub_title"]))
-            role_rows = [["Functieniveau", "n", "Gem. risicoscore"]]
+            story.append(Paragraph(
+                f"<i>Alleen groepen met minimaal {MIN_SEGMENT_N} responses worden getoond.</i>",
+                ParagraphStyle(
+                    "segment_note_role",
+                    fontName="Helvetica-Oblique",
+                    fontSize=8,
+                    leading=11,
+                    textColor=MUTED,
+                    spaceAfter=4,
+                ),
+            ))
+            role_rows = [["Functieniveau", "n", "Gem. frictiescore"]]
             ordered_roles = sorted(
-                role_risks.items(),
+                filtered_role_risks.items(),
                 key=lambda x: ROLE_LEVEL_ORDER.index(x[0]) if x[0] in ROLE_LEVEL_ORDER else 99,
             )
             for rl, scores_list in ordered_roles:
@@ -1261,146 +1521,252 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(PageBreak())
 
     # ==================================================================== #
-    # PAGINA 6 — AANBEVELINGEN                                             #
+    # PAGINA 6 — WAT NU?                                                   #
     # ==================================================================== #
 
-    story.append(Paragraph("Aanbevelingen", STYLES["section_title"]))
+    story.append(Paragraph("Werkhypothesen & Vervolgstappen", STYLES["section_title"]))
     story.append(Paragraph(
-        "Onderstaande aanbevelingen zijn gegenereerd op basis van de factorscores "
-        "en urgentiebanden. Begin met de hoogste risicowaarden.",
+        "De scores laten zien <i>waar</i> aandacht nodig is. Ze bewijzen nog niet <i>waarom</i> iets speelt. "
+        "Gebruik de hypothesen hieronder om gericht te toetsen wat achter deze signalen zit, voordat je acties bepaalt.",
         STYLES["body"],
     ))
-    story.append(Spacer(1, 0.4 * cm))
+    story.append(Spacer(1, 0.5 * cm))
 
-    if has_pattern and top_risks:
-        factor_risks_dict = {f: score for f, score in top_risks}
-        recs = get_recommendations(factor_risks_dict)
-        dept_risks_for_recs = pattern.get("department_avg_risk", {})
-        top_dept_by_risk = sorted(dept_risks_for_recs.items(), key=lambda x: x[1], reverse=True)
+    if has_pattern and camp.scan_type == "exit":
+        hypotheses = _build_exit_hypotheses(
+            top_risks=top_risks,
+            top_exit_reasons=pattern.get("top_exit_reasons", []),
+            top_contributing_reasons=pattern.get("top_contributing_reasons", []),
+            factor_avgs=factor_avgs,
+        )
+        if hypotheses:
+            story.append(Paragraph("Werkhypothesen", STYLES["sub_title"]))
+            story.append(Paragraph(
+                "Onderstaande hypothesen zijn afgeleid van scorepatronen, vertrekredenen en meespelende factoren. "
+                "Ze zijn bedoeld om te valideren in gesprek met HR, leidinggevenden of aanvullende data.",
+                STYLES["body"],
+            ))
+            for item in hypotheses:
+                hyp_rows = [
+                    [Paragraph(f"<b>{item['title']}</b>", STYLES["body_bold"])],
+                    [Paragraph(item["body"], STYLES["body"])],
+                    [Paragraph(f"<i>Te toetsen vraag:</i> {item['question']}", STYLES["body"])],
+                ]
+                hyp_table = Table(hyp_rows, colWidths=[content_width])
+                hyp_table.setStyle(TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EFF6FF")),
+                    ("BACKGROUND", (0, 1), (-1, -1), WHITE),
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
+                    ("TOPPADDING", (0, 0), (-1, -1), 6),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ]))
+                story.append(hyp_table)
+                story.append(Spacer(1, 0.2 * cm))
 
-        for idx, (factor, risk_score) in enumerate(top_risks):
-            label = FACTOR_LABELS_NL.get(factor, factor)
-            factor_recs = recs.get(factor, [])
-            if not factor_recs:
-                continue
+            story.append(Spacer(1, 0.2 * cm))
 
-            if risk_score >= 6.0:
-                badge_text  = "URGENT"
-                badge_color = RISK_HIGH
-                badge_bg    = colors.HexColor("#FEE2E2")
-            elif risk_score >= 4.5:
-                badge_text  = "AANDACHT"
-                badge_color = RISK_MED
-                badge_bg    = colors.HexColor("#FEF9C3")
-            else:
-                badge_text  = "OK"
-                badge_color = RISK_LOW
-                badge_bg    = colors.HexColor("#DCFCE7")
+    # ── Gespreksagenda op basis van top risicofactoren ────────────────────
+    AGENDA_QUESTIONS: dict[str, list[str]] = {
+        "leadership": [
+            "Herkennen leidinggevenden het beeld dat uit de scores naar voren komt?",
+            "In welke teams of afdelingen speelt dit het sterkst, en wat maakt dat zo?",
+            "Wat hebben medewerkers nodig van hun leidinggevende dat nu ontbreekt?",
+        ],
+        "culture": [
+            "Voelen medewerkers zich vrij om problemen te benoemen zonder gevolgen?",
+            "Zijn er situaties geweest waarbij dat gevoel van veiligheid onder druk stond?",
+            "Wat zou de organisatie concreet anders kunnen doen om dit te versterken?",
+        ],
+        "growth": [
+            "Weten medewerkers wat hun volgende stap binnen de organisatie kan zijn?",
+            "Hoe bespreekbaar zijn loopbaanontwikkeling en groei in de dagelijkse praktijk?",
+            "Waar zit het verschil tussen wat de organisatie biedt en wat medewerkers verwachten?",
+        ],
+        "compensation": [
+            "Hoe verhouden de arbeidsvoorwaarden zich tot vergelijkbare functies in de markt?",
+            "Is er transparantie over hoe beloning wordt bepaald en wat er mogelijk is?",
+            "Spelen non-financiële factoren (flexibiliteit, erkenning) ook een rol?",
+        ],
+        "workload": [
+            "Is de werkdruk structureel of piekgebonden — en weet de organisatie dat onderscheid te maken?",
+            "Zijn er afdelingen of rollen waar dit significant zwaarder weegt dan elders?",
+            "Wat zou een medewerker helpen om de werkdruk beter hanteerbaar te maken?",
+        ],
+        "role_clarity": [
+            "Zijn taken, verwachtingen en verantwoordelijkheden voor iedereen helder?",
+            "Hoe worden nieuwe medewerkers ingewerkt en begeleid in hun rol?",
+            "Waar ontstaan de meeste misverstanden over wie waarvoor verantwoordelijk is?",
+        ],
+    }
 
-            # Factorkop
-            header_data = [[
-                Paragraph(f"<b>{label}</b>", STYLES["body_bold"]),
-                Paragraph(f"Risico: {risk_score:.1f} / 10", STYLES["body"]),
-                Paragraph(f"<b>{badge_text}</b>", ParagraphStyle(
-                    "badge_inline",
-                    fontName="Helvetica-Bold",
-                    fontSize=9,
-                    textColor=badge_color,
-                    alignment=TA_RIGHT,
-                )),
-            ]]
-            hdr_ts = TableStyle([
-                ("BACKGROUND", (0, 0), (-1, -1), BRAND_LIGHT),
-                ("GRID",       (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
-                ("TOPPADDING", (0, 0), (-1, -1), 5),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-                ("LEFTPADDING", (0, 0), (-1, -1), 8),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-            ])
-            hdr_table = Table(
-                header_data,
-                colWidths=[content_width * 0.45, content_width * 0.30, content_width * 0.25],
-            )
-            hdr_table.setStyle(hdr_ts)
-            story.append(hdr_table)
+    top2_factors = top_risks[:2] if has_pattern and top_risks else []
+    top2_labels  = [FACTOR_LABELS_NL.get(f, f) for f, _ in top2_factors]
 
-            # Aanbevelingen
-            rec_data = []
-            for rec in factor_recs:
-                rec_data.append([Paragraph(f"• {rec}", STYLES["body"])])
-
-            rec_ts = TableStyle([
-                ("BACKGROUND", (0, 0), (-1, -1), WHITE),
-                ("GRID",       (0, 0), (-1, -1), 0.5, BORDER),
-                ("TOPPADDING", (0, 0), (-1, -1), 4),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-                ("LEFTPADDING", (0, 0), (-1, -1), 12),
-            ])
-            rec_table = Table(rec_data, colWidths=[content_width])
-            rec_table.setStyle(rec_ts)
-            story.append(rec_table)
-
-            # Afdeling-link voor de top 2 risicofactoren (Item 10)
-            if idx < 2 and top_dept_by_risk:
-                high_depts = [d for d, s in top_dept_by_risk if s > 5.0][:2]
-                if high_depts:
-                    dept_note = "Hoogste risico: " + ", ".join(
-                        f"{d} (gem. {dept_risks_for_recs[d]:.1f}/10)"
-                        for d in high_depts
-                    )
-                    story.append(Paragraph(
-                        f"<i>{dept_note}</i>",
-                        ParagraphStyle(
-                            f"dept_link_{idx}",
-                            fontName="Helvetica-Oblique",
-                            fontSize=8,
-                            leading=11,
-                            textColor=MUTED,
-                            leftIndent=12,
-                            spaceAfter=2,
-                        ),
-                    ))
-
-            story.append(Spacer(1, 0.3 * cm))
-    else:
+    if top2_factors:
+        story.append(Paragraph("Gespreksagenda", STYLES["sub_title"]))
         story.append(Paragraph(
-            "Onvoldoende responses voor gepersonaliseerde aanbevelingen "
-            "(minimaal 10 vereist).",
+            "Bespreek deze vragen in een MT-sessie of met de betrokken leidinggevenden. "
+            "De agenda is gebaseerd op de twee factoren met de hoogste signaalwaarde in dit rapport.",
             STYLES["body"],
         ))
+        story.append(Spacer(1, 0.3 * cm))
 
-    # Disclaimer
+        for factor, risk_score in top2_factors:
+            label     = FACTOR_LABELS_NL.get(factor, factor)
+            questions = AGENDA_QUESTIONS.get(factor, [])
+            risk_val  = round(11 - factor_avgs.get(factor, 5.5), 1)
+
+            agenda_rows = [[
+                Paragraph(
+                    f"<b>{label}</b>  "
+                        f"<font color='#6B7280' size='8'>signaalwaarde {risk_val:.1f} / 10</font>",
+                    STYLES["body_bold"],
+                ),
+            ]]
+            for q in questions:
+                agenda_rows.append([Paragraph(f"· {q}", STYLES["body"])])
+
+            ag_ts = TableStyle([
+                ("BACKGROUND",    (0, 0), (-1, 0), BRAND_LIGHT),
+                ("BACKGROUND",    (0, 1), (-1, -1), WHITE),
+                ("GRID",          (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
+                ("TOPPADDING",    (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING",   (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING",  (0, 0), (-1, -1), 10),
+                ("LINEAFTER",     (0, 0), (0, -1), 3, RISK_MED if risk_val < 6 else RISK_HIGH),
+            ])
+            ag_table = Table(agenda_rows, colWidths=[content_width])
+            ag_table.setStyle(ag_ts)
+            story.append(ag_table)
+            story.append(Spacer(1, 0.3 * cm))
+
     story.append(Spacer(1, 0.3 * cm))
-    disclaimer = (
-        "<i>Methodologische verantwoording: SDT-scores gebaseerd op de Work-related "
-        "Basic Need Satisfaction schaal (Van den Broeck et al., 2010). Organisatiefactoren "
-        "gebaseerd op LMX-7, Edmondson Psychological Safety Scale, JD-R en JSS. "
-        "Vervangingskosten berekend op basis van SHRM/Bersin Institute multipliers. "
-        "Alle analyses zijn anoniem en voldoen aan de AVG.</i>"
-    )
-    story.append(Paragraph(disclaimer, STYLES["caption"]))
+
+    # ── Vervolgstappen ────────────────────────────────────────────────────
+    story.append(Paragraph("Vervolgstappen", STYLES["sub_title"]))
+
+    action_steps = [
+        (
+            "1",
+            "Bespreek dit rapport intern — binnen 2 weken",
+            "Deel de bevindingen met het MT en de direct betrokken leidinggevenden. "
+            + (
+                f"Focus het gesprek op <b>{' en '.join(top2_labels)}</b> — "
+                "de gespreksagenda hierboven helpt structuur te geven."
+                if top2_labels else
+                "Gebruik de focusvragen uit dit rapport als gespreksaanzet."
+            ),
+        ),
+        (
+            "2",
+            "Stel per aandachtspunt een eigenaar aan",
+            "Koppel elk thema aan één verantwoordelijke — leidinggevende of HR-adviseur. "
+            "Zonder eigenaar blijft een bevinding een bevinding.",
+        ),
+        (
+            "3",
+            "Bepaal samen wat je gaat doen — maximaal 3 acties",
+            "Wat concreet te doen weet het team zelf het best. "
+            "Beperk je tot maximaal 3 acties tegelijk om focus te houden.",
+        ),
+        (
+            "4",
+            "Stel een evaluatiemoment in — binnen 90 dagen",
+            "Plan nu al wanneer je terugkijkt: zijn de acties uitgevoerd? Zijn er nieuwe signalen? "
+            "Zet het in de agenda voordat dit rapport in de la verdwijnt.",
+        ),
+        (
+            "5",
+            "Herhaal de ExitScan — elk kwartaal of halfjaarlijks",
+            "Eenmalige data is een momentopname. Patroonherkenning ontstaat pas bij meerdere metingen. "
+            "Continuïteit maakt de investering rendabel.",
+        ),
+    ]
+
+    for step_num, step_title, step_body in action_steps:
+        step_data = [[
+            Paragraph(f"<b>{step_num}</b>", ParagraphStyle(
+                f"step_num_{step_num}",
+                fontName="Helvetica-Bold",
+                fontSize=14,
+                textColor=BRAND,
+                alignment=TA_CENTER,
+            )),
+            Table(
+                [
+                    [Paragraph(f"<b>{step_title}</b>", STYLES["body_bold"])],
+                    [Paragraph(step_body, STYLES["body"])],
+                ],
+                colWidths=[content_width * 0.83],
+            ),
+        ]]
+        step_ts = TableStyle([
+            ("BACKGROUND",    (0, 0), (-1, -1), colors.HexColor("#F0F9FF")),
+            ("GRID",          (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
+            ("VALIGN",        (0, 0), (-1, -1), "TOP"),
+            ("TOPPADDING",    (0, 0), (-1, -1), 7),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+            ("LEFTPADDING",   (0, 0), (-1, -1), 10),
+            ("RIGHTPADDING",  (0, 0), (-1, -1), 10),
+        ])
+        step_table = Table(step_data, colWidths=[content_width * 0.10, content_width * 0.90])
+        step_table.setStyle(step_ts)
+        story.append(step_table)
+        story.append(Spacer(1, 0.2 * cm))
+
+    story.append(Spacer(1, 0.4 * cm))
+
+    # Contact-blok
+    contact_data = [[
+        Paragraph(
+            "<b>Vragen over dit rapport?</b><br/>"
+            "Neem contact op via <font color='#2563EB'>hallo@verisight.nl</font>. "
+            "We lopen graag de bevindingen met je door en denken mee over vervolgstappen.",
+            ParagraphStyle(
+                "contact_note",
+                fontName="Helvetica",
+                fontSize=9,
+                leading=14,
+                textColor=TEXT,
+            ),
+        )
+    ]]
+    contact_ts = TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, -1), BRAND_LIGHT),
+        ("GRID",          (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
+        ("TOPPADDING",    (0, 0), (-1, -1), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 12),
+        ("RIGHTPADDING",  (0, 0), (-1, -1), 12),
+    ])
+    contact_table = Table(contact_data, colWidths=[content_width])
+    contact_table.setStyle(contact_ts)
+    story.append(contact_table)
 
     story.append(PageBreak())
 
     # ==================================================================== #
-    # PAGINA 7 — METHODIEK & VERANTWOORDING                                #
+    # PAGINA 8 — METHODIEK & VERANTWOORDING                                #
     # ==================================================================== #
 
     story.append(Paragraph("Methodiek & Verantwoording", STYLES["section_title"]))
     story.append(Paragraph(
-        "Dit rapport is opgebouwd op basis van gevalideerde wetenschappelijke instrumenten. "
-        "De relatieve weging van factoren is gebaseerd op de richting van bevindingen in de literatuur. "
-        "Onderstaande toelichting maakt de onderzoekslogica transparant.",
+        "Dit rapport is opgebouwd uit verkorte vraagblokken die inhoudelijk zijn geïnspireerd door bestaande wetenschappelijke literatuur. "
+        "Het gaat nadrukkelijk niet om volledige schaalafnames of een diagnostisch instrument. "
+        "De relatieve weging van factoren is expertgedreven en bedoeld voor prioritering in gesprek.",
         STYLES["body"],
     ))
     story.append(Spacer(1, 0.4 * cm))
 
-    # ── Hoe werkt de risicoscore? ────────────────────────────────────────
-    story.append(Paragraph("Hoe wordt de risicoscore berekend?", STYLES["sub_title"]))
+    # ── Hoe werkt de frictiescore? ───────────────────────────────────────
+    story.append(Paragraph("Hoe wordt de frictiescore berekend?", STYLES["sub_title"]))
     story.append(Paragraph(
-        "Elke respondent krijgt een risicoscore op een schaal van 1 tot 10. "
+        "Elke respondent krijgt een frictiescore op een schaal van 1 tot 10. "
         "Een hogere score betekent meer signalen van ontevredenheid of frictie in de werkomgeving. "
-        "De score is indicatief en bedoeld als gespreksinput, niet als causale voorspelling of objectief oordeel. "
+        "De score is indicatief en bedoeld als gespreksinput, niet als causale voorspelling, benchmark of objectief oordeel. "
         "De score is een gewogen gemiddelde van zeven factoren:",
         STYLES["body"],
     ))
@@ -1408,12 +1774,12 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
     weight_rows = [
         ["Factor", "Gewicht", "Richting in literatuur"],
-        ["Leiderschap", "2.5 ×", "Consistent sterkste voorspeller vrijwillig verloop (o.a. LMX-onderzoek)"],
-        ["SDT Werkbeleving", "2.0 ×", "Cross-dimensionale impact op motivatie en retentie"],
-        ["Cultuur", "1.5 ×", "Psychologische veiligheid gerelateerd aan retentie (Edmondson, 1999)"],
-        ["Groei & Ontwikkeling", "1.5 ×", "Belangrijke driver voor ontwikkelingsgerichte medewerkers (JD-R)"],
-        ["Beloning", "1.0 ×", "Hygiënefactor — drempelwaarde-effect"],
-        ["Werkbelasting", "1.0 ×", "Mediator; minder directe invloed dan leiderschapsfactoren (JD-R)"],
+        ["Leiderschap", "2.5 ×", "In de literatuur sterk geassocieerd met vrijwillig verloop (o.a. LMX-onderzoek)"],
+        ["SDT Werkbeleving", "2.0 ×", "Breed signaal voor motivatie, betrokkenheid en retentie"],
+        ["Psychologische veiligheid & cultuurmatch", "1.5 ×", "Psychologische veiligheid en waardenfit hangen samen met retentie"],
+        ["Groeiperspectief", "1.5 ×", "Ontwikkel- en perspectiefsignaal in de literatuur (JD-R)"],
+        ["Beloning & voorwaarden", "1.0 ×", "Hygiënefactor — drempelwaarde-effect"],
+        ["Werkbelasting", "1.0 ×", "Werkbelasting werkt vaak als versterkende contextfactor (JD-R)"],
         ["Rolhelderheid", "1.0 ×", "Basale verwachting (Rizzo, House & Lirtzman, 1970)"],
     ]
     w_ts = TableStyle([
@@ -1436,16 +1802,13 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(w_table)
     story.append(Spacer(1, 0.4 * cm))
 
-    # ── Risicobanden ──────────────────────────────────────────────────────
-    story.append(Paragraph("Wat betekenen de risicobanden?", STYLES["sub_title"]))
+    # ── Signaalbanden ─────────────────────────────────────────────────────
+    story.append(Paragraph("Wat betekenen de signaalbanden?", STYLES["sub_title"]))
     band_rows = [
         ["Band", "Score", "Betekenis voor de organisatie"],
-        ["LAAG",   "< 4.5",   "Medewerker ervoer de werkomgeving overwegend positief. "
-                               "Vertrek hangt minder samen met interne factoren."],
-        ["MIDDEN", "4.5–7.0", "Gemengd beeld. Aandachtspunten aanwezig, maar geen acute alarmsignalen. "
-                               "Gerichte verbetering kan retentie versterken."],
-        ["HOOG",   "≥ 7.0",   "Medewerker ervoer de werkomgeving structureel negatief. "
-                               "Dit wijst op meerdere interne aandachtspunten die nader onderzocht moeten worden."],
+        ["LAAG",   "< 4.5",   "Overwegend positief beeld. Er zijn relatief weinig signalen van werkfrictie in de antwoorden."],
+        ["MIDDEN", "4.5–7.0", "Gemengd beeld. Er zijn meerdere aandachtspunten, maar de uitkomst vraagt vooral nadere verificatie."],
+        ["HOOG",   "≥ 7.0",   "Sterk signaal van ervaren werkfrictie. Dit vraagt om nadere analyse, niet automatisch om een harde conclusie."],
     ]
     band_ts = TableStyle([
         ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
@@ -1475,27 +1838,19 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(Paragraph("Wat betekent elke factor?", STYLES["sub_title"]))
     factor_explanations = [
         ("Leiderschap", "LMX-7 (Graen & Uhl-Bien, 1995)",
-         "Meet de kwaliteit van de relatie tussen medewerker en leidinggevende: feedback, "
-         "interesse in ontwikkeling en vertrouwen. Zwak leiderschap is de meest genoemde "
-         "vermijdbare vertrekoorzaak."),
-        ("Cultuur", "Psychological Safety Scale (Edmondson, 1999)",
-         "Meet of medewerkers zich vrij voelden fouten toe te geven, vragen te stellen en "
-         "afwijkende meningen te uiten. Lage cultuurscores correleren sterk met verborgen "
-         "problemen en hoog verloop."),
-        ("Groei & Ontwikkeling", "JD-R Resources-component",
-         "Meet of er voldoende leer- en groeimogelijkheden waren en of de organisatie "
-         "investeerde in loopbaanontwikkeling. Gebrek aan perspectief is een primaire "
-         "oorzaak van verloop bij jonge medewerkers."),
-        ("Beloning", "Job Satisfaction Survey (Spector, 1985)",
-         "Meet ervaren marktconformiteit, eerlijkheid en aansluiting van de totale "
-         "arbeidsvoorwaarden. Beloning werkt als hygiënefactor: te laag veroorzaakt "
-         "vertrek, maar 'goed genoeg' leidt niet automatisch tot loyaliteit."),
+         "Meet in verkorte vorm de ervaren relatiekwaliteit met de leidinggevende: feedback, "
+         "interesse in ontwikkeling en vertrouwen."),
+        ("Psychologische veiligheid & cultuurmatch", "Psychological Safety / waardenfit",
+         "Meet in verkorte vorm psychologische veiligheid en of de werkomgeving als passend werd ervaren."),
+        ("Groeiperspectief", "JD-R Resources-component",
+         "Meet ervaren ontwikkelruimte, investering in ontwikkeling en loopbaanperspectief."),
+        ("Beloning & voorwaarden", "Job Satisfaction Survey (Spector, 1985)",
+         "Meet ervaren marktconformiteit, eerlijkheid en aansluiting van de totale arbeidsvoorwaarden."),
         ("Werkbelasting", "JD-R Demands-component",
          "Meet of de werkdruk haalbaar was en of er voldoende hersteltijd was. "
-         "Vragen zijn positief geformuleerd: hoge score = werkdruk als acceptabel ervaren = lager risico."),
+         "Vragen zijn positief geformuleerd: hoge score = werkdruk als acceptabel ervaren = lager aandachtssignaal."),
         ("Rolhelderheid", "Role Conflict & Ambiguity Scale (Rizzo et al., 1970)",
-         "Meet of taken en verwachtingen duidelijk waren. Lage rolhelderheid leidt tot "
-         "stress, lagere prestaties en hogere vertrekintentie."),
+         "Meet of taken en verwachtingen duidelijk waren en of tegenstrijdige aansturing beperkt bleef."),
     ]
 
     for fname, source, explanation in factor_explanations:
@@ -1512,7 +1867,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(Paragraph("Statistische betrouwbaarheid", STYLES["sub_title"]))
     story.append(Paragraph(
         "Scores, patroonanalyse en grafieken worden alleen getoond bij minimaal 10 responses. "
-        "Bij kleinere groepen zijn de uitkomsten te gevoelig voor toeval en herleidbaarheid. "
+        f"Subgroepvergelijkingen worden alleen getoond vanaf minimaal {MIN_SEGMENT_N} responses per subgroep. "
+        "Bij kleinere groepen zijn de uitkomsten te gevoelig voor toeval, interpretatiefouten en herleidbaarheid. "
         "Alle zichtbare uitkomsten blijven indicatief en dienen als gespreksinput — niet als statistische conclusie. "
         "Alle resultaten worden uitsluitend op gegroepeerd niveau gedeeld, conform de AVG.",
         STYLES["body"],

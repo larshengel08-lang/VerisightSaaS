@@ -270,76 +270,99 @@ def compute_preventability(
     stay_intent_score: int,
     sdt_scores: dict[str, Any],
     org_scores: dict[str, float],
+    contributing_reason_codes: list[str] | None = None,
 ) -> dict[str, Any]:
     """
-    4-step avoidable turnover classification (Holtom et al., 2008 framework).
+    Indicatieve classificatie van beïnvloedbare werkfactoren in een exitcontext.
 
-    Step 1 — Is exit reason inherently unpreventable?
-      Unpreventable categories: "persoonlijk", "verhuizing", "studie", "pensioen",
-      "partner_verhuisd", "gezondheid".
-      If yes → "NIET_REDBAAR" immediately.
-
-    Step 2 — Stay intent check.
-      stay_intent_score: 1 (definitely leaving) … 5 (might have stayed).
-      If score ≤ 2 AND reason is NOT a push factor → "MOGELIJK_REDBAAR".
-
-    Step 3 — SDT + org context check.
-      If any SDT dimension < 4.0 OR any satisfier factor < 4.0 → "REDBAAR".
-
-    Step 4 — Fallback → "MOGELIJK_REDBAAR".
+    Belangrijk:
+      - Dit is nadrukkelijk geen causale of juridische vaststelling.
+      - De uitkomst benoemt alleen hoe sterk de antwoorden wijzen op
+        beïnvloedbare werkfactoren rondom het vertrek.
+      - De logica is bewust zachter dan een klassieke "redbaar / niet redbaar"
+        classificatie om overclaiming te beperken.
 
     Returns
     -------
     {
-        "preventability": "REDBAAR" | "MOGELIJK_REDBAAR" | "NIET_REDBAAR",
+        "preventability": "STERK_WERKSIGNAAL" | "GEMENGD_WERKSIGNAAL" | "BEPERKT_WERKSIGNAAL",
         "preventability_label": str (Dutch),
         "reasoning": str,
+        "signal_score": float,
     }
     """
     UNPREVENTABLE = {
         "persoonlijk", "verhuizing", "studie", "pensioen",
         "partner_verhuisd", "gezondheid", "overig_persoonlijk",
     }
+    PUSH_FACTORS = {"leiderschap", "cultuur", "groei", "beloning", "werkdruk", "rolonduidelijkheid"}
+    PUSH_CODES = {"P1", "P2", "P3", "P4", "P5", "P6"}
     SATISFIER_FACTORS = {"leadership", "culture", "growth", "role_clarity"}
+    contributing_reason_codes = contributing_reason_codes or []
+    primary_reason = exit_reason_category.lower()
+    signal_score = 0.0
+    reasoning_parts: list[str] = []
 
-    # Step 1
-    if exit_reason_category.lower() in UNPREVENTABLE:
+    # Hoofdreden buiten invloedsfeer organisatie → terughoudend classificeren
+    if primary_reason in UNPREVENTABLE:
         return {
-            "preventability": "NIET_REDBAAR",
-            "preventability_label": "Niet redbaar",
-            "reasoning": "Vertrekreden is van persoonlijke aard en buiten invloedssfeer organisatie.",
+            "preventability": "BEPERKT_WERKSIGNAAL",
+            "preventability_label": "Beperkt signaal van beïnvloedbare werkfactoren",
+            "reasoning": "De hoofdreden voor vertrek ligt volgens de respondent vooral buiten de directe invloedssfeer van de organisatie.",
+            "signal_score": 0.5,
         }
 
-    # Step 2
-    if stay_intent_score <= 2:
-        # Strong intent to leave even with org factors at play
-        return {
-            "preventability": "MOGELIJK_REDBAAR",
-            "preventability_label": "Mogelijk redbaar",
-            "reasoning": "Lage blijfbereidheid — organisatie had wellicht eerder kunnen ingrijpen.",
-        }
+    if primary_reason in PUSH_FACTORS:
+        signal_score += 2.0
+        reasoning_parts.append("de hoofdreden ligt in de werksituatie")
+    else:
+        signal_score += 0.5
+        reasoning_parts.append("de hoofdreden ligt niet uitsluitend in de werksituatie")
 
-    # Step 3 — SDT context
+    if stay_intent_score >= 4:
+        signal_score += 2.0
+        reasoning_parts.append("de respondent ziet duidelijke invloed van ander organisatiegedrag")
+    elif stay_intent_score == 3:
+        signal_score += 1.0
+        reasoning_parts.append("de respondent ziet enige invloed van ander organisatiegedrag")
+    else:
+        reasoning_parts.append("de respondent ziet weinig invloed van ander organisatiegedrag")
+
     sdt_dims = ["autonomy", "competence", "relatedness"]
-    low_sdt = [d for d in sdt_dims if sdt_scores.get(d, 5.5) < 4.0]
-    low_org = [f for f in SATISFIER_FACTORS if org_scores.get(f, 5.5) < 4.0]
+    low_sdt = [d for d in sdt_dims if sdt_scores.get(d, 5.5) < 4.5]
+    low_org = [f for f in SATISFIER_FACTORS if org_scores.get(f, 5.5) < 4.5]
+    push_contributors = sorted(code for code in contributing_reason_codes if code in PUSH_CODES)
 
-    if low_sdt or low_org:
-        triggers = low_sdt + low_org
+    if low_org:
+        signal_score += min(2.0, float(len(low_org)))
+        reasoning_parts.append(f"lage scores op werkfactoren ({', '.join(low_org)})")
+    if low_sdt:
+        signal_score += 1.5 if len(low_sdt) >= 2 else 1.0
+        reasoning_parts.append(f"lage SDT-scores ({', '.join(low_sdt)})")
+    if push_contributors:
+        signal_score += 1.0
+        reasoning_parts.append("ook aanvullende werkfactoren zijn als meespelend genoemd")
+
+    if signal_score >= 5.0:
         return {
-            "preventability": "REDBAAR",
-            "preventability_label": "Redbaar",
-            "reasoning": (
-                f"Lage scores op: {', '.join(triggers)}. "
-                "Dit wijst op werkfactoren die waarschijnlijk beter beïnvloedbaar waren."
-            ),
+            "preventability": "STERK_WERKSIGNAAL",
+            "preventability_label": "Sterk signaal van beïnvloedbare werkfactoren",
+            "reasoning": "Deze combinatie van antwoorden wijst relatief sterk op beïnvloedbare werkfactoren rondom het vertrek: "
+            + "; ".join(reasoning_parts) + ".",
+            "signal_score": round(signal_score, 2),
         }
-
-    # Step 4
+    if signal_score >= 3.0:
+        return {
+            "preventability": "GEMENGD_WERKSIGNAAL",
+            "preventability_label": "Gemengd signaal van beïnvloedbare werkfactoren",
+            "reasoning": "De antwoorden geven een gemengd beeld: er zijn aanwijzingen voor beïnvloedbare werkfactoren, maar ook voor andere verklaringen of beperkte stelligheid.",
+            "signal_score": round(signal_score, 2),
+        }
     return {
-        "preventability": "MOGELIJK_REDBAAR",
-        "preventability_label": "Mogelijk redbaar",
-        "reasoning": "Scores geven geen duidelijk patroon; aanvullende context aanbevolen.",
+        "preventability": "BEPERKT_WERKSIGNAAL",
+        "preventability_label": "Beperkt signaal van beïnvloedbare werkfactoren",
+        "reasoning": "De antwoorden geven weinig harde aanwijzingen dat beïnvloedbare werkfactoren de dominante verklaring voor het vertrek waren.",
+        "signal_score": round(signal_score, 2),
     }
 
 
@@ -411,7 +434,7 @@ RECOMMENDATIONS: dict[str, dict[str, list[str]]] = {
         ],
         "MIDDEN": [
             "Organiseer team-sessies rondom waarden en gedragsnormen.",
-            "Meet psychologische veiligheid elk kwartaal (benchmark intern).",
+            "Meet psychologische veiligheid periodiek en vergelijk vooral met eerdere eigen metingen.",
         ],
         "LAAG": [
             "Cultuurscores positief — bewaken bij organisatieveranderingen.",
@@ -433,7 +456,7 @@ RECOMMENDATIONS: dict[str, dict[str, list[str]]] = {
     },
     "compensation": {
         "HOOG": [
-            "Voer marktconforme beloningsscan uit (benchmark extern).",
+            "Voer een marktvergelijking uit voor beloning en voorwaarden.",
             "Onderzoek non-financiële arbeidsvoorwaarden als aanvulling.",
             "Communiceer transparant over beloningsstructuur en groeipaden.",
         ],
@@ -517,15 +540,16 @@ def get_recommendations(
 # ---------------------------------------------------------------------------
 
 MIN_AGGREGATE_N = 10
+MIN_SEGMENT_N = 5
 
 FACTOR_LABELS_NL: dict[str, str] = {
     "leadership":   "Leiderschap",
-    "culture":      "Cultuur & Veiligheid",
-    "growth":       "Groei & Ontwikkeling",
-    "compensation": "Beloning",
+    "culture":      "Psychologische veiligheid & cultuurmatch",
+    "growth":       "Groeiperspectief",
+    "compensation": "Beloning & voorwaarden",
     "workload":     "Werkbelasting",
     "role_clarity": "Rolhelderheid",
-    "sdt":          "Basisbehoeften (SDT)",
+    "sdt":          "Werkbeleving (SDT)",
     "autonomy":     "Autonomie",
     "competence":   "Competentie",
     "relatedness":  "Verbondenheid",
@@ -575,8 +599,13 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
     factor_totals: dict[str, list[float]] = {f: [] for f in all_factors}
 
     risk_scores: list[float] = []
-    preventability_counts: dict[str, int] = {"REDBAAR": 0, "MOGELIJK_REDBAAR": 0, "NIET_REDBAAR": 0}
+    preventability_counts: dict[str, int] = {
+        "STERK_WERKSIGNAAL": 0,
+        "GEMENGD_WERKSIGNAAL": 0,
+        "BEPERKT_WERKSIGNAAL": 0,
+    }
     exit_reason_counts: dict[str, int] = {}
+    contributing_reason_counts: dict[str, int] = {}
     department_risks: dict[str, list[float]] = {}
 
     for r in responses:
@@ -609,6 +638,10 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
         if code:
             exit_reason_counts[code] = exit_reason_counts.get(code, 0) + 1
 
+        # Meespelende redenen
+        for code in r.get("contributing_reason_codes", []):
+            contributing_reason_counts[code] = contributing_reason_counts.get(code, 0) + 1
+
         # Department breakdown
         dept = r.get("department", "Onbekend")
         rs_val = r.get("risk_score")
@@ -639,16 +672,27 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
     dept_avg = {
         dept: round(sum(vals) / len(vals), 2)
         for dept, vals in department_risks.items()
-        if len(vals) >= 2  # at least 2 per dept for safety
+        if len(vals) >= MIN_SEGMENT_N
     }
 
     # Exit reason top 3
     top_exit_reasons = sorted(exit_reason_counts.items(), key=lambda x: x[1], reverse=True)[:3]
+    top_contributing_reasons = sorted(contributing_reason_counts.items(), key=lambda x: x[1], reverse=True)[:5]
 
-    # Avoidable turnover rate
+    # Signaalpercentages
     total_exit = sum(preventability_counts.values())
-    avoidable_rate = (
-        round(preventability_counts.get("REDBAAR", 0) / total_exit * 100, 1)
+    strong_signal_rate = (
+        round(preventability_counts.get("STERK_WERKSIGNAAL", 0) / total_exit * 100, 1)
+        if total_exit > 0 else None
+    )
+    any_work_signal_rate = (
+        round(
+            (
+                preventability_counts.get("STERK_WERKSIGNAAL", 0)
+                + preventability_counts.get("GEMENGD_WERKSIGNAAL", 0)
+            ) / total_exit * 100,
+            1,
+        )
         if total_exit > 0 else None
     )
 
@@ -659,11 +703,17 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
         "factor_averages":      factor_averages,
         "top_risk_factors":     top_risks,
         "preventability_counts": preventability_counts,
-        "avoidable_rate_pct":   avoidable_rate,
+        "avoidable_rate_pct":   strong_signal_rate,
+        "strong_work_signal_pct": strong_signal_rate,
+        "any_work_signal_pct":  any_work_signal_rate,
         "exit_reason_counts":   exit_reason_counts,
         "top_exit_reasons":     [
             {"code": code, "label": EXIT_REASON_LABELS_NL.get(code, code), "count": cnt}
             for code, cnt in top_exit_reasons
+        ],
+        "top_contributing_reasons": [
+            {"code": code, "label": EXIT_REASON_LABELS_NL.get(code, code), "count": cnt}
+            for code, cnt in top_contributing_reasons
         ],
         "department_avg_risk":  dept_avg,
     }

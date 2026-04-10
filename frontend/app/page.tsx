@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { ContactForm } from '@/components/marketing/contact-form'
+import { PreviewSlider } from '@/components/marketing/preview-slider'
 
 const navLinks = [
   { href: '#vergelijking', label: 'Waarom Verisight' },
@@ -130,10 +131,10 @@ export default function LandingPage() {
                 Voor HR-teams bij organisaties met 200 tot 1.000 medewerkers
               </div>
               <h1 className="text-balance text-4xl font-bold leading-tight text-slate-950 md:text-6xl">
-                Begeleide ExitScan die laat zien waarom medewerkers vertrekken en waar je als organisatie kunt bijsturen.
+                Zie waarom medewerkers vertrekken. Stuur eerder bij.
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-700 md:text-xl">
-                Verisight maakt uitstroom vergelijkbaar, zonder dat HR zelf een surveytool of zwaar adviestraject hoeft te organiseren. Je krijgt inzicht, rapportage en duiding die direct bruikbaar zijn voor HR en management.
+                Verisight begeleidt HR van ExitScan tot rapport — zonder dat je zelf een surveytool hoeft in te richten. Je krijgt inzicht en managementtaal die direct bruikbaar zijn.
               </p>
               <div className="mt-10 grid gap-4 text-left md:grid-cols-3">
                 {heroHighlights.map(([eyebrow, title, description, tone]) => (
@@ -160,69 +161,12 @@ export default function LandingPage() {
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Voorbeeld van de managementweergave</p>
-                  <p className="mt-1 text-sm text-slate-600">Geen live klantdata: dit voorbeeld laat zien welk soort inzichten je ontvangt en hoe dat helpt prioriteren.</p>
+                  <p className="mt-1 text-sm text-slate-600">Geen live klantdata — deze voorbeelden laten zien welk soort inzichten je ontvangt.</p>
                 </div>
                 <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">ExitScan</span>
               </div>
-              <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-                <div className="rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white">
-                  <div className="mb-5 flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full bg-red-400" />
-                    <span className="h-3 w-3 rounded-full bg-amber-300" />
-                    <span className="h-3 w-3 rounded-full bg-emerald-400" />
-                    <span className="ml-3 rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">dashboard.verisight.nl</span>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-4">
-                    {[
-                      ['Responses', '14 van 18', '78% respons'],
-                      ['Gemiddeld risico', '7,2 op 10', 'Meerdere aandachtspunten'],
-                      ['Waarschijnlijk beinvloedbaar', '68%', 'Indicatieve inschatting'],
-                      ['Gemiddelde diensttijd', '2,4 jaar', 'Bij vertrek'],
-                    ].map(([label, value, detail]) => (
-                      <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-                        <p className="mt-2 text-lg font-bold text-white">{value}</p>
-                        <p className="mt-1 text-xs text-slate-400">{detail}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Welke thema&apos;s vragen de meeste aandacht?</p>
-                    <div className="mt-4 space-y-3">
-                      {[
-                        ['Leiderschap', '8,1', 'Hoog', '81%', 'bg-red-400'],
-                        ['Groei en ontwikkeling', '6,4', 'Midden', '64%', 'bg-amber-400'],
-                        ['Cultuur', '5,9', 'Midden', '59%', 'bg-amber-400'],
-                        ['Werkbelasting', '3,1', 'Laag', '31%', 'bg-emerald-400'],
-                      ].map(([label, value, band, width, color]) => (
-                        <div key={label} className="grid grid-cols-[minmax(0,10rem)_1fr_auto_auto] items-center gap-3">
-                          <span className="text-sm text-slate-200">{label}</span>
-                          <div className="h-2 overflow-hidden rounded-full bg-white/10"><div className={`h-full rounded-full ${color}`} style={{ width }} /></div>
-                          <span className="text-sm font-semibold text-white">{value}</span>
-                          <span className="text-xs font-semibold uppercase tracking-wide text-slate-300">{band}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col justify-between gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">Wat een HR-team hier concreet mee kan</p>
-                    <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
-                      <li>Je ziet welke vertrekredenen blijven terugkomen, niet alleen losse signalen per exit.</li>
-                      <li>Je krijgt een eerste indicatie waar HR of management waarschijnlijk kan bijsturen.</li>
-                      <li>Je kunt management in gewone taal uitleggen welke thema&apos;s nu prioriteit vragen.</li>
-                    </ul>
-                  </div>
-                  <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                    <p className="text-sm font-semibold text-blue-900">Typische eerste opbrengst</p>
-                    <p className="mt-2 text-sm leading-6 text-blue-950">Bijvoorbeeld: HR ziet dat vertrek niet vooral om salaris draait, maar vaker samenhangt met leiderschap en beperkte groeiperspectieven. Dat maakt vervolgstappen veel gerichter.</p>
-                  </div>
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                    <p className="text-sm font-semibold text-amber-900">Belangrijke nuance</p>
-                    <p className="mt-2 text-sm leading-6 text-amber-800">Voorbeeldscores zijn indicatief. Rapportages zijn bedoeld voor groepsinzichten en niet als zelfstandig oordeel over een individu.</p>
-                  </div>
-                </div>
+              <div className="mt-6">
+                <PreviewSlider />
               </div>
             </div>
           </div>
@@ -232,7 +176,11 @@ export default function LandingPage() {
           <div className="mx-auto grid max-w-6xl gap-4 px-5 sm:grid-cols-2 lg:grid-cols-4 sm:px-6">
             {trustItems.map(([title, description]) => (
               <div key={title} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-                <AccentTile tone="emerald" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50">
+                  <svg className="h-5 w-5 text-emerald-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fillRule="evenodd" d="M16.704 5.296a1 1 0 0 1 0 1.414l-7.5 7.5a1 1 0 0 1-1.414 0l-3.5-3.5a1 1 0 1 1 1.414-1.414L8.5 12.086l6.79-6.79a1 1 0 0 1 1.414 0Z" clipRule="evenodd" />
+                  </svg>
+                </div>
                 <p className="mt-4 text-sm font-semibold text-slate-950">{title}</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
               </div>
@@ -242,8 +190,8 @@ export default function LandingPage() {
         <section className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Waarom organisaties starten</p>
-            <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">Als je uitstroom niet vergelijkbaar maakt, blijf je te lang sturen op losse indrukken.</h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">ExitScan helpt je eerder zien welke thema&apos;s terugkomen, zodat je niet pas na meerdere kostbare exits ontdekt waar het patroon zit.</p>
+            <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">Losse exitgesprekken geven context. Geen patroon.</h2>
+            <p className="mt-4 text-lg leading-8 text-slate-600">Pas als je uitstroom vergelijkbaar maakt, zie je waar het patroon zit — voordat de kosten doorlopen.</p>
           </div>
           <div className="mt-12 grid gap-5 md:grid-cols-3">
             {[
@@ -252,9 +200,8 @@ export default function LandingPage() {
               ['Signaal 03', 'Management wil keuzes, HR mist een harde basis', 'Zonder structuur blijft het gesprek hangen in indrukken, terwijl je juist richting wilt geven aan leiderschap, groei of werkdruk.'],
             ].map(([eyebrow, title, description]) => (
               <div key={title} className="rounded-3xl border border-red-100 bg-red-50 p-6 shadow-sm">
-                <AccentTile tone="red" />
-                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-red-700">{eyebrow}</p>
-                <h3 className="text-lg font-semibold text-slate-950">{title}</h3>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-700">{eyebrow}</p>
+                <h3 className="mt-2 text-lg font-semibold text-slate-950">{title}</h3>
                 <p className="mt-3 text-sm leading-7 text-slate-700">{description}</p>
               </div>
             ))}
@@ -296,8 +243,7 @@ export default function LandingPage() {
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {outcomeCards.map(([title, description]) => (
                 <div key={title} className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                  <AccentTile tone="amber" />
-                  <h3 className="mt-4 text-lg font-semibold text-white">{title}</h3>
+                  <h3 className="text-lg font-semibold text-white">{title}</h3>
                   <p className="mt-3 text-sm leading-7 text-slate-300">{description}</p>
                 </div>
               ))}
