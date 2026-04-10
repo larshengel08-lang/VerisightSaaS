@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { Organization } from '@/lib/types'
 
 interface Props {
@@ -8,7 +9,9 @@ interface Props {
 }
 
 export function InviteClientUserForm({ orgs }: Props) {
+  const router = useRouter()
   const [orgId, setOrgId] = useState(orgs[0]?.id ?? '')
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<'viewer' | 'member'>('viewer')
   const [loading, setLoading] = useState(false)
@@ -25,7 +28,7 @@ export function InviteClientUserForm({ orgs }: Props) {
       const response = await fetch('/api/org-invites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orgId, email, role }),
+        body: JSON.stringify({ orgId, fullName, email, role }),
       })
       const json = await response.json().catch(() => ({}))
       if (!response.ok) {
@@ -35,8 +38,10 @@ export function InviteClientUserForm({ orgs }: Props) {
       }
 
       setSuccess(json.message ?? 'Toegang verwerkt.')
+      setFullName('')
       setEmail('')
       setRole('viewer')
+      router.refresh()
     } catch {
       setError('Verbindingsfout tijdens uitnodigen.')
     } finally {
@@ -60,6 +65,20 @@ export function InviteClientUserForm({ orgs }: Props) {
             </option>
           ))}
         </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Naam contactpersoon</label>
+        <input
+          type="text"
+          value={fullName}
+          onChange={e => setFullName(e.target.value)}
+          placeholder="Bijv. Sophie Jansen"
+          className={inputCls}
+        />
+        <p className="mt-1 text-xs text-gray-400">
+          Optioneel, maar aanbevolen. Deze naam gebruiken we voor de uitnodiging en het klantoverzicht.
+        </p>
       </div>
 
       <div>

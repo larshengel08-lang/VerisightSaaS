@@ -79,6 +79,18 @@ export interface OrgMember {
   created_at: string
 }
 
+export interface OrgInvite {
+  id: string
+  org_id: string
+  email: string
+  full_name: string | null
+  role: 'viewer' | 'member'
+  invited_by: string | null
+  invited_at: string
+  accepted_at: string | null
+  organizations?: Pick<Organization, 'id' | 'name'>
+}
+
 // Scoring constanten (gespiegeld van Python backend)
 export const FACTOR_LABELS: Record<string, string> = {
   leadership:   'Leiderschap',

@@ -4,7 +4,8 @@ import { NewOrgForm } from '@/components/dashboard/new-org-form'
 import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
 import { AddRespondentsForm } from '@/components/dashboard/add-respondents-form'
 import { InviteClientUserForm } from '@/components/dashboard/invite-client-user-form'
-import type { Organization, Campaign } from '@/lib/types'
+import { ClientAccessList } from '@/components/dashboard/client-access-list'
+import type { Organization, Campaign, OrgInvite } from '@/lib/types'
 
 export default async function BeheerPage() {
   const supabase = await createClient()
@@ -56,10 +57,25 @@ export default async function BeheerPage() {
         .neq('user_id', user.id)
     : { count: 0 }
 
+  const { data: invitesRaw } = orgIds.length
+    ? await supabase
+        .from('org_invites')
+        .select('id, org_id, email, full_name, role, invited_by, invited_at, accepted_at, organizations(id, name)')
+        .in('org_id', orgIds)
+        .order('accepted_at', { ascending: true, nullsFirst: true })
+        .order('invited_at', { ascending: false })
+    : { data: [] }
+
+  const invites = (invitesRaw ?? []).map(invite => ({
+    ...invite,
+    organizations: Array.isArray(invite.organizations) ? invite.organizations[0] : invite.organizations,
+  })) as OrgInvite[]
+  const pendingInviteCount = invites.filter(invite => !invite.accepted_at).length
+
   const step1Done = orgs.length > 0
   const step2Done = campaigns.length > 0
   const step3Done = (respondentCount ?? 0) > 0
-  const step4Done = (clientAccessCount ?? 0) > 0
+  const step4Done = (clientAccessCount ?? 0) > 0 || invites.length > 0
 
   return (
     <div>
@@ -192,6 +208,17 @@ export default async function BeheerPage() {
                 bestaande accounts worden direct aan de organisatie gekoppeld.
               </p>
               <InviteClientUserForm orgs={orgs} />
+              <div className="border-t border-gray-100 pt-4 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-xs font-semibold text-gray-500">Klanttoegang en uitnodigingen</p>
+                  {pendingInviteCount > 0 && (
+                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                      {pendingInviteCount} wacht op activatie
+                    </span>
+                  )}
+                </div>
+                <ClientAccessList invites={invites} />
+              </div>
             </div>
           )}
         </section>

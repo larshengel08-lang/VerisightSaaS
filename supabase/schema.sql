@@ -37,6 +37,7 @@ create table if not exists public.org_invites (
   id          uuid primary key default gen_random_uuid(),
   org_id      uuid references public.organizations(id) on delete cascade not null,
   email       text not null,
+  full_name   text,
   role        text not null default 'viewer' check (role in ('member', 'viewer')),
   invited_by  uuid references auth.users(id) on delete set null,
   invited_at  timestamptz default now(),
@@ -97,6 +98,12 @@ do $$ begin
     where table_name = 'respondents' and column_name = 'email'
   ) then
     alter table public.respondents add column email text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'org_invites' and column_name = 'full_name'
+  ) then
+    alter table public.org_invites add column full_name text;
   end if;
 end $$;
 
