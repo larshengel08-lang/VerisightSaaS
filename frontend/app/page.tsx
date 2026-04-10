@@ -161,7 +161,7 @@ export default function LandingPage() {
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Voorbeeld van de managementweergave</p>
-                  <p className="mt-1 text-sm text-slate-600">Geen live klantdata — deze voorbeelden laten zien welk soort inzichten je ontvangt.</p>
+                  <p className="mt-1 text-sm text-slate-600">Geen live klantdata — deze voorbeelden laten zien hoe Verisight signalen, hypotheses en focusvragen samenvat.</p>
                 </div>
                 <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">ExitScan</span>
               </div>
@@ -208,7 +208,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-8 rounded-3xl border border-blue-200 bg-blue-50 p-8">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-900">Waarom de businesscase vaak snel klopt</p>
-            <p className="mt-3 max-w-4xl text-base leading-8 text-blue-950">Stel: een organisatie met 300 medewerkers heeft jaarlijks 30 exits. Als vervanging, inwerken en productiviteitsverlies per vertrek al snel enkele duizenden euro&apos;s kosten, hoeft je maar beperkt beter te begrijpen waar uitstroom beinvloedbaar is om de trajectprijs terug te verdienen.</p>
+            <p className="mt-3 max-w-4xl text-base leading-8 text-blue-950">Stel: een organisatie met 300 medewerkers heeft jaarlijks 30 exits. Als vervanging, inwerken en productiviteitsverlies per vertrek al snel enkele duizenden euro&apos;s kosten, hoeft je maar beperkt beter te begrijpen waar werkfactoren waarschijnlijk meespelen om de trajectprijs terug te verdienen.</p>
             <p className="mt-3 max-w-4xl text-sm leading-7 text-blue-900">Verisight verkoopt geen garantie op minder verloop, maar wel een snellere en stevigere basis om gerichter te beslissen waar je moet ingrijpen.</p>
           </div>
         </section>

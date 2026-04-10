@@ -2,9 +2,7 @@
 
 import { useState } from 'react'
 
-const SLIDES = ['Dashboard', 'Factoranalyse', 'Wat nu?'] as const
-
-// ── Slide 1: Management dashboard ───────────────────────────────────────────
+const SLIDES = ['Dashboard', 'Factoranalyse', 'Werkhypothesen'] as const
 
 function DashboardSlide() {
   return (
@@ -19,9 +17,9 @@ function DashboardSlide() {
         <div className="grid gap-4 sm:grid-cols-4">
           {[
             ['Responses', '14 van 18', '78% respons'],
-            ['Gemiddeld risico', '7,2 op 10', 'Meerdere aandachtspunten'],
-            ['Waarschijnlijk beinvloedbaar', '68%', 'Indicatieve inschatting'],
-            ['Gemiddelde diensttijd', '2,4 jaar', 'Bij vertrek'],
+            ['Gem. frictiescore', '5,8 op 10', 'Middelhoog signaal'],
+            ['Sterk werkfactorsignaal', '61%', 'Indicatieve duiding'],
+            ['Gem. diensttijd', '2,4 jaar', 'Bij vertrek'],
           ].map(([label, value, detail]) => (
             <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
@@ -31,13 +29,13 @@ function DashboardSlide() {
           ))}
         </div>
         <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Welke thema&apos;s vragen de meeste aandacht?</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Waar zitten de sterkste aandachtssignalen?</p>
           <div className="mt-4 space-y-3">
             {[
-              ['Leiderschap', '8,1', 'Hoog', '81%', 'bg-red-400'],
-              ['Groei en ontwikkeling', '6,4', 'Midden', '64%', 'bg-amber-400'],
-              ['Cultuur', '5,9', 'Midden', '59%', 'bg-amber-400'],
-              ['Werkbelasting', '3,1', 'Laag', '31%', 'bg-emerald-400'],
+              ['Leiderschap', '6,3', 'Urgent', '63%', 'bg-red-400'],
+              ['Groeiperspectief', '6,1', 'Urgent', '61%', 'bg-red-400'],
+              ['Beloning & voorwaarden', '4,9', 'Aandacht', '49%', 'bg-amber-400'],
+              ['Werkbelasting', '4,6', 'Aandacht', '46%', 'bg-amber-400'],
             ].map(([label, value, band, width, color]) => (
               <div key={label} className="grid grid-cols-[minmax(0,10rem)_1fr_auto_auto] items-center gap-3">
                 <span className="text-sm text-slate-200">{label}</span>
@@ -55,15 +53,15 @@ function DashboardSlide() {
         <div>
           <p className="text-sm font-semibold text-slate-900">Wat een HR-team hier concreet mee kan</p>
           <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
-            <li>Je ziet welke vertrekredenen blijven terugkomen, niet alleen losse signalen per exit.</li>
-            <li>Je krijgt een eerste indicatie waar HR of management waarschijnlijk kan bijsturen.</li>
-            <li>Je kunt management in gewone taal uitleggen welke thema&apos;s nu prioriteit vragen.</li>
+            <li>Je ziet welke vertrekpatronen terugkeren, niet alleen losse signalen per exit.</li>
+            <li>Je krijgt een indicatie waar werkfactoren waarschijnlijk het meeste aandacht vragen.</li>
+            <li>Je kunt management in gewone taal meenemen in wat eerst moet worden gevalideerd.</li>
           </ul>
         </div>
         <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-          <p className="text-sm font-semibold text-blue-900">Typische eerste opbrengst</p>
+          <p className="text-sm font-semibold text-blue-900">Belangrijke nuance</p>
           <p className="mt-2 text-sm leading-6 text-blue-950">
-            Bijvoorbeeld: HR ziet dat vertrek niet vooral om salaris draait, maar vaker samenhangt met leiderschap en beperkte groeiperspectieven. Dat maakt vervolgstappen veel gerichter.
+            Verisight vat signalen samen en helpt prioriteren. Het rapport doet geen individueel oordeel en geen harde voorspelling van toekomstig verloop.
           </p>
         </div>
       </div>
@@ -71,124 +69,107 @@ function DashboardSlide() {
   )
 }
 
-// ── Slide 2: Factoranalyse ───────────────────────────────────────────────────
-
 const FACTORS = [
-  { label: 'Leiderschap',          score: 8.1, band: 'URGENT',   color: 'bg-red-500',     text: 'text-red-700',     border: 'border-red-200',     bg: 'bg-red-50'     },
-  { label: 'Groei & ontwikkeling', score: 6.4, band: 'AANDACHT', color: 'bg-amber-400',   text: 'text-amber-700',   border: 'border-amber-200',   bg: 'bg-amber-50'   },
-  { label: 'Cultuur',              score: 5.9, band: 'AANDACHT', color: 'bg-amber-400',   text: 'text-amber-700',   border: 'border-amber-200',   bg: 'bg-amber-50'   },
-  { label: 'Compensatie',          score: 4.2, band: 'NEUTRAAL', color: 'bg-blue-400',    text: 'text-blue-700',    border: 'border-blue-200',    bg: 'bg-blue-50'    },
-  { label: 'Werkbelasting',        score: 3.1, band: 'STERK',    color: 'bg-emerald-500', text: 'text-emerald-700', border: 'border-emerald-200', bg: 'bg-emerald-50' },
-  { label: 'Rolhelderheid',        score: 4.6, band: 'NEUTRAAL', color: 'bg-blue-400',    text: 'text-blue-700',    border: 'border-blue-200',    bg: 'bg-blue-50'    },
+  { label: 'Leiderschap', score: 4.7, signal: 6.3, band: 'URGENT', color: 'bg-red-500', text: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
+  { label: 'Groeiperspectief', score: 4.9, signal: 6.1, band: 'URGENT', color: 'bg-red-500', text: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
+  { label: 'Psychologische veiligheid', score: 5.6, signal: 5.4, band: 'AANDACHT', color: 'bg-amber-400', text: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
+  { label: 'Beloning & voorwaarden', score: 6.1, signal: 4.9, band: 'AANDACHT', color: 'bg-amber-400', text: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
+  { label: 'Werkbelasting', score: 6.4, signal: 4.6, band: 'AANDACHT', color: 'bg-amber-400', text: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
+  { label: 'Rolhelderheid', score: 7.1, signal: 3.9, band: 'OK', color: 'bg-emerald-500', text: 'text-emerald-700', border: 'border-emerald-200', bg: 'bg-emerald-50' },
 ] as const
 
 function FactorSlide() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-slate-100 bg-slate-50 px-5 py-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Uit het managementrapport — Organisatiefactoren</p>
-        <p className="mt-1 text-sm text-slate-700">Scores op schaal 1–10. Een hogere score wijst op een sterkere bijdrage aan vertrekrisico.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Uit het managementrapport - Organisatiefactoren</p>
+        <p className="mt-1 text-sm text-slate-700">
+          Per factor zie je de ervaren belevingsscore en de signaalwaarde. Die signaalwaarde helpt bepalen waar een gesprek of verdieping het meeste oplevert.
+        </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {FACTORS.map(({ label, score, band, color, text, border, bg }) => (
+        {FACTORS.map(({ label, score, signal, band, color, text, border, bg }) => (
           <div key={label} className={`rounded-2xl border p-4 ${border} ${bg}`}>
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-slate-900">{label}</p>
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${text} border ${border}`}>{band}</span>
             </div>
-            <div className="mt-3 flex items-end gap-3">
-              <span className="text-3xl font-bold text-slate-950">{score}</span>
-              <div className="mb-1 flex-1">
-                <div className="h-2 w-full overflow-hidden rounded-full bg-white/60">
-                  <div className={`h-full rounded-full ${color}`} style={{ width: `${score * 10}%` }} />
-                </div>
+            <div className="mt-3 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">Belevingsscore</p>
+                <span className="text-3xl font-bold text-slate-950">{score}</span>
               </div>
+              <div className="text-right">
+                <p className="text-xs uppercase tracking-wide text-slate-500">Signaalwaarde</p>
+                <p className={`text-lg font-bold ${text}`}>{signal}</p>
+              </div>
+            </div>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/70">
+              <div className={`h-full rounded-full ${color}`} style={{ width: `${signal * 10}%` }} />
             </div>
           </div>
         ))}
       </div>
       <div className="rounded-2xl border border-slate-200 bg-white p-4">
-        <p className="text-xs font-semibold text-slate-500">Wat dit rapport toevoegt aan alleen een dashboard</p>
+        <p className="text-xs font-semibold text-slate-500">Wat dit toevoegt aan een standaard dashboard</p>
         <p className="mt-2 text-sm leading-6 text-slate-700">
-          Per factor zie je de gemiddelde score, de risicoclassificatie en — waar relevant — een gerichte focusvraag voor het gesprek met leidinggevenden of het MT.
+          Niet alleen een top-3, maar ook nuance: factoren die dicht bij elkaar liggen worden als cluster gelezen, en de output benoemt expliciet dat dit aandachtssignalen zijn en geen harde diagnose.
         </p>
       </div>
     </div>
   )
 }
 
-// ── Slide 3: Gespreksagenda (Wat nu?) ────────────────────────────────────────
-
-function AgendaSlide() {
+function HypothesisSlide() {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-slate-100 bg-slate-50 px-5 py-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Uit het managementrapport — Wat nu?</p>
-        <p className="mt-1 text-sm text-slate-700">Op basis van de twee hoogste risicofactoren stelt Verisight een gespreksagenda op voor het MT of HR.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Uit het managementrapport - Werkhypothesen</p>
+        <p className="mt-1 text-sm text-slate-700">
+          Verisight vertaalt de uitkomsten niet direct naar harde conclusies, maar naar hypothesen en focusvragen die HR of MT eerst kan toetsen.
+        </p>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         {[
           {
-            factor: 'Leiderschap',
-            band: 'URGENT',
-            border: 'border-red-200',
-            bg: 'bg-red-50',
-            tag: 'text-red-700',
-            questions: [
-              'Herkennen leidinggevenden het beeld dat uit de scores naar voren komt?',
-              'In welke teams speelt dit het sterkst, en wat maakt dat zo?',
-              'Wat hebben medewerkers nodig van hun leidinggevende dat nu ontbreekt?',
-            ],
+            title: 'Hypothese: leiderschap vraagt verdiepende validatie',
+            body: 'Leiderschap komt terug als sterk aandachtssignaal en sluit aan op meerdere vertrekredenen. Dit wijst op een patroon dat eerst in gesprek moet worden gevalideerd.',
+            question: 'Herkennen leidinggevenden dit beeld, en in welke teams lijkt het het sterkst te spelen?',
           },
           {
-            factor: 'Groei & ontwikkeling',
-            band: 'AANDACHT',
-            border: 'border-amber-200',
-            bg: 'bg-amber-50',
-            tag: 'text-amber-700',
-            questions: [
-              'Zijn groeipaden concreet en bespreekbaar in functioneringsgesprekken?',
-              'Welke medewerkers ervaren het vaakst gebrek aan perspectief?',
-              'Wat is haalbaar binnen de huidige organisatiestructuur?',
-            ],
+            title: 'Hypothese: groeiperspectief speelt structureel mee',
+            body: 'Beperkt perspectief komt terug in zowel hoofdredenen als meespelende factoren. Dat maakt het een logisch thema om verder uit te diepen.',
+            question: 'Weten medewerkers concreet wat hun volgende stap kan zijn binnen de organisatie?',
           },
-        ].map(({ factor, band, border, bg, tag, questions }) => (
-          <div key={factor} className={`rounded-2xl border p-5 ${border} ${bg}`}>
-            <div className="flex items-center gap-3">
-              <p className="text-sm font-bold text-slate-950">{factor}</p>
-              <span className={`rounded-full border px-2 py-0.5 text-xs font-bold ${tag} ${border}`}>{band}</span>
+        ].map(({ title, body, question }) => (
+          <div key={title} className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+            <p className="text-sm font-bold text-slate-950">{title}</p>
+            <p className="mt-3 text-sm leading-6 text-slate-700">{body}</p>
+            <div className="mt-4 rounded-xl border border-white/70 bg-white/80 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Te toetsen vraag</p>
+              <p className="mt-2 text-sm leading-6 text-slate-800">{question}</p>
             </div>
-            <ul className="mt-4 space-y-2">
-              {questions.map((q) => (
-                <li key={q} className="flex gap-2 text-sm leading-6 text-slate-700">
-                  <span className="mt-1 shrink-0 text-slate-400">—</span>
-                  {q}
-                </li>
-              ))}
-            </ul>
           </div>
         ))}
       </div>
       <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
         <p className="text-sm font-semibold text-blue-900">Vervolgstappen inbegrepen</p>
         <p className="mt-2 text-sm leading-6 text-blue-950">
-          Het rapport sluit af met concrete actiestappen en een persoonlijke toelichting op de uitkomsten door Verisight.
+          Het rapport eindigt met een gespreksagenda, beperkte set vervolgacties en duidelijke methodische nuance, zodat de output bruikbaar blijft zonder te overclaimen.
         </p>
       </div>
     </div>
   )
 }
 
-// ── Main export ──────────────────────────────────────────────────────────────
-
 export function PreviewSlider() {
   const [current, setCurrent] = useState(0)
-  const slides = [DashboardSlide, FactorSlide, AgendaSlide]
+  const slides = [DashboardSlide, FactorSlide, HypothesisSlide]
   const SlideComponent = slides[current]
 
   return (
     <div>
-      <div className="mb-6 flex gap-2">
+      <div className="mb-6 flex flex-wrap gap-2">
         {SLIDES.map((label, i) => (
           <button
             key={label}
