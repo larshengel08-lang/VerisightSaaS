@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createPublicClient } from '@/lib/supabase/public'
 
 interface InviteBody {
   action?: 'invite' | 'resend'
@@ -12,7 +12,6 @@ interface InviteBody {
 
 async function requireAdminContext() {
   const supabase = await createClient()
-  const admin = createAdminClient()
 
   const {
     data: { user },
@@ -32,7 +31,7 @@ async function requireAdminContext() {
     return { error: NextResponse.json({ detail: 'Alleen Verisight-beheerders kunnen klanttoegang beheren.' }, { status: 403 }) }
   }
 
-  return { supabase, admin, user }
+  return { supabase, user }
 }
 
 async function ensureManagerAccess(orgId: string, userId: string, supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -47,24 +46,28 @@ async function ensureManagerAccess(orgId: string, userId: string, supabase: Awai
   return membership
 }
 
-async function sendSupabaseInvite({
-  admin,
+async function sendActivationLink({
   email,
   fullName,
   orgName,
   origin,
 }: {
-  admin: ReturnType<typeof createAdminClient>
   email: string
   fullName: string | null
   orgName: string
   origin: string
 }) {
-  return admin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=/dashboard`,
-    data: {
-      full_name: fullName ?? undefined,
-      organization_name: orgName,
+  const authClient = createPublicClient()
+
+  return authClient.auth.signInWithOtp({
+    email,
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+      data: {
+        full_name: fullName ?? undefined,
+        organization_name: orgName,
+      },
     },
   })
 }
@@ -76,7 +79,7 @@ export async function POST(request: Request) {
       return ctx.error
     }
 
-    const { supabase, admin, user } = ctx
+    const { supabase, user } = ctx
     const body = (await request.json()) as InviteBody
     const action = body.action === 'resend' ? 'resend' : 'invite'
     const orgId = body.orgId?.trim()
@@ -103,98 +106,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ detail: 'Je hebt geen beheertoegang tot deze organisatie.' }, { status: 403 })
     }
 
-    const listResult = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-    if (listResult.error) {
-      return NextResponse.json({ detail: 'Gebruikerslijst kon niet worden geladen.' }, { status: 500 })
-    }
-
-    const existingUser = listResult.data.users.find(candidate => candidate.email?.toLowerCase() === email)
-    const origin = new URL(request.url).origin
+    const { data: existingInvite } = await supabase
+      .from('org_invites')
+      .select('id, accepted_at, full_name, role')
+      .eq('org_id', orgId)
+      .eq('email', email)
+      .maybeSingle()
 
     if (action === 'resend') {
-      const { data: invite } = await admin
-        .from('org_invites')
-        .select('id, accepted_at, full_name, role')
-        .eq('org_id', orgId)
-        .eq('email', email)
-        .maybeSingle()
-
-      if (!invite) {
+      if (!existingInvite) {
         return NextResponse.json({ detail: 'Geen bestaande uitnodiging gevonden voor deze organisatie.' }, { status: 404 })
       }
 
-      if (invite.accepted_at) {
+      if (existingInvite.accepted_at) {
         return NextResponse.json({ detail: 'Deze gebruiker heeft al actieve dashboardtoegang.' }, { status: 400 })
       }
-
-      const authInvite = await sendSupabaseInvite({
-        admin,
-        email,
-        fullName: fullName ?? invite.full_name ?? null,
-        orgName: organization.name,
-        origin,
-      })
-
-      if (authInvite.error) {
-        return NextResponse.json({ detail: `Opnieuw uitnodigen mislukt: ${authInvite.error.message}` }, { status: 500 })
-      }
-
-      await admin
-        .from('org_invites')
-        .update({
-          full_name: fullName ?? invite.full_name ?? null,
-          role,
-          invited_by: user.id,
-          invited_at: new Date().toISOString(),
-        })
-        .eq('id', invite.id)
-
-      return NextResponse.json({
-        status: 'resent',
-        message: `Activatiemail opnieuw verstuurd naar ${email}.`,
-      })
     }
 
-    if (existingUser) {
-      const { error: membershipError } = await admin
-        .from('org_members')
-        .upsert(
-          { org_id: orgId, user_id: existingUser.id, role },
-          { onConflict: 'org_id,user_id' },
-        )
-
-      if (membershipError) {
-        return NextResponse.json({ detail: 'Bestaande gebruiker kon niet worden gekoppeld aan de organisatie.' }, { status: 500 })
-      }
-
-      await admin
-        .from('org_invites')
-        .upsert(
-          {
-            org_id: orgId,
-            email,
-            full_name: fullName,
-            role,
-            invited_by: user.id,
-            invited_at: new Date().toISOString(),
-            accepted_at: new Date().toISOString(),
-          },
-          { onConflict: 'org_id,email' },
-        )
-
+    if (action === 'invite' && existingInvite?.accepted_at) {
       return NextResponse.json({
         status: 'linked',
-        message: `Bestaande gebruiker gekoppeld aan ${organization.name}. Deze gebruiker kan nu inloggen en het dashboard bekijken.`,
+        message: `Deze gebruiker heeft al actieve dashboardtoegang voor ${organization.name}.`,
       })
     }
 
-    const { error: inviteError } = await admin
+    const { error: inviteError } = await supabase
       .from('org_invites')
       .upsert(
         {
           org_id: orgId,
           email,
-          full_name: fullName,
+          full_name: fullName ?? existingInvite?.full_name ?? null,
           role,
           invited_by: user.id,
           invited_at: new Date().toISOString(),
@@ -207,21 +149,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ detail: 'Uitnodiging kon niet worden opgeslagen.' }, { status: 500 })
     }
 
-    const authInvite = await sendSupabaseInvite({
-      admin,
+    const origin = new URL(request.url).origin
+    const authResult = await sendActivationLink({
       email,
-      fullName,
+      fullName: fullName ?? existingInvite?.full_name ?? null,
       orgName: organization.name,
       origin,
     })
 
-    if (authInvite.error) {
-      return NextResponse.json({ detail: `Supabase-uitnodiging mislukt: ${authInvite.error.message}` }, { status: 500 })
+    if (authResult.error) {
+      return NextResponse.json({ detail: `Uitnodiging versturen mislukt: ${authResult.error.message}` }, { status: 500 })
     }
 
     return NextResponse.json({
-      status: 'invited',
-      message: `Uitnodiging verstuurd naar ${email}. Na activatie krijgt deze gebruiker automatisch toegang tot ${organization.name}.`,
+      status: action === 'resend' ? 'resent' : 'invited',
+      message:
+        action === 'resend'
+          ? `Activatiemail opnieuw verstuurd naar ${email}.`
+          : `Activatiemail verstuurd naar ${email}. Na activatie krijgt deze gebruiker automatisch toegang tot ${organization.name}.`,
     })
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'Klanttoegang versturen mislukt.'

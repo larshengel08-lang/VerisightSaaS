@@ -203,6 +203,42 @@ as $$
   );
 $$;
 
+create or replace function public.accept_org_invites_for_current_user()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_email text;
+  accepted_count integer := 0;
+begin
+  current_email := lower(coalesce(auth.jwt() ->> 'email', ''));
+
+  if auth.uid() is null or current_email = '' then
+    return 0;
+  end if;
+
+  insert into public.org_members (org_id, user_id, role)
+  select oi.org_id, auth.uid(), oi.role
+  from public.org_invites oi
+  where lower(oi.email) = current_email
+    and oi.accepted_at is null
+  on conflict (org_id, user_id)
+  do update set role = excluded.role;
+
+  update public.org_invites
+  set accepted_at = now()
+  where lower(email) = current_email
+    and accepted_at is null;
+
+  get diagnostics accepted_count = row_count;
+  return coalesce(accepted_count, 0);
+end;
+$$;
+
+grant execute on function public.accept_org_invites_for_current_user() to authenticated;
+
 -- ── Policies: drop + recreate zodat ze altijd correct zijn ──────────────────
 
 -- Organizations

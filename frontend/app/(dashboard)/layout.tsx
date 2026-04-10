@@ -15,10 +15,7 @@ export default async function DashboardLayout({
 
   if (!user) redirect('/login')
 
-  const { acceptedCount } = await syncPendingOrgInvitesForUser({
-    userId: user.id,
-    email: user.email,
-  })
+  const { acceptedCount } = await syncPendingOrgInvitesForUser(supabase)
 
   // isAdmin = alleen accounts met is_verisight_admin = true in profiles
   // HR-klanten hebben altijd false, ook als ze owner/member zijn van een org

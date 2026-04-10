@@ -357,11 +357,11 @@ export function AddRespondentsForm({ campaigns }: Props) {
               {' '}of <code className="font-mono">.xlsx</code> bestand.
             </p>
             <a
-              href="/templates/verisight-respondenten-template.csv"
+              href="/templates/verisight-respondenten-template.xlsx"
               download
               className="inline-flex mt-3 text-xs font-medium text-blue-600 hover:underline"
             >
-              Download voorbeeldtemplate
+              Download Excel-template
             </a>
           </div>
 
