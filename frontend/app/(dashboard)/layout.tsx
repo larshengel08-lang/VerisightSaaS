@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { LogoutButton } from '@/components/ui/logout-button'
 import { MobileNav } from '@/components/ui/mobile-nav'
+import { syncPendingOrgInvitesForUser } from '@/lib/supabase/sync-org-invites'
 
 export default async function DashboardLayout({
   children,
@@ -14,6 +15,11 @@ export default async function DashboardLayout({
 
   if (!user) redirect('/login')
 
+  const { acceptedCount } = await syncPendingOrgInvitesForUser({
+    userId: user.id,
+    email: user.email,
+  })
+
   // isAdmin = alleen accounts met is_verisight_admin = true in profiles
   // HR-klanten hebben altijd false, ook als ze owner/member zijn van een org
   const { data: profile } = await supabase
@@ -23,6 +29,7 @@ export default async function DashboardLayout({
     .single()
 
   const isAdmin = profile?.is_verisight_admin === true
+  const accountLabel = isAdmin ? 'Verisight beheer' : 'Klantdashboard'
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -42,6 +49,13 @@ export default async function DashboardLayout({
             </nav>
           </div>
           <div className="flex items-center gap-3">
+            <span
+              className={`hidden sm:inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                isAdmin ? 'bg-blue-50 text-blue-700' : 'bg-emerald-50 text-emerald-700'
+              }`}
+            >
+              {accountLabel}
+            </span>
             <span className="text-xs text-gray-400 hidden sm:block truncate max-w-[160px]">
               {user.email}
             </span>
@@ -52,6 +66,12 @@ export default async function DashboardLayout({
 
       {/* Pagina-inhoud */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-8">
+        {acceptedCount > 0 && (
+          <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+            Jouw account is gekoppeld aan {acceptedCount} organisatie{acceptedCount === 1 ? '' : 's'}.
+            Je ziet nu automatisch het juiste klantdashboard en de bijbehorende rapportages.
+          </div>
+        )}
         {children}
       </main>
 

@@ -21,6 +21,7 @@ pydantic[email]>=2.7.0
 # PDF-rapportage
 reportlab>=4.2.0
 matplotlib>=3.9.0
+openpyxl>=3.1.0
 
 # AI enrichment (open text only — optioneel)
 openai>=1.30.0

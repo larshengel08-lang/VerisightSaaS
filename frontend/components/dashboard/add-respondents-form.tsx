@@ -1,200 +1,272 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Campaign } from '@/lib/types'
 
 const ROLE_LEVELS = [
-  { value: '',           label: '— niet opgegeven —' },
+  { value: '', label: '— niet opgegeven —' },
   { value: 'uitvoerend', label: 'Uitvoerend' },
   { value: 'specialist', label: 'Specialist' },
-  { value: 'senior',     label: 'Senior specialist' },
-  { value: 'manager',    label: 'Manager' },
-  { value: 'director',   label: 'Director' },
-  { value: 'c_level',    label: 'C-level' },
+  { value: 'senior', label: 'Senior specialist' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'director', label: 'Director' },
+  { value: 'c_level', label: 'C-level' },
 ]
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 
-interface Props { campaigns: Campaign[] }
+interface Props {
+  campaigns: Campaign[]
+}
 
-type Mode = 'emails' | 'bulk'
+type Mode = 'emails' | 'bulk' | 'upload'
+
+interface ImportIssue {
+  row_number: number
+  field: string
+  message: string
+}
+
+interface ImportPreviewRow {
+  row_number: number
+  email: string
+  department: string | null
+  role_level: string | null
+  annual_salary_eur: number | null
+}
+
+interface ImportResponse {
+  dry_run: boolean
+  total_rows: number
+  valid_rows: number
+  invalid_rows: number
+  duplicate_existing: number
+  preview_rows: ImportPreviewRow[]
+  errors: ImportIssue[]
+  imported: number
+  emails_sent: number
+}
 
 export function AddRespondentsForm({ campaigns }: Props) {
-  const [campaignId, setCampaignId] = useState(campaigns[0]?.id ?? '')
-  const [mode,       setMode]       = useState<Mode>('emails')
-
-  // Email-modus: één of meerdere e-mailadressen
-  const [emailInput, setEmailInput] = useState('')
-  const [department, setDepartment] = useState('')
-  const [roleLevel,  setRoleLevel]  = useState('')
-  const [salary,     setSalary]     = useState('')
-
-  // Bulk-modus (aantallen, geen e-mail)
-  const [count, setCount] = useState(5)
-
-  const [error,     setError]     = useState<string | null>(null)
-  const [loading,   setLoading]   = useState(false)
-  const [result,    setResult]    = useState<{ tokens: string[]; emailsSent: number } | null>(null)
   const router = useRouter()
 
-  const selectedCampaign = campaigns.find(c => c.id === campaignId)
+  const activeCampaigns = useMemo(
+    () => campaigns.filter(c => c.is_active),
+    [campaigns],
+  )
+
+  const [campaignId, setCampaignId] = useState(activeCampaigns[0]?.id ?? campaigns[0]?.id ?? '')
+  const [mode, setMode] = useState<Mode>('emails')
+
+  const [emailInput, setEmailInput] = useState('')
+  const [department, setDepartment] = useState('')
+  const [roleLevel, setRoleLevel] = useState('')
+  const [salary, setSalary] = useState('')
+  const [count, setCount] = useState(5)
+
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploadSendInvites, setUploadSendInvites] = useState(true)
+  const [previewResult, setPreviewResult] = useState<ImportResponse | null>(null)
+
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState<'submit' | 'preview' | 'import' | null>(null)
+  const [result, setResult] = useState<{ tokens: string[]; emailsSent: number } | null>(null)
+  const [importSuccess, setImportSuccess] = useState<ImportResponse | null>(null)
 
   function parseEmails(raw: string): string[] {
     return raw
       .split(/[\n,;]+/)
-      .map(e => e.trim().toLowerCase())
-      .filter(e => e.includes('@'))
+      .map(email => email.trim().toLowerCase())
+      .filter(email => email.includes('@'))
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
+  function resetFeedback() {
     setError(null)
     setResult(null)
+    setImportSuccess(null)
+  }
+
+  function resetUploadState() {
+    setPreviewResult(null)
+    setImportSuccess(null)
+  }
+
+  async function handleManualSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    resetFeedback()
+    setLoading('submit')
 
     const emails = mode === 'emails' ? parseEmails(emailInput) : []
     if (mode === 'emails' && emails.length === 0) {
       setError('Voer minimaal één geldig e-mailadres in.')
-      setLoading(false)
+      setLoading(null)
       return
     }
 
-    // Bouw de respondenten-payload op
     const respondents = mode === 'emails'
       ? emails.map(email => ({
           email,
           department: department || null,
-          role_level: roleLevel   || null,
+          role_level: roleLevel || null,
           annual_salary_eur: salary ? parseFloat(salary) : null,
         }))
       : Array.from({ length: count }, () => ({
           email: null,
           department: department || null,
-          role_level: roleLevel  || null,
+          role_level: roleLevel || null,
           annual_salary_eur: salary ? parseFloat(salary) : null,
         }))
 
-    // Haal de API-sleutel op via de organisatie (via Supabase direct)
-    // Voor nu gebruiken we de respondents Supabase-insert + backend e-mailroute
-    // Stap 1: maak respondenten aan via Supabase (tokens genereren)
     const { createClient } = await import('@/lib/supabase/client')
     const supabase = createClient()
-
     const rows = respondents.map(r => ({
-      campaign_id:       campaignId,
-      department:        r.department,
-      role_level:        r.role_level,
+      campaign_id: campaignId,
+      department: r.department,
+      role_level: r.role_level,
       annual_salary_eur: r.annual_salary_eur,
-      email:             r.email,
+      email: r.email,
     }))
 
-    const { data, error: sbError } = await supabase
+    const { data, error: supabaseError } = await supabase
       .from('respondents')
       .insert(rows)
       .select('token, email')
 
-    if (sbError || !data) {
-      setError(sbError?.message ?? 'Aanmaken mislukt.')
-      setLoading(false)
+    if (supabaseError || !data) {
+      setError(supabaseError?.message ?? 'Aanmaken mislukt.')
+      setLoading(null)
       return
     }
 
-    const tokens = data.map((r: { token: string }) => r.token)
-
-    // Stap 2: stuur uitnodigingsmails via backend (als e-mails opgegeven)
     let emailsSent = 0
     if (mode === 'emails' && emails.length > 0) {
       try {
-        const resp = await fetch(`${API_BASE}/api/campaigns/${campaignId}/send-invites`, {
+        const response = await fetch(`/api/campaigns/${campaignId}/respondents/send-invites`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(
-            data.map((r: { token: string; email: string }) => ({
-              token: r.token,
-              email: r.email,
-            }))
+            data.map((row: { token: string; email: string }) => ({
+              token: row.token,
+              email: row.email,
+            })),
           ),
         })
-        if (resp.ok) {
-          const json = await resp.json()
+        if (response.ok) {
+          const json = await response.json()
           emailsSent = json.sent ?? 0
         }
       } catch {
-        // E-mailfouten blokkeren het aanmaken niet
+        // Niet blokkerend; links blijven bruikbaar.
       }
     }
 
-    setResult({ tokens, emailsSent })
-    setLoading(false)
+    setResult({ tokens: data.map((row: { token: string }) => row.token), emailsSent })
+    setLoading(null)
     router.refresh()
   }
 
+  async function requestImport(dryRun: boolean) {
+    resetFeedback()
+
+    if (!uploadFile) {
+      setError('Kies eerst een .csv of .xlsx bestand.')
+      return
+    }
+    if (!campaignId) {
+      setError('Kies eerst een campaign.')
+      return
+    }
+
+    setLoading(dryRun ? 'preview' : 'import')
+
+    const body = new FormData()
+    body.append('file', uploadFile)
+    body.append('dry_run', String(dryRun))
+    body.append('send_invites', String(uploadSendInvites))
+
+    try {
+      const response = await fetch(`/api/campaigns/${campaignId}/respondents/import`, {
+        method: 'POST',
+        body,
+      })
+      const json = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setError(json.detail ?? 'Import kon niet worden verwerkt.')
+        setLoading(null)
+        return
+      }
+
+      const payload = json as ImportResponse
+      if (dryRun) {
+        setPreviewResult(payload)
+      } else {
+        setImportSuccess(payload)
+        setPreviewResult(null)
+        router.refresh()
+      }
+    } catch {
+      setError('Verbindingsfout tijdens import.')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const hasPreviewErrors = (previewResult?.errors.length ?? 0) > 0
+  const canImportPreview = !!previewResult && !hasPreviewErrors && previewResult.valid_rows > 0
+
   return (
     <div className="space-y-5">
-
-      {/* Modus-toggle */}
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setMode('emails')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            mode === 'emails'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
-          📧 Via e-mail uitnodigen
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode('bulk')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            mode === 'bulk'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-          }`}
-        >
-          🔗 Anonieme links genereren
-        </button>
+      <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        <p className="font-semibold mb-1">Rol van Verisight en rol van de klant</p>
+        <p className="text-blue-800">
+          Deze setup is voor Verisight-beheerders. De klant levert een respondentbestand aan; Verisight zet de
+          campagne op, controleert de import en verstuurt uitnodigingen. Daarna krijgt de organisatie toegang tot
+          het eigen dashboard en rapport.
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <ModeButton current={mode} value="emails" onClick={setMode} label="Via e-mail" />
+        <ModeButton current={mode} value="bulk" onClick={setMode} label="Anonieme links" />
+        <ModeButton current={mode} value="upload" onClick={setMode} label="Bestand uploaden" />
+      </div>
 
-        {/* Campaign selector */}
+      <form onSubmit={handleManualSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Campaign <span className="text-red-500">*</span>
           </label>
           <select
             value={campaignId}
-            onChange={e => setCampaignId(e.target.value)}
+            onChange={e => {
+              setCampaignId(e.target.value)
+              resetFeedback()
+              resetUploadState()
+            }}
             className={selectCls}
           >
-            {campaigns.map(c => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'})
+            {campaigns.map(campaign => (
+              <option key={campaign.id} value={campaign.id}>
+                {campaign.name} ({campaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'})
+                {campaign.is_active ? '' : ' — gesloten'}
               </option>
             ))}
           </select>
         </div>
 
-        {/* E-mail-modus */}
         {mode === 'emails' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               E-mailadressen <span className="text-red-500">*</span>
-              <span className="ml-1 text-xs font-normal text-gray-400">
-                (één per regel, of komma-gescheiden)
-              </span>
+              <span className="ml-1 text-xs font-normal text-gray-400">(één per regel of komma-gescheiden)</span>
             </label>
             <textarea
               value={emailInput}
               onChange={e => setEmailInput(e.target.value)}
-              placeholder={'jan@bedrijf.nl\npiet@bedrijf.nl\nmaria@bedrijf.nl'}
+              placeholder={'anne@bedrijf.nl\nkarim@bedrijf.nl\nsanne@bedrijf.nl'}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono
-                         focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
             {emailInput && (
               <p className="text-xs text-gray-400 mt-1">
@@ -204,117 +276,290 @@ export function AddRespondentsForm({ campaigns }: Props) {
           </div>
         )}
 
-        {/* Bulk-modus */}
         {mode === 'bulk' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Aantal links</label>
             <input
-              type="number" min={1} max={200} value={count}
-              onChange={e => setCount(parseInt(e.target.value))}
+              type="number"
+              min={1}
+              max={200}
+              value={count}
+              onChange={e => setCount(parseInt(e.target.value, 10))}
               className={inputCls}
             />
             <p className="text-xs text-gray-400 mt-1">
-              Er worden {count} anonieme survey-links gegenereerd. Jij verstuurt ze zelf.
+              Er worden {count} anonieme survey-links gegenereerd. De klant verstuurt deze dan zelf.
             </p>
           </div>
         )}
 
-        {/* Optionele metadata */}
-        <div className="grid sm:grid-cols-3 gap-3 pt-1">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Afdeling <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
-            </label>
-            <input
-              type="text" value={department}
-              onChange={e => setDepartment(e.target.value)}
-              placeholder="Operations"
-              className={inputCls}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Niveau <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
-            </label>
-            <select value={roleLevel} onChange={e => setRoleLevel(e.target.value)} className={selectCls}>
-              {ROLE_LEVELS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Bruto jaarsalaris € <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
-            </label>
-            <input
-              type="number" min={0} value={salary}
-              onChange={e => setSalary(e.target.value)}
-              placeholder="55000"
-              className={inputCls}
-            />
-          </div>
-        </div>
+        {mode !== 'upload' && (
+          <>
+            <div className="grid sm:grid-cols-3 gap-3 pt-1">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Afdeling <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
+                </label>
+                <input
+                  type="text"
+                  value={department}
+                  onChange={e => setDepartment(e.target.value)}
+                  placeholder="Operations"
+                  className={inputCls}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Niveau <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
+                </label>
+                <select value={roleLevel} onChange={e => setRoleLevel(e.target.value)} className={selectCls}>
+                  {ROLE_LEVELS.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Bruto jaarsalaris € <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={salary}
+                  onChange={e => setSalary(e.target.value)}
+                  placeholder="55000"
+                  className={inputCls}
+                />
+              </div>
+            </div>
 
-        {error && (
-          <p className="text-sm text-red-600">{error}</p>
+            <button type="submit" disabled={loading !== null} className={btnCls}>
+              {loading === 'submit'
+                ? 'Bezig…'
+                : mode === 'emails'
+                  ? `Uitnodigingen versturen (${parseEmails(emailInput).length || '?'})`
+                  : `${count} links genereren`}
+            </button>
+          </>
         )}
-
-        <button type="submit" disabled={loading} className={btnCls}>
-          {loading
-            ? 'Bezig…'
-            : mode === 'emails'
-              ? `📧 Uitnodigingen versturen (${parseEmails(emailInput).length || '?'})`
-              : `🔗 ${count} links genereren`}
-        </button>
       </form>
 
-      {/* Resultaat */}
-      {result && (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-4 space-y-3">
-          {mode === 'emails' ? (
-            <div>
-              <p className="text-sm font-semibold text-green-800 mb-1">
-                ✓ {result.tokens.length} respondenten aangemaakt
-              </p>
-              {result.emailsSent > 0 ? (
-                <p className="text-sm text-green-700">
-                  📧 {result.emailsSent} uitnodigingsmail{result.emailsSent !== 1 ? 's' : ''} verstuurd
-                </p>
-              ) : (
-                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-2">
-                  ⚠ E-mails konden niet worden verstuurd. Kopieer de links hieronder als alternatief.
-                </p>
+      {mode === 'upload' && (
+        <div className="rounded-xl border border-gray-200 p-4 space-y-4">
+          <div>
+            <p className="text-sm font-semibold text-gray-800 mb-1">Upload respondentbestand</p>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              Gebruik één rij per respondent met minimaal een kolom <code className="font-mono">email</code>. Optioneel
+              kun je <code className="font-mono">department</code>, <code className="font-mono">role_level</code> en
+              <code className="font-mono">annual_salary_eur</code> meesturen. Upload een <code className="font-mono">.csv</code>
+              {' '}of <code className="font-mono">.xlsx</code> bestand.
+            </p>
+            <a
+              href="/templates/verisight-respondenten-template.csv"
+              download
+              className="inline-flex mt-3 text-xs font-medium text-blue-600 hover:underline"
+            >
+              Download voorbeeldtemplate
+            </a>
+          </div>
+
+          <input
+            type="file"
+            accept=".csv,.xlsx"
+            onChange={e => {
+              const nextFile = e.target.files?.[0] ?? null
+              setUploadFile(nextFile)
+              resetFeedback()
+              resetUploadState()
+            }}
+            className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+          />
+
+          <label className="flex items-start gap-2 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={uploadSendInvites}
+              onChange={e => setUploadSendInvites(e.target.checked)}
+              className="mt-0.5 rounded"
+            />
+            <span>
+              Verstuur direct uitnodigingen na import
+              <span className="block text-xs text-gray-400">
+                Zet dit uit als je eerst alleen respondenten wilt klaarzetten.
+              </span>
+            </span>
+          </label>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void requestImport(true)}
+              disabled={loading !== null || !uploadFile}
+              className={btnCls}
+            >
+              {loading === 'preview' ? 'Bestand controleren…' : 'Bestand controleren'}
+            </button>
+            {canImportPreview && (
+              <button
+                type="button"
+                onClick={() => void requestImport(false)}
+                disabled={loading !== null}
+                className="bg-gray-900 hover:bg-black disabled:opacity-50 text-white text-sm font-semibold py-2.5 px-5 rounded-lg transition-colors"
+              >
+                {loading === 'import' ? 'Importeren…' : `Importeer ${previewResult.valid_rows} respondenten`}
+              </button>
+            )}
+          </div>
+
+          {previewResult && (
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3">
+              <div className="grid sm:grid-cols-4 gap-3 text-sm">
+                <ImportMetric label="Rijen" value={previewResult.total_rows} />
+                <ImportMetric label="Geldig" value={previewResult.valid_rows} />
+                <ImportMetric label="Fouten" value={previewResult.invalid_rows} />
+                <ImportMetric label="Bestaat al" value={previewResult.duplicate_existing} />
+              </div>
+
+              {previewResult.preview_rows.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-2">Preview van geldige rijen</p>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
+                      <thead className="bg-white text-gray-500">
+                        <tr>
+                          <th className="px-2 py-2 text-left">Rij</th>
+                          <th className="px-2 py-2 text-left">E-mail</th>
+                          <th className="px-2 py-2 text-left">Afdeling</th>
+                          <th className="px-2 py-2 text-left">Niveau</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {previewResult.preview_rows.map(row => (
+                          <tr key={`${row.row_number}-${row.email}`} className="border-t border-gray-200 bg-white">
+                            <td className="px-2 py-2">{row.row_number}</td>
+                            <td className="px-2 py-2 font-mono">{row.email}</td>
+                            <td className="px-2 py-2">{row.department || '—'}</td>
+                            <td className="px-2 py-2">{row.role_level || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {previewResult.errors.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-red-700 mb-2">Fouten die je eerst moet oplossen</p>
+                  <ul className="space-y-1 text-xs text-red-700">
+                    {previewResult.errors.slice(0, 12).map(issue => (
+                      <li key={`${issue.row_number}-${issue.field}-${issue.message}`}>
+                        Rij {issue.row_number} — {issue.field}: {issue.message}
+                      </li>
+                    ))}
+                  </ul>
+                  {previewResult.errors.length > 12 && (
+                    <p className="text-xs text-red-600 mt-2">
+                      + {previewResult.errors.length - 12} extra fout(en)
+                    </p>
+                  )}
+                </div>
               )}
             </div>
-          ) : (
-            <p className="text-sm font-semibold text-green-800">
-              ✓ {result.tokens.length} survey-links gegenereerd
-            </p>
           )}
+        </div>
+      )}
 
-          {/* Fallback links — altijd tonen bij bulk, bij email alleen als e-mail mislukt */}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+
+      {result && (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-4 space-y-3">
+          <div>
+            <p className="text-sm font-semibold text-green-800 mb-1">
+              {result.tokens.length} respondenten aangemaakt
+            </p>
+            {result.emailsSent > 0 ? (
+              <p className="text-sm text-green-700">
+                {result.emailsSent} uitnodigingsmail{result.emailsSent !== 1 ? 's' : ''} verstuurd
+              </p>
+            ) : (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-2">
+                E-mails konden niet worden verstuurd. Kopieer de links hieronder als alternatief.
+              </p>
+            )}
+          </div>
+
           {(mode === 'bulk' || result.emailsSent === 0) && (
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-1">
-                Survey-links {mode === 'bulk' ? '— verstuur zelf via e-mail of chat' : '— stuur als back-up'}:
-              </p>
+              <p className="text-xs font-medium text-gray-500 mb-1">Survey-links:</p>
               <textarea
                 readOnly
                 className="w-full font-mono text-xs bg-white border border-gray-200 rounded-lg p-3 h-28 resize-none focus:outline-none"
-                value={result.tokens.map(t => `${API_BASE}/survey/${t}`).join('\n')}
+                value={result.tokens.map(token => `${API_BASE}/survey/${token}`).join('\n')}
               />
             </div>
           )}
         </div>
       )}
 
-      {/* Privacy-disclaimer */}
+      {importSuccess && (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-4">
+          <p className="text-sm font-semibold text-green-800 mb-1">
+            {importSuccess.imported} respondenten geïmporteerd
+          </p>
+          <p className="text-sm text-green-700">
+            {uploadSendInvites
+              ? `${importSuccess.emails_sent} uitnodigingen direct verstuurd.`
+              : 'Respondenten zijn toegevoegd zonder directe uitnodiging.'}
+          </p>
+        </div>
+      )}
+
       <p className="text-xs text-gray-400 leading-relaxed">
-        E-mailadressen worden uitsluitend gebruikt voor het versturen van de uitnodigingsmail.
-        Ze worden niet opgeslagen in het dashboard of gekoppeld aan de ingevulde antwoorden.
+        E-mailadressen worden uitsluitend gebruikt voor uitnodiging en herinneringen. In het dashboard draait het om
+        groepsinzichten; individuele e-mailadressen worden daar niet getoond.
       </p>
     </div>
   )
 }
 
-const inputCls  = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+function ModeButton({
+  current,
+  value,
+  onClick,
+  label,
+}: {
+  current: Mode
+  value: Mode
+  onClick: (value: Mode) => void
+  label: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onClick(value)}
+      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+        current === value
+          ? 'bg-blue-600 text-white'
+          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      }`}
+    >
+      {label}
+    </button>
+  )
+}
+
+function ImportMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+      <p className="text-xs text-gray-400">{label}</p>
+      <p className="text-sm font-semibold text-gray-800">{value}</p>
+    </div>
+  )
+}
+
+const inputCls = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
 const selectCls = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white'
-const btnCls    = 'bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold py-2.5 px-5 rounded-lg transition-colors'
+const btnCls = 'bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold py-2.5 px-5 rounded-lg transition-colors'

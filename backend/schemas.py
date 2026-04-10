@@ -98,6 +98,32 @@ class RespondentBatchCreate(BaseModel):
     send_invites: bool = True  # stuur direct uitnodigingsmail als e-mail opgegeven
 
 
+class RespondentImportIssue(BaseModel):
+    row_number: int
+    field: str
+    message: str
+
+
+class RespondentImportPreviewRow(BaseModel):
+    row_number: int
+    email: EmailStr
+    department: Optional[str] = None
+    role_level: Optional[str] = None
+    annual_salary_eur: Optional[float] = None
+
+
+class RespondentImportResponse(BaseModel):
+    dry_run: bool
+    total_rows: int
+    valid_rows: int
+    invalid_rows: int
+    duplicate_existing: int = 0
+    preview_rows: list[RespondentImportPreviewRow] = Field(default_factory=list)
+    errors: list[RespondentImportIssue] = Field(default_factory=list)
+    imported: int = 0
+    emails_sent: int = 0
+
+
 class InviteSendResult(BaseModel):
     sent: int
     failed: int

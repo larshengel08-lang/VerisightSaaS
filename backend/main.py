@@ -16,10 +16,13 @@ Routes
 
 from __future__ import annotations
 
+import csv
+import io
 import os
 from contextlib import asynccontextmanager
 
 import sentry_sdk
+from openpyxl import load_workbook
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
@@ -38,7 +41,7 @@ from pathlib import Path
 from time import time
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.templating import Jinja2Templates
@@ -58,6 +61,10 @@ from backend.schemas import (
     OrganizationCreate,
     OrganizationRead,
     RespondentBatchCreate,
+    RespondentCreate,
+    RespondentImportIssue,
+    RespondentImportPreviewRow,
+    RespondentImportResponse,
     RespondentRead,
     SendInviteItem,
     SurveySubmit,
@@ -156,6 +163,49 @@ CONTACT_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
 CONTACT_RATE_LIMIT_MAX_REQUESTS = 5
 _contact_request_buckets: dict[str, dict[str, float | int]] = {}
 
+RESPONDENT_IMPORT_COLUMN_ALIASES = {
+    "email": "email",
+    "e-mail": "email",
+    "e-mailadres": "email",
+    "mailadres": "email",
+    "department": "department",
+    "afdeling": "department",
+    "team": "department",
+    "role_level": "role_level",
+    "role level": "role_level",
+    "functieniveau": "role_level",
+    "niveau": "role_level",
+    "functie_niveau": "role_level",
+    "annual_salary_eur": "annual_salary_eur",
+    "salary": "annual_salary_eur",
+    "jaarsalaris": "annual_salary_eur",
+    "bruto_jaarsalaris": "annual_salary_eur",
+    "bruto jaarsalaris": "annual_salary_eur",
+}
+
+ROLE_LEVEL_ALIASES = {
+    "uitvoerend": "uitvoerend",
+    "operationeel": "uitvoerend",
+    "medewerker": "uitvoerend",
+    "specialist": "specialist",
+    "professional": "specialist",
+    "senior": "senior",
+    "senior specialist": "senior",
+    "sr specialist": "senior",
+    "manager": "manager",
+    "teamlead": "manager",
+    "team lead": "manager",
+    "leidinggevende": "manager",
+    "director": "director",
+    "directeur": "director",
+    "head": "director",
+    "c_level": "c_level",
+    "c-level": "c_level",
+    "c level": "c_level",
+    "directie": "c_level",
+    "mt": "c_level",
+}
+
 
 def _get_client_ip(request: Request) -> str:
     forwarded_for = request.headers.get("x-forwarded-for")
@@ -184,6 +234,172 @@ def _cleanup_contact_rate_limits() -> None:
     expired = [ip for ip, bucket in _contact_request_buckets.items() if now > float(bucket["reset_at"])]
     for ip in expired:
         _contact_request_buckets.pop(ip, None)
+
+
+def _normalize_import_header(value: Any) -> str | None:
+    if value is None:
+        return None
+    raw = str(value).strip().lower()
+    if not raw:
+        return None
+    raw = raw.replace("-", "_")
+    return RESPONDENT_IMPORT_COLUMN_ALIASES.get(raw, RESPONDENT_IMPORT_COLUMN_ALIASES.get(raw.replace("_", " ")))
+
+
+def _normalize_role_level(value: Any) -> str | None:
+    if value is None:
+        return None
+    raw = str(value).strip().lower()
+    if not raw:
+        return None
+    return ROLE_LEVEL_ALIASES.get(raw)
+
+
+def _read_uploaded_rows(upload: UploadFile, content: bytes) -> list[tuple[int, dict[str, Any]]]:
+    filename = (upload.filename or "").lower()
+    if filename.endswith(".csv"):
+        decoded: str
+        try:
+            decoded = content.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            decoded = content.decode("latin-1")
+        reader = csv.DictReader(io.StringIO(decoded))
+        if not reader.fieldnames:
+            raise HTTPException(status_code=400, detail="CSV mist een headerregel met kolomnamen.")
+
+        rows: list[tuple[int, dict[str, Any]]] = []
+        for row_number, row in enumerate(reader, start=2):
+            rows.append((row_number, dict(row)))
+        return rows
+
+    if filename.endswith(".xlsx"):
+        try:
+            workbook = load_workbook(io.BytesIO(content), data_only=True)
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail="Excelbestand kon niet worden gelezen.") from exc
+
+        worksheet = workbook[workbook.sheetnames[0]]
+        header_cells = next(worksheet.iter_rows(min_row=1, max_row=1, values_only=True), None)
+        if not header_cells:
+            raise HTTPException(status_code=400, detail="Excelbestand mist een headerregel met kolomnamen.")
+
+        headers = list(header_cells)
+        rows: list[tuple[int, dict[str, Any]]] = []
+        for row_number, values in enumerate(worksheet.iter_rows(min_row=2, values_only=True), start=2):
+            if not any(value not in (None, "") for value in values):
+                continue
+            row = {str(headers[idx]): values[idx] for idx in range(len(headers)) if headers[idx] is not None}
+            rows.append((row_number, row))
+        return rows
+
+    raise HTTPException(status_code=400, detail="Upload een .csv of .xlsx bestand.")
+
+
+def _build_import_preview(
+    *,
+    raw_rows: list[tuple[int, dict[str, Any]]],
+    existing_emails: set[str],
+) -> tuple[list[RespondentCreate], list[RespondentImportIssue], list[RespondentImportPreviewRow], int]:
+    issues: list[RespondentImportIssue] = []
+    preview_rows: list[RespondentImportPreviewRow] = []
+    normalized_rows: list[RespondentCreate] = []
+    seen_emails: set[str] = set()
+    duplicate_existing = 0
+
+    for row_number, row in raw_rows:
+        normalized = {canonical: None for canonical in ("email", "department", "role_level", "annual_salary_eur")}
+        for key, value in row.items():
+            canonical = _normalize_import_header(key)
+            if not canonical:
+                continue
+            normalized[canonical] = value
+
+        email = str(normalized["email"] or "").strip().lower()
+        if not email:
+            issues.append(RespondentImportIssue(row_number=row_number, field="email", message="E-mailadres ontbreekt."))
+            continue
+
+        department_raw = normalized["department"]
+        department = str(department_raw).strip() if department_raw not in (None, "") else None
+
+        role_level = _normalize_role_level(normalized["role_level"])
+        if normalized["role_level"] not in (None, "") and not role_level:
+            issues.append(
+                RespondentImportIssue(
+                    row_number=row_number,
+                    field="role_level",
+                    message="Functieniveau niet herkend. Gebruik uitvoerend, specialist, senior, manager, director of c_level.",
+                )
+            )
+            continue
+
+        salary_value = normalized["annual_salary_eur"]
+        annual_salary_eur: float | None = None
+        if salary_value not in (None, ""):
+            try:
+                annual_salary_eur = float(str(salary_value).replace(",", "."))
+            except ValueError:
+                issues.append(
+                    RespondentImportIssue(
+                        row_number=row_number,
+                        field="annual_salary_eur",
+                        message="Jaarsalaris moet numeriek zijn.",
+                    )
+                )
+                continue
+
+        if email in seen_emails:
+            issues.append(
+                RespondentImportIssue(
+                    row_number=row_number,
+                    field="email",
+                    message="Dit e-mailadres staat dubbel in het bestand.",
+                )
+            )
+            continue
+
+        if email in existing_emails:
+            duplicate_existing += 1
+            issues.append(
+                RespondentImportIssue(
+                    row_number=row_number,
+                    field="email",
+                    message="Deze respondent bestaat al in deze campagne.",
+                )
+            )
+            continue
+
+        try:
+            respondent = RespondentCreate(
+                email=email,
+                department=department,
+                role_level=role_level,
+                annual_salary_eur=annual_salary_eur,
+            )
+        except Exception as exc:
+            issues.append(
+                RespondentImportIssue(
+                    row_number=row_number,
+                    field="row",
+                    message=str(exc),
+                )
+            )
+            continue
+
+        seen_emails.add(email)
+        normalized_rows.append(respondent)
+        if len(preview_rows) < 10:
+            preview_rows.append(
+                RespondentImportPreviewRow(
+                    row_number=row_number,
+                    email=email,
+                    department=department,
+                    role_level=role_level,
+                    annual_salary_eur=annual_salary_eur,
+                )
+            )
+
+    return normalized_rows, issues, preview_rows, duplicate_existing
 
 
 def _render_survey_status(
@@ -564,6 +780,46 @@ def _get_org_by_api_key(api_key: str, db: Session) -> Organization:
     return org
 
 
+def _create_campaign_respondents(
+    *,
+    campaign: Campaign,
+    respondent_inputs: list[RespondentCreate],
+    db: Session,
+    send_invites: bool,
+) -> tuple[list[Respondent], int]:
+    respondents = [
+        Respondent(
+            campaign_id=campaign.id,
+            department=r.department,
+            role_level=r.role_level,
+            annual_salary_eur=r.annual_salary_eur,
+            email=r.email,
+        )
+        for r in respondent_inputs
+    ]
+    db.add_all(respondents)
+    db.commit()
+    for respondent in respondents:
+        db.refresh(respondent)
+
+    emails_sent = 0
+    if send_invites:
+        for respondent, req in zip(respondents, respondent_inputs):
+            if req.email:
+                sent = send_survey_invite(
+                    to_email=req.email,
+                    campaign_name=campaign.name,
+                    token=respondent.token,
+                    scan_type=campaign.scan_type,
+                )
+                if sent:
+                    respondent.sent_at = datetime.now(timezone.utc)
+                    emails_sent += 1
+        db.commit()
+
+    return respondents, emails_sent
+
+
 @app.post("/api/campaigns", response_model=CampaignRead, status_code=201)
 async def create_campaign(
     body: CampaignCreate,
@@ -610,40 +866,78 @@ async def add_respondents(
     ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
-
-    from datetime import timezone as _tz
-    _expires = datetime.now(timezone.utc).replace(tzinfo=None)
-
-    respondents = [
-        Respondent(
-            campaign_id       = campaign.id,
-            department        = r.department,
-            role_level        = r.role_level,
-            annual_salary_eur = r.annual_salary_eur,
-            email             = r.email,
-        )
-        for r in body.respondents
-    ]
-    db.add_all(respondents)
-    db.commit()
-    for r in respondents:
-        db.refresh(r)
-
-    # Stuur uitnodigingsmails indien gewenst
-    if body.send_invites:
-        for respondent, req in zip(respondents, body.respondents):
-            if req.email:
-                sent = send_survey_invite(
-                    to_email=req.email,
-                    campaign_name=campaign.name,
-                    token=respondent.token,
-                    scan_type=campaign.scan_type,
-                )
-                if sent:
-                    respondent.sent_at = datetime.now(timezone.utc)
-        db.commit()
-
+    respondents, _emails_sent = _create_campaign_respondents(
+        campaign=campaign,
+        respondent_inputs=body.respondents,
+        db=db,
+        send_invites=body.send_invites,
+    )
     return respondents
+
+
+@app.post("/api/campaigns/{campaign_id}/respondents/import", response_model=RespondentImportResponse)
+async def import_respondents(
+    campaign_id: str,
+    x_api_key: Annotated[str, Header()],
+    upload: UploadFile = File(...),
+    dry_run: bool = Form(True),
+    send_invites: bool = Form(True),
+    db: Session = Depends(get_db),
+) -> RespondentImportResponse:
+    org = _get_org_by_api_key(x_api_key, db)
+    campaign = db.query(Campaign).filter(
+        Campaign.id == campaign_id,
+        Campaign.organization_id == org.id,
+    ).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+
+    content = await upload.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Het uploadbestand is leeg.")
+
+    raw_rows = _read_uploaded_rows(upload, content)
+    if len(raw_rows) == 0:
+        raise HTTPException(status_code=400, detail="Geen respondenten gevonden in het bestand.")
+    if len(raw_rows) > 500:
+        raise HTTPException(status_code=400, detail="Upload maximaal 500 respondenten per bestand.")
+
+    existing_emails = {
+        (email or "").strip().lower()
+        for (email,) in db.query(Respondent.email)
+        .filter(Respondent.campaign_id == campaign_id, Respondent.email.isnot(None))
+        .all()
+        if email
+    }
+    normalized_rows, issues, preview_rows, duplicate_existing = _build_import_preview(
+        raw_rows=raw_rows,
+        existing_emails=existing_emails,
+    )
+
+    response = RespondentImportResponse(
+        dry_run=dry_run,
+        total_rows=len(raw_rows),
+        valid_rows=len(normalized_rows),
+        invalid_rows=len(issues),
+        duplicate_existing=duplicate_existing,
+        preview_rows=preview_rows,
+        errors=issues,
+        imported=0,
+        emails_sent=0,
+    )
+
+    if dry_run or issues:
+        return response
+
+    respondents, emails_sent = _create_campaign_respondents(
+        campaign=campaign,
+        respondent_inputs=normalized_rows,
+        db=db,
+        send_invites=send_invites,
+    )
+    response.imported = len(respondents)
+    response.emails_sent = emails_sent
+    return response
 
 
 @app.get("/api/campaigns/{campaign_id}/respondents", response_model=list[RespondentRead])

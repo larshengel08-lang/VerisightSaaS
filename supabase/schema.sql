@@ -33,6 +33,17 @@ create table if not exists public.org_members (
   unique(org_id, user_id)
 );
 
+create table if not exists public.org_invites (
+  id          uuid primary key default gen_random_uuid(),
+  org_id      uuid references public.organizations(id) on delete cascade not null,
+  email       text not null,
+  role        text not null default 'viewer' check (role in ('member', 'viewer')),
+  invited_by  uuid references auth.users(id) on delete set null,
+  invited_at  timestamptz default now(),
+  accepted_at timestamptz,
+  unique(org_id, email)
+);
+
 create table if not exists public.campaigns (
   id              uuid primary key default gen_random_uuid(),
   organization_id uuid references public.organizations(id) on delete cascade not null,
@@ -138,6 +149,8 @@ create index if not exists idx_respondents_token    on public.respondents(token)
 create index if not exists idx_responses_respondent on public.survey_responses(respondent_id);
 create index if not exists idx_org_members_user     on public.org_members(user_id);
 create index if not exists idx_org_members_org      on public.org_members(org_id);
+create index if not exists idx_org_invites_org      on public.org_invites(org_id);
+create index if not exists idx_org_invites_email    on public.org_invites(email);
 
 -- ============================================================
 -- ROW LEVEL SECURITY
@@ -145,6 +158,7 @@ create index if not exists idx_org_members_org      on public.org_members(org_id
 
 alter table public.organizations    enable row level security;
 alter table public.org_members      enable row level security;
+alter table public.org_invites      enable row level security;
 alter table public.campaigns        enable row level security;
 alter table public.respondents      enable row level security;
 alter table public.survey_responses enable row level security;
@@ -211,14 +225,32 @@ create policy "owners_can_update_org"
 -- Org members
 drop policy if exists "members_can_select_own_memberships" on public.org_members;
 drop policy if exists "authenticated_can_insert_membership" on public.org_members;
+drop policy if exists "org_managers_can_insert_membership" on public.org_members;
 
 create policy "members_can_select_own_memberships"
   on public.org_members for select
   using (user_id = auth.uid() or public.is_org_member(org_id));
 
-create policy "authenticated_can_insert_membership"
+create policy "org_managers_can_insert_membership"
   on public.org_members for insert
-  with check (auth.uid() is not null);
+  with check (public.is_org_manager(org_id));
+
+-- Org invites
+drop policy if exists "org_managers_can_select_invites" on public.org_invites;
+drop policy if exists "org_managers_can_insert_invites" on public.org_invites;
+drop policy if exists "org_managers_can_update_invites" on public.org_invites;
+
+create policy "org_managers_can_select_invites"
+  on public.org_invites for select
+  using (public.is_org_manager(org_id));
+
+create policy "org_managers_can_insert_invites"
+  on public.org_invites for insert
+  with check (public.is_org_manager(org_id));
+
+create policy "org_managers_can_update_invites"
+  on public.org_invites for update
+  using (public.is_org_manager(org_id));
 
 -- Campaigns
 drop policy if exists "org_members_can_select_campaigns"  on public.campaigns;

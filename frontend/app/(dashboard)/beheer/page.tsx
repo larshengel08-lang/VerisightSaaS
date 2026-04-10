@@ -2,23 +2,35 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { NewOrgForm } from '@/components/dashboard/new-org-form'
 import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
+import { AddRespondentsForm } from '@/components/dashboard/add-respondents-form'
+import { InviteClientUserForm } from '@/components/dashboard/invite-client-user-form'
 import type { Organization, Campaign } from '@/lib/types'
 
 export default async function BeheerPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Organisaties van huidige user
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_verisight_admin')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.is_verisight_admin !== true) {
+    redirect('/dashboard')
+  }
+
   const { data: memberships } = await supabase
     .from('org_members')
     .select('organizations(*)')
     .eq('user_id', user.id)
 
-  const orgs = (memberships?.flatMap(m => m.organizations).filter(Boolean) ?? []) as Organization[]
+  const orgs = (memberships?.flatMap(membership => membership.organizations).filter(Boolean) ?? []) as Organization[]
 
-  // Campaigns van al deze organisaties
-  const orgIds = orgs.map(o => o.id)
+  const orgIds = orgs.map(org => org.id)
   const { data: campaignsRaw } = orgIds.length
     ? await supabase
         .from('campaigns')
@@ -28,39 +40,64 @@ export default async function BeheerPage() {
     : { data: [] }
 
   const campaigns = (campaignsRaw ?? []) as Campaign[]
+  const campaignIds = campaigns.map(campaign => campaign.id)
+  const { count: respondentCount } = campaignIds.length
+    ? await supabase
+        .from('respondents')
+        .select('id', { count: 'exact', head: true })
+        .in('campaign_id', campaignIds)
+    : { count: 0 }
 
-  // Bepaal welke stappen al klaar zijn voor de voortgangsindicator
+  const { count: clientAccessCount } = orgIds.length
+    ? await supabase
+        .from('org_members')
+        .select('id', { count: 'exact', head: true })
+        .in('org_id', orgIds)
+        .neq('user_id', user.id)
+    : { count: 0 }
+
   const step1Done = orgs.length > 0
   const step2Done = campaigns.length > 0
+  const step3Done = (respondentCount ?? 0) > 0
+  const step4Done = (clientAccessCount ?? 0) > 0
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-1">Setup</h1>
       <p className="text-sm text-gray-500 mb-6">
-        Volg de stappen om een survey te starten.
+        Deze flow is voor Verisight-beheerders. Jij zet organisatie, campagne en respondenten op; de klant krijgt
+        daarna toegang tot het eigen dashboard en rapport.
       </p>
 
-      {/* Voortgangsindicator */}
+      <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900 mb-6">
+        <p className="font-semibold mb-1">Aanbevolen werkwijze</p>
+        <p className="text-blue-800">
+          Verisight maakt eerst de organisatie en de campagne aan. Daarna levert de klant een eenvoudig
+          respondentbestand aan. Verisight controleert de import, verstuurt uitnodigingen en activeert vervolgens
+          het dashboard voor de klantorganisatie.
+        </p>
+      </div>
+
       <div className="flex items-center gap-2 mb-8">
         <StepBadge n={1} label="Organisatie" done={step1Done} />
         <div className="h-px w-6 bg-gray-200" />
         <StepBadge n={2} label="Campaign" done={step2Done} />
         <div className="h-px w-6 bg-gray-200" />
-        <StepBadge n={3} label="Uitnodigen" done={false} />
+        <StepBadge n={3} label="Import & uitnodigen" done={step3Done} />
+        <div className="h-px w-6 bg-gray-200" />
+        <StepBadge n={4} label="Klanttoegang" done={step4Done} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-
-        {/* Stap 1: Organisatie */}
         <section className={`bg-white rounded-xl border p-6 ${step1Done ? 'border-green-200' : 'border-gray-200'}`}>
           <SectionHeader n={1} title="Organisatie aanmaken" done={step1Done} />
           {step1Done ? (
             <div className="space-y-1">
-              {orgs.map(o => (
-                <div key={o.id} className="flex items-center gap-2 text-sm text-gray-700">
+              {orgs.map(org => (
+                <div key={org.id} className="flex items-center gap-2 text-sm text-gray-700">
                   <span className="text-green-500">✓</span>
-                  <span className="font-medium">{o.name}</span>
-                  <span className="text-gray-400 text-xs">({o.slug})</span>
+                  <span className="font-medium">{org.name}</span>
+                  <span className="text-gray-400 text-xs">({org.slug})</span>
                 </div>
               ))}
               <div className="pt-2 border-t border-gray-100 mt-2">
@@ -73,7 +110,6 @@ export default async function BeheerPage() {
           )}
         </section>
 
-        {/* Stap 2: Campaign */}
         <section className={`bg-white rounded-xl border p-6 ${step2Done ? 'border-green-200' : 'border-gray-200'}`}>
           <SectionHeader n={2} title="Campaign aanmaken" done={step2Done} />
           {orgs.length === 0 ? (
@@ -83,49 +119,79 @@ export default async function BeheerPage() {
           )}
         </section>
 
-        {/* Stap 3: Respondenten uitnodigen — per campaign */}
-        <section className="bg-white rounded-xl border border-gray-200 p-6 lg:col-span-2">
-          <SectionHeader n={3} title="Respondenten uitnodigen" done={false} />
+        <section className={`bg-white rounded-xl border p-6 lg:col-span-2 ${step3Done ? 'border-green-200' : 'border-gray-200'}`}>
+          <SectionHeader n={3} title="Respondenten importeren en uitnodigen" done={step3Done} />
           {campaigns.length === 0 ? (
             <LockedStep message="Maak eerst een campaign aan (stap 2)." />
           ) : (
-            <div className="space-y-2">
-              <p className="text-xs text-gray-500 mb-3">
-                Ga naar een actieve campaign om respondenten toe te voegen en uitnodigingen te versturen.
+            <div className="space-y-5">
+              <p className="text-sm text-gray-500">
+                Gebruik bij voorkeur een klantbestand met e-mailadressen en optionele segmentvelden. Dat maakt de
+                setup sneller, netter en beter herhaalbaar dan losse handmatige invoer.
               </p>
-              {campaigns.filter(c => c.is_active).length === 0 && (
+
+              {campaigns.filter(campaign => campaign.is_active).length === 0 && (
                 <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
                   Geen actieve campaigns. Maak een nieuwe campaign aan via stap 2.
                 </p>
               )}
-              {campaigns.map(c => (
-                <div key={c.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                        {c.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'}
-                      </span>
-                      <span className={`text-xs font-medium ${c.is_active ? 'text-green-600' : 'text-gray-400'}`}>
-                        {c.is_active ? '● Actief' : '○ Gesloten'}
-                      </span>
-                    </div>
-                    <p className="text-sm font-medium text-gray-800 truncate">{c.name}</p>
-                    <p className="text-xs text-gray-400">
-                      Aangemaakt {new Date(c.created_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })}
-                    </p>
-                  </div>
-                  <a
-                    href={`/campaigns/${c.id}`}
-                    className={`ml-4 flex-shrink-0 text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                      c.is_active
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : 'bg-gray-100 text-gray-400 cursor-default pointer-events-none'
-                    }`}
+
+              <AddRespondentsForm campaigns={campaigns} />
+
+              <div className="space-y-2 pt-2 border-t border-gray-100">
+                <p className="text-xs font-semibold text-gray-500">Bestaande campaigns</p>
+                {campaigns.map(campaign => (
+                  <div
+                    key={campaign.id}
+                    className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3 border border-gray-100"
                   >
-                    {c.is_active ? 'Beheer →' : 'Gesloten'}
-                  </a>
-                </div>
-              ))}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                          {campaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'}
+                        </span>
+                        <span className={`text-xs font-medium ${campaign.is_active ? 'text-green-600' : 'text-gray-400'}`}>
+                          {campaign.is_active ? '● Actief' : '○ Gesloten'}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium text-gray-800 truncate">{campaign.name}</p>
+                      <p className="text-xs text-gray-400">
+                        Aangemaakt{' '}
+                        {new Date(campaign.created_at).toLocaleDateString('nl-NL', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                    <a
+                      href={`/campaigns/${campaign.id}`}
+                      className={`ml-4 flex-shrink-0 text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                        campaign.is_active
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                          : 'bg-gray-100 text-gray-400 cursor-default pointer-events-none'
+                      }`}
+                    >
+                      {campaign.is_active ? 'Open dashboard →' : 'Gesloten'}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+
+        <section className={`bg-white rounded-xl border p-6 lg:col-span-2 ${step4Done ? 'border-green-200' : 'border-gray-200'}`}>
+          <SectionHeader n={4} title="Klantdashboard activeren" done={step4Done} />
+          {orgs.length === 0 ? (
+            <LockedStep message="Maak eerst een organisatie aan (stap 1)." />
+          ) : (
+            <div className="space-y-5">
+              <p className="text-sm text-gray-500">
+                Nodig daarna een klantgebruiker uit voor het dashboard. Nieuwe gebruikers ontvangen een activatiemail;
+                bestaande accounts worden direct aan de organisatie gekoppeld.
+              </p>
+              <InviteClientUserForm orgs={orgs} />
             </div>
           )}
         </section>
@@ -137,13 +203,14 @@ export default async function BeheerPage() {
 function StepBadge({ n, label, done }: { n: number; label: string; done: boolean }) {
   return (
     <div className="flex items-center gap-1.5">
-      <div className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0
-        ${done ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+      <div
+        className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0 ${
+          done ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-500'
+        }`}
+      >
         {done ? '✓' : n}
       </div>
-      <span className={`text-xs font-medium hidden sm:block ${done ? 'text-green-600' : 'text-gray-500'}`}>
-        {label}
-      </span>
+      <span className={`text-xs font-medium hidden sm:block ${done ? 'text-green-600' : 'text-gray-500'}`}>{label}</span>
     </div>
   )
 }
@@ -151,8 +218,11 @@ function StepBadge({ n, label, done }: { n: number; label: string; done: boolean
 function SectionHeader({ n, title, done }: { n: number; title: string; done: boolean }) {
   return (
     <div className="flex items-center gap-2 mb-4">
-      <div className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0
-        ${done ? 'bg-green-500 text-white' : 'bg-blue-600 text-white'}`}>
+      <div
+        className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center flex-shrink-0 ${
+          done ? 'bg-green-500 text-white' : 'bg-blue-600 text-white'
+        }`}
+      >
         {done ? '✓' : n}
       </div>
       <h2 className="text-base font-semibold text-gray-900">{title}</h2>
