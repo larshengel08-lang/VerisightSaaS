@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createPublicClient } from '@/lib/supabase/public'
 
@@ -70,6 +71,32 @@ async function sendActivationLink({
       },
     },
   })
+}
+
+async function getCanonicalOrigin(request: Request) {
+  const configured =
+    process.env.FRONTEND_URL ??
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    process.env.NEXT_PUBLIC_APP_URL
+
+  if (configured) {
+    return configured.replace(/\/+$/, '')
+  }
+
+  const headerStore = await headers()
+  const forwardedHost = headerStore.get('x-forwarded-host')
+  const forwardedProto = headerStore.get('x-forwarded-proto') ?? 'https'
+
+  if (forwardedHost && !forwardedHost.includes('localhost')) {
+    return `${forwardedProto}://${forwardedHost}`
+  }
+
+  const origin = new URL(request.url).origin
+  if (!origin.includes('localhost')) {
+    return origin
+  }
+
+  return origin
 }
 
 export async function POST(request: Request) {
@@ -149,7 +176,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ detail: 'Uitnodiging kon niet worden opgeslagen.' }, { status: 500 })
     }
 
-    const origin = new URL(request.url).origin
+    const origin = await getCanonicalOrigin(request)
     const authResult = await sendActivationLink({
       email,
       fullName: fullName ?? existingInvite?.full_name ?? null,
