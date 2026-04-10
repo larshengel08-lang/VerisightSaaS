@@ -35,6 +35,7 @@ if _SENTRY_DSN:
     )
 from datetime import datetime, timezone
 from pathlib import Path
+from time import time
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
@@ -45,12 +46,14 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
-from backend.email import send_hr_notification, send_survey_invite
+from backend.email import send_contact_request, send_hr_notification, send_survey_invite
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
 from backend.schemas import (
     CampaignCreate,
     CampaignRead,
     CampaignStats,
+    ContactRequestCreate,
+    ContactRequestResponse,
     InviteSendResult,
     OrganizationCreate,
     OrganizationRead,
@@ -149,6 +152,39 @@ EXIT_REASON_CODE_MAP = {
     "pensioen": "S3",
 }
 
+CONTACT_RATE_LIMIT_WINDOW_SECONDS = 15 * 60
+CONTACT_RATE_LIMIT_MAX_REQUESTS = 5
+_contact_request_buckets: dict[str, dict[str, float | int]] = {}
+
+
+def _get_client_ip(request: Request) -> str:
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip:
+        return real_ip.strip()
+    return request.client.host if request.client else "unknown"
+
+
+def _is_contact_rate_limited(ip: str) -> bool:
+    now = time()
+    bucket = _contact_request_buckets.get(ip)
+
+    if not bucket or now > float(bucket["reset_at"]):
+        _contact_request_buckets[ip] = {"count": 1, "reset_at": now + CONTACT_RATE_LIMIT_WINDOW_SECONDS}
+        return False
+
+    bucket["count"] = int(bucket["count"]) + 1
+    return int(bucket["count"]) > CONTACT_RATE_LIMIT_MAX_REQUESTS
+
+
+def _cleanup_contact_rate_limits() -> None:
+    now = time()
+    expired = [ip for ip, bucket in _contact_request_buckets.items() if now > float(bucket["reset_at"])]
+    for ip in expired:
+        _contact_request_buckets.pop(ip, None)
+
 
 def _render_survey_status(
     request: Request,
@@ -203,6 +239,33 @@ async def db_general_error_handler(request: Request, exc: SQLAlchemyError):
 async def health() -> dict[str, str]:
     db_ok = check_db_connection()
     return {"status": "ok" if db_ok else "degraded"}
+
+
+@app.post("/api/contact-request", response_model=ContactRequestResponse)
+async def create_contact_request(
+    body: ContactRequestCreate,
+    request: Request,
+) -> ContactRequestResponse:
+    if body.website:
+        return ContactRequestResponse(message="Bedankt. We nemen snel contact op.")
+
+    _cleanup_contact_rate_limits()
+    client_ip = _get_client_ip(request)
+    if _is_contact_rate_limited(client_ip):
+        raise HTTPException(status_code=429, detail="Te veel aanvragen in korte tijd. Probeer het over 15 minuten opnieuw.")
+
+    sent = send_contact_request(
+        name=body.name,
+        work_email=body.work_email,
+        organization=body.organization,
+        employee_count=body.employee_count,
+        current_question=body.current_question,
+    )
+
+    if not sent:
+        raise HTTPException(status_code=503, detail="Je aanvraag kon niet worden verzonden. Probeer het later opnieuw of mail naar hallo@verisight.nl.")
+
+    return ContactRequestResponse(message="Bedankt. We reageren meestal binnen 1 werkdag.")
 
 
 @app.get("/survey/complete", response_class=HTMLResponse)

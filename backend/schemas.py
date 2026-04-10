@@ -110,6 +110,19 @@ class SendInviteItem(BaseModel):
     email: Optional[EmailStr] = None
 
 
+class ContactRequestCreate(BaseModel):
+    name: str = Field(..., min_length=2, max_length=120)
+    work_email: EmailStr
+    organization: str = Field(..., min_length=2, max_length=255)
+    employee_count: str = Field(..., min_length=2, max_length=80)
+    current_question: str = Field(..., min_length=10, max_length=2000)
+    website: Optional[str] = Field(default=None, max_length=255)
+
+
+class ContactRequestResponse(BaseModel):
+    message: str
+
+
 # ---------------------------------------------------------------------------
 # Survey submission (from the HTML survey form)
 # ---------------------------------------------------------------------------

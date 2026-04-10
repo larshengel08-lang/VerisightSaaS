@@ -1,190 +1,62 @@
 import Link from 'next/link'
 import { PublicFooter } from '@/components/marketing/public-footer'
-
-const meetingMailto =
-  'mailto:hallo@verisight.nl?subject=Kennismakingsgesprek%20Verisight&body=Hallo%20Verisight%2C%0A%0AIk%20wil%20graag%20een%20kennismakingsgesprek%20plannen%20over%20ExitScan.%0A%0AOrganisatie%3A%0AAantal%20medewerkers%3A%0AHuidige%20vraag%20rond%20uitstroom%3A%0A%0AMet%20vriendelijke%20groet%2C'
+import { ContactForm } from '@/components/marketing/contact-form'
 
 const navLinks = [
-  { href: '#aanpak', label: 'Aanpak' },
-  { href: '#resultaten', label: 'Wat je krijgt' },
+  { href: '#vergelijking', label: 'Waarom Verisight' },
+  { href: '#resultaten', label: 'Wat dit oplevert' },
   { href: '#tarieven', label: 'Tarieven' },
   { href: '#kennismaking', label: 'Kennismaking' },
 ]
 
-const deliverables = [
-  {
-    eyebrow: 'Patronen',
-    title: 'Heldere vertrekredenen',
-    description:
-      'Je ziet niet alleen dat mensen vertrekken, maar ook welke redenen steeds terugkomen en waar HR waarschijnlijk kan bijsturen.',
-  },
-  {
-    eyebrow: 'Overzicht',
-    title: 'Patronen per team of thema',
-    description:
-      'Je krijgt overzicht op organisatieniveau: bijvoorbeeld leiderschap, groei, cultuur of werkbelasting.',
-  },
-  {
-    eyebrow: 'Output',
-    title: 'Dashboard, rapport en toelichting',
-    description:
-      'Je ontvangt een dashboard, een managementrapport en een persoonlijke toelichting op de belangrijkste aandachtspunten.',
-  },
-]
-
-const frictionPoints = [
-  {
-    eyebrow: 'Signaal 01',
-    title: 'Exitgesprekken blijven los zand',
-    description:
-      'Notities uit gesprekken zijn lastig te vergelijken. Daardoor blijven terugkerende oorzaken van vertrek onzichtbaar.',
-  },
-  {
-    eyebrow: 'Signaal 02',
-    title: 'De echte schade zie je te laat',
-    description:
-      'Als patronen pas opvallen na meerdere exits, zijn kosten voor werving, inwerken en productiviteit vaak al gemaakt.',
-  },
-  {
-    eyebrow: 'Signaal 03',
-    title: 'HR krijgt vragen zonder harde basis',
-    description:
-      'Management wil weten wat er speelt, maar zonder structuur blijft het vaak bij indrukken in plaats van bruikbare inzichten.',
-  },
-]
-
-const fitSignals = [
-  'Je organisatie heeft 200 tot 1.000 medewerkers en wil uitstroom professioneler volgen.',
-  'Er zijn meerdere exits per jaar, maar de rode draad achter vertrek is nog niet scherp.',
-  'HR of directie wil sturen op behoud, maar mist een consistente manier om vertrek te analyseren.',
-]
-
-const processSteps = [
-  {
-    step: '01',
-    eyebrow: 'Intake',
-    title: 'Korte intake en inrichting',
-    description:
-      'We stemmen af hoe jullie uitstroom eruitziet, richten ExitScan in en bepalen hoe uitnodigingen worden verstuurd.',
-  },
-  {
-    step: '02',
-    eyebrow: 'Veldwerk',
-    title: 'Versturen en verzamelen',
-    description:
-      'Vertrekkende medewerkers ontvangen een vertrouwelijke, mobiel leesbare vragenlijst. Jouw team hoeft daar geen extra tooling voor te beheren.',
-  },
-  {
-    step: '03',
-    eyebrow: 'Uitleg',
-    title: 'Analyse en persoonlijke toelichting',
-    description:
-      'Je ontvangt een dashboard, een rapport en een gesprek waarin we uitleggen wat de uitkomsten betekenen en waar je het beste kunt beginnen.',
-  },
-]
-
-const resultCards = [
-  {
-    eyebrow: 'Dashboard',
-    title: 'Dashboard met groepsinzichten',
-    description:
-      'Zie welke vertrekredenen en werkfactoren terugkomen op organisatie- of afdelingsniveau.',
-  },
-  {
-    eyebrow: 'Rapport',
-    title: 'Managementrapport in gewone taal',
-    description:
-      'Een rapport met hoofdbevindingen, aandachtspunten en concrete aanbevelingen voor HR en management.',
-  },
-  {
-    eyebrow: 'Nuance',
-    title: 'Respons- en betrouwbaarheidsduiding',
-    description:
-      'Je ziet niet alleen de uitkomst, maar ook wanneer voorzichtigheid nodig is door beperkte aantallen.',
-  },
-  {
-    eyebrow: 'Begeleiding',
-    title: 'Volledig begeleid traject',
-    description:
-      'Geen losse tool die je zelf moet uitvinden. Wij begeleiden de uitvoering van uitnodiging tot toelichting.',
-  },
-  {
-    eyebrow: 'Publiek',
-    title: 'Publieke privacy- en voorwaardenpagina',
-    description:
-      'Je kunt intern direct verwijzen naar publieke informatie over privacy, hosting en voorwaarden.',
-  },
-  {
-    eyebrow: 'Vervolg',
-    title: 'Uitbreidbaar na ExitScan',
-    description:
-      'Als de basis staat, kan Verisight later worden uitgebreid met retentieonderzoek voor zittende medewerkers.',
-  },
-]
+const heroHighlights = [
+  ['Inzicht', 'Zie welke uitstroom terugkeert', 'Je ziet terugkerende vertrekredenen en werkfactoren, niet alleen losse notities per exit.', 'blue'],
+  ['Aanpak', 'Geen extra tool of zwaar adviestraject', 'Wij richten ExitScan in, versturen uitnodigingen en duiden de uitkomsten. HR hoeft geen surveytool op te tuigen.', 'emerald'],
+  ['Output', 'Direct bruikbaar voor HR en MT', 'Je krijgt een dashboard, rapport in gewone taal en een toelichting waarmee je sneller kunt prioriteren.', 'amber'],
+] as const
 
 const trustItems = [
-  {
-    title: 'Gericht op HR-teams',
-    description: 'Voor organisaties met 200 tot 1.000 medewerkers.',
-  },
-  {
-    title: 'Data in Europa',
-    description: 'Publieke privacyverklaring en heldere juridische pagina’s beschikbaar.',
-  },
-  {
-    title: 'Begeleid traject',
-    description: 'Geen losse self-service tool die HR zelf moet optuigen.',
-  },
-  {
-    title: 'Methodische basis',
-    description: 'Opzet vanuit gevalideerde arbeids- en organisatiepsychologie.',
-  },
-]
+  ['Voor HR-teams in middelgrote organisaties', 'Past vooral bij organisaties met 200 tot 1.000 medewerkers en meerdere exits per jaar.'],
+  ['Binnen enkele weken eerste inzichten', 'Je hoeft geen lang implementatietraject of interne toolselectie te doorlopen.'],
+  ['Data in Europa', 'Met publieke privacy- en voorwaardenpagina\'s die je intern kunt delen.'],
+  ['Methodische basis', 'Opgezet vanuit arbeids- en organisatiepsychologie om uitstroom vergelijkbaar en bruikbaar te maken.'],
+] as const
+
+const comparisonCards = [
+  ['Losse exitgesprekken', 'Geven context per medewerker, maar zelden een vergelijkbaar organisatiebeeld.', 'Verisight bundelt signalen tot patronen en prioriteiten.'],
+  ['Standaard surveytool', 'Geeft software, maar laat inrichting, opvolging en duiding vaak bij HR liggen.', 'Verisight combineert tooling met begeleiding en rapportage.'],
+  ['Consultancytraject', 'Kan waardevol zijn, maar voelt vaak zwaarder en duurder dan nodig voor structureel uitstroominzicht.', 'Verisight is compacter, sneller te starten en duidelijker geprijsd.'],
+] as const
+
+const outcomeCards = [
+  ['Sneller zien waar HR moet beginnen', 'Je krijgt een duidelijker beeld van welke thema\'s eerst aandacht vragen.'],
+  ['Gerichtere verbeteracties', 'Je ziet of vertrek vooral wijst op leiderschap, groei, cultuur, onboarding of werkbelasting.'],
+  ['Minder discussie, meer gedeelde taal', 'Rapportage in gewone taal helpt HR, leidinggevenden en management sneller op een lijn.'],
+  ['Geen extra toolbeheer voor HR', 'Verisight begeleidt de uitvoering, zodat jouw team niet ook nog een surveyproces hoeft te beheren.'],
+  ['Output die intern doorgezet kan worden', 'Het traject levert iets op dat bruikbaar is voor MT-overleg, prioritering en vervolgkeuzes.'],
+  ['Basis voor retentiebeleid', 'Als patronen duidelijk zijn, kun je gerichter bepalen waar vervolgonderzoek of interventie nodig is.'],
+] as const
 
 const faqs = [
-  {
-    question: 'Is Verisight een platform of een dienst?',
-    answer:
-      'Verisight is een begeleide dienst met software. Jij krijgt toegang tot dashboard en rapportage, maar wij begeleiden de inrichting, uitnodigingen en toelichting.',
-  },
-  {
-    question: 'Hoeveel werk vraagt dit van HR?',
-    answer:
-      'Beperkt. Na de intake regelen wij de operationele inrichting. HR hoeft dus niet zelf een nieuwe surveytool te beheren.',
-  },
-  {
-    question: 'Zijn antwoorden herleidbaar naar individuen?',
-    answer:
-      'Nee, rapportages zijn bedoeld voor geaggregeerde inzichten. Privacy en groepsgrootte worden expliciet meegewogen in de rapportage.',
-  },
-]
+  ['Hoe snel kunnen we starten?', 'Na een kort verkennend gesprek kunnen we meestal snel aangeven of ExitScan past en welke planning logisch is.'],
+  ['Hoeveel werk vraagt dit van HR?', 'Beperkt. Wij begeleiden inrichting, uitnodigingen en rapportage; HR levert vooral context en interne afstemming.'],
+  ['Vanaf hoeveel exits is dit zinvol?', 'ExitScan werkt het best wanneer er doorlopend uitstroom is en je patronen wilt herkennen in plaats van losse incidenten wilt bespreken.'],
+  ['Wat als de respons lager uitvalt dan gehoopt?', 'Dan laten we dat expliciet terugkomen in de duiding, zodat de output niet stelliger wordt dan de data toelaat.'],
+  ['Is Verisight een tool of een dienst?', 'Het is een begeleide dienst met software. Je krijgt dashboard en rapportage, zonder self-service implementatie.'],
+  ['Zijn antwoorden herleidbaar naar individuen?', 'De output is bedoeld voor groepsinzichten. Privacy, minimum aantallen en zorgvuldige interpretatie worden expliciet meegenomen.'],
+] as const
 
 const pricingTiers = [
-  {
-    range: '200 - 400 medewerkers',
-    price: 'EUR 1.750',
-    note: 'Geschikt bij ongeveer 20 tot 40 exits per jaar',
-  },
-  {
-    range: '400 - 700 medewerkers',
-    price: 'EUR 2.250',
-    note: 'Geschikt bij ongeveer 40 tot 70 exits per jaar',
-    featured: true,
-  },
-  {
-    range: '700 - 1.000 medewerkers',
-    price: 'EUR 2.950',
-    note: 'Geschikt bij ongeveer 70 tot 100 exits per jaar',
-  },
-]
+  ['200 - 400 medewerkers', 'EUR 1.750', 'Vaak passend bij ongeveer 20 tot 40 exits per jaar'],
+  ['400 - 700 medewerkers', 'EUR 2.250', 'Vaak passend bij ongeveer 40 tot 70 exits per jaar'],
+  ['700 - 1.000 medewerkers', 'EUR 2.950', 'Vaak passend bij ongeveer 70 tot 100 exits per jaar'],
+] as const
 
-const includedItems = [
-  'Volledige inrichting van het ExitScan-traject',
-  'Uitnodigingen en twee herinneringen voor respondenten',
-  'Dashboard met terugkerende vertrekpatronen',
-  'Managementrapport met aanbevelingen',
-  'Persoonlijke toelichting op de uitkomsten',
-  'Privacy- en betrouwbaarheidsduiding in de rapportage',
+const contactExpectations = [
+  'Een reactie binnen ongeveer 1 werkdag',
+  'Een verkennend gesprek van circa 20 minuten',
+  'Een eerste inschatting of ExitScan nu passend is',
+  'Helderheid over timing, aanpak en prijs',
 ]
 
 function AccentTile({ tone }: { tone: 'blue' | 'red' | 'amber' | 'emerald' }) {
@@ -194,7 +66,6 @@ function AccentTile({ tone }: { tone: 'blue' | 'red' | 'amber' | 'emerald' }) {
     amber: 'border-amber-200 bg-amber-50',
     emerald: 'border-emerald-200 bg-emerald-50',
   }
-
   const dotStyles = {
     blue: 'bg-blue-700',
     red: 'bg-red-500',
@@ -209,7 +80,6 @@ function AccentTile({ tone }: { tone: 'blue' | 'red' | 'amber' | 'emerald' }) {
     </div>
   )
 }
-
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -225,7 +95,6 @@ export default function LandingPage() {
           <Link href="/" className="text-lg font-bold tracking-tight text-blue-700">
             Verisight
           </Link>
-
           <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex">
             {navLinks.map((link) => (
               <a key={link.href} href={link.href} className="transition-colors hover:text-blue-700">
@@ -233,31 +102,19 @@ export default function LandingPage() {
               </a>
             ))}
           </nav>
-
           <div className="flex items-center gap-4">
-            <Link
-              href="/login"
-              className="hidden text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 md:inline-flex"
-            >
+            <Link href="/login" className="hidden text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 md:inline-flex">
               Voor klanten: inloggen
             </Link>
-            <a
-              href="#kennismaking"
-              className="inline-flex rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-800"
-            >
-              Plan een kennismakingsgesprek
+            <a href="#kennismaking" className="inline-flex rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-800">
+              Plan een verkennend gesprek
             </a>
           </div>
         </div>
-
         <nav className="border-t border-slate-100 px-5 py-3 lg:hidden">
           <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto pb-1 text-sm font-medium text-slate-600">
             {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="whitespace-nowrap rounded-full border border-slate-200 px-3 py-1.5 transition-colors hover:border-blue-200 hover:text-blue-700"
-              >
+              <a key={link.href} href={link.href} className="whitespace-nowrap rounded-full border border-slate-200 px-3 py-1.5 transition-colors hover:border-blue-200 hover:text-blue-700">
                 {link.label}
               </a>
             ))}
@@ -273,127 +130,97 @@ export default function LandingPage() {
                 Voor HR-teams bij organisaties met 200 tot 1.000 medewerkers
               </div>
               <h1 className="text-balance text-4xl font-bold leading-tight text-slate-950 md:text-6xl">
-                Volledig begeleide uitstroomanalyse die laat zien waarom medewerkers vertrekken.
+                Begeleide ExitScan die laat zien waarom medewerkers vertrekken en waar je als organisatie kunt bijsturen.
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-700 md:text-xl">
-                Verisight combineert een duidelijke ExitScan met begeleiding. Wij richten het traject in,
-                versturen uitnodigingen, analyseren de antwoorden en leveren een dashboard, rapport en
-                persoonlijke toelichting op.
+                Verisight maakt uitstroom vergelijkbaar, zonder dat HR zelf een surveytool of zwaar adviestraject hoeft te organiseren. Je krijgt inzicht, rapportage en duiding die direct bruikbaar zijn voor HR en management.
               </p>
               <div className="mt-10 grid gap-4 text-left md:grid-cols-3">
-                {deliverables.map((item) => (
-                  <div
-                    key={item.title}
-                    className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]"
-                  >
-                    <AccentTile tone="blue" />
-                    <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">
-                      {item.eyebrow}
-                    </p>
-                    <p className="mt-2 text-base font-semibold text-slate-950">{item.title}</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+                {heroHighlights.map(([eyebrow, title, description, tone]) => (
+                  <div key={title} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+                    <AccentTile tone={tone} />
+                    <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">{eyebrow}</p>
+                    <p className="mt-2 text-base font-semibold text-slate-950">{title}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
                   </div>
                 ))}
               </div>
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <a
-                  href="#kennismaking"
-                  className="inline-flex rounded-2xl bg-blue-700 px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-blue-800"
-                >
-                  Plan een kennismakingsgesprek
+                <a href="#kennismaking" className="inline-flex rounded-2xl bg-blue-700 px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-blue-800">
+                  Plan een verkennend gesprek
                 </a>
-                <a
-                  href="#aanpak"
-                  className="inline-flex rounded-2xl border border-slate-300 px-8 py-4 text-base font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
-                >
-                  Bekijk hoe het traject werkt
+                <a href="#vergelijking" className="inline-flex rounded-2xl border border-slate-300 px-8 py-4 text-base font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950">
+                  Waarom niet gewoon exitgesprekken?
                 </a>
               </div>
-              <p className="mt-4 text-sm text-slate-500">
-                Reactie binnen 1 werkdag. Geen implementatietraject nodig. Publieke privacyverklaring beschikbaar.
-              </p>
+              <p className="mt-4 text-sm text-slate-500">Reactie binnen 1 werkdag. Geen implementatietraject nodig. Publieke privacyverklaring beschikbaar.</p>
             </div>
 
             <div className="mt-14 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-6">
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Voorbeeld van de managementweergave</p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    Geen live klantdata: dit voorbeeld laat zien welk soort inzichten je ontvangt.
-                  </p>
+                  <p className="mt-1 text-sm text-slate-600">Geen live klantdata: dit voorbeeld laat zien welk soort inzichten je ontvangt en hoe dat helpt prioriteren.</p>
                 </div>
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                  ExitScan
-                </span>
+                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">ExitScan</span>
               </div>
-
               <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
                 <div className="rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white">
                   <div className="mb-5 flex items-center gap-2">
                     <span className="h-3 w-3 rounded-full bg-red-400" />
                     <span className="h-3 w-3 rounded-full bg-amber-300" />
                     <span className="h-3 w-3 rounded-full bg-emerald-400" />
-                    <span className="ml-3 rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">
-                      dashboard.verisight.nl
-                    </span>
+                    <span className="ml-3 rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">dashboard.verisight.nl</span>
                   </div>
-
                   <div className="grid gap-4 sm:grid-cols-4">
                     {[
-                      { label: 'Responses', value: '14 van 18', detail: '78% respons' },
-                      { label: 'Gemiddeld risico', value: '7,2 op 10', detail: 'Meerdere aandachtspunten' },
-                      { label: 'Waarschijnlijk beinvloedbaar', value: '68%', detail: 'Indicatieve inschatting' },
-                      { label: 'Gemiddelde diensttijd', value: '2,4 jaar', detail: 'Bij vertrek' },
-                    ].map((item) => (
-                      <div key={item.label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{item.label}</p>
-                        <p className="mt-2 text-lg font-bold text-white">{item.value}</p>
-                        <p className="mt-1 text-xs text-slate-400">{item.detail}</p>
+                      ['Responses', '14 van 18', '78% respons'],
+                      ['Gemiddeld risico', '7,2 op 10', 'Meerdere aandachtspunten'],
+                      ['Waarschijnlijk beinvloedbaar', '68%', 'Indicatieve inschatting'],
+                      ['Gemiddelde diensttijd', '2,4 jaar', 'Bij vertrek'],
+                    ].map(([label, value, detail]) => (
+                      <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+                        <p className="mt-2 text-lg font-bold text-white">{value}</p>
+                        <p className="mt-1 text-xs text-slate-400">{detail}</p>
                       </div>
                     ))}
                   </div>
-
                   <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                      Welke thema&apos;s vragen de meeste aandacht?
-                    </p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Welke thema&apos;s vragen de meeste aandacht?</p>
                     <div className="mt-4 space-y-3">
                       {[
-                        { label: 'Leiderschap', value: '8,1', band: 'Hoog', width: '81%', color: 'bg-red-400' },
-                        { label: 'Groei en ontwikkeling', value: '6,4', band: 'Midden', width: '64%', color: 'bg-amber-400' },
-                        { label: 'Cultuur', value: '5,9', band: 'Midden', width: '59%', color: 'bg-amber-400' },
-                        { label: 'Werkbelasting', value: '3,1', band: 'Laag', width: '31%', color: 'bg-emerald-400' },
-                      ].map((item) => (
-                        <div key={item.label} className="grid grid-cols-[minmax(0,10rem)_1fr_auto_auto] items-center gap-3">
-                          <span className="text-sm text-slate-200">{item.label}</span>
-                          <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                            <div className={`h-full rounded-full ${item.color}`} style={{ width: item.width }} />
-                          </div>
-                          <span className="text-sm font-semibold text-white">{item.value}</span>
-                          <span className="text-xs font-semibold uppercase tracking-wide text-slate-300">
-                            {item.band}
-                          </span>
+                        ['Leiderschap', '8,1', 'Hoog', '81%', 'bg-red-400'],
+                        ['Groei en ontwikkeling', '6,4', 'Midden', '64%', 'bg-amber-400'],
+                        ['Cultuur', '5,9', 'Midden', '59%', 'bg-amber-400'],
+                        ['Werkbelasting', '3,1', 'Laag', '31%', 'bg-emerald-400'],
+                      ].map(([label, value, band, width, color]) => (
+                        <div key={label} className="grid grid-cols-[minmax(0,10rem)_1fr_auto_auto] items-center gap-3">
+                          <span className="text-sm text-slate-200">{label}</span>
+                          <div className="h-2 overflow-hidden rounded-full bg-white/10"><div className={`h-full rounded-full ${color}`} style={{ width }} /></div>
+                          <span className="text-sm font-semibold text-white">{value}</span>
+                          <span className="text-xs font-semibold uppercase tracking-wide text-slate-300">{band}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
-
                 <div className="flex flex-col justify-between gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Wat je hier als HR direct uit haalt</p>
+                    <p className="text-sm font-semibold text-slate-900">Wat een HR-team hier concreet mee kan</p>
                     <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
                       <li>Je ziet welke vertrekredenen blijven terugkomen, niet alleen losse signalen per exit.</li>
                       <li>Je krijgt een eerste indicatie waar HR of management waarschijnlijk kan bijsturen.</li>
-                      <li>Je kunt management in gewone taal uitleggen welke thema&apos;s prioriteit vragen.</li>
+                      <li>Je kunt management in gewone taal uitleggen welke thema&apos;s nu prioriteit vragen.</li>
                     </ul>
+                  </div>
+                  <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                    <p className="text-sm font-semibold text-blue-900">Typische eerste opbrengst</p>
+                    <p className="mt-2 text-sm leading-6 text-blue-950">Bijvoorbeeld: HR ziet dat vertrek niet vooral om salaris draait, maar vaker samenhangt met leiderschap en beperkte groeiperspectieven. Dat maakt vervolgstappen veel gerichter.</p>
                   </div>
                   <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                     <p className="text-sm font-semibold text-amber-900">Belangrijke nuance</p>
-                    <p className="mt-2 text-sm leading-6 text-amber-800">
-                      Voorbeeldscores zijn indicatief. Rapportages zijn bedoeld voor groepsinzichten en niet als
-                      zelfstandig oordeel over een individu.
-                    </p>
+                    <p className="mt-2 text-sm leading-6 text-amber-800">Voorbeeldscores zijn indicatief. Rapportages zijn bedoeld voor groepsinzichten en niet als zelfstandig oordeel over een individu.</p>
                   </div>
                 </div>
               </div>
@@ -403,118 +230,78 @@ export default function LandingPage() {
 
         <section className="border-y border-slate-200 bg-slate-50 py-6">
           <div className="mx-auto grid max-w-6xl gap-4 px-5 sm:grid-cols-2 lg:grid-cols-4 sm:px-6">
-            {trustItems.map((item) => (
-              <div key={item.title} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            {trustItems.map(([title, description]) => (
+              <div key={title} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
                 <AccentTile tone="emerald" />
-                <p className="mt-4 text-sm font-semibold text-slate-950">{item.title}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+                <p className="mt-4 text-sm font-semibold text-slate-950">{title}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
               </div>
             ))}
           </div>
         </section>
-
         <section className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Waarom organisaties starten</p>
-            <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">
-              HR weet vaak dat er iets speelt, maar nog niet wat precies steeds terugkomt.
-            </h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
-              ExitScan maakt uitstroom vergelijkbaar en bespreekbaar. Daardoor kun je patronen zien voordat ze blijven
-              doorsluimeren.
-            </p>
+            <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">Als je uitstroom niet vergelijkbaar maakt, blijf je te lang sturen op losse indrukken.</h2>
+            <p className="mt-4 text-lg leading-8 text-slate-600">ExitScan helpt je eerder zien welke thema&apos;s terugkomen, zodat je niet pas na meerdere kostbare exits ontdekt waar het patroon zit.</p>
           </div>
-
           <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {frictionPoints.map((item) => (
-              <div key={item.title} className="rounded-3xl border border-red-100 bg-red-50 p-6 shadow-sm">
+            {[
+              ['Signaal 01', 'Exitgesprekken leveren input, maar geen patroon', 'Teams houden vaak wel gesprekken, maar niet in een vorm die je betrouwbaar kunt vergelijken over afdelingen of perioden heen.'],
+              ['Signaal 02', 'De kosten lopen door terwijl de rode draad onduidelijk blijft', 'Tegen de tijd dat patronen zichtbaar worden, zijn werving, inwerken en productiviteitsverlies vaak al meerdere keren gemaakt.'],
+              ['Signaal 03', 'Management wil keuzes, HR mist een harde basis', 'Zonder structuur blijft het gesprek hangen in indrukken, terwijl je juist richting wilt geven aan leiderschap, groei of werkdruk.'],
+            ].map(([eyebrow, title, description]) => (
+              <div key={title} className="rounded-3xl border border-red-100 bg-red-50 p-6 shadow-sm">
                 <AccentTile tone="red" />
-                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-red-700">{item.eyebrow}</p>
-                <h3 className="text-lg font-semibold text-slate-950">{item.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-700">{item.description}</p>
+                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-red-700">{eyebrow}</p>
+                <h3 className="text-lg font-semibold text-slate-950">{title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-700">{description}</p>
               </div>
             ))}
           </div>
-
           <div className="mt-8 rounded-3xl border border-blue-200 bg-blue-50 p-8">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-900">Waarom de businesscase vaak snel klopt</p>
-            <p className="mt-3 max-w-4xl text-base leading-8 text-blue-950">
-              Bij een organisatie van 300 medewerkers met 10% uitstroom praat je al snel over 30 exits per jaar.
-              Als je met betere inzichten ook maar een deel van die uitstroom beter begrijpt of eerder kunt bespreekbaar
-              maken, kan een enkel voorkomen vertrek al een groot deel van het traject terugverdienen.
-            </p>
+            <p className="mt-3 max-w-4xl text-base leading-8 text-blue-950">Stel: een organisatie met 300 medewerkers heeft jaarlijks 30 exits. Als vervanging, inwerken en productiviteitsverlies per vertrek al snel enkele duizenden euro&apos;s kosten, hoeft je maar beperkt beter te begrijpen waar uitstroom beinvloedbaar is om de trajectprijs terug te verdienen.</p>
+            <p className="mt-3 max-w-4xl text-sm leading-7 text-blue-900">Verisight verkoopt geen garantie op minder verloop, maar wel een snellere en stevigere basis om gerichter te beslissen waar je moet ingrijpen.</p>
           </div>
         </section>
 
-        <section className="bg-slate-950 py-16 text-white md:py-20" id="aanpak">
+        <section className="bg-white py-16 md:py-20" id="vergelijking">
           <div className="mx-auto max-w-6xl px-5 sm:px-6">
             <div className="mx-auto max-w-3xl text-center">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-300">Aanpak</p>
-              <h2 className="mt-3 text-3xl font-bold md:text-4xl">
-                Van intake tot managementrapport in drie duidelijke stappen.
-              </h2>
-              <p className="mt-4 text-lg leading-8 text-slate-300">
-                De kern is simpel: wij begeleiden de uitvoering, jij ontvangt een onderbouwd beeld van uitstroom.
-              </p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Waarom Verisight</p>
+              <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">Beter passend dan losse exitgesprekken, een generieke surveytool of een zwaar consultancytraject.</h2>
+              <p className="mt-4 text-lg leading-8 text-slate-600">De kracht zit in de combinatie: een duidelijke ExitScan, begeleiding in de uitvoering en output die intern meteen bruikbaar is.</p>
             </div>
-
-            <div className="mt-12 grid gap-5 md:grid-cols-3">
-              {processSteps.map((item) => (
-                <div key={item.step} className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                  <AccentTile tone="blue" />
-                  <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">{item.eyebrow}</p>
-                  <p className="text-5xl font-bold text-blue-400/30">{item.step}</p>
-                  <h3 className="mt-4 text-xl font-semibold">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-300">{item.description}</p>
+            <div className="mt-12 grid gap-5 lg:grid-cols-3">
+              {comparisonCards.map(([title, description, outcome], index) => (
+                <div key={title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <AccentTile tone={index === 0 ? 'red' : index === 1 ? 'amber' : 'blue'} />
+                  <h3 className="mt-4 text-lg font-semibold text-slate-950">{title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+                  <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-950">{outcome}</div>
                 </div>
               ))}
             </div>
-
-            <div className="mt-12 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-3xl border border-blue-500/20 bg-blue-500/10 p-7">
-                <p className="text-sm font-semibold uppercase tracking-wide text-blue-300">Voor wie dit vooral past</p>
-                <ul className="mt-4 space-y-3 text-sm leading-7 text-slate-200">
-                  {fitSignals.map((item) => (
-                    <li key={item} className="flex gap-3">
-                      <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-blue-400" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-7">
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-300">Later uitbreidbaar</p>
-                <h3 className="mt-3 text-xl font-semibold">RetentieScan kan een vervolgstap zijn, niet de eerste keuze op deze pagina.</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-300">
-                  Eerst grip op uitstroom. Daarna kun je eventueel uitbreiden naar onderzoek onder zittende medewerkers.
-                  Zo blijft het aanbod op deze pagina helder en overzichtelijk.
-                </p>
-              </div>
-            </div>
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-5 py-16 sm:px-6 md:py-20" id="resultaten">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Wat je krijgt</p>
-            <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">
-              Geen losse tool, maar een traject met duidelijke output.
-            </h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">
-              Elke sectie van de output heeft een eigen functie: inzicht, besluitvorming en vervolggesprek.
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {resultCards.map((card) => (
-              <div key={card.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <AccentTile tone="amber" />
-                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">{card.eyebrow}</p>
-                <h3 className="text-lg font-semibold text-slate-950">{card.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{card.description}</p>
-              </div>
-            ))}
+        <section className="bg-slate-950 py-16 text-white md:py-20" id="resultaten">
+          <div className="mx-auto max-w-6xl px-5 sm:px-6">
+            <div className="mx-auto max-w-3xl text-center">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-300">Wat dit oplevert</p>
+              <h2 className="mt-3 text-3xl font-bold md:text-4xl">Geen losse tooloutput, maar een duidelijker basis voor actie en besluitvorming.</h2>
+              <p className="mt-4 text-lg leading-8 text-slate-300">Verisight levert inzicht, managementtaal en duiding waarmee uitstroom sneller bespreekbaar en prioriteerbaar wordt.</p>
+            </div>
+            <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {outcomeCards.map(([title, description]) => (
+                <div key={title} className="rounded-3xl border border-white/10 bg-white/5 p-6">
+                  <AccentTile tone="amber" />
+                  <h3 className="mt-4 text-lg font-semibold text-white">{title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-300">{description}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -522,67 +309,42 @@ export default function LandingPage() {
           <div className="mx-auto max-w-5xl px-5 sm:px-6">
             <div className="mx-auto max-w-3xl text-center">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Tarieven</p>
-              <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">
-                Een trajectprijs voor inrichting, analyse en toelichting.
-              </h2>
-              <p className="mt-4 text-lg leading-8 text-slate-600">
-                Geen abonnement en geen extra implementatieproject. Je betaalt per ExitScan-traject.
-              </p>
+              <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">Een vaste trajectprijs voor inrichting, analyse en toelichting.</h2>
+              <p className="mt-4 text-lg leading-8 text-slate-600">Geen abonnement en geen extra implementatieproject. Je betaalt voor een begeleide ExitScan met duidelijke output.</p>
             </div>
-
             <div className="mt-12 grid gap-4 md:grid-cols-3">
-              {pricingTiers.map((tier) => (
-                <div
-                  key={tier.range}
-                  className={`rounded-3xl border p-6 text-center ${
-                    tier.featured
-                      ? 'border-blue-700 bg-blue-700 text-white shadow-lg'
-                      : 'border-slate-200 bg-white text-slate-900'
-                  }`}
-                >
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-current/10 bg-white/10">
-                    <div className={`h-4 w-4 rounded-full ${tier.featured ? 'bg-white' : 'bg-blue-700'}`} />
-                  </div>
-                  <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${tier.featured ? 'text-blue-100' : 'text-slate-500'}`}>
-                    {tier.range}
-                  </p>
-                  <p className="mt-4 text-4xl font-bold">{tier.price}</p>
-                  <p className={`mt-3 text-sm leading-6 ${tier.featured ? 'text-blue-100' : 'text-slate-600'}`}>
-                    {tier.note}
-                  </p>
+              {pricingTiers.map(([range, price, note], index) => (
+                <div key={range} className={`rounded-3xl border p-6 text-center ${index === 1 ? 'border-blue-700 bg-blue-700 text-white shadow-lg' : 'border-slate-200 bg-white text-slate-900'}`}>
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-current/10 bg-white/10"><div className={`h-4 w-4 rounded-full ${index === 1 ? 'bg-white' : 'bg-blue-700'}`} /></div>
+                  <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${index === 1 ? 'text-blue-100' : 'text-slate-500'}`}>{range}</p>
+                  <p className="mt-4 text-4xl font-bold">{price}</p>
+                  <p className={`mt-3 text-sm leading-6 ${index === 1 ? 'text-blue-100' : 'text-slate-600'}`}>{note}</p>
                 </div>
               ))}
             </div>
-
             <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
               <div className="grid gap-8 lg:grid-cols-[1fr_0.8fr]">
                 <div>
                   <h3 className="text-xl font-semibold text-slate-950">Altijd inbegrepen</h3>
                   <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                    {includedItems.map((item) => (
-                      <div
-                        key={item}
-                        className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-                      >
-                        {item}
-                      </div>
+                    {[
+                      'Inrichting van het ExitScan-traject',
+                      'Uitnodigingen en twee herinneringen voor respondenten',
+                      'Dashboard met terugkerende vertrekpatronen',
+                      'Managementrapport met aanbevelingen en nuance',
+                      'Persoonlijke toelichting op de uitkomsten',
+                      'Publieke privacy- en voorwaardenpagina voor interne afstemming',
+                    ].map((item) => (
+                      <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">{item}</div>
                     ))}
                   </div>
                 </div>
-
                 <div className="rounded-3xl border border-blue-200 bg-blue-50 p-6">
-                  <p className="text-sm font-semibold uppercase tracking-wide text-blue-900">Volgende stap</p>
-                  <h3 className="mt-3 text-xl font-semibold text-slate-950">Plan eerst een kennismakingsgesprek.</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-700">
-                    In dat gesprek bepalen we of ExitScan past bij jullie organisatie, welke omvang logisch is en
-                    welke planning haalbaar voelt.
-                  </p>
-                  <a
-                    href="#kennismaking"
-                    className="mt-6 inline-flex rounded-2xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-800"
-                  >
-                    Plan een kennismakingsgesprek
-                  </a>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-blue-900">Past vaak goed bij</p>
+                  <p className="mt-3 text-sm leading-7 text-slate-700">Organisaties met doorlopende uitstroom die sneller van losse signalen naar een gedeeld organisatiebeeld willen.</p>
+                  <p className="mt-5 text-sm font-semibold uppercase tracking-wide text-blue-900">Eerst bespreken als</p>
+                  <p className="mt-3 text-sm leading-7 text-slate-700">Je uitstroom nog erg beperkt is, of als je eigenlijk een breder medewerkeronderzoek zoekt in plaats van een uitstroomanalyse.</p>
+                  <a href="#kennismaking" className="mt-6 inline-flex rounded-2xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-800">Plan een verkennend gesprek</a>
                   <p className="mt-3 text-sm text-slate-600">Prijzen exclusief btw. Reactie meestal binnen 1 werkdag.</p>
                 </div>
               </div>
@@ -593,79 +355,35 @@ export default function LandingPage() {
         <section className="mx-auto max-w-5xl px-5 py-16 sm:px-6 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Veelgestelde vragen</p>
-            <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">
-              Korte antwoorden op de vragen die vaak als eerste komen.
-            </h2>
+            <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">Korte antwoorden op de vragen die vaak een koopbeslissing blokkeren.</h2>
           </div>
-
           <div className="mt-10 space-y-4">
-            {faqs.map((faq) => (
-              <details key={faq.question} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <summary className="cursor-pointer list-none text-lg font-semibold text-slate-950">
-                  {faq.question}
-                </summary>
-                <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">{faq.answer}</p>
+            {faqs.map(([question, answer]) => (
+              <details key={question} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <summary className="cursor-pointer list-none text-lg font-semibold text-slate-950">{question}</summary>
+                <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">{answer}</p>
               </details>
             ))}
           </div>
         </section>
 
         <section className="bg-slate-950 py-16 text-white md:py-20" id="kennismaking">
-          <div className="mx-auto max-w-5xl px-5 sm:px-6">
-            <div className="grid gap-8 lg:grid-cols-[1fr_0.9fr]">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-300">Kennismaking</p>
-                <h2 className="mt-3 text-3xl font-bold md:text-4xl">
-                  Binnen een gesprek weet je of ExitScan voor jullie nu zinvol is.
-                </h2>
-                <p className="mt-4 text-lg leading-8 text-slate-300">
-                  We bespreken jullie huidige uitstroomvraag, de omvang van de organisatie en welke vorm van begeleiding
-                  logisch is. Daarna weet je snel of het past, zonder lang voortraject.
-                </p>
-                <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                  <a
-                    href={meetingMailto}
-                    className="inline-flex items-center justify-center rounded-2xl bg-blue-700 px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-blue-800"
-                  >
-                    Plan een kennismakingsgesprek
-                  </a>
-                  <a
-                    href="mailto:hallo@verisight.nl"
-                    className="inline-flex items-center justify-center rounded-2xl border border-white/15 px-8 py-4 text-base font-semibold text-slate-200 transition-colors hover:border-white/30 hover:text-white"
-                  >
-                    Mail direct naar hallo@verisight.nl
-                  </a>
-                </div>
-                <p className="mt-4 text-sm text-slate-400">
-                  Stuur bij voorkeur mee: aantal medewerkers, type organisatie en wat jullie nu vooral willen begrijpen
-                  van uitstroom.
-                </p>
+          <div className="mx-auto grid max-w-6xl gap-8 px-5 sm:px-6 lg:grid-cols-[0.95fr_1.05fr]">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-300">Kennismaking</p>
+              <h2 className="mt-3 text-3xl font-bold md:text-4xl">Binnen een kort gesprek weet je of ExitScan nu voor jullie zinvol is.</h2>
+              <p className="mt-4 text-lg leading-8 text-slate-300">Deel kort je organisatieomvang en wat je nu vooral wilt begrijpen van uitstroom. Daarna weet je snel of dit traject past, wat de logische omvang is en hoe snel je kunt starten.</p>
+              <div className="mt-8 space-y-4">
+                {contactExpectations.map((item) => (
+                  <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">{item}</div>
+                ))}
               </div>
-
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                <p className="text-sm font-semibold uppercase tracking-wide text-slate-300">Wat je na contact mag verwachten</p>
-                <div className="mt-5 space-y-4">
-                  {[
-                    'Een reactie binnen ongeveer 1 werkdag',
-                    'Een eerste inschatting of ExitScan nu past bij jullie situatie',
-                    'Helderheid over trajectvorm, timing en prijs',
-                    'Geen salesdemo vol schermen, maar een gesprek over jullie HR-vraag',
-                  ].map((item) => (
-                    <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                      {item}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-                  <p className="text-sm font-semibold text-emerald-200">Publieke informatie direct beschikbaar</p>
-                  <p className="mt-2 text-sm leading-6 text-emerald-100">
-                    Bekijk vooraf ook het <Link href="/privacy" className="underline">privacybeleid</Link> en de{' '}
-                    <Link href="/voorwaarden" className="underline">algemene voorwaarden</Link>.
-                  </p>
-                </div>
+              <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
+                <p className="text-sm font-semibold text-emerald-200">Publieke informatie direct beschikbaar</p>
+                <p className="mt-2 text-sm leading-6 text-emerald-100">Bekijk vooraf ook het <Link href="/privacy" className="underline">privacybeleid</Link> en de <Link href="/voorwaarden" className="underline">algemene voorwaarden</Link>.</p>
               </div>
             </div>
+            <div><ContactForm /></div>
           </div>
         </section>
       </main>

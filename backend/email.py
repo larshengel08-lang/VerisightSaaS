@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 _RESEND_API_KEY  = os.getenv("RESEND_API_KEY", "")
 _EMAIL_FROM      = os.getenv("EMAIL_FROM", "Verisight <noreply@verisight.nl>")
+_CONTACT_EMAIL   = os.getenv("CONTACT_EMAIL", "hallo@verisight.nl")
 _FRONTEND_URL    = os.getenv("FRONTEND_URL", "http://localhost:3000")
 _BACKEND_URL     = os.getenv("BACKEND_URL", "http://localhost:8000")
 
@@ -303,6 +304,82 @@ def send_survey_reminder(
     return _send(
         to=to_email,
         subject=f"Herinnering: {campaign_name} — jouw inbreng is nog welkom",
+        html=html,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Marketing-site contactaanvraag
+# ---------------------------------------------------------------------------
+
+def send_contact_request(
+    *,
+    name: str,
+    work_email: str,
+    organization: str,
+    employee_count: str,
+    current_question: str,
+) -> bool:
+    """Stuur een contactaanvraag vanaf de marketing-site naar het interne inboxadres."""
+    html = f"""
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body style="margin:0;padding:0;background:#F8FAFC;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;background:#F8FAFC;">
+    <tr>
+      <td align="center">
+        <table width="620" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:16px;overflow:hidden;">
+          <tr>
+            <td style="background:#0F172A;padding:24px 28px;">
+              <span style="font-size:20px;font-weight:700;color:#FFFFFF;">Nieuwe kennismakingsaanvraag</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px;">
+              <p style="margin:0 0 18px;font-size:15px;color:#334155;line-height:1.7;">
+                Via de marketing-site is een nieuwe aanvraag binnengekomen voor een verkennend gesprek over ExitScan.
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                <tr>
+                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#64748B;width:180px;">Naam</td>
+                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#0F172A;font-weight:600;">{name}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#64748B;">Werk e-mail</td>
+                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#0F172A;font-weight:600;">{work_email}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#64748B;">Organisatie</td>
+                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#0F172A;font-weight:600;">{organization}</td>
+                </tr>
+                <tr>
+                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#64748B;">Omvang</td>
+                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#0F172A;font-weight:600;">{employee_count}</td>
+                </tr>
+              </table>
+              <div style="margin-top:20px;padding:18px;border-radius:12px;background:#F8FAFC;border:1px solid #E2E8F0;">
+                <p style="margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#475569;">
+                  Huidige vraag
+                </p>
+                <p style="margin:0;font-size:14px;line-height:1.7;color:#0F172A;white-space:pre-wrap;">{current_question}</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+"""
+
+    return _send(
+        to=_CONTACT_EMAIL,
+        subject=f"Kennismakingsaanvraag ExitScan — {organization}",
         html=html,
     )
 
