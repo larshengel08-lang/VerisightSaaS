@@ -60,7 +60,6 @@ from backend.scoring import (
     EXIT_REASON_LABELS_NL,
     MIN_SEGMENT_N,
     detect_patterns,
-    get_recommendations,
 )
 
 # ---------------------------------------------------------------------------
@@ -887,7 +886,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             label = FACTOR_LABELS_NL.get(factor, factor)
             exec_rows.append([f"⚠  {label}", f"{score:.1f}"])
         if strong_work_signal_pct is not None:
-            exec_rows.append([f"Sterk werkfactorsignaal", f"{strong_work_signal_pct:.0f}%"])
+            exec_rows.append(["Werkfactorsignaal", f"{strong_work_signal_pct:.0f}%"])
 
         exec_style = TableStyle([
             ("SPAN",        (0, 0), (1, 0)),
@@ -1150,8 +1149,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         # Scoretabel
         story.append(Paragraph("Scoretabel per factor", STYLES["sub_title"]))
         story.append(Paragraph(
-            "<i>Toelichting: De score (1–10) geeft de gemiddelde beleving van medewerkers weer — "
-            "hogere score is positiever. De signaalwaarde laat zien waar relatief de meeste werkfrictie zit — "
+            "<i>Toelichting: De belevingsscore (1–10) geeft de gemiddelde beleving van medewerkers weer — "
+            "hogere belevingsscore is positiever. De signaalwaarde laat zien waar relatief de meeste werkfrictie zit — "
             "hogere signaalwaarde betekent meer aandacht, niet automatisch meer bewijs.</i>",
             ParagraphStyle(
                 "score_explanation",
@@ -1162,7 +1161,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                 spaceAfter=4,
             ),
         ))
-        score_rows = [["Factor", "Score (1–10)", "Signaalwaarde", "Urgentie"]]
+        score_rows = [["Factor", "Belevingsscore", "Signaalwaarde", "Band"]]
         for factor in ORG_FACTOR_KEYS:
             if factor not in factor_avgs:
                 continue
