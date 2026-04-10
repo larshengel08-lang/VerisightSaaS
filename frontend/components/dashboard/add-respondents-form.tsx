@@ -259,7 +259,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             {campaigns.map(campaign => (
               <option key={campaign.id} value={campaign.id}>
                 {organizationById[campaign.organization_id] ?? 'Onbekende organisatie'} — {campaign.name} ({campaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'})
-                {campaign.is_active ? '' : ' — gesloten'}
+                {campaign.is_active ? '' : ' — gearchiveerd'}
               </option>
             ))}
           </select>

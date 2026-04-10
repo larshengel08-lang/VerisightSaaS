@@ -33,7 +33,7 @@ export default async function DashboardHomePage() {
           <p className="text-sm text-gray-500 mt-0.5">
             {isAdmin
               ? 'Overzicht van scans die jij beheert voor klantorganisaties'
-              : 'Overzicht van actieve en gesloten scans voor jouw organisatie'}
+              : 'Overzicht van actieve en gearchiveerde scans voor jouw organisatie'}
           </p>
         </div>
         {/* Alleen Verisight-beheerders kunnen een nieuwe campaign aanmaken */}

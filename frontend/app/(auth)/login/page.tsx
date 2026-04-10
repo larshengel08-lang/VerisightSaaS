@@ -105,10 +105,7 @@ export default function LoginPage() {
           </a>
         </p>
         <p className="text-center text-xs text-gray-400 mt-2">
-          Uitgenodigd voor dashboardtoegang? De activatiemail is ook de accountstart. Gebruik daarna hetzelfde e-mailadres om in te loggen.
-        </p>
-        <p className="text-center text-xs text-gray-400 mt-2">
-          Nog geen wachtwoord ingesteld? Gebruik na activatie eerst <Link href="/forgot-password" className="text-blue-600 hover:underline">Wachtwoord vergeten</Link>.
+          Uitgenodigd voor dashboardtoegang? Open eerst de activatiemail, kies daar je wachtwoord en log daarna in met hetzelfde e-mailadres.
         </p>
         <p className="text-center text-xs text-gray-400 mt-3">
           Verisight v2.0 · Vertrouwelijk platform

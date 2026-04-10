@@ -56,8 +56,8 @@ export function InviteClientUserForm({ orgs }: Props) {
         bestaande gebruikers worden direct gekoppeld aan de organisatie.
       </p>
       <div className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-3 text-xs leading-5 text-blue-900">
-        De activatiemail is ook de accountstart. Nieuwe gebruikers hoeven dus niet eerst zelf een apart account aan te maken:
-        na klikken op de link krijgen ze toegang tot het dashboard met dit e-mailadres.
+        De activatiemail start het account. Nieuwe gebruikers openen de link, kiezen direct een wachtwoord en gaan daarna
+        verder naar het dashboard met dit e-mailadres.
       </div>
 
       <div>
@@ -115,7 +115,7 @@ export function InviteClientUserForm({ orgs }: Props) {
         <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-3 text-sm text-green-700">
           <p>{success}</p>
           <p className="mt-1 text-xs text-green-700">
-            Nieuwe gebruiker? Die start het account via de activatiemail. Daarna kan later via <span className="font-medium">Wachtwoord vergeten</span> een vast wachtwoord worden ingesteld.
+            Nieuwe gebruiker? Die kiest via de activatiemail eerst een wachtwoord en kan daarna direct inloggen.
           </p>
         </div>
       )}

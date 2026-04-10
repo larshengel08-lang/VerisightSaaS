@@ -1,12 +1,5 @@
 'use client'
 
-/**
- * CampaignActions — client component voor campagnebeheer.
- *
- * Sluit-actie: Supabase browser client → RLS bewaakt schrijftoegang (alleen owner/member).
- * Resend-actie: Next.js server action → server-side auth-verificatie vóór backend-aanroep.
- */
-
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { resendPendingAction } from './actions'
@@ -18,47 +11,55 @@ interface CampaignActionsProps {
 }
 
 export function CampaignActions({ campaignId, isActive, pendingCount }: CampaignActionsProps) {
-  const [loading,  setLoading]  = useState<'close' | 'resend' | null>(null)
-  const [error,    setError]    = useState<string | null>(null)
-  const [toast,    setToast]    = useState<string | null>(null)
+  const [loading, setLoading] = useState<'archive' | 'resend' | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
 
-  function showToast(msg: string) {
-    setToast(msg)
+  function showToast(message: string) {
+    setToast(message)
     setTimeout(() => setToast(null), 4000)
   }
 
-  async function handleClose() {
-    if (!confirm(
-      'Weet je zeker dat je deze campaign wilt sluiten?\n\n' +
+  async function handleArchive() {
+    const confirmed = confirm(
+      'Weet je zeker dat je deze campaign wilt archiveren?\n\n' +
       'Respondenten kunnen de survey daarna niet meer invullen. ' +
-      'Resultaten en het rapport blijven beschikbaar.'
-    )) return
+      'Resultaten en het rapport blijven wel beschikbaar.',
+    )
+
+    if (!confirmed) {
+      return
+    }
 
     setError(null)
-    setLoading('close')
+    setLoading('archive')
 
     const supabase = createClient()
     const { error: supabaseError } = await supabase
       .from('campaigns')
-      .update({ is_active: false })
+      .update({ is_active: false, closed_at: new Date().toISOString() })
       .eq('id', campaignId)
 
     setLoading(null)
 
     if (supabaseError) {
-      setError(`Sluiten mislukt: ${supabaseError.message}`)
+      setError(`Archiveren mislukt: ${supabaseError.message}`)
       return
     }
 
-    showToast('Campaign gesloten. Pagina wordt vernieuwd…')
+    showToast('Campaign gearchiveerd. Pagina wordt vernieuwd...')
     setTimeout(() => window.location.reload(), 1500)
   }
 
   async function handleResend() {
-    if (!confirm(
+    const confirmed = confirm(
       `${pendingCount} respondent(en) opnieuw uitnodigen?\n\n` +
-      'Alle respondenten die de survey nog niet hebben ingevuld ontvangen een nieuwe e-mail.'
-    )) return
+      'Alle respondenten die de survey nog niet hebben ingevuld ontvangen een nieuwe e-mail.',
+    )
+
+    if (!confirmed) {
+      return
+    }
 
     setError(null)
     setLoading('resend')
@@ -72,14 +73,21 @@ export function CampaignActions({ campaignId, isActive, pendingCount }: Campaign
       return
     }
 
-    const msg = result.sent > 0
-      ? `✓ ${result.sent} uitnodiging(en) verstuurd.${result.failed ? ` ${result.failed} mislukt.` : ''}`
-      : 'Geen openstaande respondenten met e-mailadres gevonden.'
-    showToast(msg)
-    if (result.sent > 0) setTimeout(() => window.location.reload(), 2000)
+    const message =
+      result.sent > 0
+        ? `✓ ${result.sent} uitnodiging(en) verstuurd.${result.failed ? ` ${result.failed} mislukt.` : ''}`
+        : 'Geen openstaande respondenten met e-mailadres gevonden.'
+
+    showToast(message)
+
+    if (result.sent > 0) {
+      setTimeout(() => window.location.reload(), 2000)
+    }
   }
 
-  if (!isActive) return null
+  if (!isActive) {
+    return null
+  }
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -91,28 +99,25 @@ export function CampaignActions({ campaignId, isActive, pendingCount }: Campaign
             className="text-sm font-medium text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 disabled:opacity-50 transition-colors"
             title={`${pendingCount} respondent(en) hebben de survey nog niet ingevuld`}
           >
-            {loading === 'resend' ? 'Versturen…' : `↻ Herinnering (${pendingCount})`}
+            {loading === 'resend' ? 'Versturen...' : `↻ Herinnering (${pendingCount})`}
           </button>
         )}
         <button
-          onClick={handleClose}
+          onClick={handleArchive}
           disabled={loading !== null}
-          className="text-sm font-medium text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50 transition-colors"
+          className="text-sm font-medium text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 disabled:opacity-50 transition-colors"
         >
-          {loading === 'close' ? 'Sluiten…' : 'Sluit campaign'}
+          {loading === 'archive' ? 'Archiveren...' : 'Archiveer campaign'}
         </button>
       </div>
 
-      {/* Toast melding */}
       {toast && (
         <div className="bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg">
           {toast}
         </div>
       )}
 
-      {error && (
-        <p className="text-xs text-red-600 max-w-xs text-right">{error}</p>
-      )}
+      {error && <p className="text-xs text-red-600 max-w-xs text-right">{error}</p>}
     </div>
   )
 }

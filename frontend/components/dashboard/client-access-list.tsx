@@ -74,7 +74,7 @@ export function ClientAccessList({ invites }: Props) {
           const isActive = Boolean(invite.accepted_at)
           const cooldownMinutes = !isActive ? getRemainingCooldownMinutes(invite.invited_at) : 0
           const resendBlocked = cooldownMinutes > 0
-          const statusLabel = isActive ? 'Actieve dashboardtoegang' : 'Uitnodiging verstuurd'
+          const statusLabel = isActive ? 'Actieve dashboardtoegang' : 'Wacht op accountactivatie'
           const statusCls = isActive
             ? 'bg-green-50 text-green-700 border-green-100'
             : 'bg-amber-50 text-amber-700 border-amber-100'

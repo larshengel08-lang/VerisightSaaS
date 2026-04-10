@@ -66,7 +66,7 @@ async function sendActivationLink({
     email,
     options: {
       shouldCreateUser: true,
-      emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+      emailRedirectTo: `${origin}/auth/callback?next=/complete-account`,
       data: {
         full_name: fullName ?? undefined,
         organization_name: orgName,
@@ -218,7 +218,7 @@ export async function POST(request: Request) {
       message:
         action === 'resend'
           ? `Activatiemail opnieuw verstuurd naar ${email}.`
-          : `Activatiemail verstuurd naar ${email}. Na activatie krijgt deze gebruiker automatisch toegang tot ${organization.name}.`,
+          : `Activatiemail verstuurd naar ${email}. Na activatie kiest deze gebruiker eerst een wachtwoord en krijgt daarna automatisch toegang tot ${organization.name}.`,
     })
   } catch (error) {
     const detail = error instanceof Error ? error.message : 'Klanttoegang versturen mislukt.'
