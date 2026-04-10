@@ -43,8 +43,9 @@ const faqs = [
 
 const baseOffer = {
   title: 'ExitScan',
-  price: 'EUR 2.950',
-  note: 'Vaste trajectprijs voor inrichting, analyse en rapportage',
+  price: 'EUR 6.499',
+  discountedPrice: 'EUR 2.925',
+  note: 'Standaard trajectprijs voor inrichting, analyse en rapportage',
 }
 
 const contactExpectations = [
@@ -239,12 +240,15 @@ export default function LandingPage() {
             <div className="mx-auto max-w-3xl text-center">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Tarieven</p>
               <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">Een vaste trajectprijs voor ExitScan, met één optionele verdieping.</h2>
-              <p className="mt-4 text-lg leading-8 text-slate-600">Vaste prijs, geen abonnement en één duidelijke add-on als je scherpere segmentanalyse wilt.</p>
+              <p className="mt-4 text-lg leading-8 text-slate-600">Heldere standaardprijs, geen abonnement en tijdelijk early-adoptertarief voor de eerste organisaties.</p>
             </div>
             <div className="mt-12">
               <div className="mx-auto max-w-xl rounded-[2rem] border border-blue-700 bg-blue-700 px-8 py-10 text-center text-white shadow-xl">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-100">{baseOffer.title}</p>
-                <p className="mt-4 text-5xl font-bold">{baseOffer.price}</p>
+                <p className="mt-4 text-sm font-semibold uppercase tracking-[0.22em] text-blue-100">Standaardprijs</p>
+                <p className="mt-2 text-3xl font-bold text-blue-100/70 line-through">{baseOffer.price}</p>
+                <p className="mt-5 text-sm font-semibold uppercase tracking-[0.22em] text-white">Early adoptertarief (55% korting)</p>
+                <p className="mt-2 text-5xl font-bold">{baseOffer.discountedPrice}</p>
                 <p className="mt-3 text-sm leading-6 text-blue-100">{baseOffer.note}</p>
                 <p className="mt-5 text-sm leading-6 text-blue-50">
                   Geschikt voor organisaties die losse exitgesprekken willen omzetten naar één vergelijkbaar organisatiebeeld met dashboard en rapport.
@@ -288,7 +292,7 @@ export default function LandingPage() {
                   <p className="mt-5 text-sm font-semibold uppercase tracking-wide text-blue-900">Eerst bespreken als</p>
                   <p className="mt-3 text-sm leading-7 text-slate-700">Je uitstroom nog erg beperkt is, of als je eigenlijk een breder medewerkeronderzoek zoekt in plaats van een uitstroomanalyse.</p>
                   <a href="#kennismaking" className="mt-6 inline-flex rounded-2xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-800">Plan een verkennend gesprek</a>
-                  <p className="mt-3 text-sm text-slate-600">Prijs exclusief btw. Reactie meestal binnen 1 werkdag.</p>
+                  <p className="mt-3 text-sm text-slate-600">Prijzen exclusief btw. Early adoptertarief geldt voor de eerste trajecten die nu starten.</p>
                   <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                     <p className="text-xs font-semibold text-amber-800">Beschikbaarheid Q2 2026</p>
                     <p className="mt-1 text-xs leading-5 text-amber-700">We begeleiden maximaal 4 trajecten per kwartaal. Momenteel nog 2 plekken beschikbaar.</p>

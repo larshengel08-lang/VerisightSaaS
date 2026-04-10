@@ -11,6 +11,8 @@ interface InviteBody {
   role?: 'viewer' | 'member'
 }
 
+const RESEND_COOLDOWN_MINUTES = 10
+
 async function requireAdminContext() {
   const supabase = await createClient()
 
@@ -135,7 +137,7 @@ export async function POST(request: Request) {
 
     const { data: existingInvite } = await supabase
       .from('org_invites')
-      .select('id, accepted_at, full_name, role')
+      .select('id, accepted_at, full_name, role, invited_at')
       .eq('org_id', orgId)
       .eq('email', email)
       .maybeSingle()
@@ -147,6 +149,21 @@ export async function POST(request: Request) {
 
       if (existingInvite.accepted_at) {
         return NextResponse.json({ detail: 'Deze gebruiker heeft al actieve dashboardtoegang.' }, { status: 400 })
+      }
+
+      if (existingInvite.invited_at) {
+        const invitedAt = new Date(existingInvite.invited_at).getTime()
+        const cooldownMs = RESEND_COOLDOWN_MINUTES * 60 * 1000
+        const elapsedMs = Date.now() - invitedAt
+        if (elapsedMs < cooldownMs) {
+          const remainingMinutes = Math.max(1, Math.ceil((cooldownMs - elapsedMs) / (60 * 1000)))
+          return NextResponse.json(
+            {
+              detail: `Activatiemail is net verstuurd. Wacht nog ongeveer ${remainingMinutes} minuut${remainingMinutes === 1 ? '' : 'en'} voordat je opnieuw uitnodigt.`,
+            },
+            { status: 429 },
+          )
+        }
       }
     }
 
@@ -185,6 +202,14 @@ export async function POST(request: Request) {
     })
 
     if (authResult.error) {
+      if (/rate limit exceeded/i.test(authResult.error.message)) {
+        return NextResponse.json(
+          {
+            detail: `Activatiemail is recent al verstuurd. Wacht ongeveer ${RESEND_COOLDOWN_MINUTES} minuten en probeer het daarna opnieuw.`,
+          },
+          { status: 429 },
+        )
+      }
       return NextResponse.json({ detail: `Uitnodiging versturen mislukt: ${authResult.error.message}` }, { status: 500 })
     }
 

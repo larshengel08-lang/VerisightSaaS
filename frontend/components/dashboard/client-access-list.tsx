@@ -8,11 +8,23 @@ interface Props {
   invites: OrgInvite[]
 }
 
+const RESEND_COOLDOWN_MINUTES = 10
+
 export function ClientAccessList({ invites }: Props) {
   const router = useRouter()
   const [busyKey, setBusyKey] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  function getRemainingCooldownMinutes(invitedAt: string) {
+    const cooldownMs = RESEND_COOLDOWN_MINUTES * 60 * 1000
+    const sentAt = new Date(invitedAt).getTime()
+    const elapsedMs = Date.now() - sentAt
+    if (elapsedMs >= cooldownMs) {
+      return 0
+    }
+    return Math.max(1, Math.ceil((cooldownMs - elapsedMs) / (60 * 1000)))
+  }
 
   async function handleResend(invite: OrgInvite) {
     setBusyKey(invite.id)
@@ -60,6 +72,8 @@ export function ClientAccessList({ invites }: Props) {
       ) : (
         invites.map(invite => {
           const isActive = Boolean(invite.accepted_at)
+          const cooldownMinutes = !isActive ? getRemainingCooldownMinutes(invite.invited_at) : 0
+          const resendBlocked = cooldownMinutes > 0
           const statusLabel = isActive ? 'Actieve dashboardtoegang' : 'Uitnodiging verstuurd'
           const statusCls = isActive
             ? 'bg-green-50 text-green-700 border-green-100'
@@ -89,17 +103,22 @@ export function ClientAccessList({ invites }: Props) {
                       year: 'numeric',
                     })}
                   </p>
+                  {!isActive && resendBlocked && (
+                    <p className="mt-1 text-xs text-amber-700">
+                      Activatiemail recent verstuurd. Opnieuw uitnodigen kan over ongeveer {cooldownMinutes} minuut{cooldownMinutes === 1 ? '' : 'en'}.
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 sm:flex-shrink-0">
                   {!isActive && (
                     <button
                       type="button"
-                      disabled={busyKey === invite.id}
+                      disabled={busyKey === invite.id || resendBlocked}
                       onClick={() => handleResend(invite)}
                       className="rounded-lg border border-blue-200 px-3 py-1.5 text-sm font-semibold text-blue-700 hover:bg-blue-50 disabled:opacity-50"
                     >
-                      {busyKey === invite.id ? 'Bezig...' : 'Opnieuw uitnodigen'}
+                      {busyKey === invite.id ? 'Bezig...' : resendBlocked ? 'Even wachten' : 'Opnieuw uitnodigen'}
                     </button>
                   )}
                 </div>
