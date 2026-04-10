@@ -3,6 +3,7 @@ import Link from 'next/link'
 const legalLinks = [
   { href: '/privacy', label: 'Privacybeleid' },
   { href: '/voorwaarden', label: 'Algemene voorwaarden' },
+  { href: '/dpa', label: 'Verwerkersovereenkomst' },
   { href: '/login', label: 'Voor klanten: inloggen' },
 ]
 

@@ -115,16 +115,42 @@ export default function VoorwaardenPage() {
       </section>
 
       <section>
-        <h2>10. Looptijd en einde van de overeenkomst</h2>
+        <h2>10. Betaling en facturering</h2>
         <p>
-          De overeenkomst loopt voor de afgesproken periode of campagne. Na beindiging kan klantdata gedurende een
-          beperkte periode beschikbaar blijven voor export, waarna gegevens volgens het bewaarbeleid worden verwijderd
-          of geanonimiseerd.
+          Verisight stuurt bij aanvang van het traject een factuur voor het overeengekomen bedrag. De betalingstermijn
+          bedraagt 14 dagen na factuurdatum, tenzij schriftelijk anders afgesproken. Bij overschrijding van de
+          betalingstermijn is Verisight gerechtigd de dienst tijdelijk op te schorten totdat betaling is ontvangen.
+        </p>
+        <p>
+          Prijzen zijn exclusief btw, tenzij anders vermeld. Verisight behoudt zich het recht voor om bij uitgebreide
+          aanpassingen of meerwerk buiten de overeengekomen scope een aanvullende offerte voor te leggen.
         </p>
       </section>
 
       <section>
-        <h2>11. Wijzigingen</h2>
+        <h2>11. Klachten</h2>
+        <p>
+          Klachten over de geleverde dienst kunnen worden gemeld via{' '}
+          <a href="mailto:hallo@verisight.nl">hallo@verisight.nl</a>. Verisight streeft ernaar klachten binnen
+          10 werkdagen te beoordelen en te beantwoorden. Klachten schorten de betalingsverplichting niet op.
+        </p>
+      </section>
+
+      <section>
+        <h2>12. Looptijd en einde van de overeenkomst</h2>
+        <p>
+          De overeenkomst loopt voor de afgesproken periode of campagne. Na beindiging kan klantdata gedurende een
+          beperkte periode — maximaal 6 maanden — beschikbaar blijven voor export, waarna gegevens volgens het
+          bewaarbeleid worden verwijderd of geanonimiseerd.
+        </p>
+        <p>
+          Verisight is gerechtigd de overeenkomst met onmiddellijke ingang te beëindigen als de klant de
+          voorwaarden wezenlijk schendt en dit na schriftelijke ingebrekestelling niet binnen 10 werkdagen herstelt.
+        </p>
+      </section>
+
+      <section>
+        <h2>13. Wijzigingen</h2>
         <p>
           Verisight kan deze voorwaarden aanpassen. Als een wijziging materieel is, informeren wij actieve klanten
           vooraf. De meest recente versie blijft publiek beschikbaar op deze pagina.
@@ -132,7 +158,7 @@ export default function VoorwaardenPage() {
       </section>
 
       <section>
-        <h2>12. Toepasselijk recht</h2>
+        <h2>14. Toepasselijk recht</h2>
         <p>
           Op deze voorwaarden is Nederlands recht van toepassing. Geschillen worden voorgelegd aan de bevoegde rechter
           in Nederland, tenzij partijen eerst een andere vorm van geschiloplossing afspreken.
@@ -140,11 +166,12 @@ export default function VoorwaardenPage() {
       </section>
 
       <section>
-        <h2>13. Contact</h2>
+        <h2>15. Contact</h2>
         <p>
           Voor vragen over deze voorwaarden kun je mailen naar{' '}
           <a href="mailto:hallo@verisight.nl">hallo@verisight.nl</a>. Bekijk ook het{' '}
-          <Link href="/privacy">privacybeleid</Link>.
+          <Link href="/privacy">privacybeleid</Link> en de{' '}
+          <Link href="/dpa">verwerkersovereenkomst</Link>.
         </p>
       </section>
     </LegalPageShell>

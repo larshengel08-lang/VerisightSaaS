@@ -20,6 +20,9 @@ export default function PrivacyPage() {
           Verisight is een in Nederland gevestigde dienst voor begeleide uitstroomanalyse. Verisight helpt
           HR-teams om vertrekredenen beter te begrijpen via een begeleid ExitScan-traject met dashboard en
           rapportage.
+        </p>
+        <p>
+          Verisight is ingeschreven bij de Kamer van Koophandel onder nummer [KvK-nummer], gevestigd te [adres].
           Voor vragen over privacy kun je mailen naar{' '}
           <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>.
         </p>
@@ -129,10 +132,20 @@ export default function PrivacyPage() {
       </section>
 
       <section>
-        <h2>10. Vragen of aanvullende afspraken</h2>
+        <h2>10. Verwerkersovereenkomst (DPA)</h2>
         <p>
-          Voor vragen over dit privacybeleid, verwerkersafspraken of een verwerkersovereenkomst kun je contact opnemen
-          via <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>. Bekijk ook de{' '}
+          Als klantorganisatie treedt Verisight op als verwerker namens jouw organisatie. Op verzoek stellen wij
+          een verwerkersovereenkomst beschikbaar. Het standaardtemplate is beschikbaar op de{' '}
+          <Link href="/dpa">DPA-pagina</Link>. Voor een gepersonaliseerd en ondertekend exemplaar kun je contact
+          opnemen via <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>11. Vragen of aanvullende afspraken</h2>
+        <p>
+          Voor vragen over dit privacybeleid kun je contact opnemen via{' '}
+          <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>. Bekijk ook de{' '}
           <Link href="/voorwaarden">algemene voorwaarden</Link>.
         </p>
       </section>
