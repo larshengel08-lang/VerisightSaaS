@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Wordmark } from '@/components/marketing/wordmark'
 
 const legalLinks = [
   { href: '/privacy', label: 'Privacybeleid' },
@@ -12,7 +13,7 @@ export function PublicFooter() {
     <footer className="border-t border-slate-200 bg-white py-10">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 sm:px-6 lg:grid-cols-[1.1fr_0.9fr_0.8fr]">
         <div>
-          <p className="text-lg font-bold tracking-tight text-blue-700">Verisight</p>
+          <Wordmark size="sm" />
           <p className="mt-3 max-w-sm text-sm leading-7 text-slate-600">
             Begeleide uitstroomanalyse voor HR-teams die vertrekredenen beter willen begrijpen en vertaalbaar
             willen maken naar concrete acties.

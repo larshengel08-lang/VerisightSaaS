@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { ContactForm } from '@/components/marketing/contact-form'
 import { PreviewSlider } from '@/components/marketing/preview-slider'
+import { Wordmark } from '@/components/marketing/wordmark'
 
 const navLinks = [
   { href: '#vergelijking', label: 'Waarom Verisight' },
@@ -16,15 +17,14 @@ const heroHighlights = [
   ['Output', 'Direct bruikbaar voor HR en MT', 'Je krijgt een dashboard, rapport in gewone taal en een toelichting waarmee je sneller kunt prioriteren.', 'amber'],
 ] as const
 
-
 const comparisonCards = [
-  ['Losse exitgesprekken', 'Geven context per persoon — maar zolang ze niet vergelijkbaar zijn over afdelingen en perioden, blijft het organisatiepatroon onzichtbaar. ExitScan voegt dat toe aan wat je al doet.', 'Verisight bundelt losse signalen tot patronen en prioriteiten.'],
+  ['Losse exitgesprekken', 'Geven context per persoon, maar zolang ze niet vergelijkbaar zijn over afdelingen en perioden, blijft het organisatiepatroon onzichtbaar. ExitScan voegt dat toe aan wat je al doet.', 'Verisight bundelt losse signalen tot patronen en prioriteiten.'],
   ['Standaard surveytool', 'Geeft software, maar laat inrichting, opvolging en duiding vaak bij HR liggen.', 'Verisight combineert tooling met begeleiding en rapportage.'],
   ['Consultancytraject', 'Kan waardevol zijn, maar voelt vaak zwaarder en duurder dan nodig voor structureel uitstroominzicht.', 'Verisight is compacter, sneller te starten en duidelijker geprijsd.'],
 ] as const
 
 const outcomeCards = [
-  ['Sneller prioriteiten stellen voor MT-gesprek', 'Je krijgt een duidelijker beeld van welke thema\'s eerst aandacht vragen — als stevige basis voor de agenda met leidinggevenden en management.'],
+  ['Sneller prioriteiten stellen voor MT-gesprek', "Je krijgt een duidelijker beeld van welke thema's eerst aandacht vragen, als stevige basis voor de agenda met leidinggevenden en management."],
   ['Gerichtere verbeteracties', 'Je ziet of vertrek vooral wijst op leiderschap, groei, cultuur, onboarding of werkbelasting.'],
   ['Minder discussie, meer gedeelde taal', 'Rapportage in gewone taal helpt HR, leidinggevenden en management sneller op een lijn.'],
   ['Geen extra toolbeheer voor HR', 'Verisight begeleidt de uitvoering, zodat jouw team niet ook nog een surveyproces hoeft te beheren.'],
@@ -39,7 +39,6 @@ const faqs = [
   ['Wat als de respons lager uitvalt dan gehoopt?', 'Dan laten we dat expliciet terugkomen in de duiding, zodat de output niet stelliger wordt dan de data toelaat.'],
   ['Is Verisight een tool of een dienst?', 'Het is een begeleide dienst met software. Je krijgt dashboard en rapportage, zonder self-service implementatie.'],
   ['Zijn antwoorden herleidbaar naar individuen?', 'De output is bedoeld voor groepsinzichten. Privacy, minimum aantallen en zorgvuldige interpretatie worden expliciet meegenomen.'],
-  ['Hebben jullie al klanten?', 'We zijn bewust selectief in met wie we starten — dat betekent dat je directe aandacht krijgt van de oprichter, niet van een accountmanager. Onze eerste trajecten lopen momenteel. Als je wilt weten wat die opleveren, bespreken we dat in een kennismakingsgesprek.'],
 ] as const
 
 const pricingTiers = [
@@ -76,6 +75,7 @@ function AccentTile({ tone }: { tone: 'blue' | 'red' | 'amber' | 'emerald' }) {
     </div>
   )
 }
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -88,10 +88,7 @@ export default function LandingPage() {
 
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-6">
-          <Link href="/" className="flex flex-col leading-none">
-            <span className="text-lg font-bold tracking-tight text-blue-700">Verisight</span>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">People · Patterns · Priorities</span>
-          </Link>
+          <Wordmark size="md" />
           <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex">
             {navLinks.map((link) => (
               <a key={link.href} href={link.href} className="transition-colors hover:text-blue-700">
@@ -154,7 +151,7 @@ export default function LandingPage() {
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Voorbeeld van de managementweergave</p>
-                  <p className="mt-1 text-sm text-slate-600">Geen live klantdata — deze voorbeelden laten zien hoe Verisight signalen, hypotheses en focusvragen samenvat.</p>
+                  <p className="mt-1 text-sm text-slate-600">Geen live klantdata - deze voorbeelden laten zien hoe Verisight signalen, hypotheses en focusvragen samenvat.</p>
                 </div>
                 <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">ExitScan</span>
               </div>
@@ -169,7 +166,7 @@ export default function LandingPage() {
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Waarom organisaties starten</p>
             <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">Losse exitgesprekken geven context. Geen patroon.</h2>
-            <p className="mt-4 text-lg leading-8 text-slate-600">Pas als je uitstroom vergelijkbaar maakt, zie je waar het patroon zit — voordat de kosten doorlopen.</p>
+            <p className="mt-4 text-lg leading-8 text-slate-600">Pas als je uitstroom vergelijkbaar maakt, zie je waar het patroon zit - voordat de kosten doorlopen.</p>
           </div>
           <div className="mt-12 grid gap-5 md:grid-cols-3">
             {[
@@ -186,7 +183,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-8 rounded-3xl border border-blue-200 bg-blue-50 p-8">
             <p className="text-sm font-semibold uppercase tracking-wide text-blue-900">Waarom de businesscase vaak snel klopt</p>
-            <p className="mt-3 max-w-4xl text-base leading-8 text-blue-950">Stel: 300 medewerkers, 10% verloop = 30 exits per jaar. Bij een gemiddelde vervangingskost van €15.000 per FTE — werving, inwerken en productiviteitsverlies — staat er €450.000 op het spel. Twee vermijdbare exits per jaar voorkomen dekt het trajectbedrag ruimschoots. Dat is een aanname die HR zelf met MT kan toetsen.</p>
+            <p className="mt-3 max-w-4xl text-base leading-8 text-blue-950">Stel: 300 medewerkers, 10% verloop = 30 exits per jaar. Bij een gemiddelde vervangingskost van EUR 15.000 per FTE - werving, inwerken en productiviteitsverlies - staat er EUR 450.000 op het spel. Twee vermijdbare exits per jaar voorkomen dekt het trajectbedrag ruimschoots. Dat is een aanname die HR zelf met MT kan toetsen.</p>
             <p className="mt-3 max-w-4xl text-sm leading-7 text-blue-900">Verisight verkoopt geen garantie op minder verloop, maar wel een snellere en stevigere basis om gerichter te beslissen waar je als eerste moet ingrijpen.</p>
           </div>
         </section>
@@ -216,7 +213,7 @@ export default function LandingPage() {
             <div className="mx-auto max-w-3xl text-center">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-300">Wat HR-teams ermee doen</p>
               <h2 className="mt-3 text-3xl font-bold md:text-4xl">Geen losse tooloutput, maar een duidelijker basis voor actie en besluitvorming.</h2>
-              <p className="mt-4 text-lg leading-8 text-slate-300">Verisight levert inzicht en duiding waarmee uitstroom sneller bespreekbaar en prioriteerbaar wordt voor HR én MT.</p>
+              <p className="mt-4 text-lg leading-8 text-slate-300">Verisight levert inzicht en duiding waarmee uitstroom sneller bespreekbaar en prioriteerbaar wordt voor HR en MT.</p>
             </div>
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {outcomeCards.map(([title, description]) => (
@@ -258,7 +255,7 @@ export default function LandingPage() {
                       'Managementrapport met focusvragen en nuance',
                       'Zelfstandig leesbare output voor HR en MT',
                       'Publieke privacy- en voorwaardenpagina voor interne afstemming',
-                      'Binnen enkele weken eerste inzichten — geen implementatietraject nodig',
+                      'Binnen enkele weken eerste inzichten - geen implementatietraject nodig',
                       'Methodische basis vanuit arbeids- en organisatiepsychologie',
                     ].map((item) => (
                       <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">{item}</div>
@@ -302,7 +299,7 @@ export default function LandingPage() {
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-300">Kennismaking</p>
               <h2 className="mt-3 text-3xl font-bold md:text-4xl">Binnen een kort gesprek weet je of ExitScan nu voor jullie zinvol is.</h2>
-              <p className="mt-4 text-lg leading-8 text-slate-300">Deel kort je organisatieomvang en wat je nu vooral wilt begrijpen van uitstroom. Daarna weet je snel of dit traject past — en of er nog een plek beschikbaar is dit kwartaal.</p>
+              <p className="mt-4 text-lg leading-8 text-slate-300">Deel kort je organisatieomvang en wat je nu vooral wilt begrijpen van uitstroom. Daarna weet je snel of dit traject past - en of er nog een plek beschikbaar is dit kwartaal.</p>
               <div className="mt-8 space-y-4">
                 {contactExpectations.map((item) => (
                   <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">{item}</div>

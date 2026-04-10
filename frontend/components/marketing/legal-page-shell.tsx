@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { PublicFooter } from '@/components/marketing/public-footer'
+import { Wordmark } from '@/components/marketing/wordmark'
 
 interface LegalPageShellProps {
   title: string
@@ -19,9 +20,7 @@ export function LegalPageShell({
     <div className="min-h-screen bg-white text-slate-900">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-6">
-          <Link href="/" className="text-lg font-bold tracking-tight text-blue-700">
-            Verisight
-          </Link>
+          <Wordmark size="sm" />
           <div className="flex items-center gap-4 text-sm font-medium text-slate-600">
             <Link href="/" className="transition-colors hover:text-slate-950">
               Home
