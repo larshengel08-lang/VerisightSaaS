@@ -284,6 +284,43 @@ create policy "org_members_can_select_responses"
   );
 
 -- ============================================================
+-- PROFILES: is_verisight_admin per gebruiker
+-- ============================================================
+
+create table if not exists public.profiles (
+  id                 uuid primary key references auth.users(id) on delete cascade,
+  is_verisight_admin boolean not null default false,
+  created_at         timestamptz default now()
+);
+
+alter table public.profiles enable row level security;
+
+-- Gebruikers mogen alleen hun eigen profiel lezen (niet schrijven via client)
+drop policy if exists "users_can_read_own_profile" on public.profiles;
+create policy "users_can_read_own_profile"
+  on public.profiles for select
+  using (id = auth.uid());
+
+-- Auto-aanmaken bij signup
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+as $$
+begin
+  insert into public.profiles (id)
+  values (new.id)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_user_created on auth.users;
+create trigger on_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- ============================================================
 -- TRIGGER: na aanmaken org → eigenaar toevoegen als owner
 -- ============================================================
 

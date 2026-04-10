@@ -9,14 +9,14 @@ export default async function DashboardHomePage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // Rol bepalen voor conditionele UI
-  const { data: memberships } = await supabase
-    .from('org_members')
-    .select('role')
-    .eq('user_id', user.id)
+  // isAdmin = alleen accounts met is_verisight_admin = true in profiles
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_verisight_admin')
+    .eq('id', user.id)
+    .single()
 
-  const isAdmin = !memberships?.length
-    || memberships.some(m => m.role === 'owner' || m.role === 'member')
+  const isAdmin = profile?.is_verisight_admin === true
 
   const { data: stats } = await supabase
     .from('campaign_stats')

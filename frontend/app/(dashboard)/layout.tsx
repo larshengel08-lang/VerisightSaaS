@@ -14,15 +14,15 @@ export default async function DashboardLayout({
 
   if (!user) redirect('/login')
 
-  // Bepaal of deze gebruiker beheerrechten heeft (owner/member)
-  // of alleen leesrechten (viewer = HR-klant)
-  const { data: memberships } = await supabase
-    .from('org_members')
-    .select('role')
-    .eq('user_id', user.id)
+  // isAdmin = alleen accounts met is_verisight_admin = true in profiles
+  // HR-klanten hebben altijd false, ook als ze owner/member zijn van een org
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_verisight_admin')
+    .eq('id', user.id)
+    .single()
 
-  const isAdmin = !memberships?.length
-    || memberships.some(m => m.role === 'owner' || m.role === 'member')
+  const isAdmin = profile?.is_verisight_admin === true
 
   return (
     <div className="min-h-screen flex flex-col">
