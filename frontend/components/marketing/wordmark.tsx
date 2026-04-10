@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface WordmarkProps {
   href?: string
@@ -13,25 +14,21 @@ export function Wordmark({
   showTagline = true,
   className = '',
 }: WordmarkProps) {
-  const wordClass =
+  const imageSize =
     size === 'sm'
-      ? 'text-[1.5rem] sm:text-[1.65rem]'
-      : 'text-[1.75rem] sm:text-[2rem]'
-  const taglineClass =
-    size === 'sm'
-      ? 'text-[0.58rem] tracking-[0.22em]'
-      : 'text-[0.62rem] tracking-[0.24em]'
+      ? { width: 260, height: 60 }
+      : { width: 320, height: 74 }
 
   return (
     <Link href={href} className={`inline-flex flex-col items-start leading-none ${className}`}>
-      <span className={`font-bold tracking-tight text-blue-700 ${wordClass}`}>
-        Verisight
-      </span>
-      {showTagline && (
-        <span className={`mt-1 font-semibold uppercase text-slate-400 ${taglineClass}`}>
-          People, patterns, priorities
-        </span>
-      )}
+      <Image
+        src={showTagline ? '/verisight-wordmark.svg' : '/verisight-logo-text.svg'}
+        alt="Verisight"
+        width={imageSize.width}
+        height={imageSize.height}
+        className={size === 'sm' ? 'h-auto w-[220px] sm:w-[240px]' : 'h-auto w-[250px] sm:w-[290px]'}
+        priority
+      />
     </Link>
   )
 }

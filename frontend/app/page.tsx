@@ -110,7 +110,7 @@ export default function LandingPage() {
               Inloggen
             </Link>
             <a href="#kennismaking" className="inline-flex rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-800">
-              Plan een verkennend gesprek
+              Plan mijn gesprek
             </a>
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function LandingPage() {
               </div>
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <a href="#kennismaking" className="inline-flex rounded-2xl bg-blue-700 px-8 py-4 text-base font-semibold text-white transition-colors hover:bg-blue-800">
-                  Plan een verkennend gesprek
+                  Plan mijn gesprek
                 </a>
                 <a href="#vergelijking" className="inline-flex rounded-2xl border border-slate-300 px-8 py-4 text-base font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950">
                   Waarom niet gewoon exitgesprekken?
@@ -291,7 +291,7 @@ export default function LandingPage() {
                   <p className="mt-3 text-sm leading-7 text-slate-700">Organisaties met doorlopende uitstroom die sneller van losse signalen naar een gedeeld organisatiebeeld willen.</p>
                   <p className="mt-5 text-sm font-semibold uppercase tracking-wide text-blue-900">Eerst bespreken als</p>
                   <p className="mt-3 text-sm leading-7 text-slate-700">Je uitstroom nog erg beperkt is, of als je eigenlijk een breder medewerkeronderzoek zoekt in plaats van een uitstroomanalyse.</p>
-                  <a href="#kennismaking" className="mt-6 inline-flex rounded-2xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-800">Plan een verkennend gesprek</a>
+                  <a href="#kennismaking" className="mt-6 inline-flex rounded-2xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-800">Plan mijn gesprek</a>
                   <p className="mt-3 text-sm text-slate-600">Prijzen exclusief btw. Early adoptertarief geldt voor de eerste trajecten die nu starten.</p>
                   <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                     <p className="text-xs font-semibold text-amber-800">Beschikbaarheid Q2 2026</p>
@@ -328,10 +328,6 @@ export default function LandingPage() {
                 {contactExpectations.map((item) => (
                   <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">{item}</div>
                 ))}
-              </div>
-              <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-                <p className="text-sm font-semibold text-emerald-200">Publieke informatie direct beschikbaar</p>
-                <p className="mt-2 text-sm leading-6 text-emerald-100">Bekijk vooraf ook het <Link href="/privacy" className="underline">privacybeleid</Link> en de <Link href="/voorwaarden" className="underline">algemene voorwaarden</Link>.</p>
               </div>
             </div>
             <div><ContactForm /></div>

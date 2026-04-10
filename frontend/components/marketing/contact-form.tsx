@@ -55,7 +55,7 @@ export function ContactForm() {
       const payload = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        setErrorMessage(payload.detail ?? 'Je aanvraag kon niet worden verzonden. Probeer het opnieuw.')
+        setErrorMessage(payload.detail ?? 'Je aanvraag kon niet worden verzonden. Probeer het later opnieuw of mail naar hallo@verisight.nl.')
         return
       }
 
@@ -186,7 +186,7 @@ export function ContactForm() {
           disabled={loading}
           className="inline-flex items-center justify-center rounded-2xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {loading ? 'Aanvraag versturen...' : 'Plan mijn verkennend gesprek'}
+          {loading ? 'Plan mijn gesprek...' : 'Plan mijn gesprek'}
         </button>
       </div>
     </form>
