@@ -16,10 +16,6 @@ const heroHighlights = [
   ['Output', 'Direct bruikbaar voor HR en MT', 'Je krijgt een dashboard, rapport in gewone taal en een toelichting waarmee je sneller kunt prioriteren.', 'amber'],
 ] as const
 
-const trustItems = [
-  ['Binnen enkele weken eerste inzichten', 'Je hoeft geen lang implementatietraject of interne toolselectie te doorlopen.'],
-  ['Methodische basis', 'Opgezet vanuit arbeids- en organisatiepsychologie om uitstroom vergelijkbaar en bruikbaar te maken.'],
-] as const
 
 const comparisonCards = [
   ['Losse exitgesprekken', 'Geven context per persoon — maar zolang ze niet vergelijkbaar zijn over afdelingen en perioden, blijft het organisatiepatroon onzichtbaar. ExitScan voegt dat toe aan wat je al doet.', 'Verisight bundelt losse signalen tot patronen en prioriteiten.'],
@@ -28,7 +24,7 @@ const comparisonCards = [
 ] as const
 
 const outcomeCards = [
-  ['Sneller zien waar HR moet beginnen', 'Je krijgt een duidelijker beeld van welke thema\'s eerst aandacht vragen.'],
+  ['Sneller prioriteiten stellen voor MT-gesprek', 'Je krijgt een duidelijker beeld van welke thema\'s eerst aandacht vragen — als stevige basis voor de agenda met leidinggevenden en management.'],
   ['Gerichtere verbeteracties', 'Je ziet of vertrek vooral wijst op leiderschap, groei, cultuur, onboarding of werkbelasting.'],
   ['Minder discussie, meer gedeelde taal', 'Rapportage in gewone taal helpt HR, leidinggevenden en management sneller op een lijn.'],
   ['Geen extra toolbeheer voor HR', 'Verisight begeleidt de uitvoering, zodat jouw team niet ook nog een surveyproces hoeft te beheren.'],
@@ -105,7 +101,7 @@ export default function LandingPage() {
           </nav>
           <div className="flex items-center gap-4">
             <Link href="/login" className="hidden text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 md:inline-flex">
-              Voor klanten: inloggen
+              Inloggen
             </Link>
             <a href="#kennismaking" className="inline-flex rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-800">
               Plan een verkennend gesprek
@@ -195,22 +191,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="border-y border-slate-200 bg-slate-50 py-6">
-          <div className="mx-auto grid max-w-6xl gap-4 px-5 sm:grid-cols-2 sm:px-6">
-            {trustItems.map(([title, description]) => (
-              <div key={title} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50">
-                  <svg className="h-5 w-5 text-emerald-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fillRule="evenodd" d="M16.704 5.296a1 1 0 0 1 0 1.414l-7.5 7.5a1 1 0 0 1-1.414 0l-3.5-3.5a1 1 0 1 1 1.414-1.414L8.5 12.086l6.79-6.79a1 1 0 0 1 1.414 0Z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <p className="mt-4 text-sm font-semibold text-slate-950">{title}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <section className="bg-white py-16 md:py-20" id="vergelijking">
           <div className="mx-auto max-w-6xl px-5 sm:px-6">
             <div className="mx-auto max-w-3xl text-center">
@@ -220,10 +200,10 @@ export default function LandingPage() {
             </div>
             <div className="mt-12 grid gap-5 lg:grid-cols-3">
               {comparisonCards.map(([title, description, outcome], index) => (
-                <div key={title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div key={title} className="flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                   <AccentTile tone={index === 0 ? 'red' : index === 1 ? 'amber' : 'blue'} />
                   <h3 className="mt-4 text-lg font-semibold text-slate-950">{title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+                  <p className="mt-3 flex-1 text-sm leading-7 text-slate-600">{description}</p>
                   <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-950">{outcome}</div>
                 </div>
               ))}
@@ -278,6 +258,8 @@ export default function LandingPage() {
                       'Managementrapport met focusvragen en nuance',
                       'Zelfstandig leesbare output voor HR en MT',
                       'Publieke privacy- en voorwaardenpagina voor interne afstemming',
+                      'Binnen enkele weken eerste inzichten — geen implementatietraject nodig',
+                      'Methodische basis vanuit arbeids- en organisatiepsychologie',
                     ].map((item) => (
                       <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">{item}</div>
                     ))}
