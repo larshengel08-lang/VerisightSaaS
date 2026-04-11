@@ -482,7 +482,10 @@ async def create_contact_request(
     _cleanup_contact_rate_limits()
     client_ip = _get_client_ip(request)
     if _is_contact_rate_limited(client_ip):
-        raise HTTPException(status_code=429, detail="Te veel aanvragen in korte tijd. Probeer het over 15 minuten opnieuw.")
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Te veel aanvragen in korte tijd. Probeer het over 15 minuten opnieuw."},
+        )
 
     sent = send_contact_request(
         name=body.name,
@@ -493,7 +496,10 @@ async def create_contact_request(
     )
 
     if not sent:
-        raise HTTPException(status_code=503, detail="Je aanvraag kon niet worden verzonden. Probeer het later opnieuw of mail naar hallo@verisight.nl.")
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "Je aanvraag kon niet worden verzonden. Probeer het later opnieuw of mail naar hallo@verisight.nl."},
+        )
 
     return ContactRequestResponse(message="Bedankt. We reageren meestal binnen 1 werkdag.")
 
@@ -1020,24 +1026,16 @@ async def send_invites(
             sent += 1
         else:
             failed += 1
-            sentry_sdk.capture_message(
-                "Survey-uitnodiging kon niet worden verzonden",
-                level="warning",
-                extras={
-                    "campaign_id": campaign_id,
-                    "flow": "send_invites",
-                },
-            )
 
     if sent > 0:
         db.commit()
 
     if failed > 0 and sent == 0:
-        # Alle mails mislukt — escaleer naar error
-        sentry_sdk.capture_message(
-            f"Alle {failed} uitnodigingen mislukt voor campaign {campaign_id}",
-            level="error",
-            extras={"campaign_id": campaign_id, "flow": "send_invites_total_failure"},
+        import logging
+        logging.getLogger(__name__).warning(
+            "Alle %s uitnodigingen mislukt voor campaign %s",
+            failed,
+            campaign_id,
         )
 
     return InviteSendResult(sent=sent, failed=failed, skipped=skipped)
@@ -1105,9 +1103,9 @@ async def campaign_stats(
     pattern_report = detect_patterns(pattern_input) if pattern_input else None
 
     return {
-        "campaign_id":              campaign.id,
+        "campaign_id":              str(campaign.id),
         "campaign_name":            campaign.name,
-        "organization_id":          campaign.organization_id,
+        "organization_id":          str(campaign.organization_id),
         "scan_type":                campaign.scan_type,
         "is_active":                campaign.is_active,
         "created_at":               campaign.created_at,
