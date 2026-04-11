@@ -75,7 +75,7 @@ export function ContactForm() {
         return
       }
 
-      setSuccessMessage(payload.message ?? 'Bedankt. We reageren meestal binnen 1 werkdag.')
+      setSuccessMessage(payload.message ?? 'Verstuurd')
       setForm(initialState)
     } catch {
       setErrorMessage('Je aanvraag kon niet worden verzonden. Probeer het opnieuw of mail naar hallo@verisight.nl.')

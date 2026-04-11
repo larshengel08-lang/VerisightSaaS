@@ -47,7 +47,7 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json(
-    { message: payload.message ?? 'Bedankt. We reageren meestal binnen 1 werkdag.' },
+    { message: payload.message ?? 'Verstuurd' },
     { status: 200 },
   )
 }

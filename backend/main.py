@@ -480,7 +480,7 @@ async def create_contact_request(
     db: Session = Depends(get_db),
 ) -> ContactRequestResponse:
     if body.website:
-        return ContactRequestResponse(message="Bedankt. We nemen snel contact op.")
+        return ContactRequestResponse(message="Verstuurd")
 
     _cleanup_contact_rate_limits()
     client_ip = _get_client_ip(request)
@@ -522,7 +522,7 @@ async def create_contact_request(
             body.work_email,
         )
 
-    return ContactRequestResponse(message="Bedankt. We reageren meestal binnen 1 werkdag.")
+    return ContactRequestResponse(message="Verstuurd")
 
 
 @app.get("/survey/complete", response_class=HTMLResponse)
