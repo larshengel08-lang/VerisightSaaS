@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import csv
 import io
+import logging
 import os
 from contextlib import asynccontextmanager
 
@@ -50,7 +51,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
 from backend.email import send_contact_request, send_hr_notification, send_survey_invite
-from backend.models import Campaign, Organization, Respondent, SurveyResponse
+from backend.models import Campaign, ContactRequest, Organization, Respondent, SurveyResponse
 from backend.schemas import (
     CampaignCreate,
     CampaignRead,
@@ -102,6 +103,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 
 _IS_SQLITE = DATABASE_URL.startswith("sqlite")
+logger = logging.getLogger(__name__)
 
 
 def _resolve_survey_modules(enabled_modules: list[str] | None) -> list[str]:
@@ -475,6 +477,7 @@ async def health() -> dict[str, str]:
 async def create_contact_request(
     body: ContactRequestCreate,
     request: Request,
+    db: Session = Depends(get_db),
 ) -> ContactRequestResponse:
     if body.website:
         return ContactRequestResponse(message="Bedankt. We nemen snel contact op.")
@@ -487,6 +490,19 @@ async def create_contact_request(
             content={"detail": "Te veel aanvragen in korte tijd. Probeer het over 15 minuten opnieuw."},
         )
 
+    lead = ContactRequest(
+        name=body.name,
+        work_email=body.work_email,
+        organization=body.organization,
+        employee_count=body.employee_count,
+        current_question=body.current_question,
+        website=body.website,
+        notification_sent=False,
+    )
+    db.add(lead)
+    db.commit()
+    db.refresh(lead)
+
     sent = send_contact_request(
         name=body.name,
         work_email=body.work_email,
@@ -495,10 +511,15 @@ async def create_contact_request(
         current_question=body.current_question,
     )
 
-    if not sent:
-        return JSONResponse(
-            status_code=503,
-            content={"detail": "Je aanvraag kon niet worden verzonden. Probeer het later opnieuw of mail naar hallo@verisight.nl."},
+    if sent:
+        lead.notification_sent = True
+        db.add(lead)
+        db.commit()
+    else:
+        logger.warning(
+            "Contactaanvraag opgeslagen zonder e-mailnotificatie voor %s (%s).",
+            body.organization,
+            body.work_email,
         )
 
     return ContactRequestResponse(message="Bedankt. We reageren meestal binnen 1 werkdag.")

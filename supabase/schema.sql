@@ -146,6 +146,18 @@ create table if not exists public.survey_responses (
   scoring_version           text not null default 'v1.0'
 );
 
+create table if not exists public.contact_requests (
+  id                uuid primary key default gen_random_uuid(),
+  name              text not null,
+  work_email        text not null,
+  organization      text not null,
+  employee_count    text not null,
+  current_question  text not null,
+  website           text,
+  notification_sent boolean not null default false,
+  created_at        timestamptz default now()
+);
+
 -- ============================================================
 -- INDEXES
 -- ============================================================
@@ -158,6 +170,7 @@ create index if not exists idx_org_members_user     on public.org_members(user_i
 create index if not exists idx_org_members_org      on public.org_members(org_id);
 create index if not exists idx_org_invites_org      on public.org_invites(org_id);
 create index if not exists idx_org_invites_email    on public.org_invites(email);
+create index if not exists idx_contact_requests_created_at on public.contact_requests(created_at desc);
 
 -- ============================================================
 -- ROW LEVEL SECURITY

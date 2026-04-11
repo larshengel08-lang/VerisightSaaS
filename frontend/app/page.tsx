@@ -1,9 +1,9 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { ContactForm } from '@/components/marketing/contact-form'
 import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { Wordmark } from '@/components/marketing/wordmark'
+import { ExpandablePreview } from '@/components/marketing/expandable-preview'
 
 const navLinks = [
   { href: '#vergelijking', label: 'Waarom Verisight' },
@@ -303,15 +303,11 @@ export default function LandingPage() {
                       <p className="mt-2 text-sm leading-6 text-slate-600">
                         Met Segment deep dive zie je extra uitsplitsingen naar afdeling, diensttijd en functieniveau in dezelfde rapportstijl als hieronder.
                       </p>
-                      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                        <Image
-                          src="/segment-deep-dive-preview.png"
-                          alt="Voorbeeld van segmentatie in het ExitScan-rapport"
-                          width={1000}
-                          height={1200}
-                          className="h-auto w-full"
-                        />
-                      </div>
+                      <ExpandablePreview
+                        src="/segment-deep-dive-preview.png"
+                        alt="Voorbeeld van segmentatie in het ExitScan-rapport"
+                        className="mt-4"
+                      />
                     </div>
                   </div>
                 ))}
@@ -343,10 +339,6 @@ export default function LandingPage() {
                   <p className="mt-3 text-sm leading-7 text-slate-700">Je uitstroom nog erg beperkt is, of als je eigenlijk een breder medewerkeronderzoek zoekt in plaats van een uitstroomanalyse.</p>
                   <a href="#kennismaking" className="mt-6 inline-flex rounded-2xl bg-blue-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-800">Plan mijn gesprek</a>
                   <p className="mt-3 text-sm text-slate-600">Prijzen exclusief btw. Early adoptertarief geldt voor de eerste trajecten die nu starten.</p>
-                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                    <p className="text-xs font-semibold text-amber-800">Beschikbaarheid Q2 2026</p>
-                    <p className="mt-1 text-xs leading-5 text-amber-700">We begeleiden maximaal 4 trajecten per kwartaal. Momenteel nog 2 plekken beschikbaar.</p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -373,7 +365,7 @@ export default function LandingPage() {
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-300">Kennismaking</p>
               <h2 className="mt-3 text-3xl font-bold md:text-4xl">Binnen een kort gesprek weet je of ExitScan nu voor jullie zinvol is.</h2>
-              <p className="mt-4 text-lg leading-8 text-slate-300">Deel kort je organisatieomvang en wat je nu vooral wilt begrijpen van uitstroom. Daarna weet je snel of dit traject past - en of er nog een plek beschikbaar is dit kwartaal.</p>
+              <p className="mt-4 text-lg leading-8 text-slate-300">Deel kort je organisatieomvang en wat je nu vooral wilt begrijpen van uitstroom. Daarna weet je snel of dit traject past en welke aanpak logisch is.</p>
               <div className="mt-8 space-y-4">
                 {contactExpectations.map((item) => (
                   <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">{item}</div>

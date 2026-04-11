@@ -198,3 +198,24 @@ class SurveyResponse(Base):
 
     def __repr__(self) -> str:
         return f"<SurveyResponse risk={self.risk_score} band={self.risk_band}>"
+
+
+# ---------------------------------------------------------------------------
+# ContactRequest — website lead capture
+# ---------------------------------------------------------------------------
+
+class ContactRequest(Base):
+    __tablename__ = "contact_requests"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    work_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    organization: Mapped[str] = mapped_column(String(255), nullable=False)
+    employee_count: Mapped[str] = mapped_column(String(80), nullable=False)
+    current_question: Mapped[str] = mapped_column(Text, nullable=False)
+    website: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    notification_sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+    def __repr__(self) -> str:
+        return f"<ContactRequest {self.work_email!r} org={self.organization!r}>"
