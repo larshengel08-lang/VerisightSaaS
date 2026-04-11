@@ -510,7 +510,11 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             <p className="text-sm font-semibold text-green-800 mb-1">
               {result.tokens.length} respondenten aangemaakt
             </p>
-            {result.emailsSent > 0 ? (
+            {mode === 'bulk' ? (
+              <p className="text-sm text-green-700">
+                Anonieme survey-links zijn gegenereerd. Deel deze links rechtstreeks met de klant of intern team.
+              </p>
+            ) : result.emailsSent > 0 ? (
               <p className="text-sm text-green-700">
                 {result.emailsSent} uitnodigingsmail{result.emailsSent !== 1 ? 's' : ''} verstuurd
               </p>

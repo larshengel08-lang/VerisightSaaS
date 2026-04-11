@@ -18,6 +18,9 @@ interface Props {
 export default async function CampaignPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   // Campaign stats
   const { data: statsRow } = await supabase
@@ -28,6 +31,29 @@ export default async function CampaignPage({ params }: Props) {
 
   if (!statsRow) notFound()
   const stats = statsRow as CampaignStats
+
+  const [{ data: profile }, { data: membership }] = await Promise.all([
+    user
+      ? supabase
+          .from('profiles')
+          .select('is_verisight_admin')
+          .eq('id', user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    user
+      ? supabase
+          .from('org_members')
+          .select('role')
+          .eq('org_id', stats.organization_id)
+          .eq('user_id', user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+
+  const canManageCampaign =
+    profile?.is_verisight_admin === true ||
+    membership?.role === 'owner' ||
+    membership?.role === 'member'
 
   // Alle responses voor patroonanalyse
   const { data: responsesRaw } = await supabase
@@ -105,6 +131,7 @@ export default async function CampaignPage({ params }: Props) {
               campaignId={id}
               isActive={stats.is_active}
               pendingCount={pendingCount}
+              canManageCampaign={canManageCampaign}
             />
           </div>
         </div>
@@ -129,19 +156,21 @@ export default async function CampaignPage({ params }: Props) {
       </div>
 
       {/* Campaign health indicator */}
-      <CampaignHealthIndicator
-        totalInvited={stats.total_invited}
-        totalCompleted={stats.total_completed}
-        completionRate={completionRate}
-        invitesNotSent={invitesNotSent}
-        incompleteScores={incompleteScores}
-        isActive={stats.is_active}
-        hasEnoughData={hasEnoughData}
-        hasMinDisplay={hasMinDisplay}
-      />
+      {canManageCampaign && (
+        <CampaignHealthIndicator
+          totalInvited={stats.total_invited}
+          totalCompleted={stats.total_completed}
+          completionRate={completionRate}
+          invitesNotSent={invitesNotSent}
+          incompleteScores={incompleteScores}
+          isActive={stats.is_active}
+          hasEnoughData={hasEnoughData}
+          hasMinDisplay={hasMinDisplay}
+        />
+      )}
 
       {/* Pre-flight checklist (alleen zichtbaar als campaign nog actief is) */}
-      {stats.is_active && (
+      {canManageCampaign && stats.is_active && (
         <PreflightChecklist
           campaignId={id}
           totalInvited={stats.total_invited}
@@ -226,7 +255,7 @@ export default async function CampaignPage({ params }: Props) {
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">Respondenten</h2>
-          {respondents.length > 0 && (
+          {canManageCampaign && respondents.length > 0 && (
             <Link
               href="/beheer"
               className="text-xs text-blue-600 hover:underline"
@@ -255,6 +284,7 @@ export default async function CampaignPage({ params }: Props) {
             responses={responses}
             scanType={stats.scan_type}
             hasMinDisplay={hasMinDisplay}
+            canManageCampaign={canManageCampaign}
           />
         )}
       </div>

@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Routes die altijd publiek toegankelijk zijn (geen login vereist)
-const PUBLIC_ROUTES = ['/', '/signup', '/login', '/auth', '/privacy', '/voorwaarden', '/survey']
+const PUBLIC_ROUTES = ['/', '/signup', '/login', '/auth', '/privacy', '/voorwaarden', '/dpa', '/survey']
 
 // Eenvoudige in-memory rate limiter voor auth-routes
 // (per deployment instance — voldoende voor MVP, vervang door Redis bij schalen)
@@ -109,6 +109,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|llms.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

@@ -43,9 +43,35 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Verisight',
+    url: 'https://www.verisight.nl',
+    logo: 'https://www.verisight.nl/verisight-wordmark.svg',
+    description:
+      'Verisight helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrekredenen te begrijpen via een begeleide ExitScan met dashboard en rapportage.',
+    areaServed: {
+      '@type': 'Country',
+      name: 'Nederland',
+    },
+    inLanguage: 'nl-NL',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'sales',
+      email: 'hallo@verisight.nl',
+      availableLanguage: 'Dutch',
+      url: 'https://www.verisight.nl/#kennismaking',
+    },
+  }
+
   return (
     <html lang="nl">
       <body className={`${inter.className} bg-white antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
         {children}
       </body>
     </html>

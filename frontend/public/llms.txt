@@ -1,0 +1,20 @@
+# Verisight
+
+> Verisight helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om
+> terugkerende vertrekpatronen zichtbaar te maken via een begeleide ExitScan.
+
+## Product
+
+- [Homepage](https://www.verisight.nl): begeleide ExitScan met dashboard en rapport
+- [Tarieven](https://www.verisight.nl/#tarieven): EUR 2.925 early adopter, EUR 6.499 standaard
+- [Segment deep dive](https://www.verisight.nl/#tarieven): optionele add-on voor extra segmentanalyse
+
+## Publieke informatie
+
+- [Privacybeleid](https://www.verisight.nl/privacy)
+- [Algemene voorwaarden](https://www.verisight.nl/voorwaarden)
+- [Verwerkersovereenkomst](https://www.verisight.nl/dpa)
+
+## Contact
+
+- E-mail: hallo@verisight.nl

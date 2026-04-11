@@ -10,6 +10,7 @@ interface Props {
   scanType: string
   /** Wanneer false (n < 5) worden individuele frictiescores verborgen vanwege herleidbaarheidsrisico. */
   hasMinDisplay: boolean
+  canManageCampaign: boolean
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
@@ -20,7 +21,7 @@ const PREVENTABILITY_LABELS: Record<string, string> = {
   BEPERKT_WERKSIGNAAL: 'Beperkt werksignaal',
 }
 
-export function RespondentTable({ respondents, responses, scanType, hasMinDisplay }: Props) {
+export function RespondentTable({ respondents, responses, scanType, hasMinDisplay, canManageCampaign }: Props) {
   const [copied, setCopied] = useState(false)
   const responseMap = new Map(responses.map(r => [r.respondent_id, r]))
   const pending = respondents.filter(r => !r.completed)
@@ -51,7 +52,9 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Token</th>
+              <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">
+                {canManageCampaign ? 'Token' : 'Referentie'}
+              </th>
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Afdeling</th>
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Niveau</th>
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Status</th>
@@ -84,7 +87,9 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
               const resp = responseMap.get(r.id)
               return (
                 <tr key={r.id} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="px-3 py-2 font-mono text-xs text-gray-400">{r.token.slice(0, 8)}...</td>
+                  <td className="px-3 py-2 font-mono text-xs text-gray-400">
+                    {canManageCampaign ? `${r.token.slice(0, 8)}...` : 'Verborgen'}
+                  </td>
                   <td className="px-3 py-2 text-gray-600">{r.department ?? '-'}</td>
                   <td className="px-3 py-2 text-gray-600">{r.role_level ?? '-'}</td>
                   <td className="px-3 py-2">
@@ -118,7 +123,7 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
         </table>
       </div>
 
-      {pending.length > 0 && (
+      {canManageCampaign && pending.length > 0 && (
         <div className="mt-4">
           <div className="mb-2 flex items-center justify-between">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">

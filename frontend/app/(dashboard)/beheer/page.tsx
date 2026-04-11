@@ -88,7 +88,7 @@ export default async function BeheerPage() {
   const step1Done = activeOrgs.length > 0
   const step2Done = campaigns.some(campaign => campaign.is_active)
   const step3Done = (respondentCount ?? 0) > 0
-  const step4Done = (clientAccessCount ?? 0) > 0 || invites.length > 0
+  const step4Done = step2Done && ((clientAccessCount ?? 0) > 0 || invites.length > 0)
 
   return (
     <div>
@@ -128,7 +128,7 @@ export default async function BeheerPage() {
                     <div className="flex items-center gap-2">
                       <span className={org.is_active ? 'text-green-500' : 'text-gray-400'}>{org.is_active ? '✓' : '○'}</span>
                       <span className="font-medium">{org.name}</span>
-                      <span className="text-xs text-gray-400">({org.slug})</span>
+                      <span className="truncate text-xs text-gray-400">({org.slug})</span>
                       {!org.is_active && (
                         <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[11px] font-medium text-gray-600">
                           Gearchiveerd
@@ -247,6 +247,8 @@ export default async function BeheerPage() {
           <SectionHeader n={4} title="Klantdashboard activeren" done={step4Done} />
           {activeOrgs.length === 0 ? (
             <LockedStep message="Maak eerst een actieve organisatie aan of heractiveer een gearchiveerde organisatie." />
+          ) : campaigns.filter(campaign => campaign.is_active).length === 0 ? (
+            <LockedStep message="Maak eerst een actieve campaign aan voordat je klanttoegang activeert." />
           ) : (
             <div className="space-y-5">
               <p className="text-sm text-gray-500">

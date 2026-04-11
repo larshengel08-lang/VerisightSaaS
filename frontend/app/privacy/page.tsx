@@ -22,8 +22,8 @@ export default function PrivacyPage() {
           rapportage.
         </p>
         <p>
-          Verisight is ingeschreven bij de Kamer van Koophandel onder nummer [KvK-nummer], gevestigd te [adres].
-          Voor vragen over privacy kun je mailen naar{' '}
+          Publieke bedrijfsgegevens, waaronder KvK-nummer en vestigingsadres, worden op deze pagina aangevuld zodra
+          de formele inschrijving is afgerond. Tot die tijd kun je voor privacyvragen of due-diligence-verzoeken mailen naar{' '}
           <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>.
         </p>
       </section>

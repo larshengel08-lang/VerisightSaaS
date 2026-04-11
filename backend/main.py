@@ -1107,11 +1107,17 @@ async def campaign_stats(
     return {
         "campaign_id":              campaign.id,
         "campaign_name":            campaign.name,
+        "organization_id":          campaign.organization_id,
         "scan_type":                campaign.scan_type,
+        "is_active":                campaign.is_active,
+        "created_at":               campaign.created_at,
         "total_invited":            total,
         "total_completed":          n_completed,
         "completion_rate_pct":      round(n_completed / total * 100, 1) if total > 0 else 0.0,
         "avg_risk_score":           avg_risk,
+        "band_high":                band_dist["HOOG"],
+        "band_medium":              band_dist["MIDDEN"],
+        "band_low":                 band_dist["LAAG"],
         "risk_band_distribution":   band_dist,
         "pattern_report":           pattern_report,
     }

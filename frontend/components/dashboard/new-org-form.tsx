@@ -14,10 +14,17 @@ export function NewOrgForm() {
   const router = useRouter()
   const supabase = createClient()
 
+  function normalizeSlug(value: string) {
+    return value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+  }
+
   // Auto-genereer slug vanuit naam
   function handleNameChange(v: string) {
     setName(v)
-    setSlug(v.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
+    setSlug(normalizeSlug(v))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -27,7 +34,7 @@ export function NewOrgForm() {
 
     const { error } = await supabase
       .from('organizations')
-      .insert({ name, slug, contact_email: email })
+      .insert({ name, slug: normalizeSlug(slug), contact_email: email })
 
     if (error) {
       setError(error.message.includes('unique') ? 'Slug is al in gebruik.' : error.message)
@@ -55,7 +62,7 @@ export function NewOrgForm() {
       <Field label="Slug" required hint="Alleen a–z, 0–9, koppelstreep">
         <input
           type="text" required value={slug}
-          onChange={e => setSlug(e.target.value)}
+          onChange={e => setSlug(normalizeSlug(e.target.value))}
           pattern="[a-z0-9\-]+"
           placeholder="acme-bv"
           className={inputCls}

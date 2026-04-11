@@ -42,6 +42,19 @@ const faqs = [
   ['Zijn antwoorden herleidbaar naar individuen?', 'De output is bedoeld voor groepsinzichten. Privacy, minimum aantallen en zorgvuldige interpretatie worden expliciet meegenomen.'],
 ] as const
 
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(([question, answer]) => ({
+    '@type': 'Question',
+    name: question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: answer,
+    },
+  })),
+}
+
 const baseOffer = {
   title: 'ExitScan',
   price: 'EUR 6.499',
@@ -89,6 +102,10 @@ function AccentTile({ tone }: { tone: 'blue' | 'red' | 'amber' | 'emerald' }) {
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       <a
         href="#hoofdinhoud"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-slate-900 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
@@ -168,6 +185,22 @@ export default function LandingPage() {
               <div className="mt-6">
                 <PreviewSlider />
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-5 pt-6 sm:px-6 md:pt-10">
+          <div className="rounded-[2rem] border border-slate-200 bg-slate-50 px-6 py-8 md:px-8">
+            <div className="max-w-4xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-700">Wat is een ExitScan?</p>
+              <h2 className="mt-3 text-2xl font-bold text-slate-950 md:text-3xl">
+                Een ExitScan maakt uitstroom vergelijkbaar, zodat HR sneller patronen ziet dan met losse exitgesprekken.
+              </h2>
+              <p className="mt-4 text-base leading-8 text-slate-600">
+                Verisight zet een gestructureerde exitscan op voor organisaties met doorlopende uitstroom. Medewerkers
+                vullen een vaste vragenlijst in, waarna Verisight de antwoorden bundelt tot een dashboard en rapport
+                met terugkerende werkfactoren, vertrekredenen en focusvragen voor HR en MT.
+              </p>
             </div>
           </div>
         </section>

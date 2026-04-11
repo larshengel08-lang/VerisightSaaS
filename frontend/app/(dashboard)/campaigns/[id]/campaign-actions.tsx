@@ -8,9 +8,10 @@ interface CampaignActionsProps {
   campaignId: string
   isActive: boolean
   pendingCount: number
+  canManageCampaign: boolean
 }
 
-export function CampaignActions({ campaignId, isActive, pendingCount }: CampaignActionsProps) {
+export function CampaignActions({ campaignId, isActive, pendingCount, canManageCampaign }: CampaignActionsProps) {
   const [loading, setLoading] = useState<'archive' | 'resend' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -85,7 +86,7 @@ export function CampaignActions({ campaignId, isActive, pendingCount }: Campaign
     }
   }
 
-  if (!isActive) {
+  if (!isActive || !canManageCampaign) {
     return null
   }
 

@@ -40,8 +40,9 @@ export default function DpaPage() {
           en
         </p>
         <p>
-          <strong>Verwerker:</strong> Verisight, gevestigd te [adres], KvK-nummer [KvK-nummer],
-          bereikbaar via{' '}
+          <strong>Verwerker:</strong> Verisight, Nederlandse dienst voor begeleide uitstroomanalyse.
+          Volledige bedrijfsgegevens worden opgenomen in de gepersonaliseerde en ondertekende versie van deze overeenkomst.
+          Verisight is bereikbaar via{' '}
           <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>, hierna te noemen
           &quot;Verwerker&quot;;
         </p>

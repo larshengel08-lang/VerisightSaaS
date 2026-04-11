@@ -4,25 +4,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
       url: 'https://www.verisight.nl',
-      lastModified: new Date(),
+      lastModified: new Date('2026-04-11'),
       changeFrequency: 'monthly',
       priority: 1,
     },
     {
-      url: 'https://www.verisight.nl/login',
-      lastModified: new Date(),
-      changeFrequency: 'yearly',
-      priority: 0.3,
-    },
-    {
       url: 'https://www.verisight.nl/privacy',
-      lastModified: new Date(),
+      lastModified: new Date('2026-04-11'),
       changeFrequency: 'yearly',
       priority: 0.4,
     },
     {
       url: 'https://www.verisight.nl/voorwaarden',
-      lastModified: new Date(),
+      lastModified: new Date('2026-04-11'),
+      changeFrequency: 'yearly',
+      priority: 0.4,
+    },
+    {
+      url: 'https://www.verisight.nl/dpa',
+      lastModified: new Date('2026-04-11'),
       changeFrequency: 'yearly',
       priority: 0.4,
     },
