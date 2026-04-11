@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { ContactForm } from '@/components/marketing/contact-form'
 import { PreviewSlider } from '@/components/marketing/preview-slider'
@@ -258,14 +259,26 @@ export default function LandingPage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Optionele add-on</p>
                 {optionalAddOns.map(([title, description, note]) => (
                   <div key={title}>
-                    <div className="mt-4 inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                      Alleen toevoegen als extra verdieping nodig is
-                    </div>
-                    <h3 className="mt-5 text-2xl font-bold text-slate-950">{title}</h3>
+                    <h3 className="mt-4 text-2xl font-bold text-slate-950">{title}</h3>
                     <p className="mt-3 text-base leading-8 text-slate-600">{description}</p>
                     <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-4">
                       <p className="text-sm font-semibold text-blue-950">Meerprijs: EUR 950</p>
                       <p className="mt-2 text-sm leading-6 text-blue-900">{note.replace('Meerprijs: EUR 950. ', '')}</p>
+                    </div>
+                    <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Voorbeeld uit het rapport</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        Met Segment deep dive zie je extra uitsplitsingen naar afdeling, diensttijd en functieniveau in dezelfde rapportstijl als hieronder.
+                      </p>
+                      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                        <Image
+                          src="/segment-deep-dive-preview.png"
+                          alt="Voorbeeld van segmentatie in het ExitScan-rapport"
+                          width={1000}
+                          height={1200}
+                          className="h-auto w-full"
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}
