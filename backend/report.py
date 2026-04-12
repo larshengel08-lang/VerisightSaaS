@@ -1319,7 +1319,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         story.append(Paragraph(
             "<i>Toelichting: De belevingsscore (1–10) geeft de gemiddelde beleving van medewerkers weer — "
             "hogere belevingsscore is positiever. De signaalwaarde laat zien waar relatief de meeste werkfrictie zit — "
-            "hogere signaalwaarde betekent meer aandacht, niet automatisch meer bewijs.</i>",
+            "hogere signaalwaarde betekent meer aandacht, niet automatisch meer bewijs. "
+            "De signaalwaarde is dus geen aparte meting of telling, maar de omgekeerde lezing van dezelfde onderliggende score.</i>",
             ParagraphStyle(
                 "score_explanation",
                 fontName="Helvetica-Oblique",
