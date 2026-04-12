@@ -8,6 +8,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --font-display: var(--font-display);
 }
 
 html {
@@ -17,10 +18,19 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: inherit;
 }
 
 ::selection {
   background: #dbeafe;
   color: #0f172a;
+}
+
+/* Display font utility — used on hero h1 and section headings */
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+/* FAQ open/close indicator */
+details > summary::-webkit-details-marker {
+  display: none;
 }
