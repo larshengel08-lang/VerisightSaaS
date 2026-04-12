@@ -4,6 +4,7 @@ import { ContactForm } from '@/components/marketing/contact-form'
 import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { Wordmark } from '@/components/marketing/wordmark'
 import { ExpandablePreview } from '@/components/marketing/expandable-preview'
+import { SolutionsDropdown } from '@/components/marketing/solutions-dropdown'
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -191,6 +192,7 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Wordmark size="md" />
           <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 lg:flex">
+            <SolutionsDropdown />
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -477,6 +479,42 @@ export default function LandingPage() {
                     alt="Voorbeeld van segmentatie in het ExitScan-rapport"
                     className="mt-4"
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Baseline / Live */}
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-7">
+              <p className="text-xs font-bold uppercase tracking-widest text-blue-600">
+                Uitvoeringsvorm
+              </p>
+              <h3 className="mt-2 text-lg font-semibold text-slate-950">
+                ExitScan is beschikbaar als Baseline of Live
+              </h3>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-xl border-2 border-blue-200 bg-blue-50 p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-bold text-slate-950">ExitScan Baseline</span>
+                    <span className="rounded-full bg-blue-600 px-2.5 py-0.5 text-[10px] font-semibold text-white">
+                      Standaard instap
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">
+                    Retrospectief — kijkt terug op de afgelopen 12 maanden. Eenmalig traject dat een
+                    patroonbeeld, nulmeting en eerste prioriteiten oplevert.
+                  </p>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-bold text-slate-950">ExitScan Live</span>
+                    <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-[10px] font-semibold text-slate-600">
+                      Op aanvraag
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">
+                    Doorlopend — uitnodiging bij elke nieuwe vertrekker. Terugkerende rapportage of
+                    dashboardverversing zodat je eerder signaleert en over tijd kunt volgen.
+                  </p>
                 </div>
               </div>
             </div>

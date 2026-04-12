@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { CampaignStats } from '@/lib/types'
 import { RiskBadge } from '@/components/ui/risk-badge'
 import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
+import { OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
 
 export default async function DashboardHomePage() {
   const supabase = await createClient()
@@ -52,8 +53,12 @@ export default async function DashboardHomePage() {
         isAdmin ? <AdminEmptyState /> : <ViewerEmptyState />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {campaigns.map(c => (
-            <CampaignCard key={c.campaign_id} campaign={c} />
+          {campaigns.map((c, idx) => (
+            <CampaignCard
+              key={c.campaign_id}
+              campaign={c}
+              showOnboarding={!isAdmin && idx === 0}
+            />
           ))}
         </div>
       )}
@@ -61,7 +66,13 @@ export default async function DashboardHomePage() {
   )
 }
 
-function CampaignCard({ campaign: c }: { campaign: CampaignStats }) {
+function CampaignCard({
+  campaign: c,
+  showOnboarding = false,
+}: {
+  campaign: CampaignStats
+  showOnboarding?: boolean
+}) {
   const scanLabel = c.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'
   const completionPct = c.completion_rate_pct ?? 0
   const avgRisk = c.avg_risk_score
@@ -109,12 +120,17 @@ function CampaignCard({ campaign: c }: { campaign: CampaignStats }) {
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
-        <Link
-          href={`/campaigns/${c.campaign_id}`}
-          className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-        >
-          Open dashboard →
-        </Link>
+        <div className="relative">
+          {showOnboarding && (
+            <OnboardingBalloon step={1} label="Bekijk je campagne" align="left" />
+          )}
+          <Link
+            href={`/campaigns/${c.campaign_id}`}
+            className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+          >
+            Open dashboard →
+          </Link>
+        </div>
         <PdfDownloadButton campaignId={c.campaign_id} campaignName={c.campaign_name} />
       </div>
     </div>

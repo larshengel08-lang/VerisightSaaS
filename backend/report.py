@@ -844,7 +844,9 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
     org      = camp.organization
     now_str  = datetime.now(timezone.utc).strftime("%d-%m-%Y %H:%M UTC")
-    scan_lbl = "ExitScan" if camp.scan_type == "exit" else "RetentieScan"
+    _mode     = (camp.delivery_mode or "baseline").lower()
+    _mode_lbl = "Live" if _mode == "live" else "Baseline"
+    scan_lbl  = f"ExitScan {_mode_lbl}" if camp.scan_type == "exit" else "RetentieScan"
 
     # ── Data verzamelen ────────────────────────────────────────────────────
     respondents = camp.respondents

@@ -7,7 +7,7 @@ import { InviteClientUserForm } from '@/components/dashboard/invite-client-user-
 import { ClientAccessList } from '@/components/dashboard/client-access-list'
 import { DeleteOrgButton } from '@/components/dashboard/delete-org-button'
 import { ArchiveOrgButton } from '@/components/dashboard/archive-org-button'
-import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Organization, type Campaign, type OrgInvite } from '@/lib/types'
+import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Organization, type Campaign, type OrgInvite, type CampaignStats } from '@/lib/types'
 
 export default async function BeheerPage() {
   const supabase = await createClient()
@@ -69,6 +69,17 @@ export default async function BeheerPage() {
         .neq('user_id', user.id)
     : { count: 0 }
 
+  // Campaign stats — voor statusoverzicht onderaan
+  const { data: campaignStatsRaw } = orgIds.length
+    ? await supabase
+        .from('campaign_stats')
+        .select('*')
+        .in('organization_id', orgIds)
+        .order('created_at', { ascending: false })
+    : { data: [] }
+
+  const campaignStats = (campaignStatsRaw ?? []) as CampaignStats[]
+
   const { data: invitesRaw } = orgIds.length
     ? await supabase
         .from('org_invites')
@@ -116,6 +127,109 @@ export default async function BeheerPage() {
         <div className="h-px w-6 bg-gray-200" />
         <StepBadge n={4} label="Klanttoegang" done={step4Done} />
       </div>
+
+      {/* ── Campagne statusoverzicht ───────────────────────────────────── */}
+      {campaignStats.length > 0 && (
+        <section className="mb-8 rounded-xl border border-gray-200 bg-white">
+          <div className="border-b border-gray-100 px-5 py-4">
+            <h2 className="text-sm font-semibold text-gray-900">Campagne-statusoverzicht</h2>
+            <p className="mt-0.5 text-xs text-gray-400">Respons en voortgang per actieve campagne</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  <th className="px-5 py-3 text-left">Campagne</th>
+                  <th className="px-5 py-3 text-left">Organisatie</th>
+                  <th className="px-5 py-3 text-center">Status</th>
+                  <th className="px-5 py-3 text-right">Uitgenodigd</th>
+                  <th className="px-5 py-3 text-right">Ingevuld</th>
+                  <th className="px-5 py-3 text-right">Respons</th>
+                  <th className="px-5 py-3 text-right">Gem. risico</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {campaignStats.map(cs => {
+                  const pct = cs.completion_rate_pct ?? 0
+                  const org = orgs.find(o => o.id === cs.organization_id)
+                  return (
+                    <tr key={cs.campaign_id} className="hover:bg-gray-50/60">
+                      <td className="px-5 py-3">
+                        <div className="font-medium text-gray-900">{cs.campaign_name}</div>
+                        <div className="mt-0.5 text-xs text-gray-400">
+                          {cs.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-gray-600">{org?.name ?? '—'}</td>
+                      <td className="px-5 py-3 text-center">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                            cs.is_active
+                              ? 'bg-green-50 text-green-700'
+                              : 'bg-gray-100 text-gray-500'
+                          }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              cs.is_active ? 'bg-green-500' : 'bg-gray-400'
+                            }`}
+                          />
+                          {cs.is_active ? 'Actief' : 'Gesloten'}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-right tabular-nums text-gray-700">
+                        {cs.total_invited ?? 0}
+                      </td>
+                      <td className="px-5 py-3 text-right tabular-nums text-gray-700">
+                        {cs.total_completed ?? 0}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100">
+                            <div
+                              className={`h-full rounded-full ${pct >= 60 ? 'bg-green-500' : pct >= 30 ? 'bg-amber-400' : 'bg-red-400'}`}
+                              style={{ width: `${Math.min(pct, 100)}%` }}
+                            />
+                          </div>
+                          <span className="w-9 text-xs font-semibold tabular-nums text-gray-700">
+                            {pct}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-right tabular-nums text-gray-700">
+                        {cs.avg_risk_score ? (
+                          <span
+                            className={`font-semibold ${
+                              cs.avg_risk_score >= 7
+                                ? 'text-red-600'
+                                : cs.avg_risk_score >= 4.5
+                                  ? 'text-amber-600'
+                                  : 'text-green-600'
+                            }`}
+                          >
+                            {cs.avg_risk_score.toFixed(1)}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-300">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <a
+                          href={`/campaigns/${cs.campaign_id}`}
+                          className="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-200 transition-colors"
+                        >
+                          Open →
+                        </a>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className={`rounded-xl border bg-white p-6 ${step1Done ? 'border-green-200' : 'border-gray-200'}`}>

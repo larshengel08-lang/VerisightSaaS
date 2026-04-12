@@ -7,6 +7,7 @@ import { RecommendationList } from '@/components/dashboard/recommendation-list'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { CampaignActions } from './campaign-actions'
 import { PdfDownloadButton } from './pdf-download-button'
+import { OnboardingBalloon, OnboardingAdvancer } from '@/components/dashboard/onboarding-balloon'
 import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import type { CampaignStats, SurveyResponse, Respondent } from '@/lib/types'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
@@ -133,7 +134,14 @@ export default async function CampaignPage({ params }: Props) {
             <h1 className="text-2xl font-bold text-gray-900">{stats.campaign_name}</h1>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
+            {/* Stap 1 afgerond: zet onboarding door naar stap 2 */}
+            {!profile?.is_verisight_admin && <OnboardingAdvancer fromStep={1} />}
+            <div className="relative">
+              {!profile?.is_verisight_admin && (
+                <OnboardingBalloon step={2} label="Download hier je rapport" align="right" />
+              )}
+              <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
+            </div>
             <CampaignActions
               campaignId={id}
               isActive={stats.is_active}

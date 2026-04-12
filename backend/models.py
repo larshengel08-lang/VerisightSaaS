@@ -72,6 +72,7 @@ class Campaign(Base):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     scan_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "exit" | "retention"
+    delivery_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)  # "baseline" | "live" — null behandeld als baseline
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
     # Optional: which Module C blocks to include (JSON list of factor keys)
