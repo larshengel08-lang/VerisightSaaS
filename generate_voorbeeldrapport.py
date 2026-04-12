@@ -48,11 +48,11 @@ DEMO_CAMPAIGN_NAME = "ExitScan Q1 2026"
 
 PROFILES = [
     # (naam, kans, sdt_bias, leiderschaps_bias, groei_bias, werkdruk_bias, reden_cat, reden_code)
-    ("leiderschap_probleem",  0.38, -1.5, -2.0,  0.0,  0.5, "leiderschap",  "P1"),
-    ("groei_frustratie",      0.25, -0.5,  0.0, -2.0,  0.0, "groei",        "P3"),
-    ("werkdruk",              0.15,  0.0,  0.0,  0.0, -2.0, "werkdruk",     "P5"),
-    ("pull_aanbod",           0.12,  0.5,  0.5,  0.0,  0.0, "beter_aanbod", "PL1"),
-    ("persoonlijk",           0.10,  0.0,  0.0,  0.0,  0.0, "persoonlijk",  "S1"),
+    ("leiderschap_probleem",  0.34, -1.4, -2.0, -0.4,  0.4, "leiderschap",  "P1"),
+    ("groei_frustratie",      0.31, -0.7, -0.3, -2.8,  0.0, "groei",        "P3"),
+    ("werkdruk",              0.14,  0.0,  0.0, -0.2, -1.9, "werkdruk",     "P5"),
+    ("pull_aanbod",           0.12,  0.6,  0.6,  0.4,  0.1, "beter_aanbod", "PL1"),
+    ("persoonlijk",           0.09,  0.1,  0.2,  0.2,  0.0, "persoonlijk",  "S1"),
 ]
 
 DEPARTMENTS = [
@@ -146,26 +146,26 @@ def _sdt_items(sdt_bias: float) -> dict[str, int]:
 
 
 def _org_items(lead_bias: float, growth_bias: float, work_bias: float) -> dict[str, int]:
-    base = 3.2
+    base = 3.35
     return {
         "leadership_1":   _likert(base + lead_bias),
         "leadership_2":   _likert(base + lead_bias),
         "leadership_3":   _likert(base + lead_bias),
-        "culture_1":      _likert(base + 0.3),
-        "culture_2":      _likert(base + 0.3),
-        "culture_3":      _likert(base + 0.3),
+        "culture_1":      _likert(base + 0.5),
+        "culture_2":      _likert(base + 0.5),
+        "culture_3":      _likert(base + 0.5),
         "growth_1":       _likert(base + growth_bias),
         "growth_2":       _likert(base + growth_bias),
         "growth_3":       _likert(base + growth_bias),
-        "compensation_1": _likert(base + 0.2),
-        "compensation_2": _likert(base + 0.2),
-        "compensation_3": _likert(base),
+        "compensation_1": _likert(base + 0.4),
+        "compensation_2": _likert(base + 0.4),
+        "compensation_3": _likert(base + 0.2),
         "workload_1":     _likert(base + work_bias),
         "workload_2":     _likert(base + work_bias),
         "workload_3":     _likert(base + work_bias),
-        "role_clarity_1": _likert(base + 0.1),
-        "role_clarity_2": _likert(base + 0.1),
-        "role_clarity_3": _likert(base + 0.1),
+        "role_clarity_1": _likert(base + 0.3),
+        "role_clarity_2": _likert(base + 0.3),
+        "role_clarity_3": _likert(base + 0.3),
     }
 
 

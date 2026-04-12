@@ -14,6 +14,7 @@ interface Props {
 const COLORS = { HOOG: '#DC2626', MIDDEN: '#F59E0B', LAAG: '#16A34A' }
 
 export function RiskCharts({ distribution, riskScores }: Props) {
+  const totalResponses = distribution.HOOG + distribution.MIDDEN + distribution.LAAG
   const pieData = [
     { name: 'Hoog signaal', value: distribution.HOOG, color: COLORS.HOOG },
     { name: 'Middensignaal', value: distribution.MIDDEN, color: COLORS.MIDDEN },
@@ -35,8 +36,34 @@ export function RiskCharts({ distribution, riskScores }: Props) {
     ? riskScores.reduce((a, b) => a + b, 0) / riskScores.length
     : null
 
+  const dominantBand = [
+    { band: 'HOOG', value: distribution.HOOG },
+    { band: 'MIDDEN', value: distribution.MIDDEN },
+    { band: 'LAAG', value: distribution.LAAG },
+  ].sort((a, b) => b.value - a.value)[0]
+
+  const dominantPercent = totalResponses > 0
+    ? Math.round((dominantBand.value / totalResponses) * 100)
+    : 0
+
+  const insightText = dominantBand.band === 'HOOG'
+    ? `${dominantPercent}% van de responses valt in hoog signaal. Voor HR wijst dit op een breed en relatief scherp aandachtssignaal: kijk eerst naar de topfactoren en plan snelle verdieping.`
+    : dominantBand.band === 'LAAG'
+      ? `${dominantPercent}% van de responses valt in laag signaal. Voor HR wijst dit niet op een breed frictiepatroon, maar het blijft zinvol om de opvallendste factoren en open antwoorden te controleren.`
+      : `${dominantPercent}% van de responses valt in middensignaal. Voor HR betekent dit meestal geen eenduidig crisisbeeld, maar wel terugkerende frictie: kijk dus niet naar losse incidenten, maar gebruik de topfactoren en segmenten om gericht door te vragen.`
+
   return (
     <div className="space-y-4">
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+        <p className="font-medium text-slate-900">Wat betekent signaalverdeling?</p>
+        <p className="mt-1">
+          De signaalverdeling laat zien hoe responses zijn verdeeld over laag, midden en hoog
+          aandachtssignaal. Dit zegt iets over de breedte en intensiteit van frictie in de groep,
+          niet over een bewezen oorzaak.
+        </p>
+        <p className="mt-2 text-slate-800">{insightText}</p>
+      </div>
+
       {/* Donut */}
       <ResponsiveContainer width="100%" height={160}>
         <PieChart>
