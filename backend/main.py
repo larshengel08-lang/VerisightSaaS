@@ -558,9 +558,12 @@ async def db_general_error_handler(request: Request, exc: SQLAlchemyError):
 # ---------------------------------------------------------------------------
 
 @app.get("/api/health")
-async def health() -> dict[str, str]:
+async def health() -> JSONResponse:
     db_ok = check_db_connection()
-    return {"status": "ok" if db_ok else "degraded"}
+    return JSONResponse(
+        status_code=200 if db_ok else 503,
+        content={"status": "ok" if db_ok else "degraded"},
+    )
 
 
 @app.post("/api/contact-request", response_model=ContactRequestResponse)
@@ -1206,10 +1209,15 @@ async def campaign_stats(
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     org = _get_org_by_api_key(x_api_key, db)
-    campaign = db.query(Campaign).filter(
-        Campaign.id == campaign_id,
-        Campaign.organization_id == org.id,
-    ).first()
+    campaign = (
+        db.query(Campaign)
+        .options(selectinload(Campaign.respondents).selectinload(Respondent.response))
+        .filter(
+            Campaign.id == campaign_id,
+            Campaign.organization_id == org.id,
+        )
+        .first()
+    )
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
 
