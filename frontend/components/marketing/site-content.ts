@@ -19,6 +19,31 @@ export const comparisonCards = [
   },
 ] as const
 
+export const trustItems = [
+  'Begeleide inrichting en uitvoering',
+  'Dashboard en managementrapport',
+  'Gehost in Europa',
+  'Methodische basis vanuit A&O-psychologie',
+] as const
+
+export const statCards = [
+  {
+    value: '1',
+    label: 'duidelijk traject',
+    detail: 'Van inrichting tot rapportage in een vaste vorm.',
+  },
+  {
+    value: '2',
+    label: 'scanmodi',
+    detail: 'Baseline als instap, Live als vervolgstap of op aanvraag.',
+  },
+  {
+    value: '+1',
+    label: 'optionele verdieping',
+    detail: 'Segment deep dive voor scherpere subgroepanalyse.',
+  },
+] as const
+
 export const outcomeCards = [
   [
     'Sneller prioriteiten stellen met HR, MT en directie',
@@ -44,6 +69,21 @@ export const outcomeCards = [
     'Basis voor retentiebeleid',
     'Als patronen duidelijk zijn, kun je gerichter bepalen waar vervolgonderzoek of interventie nodig is.',
   ],
+] as const
+
+export const processHighlights = [
+  {
+    title: 'Voor HR',
+    text: 'Minder losse signalen en sneller een gedeeld beeld van waar vertrek zich opstapelt.',
+  },
+  {
+    title: 'Voor MT',
+    text: 'Een bruikbare basis om te bepalen waar gerichte actie het meeste effect kan hebben.',
+  },
+  {
+    title: 'Voor directie',
+    text: 'Compacte stuurinformatie over terugkerende patronen in plaats van incidenten per case.',
+  },
 ] as const
 
 export const included = [
