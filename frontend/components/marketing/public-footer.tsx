@@ -2,6 +2,9 @@ import Link from 'next/link'
 import { Wordmark } from '@/components/marketing/wordmark'
 
 const legalLinks = [
+  { href: '/product', label: 'Product' },
+  { href: '/aanpak', label: 'Aanpak' },
+  { href: '/tarieven', label: 'Tarieven' },
   { href: '/privacy', label: 'Privacybeleid' },
   { href: '/voorwaarden', label: 'Algemene voorwaarden' },
   { href: '/dpa', label: 'Verwerkersovereenkomst' },
@@ -15,8 +18,7 @@ export function PublicFooter() {
         <div>
           <Wordmark size="sm" />
           <p className="mt-3 max-w-sm text-sm leading-7 text-slate-600">
-            Begeleide uitstroomanalyse voor HR-teams die vertrekredenen beter willen begrijpen en vertaalbaar
-            willen maken naar concrete acties.
+            Begeleide exitscan voor organisaties die uitstroompatronen sneller zichtbaar en bestuurbaar willen maken.
           </p>
         </div>
 

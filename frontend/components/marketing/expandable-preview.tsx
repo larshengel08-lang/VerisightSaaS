@@ -7,12 +7,14 @@ interface ExpandablePreviewProps {
   src: string
   alt: string
   className?: string
+  badge?: string
 }
 
 export function ExpandablePreview({
   src,
   alt,
   className = '',
+  badge,
 }: ExpandablePreviewProps) {
   const [open, setOpen] = useState(false)
 
@@ -42,8 +44,13 @@ export function ExpandablePreview({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group block w-full overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition hover:border-blue-300 hover:shadow-md"
+          className="group relative block w-full overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition hover:border-blue-300 hover:shadow-md"
         >
+          {badge && (
+            <span className="absolute left-4 top-4 z-10 rounded-full bg-slate-950/85 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white">
+              {badge}
+            </span>
+          )}
           <Image
             src={src}
             alt={alt}

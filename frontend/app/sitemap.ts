@@ -9,6 +9,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
+      url: 'https://www.verisight.nl/product',
+      lastModified: new Date('2026-04-12'),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: 'https://www.verisight.nl/aanpak',
+      lastModified: new Date('2026-04-12'),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: 'https://www.verisight.nl/tarieven',
+      lastModified: new Date('2026-04-12'),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
       url: 'https://www.verisight.nl/privacy',
       lastModified: new Date('2026-04-11'),
       changeFrequency: 'yearly',

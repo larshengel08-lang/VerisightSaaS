@@ -16,10 +16,10 @@ function DashboardSlide() {
         </div>
         <div className="grid gap-4 sm:grid-cols-4">
           {[
-            ['Responses', '14 van 18', '78% respons'],
-            ['Gem. frictiescore', '5,8 op 10', 'Middelhoog signaal'],
-            ['Topthema', 'Groeiperspectief', 'Sterk aandachtssignaal'],
-            ['Gem. diensttijd', '2,4 jaar', 'Bij vertrek'],
+            ['Reacties', '14 van 18', '78% respons'],
+            ['Gemiddelde frictiescore', '5,8 op 10', 'Vergt nadere duiding'],
+            ['Belangrijkste aandachtspunt', 'Groei', 'Hier is het meeste te winnen'],
+            ['Gemiddelde diensttijd', '2,4 jaar', 'Van vertrekkende medewerkers'],
           ].map(([label, value, detail]) => (
             <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
@@ -29,13 +29,13 @@ function DashboardSlide() {
           ))}
         </div>
         <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Waar zitten de sterkste aandachtssignalen?</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Waar valt de meeste verbetering te halen?</p>
           <div className="mt-4 space-y-3">
             {[
-              ['Leiderschap', '6,3', 'Urgent', '63%', 'bg-red-400'],
-              ['Groeiperspectief', '6,1', 'Urgent', '61%', 'bg-red-400'],
-              ['Beloning & voorwaarden', '4,9', 'Aandacht', '49%', 'bg-amber-400'],
-              ['Werkbelasting', '4,6', 'Aandacht', '46%', 'bg-amber-400'],
+              ['Leiderschap', '6,3', 'Nu bespreken', '63%', 'bg-red-400'],
+              ['Groei', '6,1', 'Nu bespreken', '61%', 'bg-red-400'],
+              ['Beloning & voorwaarden', '4,9', 'Verder bekijken', '49%', 'bg-amber-400'],
+              ['Werkbelasting', '4,6', 'Verder bekijken', '46%', 'bg-amber-400'],
             ].map(([label, value, band, width, color]) => (
               <div key={label} className="grid grid-cols-[minmax(0,10rem)_1fr_auto_auto] items-center gap-3">
                 <span className="text-sm text-slate-200">{label}</span>
@@ -51,17 +51,17 @@ function DashboardSlide() {
       </div>
       <div className="flex flex-col justify-between gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5">
         <div>
-          <p className="text-sm font-semibold text-slate-900">Wat een HR-team hier concreet mee kan</p>
+          <p className="text-sm font-semibold text-slate-900">Wat HR, MT en directie hiermee kunnen</p>
           <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-700">
-            <li>Je ziet welke vertrekpatronen terugkeren, niet alleen losse signalen per exit.</li>
-            <li>Je krijgt een indicatie waar werkfactoren waarschijnlijk het meeste aandacht vragen.</li>
-            <li>Je kunt management in gewone taal meenemen in wat eerst moet worden gevalideerd.</li>
+            <li>Je ziet sneller welke thema’s eerst besproken moeten worden.</li>
+            <li>Je kunt verbeterkansen concreter koppelen aan leiderschap, groei of werkbelasting.</li>
+            <li>Je hebt een bruikbare basis voor MT-overleg en gerichte vervolgacties.</li>
           </ul>
         </div>
         <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
           <p className="text-sm font-semibold text-blue-900">Belangrijke nuance</p>
           <p className="mt-2 text-sm leading-6 text-blue-950">
-            Verisight vat signalen samen en helpt prioriteren. Het rapport doet geen individueel oordeel en geen harde voorspelling van toekomstig verloop.
+            Verisight maakt patronen zichtbaar en helpt bepalen waar vervolgactie het meeste oplevert. Het blijft groepsduiding, geen individueel oordeel of harde voorspelling.
           </p>
         </div>
       </div>
@@ -70,11 +70,11 @@ function DashboardSlide() {
 }
 
 const FACTORS = [
-  { label: 'Leiderschap', score: 4.7, signal: 6.3, band: 'URGENT', color: 'bg-red-500', text: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
-  { label: 'Groeiperspectief', score: 4.9, signal: 6.1, band: 'URGENT', color: 'bg-red-500', text: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
-  { label: 'Psychologische veiligheid', score: 5.6, signal: 5.4, band: 'AANDACHT', color: 'bg-amber-400', text: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
-  { label: 'Beloning & voorwaarden', score: 6.1, signal: 4.9, band: 'AANDACHT', color: 'bg-amber-400', text: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
-  { label: 'Werkbelasting', score: 6.4, signal: 4.6, band: 'AANDACHT', color: 'bg-amber-400', text: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
+  { label: 'Leiderschap', score: 4.7, signal: 6.3, band: 'NU BESPREKEN', color: 'bg-red-500', text: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
+  { label: 'Groei', score: 4.9, signal: 6.1, band: 'NU BESPREKEN', color: 'bg-red-500', text: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
+  { label: 'Psychologische veiligheid', score: 5.6, signal: 5.4, band: 'VERDER BEKIJKEN', color: 'bg-amber-400', text: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
+  { label: 'Beloning & voorwaarden', score: 6.1, signal: 4.9, band: 'VERDER BEKIJKEN', color: 'bg-amber-400', text: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
+  { label: 'Werkbelasting', score: 6.4, signal: 4.6, band: 'VERDER BEKIJKEN', color: 'bg-amber-400', text: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
   { label: 'Rolhelderheid', score: 7.1, signal: 3.9, band: 'OK', color: 'bg-emerald-500', text: 'text-emerald-700', border: 'border-emerald-200', bg: 'bg-emerald-50' },
 ] as const
 

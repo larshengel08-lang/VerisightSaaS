@@ -1,0 +1,51 @@
+import Link from 'next/link'
+import { Wordmark } from '@/components/marketing/wordmark'
+
+const navLinks = [
+  { href: '/product', label: 'Product' },
+  { href: '/aanpak', label: 'Aanpak' },
+  { href: '/tarieven', label: 'Tarieven' },
+] as const
+
+interface PublicHeaderProps {
+  ctaHref?: string
+  ctaLabel?: string
+}
+
+export function PublicHeader({
+  ctaHref = '/#kennismaking',
+  ctaLabel = 'Plan mijn gesprek',
+}: PublicHeaderProps) {
+  return (
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <Wordmark size="md" />
+        <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 lg:flex">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="transition-colors hover:text-slate-950"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/login"
+            className="hidden text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 md:inline-flex"
+          >
+            Inloggen
+          </Link>
+          <Link
+            href={ctaHref}
+            className="inline-flex rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+          >
+            {ctaLabel}
+          </Link>
+        </div>
+      </div>
+    </header>
+  )
+}
