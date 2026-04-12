@@ -1167,7 +1167,11 @@ async def download_report(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"PDF-generatie mislukt: {e}")
 
-    filename = f"Verisight_{campaign.name.replace(' ', '_')}.pdf"
+    # HTTP Content-Disposition headers zijn latin-1; strip alle niet-ASCII tekens
+    import re as _re
+    safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)   # verwijder em-dash etc.
+    safe_name = _re.sub(r"[\s-]+", "_", safe_name).strip("_")  # spaties/streepjes → _
+    filename = f"Verisight_{safe_name}.pdf"
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",

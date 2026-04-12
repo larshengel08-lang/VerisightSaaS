@@ -623,6 +623,162 @@ def _build_segment_deep_dive_data(
     return {"coverage": coverage, "rows": rows[:6]}
 
 
+def _append_methodology_section(
+    story: list,
+    *,
+    content_width: float,
+    has_segment_deep_dive: bool,
+) -> None:
+    story.append(Paragraph("Methodiek & Verantwoording", STYLES["section_title"]))
+    story.append(Paragraph(
+        "Dit rapport is opgebouwd uit verkorte vraagblokken die inhoudelijk zijn geïnspireerd door bestaande wetenschappelijke literatuur. "
+        "Het gaat nadrukkelijk niet om volledige schaalafnames of een diagnostisch instrument. "
+        "De relatieve weging van factoren is expertgedreven en bedoeld voor prioritering in gesprek.",
+        STYLES["body"],
+    ))
+    story.append(Spacer(1, 0.4 * cm))
+
+    story.append(Paragraph("Hoe wordt de frictiescore berekend?", STYLES["sub_title"]))
+    story.append(Paragraph(
+        "Elke respondent krijgt een frictiescore op een schaal van 1 tot 10. "
+        "Een hogere score betekent meer signalen van ontevredenheid of frictie in de werkomgeving. "
+        "De score is indicatief en bedoeld als gespreksinput, niet als causale voorspelling, benchmark of objectief oordeel. "
+        "De score is een gewogen gemiddelde van zeven factoren:",
+        STYLES["body"],
+    ))
+    story.append(Spacer(1, 0.2 * cm))
+
+    weight_rows = [
+        ["Factor", "Gewicht", "Richting in literatuur"],
+        ["Leiderschap", "2.5 ×", "In de literatuur sterk geassocieerd met vrijwillig verloop (o.a. LMX-onderzoek)"],
+        ["SDT Werkbeleving", "2.0 ×", "Breed signaal voor motivatie, betrokkenheid en retentie"],
+        ["Psychologische veiligheid & cultuurmatch", "1.5 ×", "Psychologische veiligheid en waardenfit hangen samen met retentie"],
+        ["Groeiperspectief", "1.5 ×", "Ontwikkel- en perspectiefsignaal in de literatuur (JD-R)"],
+        ["Beloning & voorwaarden", "1.0 ×", "Hygiënefactor — drempelwaarde-effect"],
+        ["Werkbelasting", "1.0 ×", "Werkbelasting werkt vaak als versterkende contextfactor (JD-R)"],
+        ["Rolhelderheid", "1.0 ×", "Basale verwachting (Rizzo, House & Lirtzman, 1970)"],
+    ]
+    w_ts = TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
+        ("TEXTCOLOR",     (0, 0), (-1, 0), WHITE),
+        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE",      (0, 0), (-1, -1), 8.5),
+        ("ROWBACKGROUNDS",(0, 1), (-1, -1), [colors.HexColor("#F0F9FF"), WHITE]),
+        ("GRID",          (0, 0), (-1, -1), 0.5, BORDER),
+        ("TOPPADDING",    (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("ALIGN",         (1, 1), (1, -1), "CENTER"),
+        ("FONTNAME",      (1, 1), (1, -1), "Helvetica-Bold"),
+    ])
+    w_table = Table(
+        weight_rows,
+        colWidths=[content_width * 0.28, content_width * 0.12, content_width * 0.60],
+    )
+    w_table.setStyle(w_ts)
+    story.append(w_table)
+    story.append(Spacer(1, 0.4 * cm))
+
+    story.append(Paragraph("Wat betekenen de signaalbanden?", STYLES["sub_title"]))
+    band_rows = [
+        ["Band", "Score", "Betekenis voor de organisatie"],
+        ["LAAG",   "< 4.5",   "Overwegend positief beeld. Er zijn relatief weinig signalen van werkfrictie in de antwoorden."],
+        ["MIDDEN", "4.5–7.0", "Gemengd beeld. Er zijn meerdere aandachtspunten, maar de uitkomst vraagt vooral nadere verificatie."],
+        ["HOOG",   "≥ 7.0",   "Sterk signaal van ervaren werkfrictie. Dit vraagt om nadere analyse, niet automatisch om een harde conclusie."],
+    ]
+    band_ts = TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
+        ("TEXTCOLOR",     (0, 0), (-1, 0), WHITE),
+        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE",      (0, 0), (-1, -1), 8.5),
+        ("ROWBACKGROUNDS",(0, 1), (-1, -1), [colors.HexColor("#F0F9FF"), WHITE]),
+        ("GRID",          (0, 0), (-1, -1), 0.5, BORDER),
+        ("TOPPADDING",    (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("ALIGN",         (0, 1), (1, -1), "CENTER"),
+        ("FONTNAME",      (0, 1), (1, -1), "Helvetica-Bold"),
+        ("TEXTCOLOR",     (0, 1), (1, 1), RISK_LOW),
+        ("TEXTCOLOR",     (0, 2), (1, 2), RISK_MED),
+        ("TEXTCOLOR",     (0, 3), (1, 3), RISK_HIGH),
+        ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
+    ])
+    band_table = Table(
+        band_rows,
+        colWidths=[content_width * 0.14, content_width * 0.13, content_width * 0.73],
+    )
+    band_table.setStyle(band_ts)
+    story.append(band_table)
+    story.append(Spacer(1, 0.4 * cm))
+
+    story.append(Paragraph("Wat betekent elke factor?", STYLES["sub_title"]))
+    factor_explanations = [
+        ("Leiderschap", "LMX-7 (Graen & Uhl-Bien, 1995)",
+         "Meet in verkorte vorm de ervaren relatiekwaliteit met de leidinggevende: feedback, interesse in ontwikkeling en vertrouwen."),
+        ("Psychologische veiligheid & cultuurmatch", "Psychological Safety / waardenfit",
+         "Meet in verkorte vorm psychologische veiligheid en of de werkomgeving als passend werd ervaren."),
+        ("Groeiperspectief", "JD-R Resources-component",
+         "Meet ervaren ontwikkelruimte, investering in ontwikkeling en loopbaanperspectief."),
+        ("Beloning & voorwaarden", "Job Satisfaction Survey (Spector, 1985)",
+         "Meet ervaren marktconformiteit, eerlijkheid en aansluiting van de totale arbeidsvoorwaarden."),
+        ("Werkbelasting", "JD-R Demands-component",
+         "Meet of de werkdruk haalbaar was en of er voldoende hersteltijd was. Vragen zijn positief geformuleerd: hoge score = werkdruk als acceptabel ervaren = lager aandachtssignaal."),
+        ("Rolhelderheid", "Role Conflict & Ambiguity Scale (Rizzo et al., 1970)",
+         "Meet of taken en verwachtingen duidelijk waren en of tegenstrijdige aansturing beperkt bleef."),
+    ]
+
+    for fname, source, explanation in factor_explanations:
+        story.append(Paragraph(
+            f"<b>{fname}</b> <font color='#6B7280' size='8'>({source})</font>",
+            STYLES["body_bold"],
+        ))
+        story.append(Paragraph(explanation, STYLES["body"]))
+        story.append(Spacer(1, 0.15 * cm))
+
+    story.append(Spacer(1, 0.3 * cm))
+
+    story.append(Paragraph("Statistische betrouwbaarheid", STYLES["sub_title"]))
+    story.append(Paragraph(
+        "Scores, patroonanalyse en grafieken worden alleen getoond bij minimaal 10 responses. "
+        f"Subgroepvergelijkingen worden alleen getoond vanaf minimaal {MIN_SEGMENT_N} responses per subgroep. "
+        "Bij kleinere groepen zijn de uitkomsten te gevoelig voor toeval, interpretatiefouten en herleidbaarheid. "
+        "Alle zichtbare uitkomsten blijven indicatief en dienen als gespreksinput — niet als statistische conclusie. "
+        "Alle resultaten worden uitsluitend op gegroepeerd niveau gedeeld, conform de AVG.",
+        STYLES["body"],
+    ))
+
+    if has_segment_deep_dive:
+        story.append(Paragraph(
+            "Bij de add-on Segment deep dive worden subgroepen expliciet afgezet tegen het organisatieniveau. "
+            "Die vergelijking blijft beschrijvend: de verdieping laat zien waar frictie relatief sterker of zwakker terugkomt, "
+            "maar bewijst geen oorzaak.",
+            STYLES["body"],
+        ))
+
+    story.append(Spacer(1, 0.5 * cm))
+
+    story.append(Paragraph("Bronnen", STYLES["sub_title"]))
+    refs = [
+        "Bakker, A. B., & Demerouti, E. (2007). The Job Demands-Resources model. <i>Journal of Managerial Psychology, 22</i>(3), 309–328.",
+        "Deci, E. L., & Ryan, R. M. (2000). The 'what' and 'why' of goal pursuits. <i>Psychological Inquiry, 11</i>(4), 227–268.",
+        "Edmondson, A. C. (1999). Psychological safety and learning behavior in work teams. <i>Administrative Science Quarterly, 44</i>(2), 350–383.",
+        "Gallup (2023). <i>State of the Global Workplace Report.</i> Washington D.C.: Gallup Press. (Aangehaald voor richting in factorweging; geen peer-reviewed bron.)",
+        "Graen, G. B., & Uhl-Bien, M. (1995). Relationship-based approach to leadership. <i>The Leadership Quarterly, 6</i>(2), 219–247.",
+        "Holtom, B. C., et al. (2008). Turnover and retention research. <i>Academy of Management Annals, 2</i>(1), 231–274.",
+        "Rizzo, J. R., House, R. J., & Lirtzman, S. I. (1970). Role conflict and ambiguity in complex organizations. <i>Administrative Science Quarterly, 15</i>(2), 150–163.",
+        "Spector, P. E. (1985). Measurement of human service staff satisfaction. <i>American Journal of Community Psychology, 13</i>(6), 693–713.",
+        "Van den Broeck, A., et al. (2010). Capturing autonomy, competence, and relatedness at work. <i>Journal of Occupational and Organizational Psychology, 83</i>(4), 981–1002.",
+    ]
+    for ref in refs:
+        story.append(Paragraph(f"• {ref}", ParagraphStyle(
+            "ref",
+            fontName="Helvetica",
+            fontSize=7.5,
+            leading=11,
+            textColor=MUTED,
+            spaceAfter=3,
+            leftIndent=8,
+        )))
+
+
 # ---------------------------------------------------------------------------
 # Header/Footer callbacks
 # ---------------------------------------------------------------------------
@@ -1027,7 +1183,19 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(PageBreak())
 
     # ==================================================================== #
-    # PAGINA 3 — SDT BASISBEHOEFTEN                                        #
+    # PAGINA 3 — METHODIEK & VERANTWOORDING                                #
+    # ==================================================================== #
+
+    _append_methodology_section(
+        story,
+        content_width=content_width,
+        has_segment_deep_dive=has_segment_deep_dive,
+    )
+
+    story.append(PageBreak())
+
+    # ==================================================================== #
+    # PAGINA 4 — SDT BASISBEHOEFTEN                                        #
     # ==================================================================== #
 
     story.append(Paragraph("SDT Basisbehoeften", STYLES["section_title"]))
@@ -1983,166 +2151,6 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(contact_table)
 
     story.append(PageBreak())
-
-    # ==================================================================== #
-    # PAGINA 8 — METHODIEK & VERANTWOORDING                                #
-    # ==================================================================== #
-
-    story.append(Paragraph("Methodiek & Verantwoording", STYLES["section_title"]))
-    story.append(Paragraph(
-        "Dit rapport is opgebouwd uit verkorte vraagblokken die inhoudelijk zijn geïnspireerd door bestaande wetenschappelijke literatuur. "
-        "Het gaat nadrukkelijk niet om volledige schaalafnames of een diagnostisch instrument. "
-        "De relatieve weging van factoren is expertgedreven en bedoeld voor prioritering in gesprek.",
-        STYLES["body"],
-    ))
-    story.append(Spacer(1, 0.4 * cm))
-
-    # ── Hoe werkt de frictiescore? ───────────────────────────────────────
-    story.append(Paragraph("Hoe wordt de frictiescore berekend?", STYLES["sub_title"]))
-    story.append(Paragraph(
-        "Elke respondent krijgt een frictiescore op een schaal van 1 tot 10. "
-        "Een hogere score betekent meer signalen van ontevredenheid of frictie in de werkomgeving. "
-        "De score is indicatief en bedoeld als gespreksinput, niet als causale voorspelling, benchmark of objectief oordeel. "
-        "De score is een gewogen gemiddelde van zeven factoren:",
-        STYLES["body"],
-    ))
-    story.append(Spacer(1, 0.2 * cm))
-
-    weight_rows = [
-        ["Factor", "Gewicht", "Richting in literatuur"],
-        ["Leiderschap", "2.5 ×", "In de literatuur sterk geassocieerd met vrijwillig verloop (o.a. LMX-onderzoek)"],
-        ["SDT Werkbeleving", "2.0 ×", "Breed signaal voor motivatie, betrokkenheid en retentie"],
-        ["Psychologische veiligheid & cultuurmatch", "1.5 ×", "Psychologische veiligheid en waardenfit hangen samen met retentie"],
-        ["Groeiperspectief", "1.5 ×", "Ontwikkel- en perspectiefsignaal in de literatuur (JD-R)"],
-        ["Beloning & voorwaarden", "1.0 ×", "Hygiënefactor — drempelwaarde-effect"],
-        ["Werkbelasting", "1.0 ×", "Werkbelasting werkt vaak als versterkende contextfactor (JD-R)"],
-        ["Rolhelderheid", "1.0 ×", "Basale verwachting (Rizzo, House & Lirtzman, 1970)"],
-    ]
-    w_ts = TableStyle([
-        ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
-        ("TEXTCOLOR",     (0, 0), (-1, 0), WHITE),
-        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE",      (0, 0), (-1, -1), 8.5),
-        ("ROWBACKGROUNDS",(0, 1), (-1, -1), [colors.HexColor("#F0F9FF"), WHITE]),
-        ("GRID",          (0, 0), (-1, -1), 0.5, BORDER),
-        ("TOPPADDING",    (0, 0), (-1, -1), 5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-        ("ALIGN",         (1, 1), (1, -1), "CENTER"),
-        ("FONTNAME",      (1, 1), (1, -1), "Helvetica-Bold"),
-    ])
-    w_table = Table(
-        weight_rows,
-        colWidths=[content_width * 0.28, content_width * 0.12, content_width * 0.60],
-    )
-    w_table.setStyle(w_ts)
-    story.append(w_table)
-    story.append(Spacer(1, 0.4 * cm))
-
-    # ── Signaalbanden ─────────────────────────────────────────────────────
-    story.append(Paragraph("Wat betekenen de signaalbanden?", STYLES["sub_title"]))
-    band_rows = [
-        ["Band", "Score", "Betekenis voor de organisatie"],
-        ["LAAG",   "< 4.5",   "Overwegend positief beeld. Er zijn relatief weinig signalen van werkfrictie in de antwoorden."],
-        ["MIDDEN", "4.5–7.0", "Gemengd beeld. Er zijn meerdere aandachtspunten, maar de uitkomst vraagt vooral nadere verificatie."],
-        ["HOOG",   "≥ 7.0",   "Sterk signaal van ervaren werkfrictie. Dit vraagt om nadere analyse, niet automatisch om een harde conclusie."],
-    ]
-    band_ts = TableStyle([
-        ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
-        ("TEXTCOLOR",     (0, 0), (-1, 0), WHITE),
-        ("FONTNAME",      (0, 0), (-1, 0), "Helvetica-Bold"),
-        ("FONTSIZE",      (0, 0), (-1, -1), 8.5),
-        ("ROWBACKGROUNDS",(0, 1), (-1, -1), [colors.HexColor("#F0F9FF"), WHITE]),
-        ("GRID",          (0, 0), (-1, -1), 0.5, BORDER),
-        ("TOPPADDING",    (0, 0), (-1, -1), 5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-        ("ALIGN",         (0, 1), (1, -1), "CENTER"),
-        ("FONTNAME",      (0, 1), (1, -1), "Helvetica-Bold"),
-        ("TEXTCOLOR",     (0, 1), (1, 1), RISK_LOW),
-        ("TEXTCOLOR",     (0, 2), (1, 2), RISK_MED),
-        ("TEXTCOLOR",     (0, 3), (1, 3), RISK_HIGH),
-        ("VALIGN",        (0, 0), (-1, -1), "MIDDLE"),
-    ])
-    band_table = Table(
-        band_rows,
-        colWidths=[content_width * 0.14, content_width * 0.13, content_width * 0.73],
-    )
-    band_table.setStyle(band_ts)
-    story.append(band_table)
-    story.append(Spacer(1, 0.4 * cm))
-
-    # ── Wat betekent elke factor? ─────────────────────────────────────────
-    story.append(Paragraph("Wat betekent elke factor?", STYLES["sub_title"]))
-    factor_explanations = [
-        ("Leiderschap", "LMX-7 (Graen & Uhl-Bien, 1995)",
-         "Meet in verkorte vorm de ervaren relatiekwaliteit met de leidinggevende: feedback, "
-         "interesse in ontwikkeling en vertrouwen."),
-        ("Psychologische veiligheid & cultuurmatch", "Psychological Safety / waardenfit",
-         "Meet in verkorte vorm psychologische veiligheid en of de werkomgeving als passend werd ervaren."),
-        ("Groeiperspectief", "JD-R Resources-component",
-         "Meet ervaren ontwikkelruimte, investering in ontwikkeling en loopbaanperspectief."),
-        ("Beloning & voorwaarden", "Job Satisfaction Survey (Spector, 1985)",
-         "Meet ervaren marktconformiteit, eerlijkheid en aansluiting van de totale arbeidsvoorwaarden."),
-        ("Werkbelasting", "JD-R Demands-component",
-         "Meet of de werkdruk haalbaar was en of er voldoende hersteltijd was. "
-         "Vragen zijn positief geformuleerd: hoge score = werkdruk als acceptabel ervaren = lager aandachtssignaal."),
-        ("Rolhelderheid", "Role Conflict & Ambiguity Scale (Rizzo et al., 1970)",
-         "Meet of taken en verwachtingen duidelijk waren en of tegenstrijdige aansturing beperkt bleef."),
-    ]
-
-    for fname, source, explanation in factor_explanations:
-        story.append(Paragraph(
-            f"<b>{fname}</b> <font color='#6B7280' size='8'>({source})</font>",
-            STYLES["body_bold"],
-        ))
-        story.append(Paragraph(explanation, STYLES["body"]))
-        story.append(Spacer(1, 0.15 * cm))
-
-    story.append(Spacer(1, 0.3 * cm))
-
-    # ── Statistische betrouwbaarheid ──────────────────────────────────────
-    story.append(Paragraph("Statistische betrouwbaarheid", STYLES["sub_title"]))
-    story.append(Paragraph(
-        "Scores, patroonanalyse en grafieken worden alleen getoond bij minimaal 10 responses. "
-        f"Subgroepvergelijkingen worden alleen getoond vanaf minimaal {MIN_SEGMENT_N} responses per subgroep. "
-        "Bij kleinere groepen zijn de uitkomsten te gevoelig voor toeval, interpretatiefouten en herleidbaarheid. "
-        "Alle zichtbare uitkomsten blijven indicatief en dienen als gespreksinput — niet als statistische conclusie. "
-        "Alle resultaten worden uitsluitend op gegroepeerd niveau gedeeld, conform de AVG.",
-        STYLES["body"],
-    ))
-
-    if has_segment_deep_dive:
-        story.append(Paragraph(
-            "Bij de add-on Segment deep dive worden subgroepen expliciet afgezet tegen het organisatieniveau. "
-            "Die vergelijking blijft beschrijvend: de verdieping laat zien waar frictie relatief sterker of zwakker terugkomt, "
-            "maar bewijst geen oorzaak.",
-            STYLES["body"],
-        ))
-
-    story.append(Spacer(1, 0.5 * cm))
-
-    # Bronnenlijst
-    story.append(Paragraph("Bronnen", STYLES["sub_title"]))
-    refs = [
-        "Bakker, A. B., & Demerouti, E. (2007). The Job Demands-Resources model. <i>Journal of Managerial Psychology, 22</i>(3), 309–328.",
-        "Deci, E. L., & Ryan, R. M. (2000). The 'what' and 'why' of goal pursuits. <i>Psychological Inquiry, 11</i>(4), 227–268.",
-        "Edmondson, A. C. (1999). Psychological safety and learning behavior in work teams. <i>Administrative Science Quarterly, 44</i>(2), 350–383.",
-        "Gallup (2023). <i>State of the Global Workplace Report.</i> Washington D.C.: Gallup Press. (Aangehaald voor richting in factorweging; geen peer-reviewed bron.)",
-        "Graen, G. B., & Uhl-Bien, M. (1995). Relationship-based approach to leadership. <i>The Leadership Quarterly, 6</i>(2), 219–247.",
-        "Holtom, B. C., et al. (2008). Turnover and retention research. <i>Academy of Management Annals, 2</i>(1), 231–274.",
-        "Rizzo, J. R., House, R. J., & Lirtzman, S. I. (1970). Role conflict and ambiguity in complex organizations. <i>Administrative Science Quarterly, 15</i>(2), 150–163.",
-        "Spector, P. E. (1985). Measurement of human service staff satisfaction. <i>American Journal of Community Psychology, 13</i>(6), 693–713.",
-        "Van den Broeck, A., et al. (2010). Capturing autonomy, competence, and relatedness at work. <i>Journal of Occupational and Organizational Psychology, 83</i>(4), 981–1002.",
-    ]
-    for ref in refs:
-        story.append(Paragraph(f"• {ref}", ParagraphStyle(
-            "ref",
-            fontName="Helvetica",
-            fontSize=7.5,
-            leading=11,
-            textColor=MUTED,
-            spaceAfter=3,
-            leftIndent=8,
-        )))
 
     # ── Build ──────────────────────────────────────────────────────────────
     doc.build(story)

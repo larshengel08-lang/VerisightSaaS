@@ -1,16 +1,18 @@
-# Supabase invite-template voor dashboardtoegang
+# Supabase e-mailtemplates voor Verisight
 
-Dit bestand hoort bij:
+Deze bestanden horen erbij:
 
-- [supabase-dashboard-invite-template.html](C:/Users/larsh/Desktop/Business/Verisight/frontend/emails/supabase-dashboard-invite-template.html)
+- [supabase-magic-link-template.html](C:/Users/larsh/Desktop/Business/Verisight/frontend/emails/supabase-magic-link-template.html)
+- [supabase-reset-password-template.html](C:/Users/larsh/Desktop/Business/Verisight/frontend/emails/supabase-reset-password-template.html)
 
-## Wat dit template doet
+## Welke template hoort waar
 
-- Verisight-styling in plaats van een generieke Supabase-mail
-- duidelijke CTA om het account te activeren
-- optionele personalisatie met:
-  - `{{ .Data.full_name }}`
-  - `{{ .Data.organization_name }}`
+- `Magic link`
+  - gebruik: `supabase-magic-link-template.html`
+  - voor de huidige klantuitnodigingsflow / accountactivatie
+- `Reset password`
+  - gebruik: `supabase-reset-password-template.html`
+  - voor wachtwoordherstel door bestaande gebruikers
 
 ## Waar dit ingesteld moet worden
 
@@ -18,13 +20,13 @@ In Supabase Dashboard:
 
 1. `Authentication`
 2. `Email Templates`
-3. Open het template voor de e-mail die door `signInWithOtp` wordt gebruikt
-4. Vervang de HTML door de inhoud van `supabase-dashboard-invite-template.html`
+3. Open `Magic link` en plak de inhoud van `supabase-magic-link-template.html`
+4. Open `Reset password` en plak de inhoud van `supabase-reset-password-template.html`
 
 ## Belangrijke placeholders
 
 - `{{ .ConfirmationURL }}` moet blijven staan
-- `{{ .Data.full_name }}` en `{{ .Data.organization_name }}` zijn optioneel
+- `{{ .Data.full_name }}` en `{{ .Data.organization_name }}` zijn optioneel in de magic-linktemplate
 
 ## Belangrijke nuance
 

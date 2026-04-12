@@ -276,8 +276,8 @@ export default function LandingPage() {
               <h2 className="mt-3 text-3xl font-bold text-slate-950 md:text-4xl">Een vaste trajectprijs voor ExitScan, met één optionele verdieping.</h2>
               <p className="mt-4 text-lg leading-8 text-slate-600">Heldere standaardprijs, geen abonnement en tijdelijk early-adoptertarief voor de eerste organisaties.</p>
             </div>
-            <div className="mt-12 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-              <div className="rounded-[2rem] border border-blue-700 bg-blue-700 px-8 py-10 text-center text-white shadow-xl">
+            <div className="mt-12 grid items-start gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="self-start rounded-[2rem] border border-blue-700 bg-blue-700 px-8 py-10 text-center text-white shadow-xl">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-100">{baseOffer.title}</p>
                 <p className="mt-4 text-sm font-semibold uppercase tracking-[0.22em] text-blue-100">Standaardprijs</p>
                 <p className="mt-2 text-3xl font-bold text-blue-100/70 line-through">{baseOffer.price}</p>
@@ -288,7 +288,7 @@ export default function LandingPage() {
                   Geschikt voor organisaties die losse exitgesprekken willen omzetten naar één vergelijkbaar organisatiebeeld met dashboard en rapport.
                 </p>
               </div>
-              <div className="rounded-[2rem] border border-slate-200 bg-white px-8 py-10 shadow-sm">
+              <div className="self-start rounded-[2rem] border border-slate-200 bg-white px-8 py-10 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Optionele add-on</p>
                 {optionalAddOns.map(([title, description, note]) => (
                   <div key={title}>

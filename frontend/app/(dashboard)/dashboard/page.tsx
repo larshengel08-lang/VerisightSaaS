@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { CampaignStats } from '@/lib/types'
 import { RiskBadge } from '@/components/ui/risk-badge'
+import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
 
 export default async function DashboardHomePage() {
   const supabase = await createClient()
@@ -66,16 +67,13 @@ function CampaignCard({ campaign: c }: { campaign: CampaignStats }) {
   const avgRisk = c.avg_risk_score
 
   return (
-    <Link
-      href={`/campaigns/${c.campaign_id}`}
-      className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all group"
-    >
+    <div className="bg-white rounded-xl border border-gray-200 p-5 transition-all hover:border-blue-300 hover:shadow-md">
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1 min-w-0">
           <span className="inline-block text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded mb-1">
             {scanLabel}
           </span>
-          <h2 className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
+          <h2 className="text-sm font-semibold text-gray-900 truncate">
             {c.campaign_name}
           </h2>
         </div>
@@ -109,7 +107,17 @@ function CampaignCard({ campaign: c }: { campaign: CampaignStats }) {
           <span className="text-xs text-gray-400">Nog geen data</span>
         )}
       </div>
-    </Link>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
+        <Link
+          href={`/campaigns/${c.campaign_id}`}
+          className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+        >
+          Open dashboard →
+        </Link>
+        <PdfDownloadButton campaignId={c.campaign_id} campaignName={c.campaign_name} />
+      </div>
+    </div>
   )
 }
 

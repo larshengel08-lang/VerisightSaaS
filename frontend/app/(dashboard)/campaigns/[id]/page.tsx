@@ -9,7 +9,7 @@ import { CampaignActions } from './campaign-actions'
 import { PdfDownloadButton } from './pdf-download-button'
 import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import type { CampaignStats, SurveyResponse, Respondent } from '@/lib/types'
-import { FACTOR_LABELS } from '@/lib/types'
+import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -54,6 +54,13 @@ export default async function CampaignPage({ params }: Props) {
     profile?.is_verisight_admin === true ||
     membership?.role === 'owner' ||
     membership?.role === 'member'
+
+  const { data: campaignMeta } = await supabase
+    .from('campaigns')
+    .select('enabled_modules')
+    .eq('id', id)
+    .maybeSingle()
+  const hasSegmentDeepDive = hasCampaignAddOn(campaignMeta, 'segment_deep_dive')
 
   // Alle responses voor patroonanalyse
   const { data: responsesRaw } = await supabase
@@ -204,6 +211,8 @@ export default async function CampaignPage({ params }: Props) {
         </div>
       )}
 
+      <MethodologyCard hasSegmentDeepDive={hasSegmentDeepDive} />
+
       {/* Grafieken + factortabel */}
       {hasEnoughData && (
         <>
@@ -340,6 +349,55 @@ function SdtGauge({ label, score }: { label: string; score: number }) {
       <div className="flex justify-between text-xs text-gray-400 mt-1">
         <span>1</span>
         <span>10</span>
+      </div>
+    </div>
+  )
+}
+
+function MethodologyCard({ hasSegmentDeepDive }: { hasSegmentDeepDive: boolean }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-700">Methodologie & uitleg</h2>
+          <p className="mt-2 text-sm leading-7 text-gray-600">
+            Verisight laat signalen en patronen zien, geen diagnose. De frictiescore is een indicatieve samenvatting van
+            ervaren werkfrictie op groepsniveau. Gebruik de uitkomsten om gerichter door te vragen, niet om oorzaken
+            definitief vast te stellen.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Frictiescore</p>
+          <p className="mt-2 text-sm leading-6 text-slate-700">
+            Schaal 1–10. Hogere score betekent meer signalen van ervaren werkfrictie. Dit is geen voorspelling of
+            causaliteitsclaim.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Signaalbanden</p>
+          <p className="mt-2 text-sm leading-6 text-slate-700">
+            `Laag`, `Midden` en `Hoog` helpen prioriteren. Ze zeggen waar extra aandacht nodig is, niet automatisch
+            wat de oorzaak is.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Betrouwbaarheid</p>
+          <p className="mt-2 text-sm leading-6 text-slate-700">
+            Grafieken en patroonanalyse tonen we pas vanaf minimaal 10 responses. Subgroepvergelijkingen blijven uit
+            beeld bij kleine aantallen om ruis en herleidbaarheid te beperken.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Segment deep dive</p>
+          <p className="mt-2 text-sm leading-6 text-slate-700">
+            {hasSegmentDeepDive
+              ? 'Deze campagne gebruikt segment deep dive. Verschillen tussen afdelingen, functieniveaus of diensttijd laten zien waar frictie relatief sterker of zwakker terugkomt dan op organisatieniveau. Die vergelijking is beschrijvend, niet causaal.'
+              : 'Als segment deep dive aanstaat, laat Verisight zien welke subgroepen relatief afwijken van het organisatieniveau. Dat blijft beschrijvend en vormt vooral input voor vervolgvragen.'}
+          </p>
+        </div>
       </div>
     </div>
   )
