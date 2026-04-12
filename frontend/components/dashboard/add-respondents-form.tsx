@@ -34,6 +34,7 @@ interface ImportPreviewRow {
   email: string
   department: string | null
   role_level: string | null
+  exit_month: string | null
   annual_salary_eur: number | null
 }
 
@@ -72,6 +73,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
   const [emailInput, setEmailInput] = useState('')
   const [department, setDepartment] = useState('')
   const [roleLevel, setRoleLevel] = useState('')
+  const [exitMonth, setExitMonth] = useState('')
   const [salary, setSalary] = useState('')
   const [count, setCount] = useState(5)
 
@@ -119,12 +121,14 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
           email,
           department: department || null,
           role_level: roleLevel || null,
+          exit_month: exitMonth || null,
           annual_salary_eur: salary ? parseFloat(salary) : null,
         }))
       : Array.from({ length: count }, () => ({
           email: null,
           department: department || null,
           role_level: roleLevel || null,
+          exit_month: exitMonth || null,
           annual_salary_eur: salary ? parseFloat(salary) : null,
         }))
 
@@ -134,6 +138,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
       campaign_id: campaignId,
       department: r.department,
       role_level: r.role_level,
+      exit_month: r.exit_month,
       annual_salary_eur: r.annual_salary_eur,
       email: r.email,
     }))
@@ -275,6 +280,9 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             <p className="mt-2 text-blue-800">
               Aan te leveren Excel-kolommen: <code className="font-mono">email</code> (verplicht), <code className="font-mono">department</code> en <code className="font-mono">role_level</code> (sterk aanbevolen), <code className="font-mono">annual_salary_eur</code> (optioneel).
             </p>
+            <p className="mt-2 text-blue-800">
+              Gebruik bij retrospectieve batches ook <code className="font-mono">exit_month</code> in formaat <code className="font-mono">YYYY-MM</code>, zodat recency en recall bias beter te duiden zijn in het rapport.
+            </p>
           </div>
         )}
 
@@ -318,7 +326,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
 
         {mode !== 'upload' && (
           <>
-            <div className="grid sm:grid-cols-3 gap-3 pt-1">
+            <div className="grid sm:grid-cols-4 gap-3 pt-1">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Afdeling <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
@@ -342,6 +350,17 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Exitmaand <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
+                </label>
+                <input
+                  type="month"
+                  value={exitMonth}
+                  onChange={e => setExitMonth(e.target.value)}
+                  className={inputCls}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -375,7 +394,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             <p className="text-sm font-semibold text-gray-800 mb-1">Upload respondentbestand</p>
             <p className="text-xs text-gray-500 leading-relaxed">
               Gebruik één rij per respondent met minimaal een kolom <code className="font-mono">email</code>. Optioneel
-              kun je <code className="font-mono">department</code>, <code className="font-mono">role_level</code> en
+              kun je <code className="font-mono">department</code>, <code className="font-mono">role_level</code>, <code className="font-mono">exit_month</code> en
               <code className="font-mono">annual_salary_eur</code> meesturen. Upload een <code className="font-mono">.csv</code>
               {' '}of <code className="font-mono">.xlsx</code> bestand.
             </p>
@@ -383,7 +402,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
               <p className="mt-2 text-xs leading-relaxed text-blue-800">
                 Voor {REPORT_ADD_ON_LABELS.segment_deep_dive.toLowerCase()} zijn ingevulde kolommen <code className="font-mono">department</code>
                 {' '}en <code className="font-mono">role_level</code> sterk aanbevolen. Zonder die velden blijft het rapport beperkter op subgroepniveau.
-                Gebruik bij voorkeur exact deze kolommen: <code className="font-mono">email</code>, <code className="font-mono">department</code>, <code className="font-mono">role_level</code>, <code className="font-mono">annual_salary_eur</code>.
+                Gebruik bij voorkeur exact deze kolommen: <code className="font-mono">email</code>, <code className="font-mono">department</code>, <code className="font-mono">role_level</code>, <code className="font-mono">exit_month</code>, <code className="font-mono">annual_salary_eur</code>.
               </p>
             )}
             <a
@@ -463,6 +482,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                           <th className="px-2 py-2 text-left">E-mail</th>
                           <th className="px-2 py-2 text-left">Afdeling</th>
                           <th className="px-2 py-2 text-left">Niveau</th>
+                          <th className="px-2 py-2 text-left">Exitmaand</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -472,6 +492,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                             <td className="px-2 py-2 font-mono">{row.email}</td>
                             <td className="px-2 py-2">{row.department || '—'}</td>
                             <td className="px-2 py-2">{row.role_level || '—'}</td>
+                            <td className="px-2 py-2">{row.exit_month || '—'}</td>
                           </tr>
                         ))}
                       </tbody>

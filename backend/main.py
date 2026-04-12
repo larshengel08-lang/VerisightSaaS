@@ -192,6 +192,13 @@ RESPONDENT_IMPORT_COLUMN_ALIASES = {
     "functieniveau": "role_level",
     "niveau": "role_level",
     "functie_niveau": "role_level",
+    "exit_month": "exit_month",
+    "exit month": "exit_month",
+    "exitmaand": "exit_month",
+    "vertrekmaand": "exit_month",
+    "uittreedmaand": "exit_month",
+    "uittreedatum_maand": "exit_month",
+    "uittreedatum maand": "exit_month",
     "annual_salary_eur": "annual_salary_eur",
     "salary": "annual_salary_eur",
     "jaarsalaris": "annual_salary_eur",
@@ -271,6 +278,20 @@ def _normalize_role_level(value: Any) -> str | None:
     return ROLE_LEVEL_ALIASES.get(raw)
 
 
+def _normalize_exit_month(value: Any) -> str | None:
+    if value in (None, ""):
+        return None
+    if hasattr(value, "strftime"):
+        return value.strftime("%Y-%m")
+    raw = str(value).strip()
+    if not raw:
+        return None
+    raw = raw.replace("/", "-").replace(".", "-")
+    if len(raw) == 7 and raw[4] == "-":
+        return raw
+    return None
+
+
 def _read_uploaded_rows(upload: UploadFile, content: bytes) -> list[tuple[int, dict[str, Any]]]:
     filename = (upload.filename or "").lower()
     if filename.endswith(".csv"):
@@ -323,7 +344,10 @@ def _build_import_preview(
     duplicate_existing = 0
 
     for row_number, row in raw_rows:
-        normalized = {canonical: None for canonical in ("email", "department", "role_level", "annual_salary_eur")}
+        normalized = {
+            canonical: None
+            for canonical in ("email", "department", "role_level", "exit_month", "annual_salary_eur")
+        }
         for key, value in row.items():
             canonical = _normalize_import_header(key)
             if not canonical:
@@ -345,6 +369,17 @@ def _build_import_preview(
                     row_number=row_number,
                     field="role_level",
                     message="Functieniveau niet herkend. Gebruik uitvoerend, specialist, senior, manager, director of c_level.",
+                )
+            )
+            continue
+
+        exit_month = _normalize_exit_month(normalized["exit_month"])
+        if normalized["exit_month"] not in (None, "") and not exit_month:
+            issues.append(
+                RespondentImportIssue(
+                    row_number=row_number,
+                    field="exit_month",
+                    message="Gebruik voor exitmaand het formaat JJJJ-MM, bijvoorbeeld 2026-03.",
                 )
             )
             continue
@@ -390,6 +425,7 @@ def _build_import_preview(
                 email=email,
                 department=department,
                 role_level=role_level,
+                exit_month=exit_month,
                 annual_salary_eur=annual_salary_eur,
             )
         except Exception as exc:
@@ -411,6 +447,7 @@ def _build_import_preview(
                     email=email,
                     department=department,
                     role_level=role_level,
+                    exit_month=exit_month,
                     annual_salary_eur=annual_salary_eur,
                 )
             )
@@ -833,6 +870,7 @@ def _create_campaign_respondents(
             campaign_id=campaign.id,
             department=r.department,
             role_level=r.role_level,
+            exit_month=r.exit_month,
             annual_salary_eur=r.annual_salary_eur,
             email=r.email,
         )

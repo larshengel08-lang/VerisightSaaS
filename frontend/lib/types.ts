@@ -52,6 +52,7 @@ export interface Respondent {
   token: string
   department: string | null
   role_level: string | null
+  exit_month: string | null
   annual_salary_eur: number | null
   sent_at: string | null
   opened_at: string | null

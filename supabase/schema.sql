@@ -62,6 +62,7 @@ create table if not exists public.respondents (
   token             uuid unique default gen_random_uuid(),
   department        text,
   role_level        text,
+  exit_month        text,
   annual_salary_eur numeric,
   sent_at           timestamptz,
   opened_at         timestamptz,
@@ -98,6 +99,12 @@ do $$ begin
     where table_name = 'respondents' and column_name = 'email'
   ) then
     alter table public.respondents add column email text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'respondents' and column_name = 'exit_month'
+  ) then
+    alter table public.respondents add column exit_month text;
   end if;
   if not exists (
     select 1 from information_schema.columns

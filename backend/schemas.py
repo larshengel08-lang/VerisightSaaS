@@ -85,6 +85,7 @@ class CampaignRead(OrmBase):
 class RespondentCreate(BaseModel):
     department: Optional[str] = Field(None, max_length=100)
     role_level: Optional[str] = Field(None, max_length=50)
+    exit_month: Optional[str] = Field(None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$")
     annual_salary_eur: Optional[float] = Field(None, gt=0, lt=1_000_000)
     email: Optional[EmailStr] = None  # voor uitnodigingsmail
 
@@ -95,6 +96,7 @@ class RespondentRead(OrmBase):
     token: str
     department: Optional[str]
     role_level: Optional[str]
+    exit_month: Optional[str]
     completed: bool
     completed_at: Optional[datetime]
     sent_at: Optional[datetime]
@@ -117,6 +119,7 @@ class RespondentImportPreviewRow(BaseModel):
     email: EmailStr
     department: Optional[str] = None
     role_level: Optional[str] = None
+    exit_month: Optional[str] = None
     annual_salary_eur: Optional[float] = None
 
 

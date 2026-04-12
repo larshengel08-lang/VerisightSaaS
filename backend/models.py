@@ -104,6 +104,7 @@ class Respondent(Base):
     # Minimal metadata for segmentation (operator-supplied, optional)
     department: Mapped[str | None] = mapped_column(String(100), nullable=True)
     role_level: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    exit_month: Mapped[str | None] = mapped_column(String(7), nullable=True)  # YYYY-MM, vooral voor retrospectieve batches
     annual_salary_eur: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # E-mailadres voor uitnodiging (optioneel — nooit getoond in dashboard)
