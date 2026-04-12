@@ -28,19 +28,19 @@ export const trustItems = [
 
 export const statCards = [
   {
-    value: '1',
-    label: 'duidelijk traject',
-    detail: 'Van inrichting tot rapportage in een vaste vorm.',
+    value: 'Binnen weken',
+    label: 'eerste managementbeeld',
+    detail: 'Van inrichting tot eerste rapportage in een vaste, begeleide vorm.',
   },
   {
-    value: '2',
-    label: 'scanmodi',
+    value: 'Baseline of Live',
+    label: 'duidelijke scanvorm',
     detail: 'Baseline als instap, Live als vervolgstap of op aanvraag.',
   },
   {
-    value: '+1',
-    label: 'optionele verdieping',
-    detail: 'Segment deep dive voor scherpere subgroepanalyse.',
+    value: 'Dashboard + rapport',
+    label: 'vaste output',
+    detail: 'Met optionele segment deep dive voor scherpere subgroepanalyse.',
   },
 ] as const
 

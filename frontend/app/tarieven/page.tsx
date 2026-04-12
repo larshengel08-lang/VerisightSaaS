@@ -23,7 +23,7 @@ export default function TarievenPage() {
       <div className="grid items-start gap-6 lg:grid-cols-[1.08fr_0.92fr]">
         <div className="rounded-[2rem] border border-slate-900 bg-[#0d1b2e] p-8 text-white shadow-[0_28px_70px_rgba(15,23,42,0.18)] md:p-10">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">ExitScan Baseline</p>
-          <h2 className="font-display mt-4 text-5xl text-white md:text-6xl">euro 2.950</h2>
+          <h2 className="font-display mt-4 text-5xl text-white md:text-6xl">€ 2.950</h2>
           <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">
             Dit is de standaard eerste instap voor organisaties die snel een betrouwbaar organisatiebeeld, duidelijke prioriteiten en een professioneel managementrapport willen.
           </p>
@@ -45,6 +45,21 @@ export default function TarievenPage() {
               De launchprijs sluit in de praktijk meestal aan op een Baseline-traject. Een Live exitscan is mogelijk als vervolg of op aanvraag, afhankelijk van volume en werkwijze.
             </p>
           </div>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/#kennismaking"
+              className="inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(37,99,235,0.18)] transition-all hover:-translate-y-0.5 hover:bg-blue-700"
+            >
+              Plan mijn gesprek
+            </Link>
+            <Link
+              href="/aanpak"
+              className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              Bekijk aanpak
+            </Link>
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -55,7 +70,7 @@ export default function TarievenPage() {
               Extra segmentanalyse in het rapport, met scherpere uitsplitsing naar afdeling, functieniveau en diensttijd. Zinnig als je niet alleen het totaalbeeld wilt zien, maar ook waar verschillen extra validatie verdienen.
             </p>
             <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50 px-5 py-5">
-              <p className="text-sm font-semibold text-blue-950">Meerprijs: euro 950</p>
+              <p className="text-sm font-semibold text-blue-950">Meerprijs: € 950</p>
               <p className="mt-2 text-sm leading-7 text-blue-900">
                 Werkt het best wanneer afdeling, functieniveau en bij retrospectieve batches ook exitmaand netjes zijn aangeleverd.
               </p>
@@ -69,7 +84,7 @@ export default function TarievenPage() {
           </div>
 
           <div className="rounded-[2rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Commerciele fit</p>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Commerciële fit</p>
             <h3 className="mt-4 text-2xl font-semibold text-slate-950">Deze prijs werkt vooral als je nu richting wilt aanbrengen.</h3>
             <p className="mt-4 text-sm leading-7 text-slate-600">
               Verisight is geen tool die vooral meer data produceert. Het traject is bedoeld om sneller te zien welke terugkerende patronen aandacht vragen en waar verdere actie of validatie het meest oplevert.

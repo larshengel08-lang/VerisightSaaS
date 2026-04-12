@@ -26,7 +26,7 @@ const problemCards = [
 ] as const
 
 const heroBullets = [
-  'Dashboard en managementrapport in één traject',
+  'Dashboard en managementrapport in een traject',
   'Begeleide uitvoering, dus geen extra toolbeheer voor HR',
   'Snel zien waar gerichte actie het meeste oplevert',
 ] as const
@@ -35,26 +35,26 @@ const infoCards = [
   {
     href: '/product',
     eyebrow: 'Product',
-    title: 'Waarom Verisight anders is',
+    title: 'Bekijk wat je concreet krijgt',
     description:
-      'Bekijk hoe Verisight zich verhoudt tot losse exitgesprekken, surveytools en consultancy.',
-    cta: 'Bekijk product',
+      'Zie hoe ExitScan zich verhoudt tot losse exitgesprekken, surveytools en zwaardere trajecten.',
+    cta: 'Naar product',
   },
   {
     href: '/aanpak',
     eyebrow: 'Aanpak',
-    title: 'Hoe een exitscan werkt',
+    title: 'Bekijk hoe het traject loopt',
     description:
-      'Zie het verschil tussen ExitScan Baseline en ExitScan Live, en wat je als organisatie aanlevert.',
-    cta: 'Bekijk aanpak',
+      'Zie het verschil tussen Baseline en Live en wat je als organisatie precies aanlevert.',
+    cta: 'Naar aanpak',
   },
   {
     href: '/tarieven',
     eyebrow: 'Tarieven',
-    title: 'Wat je koopt en wat het kost',
+    title: 'Bekijk prijs en add-on',
     description:
-      'Bekijk de launchprijs, de add-on en wanneer segmentverdieping logisch is.',
-    cta: 'Bekijk tarieven',
+      'Bekijk de launchprijs, de segment deep dive en wanneer die extra laag logisch is.',
+    cta: 'Naar tarieven',
   },
 ] as const
 
@@ -86,7 +86,7 @@ export default function LandingPage() {
                   <span className="block text-blue-700">Zie waar gerichte actie het meeste oplevert.</span>
                 </h1>
                 <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
-                  Verisight bundelt exitgegevens tot één vergelijkbaar organisatiebeeld, met dashboard, managementrapport en duidelijke prioriteiten voor HR, MT en directie.
+                  Verisight bundelt exitgegevens tot een vergelijkbaar organisatiebeeld, met dashboard, managementrapport en duidelijke prioriteiten voor HR, MT en directie.
                 </p>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -201,9 +201,9 @@ export default function LandingPage() {
         <section className="bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] py-24">
           <div className="mx-auto max-w-6xl px-6">
             <SectionHeading
-              eyebrow="Zo is de site opgebouwd"
-              title="Bekijk product, aanpak en tarieven op aparte pagina’s."
-              description="Zo kun je sneller zien wat Verisight is, hoe een exitscan werkt en welke vorm het best past bij jullie situatie."
+              eyebrow="Kies je route"
+              title="Ga direct naar het deel dat je nu nodig hebt."
+              description="Gebruik de pagina’s hieronder om sneller te beoordelen of Verisight past bij jullie vraag, werkwijze en timing."
               align="center"
             />
 
@@ -250,10 +250,8 @@ export default function LandingPage() {
                 ))}
               </div>
             </div>
-            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
-              <div className="rounded-[1.6rem] bg-white p-1">
-                <ContactForm />
-              </div>
+            <div>
+              <ContactForm surface="light" />
             </div>
           </div>
         </section>

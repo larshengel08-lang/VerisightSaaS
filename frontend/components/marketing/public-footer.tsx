@@ -55,8 +55,8 @@ export function PublicFooter() {
                 hallo@verisight.nl
               </a>
             </p>
-            <p>Verkennend gesprek in korte vorm</p>
-            <p>Data gehost in Europa</p>
+            <p>Voor organisaties vanaf circa 200 medewerkers</p>
+            <p>Gehost in Europa</p>
           </div>
         </div>
       </div>

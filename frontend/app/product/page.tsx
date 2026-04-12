@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { ExpandablePreview } from '@/components/marketing/expandable-preview'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
+import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { SectionHeading } from '@/components/marketing/section-heading'
 import { comparisonCards, outcomeCards, trustItems } from '@/components/marketing/site-content'
 import { TrustStrip } from '@/components/marketing/trust-strip'
@@ -10,7 +10,7 @@ export default function ProductPage() {
     <MarketingPageShell
       eyebrow="Product"
       title="Een exitscan die meer oplevert dan losse gesprekken of een generieke surveytool."
-      description="Verisight bundelt vertrekinput tot één vergelijkbaar organisatiebeeld, met dashboard, rapport en prioriteiten voor HR, MT en directie."
+      description="Verisight bundelt vertrekinput tot een vergelijkbaar organisatiebeeld, met dashboard, rapport en prioriteiten voor HR, MT en directie."
     >
       <div className="grid gap-6 lg:grid-cols-3">
         {comparisonCards.map(({ title, description, outcome }) => (
@@ -40,7 +40,18 @@ export default function ProductPage() {
         </div>
       </div>
 
-      <div className="mt-16 grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="mt-16 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Voorbeeldweergave</p>
+          <h2 className="mt-4 text-3xl font-semibold text-slate-950">Zo ziet de kernoutput eruit voor management.</h2>
+          <p className="mt-4 text-sm leading-7 text-slate-600">
+            Niet alleen een rij antwoorden, maar een compacte weergave van wat terugkeert, waar eerst naar gekeken moet worden en hoe je het gesprek intern voert.
+          </p>
+          <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+            <PreviewSlider />
+          </div>
+        </div>
+
         <div className="rounded-[2rem] border border-slate-200 bg-[#0d1b2e] p-8 text-white shadow-[0_28px_70px_rgba(15,23,42,0.16)]">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">Waarom dit werkt</p>
           <h2 className="font-display mt-4 text-4xl text-white">Trust zonder theater.</h2>
@@ -50,20 +61,12 @@ export default function ProductPage() {
           <div className="mt-8">
             <TrustStrip items={trustItems} tone="dark" />
           </div>
-        </div>
-
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Voorbeeldrapport</p>
-          <h2 className="mt-4 text-3xl font-semibold text-slate-950">Zo ziet de verdiepte segmentanalyse eruit.</h2>
-          <p className="mt-4 text-sm leading-7 text-slate-600">
-            De output blijft in gewone taal, maar laat wel zien waar verschillen tussen afdelingen, functieniveaus of diensttijd verdere validatie verdienen.
-          </p>
-          <ExpandablePreview
-            src="/segment-deep-dive-preview.png"
-            alt="Voorbeeld van segmentanalyse in het Verisight-rapport"
-            className="mt-6"
-            badge="Voorbeeld"
-          />
+          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5">
+            <p className="text-sm font-semibold text-white">Optioneel uit te breiden met segment deep dive</p>
+            <p className="mt-2 text-sm leading-7 text-slate-300">
+              Voor organisaties die niet alleen het totaalbeeld willen zien, maar ook explicieter willen kijken naar verschillen per afdeling, functieniveau of diensttijd.
+            </p>
+          </div>
         </div>
       </div>
 
