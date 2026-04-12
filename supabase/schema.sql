@@ -16,9 +16,14 @@ create table if not exists public.organizations (
   name          text not null,
   slug          text unique not null,
   contact_email text not null,
-  api_key       uuid unique default gen_random_uuid(),
   is_active     boolean default true,
   created_at    timestamptz default now()
+);
+
+create table if not exists public.organization_secrets (
+  org_id      uuid primary key references public.organizations(id) on delete cascade,
+  api_key     uuid unique default gen_random_uuid(),
+  created_at  timestamptz default now()
 );
 
 create table if not exists public.org_members (
@@ -50,6 +55,7 @@ create table if not exists public.campaigns (
   organization_id uuid references public.organizations(id) on delete cascade not null,
   name            text not null,
   scan_type       text not null check (scan_type in ('exit', 'retention')),
+  delivery_mode   text check (delivery_mode in ('baseline', 'live')),
   is_active       boolean default true,
   enabled_modules jsonb,
   created_at      timestamptz default now(),
@@ -84,6 +90,62 @@ do $$ begin
     check (role in ('owner', 'member', 'viewer'));
 exception when others then null;
 end $$;
+
+-- Voeg delivery_mode toe aan bestaande campaigns indien nog niet aanwezig
+do $$ begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'campaigns' and column_name = 'delivery_mode'
+  ) then
+    alter table public.campaigns add column delivery_mode text;
+    alter table public.campaigns
+      add constraint campaigns_delivery_mode_check
+      check (delivery_mode in ('baseline', 'live'));
+  end if;
+exception when duplicate_object then null;
+end $$;
+
+-- Backfill geheime org-sleutels uit oude organizations.api_key, indien nog aanwezig
+do $$ begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_name = 'organizations' and column_name = 'api_key'
+  ) then
+    insert into public.organization_secrets (org_id, api_key)
+    select id, api_key
+    from public.organizations
+    where api_key is not null
+    on conflict (org_id) do nothing;
+
+    alter table public.organizations drop column if exists api_key;
+  end if;
+end $$;
+
+create or replace function public.ensure_organization_secret()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.organization_secrets (org_id)
+  values (new.id)
+  on conflict (org_id) do nothing;
+
+  if auth.uid() is not null then
+    insert into public.org_members (org_id, user_id, role)
+    values (new.id, auth.uid(), 'owner')
+    on conflict (org_id, user_id) do nothing;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists organizations_create_secret on public.organizations;
+create trigger organizations_create_secret
+after insert on public.organizations
+for each row execute function public.ensure_organization_secret();
 
 -- Voeg nieuwe kolommen toe aan bestaande tabel indien nog niet aanwezig
 do $$ begin
@@ -184,6 +246,7 @@ create index if not exists idx_contact_requests_created_at on public.contact_req
 -- ============================================================
 
 alter table public.organizations    enable row level security;
+alter table public.organization_secrets enable row level security;
 alter table public.org_members      enable row level security;
 alter table public.org_invites      enable row level security;
 alter table public.campaigns        enable row level security;
@@ -220,6 +283,19 @@ as $$
     where org_members.org_id = $1
       and org_members.user_id = auth.uid()
       and org_members.role in ('owner', 'member')
+  );
+$$;
+
+create or replace function public.is_verisight_admin_user()
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from public.profiles
+    where profiles.id = auth.uid()
+      and profiles.is_verisight_admin = true
   );
 $$;
 
@@ -264,6 +340,7 @@ grant execute on function public.accept_org_invites_for_current_user() to authen
 -- Organizations
 drop policy if exists "org_members_can_select_org"       on public.organizations;
 drop policy if exists "authenticated_can_insert_org"     on public.organizations;
+drop policy if exists "verisight_admins_can_insert_org"  on public.organizations;
 drop policy if exists "owners_can_update_org"            on public.organizations;
 drop policy if exists "owners_can_delete_org"            on public.organizations;
 
@@ -271,9 +348,9 @@ create policy "org_members_can_select_org"
   on public.organizations for select
   using (public.is_org_member(id));
 
-create policy "authenticated_can_insert_org"
+create policy "verisight_admins_can_insert_org"
   on public.organizations for insert
-  with check (auth.uid() is not null);
+  with check (public.is_verisight_admin_user());
 
 create policy "owners_can_update_org"
   on public.organizations for update

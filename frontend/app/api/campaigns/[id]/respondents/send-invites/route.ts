@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
+import { getOrganizationApiKey } from '@/lib/organization-secrets'
+import { getBackendApiUrl } from '@/lib/server-env'
 
 interface Context {
   params: Promise<{ id: string }>
@@ -36,22 +36,19 @@ export async function POST(request: Request, { params }: Context) {
     return NextResponse.json({ detail: 'Campaign niet gevonden of niet toegankelijk.' }, { status: 404 })
   }
 
-  const { data: organization, error: orgError } = await supabase
-    .from('organizations')
-    .select('api_key')
-    .eq('id', campaign.organization_id)
-    .single()
-
-  if (orgError || !organization?.api_key) {
+  let apiKey: string
+  try {
+    apiKey = await getOrganizationApiKey(campaign.organization_id)
+  } catch {
     return NextResponse.json({ detail: 'Autorisatie voor uitnodigingen ontbreekt.' }, { status: 403 })
   }
 
   const body = await request.text()
-  const backendResponse = await fetch(`${API_BASE}/api/campaigns/${id}/send-invites`, {
+  const backendResponse = await fetch(`${getBackendApiUrl()}/api/campaigns/${id}/send-invites`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': organization.api_key,
+      'x-api-key': apiKey,
     },
     body,
     cache: 'no-store',

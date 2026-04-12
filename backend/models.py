@@ -50,11 +50,15 @@ class Organization(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     contact_email: Mapped[str] = mapped_column(String(255), nullable=False)
-    api_key: Mapped[str] = mapped_column(String(64), unique=True, default=_uuid)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     campaigns: Mapped[list["Campaign"]] = relationship(back_populates="organization", cascade="all, delete-orphan")
+    secret: Mapped["OrganizationSecret | None"] = relationship(
+        back_populates="organization",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
 
     def __repr__(self) -> str:
         return f"<Organization {self.slug!r}>"
@@ -87,6 +91,23 @@ class Campaign(Base):
 
     def __repr__(self) -> str:
         return f"<Campaign {self.name!r} ({self.scan_type})>"
+
+
+# ---------------------------------------------------------------------------
+# OrganizationSecret (server-only tenant secret)
+# ---------------------------------------------------------------------------
+
+class OrganizationSecret(Base):
+    __tablename__ = "organization_secrets"
+
+    org_id: Mapped[str] = mapped_column(String(36), ForeignKey("organizations.id"), primary_key=True)
+    api_key: Mapped[str] = mapped_column(String(64), unique=True, default=_uuid)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+    organization: Mapped["Organization"] = relationship(back_populates="secret")
+
+    def __repr__(self) -> str:
+        return f"<OrganizationSecret org_id={self.org_id!r}>"
 
 
 # ---------------------------------------------------------------------------

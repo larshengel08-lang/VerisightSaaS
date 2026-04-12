@@ -7,6 +7,8 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { getOrganizationApiKey } from '@/lib/organization-secrets'
+import { getBackendApiUrl } from '@/lib/server-env'
 
 export interface ResendResult {
   sent: number
@@ -37,13 +39,10 @@ export async function resendPendingAction(campaignId: string): Promise<ResendRes
     return { sent: 0, failed: 0, skipped: 0, error: 'Campaign niet gevonden of niet toegankelijk.' }
   }
 
-  const { data: org, error: orgError } = await supabase
-    .from('organizations')
-    .select('api_key')
-    .eq('id', campaign.organization_id)
-    .single()
-
-  if (orgError || !org?.api_key) {
+  let apiKey: string
+  try {
+    apiKey = await getOrganizationApiKey(campaign.organization_id)
+  } catch {
     return { sent: 0, failed: 0, skipped: 0, error: 'Autorisatie voor backend-uitnodigingen ontbreekt.' }
   }
 
@@ -58,13 +57,12 @@ export async function resendPendingAction(campaignId: string): Promise<ResendRes
   if (fetchError) return { sent: 0, failed: 0, skipped: 0, error: fetchError.message }
   if (!respondents?.length) return { sent: 0, failed: 0, skipped: 0 }
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
   try {
-    const resp = await fetch(`${apiUrl}/api/campaigns/${campaignId}/send-invites`, {
+    const resp = await fetch(`${getBackendApiUrl()}/api/campaigns/${campaignId}/send-invites`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': org.api_key,
+        'x-api-key': apiKey,
       },
       body: JSON.stringify(respondents.map(r => ({ token: r.token, email: r.email }))),
       // Server-side fetch: geen browser CORS-restrictie, directe backend-aanroep

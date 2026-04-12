@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
+import { getBackendApiUrl } from '@/lib/server-env'
 
 function isNonEmptyString(value: unknown, min = 1) {
   return typeof value === 'string' && value.trim().length >= min
@@ -26,7 +25,7 @@ export async function POST(request: Request) {
   const forwardedFor = request.headers.get('x-forwarded-for')
   const realIp = request.headers.get('x-real-ip')
 
-  const response = await fetch(`${API_BASE}/api/contact-request`, {
+  const response = await fetch(`${getBackendApiUrl()}/api/contact-request`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

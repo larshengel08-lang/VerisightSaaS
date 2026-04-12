@@ -243,11 +243,10 @@ class TestComputeRetentionRisk:
 
 class TestComputePreventability:
     """
-    Preventability-logica (Holtom et al., 2008 framework):
-    Step 1 — persoonlijke exitreden → direct NIET_REDBAAR
-    Step 2 — stay_intent ≤ 2 → MOGELIJK_REDBAAR (eerder kunnen ingrijpen)
-    Step 3 — push + hoge intent + lage SDT/org-score → REDBAAR
-    Step 4 — fallback → MOGELIJK_REDBAAR
+    Werkfactorsignaal-logica:
+    - persoonlijke exitreden → beperkt signaal van beïnvloedbare werkfactoren
+    - combinatie van hoofdreden, stay-intent en lage scores → oplopend werkfactorsignaal
+    - output is bewust zachter dan een klassieke redbaar/niet-redbaar classificatie
     """
     def _neutral_sdt(self):
         return compute_sdt_scores({k: 3 for k in [f"B{i}" for i in range(1, 13)]})
@@ -255,28 +254,28 @@ class TestComputePreventability:
     def _neutral_org(self):
         return compute_org_scores(_org_all(3))
 
-    def test_personal_reason_is_niet_redbaar(self):
-        """Persoonlijke exitreden (Step 1) → direct NIET_REDBAAR."""
+    def test_personal_reason_is_beperkt_werksignaal(self):
+        """Persoonlijke exitreden → beperkt werkfactorsignaal."""
         result = compute_preventability(
             exit_reason_category="pensioen",
             stay_intent_score=5,
             sdt_scores=self._neutral_sdt(),
             org_scores=self._neutral_org(),
         )
-        assert result["preventability"] == "NIET_REDBAAR"
+        assert result["preventability"] == "BEPERKT_WERKSIGNAAL"
 
-    def test_low_stay_intent_gives_mogelijk_redbaar(self):
-        """Stay-intent ≤ 2 (Step 2) → MOGELIJK_REDBAAR, ook bij push-reden."""
+    def test_low_stay_intent_with_push_reason_stays_beperkt(self):
+        """Alleen push-hoofdreden zonder extra werkfrictie blijft beperkt signaal."""
         result = compute_preventability(
             exit_reason_category="push",
             stay_intent_score=1,
             sdt_scores=self._neutral_sdt(),
             org_scores=self._neutral_org(),
         )
-        assert result["preventability"] == "MOGELIJK_REDBAAR"
+        assert result["preventability"] == "BEPERKT_WERKSIGNAAL"
 
-    def test_push_high_intent_low_sdt_is_redbaar(self):
-        """Push + hoge intent + slechte SDT-scores (Step 3) → REDBAAR."""
+    def test_push_high_intent_low_sdt_is_gemengd_werksignaal(self):
+        """Push + hoge intent + slechte SDT-scores → minimaal gemengd werkfactorsignaal."""
         # Slechte SDT: alle items op 1 → lage dimensiescores (ruim onder 4.0)
         bad_sdt = compute_sdt_scores({k: 1 for k in [f"B{i}" for i in range(1, 13)]})
         result = compute_preventability(
@@ -285,17 +284,17 @@ class TestComputePreventability:
             sdt_scores=bad_sdt,
             org_scores=self._neutral_org(),
         )
-        assert result["preventability"] == "REDBAAR"
+        assert result["preventability"] == "GEMENGD_WERKSIGNAAL"
 
-    def test_neutral_scenario_is_mogelijk_redbaar(self):
-        """Neutrale scores, push, hoge intent → geen SDT/org < 4.0 → fallback MOGELIJK_REDBAAR."""
+    def test_neutral_scenario_is_beperkt_werksignaal(self):
+        """Neutrale scores zonder extra negatieve signalen blijven beperkt werkfactorsignaal."""
         result = compute_preventability(
             exit_reason_category="push",
             stay_intent_score=5,
             sdt_scores=self._neutral_sdt(),
             org_scores=self._neutral_org(),
         )
-        assert result["preventability"] == "MOGELIJK_REDBAAR"
+        assert result["preventability"] == "BEPERKT_WERKSIGNAAL"
 
     def test_result_has_required_keys(self):
         """Output bevat altijd preventability, label en reasoning."""

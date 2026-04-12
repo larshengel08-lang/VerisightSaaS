@@ -51,9 +51,9 @@ from reportlab.platypus import (
 from reportlab.platypus.frames import Frame
 from reportlab.lib.utils import ImageReader
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
-from backend.models import Campaign, SurveyResponse
+from backend.models import Campaign, Respondent, SurveyResponse
 from backend.scoring import (
     FACTOR_LABELS_NL,
     ORG_FACTOR_KEYS,
@@ -838,7 +838,15 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     Genereer een PDF-rapport voor de gegeven campaign-ID.
     Geeft ruwe bytes terug (geschikt voor HTTP-response of opslaan).
     """
-    camp: Campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    camp: Campaign = (
+        db.query(Campaign)
+        .options(
+            joinedload(Campaign.organization),
+            selectinload(Campaign.respondents).selectinload(Respondent.response),
+        )
+        .filter(Campaign.id == campaign_id)
+        .first()
+    )
     if not camp:
         raise ValueError(f"Campaign niet gevonden: {campaign_id}")
 
@@ -850,8 +858,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
     # ── Data verzamelen ────────────────────────────────────────────────────
     respondents = camp.respondents
-    completed   = [r for r in respondents if r.completed]
-    responses: list[SurveyResponse] = [r.response for r in completed if r.response]
+    completed = [respondent for respondent in respondents if respondent.completed and respondent.response]
+    responses: list[SurveyResponse] = [respondent.response for respondent in completed if respondent.response]
 
     n_invited   = len(respondents)
     n_completed = len(responses)
@@ -867,16 +875,16 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
     pattern_input = [
         {
-            "org_scores":       r.org_scores,
-            "sdt_scores":       r.sdt_scores,
-            "risk_score":       r.risk_score,
-            "preventability":   r.preventability,
-            "exit_reason_code": r.exit_reason_code,
-            "contributing_reason_codes": list((r.pull_factors_raw or {}).keys()),
-            "department":       r.respondent.department,
-            "role_level":       r.respondent.role_level,
+            "org_scores": respondent.response.org_scores,
+            "sdt_scores": respondent.response.sdt_scores,
+            "risk_score": respondent.response.risk_score,
+            "preventability": respondent.response.preventability,
+            "exit_reason_code": respondent.response.exit_reason_code,
+            "contributing_reason_codes": list((respondent.response.pull_factors_raw or {}).keys()),
+            "department": respondent.department,
+            "role_level": respondent.role_level,
         }
-        for r in responses
+        for respondent in completed
     ]
     pattern      = detect_patterns(pattern_input)
     has_pattern  = pattern.get("sufficient_data", False)

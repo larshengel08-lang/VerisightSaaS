@@ -42,16 +42,17 @@ from pathlib import Path
 from time import time
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
+from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
 from backend.email import send_contact_request, send_hr_notification, send_survey_invite
-from backend.models import Campaign, ContactRequest, Organization, Respondent, SurveyResponse
+from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
 from backend.schemas import (
     CampaignCreate,
     CampaignRead,
@@ -103,6 +104,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 
 _IS_SQLITE = DATABASE_URL.startswith("sqlite")
+_IS_PRODUCTION = os.getenv("ENVIRONMENT", "development").lower() == "production"
 logger = logging.getLogger(__name__)
 
 
@@ -120,8 +122,59 @@ def _resolve_survey_modules(enabled_modules: list[str] | None) -> list[str]:
     return factor_modules or ORG_FACTOR_KEYS
 
 
+def _validate_runtime_config() -> None:
+    if not _IS_PRODUCTION:
+        return
+
+    missing = [
+        name for name in ("DATABASE_URL", "FRONTEND_URL", "BACKEND_URL", "RESEND_API_KEY")
+        if not os.getenv(name)
+    ]
+    if missing:
+        raise RuntimeError(
+            "Productieconfig onvolledig. Ontbrekende environment variables: "
+            + ", ".join(missing)
+        )
+
+
+def _require_backend_admin_token(x_admin_token: str | None) -> None:
+    if not _IS_PRODUCTION:
+        return
+
+    configured = os.getenv("BACKEND_ADMIN_TOKEN")
+    if not configured:
+        raise HTTPException(status_code=503, detail="Backend adminactie niet geconfigureerd.")
+    if x_admin_token != configured:
+        raise HTTPException(status_code=403, detail="Admin-token ontbreekt of is ongeldig.")
+
+
+def _send_hr_notification_safe(
+    *,
+    to_email: str,
+    campaign_name: str,
+    campaign_id: str,
+    total_completed: int,
+    total_invited: int,
+) -> None:
+    try:
+        send_hr_notification(
+            to_email=to_email,
+            campaign_name=campaign_name,
+            campaign_id=campaign_id,
+            total_completed=total_completed,
+            total_invited=total_invited,
+        )
+    except Exception as exc:
+        logger.warning("HR-notificatie mislukt: %s", exc)
+        sentry_sdk.capture_message(
+            f"HR-notificatie mislukt na survey-submit: {exc}",
+            level="warning",
+        )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _validate_runtime_config()
     # Alleen tabellen aanmaken bij SQLite (lokale dev zonder Supabase)
     # Bij PostgreSQL/Supabase beheert schema.sql de tabellen
     if _IS_SQLITE:
@@ -648,6 +701,7 @@ async def serve_survey(
 @app.post("/survey/submit", response_class=JSONResponse)
 async def submit_survey(
     payload: SurveySubmit,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     # Validate token
@@ -786,29 +840,18 @@ async def submit_survey(
         })
         raise HTTPException(status_code=500, detail="Opslaan van survey-antwoorden mislukt. Probeer opnieuw.")
 
-    # Stuur notificatie naar HR-beheerder van de organisatie
-    try:
-        campaign_obj = respondent.campaign
-        org = campaign_obj.organization
-        total_completed = sum(1 for r in campaign_obj.respondents if r.completed)
-        total_invited   = len(campaign_obj.respondents)
-        send_hr_notification(
-            to_email        = org.contact_email,
-            campaign_name   = campaign_obj.name,
-            campaign_id     = campaign_obj.id,
-            total_completed = total_completed,
-            total_invited   = total_invited,
-        )
-    except Exception as exc:
-        # Notificatie-fout mag nooit de survey-response blokkeren,
-        # maar moet wel zichtbaar zijn in Sentry.
-        import logging
-        logging.getLogger(__name__).warning("HR-notificatie mislukt: %s", exc)
-        sentry_sdk.capture_message(
-            f"HR-notificatie mislukt na survey-submit: {exc}",
-            level="warning",
-            extras={"campaign_id": str(respondent.campaign_id)},
-        )
+    campaign_obj = respondent.campaign
+    org = campaign_obj.organization
+    total_completed = sum(1 for r in campaign_obj.respondents if r.completed)
+    total_invited = len(campaign_obj.respondents)
+    background_tasks.add_task(
+        _send_hr_notification_safe,
+        to_email=org.contact_email,
+        campaign_name=campaign_obj.name,
+        campaign_id=campaign_obj.id,
+        total_completed=total_completed,
+        total_invited=total_invited,
+    )
 
     return {"status": "ok", "message": "Bedankt voor het invullen van de survey."}
 
@@ -820,8 +863,11 @@ async def submit_survey(
 @app.post("/api/organizations", response_model=OrganizationRead, status_code=201)
 async def create_organization(
     body: OrganizationCreate,
+    x_admin_token: Annotated[str | None, Header()] = None,
     db: Session = Depends(get_db),
 ) -> Organization:
+    _require_backend_admin_token(x_admin_token)
+
     existing = db.query(Organization).filter(Organization.slug == body.slug).first()
     if existing:
         raise HTTPException(status_code=409, detail=f"Slug '{body.slug}' al in gebruik.")
@@ -832,6 +878,8 @@ async def create_organization(
         contact_email=body.contact_email,
     )
     db.add(org)
+    db.flush()
+    db.add(OrganizationSecret(org_id=org.id))
     db.commit()
     db.refresh(org)
     return org
@@ -850,7 +898,33 @@ async def get_organization(slug: str, db: Session = Depends(get_db)) -> Organiza
 # ---------------------------------------------------------------------------
 
 def _get_org_by_api_key(api_key: str, db: Session) -> Organization:
-    org = db.query(Organization).filter(Organization.api_key == api_key).first()
+    secret = (
+        db.query(OrganizationSecret)
+        .options(selectinload(OrganizationSecret.organization))
+        .filter(OrganizationSecret.api_key == api_key)
+        .first()
+    )
+    org = secret.organization if secret else None
+
+    # Backwards-compatible fallback while older databases still store api_key on organizations.
+    if not org:
+        try:
+            row = db.execute(
+                text(
+                    """
+                    select id
+                    from organizations
+                    where api_key = :api_key
+                    limit 1
+                    """
+                ),
+                {"api_key": api_key},
+            ).first()
+            if row:
+                org = db.query(Organization).filter(Organization.id == str(row[0])).first()
+        except Exception:
+            org = None
+
     if not org:
         raise HTTPException(status_code=401, detail="Ongeldige API-sleutel.")
     if not org.is_active:
@@ -877,9 +951,8 @@ def _create_campaign_respondents(
         for r in respondent_inputs
     ]
     db.add_all(respondents)
+    db.flush()
     db.commit()
-    for respondent in respondents:
-        db.refresh(respondent)
 
     emails_sent = 0
     if send_invites:
@@ -939,10 +1012,15 @@ async def add_respondents(
     db: Session = Depends(get_db),
 ) -> list[Respondent]:
     org = _get_org_by_api_key(x_api_key, db)
-    campaign = db.query(Campaign).filter(
-        Campaign.id == campaign_id,
-        Campaign.organization_id == org.id,
-    ).first()
+    campaign = (
+        db.query(Campaign)
+        .options(selectinload(Campaign.respondents).selectinload(Respondent.response))
+        .filter(
+            Campaign.id == campaign_id,
+            Campaign.organization_id == org.id,
+        )
+        .first()
+    )
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
     respondents, _emails_sent = _create_campaign_respondents(
@@ -1059,11 +1137,19 @@ async def send_invites(
     failed = 0
     skipped = 0
 
-    for item in body:
-        respondent = db.query(Respondent).filter(
-            Respondent.token == item.token,
+    requested_tokens = [item.token for item in body]
+    respondents = (
+        db.query(Respondent)
+        .filter(
             Respondent.campaign_id == campaign_id,
-        ).first()
+            Respondent.token.in_(requested_tokens),
+        )
+        .all()
+    )
+    respondents_by_token = {respondent.token: respondent for respondent in respondents}
+
+    for item in body:
+        respondent = respondents_by_token.get(item.token)
 
         if not respondent or not respondent.email:
             failed += 1
@@ -1128,11 +1214,11 @@ async def campaign_stats(
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
 
     respondents = campaign.respondents
-    completed   = [r for r in respondents if r.completed]
+    completed = [respondent for respondent in respondents if respondent.completed and respondent.response]
     total       = len(respondents)
     n_completed = len(completed)
 
-    responses: list[SurveyResponse] = [r.response for r in completed if r.response]
+    responses: list[SurveyResponse] = [respondent.response for respondent in completed if respondent.response]
 
     # Risk distribution
     band_dist: dict[str, int] = {"HOOG": 0, "MIDDEN": 0, "LAAG": 0}
@@ -1148,16 +1234,16 @@ async def campaign_stats(
     # Pattern detection input
     pattern_input = [
         {
-            "org_scores":         resp.org_scores,
-            "sdt_scores":         resp.sdt_scores,
-            "risk_score":         resp.risk_score,
-            "preventability":     resp.preventability,
-            "exit_reason_code":   resp.exit_reason_code,
-            "contributing_reason_codes": list((resp.pull_factors_raw or {}).keys()),
-            "department":         resp.respondent.department,
-            "role_level":         resp.respondent.role_level,
+            "org_scores": respondent.response.org_scores,
+            "sdt_scores": respondent.response.sdt_scores,
+            "risk_score": respondent.response.risk_score,
+            "preventability": respondent.response.preventability,
+            "exit_reason_code": respondent.response.exit_reason_code,
+            "contributing_reason_codes": list((respondent.response.pull_factors_raw or {}).keys()),
+            "department": respondent.department,
+            "role_level": respondent.role_level,
         }
-        for resp in responses
+        for respondent in completed
     ]
     pattern_report = detect_patterns(pattern_input) if pattern_input else None
 

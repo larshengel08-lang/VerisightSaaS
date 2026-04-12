@@ -14,7 +14,6 @@ export interface Organization {
   name: string
   slug: string
   contact_email: string
-  api_key: string
   is_active: boolean
   created_at: string
 }

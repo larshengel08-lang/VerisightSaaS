@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
+import { getOrganizationApiKey } from '@/lib/organization-secrets'
+import { getBackendApiUrl } from '@/lib/server-env'
 
 interface Context {
   params: Promise<{ id: string }>
@@ -26,19 +26,16 @@ export async function GET(_request: Request, { params }: Context) {
     return NextResponse.json({ detail: 'Campaign niet gevonden of niet toegankelijk.' }, { status: 404 })
   }
 
-  const { data: organization, error: orgError } = await supabase
-    .from('organizations')
-    .select('api_key')
-    .eq('id', campaign.organization_id)
-    .single()
-
-  if (orgError || !organization?.api_key) {
+  let apiKey: string
+  try {
+    apiKey = await getOrganizationApiKey(campaign.organization_id)
+  } catch {
     return NextResponse.json({ detail: 'Autorisatie voor rapportdownload ontbreekt.' }, { status: 403 })
   }
 
-  const backendResponse = await fetch(`${API_BASE}/api/campaigns/${id}/report`, {
+  const backendResponse = await fetch(`${getBackendApiUrl()}/api/campaigns/${id}/report`, {
     headers: {
-      'x-api-key': organization.api_key,
+      'x-api-key': apiKey,
     },
     cache: 'no-store',
   })
@@ -51,9 +48,14 @@ export async function GET(_request: Request, { params }: Context) {
     )
   }
 
-  const pdfBuffer = await backendResponse.arrayBuffer()
+  if (!backendResponse.body) {
+    return NextResponse.json(
+      { detail: 'Rapport kon niet worden gestreamd.' },
+      { status: 502 },
+    )
+  }
 
-  return new NextResponse(pdfBuffer, {
+  return new NextResponse(backendResponse.body, {
     status: 200,
     headers: {
       'Content-Type': 'application/pdf',

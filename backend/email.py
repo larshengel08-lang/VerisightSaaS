@@ -20,11 +20,12 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 logger = logging.getLogger(__name__)
 
+_ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 _RESEND_API_KEY  = os.getenv("RESEND_API_KEY", "")
 _EMAIL_FROM      = os.getenv("EMAIL_FROM", "Verisight <noreply@verisight.nl>")
 _CONTACT_EMAIL   = os.getenv("CONTACT_EMAIL", "hallo@verisight.nl")
-_FRONTEND_URL    = os.getenv("FRONTEND_URL", "http://localhost:3000")
-_BACKEND_URL     = os.getenv("BACKEND_URL", "http://localhost:8000")
+_FRONTEND_URL    = os.getenv("FRONTEND_URL", "")
+_BACKEND_URL     = os.getenv("BACKEND_URL", "")
 
 try:
     import resend as _resend
@@ -44,6 +45,14 @@ def _mask_email(address: str) -> str:
     else:
         masked_local = f"{local[0]}***{local[-1]}"
     return f"{masked_local}@{domain}"
+
+
+def _require_runtime_url(value: str, env_name: str) -> str:
+    if value:
+        return value.rstrip("/")
+    if _ENVIRONMENT == "production":
+        raise RuntimeError(f"{env_name} ontbreekt in productie.")
+    return "http://localhost:3000" if env_name == "FRONTEND_URL" else "http://localhost:8000"
 
 
 # ---------------------------------------------------------------------------
@@ -82,7 +91,7 @@ def send_survey_invite(
     scan_type: str = "exit",
 ) -> bool:
     """Stuur een uitnodigingsmail met de survey-link naar een respondent."""
-    survey_url = f"{_BACKEND_URL}/survey/{token}"
+    survey_url = f"{_require_runtime_url(_BACKEND_URL, 'BACKEND_URL')}/survey/{token}"
 
     intro = (
         "Je leidinggevende of HR-afdeling nodigt je uit om een korte vragenlijst in te vullen "
@@ -203,7 +212,7 @@ def send_survey_reminder(
     scan_type: str = "exit",
 ) -> bool:
     """Stuur een herinneringsmail naar een respondent die de survey nog niet heeft ingevuld."""
-    survey_url = f"{_BACKEND_URL}/survey/{token}"
+    survey_url = f"{_require_runtime_url(_BACKEND_URL, 'BACKEND_URL')}/survey/{token}"
 
     duration = "8–12 minuten" if scan_type == "exit" else "6–10 minuten"
 
@@ -397,7 +406,7 @@ def send_hr_notification(
     total_invited: int,
 ) -> bool:
     """Notificeer de HR-beheerder dat een survey is ingevuld."""
-    dashboard_url = f"{_FRONTEND_URL}/campaigns/{campaign_id}"
+    dashboard_url = f"{_require_runtime_url(_FRONTEND_URL, 'FRONTEND_URL')}/campaigns/{campaign_id}"
     completion_pct = round(total_completed / total_invited * 100) if total_invited else 0
 
     html = f"""
