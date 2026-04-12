@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import { Inter, DM_Serif_Display } from 'next/font/google'
+import { Inter, Sora } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
-const dmSerif = DM_Serif_Display({ subsets: ['latin'], weight: '400', display: 'swap', variable: '--font-display' })
+const sora = Sora({ subsets: ['latin'], display: 'swap', variable: '--font-display' })
 
 export const metadata: Metadata = {
   title: {
@@ -68,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="nl">
-      <body className={`${inter.variable} ${dmSerif.variable} font-[family-name:var(--font-inter)] bg-white antialiased`}>
+      <body className={`${inter.variable} ${sora.variable} font-[family-name:var(--font-inter)] bg-white antialiased`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

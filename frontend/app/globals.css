@@ -27,7 +27,9 @@ body {
 
 /* Display font utility — used on hero h1 and section headings */
 .font-display {
-  font-family: var(--font-display), Georgia, serif;
+  font-family: var(--font-display), var(--font-inter), sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
 }
 
 /* FAQ open/close indicator */

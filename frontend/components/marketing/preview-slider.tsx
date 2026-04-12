@@ -18,7 +18,7 @@ function DashboardSlide() {
           {[
             ['Responses', '14 van 18', '78% respons'],
             ['Gem. frictiescore', '5,8 op 10', 'Middelhoog signaal'],
-            ['Signaalsterkte', '61%', 'Indicatieve duiding'],
+            ['Topthema', 'Groeiperspectief', 'Sterk aandachtssignaal'],
             ['Gem. diensttijd', '2,4 jaar', 'Bij vertrek'],
           ].map(([label, value, detail]) => (
             <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">

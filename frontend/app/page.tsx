@@ -37,19 +37,19 @@ const heroHighlights = [
 
 const signalen = [
   {
-    n: '01',
+    n: '1',
     title: 'Exitgesprekken leveren input, maar geen patroon',
     description:
       'Teams houden vaak wel gesprekken, maar niet in een vorm die je betrouwbaar kunt vergelijken over afdelingen of perioden heen.',
   },
   {
-    n: '02',
+    n: '2',
     title: 'De kosten lopen door terwijl de rode draad onduidelijk blijft',
     description:
       'Tegen de tijd dat patronen zichtbaar worden, zijn werving, inwerken en productiviteitsverlies vaak al meerdere keren gemaakt.',
   },
   {
-    n: '03',
+    n: '3',
     title: 'Management wil keuzes, HR mist een harde basis',
     description:
       'Zonder structuur blijft het gesprek hangen in indrukken, terwijl je juist richting wilt geven aan leiderschap, groei of werkdruk.',
@@ -313,14 +313,11 @@ export default function LandingPage() {
               {signalen.map(({ n, title, description }) => (
                 <div
                   key={n}
-                  className="relative overflow-hidden rounded-2xl border border-red-100 bg-red-50 p-6"
+                  className="rounded-2xl border border-red-100 bg-red-50 p-6"
                 >
-                  <span className="pointer-events-none absolute -right-3 -top-5 select-none font-display text-[7rem] leading-none text-red-100">
-                    {n}
-                  </span>
-                  <p className="text-xs font-bold uppercase tracking-widest text-red-600">
+                  <span className="inline-flex rounded-full border border-red-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-widest text-red-600">
                     Signaal {n}
-                  </p>
+                  </span>
                   <h3 className="mt-3 text-base font-semibold leading-6 text-slate-950">{title}</h3>
                   <p className="mt-3 text-sm leading-7 text-slate-700">{description}</p>
                 </div>
