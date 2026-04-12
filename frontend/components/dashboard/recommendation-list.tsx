@@ -76,7 +76,7 @@ export function RecommendationList({ factorAverages }: Props) {
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-semibold text-gray-800">{FACTOR_LABELS[item.factor]}</span>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">signaal {item.signalValue.toFixed(1)}/10</span>
+              <span className="text-xs text-gray-500">prioriteit {item.signalValue.toFixed(1)}/10</span>
               <span className={`rounded px-1.5 py-0.5 text-xs font-bold ${bandStyle[item.band].badge}`}>
                 {item.band === 'HOOG' ? 'URGENT' : item.band === 'MIDDEN' ? 'AANDACHT' : 'OK'}
               </span>

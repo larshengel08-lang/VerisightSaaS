@@ -28,9 +28,9 @@ export function FactorTable({ factorAverages }: Props) {
   return (
     <div className="space-y-2">
       <p className="text-xs leading-5 text-gray-500">
-        De <span className="font-semibold">signaalwaarde</span> is de omgekeerde lezing van de belevingsscore:
-        hoe lager de gemiddelde beleving, hoe hoger het aandachtssignaal. Een hogere signaalwaarde betekent dus
-        meer aanleiding om dit thema te bespreken, niet automatisch meer bewijs of meer losse meldingen.
+        De <span className="font-semibold">belevingsscore</span> laat zien hoe positief een thema gemiddeld is ervaren.
+        De <span className="font-semibold">signaalwaarde</span> vertaalt dat naar prioriteit: hoe hoger de signaalwaarde,
+        hoe eerder dit thema een managementgesprek verdient. Het is geen extra meting of bewijslaag.
       </p>
       {rows.map(row => (
         <div key={row.factor} className="flex items-center gap-3">

@@ -17,21 +17,21 @@ const navLinks = [
 const heroHighlights = [
   {
     eyebrow: 'Inzicht',
-    title: 'Zie welke uitstroom terugkeert',
+    title: 'Van losse exits naar één organisatiebeeld',
     description:
-      'Je ziet terugkerende vertrekredenen en werkfactoren, niet alleen losse notities per exit.',
+      'Je ziet welke vertrekpatronen en werkfactoren terugkeren, niet alleen losse notities per exit.',
   },
   {
     eyebrow: 'Aanpak',
-    title: 'Geen extra tool of zwaar adviestraject',
+    title: 'Begeleid traject, geen extra toolbeheer',
     description:
-      'Wij richten ExitScan in, versturen uitnodigingen en duiden de uitkomsten. HR hoeft geen surveytool op te tuigen.',
+      'Wij richten ExitScan in, versturen uitnodigingen en duiden de uitkomsten. HR hoeft geen surveyproces op te tuigen.',
   },
   {
     eyebrow: 'Output',
-    title: 'Direct bruikbaar voor HR en MT',
+    title: 'Dashboard en rapport waarmee je kunt prioriteren',
     description:
-      'Je krijgt een dashboard, rapport in gewone taal en een toelichting waarmee je sneller kunt prioriteren.',
+      'Je krijgt een dashboard, rapport in gewone taal en focusvragen waarmee HR en MT sneller kunnen bepalen waar gerichte actie nodig is.',
   },
 ] as const
 
@@ -225,11 +225,11 @@ export default function LandingPage() {
             {/* Headline */}
             <div className="mx-auto max-w-3xl text-center">
               <h1 className="font-display text-balance text-[2.75rem] leading-[1.15] text-slate-950 md:text-[3.75rem]">
-                Zie waarom medewerkers vertrekken. Stuur eerder bij.
+                Maak uitstroompatronen zichtbaar. Zie waar gerichte actie het meeste oplevert.
               </h1>
               <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-slate-600">
-                Verisight zet een gestructureerde ExitScan op, analyseert de uitkomsten en levert
-                een rapport dat HR en MT direct kunnen gebruiken.
+                Verisight bundelt exitinput tot één vergelijkbaar organisatiebeeld, met dashboard,
+                managementrapport en concrete prioriteiten voor HR en MT.
               </p>
               <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                 <a
@@ -246,7 +246,7 @@ export default function LandingPage() {
                 </a>
               </div>
               <p className="mt-3 text-sm text-slate-400">
-                Reactie binnen 1 werkdag · Geen implementatietraject nodig
+                Reactie binnen 1 werkdag · Begeleid traject zonder implementatietraject
               </p>
             </div>
 
@@ -304,8 +304,8 @@ export default function LandingPage() {
                 Losse exitgesprekken geven context. Geen patroon.
               </h2>
               <p className="mt-4 text-lg leading-8 text-slate-600">
-                Pas als je uitstroom vergelijkbaar maakt, zie je waar het patroon zit — voordat de
-                kosten doorlopen.
+                Pas als je uitstroom vergelijkbaar maakt, zie je waar dezelfde frictie terugkeert en
+                waar gerichte actie waarschijnlijk het meeste oplevert.
               </p>
             </div>
 
@@ -354,8 +354,8 @@ export default function LandingPage() {
                 consultancytraject.
               </h2>
               <p className="mt-4 text-lg leading-8 text-slate-600">
-                De kracht zit in de combinatie: een duidelijke ExitScan, begeleiding in de
-                uitvoering en output die intern meteen bruikbaar is.
+                De kracht zit in de combinatie: een duidelijke ExitScan, begeleiding in de uitvoering
+                en output die intern direct bruikbaar is voor HR en MT.
               </p>
             </div>
             <div className="mt-12 grid gap-5 lg:grid-cols-3">
@@ -408,11 +408,11 @@ export default function LandingPage() {
             <div className="mx-auto max-w-3xl text-center">
               <SectionLabel>Tarieven</SectionLabel>
               <h2 className="font-display mt-4 text-3xl text-slate-950 md:text-4xl">
-                Een vaste trajectprijs voor ExitScan, met één optionele verdieping.
+                Een vaste launchprijs voor ExitScan, met één optionele verdieping.
               </h2>
               <p className="mt-4 text-lg leading-8 text-slate-600">
-                Heldere standaardprijs, geen abonnement en tijdelijk early-adoptertarief voor de
-                eerste organisaties.
+                Geen abonnement, geen licentiegedoe en geen losse consultancy-uren achteraf. Je koopt
+                één duidelijk traject met één optionele add-on.
               </p>
             </div>
 
@@ -422,26 +422,18 @@ export default function LandingPage() {
                 <p className="text-xs font-bold uppercase tracking-widest text-blue-300">
                   ExitScan
                 </p>
-                <div className="mt-6">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-white/40">
-                    Standaardprijs
-                  </p>
-                  <p className="mt-1 text-2xl font-bold text-white/30 line-through">EUR 6.499</p>
-                </div>
-                <div className="mt-5 border-t border-white/10 pt-5">
-                  <p className="text-xs font-bold uppercase tracking-widest text-blue-300">
-                    Early adoptertarief · 55% korting
-                  </p>
-                  <p className="mt-2 text-[3.25rem] font-bold leading-none text-white">
-                    EUR 2.925
-                  </p>
-                </div>
+                <p className="mt-6 text-xs font-bold uppercase tracking-widest text-blue-300">
+                  Launchprijs
+                </p>
+                <p className="mt-2 text-[3.25rem] font-bold leading-none text-white">
+                  EUR 2.950
+                </p>
                 <p className="mt-4 text-sm leading-6 text-white/50">
-                  Standaard trajectprijs voor inrichting, analyse en rapportage
+                  Vaste trajectprijs voor inrichting, uitvoering, analyse en rapportage
                 </p>
                 <p className="mt-5 text-sm leading-7 text-white/70">
-                  Geschikt voor organisaties die losse exitgesprekken willen omzetten naar één
-                  vergelijkbaar organisatiebeeld met dashboard en rapport.
+                  Voor organisaties die uitstroom niet langer alleen per casus willen bespreken, maar
+                  als terugkerend organisatiepatroon willen begrijpen en prioriteren.
                 </p>
                 <a
                   href="#kennismaking"
@@ -450,7 +442,7 @@ export default function LandingPage() {
                   Plan mijn gesprek
                 </a>
                 <p className="mt-4 text-xs text-white/30">
-                  Prijzen exclusief btw. Geldt voor de eerste trajecten die nu starten.
+                  Prijs exclusief btw. Geldt voor trajecten die in deze launchfase starten.
                 </p>
               </div>
 
@@ -491,7 +483,7 @@ export default function LandingPage() {
 
             {/* Included features */}
             <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-8">
-              <h3 className="text-lg font-semibold text-slate-950">Altijd inbegrepen</h3>
+              <h3 className="text-lg font-semibold text-slate-950">Wat je koopt</h3>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {included.map((item) => (
                   <div
@@ -511,8 +503,8 @@ export default function LandingPage() {
                     Past vaak goed bij
                   </p>
                   <p className="mt-2 text-sm leading-7 text-slate-700">
-                    Organisaties met doorlopende uitstroom die sneller van losse signalen naar een
-                    gedeeld organisatiebeeld willen.
+                    Organisaties met doorlopende uitstroom die van losse exits naar één gedeeld
+                    managementbeeld willen over waar frictie terugkeert.
                   </p>
                 </div>
                 <div>
@@ -520,8 +512,8 @@ export default function LandingPage() {
                     Eerst bespreken als
                   </p>
                   <p className="mt-2 text-sm leading-7 text-slate-700">
-                    Je uitstroom nog erg beperkt is, of als je eigenlijk een breder
-                    medewerkeronderzoek zoekt in plaats van een uitstroomanalyse.
+                    Je uitstroom nog erg beperkt is, of als je vooral op zoek bent naar een breed
+                    medewerkeronderzoek in plaats van een gerichte uitstroomanalyse.
                   </p>
                 </div>
               </div>

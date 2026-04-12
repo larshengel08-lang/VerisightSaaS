@@ -1093,7 +1093,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         )
         intro += (
             f"De gemiddelde frictiescore bedraagt <b>{avg_risk:.1f} op 10</b>. "
-            f"Dat wijst op een <b>{band_str}</b> signaalniveau van ervaren frictie in de werkomgeving rondom vertrek."
+            f"Dat wijst op een <b>{band_str}</b> niveau van terugkerende werkfrictie rondom vertrek en helpt bepalen waar een gesprek of verdiepende actie het meeste oplevert."
         )
     story.append(Paragraph(intro, STYLES["body"]))
     story.append(Spacer(1, 0.4 * cm))
@@ -1318,8 +1318,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         story.append(Paragraph("Scoretabel per factor", STYLES["sub_title"]))
         story.append(Paragraph(
             "<i>Toelichting: De belevingsscore (1–10) geeft de gemiddelde beleving van medewerkers weer — "
-            "hogere belevingsscore is positiever. De signaalwaarde laat zien waar relatief de meeste werkfrictie zit — "
-            "hogere signaalwaarde betekent meer aandacht, niet automatisch meer bewijs. "
+            "hogere belevingsscore is positiever. De signaalwaarde vertaalt diezelfde uitkomst naar prioriteit — "
+            "hoe hoger de signaalwaarde, hoe eerder dit thema een managementgesprek verdient. "
             "De signaalwaarde is dus geen aparte meting of telling, maar de omgekeerde lezing van dezelfde onderliggende score.</i>",
             ParagraphStyle(
                 "score_explanation",
@@ -1442,7 +1442,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                 fq_data = [[
                     Paragraph(
                         f"<b>{label}</b>  <font color='#6B7280' size='8'>"
-                        f"score {score:.1f} · signaalwaarde {risk_val:.1f}</font>",
+                        f"score {score:.1f} · prioriteit {risk_val:.1f}</font>",
                         STYLES["body_bold"],
                     ),
                 ], [
@@ -1812,7 +1812,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             story.append(Paragraph("Segment deep dive", STYLES["sub_title"]))
             story.append(Paragraph(
                 "Deze add-on vergelijkt subgroepen expliciet met het organisatieniveau. "
-                "Zo zie je scherper waar frictie zich concentreert en welke thema's daar relatief het meest opvallen.",
+                "Zo zie je scherper waar vervolgvalidatie waarschijnlijk het meeste oplevert en welke thema's daar relatief het meest opvallen.",
                 STYLES["body"],
             ))
 

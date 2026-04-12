@@ -361,9 +361,9 @@ function MethodologyCard({ hasSegmentDeepDive }: { hasSegmentDeepDive: boolean }
         <div>
           <h2 className="text-sm font-semibold text-gray-700">Methodologie & uitleg</h2>
           <p className="mt-2 text-sm leading-7 text-gray-600">
-            Verisight laat signalen en patronen zien, geen diagnose. De frictiescore is een indicatieve samenvatting van
-            ervaren werkfrictie op groepsniveau. Gebruik de uitkomsten om gerichter door te vragen, niet om oorzaken
-            definitief vast te stellen.
+            Verisight maakt zichtbaar waar uitstroompatronen terugkeren en waar vervolgactie waarschijnlijk het meeste
+            oplevert. De uitkomsten zijn bedoeld om beter te prioriteren en door te vragen, niet om oorzaken definitief
+            vast te stellen.
           </p>
         </div>
       </div>
@@ -372,15 +372,15 @@ function MethodologyCard({ hasSegmentDeepDive }: { hasSegmentDeepDive: boolean }
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Frictiescore</p>
           <p className="mt-2 text-sm leading-6 text-slate-700">
-            Schaal 1–10. Hogere score betekent meer signalen van ervaren werkfrictie. Dit is geen voorspelling of
-            causaliteitsclaim.
+            Schaal 1–10. Hogere score betekent dat werkfrictie in deze groep duidelijker terugkomt. Gebruik dit als
+            prioriteringssignaal, niet als voorspelling.
           </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Signaalbanden</p>
           <p className="mt-2 text-sm leading-6 text-slate-700">
-            `Laag`, `Midden` en `Hoog` helpen prioriteren. Ze zeggen waar extra aandacht nodig is, niet automatisch
-            wat de oorzaak is.
+            `Laag`, `Midden` en `Hoog` laten zien hoeveel aandacht een patroon vraagt. Ze helpen HR en MT bepalen wat
+            eerst besproken of gevalideerd moet worden.
           </p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -394,8 +394,8 @@ function MethodologyCard({ hasSegmentDeepDive }: { hasSegmentDeepDive: boolean }
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Segment deep dive</p>
           <p className="mt-2 text-sm leading-6 text-slate-700">
             {hasSegmentDeepDive
-              ? 'Deze campagne gebruikt segment deep dive. Verschillen tussen afdelingen, functieniveaus of diensttijd laten zien waar frictie relatief sterker of zwakker terugkomt dan op organisatieniveau. Die vergelijking is beschrijvend, niet causaal.'
-              : 'Als segment deep dive aanstaat, laat Verisight zien welke subgroepen relatief afwijken van het organisatieniveau. Dat blijft beschrijvend en vormt vooral input voor vervolgvragen.'}
+              ? 'Deze campagne gebruikt segment deep dive. Verschillen tussen afdelingen, functieniveaus of diensttijd laten zien waar vervolgvalidatie waarschijnlijk het meeste oplevert. De vergelijking is beschrijvend, niet causaal.'
+              : 'Als segment deep dive aanstaat, laat Verisight zien welke subgroepen relatief afwijken van het organisatieniveau. Dat helpt vooral bepalen waar vervolgvragen het meeste opleveren.'}
           </p>
         </div>
       </div>
