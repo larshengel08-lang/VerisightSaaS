@@ -1261,6 +1261,36 @@ async def download_report(
     )
 
 
+@app.get("/api/internal/campaigns/{campaign_id}/report")
+async def download_report_internal(
+    campaign_id: str,
+    x_admin_token: Annotated[str | None, Header()] = None,
+    db: Session = Depends(get_db),
+) -> Response:
+    """Interne rapportdownload voor vertrouwde server-side proxy's."""
+    require_backend_admin_token(x_admin_token, is_production=_IS_PRODUCTION)
+
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+
+    try:
+        from backend.report import generate_campaign_report
+        pdf_bytes = generate_campaign_report(campaign_id, db)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF-generatie mislukt: {e}")
+
+    import re as _re
+    safe_name = _re.sub(r"[^\w\s-]", "", campaign.name)
+    safe_name = _re.sub(r"[\s-]+", "_", safe_name).strip("_")
+    filename = f"Verisight_{safe_name}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ---------------------------------------------------------------------------
 # Open text enrichment (internal helper)
 # ---------------------------------------------------------------------------

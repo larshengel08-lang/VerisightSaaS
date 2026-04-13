@@ -254,6 +254,7 @@ export default async function CampaignPage({ params }: Props) {
                 label={`Gem. ${scanDefinition.signalLabelLower}`}
                 value={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : '–'}
                 accent={averageRiskScore !== null ? 'text-blue-700' : undefined}
+                helpText={scanDefinition.signalHelp}
               />
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">

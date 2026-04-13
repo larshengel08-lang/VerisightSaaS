@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
 import {
   DashboardChip,
+  InfoTooltip,
   DashboardPanel,
   DashboardSection,
 } from '@/components/dashboard/dashboard-primitives'
@@ -184,9 +185,21 @@ function CampaignRow({
 }
 
 function StatCell({ label, value }: { label: string; value: string }) {
+  const helpText =
+    label.startsWith('Gem.')
+      ? 'Dit is het gemiddelde groepssignaal op een schaal van 1-10. Beweeg met je muis over het informatie-icoon om te zien hoe je deze score moet lezen.'
+      : label === 'Respons'
+        ? 'Het percentage uitgenodigde respondenten dat de survey volledig heeft ingevuld.'
+        : label === 'Ingevuld'
+          ? 'Het aantal respondenten dat de survey volledig heeft afgerond.'
+          : null
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</p>
+      <div className="flex items-center gap-1.5">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</p>
+        {helpText ? <InfoTooltip text={helpText} /> : null}
+      </div>
       <p className="mt-2 text-lg font-semibold text-slate-950">{value}</p>
     </div>
   )

@@ -34,7 +34,7 @@ export function DashboardHero({
   tone?: Tone
 }) {
   return (
-    <section className={`overflow-hidden rounded-[28px] border p-6 shadow-sm ${TONE_STYLES[tone]}`}>
+    <section className={`overflow-visible rounded-[28px] border p-6 shadow-sm ${TONE_STYLES[tone]}`}>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr),minmax(320px,0.9fr)]">
         <div>
           <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${TONE_ACCENTS[tone]}`}>{eyebrow}</p>
@@ -161,15 +161,37 @@ export function DashboardKeyValue({
   label,
   value,
   accent,
+  helpText,
 }: {
   label: string
   value: string
   accent?: string
+  helpText?: string
 }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</p>
+      <div className="flex items-center gap-1.5">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{label}</p>
+        {helpText ? <InfoTooltip text={helpText} /> : null}
+      </div>
       <p className={`mt-2 text-lg font-semibold text-slate-950 ${accent ?? ''}`}>{value}</p>
     </div>
+  )
+}
+
+export function InfoTooltip({ text }: { text: string }) {
+  return (
+    <span className="group relative inline-flex items-center">
+      <button
+        type="button"
+        aria-label="Meer informatie"
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-300 bg-white text-[10px] font-semibold leading-none text-slate-400 transition-colors hover:border-slate-400 hover:text-slate-600 focus:border-blue-400 focus:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200"
+      >
+        i
+      </button>
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 hidden w-64 -translate-x-1/2 rounded-xl bg-slate-950 px-3 py-2 text-xs font-medium leading-5 text-white shadow-xl group-hover:block group-focus-within:block">
+        {text}
+      </span>
+    </span>
   )
 }

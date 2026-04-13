@@ -26,19 +26,46 @@ export async function GET(_request: Request, { params }: Context) {
     return NextResponse.json({ detail: 'Campaign niet gevonden of niet toegankelijk.' }, { status: 404 })
   }
 
-  let apiKey: string
-  try {
-    apiKey = await getOrganizationApiKey(campaign.organization_id)
-  } catch {
-    return NextResponse.json({ detail: 'Autorisatie voor rapportdownload ontbreekt.' }, { status: 403 })
+  const backendBaseUrl = getBackendApiUrl()
+  const adminToken = process.env.BACKEND_ADMIN_TOKEN?.trim()
+
+  async function fetchWithAdminFallback() {
+    if (!adminToken) {
+      return null
+    }
+
+    return fetch(`${backendBaseUrl}/api/internal/campaigns/${id}/report`, {
+      headers: {
+        'x-admin-token': adminToken,
+      },
+      cache: 'no-store',
+    })
   }
 
-  const backendResponse = await fetch(`${getBackendApiUrl()}/api/campaigns/${id}/report`, {
-    headers: {
-      'x-api-key': apiKey,
-    },
-    cache: 'no-store',
-  })
+  let backendResponse: globalThis.Response | null = null
+
+  try {
+    const apiKey = await getOrganizationApiKey(campaign.organization_id)
+    backendResponse = await fetch(`${backendBaseUrl}/api/campaigns/${id}/report`, {
+      headers: {
+        'x-api-key': apiKey,
+      },
+      cache: 'no-store',
+    })
+
+    if ((backendResponse.status === 401 || backendResponse.status === 403) && adminToken) {
+      backendResponse = await fetchWithAdminFallback()
+    }
+  } catch {
+    backendResponse = await fetchWithAdminFallback()
+    if (!backendResponse) {
+      return NextResponse.json({ detail: 'Autorisatie voor rapportdownload ontbreekt.' }, { status: 403 })
+    }
+  }
+
+  if (!backendResponse) {
+    return NextResponse.json({ detail: 'Rapportproxy kon niet worden gestart.' }, { status: 502 })
+  }
 
   if (!backendResponse.ok) {
     const detail = await backendResponse.text()

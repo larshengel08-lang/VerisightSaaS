@@ -1,4 +1,4 @@
-# PLANS.md - Verisight Commercial Website Redesign Plan
+# WEBSITE_REDESIGN_PLAN.md - Verisight Commercial Website Redesign Plan
 
 ## Summary
 This plan turns the current public Verisight site into a sharper commercial website centered on **two live products only**: **ExitScan** and **RetentieScan**. The visual target is a more polished, conversion-oriented marketing experience in the spirit of the TailGrids reference: stronger hero composition, clearer section hierarchy, more visual proof, less text repetition, and cleaner product navigation.
@@ -7,7 +7,7 @@ This plan assumes:
 - the **public marketing website** is in scope
 - the **dashboard/app UX is out of scope for now**
 - **future products stay technically supported**, but are **removed from the primary sales story** until they are real
-- `PLANS.md` at repo root becomes the execution source of truth
+- `WEBSITE_REDESIGN_PLAN.md` at repo root becomes the execution source of truth
 
 Important codebase anchors for execution:
 - marketing homepage: `frontend/app/page.tsx`
@@ -37,7 +37,7 @@ Dependency: none
 - [x] Record the current list of public assets and where visual placeholders are still synthetic or reused.
 
 ### Definition of done
-- [x] A baseline inventory exists inside `PLANS.md` or linked internal notes.
+- [x] A baseline inventory exists inside `WEBSITE_REDESIGN_PLAN.md` or linked internal notes.
 - [x] Execution starts from one agreed scope: public marketing site only.
 - [x] The plan explicitly excludes dashboard redesign work in this phase.
 
@@ -534,7 +534,7 @@ Dependency: Milestones 3-6
 ---
 
 ## Defaults Chosen
-- `PLANS.md` should live at repo root.
+- `WEBSITE_REDESIGN_PLAN.md` should live at repo root.
 - The marketing site is optimized for **two live products**, not for a broad product catalog.
 - Future products remain technically possible, but not part of the current primary sales UX.
 - The site should borrow the **clarity, hierarchy, and polish rhythm** of the TailGrids-style reference, but keep Verisight’s own product language and not become a generic SaaS clone.

@@ -1,4 +1,4 @@
-# PLAN2.md - Verisight Dashboard UX Redesign Plan
+# DASHBOARD_UX_PLAN.md - Verisight Dashboard UX Redesign Plan
 
 ## Summary
 This plan redesigned the **dashboard/app experience only** for the two current products: **ExitScan** and **RetentieScan**. The redesign kept one shared app shell and the existing `scan_type` split, but reworked the UX from a long, report-like stack into a calmer, more decision-first dashboard structure.
