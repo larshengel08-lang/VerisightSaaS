@@ -23,7 +23,7 @@ export const metadata: Metadata = {
       'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Verisight levert ExitScan en RetentieScan in een begeleide productvorm.',
     images: [
       {
-        url: '/og-image.png',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
         alt: 'Verisight productportfolio met ExitScan en RetentieScan',
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     title: 'Verisight | ExitScan en RetentieScan voor HR-teams',
     description:
       'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Verisight levert ExitScan en RetentieScan in een begeleide productvorm.',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
   robots: {
     index: true,

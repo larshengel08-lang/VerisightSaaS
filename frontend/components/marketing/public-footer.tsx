@@ -1,18 +1,6 @@
 import Link from 'next/link'
+import { marketingFooterLinks, marketingLegalLinks } from '@/components/marketing/site-content'
 import { Wordmark } from '@/components/marketing/wordmark'
-
-const legalLinks = [
-  { href: '/producten', label: 'Alle producten' },
-  { href: '/producten/exitscan', label: 'ExitScan' },
-  { href: '/producten/retentiescan', label: 'RetentieScan' },
-  { href: '/producten/combinatie', label: 'Combinatie' },
-  { href: '/aanpak', label: 'Aanpak' },
-  { href: '/tarieven', label: 'Tarieven' },
-  { href: '/privacy', label: 'Privacybeleid' },
-  { href: '/voorwaarden', label: 'Algemene voorwaarden' },
-  { href: '/dpa', label: 'Verwerkersovereenkomst' },
-  { href: '/login', label: 'Voor klanten: inloggen' },
-]
 
 export function PublicFooter() {
   return (
@@ -38,10 +26,7 @@ export function PublicFooter() {
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Navigatie</p>
           <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600">
-            <Link href="/" className="transition-colors hover:text-slate-950">
-              Home
-            </Link>
-            {legalLinks.map((link) => (
+            {marketingFooterLinks.map((link) => (
               <Link key={link.href} href={link.href} className="transition-colors hover:text-slate-950">
                 {link.label}
               </Link>
@@ -50,7 +35,7 @@ export function PublicFooter() {
         </div>
 
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Contact</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Contact en juridisch</p>
           <div className="mt-4 space-y-3 text-sm text-slate-600">
             <p>
               E-mail:{' '}
@@ -60,6 +45,15 @@ export function PublicFooter() {
             </p>
             <p>Voor organisaties vanaf circa 200 medewerkers</p>
             <p>Gehost in Europa</p>
+            <div className="pt-2">
+              {marketingLegalLinks.map((link) => (
+                <div key={link.href}>
+                  <Link href={link.href} className="transition-colors hover:text-slate-950">
+                    {link.label}
+                  </Link>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

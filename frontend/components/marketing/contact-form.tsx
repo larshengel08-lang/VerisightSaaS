@@ -111,6 +111,10 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className={shellClass}>
+      <div className={`mb-5 rounded-2xl border px-4 py-4 text-sm leading-7 ${isLight ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'}`}>
+        Gebruik dit formulier voor ExitScan, RetentieScan of de combinatie. We helpen eerst kiezen welke productroute logisch is en pas daarna hoe een traject eruit moet zien.
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="name" className={`mb-2 block text-sm font-medium ${labelClass}`}>
@@ -190,7 +194,7 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
           value={form.currentQuestion}
           onChange={(event) => updateField('currentQuestion', event.target.value)}
           className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
-          placeholder="Bijvoorbeeld: we doen al exitgesprekken, maar missen overzicht. Of: we willen eerder zien waar behoud onder druk staat."
+          placeholder="Bijvoorbeeld: we doen al exitgesprekken, maar missen overzicht. Of: we willen eerder zien waar behoud onder druk staat in specifieke teams."
         />
       </div>
 
@@ -216,7 +220,7 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-6 ${helperClass}`}>
-          Verkennend gesprek van 20 minuten. Voor ExitScan, RetentieScan of de combinatie. Reactie meestal binnen 1 werkdag.
+          Verkennend gesprek van 20 minuten. Eerst productkeuze, daarna aanpak en prijs. Reactie meestal binnen 1 werkdag.
         </p>
         <button
           type="submit"

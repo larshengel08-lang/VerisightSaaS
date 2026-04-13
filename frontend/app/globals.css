@@ -3,6 +3,18 @@
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
+  --marketing-shell: 80rem;
+  --marketing-section-space: clamp(4.5rem, 7vw, 7rem);
+  --marketing-surface: #ffffff;
+  --marketing-surface-soft: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  --marketing-surface-tint: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
+  --marketing-surface-dark: linear-gradient(180deg, #12233a 0%, #0f172a 100%);
+  --marketing-border: rgba(148, 163, 184, 0.22);
+  --marketing-shadow-soft: 0 24px 60px rgba(15, 23, 42, 0.08);
+  --marketing-shadow-strong: 0 32px 90px rgba(15, 23, 42, 0.14);
+  --marketing-glow-blue: rgba(191, 219, 254, 0.75);
+  --marketing-glow-emerald: rgba(167, 243, 208, 0.72);
+  --marketing-glow-sky: rgba(186, 230, 253, 0.7);
 }
 
 @theme inline {
@@ -20,12 +32,22 @@ body {
   color: var(--foreground);
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 3px;
+}
+
 ::selection {
   background: #dbeafe;
   color: #0f172a;
 }
 
-/* Display font utility — used on hero h1 and section headings */
+/* Display font utility used on hero headings and section titles. */
 .font-display {
   font-family: var(--font-display), var(--font-inter), sans-serif;
   font-weight: 600;
@@ -35,4 +57,72 @@ body {
 /* FAQ open/close indicator */
 details > summary::-webkit-details-marker {
   display: none;
+}
+
+@layer components {
+  .marketing-shell {
+    margin-inline: auto;
+    width: min(100%, var(--marketing-shell));
+    padding-inline: 1.5rem;
+  }
+
+  .marketing-section {
+    padding-block: var(--marketing-section-space);
+  }
+
+  .marketing-section-surface {
+    background: var(--marketing-surface-soft);
+  }
+
+  .marketing-section-tint {
+    background: var(--marketing-surface-tint);
+  }
+
+  .marketing-section-dark {
+    background: var(--marketing-surface-dark);
+    color: white;
+  }
+
+  .marketing-panel {
+    border: 1px solid var(--marketing-border);
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: var(--marketing-shadow-soft);
+    border-radius: 2rem;
+  }
+
+  .marketing-panel-soft {
+    border: 1px solid rgba(191, 219, 254, 0.55);
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: var(--marketing-shadow-soft);
+    border-radius: 2rem;
+  }
+
+  .marketing-panel-dark {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(15, 23, 42, 0.92);
+    box-shadow: var(--marketing-shadow-strong);
+    border-radius: 2rem;
+    color: white;
+  }
+
+  .marketing-glow-blue,
+  .marketing-glow-emerald,
+  .marketing-glow-sky {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(64px);
+    pointer-events: none;
+  }
+
+  .marketing-glow-blue {
+    background: var(--marketing-glow-blue);
+  }
+
+  .marketing-glow-emerald {
+    background: var(--marketing-glow-emerald);
+  }
+
+  .marketing-glow-sky {
+    background: var(--marketing-glow-sky);
+  }
 }

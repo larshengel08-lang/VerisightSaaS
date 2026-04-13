@@ -1,14 +1,17 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { SectionHeading } from '@/components/marketing/section-heading'
-import { included, trustItems } from '@/components/marketing/site-content'
+import { approachRoutes, approachSteps, included, trustItems } from '@/components/marketing/site-content'
 import { TrustStrip } from '@/components/marketing/trust-strip'
 
 export const metadata: Metadata = {
   title: 'Aanpak',
   description:
     'Bekijk hoe Verisight ExitScan, RetentieScan en combinatie-trajecten opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
+  alternates: {
+    canonical: '/aanpak',
+  },
   openGraph: {
     title: 'Aanpak | Verisight',
     description:
@@ -32,85 +35,36 @@ export const metadata: Metadata = {
   },
 }
 
-const steps = [
-  {
-    title: '1. Intake en scan-keuze',
-    body: 'We bepalen samen of de vraag vooral om ExitScan, RetentieScan of een combinatie vraagt, en welke respondentdata nodig is.',
-  },
-  {
-    title: '2. Uitnodigen en uitvoeren',
-    body: 'Verisight richt de flow in, verstuurt uitnodigingen en bewaakt de dataverzameling zonder extra toolbeheer voor HR.',
-  },
-  {
-    title: '3. Duiden en opvolgen',
-    body: 'Je krijgt een dashboard en rapport waarmee HR, MT en directie sneller zien waar gesprek, validatie of vervolgactie logisch is.',
-  },
-] as const
-
-const routes = [
-  {
-    eyebrow: 'ExitScan Baseline',
-    title: 'De standaard eerste instap voor vertrekduiding',
-    body: 'Retrospectief traject op ex-medewerkers van bijvoorbeeld de afgelopen 12 maanden. Geschikt als eerste patroonbeeld en startpunt voor actie.',
-    bullets: [
-      'Eenmalige aanlevering van respondentbestand',
-      'Bij voorkeur inclusief afdeling, functieniveau en exitmaand',
-      'Sterk als nulmeting en managementbeeld op uitstroom',
-    ],
-    shellClass: 'border-blue-200 bg-blue-50',
-    eyebrowClass: 'text-blue-700',
-    bodyClass: 'text-slate-700',
-  },
-  {
-    eyebrow: 'ExitScan Live',
-    title: 'Voor organisaties die uitstroom doorlopend willen volgen',
-    body: 'Doorlopende ExitScan voor nieuwe vertrekkers. Past vooral wanneer je uitstroom structureel wilt monitoren en periodiek wilt verversen.',
-    bullets: [
-      'Vast proces met HR voor nieuwe vertrekkers',
-      'Actuelere signalen, trends pas zinvol bij voldoende volume',
-      'Vooral geschikt als vervolg of op aanvraag',
-    ],
-    shellClass: 'border-slate-200 bg-slate-50',
-    eyebrowClass: 'text-slate-500',
-    bodyClass: 'text-slate-700',
-  },
-  {
-    eyebrow: 'RetentieScan Baseline',
-    title: 'De eerste meetvorm voor actieve medewerkers',
-    body: 'Een eenmalige RetentieScan om te zien waar behoud onder druk staat, welke werkfactoren prioriteit vragen en hoe bevlogenheid en vertrekintentie zich verhouden.',
-    bullets: [
-      'Actieve medewerkers in plaats van ex-medewerkers',
-      'Groepsinzichten, geen individuele retention-scores',
-      'Sterk als startpunt voor gerichte opvolging en herhaalmeting',
-    ],
-    shellClass: 'border-emerald-200 bg-emerald-50',
-    eyebrowClass: 'text-emerald-700',
-    bodyClass: 'text-slate-700',
-  },
-  {
-    eyebrow: 'RetentieScan ritme',
-    title: 'Voor organisaties die periodiek willen volgen',
-    body: 'Herhaalmeting per kwartaal of halfjaar om te zien of retentiesignalen, bevlogenheid en prioritaire werkfactoren verbeteren.',
-    bullets: [
-      'Compacter vervolg op een baseline',
-      'Geschikt om effect van acties zichtbaar te maken',
-      'Blijft groeps- en segmentgericht, niet persoonsgericht',
-    ],
-    shellClass: 'border-amber-200 bg-amber-50',
-    eyebrowClass: 'text-amber-700',
-    bodyClass: 'text-slate-700',
-  },
-] as const
-
 export default function AanpakPage() {
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://www.verisight.nl/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Aanpak',
+        item: 'https://www.verisight.nl/aanpak',
+      },
+    ],
+  }
+
   return (
-    <MarketingPageShell
-      eyebrow="Aanpak"
-      title="Een duidelijke aanpak zonder dat ExitScan en RetentieScan door elkaar gaan lopen."
-      description="Verisight is geen losse surveytool en ook geen zwaar consultancytraject. Je koopt een begeleide productvorm met duidelijke scan-keuze, uitvoering, rapportage en opvolging."
-    >
-      <div className="grid gap-5 lg:grid-cols-3">
-        {steps.map(({ title, body }) => (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <MarketingPageShell
+        eyebrow="Aanpak"
+        title="Een duidelijke aanpak zonder dat ExitScan en RetentieScan door elkaar gaan lopen."
+        description="Verisight is geen losse surveytool en ook geen zwaar consultancytraject. Je koopt een begeleide productvorm met duidelijke scan-keuze, uitvoering, rapportage en opvolging."
+      >
+        <div className="grid gap-5 lg:grid-cols-3">
+        {approachSteps.map(({ title, body }) => (
           <div key={title} className="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-sm">
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-600">{title}</p>
             <p className="mt-4 text-sm leading-7 text-slate-600">{body}</p>
@@ -119,7 +73,7 @@ export default function AanpakPage() {
       </div>
 
       <div className="mt-16 grid gap-6 lg:grid-cols-2">
-        {routes.map((route) => (
+        {approachRoutes.map((route) => (
           <div
             key={route.title}
             className={`rounded-[2rem] border p-8 ${route.shellClass}`}
@@ -171,26 +125,17 @@ export default function AanpakPage() {
         </div>
       </div>
 
-      <div className="mt-16 rounded-[2rem] border border-blue-100 bg-blue-50 p-8 md:p-10">
-        <h2 className="text-3xl font-semibold text-slate-950">Wil je weten welke vorm nu het best past?</h2>
-        <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-700">
-          In een kort gesprek bepalen we of jullie beter starten met ExitScan, RetentieScan of een combinatie, en of een herhaalritme of segment deep dive logisch is.
-        </p>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <Link
-            href="/#kennismaking"
-            className="inline-flex rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(37,99,235,0.18)] transition-all hover:-translate-y-0.5 hover:bg-blue-700"
-          >
-            Plan mijn gesprek
-          </Link>
-          <Link
-            href="/tarieven"
-            className="inline-flex rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
-          >
-            Bekijk tarieven
-          </Link>
-        </div>
-      </div>
-    </MarketingPageShell>
+        <MarketingCalloutBand
+          className="mt-16"
+          eyebrow="Volgende stap"
+          title="Wil je weten welke vorm nu het best past?"
+          body="In een kort gesprek bepalen we of jullie beter starten met ExitScan, RetentieScan of een combinatie, en of een herhaalritme of segment deep dive logisch is."
+          primaryHref="/#kennismaking"
+          primaryLabel="Plan mijn gesprek"
+          secondaryHref="/tarieven"
+          secondaryLabel="Bekijk tarieven"
+        />
+      </MarketingPageShell>
+    </>
   )
 }

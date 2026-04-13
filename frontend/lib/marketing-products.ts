@@ -6,6 +6,11 @@ export interface MarketingProduct {
   shortLabel: string
   tagline: string
   description: string
+  seoTitle?: string
+  ogAlt?: string
+  serviceType?: string
+  serviceAudience?: string
+  serviceOutput?: string
   status: MarketingProductStatus
   href: string
 }
@@ -18,6 +23,11 @@ export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
     tagline: 'Begrijp waarom mensen zijn vertrokken',
     description:
       'Vertrekduiding op basis van terugkerende werkfactoren, vertrekredenen en managementrapportage.',
+    seoTitle: 'ExitScan | Verisight',
+    ogAlt: 'ExitScan productpagina van Verisight',
+    serviceType: 'Vertrekduiding en managementrapportage',
+    serviceAudience: 'HR-teams en directies die uitstroom achteraf willen duiden',
+    serviceOutput: 'Frictiescore, vertrekduiding en prioritaire werkfactoren',
     status: 'live',
     href: '/producten/exitscan',
   },
@@ -28,6 +38,11 @@ export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
     tagline: 'Zie eerder waar behoud onder druk staat',
     description:
       'Vroegsignalering op behoud, bevlogenheid, vertrekintentie en beïnvloedbare werkfactoren.',
+    seoTitle: 'RetentieScan | Verisight',
+    ogAlt: 'RetentieScan productpagina van Verisight',
+    serviceType: 'Vroegsignalering op behoud en retentiesignalen',
+    serviceAudience: 'HR-teams en directies die behoud eerder zichtbaar willen maken',
+    serviceOutput: 'Retentiesignaal, bevlogenheid, vertrekintentie en topfactoren',
     status: 'live',
     href: '/producten/retentiescan',
   },
@@ -38,6 +53,11 @@ export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
     tagline: 'Kijk terug en vooruit in dezelfde managementtaal',
     description:
       'Combineer ExitScan en RetentieScan in één portfolio-aanpak voor terugkijkende duiding en vroegsignalering.',
+    seoTitle: 'Combinatie | Verisight',
+    ogAlt: 'Combinatiepagina van ExitScan en RetentieScan bij Verisight',
+    serviceType: 'Portfolio-aanpak voor vertrekduiding en vroegsignalering',
+    serviceAudience: 'HR-teams en directies met zowel uitstroom- als behoudsvragen',
+    serviceOutput: 'Twee gerichte scans in één gedeelde managementstructuur',
     status: 'live',
     href: '/producten/combinatie',
   },

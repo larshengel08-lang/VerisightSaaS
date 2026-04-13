@@ -4,12 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { SolutionsDropdown } from '@/components/marketing/solutions-dropdown'
+import { marketingNavLinks, marketingPrimaryCta } from '@/components/marketing/site-content'
 import { Wordmark } from '@/components/marketing/wordmark'
-
-const navLinks = [
-  { href: '/aanpak', label: 'Aanpak' },
-  { href: '/tarieven', label: 'Tarieven' },
-] as const
 
 interface PublicHeaderProps {
   ctaHref?: string
@@ -17,11 +13,12 @@ interface PublicHeaderProps {
 }
 
 export function PublicHeader({
-  ctaHref = '/#kennismaking',
-  ctaLabel = 'Plan mijn gesprek',
+  ctaHref = marketingPrimaryCta.href,
+  ctaLabel = marketingPrimaryCta.label,
 }: PublicHeaderProps) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const secondaryNavLinks = marketingNavLinks.filter((link) => link.href !== '/' && link.href !== '/producten')
 
   function closeMenu() {
     setMobileOpen(false)
@@ -37,7 +34,7 @@ export function PublicHeader({
             <div className="px-2">
               <SolutionsDropdown />
             </div>
-            {navLinks.map((link) => (
+            {secondaryNavLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -111,7 +108,7 @@ export function PublicHeader({
               >
                 Alle producten
               </Link>
-              {navLinks.map((link) => (
+              {secondaryNavLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

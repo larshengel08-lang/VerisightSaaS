@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
+import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
+import { MarketingProofStrip } from '@/components/marketing/marketing-proof-strip'
 import { PreviewSlider } from '@/components/marketing/preview-slider'
-import { TrustStrip } from '@/components/marketing/trust-strip'
-import { trustItems } from '@/components/marketing/site-content'
-import { ALL_MARKETING_PRODUCTS, getMarketingProductBySlug } from '@/lib/marketing-products'
+import { ALL_MARKETING_PRODUCTS, type MarketingProduct, getMarketingProductBySlug } from '@/lib/marketing-products'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -22,8 +23,9 @@ export async function generateMetadata({ params }: Props) {
   const url = `https://www.verisight.nl${product.href}`
   const imageAlt =
     product.status === 'live'
-      ? `${product.label} productpagina van Verisight`
+      ? product.ogAlt ?? `${product.label} productpagina van Verisight`
       : `${product.label} binnenkort bij Verisight`
+  const imageUrl = `${product.href}/opengraph-image`
 
   return {
     title: product.label,
@@ -34,11 +36,11 @@ export async function generateMetadata({ params }: Props) {
     openGraph: {
       type: 'website',
       url,
-      title: `${product.label} | Verisight`,
+      title: product.seoTitle ?? `${product.label} | Verisight`,
       description,
       images: [
         {
-          url: '/og-image.png',
+          url: imageUrl,
           width: 1200,
           height: 630,
           alt: imageAlt,
@@ -47,9 +49,9 @@ export async function generateMetadata({ params }: Props) {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${product.label} | Verisight`,
+      title: product.seoTitle ?? `${product.label} | Verisight`,
       description,
-      images: ['/og-image.png'],
+      images: [imageUrl],
     },
   } satisfies Metadata
 }
@@ -60,10 +62,110 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (!product) notFound()
 
-  if (slug === 'retentiescan') return <RetentionScanPage />
-  if (slug === 'exitscan') return <ExitScanPage />
-  if (slug === 'combinatie') return <CombinatiePage />
-  return <UpcomingProductPage slug={slug} />
+  const structuredData = getProductStructuredData(product)
+
+  return (
+    <>
+      {structuredData.map((schema, index) => (
+        <script
+          key={`${product.slug}-schema-${index}`}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
+      {slug === 'retentiescan' ? <RetentionScanPage /> : null}
+      {slug === 'exitscan' ? <ExitScanPage /> : null}
+      {slug === 'combinatie' ? <CombinatiePage /> : null}
+      {!['retentiescan', 'exitscan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
+    </>
+  )
+}
+
+function getProductStructuredData(product: MarketingProduct) {
+  const fullUrl = `https://www.verisight.nl${product.href}`
+  const imageUrl = `https://www.verisight.nl${product.href}/opengraph-image`
+
+  const webpageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: product.seoTitle ?? `${product.label} | Verisight`,
+    description: product.description,
+    url: fullUrl,
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'Verisight',
+      url: 'https://www.verisight.nl',
+    },
+    primaryImageOfPage: imageUrl,
+    inLanguage: 'nl-NL',
+  }
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://www.verisight.nl/',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Producten',
+        item: 'https://www.verisight.nl/producten',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: product.label,
+        item: fullUrl,
+      },
+    ],
+  }
+
+  if (product.status !== 'live') {
+    return [webpageSchema, breadcrumbSchema]
+  }
+
+  const serviceSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: product.label,
+    serviceType: product.serviceType ?? product.label,
+    description: product.description,
+    url: fullUrl,
+    image: imageUrl,
+    provider: {
+      '@type': 'Organization',
+      name: 'Verisight',
+      url: 'https://www.verisight.nl',
+    },
+    areaServed: {
+      '@type': 'Country',
+      name: 'Nederland',
+    },
+    audience: {
+      '@type': 'BusinessAudience',
+      audienceType: product.serviceAudience ?? 'HR-teams en directies',
+    },
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: `${product.label} output`,
+      itemListElement: [
+        {
+          '@type': 'Offer',
+          itemOffered: {
+            '@type': 'Service',
+            name: product.serviceOutput ?? 'Dashboard en managementrapport',
+          },
+        },
+      ],
+    },
+  }
+
+  return [webpageSchema, breadcrumbSchema, serviceSchema]
 }
 
 function ExitScanPage() {
@@ -77,63 +179,100 @@ function ExitScanPage() {
       contextTitle="Een product voor organisaties die willen leren van vertrek dat al heeft plaatsgevonden."
       contextBody="ExitScan is het sterkst wanneer losse exitgesprekken te anekdotisch blijven en management sneller een terugkerend patroonbeeld nodig heeft."
     >
-      <FeatureSplit
-        leftEyebrow="Wanneer past ExitScan?"
-        leftTitle="Als je wilt leren van uitstroom zonder te blijven hangen in losse verhalen."
-        leftBody="ExitScan helpt patronen zichtbaar te maken in werkfactoren, vertrekredenen en managementsignalen. Daarmee wordt vertrekduiding vergelijkbaar en bespreekbaar."
-        leftPoints={[
-          'Voor terugkijkende analyse op ex-medewerkers',
-          'Meer dan losse exitgesprekken of spreadsheetduiding',
-          'Logisch als nulmeting of eerste patroonanalyse',
-        ]}
-        rightEyebrow="Wat management krijgt"
-        rightTitle="Een serieus managementinstrument voor uitstroomduiding."
-        rightBody="Geen losse verzameling exitinput, maar een compacte rapportvorm waarmee HR, MT en directie sneller zien welke thema's terugkeren en waar vervolgactie logisch is."
-        theme="dark"
-      />
+      <div className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
+        <div className="marketing-panel p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-600">Wanneer past ExitScan?</p>
+          <h2 className="mt-4 text-3xl font-semibold text-slate-950">
+            Als je wilt leren van uitstroom zonder te blijven hangen in losse verhalen.
+          </h2>
+          <p className="mt-4 text-sm leading-7 text-slate-600">
+            ExitScan helpt patronen zichtbaar te maken in werkfactoren, vertrekredenen en managementsignalen. Daarmee wordt vertrekduiding vergelijkbaar en bespreekbaar.
+          </p>
+          <div className="mt-8 space-y-3">
+            {[
+              'Voor terugkijkende analyse op ex-medewerkers',
+              'Meer dan losse exitgesprekken of spreadsheetduiding',
+              'Logisch als nulmeting of eerste patroonanalyse',
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-3 text-sm text-slate-700">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
+                  +
+                </span>
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
-      <ThreeLensBlock
-        eyebrow="Waar ExitScan sterk in is"
-        title="Drie redenen waarom ExitScan anders leest dan een gewone exitinventarisatie."
-        cards={[
+        <div className="marketing-panel-dark p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">Wat management krijgt</p>
+          <h2 className="font-display mt-4 text-4xl text-white">Een serieus managementinstrument voor uitstroomduiding.</h2>
+          <p className="mt-5 text-base leading-8 text-slate-300">
+            Geen losse verzameling exitinput, maar een compacte rapportvorm waarmee HR, MT en directie sneller zien welke thema&apos;s terugkeren en waar vervolgactie logisch is.
+          </p>
+          <div className="mt-8 grid gap-3">
+            {[
+              'Frictiescore en vertrekduiding in één overzicht',
+              'Werkfactoren die terugkomen in vrijwillig vertrek',
+              'Een rapport dat direct bespreekbaar is in MT en directie',
+            ].map((item) => (
+              <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200">
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <MarketingProofStrip
+        className="mt-16"
+        items={[
           {
             title: 'Terugkijkend patroonbeeld',
-            text: 'ExitScan helpt organisaties begrijpen waarom mensen gingen en welke werkfactoren daar het vaakst in terugkomen.',
+            body: 'ExitScan helpt organisaties begrijpen waarom mensen gingen en welke werkfactoren daar het vaakst in terugkomen.',
           },
           {
             title: 'Meer dan losse exitgesprekken',
-            text: 'De scan vertaalt meerdere reacties naar een vergelijkbaar managementbeeld, zodat HR en MT sneller prioriteren.',
+            body: 'De scan vertaalt meerdere reacties naar een vergelijkbaar managementbeeld, zodat HR en MT sneller prioriteren.',
           },
           {
-            title: 'Gericht op beïnvloedbare werkfactoren',
-            text: 'Leiderschap, cultuur, groei, werkbelasting en rolhelderheid worden zichtbaar als terugkerende vertrekduiding.',
+            title: 'Gericht op beïnvloedbare factoren',
+            body: 'Leiderschap, cultuur, groei, werkbelasting en rolhelderheid worden zichtbaar als terugkerende vertrekduiding.',
           },
         ]}
       />
 
-      <ProductUseMatrix
-        eyebrow="Hoe je het leest"
-        title="ExitScan is sterk als de vraag achteraf duiden is."
-        rows={[
-          ['Hoofdvraag', 'Waarom gingen mensen weg en welke factoren keren terug?'],
-          ['Leesrichting', 'Terugkijkend patroonbeeld op uitstroom'],
-          ['Managementoutput', 'Frictiescore, vertrekduiding en prioritaire werkfactoren'],
-          ['Niet bedoeld als', 'Vroegsignalering in de actieve populatie'],
-        ]}
-      />
+      <div className="mt-16 grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
+        <MarketingComparisonTable
+          columns={['Leeslens', 'Betekenis']}
+          rows={[
+            ['Hoofdvraag', 'Waarom gingen mensen weg en welke factoren keren terug?'],
+            ['Leesrichting', 'Terugkijkend patroonbeeld op uitstroom'],
+            ['Managementoutput', 'Frictiescore, vertrekduiding en prioritaire werkfactoren'],
+            ['Niet bedoeld als', 'Vroegsignalering in de actieve populatie'],
+          ]}
+        />
+        <div className="marketing-panel p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Voorbeeldoutput</p>
+          <h2 className="mt-4 text-3xl font-semibold text-slate-950">Zo ziet ExitScan eruit voor management.</h2>
+          <p className="mt-4 text-sm leading-7 text-slate-600">
+            De output combineert frictiescore, vertrekduiding en prioritaire werkfactoren in een compacte managementstructuur.
+          </p>
+          <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+            <PreviewSlider variant="exit" />
+          </div>
+        </div>
+      </div>
 
-      <PreviewBlock
-        variant="exit"
-        eyebrow="Voorbeeldweergave"
-        title="Zo ziet ExitScan eruit voor management."
-        body="De output combineert frictiescore, vertrekduiding en prioritaire werkfactoren in een compacte managementstructuur."
-      />
-
-      <ProductComparisonBlock
-        theme="exit"
+      <MarketingCalloutBand
+        className="mt-16"
         eyebrow="Verschil met RetentieScan"
         title="ExitScan kijkt terug. RetentieScan signaleert eerder."
-        body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen vormen ze een logisch portfolio."
+        body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen vormen ze een logisch portfolio, maar ExitScan blijft het product voor vertrekduiding achteraf."
+        primaryHref="/#kennismaking"
+        primaryLabel="Plan mijn gesprek"
+        secondaryHref="/producten/retentiescan"
+        secondaryLabel="Bekijk RetentieScan"
       />
     </MarketingPageShell>
   )
@@ -150,25 +289,42 @@ function RetentionScanPage() {
       contextTitle="Een product voor organisaties die eerder willen zien waar behoud begint te schuiven."
       contextBody="RetentieScan is geen individuele voorspeller, maar een managementroute die zichtbaar maakt waar retentiesignalen, bevlogenheid en vertrekintentie nu aandacht vragen."
     >
-      <FeatureSplit
-        leftEyebrow="Waarom nu"
-        leftTitle="ExitScan kijkt terug. RetentieScan kijkt eerder vooruit."
-        leftBody="Waar ExitScan helpt begrijpen waarom mensen gingen, helpt RetentieScan om eerder te zien waar behoud onder druk staat. Zo kan HR eerder prioriteren op de werkfactoren die nog beïnvloedbaar zijn."
-        leftPoints={[
-          'Vroegtijdig zien waar behoud onder druk staat',
-          'Managementinformatie over beïnvloedbare werkfactoren',
-          'Dashboard en rapport in dezelfde professionele Verisight-vorm',
-        ]}
-        rightEyebrow="Wat je krijgt"
-        rightTitle="Een vroegsignaal dat bruikbaar is voor management."
-        rightBody="Geen individuele risicovoorspelling, maar een groepsweergave van retentiesignalen, bevlogenheid, vertrekintentie en de factoren die behoud waarschijnlijk het meest beïnvloeden."
-        theme="dark"
-      />
+      <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
+        <div className="marketing-panel-soft p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Waarom nu</p>
+          <h2 className="mt-4 text-3xl font-semibold text-slate-950">
+            ExitScan kijkt terug. RetentieScan kijkt eerder vooruit.
+          </h2>
+          <p className="mt-4 text-sm leading-7 text-slate-600">
+            Waar ExitScan helpt begrijpen waarom mensen gingen, helpt RetentieScan om eerder te zien waar behoud onder druk staat. Zo kan HR eerder prioriteren op de werkfactoren die nog beïnvloedbaar zijn.
+          </p>
+          <div className="mt-8 grid gap-3">
+            {[
+              'Vroegtijdig zien waar behoud onder druk staat',
+              'Managementinformatie over beïnvloedbare werkfactoren',
+              'Geen individuele risicoscores naar management',
+            ].map((item) => (
+              <div key={item} className="rounded-2xl border border-emerald-100 bg-white px-4 py-4 text-sm leading-7 text-slate-700">
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
 
-      <ThreeLensBlock
-        eyebrow="Waar RetentieScan sterk in is"
-        title="Drie redenen waarom RetentieScan meer doet dan een generieke pulse of MTO."
-        cards={[
+        <div className="marketing-panel p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Wat je krijgt</p>
+          <h2 className="mt-4 text-3xl font-semibold text-slate-950">Een vroegsignaal dat bruikbaar is voor management.</h2>
+          <p className="mt-4 text-sm leading-7 text-slate-600">
+            Geen individuele risicovoorspelling, maar een groepsweergave van retentiesignalen, bevlogenheid, vertrekintentie en de factoren die behoud waarschijnlijk het meest beïnvloeden.
+          </p>
+          <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+            <PreviewSlider variant="retention" />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-16 grid gap-5 md:grid-cols-3">
+        {[
           {
             title: 'Eerder signaleren',
             text: 'RetentieScan maakt zichtbaar waar behoud al begint te schuiven, voordat verloop zichtbaar wordt in vacatures, uitval of exitgesprekken.',
@@ -181,32 +337,51 @@ function RetentionScanPage() {
             title: 'Gebouwd voor managementactie',
             text: 'De uitkomst is geen losse survey-export, maar een gedeelde taal voor HR, MT en directie over waar retentie nu aandacht vraagt.',
           },
-        ]}
-      />
+        ].map((card) => (
+          <div key={card.title} className="rounded-[1.75rem] border border-emerald-100 bg-emerald-50 p-7">
+            <h2 className="text-2xl font-semibold text-slate-950">{card.title}</h2>
+            <p className="mt-4 text-sm leading-7 text-slate-700">{card.text}</p>
+          </div>
+        ))}
+      </div>
 
-      <ProductUseMatrix
-        eyebrow="Hoe je het leest"
-        title="RetentieScan is sterk als de vraag eerder signaleren is."
-        rows={[
-          ['Hoofdvraag', 'Waar staat behoud nu onder druk in de actieve populatie?'],
-          ['Leesrichting', 'Vroegsignalering op groeps- en segmentniveau'],
-          ['Managementoutput', 'Retentiesignaal, bevlogenheid, vertrekintentie en topfactoren'],
-          ['Niet bedoeld als', 'Persoonsgerichte voorspeller of performance-instrument'],
-        ]}
-      />
+      <div className="mt-16 grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
+        <div className="marketing-panel-dark p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">Hoe je het leest</p>
+          <h2 className="font-display mt-4 text-4xl text-white">Sterk als de vraag eerder signaleren is.</h2>
+          <div className="mt-8 space-y-3">
+            {[
+              'Retentiesignaal op groeps- en segmentniveau',
+              'Bevlogenheid, vertrekintentie en beïnvloedbare topfactoren',
+              'Niet bedoeld als performance-instrument of individuele voorspeller',
+            ].map((item) => (
+              <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200">
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
 
-      <PreviewBlock
-        variant="retention"
-        eyebrow="Voorbeeldweergave"
-        title="Zo ziet RetentieScan eruit voor management."
-        body="De output combineert retentiesignaal, bevlogenheid, vertrekintentie en prioritaire werkfactoren in een compacte rapportstructuur."
-      />
+        <MarketingComparisonTable
+          columns={['Leeslens', 'Betekenis']}
+          rows={[
+            ['Hoofdvraag', 'Waar staat behoud nu onder druk in de actieve populatie?'],
+            ['Leesrichting', 'Vroegsignalering op groeps- en segmentniveau'],
+            ['Managementoutput', 'Retentiesignaal, bevlogenheid, vertrekintentie en topfactoren'],
+            ['Niet bedoeld als', 'Persoonsgerichte voorspeller of performance-instrument'],
+          ]}
+        />
+      </div>
 
-      <ProductComparisonBlock
-        theme="retention"
+      <MarketingCalloutBand
+        className="mt-16"
         eyebrow="Combinatie met ExitScan"
         title="Samen vormen ze een logisch portfolio."
-        body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen geven ze een scherper beeld van zowel achteraf duiden als vooruit kijken."
+        body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen geven ze een scherper beeld van zowel achteraf duiden als vooruit kijken, zonder dat RetentieScan een diagnose- of voorspelproduct hoeft te worden."
+        primaryHref="/#kennismaking"
+        primaryLabel="Plan mijn gesprek"
+        secondaryHref="/producten/combinatie"
+        secondaryLabel="Bekijk Combinatie"
       />
     </MarketingPageShell>
   )
@@ -216,63 +391,68 @@ function CombinatiePage() {
   return (
     <MarketingPageShell
       eyebrow="Combinatie"
-      title="Kijk terug en vooruit in dezelfde managementtaal."
-      description="De combinatie van ExitScan en RetentieScan is logisch voor organisaties die zowel willen leren van uitstroom als eerder willen signaleren waar behoud nu onder druk staat."
+      title="Gebruik ExitScan en RetentieScan als bewuste portfolioroute."
+      description="De combinatie is logisch voor organisaties die zowel willen leren van uitstroom als eerder willen signaleren waar behoud nu onder druk staat."
       theme="combination"
       highlightItems={['Portfolio-aanpak', 'Twee producten', 'Eén platform']}
       contextTitle="Een route voor organisaties waar uitstroom en behoud tegelijk op tafel liggen."
       contextBody="De combinatie is vooral sterk wanneer management zowel oorzaken achteraf wil begrijpen als eerder wil weten waar behoud in de actieve populatie begint te schuiven."
     >
-      <FeatureSplit
-        leftEyebrow="Wanneer kies je de combinatie?"
-        leftTitle="Als uitstroom en behoud allebei op tafel liggen."
-        leftBody="Voor organisaties die niet alleen willen begrijpen waarom mensen zijn gegaan, maar ook eerder willen weten waar behoud in de actieve populatie aandacht vraagt."
-        leftPoints={[
-          'ExitScan voor terugkijkende vertrekduiding',
-          'RetentieScan voor vroegsignalering op behoud',
-          'Een platform, een managementtaal en heldere productscheiding',
-        ]}
-        rightEyebrow="Portfolio-aanpak"
-        rightTitle="Niet één meting, maar twee gerichte managementsporen."
-        rightBody="De combinatie is sterk voor organisaties die willen schakelen tussen leren van vertrek en eerder bijsturen op behoud, zonder dat beide producten inhoudelijk door elkaar gaan lopen."
-        theme="dark"
-      />
+      <div className="marketing-panel-soft p-8">
+        <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-700">Wanneer kies je de combinatie?</p>
+        <h2 className="mt-4 text-3xl font-semibold text-slate-950">Niet als derde losse scan, maar als route tussen twee gerichte producten.</h2>
+        <p className="mt-4 text-sm leading-7 text-slate-600">
+          Voor organisaties die niet alleen willen begrijpen waarom mensen zijn gegaan, maar ook eerder willen weten waar behoud in de actieve populatie aandacht vraagt. De combinatie is vooral sterk wanneer beide managementvragen tegelijk bestaan.
+        </p>
+      </div>
 
-      <ThreeLensBlock
-        eyebrow="Hoe de combinatie werkt"
-        title="Gebruik de combinatie als een gefaseerde portfolio-aanpak."
-        cards={[
+      <MarketingProofStrip
+        className="mt-12"
+        items={[
           {
             title: 'Stap 1: duid vertrek',
-            text: 'Gebruik ExitScan om vertrekpatronen en terugkerende werkfactoren achteraf scherp te krijgen.',
+            body: 'Gebruik ExitScan om vertrekpatronen en terugkerende werkfactoren achteraf scherp te krijgen.',
           },
           {
             title: 'Stap 2: signaleer behoud',
-            text: "Gebruik RetentieScan om eerder zichtbaar te maken waar dezelfde thema's nu nog doorwerken in actieve teams.",
+            body: 'Gebruik RetentieScan om eerder zichtbaar te maken waar dezelfde thema’s nu nog doorwerken in actieve teams.',
           },
           {
             title: 'Stap 3: stuur in één lijn',
-            text: 'Gebruik een gedeelde managementtaal voor prioritering, opvolging en herhaalmeting.',
+            body: 'Gebruik een gedeelde managementtaal voor prioritering, opvolging en herhaalmeting.',
           },
         ]}
       />
 
-      <ProductUseMatrix
-        eyebrow="Wanneer logisch"
-        title="De combinatie is geen extra feature, maar een eigen koopreden."
-        rows={[
-          ['Hoofdvraag', 'Hoe verbinden we vertrekduiding en vroegsignalering in dezelfde lijn?'],
-          ['Leesrichting', 'Achteraf begrijpen en vooruit kijken'],
-          ['Managementoutput', 'Twee gerichte scans in een gedeeld portfolio'],
-          ['Niet bedoeld als', 'Een algemene survey waar alles tegelijk in wordt gepropt'],
-        ]}
-      />
+      <div className="mt-16 grid gap-6 lg:grid-cols-[1fr_1fr]">
+        <MarketingComparisonTable
+          columns={['Routevraag', 'Betekenis']}
+          rows={[
+            ['Hoofdvraag', 'Hoe verbinden we vertrekduiding en vroegsignalering in dezelfde lijn?'],
+            ['Leesrichting', 'Achteraf begrijpen en vooruit kijken'],
+            ['Managementoutput', 'Twee gerichte scans in een gedeeld portfolio'],
+            ['Niet bedoeld als', 'Een algemene survey waar alles tegelijk in wordt gepropt'],
+          ]}
+        />
 
-      <ProductComparisonBlock
-        theme="combination"
+        <div className="marketing-panel-dark p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300">Hoe je het verkoopt</p>
+          <h2 className="font-display mt-4 text-4xl text-white">Start vaak met één product, maar houd de tweede route bewust klaar.</h2>
+          <p className="mt-5 text-base leading-8 text-slate-300">
+            De combinatie is geen verplichte instap. Het is een koopreden voor organisaties die beide vragen tegelijk serieus willen adresseren in dezelfde managementtaal.
+          </p>
+        </div>
+      </div>
+
+      <MarketingCalloutBand
+        className="mt-16"
         eyebrow="Volgende stap"
         title="Wil je bepalen of de combinatie logisch is?"
-        body="In een kort gesprek kijken we of jullie vooral met een product moeten starten of direct baat hebben bij een portfolio-aanpak met beide scans."
+        body="In een kort gesprek kijken we of jullie vooral met één product moeten starten of direct baat hebben bij een portfolio-aanpak met beide scans."
+        primaryHref="/#kennismaking"
+        primaryLabel="Plan mijn gesprek"
+        secondaryHref="/producten"
+        secondaryLabel="Bekijk alle producten"
       />
     </MarketingPageShell>
   )
@@ -288,11 +468,11 @@ function UpcomingProductPage({ slug }: { slug: string }) {
       title={product.label}
       description={product.description}
       theme="coming-soon"
-      highlightItems={['Productroute gereserveerd', 'Portfolio-proof', 'Nog niet live']}
+      highlightItems={['Productroute gereserveerd', 'Nog niet live', 'Portfolio-proof']}
       contextTitle="Deze productroute staat klaar binnen dezelfde productstructuur."
       contextBody="Zo groeit het portfolio straks door zonder dat live producten onduidelijk worden of de navigatie opnieuw moet worden uitgevonden."
     >
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-sm md:p-12">
+      <div className="marketing-panel p-8 text-center md:p-12">
         <span className="inline-flex items-center rounded-full bg-slate-100 px-4 py-1.5 text-sm font-semibold text-slate-600">
           Binnenkort beschikbaar
         </span>
@@ -316,171 +496,5 @@ function UpcomingProductPage({ slug }: { slug: string }) {
         </div>
       </div>
     </MarketingPageShell>
-  )
-}
-
-function FeatureSplit({
-  leftEyebrow,
-  leftTitle,
-  leftBody,
-  leftPoints,
-  rightEyebrow,
-  rightTitle,
-  rightBody,
-  theme,
-}: {
-  leftEyebrow: string
-  leftTitle: string
-  leftBody: string
-  leftPoints: string[]
-  rightEyebrow: string
-  rightTitle: string
-  rightBody: string
-  theme: 'dark'
-}) {
-  return (
-    <div className="grid gap-8 lg:grid-cols-[1.02fr_0.98fr]">
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-600">{leftEyebrow}</p>
-        <h2 className="mt-4 text-3xl font-semibold text-slate-950">{leftTitle}</h2>
-        <p className="mt-4 text-sm leading-7 text-slate-600">{leftBody}</p>
-        <div className="mt-8 space-y-3">
-          {leftPoints.map((item) => (
-            <div key={item} className="flex items-center gap-3 text-sm text-slate-700">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">+</span>
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="rounded-[2rem] border border-slate-200 bg-[#0d1b2e] p-8 text-white shadow-[0_28px_70px_rgba(15,23,42,0.16)]">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">{rightEyebrow}</p>
-        <h2 className="font-display mt-4 text-4xl text-white">{rightTitle}</h2>
-        <p className="mt-5 text-base leading-8 text-slate-300">{rightBody}</p>
-        {theme === 'dark' ? (
-          <div className="mt-8">
-            <TrustStrip items={trustItems} tone="dark" />
-          </div>
-        ) : null}
-      </div>
-    </div>
-  )
-}
-
-function ThreeLensBlock({
-  eyebrow,
-  title,
-  cards,
-}: {
-  eyebrow: string
-  title: string
-  cards: { title: string; text: string }[]
-}) {
-  return (
-    <div className="mt-16">
-      <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">{eyebrow}</p>
-      <h2 className="mt-4 max-w-3xl text-3xl font-semibold text-slate-950">{title}</h2>
-      <div className="mt-8 grid gap-5 md:grid-cols-3">
-        {cards.map(({ title: cardTitle, text }) => (
-          <div key={cardTitle} className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-7">
-            <h3 className="text-xl font-semibold text-slate-950">{cardTitle}</h3>
-            <p className="mt-4 text-sm leading-7 text-slate-600">{text}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ProductUseMatrix({
-  eyebrow,
-  title,
-  rows,
-}: {
-  eyebrow: string
-  title: string
-  rows: [string, string][]
-}) {
-  return (
-    <div className="mt-16 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-      <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">{eyebrow}</p>
-      <h2 className="mt-4 text-3xl font-semibold text-slate-950">{title}</h2>
-      <div className="mt-8 overflow-hidden rounded-[1.5rem] border border-slate-200">
-        {rows.map(([label, value], index) => (
-          <div
-            key={label}
-            className={`grid gap-3 px-5 py-5 md:grid-cols-[0.75fr_1.25fr] ${index < rows.length - 1 ? 'border-b border-slate-200' : ''}`}
-          >
-            <div className="text-sm font-semibold text-slate-900">{label}</div>
-            <div className="text-sm leading-7 text-slate-600">{value}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function PreviewBlock({
-  variant,
-  eyebrow,
-  title,
-  body,
-}: {
-  variant: 'exit' | 'retention'
-  eyebrow: string
-  title: string
-  body: string
-}) {
-  return (
-    <div className="mt-16 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
-      <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">{eyebrow}</p>
-      <h2 className="mt-4 text-3xl font-semibold text-slate-950">{title}</h2>
-      <p className="mt-4 text-sm leading-7 text-slate-600">{body}</p>
-      <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-        <PreviewSlider variant={variant} />
-      </div>
-    </div>
-  )
-}
-
-function ProductComparisonBlock({
-  theme,
-  eyebrow,
-  title,
-  body,
-}: {
-  theme: 'exit' | 'retention' | 'combination'
-  eyebrow: string
-  title: string
-  body: string
-}) {
-  const shellClass =
-    theme === 'retention'
-      ? 'border-emerald-100 bg-emerald-50'
-      : theme === 'combination'
-        ? 'border-sky-100 bg-sky-50'
-        : 'border-blue-100 bg-blue-50'
-
-  return (
-    <div className={`mt-16 rounded-[2rem] border p-8 md:p-10 ${shellClass}`}>
-      <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-700">{eyebrow}</p>
-      <h2 className="mt-4 text-3xl font-semibold text-slate-950">{title}</h2>
-      <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-700">{body}</p>
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <Link
-          href="/#kennismaking"
-          className="inline-flex rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(37,99,235,0.18)] transition-all hover:-translate-y-0.5 hover:bg-blue-700"
-        >
-          Plan mijn gesprek
-        </Link>
-        <Link
-          href="/producten"
-          className="inline-flex rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
-        >
-          Bekijk alle producten
-        </Link>
-      </div>
-    </div>
   )
 }

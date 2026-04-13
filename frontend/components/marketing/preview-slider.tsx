@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 
 type PreviewVariant = 'portfolio' | 'exit' | 'retention'
@@ -16,7 +17,7 @@ const COPY = {
     intro:
       'Verisight vertaalt scans naar een compact managementbeeld: wanneer kijk je terug op vertrek en wanneer stuur je eerder op behoud?',
     kpis: [
-      ['Actieve campaigns', '2 scans actief', 'ExitScan en RetentieScan'],
+      ['Actieve campagnes', '2 scans actief', 'ExitScan en RetentieScan'],
       ['Gemiddeld hoofdsignaal', '5,4 op 10', 'Bespreek met HR en MT'],
       ['Belangrijkste aandachtspunt', 'Groei', 'Hier is het meeste te winnen'],
       ['Stuurvraag', 'Vertrek of behoud?', 'Kies de juiste scanvorm'],
@@ -39,6 +40,11 @@ const COPY = {
         body: 'Leiderschap, groei, cultuur en werkbelasting spelen in beide scans een rol. Het verschil zit in de managementvraag en de manier waarop je de uitkomst gebruikt.',
         question: 'Lezen we deze signalen als vertrekduiding of als vroegsignaal op behoud?',
       },
+    ],
+    proofNotes: [
+      ['Dashboard en rapport', 'Dezelfde managementtaal in twee productroutes'],
+      ['Segment deep dive', 'Geschikt voor afdelingen en functieniveaus bij voldoende n'],
+      ['Begeleide output', 'Geen losse survey-export of self-serve tool'],
     ],
   },
   exit: {
@@ -70,6 +76,11 @@ const COPY = {
         question: 'Weten medewerkers concreet wat hun volgende stap kan zijn binnen de organisatie?',
       },
     ],
+    proofNotes: [
+      ['Rapportfocus', 'Vertrekduiding, frictiescore en prioritaire werkfactoren'],
+      ['Geschikt voor HR en MT', 'Sterk als nulmeting of periodieke exit review'],
+      ['Methodische nuance', 'Signalen en hypothesen, geen absolute waarheid'],
+    ],
   },
   retention: {
     label: 'RetentieScan-voorbeeld',
@@ -100,70 +111,173 @@ const COPY = {
         question: 'Waar ontbreekt nu het geloofwaardige groeiverhaal of de dagelijkse ondersteuning die medewerkers nodig hebben?',
       },
     ],
+    proofNotes: [
+      ['Groepsniveau', 'Geen individuele retention-scores naar management'],
+      ['Signaalmix', 'Retentiesignaal, bevlogenheid en vertrekintentie in één beeld'],
+      ['Actielogica', 'Topfactoren en vervolgvragen voor 30-90 dagen'],
+    ],
   },
 } as const
 
 const FACTORS = [
-  { label: 'Leiderschap', score: 4.7, signal: 6.3, band: 'NU BESPREKEN', color: 'bg-red-500', text: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
-  { label: 'Groei', score: 4.9, signal: 6.1, band: 'NU BESPREKEN', color: 'bg-red-500', text: 'text-red-700', border: 'border-red-200', bg: 'bg-red-50' },
-  { label: 'Psychologische veiligheid', score: 5.6, signal: 5.4, band: 'VERDER BEKIJKEN', color: 'bg-amber-400', text: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
-  { label: 'Beloning & voorwaarden', score: 6.1, signal: 4.9, band: 'VERDER BEKIJKEN', color: 'bg-amber-400', text: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
-  { label: 'Werkbelasting', score: 6.4, signal: 4.6, band: 'VERDER BEKIJKEN', color: 'bg-amber-400', text: 'text-amber-700', border: 'border-amber-200', bg: 'bg-amber-50' },
-  { label: 'Rolhelderheid', score: 7.1, signal: 3.9, band: 'OK', color: 'bg-emerald-500', text: 'text-emerald-700', border: 'border-emerald-200', bg: 'bg-emerald-50' },
+  {
+    label: 'Leiderschap',
+    score: 4.7,
+    signal: 6.3,
+    band: 'NU BESPREKEN',
+    color: 'bg-red-500',
+    text: 'text-red-700',
+    border: 'border-red-200',
+    bg: 'bg-red-50',
+  },
+  {
+    label: 'Groei',
+    score: 4.9,
+    signal: 6.1,
+    band: 'NU BESPREKEN',
+    color: 'bg-red-500',
+    text: 'text-red-700',
+    border: 'border-red-200',
+    bg: 'bg-red-50',
+  },
+  {
+    label: 'Psychologische veiligheid',
+    score: 5.6,
+    signal: 5.4,
+    band: 'VERDER BEKIJKEN',
+    color: 'bg-amber-400',
+    text: 'text-amber-700',
+    border: 'border-amber-200',
+    bg: 'bg-amber-50',
+  },
+  {
+    label: 'Beloning & voorwaarden',
+    score: 6.1,
+    signal: 4.9,
+    band: 'VERDER BEKIJKEN',
+    color: 'bg-amber-400',
+    text: 'text-amber-700',
+    border: 'border-amber-200',
+    bg: 'bg-amber-50',
+  },
+  {
+    label: 'Werkbelasting',
+    score: 6.4,
+    signal: 4.6,
+    band: 'VERDER BEKIJKEN',
+    color: 'bg-amber-400',
+    text: 'text-amber-700',
+    border: 'border-amber-200',
+    bg: 'bg-amber-50',
+  },
+  {
+    label: 'Rolhelderheid',
+    score: 7.1,
+    signal: 3.9,
+    band: 'OK',
+    color: 'bg-emerald-500',
+    text: 'text-emerald-700',
+    border: 'border-emerald-200',
+    bg: 'bg-emerald-50',
+  },
 ] as const
+
+function ProofRail({ variant }: { variant: PreviewVariant }) {
+  const copy = COPY[variant]
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[0.88fr_1.12fr]">
+      <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Rapportexcerpt</p>
+        <div className="mt-4 space-y-3">
+          {copy.proofNotes.map(([title, body]) => (
+            <div key={title} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <p className="text-sm font-semibold text-slate-950">{title}</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-slate-950">Segment deep dive preview</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">Voorbeeld van dezelfde visuele outputtaal in rapport en dashboard.</p>
+          </div>
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700">
+            Proof
+          </span>
+        </div>
+        <Image
+          src="/segment-deep-dive-preview.png"
+          alt="Voorbeeld van een Verisight segment deep dive"
+          width={1600}
+          height={960}
+          className="h-full w-full object-cover"
+        />
+      </div>
+    </div>
+  )
+}
 
 function DashboardSlide({ variant }: { variant: PreviewVariant }) {
   const copy = COPY[variant]
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-      <div className="rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white">
-        <div className="mb-5 flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full bg-red-400" />
-          <span className="h-3 w-3 rounded-full bg-amber-300" />
-          <span className="h-3 w-3 rounded-full bg-emerald-400" />
-          <span className="ml-3 rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">dashboard.verisight.nl</span>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-4">
-          {copy.kpis.map(([label, value, detail]) => (
-            <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-              <p className="mt-2 text-lg font-bold text-white">{value}</p>
-              <p className="mt-1 text-xs text-slate-400">{detail}</p>
-            </div>
-          ))}
-        </div>
-        <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{copy.focusTitle}</p>
-          <div className="mt-4 space-y-3">
-            {[
-              ['Leiderschap', '6,3', 'Nu bespreken', '63%', 'bg-red-400'],
-              ['Groei', '6,1', 'Nu bespreken', '61%', 'bg-red-400'],
-              ['Beloning & voorwaarden', '4,9', 'Verder bekijken', '49%', 'bg-amber-400'],
-              ['Werkbelasting', '4,6', 'Verder bekijken', '46%', 'bg-amber-400'],
-            ].map(([label, value, band, width, color]) => (
-              <div key={label} className="grid grid-cols-[minmax(0,10rem)_1fr_auto_auto] items-center gap-3">
-                <span className="text-sm text-slate-200">{label}</span>
-                <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                  <div className={color} style={{ width, height: '100%', borderRadius: 9999 }} />
-                </div>
-                <span className="text-sm font-semibold text-white">{value}</span>
-                <span className="text-xs font-semibold uppercase tracking-wide text-slate-300">{band}</span>
+    <div className="space-y-4">
+      <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr]">
+        <div className="rounded-3xl border border-slate-200 bg-slate-950 p-5 text-white">
+          <div className="mb-5 flex items-center gap-2">
+            <span className="h-3 w-3 rounded-full bg-red-400" />
+            <span className="h-3 w-3 rounded-full bg-amber-300" />
+            <span className="h-3 w-3 rounded-full bg-emerald-400" />
+            <span className="ml-3 rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">dashboard.verisight.nl</span>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-4">
+            {copy.kpis.map(([label, value, detail]) => (
+              <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+                <p className="mt-2 text-lg font-bold text-white">{value}</p>
+                <p className="mt-1 text-xs text-slate-400">{detail}</p>
               </div>
             ))}
           </div>
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{copy.focusTitle}</p>
+            <div className="mt-4 space-y-3">
+              {[
+                ['Leiderschap', '6,3', 'Nu bespreken', '63%', 'bg-red-400'],
+                ['Groei', '6,1', 'Nu bespreken', '61%', 'bg-red-400'],
+                ['Beloning & voorwaarden', '4,9', 'Verder bekijken', '49%', 'bg-amber-400'],
+                ['Werkbelasting', '4,6', 'Verder bekijken', '46%', 'bg-amber-400'],
+              ].map(([label, value, band, width, color]) => (
+                <div key={label} className="grid grid-cols-[minmax(0,10rem)_1fr_auto_auto] items-center gap-3">
+                  <span className="text-sm text-slate-200">{label}</span>
+                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                    <div className={color} style={{ width, height: '100%', borderRadius: 9999 }} />
+                  </div>
+                  <span className="text-sm font-semibold text-white">{value}</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-300">{band}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col justify-between gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">{copy.label}</p>
+            <p className="mt-4 text-sm leading-6 text-slate-700">{copy.intro}</p>
+          </div>
+          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+            <p className="text-sm font-semibold text-blue-900">Belangrijke nuance</p>
+            <p className="mt-2 text-sm leading-6 text-blue-950">{copy.nuance}</p>
+          </div>
         </div>
       </div>
-      <div className="flex flex-col justify-between gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-5">
-        <div>
-          <p className="text-sm font-semibold text-slate-900">{copy.label}</p>
-          <p className="mt-4 text-sm leading-6 text-slate-700">{copy.intro}</p>
-        </div>
-        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-          <p className="text-sm font-semibold text-blue-900">Belangrijke nuance</p>
-          <p className="mt-2 text-sm leading-6 text-blue-950">{copy.nuance}</p>
-        </div>
-      </div>
+
+      <ProofRail variant={variant} />
     </div>
   )
 }
@@ -174,7 +288,9 @@ function FactorSlide({ variant }: { variant: PreviewVariant }) {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-slate-100 bg-slate-50 px-5 py-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Uit het managementrapport - Organisatiefactoren</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+          Uit het managementrapport - Organisatiefactoren
+        </p>
         <p className="mt-1 text-sm text-slate-700">{copy.factorLead}</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -200,12 +316,7 @@ function FactorSlide({ variant }: { variant: PreviewVariant }) {
           </div>
         ))}
       </div>
-      <div className="rounded-2xl border border-slate-200 bg-white p-4">
-        <p className="text-xs font-semibold text-slate-500">Wat dit toevoegt aan een standaard dashboard</p>
-        <p className="mt-2 text-sm leading-6 text-slate-700">
-          Niet alleen een top-3, maar ook nuance: factoren die dicht bij elkaar liggen worden als cluster gelezen, en de output benoemt expliciet dat dit aandachtssignalen zijn en geen harde diagnose.
-        </p>
-      </div>
+      <ProofRail variant={variant} />
     </div>
   )
 }
@@ -216,7 +327,9 @@ function HypothesisSlide({ variant }: { variant: PreviewVariant }) {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-slate-100 bg-slate-50 px-5 py-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Uit het managementrapport - Duiding en vervolgstappen</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+          Uit het managementrapport - Duiding en vervolgstappen
+        </p>
         <p className="mt-1 text-sm text-slate-700">{copy.hypothesisLead}</p>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -231,12 +344,7 @@ function HypothesisSlide({ variant }: { variant: PreviewVariant }) {
           </div>
         ))}
       </div>
-      <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-        <p className="text-sm font-semibold text-blue-900">Vervolgstappen inbegrepen</p>
-        <p className="mt-2 text-sm leading-6 text-blue-950">
-          Het rapport eindigt met focusvragen, een beperkte set vervolgstappen en methodische nuance, zodat de output intern overeind blijft zonder te overclaimen.
-        </p>
-      </div>
+      <ProofRail variant={variant} />
     </div>
   )
 }
