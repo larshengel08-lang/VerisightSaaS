@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body style="margin:0;padding:0;background:#F9FAFB;font-family:'Inter',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;">
+        <tr>
+          <td style="background:#1E3A5F;padding:24px 32px;">
+            <span style="color:#FFFFFF;font-size:18px;font-weight:700;">Verisight</span>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px;">
+            <p style="font-size:13px;color:#6B7280;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px;">Nieuwe response ontvangen</p>
+            <h1 style="font-size:20px;font-weight:700;color:#111827;margin:0 0 20px;">
+              {campaign_name}
+            </h1>
+
+            <table cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 24px;">
+              <tr>
+                <td style="background:#F0FDF4;border-radius:8px;padding:16px 20px;">
+                  <span style="font-size:24px;font-weight:700;color:#16A34A;">{total_completed}</span>
+                  <span style="font-size:13px;color:#16A34A;"> van {total_invited} ingevuld ({completion_pct}%)</span>
+                </td>
+              </tr>
+            </table>
+
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+              <tr>
+                <td style="background:#2563EB;border-radius:8px;">
+                  <a href="{dashboard_url}"
+                     style="display:inline-block;padding:12px 28px;color:#FFFFFF;font-size:14px;font-weight:600;text-decoration:none;">
+                    Bekijk dashboard &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="font-size:12px;color:#9CA3AF;margin:0;">
+              Je ontvangt deze notificatie omdat je beheerder bent van deze campaign in Verisight.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#F9FAFB;padding:16px 32px;border-top:1px solid #F3F4F6;">
+            <p style="font-size:11px;color:#9CA3AF;margin:0;">Verisight &bull; HR-verloopanalyse</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

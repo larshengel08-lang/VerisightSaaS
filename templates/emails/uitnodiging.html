@@ -1,17 +1,4 @@
 <!DOCTYPE html>
-<!--
-  Verisight — Survey-uitnodiging
-  ================================
-  Verzonden bij: eerste uitnodiging van een respondent voor een ExitScan of RetentieScan.
-
-  Variabelen (ingevuld door backend/email.py):
-    {campaign_name}  — naam van de campaign
-    {survey_url}     — unieke survey-link voor deze respondent
-    {intro}          — intro-tekst, verschilt per scan_type (exit / retention)
-    {duration}       — verwachte invultijd (8–12 min voor exit, 6–10 min voor retention)
-
-  Onderwerp: "Uitnodiging: {campaign_name}"
--->
 <html lang="nl">
 <head>
   <meta charset="UTF-8" />
@@ -21,46 +8,32 @@
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;padding:40px 20px;">
     <tr><td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;">
-
-        <!-- Header -->
         <tr>
           <td style="background:#1E3A5F;padding:28px 36px;">
             <span style="color:#FFFFFF;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Verisight</span>
           </td>
         </tr>
-
-        <!-- Body -->
         <tr>
           <td style="padding:36px;">
             <h1 style="font-size:22px;font-weight:700;color:#111827;margin:0 0 16px;">{campaign_name}</h1>
-            <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 24px;">
-              {intro}
-              <!-- EXIT: "Je leidinggevende of HR-afdeling nodigt je uit om een korte vragenlijst in te vullen
-                   over jouw ervaringen binnen de organisatie. Dit helpt de organisatie concreet te verbeteren." -->
-              <!-- RETENTION: "Je leidinggevende of HR-afdeling nodigt je uit om een korte vragenlijst in te vullen
-                   over jouw werkbeleving. Jouw input is waardevol en wordt vertrouwelijk behandeld." -->
-            </p>
+            <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 24px;">{intro}</p>
 
             <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
               <tr>
                 <td style="background:#EFF6FF;border-radius:8px;padding:14px 20px;">
-                  <span style="font-size:13px;color:#1D4ED8;font-weight:600;">⏱ Duur: {duration}</span>
-                  &nbsp;&nbsp;
-                  <span style="font-size:13px;color:#1D4ED8;font-weight:600;">🔒 Vertrouwelijk</span>
-                  &nbsp;&nbsp;
-                  <span style="font-size:13px;color:#1D4ED8;font-weight:600;">📱 Werkt op mobiel</span>
+                  <span style="font-size:13px;color:#1D4ED8;font-weight:600;">Duur: {duration}</span>
+                  <span style="font-size:13px;color:#1D4ED8;font-weight:600;"> &bull; Vertrouwelijk</span>
+                  <span style="font-size:13px;color:#1D4ED8;font-weight:600;"> &bull; Werkt op mobiel</span>
                 </td>
               </tr>
             </table>
 
-            <!-- CTA -->
             <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
               <tr>
                 <td style="background:#2563EB;border-radius:8px;">
                   <a href="{survey_url}"
-                     style="display:inline-block;padding:14px 32px;color:#FFFFFF;font-size:15px;
-                            font-weight:600;text-decoration:none;">
-                    Vragenlijst invullen →
+                     style="display:inline-block;padding:14px 32px;color:#FFFFFF;font-size:15px;font-weight:600;text-decoration:none;">
+                    Vragenlijst invullen &rarr;
                   </a>
                 </td>
               </tr>
@@ -83,13 +56,11 @@
             </p>
           </td>
         </tr>
-
-        <!-- Footer -->
         <tr>
           <td style="background:#F9FAFB;padding:20px 36px;border-top:1px solid #F3F4F6;">
             <p style="font-size:11px;color:#9CA3AF;margin:0 0 6px;">
-              Aangeboden door <strong>Verisight</strong> · HR-verloopanalyse ·
-              Gehost in Europa · AVG-conform verwerking
+              Aangeboden door <strong>Verisight</strong> &bull; HR-verloopanalyse &bull;
+              Gehost in Europa &bull; AVG-conform verwerking
             </p>
             <p style="font-size:11px;color:#D1D5DB;margin:0;">
               Wil je geen uitnodigingen meer ontvangen? Neem contact op met de HR-afdeling
@@ -98,7 +69,6 @@
             </p>
           </td>
         </tr>
-
       </table>
     </td></tr>
   </table>

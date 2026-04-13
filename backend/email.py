@@ -1,17 +1,18 @@
 """
-Verisight — E-mailmodule (Resend)
-==================================
+Verisight - e-mailmodule (Resend)
+=================================
 Verzendt uitnodigings- en notificatiemails via Resend.
 Stel RESEND_API_KEY en EMAIL_FROM in als environment variables.
 
-Zonder RESEND_API_KEY worden mails niet verzonden maar gelogd —
-zo werkt lokale development zonder configuratie.
+Zonder RESEND_API_KEY worden mails niet verzonden maar gelogd.
+Zo werkt lokale development zonder configuratie.
 """
 
 from __future__ import annotations
 
 import logging
 import os
+from html import escape
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -21,18 +22,20 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 logger = logging.getLogger(__name__)
 
 _ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
-_RESEND_API_KEY  = os.getenv("RESEND_API_KEY", "")
-_EMAIL_FROM      = os.getenv("EMAIL_FROM", "Verisight <noreply@verisight.nl>")
-_CONTACT_EMAIL   = os.getenv("CONTACT_EMAIL", "hallo@verisight.nl")
-_FRONTEND_URL    = os.getenv("FRONTEND_URL", "")
-_BACKEND_URL     = os.getenv("BACKEND_URL", "")
+_RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+_EMAIL_FROM = os.getenv("EMAIL_FROM", "Verisight <noreply@verisight.nl>")
+_CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "hallo@verisight.nl")
+_FRONTEND_URL = os.getenv("FRONTEND_URL", "")
+_BACKEND_URL = os.getenv("BACKEND_URL", "")
+_EMAIL_TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates" / "emails"
 
 try:
     import resend as _resend
+
     _resend.api_key = _RESEND_API_KEY
     _RESEND_AVAILABLE = bool(_RESEND_API_KEY)
 except ImportError:
-    _resend = None           # type: ignore
+    _resend = None  # type: ignore
     _RESEND_AVAILABLE = False
 
 
@@ -55,9 +58,14 @@ def _require_runtime_url(value: str, env_name: str) -> str:
     return "http://localhost:3000" if env_name == "FRONTEND_URL" else "http://localhost:8000"
 
 
-# ---------------------------------------------------------------------------
-# Interne helper
-# ---------------------------------------------------------------------------
+def _render_email_template(template_name: str, **context: str | int) -> str:
+    template = (_EMAIL_TEMPLATE_DIR / template_name).read_text(encoding="utf-8")
+    safe_context = {
+        key: escape(str(value), quote=True)
+        for key, value in context.items()
+    }
+    return template.format_map(safe_context)
+
 
 def _send(*, to: str, subject: str, html: str) -> bool:
     """Verstuur een e-mail. Retourneert True bij succes."""
@@ -67,10 +75,10 @@ def _send(*, to: str, subject: str, html: str) -> bool:
         return False
     try:
         _resend.Emails.send({
-            "from":    _EMAIL_FROM,
-            "to":      [to],
+            "from": _EMAIL_FROM,
+            "to": [to],
             "subject": subject,
-            "html":    html,
+            "html": html,
         })
         logger.info("E-mail verzonden naar %s", safe_to)
         return True
@@ -78,10 +86,6 @@ def _send(*, to: str, subject: str, html: str) -> bool:
         logger.error("E-mail verzending mislukt naar %s: %s", safe_to, exc)
         return False
 
-
-# ---------------------------------------------------------------------------
-# Survey-uitnodiging
-# ---------------------------------------------------------------------------
 
 def send_survey_invite(
     *,
@@ -96,102 +100,19 @@ def send_survey_invite(
     intro = (
         "Je leidinggevende of HR-afdeling nodigt je uit om een korte vragenlijst in te vullen "
         "over jouw ervaringen binnen de organisatie. Dit helpt de organisatie concreet te verbeteren."
-        if scan_type == "exit" else
-        "Je leidinggevende of HR-afdeling nodigt je uit om een korte vragenlijst in te vullen "
+        if scan_type == "exit"
+        else "Je leidinggevende of HR-afdeling nodigt je uit om een korte vragenlijst in te vullen "
         "over jouw werkbeleving. Jouw input is waardevol en wordt vertrouwelijk behandeld."
     )
 
-    duration = "8–12 minuten" if scan_type == "exit" else "6–10 minuten"
-
-    html = f"""
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-</head>
-<body style="margin:0;padding:0;background:#F9FAFB;font-family:'Inter',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;padding:40px 20px;">
-    <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;">
-
-        <!-- Header -->
-        <tr>
-          <td style="background:#1E3A5F;padding:28px 36px;">
-            <span style="color:#FFFFFF;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Verisight</span>
-          </td>
-        </tr>
-
-        <!-- Body -->
-        <tr>
-          <td style="padding:36px;">
-            <h1 style="font-size:22px;font-weight:700;color:#111827;margin:0 0 16px;">{campaign_name}</h1>
-            <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 24px;">{intro}</p>
-
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
-              <tr>
-                <td style="background:#EFF6FF;border-radius:8px;padding:14px 20px;">
-                  <span style="font-size:13px;color:#1D4ED8;font-weight:600;">⏱ Duur: {duration}</span>
-                  &nbsp;&nbsp;
-                  <span style="font-size:13px;color:#1D4ED8;font-weight:600;">🔒 Vertrouwelijk</span>
-                  &nbsp;&nbsp;
-                  <span style="font-size:13px;color:#1D4ED8;font-weight:600;">📱 Werkt op mobiel</span>
-                </td>
-              </tr>
-            </table>
-
-            <!-- CTA -->
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
-              <tr>
-                <td style="background:#2563EB;border-radius:8px;">
-                  <a href="{survey_url}"
-                     style="display:inline-block;padding:14px 32px;color:#FFFFFF;font-size:15px;
-                            font-weight:600;text-decoration:none;">
-                    Vragenlijst invullen →
-                  </a>
-                </td>
-              </tr>
-            </table>
-
-            <p style="font-size:13px;color:#6B7280;margin:0 0 8px;">
-              Werkt de knop niet? Kopieer en plak deze link in je browser:
-            </p>
-            <p style="font-size:12px;color:#9CA3AF;word-break:break-all;margin:0 0 28px;">
-              {survey_url}
-            </p>
-
-            <hr style="border:none;border-top:1px solid #F3F4F6;margin:0 0 24px;" />
-
-            <p style="font-size:12px;color:#9CA3AF;line-height:1.6;margin:0;">
-              Je antwoorden worden vertrouwelijk behandeld en zijn alleen inzichtelijk voor
-              geautoriseerde HR-medewerkers van jouw organisatie, geaggregeerd op groepsniveau.
-              Je kunt deelname altijd weigeren door deze e-mail te negeren.
-              De link is 90 dagen geldig.
-            </p>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td style="background:#F9FAFB;padding:20px 36px;border-top:1px solid #F3F4F6;">
-            <p style="font-size:11px;color:#9CA3AF;margin:0 0 6px;">
-              Aangeboden door <strong>Verisight</strong> · HR-verloopanalyse ·
-              Gehost in Europa · AVG-conform verwerking
-            </p>
-            <p style="font-size:11px;color:#D1D5DB;margin:0;">
-              Wil je geen uitnodigingen meer ontvangen? Neem contact op met de HR-afdeling
-              van je organisatie of stuur een e-mail naar
-              <a href="mailto:privacy@verisight.nl" style="color:#D1D5DB;">privacy@verisight.nl</a>.
-            </p>
-          </td>
-        </tr>
-
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>
-"""
+    duration = "8-12 minuten" if scan_type == "exit" else "6-10 minuten"
+    html = _render_email_template(
+        "uitnodiging.html",
+        campaign_name=campaign_name,
+        intro=intro,
+        duration=duration,
+        survey_url=survey_url,
+    )
 
     return _send(
         to=to_email,
@@ -199,10 +120,6 @@ def send_survey_invite(
         html=html,
     )
 
-
-# ---------------------------------------------------------------------------
-# Survey-herinnering (voor respondenten die nog niet hebben ingevuld)
-# ---------------------------------------------------------------------------
 
 def send_survey_reminder(
     *,
@@ -213,113 +130,21 @@ def send_survey_reminder(
 ) -> bool:
     """Stuur een herinneringsmail naar een respondent die de survey nog niet heeft ingevuld."""
     survey_url = f"{_require_runtime_url(_BACKEND_URL, 'BACKEND_URL')}/survey/{token}"
+    duration = "8-12 minuten" if scan_type == "exit" else "6-10 minuten"
 
-    duration = "8–12 minuten" if scan_type == "exit" else "6–10 minuten"
-
-    html = f"""
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-</head>
-<body style="margin:0;padding:0;background:#F9FAFB;font-family:'Inter',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;padding:40px 20px;">
-    <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;">
-
-        <!-- Header -->
-        <tr>
-          <td style="background:#1E3A5F;padding:28px 36px;">
-            <span style="color:#FFFFFF;font-size:20px;font-weight:700;letter-spacing:-0.5px;">Verisight</span>
-          </td>
-        </tr>
-
-        <!-- Body -->
-        <tr>
-          <td style="padding:36px;">
-            <p style="font-size:12px;color:#6B7280;font-weight:600;text-transform:uppercase;
-                       letter-spacing:.05em;margin:0 0 10px;">Herinnering</p>
-            <h1 style="font-size:22px;font-weight:700;color:#111827;margin:0 0 16px;">{campaign_name}</h1>
-            <p style="font-size:15px;color:#374151;line-height:1.7;margin:0 0 24px;">
-              Onlangs ontvang je een uitnodiging voor deze vragenlijst. We willen je er vriendelijk
-              aan herinneren dat je inbreng nog steeds welkom is — de link is nog actief.
-            </p>
-
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
-              <tr>
-                <td style="background:#EFF6FF;border-radius:8px;padding:14px 20px;">
-                  <span style="font-size:13px;color:#1D4ED8;font-weight:600;">⏱ Duur: {duration}</span>
-                  &nbsp;&nbsp;
-                  <span style="font-size:13px;color:#1D4ED8;font-weight:600;">🔒 Vertrouwelijk</span>
-                  &nbsp;&nbsp;
-                  <span style="font-size:13px;color:#1D4ED8;font-weight:600;">📱 Werkt op mobiel</span>
-                </td>
-              </tr>
-            </table>
-
-            <!-- CTA -->
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
-              <tr>
-                <td style="background:#2563EB;border-radius:8px;">
-                  <a href="{survey_url}"
-                     style="display:inline-block;padding:14px 32px;color:#FFFFFF;font-size:15px;
-                            font-weight:600;text-decoration:none;">
-                    Vragenlijst invullen →
-                  </a>
-                </td>
-              </tr>
-            </table>
-
-            <p style="font-size:13px;color:#6B7280;margin:0 0 8px;">
-              Werkt de knop niet? Kopieer en plak deze link in je browser:
-            </p>
-            <p style="font-size:12px;color:#9CA3AF;word-break:break-all;margin:0 0 28px;">
-              {survey_url}
-            </p>
-
-            <hr style="border:none;border-top:1px solid #F3F4F6;margin:0 0 24px;" />
-
-            <p style="font-size:12px;color:#9CA3AF;line-height:1.6;margin:0;">
-              Je antwoorden worden vertrouwelijk behandeld en zijn alleen inzichtelijk voor
-              geautoriseerde HR-medewerkers van jouw organisatie, geaggregeerd op groepsniveau.
-              Je kunt deelname altijd weigeren door deze e-mail te negeren.
-            </p>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td style="background:#F9FAFB;padding:20px 36px;border-top:1px solid #F3F4F6;">
-            <p style="font-size:11px;color:#9CA3AF;margin:0 0 6px;">
-              Aangeboden door <strong>Verisight</strong> · HR-verloopanalyse ·
-              Gehost in Europa · AVG-conform verwerking
-            </p>
-            <p style="font-size:11px;color:#D1D5DB;margin:0;">
-              Wil je geen uitnodigingen meer ontvangen? Neem contact op met de HR-afdeling
-              van je organisatie of stuur een e-mail naar
-              <a href="mailto:privacy@verisight.nl" style="color:#D1D5DB;">privacy@verisight.nl</a>.
-            </p>
-          </td>
-        </tr>
-
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>
-"""
+    html = _render_email_template(
+        "herinnering.html",
+        campaign_name=campaign_name,
+        duration=duration,
+        survey_url=survey_url,
+    )
 
     return _send(
         to=to_email,
-        subject=f"Herinnering: {campaign_name} — jouw inbreng is nog welkom",
+        subject=f"Herinnering: {campaign_name} - jouw inbreng is nog welkom",
         html=html,
     )
 
-
-# ---------------------------------------------------------------------------
-# Marketing-site contactaanvraag
-# ---------------------------------------------------------------------------
 
 def send_contact_request(
     *,
@@ -330,72 +155,21 @@ def send_contact_request(
     current_question: str,
 ) -> bool:
     """Stuur een contactaanvraag vanaf de marketing-site naar het interne inboxadres."""
-    html = f"""
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-</head>
-<body style="margin:0;padding:0;background:#F8FAFC;font-family:Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;background:#F8FAFC;">
-    <tr>
-      <td align="center">
-        <table width="620" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:16px;overflow:hidden;">
-          <tr>
-            <td style="background:#0F172A;padding:24px 28px;">
-              <span style="font-size:20px;font-weight:700;color:#FFFFFF;">Nieuwe kennismakingsaanvraag</span>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:28px;">
-              <p style="margin:0 0 18px;font-size:15px;color:#334155;line-height:1.7;">
-                Via de marketing-site is een nieuwe aanvraag binnengekomen voor een verkennend gesprek over ExitScan.
-              </p>
-              <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                <tr>
-                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#64748B;width:180px;">Naam</td>
-                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#0F172A;font-weight:600;">{name}</td>
-                </tr>
-                <tr>
-                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#64748B;">Werk e-mail</td>
-                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#0F172A;font-weight:600;">{work_email}</td>
-                </tr>
-                <tr>
-                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#64748B;">Organisatie</td>
-                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#0F172A;font-weight:600;">{organization}</td>
-                </tr>
-                <tr>
-                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#64748B;">Omvang</td>
-                  <td style="padding:10px 0;border-top:1px solid #E2E8F0;font-size:14px;color:#0F172A;font-weight:600;">{employee_count}</td>
-                </tr>
-              </table>
-              <div style="margin-top:20px;padding:18px;border-radius:12px;background:#F8FAFC;border:1px solid #E2E8F0;">
-                <p style="margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#475569;">
-                  Huidige vraag
-                </p>
-                <p style="margin:0;font-size:14px;line-height:1.7;color:#0F172A;white-space:pre-wrap;">{current_question}</p>
-              </div>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-"""
+    html = _render_email_template(
+        "contact_request.html",
+        name=name,
+        work_email=work_email,
+        organization=organization,
+        employee_count=employee_count,
+        current_question=current_question,
+    )
 
     return _send(
         to=_CONTACT_EMAIL,
-        subject=f"Kennismakingsaanvraag ExitScan — {organization}",
+        subject=f"Kennismakingsaanvraag ExitScan - {organization}",
         html=html,
     )
 
-
-# ---------------------------------------------------------------------------
-# HR-notificatie bij ingevulde survey
-# ---------------------------------------------------------------------------
 
 def send_hr_notification(
     *,
@@ -409,67 +183,17 @@ def send_hr_notification(
     dashboard_url = f"{_require_runtime_url(_FRONTEND_URL, 'FRONTEND_URL')}/campaigns/{campaign_id}"
     completion_pct = round(total_completed / total_invited * 100) if total_invited else 0
 
-    html = f"""
-<!DOCTYPE html>
-<html lang="nl">
-<head><meta charset="UTF-8" /></head>
-<body style="margin:0;padding:0;background:#F9FAFB;font-family:'Inter',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F9FAFB;padding:40px 20px;">
-    <tr><td align="center">
-      <table width="520" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;">
-        <tr>
-          <td style="background:#1E3A5F;padding:24px 32px;">
-            <span style="color:#FFFFFF;font-size:18px;font-weight:700;">Verisight</span>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:32px;">
-            <p style="font-size:13px;color:#6B7280;font-weight:600;text-transform:uppercase;
-                       letter-spacing:.05em;margin:0 0 8px;">Nieuwe response ontvangen</p>
-            <h1 style="font-size:20px;font-weight:700;color:#111827;margin:0 0 20px;">
-              {campaign_name}
-            </h1>
-
-            <table cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 24px;">
-              <tr>
-                <td style="background:#F0FDF4;border-radius:8px;padding:16px 20px;">
-                  <span style="font-size:24px;font-weight:700;color:#16A34A;">{total_completed}</span>
-                  <span style="font-size:13px;color:#16A34A;"> van {total_invited} ingevuld ({completion_pct}%)</span>
-                </td>
-              </tr>
-            </table>
-
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
-              <tr>
-                <td style="background:#2563EB;border-radius:8px;">
-                  <a href="{dashboard_url}"
-                     style="display:inline-block;padding:12px 28px;color:#FFFFFF;
-                            font-size:14px;font-weight:600;text-decoration:none;">
-                    Bekijk dashboard →
-                  </a>
-                </td>
-              </tr>
-            </table>
-
-            <p style="font-size:12px;color:#9CA3AF;margin:0;">
-              Je ontvangt deze notificatie omdat je beheerder bent van deze campaign in Verisight.
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td style="background:#F9FAFB;padding:16px 32px;border-top:1px solid #F3F4F6;">
-            <p style="font-size:11px;color:#9CA3AF;margin:0;">Verisight · HR-verloopanalyse</p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>
-"""
+    html = _render_email_template(
+        "hr_notification.html",
+        campaign_name=campaign_name,
+        dashboard_url=dashboard_url,
+        total_completed=total_completed,
+        total_invited=total_invited,
+        completion_pct=completion_pct,
+    )
 
     return _send(
         to=to_email,
-        subject=f"✓ Nieuwe response: {campaign_name} ({total_completed}/{total_invited})",
+        subject=f"Nieuwe response: {campaign_name} ({total_completed}/{total_invited})",
         html=html,
     )

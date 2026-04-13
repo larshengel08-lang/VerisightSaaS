@@ -21,13 +21,13 @@ export function RiskCharts({ distribution, riskScores }: Props) {
     { name: 'Laag signaal', value: distribution.LAAG, color: COLORS.LAAG },
   ].filter(d => d.value > 0)
 
-  // Histogram bins 1–10 (9 bins: 1-2, 2-3, …, 9-10 incl.)
+  // Histogram bins 1-10 (9 bins: 1-2, 2-3, ..., 9-10 incl.)
   const bins = Array.from({ length: 9 }, (_, i) => {
     const lo = i + 1
     const hi = i + 2
     return {
-      range: `${lo}–${hi}`,
-      // Laatste bin (9–10) is inclusief de bovengrens zodat score=10 niet valt buiten het histogram
+      range: `${lo}-${hi}`,
+      // Laatste bin (9-10) is inclusief de bovengrens zodat score=10 niet valt buiten het histogram
       count: riskScores.filter(s => s >= lo && (i === 8 ? s <= hi : s < hi)).length,
     }
   })
@@ -64,7 +64,6 @@ export function RiskCharts({ distribution, riskScores }: Props) {
         <p className="mt-2 text-slate-800">{insightText}</p>
       </div>
 
-      {/* Donut */}
       <ResponsiveContainer width="100%" height={160}>
         <PieChart>
           <Pie
@@ -87,13 +86,12 @@ export function RiskCharts({ distribution, riskScores }: Props) {
         </PieChart>
       </ResponsiveContainer>
 
-      {/* Histogram */}
       {avg && (
         <ResponsiveContainer width="100%" height={100}>
           <BarChart data={bins} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
             <XAxis dataKey="range" tick={{ fontSize: 10 }} />
             <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-            <ReferenceLine x={`${Math.floor(avg)}–${Math.ceil(avg)}`} stroke="#6B7280" strokeDasharray="3 3" />
+            <ReferenceLine x={`${Math.floor(avg)}-${Math.ceil(avg)}`} stroke="#6B7280" strokeDasharray="3 3" />
             <Bar dataKey="count" fill="#2563EB" radius={[2, 2, 0, 0]} />
             <Tooltip formatter={(v) => [`${v} responses`, 'Aantal']} />
           </BarChart>
