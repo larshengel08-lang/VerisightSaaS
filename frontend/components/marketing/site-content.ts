@@ -104,7 +104,7 @@ export const faqs = [
   ],
   [
     'Is RetentieScan gewoon een MTO?',
-    'Nee. RetentieScan is smaller en scherper gepositioneerd: het richt zich op retentiesignalen, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
+    'Nee. RetentieScan is smaller en scherper gepositioneerd: het richt zich op retentiesignalen, stay-intent, vertrekintentie en beïnvloedbare werkfactoren.',
   ],
   [
     'Wanneer kies je voor de combinatie?',

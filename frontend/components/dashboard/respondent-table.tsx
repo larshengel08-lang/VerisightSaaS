@@ -85,7 +85,7 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
                   Werksignaal
                   <span
                     className="ml-1 cursor-help text-gray-300"
-                    title="Dit label vat samen hoe sterk de antwoorden wijzen op beinvloedbare werkfactoren rondom vertrek. Het is een signaal, geen harde diagnose."
+                        title="Dit label vat samen hoe sterk de antwoorden wijzen op beïnvloedbare werkfactoren rondom vertrek. Het is een signaal, geen harde diagnose."
                   >
                     i
                   </span>

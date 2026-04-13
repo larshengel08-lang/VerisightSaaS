@@ -243,7 +243,7 @@ export default async function CampaignPage({ params }: Props) {
           <KpiCard
             label="Sterk werksignaal"
             value={hasEnoughData ? `${computeStrongWorkSignalRate(responses)}%` : '–'}
-            tooltip="Percentage responses waarbij de antwoorden relatief sterk wijzen op beinvloedbare werkfactoren rondom vertrek."
+                      tooltip="Percentage responses waarbij de antwoorden relatief sterk wijzen op beïnvloedbare werkfactoren rondom vertrek."
           />
         ) : (
           <KpiCard

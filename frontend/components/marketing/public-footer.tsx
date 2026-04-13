@@ -66,7 +66,7 @@ export function PublicFooter() {
 
       <div className="mx-auto mt-10 max-w-6xl border-t border-slate-200 px-5 pt-6 text-xs text-slate-500 sm:px-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} Verisight. Publieke informatie voor orientatie en kennismaking.</p>
+          <p>&copy; {new Date().getFullYear()} Verisight. Publieke informatie voor oriëntatie en kennismaking.</p>
           <p>Geen trackingcookies op de marketing-site.</p>
         </div>
       </div>

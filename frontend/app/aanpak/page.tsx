@@ -1,8 +1,36 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { SectionHeading } from '@/components/marketing/section-heading'
 import { included, trustItems } from '@/components/marketing/site-content'
 import { TrustStrip } from '@/components/marketing/trust-strip'
+
+export const metadata: Metadata = {
+  title: 'Aanpak',
+  description:
+    'Bekijk hoe Verisight ExitScan, RetentieScan en combinatie-trajecten opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
+  openGraph: {
+    title: 'Aanpak | Verisight',
+    description:
+      'Bekijk hoe Verisight ExitScan, RetentieScan en combinatie-trajecten opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
+    url: 'https://www.verisight.nl/aanpak',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Verisight aanpak voor ExitScan en RetentieScan',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Aanpak | Verisight',
+    description:
+      'Bekijk hoe Verisight ExitScan, RetentieScan en combinatie-trajecten opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
+    images: ['/og-image.png'],
+  },
+}
 
 const steps = [
   {

@@ -7,9 +7,9 @@ export const retentionScanDefinition: ScanDefinition = {
   signalLabelLower: 'retentiesignaal',
   summaryLabel: 'Gem. stay-intent',
   methodologyText:
-    'Verisight maakt zichtbaar waar behoud onder druk staat en welke beinvloedbare werkfactoren als eerste aandacht vragen. RetentieScan is een SDT-gebaseerd signaalinstrument: werkbeleving en werkfactoren vormen samen het retentiesignaal, terwijl bevlogenheid, vertrekintentie en stay-intent apart leesbaar blijven.',
+    'Verisight maakt zichtbaar waar behoud onder druk staat en welke beïnvloedbare werkfactoren als eerste aandacht vragen. RetentieScan is een SDT-gebaseerd signaalinstrument: werkbeleving en werkfactoren vormen samen het retentiesignaal, terwijl bevlogenheid, vertrekintentie en stay-intent apart leesbaar blijven.',
   signalHelp:
-    'Retentieschaal 1-10: een gelijkgewogen samenvatting van SDT en beinvloedbare werkfactoren. Hogere score = sterker vroegsignaal dat behoud aandacht vraagt.',
+    'Retentieschaal 1-10: een gelijkgewogen samenvatting van SDT en beïnvloedbare werkfactoren. Hogere score = sterker vroegsignaal dat behoud aandacht vraagt.',
   reliabilityText:
     'Grafieken en patroonanalyse tonen we pas vanaf minimaal 10 responses. Individuele scores blijven uit beeld; segmentvergelijkingen tonen we alleen bij voldoende aantallen. De uitkomst is bedoeld voor prioritering, niet als gevalideerde voorspeller van vrijwillig vertrek.',
   segmentText:

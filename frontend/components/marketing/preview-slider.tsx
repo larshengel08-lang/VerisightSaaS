@@ -85,7 +85,7 @@ const COPY = {
     nuance:
       'RetentieScan is bedoeld voor groeps- en segmentduiding. De output is nadrukkelijk geen individuele voorspeller of performance-instrument.',
     factorLead:
-      'De factoranalyse laat zien waar behoudssignalen samenhangen met beinvloedbare werkfactoren zoals leiderschap, groei en werkbelasting.',
+      'De factoranalyse laat zien waar behoudssignalen samenhangen met beïnvloedbare werkfactoren zoals leiderschap, groei en werkbelasting.',
     hypothesisLead:
       'De rapportage helpt management niet alleen zien wat spannend is, maar ook hoe je daar zorgvuldig over spreekt zonder te overclaimen.',
     hypotheses: [

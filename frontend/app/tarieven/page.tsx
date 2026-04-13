@@ -1,8 +1,36 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { SectionHeading } from '@/components/marketing/section-heading'
 import { trustItems } from '@/components/marketing/site-content'
 import { TrustStrip } from '@/components/marketing/trust-strip'
+
+export const metadata: Metadata = {
+  title: 'Tarieven',
+  description:
+    'Bekijk de prijsankers voor ExitScan, RetentieScan en de combinatie, inclusief baseline, deep dive en periodieke opvolging.',
+  openGraph: {
+    title: 'Tarieven | Verisight',
+    description:
+      'Bekijk de prijsankers voor ExitScan, RetentieScan en de combinatie, inclusief baseline, deep dive en periodieke opvolging.',
+    url: 'https://www.verisight.nl/tarieven',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Verisight tarieven voor ExitScan en RetentieScan',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Tarieven | Verisight',
+    description:
+      'Bekijk de prijsankers voor ExitScan, RetentieScan en de combinatie, inclusief baseline, deep dive en periodieke opvolging.',
+    images: ['/og-image.png'],
+  },
+}
 
 const pricingCards = [
   {
@@ -104,7 +132,7 @@ const faqs = [
   ],
   [
     'Is RetentieScan een MTO-vervanger?',
-    'Nee. Het product is smaller en scherper: het richt zich op behoudssignalen, vertrekintentie en beinvloedbare werkfactoren.',
+    'Nee. Het product is smaller en scherper: het richt zich op behoudssignalen, vertrekintentie en beïnvloedbare werkfactoren.',
   ],
   [
     'Wanneer kies je voor een combinatiepakket?',
