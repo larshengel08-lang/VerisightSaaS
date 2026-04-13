@@ -590,10 +590,6 @@ async def create_contact_request(
             body.work_email,
             send_result.reason or "onbekende fout",
         )
-        raise HTTPException(
-            status_code=502,
-            detail="Je aanvraag is opgeslagen, maar de e-mailnotificatie kon niet worden verzonden. Mail direct naar hallo@verisight.nl.",
-        )
 
     return ContactRequestResponse(message="Verstuurd")
 
@@ -719,6 +715,7 @@ async def submit_survey(
             payload=payload,
             campaign=respondent.campaign,
             respondent=respondent,
+            exit_reason_code=exit_reason_code,
             contributing_reason_codes=contributing_reason_codes,
         )
         sdt_scores = score_payload["sdt_scores"]

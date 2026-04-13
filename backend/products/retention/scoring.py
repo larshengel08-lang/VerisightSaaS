@@ -112,6 +112,7 @@ def score_submission(
     payload: Any,
     campaign: Any,
     respondent: Any,
+    exit_reason_code: str | None = None,
     contributing_reason_codes: list[str],
 ) -> dict[str, Any]:
     sdt_scores = compute_sdt_scores(payload.sdt_raw)

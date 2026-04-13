@@ -99,6 +99,7 @@ def _survey_payload(token: str):
         "tenure_years": 2.0,
         "exit_reason_category": "groei",
         "stay_intent_score": 4,
+        "signal_visibility_score": 2,
         "sdt_raw": {f"B{i}": 3 for i in range(1, 13)},
         "org_raw": {f"{factor}_{idx}": 3 for factor in ORG_FACTOR_KEYS for idx in range(1, 4)},
         "pull_factors_raw": {"leiderschap": 1},
@@ -139,6 +140,8 @@ def test_survey_submit_persists_response_and_marks_respondent_complete(client, d
     assert respondent.completed is True
     assert stored.risk_score is not None
     assert stored.exit_reason_code == "P3"
+    assert stored.full_result["exit_context_summary"]["signal_visibility_score"] == 2
+    assert stored.full_result["exit_context_summary"]["primary_reason_label"] == "Gebrek aan groei"
 
 
 def test_survey_submit_rejects_duplicate_submission(client, db_session: Session):
@@ -158,6 +161,19 @@ def test_survey_submit_rejects_unknown_token(client):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Ongeldige token."
+
+
+def test_exit_survey_submit_requires_signal_visibility_answer(client, db_session: Session):
+    org = _create_org(db_session, api_key="missing-signal-key")
+    campaign = _create_campaign(db_session, org, name="Exit zonder signalering")
+    respondent = _create_respondent(db_session, campaign)
+    payload = _survey_payload(respondent.token)
+    payload["signal_visibility_score"] = None
+
+    response = client.post("/survey/submit", json=payload)
+
+    assert response.status_code == 422
+    assert "eerdere signalering" in response.json()["detail"]
 
 
 def test_retention_survey_submit_persists_normalized_scores_and_summary(client, db_session: Session):

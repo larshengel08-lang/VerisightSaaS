@@ -705,6 +705,7 @@ try { sessionStorage.removeItem(key); } catch (e) {}
       tenure_years:             data.tenure_years ? parseFloat(data.tenure_years) : null,
       exit_reason_category:     data.exit_reason_category || null,
       stay_intent_score:        data.stay_intent_score ? parseInt(data.stay_intent_score) : null,
+      signal_visibility_score:  data.signal_visibility_score ? parseInt(data.signal_visibility_score) : null,
       sdt_raw,
       org_raw,
       pull_factors_raw,

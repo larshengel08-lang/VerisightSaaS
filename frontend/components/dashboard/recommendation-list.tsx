@@ -28,6 +28,11 @@ export function RecommendationList({ factorAverages, scanType }: Props) {
     LAAG: { wrapper: 'border-emerald-200 bg-emerald-50/80', badge: 'bg-emerald-100 text-emerald-700' },
   }
 
+  const badgeCopy =
+    scanType === 'exit'
+      ? { HOOG: 'Nu bespreken', MIDDEN: 'Verder duiden', LAAG: 'Monitoren' }
+      : { HOOG: 'Urgent', MIDDEN: 'Aandacht', LAAG: 'Monitoren' }
+
   return (
     <div className="space-y-3">
       {items.map((item) => (
@@ -35,13 +40,17 @@ export function RecommendationList({ factorAverages, scanType }: Props) {
           <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-900">{FACTOR_LABELS[item.factor]}</p>
-              <p className="mt-1 text-xs text-slate-500">Prioriteit {item.signalValue.toFixed(1)}/10</p>
+              <p className="mt-1 text-xs text-slate-500">
+                {scanType === 'exit' ? 'Verificatiespoor' : 'Prioriteit'} {item.signalValue.toFixed(1)}/10
+              </p>
             </div>
             <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${bandStyle[item.band].badge}`}>
-              {item.band === 'HOOG' ? 'Urgent' : item.band === 'MIDDEN' ? 'Aandacht' : 'Monitoren'}
+              {badgeCopy[item.band as keyof typeof badgeCopy]}
             </span>
           </div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Focusvragen</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            {scanType === 'exit' ? 'Managementvragen' : 'Focusvragen'}
+          </p>
           <ul className="space-y-2">
             {item.questions.map((question) => (
               <li key={question} className="flex gap-2 text-sm leading-6 text-slate-700">

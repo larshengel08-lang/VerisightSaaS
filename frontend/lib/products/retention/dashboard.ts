@@ -125,6 +125,9 @@ export function buildRetentionDashboardViewModel(args: {
   stayIntent: number | null
   hasEnoughData: boolean
   factorAverages: Record<string, number>
+  topExitReasonLabel?: string | null
+  topContributingReasonLabel?: string | null
+  signalVisibilityAverage?: number | null
 }): DashboardViewModel {
   const topFactors = getTopFactors(args.factorAverages)
   const averageSignal = args.averageSignal ??

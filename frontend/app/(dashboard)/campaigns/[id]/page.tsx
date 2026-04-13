@@ -32,10 +32,13 @@ import {
   CampaignHealthIndicator,
   clusterRetentionOpenSignals,
   computeAverageRiskScore,
+  computeAverageSignalVisibility,
   computeFactorAverages,
   computeRetentionSignalAverages,
   computeRetentionSupplementalAverages,
   computeStrongWorkSignalRate,
+  getTopContributingReasonLabel,
+  getTopExitReasonLabel,
   getTopFactorLabel,
   MethodologyCard,
   MIN_N_DISPLAY,
@@ -139,6 +142,9 @@ export default async function CampaignPage({ params }: Props) {
   const factorData = computeFactorAverages(responses)
   const averageRiskScore = computeAverageRiskScore(responses)
   const strongWorkSignalRate = stats.scan_type === 'exit' ? computeStrongWorkSignalRate(responses) : null
+  const topExitReasonLabel = stats.scan_type === 'exit' ? getTopExitReasonLabel(responses) : null
+  const topContributingReasonLabel = stats.scan_type === 'exit' ? getTopContributingReasonLabel(responses) : null
+  const signalVisibilityAverage = stats.scan_type === 'exit' ? computeAverageSignalVisibility(responses) : null
   const retentionSupplemental = computeRetentionSupplementalAverages(responses)
   const currentRetentionSignals =
     stats.scan_type === 'retention'
@@ -162,6 +168,9 @@ export default async function CampaignPage({ params }: Props) {
     stayIntent: retentionSupplemental.stayIntent,
     hasEnoughData,
     factorAverages: factorData.orgAverages,
+    topExitReasonLabel,
+    topContributingReasonLabel,
+    signalVisibilityAverage,
   })
 
   const pendingCount = stats.total_invited - stats.total_completed

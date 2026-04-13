@@ -1,7 +1,7 @@
 import { getProductModule } from '@/lib/products/shared/registry'
 import type { SegmentPlaybookEntry, SignalTrendCard } from '@/lib/products/shared/types'
 import { getScanDefinition } from '@/lib/scan-definitions'
-import { FACTOR_LABELS } from '@/lib/types'
+import { EXIT_REASON_LABELS, FACTOR_LABELS } from '@/lib/types'
 import type { CampaignStats, Respondent, SurveyResponse } from '@/lib/types'
 import { DashboardPanel } from '@/components/dashboard/dashboard-primitives'
 
@@ -402,6 +402,54 @@ export function computeStrongWorkSignalRate(responses: SurveyResponse[]) {
   const strongSignal = responses.filter((response) => response.preventability === 'STERK_WERKSIGNAAL').length
   if (!total) return 0
   return Math.round((strongSignal / total) * 100)
+}
+
+function getExitContextSummary(response: SurveyResponse) {
+  const fullResult = response.full_result as Record<string, unknown> | null | undefined
+  const exitContext = fullResult?.exit_context_summary
+  return exitContext && typeof exitContext === 'object'
+    ? exitContext as Record<string, unknown>
+    : null
+}
+
+export function getTopExitReasonLabel(responses: SurveyResponse[]) {
+  const counts = new Map<string, number>()
+
+  for (const response of responses) {
+    const code = response.exit_reason_code
+    if (!code) continue
+    counts.set(code, (counts.get(code) ?? 0) + 1)
+  }
+
+  const top = [...counts.entries()].sort((left, right) => right[1] - left[1])[0]
+  return top ? (EXIT_REASON_LABELS[top[0]] ?? top[0]) : null
+}
+
+export function getTopContributingReasonLabel(responses: SurveyResponse[]) {
+  const counts = new Map<string, number>()
+
+  for (const response of responses) {
+    const summary = getExitContextSummary(response)
+    const codes = summary?.['contributing_reason_codes']
+    if (!Array.isArray(codes)) continue
+
+    for (const code of codes) {
+      if (typeof code !== 'string') continue
+      counts.set(code, (counts.get(code) ?? 0) + 1)
+    }
+  }
+
+  const top = [...counts.entries()].sort((left, right) => right[1] - left[1])[0]
+  return top ? (EXIT_REASON_LABELS[top[0]] ?? top[0]) : null
+}
+
+export function computeAverageSignalVisibility(responses: SurveyResponse[]) {
+  const values = responses
+    .map((response) => getExitContextSummary(response)?.['signal_visibility_score'])
+    .filter((value): value is number => typeof value === 'number')
+
+  if (!values.length) return null
+  return values.reduce((sum, value) => sum + value, 0) / values.length
 }
 
 export function computeRetentionSupplementalAverages(responses: SurveyResponse[]) {

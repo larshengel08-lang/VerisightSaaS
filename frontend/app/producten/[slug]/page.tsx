@@ -172,8 +172,8 @@ function ExitScanPage() {
   return (
     <MarketingPageShell
       eyebrow="ExitScan"
-      title="Begrijp waarom mensen zijn vertrokken."
-      description="ExitScan helpt organisaties vertrekduiding opbouwen uit terugkerende werkfactoren, vertrekredenen en managementrapportage."
+      title="Maak vertrek bestuurlijk leesbaar."
+      description="ExitScan helpt organisaties vertrekduiding opbouwen uit terugkerende werkfactoren, vertrekredenen en werksignalen. Geen harde oorzaakverklaring, wel een managementbeeld dat helpt prioriteren."
       theme="exit"
       highlightItems={['Terugkijkend', 'Vertrekduiding', 'Managementrapport']}
       contextTitle="Een product voor organisaties die willen leren van vertrek dat al heeft plaatsgevonden."
@@ -186,7 +186,7 @@ function ExitScanPage() {
             Als je wilt leren van uitstroom zonder te blijven hangen in losse verhalen.
           </h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            ExitScan helpt patronen zichtbaar te maken in werkfactoren, vertrekredenen en managementsignalen. Daarmee wordt vertrekduiding vergelijkbaar en bespreekbaar.
+            ExitScan helpt patronen zichtbaar te maken in werkfactoren, vertrekredenen en werksignalen. Daarmee wordt vertrekduiding bestuurlijk leesbaar, vergelijkbaar en beter bespreekbaar.
           </p>
           <div className="mt-8 space-y-3">
             {[
@@ -208,7 +208,7 @@ function ExitScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">Wat management krijgt</p>
           <h2 className="font-display mt-4 text-4xl text-white">Een serieus managementinstrument voor uitstroomduiding.</h2>
           <p className="mt-5 text-base leading-8 text-slate-300">
-            Geen losse verzameling exitinput, maar een compacte rapportvorm waarmee HR, MT en directie sneller zien welke thema&apos;s terugkeren en waar vervolgactie logisch is.
+            Geen losse verzameling exitinput, maar een compacte rapportvorm waarmee HR, MT en directie sneller zien welk vertrekbeeld terugkeert, welke werkfactoren meewegen en waar vervolgactie logisch is.
           </p>
           <div className="mt-8 grid gap-3">
             {[
@@ -229,7 +229,7 @@ function ExitScanPage() {
         items={[
           {
             title: 'Terugkijkend patroonbeeld',
-            body: 'ExitScan helpt organisaties begrijpen waarom mensen gingen en welke werkfactoren daar het vaakst in terugkomen.',
+            body: 'ExitScan helpt organisaties vertrek duiden op basis van terugkerende werkfactoren, vertrekredenen en werksignalen.',
           },
           {
             title: 'Meer dan losse exitgesprekken',
@@ -246,9 +246,9 @@ function ExitScanPage() {
         <MarketingComparisonTable
           columns={['Leeslens', 'Betekenis']}
           rows={[
-            ['Hoofdvraag', 'Waarom gingen mensen weg en welke factoren keren terug?'],
+            ['Hoofdvraag', 'Welk vertrekbeeld keert terug en welke werkfactoren wegen daarin mee?'],
             ['Leesrichting', 'Terugkijkend patroonbeeld op uitstroom'],
-            ['Managementoutput', 'Frictiescore, vertrekduiding en prioritaire werkfactoren'],
+            ['Managementoutput', 'Frictiescore, vertrekduiding, werksignalen en prioritaire werkfactoren'],
             ['Niet bedoeld als', 'Vroegsignalering in de actieve populatie'],
           ]}
         />
@@ -256,7 +256,7 @@ function ExitScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Voorbeeldoutput</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">Zo ziet ExitScan eruit voor management.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            De output combineert frictiescore, vertrekduiding en prioritaire werkfactoren in een compacte managementstructuur.
+            De output combineert frictiescore, vertrekduiding, werksignalen en prioritaire werkfactoren in een compacte managementstructuur.
           </p>
           <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             <PreviewSlider variant="exit" />
@@ -268,7 +268,7 @@ function ExitScanPage() {
         className="mt-16"
         eyebrow="Verschil met RetentieScan"
         title="ExitScan kijkt terug. RetentieScan signaleert eerder."
-        body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen vormen ze een logisch portfolio, maar ExitScan blijft het product voor vertrekduiding achteraf."
+        body="ExitScan helpt vertrek achteraf duiden. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen vormen ze een logisch portfolio, maar ExitScan blijft het product voor terugkijkende vertrekduiding."
         primaryHref="/#kennismaking"
         primaryLabel="Plan mijn gesprek"
         secondaryHref="/producten/retentiescan"

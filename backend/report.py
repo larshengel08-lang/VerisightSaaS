@@ -1541,7 +1541,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             )
             intro += (
                 f"De gemiddelde frictiescore bedraagt <b>{avg_risk:.1f} op 10</b>. "
-                f"Dat wijst op een <b>{exit_band_str}</b> niveau van terugkerende werkfrictie rondom vertrek en helpt bepalen waar een gesprek of verdiepende actie het meeste oplevert."
+                f"Dat wijst op een <b>{exit_band_str}</b> niveau van terugkerende werkfrictie rondom vertrek en helpt bepalen welk vertrekbeeld en welke managementvraag nu eerst aandacht vragen."
             )
     story.append(Paragraph(intro, STYLES["body"]))
     story.append(Spacer(1, 0.4 * cm))
@@ -2036,6 +2036,39 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                         ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
                     ]))
                     story.append(contrib_table)
+                    story.append(Spacer(1, 0.3 * cm))
+
+                signal_visibility_scores = [
+                    summary.get("signal_visibility_score")
+                    for summary in (
+                        ((r.full_result or {}).get("exit_context_summary") or {})
+                        for r in responses
+                    )
+                    if isinstance(summary.get("signal_visibility_score"), (int, float))
+                ]
+                if signal_visibility_scores:
+                    avg_signal_visibility = sum(signal_visibility_scores) / len(signal_visibility_scores)
+                    if avg_signal_visibility >= 4:
+                        signal_visibility_text = (
+                            "Vertreksignalen waren gemiddeld al redelijk zichtbaar of bespreekbaar. "
+                            "Toets daarom vooral waar opvolging of escalatie achterbleef nadat signalen al op tafel lagen."
+                        )
+                    elif avg_signal_visibility >= 3:
+                        signal_visibility_text = (
+                            "Vertreksignalen waren deels zichtbaar, maar nog niet scherp genoeg opgepakt. "
+                            "Gebruik dit om te bepalen waar gesprekken te laat of te impliciet bleven."
+                        )
+                    else:
+                        signal_visibility_text = (
+                            "Vertreksignalen bleven vaak onder de radar. "
+                            "Gebruik dit om te onderzoeken waar twijfels te laat zichtbaar werden of onvoldoende veilig bespreekbaar waren."
+                        )
+
+                    story.append(Paragraph("Eerdere signalering", STYLES["sub_title"]))
+                    story.append(Paragraph(
+                        f"Gemiddeld ligt eerdere signalering op <b>{avg_signal_visibility:.1f} / 5</b>. {signal_visibility_text}",
+                        STYLES["body"],
+                    ))
                     story.append(Spacer(1, 0.3 * cm))
 
                 story.append(Spacer(1, 0.5 * cm))

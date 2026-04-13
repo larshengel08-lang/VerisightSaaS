@@ -177,6 +177,7 @@ class SurveySubmit(BaseModel):
     exit_reason_category: Optional[str] = None
     exit_reason_code: Optional[str] = None
     stay_intent_score: Optional[int] = Field(None, ge=1, le=5)
+    signal_visibility_score: Optional[int] = Field(None, ge=1, le=5)
 
     # Module B — SDT (12 items, required)
     sdt_raw: dict[str, int] = Field(..., min_length=12, max_length=12)

@@ -35,7 +35,7 @@ export const marketingLegalLinks = [
 export const homepageProductRoutes = [
   {
     name: 'ExitScan',
-    title: 'Begrijp waarom mensen gingen',
+    title: 'Maak vertrek bestuurlijk leesbaar',
     body: 'Voor organisaties die terugkijkend willen leren van uitstroom en daar meer uit willen halen dan losse exitgesprekken.',
     href: '/producten/exitscan',
     accent: 'border-blue-200 bg-blue-50',
@@ -126,7 +126,7 @@ export const comparisonCards = [
   {
     title: 'ExitScan',
     description:
-      'Voor organisaties die willen begrijpen waarom mensen zijn vertrokken en welke werkfactoren daar het vaakst in terugkomen.',
+      'Voor organisaties die vertrek willen duiden op basis van terugkerende werkfactoren, vertrekredenen en werksignalen.',
     outcome: 'Sterk wanneer de vraag terugkijkend is: wat leren we van vertrek dat al heeft plaatsgevonden?',
   },
   {
@@ -353,7 +353,7 @@ export const retentionPackages = [
 ] as const
 
 export const pricingChoiceGuide = [
-  ['ExitScan', 'Je wilt begrijpen waarom mensen zijn gegaan en wat vertrek achteraf verklaart.'],
+  ['ExitScan', 'Je wilt vertrek achteraf duiden en zien welke werkfactoren en werksignalen daarin terugkeren.'],
   ['RetentieScan', 'Je wilt eerder zien waar behoud in de actieve populatie onder druk staat.'],
   ['Combinatie', 'Je wilt zowel leren van vertrek als eerder kunnen bijsturen op behoud.'],
 ] as const

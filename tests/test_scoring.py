@@ -9,6 +9,7 @@ A failing test here means something in scoring.py broke a scientific assumption.
 """
 
 import pytest
+from types import SimpleNamespace
 from backend.scoring import (
     compute_sdt_scores,
     compute_org_scores,
@@ -21,6 +22,7 @@ from backend.scoring import (
     RISK_MEDIUM,
     ORG_FACTOR_KEYS,
 )
+from backend.products.exit.scoring import build_exit_context_summary, compute_exit_friction
 
 
 # ---------------------------------------------------------------------------
@@ -279,6 +281,38 @@ class TestComputeRetentionSupplementalScores:
         assert result["engagement_score"] is None
         assert result["turnover_intention_score"] is None
         assert result["stay_intent_score"] is None
+
+
+class TestComputeExitFriction:
+    def test_exit_friction_uses_exit_weighting_and_returns_valid_band(self):
+        sdt = compute_sdt_scores(_sdt_all(3))
+        org = compute_org_scores(_org_all(3))
+
+        result = compute_exit_friction(sdt, org)
+
+        assert 1.0 <= result["risk_score"] <= 10.0
+        assert result["risk_band"] in {"LAAG", "MIDDEN", "HOOG"}
+        assert result["factor_weights"]["leadership"] == pytest.approx(2.5)
+        assert result["factor_weights"]["sdt"] == pytest.approx(2.0)
+
+
+class TestExitContextSummary:
+    def test_exit_context_summary_contains_reason_labels_and_signal_visibility(self):
+        payload = SimpleNamespace(
+            exit_reason_category="groei",
+            stay_intent_score=4,
+            signal_visibility_score=2,
+        )
+
+        summary = build_exit_context_summary(
+            payload=payload,
+            exit_reason_code="P3",
+            contributing_reason_codes=["P1"],
+        )
+
+        assert summary["primary_reason_label"] == "Gebrek aan groei"
+        assert summary["contributing_reason_labels"] == ["Leiderschap / management"]
+        assert summary["signal_visibility_summary"]["label"] == "Signalen bleven grotendeels onder de radar"
 
 
 class TestRetentionSignalProfile:

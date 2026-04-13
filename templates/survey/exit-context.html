@@ -73,6 +73,27 @@
       <div class="field-error">Selecteer een antwoord.</div>
     </div>
 
+    <div class="question-block" id="qblock-signal-visibility">
+      <div class="question-text">
+        In hoeverre waren signalen over je twijfel of vertrek vooraf zichtbaar of bespreekbaar binnen de organisatie?
+      </div>
+      <div class="likert-wrap">
+        <div class="likert-labels">
+          <span>Helemaal niet</span>
+          <span>Zeer duidelijk</span>
+        </div>
+        <div class="likert-options">
+          {% for i in range(1, 6) %}
+          <div class="likert-option">
+            <input type="radio" name="signal_visibility_score" id="signal_visibility_{{ i }}" value="{{ i }}" required />
+            <label for="signal_visibility_{{ i }}">{{ i }}</label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="field-error">Selecteer een antwoord.</div>
+    </div>
+
     <div class="question-block" id="qblock-contributing-reasons">
       <div class="question-text">
         Welke andere factoren speelden ook mee in je vertrek? <span style="color:var(--muted);font-weight:400;">(optioneel, maximaal 2)</span>

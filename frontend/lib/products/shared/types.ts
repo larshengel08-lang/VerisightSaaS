@@ -63,6 +63,9 @@ export interface ProductModule {
     stayIntent: number | null
     hasEnoughData: boolean
     factorAverages: Record<string, number>
+    topExitReasonLabel?: string | null
+    topContributingReasonLabel?: string | null
+    signalVisibilityAverage?: number | null
   }): DashboardViewModel
   getFocusQuestions(): Record<string, Record<string, string[]>>
   getActionPlaybooks(): Record<string, Record<string, ActionPlaybook>>
