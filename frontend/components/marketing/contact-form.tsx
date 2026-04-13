@@ -181,7 +181,7 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
 
       <div className="mt-4">
         <label htmlFor="currentQuestion" className={`mb-2 block text-sm font-medium ${labelClass}`}>
-          Wat wil je nu vooral begrijpen van uitstroom?
+          Wat wil je nu vooral begrijpen van behoud of uitstroom?
         </label>
         <textarea
           id="currentQuestion"
@@ -190,7 +190,7 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
           value={form.currentQuestion}
           onChange={(event) => updateField('currentQuestion', event.target.value)}
           className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
-          placeholder="Bijvoorbeeld: we doen exitgesprekken, maar missen overzicht over terugkerende redenen per team."
+          placeholder="Bijvoorbeeld: we doen al exitgesprekken, maar missen overzicht. Of: we willen eerder zien waar behoud onder druk staat."
         />
       </div>
 
@@ -216,7 +216,7 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-6 ${helperClass}`}>
-          Verkennend gesprek van 20 minuten. Reactie meestal binnen 1 werkdag.
+          Verkennend gesprek van 20 minuten. Voor ExitScan, RetentieScan of de combinatie. Reactie meestal binnen 1 werkdag.
         </p>
         <button
           type="submit"

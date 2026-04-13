@@ -1,14 +1,18 @@
 'use client'
 
+import { getScanDefinition } from '@/lib/scan-definitions'
 import { FACTOR_LABELS } from '@/lib/types'
+import type { ScanType } from '@/lib/types'
 
 const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity']
 
 interface Props {
   factorAverages: Record<string, number>
+  scanType: ScanType
 }
 
-export function FactorTable({ factorAverages }: Props) {
+export function FactorTable({ factorAverages, scanType }: Props) {
+  const scanDefinition = getScanDefinition(scanType)
   const rows = ORG_FACTORS
     .filter(f => f in factorAverages)
     .map(f => {
@@ -29,7 +33,7 @@ export function FactorTable({ factorAverages }: Props) {
     <div className="space-y-2">
       <p className="text-xs leading-5 text-gray-500">
         De <span className="font-semibold">belevingsscore</span> laat zien hoe positief een thema gemiddeld is ervaren.
-        De <span className="font-semibold">signaalwaarde</span> vertaalt dat naar prioriteit: hoe hoger de signaalwaarde,
+        De <span className="font-semibold">{scanDefinition.signalLabelLower}</span> vertaalt dat naar prioriteit: hoe hoger de signalering,
         hoe eerder dit thema een managementgesprek verdient. Het is geen extra meting of bewijslaag.
       </p>
       {rows.map(row => (

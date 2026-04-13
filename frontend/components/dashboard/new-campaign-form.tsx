@@ -23,6 +23,10 @@ export function NewCampaignForm({ orgs }: Props) {
   const supabase = createClient()
   const hasSelectedFactorSubset = modules.some(module => ORG_FACTORS.includes(module))
   const hasSegmentDeepDive = modules.includes('segment_deep_dive')
+  const campaignNamePlaceholder =
+    scanType === 'exit' ? 'ExitScan Q2 2025' : 'RetentieScan Voorjaar 2026'
+  const fullScanLabel =
+    scanType === 'exit' ? 'de volledige ExitScan' : 'de volledige RetentieScan'
 
   function toggleModule(m: string) {
     setModules(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
@@ -68,7 +72,7 @@ export function NewCampaignForm({ orgs }: Props) {
         <input
           type="text" required value={name}
           onChange={e => setName(e.target.value)}
-          placeholder="ExitScan Q2 2025"
+          placeholder={campaignNamePlaceholder}
           className={inputCls}
         />
       </div>
@@ -93,6 +97,16 @@ export function NewCampaignForm({ orgs }: Props) {
         </div>
       </div>
 
+      {scanType === 'retention' && (
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-950">
+          <p className="font-semibold mb-1">RetentieScan v1.1-validatievoorbereiding</p>
+          <p className="text-emerald-900">
+            Gebruik bij respondentimport bij voorkeur altijd <code className="font-mono">email</code>, <code className="font-mono">department</code> en <code className="font-mono">role_level</code>.
+            Daarmee houd je niet alleen segmentanalyse bruikbaar, maar ook de latere v1.1-validatie van betrouwbaarheid, factorcontrole en pragmatische follow-up op orde.
+          </p>
+        </div>
+      )}
+
       {/* Modules */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -113,7 +127,7 @@ export function NewCampaignForm({ orgs }: Props) {
           ))}
         </div>
         <p className="mt-2 text-xs leading-5 text-gray-400">
-          Laat dit leeg als je de volledige ExitScan wilt draaien. Beperk alleen factoren als je bewust een kortere of aangepaste campagne wilt opzetten.
+          Laat dit leeg als je {fullScanLabel} wilt draaien. Beperk alleen factoren als je bewust een kortere of aangepaste campagne wilt opzetten.
         </p>
       </div>
 
@@ -148,6 +162,11 @@ export function NewCampaignForm({ orgs }: Props) {
         {!hasSelectedFactorSubset && hasSegmentDeepDive && (
           <p className="mt-2 text-xs text-blue-800">
             De add-on wijzigt de survey niet: alle standaard factoren blijven actief en het rapport krijgt extra segmentanalyse.
+          </p>
+        )}
+        {scanType === 'retention' && (
+          <p className="mt-2 text-xs text-blue-800">
+            Voor RetentieScan is het verstandig om vanaf de eerste baseline ook alvast een follow-up ritme en uitkomstregistratie klaar te zetten, zodat v1.1-validatie later niet afhankelijk blijft van losse reconstructies.
           </p>
         )}
       </div>

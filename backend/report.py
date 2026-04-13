@@ -54,12 +54,15 @@ from reportlab.lib.utils import ImageReader
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from backend.models import Campaign, Respondent, SurveyResponse
+from backend.products.shared.registry import get_product_module
 from backend.report_content import FACTOR_EXPLANATIONS, METHODOLOGY_REFERENCES
+from backend.scan_definitions import get_scan_definition
 from backend.scoring import (
     FACTOR_LABELS_NL,
     ORG_FACTOR_KEYS,
     EXIT_REASON_LABELS_NL,
     MIN_SEGMENT_N,
+    compute_retention_signal_profile,
     detect_patterns,
 )
 
@@ -455,6 +458,301 @@ def _select_relevant_quotes(
     return selected[:max_quotes]
 
 
+def _cluster_retention_open_signals(quotes: list[str], max_themes: int = 3) -> list[dict[str, Any]]:
+    theme_definitions = [
+        {
+            "key": "leadership",
+            "title": "Leiderschap en ondersteuning",
+            "keywords": ["leidinggevende", "manager", "feedback", "aansturing", "coach", "sturing"],
+            "implication": "Wijst vaak op behoefte aan duidelijker leiderschap, sterkere feedback of meer autonomie-ondersteuning.",
+        },
+        {
+            "key": "culture",
+            "title": "Veiligheid en samenwerking",
+            "keywords": ["cultuur", "veilig", "vertrouwen", "team", "samenwerking", "uitspreken"],
+            "implication": "Wijst vaak op vragen rond psychologische veiligheid, samenwerking of cultuurfit.",
+        },
+        {
+            "key": "growth",
+            "title": "Groei en perspectief",
+            "keywords": ["groei", "ontwikkeling", "loopbaan", "doorgroei", "perspectief", "leren"],
+            "implication": "Wijst vaak op behoefte aan zicht op ontwikkeling, doorgroei of een geloofwaardige volgende stap.",
+        },
+        {
+            "key": "compensation",
+            "title": "Beloning en voorwaarden",
+            "keywords": ["salaris", "beloning", "arbeidsvoorwaarden", "voorwaarden", "vergoeding", "loon"],
+            "implication": "Wijst vaak op ervaren passendheid, uitlegbaarheid of eerlijkheid van beloning en voorwaarden.",
+        },
+        {
+            "key": "workload",
+            "title": "Werkdruk en herstel",
+            "keywords": ["werkdruk", "druk", "belasting", "hersteltijd", "planning", "teveel"],
+            "implication": "Wijst vaak op structurele druk, weinig herstelruimte of onhoudbare pieken in het werk.",
+        },
+        {
+            "key": "role_clarity",
+            "title": "Prioriteiten en rolhelderheid",
+            "keywords": ["prioriteit", "rol", "verwachting", "duidelijk", "verantwoordelijkheid", "tegenstrijdig"],
+            "implication": "Wijst vaak op onduidelijkheid over prioriteiten, verwachtingen of tegenstrijdige opdrachten.",
+        },
+    ]
+
+    buckets = {
+        definition["key"]: {
+            "title": definition["title"],
+            "implication": definition["implication"],
+            "quotes": [],
+        }
+        for definition in theme_definitions
+    }
+    overige: list[str] = []
+
+    for quote in _dedupe_quotes(quotes):
+        normalized = " ".join(quote.lower().split())
+        match_key = next(
+            (
+                definition["key"]
+                for definition in theme_definitions
+                if any(keyword in normalized for keyword in definition["keywords"])
+            ),
+            None,
+        )
+        if match_key:
+            buckets[match_key]["quotes"].append(quote)
+        else:
+            overige.append(quote)
+
+    themes = [
+        {
+            "key": key,
+            "title": value["title"],
+            "count": len(value["quotes"]),
+            "implication": value["implication"],
+            "sample_quote": value["quotes"][0],
+        }
+        for key, value in buckets.items()
+        if value["quotes"]
+    ]
+
+    if overige:
+        themes.append({
+            "key": "other",
+            "title": "Overige verbetersignalen",
+            "count": len(overige),
+            "implication": "Hier zitten signalen die niet netjes in een hoofdcategorie vallen, maar wel vervolgvragen kunnen sturen.",
+            "sample_quote": overige[0],
+        })
+
+    themes.sort(key=lambda item: item["count"], reverse=True)
+    return themes[:max_themes]
+
+
+def _build_retention_action_hypotheses(
+    *,
+    top_risks: list[tuple[str, float]],
+    retention_signal_profile: str | None,
+    retention_themes: list[dict[str, Any]],
+    avg_engagement: float | None,
+    avg_turnover_intention: float | None,
+    avg_stay_intent: float | None,
+) -> list[dict[str, str]]:
+    validation_questions = {
+        "leadership": "Waar missen medewerkers nu vooral richting, feedback of autonomie-ondersteuning van hun leidinggevende?",
+        "culture": "Waar wordt veiligheid of samenwerking nu het meest afgeremd, en in welke teams zie je dat het eerst terug?",
+        "growth": "Waar ontbreekt vooral een geloofwaardig perspectief op ontwikkeling of doorgroei?",
+        "compensation": "Gaat het vooral om hoogte, uitlegbaarheid of de passendheid van voorwaarden voor duurzaam werken?",
+        "workload": "Welke teams ervaren vooral structurele druk en waar kan werk of prioriteit concreet worden verlicht?",
+        "role_clarity": "Waar zijn prioriteiten, verwachtingen of verantwoordelijkheden nu het minst helder?",
+    }
+    action_hints = {
+        "leadership": "Start gerichte managercheck-ins en leg vast welk leidinggevend gedrag binnen 30 dagen anders moet.",
+        "culture": "Plan een teamsessie over veiligheid en samenwerking en spreek concreet gewenst gedrag af.",
+        "growth": "Maak groeipaden zichtbaar en voeg een gericht ontwikkelgesprek toe aan de eerstvolgende cyclus.",
+        "compensation": "Maak beloningslogica en voorwaarden beter uitlegbaar en bepaal of een gerichte fairnesscheck nodig is.",
+        "workload": "Pak de hoogste drukpunten direct aan met een werklastreview en duidelijke prioriteitskeuzes.",
+        "role_clarity": "Vertaal prioriteiten en rolafspraken naar een kort, expliciet werkdocument per team of rol.",
+    }
+
+    items: list[dict[str, str]] = []
+
+    if top_risks:
+        factor, signal_value = top_risks[0]
+        label = FACTOR_LABELS_NL.get(factor, factor)
+        matching_theme = next((theme for theme in retention_themes if theme["key"] == factor), None)
+        body = (
+            f"{label} is nu het sterkste aandachtssignaal (signaalwaarde {signal_value:.1f}/10). "
+            "Dat maakt dit het logischste startpunt voor verificatie en eerste managementactie."
+        )
+        if matching_theme:
+            body += f" In open antwoorden komt dit ook terug via het thema <b>{matching_theme['title'].lower()}</b>."
+        items.append({
+            "title": f"Hypothese: {label} zet behoud het sterkst onder druk",
+            "body": body,
+            "question": validation_questions.get(factor, f"Wat speelt er precies binnen {label.lower()}?"),
+            "action": action_hints.get(factor, f"Bepaal voor {label.lower()} een concrete 30-90 dagenactie."),
+        })
+
+    if retention_signal_profile == "scherp_aandachtssignaal":
+        items.append({
+            "title": "Hypothese: meerdere behoudssignalen wijzen dezelfde kant op",
+            "body": (
+                "De combinatie van retentiesignaal, bevlogenheid, stay-intent en vertrekintentie wijst op een scherp groepssignaal. "
+                "Dit vraagt snelle verificatie in de teams of segmenten waar de laagste werkfactoren samenkomen."
+            ),
+            "question": "In welke teams vallen lage stay-intent, hogere vertrekintentie en zwakke werkfactoren nu samen?",
+            "action": "Plan binnen twee weken een gerichte verdiepingssessie met HR en betrokken leidinggevenden op de meest afwijkende groepen.",
+        })
+    elif retention_signal_profile == "vertrekdenken_zichtbaar":
+        items.append({
+            "title": "Hypothese: expliciet vertrekdenken vraagt snelle verificatie",
+            "body": (
+                "Vertrekintentie is zichtbaar zonder dat je dit als individuele voorspelling moet lezen. "
+                "Dat maakt het belangrijk om snel te toetsen waar het gesprek over behoud nu het meest ontbreekt."
+            ),
+            "question": "Waar is vertrekdenken het meest expliciet zichtbaar en welke werkfactoren worden daar het vaakst mee genoemd?",
+            "action": "Gebruik het volgende gesprek om expliciet te toetsen of dit om acuut vertrekdenken of om corrigeerbare frictie gaat.",
+        })
+    else:
+        items.append({
+            "title": "Hypothese: dit is vooral een vroegsignaal dat prioritering vraagt",
+            "body": (
+                "Het totaalbeeld wijst eerder op behoudsdruk dan op een harde vertrekclaim. "
+                "Juist daarom loont het om nu scherp te prioriteren welke factoren eerst aandacht verdienen."
+            ),
+            "question": "Welke signalen zijn nog te vroeg om hard te duiden, maar sterk genoeg om nu wel gericht te bespreken?",
+            "action": "Beperk de eerste ronde tot maximaal drie concrete acties en leg direct vast wanneer je de uitkomst opnieuw toetst.",
+        })
+
+    if retention_themes:
+        theme = retention_themes[0]
+        items.append({
+            "title": f"Hypothese: open antwoorden geven richting via {theme['title'].lower()}",
+            "body": (
+                f"In open antwoorden komt <b>{theme['title'].lower()}</b> het vaakst terug ({theme['count']} signalen). "
+                "Dat maakt dit een logisch thema om als eerste te valideren in gesprek."
+            ),
+            "question": f"Welke concrete voorbeelden zitten er achter dit thema, en gaat het om één groep of een breder patroon?",
+            "action": "Vertaal dit thema naar een korte validatievraag voor managers en neem het mee in de eerste 30-90 dagenactie.",
+        })
+
+    if avg_engagement is not None and avg_turnover_intention is not None and avg_stay_intent is not None:
+        items.append({
+            "title": "Hypothese: de signaalcombinatie bepaalt hoe acuut opvolging is",
+            "body": (
+                f"Bevlogenheid ({avg_engagement:.1f}/10), stay-intent ({avg_stay_intent:.1f}/10) en vertrekintentie ({avg_turnover_intention:.1f}/10) "
+                "moeten in samenhang worden gelezen. Dat onderscheidt een vroegsignaal van een scherper aandachtspunt."
+            ),
+            "question": "Welk signaal vraagt nu vooral verdieping: energie, expliciete bereidheid om te blijven of zichtbaar vertrekdenken?",
+            "action": "Bespreek deze combinatie expliciet in de MT-duiding en koppel elke uitkomst aan één eigenaar en één vervolgactie.",
+        })
+
+    return items[:3]
+
+
+def _build_retention_playbook_rows(
+    top_risks: list[tuple[str, float]],
+    playbooks: dict[str, dict[str, dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for factor, signal_value in top_risks[:2]:
+        band = "HOOG" if signal_value >= 7 else "MIDDEN" if signal_value >= 4.5 else "LAAG"
+        playbook = playbooks.get(factor, {}).get(band)
+        if not playbook:
+            continue
+        rows.append({
+            "factor": factor,
+            "label": FACTOR_LABELS_NL.get(factor, factor),
+            "signal_value": signal_value,
+            "band": band,
+            "title": playbook["title"],
+            "validate": playbook["validate"],
+            "actions": playbook["actions"],
+            "caution": playbook["caution"],
+        })
+    return rows
+
+
+def _compute_retention_signal_averages(responses: list[SurveyResponse]) -> dict[str, float | None]:
+    risk_scores = [float(response.risk_score) for response in responses if response.risk_score is not None]
+    engagement_scores = [float(response.uwes_score) for response in responses if response.uwes_score is not None]
+    turnover_scores = [
+        float(response.turnover_intention_score)
+        for response in responses
+        if response.turnover_intention_score is not None
+    ]
+    stay_scores = [float(response.stay_intent_score) for response in responses if response.stay_intent_score is not None]
+
+    def _avg(values: list[float]) -> float | None:
+        return round(sum(values) / len(values), 2) if values else None
+
+    return {
+        "retention_signal": _avg(risk_scores),
+        "engagement": _avg(engagement_scores),
+        "turnover_intention": _avg(turnover_scores),
+        "stay_intent": _avg(stay_scores),
+    }
+
+
+def _build_retention_trend_rows(
+    *,
+    current: dict[str, float | None],
+    previous: dict[str, float | None],
+) -> list[dict[str, Any]]:
+    definitions = [
+        (
+            "Bevlogenheid",
+            "engagement",
+            "Een hogere score wijst op meer energie en positieve betrokkenheid dan in de vorige meting.",
+            "De energie ligt lager dan in de vorige meting. Toets vooral of werkdruk, leiderschap of perspectief mee verschuiven.",
+            "Bevlogenheid beweegt beperkt. Gebruik dit om te toetsen of acties al effect hebben of nog onvoldoende zichtbaar zijn.",
+            "higher_is_better",
+        ),
+        (
+            "Stay-intent",
+            "stay_intent",
+            "De expliciete bereidheid om te blijven is hoger dan in de vorige meting.",
+            "Stay-intent is gedaald. Dat maakt snelle verificatie en vervolgactie belangrijker.",
+            "Stay-intent is vrijwel stabiel. Kijk vooral of dit past bij de ontwikkeling van werkfactoren en vertrekintentie.",
+            "higher_is_better",
+        ),
+        (
+            "Vertrekintentie",
+            "turnover_intention",
+            "Vertrekintentie is lager dan in de vorige meting. Dat is positief zolang werkfactoren mee verbeteren.",
+            "Vertrekintentie is opgelopen. Toets snel of dit vooral in specifieke teams of rollen zichtbaar is.",
+            "Vertrekintentie blijft ongeveer gelijk. Segmentvergelijking helpt hier het snelst bepalen waar aandacht nodig is.",
+            "lower_is_better",
+        ),
+    ]
+
+    rows: list[dict[str, Any]] = []
+    for label, key, improved_text, worsened_text, stable_text, direction in definitions:
+        current_value = current.get(key)
+        previous_value = previous.get(key)
+        if current_value is None or previous_value is None:
+            continue
+
+        delta = round(float(current_value) - float(previous_value), 1)
+        if direction == "higher_is_better":
+            improved = delta >= 0.1
+            worsened = delta <= -0.1
+        else:
+            improved = delta <= -0.1
+            worsened = delta >= 0.1
+
+        rows.append({
+            "label": label,
+            "current": current_value,
+            "previous": previous_value,
+            "delta": delta,
+            "direction": "verbeterd" if improved else "verslechterd" if worsened else "stabiel",
+            "explanation": improved_text if improved else worsened_text if worsened else stable_text,
+        })
+
+    return rows
+
+
 def _build_exit_hypotheses(
     top_risks: list[tuple[str, float]],
     top_exit_reasons: list[dict[str, Any]],
@@ -624,41 +922,94 @@ def _build_segment_deep_dive_data(
     return {"coverage": coverage, "rows": rows[:6]}
 
 
+def _build_retention_segment_playbook_rows(
+    *,
+    responses: list[SurveyResponse],
+    org_avg_risk: float | None,
+    playbooks: dict[str, dict[str, dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    if org_avg_risk is None:
+        return []
+
+    grouped: dict[tuple[str, str], list[SurveyResponse]] = {}
+    for response in responses:
+        if response.risk_score is None:
+            continue
+
+        if response.respondent.department:
+            grouped.setdefault(("department", response.respondent.department), []).append(response)
+        if response.respondent.role_level:
+            grouped.setdefault(("role_level", response.respondent.role_level), []).append(response)
+
+    rows: list[dict[str, Any]] = []
+    for (segment_type, raw_label), items in grouped.items():
+        if len(items) < MIN_SEGMENT_N:
+            continue
+
+        avg_risk = round(sum(float(item.risk_score or 0) for item in items) / len(items), 2)
+        factor_signal_scores: list[tuple[str, float]] = []
+        for factor in ORG_FACTOR_KEYS:
+            values = [
+                float(item.org_scores[factor])
+                for item in items
+                if item.org_scores and item.org_scores.get(factor) is not None
+            ]
+            if not values:
+                continue
+            factor_signal_scores.append((factor, round(11.0 - (sum(values) / len(values)), 2)))
+
+        if not factor_signal_scores:
+            continue
+
+        factor, signal_value = sorted(factor_signal_scores, key=lambda item: item[1], reverse=True)[0]
+        band = "HOOG" if signal_value >= 7 else "MIDDEN" if signal_value >= 4.5 else "LAAG"
+        playbook = playbooks.get(factor, {}).get(band)
+        if not playbook:
+            continue
+
+        delta_vs_org = round(avg_risk - org_avg_risk, 2)
+        if avg_risk < 4.5 and delta_vs_org < 0.4:
+            continue
+
+        rows.append({
+            "segment_type": segment_type,
+            "segment_label": _segment_group_label(segment_type, raw_label),
+            "n": len(items),
+            "avg_risk": avg_risk,
+            "delta_vs_org": delta_vs_org,
+            "factor": factor,
+            "factor_label": FACTOR_LABELS_NL.get(factor, factor),
+            "signal_value": signal_value,
+            "title": playbook["title"],
+            "validate": playbook["validate"],
+            "actions": playbook["actions"],
+            "caution": playbook["caution"],
+        })
+
+    rows.sort(key=lambda item: (item["delta_vs_org"], item["avg_risk"], item["signal_value"]), reverse=True)
+    return rows[:3]
+
+
 def _append_methodology_section(
     story: list,
     *,
+    scan_type: str,
     content_width: float,
     has_segment_deep_dive: bool,
 ) -> None:
+    scan_meta = get_scan_definition(scan_type)
+    product_module = get_product_module(scan_type)
+    methodology_payload = product_module.get_methodology_payload()
     story.append(Paragraph("Methodiek & Verantwoording", STYLES["section_title"]))
-    story.append(Paragraph(
-        "Dit rapport is opgebouwd uit verkorte vraagblokken die inhoudelijk zijn geïnspireerd door bestaande wetenschappelijke literatuur. "
-        "Het gaat nadrukkelijk niet om volledige schaalafnames of een diagnostisch instrument. "
-        "De relatieve weging van factoren is expertgedreven en bedoeld voor prioritering in gesprek.",
-        STYLES["body"],
-    ))
+    story.append(Paragraph(methodology_payload["intro_text"], STYLES["body"]))
     story.append(Spacer(1, 0.4 * cm))
 
-    story.append(Paragraph("Hoe wordt de frictiescore berekend?", STYLES["sub_title"]))
-    story.append(Paragraph(
-        "Elke respondent krijgt een frictiescore op een schaal van 1 tot 10. "
-        "Een hogere score betekent meer signalen van ontevredenheid of frictie in de werkomgeving. "
-        "De score is indicatief en bedoeld als gespreksinput, niet als causale voorspelling, benchmark of objectief oordeel. "
-        "De score is een gewogen gemiddelde van zeven factoren:",
-        STYLES["body"],
-    ))
+    story.append(Paragraph(f"Hoe wordt het {scan_meta['signal_short_label']} berekend?", STYLES["sub_title"]))
+    method_text = methodology_payload["method_text"]
+    story.append(Paragraph(method_text, STYLES["body"]))
     story.append(Spacer(1, 0.2 * cm))
 
-    weight_rows = [
-        ["Factor", "Gewicht", "Richting in literatuur"],
-        ["Leiderschap", "2.5 ×", "In de literatuur sterk geassocieerd met vrijwillig verloop (o.a. LMX-onderzoek)"],
-        ["SDT Werkbeleving", "2.0 ×", "Breed signaal voor motivatie, betrokkenheid en retentie"],
-        ["Psychologische veiligheid & cultuurmatch", "1.5 ×", "Psychologische veiligheid en waardenfit hangen samen met retentie"],
-        ["Groeiperspectief", "1.5 ×", "Ontwikkel- en perspectiefsignaal in de literatuur (JD-R)"],
-        ["Beloning & voorwaarden", "1.0 ×", "Hygiënefactor — drempelwaarde-effect"],
-        ["Werkbelasting", "1.0 ×", "Werkbelasting werkt vaak als versterkende contextfactor (JD-R)"],
-        ["Rolhelderheid", "1.0 ×", "Basale verwachting (Rizzo, House & Lirtzman, 1970)"],
-    ]
+    weight_rows = methodology_payload["weight_rows"]
     w_ts = TableStyle([
         ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
         ("TEXTCOLOR",     (0, 0), (-1, 0), WHITE),
@@ -680,12 +1031,7 @@ def _append_methodology_section(
     story.append(Spacer(1, 0.4 * cm))
 
     story.append(Paragraph("Wat betekenen de signaalbanden?", STYLES["sub_title"]))
-    band_rows = [
-        ["Band", "Score", "Betekenis voor de organisatie"],
-        ["LAAG",   "< 4.5",   "Overwegend positief beeld. Er zijn relatief weinig signalen van werkfrictie in de antwoorden."],
-        ["MIDDEN", "4.5–7.0", "Gemengd beeld. Er zijn meerdere aandachtspunten, maar de uitkomst vraagt vooral nadere verificatie."],
-        ["HOOG",   "≥ 7.0",   "Sterk signaal van ervaren werkfrictie. Dit vraagt om nadere analyse, niet automatisch om een harde conclusie."],
-    ]
+    band_rows = methodology_payload["band_rows"]
     band_ts = TableStyle([
         ("BACKGROUND",    (0, 0), (-1, 0), BRAND),
         ("TEXTCOLOR",     (0, 0), (-1, 0), WHITE),
@@ -759,7 +1105,7 @@ def _append_methodology_section(
 # ---------------------------------------------------------------------------
 
 
-def _make_header_footer(org_name: str, camp_name: str, generated: str):
+def _make_header_footer(org_name: str, camp_name: str, generated: str, product_name: str):
     """Geeft onFirstPage en onLaterPages callbacks terug voor platypus."""
 
     def _later_pages(canvas, doc):
@@ -787,7 +1133,7 @@ def _make_header_footer(org_name: str, camp_name: str, generated: str):
         # Paginanummer + versie
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(MUTED)
-        canvas.drawString(1.5 * cm, 1.0 * cm, "ExitScan v1.0  ·  Verisight")
+        canvas.drawString(1.5 * cm, 1.0 * cm, f"{product_name} v1.0  ·  Verisight")
         canvas.drawCentredString(PAGE_W / 2, 1.0 * cm, f"Pagina {doc.page}")
         canvas.drawRightString(PAGE_W - 1.5 * cm, 1.0 * cm, f"Gegenereerd {generated}")
 
@@ -830,6 +1176,10 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     _mode     = (camp.delivery_mode or "baseline").lower()
     _mode_lbl = "Live" if _mode == "live" else "Baseline"
     scan_lbl  = f"ExitScan {_mode_lbl}" if camp.scan_type == "exit" else "RetentieScan"
+    scan_meta = get_scan_definition(camp.scan_type)
+    signal_label = scan_meta["signal_label"]
+    signal_label_lower = scan_meta["signal_short_label"]
+    is_retention = camp.scan_type == "retention"
 
     # ── Data verzamelen ────────────────────────────────────────────────────
     respondents = camp.respondents
@@ -842,6 +1192,24 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
     risk_scores = [r.risk_score for r in responses if r.risk_score]
     avg_risk    = round(sum(risk_scores) / len(risk_scores), 2) if risk_scores else None
+    engagement_scores = [r.uwes_score for r in responses if r.uwes_score is not None]
+    avg_engagement = round(sum(engagement_scores) / len(engagement_scores), 2) if engagement_scores else None
+    turnover_intention_scores = [
+        r.turnover_intention_score for r in responses if r.turnover_intention_score is not None
+    ]
+    avg_turnover_intention = (
+        round(sum(turnover_intention_scores) / len(turnover_intention_scores), 2)
+        if turnover_intention_scores else None
+    )
+    stay_intent_scores = [
+        round((float(r.stay_intent_score) - 1) / 4 * 9 + 1, 2)
+        for r in responses
+        if r.stay_intent_score is not None
+    ]
+    avg_stay_intent = (
+        round(sum(stay_intent_scores) / len(stay_intent_scores), 2)
+        if stay_intent_scores else None
+    )
 
     band_counts = {"HOOG": 0, "MIDDEN": 0, "LAAG": 0}
     for r in responses:
@@ -855,6 +1223,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             "risk_score": respondent.response.risk_score,
             "preventability": respondent.response.preventability,
             "exit_reason_code": respondent.response.exit_reason_code,
+            "stay_intent_score": respondent.response.stay_intent_score,
             "contributing_reason_codes": list((respondent.response.pull_factors_raw or {}).keys()),
             "department": respondent.department,
             "role_level": respondent.role_level,
@@ -869,11 +1238,97 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     top_cluster  = _top_factor_cluster(top_risks)
     strong_work_signal_pct = pattern.get("strong_work_signal_pct") if has_pattern else None
     any_work_signal_pct = pattern.get("any_work_signal_pct") if has_pattern else None
+    retention_signal_profile = (
+        compute_retention_signal_profile(
+            risk_score=avg_risk or 5.5,
+            engagement_score=avg_engagement,
+            turnover_intention_score=avg_turnover_intention,
+            stay_intent_score=avg_stay_intent,
+        )
+        if is_retention and avg_risk is not None else None
+    )
+    retention_themes = _cluster_retention_open_signals(
+        [
+            response.open_text_raw
+            for response in responses
+            if response.open_text_raw and response.open_text_raw.strip()
+        ]
+    ) if is_retention else []
+    retention_hypotheses = _build_retention_action_hypotheses(
+        top_risks=top_risks,
+        retention_signal_profile=retention_signal_profile,
+        retention_themes=retention_themes,
+        avg_engagement=avg_engagement,
+        avg_turnover_intention=avg_turnover_intention,
+        avg_stay_intent=avg_stay_intent,
+    ) if is_retention and has_pattern else []
+    retention_playbooks = _build_retention_playbook_rows(
+        top_risks=top_risks,
+        playbooks=get_product_module(camp.scan_type).get_action_playbooks_payload(),
+    ) if is_retention and has_pattern and hasattr(get_product_module(camp.scan_type), "get_action_playbooks_payload") else []
+    retention_playbook_calibration_note = (
+        get_product_module(camp.scan_type).get_action_playbook_calibration_note()
+        if is_retention and hasattr(get_product_module(camp.scan_type), "get_action_playbook_calibration_note")
+        else None
+    )
+    previous_avg_risk: float | None = None
+    trend_delta: float | None = None
+    trend_label: str | None = None
+    previous_campaign_label: str | None = None
+    previous_responses: list[SurveyResponse] = []
+    if avg_risk is not None:
+        try:
+            previous_campaign = (
+                db.query(Campaign)
+                .filter(
+                    Campaign.organization_id == org.id,
+                    Campaign.scan_type == camp.scan_type,
+                    Campaign.id != camp.id,
+                    Campaign.created_at < camp.created_at,
+                )
+                .order_by(Campaign.created_at.desc())
+                .first()
+            )
+            if previous_campaign:
+                previous_responses = [
+                    respondent.response
+                    for respondent in previous_campaign.respondents
+                    if respondent.completed and respondent.response and respondent.response.risk_score is not None
+                ]
+                previous_scores = [response.risk_score for response in previous_responses if response.risk_score is not None]
+                if previous_scores:
+                    previous_avg_risk = round(sum(previous_scores) / len(previous_scores), 2)
+                    trend_delta = round(avg_risk - previous_avg_risk, 1)
+                    trend_label = "verbeterd" if trend_delta < -0.1 else "verslechterd" if trend_delta > 0.1 else "stabiel"
+                    previous_campaign_label = previous_campaign.name
+        except Exception:
+            previous_avg_risk = None
+            trend_delta = None
+            trend_label = None
+            previous_campaign_label = None
+            previous_responses = []
+    retention_trend_rows = (
+        _build_retention_trend_rows(
+            current=_compute_retention_signal_averages(responses),
+            previous=_compute_retention_signal_averages(previous_responses),
+        )
+        if is_retention and previous_responses
+        else []
+    )
     has_segment_deep_dive = _campaign_has_add_on(camp, SEGMENT_DEEP_DIVE_KEY)
     segment_deep_dive = _build_segment_deep_dive_data(
         responses=responses,
         org_avg_risk=pattern.get("avg_risk_score") if has_pattern else avg_risk,
     ) if has_segment_deep_dive else {"coverage": {}, "rows": []}
+    retention_segment_playbooks = (
+        _build_retention_segment_playbook_rows(
+            responses=responses,
+            org_avg_risk=avg_risk,
+            playbooks=get_product_module(camp.scan_type).get_action_playbooks_payload(),
+        )
+        if is_retention and has_segment_deep_dive and has_pattern and hasattr(get_product_module(camp.scan_type), "get_action_playbooks_payload")
+        else []
+    )
 
     # Replacement cost totaal (exit only)
     total_cost = sum(
@@ -883,7 +1338,12 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     # ── PDF opbouwen ───────────────────────────────────────────────────────
     buf = io.BytesIO()
 
-    first_page_cb, later_pages_cb = _make_header_footer(org.name, camp.name, now_str)
+    first_page_cb, later_pages_cb = _make_header_footer(
+        org.name,
+        camp.name,
+        now_str,
+        scan_meta["product_name"],
+    )
 
     content_x      = 1.5 * cm
     content_y      = 2.5 * cm
@@ -930,15 +1390,26 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(Spacer(1, 2.0 * cm))
 
     # KPI-blokken op voorblad
-    kpi_data = [
-        ["Uitgenodigden", "Ingevuld", "Respons", "Gem. frictiescore"],
-        [
-            str(n_invited),
-            str(n_completed),
-            f"{completion}%",
-            f"{avg_risk:.1f}/10" if avg_risk else "–",
-        ],
-    ]
+    if is_retention:
+        kpi_data = [
+            ["Uitgenodigden", "Ingevuld", "Respons", f"Gem. {signal_label_lower}"],
+            [
+                str(n_invited),
+                str(n_completed),
+                f"{completion}%",
+                f"{avg_risk:.1f}/10" if avg_risk else "-",
+            ],
+        ]
+    else:
+        kpi_data = [
+            ["Uitgenodigden", "Ingevuld", "Respons", f"Gem. {signal_label_lower}"],
+            [
+                str(n_invited),
+                str(n_completed),
+                f"{completion}%",
+                f"{avg_risk:.1f}/10" if avg_risk else "-",
+            ],
+        ]
     kpi_style = TableStyle([
         ("BACKGROUND",   (0, 0), (-1, 0), colors.HexColor("#1D4ED8")),
         ("BACKGROUND",   (0, 1), (-1, 1), colors.HexColor("#1E40AF")),
@@ -961,53 +1432,30 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     kpi_table.setStyle(kpi_style)
     story.append(kpi_table)
 
-    # Trend-indicator: vergelijk met vorige campagne van dezelfde organisatie (indien beschikbaar)
-    try:
-        from backend.models import Respondent as _Respondent
-        prev_camp = (
-            db.query(Campaign)
-            .filter(
-                Campaign.organization_id == org.id,
-                Campaign.id != camp.id,
-                Campaign.is_active == False,  # noqa: E712
-            )
-            .order_by(Campaign.id.desc())
-            .first()
-        )
-        if prev_camp:
-            prev_respondents = prev_camp.respondents
-            prev_completed   = [r for r in prev_respondents if r.completed]
-            prev_responses   = [r.response for r in prev_completed if r.response]
-            prev_scores      = [r.risk_score for r in prev_responses if r.risk_score]
-            if prev_scores and avg_risk is not None:
-                prev_avg   = round(sum(prev_scores) / len(prev_scores), 2)
-                delta      = round(avg_risk - prev_avg, 1)
-                arrow      = "↑" if delta > 0 else "↓" if delta < 0 else "→"
-                delta_text = f"{arrow} {abs(delta):.1f} vs. vorige campagne"
-                delta_color = colors.HexColor("#FCA5A5") if delta > 0 else colors.HexColor("#86EFAC")
-                trend_data  = [["Trend", delta_text]]
-                trend_style = TableStyle([
-                    ("BACKGROUND",   (0, 0), (-1, 0), colors.HexColor("#1D4ED8")),
-                    ("BACKGROUND",   (0, 1), (-1, 1), colors.HexColor("#1E40AF")),
-                    ("TEXTCOLOR",    (0, 0), (-1, -1), WHITE),
-                    ("FONTNAME",     (0, 0), (-1, 0), "Helvetica"),
-                    ("FONTNAME",     (0, 1), (-1, 1), "Helvetica-Bold"),
-                    ("FONTSIZE",     (0, 0), (-1, 0), 9),
-                    ("FONTSIZE",     (0, 1), (-1, 1), 14),
-                    ("ALIGN",        (0, 0), (-1, -1), "CENTER"),
-                    ("VALIGN",       (0, 0), (-1, -1), "MIDDLE"),
-                    ("TOPPADDING",   (0, 0), (-1, 0), 8),
-                    ("BOTTOMPADDING",(0, 0), (-1, 0), 6),
-                    ("TOPPADDING",   (0, 1), (-1, 1), 10),
-                    ("BOTTOMPADDING",(0, 1), (-1, 1), 12),
-                    ("GRID",         (0, 0), (-1, -1), 0.5, colors.HexColor("#3B82F6")),
-                ])
-                trend_table = Table(trend_data, colWidths=[content_width])
-                trend_table.setStyle(trend_style)
-                story.append(Spacer(1, 0.3 * cm))
-                story.append(trend_table)
-    except Exception:
-        pass  # Trend-indicator is optioneel — geen foutmelding tonen
+    if trend_delta is not None:
+        arrow = "↑" if trend_delta > 0 else "↓" if trend_delta < 0 else "→"
+        comparison_label = previous_campaign_label or "vorige campagne"
+        trend_data = [["Trend", f"{arrow} {abs(trend_delta):.1f} vs. {comparison_label}"]]
+        trend_style = TableStyle([
+            ("BACKGROUND",   (0, 0), (-1, 0), colors.HexColor("#1D4ED8")),
+            ("BACKGROUND",   (0, 1), (-1, 1), colors.HexColor("#1E40AF")),
+            ("TEXTCOLOR",    (0, 0), (-1, -1), WHITE),
+            ("FONTNAME",     (0, 0), (-1, 0), "Helvetica"),
+            ("FONTNAME",     (0, 1), (-1, 1), "Helvetica-Bold"),
+            ("FONTSIZE",     (0, 0), (-1, 0), 9),
+            ("FONTSIZE",     (0, 1), (-1, 1), 14),
+            ("ALIGN",        (0, 0), (-1, -1), "CENTER"),
+            ("VALIGN",       (0, 0), (-1, -1), "MIDDLE"),
+            ("TOPPADDING",   (0, 0), (-1, 0), 8),
+            ("BOTTOMPADDING",(0, 0), (-1, 0), 6),
+            ("TOPPADDING",   (0, 1), (-1, 1), 10),
+            ("BOTTOMPADDING",(0, 1), (-1, 1), 12),
+            ("GRID",         (0, 0), (-1, -1), 0.5, colors.HexColor("#3B82F6")),
+        ])
+        trend_table = Table(trend_data, colWidths=[content_width])
+        trend_table.setStyle(trend_style)
+        story.append(Spacer(1, 0.3 * cm))
+        story.append(trend_table)
 
     story.append(Spacer(1, 1.5 * cm))
 
@@ -1026,8 +1474,14 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         for factor, score in top_risks_cover:
             label = FACTOR_LABELS_NL.get(factor, factor)
             exec_rows.append([f"⚠  {label}", f"{score:.1f}"])
-        if strong_work_signal_pct is not None:
+        if strong_work_signal_pct is not None and not is_retention:
             exec_rows.append(["Werkfactorsignaal", f"{strong_work_signal_pct:.0f}%"])
+        if is_retention and avg_engagement is not None:
+            exec_rows.append(["Bevlogenheid", f"{avg_engagement:.1f}/10"])
+        if is_retention and avg_turnover_intention is not None:
+            exec_rows.append(["Vertrekintentie", f"{avg_turnover_intention:.1f}/10"])
+        if is_retention and avg_stay_intent is not None:
+            exec_rows.append(["Stay-intent", f"{avg_stay_intent:.1f}/10"])
 
         exec_style = TableStyle([
             ("SPAN",        (0, 0), (1, 0)),
@@ -1073,24 +1527,39 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         f"{n_invited} uitgenodigde medewerkers deel (respons: {completion}%). "
     )
     if avg_risk:
-        band_str = {"HOOG": "hoog", "MIDDEN": "middelhoog", "LAAG": "laag"}.get(
+        band_str = {"HOOG": "sterk aandachtssignaal", "MIDDEN": "verhoogd aandachtssignaal", "LAAG": "laag aandachtssignaal"}.get(
             ("HOOG" if avg_risk >= 7 else "MIDDEN" if avg_risk >= 4.5 else "LAAG"), ""
         )
-        intro += (
-            f"De gemiddelde frictiescore bedraagt <b>{avg_risk:.1f} op 10</b>. "
-            f"Dat wijst op een <b>{band_str}</b> niveau van terugkerende werkfrictie rondom vertrek en helpt bepalen waar een gesprek of verdiepende actie het meeste oplevert."
-        )
+        if is_retention:
+            intro += (
+                f"Het gemiddelde {signal_label_lower} bedraagt <b>{avg_risk:.1f} op 10</b>. "
+                f"Dat wijst op een <b>{band_str}</b> in deze groep en helpt bepalen waar behoud waarschijnlijk het meeste gebaat is bij verificatie, verdieping of actie."
+            )
+        else:
+            exit_band_str = {"HOOG": "hoog", "MIDDEN": "middelhoog", "LAAG": "laag"}.get(
+                ("HOOG" if avg_risk >= 7 else "MIDDEN" if avg_risk >= 4.5 else "LAAG"), ""
+            )
+            intro += (
+                f"De gemiddelde frictiescore bedraagt <b>{avg_risk:.1f} op 10</b>. "
+                f"Dat wijst op een <b>{exit_band_str}</b> niveau van terugkerende werkfrictie rondom vertrek en helpt bepalen waar een gesprek of verdiepende actie het meeste oplevert."
+            )
     story.append(Paragraph(intro, STYLES["body"]))
     story.append(Spacer(1, 0.4 * cm))
 
     # Risico-meter
     if avg_risk:
         band_label = "HOOG" if avg_risk >= 7 else "MIDDEN" if avg_risk >= 4.5 else "LAAG"
-        story.append(Paragraph("Frictiemeter (gemiddeld)", STYLES["sub_title"]))
+        story.append(Paragraph(f"{signal_label} (gemiddeld)", STYLES["sub_title"]))
         story.append(_risk_gauge_image(avg_risk, band_label))
-        story.append(Paragraph(
+        benchmark_text = (
+            f"<i>Het {signal_label_lower} is een interne samenvatting van behoudssignalen in deze groep. "
+            "Gebruik deze score als gesprekssamenvatting en vroegsignaal, niet als individuele voorspelling of externe benchmark.</i>"
+            if is_retention else
             "<i>De frictiescore is een interne samenvatting van ervaren werkfrictie rondom vertrek. "
-            "Gebruik deze score als gesprekssamenvatting, niet als externe benchmark of voorspelling.</i>",
+            "Gebruik deze score als gesprekssamenvatting, niet als externe benchmark of voorspelling.</i>"
+        )
+        story.append(Paragraph(
+            benchmark_text,
             ParagraphStyle(
                 "benchmark_note",
                 fontName="Helvetica-Oblique",
@@ -1149,6 +1618,28 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                 f"<b>{labels}</b> liggen dicht bij elkaar en vormen samen de sterkste aandachtssignalen. "
                 "Behandel deze volgorde niet als harde rangorde."
             )
+    if is_retention and avg_engagement is not None:
+        findings.append(
+            f"De gemiddelde <b>bevlogenheid</b> ligt op <b>{avg_engagement:.1f} / 10</b>."
+        )
+    if is_retention and avg_turnover_intention is not None:
+        findings.append(
+            f"De gemiddelde <b>vertrekintentie</b> ligt op <b>{avg_turnover_intention:.1f} / 10</b>."
+        )
+    if is_retention and avg_stay_intent is not None:
+        findings.append(
+            f"De gemiddelde <b>stay-intent</b> ligt op <b>{avg_stay_intent:.1f} / 10</b>."
+        )
+    if is_retention and retention_themes:
+        findings.append(
+            f"In open antwoorden komt <b>{retention_themes[0]['title'].lower()}</b> het vaakst terug "
+            f"(<b>{retention_themes[0]['count']}</b> signalen)."
+        )
+    if is_retention and trend_delta is not None and trend_label is not None and previous_avg_risk is not None:
+        findings.append(
+            f"Ten opzichte van de vorige RetentieScan is het gemiddelde {signal_label_lower} "
+            f"<b>{trend_label}</b> ({previous_avg_risk:.1f} → {avg_risk:.1f})."
+        )
     if strong_work_signal_pct is not None:
         findings.append(
             f"Bij <b>{strong_work_signal_pct:.0f}% van het vertrek</b> is sprake van een sterk signaal van beïnvloedbare werkfactoren. "
@@ -1173,6 +1664,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
     _append_methodology_section(
         story,
+        scan_type=camp.scan_type,
         content_width=content_width,
         has_segment_deep_dive=has_segment_deep_dive,
     )
@@ -1187,7 +1679,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(Paragraph(
         "Dit vraagblok is geïnspireerd op de Basic Psychological Need Satisfaction at Work-literatuur "
         "(Van den Broeck et al., 2010; Deci et al., 2001) en gebruikt verkorte, aangepaste items. "
-        "Scores < 4.5 wijzen op duidelijke frictie; > 7.0 is overwegend positief.",
+        "Lees dit als SDT-gebaseerd signaalblok: scores < 4.5 vragen aandacht; > 7.0 is overwegend positief.",
         STYLES["body"],
     ))
     story.append(Spacer(1, 0.3 * cm))
@@ -1225,7 +1717,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             elif score >= 4.0:
                 interpret = "Matig — aandacht gewenst."
             else:
-                interpret = "Laag — behoeftefrustatie aanwezig. Directe aandacht vereist."
+                interpret = "Laag — duidelijke behoeftefrustratie. Directe aandacht gewenst."
             sdt_rows.append([label, f"{score:.1f} / 10", interpret])
 
         sdt_ts = TableStyle([
@@ -1380,9 +1872,9 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
         # ── Focusvragen per factor (alleen URGENT / AANDACHT) ─────────────
         FOCUS_QUESTIONS: dict[str, str] = {
-            "leadership":   "Wat vertellen vertrekkers over de relatie met hun leidinggevende? "
+            "leadership":   "Wat vertellen medewerkers over de relatie met hun leidinggevende? "
                             "Herkennen leidinggevenden dit beeld, en in welke teams speelt dit het sterkst?",
-            "culture":      "Voelden medewerkers zich vrij om problemen te benoemen zonder gevolgen? "
+            "culture":      "Voelen medewerkers zich vrij om problemen te benoemen zonder gevolgen? "
                             "Waar zit het verschil tussen afdelingen of teams?",
             "growth":       "Zijn er concrete groeipaden zichtbaar en bespreekbaar? "
                             "Weten medewerkers wat hun volgende stap kan zijn binnen de organisatie?",
@@ -1459,15 +1951,11 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     # PAGINA 5 — PATRONEN & VERTREKREDEN / BEVLOGENHEID                   #
     # ==================================================================== #
 
-    if camp.scan_type == "exit":
-        story.append(Paragraph("Patronen & Vertrekreden", STYLES["section_title"]))
-        story.append(Paragraph(
-            "Deze pagina combineert hoofdredenen, meespelende factoren en een indicatieve duiding van werkinvloed. "
-            "De uitkomsten helpen om patronen te verkennen, niet om één causale vertrekverklaring vast te stellen.",
-            STYLES["body"],
-        ))
-    else:
-        story.append(Paragraph("Bevlogenheid & Vertrekintentie", STYLES["section_title"]))
+    signal_page_payload = get_product_module(camp.scan_type).get_signal_page_payload(
+        retention_signal_profile=retention_signal_profile,
+    )
+    story.append(Paragraph(signal_page_payload["title"], STYLES["section_title"]))
+    story.append(Paragraph(signal_page_payload["intro"], STYLES["body"]))
 
     story.append(Spacer(1, 0.3 * cm))
 
@@ -1614,6 +2102,162 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                     ("LEFTPADDING", (0, 0), (-1, -1), 0),
                 ]))
                 story.append(side_table)
+        else:
+            profile_labels = {
+                "scherp_aandachtssignaal": "Scherp aandachtssignaal",
+                "vertrekdenken_zichtbaar": "Vertrekdenken zichtbaar",
+                "vroegsignaal": "Vroegsignaal",
+                "overwegend_stabiel": "Overwegend stabiel",
+            }
+            summary_rows = [["Metriek", "Gemiddelde"]]
+            summary_rows.append([signal_label, f"{avg_risk:.1f} / 10" if avg_risk is not None else "-"])
+            summary_rows.append(["Bevlogenheid", f"{avg_engagement:.1f} / 10" if avg_engagement is not None else "-"])
+            summary_rows.append([
+                "Stay-intent",
+                f"{avg_stay_intent:.1f} / 10" if avg_stay_intent is not None else "-",
+            ])
+            summary_rows.append([
+                "Vertrekintentie",
+                f"{avg_turnover_intention:.1f} / 10" if avg_turnover_intention is not None else "-",
+            ])
+            if retention_signal_profile:
+                summary_rows.append(["Risicoprofiel", profile_labels.get(retention_signal_profile, retention_signal_profile)])
+            if trend_delta is not None:
+                summary_rows.append([
+                    "Trend sinds vorige meting",
+                    f"{'+' if trend_delta > 0 else ''}{trend_delta:.1f}",
+                ])
+            summary_table = Table(
+                summary_rows,
+                colWidths=[content_width * 0.65, content_width * 0.35],
+            )
+            summary_table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), BRAND),
+                ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#F0F9FF"), WHITE]),
+                ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
+                ("ALIGN", (1, 1), (1, -1), "CENTER"),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ]))
+            story.append(Paragraph(signal_page_payload["summary_title"], STYLES["sub_title"]))
+            story.append(summary_table)
+            story.append(Spacer(1, 0.3 * cm))
+
+            if previous_campaign_label and retention_trend_rows:
+                story.append(Paragraph("Trend op behoudssignalen", STYLES["sub_title"]))
+                story.append(Paragraph(
+                    f"Vergeleken met <b>{previous_campaign_label}</b> zie je hieronder hoe bevlogenheid, stay-intent en vertrekintentie verschoven. "
+                    "Gebruik dit om te bepalen of de huidige verandering breed genoeg is om actie op te schalen.",
+                    STYLES["body"],
+                ))
+                trend_rows = [["Signaal", "Nu", "Vorige", "Delta", "Lezing"]]
+                for row in retention_trend_rows:
+                    trend_rows.append([
+                        row["label"],
+                        f"{row['current']:.1f} / 10",
+                        f"{row['previous']:.1f} / 10",
+                        f"{'+' if row['delta'] > 0 else ''}{row['delta']:.1f}",
+                        row["direction"],
+                    ])
+                trend_table = Table(
+                    trend_rows,
+                    colWidths=[
+                        content_width * 0.28,
+                        content_width * 0.14,
+                        content_width * 0.14,
+                        content_width * 0.12,
+                        content_width * 0.32,
+                    ],
+                )
+                trend_style = TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#DBEAFE")),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), BRAND_DARK),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#F8FBFF"), WHITE]),
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
+                    ("ALIGN", (1, 1), (3, -1), "CENTER"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ])
+                for row_idx, row in enumerate(retention_trend_rows, start=1):
+                    delta_color = RISK_LOW if row["direction"] == "verbeterd" else RISK_HIGH if row["direction"] == "verslechterd" else MUTED
+                    trend_style.add("TEXTCOLOR", (3, row_idx), (4, row_idx), delta_color)
+                trend_table.setStyle(trend_style)
+                story.append(trend_table)
+                story.append(Spacer(1, 0.2 * cm))
+                for row in retention_trend_rows:
+                    story.append(Paragraph(
+                        f"<b>{row['label']}:</b> {row['explanation']}",
+                        STYLES["body"],
+                    ))
+                story.append(Spacer(1, 0.2 * cm))
+
+            story.append(Paragraph("Hoe lees je deze combinatie?", STYLES["sub_title"]))
+            story.append(Paragraph(
+                signal_page_payload["signal_profile_text"],
+                STYLES["body"],
+            ))
+            story.append(Spacer(1, 0.3 * cm))
+
+            if retention_hypotheses:
+                story.append(Paragraph("Waar nu het meeste vervolg nodig is", STYLES["sub_title"]))
+                for item in retention_hypotheses:
+                    block = Table(
+                        [
+                            [Paragraph(f"<b>{item['title']}</b>", STYLES["body_bold"])],
+                            [Paragraph(item["body"], STYLES["body"])],
+                            [Paragraph(f"<i>Eerste logische actie:</i> {item['action']}", STYLES["body"])],
+                        ],
+                        colWidths=[content_width],
+                    )
+                    block.setStyle(TableStyle([
+                        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EFF6FF")),
+                        ("BACKGROUND", (0, 1), (-1, -1), WHITE),
+                        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
+                        ("TOPPADDING", (0, 0), (-1, -1), 6),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                    ]))
+                    story.append(block)
+                    story.append(Spacer(1, 0.2 * cm))
+
+            if retention_themes:
+                story.append(Spacer(1, 0.2 * cm))
+                story.append(Paragraph("Verbetersignalen uit open antwoorden", STYLES["sub_title"]))
+                story.append(Paragraph(
+                    "Open antwoorden zijn geclusterd tot managementthema's. Lees ze als richting voor verificatie en actie, niet als losse klachtenlijst.",
+                    STYLES["body"],
+                ))
+                theme_rows = [["Thema", "Signalen", "Wat dit vaak betekent"]]
+                for theme in retention_themes:
+                    sample_quote = theme["sample_quote"]
+                    if len(sample_quote) > 120:
+                        sample_quote = sample_quote[:117] + "..."
+                    theme_rows.append([
+                        Paragraph(f"<b>{theme['title']}</b>", STYLES["body_bold"]),
+                        Paragraph(f"{theme['count']} signalen<br/><font color='#6B7280'><i>\"{sample_quote}\"</i></font>", STYLES["body"]),
+                        Paragraph(theme["implication"], STYLES["body"]),
+                    ])
+                theme_table = Table(
+                    theme_rows,
+                    colWidths=[content_width * 0.24, content_width * 0.28, content_width * 0.48],
+                )
+                theme_table.setStyle(TableStyle([
+                    ("BACKGROUND", (0, 0), (-1, 0), BRAND),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#F8FBFF"), WHITE]),
+                    ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 6),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+                ]))
+                story.append(theme_table)
 
         # Afdeling-risico
         dept_risks = pattern.get("department_avg_risk", {})
@@ -1625,7 +2269,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
         if dept_risks:
             story.append(Spacer(1, 0.4 * cm))
-            story.append(Paragraph("Frictiescore per afdeling", STYLES["sub_title"]))
+            story.append(Paragraph(f"{signal_label} per afdeling", STYLES["sub_title"]))
             story.append(Paragraph(
                 f"<i>Alleen afdelingen met minimaal {MIN_SEGMENT_N} responses worden getoond om ruis en schijnprecisie te beperken.</i>",
                 ParagraphStyle(
@@ -1637,7 +2281,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                     spaceAfter=4,
                 ),
             ))
-            dept_rows = [["Afdeling", "n", "Gem. frictiescore"]]
+            dept_rows = [["Afdeling", "n", f"Gem. {signal_label_lower}"]]
             for dept, score in sorted(dept_risks.items(), key=lambda x: x[1], reverse=True):
                 n_dept = dept_n_counts.get(dept, 0)
                 dept_rows.append([dept, str(n_dept), f"{score:.1f} / 10"])
@@ -1690,7 +2334,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             filtered_tenure = {}
         if filtered_tenure:
             story.append(Spacer(1, 0.4 * cm))
-            story.append(Paragraph("Vertrek naar diensttijd", STYLES["sub_title"]))
+            story.append(Paragraph("Signaal naar diensttijd", STYLES["sub_title"]))
             story.append(Paragraph(
                 f"<i>Alleen groepen met minimaal {MIN_SEGMENT_N} responses worden getoond.</i>",
                 ParagraphStyle(
@@ -1702,7 +2346,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                     spaceAfter=4,
                 ),
             ))
-            tenure_rows = [["Diensttijd", "n", "Gem. frictiescore"]]
+            tenure_rows = [["Diensttijd", "n", f"Gem. {signal_label_lower}"]]
             for label, scores_list in filtered_tenure.items():
                 n_t = len(scores_list)
                 avg_t = round(sum(scores_list) / n_t, 1) if n_t > 0 else None
@@ -1750,7 +2394,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
         if filtered_role_risks:
             story.append(Spacer(1, 0.4 * cm))
-            story.append(Paragraph("Vertrek naar functieniveau", STYLES["sub_title"]))
+            story.append(Paragraph("Signaal naar functieniveau", STYLES["sub_title"]))
             story.append(Paragraph(
                 f"<i>Alleen groepen met minimaal {MIN_SEGMENT_N} responses worden getoond.</i>",
                 ParagraphStyle(
@@ -1762,7 +2406,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                     spaceAfter=4,
                 ),
             ))
-            role_rows = [["Functieniveau", "n", "Gem. frictiescore"]]
+            role_rows = [["Functieniveau", "n", f"Gem. {signal_label_lower}"]]
             ordered_roles = sorted(
                 filtered_role_risks.items(),
                 key=lambda x: ROLE_LEVEL_ORDER.index(x[0]) if x[0] in ROLE_LEVEL_ORDER else 99,
@@ -1835,14 +2479,14 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             if deep_dive_rows:
                 story.append(Spacer(1, 0.25 * cm))
                 story.append(Paragraph(
-                    "Onderstaande groepen wijken het meest af van de gemiddelde frictiescore van de organisatie.",
+                    f"Onderstaande groepen wijken het meest af van het gemiddelde {signal_label_lower} van de organisatie.",
                     STYLES["body"],
                 ))
                 table_rows = [[
                     "Segment",
                     "Groep",
                     "n",
-                    "Gem. frictiescore",
+                    f"Gem. {signal_label_lower}",
                     "Vs. org",
                     "Relatief opvallende thema's",
                 ]]
@@ -1922,6 +2566,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     ))
     story.append(Spacer(1, 0.5 * cm))
 
+    hypotheses: list[dict[str, str]] = []
     if has_pattern and camp.scan_type == "exit":
         hypotheses = _build_exit_hypotheses(
             top_risks=top_risks,
@@ -1929,33 +2574,123 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             top_contributing_reasons=pattern.get("top_contributing_reasons", []),
             factor_avgs=factor_avgs,
         )
-        if hypotheses:
-            story.append(Paragraph("Werkhypothesen", STYLES["sub_title"]))
-            story.append(Paragraph(
-                "Onderstaande hypothesen zijn afgeleid van scorepatronen, vertrekredenen en meespelende factoren. "
-                "Ze zijn bedoeld om te valideren in gesprek met HR, leidinggevenden of aanvullende data.",
-                STYLES["body"],
-            ))
-            for item in hypotheses:
-                hyp_rows = [
-                    [Paragraph(f"<b>{item['title']}</b>", STYLES["body_bold"])],
-                    [Paragraph(item["body"], STYLES["body"])],
-                    [Paragraph(f"<i>Te toetsen vraag:</i> {item['question']}", STYLES["body"])],
-                ]
-                hyp_table = Table(hyp_rows, colWidths=[content_width])
-                hyp_table.setStyle(TableStyle([
-                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EFF6FF")),
-                    ("BACKGROUND", (0, 1), (-1, -1), WHITE),
-                    ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
-                    ("TOPPADDING", (0, 0), (-1, -1), 6),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-                ]))
-                story.append(hyp_table)
-                story.append(Spacer(1, 0.2 * cm))
+    elif has_pattern and camp.scan_type == "retention":
+        hypotheses = retention_hypotheses
 
+    if hypotheses:
+        story.append(Paragraph("Werkhypothesen", STYLES["sub_title"]))
+        story.append(Paragraph(
+            (
+                "Onderstaande hypothesen zijn afgeleid van scorepatronen, vertrekredenen en meespelende factoren. "
+                "Ze zijn bedoeld om te valideren in gesprek met HR, leidinggevenden of aanvullende data."
+            ) if camp.scan_type == "exit" else (
+                "Onderstaande hypothesen zijn afgeleid van werkfactoren, behoudssignalen en open verbetersignalen. "
+                "Ze helpen bepalen wat eerst geverifieerd moet worden voordat je acties opschaalt."
+            ),
+            STYLES["body"],
+        ))
+        for item in hypotheses:
+            hyp_rows = [
+                [Paragraph(f"<b>{item['title']}</b>", STYLES["body_bold"])],
+                [Paragraph(item["body"], STYLES["body"])],
+                [Paragraph(f"<i>Te toetsen vraag:</i> {item['question']}", STYLES["body"])],
+            ]
+            if camp.scan_type == "retention":
+                hyp_rows.append([Paragraph(f"<i>Eerste logische actie:</i> {item['action']}", STYLES["body"])])
+            hyp_table = Table(hyp_rows, colWidths=[content_width])
+            hyp_table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EFF6FF")),
+                ("BACKGROUND", (0, 1), (-1, -1), WHITE),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+            ]))
+            story.append(hyp_table)
             story.append(Spacer(1, 0.2 * cm))
+
+        story.append(Spacer(1, 0.2 * cm))
+
+    if camp.scan_type == "retention" and retention_playbooks:
+        story.append(Paragraph("Action playbooks", STYLES["sub_title"]))
+        story.append(Paragraph(
+            "Deze playbooks vertalen de sterkste retentiesignalen naar een praktisch eerste handelingskader. "
+            "Gebruik ze om gericht te valideren, in actie te komen en overhaaste conclusies te voorkomen.",
+            STYLES["body"],
+        ))
+        if retention_playbook_calibration_note:
+            story.append(Paragraph(retention_playbook_calibration_note, STYLES["body"]))
+        for playbook in retention_playbooks:
+            rows = [
+                [Paragraph(
+                    f"<b>{playbook['label']}</b>  <font color='#6B7280' size='8'>signaalwaarde {playbook['signal_value']:.1f} / 10</font>",
+                    STYLES["body_bold"],
+                )],
+                [Paragraph(f"<b>{playbook['title']}</b>", STYLES["body_bold"])],
+                [Paragraph(f"<i>Eerst valideren:</i> {playbook['validate']}", STYLES["body"])],
+                [Paragraph(
+                    "<br/>".join([f"• {action}" for action in playbook["actions"]]),
+                    STYLES["body"],
+                )],
+                [Paragraph(f"<i>Niet overhaasten:</i> {playbook['caution']}", STYLES["body"])],
+            ]
+            table = Table(rows, colWidths=[content_width])
+            table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EFF6FF")),
+                ("BACKGROUND", (0, 1), (-1, -1), WHITE),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+            ]))
+            story.append(table)
+            story.append(Spacer(1, 0.2 * cm))
+
+        story.append(Spacer(1, 0.2 * cm))
+
+    if camp.scan_type == "retention" and retention_segment_playbooks:
+        story.append(Paragraph("Segment-specifieke playbooks", STYLES["sub_title"]))
+        story.append(Paragraph(
+            "Deze verfijning laat zien welke afdelingen of functieniveaus relatief scherper afwijken dan het organisatieniveau "
+            "en welke eerste actie daar nu het meest logisch lijkt.",
+            STYLES["body"],
+        ))
+        for segment in retention_segment_playbooks:
+            rows = [
+                [Paragraph(
+                    f"<b>{_segment_type_label(segment['segment_type'])}: {segment['segment_label']}</b>  "
+                    f"<font color='#6B7280' size='8'>n = {segment['n']} · gem. retentiesignaal {segment['avg_risk']:.1f} / 10 · "
+                    f"delta vs. org {'+' if segment['delta_vs_org'] > 0 else ''}{segment['delta_vs_org']:.1f}</font>",
+                    STYLES["body_bold"],
+                )],
+                [Paragraph(
+                    f"<b>{segment['factor_label']}</b> is in dit segment de scherpste werkfactor "
+                    f"(signaalwaarde {segment['signal_value']:.1f} / 10).",
+                    STYLES["body"],
+                )],
+                [Paragraph(f"<i>Eerst valideren:</i> {segment['validate']}", STYLES["body"])],
+                [Paragraph(
+                    "<br/>".join([f"• {action}" for action in segment["actions"]]),
+                    STYLES["body"],
+                )],
+                [Paragraph(f"<i>Niet overhaasten:</i> {segment['caution']}", STYLES["body"])],
+            ]
+            table = Table(rows, colWidths=[content_width])
+            table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#F8FBFF")),
+                ("BACKGROUND", (0, 1), (-1, -1), WHITE),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+            ]))
+            story.append(table)
+            story.append(Spacer(1, 0.2 * cm))
+
+        story.append(Spacer(1, 0.2 * cm))
 
     # ── Gespreksagenda op basis van top risicofactoren ────────────────────
     AGENDA_QUESTIONS: dict[str, list[str]] = {
@@ -2070,9 +2805,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         ),
         (
             "5",
-            "Herhaal de ExitScan — elk kwartaal of halfjaarlijks",
-            "Eenmalige data is een momentopname. Patroonherkenning ontstaat pas bij meerdere metingen. "
-            "Continuïteit maakt de investering rendabel.",
+            scan_meta["report_repeat_title"],
+            scan_meta["report_repeat_body"],
         ),
     ]
 

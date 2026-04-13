@@ -282,6 +282,19 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
           </div>
         )}
 
+        {selectedCampaign?.scan_type === 'retention' && (
+          <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+            <p className="font-semibold mb-1">RetentieScan: minimale datadiscipline voor v1.1</p>
+            <p className="text-emerald-900">
+              Lever voor RetentieScan bij voorkeur altijd <code className="font-mono">email</code>, <code className="font-mono">department</code> en <code className="font-mono">role_level</code> aan.
+              Zonder afdeling en functieniveau wordt niet alleen het dashboard beperkter, maar ook de latere validatie van segmentverschillen en pragmatische follow-up.
+            </p>
+            <p className="mt-2 text-emerald-900">
+              Zet na de baseline ook een follow-up bestand klaar met team- of segmentuitkomsten zoals uitstroom, verzuim of vervolgmeting. Gebruik hiervoor het template <code className="font-mono">data/templates/retentionscan_followup_outcomes_template.csv</code>.
+            </p>
+          </div>
+        )}
+
         {mode === 'emails' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -394,6 +407,11 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
               <code className="font-mono">annual_salary_eur</code> meesturen. Upload een <code className="font-mono">.csv</code>
               {' '}of <code className="font-mono">.xlsx</code> bestand.
             </p>
+            {selectedCampaign?.scan_type === 'retention' && (
+              <p className="mt-2 text-xs leading-relaxed text-emerald-800">
+                Voor RetentieScan v1.1-validatie zijn <code className="font-mono">department</code> en <code className="font-mono">role_level</code> de aanbevolen standaard. Daarmee kunnen we later betrouwbaarheid, segmentverschillen en pragmatische follow-up veel netter toetsen.
+              </p>
+            )}
             {hasSegmentDeepDive && (
               <p className="mt-2 text-xs leading-relaxed text-blue-800">
                 Voor {REPORT_ADD_ON_LABELS.segment_deep_dive.toLowerCase()} zijn ingevulde kolommen <code className="font-mono">department</code>
@@ -408,6 +426,11 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             >
               Download Excel-template
             </a>
+            {selectedCampaign?.scan_type === 'retention' && (
+              <p className="mt-2 text-xs text-gray-500">
+                Voor follow-up uitkomsten gebruik je daarna het CSV-template <code className="font-mono">retentionscan_followup_outcomes_template.csv</code> uit de repo.
+              </p>
+            )}
           </div>
 
           <input

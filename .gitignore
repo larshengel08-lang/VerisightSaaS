@@ -16,6 +16,10 @@ backend/.env
 *.db
 *.sqlite3
 data/*.db
+data/retention_pilot_dummy_run/
+data/retention_validation_export/
+data/retention_validation_readiness/
+data/retention_validation_report/
 
 # Gegenereerde bestanden
 *.pdf

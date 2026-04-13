@@ -25,15 +25,16 @@ from typing import Any
 from backend.scoring_config import (
     DEFAULT_ROLE_MULTIPLIER,
     EXIT_REASON_LABELS_NL,
+    EXIT_SCAN_WEIGHTS,
     FACTOR_LABELS_NL,
     MIN_AGGREGATE_N,
     MIN_SEGMENT_N,
     ORG_FACTOR_KEYS,
     RECOMMENDATIONS,
+    RETENTION_SCAN_WEIGHTS,
     RISK_HIGH,
     RISK_MEDIUM,
     ROLE_MULTIPLIERS,
-    SCAN_WEIGHTS,
     SCORING_VERSION,
     SDT_DIMENSION_ITEMS,
     SDT_REVERSE_ITEMS,
@@ -41,7 +42,25 @@ from backend.scoring_config import (
 
 
 def _scale(raw: float) -> float:
-    return (raw - 1) / 4 * 9 + 1
+    from backend.products.shared.sdt import scale_to_ten
+
+    return scale_to_ten(raw)
+
+
+def compute_retention_signal_profile(
+    risk_score: float,
+    engagement_score: float | None,
+    turnover_intention_score: float | None,
+    stay_intent_score: float | None,
+) -> str:
+    from backend.products.retention.scoring import compute_retention_signal_profile as _impl
+
+    return _impl(
+        risk_score=risk_score,
+        engagement_score=engagement_score,
+        turnover_intention_score=turnover_intention_score,
+        stay_intent_score=stay_intent_score,
+    )
 
 # ---------------------------------------------------------------------------
 # Text anonymisation (AVG/GDPR)
@@ -68,52 +87,9 @@ def anonymize_text(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 def compute_sdt_scores(responses: dict[str, int]) -> dict[str, Any]:
-    """
-    Compute SDT need satisfaction scores from Module B Likert responses.
+    from backend.products.shared.sdt import compute_sdt_scores as _impl
 
-    Parameters
-    ----------
-    responses : dict mapping item key (e.g. "B1") to raw Likert value 1-5
-
-    Returns
-    -------
-    {
-        "autonomy":    float (1-10),
-        "competence":  float (1-10),
-        "relatedness": float (1-10),
-        "sdt_total":   float (1-10),  # unweighted mean of 3 dimensions
-        "sdt_risk":    float (0-10),  # inverted: low satisfaction = high risk
-    }
-    """
-    dim_scores: dict[str, float] = {}
-
-    for dimension, items in SDT_DIMENSION_ITEMS.items():
-        scaled_values = []
-        for item in items:
-            raw = responses.get(item)
-            if raw is None:
-                continue
-            raw = float(raw)
-            # Reverse frustration items before scaling
-            if item in SDT_REVERSE_ITEMS:
-                raw = 6.0 - raw  # invert on 1-5 scale
-            scaled_values.append(_scale(raw))
-
-        if scaled_values:
-            dim_scores[dimension] = round(sum(scaled_values) / len(scaled_values), 2)
-        else:
-            dim_scores[dimension] = 5.5  # neutral fallback
-
-    sdt_total = round(sum(dim_scores.values()) / len(dim_scores), 2)
-    sdt_risk  = round(11.0 - sdt_total, 2)  # 10→1 (very satisfied = low risk)
-
-    return {
-        "autonomy":    dim_scores.get("autonomy",    5.5),
-        "competence":  dim_scores.get("competence",  5.5),
-        "relatedness": dim_scores.get("relatedness", 5.5),
-        "sdt_total":   sdt_total,
-        "sdt_risk":    sdt_risk,
-    }
+    return _impl(responses)
 
 
 # ---------------------------------------------------------------------------
@@ -121,33 +97,9 @@ def compute_sdt_scores(responses: dict[str, int]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 def compute_org_scores(responses: dict[str, int | float]) -> dict[str, float]:
-    """
-    Compute per-theme org-factor scores from Module C items.
+    from backend.products.shared.org_factors import compute_org_scores as _impl
 
-    Workload items are averaged but NOT inverted here — the inversion happens
-    in the risk model so that visualisations can show raw load vs. risk
-    contribution separately.
-
-    Parameters
-    ----------
-    responses : dict mapping e.g. "leadership_1", "leadership_2", ...
-                Each value is a raw Likert 1-5.
-
-    Returns
-    -------
-    dict mapping factor name → scaled score (1-10).
-    """
-    factor_scores: dict[str, float] = {}
-
-    for factor in ORG_FACTOR_KEYS:
-        items = [v for k, v in responses.items() if k.startswith(factor)]
-        if items:
-            avg = sum(float(i) for i in items) / len(items)
-            factor_scores[factor] = round(_scale(avg), 2)
-        else:
-            factor_scores[factor] = 5.5
-
-    return factor_scores
+    return _impl(responses)
 
 
 # ---------------------------------------------------------------------------
@@ -157,49 +109,30 @@ def compute_org_scores(responses: dict[str, int | float]) -> dict[str, float]:
 def compute_retention_risk(
     sdt_scores: dict[str, Any],
     org_scores: dict[str, float],
+    scan_type: str = "exit",
 ) -> dict[str, Any]:
-    """
-    Compute weighted retention risk score (0-10).
+    if scan_type == "retention":
+        from backend.products.retention.scoring import compute_retention_risk as _impl
 
-    Model:
-      1. Each org factor is converted to a risk contribution.
-         All factors (including workload): risk = 11 - score (low satisfaction = high risk).
-         Workload questions are positively formulated ("werkdruk was acceptabel"),
-         so high score = low load = low risk — same formula applies.
-      2. SDT risk contributes as an additional weighted component (weight = 2.0).
-      3. Weighted sum is normalised to 0-10.
+        return _impl(sdt_scores, org_scores, scan_type=scan_type)
 
-    Returns dict with:
-      - "risk_score"       : float 0-10
-      - "risk_band"        : "HOOG" | "MIDDEN" | "LAAG"
-      - "factor_risks"     : dict factor → risk contribution (pre-weight)
-      - "factor_weights"   : dict factor → weight used
-      - "weighted_factors" : dict factor → weighted risk value
-    """
     factor_risks: dict[str, float] = {}
     weighted: dict[str, float] = {}
-    weights = dict(SCAN_WEIGHTS)  # copy
+    weights = dict(EXIT_SCAN_WEIGHTS)
 
-    # Org factor risk contributions
-    # Alle factoren: hoge tevredenheidsscore = laag risico → risk = 11 - score
-    # Werkbelasting: vragen zijn positief geformuleerd ("werkdruk was acceptabel"),
-    # dus hoge score = lage werkdruk = laag risico. Zelfde formule als andere factoren.
     for factor in ORG_FACTOR_KEYS:
         score = org_scores.get(factor, 5.5)
         risk = round(11.0 - score, 2)
         factor_risks[factor] = round(risk, 2)
         weighted[factor] = round(risk * weights[factor], 2)
 
-    # SDT risk as synthetic factor
     sdt_risk = sdt_scores.get("sdt_risk", 5.5)
-    sdt_weight = 2.0
-    weights["sdt"] = sdt_weight
+    weights["sdt"] = 2.0
     factor_risks["sdt"] = round(sdt_risk, 2)
-    weighted["sdt"] = round(sdt_risk * sdt_weight, 2)
+    weighted["sdt"] = round(sdt_risk * weights["sdt"], 2)
 
     total_weight = sum(weights.values())
     raw_risk = sum(weighted.values()) / total_weight
-    # Clamp to [1, 10]
     risk_score = round(max(1.0, min(10.0, raw_risk)), 2)
 
     if risk_score >= RISK_HIGH:
@@ -210,12 +143,26 @@ def compute_retention_risk(
         band = "LAAG"
 
     return {
-        "risk_score":       risk_score,
-        "risk_band":        band,
-        "factor_risks":     factor_risks,
-        "factor_weights":   weights,
+        "risk_score": risk_score,
+        "risk_band": band,
+        "factor_risks": factor_risks,
+        "factor_weights": weights,
         "weighted_factors": weighted,
     }
+
+
+def compute_retention_supplemental_scores(
+    uwes_raw: dict[str, int | float],
+    turnover_intention_raw: dict[str, int | float],
+    stay_intent_raw: int | float | None = None,
+) -> dict[str, float | None]:
+    from backend.products.retention.scoring import compute_retention_supplemental_scores as _impl
+
+    return _impl(
+        uwes_raw=uwes_raw,
+        turnover_intention_raw=turnover_intention_raw,
+        stay_intent_raw=stay_intent_raw,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -429,6 +376,9 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
     factor_totals: dict[str, list[float]] = {f: [] for f in all_factors}
 
     risk_scores: list[float] = []
+    engagement_scores: list[float] = []
+    turnover_intention_scores: list[float] = []
+    stay_intent_scores: list[float] = []
     preventability_counts: dict[str, int] = {
         "STERK_WERKSIGNAAL": 0,
         "GEMENGD_WERKSIGNAAL": 0,
@@ -458,6 +408,18 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
         if rs is not None:
             risk_scores.append(float(rs))
 
+        engagement = r.get("uwes_score")
+        if engagement is not None:
+            engagement_scores.append(float(engagement))
+
+        turnover_intention = r.get("turnover_intention_score")
+        if turnover_intention is not None:
+            turnover_intention_scores.append(float(turnover_intention))
+
+        stay_intent = r.get("stay_intent_score")
+        if stay_intent is not None:
+            stay_intent_scores.append(round(_scale(float(stay_intent)), 2))
+
         # Preventability
         prev = r.get("preventability")
         if prev in preventability_counts:
@@ -486,6 +448,18 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
     avg_risk = round(sum(risk_scores) / len(risk_scores), 2) if risk_scores else None
+    avg_engagement = (
+        round(sum(engagement_scores) / len(engagement_scores), 2)
+        if engagement_scores else None
+    )
+    avg_turnover_intention = (
+        round(sum(turnover_intention_scores) / len(turnover_intention_scores), 2)
+        if turnover_intention_scores else None
+    )
+    avg_stay_intent = (
+        round(sum(stay_intent_scores) / len(stay_intent_scores), 2)
+        if stay_intent_scores else None
+    )
 
     # Identify top risks (factors with risk > threshold)
     top_risks = sorted(
@@ -530,6 +504,9 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
         "n":                    n,
         "sufficient_data":      True,
         "avg_risk_score":       avg_risk,
+        "avg_engagement_score": avg_engagement,
+        "avg_turnover_intention_score": avg_turnover_intention,
+        "avg_stay_intent_score": avg_stay_intent,
         "factor_averages":      factor_averages,
         "top_risk_factors":     top_risks,
         "preventability_counts": preventability_counts,

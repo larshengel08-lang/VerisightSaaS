@@ -2,11 +2,16 @@
 
 import { useState } from 'react'
 import { RiskBadge } from '@/components/ui/risk-badge'
-import type { Respondent, SurveyResponse } from '@/lib/types'
+import type { Preventability, Respondent, RiskBand } from '@/lib/types'
 
 interface Props {
   respondents: Respondent[]
-  responses: (SurveyResponse & { respondents: Respondent })[]
+  responses: Array<{
+    respondent_id: string
+    risk_score?: number | null
+    risk_band?: RiskBand | null
+    preventability?: Preventability | null
+  }>
   scanType: string
   /** Wanneer false (n < 5) worden individuele frictiescores verborgen vanwege herleidbaarheidsrisico. */
   hasMinDisplay: boolean
@@ -25,6 +30,7 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
   const [copied, setCopied] = useState(false)
   const responseMap = new Map(responses.map(r => [r.respondent_id, r]))
   const pending = respondents.filter(r => !r.completed)
+  const showIndividualScores = hasMinDisplay && scanType === 'exit'
 
   const pendingLinks = pending.map(r => `${API_BASE}/survey/${r.token}`).join('\n')
 
@@ -47,6 +53,11 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
           Dit beschermt de anonimiteit van respondenten.
         </div>
       )}
+      {scanType === 'retention' && responses.length > 0 && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+          Bij RetentieScan tonen we in deze tabel bewust geen individuele scores of vertrekintentie. De uitkomsten zijn alleen bedoeld voor groeps- en segmentinzichten.
+        </div>
+      )}
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -58,7 +69,7 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Afdeling</th>
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Niveau</th>
               <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Status</th>
-              {hasMinDisplay && (
+              {showIndividualScores && (
                 <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-gray-400">
                   Frictiescore
                   <span
@@ -69,7 +80,7 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
                   </span>
                 </th>
               )}
-              {hasMinDisplay && scanType === 'exit' && (
+              {showIndividualScores && scanType === 'exit' && (
                 <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-gray-400">
                   Werksignaal
                   <span
@@ -99,7 +110,7 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
                       <span className="text-xs text-gray-400">Nog niet gestart</span>
                     )}
                   </td>
-                  {hasMinDisplay && (
+                  {showIndividualScores && (
                     <td className="px-3 py-2 text-right">
                       {resp?.risk_score ? (
                         <div className="flex items-center justify-end gap-1.5">
@@ -109,7 +120,7 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
                       ) : '-'}
                     </td>
                   )}
-                  {hasMinDisplay && scanType === 'exit' && (
+                  {showIndividualScores && scanType === 'exit' && (
                     <td className="px-3 py-2 text-right text-xs text-gray-500">
                       {resp?.preventability
                         ? (PREVENTABILITY_LABELS[resp.preventability] ?? resp.preventability.replaceAll('_', ' '))

@@ -9,8 +9,26 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
-      url: 'https://www.verisight.nl/product',
+      url: 'https://www.verisight.nl/producten',
       lastModified: new Date('2026-04-12'),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: 'https://www.verisight.nl/producten/exitscan',
+      lastModified: new Date('2026-04-13'),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: 'https://www.verisight.nl/producten/retentiescan',
+      lastModified: new Date('2026-04-13'),
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: 'https://www.verisight.nl/producten/combinatie',
+      lastModified: new Date('2026-04-13'),
       changeFrequency: 'monthly',
       priority: 0.8,
     },

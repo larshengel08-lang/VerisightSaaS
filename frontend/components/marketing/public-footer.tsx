@@ -2,7 +2,10 @@ import Link from 'next/link'
 import { Wordmark } from '@/components/marketing/wordmark'
 
 const legalLinks = [
-  { href: '/product', label: 'Product' },
+  { href: '/producten', label: 'Alle producten' },
+  { href: '/producten/exitscan', label: 'ExitScan' },
+  { href: '/producten/retentiescan', label: 'RetentieScan' },
+  { href: '/producten/combinatie', label: 'Combinatie' },
   { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
   { href: '/privacy', label: 'Privacybeleid' },
@@ -18,10 +21,10 @@ export function PublicFooter() {
         <div>
           <Wordmark size="sm" />
           <p className="mt-4 max-w-sm text-sm leading-7 text-slate-600">
-            Begeleide exitscan voor organisaties die uitstroompatronen sneller zichtbaar en bestuurbaar willen maken.
+            Verisight helpt organisaties kiezen tussen ExitScan en RetentieScan: terugkijken naar vertrek, eerder signaleren op behoud, of beide in een logisch portfolio.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
-            {['Gehost in Europa', 'AVG-bewust', 'Dashboard + rapport'].map((item) => (
+            {['Gehost in Europa', 'AVG-bewust', 'Exit + Retentie', 'Dashboard + rapport'].map((item) => (
               <span
                 key={item}
                 className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600"

@@ -7,20 +7,20 @@ const sora = Sora({ subsets: ['latin'], display: 'swap', variable: '--font-displ
 
 export const metadata: Metadata = {
   title: {
-    default: 'Verisight | Begeleide ExitScan voor HR-teams',
+    default: 'Verisight | ExitScan en RetentieScan voor HR-teams',
     template: '%s | Verisight',
   },
   description:
-    'Verisight helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrekredenen te begrijpen via een begeleide ExitScan met dashboard, rapport en persoonlijke toelichting.',
+    'Verisight helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met ExitScan en behoud eerder zichtbaar te maken met RetentieScan.',
   metadataBase: new URL('https://www.verisight.nl'),
   openGraph: {
     type: 'website',
     locale: 'nl_NL',
     url: 'https://www.verisight.nl',
     siteName: 'Verisight',
-    title: 'Verisight | Begeleide ExitScan voor HR-teams',
+    title: 'Verisight | ExitScan en RetentieScan voor HR-teams',
     description:
-      'Begrijp waarom medewerkers vertrekken. Verisight levert een begeleide ExitScan voor HR-teams met dashboard, rapport en persoonlijke toelichting.',
+      'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Verisight levert ExitScan en RetentieScan in een begeleide productvorm.',
     images: [
       {
         url: '/og-image.png',
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Verisight | Begeleide ExitScan voor HR-teams',
+    title: 'Verisight | ExitScan en RetentieScan voor HR-teams',
     description:
-      'Begrijp waarom medewerkers vertrekken. Verisight levert een begeleide ExitScan voor HR-teams met dashboard, rapport en persoonlijke toelichting.',
+      'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Verisight levert ExitScan en RetentieScan in een begeleide productvorm.',
     images: ['/og-image.png'],
   },
   robots: {
@@ -51,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     url: 'https://www.verisight.nl',
     logo: 'https://www.verisight.nl/verisight-wordmark.svg',
     description:
-      'Verisight helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrekredenen te begrijpen via een begeleide ExitScan met dashboard en rapportage.',
+      'Verisight helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met ExitScan en behoud eerder zichtbaar te maken met RetentieScan.',
     areaServed: {
       '@type': 'Country',
       name: 'Nederland',

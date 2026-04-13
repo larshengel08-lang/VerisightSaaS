@@ -13,6 +13,8 @@ from backend.scoring import (
     compute_sdt_scores,
     compute_org_scores,
     compute_retention_risk,
+    compute_retention_signal_profile,
+    compute_retention_supplemental_scores,
     compute_preventability,
     _scale,
     RISK_HIGH,
@@ -235,6 +237,59 @@ class TestComputeRetentionRisk:
         assert risk_leadership > risk_compensation, (
             "Leiderschap-risico moet zwaarder wegen dan beloning-risico"
         )
+
+    def test_retention_scan_uses_equal_weights(self):
+        sdt_neutral = compute_sdt_scores({k: 3 for k in [f"B{i}" for i in range(1, 13)]})
+        org_base = compute_org_scores(_org_all(5))
+
+        org_bad_leadership = dict(org_base)
+        org_bad_leadership["leadership"] = 1.0
+
+        org_bad_compensation = dict(org_base)
+        org_bad_compensation["compensation"] = 1.0
+
+        risk_leadership = compute_retention_risk(
+            sdt_neutral,
+            org_bad_leadership,
+            scan_type="retention",
+        )["risk_score"]
+        risk_compensation = compute_retention_risk(
+            sdt_neutral,
+            org_bad_compensation,
+            scan_type="retention",
+        )["risk_score"]
+
+        assert risk_leadership == pytest.approx(risk_compensation)
+
+
+class TestComputeRetentionSupplementalScores:
+    def test_engagement_and_turnover_intention_are_normalized_to_1_10(self):
+        result = compute_retention_supplemental_scores(
+            {"uwes_1": 5, "uwes_2": 4, "uwes_3": 5},
+            {"ti_1": 2, "ti_2": 3},
+            4,
+        )
+
+        assert result["engagement_score"] == pytest.approx(round(_scale((5 + 4 + 5) / 3), 2))
+        assert result["turnover_intention_score"] == pytest.approx(round(_scale((2 + 3) / 2), 2))
+        assert result["stay_intent_score"] == pytest.approx(round(_scale(4), 2))
+
+    def test_empty_retention_blocks_return_none(self):
+        result = compute_retention_supplemental_scores({}, {}, None)
+        assert result["engagement_score"] is None
+        assert result["turnover_intention_score"] is None
+        assert result["stay_intent_score"] is None
+
+
+class TestRetentionSignalProfile:
+    def test_sharp_attention_profile_when_multiple_negative_signals_align(self):
+        profile = compute_retention_signal_profile(
+            risk_score=7.4,
+            engagement_score=4.8,
+            turnover_intention_score=6.4,
+            stay_intent_score=4.3,
+        )
+        assert profile == "scherp_aandachtssignaal"
 
 
 # ---------------------------------------------------------------------------

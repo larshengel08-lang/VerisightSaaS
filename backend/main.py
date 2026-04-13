@@ -53,7 +53,9 @@ from sqlalchemy.orm import Session, selectinload
 from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
 from backend.email import send_contact_request_result, send_hr_notification, send_survey_invite
 from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
+from backend.products.shared.registry import get_product_module
 from backend.runtime import require_backend_admin_token, validate_runtime_config
+from backend.scan_definitions import get_scan_definition
 from backend.schemas import (
     CampaignCreate,
     CampaignRead,
@@ -75,15 +77,8 @@ from backend.schemas import (
 )
 from backend.scoring import (
     anonymize_text,
-    compute_sdt_scores,
-    compute_org_scores,
-    compute_retention_risk,
-    compute_preventability,
-    compute_replacement_cost,
     detect_patterns,
-    get_recommendations,
     ORG_FACTOR_KEYS,
-    SCORING_VERSION,
 )
 
 # ---------------------------------------------------------------------------
@@ -665,12 +660,14 @@ async def serve_survey(
         )
 
     enabled_modules = _resolve_survey_modules(campaign.enabled_modules)
+    scan_definition = get_scan_definition(campaign.scan_type)
 
     return templates.TemplateResponse(
         request,
         "survey.html",
         context={
             "token":           token,
+            "scan":            scan_definition,
             "scan_type":       campaign.scan_type,
             "campaign_name":   campaign.name,
             "enabled_modules": enabled_modules,
@@ -696,6 +693,8 @@ async def submit_survey(
         raise HTTPException(status_code=409, detail="Survey al ingevuld.")
     if not respondent.campaign.is_active:
         raise HTTPException(status_code=410, detail="Deze survey is gesloten en accepteert geen nieuwe inzendingen meer.")
+    product_module = get_product_module(respondent.campaign.scan_type)
+    product_module.validate_submission(payload)
 
     exit_reason_code = payload.exit_reason_code
     if not exit_reason_code and payload.exit_reason_category:
@@ -712,49 +711,29 @@ async def submit_survey(
 
     # --- Scoring ---
     try:
-        sdt_scores = compute_sdt_scores(payload.sdt_raw)
-        org_scores  = compute_org_scores(payload.org_raw)
-        risk_result = compute_retention_risk(sdt_scores, org_scores)
+        score_payload = product_module.score_submission(
+            payload=payload,
+            campaign=respondent.campaign,
+            respondent=respondent,
+            contributing_reason_codes=contributing_reason_codes,
+        )
+        sdt_scores = score_payload["sdt_scores"]
+        org_scores = score_payload["org_scores"]
+        risk_result = score_payload["risk_result"]
+        preventability_result = score_payload["preventability_result"]
+        replacement_cost_eur = score_payload["replacement_cost_eur"]
+        recommendations = score_payload["recommendations"]
+        uwes_score = score_payload["uwes_score"]
+        ti_score = score_payload["turnover_intention_score"]
+        retention_summary = score_payload["retention_summary"]
+        full_result = score_payload["full_result"]
+        scoring_version = score_payload["scoring_version"]
     except Exception as exc:
         sentry_sdk.capture_exception(exc, extras={
             "campaign_id": str(respondent.campaign_id),
             "flow": "survey_scoring",
         })
         raise HTTPException(status_code=500, detail="Scoringsberekening mislukt. De survey is niet opgeslagen.")
-
-    # Preventability (exit only)
-    preventability_result: dict[str, Any] = {}
-    if respondent.campaign.scan_type == "exit" and payload.exit_reason_category:
-        preventability_result = compute_preventability(
-            exit_reason_category=payload.exit_reason_category,
-            stay_intent_score=payload.stay_intent_score or 3,
-            sdt_scores=sdt_scores,
-            org_scores=org_scores,
-            contributing_reason_codes=contributing_reason_codes,
-        )
-
-    # Replacement cost (exit only — if salary known)
-    replacement_cost_eur: float | None = None
-    if respondent.campaign.scan_type == "exit" and respondent.annual_salary_eur:
-        rc = compute_replacement_cost(
-            annual_salary=respondent.annual_salary_eur,
-            role_level=respondent.role_level or "specialist",
-        )
-        replacement_cost_eur = rc["cost_per_employee"]
-
-    # UWES score (retention only)
-    uwes_score: float | None = None
-    if payload.uwes_raw:
-        vals = [float(v) for v in payload.uwes_raw.values()]
-        if vals:
-            uwes_score = round(sum(vals) / len(vals), 2)
-
-    # Turnover intention score (retention only)
-    ti_score: float | None = None
-    if payload.turnover_intention_raw:
-        vals = [float(v) for v in payload.turnover_intention_raw.values()]
-        if vals:
-            ti_score = round(sum(vals) / len(vals), 2)
 
     # Open text — anonymise then optionally enrich
     open_text_clean: str | None = None
@@ -764,20 +743,6 @@ async def submit_survey(
         if _openai_available and open_text_clean:
             open_text_analysis = _enrich_open_text(open_text_clean)
 
-    # Recommendations
-    recommendations = get_recommendations(risk_result["factor_risks"])
-
-    # Build full result for storage
-    full_result = {
-        "sdt_scores":            sdt_scores,
-        "org_scores":            org_scores,
-        "risk_result":           risk_result,
-        "preventability_result": preventability_result,
-        "contributing_reason_codes": contributing_reason_codes,
-        "recommendations":       recommendations,
-        "uwes_score":            uwes_score,
-        "turnover_intention_score": ti_score,
-    }
 
     # --- Persist ---
     response_row = SurveyResponse(
@@ -802,7 +767,7 @@ async def submit_survey(
         preventability        = preventability_result.get("preventability"),
         replacement_cost_eur  = replacement_cost_eur,
         full_result           = full_result,
-        scoring_version       = SCORING_VERSION,
+        scoring_version       = scoring_version,
     )
 
     # AVG data minimalisatie: jaarlijks salaris is niet langer nodig na scoring.

@@ -18,10 +18,19 @@ ORG_FACTOR_KEYS = [
     "role_clarity",
 ]
 
-SCAN_WEIGHTS: dict[str, float] = {
+EXIT_SCAN_WEIGHTS: dict[str, float] = {
     "leadership": 2.5,
     "culture": 1.5,
     "growth": 1.5,
+    "compensation": 1.0,
+    "workload": 1.0,
+    "role_clarity": 1.0,
+}
+
+RETENTION_SCAN_WEIGHTS: dict[str, float] = {
+    "leadership": 1.0,
+    "culture": 1.0,
+    "growth": 1.0,
     "compensation": 1.0,
     "workload": 1.0,
     "role_clarity": 1.0,
@@ -39,7 +48,7 @@ DEFAULT_ROLE_MULTIPLIER = 1.00
 
 RISK_HIGH = 7.0
 RISK_MEDIUM = 4.5
-SCORING_VERSION = "v1.0"
+SCORING_VERSION = "v1.1"
 
 MIN_AGGREGATE_N = 10
 MIN_SEGMENT_N = 5

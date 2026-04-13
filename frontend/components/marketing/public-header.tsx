@@ -3,10 +3,10 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { SolutionsDropdown } from '@/components/marketing/solutions-dropdown'
 import { Wordmark } from '@/components/marketing/wordmark'
 
 const navLinks = [
-  { href: '/product', label: 'Product' },
   { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
 ] as const
@@ -34,6 +34,9 @@ export function PublicHeader({
           <Wordmark size="md" />
 
           <nav className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50/80 p-1 lg:flex">
+            <div className="px-2">
+              <SolutionsDropdown />
+            </div>
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -94,6 +97,20 @@ export function PublicHeader({
             className="mt-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:hidden"
           >
             <div className="space-y-1">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <SolutionsDropdown />
+              </div>
+              <Link
+                href="/producten"
+                onClick={closeMenu}
+                className={`block rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
+                  pathname === '/producten'
+                    ? 'bg-slate-100 text-slate-950'
+                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950'
+                }`}
+              >
+                Alle producten
+              </Link>
               {navLinks.map((link) => (
                 <Link
                   key={link.href}

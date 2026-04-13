@@ -17,6 +17,7 @@ from html import escape
 from pathlib import Path
 
 from dotenv import load_dotenv
+from backend.scan_definitions import get_scan_definition
 
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
@@ -130,27 +131,18 @@ def send_survey_invite(
 ) -> bool:
     """Stuur een uitnodigingsmail met de survey-link naar een respondent."""
     survey_url = f"{_require_runtime_url(_BACKEND_URL, 'BACKEND_URL')}/survey/{token}"
-
-    intro = (
-        "Je leidinggevende of HR-afdeling nodigt je uit om een korte vragenlijst in te vullen "
-        "over jouw ervaringen binnen de organisatie. Dit helpt de organisatie concreet te verbeteren."
-        if scan_type == "exit"
-        else "Je leidinggevende of HR-afdeling nodigt je uit om een korte vragenlijst in te vullen "
-        "over jouw werkbeleving. Jouw input is waardevol en wordt vertrouwelijk behandeld."
-    )
-
-    duration = "8-12 minuten" if scan_type == "exit" else "6-10 minuten"
+    scan = get_scan_definition(scan_type)
     html = _render_email_template(
         "uitnodiging.html",
         campaign_name=campaign_name,
-        intro=intro,
-        duration=duration,
+        intro=scan["invite_intro"],
+        duration=scan["invite_duration"],
         survey_url=survey_url,
     )
 
     return _send(
         to=to_email,
-        subject=f"Uitnodiging: {campaign_name}",
+        subject=f"Uitnodiging {scan['product_name']}: {campaign_name}",
         html=html,
     )
 
@@ -164,18 +156,18 @@ def send_survey_reminder(
 ) -> bool:
     """Stuur een herinneringsmail naar een respondent die de survey nog niet heeft ingevuld."""
     survey_url = f"{_require_runtime_url(_BACKEND_URL, 'BACKEND_URL')}/survey/{token}"
-    duration = "8-12 minuten" if scan_type == "exit" else "6-10 minuten"
+    scan = get_scan_definition(scan_type)
 
     html = _render_email_template(
         "herinnering.html",
         campaign_name=campaign_name,
-        duration=duration,
+        duration=scan["invite_duration"],
         survey_url=survey_url,
     )
 
     return _send(
         to=to_email,
-        subject=f"Herinnering: {campaign_name} - jouw inbreng is nog welkom",
+        subject=f"Herinnering {scan['product_name']}: {campaign_name}",
         html=html,
     )
 
@@ -221,7 +213,7 @@ def send_contact_request_result(
 
     return _send_result(
         to=_CONTACT_EMAIL,
-        subject=f"Kennismakingsaanvraag ExitScan - {organization}",
+        subject=f"Kennismakingsaanvraag Verisight - {organization}",
         html=html,
     )
 

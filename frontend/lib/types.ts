@@ -68,6 +68,11 @@ export interface SurveyResponse {
   exit_reason_code: string | null
   sdt_scores: Record<string, number>
   org_scores: Record<string, number>
+  stay_intent_score?: number | null
+  uwes_score?: number | null
+  turnover_intention_score?: number | null
+  open_text_raw?: string | null
+  open_text_analysis?: string | null
   full_result: Record<string, unknown>
   submitted_at: string
 }

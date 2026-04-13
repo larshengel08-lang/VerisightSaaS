@@ -4,30 +4,30 @@ import { LegalPageShell } from '@/components/marketing/legal-page-shell'
 
 export const metadata: Metadata = {
   title: 'Algemene voorwaarden',
-  description: 'Lees de algemene voorwaarden van Verisight voor het gebruik van ExitScan.',
+  description: 'Lees de algemene voorwaarden van Verisight voor het gebruik van ExitScan en RetentieScan.',
 }
 
 export default function VoorwaardenPage() {
   return (
     <LegalPageShell
       title="Algemene voorwaarden"
-      description="Op deze pagina lees je de basisvoorwaarden voor het gebruik van Verisight en ExitScan."
+      description="Op deze pagina lees je de basisvoorwaarden voor het gebruik van Verisight, ExitScan en RetentieScan."
       lastUpdated="9 april 2026"
     >
       <section>
         <h2>1. Definities</h2>
         <ul>
           <li>
-            <strong>Verisight:</strong> de dienst en software voor ExitScan, rapportage en gerelateerde begeleiding.
+            <strong>Verisight:</strong> de dienst en software voor ExitScan, RetentieScan, rapportage en gerelateerde begeleiding.
           </li>
           <li>
-            <strong>Klant:</strong> de organisatie die ExitScan afneemt.
+            <strong>Klant:</strong> de organisatie die een of meer Verisight-producten afneemt.
           </li>
           <li>
             <strong>Gebruiker:</strong> een bevoegde medewerker van de klantorganisatie met toegang tot het platform.
           </li>
           <li>
-            <strong>Respondent:</strong> een (voormalig) medewerker die de ExitScan invult.
+            <strong>Respondent:</strong> een (voormalig of actief) medewerker die een Verisight-vragenlijst invult.
           </li>
         </ul>
       </section>
@@ -43,8 +43,8 @@ export default function VoorwaardenPage() {
       <section>
         <h2>3. Wat levert Verisight?</h2>
         <p>
-          Verisight levert een begeleid ExitScan-traject met software, uitnodigingen, analyse en rapportage. Dat kan
-          onder meer bestaan uit:
+          Verisight levert begeleide productvormen met software, uitnodigingen, analyse en rapportage. Dat kan
+          onder meer bestaan uit ExitScan, RetentieScan of een combinatie daarvan, met:
         </p>
         <ul>
           <li>inrichting van de campagne;</li>
@@ -81,6 +81,9 @@ export default function VoorwaardenPage() {
           De software, rapportformats, vragenlijsten en methodische opzet van Verisight blijven eigendom van Verisight.
           De klant krijgt een gebruiksrecht voor de duur van de overeenkomst. Klantdata en uitkomsten die specifiek
           voor de klant zijn verzameld, blijven van de klant.
+        </p>
+        <p>
+          RetentieScan mag niet worden gebruikt als individueel beoordelings-, performance- of beslisinstrument op persoonsniveau.
         </p>
       </section>
 

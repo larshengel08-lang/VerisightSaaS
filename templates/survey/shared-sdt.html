@@ -1,0 +1,42 @@
+<div class="step {% if scan_type != "exit" %}active{% endif %}" data-step="{% if scan_type == "exit" %}2{% else %}1{% endif %}" data-label="Werkbeleving">
+  <div class="card">
+    <div class="card-title">
+      {% if scan_type == "exit" %}Stap 2{% else %}Stap 1{% endif %} — Werkbeleving
+    </div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:24px;">
+      {{ scan.sdt_intro }}
+    </p>
+
+    {% for item_id, item_text in scan.sdt_items %}
+    <div class="question-block" id="qblock-{{ item_id }}">
+      <div class="question-text">
+        <span class="question-number">{{ loop.index }}.</span>{{ item_text }}
+      </div>
+      <div class="likert-wrap">
+        <div class="likert-labels">
+          <span>Helemaal niet mee eens</span>
+          <span>Helemaal mee eens</span>
+        </div>
+        <div class="likert-options">
+          {% for i in range(1, 6) %}
+          <div class="likert-option">
+            <input type="radio" name="{{ item_id }}" id="{{ item_id }}_{{ i }}" value="{{ i }}" required />
+            <label for="{{ item_id }}_{{ i }}">{{ i }}</label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="field-error">Selecteer een antwoord.</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="nav-row">
+    {% if scan_type == "exit" %}
+    <button type="button" class="btn btn-secondary prev-btn">← Vorige</button>
+    {% else %}
+    <span></span>
+    {% endif %}
+    <button type="button" class="btn btn-primary next-btn">Volgende →</button>
+  </div>
+</div>

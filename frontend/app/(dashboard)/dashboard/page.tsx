@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { CampaignStats } from '@/lib/types'
+import { getScanDefinition } from '@/lib/scan-definitions'
 import { RiskBadge } from '@/components/ui/risk-badge'
 import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
 import { OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
@@ -73,7 +74,8 @@ function CampaignCard({
   campaign: CampaignStats
   showOnboarding?: boolean
 }) {
-  const scanLabel = c.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'
+  const scanDefinition = getScanDefinition(c.scan_type)
+  const scanLabel = scanDefinition.productName
   const completionPct = c.completion_rate_pct ?? 0
   const avgRisk = c.avg_risk_score
 
@@ -105,7 +107,7 @@ function CampaignCard({
       </div>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">Gem. frictiescore</span>
+        <span className="text-xs text-gray-500">Gem. {scanDefinition.signalLabelLower}</span>
         {avgRisk ? (
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-gray-900">
@@ -188,7 +190,7 @@ function ViewerEmptyState() {
           ⏳
         </div>
         <h2 className="text-lg font-semibold text-gray-900 mb-2">
-          Jouw ExitScan wordt opgezet
+          Jouw scan wordt opgezet
         </h2>
         <p className="text-sm text-gray-500 leading-relaxed mb-6">
           Verisight zet jouw campagne op, importeert het respondentbestand en verstuurt de uitnodigingen.

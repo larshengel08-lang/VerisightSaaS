@@ -1,0 +1,113 @@
+{% if scan_type == "exit" %}
+<div class="step active" data-step="1" data-label="Vertrekcontext">
+  <div class="card">
+    <div class="card-title">Stap 1 — Vertrekcontext</div>
+
+    <div class="question-block" id="qblock-tenure">
+      <label class="field-label" for="tenure_years">
+        Hoe lang was je in dienst bij deze organisatie?
+      </label>
+      <select name="tenure_years" id="tenure_years" required>
+        <option value="">— Selecteer —</option>
+        <option value="0.25">Minder dan 3 maanden</option>
+        <option value="0.5">3–6 maanden</option>
+        <option value="1">6–12 maanden</option>
+        <option value="2">1–2 jaar</option>
+        <option value="3.5">2–5 jaar</option>
+        <option value="7.5">5–10 jaar</option>
+        <option value="12">10–15 jaar</option>
+        <option value="20">Meer dan 15 jaar</option>
+      </select>
+      <div class="field-error">Selecteer een optie.</div>
+    </div>
+
+    <div class="question-block" id="qblock-reason">
+      <label class="field-label" for="exit_reason_category">
+        Wat is de belangrijkste reden voor je vertrek?
+      </label>
+      <select name="exit_reason_category" id="exit_reason_category" required>
+        <option value="">— Selecteer —</option>
+        <optgroup label="Organisatiefactoren (push)">
+          <option value="leiderschap">Leiderschap / mijn direct leidinggevende</option>
+          <option value="cultuur">Organisatiecultuur of werksfeer</option>
+          <option value="groei">Onvoldoende doorgroeimogelijkheden</option>
+          <option value="beloning">Beloning of arbeidsvoorwaarden</option>
+          <option value="werkdruk">Werkdruk of werkstress</option>
+          <option value="rolonduidelijkheid">Rolonduidelijkheid of tegenstrijdige verwachtingen</option>
+        </optgroup>
+        <optgroup label="Externe aantrekkingskrachten (pull)">
+          <option value="beter_aanbod">Beter aanbod elders (salaris, functie, kansen)</option>
+          <option value="carriere_switch">Carrièreswitch naar andere sector</option>
+          <option value="ondernemerschap">Eigen onderneming starten</option>
+        </optgroup>
+        <optgroup label="Persoonlijke omstandigheid">
+          <option value="verhuizing">Verhuizing</option>
+          <option value="partner_verhuisd">Partner verhuisd of mantelzorg</option>
+          <option value="studie">Studie of opleiding starten</option>
+          <option value="pensioen">Pensioen</option>
+          <option value="gezondheid">Gezondheid</option>
+          <option value="persoonlijk">Overige persoonlijke reden</option>
+        </optgroup>
+      </select>
+      <div class="field-error">Selecteer een optie.</div>
+    </div>
+
+    <div class="question-block" id="qblock-stay">
+      <div class="question-text">
+        In hoeverre denk je dat andere keuzes vanuit de organisatie je besluit hadden kunnen beïnvloeden?
+      </div>
+      <div class="likert-wrap">
+        <div class="likert-labels">
+          <span>Vrijwel niet</span>
+          <span>In sterke mate</span>
+        </div>
+        <div class="likert-options">
+          {% for i in range(1, 6) %}
+          <div class="likert-option">
+            <input type="radio" name="stay_intent_score" id="stay_{{ i }}" value="{{ i }}" required />
+            <label for="stay_{{ i }}">{{ i }}</label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="field-error">Selecteer een antwoord.</div>
+    </div>
+
+    <div class="question-block" id="qblock-contributing-reasons">
+      <div class="question-text">
+        Welke andere factoren speelden ook mee in je vertrek? <span style="color:var(--muted);font-weight:400;">(optioneel, maximaal 2)</span>
+      </div>
+      <div class="checkbox-grid" data-max="2">
+        {% set additional_reason_options = [
+          ("leiderschap", "Leiderschap / mijn direct leidinggevende"),
+          ("cultuur", "Organisatiecultuur of werksfeer"),
+          ("groei", "Onvoldoende doorgroeimogelijkheden"),
+          ("beloning", "Beloning of arbeidsvoorwaarden"),
+          ("werkdruk", "Werkdruk of werkstress"),
+          ("rolonduidelijkheid", "Rolonduidelijkheid of tegenstrijdige verwachtingen"),
+          ("beter_aanbod", "Beter aanbod elders"),
+          ("carriere_switch", "Carrièreswitch"),
+          ("ondernemerschap", "Eigen onderneming"),
+          ("verhuizing", "Verhuizing"),
+          ("partner_verhuisd", "Partner verhuisd of mantelzorg"),
+          ("studie", "Studie of opleiding"),
+          ("pensioen", "Pensioen"),
+          ("gezondheid", "Gezondheid"),
+          ("persoonlijk", "Overige persoonlijke reden"),
+        ] %}
+        {% for option_value, option_label in additional_reason_options %}
+        <label class="checkbox-option">
+          <input type="checkbox" name="contributing_reasons" value="{{ option_value }}" />
+          <span>{{ option_label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <div class="field-error">Selecteer maximaal 2 meespelende factoren.</div>
+    </div>
+  </div>
+  <div class="nav-row">
+    <span></span>
+    <button type="button" class="btn btn-primary next-btn">Volgende →</button>
+  </div>
+</div>
+{% endif %}

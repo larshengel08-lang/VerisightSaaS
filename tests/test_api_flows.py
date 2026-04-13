@@ -108,6 +108,21 @@ def _survey_payload(token: str):
     }
 
 
+def _retention_payload(token: str):
+    return {
+        "token": token,
+        "tenure_years": None,
+        "exit_reason_category": None,
+        "stay_intent_score": 4,
+        "sdt_raw": {f"B{i}": 4 for i in range(1, 13)},
+        "org_raw": {f"{factor}_{idx}": 4 for factor in ORG_FACTOR_KEYS for idx in range(1, 4)},
+        "pull_factors_raw": {},
+        "open_text": "Meer ontwikkelruimte en duidelijkere prioriteiten zouden helpen.",
+        "uwes_raw": {"uwes_1": 4, "uwes_2": 5, "uwes_3": 4},
+        "turnover_intention_raw": {"ti_1": 2, "ti_2": 3},
+    }
+
+
 def test_survey_submit_persists_response_and_marks_respondent_complete(client, db_session: Session):
     org = _create_org(db_session)
     campaign = _create_campaign(db_session, org)
@@ -143,6 +158,63 @@ def test_survey_submit_rejects_unknown_token(client):
 
     assert response.status_code == 404
     assert response.json()["detail"] == "Ongeldige token."
+
+
+def test_retention_survey_submit_persists_normalized_scores_and_summary(client, db_session: Session):
+    org = _create_org(db_session, api_key="retention-key")
+    campaign = _create_campaign(db_session, org, name="Retentie Q2", scan_type="retention")
+    respondent = _create_respondent(db_session, campaign, email="retention@example.com", department="People")
+
+    response = client.post("/survey/submit", json=_retention_payload(respondent.token))
+
+    assert response.status_code == 200
+    stored = db_session.query(SurveyResponse).filter(SurveyResponse.respondent_id == respondent.id).one()
+
+    assert stored.uwes_score is not None
+    assert stored.turnover_intention_score is not None
+    assert 1.0 <= stored.uwes_score <= 10.0
+    assert 1.0 <= stored.turnover_intention_score <= 10.0
+    assert stored.preventability is None
+    assert stored.full_result["retention_summary"]["retention_signal_score"] == stored.risk_score
+    assert stored.full_result["retention_summary"]["engagement_score"] == stored.uwes_score
+    assert stored.full_result["retention_summary"]["turnover_intention_score"] == stored.turnover_intention_score
+    assert stored.full_result["retention_summary"]["stay_intent_score"] is not None
+    assert stored.full_result["retention_summary"]["signal_profile"] in {
+        "overwegend_stabiel",
+        "vroegsignaal",
+        "vertrekdenken_zichtbaar",
+        "scherp_aandachtssignaal",
+    }
+
+
+def test_retention_report_route_returns_pdf(client, db_session: Session):
+    org = _create_org(db_session, api_key="retention-report-key")
+    campaign = _create_campaign(db_session, org, name="Retentie Rapport", scan_type="retention")
+    respondent = _create_respondent(db_session, campaign, email="retention-report@example.com", department="Operations")
+    client.post("/survey/submit", json=_retention_payload(respondent.token))
+
+    response = client.get(
+        f"/api/campaigns/{campaign.id}/report",
+        headers={"x-api-key": "retention-report-key"},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content.startswith(b"%PDF")
+
+
+def test_retention_survey_submit_rejects_incomplete_signal_blocks(client, db_session: Session):
+    org = _create_org(db_session, api_key="retention-incomplete-key")
+    campaign = _create_campaign(db_session, org, name="Retentie Incompleet", scan_type="retention")
+    respondent = _create_respondent(db_session, campaign, email="retention-incomplete@example.com", department="People")
+    payload = _retention_payload(respondent.token)
+    payload["stay_intent_score"] = None
+    payload["uwes_raw"] = {"uwes_1": 4, "uwes_2": 5}
+
+    response = client.post("/survey/submit", json=payload)
+
+    assert response.status_code == 422
+    assert "RetentieScan vereist" in response.json()["detail"]
 
 
 def test_respondent_import_creates_rows_without_sending_invites(client, db_session: Session):

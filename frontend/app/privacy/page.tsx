@@ -4,22 +4,22 @@ import { LegalPageShell } from '@/components/marketing/legal-page-shell'
 
 export const metadata: Metadata = {
   title: 'Privacybeleid',
-  description: 'Lees hoe Verisight omgaat met persoonsgegevens, hosting en rechten onder de AVG.',
+  description: 'Lees hoe Verisight omgaat met persoonsgegevens, hosting en rechten onder de AVG voor ExitScan en RetentieScan.',
 }
 
 export default function PrivacyPage() {
   return (
     <LegalPageShell
       title="Privacybeleid"
-      description="Op deze pagina lees je hoe Verisight omgaat met persoonsgegevens van klantgebruikers en respondenten binnen ExitScan."
+      description="Op deze pagina lees je hoe Verisight omgaat met persoonsgegevens van klantgebruikers en respondenten binnen ExitScan en RetentieScan."
       lastUpdated="9 april 2026"
     >
       <section>
         <h2>1. Wie is Verisight?</h2>
         <p>
-          Verisight is een in Nederland gevestigde dienst voor begeleide uitstroomanalyse. Verisight helpt
-          HR-teams om vertrekredenen beter te begrijpen via een begeleid ExitScan-traject met dashboard en
-          rapportage.
+          Verisight is een in Nederland gevestigde dienst voor begeleide HR-signalerings- en rapportageproducten.
+          Verisight helpt HR-teams om vertrekredenen beter te begrijpen via ExitScan en om eerder te zien waar
+          behoud onder druk staat via RetentieScan.
         </p>
         <p>
           Publieke bedrijfsgegevens, waaronder KvK-nummer en vestigingsadres, worden op deze pagina aangevuld zodra
@@ -49,10 +49,10 @@ export default function PrivacyPage() {
       <section>
         <h2>3. Waarom verwerken wij deze gegevens?</h2>
         <ul>
-          <li>Om ExitScan uit te voeren en rapportages beschikbaar te maken voor de klantorganisatie.</li>
+          <li>Om ExitScan en RetentieScan uit te voeren en rapportages beschikbaar te maken voor de klantorganisatie.</li>
           <li>Om uitnodigingen en herinneringen te versturen aan respondenten.</li>
           <li>Om de veiligheid, betrouwbaarheid en beschikbaarheid van het platform te bewaken.</li>
-          <li>Om klantorganisaties te helpen hun uitstroom in groepsverband te analyseren.</li>
+          <li>Om klantorganisaties te helpen hun uitstroom te duiden en retentiesignalen op groepsniveau te analyseren.</li>
         </ul>
       </section>
 
@@ -104,6 +104,11 @@ export default function PrivacyPage() {
           Verisight gebruikt versleutelde verbindingen, toegangsbeperking en database-afscherming per organisatie.
           Rapportages zijn bedoeld voor groepsinzichten. Waar nodig worden minimale groepsgroottes of
           betrouwbaarheidsduiding toegepast om herleidbaarheid te beperken.
+        </p>
+        <p>
+          Voor RetentieScan geldt aanvullend dat de uitkomsten zijn bedoeld voor groeps- en segmentinzichten over
+          actieve medewerkers. Individuele retention-scores of vertrekintentie worden niet als managementoutput
+          gepresenteerd.
         </p>
       </section>
 

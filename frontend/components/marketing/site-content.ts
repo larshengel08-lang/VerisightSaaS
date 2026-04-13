@@ -1,26 +1,26 @@
 export const comparisonCards = [
   {
-    title: 'Losse exitgesprekken',
+    title: 'ExitScan',
     description:
-      'Geven context per persoon, maar zolang ze niet vergelijkbaar zijn over afdelingen en perioden, blijft het organisatiepatroon onzichtbaar.',
-    outcome: 'Verisight bundelt losse signalen tot patronen en prioriteiten.',
+      'Voor organisaties die willen begrijpen waarom mensen zijn vertrokken en welke werkfactoren daar het vaakst in terugkomen.',
+    outcome: 'Sterk wanneer de vraag terugkijkend is: wat leren we van vertrek dat al heeft plaatsgevonden?',
   },
   {
-    title: 'Standaard surveytool',
+    title: 'RetentieScan',
     description:
-      'Geeft software, maar laat inrichting, opvolging en duiding vaak bij HR liggen.',
-    outcome: 'Verisight combineert tooling met begeleiding en rapportage.',
+      'Voor organisaties die eerder willen zien waar behoud onder druk staat, voordat signalen zichtbaar worden in vacatures, uitval of exitgesprekken.',
+    outcome: 'Sterk wanneer de vraag vooruitkijkend is: waar vraagt behoud nu aandacht in de actieve populatie?',
   },
   {
-    title: 'Consultancytraject',
+    title: 'Combinatie',
     description:
-      'Kan waardevol zijn, maar voelt vaak zwaarder en duurder dan nodig voor structureel uitstroominzicht.',
-    outcome: 'Verisight is compacter, sneller te starten en duidelijker geprijsd.',
+      'Voor organisaties die zowel vertrekduiding als behoudsignalering willen opbouwen binnen eenzelfde managementtaal en platform.',
+    outcome: 'Sterk wanneer je achteraf wilt begrijpen en tegelijk eerder wilt kunnen bijsturen.',
   },
 ] as const
 
 export const trustItems = [
-  'Begeleide inrichting en uitvoering',
+  'Twee scans, een platform',
   'Dashboard en managementrapport',
   'Gehost in Europa',
   'Methodische basis vanuit A&O-psychologie',
@@ -28,99 +28,103 @@ export const trustItems = [
 
 export const statCards = [
   {
-    value: 'Binnen weken',
-    label: 'eerste managementbeeld',
-    detail: 'Van inrichting tot eerste rapportage in een vaste, begeleide vorm.',
-  },
-  {
-    value: 'Baseline of Live',
-    label: 'duidelijke scanvorm',
-    detail: 'Baseline als instap, Live als vervolgstap of op aanvraag.',
+    value: '2 producten',
+    label: 'een logisch portfolio',
+    detail: 'ExitScan voor vertrekduiding, RetentieScan voor vroegsignalering op behoud.',
   },
   {
     value: 'Dashboard + rapport',
     label: 'vaste output',
-    detail: 'Met optionele segment deep dive voor scherpere subgroepanalyse.',
+    detail: 'Voor HR, MT en directie in dezelfde professionele Verisight-structuur.',
+  },
+  {
+    value: 'Baseline of ritme',
+    label: 'heldere productvorm',
+    detail: 'Eenmalig starten of periodiek herhalen, afhankelijk van je vraag en volwassenheid.',
   },
 ] as const
 
 export const outcomeCards = [
   [
-    'Sneller prioriteiten stellen met HR, MT en directie',
-    "Je ziet welke thema's eerst aandacht vragen en waar verdiepend gesprek of actie het meeste oplevert.",
+    'Kies de juiste scan voor de juiste managementvraag',
+    'Je voorkomt dat ExitScan en RetentieScan door elkaar gaan lopen: de ene kijkt terug, de andere signaleert eerder vooruit.',
   ],
   [
-    'Gerichtere verbeteracties kiezen',
-    'Je ziet of vertrek vooral wijst op leiderschap, groei, cultuur, onboarding of werkbelasting.',
+    'Werk met een gedeelde taal voor HR, MT en directie',
+    'Dashboard en rapportage helpen om sneller op een lijn te komen over waar verdieping of actie het meeste oplevert.',
   ],
   [
-    'Minder discussie, meer gedeelde taal',
-    'Dashboard en rapportage helpen om sneller op één lijn te komen over wat eerst gevalideerd moet worden.',
+    'Combineer signalering met duiding',
+    'Je kunt behoudssignalen volgen zonder van RetentieScan een individuele voorspeller te maken.',
   ],
   [
-    'Geen extra surveyproces voor HR',
-    'Verisight begeleidt de uitvoering, zodat jouw team niet ook nog toolbeheer hoeft te organiseren.',
+    'Geen extra toolbeheer voor HR',
+    'Verisight begeleidt de uitvoering, zodat jouw team niet ook nog een nieuwe surveytool hoeft te implementeren.',
   ],
   [
-    'Output die intern doorgezet kan worden',
-    'Het traject levert materiaal op dat bruikbaar is voor MT-overleg, prioritering en vervolgstappen.',
+    'Privacy by design in beide producten',
+    'Output blijft bedoeld voor groepsinzichten en managementduiding, met extra terughoudendheid bij actieve medewerkers.',
   ],
   [
-    'Basis voor retentiebeleid',
-    'Als patronen duidelijk zijn, kun je gerichter bepalen waar vervolgonderzoek of interventie nodig is.',
+    'Herhaalbaar zonder productverwarring',
+    'Je kunt starten met een eerste baseline en daarna bewust kiezen welke scan wanneer logisch is om te herhalen.',
   ],
 ] as const
 
 export const processHighlights = [
   {
     title: 'Voor HR',
-    text: 'Minder losse signalen en sneller een gedeeld beeld van waar vertrek zich opstapelt.',
+    text: 'Minder losse signalen en sneller een bruikbare keuze tussen vertrekduiding en behoudsignalering.',
   },
   {
     title: 'Voor MT',
-    text: 'Een bruikbare basis om te bepalen waar gerichte actie het meeste effect kan hebben.',
+    text: 'Een compact managementbeeld dat helpt bepalen waar gesprek, validatie of actie het meeste oplevert.',
   },
   {
     title: 'Voor directie',
-    text: 'Compacte stuurinformatie over terugkerende patronen in plaats van incidenten per case.',
+    text: 'Stuurinformatie over zowel terugkerende vertrekpatronen als vroege signalen rond behoud.',
   },
 ] as const
 
 export const included = [
-  'Inrichting van het exitscan-traject',
-  'Uitnodigingen en twee herinneringen voor respondenten',
-  'Dashboard met terugkerende vertrekpatronen',
-  'Managementrapport met prioriteiten en nuance',
-  'Zelfstandig leesbare output voor HR, MT en directie',
-  'Publieke privacy- en voorwaardenpagina voor interne afstemming',
+  'Inrichting van de gekozen scan of meetronde',
+  'Uitnodigingen en herinneringen voor respondenten',
+  'Dashboard met prioriteiten en managementduiding',
+  'Zelfstandig leesbaar rapport voor HR, MT en directie',
+  'Privacy- en interpretatiekaders in gewone taal',
+  'Begeleide productvorm in plaats van losse surveysoftware',
   'Binnen enkele weken eerste inzichten zonder implementatietraject',
   'Methodische basis vanuit arbeids- en organisatiepsychologie',
 ] as const
 
 export const faqs = [
   [
-    'Hoe snel kunnen we starten?',
-    'Na een kort verkennend gesprek kunnen we meestal snel aangeven of ExitScan past en welke planning logisch is.',
+    'Wat is het verschil tussen ExitScan en RetentieScan?',
+    'ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat bij actieve medewerkers.',
   ],
   [
-    'Hoeveel werk vraagt dit van HR?',
-    'Beperkt. Wij begeleiden inrichting, uitnodigingen en rapportage; HR levert vooral context en interne afstemming.',
+    'Is RetentieScan gewoon een MTO?',
+    'Nee. RetentieScan is smaller en scherper gepositioneerd: het richt zich op retentiesignalen, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
-    'Vanaf hoeveel exits is dit zinvol?',
-    'ExitScan werkt het best wanneer er doorlopend uitstroom is en je patronen wilt herkennen in plaats van losse incidenten wilt bespreken.',
+    'Wanneer kies je voor de combinatie?',
+    'Als je zowel achteraf wilt begrijpen wat vertrek dreef als eerder wilt signaleren waar behoud nu aandacht vraagt.',
   ],
   [
-    'Wat als de respons lager uitvalt dan gehoopt?',
-    'Dan laten we dat expliciet terugkomen in de duiding, zodat de output niet stelliger wordt dan de data toelaat.',
+    'Ziet management individuele retention-scores?',
+    'Nee. RetentieScan is bedoeld voor groeps- en segmentinzichten, niet voor beoordeling of voorspelling op persoonsniveau.',
+  ],
+  [
+    'Is RetentieScan een gevalideerde vertrekvoorspeller?',
+    'Nee. Voor v1 positioneren we RetentieScan als SDT-gebaseerde managementscan voor behoudssignalen en prioritering, niet als wetenschappelijk gevalideerde voorspeller van vrijwillig vertrek.',
+  ],
+  [
+    'Hoe vaak herhaal je RetentieScan?',
+    'Voor v1 is een baseline logisch als startpunt. Daarna kun je periodiek herhalen, bijvoorbeeld per kwartaal of halfjaar, als je gericht wilt volgen of acties effect hebben.',
   ],
   [
     'Is Verisight een tool of een dienst?',
-    'Het is een begeleide dienst met software. Je krijgt dashboard en rapportage, zonder self-service implementatie.',
-  ],
-  [
-    'Zijn antwoorden herleidbaar naar individuen?',
-    'De output is bedoeld voor groepsinzichten. Privacy, minimum aantallen en zorgvuldige interpretatie worden expliciet meegenomen.',
+    'Het is een begeleide dienst met software. Je krijgt dashboard en rapportage, zonder self-service implementatie of losse consultancy zonder productvorm.',
   ],
 ] as const
 

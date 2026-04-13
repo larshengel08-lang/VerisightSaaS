@@ -2,7 +2,21 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Routes die altijd publiek toegankelijk zijn (geen login vereist)
-const PUBLIC_ROUTES = ['/', '/signup', '/login', '/auth', '/privacy', '/voorwaarden', '/dpa', '/survey']
+const PUBLIC_ROUTES = [
+  '/',
+  '/signup',
+  '/login',
+  '/auth',
+  '/privacy',
+  '/voorwaarden',
+  '/dpa',
+  '/survey',
+  '/product',
+  '/producten',
+  '/aanpak',
+  '/tarieven',
+  '/oplossingen',
+]
 const PUBLIC_API_ROUTES = ['/api/contact']
 
 // Eenvoudige in-memory rate limiter voor auth-routes
