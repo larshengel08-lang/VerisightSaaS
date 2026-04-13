@@ -53,6 +53,7 @@ from sqlalchemy.orm import Session, selectinload
 from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
 from backend.email import send_contact_request, send_hr_notification, send_survey_invite
 from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
+from backend.runtime import require_backend_admin_token, validate_runtime_config
 from backend.schemas import (
     CampaignCreate,
     CampaignRead,
@@ -122,32 +123,6 @@ def _resolve_survey_modules(enabled_modules: list[str] | None) -> list[str]:
     return factor_modules or ORG_FACTOR_KEYS
 
 
-def _validate_runtime_config() -> None:
-    if not _IS_PRODUCTION:
-        return
-
-    missing = [
-        name for name in ("DATABASE_URL", "FRONTEND_URL", "BACKEND_URL", "RESEND_API_KEY")
-        if not os.getenv(name)
-    ]
-    if missing:
-        raise RuntimeError(
-            "Productieconfig onvolledig. Ontbrekende environment variables: "
-            + ", ".join(missing)
-        )
-
-
-def _require_backend_admin_token(x_admin_token: str | None) -> None:
-    if not _IS_PRODUCTION:
-        return
-
-    configured = os.getenv("BACKEND_ADMIN_TOKEN")
-    if not configured:
-        raise HTTPException(status_code=503, detail="Backend adminactie niet geconfigureerd.")
-    if x_admin_token != configured:
-        raise HTTPException(status_code=403, detail="Admin-token ontbreekt of is ongeldig.")
-
-
 def _send_hr_notification_safe(
     *,
     to_email: str,
@@ -174,7 +149,7 @@ def _send_hr_notification_safe(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    _validate_runtime_config()
+    validate_runtime_config(is_production=_IS_PRODUCTION)
     # Alleen tabellen aanmaken bij SQLite (lokale dev zonder Supabase)
     # Bij PostgreSQL/Supabase beheert schema.sql de tabellen
     if _IS_SQLITE:
@@ -869,7 +844,7 @@ async def create_organization(
     x_admin_token: Annotated[str | None, Header()] = None,
     db: Session = Depends(get_db),
 ) -> Organization:
-    _require_backend_admin_token(x_admin_token)
+    require_backend_admin_token(x_admin_token, is_production=_IS_PRODUCTION)
 
     existing = db.query(Organization).filter(Organization.slug == body.slug).first()
     if existing:

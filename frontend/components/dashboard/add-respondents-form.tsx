@@ -3,6 +3,10 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Campaign, type Organization } from '@/lib/types'
+import {
+  getDefaultCampaignId,
+  parseEmails as parseEmailList,
+} from '@/components/dashboard/add-respondents-form.shared'
 
 const ROLE_LEVELS = [
   { value: '', label: '— niet opgegeven —' },
@@ -53,12 +57,7 @@ interface ImportResponse {
 export function AddRespondentsForm({ campaigns, organizations }: Props) {
   const router = useRouter()
 
-  const activeCampaigns = useMemo(
-    () => campaigns.filter(c => c.is_active),
-    [campaigns],
-  )
-
-  const [campaignId, setCampaignId] = useState(activeCampaigns[0]?.id ?? campaigns[0]?.id ?? '')
+  const [campaignId, setCampaignId] = useState(getDefaultCampaignId(campaigns))
   const selectedCampaign = useMemo(
     () => campaigns.find(campaign => campaign.id === campaignId) ?? null,
     [campaignId, campaigns],
@@ -87,10 +86,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
   const [importSuccess, setImportSuccess] = useState<ImportResponse | null>(null)
 
   function parseEmails(raw: string): string[] {
-    return raw
-      .split(/[\n,;]+/)
-      .map(email => email.trim().toLowerCase())
-      .filter(email => email.includes('@'))
+    return parseEmailList(raw)
   }
 
   function resetFeedback() {

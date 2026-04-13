@@ -22,69 +22,26 @@ from __future__ import annotations
 
 import re
 from typing import Any
+from backend.scoring_config import (
+    DEFAULT_ROLE_MULTIPLIER,
+    EXIT_REASON_LABELS_NL,
+    FACTOR_LABELS_NL,
+    MIN_AGGREGATE_N,
+    MIN_SEGMENT_N,
+    ORG_FACTOR_KEYS,
+    RECOMMENDATIONS,
+    RISK_HIGH,
+    RISK_MEDIUM,
+    ROLE_MULTIPLIERS,
+    SCAN_WEIGHTS,
+    SCORING_VERSION,
+    SDT_DIMENSION_ITEMS,
+    SDT_REVERSE_ITEMS,
+)
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
 
-# Scale transform: Likert 1-5 → internal 1-10
-# formula: (raw - 1) / 4 * 9 + 1
 def _scale(raw: float) -> float:
     return (raw - 1) / 4 * 9 + 1
-
-
-# SDT reverse-coded items (1-indexed question labels within Module B)
-# Items B4, B8, B12 measure frustration → must be reversed before averaging
-SDT_REVERSE_ITEMS = {"B4", "B8", "B12"}
-
-# Module B item → dimension mapping
-# Autonomy: B1-B4, Competence: B5-B8, Relatedness: B9-B12
-SDT_DIMENSION_ITEMS: dict[str, list[str]] = {
-    "autonomy":    ["B1", "B2", "B3", "B4"],
-    "competence":  ["B5", "B6", "B7", "B8"],
-    "relatedness": ["B9", "B10", "B11", "B12"],
-}
-
-# Org-factor module keys (Module C)
-ORG_FACTOR_KEYS = [
-    "leadership",   # C1  LMX / management quality
-    "culture",      # C2  psychological safety / fit
-    "growth",       # C3  career / development
-    "compensation", # C4  pay / benefits
-    "workload",     # C5  JD-R demands (positief geformuleerd: hoge score = lage werkdruk = laag risico)
-    "role_clarity", # C6  role ambiguity/conflict
-]
-
-# Factorgewichten — expert judgment gebaseerd op richting in de literatuur
-# (o.a. Gallup engagement-onderzoek, JD-R model). Leiderschap en SDT komen
-# consistent als sterkste voorspellers naar voren. Gewichten worden empirisch
-# gekalibreerd zodra voldoende eigendata beschikbaar is.
-SCAN_WEIGHTS: dict[str, float] = {
-    "leadership":   2.5,
-    "culture":      1.5,
-    "growth":       1.5,
-    "compensation": 1.0,
-    "workload":     1.0,
-    "role_clarity": 1.0,
-}
-
-# Role-based replacement cost multipliers (SHRM / Bersin Institute)
-ROLE_MULTIPLIERS: dict[str, float] = {
-    "uitvoerend":  0.50,
-    "specialist":  1.00,
-    "senior":      1.50,
-    "manager":     2.00,
-    "director":    2.50,
-    "c_level":     3.00,
-}
-DEFAULT_ROLE_MULTIPLIER = 1.00
-
-# Risk thresholds
-RISK_HIGH   = 7.0
-RISK_MEDIUM = 4.5
-
-# Scoring model version — bump when weights or formulas change (important for historical comparison)
-SCORING_VERSION = "v1.0"
 
 # ---------------------------------------------------------------------------
 # Text anonymisation (AVG/GDPR)
@@ -407,98 +364,6 @@ def compute_replacement_cost(
 # Recommendation engine
 # ---------------------------------------------------------------------------
 
-# Per-theme, per-band recommendations (Dutch, ready for dashboard/report)
-RECOMMENDATIONS: dict[str, dict[str, list[str]]] = {
-    "leadership": {
-        "HOOG": [
-            "Implementeer direct een 1:1 check-in structuur (wekelijks, 30 min).",
-            "Start leiderschapstraject gericht op coachend management (SDT-based).",
-            "Overweeg 360°-feedback voor direct leidinggevenden binnen 30 dagen.",
-            "Evalueer span-of-control: is het aantal directe rapporten beheersbaar?",
-        ],
-        "MIDDEN": [
-            "Plan kwartaalgesprekken over ontwikkeling en werkbeleving.",
-            "Introduceer concrete feedbackmomenten in bestaande teamoverleggen.",
-            "Zorg voor heldere escalatiepaden bij spanningen tussen medewerker en manager.",
-        ],
-        "LAAG": [
-            "Leiderschapskwaliteit scoort goed — periodiek monitoren volstaat.",
-            "Deel best practices van sterke managers intern.",
-        ],
-    },
-    "culture": {
-        "HOOG": [
-            "Voer cultuuraudit uit (psychologische veiligheid — Edmondson-instrument).",
-            "Stel actieplan op voor inclusie en respect op de werkplek.",
-            "Adresseer specifieke cultuurklachten uit open teksten binnen 2 weken.",
-        ],
-        "MIDDEN": [
-            "Organiseer team-sessies rondom waarden en gedragsnormen.",
-            "Meet psychologische veiligheid periodiek en vergelijk vooral met eerdere eigen metingen.",
-        ],
-        "LAAG": [
-            "Cultuurscores positief — bewaken bij organisatieveranderingen.",
-        ],
-    },
-    "growth": {
-        "HOOG": [
-            "Stel binnen 30 dagen persoonlijk ontwikkelplan op voor iedere medewerker.",
-            "Introduceer of activeer mentoring- en interne mobiliteitsprogramma.",
-            "Maak loopbaanpaden zichtbaar en bespreekbaar (carrière-architectuur).",
-        ],
-        "MIDDEN": [
-            "Evalueer of L&D-budget effectief wordt ingezet.",
-            "Voeg groeigesprek toe aan jaarcyclus (naast beoordelingsgesprek).",
-        ],
-        "LAAG": [
-            "Groeimogelijkheden worden gewaardeerd — behoud huidige aanpak.",
-        ],
-    },
-    "compensation": {
-        "HOOG": [
-            "Voer een marktvergelijking uit voor beloning en voorwaarden.",
-            "Onderzoek non-financiële arbeidsvoorwaarden als aanvulling.",
-            "Communiceer transparant over beloningsstructuur en groeipaden.",
-        ],
-        "MIDDEN": [
-            "Evalueer arbeidsvoorwaarden bij volgende CAO-ronde of budgetcyclus.",
-            "Overweeg flexibele benefits (keuzebudget).",
-        ],
-        "LAAG": [
-            "Beloning wordt als marktconform ervaren — geen directe actie vereist.",
-        ],
-    },
-    "workload": {
-        "HOOG": [
-            "Urgent: analyseer werklastklachten en stel concrete capaciteitsmaatregelen in.",
-            "Voer JD-R resources-scan uit — zijn er voldoende taakhulpbronnen?",
-            "Overweeg tijdelijke capaciteitsuitbreiding of herindeling van taken.",
-        ],
-        "MIDDEN": [
-            "Monitor werklastbeleving maandelijks via korte pulse-meting.",
-            "Bespreek werkdruk actief in teamoverleg.",
-        ],
-        "LAAG": [
-            "Werkbelasting in balans — handhaven huidige aanpak.",
-        ],
-    },
-    "role_clarity": {
-        "HOOG": [
-            "Herschrijf functiebeschrijvingen en bespreek deze individueel.",
-            "Introduceer RACI-model voor cruciale processen.",
-            "Zorg dat verwachtingen aantoonbaar zijn gecommuniceerd (schriftelijk).",
-        ],
-        "MIDDEN": [
-            "Verhelder taken en verantwoordelijkheden in teamoverleg.",
-            "Controleer of KPI's en doelen voor iedereen helder zijn.",
-        ],
-        "LAAG": [
-            "Rolhelderheid goed — geen actie vereist.",
-        ],
-    },
-}
-
-
 def get_recommendations(
     factor_risks: dict[str, float],
     risk_bands: dict[str, str] | None = None,
@@ -538,41 +403,6 @@ def get_recommendations(
 # ---------------------------------------------------------------------------
 # Pattern detection (aggregate — min n=5 for GDPR-safe reporting)
 # ---------------------------------------------------------------------------
-
-MIN_AGGREGATE_N = 10
-MIN_SEGMENT_N = 5
-
-FACTOR_LABELS_NL: dict[str, str] = {
-    "leadership":   "Leiderschap",
-    "culture":      "Psychologische veiligheid & cultuurmatch",
-    "growth":       "Groeiperspectief",
-    "compensation": "Beloning & voorwaarden",
-    "workload":     "Werkbelasting",
-    "role_clarity": "Rolhelderheid",
-    "sdt":          "Werkbeleving (SDT)",
-    "autonomy":     "Autonomie",
-    "competence":   "Competentie",
-    "relatedness":  "Verbondenheid",
-}
-
-EXIT_REASON_LABELS_NL: dict[str, str] = {
-    # Push factors
-    "P1": "Leiderschap / management",
-    "P2": "Organisatiecultuur",
-    "P3": "Gebrek aan groei",
-    "P4": "Beloning",
-    "P5": "Werkdruk / stress",
-    "P6": "Rolonduidelijkheid",
-    # Pull factors
-    "PL1": "Beter aanbod elders",
-    "PL2": "Carrièreswitch",
-    "PL3": "Ondernemerschap",
-    # Situational
-    "S1": "Persoonlijke omstandigheid",
-    "S2": "Verhuizing / partner",
-    "S3": "Studie / pensioen",
-}
-
 
 def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
     """
