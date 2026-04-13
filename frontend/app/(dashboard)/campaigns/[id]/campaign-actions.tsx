@@ -23,14 +23,9 @@ export function CampaignActions({ campaignId, isActive, pendingCount, canManageC
 
   async function handleArchive() {
     const confirmed = confirm(
-      'Weet je zeker dat je deze campaign wilt archiveren?\n\n' +
-      'Respondenten kunnen de survey daarna niet meer invullen. ' +
-      'Resultaten en het rapport blijven wel beschikbaar.',
+      'Weet je zeker dat je deze campaign wilt archiveren?\n\nRespondenten kunnen de survey daarna niet meer invullen. Resultaten en het rapport blijven wel beschikbaar.',
     )
-
-    if (!confirmed) {
-      return
-    }
+    if (!confirmed) return
 
     setError(null)
     setLoading('archive')
@@ -54,19 +49,14 @@ export function CampaignActions({ campaignId, isActive, pendingCount, canManageC
 
   async function handleResend() {
     const confirmed = confirm(
-      `${pendingCount} respondent(en) opnieuw uitnodigen?\n\n` +
-      'Alle respondenten die de survey nog niet hebben ingevuld ontvangen een nieuwe e-mail.',
+      `${pendingCount} respondent(en) opnieuw uitnodigen?\n\nAlle respondenten die de survey nog niet hebben ingevuld ontvangen een nieuwe e-mail.`,
     )
-
-    if (!confirmed) {
-      return
-    }
+    if (!confirmed) return
 
     setError(null)
     setLoading('resend')
 
     const result = await resendPendingAction(campaignId)
-
     setLoading(null)
 
     if (result.error) {
@@ -76,49 +66,45 @@ export function CampaignActions({ campaignId, isActive, pendingCount, canManageC
 
     const message =
       result.sent > 0
-        ? `✓ ${result.sent} uitnodiging(en) verstuurd.${result.failed ? ` ${result.failed} mislukt.` : ''}`
+        ? `${result.sent} uitnodiging(en) verstuurd.${result.failed ? ` ${result.failed} mislukt.` : ''}`
         : 'Geen openstaande respondenten met e-mailadres gevonden.'
 
     showToast(message)
-
     if (result.sent > 0) {
       setTimeout(() => window.location.reload(), 2000)
     }
   }
 
-  if (!isActive || !canManageCampaign) {
-    return null
-  }
+  if (!isActive || !canManageCampaign) return null
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <div className="flex gap-2">
-        {pendingCount > 0 && (
+    <div className="flex flex-col items-start gap-2 sm:items-end">
+      <div className="flex flex-wrap gap-2">
+        {pendingCount > 0 ? (
           <button
             onClick={handleResend}
             disabled={loading !== null}
-            className="text-sm font-medium text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg hover:bg-blue-50 disabled:opacity-50 transition-colors"
+            className="rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 disabled:opacity-50"
             title={`${pendingCount} respondent(en) hebben de survey nog niet ingevuld`}
           >
-            {loading === 'resend' ? 'Versturen...' : `↻ Herinnering (${pendingCount})`}
+            {loading === 'resend' ? 'Versturen...' : `Herinnering (${pendingCount})`}
           </button>
-        )}
+        ) : null}
         <button
           onClick={handleArchive}
           disabled={loading !== null}
-          className="text-sm font-medium text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 disabled:opacity-50 transition-colors"
+          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700 disabled:opacity-50"
         >
           {loading === 'archive' ? 'Archiveren...' : 'Archiveer campaign'}
         </button>
       </div>
 
-      {toast && (
-        <div className="bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg shadow-lg">
+      {toast ? (
+        <div className="rounded-full bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-lg">
           {toast}
         </div>
-      )}
-
-      {error && <p className="text-xs text-red-600 max-w-xs text-right">{error}</p>}
+      ) : null}
+      {error ? <p className="max-w-xs text-xs text-red-600 sm:text-right">{error}</p> : null}
     </div>
   )
 }

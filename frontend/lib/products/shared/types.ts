@@ -56,6 +56,8 @@ export interface ProductModule {
   definition: ScanDefinition
   buildDashboardViewModel(args: {
     signalLabelLower: string
+    averageSignal: number | null
+    strongWorkSignalRate: number | null
     engagement: number | null
     turnoverIntention: number | null
     stayIntent: number | null

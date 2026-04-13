@@ -118,6 +118,8 @@ function buildProfileCards(args: {
 
 export function buildRetentionDashboardViewModel(args: {
   signalLabelLower: string
+  averageSignal: number | null
+  strongWorkSignalRate: number | null
   engagement: number | null
   turnoverIntention: number | null
   stayIntent: number | null
@@ -125,10 +127,10 @@ export function buildRetentionDashboardViewModel(args: {
   factorAverages: Record<string, number>
 }): DashboardViewModel {
   const topFactors = getTopFactors(args.factorAverages)
-  const averageSignal =
-    Object.keys(args.factorAverages).length > 0
+  const averageSignal = args.averageSignal ??
+    (Object.keys(args.factorAverages).length > 0
       ? Object.values(args.factorAverages).reduce((sum, score) => sum + (11 - score), 0) / Object.keys(args.factorAverages).length
-      : null
+      : null)
   const signalProfile = deriveSignalProfile(
     averageSignal,
     args.engagement,

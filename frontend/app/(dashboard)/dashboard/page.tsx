@@ -1,18 +1,30 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import type { CampaignStats } from '@/lib/types'
-import { getScanDefinition } from '@/lib/scan-definitions'
-import { RiskBadge } from '@/components/ui/risk-badge'
-import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
+import {
+  DashboardChip,
+  DashboardPanel,
+  DashboardSection,
+} from '@/components/dashboard/dashboard-primitives'
+import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
+import { getScanDefinition } from '@/lib/scan-definitions'
+import type { CampaignStats } from '@/lib/types'
+
+type CampaignGroup = {
+  key: string
+  title: string
+  description: string
+  campaigns: CampaignStats[]
+}
 
 export default async function DashboardHomePage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  // isAdmin = alleen accounts met is_verisight_admin = true in profiles
   const { data: profile } = await supabase
     .from('profiles')
     .select('is_verisight_admin')
@@ -27,196 +39,266 @@ export default async function DashboardHomePage() {
     .order('created_at', { ascending: false })
 
   const campaigns = (stats ?? []) as CampaignStats[]
+  const groups = groupCampaigns(campaigns)
+  const activeCampaigns = campaigns.filter((campaign) => campaign.is_active)
+  const avgResponse =
+    campaigns.length > 0
+      ? Math.round(campaigns.reduce((sum, campaign) => sum + (campaign.completion_rate_pct ?? 0), 0) / campaigns.length)
+      : 0
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Campagnes</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {isAdmin
-              ? 'Overzicht van scans die jij beheert voor klantorganisaties'
-              : 'Overzicht van actieve en gearchiveerde scans voor jouw organisatie'}
-          </p>
+    <div className="space-y-6">
+      <DashboardSection
+        eyebrow="Overzicht"
+        title="Campaign cockpit"
+        description={
+          isAdmin
+            ? 'Gebruik dit overzicht om per campagne te zien wat de volgende operationele stap is: opzetten, monitoren, rapporteren of afsluiten.'
+            : 'Gebruik dit overzicht om te zien welke campagnes live zijn, waar resultaten klaarstaan en welke scans nog in opbouw zijn.'
+        }
+        aside={
+          isAdmin ? (
+            <Link
+              href="/beheer"
+              className="inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+            >
+              Nieuwe campaign
+            </Link>
+          ) : (
+            <DashboardChip label="Klantdashboard" tone="emerald" />
+          )
+        }
+      >
+        <div className="grid gap-4 lg:grid-cols-3">
+          <DashboardPanel
+            eyebrow="Actief"
+            title={`${activeCampaigns.length}`}
+            body="Aantal actieve campagnes dat nu monitoring, reminders of rapportage vraagt."
+            tone="blue"
+          />
+          <DashboardPanel
+            eyebrow="Gemiddelde respons"
+            title={`${avgResponse}%`}
+            body="Snelle thermometer voor hoe ver campagnes gemiddeld in hun response- en analysecirkel zitten."
+            tone={avgResponse >= 60 ? 'emerald' : avgResponse >= 30 ? 'amber' : 'blue'}
+          />
+          <DashboardPanel
+            eyebrow="Status"
+            title={campaigns.length === 0 ? 'Nog leeg' : 'Operationeel overzicht'}
+            body={
+              campaigns.length === 0
+                ? 'Maak eerst een organisatie en campaign aan. Daarna verschijnt hier automatisch de cockpit.'
+                : 'Elke campagne is gegroepeerd op eerstvolgende actie, zodat je niet handmatig door kaarten hoeft te zoeken.'
+            }
+            tone="slate"
+          />
         </div>
-        {/* Alleen Verisight-beheerders kunnen een nieuwe campaign aanmaken */}
-        {isAdmin && (
-          <Link
-            href="/beheer"
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-          >
-            + Nieuwe campaign →
-          </Link>
-        )}
-      </div>
+      </DashboardSection>
 
       {campaigns.length === 0 ? (
         isAdmin ? <AdminEmptyState /> : <ViewerEmptyState />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {campaigns.map((c, idx) => (
-            <CampaignCard
-              key={c.campaign_id}
-              campaign={c}
-              showOnboarding={!isAdmin && idx === 0}
-            />
-          ))}
+        <div className="space-y-5">
+          {groups.map((group) =>
+            group.campaigns.length > 0 ? (
+              <DashboardSection
+                key={group.key}
+                eyebrow="Campagnestatus"
+                title={group.title}
+                description={group.description}
+                aside={<DashboardChip label={`${group.campaigns.length} campagne${group.campaigns.length === 1 ? '' : 's'}`} tone="slate" />}
+              >
+                <div className="space-y-3">
+                  {group.campaigns.map((campaign, index) => (
+                    <CampaignRow
+                      key={campaign.campaign_id}
+                      campaign={campaign}
+                      showOnboarding={!isAdmin && group.key === 'active' && index === 0}
+                    />
+                  ))}
+                </div>
+              </DashboardSection>
+            ) : null,
+          )}
         </div>
       )}
     </div>
   )
 }
 
-function CampaignCard({
-  campaign: c,
-  showOnboarding = false,
+function CampaignRow({
+  campaign,
+  showOnboarding,
 }: {
   campaign: CampaignStats
-  showOnboarding?: boolean
+  showOnboarding: boolean
 }) {
-  const scanDefinition = getScanDefinition(c.scan_type)
-  const scanLabel = scanDefinition.productName
-  const completionPct = c.completion_rate_pct ?? 0
-  const avgRisk = c.avg_risk_score
+  const scanDefinition = getScanDefinition(campaign.scan_type)
+  const nextAction = getNextAction(campaign)
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 transition-all hover:border-blue-300 hover:shadow-md">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <span className="inline-block text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded mb-1">
-            {scanLabel}
-          </span>
-          <h2 className="text-sm font-semibold text-gray-900 truncate">
-            {c.campaign_name}
-          </h2>
-        </div>
-        <span className={`ml-2 w-2 h-2 rounded-full flex-shrink-0 mt-1 ${c.is_active ? 'bg-green-400' : 'bg-gray-300'}`} />
-      </div>
-
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        <KpiCell label="Uitgenodigd" value={c.total_invited} />
-        <KpiCell label="Ingevuld" value={c.total_completed} />
-        <KpiCell label="Respons" value={`${completionPct}%`} />
-      </div>
-
-      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-3">
-        <div
-          className="h-full bg-blue-500 rounded-full"
-          style={{ width: `${Math.min(completionPct, 100)}%` }}
-        />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-500">Gem. {scanDefinition.signalLabelLower}</span>
-        {avgRisk ? (
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-gray-900">
-              {avgRisk.toFixed(1)}
-              <span className="text-xs font-normal text-gray-400"> /10</span>
-            </span>
-            <RiskBadge score={avgRisk} />
+    <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <DashboardChip label={scanDefinition.productName} tone={campaign.scan_type === 'retention' ? 'emerald' : 'blue'} />
+            <DashboardChip label={campaign.is_active ? 'Actief' : 'Gesloten'} tone={campaign.is_active ? 'emerald' : 'slate'} />
           </div>
-        ) : (
-          <span className="text-xs text-gray-400">Nog geen data</span>
-        )}
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4">
-        <div className="relative">
-          {showOnboarding && (
-            <OnboardingBalloon step={1} label="Bekijk je campagne" align="left" />
-          )}
-          <Link
-            href={`/campaigns/${c.campaign_id}`}
-            className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-          >
-            Open dashboard →
-          </Link>
+          <h2 className="mt-3 text-lg font-semibold text-slate-950">{campaign.campaign_name}</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{nextAction.body}</p>
         </div>
-        <PdfDownloadButton campaignId={c.campaign_id} campaignName={c.campaign_name} />
+
+        <div className="grid gap-3 sm:grid-cols-3 xl:min-w-[360px]">
+          <StatCell label="Respons" value={`${campaign.completion_rate_pct ?? 0}%`} />
+          <StatCell label="Ingevuld" value={`${campaign.total_completed}`} />
+          <StatCell
+            label={`Gem. ${scanDefinition.signalLabelLower}`}
+            value={campaign.avg_risk_score !== null ? `${campaign.avg_risk_score.toFixed(1)}/10` : '–'}
+          />
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-600">{nextAction.label}</span>
+          <span className="text-slate-400">·</span>
+          <span className="text-slate-500">
+            Uitgenodigd {campaign.total_invited} · Banden hoog/midden/laag: {campaign.band_high}/{campaign.band_medium}/{campaign.band_low}
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            {showOnboarding ? <OnboardingBalloon step={1} label="Open je campagne" align="left" /> : null}
+            <Link
+              href={`/campaigns/${campaign.campaign_id}`}
+              className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100"
+            >
+              Open dashboard
+            </Link>
+          </div>
+          <PdfDownloadButton campaignId={campaign.campaign_id} campaignName={campaign.campaign_name} />
+        </div>
       </div>
     </div>
   )
 }
 
-function KpiCell({ label, value }: { label: string; value: string | number }) {
+function StatCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="text-center">
-      <div className="text-lg font-bold text-gray-900">{value}</div>
-      <div className="text-xs text-gray-400">{label}</div>
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</p>
+      <p className="mt-2 text-lg font-semibold text-slate-950">{value}</p>
     </div>
   )
 }
 
-// Lege staat voor Verisight-beheerders: stap-voor-stap setup
+function getNextAction(campaign: CampaignStats) {
+  if (!campaign.is_active) {
+    return {
+      label: 'Rapport beschikbaar',
+      body: 'Deze campagne is gesloten. Gebruik het dashboard vooral voor rapportage, terugblik en het voorbereiden van het vervolggesprek.',
+    }
+  }
+
+  if (campaign.total_invited === 0) {
+    return {
+      label: 'Respondenten toevoegen',
+      body: 'De campagne bestaat, maar er zijn nog geen respondenten gekoppeld. Dit is nu de eerstvolgende operationele stap.',
+    }
+  }
+
+  if ((campaign.completion_rate_pct ?? 0) < 20) {
+    return {
+      label: 'Respons opbouwen',
+      body: 'De response is nog laag. Focus nu op uitnodigingen, reminders en het zorgen voor genoeg basis om later veilig te kunnen analyseren.',
+    }
+  }
+
+  if (campaign.total_completed < 10) {
+    return {
+      label: 'Nog indicatief',
+      body: 'Er zijn al responses binnen, maar nog niet genoeg voor een stevig patroonbeeld. Gebruik dit dashboard voorlopig vooral om richting te houden.',
+    }
+  }
+
+  return {
+    label: 'Klaar voor verdieping',
+    body: 'De campagne heeft genoeg respons om actief te sturen op analyse, managementduiding en rapportage.',
+  }
+}
+
+function groupCampaigns(campaigns: CampaignStats[]): CampaignGroup[] {
+  return [
+    {
+      key: 'active',
+      title: 'Actieve campagnes',
+      description: 'Campagnes die nog live lopen en direct monitoring of actie vragen.',
+      campaigns: campaigns.filter((campaign) => campaign.is_active && campaign.total_completed >= 10),
+    },
+    {
+      key: 'building',
+      title: 'Nog in opbouw',
+      description: 'Campagnes waar response of setup nog eerst aandacht nodig heeft voordat verdieping zinvol wordt.',
+      campaigns: campaigns.filter((campaign) => campaign.is_active && campaign.total_completed < 10),
+    },
+    {
+      key: 'closed',
+      title: 'Afgerond en gesloten',
+      description: 'Gesloten campagnes die vooral nog voor rapportage, terugblik en follow-up gebruikt worden.',
+      campaigns: campaigns.filter((campaign) => !campaign.is_active),
+    },
+  ]
+}
+
 function AdminEmptyState() {
   return (
-    <div className="bg-white rounded-xl border border-dashed border-gray-200 p-10">
-      <div className="max-w-lg mx-auto">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-50 rounded-2xl text-2xl mb-4">
-            🚀
-          </div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Welkom bij Verisight</h2>
-          <p className="text-sm text-gray-500">
-            Richt eerst de organisatie en campaign in. Daarna lever je een respondentbestand aan en krijgt de
-            klant toegang tot het dashboard.
-          </p>
-        </div>
-        <div className="space-y-4 mb-8">
-          <Step number={1} title="Maak een organisatie aan" description="Registreer de klantorganisatie en het HR-contactpunt." />
-          <Step number={2} title="Maak een campaign aan" description="Kies ExitScan of RetentieScan en geef de campagne een naam." />
-          <Step number={3} title="Importeer respondenten" description="Gebruik bij voorkeur een klantbestand met e-mailadressen en segmentvelden." />
-        </div>
-        <div className="text-center">
-          <Link
-            href="/beheer"
-            className="inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Starten →
-          </Link>
-        </div>
+    <DashboardSection
+      eyebrow="Setup"
+      title="Nog geen campagnes beschikbaar"
+      description="De cockpit wordt vanzelf gevuld zodra je een organisatie, campaign en respondentbestand hebt toegevoegd."
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        <DashboardPanel
+          eyebrow="Stap 1"
+          title="Organisatie"
+          body="Maak eerst de klantorganisatie aan en leg het contactpunt vast."
+          tone="blue"
+        />
+        <DashboardPanel
+          eyebrow="Stap 2"
+          title="Campaign"
+          body="Kies ExitScan of RetentieScan en zet de campagne op met de juiste metadata."
+          tone="blue"
+        />
+        <DashboardPanel
+          eyebrow="Stap 3"
+          title="Respondenten"
+          body="Importeer respondenten en stuur uitnodigingen, zodat de cockpit vanzelf in monitoring overgaat."
+          tone="emerald"
+        />
       </div>
-    </div>
+      <div className="mt-5">
+        <Link
+          href="/beheer"
+          className="inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+        >
+          Naar setup
+        </Link>
+      </div>
+    </DashboardSection>
   )
 }
 
-// Lege staat voor HR-klanten: wachten op Verisight-begeleider
 function ViewerEmptyState() {
   return (
-    <div className="bg-white rounded-xl border border-dashed border-gray-200 p-10">
-      <div className="max-w-md mx-auto text-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-50 rounded-2xl text-2xl mb-4">
-          ⏳
-        </div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-2">
-          Jouw scan wordt opgezet
-        </h2>
-        <p className="text-sm text-gray-500 leading-relaxed mb-6">
-          Verisight zet jouw campagne op, importeert het respondentbestand en verstuurt de uitnodigingen.
-          Zodra de eerste responses binnenkomen, zie je hier automatisch jouw dashboard en rapportage.
-        </p>
-        <p className="text-xs text-gray-400">
-          Vragen? Stuur een mail naar{' '}
-          <a href="mailto:hallo@verisight.nl" className="text-blue-500 hover:underline">
-            hallo@verisight.nl
-          </a>
-        </p>
+    <DashboardSection
+      eyebrow="Wachten op livegang"
+      title="Jouw dashboard wordt voorbereid"
+      description="Verisight zet de campagne op, controleert de import en activeert daarna automatisch dit overzicht."
+    >
+      <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-5 text-sm leading-6 text-slate-700">
+        Zodra de eerste responses binnenkomen, verschijnen hier automatisch je campagnes, status en rapportacties.
       </div>
-    </div>
-  )
-}
-
-function Step({ number, title, description }: { number: number; title: string; description: string }) {
-  return (
-    <div className="flex gap-4 items-start">
-      <div className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
-        {number}
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-gray-800">{title}</p>
-        <p className="text-xs text-gray-400 mt-0.5">{description}</p>
-      </div>
-    </div>
+    </DashboardSection>
   )
 }
