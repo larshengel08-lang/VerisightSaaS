@@ -51,7 +51,7 @@ from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
 
 from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
-from backend.email import send_contact_request, send_hr_notification, send_survey_invite
+from backend.email import send_contact_request_result, send_hr_notification, send_survey_invite
 from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
 from backend.runtime import require_backend_admin_token, validate_runtime_config
 from backend.schemas import (
@@ -566,12 +566,13 @@ async def create_contact_request(
         current_question=body.current_question,
         website=body.website,
         notification_sent=False,
+        notification_error=None,
     )
     db.add(lead)
     db.commit()
     db.refresh(lead)
 
-    sent = send_contact_request(
+    send_result = send_contact_request_result(
         name=body.name,
         work_email=body.work_email,
         organization=body.organization,
@@ -579,15 +580,20 @@ async def create_contact_request(
         current_question=body.current_question,
     )
 
-    if sent:
+    if send_result.ok:
         lead.notification_sent = True
+        lead.notification_error = None
         db.add(lead)
         db.commit()
     else:
+        lead.notification_error = send_result.reason
+        db.add(lead)
+        db.commit()
         logger.warning(
-            "Contactaanvraag opgeslagen zonder e-mailnotificatie voor %s (%s).",
+            "Contactaanvraag opgeslagen zonder e-mailnotificatie voor %s (%s): %s",
             body.organization,
             body.work_email,
+            send_result.reason or "onbekende fout",
         )
 
     return ContactRequestResponse(message="Verstuurd")

@@ -238,6 +238,7 @@ class ContactRequest(Base):
     current_question: Mapped[str] = mapped_column(Text, nullable=False)
     website: Mapped[str | None] = mapped_column(String(255), nullable=True)
     notification_sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    notification_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     def __repr__(self) -> str:

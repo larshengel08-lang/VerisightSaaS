@@ -224,8 +224,18 @@ create table if not exists public.contact_requests (
   current_question  text not null,
   website           text,
   notification_sent boolean not null default false,
+  notification_error text,
   created_at        timestamptz default now()
 );
+
+do $$ begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'notification_error'
+  ) then
+    alter table public.contact_requests add column notification_error text;
+  end if;
+end $$;
 
 -- ============================================================
 -- INDEXES

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from backend.database import Base
+from backend.email import EmailSendResult
 from backend.main import _contact_request_buckets, app, get_db
 
 
@@ -40,7 +41,7 @@ def client(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> Generator[Te
             pass
 
     monkeypatch.setattr("backend.main.send_hr_notification", lambda **kwargs: True)
-    monkeypatch.setattr("backend.main.send_contact_request", lambda **kwargs: True)
+    monkeypatch.setattr("backend.main.send_contact_request_result", lambda **kwargs: EmailSendResult(ok=True))
     _contact_request_buckets.clear()
 
     app.dependency_overrides[get_db] = override_get_db

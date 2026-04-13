@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import os
+from dataclasses import dataclass
 from html import escape
 from pathlib import Path
 
@@ -37,6 +38,12 @@ try:
 except ImportError:
     _resend = None  # type: ignore
     _RESEND_AVAILABLE = False
+
+
+@dataclass(frozen=True)
+class EmailSendResult:
+    ok: bool
+    reason: str | None = None
 
 
 def _mask_email(address: str) -> str:
@@ -67,24 +74,51 @@ def _render_email_template(template_name: str, **context: str | int) -> str:
     return template.format_map(safe_context)
 
 
-def _send(*, to: str, subject: str, html: str) -> bool:
-    """Verstuur een e-mail. Retourneert True bij succes."""
+def _sanitize_error_reason(reason: str, *, max_length: int = 240) -> str:
+    normalized = " ".join(str(reason).strip().split())
+    if len(normalized) <= max_length:
+        return normalized
+    return normalized[: max_length - 3] + "..."
+
+
+def _send_result(*, to: str, subject: str, html: str) -> EmailSendResult:
+    """Verstuur een e-mail en geef een diagnostisch resultaat terug."""
     safe_to = _mask_email(to)
+    if not to:
+        return EmailSendResult(ok=False, reason="missing_recipient")
+    if not _EMAIL_FROM.strip():
+        logger.warning("E-mail niet verzonden naar %s: EMAIL_FROM ontbreekt.", safe_to)
+        return EmailSendResult(ok=False, reason="missing_email_from")
+    if not _CONTACT_EMAIL.strip() and subject.startswith("Kennismakingsaanvraag"):
+        logger.warning("E-mail niet verzonden naar %s: CONTACT_EMAIL ontbreekt.", safe_to)
+        return EmailSendResult(ok=False, reason="missing_contact_email")
+    if _resend is None:
+        logger.warning("E-mail niet verzonden naar %s: resend package ontbreekt.", safe_to)
+        return EmailSendResult(ok=False, reason="resend_import_missing")
     if not _RESEND_AVAILABLE:
-        logger.info("E-mail niet verzonden (geen RESEND_API_KEY). Aan: %s", safe_to)
-        return False
+        logger.info("E-mail niet verzonden naar %s: RESEND_API_KEY ontbreekt.", safe_to)
+        return EmailSendResult(ok=False, reason="missing_resend_api_key")
     try:
-        _resend.Emails.send({
+        response = _resend.Emails.send({
             "from": _EMAIL_FROM,
             "to": [to],
             "subject": subject,
             "html": html,
         })
+        if not response:
+            logger.warning("E-mailprovider gaf lege respons terug voor %s.", safe_to)
+            return EmailSendResult(ok=False, reason="empty_provider_response")
         logger.info("E-mail verzonden naar %s", safe_to)
-        return True
+        return EmailSendResult(ok=True)
     except Exception as exc:
-        logger.error("E-mail verzending mislukt naar %s: %s", safe_to, exc)
-        return False
+        reason = _sanitize_error_reason(f"{exc.__class__.__name__}: {exc}")
+        logger.error("E-mail verzending mislukt naar %s: %s", safe_to, reason)
+        return EmailSendResult(ok=False, reason=f"provider_error: {reason}")
+
+
+def _send(*, to: str, subject: str, html: str) -> bool:
+    """Verstuur een e-mail. Retourneert True bij succes."""
+    return _send_result(to=to, subject=subject, html=html).ok
 
 
 def send_survey_invite(
@@ -154,7 +188,28 @@ def send_contact_request(
     employee_count: str,
     current_question: str,
 ) -> bool:
+    return send_contact_request_result(
+        name=name,
+        work_email=work_email,
+        organization=organization,
+        employee_count=employee_count,
+        current_question=current_question,
+    ).ok
+
+
+def send_contact_request_result(
+    *,
+    name: str,
+    work_email: str,
+    organization: str,
+    employee_count: str,
+    current_question: str,
+) -> EmailSendResult:
     """Stuur een contactaanvraag vanaf de marketing-site naar het interne inboxadres."""
+    if not _CONTACT_EMAIL.strip():
+        logger.warning("Contactaanvraag-mail niet verzonden: CONTACT_EMAIL ontbreekt.")
+        return EmailSendResult(ok=False, reason="missing_contact_email")
+
     html = _render_email_template(
         "contact_request.html",
         name=name,
@@ -164,7 +219,7 @@ def send_contact_request(
         current_question=current_question,
     )
 
-    return _send(
+    return _send_result(
         to=_CONTACT_EMAIL,
         subject=f"Kennismakingsaanvraag ExitScan - {organization}",
         html=html,

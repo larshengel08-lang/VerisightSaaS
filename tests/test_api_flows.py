@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
+from backend.email import EmailSendResult, send_contact_request_result
 from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
 from backend.scoring import ORG_FACTOR_KEYS
 
@@ -270,7 +271,10 @@ def test_report_route_rejects_invalid_api_key(client, db_session: Session):
 
 
 def test_contact_request_persists_when_email_notification_fails(client, db_session: Session, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr("backend.main.send_contact_request", lambda **kwargs: False)
+    monkeypatch.setattr(
+        "backend.main.send_contact_request_result",
+        lambda **kwargs: EmailSendResult(ok=False, reason="missing_resend_api_key"),
+    )
 
     response = client.post(
         "/api/contact-request",
@@ -290,3 +294,45 @@ def test_contact_request_persists_when_email_notification_fails(client, db_sessi
 
     stored = db_session.query(ContactRequest).one()
     assert stored.notification_sent is False
+    assert stored.notification_error == "missing_resend_api_key"
+
+
+def test_contact_request_marks_notification_sent_and_clears_error(client, db_session: Session, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(
+        "backend.main.send_contact_request_result",
+        lambda **kwargs: EmailSendResult(ok=True),
+    )
+
+    response = client.post(
+        "/api/contact-request",
+        json={
+            "name": "Lars",
+            "work_email": "lars@verisight.nl",
+            "organization": "Verisight",
+            "employee_count": "200-500",
+            "current_question": "Wij willen weten hoe de live scan werkt.",
+            "website": "",
+        },
+        headers={"x-forwarded-for": "203.0.113.11"},
+    )
+
+    assert response.status_code == 200
+
+    stored = db_session.query(ContactRequest).one()
+    assert stored.notification_sent is True
+    assert stored.notification_error is None
+
+
+def test_send_contact_request_result_returns_missing_contact_email_reason(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr("backend.email._CONTACT_EMAIL", "")
+
+    result = send_contact_request_result(
+        name="Lars",
+        work_email="lars@verisight.nl",
+        organization="Verisight",
+        employee_count="200-500",
+        current_question="Hoe werkt dit?",
+    )
+
+    assert result.ok is False
+    assert result.reason == "missing_contact_email"
