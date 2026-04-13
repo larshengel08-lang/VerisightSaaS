@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from backend.models import Campaign, Organization, OrganizationSecret, Respondent, SurveyResponse
+from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
 from backend.scoring import ORG_FACTOR_KEYS
 
 
@@ -125,6 +125,25 @@ def test_survey_submit_persists_response_and_marks_respondent_complete(client, d
     assert stored.exit_reason_code == "P3"
 
 
+def test_survey_submit_rejects_duplicate_submission(client, db_session: Session):
+    org = _create_org(db_session)
+    campaign = _create_campaign(db_session, org)
+    respondent = _create_respondent(db_session, campaign, completed=True)
+    _create_response(db_session, respondent, risk_score=6.2, risk_band="MIDDEN")
+
+    response = client.post("/survey/submit", json=_survey_payload(respondent.token))
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Survey al ingevuld."
+
+
+def test_survey_submit_rejects_unknown_token(client):
+    response = client.post("/survey/submit", json=_survey_payload("missing-token"))
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Ongeldige token."
+
+
 def test_respondent_import_creates_rows_without_sending_invites(client, db_session: Session):
     org = _create_org(db_session, api_key="import-key")
     campaign = _create_campaign(db_session, org, name="Importcampagne")
@@ -152,6 +171,33 @@ def test_respondent_import_creates_rows_without_sending_invites(client, db_sessi
     assert {row.exit_month for row in rows} == {"2026-03", "2026-02"}
 
 
+def test_respondent_import_dry_run_reports_duplicate_email_without_persisting(client, db_session: Session):
+    org = _create_org(db_session, api_key="duplicate-key")
+    campaign = _create_campaign(db_session, org, name="Dryrun duplicaten")
+    _create_respondent(db_session, campaign, email="a@example.com")
+    csv_content = (
+        "email,department,role_level,exit_month\n"
+        "a@example.com,Operations,specialist,2026-03\n"
+    )
+
+    response = client.post(
+        f"/api/campaigns/{campaign.id}/respondents/import",
+        headers={"x-api-key": "duplicate-key"},
+        data={"dry_run": "true", "send_invites": "false"},
+        files={"upload": ("respondents.csv", io.BytesIO(csv_content.encode("utf-8")), "text/csv")},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["imported"] == 0
+    assert body["invalid_rows"] == 1
+    assert body["errors"][0]["field"] == "email"
+    assert "bestaat al" in body["errors"][0]["message"].lower()
+
+    rows = db_session.query(Respondent).filter(Respondent.campaign_id == campaign.id).all()
+    assert len(rows) == 1
+
+
 def test_campaign_stats_returns_expected_counts_and_distribution(client, db_session: Session):
     org = _create_org(db_session, api_key="stats-key")
     campaign = _create_campaign(db_session, org, name="Statscampagne")
@@ -176,6 +222,24 @@ def test_campaign_stats_returns_expected_counts_and_distribution(client, db_sess
     assert body["completion_rate_pct"] == 66.7
 
 
+def test_campaign_stats_returns_zero_values_for_empty_campaign(client, db_session: Session):
+    org = _create_org(db_session, api_key="empty-stats-key")
+    campaign = _create_campaign(db_session, org, name="Lege campagne")
+
+    response = client.get(
+        f"/api/campaigns/{campaign.id}/stats",
+        headers={"x-api-key": "empty-stats-key"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total_invited"] == 0
+    assert body["total_completed"] == 0
+    assert body["avg_risk_score"] is None
+    assert body["completion_rate_pct"] == 0.0
+    assert body["risk_band_distribution"] == {"HOOG": 0, "MIDDEN": 0, "LAAG": 0}
+
+
 def test_report_route_returns_pdf(client, db_session: Session):
     org = _create_org(db_session, api_key="report-key")
     campaign = _create_campaign(db_session, org, name="Rapportcampagne")
@@ -190,3 +254,39 @@ def test_report_route_returns_pdf(client, db_session: Session):
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/pdf"
     assert response.content.startswith(b"%PDF")
+
+
+def test_report_route_rejects_invalid_api_key(client, db_session: Session):
+    org = _create_org(db_session, api_key="valid-report-key")
+    campaign = _create_campaign(db_session, org, name="Afgeschermd rapport")
+
+    response = client.get(
+        f"/api/campaigns/{campaign.id}/report",
+        headers={"x-api-key": "wrong-key"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Ongeldige API-sleutel."
+
+
+def test_contact_request_persists_when_email_notification_fails(client, db_session: Session, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr("backend.main.send_contact_request", lambda **kwargs: False)
+
+    response = client.post(
+        "/api/contact-request",
+        json={
+            "name": "Lars",
+            "work_email": "lars@verisight.nl",
+            "organization": "Verisight",
+            "employee_count": "200-500",
+            "current_question": "Wij willen weten hoe de baseline werkt.",
+            "website": "",
+        },
+        headers={"x-forwarded-for": "203.0.113.10"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["message"] == "Verstuurd"
+
+    stored = db_session.query(ContactRequest).one()
+    assert stored.notification_sent is False

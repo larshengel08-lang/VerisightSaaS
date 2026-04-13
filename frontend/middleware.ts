@@ -3,9 +3,10 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 // Routes die altijd publiek toegankelijk zijn (geen login vereist)
 const PUBLIC_ROUTES = ['/', '/signup', '/login', '/auth', '/privacy', '/voorwaarden', '/dpa', '/survey']
+const PUBLIC_API_ROUTES = ['/api/contact']
 
 // Eenvoudige in-memory rate limiter voor auth-routes
-// (per deployment instance — voldoende voor MVP, vervang door Redis bij schalen)
+// (per deployment instance - voldoende voor MVP, vervang door Redis bij schalen)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT_WINDOW_MS = 60_000  // 1 minuut
 const RATE_LIMIT_MAX = 10            // max 10 pogingen per minuut
@@ -81,7 +82,7 @@ export async function middleware(request: NextRequest) {
     },
   )
 
-  // Ververs de sessie — NIET verwijderen, nodig voor token refresh
+  // Ververs de sessie - NIET verwijderen, nodig voor token refresh
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -89,15 +90,18 @@ export async function middleware(request: NextRequest) {
   const isPublicRoute = PUBLIC_ROUTES.some(route =>
     pathname === route || pathname.startsWith(route + '/'),
   )
+  const isPublicApiRoute = PUBLIC_API_ROUTES.some(route =>
+    pathname === route || pathname.startsWith(route + '/'),
+  )
 
-  // Niet ingelogd + beveiligde route → login
-  if (!user && !isPublicRoute) {
+  // Niet ingelogd + beveiligde route -> login
+  if (!user && !isPublicRoute && !isPublicApiRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // Ingelogd + login of signup → dashboard
+  // Ingelogd + login of signup -> dashboard
   if (user && (pathname === '/login' || pathname === '/signup')) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from backend.database import Base
-from backend.main import app, get_db
+from backend.main import _contact_request_buckets, app, get_db
 
 
 @pytest.fixture()
@@ -41,6 +41,7 @@ def client(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> Generator[Te
 
     monkeypatch.setattr("backend.main.send_hr_notification", lambda **kwargs: True)
     monkeypatch.setattr("backend.main.send_contact_request", lambda **kwargs: True)
+    _contact_request_buckets.clear()
 
     app.dependency_overrides[get_db] = override_get_db
     try:
@@ -48,3 +49,4 @@ def client(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> Generator[Te
             yield test_client
     finally:
         app.dependency_overrides.clear()
+        _contact_request_buckets.clear()
