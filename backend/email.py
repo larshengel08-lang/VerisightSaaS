@@ -82,7 +82,13 @@ def _sanitize_error_reason(reason: str, *, max_length: int = 240) -> str:
     return normalized[: max_length - 3] + "..."
 
 
-def _send_result(*, to: str, subject: str, html: str) -> EmailSendResult:
+def _send_result(
+    *,
+    to: str,
+    subject: str,
+    html: str,
+    reply_to: str | None = None,
+) -> EmailSendResult:
     """Verstuur een e-mail en geef een diagnostisch resultaat terug."""
     safe_to = _mask_email(to)
     if not to:
@@ -100,12 +106,16 @@ def _send_result(*, to: str, subject: str, html: str) -> EmailSendResult:
         logger.info("E-mail niet verzonden naar %s: RESEND_API_KEY ontbreekt.", safe_to)
         return EmailSendResult(ok=False, reason="missing_resend_api_key")
     try:
-        response = _resend.Emails.send({
+        payload = {
             "from": _EMAIL_FROM,
             "to": [to],
             "subject": subject,
             "html": html,
-        })
+        }
+        if reply_to:
+            payload["reply_to"] = reply_to
+
+        response = _resend.Emails.send(payload)
         if not response:
             logger.warning("E-mailprovider gaf lege respons terug voor %s.", safe_to)
             return EmailSendResult(ok=False, reason="empty_provider_response")
@@ -215,6 +225,7 @@ def send_contact_request_result(
         to=_CONTACT_EMAIL,
         subject=f"Kennismakingsaanvraag Verisight - {organization}",
         html=html,
+        reply_to=work_email,
     )
 
 
