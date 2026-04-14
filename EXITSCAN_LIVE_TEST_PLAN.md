@@ -94,6 +94,17 @@ Uitvoeringsstatus op 14 april 2026:
   - `Plan mijn gesprek` landt op `/#kennismaking`
   - login en dashboard blijven op klein scherm functioneel bereikbaar
 
+Laatste live waarheid na fixdeploy en hercontrole op 14 april 2026:
+
+- Gebruik deze sectie als leidende status boven oudere milestone-notes die nog pre-fix bevindingen kunnen bevatten.
+- `/forgot-password` is live publiek bereikbaar en reageert met `200 OK`.
+- De publieke dashboardpreview verwijst live niet meer naar `dashboard.verisight.nl`, maar naar `verisight.nl/dashboard`.
+- `GET /survey/invalid-test-token` geeft live een nette `404` met de ongeldige-link-state.
+- Een geldige open survey-token opent live weer met `200 OK`.
+- `PDF-rapport` downloadt live succesvol op de dedicated action-safe fixture als ingelogde admin.
+- `Herinnering` rondt live af zonder autorisatiefout en toont op de action-safe fixture een successmelding.
+- De Supabase-RPC `get_org_api_key_for_current_user(uuid)` is live toegepast als onderdeel van deze fixdeploy.
+
 ## 2. Milestones
 
 ### Milestone 0 - Freeze Scope, Testmatrix And Access
