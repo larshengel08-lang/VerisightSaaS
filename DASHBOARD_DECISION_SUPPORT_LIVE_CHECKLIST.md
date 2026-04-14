@@ -15,7 +15,7 @@ Deze checklist borgt de livegang van de dashboard decision-supportaanscherping v
 - [x] Dashboardwijzigingen zijn lokaal gebouwd en getest
 - [x] Dashboardwijzigingen staan op `codex/dashboard-decision-support`
 - [x] Branch is gepusht naar GitHub
-- [ ] `main` bevat deze wijziging nog niet
+- [x] `main` bevat deze wijziging
 - [ ] Productie is nog niet functioneel gevalideerd
 
 ## Pre-Live Checks
@@ -25,21 +25,21 @@ Deze checklist borgt de livegang van de dashboard decision-supportaanscherping v
 - [x] frontend unit tests slagen
 - [x] relevante backend tests slagen
 - [x] feature branch bevat alleen het dashboard decision-supportpakket
-- [ ] merge naar `main` uitgevoerd
+- [x] merge naar `main` uitgevoerd
 - [ ] productie-deploy afgerond op Vercel
 
 ## Merge And Deploy
 
-1. [ ] Merge `codex/dashboard-decision-support` naar `main`
-2. [ ] Push `main` naar `origin`
+1. [x] Merge `codex/dashboard-decision-support` naar `main`
+2. [x] Push `main` naar `origin`
 3. [ ] Wacht op automatische Vercel production deploy
-4. [ ] Controleer dat de publieke frontend op productie bereikbaar blijft
+4. [x] Controleer dat de publieke frontend op productie bereikbaar blijft
 
 ## Live Validation
 
 ### 1. Dashboard Overview
 
-- [ ] `/dashboard` opent zonder crash
+- [x] `/dashboard` resolveert zonder serverfout en stuurt unauthenticated netjes door naar `/login`
 - [ ] overzichtscopy stuurt duidelijker naar managementread in plaats van alleen operatie
 - [ ] campaign kaarten voelen compacter en minder generiek
 
@@ -87,6 +87,25 @@ Gebruik een live RetentieScan-campagne met voldoende responses.
 - [ ] screenshot van live RetentieScan campaign hero
 - [ ] korte notitie per product: klopt de eerste managementread inhoudelijk?
 - [ ] korte notitie: klopt CTA-hiërarchie inhoudelijk?
+
+## Uitgevoerde checks op 2026-04-14
+
+- [x] `https://www.verisight.nl/` geeft `200 OK`
+- [x] `https://www.verisight.nl/producten` geeft `200 OK`
+- [x] `https://www.verisight.nl/producten/exitscan` geeft `200 OK`
+- [x] `https://www.verisight.nl/producten/retentiescan` geeft `200 OK`
+- [x] `https://www.verisight.nl/producten/combinatie` geeft `200 OK`
+- [x] `https://www.verisight.nl/login` geeft `200 OK`
+- [x] `https://www.verisight.nl/dashboard` eindigt unauthenticated op `/login`
+- [ ] Live ExitScan-campaign validatie uitgevoerd
+- [ ] Live RetentieScan-campaign validatie uitgevoerd
+
+## Open blockers voor volledige live-validatie
+
+- [ ] Ingelogde productie-sessie ontbreekt in deze werkomgeving
+- [ ] Concrete live campaign-URLs of campaign-ID's voor ExitScan ontbreken
+- [ ] Concrete live campaign-URLs of campaign-ID's voor RetentieScan ontbreken
+- [ ] Daardoor zijn hero-copy, managementread en CTA-hiërarchie op echte live campaign pages nog niet visueel bevestigd
 
 ## Rollback
 
