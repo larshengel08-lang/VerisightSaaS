@@ -38,7 +38,7 @@ export async function POST(request: Request, { params }: Context) {
 
   let apiKey: string
   try {
-    apiKey = await getOrganizationApiKey(campaign.organization_id)
+    apiKey = await getOrganizationApiKey(campaign.organization_id, { supabase })
   } catch {
     return NextResponse.json({ detail: 'Autorisatie voor uitnodigingen ontbreekt.' }, { status: 403 })
   }

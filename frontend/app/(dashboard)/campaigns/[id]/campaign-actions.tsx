@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { resendPendingAction } from './actions'
+import { buildResendResultMessage } from './reminder-feedback'
 
 interface CampaignActionsProps {
   campaignId: string
@@ -64,12 +65,7 @@ export function CampaignActions({ campaignId, isActive, pendingCount, canManageC
       return
     }
 
-    const message =
-      result.sent > 0
-        ? `${result.sent} uitnodiging(en) verstuurd.${result.failed ? ` ${result.failed} mislukt.` : ''}`
-        : 'Geen openstaande respondenten met e-mailadres gevonden.'
-
-    showToast(message)
+    showToast(buildResendResultMessage(result))
     if (result.sent > 0) {
       setTimeout(() => window.location.reload(), 2000)
     }

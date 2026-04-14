@@ -9,6 +9,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getOrganizationApiKey } from '@/lib/organization-secrets'
 import { getBackendApiUrl } from '@/lib/server-env'
+import { formatBackendDetail } from './reminder-feedback'
 
 export interface ResendResult {
   sent: number
@@ -83,7 +84,12 @@ export async function resendPendingAction(campaignId: string): Promise<ResendRes
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}))
-      return { sent: 0, failed: respondents.length, skipped: 0, error: err.detail ?? 'Backend error' }
+      return {
+        sent: 0,
+        failed: respondents.length,
+        skipped: 0,
+        error: formatBackendDetail(err?.detail ?? err),
+      }
     }
 
     const result = await resp.json()
