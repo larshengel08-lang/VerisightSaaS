@@ -58,7 +58,9 @@ Verisight moet overtuigend landen bij HR-beslissers, directie en eerste kopers z
 - Founder-Led Sales Narrative
 
 **Status**
-- huidige actieve focus
+- actief, deels uitgevoerd
+- Management Actionability afgerond op 2026-04-14
+- huidige vervolgfocus: Method And Trust, Trust Signal en Boardroom Readiness
 
 **Exit gate**
 - HR en directie begrijpen sneller wat het product oplevert
