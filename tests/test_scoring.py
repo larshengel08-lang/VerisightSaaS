@@ -25,6 +25,10 @@ from backend.scoring import (
 )
 from backend.products.exit.scoring import build_exit_context_summary, compute_exit_friction
 from backend.products.exit.report_content import get_methodology_payload, get_signal_page_payload
+from backend.products.retention.report_content import (
+    get_methodology_payload as get_retention_methodology_payload,
+    get_signal_page_payload as get_retention_signal_page_payload,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -355,6 +359,29 @@ class TestRetentionSignalProfile:
             stay_intent_score=4.3,
         )
         assert profile == "scherp_aandachtssignaal"
+
+
+class TestRetentionReportContent:
+    def test_retention_methodology_payload_stays_group_level_and_non_predictive(self):
+        payload = get_retention_methodology_payload()
+
+        intro = payload["intro_text"].lower()
+        method = payload["method_text"].lower()
+
+        assert "groepsniveau" in intro
+        assert "brede mto" in intro
+        assert "v1" in method
+        assert "niet als causale voorspelling" in method
+        assert "gelijkgewogen samenvatting" in method
+
+    def test_retention_signal_page_frames_group_signal_not_individual_score(self):
+        payload = get_retention_signal_page_payload(retention_signal_profile="scherp_aandachtssignaal")
+        intro = payload["intro"].lower()
+        profile = payload["signal_profile_text"].lower()
+
+        assert "groepsinformatie" in intro
+        assert "niet als individuele risicoscore" in intro
+        assert "niet als individuele voorspelling" in profile
 
 
 class TestDetectPatterns:

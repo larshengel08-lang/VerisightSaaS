@@ -7,14 +7,14 @@ def get_methodology_payload() -> dict[str, Any]:
     return {
         "intro_text": (
             "Dit rapport is opgebouwd uit verkorte vraagblokken die inhoudelijk zijn geinspireerd door bestaande wetenschappelijke literatuur. "
-            "Het gaat nadrukkelijk niet om volledige schaalafnames of een diagnostisch instrument. "
-            "De uitkomsten zijn bedoeld voor prioritering en gesprek, niet voor een individueel oordeel of harde voorspelling."
+            "Het gaat nadrukkelijk niet om volledige schaalafnames, een brede MTO of een diagnostisch instrument. "
+            "De uitkomsten zijn bedoeld voor prioritering en gesprek op groepsniveau, niet voor een individueel oordeel of harde voorspelling."
         ),
         "method_text": (
             "Elke respondent krijgt een retentiesignaal op een schaal van 1 tot 10. "
             "Een hogere score betekent een sterker groepssignaal dat behoud aandacht vraagt. "
             "De score is indicatief en bedoeld als gespreksinput, niet als causale voorspelling, benchmark of objectief oordeel. "
-            "Voor RetentieScan is dit een gelijkgewogen samenvatting van SDT-werkbeleving en zes beinvloedbare werkfactoren. "
+            "Voor RetentieScan is dit in v1 een gelijkgewogen samenvatting van SDT-werkbeleving en zes beinvloedbare werkfactoren. "
             "Bevlogenheid, vertrekintentie en stay-intent worden daarnaast apart gerapporteerd als aanvullende behoudssignalen."
         ),
         "weight_rows": [
@@ -38,8 +38,8 @@ def get_methodology_payload() -> dict[str, Any]:
 
 def get_signal_page_payload(*, retention_signal_profile: str | None = None) -> dict[str, Any]:
     profile_copy = {
-        "scherp_aandachtssignaal": "De combinatie van retentiesignaal, bevlogenheid, stay-intent en vertrekintentie wijst op een scherp groepssignaal dat behoud nu aandacht vraagt.",
-        "vertrekdenken_zichtbaar": "De uitkomst laat expliciet vertrekdenken zien. Dat vraagt snelle verificatie in combinatie met de laagst scorende werkfactoren en open verbetersignalen.",
+        "scherp_aandachtssignaal": "De combinatie van retentiesignaal, bevlogenheid, stay-intent en vertrekintentie wijst op een scherp groepssignaal dat behoud nu aandacht vraagt. Lees dit niet als individuele voorspelling, maar als prioritering voor verificatie en actie.",
+        "vertrekdenken_zichtbaar": "De uitkomst laat expliciet vertrekdenken op groepsniveau zien. Dat vraagt snelle verificatie in combinatie met de laagst scorende werkfactoren en open verbetersignalen.",
         "vroegsignaal": "De uitkomst wijst op een vroegsignaal: er zijn aandachtspunten zichtbaar, maar nog niet elk signaal hoeft al op direct vertrekdenken te wijzen.",
         "overwegend_stabiel": "Het totaalbeeld oogt overwegend stabiel. Controleer vooral of de laagst scorende werkfactoren en open signalen aansluiten op wat teams nu nodig hebben.",
     }
@@ -47,7 +47,7 @@ def get_signal_page_payload(*, retention_signal_profile: str | None = None) -> d
         "title": "Bevlogenheid, Stay-intent & Vertrekintentie",
         "intro": (
             "Deze pagina laat zien hoe retentiesignaal, bevlogenheid, stay-intent en vertrekintentie zich tot elkaar verhouden. "
-            "Lees dit als groepsinformatie over waar behoud onder druk staat en welke werkfactoren daarbij waarschijnlijk het meest meespelen."
+            "Lees dit als groepsinformatie over waar behoud onder druk staat en welke werkfactoren daarbij waarschijnlijk het meest meespelen, niet als individuele risicoscore."
         ),
         "summary_title": "Behoudssignalen in samenhang",
         "signal_profile_text": profile_copy.get(
@@ -185,5 +185,5 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
 def get_action_playbook_calibration_note() -> str:
     return (
         "Deze playbooks zijn v1-richtlijnen op basis van werkfactoren en signaalpatronen. "
-        "Na de eerste pilotronde ijken we ze op echte RetentieScan-data, zodat prioriteiten en vervolgacties beter aansluiten op wat in de praktijk het meeste effect heeft."
+        "We ijken ze na de eerste pilotronde op echte RetentieScan-data, zodat prioriteiten en vervolgacties beter aansluiten op wat in de praktijk het meeste effect heeft."
     )

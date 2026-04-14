@@ -28,6 +28,8 @@ describe('buildRetentionDashboardViewModel', () => {
       'Gemiddelde stay-intent',
       'Topfactor',
     ])
+    expect(model.signaalbandenText).toContain('groepsniveau')
+    expect(model.profileCards[0]?.title).toBe('Groepsbeeld')
     expect(model.primaryQuestion.body).toContain('werkbelasting')
     expect(model.nextStep.body).toContain('30-90')
     expect(model.managementBlocks).toHaveLength(3)
@@ -55,5 +57,6 @@ describe('buildRetentionDashboardViewModel', () => {
     expect(model.topSummaryCards).toEqual([])
     expect(model.primaryQuestion.title).toBe('Eerste managementvraag')
     expect(model.nextStep.title).toBe('Voorzichtig valideren')
+    expect(model.signaalbandenText).toContain('niet als individuele voorspelling')
   })
 })

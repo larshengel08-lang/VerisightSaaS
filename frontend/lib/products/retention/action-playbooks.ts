@@ -1,7 +1,7 @@
 import type { ActionPlaybook } from '@/lib/products/shared/types'
 
 export const RETENTION_ACTION_PLAYBOOK_CALIBRATION_NOTE =
-  'Deze playbooks zijn v1-richtlijnen op basis van werkfactoren en signaalpatronen. We ijken ze later op echte pilotdata, zodat prioritering en actieroutes beter aansluiten op wat in de praktijk het meeste effect heeft.'
+  'Deze playbooks zijn v1-richtlijnen op basis van werkfactoren en signaalpatronen. We ijken ze na de eerste pilotronde op echte RetentieScan-data, zodat prioritering en actieroutes beter aansluiten op wat in de praktijk het meeste effect heeft.'
 
 export const RETENTION_ACTION_PLAYBOOKS: Record<string, Record<string, ActionPlaybook>> = {
   leadership: {

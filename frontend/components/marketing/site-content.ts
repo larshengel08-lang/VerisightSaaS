@@ -44,7 +44,7 @@ export const homepageProductRoutes = [
   {
     name: 'RetentieScan',
     title: 'Zie eerder waar behoud schuift',
-    body: 'Voor organisaties die eerder willen zien waar behoud onder druk staat in actieve teams, zonder individuele voorspeller te worden.',
+    body: 'Voor organisaties die eerder willen zien waar behoud in actieve teams onder druk staat, zonder er een brede MTO of individuele voorspeller van te maken.',
     href: '/producten/retentiescan',
     accent: 'border-emerald-200 bg-emerald-50',
     chip: 'Vroegsignalering',
@@ -68,7 +68,7 @@ export const homepageComparisonRows = [
   [
     'Je wilt eerder signaleren in actieve teams',
     'RetentieScan',
-    'Retentiesignaal, bevlogenheid en vertrekintentie',
+    'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie',
   ],
   [
     'Je wilt beide sporen naast elkaar gebruiken',
@@ -105,7 +105,7 @@ export const productOverviewComparisonRows = [
   [
     'ExitScan',
     'Vertrekduiding',
-    'Waarom gingen mensen weg en welke werkfactoren keren terug?',
+    'Welk vertrekbeeld keert terug en welke werkfactoren wegen daarin mee?',
     'Voor terugkijkende analyse op uitstroom',
   ],
   [
@@ -132,8 +132,8 @@ export const comparisonCards = [
   {
     title: 'RetentieScan',
     description:
-      'Voor organisaties die eerder willen zien waar behoud onder druk staat, voordat signalen zichtbaar worden in vacatures, uitval of exitgesprekken.',
-    outcome: 'Sterk wanneer de vraag vooruitkijkend is: waar vraagt behoud nu aandacht in de actieve populatie?',
+      'Voor organisaties die eerder willen zien waar behoud op groeps- en segmentniveau onder druk staat, voordat signalen zichtbaar worden in vacatures, uitval of exitgesprekken.',
+    outcome: 'Sterk wanneer de vraag vooruitkijkend is: waar vraagt behoud nu aandacht in de actieve populatie zonder van de scan een brede MTO of voorspeller te maken?',
   },
   {
     title: 'Combinatie',
@@ -179,7 +179,7 @@ export const outcomeCards = [
   ],
   [
     'Combineer signalering met duiding',
-    'Je kunt behoudssignalen volgen zonder van RetentieScan een individuele voorspeller te maken.',
+    'Je kunt behoudssignalen volgen zonder van RetentieScan een brede MTO of individuele voorspeller te maken.',
   ],
   [
     'Geen extra toolbeheer voor HR',
@@ -270,10 +270,10 @@ export const approachRoutes = [
   {
     eyebrow: 'RetentieScan Baseline',
     title: 'De eerste meetvorm voor actieve medewerkers',
-    body: 'Een eenmalige RetentieScan om te zien waar behoud onder druk staat, welke werkfactoren prioriteit vragen en hoe bevlogenheid en vertrekintentie zich verhouden.',
+    body: 'Een eenmalige RetentieScan om te zien waar behoud op groepsniveau onder druk staat, welke werkfactoren prioriteit vragen en hoe bevlogenheid, stay-intent en vertrekintentie zich verhouden.',
     bullets: [
       'Actieve medewerkers in plaats van ex-medewerkers',
-      'Groepsinzichten, geen individuele retention-scores',
+      'Groepsinzichten, geen brede MTO en geen individuele retention-scores',
       'Sterk als startpunt voor gerichte opvolging en herhaalmeting',
     ],
     shellClass: 'border-emerald-200 bg-emerald-50',
@@ -283,10 +283,10 @@ export const approachRoutes = [
   {
     eyebrow: 'RetentieScan ritme',
     title: 'Voor organisaties die periodiek willen volgen',
-    body: 'Herhaalmeting per kwartaal of halfjaar om te zien of retentiesignalen, bevlogenheid en prioritaire werkfactoren verbeteren.',
+    body: 'Herhaalmeting per kwartaal of halfjaar om te zien of retentiesignalen, stay-intent, bevlogenheid en prioritaire werkfactoren verbeteren.',
     bullets: [
       'Compacter vervolg op een baseline',
-      'Geschikt om effect van acties zichtbaar te maken',
+      'Geschikt om effect van acties zichtbaar te maken in dezelfde signaallogica',
       'Blijft groeps- en segmentgericht, niet persoonsgericht',
     ],
     shellClass: 'border-amber-200 bg-amber-50',
@@ -311,9 +311,9 @@ export const pricingCards = [
     eyebrow: 'RetentieScan Baseline',
     price: 'EUR 3.450',
     description:
-      'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding en managementinformatie.',
+      'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.',
     bullets: [
-      'Retentiesignaal, bevlogenheid en vertrekintentie in een rapport',
+      'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in een rapport',
       'Geen individuele retention-scores naar management',
       'Geschikt als basis voor vervolgmeting of gerichte opvolging',
     ],
@@ -379,11 +379,11 @@ export const pricingAddOns = [
 export const pricingFaqs = [
   [
     'Waarom is RetentieScan niet goedkoper dan ExitScan?',
-    'Omdat RetentieScan geen lichtere algemene survey is. Het product vraagt juist scherpere privacykaders, actieve-medewerkersduiding en een eigen managementverhaal.',
+    'Omdat RetentieScan geen lichtere algemene survey of MTO-light is. Het product vraagt juist scherpere privacykaders, actieve-medewerkersduiding en een eigen managementverhaal.',
   ],
   [
     'Is RetentieScan een MTO-vervanger?',
-    'Nee. Het product is smaller en scherper: het richt zich op behoudssignalen, vertrekintentie en beïnvloedbare werkfactoren.',
+    'Nee. Het product is smaller en scherper: het richt zich op behoudssignalen, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
     'Wanneer kies je voor een combinatiepakket?',
@@ -391,7 +391,7 @@ export const pricingFaqs = [
   ],
   [
     'Wat ziet management wel en niet?',
-    'Management ziet groeps- en segmentinzichten. Bij RetentieScan tonen we geen individuele retention-scores of vertrekintentie op persoonsniveau.',
+    'Management ziet groeps- en segmentinzichten. Bij RetentieScan tonen we geen individuele retention-scores, geen vertrekintentie op persoonsniveau en geen performance-oordelen.',
   ],
   [
     'Hoe vaak herhaal je RetentieScan?',
@@ -406,11 +406,11 @@ export const pricingFaqs = [
 export const faqs = [
   [
     'Wat is het verschil tussen ExitScan en RetentieScan?',
-    'ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat bij actieve medewerkers.',
+    'ExitScan helpt vertrek achteraf duiden op basis van terugkerende werkfactoren, vertrekredenen en werksignalen. RetentieScan helpt eerder zien waar behoud op groepsniveau onder druk staat bij actieve medewerkers.',
   ],
   [
     'Is RetentieScan gewoon een MTO?',
-    'Nee. RetentieScan is smaller en scherper gepositioneerd: het richt zich op retentiesignalen, stay-intent, vertrekintentie en beïnvloedbare werkfactoren.',
+    'Nee. RetentieScan is smaller en scherper gepositioneerd: het richt zich op retentiesignalen, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
     'Wanneer kies je voor de combinatie?',
@@ -418,7 +418,7 @@ export const faqs = [
   ],
   [
     'Ziet management individuele retention-scores?',
-    'Nee. RetentieScan is bedoeld voor groeps- en segmentinzichten, niet voor beoordeling of voorspelling op persoonsniveau.',
+    'Nee. RetentieScan is bedoeld voor groeps- en segmentinzichten, niet voor beoordeling, performance-sturing of voorspelling op persoonsniveau.',
   ],
   [
     'Is RetentieScan een gevalideerde vertrekvoorspeller?',
