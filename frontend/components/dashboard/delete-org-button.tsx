@@ -13,11 +13,12 @@ export function DeleteOrgButton({ orgId, orgName, campaignCount }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   async function handleDelete() {
     const warning = campaignCount > 0
-      ? `Weet je zeker dat je ${orgName} wilt verwijderen? Dit verwijdert ook ${campaignCount} campaign(s), alle respondenten, uitnodigingen en dashboardtoegang.`
-      : `Weet je zeker dat je ${orgName} wilt verwijderen?`
+      ? `Weet je zeker dat je ${orgName} wilt verwijderen?\n\nDit verwijdert ook ${campaignCount} campaign(s), alle respondenten, uitnodigingen en dashboardtoegang.\n\nDeze actie kan niet ongedaan worden gemaakt.`
+      : `Weet je zeker dat je ${orgName} wilt verwijderen?\n\nDeze actie kan niet ongedaan worden gemaakt.`
 
     if (!window.confirm(warning)) {
       return
@@ -25,6 +26,7 @@ export function DeleteOrgButton({ orgId, orgName, campaignCount }: Props) {
 
     setLoading(true)
     setError(null)
+    setSuccess(null)
 
     try {
       const response = await fetch(`/api/organizations/${orgId}`, { method: 'DELETE' })
@@ -35,7 +37,10 @@ export function DeleteOrgButton({ orgId, orgName, campaignCount }: Props) {
         return
       }
 
-      router.refresh()
+      setSuccess(json.message ?? `Organisatie ${orgName} is verwijderd.`)
+      setTimeout(() => {
+        router.refresh()
+      }, 900)
     } catch {
       setError('Verbindingsfout tijdens verwijderen.')
     } finally {
@@ -53,6 +58,7 @@ export function DeleteOrgButton({ orgId, orgName, campaignCount }: Props) {
       >
         {loading ? 'Verwijderen...' : 'Verwijderen'}
       </button>
+      {success && <p className="max-w-64 text-right text-xs text-emerald-700">{success}</p>}
       {error && <p className="max-w-52 text-right text-xs text-red-600">{error}</p>}
     </div>
   )
