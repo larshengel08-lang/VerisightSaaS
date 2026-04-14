@@ -23,6 +23,9 @@ const FACTOR_ACTION_HINTS: Record<string, string> = {
   role_clarity: 'Breng prioriteiten en rolafspraken terug tot een helder werkdocument per team of rol.',
 }
 
+const SIGNAL_BANDS_TEXT =
+  'Laag, verhoogd en sterk aandachtssignaal laten zien hoe breed en hoe scherp behoudssignalen zich in de groep verdelen. Gebruik deze banding voor prioritering en verificatie op groepsniveau, niet als individuele voorspelling.'
+
 function deriveSignalProfile(
   riskScore: number | null,
   engagement: number | null,
@@ -69,46 +72,46 @@ function buildProfileCards(args: {
 
   if (turnoverHigh && stayLow && (signalHigh || engagementLow)) {
     profiles.push({
-      title: 'Risicoprofiel',
+      title: 'Groepsbeeld',
       value: 'Acuut behoudssignaal',
-      body: 'Hoge vertrekintentie en lage stay-intent vallen samen met werkfactoren of bevlogenheid die onder druk staan. Dit vraagt snelle verificatie en gerichte opvolging.',
+      body: 'Hoge vertrekintentie en lage stay-intent vallen samen met werkfactoren of bevlogenheid die onder druk staan. Lees dit als scherp groepssignaal dat snelle verificatie en gerichte opvolging vraagt.',
       tone: 'amber',
     })
   } else if (signalHigh && !turnoverHigh && stayLow) {
     profiles.push({
-      title: 'Risicoprofiel',
+      title: 'Groepsbeeld',
       value: 'Stille behoudsdruk',
-      body: 'De werkfactoren geven al duidelijk spanning, terwijl expliciet vertrekdenken nog minder zichtbaar is. Dit is typisch een vroegsignaal dat snel prioritering vraagt.',
+      body: 'De werkfactoren geven al duidelijk spanning, terwijl expliciet vertrekdenken nog minder zichtbaar is. Dit is typisch een vroegsignaal op groepsniveau dat snelle prioritering vraagt.',
       tone: 'blue',
     })
   } else if (engagementLow && !turnoverHigh && !stayLow) {
     profiles.push({
-      title: 'Risicoprofiel',
+      title: 'Groepsbeeld',
       value: 'Vermoeid maar nog verbonden',
       body: 'De energie staat onder druk, maar stay-intent en vertrekintentie wijzen nog niet op acute uitstroom. Hier ligt de meeste winst vaak in herstel, werkdruk en prioriteiten.',
       tone: 'blue',
     })
   } else if (signalLow && !engagementLow && !turnoverHigh && !stayLow) {
     profiles.push({
-      title: 'Risicoprofiel',
+      title: 'Groepsbeeld',
       value: 'Overwegend stabiel',
-      body: 'De combinatie van werkfactoren en behoudssignalen oogt gezond. Blijf vooral de laagst scorende factoren monitoren en leg vast wat je wilt behouden.',
+      body: 'De combinatie van werkfactoren en behoudssignalen oogt op groepsniveau gezond. Blijf vooral de laagst scorende factoren monitoren en leg vast wat je wilt behouden.',
       tone: 'emerald',
     })
   } else {
     profiles.push({
-      title: 'Risicoprofiel',
+      title: 'Groepsbeeld',
       value: 'Gemengd beeld',
-      body: 'De signalen wijzen niet allemaal dezelfde kant op. Dat maakt segmentvergelijking en verificatie belangrijker dan snelle conclusies.',
+      body: 'De signalen wijzen niet allemaal dezelfde kant op. Dat maakt segmentvergelijking en verificatie belangrijker dan snelle conclusies of te snelle causaliteit.',
       tone: 'blue',
     })
   }
 
   if (signalHigh && engagementLow) {
     profiles.push({
-      title: 'Aanvullend profiel',
+      title: 'Aanvullend signaal',
       value: 'Werkbeleving onder druk',
-      body: 'Lage bevlogenheid in combinatie met hogere werkfrictie maakt de kans groter dat teams afhaken voordat dat in expliciete vertrekintentie zichtbaar wordt.',
+      body: 'Lage bevlogenheid in combinatie met hogere werkfrictie vergroot de kans dat teams afhaken voordat dat in expliciete vertrekintentie zichtbaar wordt. Gebruik dit als extra verificatiespoor, niet als voorspelling.',
       tone: 'amber',
     })
   }
@@ -149,8 +152,7 @@ export function buildRetentionDashboardViewModel(args: {
 
   if (!args.hasMinDisplay) {
     return {
-      signaalbandenText:
-        'Laag, verhoogd en sterk aandachtssignaal laten zien hoeveel verificatie en opvolging een patroon vraagt. Ze helpen HR en MT bepalen wat eerst besproken of verdiept moet worden.',
+      signaalbandenText: SIGNAL_BANDS_TEXT,
       topSummaryCards: [],
       managementBlocks: [],
       profileCards: [],
@@ -177,8 +179,7 @@ export function buildRetentionDashboardViewModel(args: {
 
   if (!args.hasEnoughData) {
     return {
-      signaalbandenText:
-        'Laag, verhoogd en sterk aandachtssignaal laten zien hoeveel verificatie en opvolging een patroon vraagt. Ze helpen HR en MT bepalen wat eerst besproken of verdiept moet worden.',
+      signaalbandenText: SIGNAL_BANDS_TEXT,
       topSummaryCards: [],
       managementBlocks: [],
       profileCards: [],
@@ -233,8 +234,7 @@ export function buildRetentionDashboardViewModel(args: {
   )
 
   return {
-    signaalbandenText:
-      'Laag, verhoogd en sterk aandachtssignaal laten zien hoeveel verificatie en opvolging een patroon vraagt. Ze helpen HR en MT bepalen wat eerst besproken of verdiept moet worden.',
+    signaalbandenText: SIGNAL_BANDS_TEXT,
     topSummaryCards: [
       {
         title: 'Gemiddelde vertrekintentie',
@@ -251,7 +251,7 @@ export function buildRetentionDashboardViewModel(args: {
       {
         title: 'Topfactor',
         value: topFactorLabels[0] ?? 'Nog geen topfactor',
-        body: 'Gebruik de laagst scorende werkfactor als eerste verificatiespoor. Daarna pas bepaal je of het patroon om snelle opvolging of verdere duiding vraagt.',
+        body: 'Gebruik de laagst scorende werkfactor als eerste verificatiespoor. Daarna pas bepaal je of het patroon om snelle opvolging of verdere duiding op groepsniveau vraagt.',
         tone: signalProfile === 'scherp_aandachtssignaal' ? 'amber' : 'blue',
       },
     ],

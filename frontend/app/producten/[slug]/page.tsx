@@ -283,11 +283,11 @@ function RetentionScanPage() {
     <MarketingPageShell
       eyebrow="RetentieScan"
       title="Zie eerder waar behoud onder druk staat."
-      description="RetentieScan helpt organisaties om retentiesignalen en beïnvloedbare werkfactoren eerder zichtbaar te maken, met dashboard en rapport in dezelfde professionele Verisight-structuur."
+      description="RetentieScan helpt organisaties om op groeps- en segmentniveau eerder zichtbaar te maken waar behoud onder druk staat, met dashboard en rapport in dezelfde professionele Verisight-structuur. Geen brede MTO en geen individuele voorspeller."
       theme="retention"
       highlightItems={['Vroegsignalering', 'Groepsniveau', 'Behoudssignalen']}
       contextTitle="Een product voor organisaties die eerder willen zien waar behoud begint te schuiven."
-      contextBody="RetentieScan is geen individuele voorspeller, maar een managementroute die zichtbaar maakt waar retentiesignalen, bevlogenheid en vertrekintentie nu aandacht vragen."
+      contextBody="RetentieScan is geen brede tevredenheidsmeting en geen individuele voorspeller, maar een managementroute die zichtbaar maakt waar retentiesignalen, stay-intent, bevlogenheid en vertrekintentie nu aandacht vragen."
     >
       <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
         <div className="marketing-panel-soft p-8">
@@ -296,13 +296,13 @@ function RetentionScanPage() {
             ExitScan kijkt terug. RetentieScan kijkt eerder vooruit.
           </h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Waar ExitScan helpt begrijpen waarom mensen gingen, helpt RetentieScan om eerder te zien waar behoud onder druk staat. Zo kan HR eerder prioriteren op de werkfactoren die nog beïnvloedbaar zijn.
+            Waar ExitScan helpt begrijpen waarom mensen gingen, helpt RetentieScan om eerder te zien waar behoud op groepsniveau onder druk staat. Zo kan HR eerder prioriteren op de werkfactoren die nog beïnvloedbaar zijn, zonder van de scan een brede MTO of voorspelproduct te maken.
           </p>
           <div className="mt-8 grid gap-3">
             {[
               'Vroegtijdig zien waar behoud onder druk staat',
               'Managementinformatie over beïnvloedbare werkfactoren',
-              'Geen individuele risicoscores naar management',
+              'Geen individuele risicoscores of performance-oordelen naar management',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-emerald-100 bg-white px-4 py-4 text-sm leading-7 text-slate-700">
                 {item}
@@ -313,9 +313,9 @@ function RetentionScanPage() {
 
         <div className="marketing-panel p-8">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Wat je krijgt</p>
-          <h2 className="mt-4 text-3xl font-semibold text-slate-950">Een vroegsignaal dat bruikbaar is voor management.</h2>
+          <h2 className="mt-4 text-3xl font-semibold text-slate-950">Een vroegsignaal dat bestuurlijk bruikbaar is.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Geen individuele risicovoorspelling, maar een groepsweergave van retentiesignalen, bevlogenheid, vertrekintentie en de factoren die behoud waarschijnlijk het meest beïnvloeden.
+            Geen individuele risicovoorspelling en geen brede tevredenheidsmeting, maar een groepsweergave van retentiesignalen, stay-intent, bevlogenheid, vertrekintentie en de factoren die behoud waarschijnlijk het meest beïnvloeden.
           </p>
           <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             <PreviewSlider variant="retention" />
@@ -331,11 +331,11 @@ function RetentionScanPage() {
           },
           {
             title: 'Focus op beïnvloedbare factoren',
-            text: 'De scan kijkt niet alleen naar sentiment, maar naar leiderschap, cultuur, groei, werkbelasting, rolhelderheid en SDT-werkbeleving.',
+            text: 'De scan kijkt niet alleen naar sentiment, maar naar leiderschap, cultuur, groei, werkbelasting, rolhelderheid en SDT-werkbeleving als beïnvloedbare werkfactoren.',
           },
           {
             title: 'Gebouwd voor managementactie',
-            text: 'De uitkomst is geen losse survey-export, maar een gedeelde taal voor HR, MT en directie over waar retentie nu aandacht vraagt.',
+            text: 'De uitkomst is geen losse survey-export, brede MTO of persoonsrisicoscore, maar een gedeelde taal voor HR, MT en directie over waar retentie nu aandacht vraagt.',
           },
         ].map((card) => (
           <div key={card.title} className="rounded-[1.75rem] border border-emerald-100 bg-emerald-50 p-7">
@@ -352,8 +352,8 @@ function RetentionScanPage() {
           <div className="mt-8 space-y-3">
             {[
               'Retentiesignaal op groeps- en segmentniveau',
-              'Bevlogenheid, vertrekintentie en beïnvloedbare topfactoren',
-              'Niet bedoeld als performance-instrument of individuele voorspeller',
+              'Stay-intent, bevlogenheid, vertrekintentie en beïnvloedbare topfactoren',
+              'Niet bedoeld als performance-instrument, brede MTO of individuele voorspeller',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200">
                 {item}
@@ -367,8 +367,8 @@ function RetentionScanPage() {
           rows={[
             ['Hoofdvraag', 'Waar staat behoud nu onder druk in de actieve populatie?'],
             ['Leesrichting', 'Vroegsignalering op groeps- en segmentniveau'],
-            ['Managementoutput', 'Retentiesignaal, bevlogenheid, vertrekintentie en topfactoren'],
-            ['Niet bedoeld als', 'Persoonsgerichte voorspeller of performance-instrument'],
+            ['Managementoutput', 'Retentiesignaal, stay-intent, bevlogenheid, vertrekintentie en topfactoren'],
+            ['Niet bedoeld als', 'Persoonsgerichte voorspeller, brede MTO of performance-instrument'],
           ]}
         />
       </div>
@@ -377,7 +377,7 @@ function RetentionScanPage() {
         className="mt-16"
         eyebrow="Combinatie met ExitScan"
         title="Samen vormen ze een logisch portfolio."
-        body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen geven ze een scherper beeld van zowel achteraf duiden als vooruit kijken, zonder dat RetentieScan een diagnose- of voorspelproduct hoeft te worden."
+        body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen geven ze een scherper beeld van zowel achteraf duiden als vooruit kijken, zonder dat RetentieScan een diagnose-, MTO- of voorspelproduct hoeft te worden."
         primaryHref="/#kennismaking"
         primaryLabel="Plan mijn gesprek"
         secondaryHref="/producten/combinatie"
