@@ -3,6 +3,77 @@ from __future__ import annotations
 from typing import Any
 
 
+def get_management_summary_payload(
+    *,
+    top_factor_labels: list[str],
+    retention_signal_profile: str | None,
+    avg_engagement: float | None,
+    avg_turnover_intention: float | None,
+    avg_stay_intent: float | None,
+    retention_theme_title: str | None,
+) -> dict[str, Any]:
+    top_factor_text = " en ".join(label.lower() for label in top_factor_labels[:2]) if top_factor_labels else "de laagst scorende werkfactoren"
+
+    if retention_signal_profile == "scherp_aandachtssignaal":
+        group_body = (
+            f"Meerdere behoudssignalen wijzen dezelfde kant op. De scherpste managementduiding zit nu vooral in {top_factor_text}, "
+            "in combinatie met aanvullende signalen die snelle verificatie vragen."
+        )
+    elif retention_signal_profile == "vertrekdenken_zichtbaar":
+        group_body = (
+            f"Expliciet vertrekdenken is zichtbaar op groepsniveau. Gebruik {top_factor_text} als eerste verificatiespoor om te bepalen waar behoud nu het meest onder druk staat."
+        )
+    elif retention_signal_profile == "overwegend_stabiel":
+        group_body = (
+            f"Het totaalbeeld oogt overwegend stabiel, maar {top_factor_text} bepalen nog steeds waar management de meeste winst kan boeken."
+        )
+    else:
+        group_body = (
+            f"Er is een vroegsignaal zichtbaar: nog geen breed crisisbeeld, maar wel genoeg reden om {top_factor_text} eerst te valideren."
+        )
+
+    metrics = []
+    if avg_turnover_intention is not None:
+        metrics.append(f"vertrekintentie {avg_turnover_intention:.1f}/10")
+    if avg_stay_intent is not None:
+        metrics.append(f"stay-intent {avg_stay_intent:.1f}/10")
+    if avg_engagement is not None:
+        metrics.append(f"bevlogenheid {avg_engagement:.1f}/10")
+    metric_text = ", ".join(metrics) if metrics else "de aanvullende behoudssignalen"
+
+    verification_body = (
+        f"Toets eerst hoe {top_factor_text} samenhangen met {metric_text}. "
+        "Gebruik segmenten en open signalen daarna pas als gecontroleerde verdieping."
+    )
+    if retention_theme_title:
+        verification_body += f" In open antwoorden komt {retention_theme_title.lower()} nu het vaakst terug."
+
+    next_step = (
+        f"Gebruik {top_factor_text} als eerste managementspoor en koppel daar één verificatiegesprek en één 30-90 dagenactie aan. "
+        "Zo blijft RetentieScan een route van signalering naar gerichte opvolging."
+    )
+
+    return {
+        "section_title": "Managementsamenvatting",
+        "distribution_title": "Verdeling van behoudssignalen",
+        "findings_title": "Scherpste managementlezing",
+        "cards": [
+            {
+                "title": "Groepsbeeld nu",
+                "body": group_body,
+            },
+            {
+                "title": "Eerste verificatiespoor",
+                "body": verification_body,
+            },
+            {
+                "title": "Eerste logische stap",
+                "body": next_step,
+            },
+        ],
+    }
+
+
 def get_methodology_payload() -> dict[str, Any]:
     return {
         "intro_text": (
@@ -50,10 +121,64 @@ def get_signal_page_payload(*, retention_signal_profile: str | None = None) -> d
             "Lees dit als groepsinformatie over waar behoud onder druk staat en welke werkfactoren nu als eerste verificatie vragen, niet als individuele beoordeling of voorspelling."
         ),
         "summary_title": "Behoudssignalen in samenhang",
+        "signal_profile_title": "Hoe lees je deze combinatie?",
         "signal_profile_text": profile_copy.get(
             retention_signal_profile,
             "Lees deze combinatie als groepssignaal: werkfactoren laten zien waar aandacht nodig is, bevlogenheid, stay-intent en vertrekintentie helpen bepalen hoe scherp het aandachtspunt is.",
         ),
+    }
+
+
+def get_hypotheses_payload() -> dict[str, str]:
+    return {
+        "section_title": "Werkhypothesen",
+        "intro_text": (
+            "Onderstaande hypothesen zijn afgeleid van werkfactoren, behoudssignalen en open verbetersignalen. "
+            "Ze helpen bepalen wat eerst geverifieerd moet worden voordat je acties opschaalt."
+        ),
+    }
+
+
+def get_next_steps_payload(*, top_focus_labels: list[str]) -> dict[str, Any]:
+    focus_text = " en ".join(top_focus_labels) if top_focus_labels else "de scherpste werkfactoren"
+    return {
+        "section_title": "Vervolgstappen",
+        "intro_text": (
+            "Gebruik RetentieScan eerst om scherp te prioriteren en te verifiëren. Pas daarna schaal je acties op of trek je bredere conclusies over behoud."
+        ),
+        "steps": [
+            {
+                "number": "1",
+                "title": "Valideer binnen 2 weken het groepsbeeld",
+                "body": (
+                    f"Bespreek het rapport met HR en betrokken leidinggevenden en gebruik {focus_text} als eerste verificatiespoor. "
+                    "Toets vooral of het signaal breed speelt of geconcentreerd zit in enkele teams of rollen."
+                ),
+            },
+            {
+                "number": "2",
+                "title": "Koppel elk aandachtspunt aan een eigenaar",
+                "body": (
+                    "Wijs per thema één eigenaar aan voor verificatie en opvolging. "
+                    "Zo voorkom je dat RetentieScan blijft hangen in observatie zonder vervolg."
+                ),
+            },
+            {
+                "number": "3",
+                "title": "Vertaal verificatie naar maximaal 3 gerichte acties",
+                "body": (
+                    "Kies alleen acties die logisch volgen uit het groepsbeeld, de topfactoren en de aanvullende behoudssignalen. "
+                    "Voorkom dat open antwoorden of segmenten de hoofdlijn gaan overschrijven."
+                ),
+            },
+            {
+                "number": "4",
+                "title": "Plan direct een evaluatie- of vervolgmeting",
+                "body": (
+                    "Leg nu al vast wanneer je terugkijkt of acties effect hebben en of retentiesignalen, stay-intent en vertrekintentie verschuiven."
+                ),
+            },
+        ],
     }
 
 

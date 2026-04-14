@@ -4,7 +4,10 @@ from backend.products.retention.definition import SCAN_DEFINITION, get_definitio
 from backend.products.retention.report_content import (
     get_action_playbook_calibration_note,
     get_action_playbooks_payload,
+    get_hypotheses_payload,
+    get_management_summary_payload,
     get_methodology_payload,
+    get_next_steps_payload,
     get_signal_page_payload,
 )
 from backend.products.retention.scoring import (
@@ -25,7 +28,10 @@ __all__ = [
     "get_action_playbook_calibration_note",
     "get_action_playbooks_payload",
     "get_definition",
+    "get_hypotheses_payload",
+    "get_management_summary_payload",
     "get_methodology_payload",
+    "get_next_steps_payload",
     "get_signal_page_payload",
     "score_submission",
     "scan_type",

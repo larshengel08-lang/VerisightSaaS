@@ -548,6 +548,36 @@ def _cluster_retention_open_signals(quotes: list[str], max_themes: int = 3) -> l
     return themes[:max_themes]
 
 
+def _append_report_cards(
+    story: list,
+    cards: list[dict[str, str]],
+    *,
+    content_width: float,
+) -> None:
+    if not cards:
+        return
+
+    for card in cards:
+        table = Table(
+            [
+                [Paragraph(f"<b>{card['title']}</b>", STYLES["body_bold"])],
+                [Paragraph(card["body"], STYLES["body"])],
+            ],
+            colWidths=[content_width],
+        )
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EFF6FF")),
+            ("BACKGROUND", (0, 1), (-1, -1), WHITE),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("LEFTPADDING", (0, 0), (-1, -1), 10),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+        ]))
+        story.append(table)
+        story.append(Spacer(1, 0.2 * cm))
+
+
 def _build_retention_action_hypotheses(
     *,
     top_risks: list[tuple[str, float]],
@@ -1177,6 +1207,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     _mode_lbl = "Live" if _mode == "live" else "Baseline"
     scan_lbl  = f"ExitScan {_mode_lbl}" if camp.scan_type == "exit" else "RetentieScan"
     scan_meta = get_scan_definition(camp.scan_type)
+    product_module = get_product_module(camp.scan_type)
     signal_label = scan_meta["signal_label"]
     signal_label_lower = scan_meta["signal_short_label"]
     is_retention = camp.scan_type == "retention"
@@ -1254,6 +1285,29 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             if response.open_text_raw and response.open_text_raw.strip()
         ]
     ) if is_retention else []
+    top_factor_labels = [FACTOR_LABELS_NL.get(factor, factor) for factor, _ in top_risks[:2]]
+    top_exit_reason_label = (
+        pattern.get("top_exit_reasons", [{}])[0].get("label")
+        if has_pattern and pattern.get("top_exit_reasons")
+        else None
+    )
+    top_contributing_reason_label = (
+        pattern.get("top_contributing_reasons", [{}])[0].get("label")
+        if has_pattern and pattern.get("top_contributing_reasons")
+        else None
+    )
+    signal_visibility_average = None
+    if not is_retention:
+        signal_visibility_scores = [
+            summary.get("signal_visibility_score")
+            for summary in (
+                ((r.full_result or {}).get("exit_context_summary") or {})
+                for r in responses
+            )
+            if isinstance(summary.get("signal_visibility_score"), (int, float))
+        ]
+        if signal_visibility_scores:
+            signal_visibility_average = sum(signal_visibility_scores) / len(signal_visibility_scores)
     retention_hypotheses = _build_retention_action_hypotheses(
         top_risks=top_risks,
         retention_signal_profile=retention_signal_profile,
@@ -1264,11 +1318,11 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     ) if is_retention and has_pattern else []
     retention_playbooks = _build_retention_playbook_rows(
         top_risks=top_risks,
-        playbooks=get_product_module(camp.scan_type).get_action_playbooks_payload(),
-    ) if is_retention and has_pattern and hasattr(get_product_module(camp.scan_type), "get_action_playbooks_payload") else []
+        playbooks=product_module.get_action_playbooks_payload(),
+    ) if is_retention and has_pattern and hasattr(product_module, "get_action_playbooks_payload") else []
     retention_playbook_calibration_note = (
-        get_product_module(camp.scan_type).get_action_playbook_calibration_note()
-        if is_retention and hasattr(get_product_module(camp.scan_type), "get_action_playbook_calibration_note")
+        product_module.get_action_playbook_calibration_note()
+        if is_retention and hasattr(product_module, "get_action_playbook_calibration_note")
         else None
     )
     previous_avg_risk: float | None = None
@@ -1324,11 +1378,27 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         _build_retention_segment_playbook_rows(
             responses=responses,
             org_avg_risk=avg_risk,
-            playbooks=get_product_module(camp.scan_type).get_action_playbooks_payload(),
+            playbooks=product_module.get_action_playbooks_payload(),
         )
-        if is_retention and has_segment_deep_dive and has_pattern and hasattr(get_product_module(camp.scan_type), "get_action_playbooks_payload")
+        if is_retention and has_segment_deep_dive and has_pattern and hasattr(product_module, "get_action_playbooks_payload")
         else []
     )
+    management_summary_payload = product_module.get_management_summary_payload(
+        top_factor_labels=top_factor_labels,
+        top_exit_reason_label=top_exit_reason_label,
+        top_contributing_reason_label=top_contributing_reason_label,
+        strong_work_signal_pct=strong_work_signal_pct,
+        signal_visibility_average=signal_visibility_average,
+    ) if not is_retention else product_module.get_management_summary_payload(
+        top_factor_labels=top_factor_labels,
+        retention_signal_profile=retention_signal_profile,
+        avg_engagement=avg_engagement,
+        avg_turnover_intention=avg_turnover_intention,
+        avg_stay_intent=avg_stay_intent,
+        retention_theme_title=retention_themes[0]["title"] if retention_themes else None,
+    )
+    hypotheses_payload = product_module.get_hypotheses_payload()
+    next_steps_payload = product_module.get_next_steps_payload(top_focus_labels=top_factor_labels)
 
     # Replacement cost totaal (exit only)
     total_cost = sum(
@@ -1517,7 +1587,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     # PAGINA 2 — MANAGEMENT SUMMARY                                        #
     # ==================================================================== #
 
-    story.append(Paragraph("Management Summary", STYLES["section_title"]))
+    story.append(Paragraph(management_summary_payload["section_title"], STYLES["section_title"]))
     story.append(Spacer(1, 0.3 * cm))
 
     # Inleiding
@@ -1572,7 +1642,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         story.append(Spacer(1, 0.3 * cm))
 
     # Risicodistributie tabel
-    story.append(Paragraph("Verdeling signaalbanden", STYLES["sub_title"]))
+    story.append(Paragraph(management_summary_payload["distribution_title"], STYLES["sub_title"]))
     dist_data = [
         ["Signaalband", "Aantal", "Percentage"],
         ["Hoog signaal (7–10)", str(band_counts["HOOG"]),  f"{band_counts['HOOG']  / max(n_completed,1) * 100:.0f}%"],
@@ -1602,7 +1672,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(Spacer(1, 0.5 * cm))
 
     # Sleutelbevindingen
-    story.append(Paragraph("Sleutelbevindingen", STYLES["sub_title"]))
+    story.append(Paragraph(management_summary_payload["findings_title"], STYLES["sub_title"]))
     findings = []
 
     if has_pattern and top_cluster:
@@ -1655,6 +1725,14 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
     for f in findings:
         story.append(Paragraph(f"• {f}", STYLES["body"]))
+
+    if has_pattern:
+        story.append(Spacer(1, 0.2 * cm))
+        _append_report_cards(
+            story,
+            management_summary_payload.get("cards", []),
+            content_width=content_width,
+        )
 
     story.append(PageBreak())
 
@@ -1959,7 +2037,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     # PAGINA 5 — PATRONEN & VERTREKREDEN / BEVLOGENHEID                   #
     # ==================================================================== #
 
-    signal_page_payload = get_product_module(camp.scan_type).get_signal_page_payload(
+    signal_page_payload = product_module.get_signal_page_payload(
         retention_signal_profile=retention_signal_profile,
     )
     story.append(Paragraph(signal_page_payload["title"], STYLES["section_title"]))
@@ -1969,6 +2047,14 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
     if has_pattern:
         if camp.scan_type == "exit":
+            if signal_page_payload.get("summary_title"):
+                story.append(Paragraph(signal_page_payload["summary_title"], STYLES["sub_title"]))
+            if signal_page_payload.get("signal_profile_title"):
+                story.append(Paragraph(signal_page_payload["signal_profile_title"], STYLES["body_bold"]))
+            if signal_page_payload.get("signal_profile_text"):
+                story.append(Paragraph(signal_page_payload["signal_profile_text"], STYLES["body"]))
+                story.append(Spacer(1, 0.2 * cm))
+
             # Vertrekreden tabel
             top_reasons = pattern.get("top_exit_reasons", [])
             if top_reasons:
@@ -2046,22 +2132,13 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                     story.append(contrib_table)
                     story.append(Spacer(1, 0.3 * cm))
 
-                signal_visibility_scores = [
-                    summary.get("signal_visibility_score")
-                    for summary in (
-                        ((r.full_result or {}).get("exit_context_summary") or {})
-                        for r in responses
-                    )
-                    if isinstance(summary.get("signal_visibility_score"), (int, float))
-                ]
-                if signal_visibility_scores:
-                    avg_signal_visibility = sum(signal_visibility_scores) / len(signal_visibility_scores)
-                    if avg_signal_visibility >= 4:
+                if signal_visibility_average is not None:
+                    if signal_visibility_average >= 4:
                         signal_visibility_text = (
                             "Vertreksignalen waren gemiddeld al redelijk zichtbaar of bespreekbaar. "
                             "Toets daarom vooral waar opvolging of escalatie achterbleef nadat signalen al op tafel lagen."
                         )
-                    elif avg_signal_visibility >= 3:
+                    elif signal_visibility_average >= 3:
                         signal_visibility_text = (
                             "Vertreksignalen waren deels zichtbaar, maar nog niet scherp genoeg opgepakt. "
                             "Gebruik dit om te bepalen waar gesprekken te laat of te impliciet bleven."
@@ -2074,7 +2151,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
                     story.append(Paragraph("Eerdere signalering", STYLES["sub_title"]))
                     story.append(Paragraph(
-                        f"Gemiddeld ligt eerdere signalering op <b>{avg_signal_visibility:.1f} / 5</b>. {signal_visibility_text}",
+                        f"Gemiddeld ligt eerdere signalering op <b>{signal_visibility_average:.1f} / 5</b>. {signal_visibility_text}",
                         STYLES["body"],
                     ))
                     story.append(Spacer(1, 0.3 * cm))
@@ -2235,7 +2312,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                     ))
                 story.append(Spacer(1, 0.2 * cm))
 
-            story.append(Paragraph("Hoe lees je deze combinatie?", STYLES["sub_title"]))
+            story.append(Paragraph(signal_page_payload["signal_profile_title"], STYLES["sub_title"]))
             story.append(Paragraph(
                 signal_page_payload["signal_profile_text"],
                 STYLES["body"],
@@ -2619,15 +2696,9 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         hypotheses = retention_hypotheses
 
     if hypotheses:
-        story.append(Paragraph("Werkhypothesen", STYLES["sub_title"]))
+        story.append(Paragraph(hypotheses_payload["section_title"], STYLES["sub_title"]))
         story.append(Paragraph(
-            (
-                "Onderstaande hypothesen zijn afgeleid van scorepatronen, vertrekredenen en meespelende factoren. "
-                "Ze zijn bedoeld om te valideren in gesprek met HR, leidinggevenden of aanvullende data."
-            ) if camp.scan_type == "exit" else (
-                "Onderstaande hypothesen zijn afgeleid van werkfactoren, behoudssignalen en open verbetersignalen. "
-                "Ze helpen bepalen wat eerst geverifieerd moet worden voordat je acties opschaalt."
-            ),
+            hypotheses_payload["intro_text"],
             STYLES["body"],
         ))
         for item in hypotheses:
@@ -2812,49 +2883,21 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(Spacer(1, 0.3 * cm))
 
     # ── Vervolgstappen ────────────────────────────────────────────────────
-    story.append(Paragraph("Vervolgstappen", STYLES["sub_title"]))
+    story.append(Paragraph(next_steps_payload["section_title"], STYLES["sub_title"]))
+    story.append(Paragraph(next_steps_payload["intro_text"], STYLES["body"]))
 
-    action_steps = [
-        (
-            "1",
-            "Bespreek dit rapport intern — binnen 2 weken",
-            "Deel de bevindingen met het MT en de direct betrokken leidinggevenden. "
-            + (
-                f"Focus het gesprek op <b>{' en '.join(top2_labels)}</b> — "
-                "de gespreksagenda hierboven helpt structuur te geven."
-                if top2_labels else
-                "Gebruik de focusvragen uit dit rapport als gespreksaanzet."
-            ),
-        ),
-        (
-            "2",
-            "Stel per aandachtspunt een eigenaar aan",
-            "Koppel elk thema aan één verantwoordelijke — leidinggevende of HR-adviseur. "
-            "Zonder eigenaar blijft een bevinding een bevinding.",
-        ),
-        (
-            "3",
-            "Bepaal samen wat je gaat doen — maximaal 3 acties",
-            "Wat concreet te doen weet het team zelf het best. "
-            "Beperk je tot maximaal 3 acties tegelijk om focus te houden.",
-        ),
-        (
-            "4",
-            "Stel een evaluatiemoment in — binnen 90 dagen",
-            "Plan nu al wanneer je terugkijkt: zijn de acties uitgevoerd? Zijn er nieuwe signalen? "
-            "Zet het in de agenda voordat dit rapport in de la verdwijnt.",
-        ),
-        (
-            "5",
-            scan_meta["report_repeat_title"],
-            scan_meta["report_repeat_body"],
-        ),
+    action_steps = list(next_steps_payload["steps"]) + [
+        {
+            "number": "5",
+            "title": scan_meta["report_repeat_title"],
+            "body": scan_meta["report_repeat_body"],
+        },
     ]
 
-    for step_num, step_title, step_body in action_steps:
+    for step in action_steps:
         step_data = [[
-            Paragraph(f"<b>{step_num}</b>", ParagraphStyle(
-                f"step_num_{step_num}",
+            Paragraph(f"<b>{step['number']}</b>", ParagraphStyle(
+                f"step_num_{step['number']}",
                 fontName="Helvetica-Bold",
                 fontSize=14,
                 textColor=BRAND,
@@ -2862,8 +2905,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             )),
             Table(
                 [
-                    [Paragraph(f"<b>{step_title}</b>", STYLES["body_bold"])],
-                    [Paragraph(step_body, STYLES["body"])],
+                    [Paragraph(f"<b>{step['title']}</b>", STYLES["body_bold"])],
+                    [Paragraph(step["body"], STYLES["body"])],
                 ],
                 colWidths=[content_width * 0.83],
             ),

@@ -7,9 +7,9 @@ export const exitScanDefinition: ScanDefinition = {
   signalLabelLower: 'frictiescore',
   summaryLabel: 'Sterk werksignaal',
   methodologyText:
-    'ExitScan maakt vertrekduiding bestuurlijk leesbaar. Het product bundelt vertrekredenen, werkfactoren en werksignalen tot een managementbeeld dat helpt prioriteren en doorvragen, zonder oorzaken definitief vast te stellen.',
+    'ExitScan maakt vertrekduiding bestuurlijk leesbaar. Het product bundelt vertrekredenen, meespelende factoren, eerdere signalering en werksignalen tot een managementbeeld dat helpt prioriteren en doorvragen, zonder oorzaken definitief vast te stellen.',
   signalHelp:
-    'Frictieschaal 1-10: hogere score = sterker signaal van ervaren werkfrictie rondom vertrek. Lees deze score altijd samen met vertrekredenen, topfactoren en werksignaal.',
+    'Frictiescore 1-10: hogere score = sterker signaal van ervaren werkfrictie rondom vertrek. Lees deze managementsamenvatting altijd samen met vertrekredenen, topfactoren en werksignaal.',
   reliabilityText:
     'Grafieken en patroonanalyse tonen we pas vanaf minimaal 10 responses. Subgroepvergelijkingen blijven uit beeld bij kleine aantallen om ruis en herleidbaarheid te beperken.',
   segmentText:

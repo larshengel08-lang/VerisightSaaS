@@ -14,6 +14,8 @@ describe('ExitScan positioning copy', () => {
     expect(exitProduct?.description.toLowerCase()).not.toContain('voorspeller')
     expect(exitProduct?.description.toLowerCase()).not.toContain('diagnose')
     expect(exitScanDefinition.methodologyText.toLowerCase()).toContain('zonder oorzaken definitief vast te stellen')
+    expect(exitScanDefinition.methodologyText.toLowerCase()).toContain('eerdere signalering')
+    expect(exitScanDefinition.signalHelp.toLowerCase()).toContain('managementsamenvatting')
   })
 
   it('keeps the portfolio distinction between ExitScan and RetentieScan explicit', () => {
@@ -39,6 +41,8 @@ describe('RetentieScan positioning copy', () => {
     expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('geen brede mto')
     expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('geen individuele voorspeller')
     expect(retentionScanDefinition.signalHelp.toLowerCase()).toContain('samenvattend groepssignaal')
+    expect(retentionScanDefinition.signalHelp.toLowerCase()).toContain('eerst verificatie')
+    expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('aanvullende behoudssignalen')
   })
 
   it('keeps retention faq copy explicit about group insight and non-predictive use', () => {
