@@ -1,118 +1,172 @@
-# Verisight — Roadmap
+# Verisight - Roadmap
 
-*Levend document. Update bij elke faseovergang.*
-*Laatste update: 2026-04-07*
+Levend document. Dit is de strategische source of truth boven de prompt-checklist.
+Laatste update: 2026-04-14
 
----
+## Gebruik
 
-## Fases
+- [PROMPT_CHECKLIST.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_CHECKLIST.xlsx) is de tactische uitvoerqueue.
+- Deze roadmap beschrijft de strategische fases, gates en afhankelijkheden.
+- Externe documenten in [Docs_External](C:/Users/larsh/Desktop/Business/Docs_External) zijn waardevolle referentie, maar mogen geen concurrerende roadmap vormen.
 
-### ✅ Fase 0 — Fundament
-- [x] Strategie, einddoel en MVP uitgewerkt
-- [x] Dashboard gebouwd (Next.js + Supabase)
-- [x] ExitScan survey gebouwd (FastAPI + Jinja2)
-- [x] Multi-tenant architectuur (RLS) ingericht
-- [x] Owner/viewer rolmodel werkend
-- [x] Interne user testing gestart
+## Huidige stand
 
----
+Verisight is voorbij de ruwe MVP-fase. De kern van product, live flows, rapportage en productduiding is aanzienlijk aangescherpt. De grootste open vragen zitten nu minder in "werkt het technisch?" en meer in:
 
-### 🔄 Fase 1 — Stabiliseer (nu)
+- landt de output overtuigend bij HR en directie
+- oogt het product voldoende professioneel en betrouwbaar
+- is de commerciële propositie overdraagbaar zonder live uitleg van Lars
+- zijn trust, claims, onboarding en eerste verkoopstappen strak genoeg voor echte marktbeweging
 
-**Doel:** Iemand buiten Lars kan de volledige flow doorlopen zonder hulp of bugs.
+## Fase A - Product Credibility Foundation
 
-**Tech:**
-- [ ] Alle bugs uit interne testing fixen
-- [ ] Campagnetype-veld toevoegen (`historical` / `live`) aan campaigns-schema
-- [ ] Survey-proxy op localhost:3000 stabiel maken (cookie-forwarding)
-- [ ] Visuele issues oplossen (UI-review)
+**Doel**
+De productbasis moet inhoudelijk kloppen, live werken en geloofwaardig genoeg zijn om commercieel op voort te bouwen.
 
-**Marketing (parallel):**
-- [ ] LinkedIn-gewoonte starten: 1 post/week over HR-uitstroom
-- [ ] Rudimentaire landingspagina (1 pagina, geen CMS nodig)
+**Hoort in deze fase**
+- ExitScan review en live test
+- RetentieScan review en live test
+- RetentieScan product sharpening
+- RetentieScan v1.1 validation
+- dashboard decision support
+- reporting system sharpening
+- report visual and commercial uplift
 
-**Exit-criterium:** volledige flow werkt foutloos voor een externe testpersoon.
+**Status**
+- grotendeels afgerond
 
----
+**Exit gate**
+- claims sluiten aan op de methodiek
+- kernflows werken live
+- rapport en dashboard zijn professioneel genoeg als managementinstrument
 
-### 📋 Fase 2 — Externe pilot (gratis)
+**Wacht expliciet tot later**
+- grote SEO-inzet
+- grootschalige websitepolish los van inhoud
+- portfolio-uitbreiding
 
-**Doel:** Validatie door echte HR-manager bij een echt bedrijf.
+## Fase B - Decision-Maker Readiness
 
-**Aanpak:**
-- 1-2 bedrijven uit netwerk benaderen
-- Geen pitch, geen geld — "mag ik dit bij jullie testen?"
-- Lars doet alles: maillijst ontvangen, campagne aanmaken, rapport opleveren
-- Feedback verzamelen: wat mist? wat klopt niet? wat verrast positief?
+**Doel**
+Verisight moet overtuigend landen bij HR-beslissers, directie en eerste kopers zonder dat betekenis of geloofwaardigheid verloren gaat.
 
-**Deliverable:** werkend rapport + ingevulde feedbackvragen
+**Hoort in deze fase**
+- Management Actionability
+- Method And Trust
+- Trust Signal
+- Boardroom Readiness
+- Founder-Led Sales Narrative
 
-**Exit-criterium:** klant begrijpt de uitkomst zonder toelichting van Lars.
+**Status**
+- huidige actieve focus
 
----
+**Exit gate**
+- HR en directie begrijpen sneller wat het product oplevert
+- trust- en claimsgrenzen zijn helder
+- het verhaal is overtuigend zonder te overclaimen
 
-### 💶 Fase 3 — Eerste betaalde pilot
+**Wacht expliciet tot later**
+- website-redesign als hoofdproject
+- SEO-conversieschaal
+- bredere contentmachine
 
-**Doel:** Betalend bewijs van waarde.
+## Fase C - Commercial Packaging
 
-**Aanpak:**
-- Zelfde werkwijze als fase 2, maar met trajectprijs
-- Trajectprijs vastgesteld: €1.750 (200-400 mw) / €2.250 (400-700 mw) / €2.950 (700-1.000 mw)
-- Maakt het serieus voor beide partijen; dekt tijdsinvestering
-- Gebruik om tijdsinvestering vs. prijs te valideren
+**Doel**
+De propositie, verpakking en ondersteunende assets moeten coherent genoeg zijn om verkoopbaar en herhaalbaar te worden.
 
-**Exit-criterium:** klant betaalt, is tevreden, en zou het aanbevelen.
+**Hoort in deze fase**
+- Product Terminology And Taxonomy
+- Sales Enablement
+- Pricing And Packaging
+- Sample Output And Showcase
 
----
+**Exit gate**
+- producttaal is consistent
+- pricing en packaging zijn begrijpelijk
+- voorbeeldoutput en salesmateriaal ondersteunen hetzelfde verhaal
 
-### ⚙️ Fase 4 — Productize de delivery
+**Wacht expliciet tot later**
+- website-optimalisatie op schaal
+- SEO-programma
 
-**Doel:** Alles wat Lars handmatig deed, zit in het product.
+## Fase D - Website And Funnel System
 
-**Tech:**
-- [ ] Klant kan maillijst uploaden (CSV of integratie)
-- [ ] Automatische survey-uitnodigingen via Resend
-- [ ] Rapport automatisch gegenereerd zonder handmatige stap
-- [ ] Minimale self-service flow voor org-aanmaak en campagnestart
+**Doel**
+De website en funnel moeten de aangescherpte propositie, trustlaag en voorbeeldoutput helder en commercieel overbrengen.
 
-**Exit-criterium:** Lars kan een nieuw bedrijf onboarden in < 30 minuten zonder handmatig werk.
+**Hoort in deze fase**
+- Website Redesign And Flow
+- Customer Journey And Funnel Alignment
+- SEO Conversion Program
 
----
+**Exit gate**
+- website weerspiegelt de aangescherpte product- en trustlaag
+- funnel volgt een duidelijke route van interesse naar gesprek
+- SEO en conversie worden geoptimaliseerd op stabiele messaging
 
-### 🚀 Fase 5 — Self-service SaaS
+**Wacht expliciet tot later**
+- brede content-operating-systemen
+- schaalmarketing zonder eerste commerciële bevestiging
 
-**Doel:** Klant doorloopt volledige onboarding zonder Lars.
+## Fase E - Delivery And Adoption System
 
-**Tech:**
-- [ ] Org self-signup
-- [ ] User-uitnodiging door klant zelf
-- [ ] Stripe-integratie (trajectprijs + live-abonnement)
-- [ ] Live campagne-modus
+**Doel**
+Eerste klanten moeten soepel van akkoord naar intake, campagne, rapportage en opvolging kunnen gaan.
 
-**Marketing:**
-- [ ] SEO-content strategie
-- [ ] Publieke landingspagina met pricing
-- [ ] Inbound leads via content
+**Hoort in deze fase**
+- Client Onboarding And Adoption
+- Implementation Readiness
+- Report To Action
+- Pilot And Early Customer Learning
+- Demo And Sample Environment
 
----
+**Exit gate**
+- nieuwe klanttrajecten zijn uitvoerbaar zonder onnodige improvisatie
+- rapporten leiden tot opvolging en leerloops
+- demo en pilotassets zijn schaalbaar genoeg voor hergebruik
 
-## Technische schuld — bewust uitgesteld
+**Wacht expliciet tot later**
+- zware self-service uitbreiding
+- grote ops-automatisering
 
-| Item | Reden voor uitstel | Wanneer oppakken |
-|------|-------------------|-----------------|
-| Stripe-integratie | Geen betalende klant | Fase 4-5 |
-| Self-service onboarding | Hybride werkt nu | Fase 4 |
-| MTO-module | Scope: ExitScan eerst | Na fase 3 |
-| Onboarding survey | Scope | Na fase 3 |
-| Publieke API | Geen use case nog | SaaS-fase |
+## Fase F - Scale And Operating System
 
----
+**Doel**
+Na eerste tractie moeten commerciële, delivery- en contentprocessen herhaalbaar en schaalbaar worden gemaakt.
 
-## Architectuur — nu bewaken
+**Hoort in deze fase**
+- Ops And Delivery System
+- Case Proof And Evidence
+- Portfolio Architecture
+- Content Operating System
 
-| Principe | Waarom nu al |
-|---------|-------------|
-| Campagnetype-veld (`historical`/`live`) | Pricing-model vereist dit; kleine wijziging nu |
-| Geen hardcoded org IDs | Blokkeert later multi-tenant self-service |
-| Geen admin-only shortcuts in schema | Vereist refactor bij self-service |
-| Billing-anker per campagne (historisch) / per org (live) | Basis voor Stripe-structuur later |
+**Exit gate**
+- herhaalbaar verkoop- en deliveryritme
+- eerste geloofwaardig bewijs en cases
+- portfolio en contentlogica zonder productverwarring
+
+## Externe afhankelijkheden en gates
+
+Deze items bepalen mede de volgorde van het werk en horen niet als losse notities te blijven rondzweven:
+
+- KvK en formele zakelijke basis
+- zakelijke bankrekening en facturatiegereedheid
+- Resend- en domeinverificatie voor betrouwbare maildelivery
+- timing en ruimte naast huidig werk
+- eerste outreach en echte klantgesprekken
+- privacy/security answer pack voor kopers
+- Baseline versus Live commerciële framing
+
+## Wat we nu bewust niet eerst doen
+
+- geen grote website-redesign voor de trust- en packaginglaag scherp staat
+- geen SEO-schaalprogramma voor messaging stabiel is
+- geen self-service of Stripe als eerste focus
+- geen nieuwe productfamilies voor ExitScan en RetentieScan commercieel scherp genoeg staan
+
+## Documentregels
+
+- gebruik de checklist voor "wat nu als eerst?"
+- gebruik deze roadmap voor "waarom in deze fase?"
+- gebruik externe documenten als input of referentie, niet als autonome werkvolgorde

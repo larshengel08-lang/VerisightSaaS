@@ -11,6 +11,12 @@ Gebruik deze indeling:
 - `docs/archive` voor afgeronde review-, validatie- en live-testdocumenten
 - `docs/prompts` voor prompttemplate, promptindex en promptchecklist
 
+Source-of-truth volgorde:
+1. `docs/prompts/PROMPT_CHECKLIST.xlsx`
+2. `docs/strategy/ROADMAP.md`
+3. `docs/strategy/STRATEGY.md`
+4. `Docs_External` als gesynchroniseerde referentie- en assetlaag
+
 ## Active
 
 - [EXITSCAN_PRODUCT_SHARPENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_PRODUCT_SHARPENING_PLAN.md)
@@ -30,6 +36,7 @@ Gebruik deze indeling:
 
 - [ROADMAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP.md)
 - [STRATEGY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/STRATEGY.md)
+- [EXTERNAL_DOCS_ALIGNMENT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/EXTERNAL_DOCS_ALIGNMENT.md)
 
 ## Ops
 
@@ -55,9 +62,16 @@ Gebruik deze indeling:
 - [PROMPT_INDEX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_INDEX.md)
 - [PROMPT_CHECKLIST.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_CHECKLIST.xlsx)
 
+## External Docs
+
+- [Docs_External](C:/Users/larsh/Desktop/Business/Docs_External)
+- [Verisight_Docs](C:/Users/larsh/Desktop/Business/Docs_External/Verisight_Docs)
+- [Verisight Retentiescan](C:/Users/larsh/Desktop/Business/Docs_External/Verisight%20Retentiescan)
+
 ## Praktische regels
 
 - Per traject is er bij voorkeur precies één actief source-of-truth planbestand.
 - Review- en live-testdocumenten verhuizen na afronding naar `docs/archive`.
 - Nieuwe planbestanden horen bij voorkeur in `docs/active` zodra ze echt leidend zijn.
 - Gebruik het prompt-systeem in `docs/prompts` voor nieuwe analyse-, plan- en uitvoeringstrajecten.
+- Gebruik externe documenten als referentie, assetbron of archief, niet als concurrerende roadmap.

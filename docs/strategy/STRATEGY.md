@@ -1,118 +1,124 @@
-# Verisight — Strategie & Beslissingen
+# Verisight - Strategie En Beslissingen
 
-*Levend document. Update bij elke businessbeslissing.*
-*Laatste update: 2026-04-08*
+Levend document. Dit is de strategische samenvatting van wat Verisight nu verkoopt, hoe we het positioneren en welke guardrails gelden.
+Laatste update: 2026-04-14
 
----
+## Wat we nu bouwen en verkopen
 
-## Wat we bouwen
+Verisight is nu geen brede people-suite en ook nog geen self-service SaaS in volle vorm. Verisight is op dit moment een begeleid, productized people-insight aanbod met twee nauw verwante producten:
 
-HR-inzichtenplatform voor MKB. Breed inzetbaar, niet branchespecifiek.
+- **ExitScan**
+  - primaire entreepropositie
+  - terugkijkende vertrekduiding
+  - bedoeld om patronen in vertrek zichtbaar en bestuurbaar te maken
 
-**Eerste module:** ExitScan — uitstroomsurvey uitsturen, uitkomsten consolideren, rapporteren en toelichten.
+- **RetentieScan**
+  - complementair aan ExitScan
+  - vroegsignalering in actieve populaties
+  - bedoeld om behoudsrelevante signalen eerder zichtbaar te maken
 
-**Toekomstige modules:** Onboarding survey, MTO (medewerkerstevredenheid), en meer.
+## Huidige fase
 
----
+Verisight zit nu in een fase tussen productcredibiliteit en commerciële gereedheid:
 
-## Fase
+- de technische en inhoudelijke basis is veel verder dan een ruwe MVP
+- de grootste open vragen zitten nu in verkoopbaarheid, vertrouwen, decision support en eerste echte klantbeweging
 
-**Nu:** Post user testing (intern) / pre-revenue
-**Aanpak:** Route A — eerste klant nú, eerlijke framing (early access). Propositie matcht het product, niet ernaar toe.
+De actieve lijn is daarom:
 
-**Volgende mijlpaal:** Eerste externe pilot → eerste betalende klant
+1. decision-maker readiness
+2. commerciële packaging
+3. website en funnel
+4. delivery en adoption
 
----
+## Source-of-truth hiërarchie
 
-## Doelgroep
+Gebruik deze volgorde als er spanning ontstaat tussen documenten:
 
-**Primair:** Organisaties met 200–1.000 medewerkers met een professionele HR-functie.
+1. [PROMPT_CHECKLIST.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_CHECKLIST.xlsx)
+   - tactische uitvoervolgorde
+2. [ROADMAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP.md)
+   - strategische fasevolgorde en gates
+3. deze strategie
+   - positionering, guardrails en beslissingen
+4. [Docs_External](C:/Users/larsh/Desktop/Business/Docs_External)
+   - referentie, uitwerking, assets, archief of gevoelige operationele context
 
-**Randgeval:** Organisaties van 100–200 medewerkers kunnen deelnemen mits zij aantoonbaar ≥15 exits in de afgelopen 12 maanden verwachten. Verisight bespreekt haalbaarheid actief vóór contractering.
+## Product- en commerciële guardrails
 
-**Reden ondergrens 200:** Bij minder dan ~200 medewerkers zijn er structureel te weinig exits voor een betekenisvolle analyse (n-minimum van 10 is dan moeilijk haalbaar bij realistische responsrates).
+### Claims
 
-**Beslisser:** HR-manager of directeur met HR-verantwoordelijkheid. CFO is medebeslist bij budget.
-**Gebruiker:** HR-manager (operationeel), directie (rapport/debrief).
+Claims mogen commercieel scherp zijn, maar niet onwaar.
 
----
+Wat nu verdedigbaar is:
+- terugkerende patronen zichtbaar maken
+- werkfactoren rond vertrek of behoud bespreekbaar maken
+- management helpen prioriteren waar verder gesprek of validatie nodig is
+- zelfstandig leesbare rapportage met focusvragen, hypothesen en vervolgrichting
 
-## Businessmodel
+Wat nu niet te hard geclaimd mag worden:
+- harde diagnose van waarom iemand vertrekt
+- voorspellen van individueel verloop
+- exact vaststellen wat vermijdbaar was
+- causale zekerheid op basis van één scan of rapport
 
-### Nu — hybride
-- Lars doet setup en uitvoering
-- HR-manager van klant kan resultaten bekijken (viewer-rol)
-- Early access: eerste 1-2 klanten gereduceerde prijs in ruil voor feedback
+### Productvolgorde
 
-### Later — self-service SaaS
-- Klant maakt eigen account en organisatie aan
-- Klant nodigt eigen teamleden uit
-- Klant beheert eigen campagnes
+- ExitScan blijft de primaire entree
+- RetentieScan blijft complementair
+- Baseline versus Live is een belangrijke commerciële structuur, maar geen reden om productverwarring te creëren
 
----
+### Verkoopvorm nu
 
-## Pricing (vastgesteld v1)
+De huidige passende vorm is:
+- begeleid
+- productized
+- professioneel
+- niet overmatig maatwerkgedreven
 
-### Trajectprijs per organisatieomvang
-| Organisatie | Prijs (excl. btw) | Typisch verloop |
-|-------------|-------------------|-----------------|
-| 200–400 mw | €1.750 | ~20–40 exits/jaar |
-| 400–700 mw | €2.250 | ~40–70 exits/jaar |
-| 700–1.000 mw | €2.950 | ~70–100 exits/jaar |
+Nog niet de hoofdvorm:
+- volledig self-service
+- consultancy-intensief traject zonder productkader
 
-**Onderbouwing:**
-- Tijdskost: 4–6 uur per traject × marktconforme tarief ≈ €1.200–€2.400
-- Waardevlak: <15% van gemiddelde vervangingskosten één medewerker (€15k–€25k)
-- Beide ankerpunten convergeren naar bovenstaand tarief per tier
+## Actieve strategische focus
 
-**Add-on:** Live online toelichting (60 min, time-boxed, geen actieplan) → +€350
+De hoogste prioriteit ligt nu op:
 
-### Billing-anker
-- Historische ExitScan: **per campagne** (eenmalig)
-- Toekomstige live module: **per organisatie per maand** (abonnement)
+- actionability van output
+- methodiek en trust
+- zichtbare trust-signals
+- boardroom-geschikte taal en packaging
+- founder-led salesnarratief
+- voorbeeldoutput en commerciële verpakking
 
----
+Daarna pas:
 
-## Propositie — kernpunten
+- website-redesign
+- funneloptimalisatie
+- SEO en bredere content
 
-**Wat Verisight is:** Gestandaardiseerde, wetenschappelijk onderbouwde ExitScan die organisaties helpt patronen in vertrek te begrijpen, los van incidenten en individuele verhalen.
+## Externe afhankelijkheden
 
-**Wat inbegrepen is:**
-- Exitscan over ex-medewerkers afgelopen 12 maanden
-- Anonieme survey + 2 automatische herinneringen
-- Realtime dashboard (voortgang & respons)
-- Eindrapport: kernpatronen, vertrekredenen, SDT-scores, betrouwbaarheidsduiding, aanbevelingen op basis van arbeidspsychologische kaders
-- Transparante datakwaliteitsrapportage
+Niet alles wat nu belangrijk is, zit in code. Deze afhankelijkheden tellen mee in prioritering:
 
-**Randvoorwaarden:**
-- Minimaal 10 respondenten vereist voor betekenisvolle analyse
-- Responsverhoging is gedeelde verantwoordelijkheid: Verisight verzorgt professionele uitnodiging + 2 herinneringen; organisatie verzorgt interne communicatie
+- KvK en formele bedrijfsbasis
+- bankrekening en facturatie
+- Resend/domein/maildeliverability
+- beschikbaarheid naast huidig werk
+- eerste echte gesprekken, pilots en bezwaarpatronen
+- privacy/security antwoordlaag voor kopers
 
-**Wat Verisight níet is:** Consultancy, implementatie van verbeteracties, individuele opvolging, garantie op representativiteit.
+## Wat buiten scope blijft tot later
 
-**Herhaling:** Jaarlijks of op aanvraag herhaalbaar. Geen verplichting — klant bepaalt tempo.
+- grote self-service onboarding
+- Stripe en brede billing-automatisering
+- nieuwe productfamilies buiten ExitScan/RetentieScan
+- publiek API-werk
+- brede contentmachine zonder stabiele kernpropositie
 
----
+## Belangrijke defaults
 
-## Beslissingslog
-
-| Datum | Beslissing | Reden |
-|-------|-----------|-------|
-| 2026-04-07 | Campagnetype historisch vs. live als apart veld in schema | Pricing-model vereist dit onderscheid |
-| 2026-04-07 | Billing-anker: trajectprijs = per campagne, live = per org/maand | Past bij hybride model en toekomstige Stripe-integratie |
-| 2026-04-07 | Geen self-service onboarding bouwen voor eerste klant | Focus op waarde valideren |
-| 2026-04-08 | Doelgroep ondergrens verhoogd van 100 naar 200 medewerkers | <200 mw → structureel te weinig exits voor n≥10 |
-| 2026-04-08 | Trajectprijs vastgesteld: €1.750/€2.250/€2.950 op org-omvang | Twee ankerpunten (tijdskost + waarde) convergeren hier |
-| 2026-04-08 | Live toelichting: optionele add-on €350, niet kern van propositie | Schaalbaarheid; waarde zit in rapport, niet in uitleg |
-| 2026-04-08 | Route A gekozen: eerste klant nu, eerlijke framing | Interpretatiekaders bestaan nog niet; belofte matcht product |
-
----
-
-## Buiten scope (nu)
-
-- Self-service onboarding
-- Stripe / betalingsintegratie
-- MTO-module
-- Onboarding survey-module
-- Publieke API
-- Interactieve demo-pagina (Loom-video + voorbeeldrapport volstaat in fase 1-2)
+- website-redesign volgt op trust- en packagingwerk
+- sample output is een fundament voor sales en website
+- externe documentmappen zijn in scope voor alignment, maar niet leidend boven repo truth
+- gevoelige operationele data hoort niet in plandocumenten of roadmaps thuis
