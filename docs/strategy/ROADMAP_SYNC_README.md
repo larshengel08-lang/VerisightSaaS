@@ -33,6 +33,12 @@ Dan wordt:
 - de checklist netjes geharmoniseerd
 - de roadmap opnieuw opgebouwd met de nieuwste status
 
+Je kunt hiervoor ook gewoon dubbelklikken op:
+
+```bat
+C:\Users\larsh\Desktop\Business\UPDATE_VERISIGHT_PLANNING.bat
+```
+
 ### Volgorde of fases aanpassen
 
 Als je de prioriteitsvolgorde of fase-indeling wilt wijzigen:
@@ -47,6 +53,22 @@ C:\Users\larsh\Desktop\Business\Verisight\sync_planning_artifacts.bat
 Dan wordt:
 - de checklist opnieuw geordend
 - de roadmap opnieuw gegenereerd
+
+## Automatische sync bij commit
+
+Er is nu ook een Git-hook toegevoegd:
+
+- [pre-commit](/C:/Users/larsh/Desktop/Business/Verisight/.githooks/pre-commit)
+
+Die doet automatisch een sync vlak voor een commit als je staged wijzigingen hebt in:
+- `docs/prompts/PROMPT_CHECKLIST.xlsx`
+- `docs/strategy/ROADMAP_DATA.yaml`
+
+Dat betekent:
+- wijzig je de checklist en commit je daarna, dan wordt `ROADMAP.md` vanzelf bijgewerkt
+- wijzig je de YAML-structuur en commit je daarna, dan worden checklist en roadmap nog een keer rechtgetrokken voor de commit doorgaat
+
+De hook draait bewust alleen op deze planningsbestanden, zodat normale codecommits niet onnodig worden vertraagd.
 
 ## Praktische regels
 

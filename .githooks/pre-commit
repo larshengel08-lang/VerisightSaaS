@@ -1,0 +1,17 @@
+#!/bin/sh
+set -eu
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+STAGED_FILES="$(git diff --cached --name-only --diff-filter=ACMR)"
+
+if ! printf '%s\n' "$STAGED_FILES" | grep -Eq '^(docs/prompts/PROMPT_CHECKLIST\.xlsx|docs/strategy/ROADMAP_DATA\.yaml)$'; then
+  exit 0
+fi
+
+echo "[planning-sync] Wijziging in checklist of roadmap-data gedetecteerd; sync draait..." >&2
+python "$REPO_ROOT/sync_planning_artifacts.py"
+git add \
+  "$REPO_ROOT/docs/prompts/PROMPT_CHECKLIST.xlsx" \
+  "$REPO_ROOT/docs/strategy/ROADMAP.md"
+
+echo "[planning-sync] Checklist en roadmap opnieuw gestaged." >&2
