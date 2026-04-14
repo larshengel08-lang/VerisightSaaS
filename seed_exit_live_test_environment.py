@@ -141,10 +141,27 @@ def _purge_campaign(db, campaign: Campaign) -> None:
     db.flush()
 
 
-def _get_or_create_org(db, *, slug: str, name: str, contact_email: str) -> Organization:
+def _get_or_create_org(
+    db,
+    *,
+    slug: str,
+    name: str,
+    contact_email: str,
+    creator_user_id: str | None = None,
+) -> Organization:
     org = db.query(Organization).filter(Organization.slug == slug).first()
     if org:
         return org
+
+    # Live Supabase gebruikt nog een trigger die bij nieuwe organisaties direct
+    # een owner-membership probeert te maken op basis van auth.uid(). Omdat dit
+    # seedscript via een serviceverbinding draait, zetten we die claim hier
+    # expliciet zodat de trigger niet faalt.
+    if creator_user_id:
+        db.execute(
+            text("select set_config('request.jwt.claim.sub', :creator_user_id, true)"),
+            {"creator_user_id": creator_user_id},
+        )
 
     org = Organization(
         id=str(uuid.uuid4()),
@@ -387,6 +404,7 @@ def main() -> None:
             slug=args.org_slug,
             name=args.org_name,
             contact_email=args.contact_email,
+            creator_user_id=args.admin_user_id,
         )
         _ensure_org_secret(db, org)
         _ensure_role_memberships(

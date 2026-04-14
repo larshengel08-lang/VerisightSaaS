@@ -45,7 +45,7 @@ Publieke interfaces en contracten die in dit traject leidend blijven:
 
 Uitvoeringsstatus op 14 april 2026:
 
-- Publieke hoofd- en productroutes zijn live gecontroleerd en reageren zoals verwacht:
+- De publieke hoofd- en productroutes zijn live gecontroleerd en reageren zoals verwacht:
   - `/`
   - `/producten`
   - `/producten/exitscan`
@@ -56,32 +56,49 @@ Uitvoeringsstatus op 14 april 2026:
   - `/voorwaarden`
   - `/dpa`
 - Anonieme toegang tot `/dashboard`, `/campaigns/test-campaign` en `/api/campaigns/test-campaign/report` geeft live een `307` redirect naar `/login`.
-- `POST /api/contact` valideert live correct:
-  - lege body geeft `400`
+- De contactflow valideert live correct:
+  - `POST /api/contact` met lege body geeft `400`
   - `GET /api/contact` geeft `405`
   - honeypot-submit met gevuld `website`-veld geeft `200 {"message":"Verstuurd"}`
-- `GET /survey/complete` werkt live en serveert de bedankpagina.
-- Er zijn ook directe livebevindingen gevonden:
-  - `GET /survey/invalid-test-token` geeft live `503 Service Unavailable` met `Database-fout opgetreden`, niet de verwachte ongeldige-link-state
-  - `GET /forgot-password` geeft live een `307` redirect naar `/login`
-  - de publieke homepage en ExitScan-productpagina tonen in de dashboardpreview het niet-resolvende domein `dashboard.verisight.nl`
-- Niet volledig uitvoerbaar zonder extra toegang of fixtures:
-  - succesvolle loginflow
-  - rolgebaseerde dashboardchecks
-  - geldige, verlopen, ingevulde en gesloten surveytokens
-  - echte PDF-download als ingelogde gebruiker
-  - `Herinnering` en `Archiveer campaign`
-  - echte mobile interactiechecks in een browserharnas
-- Repo-capability toegevoegd voor de open fixturelaag:
-  - `seed_exit_live_test_environment.py` kan de ExitScan-campaignstates en sample surveytokens seed-en
-  - het script ondersteunt optioneel ook rolkoppeling op basis van bekende Supabase user IDs
-  - zonder bekende user IDs blijft roltoegang via Supabase-accounts en memberships nog een aparte handmatige of beheerstap
+- De authlaag is live verder gevalideerd:
+  - onjuiste login toont live `Ongeldig e-mailadres of wachtwoord.`
+  - ingelogde gebruikers die `/login` openen worden live doorgestuurd naar `/dashboard`
+  - `GET /forgot-password` geeft live een `307` redirect naar `/login`, waardoor de herstelroute functioneel ontbreekt
+- Er is een dedicated live fixtureomgeving opgezet via `seed_exit_live_test_environment.py`:
+  - organisatie-slug: `exitscan-live-test`
+  - vaste testaccounts:
+    - `exitscan-live-admin@verisight.test`
+    - `exitscan-live-member@verisight.test`
+    - `exitscan-live-viewer@verisight.test`
+    - `exitscan-live-noaccess@verisight.test`
+  - campaign IDs en sample tokens worden per seed-run opnieuw gegenereerd; de laatste scriptoutput is leidend voor concrete IDs
+- De surveyketen is live inhoudelijk gevalideerd:
+  - ongeldige token geeft live `503 Service Unavailable` met `Database-fout opgetreden`, niet de verwachte nette ongeldige-link-state
+  - geldige open token geeft live `500 Internal Server Error` op `GET /survey/[token]`
+  - verlopen token geeft live `410 Gone`
+  - ingevulde token geeft live `200` met `Al ingevuld`
+  - gesloten campagne geeft live `410 Gone`
+  - `POST /survey/submit` met een geldige open token werkt live wel en zet de respondent naar completed-state
+- De dashboard- en campaigndetailflow zijn live gevalideerd voor `admin`, `member`, `viewer` en `no-access`:
+  - state-drempels `0`, `1-4`, `5-9`, `10+`, `gesloten` en `geen toegang` zijn met echte fixtures bekeken
+  - `viewer` ziet op campaign detail geen reminder- of archive-acties
+  - `member` ziet deze acties op dit moment wel
+  - `no-access` ziet geen expliciete fout op dashboard, maar een lege cockpit die legitiem oogt
+- De operationele actieflow is live gevalideerd:
+  - `PDF-rapport` geeft via echte browserklik `403 {"detail":"Autorisatie voor rapportdownload ontbreekt."}`
+  - `Herinnering` geeft live `Versturen mislukt: Autorisatie voor backend-uitnodigingen ontbreekt.`
+  - `Archiveer campaign` werkt live op de dedicated action-safe fixture en sluit de campaign succesvol
+  - na muterende tests is de fixtureset telkens opnieuw geseed om een schone baseline te houden
+- Mobile smoke is live meegetest:
+  - mobile menu opent
+  - `Plan mijn gesprek` landt op `/#kennismaking`
+  - login en dashboard blijven op klein scherm functioneel bereikbaar
 
 ## 2. Milestones
 
 ### Milestone 0 - Freeze Scope, Testmatrix And Access
 Dependency: none
-Status: basis vastgelegd in dit plan; credentials- en fixturelaag nog niet ingevuld
+Status: uitgevoerd op 14 april 2026
 
 #### Tasks
 - [ ] Leg vast dat dit traject alleen ExitScan dekt, met RetentieScan alleen als positioneringsvergelijking.
@@ -116,14 +133,20 @@ Status: basis vastgelegd in dit plan; credentials- en fixturelaag nog niet ingev
 - [ ] De canonieke live basis en het non-canonieke dashboard-subdomein zijn expliciet onderscheiden.
 
 #### Execution Notes
-- Fixtureseed toegevoegd:
+- Fixtureseed live uitgevoerd:
   - gebruik `seed_exit_live_test_environment.py` voor de open campaign- en tokenfixtures
   - het script maakt ook een dedicated `ExitScan Live Test - Action Safe` campaign aan voor reminder/archive
-- Roltoegang blijft nog afhankelijk van Supabase-accounts en memberships of invites.
+- Live accounts en rollen ingericht:
+  - `admin`: `exitscan-live-admin@verisight.test`
+  - `member`: `exitscan-live-member@verisight.test`
+  - `viewer`: `exitscan-live-viewer@verisight.test`
+  - `no-access`: `exitscan-live-noaccess@verisight.test`
+- Belangrijke live nuance:
+  - campaign IDs en sample tokens wisselen bij elke reseed; behandel de laatste scriptoutput als leidende momentopname
 
 ### Milestone 1 - Public Website, Navigation And CTA Flow
 Dependency: Milestone 0
-Status: gedeeltelijk uitgevoerd op 14 april 2026
+Status: uitgevoerd op 14 april 2026
 
 #### Tasks
 - [ ] Test de publieke ExitScan-route op desktop:
@@ -168,16 +191,16 @@ Status: gedeeltelijk uitgevoerd op 14 april 2026
 #### Execution Notes
 - Live geverifieerd dat de interne links op homepage en ExitScan-productpagina status `200` geven voor de kernroutes.
 - Live geverifieerd dat `Plan mijn gesprek`, `Bekijk producten`, productlinks, login-link en juridische links allemaal een bestaande publieke bestemming hebben.
+- Mobile smoke live geverifieerd:
+  - mobile menu opent
+  - `Plan mijn gesprek` landt op `/#kennismaking`
+  - homepage, productpagina en login blijven mobiel bereikbaar
 - Gevonden afwijking:
   - de publieke dashboardpreview toont `dashboard.verisight.nl` terwijl dat domein live niet resolveert
-- Nog open:
-  - echte mobile menu-interactie
-  - echte anchor-scrollvalidatie in browser
-  - visuele doodlopende paden buiten statuscode-checks
 
 ### Milestone 2 - Contact, Auth And Recovery Path
 Dependency: Milestone 1
-Status: gedeeltelijk uitgevoerd op 14 april 2026
+Status: grotendeels uitgevoerd op 14 april 2026; forgot-password-route blokkeert volledige hersteltest
 
 #### Tasks
 - [ ] Test het formulier onder `#kennismaking` op:
@@ -215,17 +238,17 @@ Status: gedeeltelijk uitgevoerd op 14 april 2026
   - `POST /api/contact` met lege body geeft `400`
   - `GET /api/contact` geeft `405`
   - honeypot-submit op `POST /api/contact` geeft `200 {"message":"Verstuurd"}`
+  - onjuiste login toont live `Ongeldig e-mailadres of wachtwoord.`
+  - ingelogde gebruikers die `/login` openen worden live doorgestuurd naar `/dashboard`
 - Gevonden afwijking:
   - `/forgot-password` geeft live `307 -> /login`, ondanks dat de loginpagina ernaar linkt en er in de codebase een aparte route voor bestaat
 - Nog open:
-  - succesvolle login
-  - onjuiste-loginfout in de echte UI
-  - forgot-password submit- en succesflow
-  - backend-onbereikbaarheid in de contactflow
+  - forgot-password submit- en succesflow is niet uitvoerbaar zolang de live route direct naar `/login` terugvalt
+  - netwerkfout-simulatie voor de contactflow is niet apart live afgedwongen
 
 ### Milestone 3 - Respondent Flow And Survey Chain
 Dependency: Milestone 2
-Status: gedeeltelijk uitgevoerd op 14 april 2026
+Status: uitgevoerd op 14 april 2026 met live blockers op open-token rendering
 
 #### Tasks
 - [ ] Neem de respondentketen expliciet mee:
@@ -261,20 +284,21 @@ Status: gedeeltelijk uitgevoerd op 14 april 2026
 #### Execution Notes
 - Live geverifieerd:
   - `/survey/complete` geeft `200` en toont de bedankpagina
-  - `POST /survey/invalid-test-token` geeft `405 Method Not Allowed` op de routeproxy, wat voor dit pad verwacht is
-- Gevonden blocker:
-  - `GET /survey/invalid-test-token` geeft live `503 Service Unavailable` met `Database-fout opgetreden`, terwijl de codebase en tests wijzen op een nette ongeldige-token-state
-- Nog open:
-  - geldige token
-  - verlopen token
-  - al ingevulde token
-  - gesloten campagne
-  - echte submitdoorwerking naar dashboard en rapport
-  - fixtureseed voor deze states is nu beschikbaar via `seed_exit_live_test_environment.py`
+  - ongeldige token geeft live `503 Service Unavailable` met `Database-fout opgetreden`
+  - geldige open token geeft live `500 Internal Server Error` op `GET /survey/[token]`
+  - verlopen token geeft `410 Gone`
+  - al ingevulde token geeft `200` met `Al ingevuld`
+  - gesloten campagne geeft `410 Gone`
+  - `POST /survey/submit` met een geldige open token geeft `200 {"status":"ok","message":"Bedankt voor het invullen van de survey."}`
+  - na succesvolle submit wordt dezelfde token live `Al ingevuld`
+- Belangrijke conclusie:
+  - opslag en completion-state leven nog, maar de open surveyrender crasht vóór invullen bij een geldige open token
+- Testhygiëne:
+  - na de submit-validatie is de volledige fixturelaag opnieuw geseed
 
 ### Milestone 4 - Dashboard Home, Campaign Detail And Role-Based States
 Dependency: Milestone 3
-Status: geblokkeerd op credentials en concrete campaign fixtures
+Status: uitgevoerd op 14 april 2026
 
 #### Tasks
 - [ ] Test `/dashboard` per rol op:
@@ -318,17 +342,19 @@ Status: geblokkeerd op credentials en concrete campaign fixtures
 #### Execution Notes
 - Live geverifieerd:
   - anonieme toegang tot `/campaigns/test-campaign` geeft `307 -> /login`
-- Vanuit de codebase bevestigd:
-  - de relevante ExitScan-states bestaan echt in de huidige implementatie
-  - role-based gedrag voor beheeracties is aanwezig in de huidige code
-- Nog open:
-  - echte checks voor `admin`, `owner/member` en `viewer`
-  - validatie van campaign detail per echte state
-  - inhoudelijke dashboardleesbaarheid op live fixtures
+  - `admin`, `member`, `viewer` en `no-access` kunnen live worden ingelogd en op dashboard/campaign detail worden getest
+  - de states `0`, `1-4`, `5-9`, `10+`, `gesloten` en `geen toegang` zijn via echte fixtures bekeken
+- Role-based live uitkomst:
+  - `viewer` ziet geen `Herinnering` of `Archiveer campaign` op campaign detail
+  - `member` ziet deze beheeracties op dit moment wel
+  - `no-access` ziet op dashboard geen expliciete toegangsfout maar een lege cockpit
+  - `no-access` krijgt op een campaigndetail een 404-achtige niet-gevonden-state
+- Extra UX-observatie:
+  - op member- en viewer-dashboards verschijnt een los `1`-element voor `Open je campagne`, wat als visuele ruis of badge-lek oogt
 
 ### Milestone 5 - PDF Download, Campaign Actions And Failure Paths
 Dependency: Milestone 4
-Status: gedeeltelijk uitgevoerd op 14 april 2026; echte succespaden geblokkeerd op toegang
+Status: uitgevoerd op 14 april 2026 met harde blockers op PDF en reminder
 
 #### Tasks
 - [ ] Test `PDF-rapport` op:
@@ -367,16 +393,21 @@ Status: gedeeltelijk uitgevoerd op 14 april 2026; echte succespaden geblokkeerd 
 #### Execution Notes
 - Live geverifieerd:
   - anonieme toegang tot `/api/campaigns/test-campaign/report` geeft `307 -> /login`
+  - `PDF-rapport` geeft via echte browserklik `403 {"detail":"Autorisatie voor rapportdownload ontbreekt."}`
+  - `Herinnering` geeft live `Versturen mislukt: Autorisatie voor backend-uitnodigingen ontbreekt.`
+  - `Archiveer campaign` werkt live op de dedicated action-safe fixture en zet de campaign naar `Gesloten`
 - Vanuit codebase bevestigd:
   - rapportdownload hangt af van frontend-proxy, org API-key, backend admin fallback en backend report generation
-- Nog open:
-  - echte PDF-download als ingelogde gebruiker
-  - foutstate vanuit backend-auth of report generation via de UI
-  - reminder- en archive-flows op een veilige testcampagne
+  - reminder gebruikt server action plus organization secret plus backend invite-endpoint
+- Belangrijke conclusie:
+  - zowel PDF-download als reminder falen op server-side autorisatie/configuratie, niet op de knop zelf
+  - archive werkt functioneel wel
+- Testhygiëne:
+  - na de archive-check is de fixtureset direct opnieuw geseed
 
 ### Milestone 6 - Blocker Triage, Execution Order And Closeout
 Dependency: Milestone 5
-Status: gedeeltelijk uitgevoerd; eerste blockertriage verwerkt op 14 april 2026
+Status: uitgevoerd op 14 april 2026
 
 #### Tasks
 - [ ] Rangschik alle bevindingen als:
@@ -411,12 +442,16 @@ Status: gedeeltelijk uitgevoerd; eerste blockertriage verwerkt op 14 april 2026
 - [ ] De planuitvoer sluit af op repo-feiten en live-observaties, niet op losse aannames.
 
 #### Execution Notes
-- Eerste blockertriage op basis van live uitvoering:
-  - `live blocker`: `GET /survey/invalid-test-token` geeft `503` in plaats van nette ongeldige-link-state
-  - `live blocker`: publieke preview toont `dashboard.verisight.nl` terwijl dat domein niet resolveert
-  - `hoog UX-risico`: `/forgot-password` redirect naar `/login` maakt de herstelroute live onduidelijk
-- `PROMPT_CHECKLIST.xlsx` is bijgewerkt voor deze prompt.
-- Verdere triage blijft afhankelijk van echte roltoegang en testfixtures.
+- Huidige blockertriage op basis van live uitvoering:
+  - `live blocker` | owner `frontend/backend`: geldige open survey-token geeft `500` op `GET /survey/[token]`
+  - `live blocker` | owner `frontend/backend/ops`: ongeldige survey-token geeft `503` met databasefout in plaats van nette foutstate
+  - `live blocker` | owner `frontend/ops`: `PDF-rapport` geeft live `403 Autorisatie voor rapportdownload ontbreekt`
+  - `live blocker` | owner `frontend/ops`: `Herinnering` geeft live `Autorisatie voor backend-uitnodigingen ontbreekt`
+  - `hoog UX/conversierisico` | owner `frontend/marketing`: publieke preview toont `dashboard.verisight.nl` terwijl dat domein niet resolveert
+  - `hoog UX-risico` | owner `frontend/product`: `/forgot-password` redirect naar `/login` maakt herstelroute live onbruikbaar
+  - `middel` | owner `product/frontend`: `no-access` gebruiker ziet lege cockpit in plaats van expliciete toegangsfout
+  - `middel` | owner `frontend/product`: los `1`-element voor `Open je campagne` oogt als badge- of layoutlek
+- `PROMPT_CHECKLIST.xlsx` is bijgewerkt voor deze prompt en aangevuld met de uitgevoerde live-validatie.
 
 ## 3. Execution Breakdown By Subsystem
 
@@ -467,6 +502,9 @@ Status: gedeeltelijk uitgevoerd; eerste blockertriage verwerkt op 14 april 2026
 - [ ] Rapportdownload hangt af van meerdere schakels; één auth- of backendfout maakt de knop direct waardeloos.
 - [ ] De respondentflow hangt af van proxy plus backend-HTML; fouten hierin voelen voor eindgebruikers als kapotte survey-link of kapotte invulflow.
 - [ ] `GET /survey/invalid-test-token` geeft live `503 Service Unavailable` met `Database-fout opgetreden` in plaats van een nette ongeldige-token-state.
+- [ ] `GET /survey/[geldige-open-token]` geeft live `500 Internal Server Error`, terwijl dezelfde token via `POST /survey/submit` wel succesvol opgeslagen kan worden.
+- [ ] `PDF-rapport` geeft live `403 {"detail":"Autorisatie voor rapportdownload ontbreekt."}` bij echte browserklik.
+- [ ] `Herinnering` geeft live `Autorisatie voor backend-uitnodigingen ontbreekt.`, waardoor operationele opvolging stukloopt.
 
 ### UX- And Flow Risks
 - [ ] De drempels `0`, `<5`, `5-9`, `10+` kunnen onduidelijk voelen als de overgang tussen compact, indicatief en verdiepend niet strak wordt getest.
@@ -484,11 +522,15 @@ Status: gedeeltelijk uitgevoerd; eerste blockertriage verwerkt op 14 april 2026
 - [ ] Role-based zichtbaarheid van `Herinnering` en `Archiveer campaign` kan verkeerde verwachtingen of ongewenste acties geven.
 - [ ] Indicatieve states kunnen te weinig uitleg geven, terwijl volwassen states te veel detail ineens zichtbaar kunnen maken.
 - [ ] De dashboardroute moet aanvoelen als managementflow en niet als verzameling losse analyseblokken.
+- [ ] `member` kan live dezelfde beheeracties zien als `admin`; als dit niet bewust bedoeld is, is dit een permissierisico.
+- [ ] `no-access` toont live een lege cockpit in plaats van expliciete geen-toegang-state, wat toegangsschijn geeft.
 
 ### Risk Of Fake Interaction Or Dead Elements
 - [ ] Elke button of link die wel visueel sterk is maar niet logisch vervolgt, schaadt het live vertrouwen disproportioneel.
 - [ ] Demo- en previewlagen kunnen gebruikers laten denken dat iets interactief of persoonlijk beschikbaar is terwijl het alleen illustratief is.
 - [ ] Download-, reminder- en archive-acties moeten scherp begrensd zijn om schijninteractie of onveilige interactie te voorkomen.
+- [ ] `PDF-rapport` blijft op meerdere states zichtbaar terwijl de live download nu functioneel blokkeert.
+- [ ] Op member- en viewer-dashboards verschijnt live een los `1`-element voor `Open je campagne`, wat als half-interactieve of kapotte badge voelt.
 
 ### Risk That ExitScan Feels Unclear Or Frictional Live
 - [ ] ExitScan moet live primair en scherp blijven; de portfolio-omgeving mag het product niet verzachten.
@@ -497,14 +539,14 @@ Status: gedeeltelijk uitgevoerd; eerste blockertriage verwerkt op 14 april 2026
 
 ## 5. Open Questions
 
-- [ ] Welke concrete testaccounts worden toegewezen aan `admin`, `owner/member` en `viewer`?
-  - Nog niet in de repo of live checks gevonden.
-- [ ] Welke concrete campaign IDs vertegenwoordigen de zes benodigde ExitScan-states?
-  - Seedbaar via `seed_exit_live_test_environment.py`; daadwerkelijke IDs ontstaan per omgeving na run.
-- [ ] Welke testcampagne is expliciet veilig voor `Herinnering` en `Archiveer campaign`?
-  - Seedbaar als `ExitScan Live Test - Action Safe` via `seed_exit_live_test_environment.py`.
-- [ ] Is er al een vaste live of QA-organisatie voor survey-token tests zonder productie-impact?
-  - Nog niet in de repo of live checks gevonden.
+- [ ] Welke server-side configuratie ontbreekt of faalt live voor secret-backed frontend flows?
+  - Inference: `PDF-rapport` en `Herinnering` falen vóór succesvolle backendverwerking, waarschijnlijk in `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_API_URL` en/of `BACKEND_ADMIN_TOKEN`.
+- [ ] Is het de bedoeling dat `member` dezelfde operationele campagneacties ziet als `admin`?
+  - Live gedrag laat `Herinnering` en `Archiveer campaign` nu wel zien voor `member`.
+- [ ] Moet een gebruiker zonder organisatiekoppeling een lege cockpit zien of juist een expliciete geen-toegang-state?
+  - Live voelt de huidige lege cockpit als schijn-toegang.
+- [ ] Wat veroorzaakt de open-token rendercrash op `GET /survey/[token]` terwijl `POST /survey/submit` voor dezelfde token wel werkt?
+  - Inference: de fout zit waarschijnlijk in de open survey-render of templatinglaag, niet in tokenvalidatie of opslag zelf.
 
 ## 6. Follow-up Ideas
 
