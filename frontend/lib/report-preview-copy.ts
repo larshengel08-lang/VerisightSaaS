@@ -66,7 +66,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     focusTitle: 'Wat moet management nu eerst bespreken?',
     nuance:
-      'ExitScan maakt patronen zichtbaar en helpt bepalen waar vervolgactie het meeste oplevert. Het blijft groepsduiding, geen individueel oordeel of harde voorspelling.',
+      'ExitScan maakt patronen zichtbaar en helpt bepalen waar vervolgactie het meeste oplevert. Het blijft gegroepeerde vertrekduiding: geen individueel oordeel, geen diagnose en geen harde voorspelling.',
     factorLead:
       'Per factor zie je de belevingsscore en de signaalwaarde. Die signaalwaarde helpt bepalen welke werkfactor eerst bestuurlijke verificatie verdient.',
     hypothesisLead:
@@ -86,7 +86,8 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     proofNotes: [
       ['Managementsamenvatting', 'Vertrekbeeld nu, eerste managementvraag en eerste logische stap in één leeslaag'],
       ['Werkhypothesen', 'Topfactoren worden vertaald naar te toetsen vragen en concrete opvolging'],
-      ['Methodische nuance', 'Signalen en hypothesen, geen absolute waarheid'],
+      ['Methodische nuance', 'Signalen en hypothesen, geen absolute waarheid of diagnose'],
+      ['Bewijsstatus', 'Methodisch verdedigbaar en testmatig geborgd, maar niet extern gevalideerd als diagnostisch instrument'],
     ],
   },
   retention: {
@@ -101,7 +102,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     focusTitle: 'Waar vraagt behoud nu de meeste aandacht?',
     nuance:
-      'RetentieScan is bedoeld voor groeps- en segmentduiding. De output is nadrukkelijk geen individuele voorspeller of performance-instrument.',
+      'RetentieScan is bedoeld voor groeps- en segmentduiding. De output is nadrukkelijk geen individuele voorspeller of performance-instrument, maar een v1-werkmodel voor verificatie en prioritering.',
     factorLead:
       'De factoranalyse laat zien waar behoudssignalen samenhangen met beïnvloedbare werkfactoren zoals leiderschap, groei en werkbelasting.',
     hypothesisLead:
@@ -122,6 +123,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       ['Managementsamenvatting', 'Groepsbeeld nu, eerste verificatiespoor en eerste logische stap in één executive laag'],
       ['Signaalmix', 'Retentiesignaal, stay-intent en vertrekintentie in één bestuurssamenvatting'],
       ['Actielogica', 'Topfactoren en vervolgstappen voor 30-90 dagen, zonder individuele voorspelling'],
+      ['Bewijsstatus', 'Inhoudelijk plausibel, intern consistent en testmatig beschermd; nog geen pragmatisch bewezen predictor'],
     ],
   },
 }

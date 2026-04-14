@@ -10,6 +10,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Optional
 
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
@@ -158,6 +160,21 @@ class ContactRequestCreate(BaseModel):
 
 class ContactRequestResponse(BaseModel):
     message: str
+    notification_sent: bool = True
+    warning: str | None = None
+    lead_id: str | None = None
+
+
+class ContactRequestRead(BaseModel):
+    id: str
+    name: str
+    work_email: EmailStr
+    organization: str
+    employee_count: str
+    current_question: str
+    notification_sent: bool
+    notification_error: str | None = None
+    created_at: datetime
 
 
 # ---------------------------------------------------------------------------

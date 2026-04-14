@@ -46,7 +46,12 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json(
-    { message: payload.message ?? 'Verstuurd' },
-    { status: 200 },
+    {
+      message: payload.message ?? 'Verstuurd',
+      notification_sent: payload.notification_sent ?? true,
+      warning: payload.warning ?? null,
+      lead_id: payload.lead_id ?? null,
+    },
+    { status: response.status },
   )
 }

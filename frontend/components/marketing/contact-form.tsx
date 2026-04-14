@@ -28,6 +28,7 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
   const [form, setForm] = useState<FormState>(initialState)
   const [loading, setLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [warningMessage, setWarningMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const isLight = surface === 'light'
@@ -40,6 +41,7 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
     event.preventDefault()
     setLoading(true)
     setSuccessMessage(null)
+    setWarningMessage(null)
     setErrorMessage(null)
 
     if (
@@ -82,6 +84,12 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
       }
 
       setSuccessMessage(payload.message ?? 'Verstuurd')
+      if (payload.notification_sent === false) {
+        const reference = payload.lead_id ? ` Referentie: ${payload.lead_id}.` : ''
+        setWarningMessage(
+          `${payload.warning ?? 'Je aanvraag is opgeslagen, maar de e-mailnotificatie liep vast.'}${reference}`,
+        )
+      }
       setForm(initialState)
     } catch {
       setErrorMessage('Je aanvraag kon niet worden verzonden. Probeer het opnieuw of mail naar hallo@verisight.nl.')
@@ -105,6 +113,9 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
   const errorClass = isLight
     ? 'border-red-200 bg-red-50 text-red-800'
     : 'border-red-400/30 bg-red-400/10 text-red-100'
+  const warningClass = isLight
+    ? 'border-amber-200 bg-amber-50 text-amber-900'
+    : 'border-amber-400/30 bg-amber-400/10 text-amber-100'
   const buttonClass = isLight
     ? 'bg-blue-600 hover:bg-blue-700'
     : 'bg-blue-700 hover:bg-blue-800'
@@ -212,6 +223,10 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
 
       {successMessage ? (
         <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${successClass}`}>{successMessage}</div>
+      ) : null}
+
+      {warningMessage ? (
+        <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${warningClass}`}>{warningMessage}</div>
       ) : null}
 
       {errorMessage ? (

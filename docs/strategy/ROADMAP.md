@@ -51,14 +51,14 @@ Verisight moet overtuigend landen bij HR-beslissers, directie en eerste kopers z
 
 **Hoort in deze fase**
 - Management Actionability - afgerond
-- Method And Trust System
+- Method And Trust System - afgerond
 - Trust Signal Program
 - Boardroom Readiness
 - Founder-Led Sales Narrative
 
 **Status**
 - huidige actieve focus
-- 1 van 5 checklist-items afgerond
+- 2 van 5 checklist-items afgerond
 
 **Exit gate**
 - HR en directie begrijpen sneller wat het product oplevert

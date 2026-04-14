@@ -186,13 +186,13 @@ function ExitScanPage() {
             Als je wilt leren van uitstroom zonder te blijven hangen in losse verhalen.
           </h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            ExitScan helpt patronen zichtbaar te maken in werkfactoren, vertrekredenen en werksignalen. Daarmee wordt vertrekduiding bestuurlijk leesbaar, vergelijkbaar en beter bespreekbaar.
+            ExitScan helpt patronen zichtbaar te maken in werkfactoren, vertrekredenen en werksignalen. Daarmee wordt vertrekduiding bestuurlijk leesbaar, vergelijkbaar en beter bespreekbaar, zonder van de scan een diagnose of voorspelproduct te maken.
           </p>
           <div className="mt-8 space-y-3">
             {[
               'Voor terugkijkende analyse op ex-medewerkers',
               'Meer dan losse exitgesprekken of spreadsheetduiding',
-              'Logisch als nulmeting of eerste patroonanalyse',
+              'Logisch als nulmeting of eerste patroonanalyse met gegroepeerde managementoutput',
             ].map((item) => (
               <div key={item} className="flex items-center gap-3 text-sm text-slate-700">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
@@ -208,13 +208,13 @@ function ExitScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">Wat management krijgt</p>
           <h2 className="font-display mt-4 text-4xl text-white">Een serieus managementinstrument voor uitstroomduiding.</h2>
           <p className="mt-5 text-base leading-8 text-slate-300">
-            Geen losse verzameling exitinput, maar een compacte rapportvorm die opent met managementsamenvatting, eerste managementvraag en eerste logische stap. Zo zien HR, MT en directie sneller welk vertrekbeeld terugkeert, welke werkfactoren meewegen en waar vervolgactie logisch is.
+            Geen losse verzameling exitinput, maar een compacte rapportvorm die opent met managementsamenvatting, eerste managementvraag en eerste logische stap. Zo zien HR, MT en directie sneller welk vertrekbeeld terugkeert, welke werkfactoren meewegen en waar vervolgactie logisch is, terwijl claims, privacy en interpretatiegrenzen expliciet leesbaar blijven.
           </p>
           <div className="mt-8 grid gap-3">
             {[
               'Frictiescore en vertrekduiding in één overzicht',
               'Werkfactoren die terugkomen in vrijwillig vertrek',
-              'Een rapport dat direct bespreekbaar is in MT en directie',
+              'Een rapport dat direct bespreekbaar is in MT en directie, zonder diagnoseclaim',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200">
                 {item}
@@ -237,7 +237,7 @@ function ExitScanPage() {
           },
           {
             title: 'Gericht op beïnvloedbare factoren',
-            body: 'Leiderschap, cultuur, groei, werkbelasting en rolhelderheid worden zichtbaar als terugkerende vertrekduiding.',
+            body: 'Leiderschap, cultuur, groei, werkbelasting en rolhelderheid worden zichtbaar als terugkerende vertrekduiding, zonder harde diagnose of causaliteitsclaim.',
           },
         ]}
       />
@@ -256,7 +256,7 @@ function ExitScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Voorbeeldoutput</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">Zo ziet ExitScan eruit voor management.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            De output combineert managementsamenvatting, vertrekduiding, werksignalen en prioritaire werkfactoren in een compacte managementstructuur.
+            De output combineert managementsamenvatting, vertrekduiding, werksignalen, prioritaire werkfactoren en een leeswijzer over claims, privacy en interpretatie in een compacte managementstructuur.
           </p>
           <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             <PreviewSlider variant="exit" />
@@ -296,13 +296,13 @@ function RetentionScanPage() {
             ExitScan kijkt terug. RetentieScan kijkt eerder vooruit.
           </h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Waar ExitScan helpt begrijpen waarom mensen gingen, helpt RetentieScan om eerder te zien waar behoud op groepsniveau onder druk staat. Zo kan HR eerder prioriteren op de werkfactoren die nu de meeste aandacht vragen, zonder van de scan een brede MTO of voorspelproduct te maken.
+            Waar ExitScan helpt begrijpen waarom mensen gingen, helpt RetentieScan om eerder te zien waar behoud op groepsniveau onder druk staat. Zo kan HR eerder prioriteren op de werkfactoren die nu de meeste aandacht vragen, zonder van de scan een brede MTO, performance-instrument of voorspelproduct te maken.
           </p>
           <div className="mt-8 grid gap-3">
             {[
               'Vroegtijdig zien waar behoud onder druk staat',
               'Managementinformatie over beïnvloedbare werkfactoren',
-              'Geen individuele signalen of performance-oordelen naar management',
+              'Geen individuele signalen, geen performance-oordelen en geen persoonsgerichte actieroutes naar management',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-emerald-100 bg-white px-4 py-4 text-sm leading-7 text-slate-700">
                 {item}
@@ -315,7 +315,7 @@ function RetentionScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Wat je krijgt</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">Een vroegsignaal dat bestuurlijk bruikbaar is.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Geen individuele voorspelling en geen brede tevredenheidsmeting, maar een groepsweergave die opent met managementsamenvatting, eerste verificatiespoor en eerste logische stap. Daarna volgen retentiesignalen, stay-intent, bevlogenheid, vertrekintentie en de werkfactoren die nu als eerste opvolging vragen.
+            Geen individuele voorspelling en geen brede tevredenheidsmeting, maar een groepsweergave die opent met managementsamenvatting, eerste verificatiespoor en eerste logische stap. Daarna volgen retentiesignalen, stay-intent, bevlogenheid, vertrekintentie en de werkfactoren die nu als eerste opvolging vragen, inclusief een expliciete leeswijzer over privacy, claims en bewijsstatus.
           </p>
           <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             <PreviewSlider variant="retention" />
@@ -335,7 +335,7 @@ function RetentionScanPage() {
           },
           {
             title: 'Gebouwd voor managementactie',
-            text: 'De uitkomst is geen losse survey-export, brede MTO of persoonsgerichte score, maar een gedeelde taal voor HR, MT en directie over waar retentie nu aandacht vraagt.',
+            text: 'De uitkomst is geen losse survey-export, brede MTO of persoonsgerichte score, maar een gedeelde taal voor HR, MT en directie over waar retentie nu aandacht vraagt, met groepsgrenzen en een v1-bewijsstatus die expliciet blijven.',
           },
         ].map((card) => (
           <div key={card.title} className="rounded-[1.75rem] border border-emerald-100 bg-emerald-50 p-7">
@@ -353,7 +353,7 @@ function RetentionScanPage() {
             {[
               'Retentiesignaal op groeps- en segmentniveau',
               'Stay-intent, bevlogenheid, vertrekintentie en beïnvloedbare topfactoren',
-              'Niet bedoeld als performance-instrument, brede MTO of individuele voorspeller',
+              'Niet bedoeld als performance-instrument, brede MTO, individuele voorspeller of black-box risicomodel',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200">
                 {item}

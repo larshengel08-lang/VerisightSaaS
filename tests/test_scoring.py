@@ -346,11 +346,14 @@ class TestExitReportContent:
 
         intro = payload["intro_text"].lower()
         method = payload["method_text"].lower()
+        trust_rows = payload["trust_rows"]
 
         assert "vertrekduiding" in intro
         assert "diagnostisch instrument" in intro
         assert "niet als causale voorspelling" in method
         assert "benchmark" in method
+        assert any(row[0] == "Bewijsstatus nu" for row in trust_rows)
+        assert any("niet extern gevalideerd" in row[1].lower() for row in trust_rows)
 
     def test_exit_signal_page_payload_frames_management_questions_not_causal_proof(self):
         payload = get_signal_page_payload()
@@ -414,6 +417,7 @@ class TestRetentionReportContent:
 
         intro = payload["intro_text"].lower()
         method = payload["method_text"].lower()
+        trust_rows = payload["trust_rows"]
 
         assert "groepsniveau" in intro
         assert "brede mto" in intro
@@ -421,6 +425,8 @@ class TestRetentionReportContent:
         assert "per response" in method
         assert "niet als causale voorspelling" in method
         assert "gelijkgewogen samenvatting" in method
+        assert any(row[0] == "Privacy & rapportage" for row in trust_rows)
+        assert any("v1-werkmodel" in row[1].lower() for row in trust_rows)
 
     def test_retention_signal_page_frames_group_signal_not_individual_score(self):
         payload = get_retention_signal_page_payload(retention_signal_profile="scherp_aandachtssignaal")
@@ -473,8 +479,10 @@ class TestReportingParity:
         retention_definition = Path("frontend/lib/products/retention/definition.ts").read_text(encoding="utf-8").lower()
 
         assert "managementsamenvatting" in exit_definition
+        assert "geen diagnose" in exit_definition
         assert "eerdere signalering" in exit_definition
         assert "eerst verificatie" in retention_definition
+        assert "v1-werkmodel" in retention_definition
         assert "aanvullende behoudssignalen" in retention_definition
 
 

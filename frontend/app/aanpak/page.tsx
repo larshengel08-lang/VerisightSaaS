@@ -95,8 +95,8 @@ export default function AanpakPage() {
       <div className="mt-16 rounded-[2rem] border border-slate-200 bg-[#0d1b2e] p-8 text-white shadow-[0_28px_70px_rgba(15,23,42,0.16)]">
         <SectionHeading
           eyebrow="Trustlaag"
-          title="Duidelijk proces, Europese hosting en output die intern bruikbaar blijft."
-          description="Voor organisaties vanaf circa 200 medewerkers is niet alleen de analyse belangrijk, maar ook dat de productvorm netjes, voorspelbaar en privacybewust blijft."
+          title="Duidelijk proces, gegroepeerde output en trust die in het productverhaal zit."
+          description="Voor organisaties vanaf circa 200 medewerkers is niet alleen de analyse belangrijk, maar ook dat de productvorm netjes, voorspelbaar, privacybewust en methodisch uitlegbaar blijft."
           light
         />
         <div className="mt-8">
@@ -108,7 +108,7 @@ export default function AanpakPage() {
         <SectionHeading
           eyebrow="Wat standaard inbegrepen is"
           title="Een traject van scan-keuze tot rapportage."
-          description="Je koopt geen losse tool en geen open eind aan consultancy-uren, maar een duidelijke productvorm met vaste output."
+          description="Je koopt geen losse tool en geen open eind aan consultancy-uren, maar een duidelijke productvorm met vaste output, expliciete leeswijzers en productspecifieke trustgrenzen."
         />
         <div className="mt-10 grid gap-3 sm:grid-cols-2">
           {included.map((item) => (

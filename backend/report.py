@@ -1247,6 +1247,29 @@ def _append_methodology_section(
     story.append(band_table)
     story.append(Spacer(1, 0.4 * cm))
 
+    trust_rows = methodology_payload.get("trust_rows", [])
+    if trust_rows:
+        story.append(Paragraph("Trust, interpretatie & claimsgrens", STYLES["sub_title"]))
+        trust_table = Table(
+            trust_rows,
+            colWidths=[content_width * 0.24, content_width * 0.76],
+        )
+        trust_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#E0F2FE")),
+            ("BACKGROUND", (1, 0), (1, -1), WHITE),
+            ("TEXTCOLOR", (0, 0), (0, -1), BRAND_DARK),
+            ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+            ("FONTSIZE", (0, 0), (-1, -1), 8.5),
+            ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("TOPPADDING", (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ]))
+        story.append(trust_table)
+        story.append(Spacer(1, 0.4 * cm))
+
     story.append(Paragraph("Wat betekent elke factor?", STYLES["sub_title"]))
     for fname, source, explanation in FACTOR_EXPLANATIONS:
         story.append(Paragraph(

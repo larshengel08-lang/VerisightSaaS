@@ -305,10 +305,15 @@ export function MethodologyCard({
   return (
     <div className={embedded ? 'space-y-4' : 'rounded-[24px] border border-slate-200 bg-white p-5'}>
       <div>
-        <h3 className="text-base font-semibold text-slate-950">Methodologie & uitleg</h3>
+        <h3 className="text-base font-semibold text-slate-950">Methodologie, trust en leeswijzer</h3>
         <p className="mt-2 text-sm leading-7 text-slate-600">{scanDefinition.methodologyText}</p>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
+        <InfoBlock title="Wat dit product wel is" body={scanDefinition.whatItIsText} />
+        <InfoBlock title="Niet voor bedoeld" body={scanDefinition.whatItIsNotText} />
+        <InfoBlock title="Hoe je de output leest" body={scanDefinition.howToReadText} />
+        <InfoBlock title="Privacy- en gebruiksgrens" body={scanDefinition.privacyBoundaryText} />
+        <InfoBlock title="Bewijsstatus nu" body={scanDefinition.evidenceStatusText} />
         <InfoBlock title={signalLabel} body={scanDefinition.signalHelp} />
         <InfoBlock title="Signaalbanden" body={signaalbandenText} />
         <InfoBlock title="Betrouwbaarheid" body={scanDefinition.reliabilityText} />

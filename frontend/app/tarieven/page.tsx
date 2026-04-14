@@ -170,8 +170,8 @@ export default function TarievenPage() {
       <div className="mt-16 marketing-panel-dark p-8 md:p-10">
         <SectionHeading
           eyebrow="Trustlaag"
-          title="Een duidelijke prijs, een begeleid proces en output die intern overeind blijft."
-          description="Voor een eerste traject is vertrouwen vaak belangrijker dan maximale productbreedte. Daarom blijft Verisight bewust compact, begeleid en methodisch helder opgezet."
+          title="Een duidelijke prijs, een begeleid proces en output met expliciete claimsgrenzen."
+          description="Voor een eerste traject is vertrouwen vaak belangrijker dan maximale productbreedte. Daarom blijft Verisight bewust compact, begeleid, privacybewust en methodisch helder opgezet."
           light
         />
         <div className="mt-8">

@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from backend.products.exit.definition import SCAN_DEFINITION
+
+
+TRUST_CONTRACT = SCAN_DEFINITION["trust_contract"]
+
 
 EXIT_DECISION_BY_FACTOR = {
     "leadership": (
@@ -134,7 +139,9 @@ def get_management_summary_payload(
 
     trust_note = (
         "Lees ExitScan als managementsamenvatting van vertrekpatronen. Het rapport bundelt signalen, werkfactoren en hypotheses "
-        "tot een bestuurlijk gesprek, zonder causaliteit of harde voorspellingen te claimen."
+        "tot een bestuurlijk gesprek, zonder causaliteit, diagnose of harde voorspellingen te claimen. "
+        "De uitkomst is indicatief, gegroepeerd en bedoeld voor prioritering en verificatie. "
+        "ExitScan is methodisch verdedigbaar, maar niet extern gevalideerd als diagnostisch instrument."
     )
 
     return {
@@ -227,6 +234,13 @@ def get_methodology_payload() -> dict[str, Any]:
             ["LAAG", "< 4.5", "Overwegend positief beeld. Er zijn relatief weinig signalen van terugkerende werkfrictie rondom vertrek."],
             ["MIDDEN", "4.5-7.0", "Gemengd beeld. Er zijn meerdere aandachtspunten, maar de uitkomst vraagt vooral nadere verificatie."],
             ["HOOG", ">= 7.0", "Sterk signaal van ervaren werkfrictie. Dit vraagt om nadere analyse, niet automatisch om een harde conclusie."],
+        ],
+        "trust_rows": [
+            ["Wat dit product wel is", TRUST_CONTRACT["what_it_is"]],
+            ["Niet voor bedoeld", TRUST_CONTRACT["what_it_is_not"]],
+            ["Hoe je de output leest", TRUST_CONTRACT["how_to_read"]],
+            ["Privacy & rapportage", TRUST_CONTRACT["privacy_boundary"]],
+            ["Bewijsstatus nu", TRUST_CONTRACT["evidence_status"]],
         ],
     }
 

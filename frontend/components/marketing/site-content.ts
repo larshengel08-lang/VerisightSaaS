@@ -78,9 +78,9 @@ export const homepageComparisonRows = [
 ] as const
 
 export const homepageProofSignals = [
-  'Productkeuze voor de analyse begint',
+  'Methodische productkeuze: vertrekduiding of vroegsignalering',
   'Dashboard en rapport in dezelfde managementtaal',
-  'ExitScan en RetentieScan blijven inhoudelijk gescheiden',
+  'Groepsinzichten met minimale n-grenzen en productspecifieke leeswijzers',
 ] as const
 
 export const homepageUtilityLinks = [
@@ -144,9 +144,9 @@ export const comparisonCards = [
 ] as const
 
 export const trustItems = [
-  'Twee scans, een platform',
-  'Dashboard en managementrapport',
-  'Gehost in Europa',
+  'Primaire dataopslag in EU-regio',
+  'Groepsinzichten met minimale n-grenzen',
+  'Dashboard en managementrapport in dezelfde leeslijn',
   'Methodische basis vanuit A&O-psychologie',
 ] as const
 
@@ -175,7 +175,7 @@ export const outcomeCards = [
   ],
   [
     'Werk met een gedeelde taal voor HR, MT en directie',
-    'Dashboard en rapportage helpen om sneller op een lijn te komen over waar verdieping of actie het meeste oplevert.',
+    'Dashboard en rapportage helpen om sneller op een lijn te komen over waar verdieping of actie het meeste oplevert, inclusief vaste leeswijzers over claims, privacy en interpretatie.',
   ],
   [
     'Combineer signalering met duiding',
@@ -187,7 +187,7 @@ export const outcomeCards = [
   ],
   [
     'Privacy by design in beide producten',
-    'Output blijft bedoeld voor groepsinzichten en managementduiding, met extra terughoudendheid bij actieve medewerkers.',
+    'Output blijft bedoeld voor groepsinzichten en managementduiding, met extra terughoudendheid bij actieve medewerkers en zonder individuele managementoutput in RetentieScan.',
   ],
   [
     'Herhaalbaar zonder productverwarring',
@@ -215,7 +215,7 @@ export const included = [
   'Uitnodigingen en herinneringen voor respondenten',
   'Dashboard met prioriteiten en managementduiding',
   'Zelfstandig leesbaar rapport voor HR, MT en directie',
-  'Privacy- en interpretatiekaders in gewone taal',
+  'Privacy-, claims- en interpretatiekaders in gewone taal',
   'Begeleide productvorm in plaats van losse surveysoftware',
   'Binnen enkele weken eerste inzichten zonder implementatietraject',
   'Methodische basis vanuit arbeids- en organisatiepsychologie',
@@ -228,7 +228,7 @@ export const approachSteps = [
   },
   {
     title: '2. Datavoorbereiding',
-    body: 'We spreken af welke respondentdata, segmentinformatie en timing nodig zijn om dashboard en rapport straks goed leesbaar te maken.',
+    body: 'We spreken af welke respondentdata, segmentinformatie en timing nodig zijn om dashboard en rapport straks goed leesbaar te maken, inclusief minimale n-grenzen en privacygrenzen voor segmenten.',
   },
   {
     title: '3. Uitnodigen en uitvoeren',
@@ -236,7 +236,7 @@ export const approachSteps = [
   },
   {
     title: '4. Rapport en opvolging',
-    body: 'Je krijgt een dashboard en rapport waarmee HR, MT en directie sneller zien waar gesprek, validatie of vervolgactie logisch is.',
+    body: 'Je krijgt een dashboard en rapport waarmee HR, MT en directie sneller zien waar gesprek, validatie of vervolgactie logisch is, inclusief leeswijzers over methodiek, claimsgrenzen en privacy.',
   },
 ] as const
 
@@ -311,7 +311,7 @@ export const pricingCards = [
     eyebrow: 'RetentieScan Baseline',
     price: 'EUR 3.450',
     description:
-      'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.',
+      'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding, methodische leeswijzers en een gerichte managementscan in plaats van een brede MTO.',
     bullets: [
       'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in een managementrapport',
       'Geen individuele signalen naar management',
@@ -391,7 +391,7 @@ export const pricingFaqs = [
   ],
   [
     'Wat ziet management wel en niet?',
-    'Management ziet groeps- en segmentinzichten. Bij RetentieScan tonen we geen individuele signalen, geen vertrekintentie op persoonsniveau en geen performance-oordelen.',
+    'Management ziet groeps- en segmentinzichten. Bij RetentieScan tonen we geen individuele signalen, geen vertrekintentie op persoonsniveau, geen performance-oordelen en geen persoonsgerichte actieroutes.',
   ],
   [
     'Hoe vaak herhaal je RetentieScan?',
@@ -399,7 +399,7 @@ export const pricingFaqs = [
   ],
   [
     'Beloof je hiermee lager verloop?',
-    'Nee. Verisight verkoopt geen garantie op lager verloop, maar scherpere duiding, betere prioritering en een sterkere basis voor managementbeslissingen.',
+    'Nee. Verisight verkoopt geen garantie op lager verloop, maar scherpere duiding, betere prioritering en een sterkere basis voor managementbeslissingen op groepsniveau.',
   ],
 ] as const
 
@@ -422,7 +422,7 @@ export const faqs = [
   ],
   [
     'Is RetentieScan een gevalideerde vertrekvoorspeller?',
-    'Nee. Voor v1 positioneren we RetentieScan als SDT-gebaseerde managementscan voor behoudssignalen, verificatie en prioritering, niet als wetenschappelijk gevalideerde voorspeller van vrijwillig vertrek.',
+    'Nee. Voor v1 positioneren we RetentieScan als SDT-gebaseerde managementscan voor behoudssignalen, verificatie en prioritering: inhoudelijk plausibel en testmatig beschermd, maar niet als wetenschappelijk gevalideerde voorspeller van vrijwillig vertrek.',
   ],
   [
     'Hoe vaak herhaal je RetentieScan?',

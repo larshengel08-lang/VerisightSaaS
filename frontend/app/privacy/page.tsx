@@ -22,6 +22,11 @@ export default function PrivacyPage() {
           behoud onder druk staat via RetentieScan.
         </p>
         <p>
+          Privacy hoort daarbij niet als los juridisch blok, maar als onderdeel van de productopzet. ExitScan en
+          RetentieScan zijn daarom gebouwd voor groepsinzichten, managementduiding en expliciete interpretatiegrenzen
+          in plaats van individuele oordelen of black-box voorspellingen.
+        </p>
+        <p>
           Publieke bedrijfsgegevens, waaronder KvK-nummer en vestigingsadres, worden op deze pagina aangevuld zodra
           de formele inschrijving is afgerond. Tot die tijd kun je voor privacyvragen of due-diligence-verzoeken mailen naar{' '}
           <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>.
@@ -93,8 +98,8 @@ export default function PrivacyPage() {
           </li>
         </ul>
         <p>
-          Als doorgifte buiten de EER plaatsvindt, wordt passende contractuele bescherming toegepast. Op verzoek
-          lichten wij dat verder toe.
+          De primaire database draait in een EU-regio. Voor apphosting en e-mailverwerking maken wij daarnaast gebruik
+          van subverwerkers waarvoor passende contractuele waarborgen gelden. Op verzoek lichten wij dat verder toe.
         </p>
       </section>
 
@@ -102,13 +107,14 @@ export default function PrivacyPage() {
         <h2>7. Hoe beveiligen wij gegevens?</h2>
         <p>
           Verisight gebruikt versleutelde verbindingen, toegangsbeperking en database-afscherming per organisatie.
-          Rapportages zijn bedoeld voor groepsinzichten. Waar nodig worden minimale groepsgroottes of
-          betrouwbaarheidsduiding toegepast om herleidbaarheid te beperken.
+          Rapportages zijn bedoeld voor groepsinzichten. Waar nodig passen wij minimale groepsgroottes,
+          segmentonderdrukking, open-tekst-anonimisering en betrouwbaarheidsduiding toe om herleidbaarheid en
+          schijnprecisie te beperken.
         </p>
         <p>
           Voor RetentieScan geldt aanvullend dat de uitkomsten zijn bedoeld voor groeps- en segmentinzichten over
-          actieve medewerkers. Individuele signalen of vertrekintentie op persoonsniveau worden niet als managementoutput
-          gepresenteerd.
+          actieve medewerkers. Individuele signalen, individuele vertrekintentie en persoonsgerichte actieroutes worden
+          niet als managementoutput gepresenteerd.
         </p>
       </section>
 

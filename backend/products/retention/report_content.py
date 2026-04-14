@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from backend.products.retention.definition import SCAN_DEFINITION
+
+
+TRUST_CONTRACT = SCAN_DEFINITION["trust_contract"]
+
 
 RETENTION_DECISION_BY_FACTOR = {
     "leadership": (
@@ -129,7 +134,8 @@ def get_management_summary_payload(
 
     trust_note = (
         "Lees RetentieScan als groeps- en segmentduiding voor verificatie en opvolging. Het rapport is geen brede MTO, "
-        "geen individueel performance-instrument en geen gevalideerde voorspeller van vrijwillig vertrek."
+        "geen individueel performance-instrument en geen gevalideerde voorspeller van vrijwillig vertrek. "
+        "Dit blijft een v1-werkmodel: management ziet groepssignalen, geen individuele scores of persoonsgerichte interventieroutes."
     )
 
     return {
@@ -221,6 +227,13 @@ def get_methodology_payload() -> dict[str, Any]:
             ["Laag aandachtssignaal", "< 4.5", "Overwegend stabiel beeld. Er zijn relatief weinig directe signalen dat behoud nu breed onder druk staat."],
             ["Verhoogd aandachtssignaal", "4.5-7.0", "Gemengd beeld. Er zijn meerdere aandachtspunten die verificatie en prioritering vragen."],
             ["Sterk aandachtssignaal", ">= 7.0", "Een relatief scherp groepssignaal dat behoud aandacht vraagt. Dit is geen individuele voorspelling of causaliteitsclaim."],
+        ],
+        "trust_rows": [
+            ["Wat dit product wel is", TRUST_CONTRACT["what_it_is"]],
+            ["Niet voor bedoeld", TRUST_CONTRACT["what_it_is_not"]],
+            ["Hoe je de output leest", TRUST_CONTRACT["how_to_read"]],
+            ["Privacy & rapportage", TRUST_CONTRACT["privacy_boundary"]],
+            ["Bewijsstatus nu", TRUST_CONTRACT["evidence_status"]],
         ],
     }
 

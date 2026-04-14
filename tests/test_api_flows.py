@@ -415,12 +415,15 @@ def test_contact_request_persists_when_email_notification_fails(client, db_sessi
         headers={"x-forwarded-for": "203.0.113.10"},
     )
 
-    assert response.status_code == 200
-    assert response.json()["message"] == "Verstuurd"
+    assert response.status_code == 202
+    assert response.json()["message"] == "Aanvraag opgeslagen"
+    assert response.json()["notification_sent"] is False
+    assert response.json()["lead_id"]
 
     stored = db_session.query(ContactRequest).one()
     assert stored.notification_sent is False
     assert stored.notification_error == "missing_resend_api_key"
+    assert response.json()["lead_id"] == stored.id
 
 
 def test_contact_request_marks_notification_sent_and_clears_error(client, db_session: Session, monkeypatch: pytest.MonkeyPatch):
@@ -443,10 +446,40 @@ def test_contact_request_marks_notification_sent_and_clears_error(client, db_ses
     )
 
     assert response.status_code == 200
+    assert response.json()["notification_sent"] is True
+    assert response.json()["lead_id"]
 
     stored = db_session.query(ContactRequest).one()
     assert stored.notification_sent is True
     assert stored.notification_error is None
+
+
+def test_contact_requests_list_returns_recent_leads(client, db_session: Session, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(
+        "backend.main.send_contact_request_result",
+        lambda **kwargs: EmailSendResult(ok=True),
+    )
+
+    client.post(
+        "/api/contact-request",
+        json={
+            "name": "Lars",
+            "work_email": "lars@verisight.nl",
+            "organization": "Verisight",
+            "employee_count": "200-500",
+            "current_question": "Wij willen weten hoe de baseline werkt.",
+            "website": "",
+        },
+        headers={"x-forwarded-for": "203.0.113.12"},
+    )
+
+    response = client.get("/api/contact-requests?limit=5")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["organization"] == "Verisight"
+    assert payload[0]["notification_sent"] is True
 
 
 def test_send_contact_request_result_returns_missing_contact_email_reason(monkeypatch: pytest.MonkeyPatch):

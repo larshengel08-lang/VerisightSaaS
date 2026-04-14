@@ -9,6 +9,29 @@ SCAN_DEFINITION: dict[str, Any] = {
     "product_name": "ExitScan",
     "signal_label": "Frictiescore",
     "signal_short_label": "frictiescore",
+    "trust_contract": {
+        "what_it_is": (
+            "Een begeleide exitscan voor terugkijkende vertrekduiding op groepsniveau, "
+            "met dashboard en managementrapport in dezelfde leeslijn."
+        ),
+        "what_it_is_not": (
+            "Geen diagnose, geen individuele beoordeling, geen voorspelmodel en geen objectieve "
+            "causaliteitsclaim over waarom iemand vertrok."
+        ),
+        "how_to_read": (
+            "Lees frictiescore, vertrekredenen, meespelende factoren en eerdere signalering samen "
+            "als managementverhaal. De score opent het gesprek, maar sluit het niet af."
+        ),
+        "privacy_boundary": (
+            "Output blijft gegroepeerd. Detailweergave start pas vanaf 5 responses, patroonanalyse "
+            "vanaf 10 en segmenten blijven verborgen bij te kleine groepen."
+        ),
+        "evidence_status": (
+            "Methodisch verdedigbaar en testmatig geborgd, maar niet extern gevalideerd als "
+            "diagnostisch instrument. De huidige gewichten blijven expert judgment totdat eigendata "
+            "latere kalibratie dragen."
+        ),
+    },
     "survey_intro": "Bedankt voor je tijd. Je antwoorden helpen de organisatie beter te worden. Dit duurt circa 8 minuten.",
     "survey_privacy_note": "Je antwoorden worden vertrouwelijk verwerkt en alleen op gegroepeerd niveau gerapporteerd. De uitkomsten zijn bedoeld als groepsinzichten en gespreksinput, niet als individueel oordeel of harde voorspelling. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat totdat je verzendt of het concept wist.",
     "sdt_intro": "De volgende stellingen gaan over hoe jij je werk ervoer. Geef aan in welke mate elke stelling voor jou van toepassing was (1 = helemaal niet mee eens, 5 = helemaal mee eens).",

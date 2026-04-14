@@ -91,3 +91,8 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
     assert "managementsamenvatting, eerste verificatiespoor en eerste logische stap" in product_page
     assert "managementsamenvatting, vertrekduiding" in marketing_products
     assert "managementsamenvatting, retentiesignaal" in marketing_products
+    assert "bewijstatus" not in preview_copy
+    assert "bewijsstatus" in preview_copy
+    assert "trust, interpretatie & claimsgrens" in report
+    assert "niet extern gevalideerd als diagnostisch instrument" in exit_report_content
+    assert "v1-werkmodel" in retention_report_content

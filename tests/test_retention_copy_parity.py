@@ -19,6 +19,8 @@ def test_retention_signal_language_stays_aligned_across_layers():
     assert "samenvattend groepssignaal" in frontend_definition
     assert "samenvattend groepssignaal" in backend_definition
     assert "samenvattend groepssignaal" in report_content
+    assert "v1-werkmodel" in frontend_definition
+    assert "v1-werkmodel" in backend_definition
     assert "signaalprofiel" in report
     assert "risicoprofiel" not in report
 
@@ -33,8 +35,10 @@ def test_retention_copy_keeps_non_predictive_management_boundary():
     assert "geen individuele voorspeller" in product_page
     assert "geen individuele signalen naar management" in marketing
     assert "niet als wetenschappelijk gevalideerde voorspeller" in marketing
-    assert "individuele signalen of vertrekintentie op persoonsniveau" in privacy_page
-    assert "individuele signalen of vertrekintentie op persoonsniveau" in dpa_page
+    assert "individuele signalen, individuele vertrekintentie" in privacy_page
+    assert "individuele signalen, individuele vertrekintentie" in dpa_page
+    assert "primaire database draait in een eu-regio" in privacy_page
+    assert "persoonsgerichte actieroutes" in dpa_page
     assert "risicovoorspelling" not in product_page
 
 

@@ -9,6 +9,28 @@ SCAN_DEFINITION: dict[str, Any] = {
     "product_name": "RetentieScan",
     "signal_label": "Retentiesignaal",
     "signal_short_label": "retentiesignaal",
+    "trust_contract": {
+        "what_it_is": (
+            "Een compacte behoudsscan voor groeps- en segmentniveau, bedoeld om eerder zichtbaar "
+            "te maken waar behoud aandacht vraagt in actieve populaties."
+        ),
+        "what_it_is_not": (
+            "Geen brede MTO, geen individuele voorspeller, geen performance-instrument en geen "
+            "selectie- of interventietool op persoonsniveau."
+        ),
+        "how_to_read": (
+            "Lees het retentiesignaal samen met bevlogenheid, stay-intent, vertrekintentie en "
+            "topfactoren als verificatiehulp. De uitkomst is een managementroute, geen hard classificatiemodel."
+        ),
+        "privacy_boundary": (
+            "Management ziet alleen groeps- en segmentinzichten. Individuele signalen, individuele "
+            "vertrekintentie en open tekst op persoonsniveau blijven buiten beeld; segmenten verschijnen alleen bij voldoende n."
+        ),
+        "evidence_status": (
+            "RetentieScan is een v1-werkmodel: inhoudelijk plausibel, intern consistent en "
+            "testmatig beschermd. Het product is nadrukkelijk geen pragmatisch bewezen of wetenschappelijk gevalideerde predictor van vrijwillig vertrek."
+        ),
+    },
     "survey_intro": "Jouw mening telt. Deze RetentieScan is een compacte behoudsscan die kijkt naar groepssignalen over werkbeleving en behoud - niet naar individuele beoordeling of voorspelling. Invullen kost circa 6 minuten.",
     "survey_privacy_note": "Je antwoorden worden vertrouwelijk verwerkt en alleen op groeps- of segmentniveau gerapporteerd. De uitkomsten zijn bedoeld als managementinformatie over werkbeleving en behoud, niet als individueel oordeel, brede tevredenheidsmeting of voorspelling. Als je tussentijds stopt, bewaart deze browser tijdelijk een concept op dit apparaat totdat je verzendt of het concept wist.",
     "sdt_intro": "De volgende stellingen gaan over hoe jij je werk nu ervaart. Geef aan in welke mate elke stelling voor jou van toepassing is (1 = helemaal niet mee eens, 5 = helemaal mee eens).",

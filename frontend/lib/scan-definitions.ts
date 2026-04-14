@@ -8,6 +8,11 @@ export interface ScanDefinition {
   signalLabelLower: string
   summaryLabel: string
   methodologyText: string
+  whatItIsText: string
+  whatItIsNotText: string
+  howToReadText: string
+  privacyBoundaryText: string
+  evidenceStatusText: string
   signalHelp: string
   reliabilityText: string
   segmentText: string

@@ -43,7 +43,7 @@ from time import time
 from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
+from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.templating import Jinja2Templates
@@ -62,6 +62,7 @@ from backend.schemas import (
     CampaignRead,
     CampaignStats,
     ContactRequestCreate,
+    ContactRequestRead,
     ContactRequestResponse,
     InviteSendResult,
     OrganizationCreate,
@@ -544,7 +545,7 @@ async def create_contact_request(
     db: Session = Depends(get_db),
 ) -> ContactRequestResponse:
     if body.website:
-        return ContactRequestResponse(message="Verstuurd")
+        return ContactRequestResponse(message="Verstuurd", notification_sent=True)
 
     _cleanup_contact_rate_limits()
     client_ip = _get_client_ip(request)
@@ -581,6 +582,11 @@ async def create_contact_request(
         lead.notification_error = None
         db.add(lead)
         db.commit()
+        return ContactRequestResponse(
+            message="Verstuurd",
+            notification_sent=True,
+            lead_id=lead.id,
+        )
     else:
         lead.notification_error = send_result.reason
         db.add(lead)
@@ -591,8 +597,33 @@ async def create_contact_request(
             body.work_email,
             send_result.reason or "onbekende fout",
         )
+        return JSONResponse(
+            status_code=202,
+            content=ContactRequestResponse(
+                message="Aanvraag opgeslagen",
+                notification_sent=False,
+                warning=(
+                    "Je aanvraag is opgeslagen, maar de e-mailnotificatie liep vast. "
+                    "Controleer de leadlijst of de backendlogs voor verdere opvolging."
+                ),
+                lead_id=lead.id,
+            ).model_dump(),
+        )
 
-    return ContactRequestResponse(message="Verstuurd")
+
+@app.get("/api/contact-requests", response_model=list[ContactRequestRead])
+async def list_contact_requests(
+    limit: int = Query(default=25, ge=1, le=100),
+    x_admin_token: Annotated[str | None, Header()] = None,
+    db: Session = Depends(get_db),
+) -> list[ContactRequest]:
+    require_backend_admin_token(x_admin_token, is_production=_IS_PRODUCTION)
+    return (
+        db.query(ContactRequest)
+        .order_by(ContactRequest.created_at.desc())
+        .limit(limit)
+        .all()
+    )
 
 
 @app.get("/survey/complete", response_class=HTMLResponse)

@@ -41,6 +41,10 @@ export default function DpaPage() {
           <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>, hierna te noemen
           &quot;Verwerker&quot;.
         </p>
+        <p>
+          De dienst is ingericht voor gegroepeerde managementinzichten met expliciete privacy- en
+          interpretatiegrenzen. Verwerker levert geen persoonsgerichte voorspel- of beoordelingsoutput.
+        </p>
       </section>
 
       <section>
@@ -84,8 +88,8 @@ export default function DpaPage() {
         </p>
         <p>
           Wanneer RetentieScan wordt ingezet op actieve medewerkers, zijn de uitkomsten nadrukkelijk bedoeld voor
-          groeps- en segmentinzichten. Individuele signalen of vertrekintentie op persoonsniveau worden niet als
-          managementoutput verstrekt.
+          groeps- en segmentinzichten. Individuele signalen, individuele vertrekintentie op persoonsniveau en
+          persoonsgerichte actieroutes worden niet als managementoutput verstrekt.
         </p>
       </section>
 
@@ -111,7 +115,8 @@ export default function DpaPage() {
           <li>versleuteling van gegevens tijdens transport via TLS/HTTPS;</li>
           <li>database-afscherming per organisatie via toegangsbeperking en tenant-isolatie;</li>
           <li>beperkte toegang voor medewerkers van Verwerker op basis van need-to-know;</li>
-          <li>minimum groepsgroottes en terughoudende rapportage om herleidbaarheid te beperken.</li>
+          <li>minimum groepsgroottes, segmentonderdrukking en terughoudende rapportage om herleidbaarheid te beperken;</li>
+          <li>anonimisering van open tekst waar dat nodig is voor veilige groepsduiding.</li>
         </ul>
       </section>
 

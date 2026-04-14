@@ -8,6 +8,8 @@ describe('REPORT_PREVIEW_COPY', () => {
     expect(exitCopy.intro).toContain('managementsamenvatting')
     expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Managementsamenvatting')
     expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Werkhypothesen')
+    expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Bewijsstatus')
+    expect(exitCopy.nuance).toContain('geen diagnose')
     expect(exitCopy.hypothesisLead).toContain('eerste eigenaar')
   })
 
@@ -16,7 +18,9 @@ describe('REPORT_PREVIEW_COPY', () => {
 
     expect(retentionCopy.intro).toContain('eerste verificatiespoor')
     expect(retentionCopy.nuance).toContain('geen individuele voorspeller')
+    expect(retentionCopy.nuance).toContain('v1-werkmodel')
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Managementsamenvatting')
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Actielogica')
+    expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Bewijsstatus')
   })
 })
