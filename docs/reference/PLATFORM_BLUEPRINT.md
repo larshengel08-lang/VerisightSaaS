@@ -2,7 +2,7 @@
 **Versie 1.0 | Datum: April 2025**
 **Status: Toekomstvisie — beschrijft de volledige productrichting**
 
-> **v1-implementatie:** Zie `ARCHITECTURE.md` voor wat er nu staat en `ROADMAP.md` voor de fasering.
+> **v1-implementatie:** Zie `docs/reference/ARCHITECTURE.md` voor wat er nu staat en `docs/strategy/ROADMAP.md` voor de fasering.
 > Dit document beschrijft het einddoel. Niet alles hierin is gebouwd of gepland voor de komende fase.
 
 ---

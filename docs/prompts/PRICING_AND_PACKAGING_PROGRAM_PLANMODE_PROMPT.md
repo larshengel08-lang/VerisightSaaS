@@ -18,7 +18,7 @@ Lees eerst voor context:
 - [backend/report.py](/C:/Users/larsh/Desktop/Business/Verisight/backend/report.py)
 - [backend/scoring.py](/C:/Users/larsh/Desktop/Business/Verisight/backend/scoring.py)
 - [AUDIT_IMPLEMENTATION_ROSTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/AUDIT_IMPLEMENTATION_ROSTER.md)
-- [EXITSCAN_PRODUCT_SHARPENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/EXITSCAN_PRODUCT_SHARPENING_PLAN.md)
+- [EXITSCAN_PRODUCT_SHARPENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_PRODUCT_SHARPENING_PLAN.md)
 
 Scope:
 - ExitScan pricing
