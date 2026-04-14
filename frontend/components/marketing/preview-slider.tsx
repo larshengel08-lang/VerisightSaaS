@@ -232,7 +232,7 @@ function DashboardSlide({ variant }: { variant: PreviewVariant }) {
             <span className="h-3 w-3 rounded-full bg-red-400" />
             <span className="h-3 w-3 rounded-full bg-amber-300" />
             <span className="h-3 w-3 rounded-full bg-emerald-400" />
-            <span className="ml-3 rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">dashboard.verisight.nl</span>
+            <span className="ml-3 rounded-full bg-white/10 px-3 py-1 text-xs text-slate-300">verisight.nl/dashboard</span>
           </div>
           <div className="grid gap-4 sm:grid-cols-4">
             {copy.kpis.map(([label, value, detail]) => (

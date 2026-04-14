@@ -309,6 +309,34 @@ as $$
   );
 $$;
 
+create or replace function public.get_org_api_key_for_current_user(target_org_id uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  resolved_key uuid;
+begin
+  if not public.is_org_member(target_org_id) then
+    raise exception 'Geen toegang tot organisatiesecret voor deze organisatie.';
+  end if;
+
+  select api_key
+  into resolved_key
+  from public.organization_secrets
+  where org_id = target_org_id;
+
+  if resolved_key is null then
+    raise exception 'API-sleutel voor organisatie ontbreekt.';
+  end if;
+
+  return resolved_key;
+end;
+$$;
+
+grant execute on function public.get_org_api_key_for_current_user(uuid) to authenticated;
+
 create or replace function public.accept_org_invites_for_current_user()
 returns integer
 language plpgsql

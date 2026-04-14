@@ -45,7 +45,7 @@ export async function GET(_request: Request, { params }: Context) {
   let backendResponse: globalThis.Response | null = null
 
   try {
-    const apiKey = await getOrganizationApiKey(campaign.organization_id)
+    const apiKey = await getOrganizationApiKey(campaign.organization_id, { supabase })
     backendResponse = await fetch(`${backendBaseUrl}/api/campaigns/${id}/report`, {
       headers: {
         'x-api-key': apiKey,

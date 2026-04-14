@@ -39,9 +39,21 @@ export async function resendPendingAction(campaignId: string): Promise<ResendRes
     return { sent: 0, failed: 0, skipped: 0, error: 'Campaign niet gevonden of niet toegankelijk.' }
   }
 
+  const { data: membership, error: membershipError } = await supabase
+    .from('org_members')
+    .select('role')
+    .eq('org_id', campaign.organization_id)
+    .eq('user_id', user.id)
+    .in('role', ['owner', 'member'])
+    .maybeSingle()
+
+  if (membershipError || !membership) {
+    return { sent: 0, failed: 0, skipped: 0, error: 'Je hebt geen rechten om herinneringen te versturen.' }
+  }
+
   let apiKey: string
   try {
-    apiKey = await getOrganizationApiKey(campaign.organization_id)
+    apiKey = await getOrganizationApiKey(campaign.organization_id, { supabase })
   } catch {
     return { sent: 0, failed: 0, skipped: 0, error: 'Autorisatie voor backend-uitnodigingen ontbreekt.' }
   }

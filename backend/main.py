@@ -41,6 +41,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from time import time
 from typing import Annotated, Any
+from uuid import UUID
 
 from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -609,7 +610,7 @@ async def serve_survey(
     token: str,
     db: Session = Depends(get_db),
 ) -> HTMLResponse:
-    respondent = db.query(Respondent).filter(Respondent.token == token).first()
+    respondent = _get_respondent_by_token(token, db)
 
     if not respondent:
         return _render_survey_status(
@@ -686,7 +687,7 @@ async def submit_survey(
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     # Validate token
-    respondent = db.query(Respondent).filter(Respondent.token == payload.token).first()
+    respondent = _get_respondent_by_token(payload.token, db)
     if not respondent:
         raise HTTPException(status_code=404, detail="Ongeldige token.")
     if respondent.completed:
@@ -880,6 +881,15 @@ def _get_org_by_api_key(api_key: str, db: Session) -> Organization:
     if not org.is_active:
         raise HTTPException(status_code=403, detail="Organisatie is inactief.")
     return org
+
+
+def _get_respondent_by_token(token: str, db: Session) -> Respondent | None:
+    try:
+        normalized = str(UUID(token))
+    except (TypeError, ValueError):
+        return None
+
+    return db.query(Respondent).filter(Respondent.token == normalized).first()
 
 
 def _create_campaign_respondents(

@@ -9,7 +9,7 @@
     {% for section in scan.org_sections %}
     {% if section.key in enabled_modules %}
     <p style="font-weight:600;font-size:14px;{% if not loop.first %}margin:20px 0 16px;{% else %}margin-bottom:16px;{% endif %}color:var(--text);">{{ section.title }}</p>
-    {% for item_id, item_text in section.items %}
+    {% for item_id, item_text in section["items"] %}
     <div class="question-block" id="qblock-{{ item_id }}">
       <div class="question-text"><span class="question-number">◆</span>{{ item_text }}</div>
       <div class="likert-wrap">
