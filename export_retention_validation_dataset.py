@@ -23,6 +23,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Export RetentieScan-validatiedataset en codeboek.")
     parser.add_argument("--db-path", help="Pad naar SQLite databasebestand. Overschrijft DATABASE_URL voor deze run.")
     parser.add_argument(
+        "--dataset-origin",
+        choices=["real", "synthetic", "dummy", "unknown"],
+        help="Herkomst van de response-dataset. Laat leeg om deze alleen op naam te infereren.",
+    )
+    parser.add_argument(
         "--outdir",
         default="data/retention_validation_export",
         help="Doelmap voor CSV/JSON exportbestanden.",
@@ -32,11 +37,14 @@ def main() -> None:
     root = _bootstrap_path()
     _configure_database_url(args.db_path)
 
+    from analysis.retention.evidence import assess_validation_evidence, resolve_dataset_origin
     from analysis.retention.validation import aggregate_segments, export_codebook_json, extract_retention_rows
     from backend.database import SessionLocal
 
     outdir = (root / args.outdir).resolve()
     outdir.mkdir(parents=True, exist_ok=True)
+    dataset_origin = resolve_dataset_origin(args.dataset_origin, args.db_path, args.outdir)
+    evidence = assess_validation_evidence(responses_origin=dataset_origin)
 
     db = SessionLocal()
     try:
@@ -68,6 +76,8 @@ def main() -> None:
 
     meta = {
         "db_path": str(Path(args.db_path).resolve()) if args.db_path else None,
+        "dataset_origin": dataset_origin,
+        "evidence": evidence,
         "n_rows": len(rows),
         "n_segments": len(segments),
         "response_export": str(response_path),

@@ -294,6 +294,8 @@ def main() -> None:
             "run_retention_validation.py",
             "--db-path",
             str(db_path),
+            "--dataset-origin",
+            "dummy",
             "--outdir",
             str(outdir / "validation_report"),
         ]
@@ -303,6 +305,8 @@ def main() -> None:
             "assess_retention_validation_readiness.py",
             "--db-path",
             str(db_path),
+            "--dataset-origin",
+            "dummy",
             "--outdir",
             str(outdir / "readiness"),
         ]
@@ -314,6 +318,10 @@ def main() -> None:
             str(db_path),
             "--outcomes-csv",
             str(outcomes_csv),
+            "--responses-origin",
+            "dummy",
+            "--outcomes-origin",
+            "dummy",
             "--outdir",
             str(outdir / "pragmatic_validation"),
         ]

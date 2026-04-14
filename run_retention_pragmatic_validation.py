@@ -39,6 +39,22 @@ def _render_markdown(summary: dict[str, Any]) -> str:
     lines = [
         "# RetentieScan pragmatische validatie",
         "",
+        "## Evidence Boundary",
+        "",
+        f"- Responses origin: {summary['evidence']['responses_origin']}",
+        f"- Outcomes origin: {summary['evidence']['outcomes_origin']}",
+        f"- Counts as market evidence: {'yes' if summary['evidence']['counts_as_market_evidence'] else 'no'}",
+        f"- Counts as statistical validation: {'yes' if summary['evidence']['counts_as_statistical_validation'] else 'no'}",
+        f"- Counts as pragmatic validation: {'yes' if summary['evidence']['counts_as_pragmatic_validation'] else 'no'}",
+        "",
+        f"{summary['evidence']['summary']}",
+        "",
+    ]
+    for warning in summary["evidence"]["warnings"]:
+        lines.append(f"- Warning: {warning}")
+    lines.extend(
+        [
+            "",
         "## Coverage",
         "",
         f"- Segmentaggregaties: {summary['coverage']['n_segments']}",
@@ -49,7 +65,8 @@ def _render_markdown(summary: dict[str, Any]) -> str:
         "",
         "| Relatie | n | r |",
         "|---|---:|---:|",
-    ]
+        ]
+    )
     for key, value in summary["correlations"].items():
         lines.append(f"| {key} | {value['n']} | {value['r'] if value['r'] is not None else '-'} |")
     lines.append("")
@@ -61,6 +78,16 @@ def main() -> None:
     parser.add_argument("--db-path", help="Pad naar SQLite databasebestand.")
     parser.add_argument("--outcomes-csv", required=True, help="Pad naar ingevuld follow-up outcomes CSV-bestand.")
     parser.add_argument(
+        "--responses-origin",
+        choices=["real", "synthetic", "dummy", "unknown"],
+        help="Herkomst van de response-dataset. Laat leeg om deze alleen op naam te infereren.",
+    )
+    parser.add_argument(
+        "--outcomes-origin",
+        choices=["real", "synthetic", "dummy", "unknown"],
+        help="Herkomst van de follow-up outcomes. Laat leeg om deze alleen op naam te infereren.",
+    )
+    parser.add_argument(
         "--outdir",
         default="data/retention_pragmatic_validation",
         help="Doelmap voor JSON/Markdown/CSV output.",
@@ -70,6 +97,7 @@ def main() -> None:
     root = _bootstrap_path()
     _configure_database_url(args.db_path)
 
+    from analysis.retention.evidence import assess_validation_evidence, resolve_dataset_origin
     from analysis.retention.validation import (
         add_derived_scores,
         aggregate_segments,
@@ -80,6 +108,12 @@ def main() -> None:
 
     outdir = (root / args.outdir).resolve()
     outdir.mkdir(parents=True, exist_ok=True)
+    responses_origin = resolve_dataset_origin(args.responses_origin, args.db_path, args.outdir)
+    outcomes_origin = resolve_dataset_origin(args.outcomes_origin, args.outcomes_csv)
+    evidence = assess_validation_evidence(
+        responses_origin=responses_origin,
+        outcomes_origin=outcomes_origin,
+    )
 
     db = SessionLocal()
     try:
@@ -138,6 +172,7 @@ def main() -> None:
     }
 
     summary = {
+        "evidence": evidence,
         "coverage": {
             "n_segments": len(segment_rows),
             "n_outcomes_rows": len(outcomes_rows),
@@ -166,6 +201,8 @@ def main() -> None:
                 "json": str(json_path),
                 "markdown": str(md_path),
                 "joined_csv": str(joined_csv),
+                "responses_origin": responses_origin,
+                "outcomes_origin": outcomes_origin,
                 "coverage": summary["coverage"],
             },
             ensure_ascii=False,

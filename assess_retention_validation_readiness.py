@@ -22,6 +22,21 @@ def _render_markdown(readiness: dict) -> str:
     lines = [
         "# RetentieScan Validation Readiness",
         "",
+        "## Evidence Boundary",
+        "",
+        f"- Dataset origin: {readiness['evidence']['responses_origin']}",
+        f"- Counts as market evidence: {'yes' if readiness['evidence']['counts_as_market_evidence'] else 'no'}",
+        f"- Counts as statistical validation: {'yes' if readiness['evidence']['counts_as_statistical_validation'] else 'no'}",
+        f"- Counts as pragmatic validation: {'yes' if readiness['evidence']['counts_as_pragmatic_validation'] else 'no'}",
+        "",
+        f"{readiness['evidence']['summary']}",
+        "",
+    ]
+    for warning in readiness["evidence"]["warnings"]:
+        lines.append(f"- Warning: {warning}")
+    lines.extend(
+        [
+            "",
         "## Dataset",
         "",
         f"- Responses: {readiness['dataset']['n_responses']}",
@@ -33,7 +48,8 @@ def _render_markdown(readiness: dict) -> str:
         "",
         "| Stap | Status | Uitleg |",
         "|---|---|---|",
-    ]
+        ]
+    )
     for item in readiness["checks"]:
         lines.append(f"| {item['step']} | {item['status']} | {item['message']} |")
     lines.extend(
@@ -53,6 +69,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Beoordeel of RetentieScan-data klaar is voor v1.1-validatie.")
     parser.add_argument("--db-path", help="Pad naar SQLite databasebestand. Overschrijft DATABASE_URL voor deze run.")
     parser.add_argument(
+        "--dataset-origin",
+        choices=["real", "synthetic", "dummy", "unknown"],
+        help="Herkomst van de response-dataset. Laat leeg om deze alleen op naam te infereren.",
+    )
+    parser.add_argument(
         "--outdir",
         default="data/retention_validation_readiness",
         help="Doelmap voor JSON/Markdown output.",
@@ -62,11 +83,14 @@ def main() -> None:
     root = _bootstrap_path()
     _configure_database_url(args.db_path)
 
+    from analysis.retention.evidence import assess_validation_evidence, resolve_dataset_origin
     from analysis.retention.validation import extract_retention_rows
     from backend.database import SessionLocal
 
     outdir = (root / args.outdir).resolve()
     outdir.mkdir(parents=True, exist_ok=True)
+    dataset_origin = resolve_dataset_origin(args.dataset_origin, args.db_path, args.outdir)
+    evidence = assess_validation_evidence(responses_origin=dataset_origin)
 
     db = SessionLocal()
     try:
@@ -118,8 +142,11 @@ def main() -> None:
     if n_departments < 2 or n_role_levels < 2:
         next_actions.append("Zorg bij respondentimport voor ingevulde department en role_level om segmentvalidatie mogelijk te maken.")
     next_actions.append("Leg follow-up uitkomsten vast in het outcomes-template voor latere pragmatische validatie.")
+    if dataset_origin != "real":
+        next_actions.append("Gebruik deze output niet als market evidence; verzamel en label eerst echte RetentieScan-data.")
 
     readiness = {
+        "evidence": evidence,
         "dataset": {
             "n_responses": n_responses,
             "n_campaigns": n_campaigns,
@@ -135,7 +162,18 @@ def main() -> None:
     json_path.write_text(json.dumps(readiness, ensure_ascii=False, indent=2), encoding="utf-8")
     md_path.write_text(_render_markdown(readiness), encoding="utf-8")
 
-    print(json.dumps({"json": str(json_path), "markdown": str(md_path), "dataset": readiness["dataset"]}, ensure_ascii=False, indent=2))
+    print(
+        json.dumps(
+            {
+                "json": str(json_path),
+                "markdown": str(md_path),
+                "dataset_origin": dataset_origin,
+                "dataset": readiness["dataset"],
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

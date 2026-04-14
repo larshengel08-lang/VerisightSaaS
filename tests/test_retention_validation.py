@@ -5,6 +5,7 @@ import json
 import numpy as np
 
 from analysis.retention.codebook import RETENTION_CODEBOOK
+from analysis.retention.evidence import assess_validation_evidence, infer_dataset_origin, resolve_dataset_origin
 from analysis.retention.validation import (
     cronbach_alpha,
     omega_total,
@@ -143,3 +144,34 @@ def test_codebook_contains_stay_intent_and_derived_signal():
 
     assert "stay_intent_score" in payload
     assert "retention_signal_score" in payload
+
+
+def test_infer_dataset_origin_detects_synthetic_and_dummy_paths():
+    assert infer_dataset_origin("retention_validation_demo.db") == "synthetic"
+    assert infer_dataset_origin("retention_pilot_dummy.db") == "dummy"
+    assert infer_dataset_origin("customer-retention.sqlite") == "unknown"
+
+
+def test_resolve_dataset_origin_prefers_explicit_value():
+    assert resolve_dataset_origin("real", "retention_validation_demo.db") == "real"
+
+
+def test_assess_validation_evidence_blocks_synthetic_market_claims():
+    evidence = assess_validation_evidence(responses_origin="synthetic")
+
+    assert evidence["counts_as_market_evidence"] is False
+    assert evidence["counts_as_statistical_validation"] is False
+    assert evidence["counts_as_pragmatic_validation"] is False
+    assert any("niet als empirisch bewijs" in warning.lower() for warning in evidence["warnings"])
+
+
+def test_assess_validation_evidence_requires_real_outcomes_for_pragmatic_validation():
+    evidence = assess_validation_evidence(
+        responses_origin="real",
+        outcomes_origin="dummy",
+    )
+
+    assert evidence["counts_as_market_evidence"] is True
+    assert evidence["counts_as_statistical_validation"] is True
+    assert evidence["counts_as_pragmatic_validation"] is False
+    assert any("follow-up" in warning.lower() for warning in evidence["warnings"])
