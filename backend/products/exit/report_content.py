@@ -13,6 +13,7 @@ def get_management_summary_payload(
 ) -> dict[str, Any]:
     top_factor_text = " en ".join(label.lower() for label in top_factor_labels[:2]) if top_factor_labels else "de scherpste werkfactoren"
     top_reason_text = (top_exit_reason_label or "het huidige vertrekbeeld").lower()
+    top_factor_value = " / ".join(top_factor_labels[:2]) if top_factor_labels else "Nog geen duidelijke topfactor"
 
     if strong_work_signal_pct is not None and strong_work_signal_pct >= 50:
         profile_body = (
@@ -51,10 +52,73 @@ def get_management_summary_payload(
         "Koppel die verificatie daarna direct aan een concrete 30-90 dagenactie."
     )
 
+    if signal_visibility_average is None:
+        visibility_value = "Nog in opbouw"
+        visibility_body = (
+            "Zodra meer exitresponses binnen zijn laat ExitScan zien of signalen vooraf zichtbaar of bespreekbaar waren."
+        )
+    elif signal_visibility_average >= 4:
+        visibility_value = "Signalen waren zichtbaar"
+        visibility_body = (
+            "Twijfel of vertrek kwam niet volledig uit de lucht vallen. Toets vooral waar opvolging of escalatie te laat kwam."
+        )
+    elif signal_visibility_average >= 3:
+        visibility_value = "Signalen waren deels zichtbaar"
+        visibility_body = (
+            "Er waren aanwijzingen, maar nog geen scherp of breed gesprek. Kijk waar opvolging tussen wal en schip viel."
+        )
+    else:
+        visibility_value = "Signalen bleven onder de radar"
+        visibility_body = (
+            "Gebruik dit om te onderzoeken waar twijfels te laat zichtbaar werden of onvoldoende veilig bespreekbaar waren."
+        )
+
+    executive_intro = (
+        f"ExitScan maakt het vertrekbeeld bestuurlijk leesbaar: {top_reason_text} is nu het eerste vertrekhaakje, "
+        f"terwijl {top_factor_text} laten zien waar management het meeste kan toetsen en verbeteren."
+    )
+    if strong_work_signal_pct is not None and strong_work_signal_pct >= 50:
+        executive_intro += (
+            " De antwoorden wijzen daarbij relatief breed op beïnvloedbare werkfrictie, wat het rapport vooral bruikbaar maakt "
+            "voor prioritering, eigenaarschap en een gericht managementgesprek."
+        )
+    else:
+        executive_intro += (
+            " Gebruik dit rapport daarom als vertrekduiding en verificatiespoor, niet als sluitende oorzaakverklaring."
+        )
+
+    trust_note = (
+        "Lees ExitScan als managementsamenvatting van vertrekpatronen. Het rapport bundelt signalen, werkfactoren en hypotheses "
+        "tot een bestuurlijk gesprek, zonder causaliteit of harde voorspellingen te claimen."
+    )
+
     return {
         "section_title": "Managementsamenvatting",
         "distribution_title": "Verdeling van het vertrekbeeld",
         "findings_title": "Scherpste managementlezing",
+        "executive_title": "Vertrekduiding voor HR, MT en directie",
+        "executive_intro": executive_intro,
+        "trust_note_title": "Leeswijzer voor bestuur en management",
+        "trust_note": trust_note,
+        "highlight_cards": [
+            {
+                "title": "Vertrekbeeld nu",
+                "value": (top_exit_reason_label or "Nog geen duidelijke hoofdreden"),
+                "body": profile_body,
+            },
+            {
+                "title": "Scherpste werkfactoren",
+                "value": top_factor_value,
+                "body": (
+                    f"Gebruik {top_factor_text} als eerste verificatiespoor om te bepalen welk deel van het vertrekverhaal bestuurlijk het meest beïnvloedbaar is."
+                ),
+            },
+            {
+                "title": "Eerdere signalering",
+                "value": visibility_value,
+                "body": visibility_body,
+            },
+        ],
         "cards": [
             {
                 "title": "Vertrekbeeld nu",
@@ -106,7 +170,7 @@ def get_methodology_payload() -> dict[str, Any]:
 
 def get_signal_page_payload(*, retention_signal_profile: str | None = None) -> dict[str, Any]:
     return {
-        "title": "Vertrekredenen & werksignalen",
+        "title": "Vertrekbeeld, redenen & werksignalen",
         "intro": (
             "Deze pagina combineert hoofdredenen, meespelende factoren, eerdere signalering en een indicatieve duiding van werkinvloed. "
             "De uitkomsten helpen om vertrekpatronen te verkennen en managementvragen te richten, niet om één causale vertrekverklaring vast te stellen."

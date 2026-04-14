@@ -208,7 +208,7 @@ function ExitScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">Wat management krijgt</p>
           <h2 className="font-display mt-4 text-4xl text-white">Een serieus managementinstrument voor uitstroomduiding.</h2>
           <p className="mt-5 text-base leading-8 text-slate-300">
-            Geen losse verzameling exitinput, maar een compacte rapportvorm waarmee HR, MT en directie sneller zien welk vertrekbeeld terugkeert, welke werkfactoren meewegen en waar vervolgactie logisch is.
+            Geen losse verzameling exitinput, maar een compacte rapportvorm die opent met managementsamenvatting, eerste managementvraag en eerste logische stap. Zo zien HR, MT en directie sneller welk vertrekbeeld terugkeert, welke werkfactoren meewegen en waar vervolgactie logisch is.
           </p>
           <div className="mt-8 grid gap-3">
             {[
@@ -256,7 +256,7 @@ function ExitScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Voorbeeldoutput</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">Zo ziet ExitScan eruit voor management.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            De output combineert frictiescore, vertrekduiding, werksignalen en prioritaire werkfactoren in een compacte managementstructuur.
+            De output combineert managementsamenvatting, vertrekduiding, werksignalen en prioritaire werkfactoren in een compacte managementstructuur.
           </p>
           <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             <PreviewSlider variant="exit" />
@@ -315,7 +315,7 @@ function RetentionScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Wat je krijgt</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">Een vroegsignaal dat bestuurlijk bruikbaar is.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Geen individuele voorspelling en geen brede tevredenheidsmeting, maar een groepsweergave van retentiesignalen, stay-intent, bevlogenheid, vertrekintentie en de werkfactoren die nu als eerste verificatie en opvolging vragen.
+            Geen individuele voorspelling en geen brede tevredenheidsmeting, maar een groepsweergave die opent met managementsamenvatting, eerste verificatiespoor en eerste logische stap. Daarna volgen retentiesignalen, stay-intent, bevlogenheid, vertrekintentie en de werkfactoren die nu als eerste opvolging vragen.
           </p>
           <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             <PreviewSlider variant="retention" />

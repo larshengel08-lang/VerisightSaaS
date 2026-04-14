@@ -13,6 +13,7 @@ def get_management_summary_payload(
     retention_theme_title: str | None,
 ) -> dict[str, Any]:
     top_factor_text = " en ".join(label.lower() for label in top_factor_labels[:2]) if top_factor_labels else "de laagst scorende werkfactoren"
+    top_factor_value = " / ".join(top_factor_labels[:2]) if top_factor_labels else "Nog geen duidelijke topfactor"
 
     if retention_signal_profile == "scherp_aandachtssignaal":
         group_body = (
@@ -53,10 +54,64 @@ def get_management_summary_payload(
         "Zo blijft RetentieScan een route van signalering naar gerichte opvolging."
     )
 
+    signal_profile_copy = {
+        "scherp_aandachtssignaal": (
+            "Meerdere behoudssignalen wijzen dezelfde kant op. Dat vraagt snelle verificatie en duidelijke eigenaarschap op groepsniveau."
+        ),
+        "vertrekdenken_zichtbaar": (
+            "Expliciet vertrekdenken is zichtbaar. Gebruik dit vooral om te bepalen waar een managementgesprek nu niet langer kan wachten."
+        ),
+        "overwegend_stabiel": (
+            "Het totaalbeeld oogt overwegend stabiel, maar de laagst scorende werkfactoren bepalen nog steeds waar management de meeste winst kan boeken."
+        ),
+        "vroegsignaal": (
+            "Er is een vroegsignaal zichtbaar: nog geen breed crisisbeeld, maar wel genoeg reden om prioriteiten en verificatie scherp te zetten."
+        ),
+    }
+    signal_profile_value = {
+        "scherp_aandachtssignaal": "Scherp aandachtssignaal",
+        "vertrekdenken_zichtbaar": "Vertrekdenken zichtbaar",
+        "overwegend_stabiel": "Overwegend stabiel",
+        "vroegsignaal": "Vroegsignaal",
+    }.get(retention_signal_profile, "Vroegsignaal")
+
+    executive_intro = (
+        f"RetentieScan maakt zichtbaar waar behoud op groepsniveau onder druk staat. Op dit moment zitten de scherpste signalen vooral in {top_factor_text}, "
+        f"gelezen in samenhang met {metric_text}."
+    )
+    if retention_theme_title:
+        executive_intro += f" In open antwoorden komt {retention_theme_title.lower()} nu het vaakst terug."
+
+    trust_note = (
+        "Lees RetentieScan als groeps- en segmentduiding voor verificatie en opvolging. Het rapport is geen brede MTO, "
+        "geen individueel performance-instrument en geen gevalideerde voorspeller van vrijwillig vertrek."
+    )
+
     return {
         "section_title": "Managementsamenvatting",
         "distribution_title": "Verdeling van behoudssignalen",
         "findings_title": "Scherpste managementlezing",
+        "executive_title": "Behoudssignalen voor HR, MT en directie",
+        "executive_intro": executive_intro,
+        "trust_note_title": "Leeswijzer voor bestuur en management",
+        "trust_note": trust_note,
+        "highlight_cards": [
+            {
+                "title": "Groepsbeeld nu",
+                "value": signal_profile_value,
+                "body": group_body,
+            },
+            {
+                "title": "Scherpste werkfactoren",
+                "value": top_factor_value,
+                "body": verification_body,
+            },
+            {
+                "title": "Eerste managementspoor",
+                "value": signal_profile_value,
+                "body": signal_profile_copy.get(retention_signal_profile, signal_profile_copy["vroegsignaal"]),
+            },
+        ],
         "cards": [
             {
                 "title": "Groepsbeeld nu",
@@ -115,7 +170,7 @@ def get_signal_page_payload(*, retention_signal_profile: str | None = None) -> d
         "overwegend_stabiel": "Het totaalbeeld oogt overwegend stabiel. Controleer vooral of de laagst scorende werkfactoren en open signalen aansluiten op wat teams nu nodig hebben.",
     }
     return {
-        "title": "Bevlogenheid, Stay-intent & Vertrekintentie",
+        "title": "Behoudssignalen in samenhang",
         "intro": (
             "Deze pagina laat zien hoe retentiesignaal, bevlogenheid, stay-intent en vertrekintentie zich tot elkaar verhouden. "
             "Lees dit als groepsinformatie over waar behoud onder druk staat en welke werkfactoren nu als eerste verificatie vragen, niet als individuele beoordeling of voorspelling."
