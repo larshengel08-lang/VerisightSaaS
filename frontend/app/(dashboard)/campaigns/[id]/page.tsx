@@ -23,8 +23,6 @@ import {
   buildDecisionPanels,
   buildHeroDescription,
   buildInsightWarnings,
-  buildNextStepBody,
-  buildNextStepTitle,
   buildRetentionSegmentPlaybooks,
   buildRetentionTrendCards,
   buildRiskHistogram,
@@ -37,9 +35,9 @@ import {
   computeRetentionSignalAverages,
   computeRetentionSupplementalAverages,
   computeStrongWorkSignalRate,
+  getDisclosureDefaults,
   getTopContributingReasonLabel,
   getTopExitReasonLabel,
-  getTopFactorLabel,
   MethodologyCard,
   MIN_N_DISPLAY,
   MIN_N_PATTERNS,
@@ -143,8 +141,10 @@ export default async function CampaignPage({ params }: Props) {
   const averageRiskScore = computeAverageRiskScore(responses)
   const strongWorkSignalRate = stats.scan_type === 'exit' ? computeStrongWorkSignalRate(responses) : null
   const topExitReasonLabel = stats.scan_type === 'exit' ? getTopExitReasonLabel(responses) : null
-  const topContributingReasonLabel = stats.scan_type === 'exit' ? getTopContributingReasonLabel(responses) : null
-  const signalVisibilityAverage = stats.scan_type === 'exit' ? computeAverageSignalVisibility(responses) : null
+  const topContributingReasonLabel =
+    stats.scan_type === 'exit' ? getTopContributingReasonLabel(responses) : null
+  const signalVisibilityAverage =
+    stats.scan_type === 'exit' ? computeAverageSignalVisibility(responses) : null
   const retentionSupplemental = computeRetentionSupplementalAverages(responses)
   const currentRetentionSignals =
     stats.scan_type === 'retention'
@@ -159,6 +159,7 @@ export default async function CampaignPage({ params }: Props) {
   const hasMinDisplay = responses.length >= MIN_N_DISPLAY
   const scanDefinition = getScanDefinition(stats.scan_type)
   const productModule = getProductModule(stats.scan_type)
+  const pendingCount = stats.total_invited - stats.total_completed
   const dashboardViewModel = productModule.buildDashboardViewModel({
     signalLabelLower: scanDefinition.signalLabelLower,
     averageSignal: averageRiskScore,
@@ -167,13 +168,14 @@ export default async function CampaignPage({ params }: Props) {
     turnoverIntention: retentionSupplemental.turnoverIntention,
     stayIntent: retentionSupplemental.stayIntent,
     hasEnoughData,
+    hasMinDisplay,
+    pendingCount,
     factorAverages: factorData.orgAverages,
     topExitReasonLabel,
     topContributingReasonLabel,
     signalVisibilityAverage,
   })
 
-  const pendingCount = stats.total_invited - stats.total_completed
   const invitesNotSent = respondents.filter((respondent) => !respondent.sent_at && !respondent.completed).length
   const incompleteScores = responses.filter((response) => !response.org_scores || !response.sdt_scores).length
   const riskDistribution = {
@@ -200,6 +202,13 @@ export default async function CampaignPage({ params }: Props) {
     stats.scan_type === 'retention'
       ? productModule.getActionPlaybookCalibrationNote?.() ?? null
       : null
+  const disclosureDefaults = getDisclosureDefaults({
+    scanType: stats.scan_type,
+    hasEnoughData,
+    hasMinDisplay,
+    respondentsLength: respondents.length,
+    canManageCampaign,
+  })
 
   return (
     <div className="space-y-6">
@@ -231,7 +240,13 @@ export default async function CampaignPage({ params }: Props) {
             />
             <DashboardChip label={`${stats.completion_rate_pct ?? 0}% respons`} tone="slate" />
             <DashboardChip
-              label={hasEnoughData ? 'Beslisniveau bereikt' : hasMinDisplay ? 'Indicatief beeld' : 'Nog onvoldoende responses'}
+              label={
+                hasEnoughData
+                  ? 'Beslisniveau bereikt'
+                  : hasMinDisplay
+                    ? 'Indicatief beeld'
+                    : 'Nog onvoldoende responses'
+              }
               tone={hasEnoughData ? 'blue' : 'amber'}
             />
           </>
@@ -245,12 +260,6 @@ export default async function CampaignPage({ params }: Props) {
               ) : null}
               <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
             </div>
-            <CampaignActions
-              campaignId={id}
-              isActive={stats.is_active}
-              pendingCount={pendingCount}
-              canManageCampaign={canManageCampaign}
-            />
           </>
         }
         aside={
@@ -303,7 +312,7 @@ export default async function CampaignPage({ params }: Props) {
       <DashboardSection
         eyebrow="Eerst lezen"
         title="Beslisoverzicht"
-        description="Deze bovenste laag helpt bepalen waar je eerst moet kijken, wat nu al stevig genoeg is om te bespreken en welke acties of verificaties logisch zijn."
+        description="Deze bovenste laag laat eerst het managementbeeld zien: hoe stevig het patroon is, wat dit product nu zegt en welke vraag of vervolgstap als eerste telt."
         aside={
           <DashboardChip
             label={hasEnoughData ? 'Decision dashboard' : 'Nog in opbouw'}
@@ -311,57 +320,95 @@ export default async function CampaignPage({ params }: Props) {
           />
         }
       >
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr),minmax(320px,0.8fr)]">
-          <div className="grid gap-4 md:grid-cols-3">
-            {buildDecisionPanels({
-              stats,
-              averageRiskScore,
-              scanDefinition,
-              strongWorkSignalRate,
-              retentionSupplemental,
-              factorAverages: factorData.orgAverages,
-              hasEnoughData,
-              hasMinDisplay,
-            }).map((panel) => (
+        <div className="space-y-4">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr),minmax(320px,0.7fr)]">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {buildDecisionPanels({
+                stats,
+                averageRiskScore,
+                scanDefinition,
+                strongWorkSignalRate,
+                retentionSupplemental,
+                factorAverages: factorData.orgAverages,
+                hasEnoughData,
+                hasMinDisplay,
+              }).map((panel) => (
+                <DashboardPanel
+                  key={panel.title}
+                  eyebrow={panel.eyebrow}
+                  title={panel.title}
+                  value={panel.value}
+                  body={panel.body}
+                  tone={panel.tone}
+                />
+              ))}
+              {dashboardViewModel.topSummaryCards.map((card) => (
+                <DashboardPanel
+                  key={`${card.title}-${card.value ?? 'card'}`}
+                  eyebrow="Productspecifiek signaal"
+                  title={card.title}
+                  value={card.value}
+                  body={card.body}
+                  tone={card.tone}
+                />
+              ))}
+            </div>
+
+            <div className="grid gap-4">
               <DashboardPanel
-                key={panel.title}
-                eyebrow={panel.eyebrow}
-                title={panel.title}
-                value={panel.value}
-                body={panel.body}
-                tone={panel.tone}
+                eyebrow="Eerste managementvraag"
+                title={dashboardViewModel.primaryQuestion.title}
+                body={dashboardViewModel.primaryQuestion.body}
+                tone={dashboardViewModel.primaryQuestion.tone}
               />
-            ))}
+              <DashboardPanel
+                eyebrow="Logische vervolgstap"
+                title={dashboardViewModel.nextStep.title}
+                body={dashboardViewModel.nextStep.body}
+                tone={dashboardViewModel.nextStep.tone}
+              />
+            </div>
           </div>
-          <DashboardPanel
-            eyebrow="Volgende stap"
-            title={buildNextStepTitle(stats.scan_type, hasEnoughData, hasMinDisplay)}
-            body={buildNextStepBody({
-              scanType: stats.scan_type,
-              hasEnoughData,
-              hasMinDisplay,
-              pendingCount,
-              topFactor: getTopFactorLabel(factorData.orgAverages),
-            })}
-            tone={hasEnoughData ? 'emerald' : 'amber'}
-          />
+
+          {dashboardViewModel.profileCards.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {dashboardViewModel.profileCards.map((card) => (
+                <DashboardPanel
+                  key={`${card.title}-${card.value ?? 'profile'}`}
+                  eyebrow={card.title}
+                  title={card.value || card.title}
+                  body={card.body}
+                  tone={card.tone}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
       </DashboardSection>
 
-      {(dashboardViewModel.profileCards.length > 0 ||
-        dashboardViewModel.managementBlocks.length > 0 ||
-        (stats.scan_type === 'retention' && previousStats && currentRetentionSignals && previousRetentionSignals)) ? (
+      {(dashboardViewModel.managementBlocks.length > 0 ||
+        (stats.scan_type === 'retention' &&
+          previousStats &&
+          currentRetentionSignals &&
+          previousRetentionSignals)) ? (
         <DashboardSection
-          eyebrow={stats.scan_type === 'retention' ? 'Behoud lezen' : 'Vertrek lezen'}
-          title={stats.scan_type === 'retention' ? 'Interpretatie en managementduiding' : 'Interpretatie en managementgesprek'}
+          eyebrow={stats.scan_type === 'retention' ? 'Verifieren en prioriteren' : 'Vertrek duiden'}
+          title={
+            stats.scan_type === 'retention'
+              ? 'Managementduiding en prioritering'
+              : 'Vertrekduiding en managementgesprek'
+          }
           description={
             stats.scan_type === 'retention'
-              ? 'Deze laag vertaalt signalen naar een voorzichtig, bestuurlijk leesbaar beeld.'
-              : 'Deze laag helpt bepalen welke exitpatronen het meest beïnvloedbaar lijken en waar management eerst moet doorvragen.'
+              ? 'Deze laag vertaalt RetentieScan naar een duidelijke lijn: wat is het beeld, wat moet je eerst toetsen en welke acties verdienen nu bestuurlijke aandacht.'
+              : 'Deze laag brengt ExitScan terug tot een bestuurlijk leesbaar vertrekbeeld: wat keert terug, wat lijkt beinvloedbaar en waar moet management eerst doorvragen.'
           }
         >
           <div className="space-y-4">
-            {stats.scan_type === 'retention' && previousStats && currentRetentionSignals && previousRetentionSignals ? (
+            {stats.scan_type === 'retention' &&
+            previousStats &&
+            currentRetentionSignals &&
+            previousRetentionSignals ? (
               <RetentionTrendSection
                 current={currentRetentionSignals}
                 previous={previousRetentionSignals}
@@ -369,20 +416,6 @@ export default async function CampaignPage({ params }: Props) {
                 previousCampaignName={previousStats.campaign_name}
                 trendCards={retentionTrendCards}
               />
-            ) : null}
-
-            {dashboardViewModel.profileCards.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                {dashboardViewModel.profileCards.map((card) => (
-                  <DashboardPanel
-                    key={`${card.title}-${card.value}`}
-                    eyebrow={card.title}
-                    title={card.value || card.title}
-                    body={card.body}
-                    tone={card.tone}
-                  />
-                ))}
-              </div>
             ) : null}
 
             {dashboardViewModel.managementBlocks.length > 0 ? (
@@ -413,7 +446,7 @@ export default async function CampaignPage({ params }: Props) {
                     <ul className="mt-3 space-y-2">
                       {block.items.map((item) => (
                         <li key={item} className="flex gap-2 text-sm leading-6 text-slate-700">
-                          <span className="text-slate-400">•</span>
+                          <span className="text-slate-400">-</span>
                           <span>{item}</span>
                         </li>
                       ))}
@@ -430,9 +463,15 @@ export default async function CampaignPage({ params }: Props) {
         <DashboardSection
           eyebrow="Operatie"
           title="Campagnestatus en launchcontrole"
-          description="Gebruik deze laag om te zien of de campagne technisch en operationeel klaar is voor rapportage, reminders of vervolgacties."
+          description="Deze laag is bewust operationeel gehouden: gebruik hem voor reminders, archiveren, launchchecks en responsmonitoring nadat het managementbeeld helder is."
         >
           <div className="space-y-4">
+            <CampaignActions
+              campaignId={id}
+              isActive={stats.is_active}
+              pendingCount={pendingCount}
+              canManageCampaign={canManageCampaign}
+            />
             <CampaignHealthIndicator
               totalInvited={stats.total_invited}
               totalCompleted={stats.total_completed}
@@ -460,7 +499,7 @@ export default async function CampaignPage({ params }: Props) {
       ) : null}
 
       <DashboardDisclosure
-        defaultOpen={hasEnoughData}
+        defaultOpen={disclosureDefaults.analysisOpen}
         title="Analyse en drivers"
         description="Verdiep het signaal pas nadat het beslisoverzicht helder is."
         badge={
@@ -525,9 +564,9 @@ export default async function CampaignPage({ params }: Props) {
       </DashboardDisclosure>
 
       <DashboardDisclosure
-        defaultOpen={hasEnoughData}
-        title="Focusvragen en vervolgacties"
-        description="Gebruik deze laag om van signaal naar gesprek en vervolgactie te gaan."
+        defaultOpen={disclosureDefaults.focusOpen}
+        title="Van signaal naar gesprek en actie"
+        description={dashboardViewModel.focusSectionIntro}
         badge={
           <DashboardChip
             label={stats.scan_type === 'retention' ? 'Signaleren → valideren → handelen' : 'Terugblik → duiden → verbeteren'}
@@ -539,7 +578,9 @@ export default async function CampaignPage({ params }: Props) {
           <div className="space-y-5">
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
               <h3 className="text-sm font-semibold text-slate-950">Prioritaire focusvragen</h3>
-              <p className="mt-1 text-sm leading-6 text-slate-600">Start met de factoren die het scherpst afwijken.</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Start met de factoren die het scherpst afwijken.
+              </p>
               <div className="mt-4">
                 <RecommendationList factorAverages={factorData.orgAverages} scanType={stats.scan_type} />
               </div>
@@ -597,7 +638,9 @@ export default async function CampaignPage({ params }: Props) {
                             </span>
                           </div>
                           <p className="mt-3 text-sm leading-6 text-slate-700">{theme.implication}</p>
-                          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Voorbeeldsignaal</p>
+                          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                            Voorbeeldsignaal
+                          </p>
                           <p className="mt-1 text-sm italic leading-6 text-slate-600">&quot;{theme.sample}&quot;</p>
                         </div>
                       ))}
@@ -615,7 +658,7 @@ export default async function CampaignPage({ params }: Props) {
       </DashboardDisclosure>
 
       <DashboardDisclosure
-        defaultOpen={respondents.length === 0 || canManageCampaign}
+        defaultOpen={disclosureDefaults.respondentsOpen}
         title="Respondenten en uitnodigingen"
         description="Operationele detailweergave voor import, responsmonitoring en uitnodigingsbeheer."
         badge={<DashboardChip label={`${respondents.length} respondenten`} tone="slate" />}
@@ -647,10 +690,15 @@ export default async function CampaignPage({ params }: Props) {
       </DashboardDisclosure>
 
       <DashboardDisclosure
-        defaultOpen={!hasEnoughData}
+        defaultOpen={disclosureDefaults.methodologyOpen}
         title="Methodologie en leeswijzer"
         description="Gebruik dit als contextlaag voor interpretatie, privacy en betrouwbaarheid."
-        badge={<DashboardChip label={stats.scan_type === 'retention' ? 'Privacy-first' : 'Rapportcontext'} tone="slate" />}
+        badge={
+          <DashboardChip
+            label={stats.scan_type === 'retention' ? 'Privacy-first' : 'Rapportcontext'}
+            tone="slate"
+          />
+        }
       >
         <MethodologyCard
           scanType={stats.scan_type}

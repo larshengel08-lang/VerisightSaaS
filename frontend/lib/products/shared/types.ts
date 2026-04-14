@@ -15,6 +15,12 @@ export interface DashboardListBlock {
   tone: 'blue' | 'emerald' | 'amber'
 }
 
+export interface DashboardDecisionCard {
+  title: string
+  body: string
+  tone: 'blue' | 'emerald' | 'amber'
+}
+
 export interface ActionPlaybook {
   title: string
   validate: string
@@ -46,9 +52,12 @@ export interface SegmentPlaybookEntry extends ActionPlaybook {
 
 export interface DashboardViewModel {
   signaalbandenText: string
-  supplementalCards: DashboardStatCard[]
+  topSummaryCards: DashboardStatCard[]
   managementBlocks: DashboardListBlock[]
   profileCards: DashboardStatCard[]
+  primaryQuestion: DashboardDecisionCard
+  nextStep: DashboardDecisionCard
+  focusSectionIntro: string
 }
 
 export interface ProductModule {
@@ -62,6 +71,8 @@ export interface ProductModule {
     turnoverIntention: number | null
     stayIntent: number | null
     hasEnoughData: boolean
+    hasMinDisplay: boolean
+    pendingCount: number
     factorAverages: Record<string, number>
     topExitReasonLabel?: string | null
     topContributingReasonLabel?: string | null

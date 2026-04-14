@@ -124,15 +124,19 @@ export function buildRetentionDashboardViewModel(args: {
   turnoverIntention: number | null
   stayIntent: number | null
   hasEnoughData: boolean
+  hasMinDisplay: boolean
+  pendingCount: number
   factorAverages: Record<string, number>
   topExitReasonLabel?: string | null
   topContributingReasonLabel?: string | null
   signalVisibilityAverage?: number | null
 }): DashboardViewModel {
   const topFactors = getTopFactors(args.factorAverages)
-  const averageSignal = args.averageSignal ??
+  const averageSignal =
+    args.averageSignal ??
     (Object.keys(args.factorAverages).length > 0
-      ? Object.values(args.factorAverages).reduce((sum, score) => sum + (11 - score), 0) / Object.keys(args.factorAverages).length
+      ? Object.values(args.factorAverages).reduce((sum, score) => sum + (11 - score), 0) /
+        Object.keys(args.factorAverages).length
       : null)
   const signalProfile = deriveSignalProfile(
     averageSignal,
@@ -140,18 +144,65 @@ export function buildRetentionDashboardViewModel(args: {
     args.turnoverIntention,
     args.stayIntent,
   )
+  const topFactorLabels = topFactors.map(({ factor }) => FACTOR_LABELS[factor] ?? factor)
+  const topFactorLabel = topFactorLabels[0] ?? 'de laagst scorende werkfactor'
+
+  if (!args.hasMinDisplay) {
+    return {
+      signaalbandenText:
+        'Laag, verhoogd en sterk aandachtssignaal laten zien hoeveel verificatie en opvolging een patroon vraagt. Ze helpen HR en MT bepalen wat eerst besproken of verdiept moet worden.',
+      topSummaryCards: [],
+      managementBlocks: [],
+      profileCards: [],
+      primaryQuestion: {
+        title: 'Eerste managementvraag',
+        body:
+          args.pendingCount > 0
+            ? 'Welke respondenten of teams ontbreken nog om een eerste veilig groepsbeeld van behoudssignalen te krijgen?'
+            : 'Welke extra responses zijn nog nodig voordat behoudssignalen veilig als groepsinput gebruikt kunnen worden?',
+        tone: 'amber',
+      },
+      nextStep: {
+        title: 'Eerst respons opbouwen',
+        body:
+          args.pendingCount > 0
+            ? `Stuur eerst de resterende ${args.pendingCount} respondent(en) een reminder of uitnodiging. Pas daarna verschuift de campagne van monitoring naar behoudsduiding.`
+            : 'Gebruik deze campagne nog niet als managementinput. Bouw eerst voldoende responses op voor veilige groepsduiding.',
+        tone: 'amber',
+      },
+      focusSectionIntro:
+        'Zodra genoeg responses binnen zijn helpt deze laag om van behoudssignaal naar verificatie en opvolging te gaan.',
+    }
+  }
 
   if (!args.hasEnoughData) {
     return {
       signaalbandenText:
         'Laag, verhoogd en sterk aandachtssignaal laten zien hoeveel verificatie en opvolging een patroon vraagt. Ze helpen HR en MT bepalen wat eerst besproken of verdiept moet worden.',
-      supplementalCards: [],
+      topSummaryCards: [],
       managementBlocks: [],
       profileCards: [],
+      primaryQuestion: {
+        title: 'Eerste managementvraag',
+        body:
+          topFactors.length > 0
+            ? `Lijkt ${topFactorLabel.toLowerCase()} nu al het eerste behoudsspoor, of verschuift dat beeld nog zodra de groep vollediger is?`
+            : 'Welk behoudssignaal tekent zich voorzichtig af zonder het nu al te zwaar te maken?',
+        tone: 'blue',
+      },
+      nextStep: {
+        title: 'Voorzichtig valideren',
+        body:
+          topFactors.length > 0
+            ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste verificatiespoor, maar behandel de huidige uitkomst nog als indicatief totdat minimaal 10 responses binnen zijn.`
+            : 'Gebruik de eerste signalen om vervolgvragen voor HR en MT te kiezen, niet om al een zwaar risicobeeld te claimen.',
+        tone: 'amber',
+      },
+      focusSectionIntro:
+        'Gebruik focusvragen nu vooral om te bepalen welke teams, rollen of werkfactoren straks als eerste verdieping vragen.',
     }
   }
 
-  const topFactorLabels = topFactors.map(({ factor }) => FACTOR_LABELS[factor] ?? factor)
   const profileText =
     signalProfile === 'scherp_aandachtssignaal'
       ? 'Meerdere behoudssignalen wijzen dezelfde kant op: dit vraagt snelle verificatie in de groepen waar de laagste werkfactoren samenkomen.'
@@ -162,21 +213,29 @@ export function buildRetentionDashboardViewModel(args: {
           : 'Er is een vroegsignaal zichtbaar: nog geen harde vertrekclaim, maar wel genoeg reden om de zwakste werkfactoren gericht te valideren.'
 
   const validationItems = topFactors.map(
-    ({ factor }) => FACTOR_VALIDATION_HINTS[factor] ?? `Valideer scherper wat er speelt binnen ${FACTOR_LABELS[factor] ?? factor}.`,
+    ({ factor }) =>
+      FACTOR_VALIDATION_HINTS[factor] ??
+      `Valideer scherper wat er speelt binnen ${FACTOR_LABELS[factor] ?? factor}.`,
   )
   if (args.turnoverIntention !== null && args.turnoverIntention >= 5.5) {
-    validationItems.push('Toets expliciet in welke teams vertrekdenken nu het meest zichtbaar lijkt en welk gesprek daar nog ontbreekt.')
+    validationItems.push(
+      'Toets expliciet in welke teams vertrekdenken nu het meest zichtbaar lijkt en welk gesprek daar nog ontbreekt.',
+    )
   }
 
   const actionItems = topFactors.map(
-    ({ factor }) => FACTOR_ACTION_HINTS[factor] ?? `Werk voor ${FACTOR_LABELS[factor] ?? factor} één concrete 30-90 dagenactie uit.`,
+    ({ factor }) =>
+      FACTOR_ACTION_HINTS[factor] ??
+      `Werk voor ${FACTOR_LABELS[factor] ?? factor} een concrete 30-90 dagenactie uit.`,
   )
-  actionItems.push('Plan nu al een vervolgmeting of evaluatiemoment, zodat acties niet los komen te staan van het volgende gesprek.')
+  actionItems.push(
+    'Plan nu al een vervolgmeting of evaluatiemoment, zodat acties niet los komen te staan van het volgende gesprek.',
+  )
 
   return {
     signaalbandenText:
       'Laag, verhoogd en sterk aandachtssignaal laten zien hoeveel verificatie en opvolging een patroon vraagt. Ze helpen HR en MT bepalen wat eerst besproken of verdiept moet worden.',
-    supplementalCards: [
+    topSummaryCards: [
       {
         title: 'Gemiddelde vertrekintentie',
         value: args.turnoverIntention !== null ? `${args.turnoverIntention.toFixed(1)}/10` : '–',
@@ -190,10 +249,10 @@ export function buildRetentionDashboardViewModel(args: {
         tone: 'emerald',
       },
       {
-        title: 'Managementduiding',
-        value: '',
-        body: 'Lees retentiesignaal, bevlogenheid, stay-intent en vertrekintentie samen. Juist de combinatie bepaalt of je vooral een vroegsignaal ziet of een scherper aandachtspunt dat sneller opvolging vraagt.',
-        tone: 'emerald',
+        title: 'Topfactor',
+        value: topFactorLabels[0] ?? 'Nog geen topfactor',
+        body: 'Gebruik de laagst scorende werkfactor als eerste verificatiespoor. Daarna pas bepaal je of het patroon om snelle opvolging of verdere duiding vraagt.',
+        tone: signalProfile === 'scherp_aandachtssignaal' ? 'amber' : 'blue',
       },
     ],
     managementBlocks: [
@@ -203,7 +262,10 @@ export function buildRetentionDashboardViewModel(args: {
           topFactorLabels.length > 0
             ? `${profileText} Op dit moment zitten de scherpste signalen vooral in ${topFactorLabels.join(' en ')}.`
             : profileText,
-        items: topFactorLabels.length > 0 ? topFactorLabels.map((label) => `${label} vraagt nu de meeste bestuurlijke aandacht.`) : [profileText],
+        items:
+          topFactorLabels.length > 0
+            ? topFactorLabels.map((label) => `${label} vraagt nu de meeste bestuurlijke aandacht.`)
+            : [profileText],
         tone: 'blue',
       },
       {
@@ -223,5 +285,23 @@ export function buildRetentionDashboardViewModel(args: {
       turnoverIntention: args.turnoverIntention,
       stayIntent: args.stayIntent,
     }),
+    primaryQuestion: {
+      title: 'Eerste managementvraag',
+      body:
+        signalProfile === 'scherp_aandachtssignaal'
+          ? `Welke teams laten de scherpste combinatie zien van ${topFactorLabel.toLowerCase()}, lage werkbeleving en oplopend vertrekdenken?`
+          : `Is ${topFactorLabel.toLowerCase()} nu vooral een vroegsignaal dat snelle verificatie vraagt, of al een scherper aandachtspunt dat opvolging binnen 30-90 dagen nodig maakt?`,
+      tone: 'blue',
+    },
+    nextStep: {
+      title: 'Eerst valideren, daarna opvolgen',
+      body:
+        args.turnoverIntention !== null && args.turnoverIntention >= 5.5
+          ? `Gebruik ${topFactorLabel.toLowerCase()} en vertrekintentie als eerste managementspoor: bepaal waar het beeld het scherpst is en koppel daar meteen een 30-90 dagenactie aan.`
+          : `Gebruik ${topFactorLabel.toLowerCase()} als eerste validatiespoor en vertaal dat daarna naar één concrete actie in teamritme, leiderschap of werkinrichting.`,
+      tone: signalProfile === 'scherp_aandachtssignaal' ? 'amber' : 'emerald',
+    },
+    focusSectionIntro:
+      'Gebruik de vragen en playbooks hieronder om RetentieScan niet bij signalering te laten stoppen, maar gecontroleerd naar validatie en actie te brengen.',
   }
 }

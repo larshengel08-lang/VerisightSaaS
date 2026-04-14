@@ -17,12 +17,14 @@ from backend.scoring import (
     compute_retention_signal_profile,
     compute_retention_supplemental_scores,
     compute_preventability,
+    detect_patterns,
     _scale,
     RISK_HIGH,
     RISK_MEDIUM,
     ORG_FACTOR_KEYS,
 )
 from backend.products.exit.scoring import build_exit_context_summary, compute_exit_friction
+from backend.products.exit.report_content import get_methodology_payload, get_signal_page_payload
 
 
 # ---------------------------------------------------------------------------
@@ -295,6 +297,15 @@ class TestComputeExitFriction:
         assert result["factor_weights"]["leadership"] == pytest.approx(2.5)
         assert result["factor_weights"]["sdt"] == pytest.approx(2.0)
 
+    def test_shared_compute_retention_risk_exit_path_matches_exit_module(self):
+        sdt = compute_sdt_scores(_sdt_all(2))
+        org = compute_org_scores(_org_all(4))
+
+        shared_result = compute_retention_risk(sdt, org)
+        exit_result = compute_exit_friction(sdt, org)
+
+        assert shared_result == exit_result
+
 
 class TestExitContextSummary:
     def test_exit_context_summary_contains_reason_labels_and_signal_visibility(self):
@@ -315,6 +326,26 @@ class TestExitContextSummary:
         assert summary["signal_visibility_summary"]["label"] == "Signalen bleven grotendeels onder de radar"
 
 
+class TestExitReportContent:
+    def test_exit_methodology_payload_stays_non_causal(self):
+        payload = get_methodology_payload()
+
+        intro = payload["intro_text"].lower()
+        method = payload["method_text"].lower()
+
+        assert "vertrekduiding" in intro
+        assert "diagnostisch instrument" in intro
+        assert "niet als causale voorspelling" in method
+        assert "benchmark" in method
+
+    def test_exit_signal_page_payload_frames_management_questions_not_causal_proof(self):
+        payload = get_signal_page_payload()
+        intro = payload["intro"].lower()
+
+        assert "managementvragen" in intro
+        assert "niet om één causale vertrekverklaring vast te stellen" in intro
+
+
 class TestRetentionSignalProfile:
     def test_sharp_attention_profile_when_multiple_negative_signals_align(self):
         profile = compute_retention_signal_profile(
@@ -324,6 +355,76 @@ class TestRetentionSignalProfile:
             stay_intent_score=4.3,
         )
         assert profile == "scherp_aandachtssignaal"
+
+
+class TestDetectPatterns:
+    def test_detect_patterns_builds_exit_signal_summary(self):
+        responses = [
+            {
+                "org_scores": {"leadership": 3.0, "culture": 4.0, "growth": 3.5, "compensation": 5.0, "workload": 4.0, "role_clarity": 4.5},
+                "sdt_scores": {"autonomy": 4.0, "competence": 4.5, "relatedness": 5.0},
+                "risk_score": 6.8,
+                "preventability": "STERK_WERKSIGNAAL",
+                "exit_reason_code": "P1",
+                "contributing_reason_codes": ["P3"],
+                "department": "Operations",
+            }
+            for _ in range(5)
+        ] + [
+            {
+                "org_scores": {"leadership": 4.0, "culture": 4.5, "growth": 4.0, "compensation": 5.0, "workload": 4.5, "role_clarity": 4.0},
+                "sdt_scores": {"autonomy": 4.5, "competence": 4.5, "relatedness": 4.5},
+                "risk_score": 5.9,
+                "preventability": "GEMENGD_WERKSIGNAAL",
+                "exit_reason_code": "P3",
+                "contributing_reason_codes": ["P1"],
+                "department": "Operations",
+            }
+            for _ in range(5)
+        ]
+
+        result = detect_patterns(responses)
+
+        assert result["sufficient_data"] is True
+        assert result["strong_work_signal_pct"] == pytest.approx(50.0)
+        assert result["any_work_signal_pct"] == pytest.approx(100.0)
+        assert result["top_exit_reasons"][0]["code"] == "P1"
+        assert result["top_contributing_reasons"][0]["code"] == "P3"
+        assert result["department_avg_risk"]["Operations"] == pytest.approx(6.35)
+
+    def test_detect_patterns_builds_retention_averages_without_exit_metadata(self):
+        responses = [
+            {
+                "org_scores": {"leadership": 4.0, "culture": 4.5, "growth": 4.5, "compensation": 5.0, "workload": 4.0, "role_clarity": 4.5},
+                "sdt_scores": {"autonomy": 4.5, "competence": 5.0, "relatedness": 4.5},
+                "risk_score": 5.8,
+                "uwes_score": 5.2,
+                "turnover_intention_score": 6.1,
+                "stay_intent_score": 2,
+                "department": "People",
+            }
+            for _ in range(5)
+        ] + [
+            {
+                "org_scores": {"leadership": 5.0, "culture": 5.0, "growth": 5.0, "compensation": 5.0, "workload": 5.0, "role_clarity": 5.0},
+                "sdt_scores": {"autonomy": 5.0, "competence": 5.0, "relatedness": 5.0},
+                "risk_score": 4.8,
+                "uwes_score": 5.8,
+                "turnover_intention_score": 4.8,
+                "stay_intent_score": 4,
+                "department": "People",
+            }
+            for _ in range(5)
+        ]
+
+        result = detect_patterns(responses)
+
+        assert result["sufficient_data"] is True
+        assert result["avg_engagement_score"] == pytest.approx(5.5)
+        assert result["avg_turnover_intention_score"] == pytest.approx(5.45)
+        assert result["avg_stay_intent_score"] == pytest.approx(5.5)
+        assert result["top_exit_reasons"] == []
+        assert result["strong_work_signal_pct"] is None
 
 
 # ---------------------------------------------------------------------------

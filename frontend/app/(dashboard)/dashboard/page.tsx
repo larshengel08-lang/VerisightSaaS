@@ -54,8 +54,8 @@ export default async function DashboardHomePage() {
         title="Campaign cockpit"
         description={
           isAdmin
-            ? 'Gebruik dit overzicht om per campagne te zien wat de volgende operationele stap is: opzetten, monitoren, rapporteren of afsluiten.'
-            : 'Gebruik dit overzicht om te zien welke campagnes live zijn, waar resultaten klaarstaan en welke scans nog in opbouw zijn.'
+            ? 'Gebruik dit overzicht om snel te zien welke campaign klaar is voor managementduiding en welke nog eerst operationele aandacht vraagt.'
+            : 'Gebruik dit overzicht om te zien welke campagnes klaar zijn voor managementread, welke nog in opbouw zijn en waar rapportage direct beschikbaar is.'
         }
         aside={
           isAdmin ? (
@@ -209,7 +209,7 @@ function getNextAction(campaign: CampaignStats) {
   if (!campaign.is_active) {
     return {
       label: 'Rapport beschikbaar',
-      body: 'Deze campagne is gesloten. Gebruik het dashboard vooral voor rapportage, terugblik en het voorbereiden van het vervolggesprek.',
+      body: 'Deze campagne is gesloten. Open het dashboard vooral voor managementread, rapportage en het voorbereiden van het vervolggesprek.',
     }
   }
 
@@ -230,13 +230,13 @@ function getNextAction(campaign: CampaignStats) {
   if (campaign.total_completed < 10) {
     return {
       label: 'Nog indicatief',
-      body: 'Er zijn al responses binnen, maar nog niet genoeg voor een stevig patroonbeeld. Gebruik dit dashboard voorlopig vooral om richting te houden.',
+      body: 'Er zijn al responses binnen, maar nog niet genoeg voor een stevig patroonbeeld. Open het dashboard vooral om richting te houden, niet om al brede managementconclusies te trekken.',
     }
   }
 
   return {
     label: 'Klaar voor verdieping',
-    body: 'De campagne heeft genoeg respons om actief te sturen op analyse, managementduiding en rapportage.',
+    body: 'De campagne heeft genoeg respons om actief te sturen op managementduiding, prioritering en rapportage.',
   }
 }
 

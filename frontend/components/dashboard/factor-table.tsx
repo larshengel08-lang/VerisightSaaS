@@ -28,13 +28,27 @@ export function FactorTable({ factorAverages, scanType }: Props) {
     AANDACHT: 'bg-amber-100 text-amber-700',
     OK:       'bg-green-100 text-green-700',
   }
+  const urgencyCopy =
+    scanType === 'exit'
+      ? {
+          URGENT: 'NU DUIDEN',
+          AANDACHT: 'DOORVRAGEN',
+          OK: 'MONITOREN',
+        }
+      : {
+          URGENT: 'URGENT',
+          AANDACHT: 'AANDACHT',
+          OK: 'MONITOREN',
+        }
+  const introText =
+    scanType === 'exit'
+      ? 'De belevingsscore laat zien hoe vertrekkers een thema gemiddeld ervoeren. De frictiescore per factor vertaalt dat naar prioriteit voor vertrekduiding: hoe hoger de signalering, hoe eerder dit thema managementverificatie verdient.'
+      : `De belevingsscore laat zien hoe medewerkers een thema gemiddeld ervaren. Het ${scanDefinition.signalLabelLower} per factor vertaalt dat naar prioriteit voor behoudsduiding: hoe hoger de signalering, hoe eerder dit thema verificatie en opvolging vraagt.`
 
   return (
     <div className="space-y-2">
       <p className="text-xs leading-5 text-gray-500">
-        De <span className="font-semibold">belevingsscore</span> laat zien hoe positief een thema gemiddeld is ervaren.
-        De <span className="font-semibold">{scanDefinition.signalLabelLower}</span> vertaalt dat naar prioriteit: hoe hoger de signalering,
-        hoe eerder dit thema een managementgesprek verdient. Het is geen extra meting of bewijslaag.
+        {introText} Het is geen extra meting of bewijslaag.
       </p>
       {rows.map(row => (
         <div key={row.factor} className="flex items-center gap-3">
@@ -63,8 +77,8 @@ export function FactorTable({ factorAverages, scanType }: Props) {
           </span>
 
           {/* Badge */}
-          <span className={`text-xs font-bold px-1.5 py-0.5 rounded w-16 text-center ${urgencyStyle[row.urgency]}`}>
-            {row.urgency}
+          <span className={`text-xs font-bold px-1.5 py-0.5 rounded w-20 text-center ${urgencyStyle[row.urgency]}`}>
+            {urgencyCopy[row.urgency as keyof typeof urgencyCopy]}
           </span>
         </div>
       ))}

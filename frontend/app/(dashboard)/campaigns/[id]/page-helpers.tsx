@@ -192,6 +192,27 @@ export function buildNextStepBody({
     : 'Gebruik het werksignaal en de topfactoren om het eerstvolgende verbetergesprek te richten.'
 }
 
+export function getDisclosureDefaults({
+  scanType,
+  hasEnoughData,
+  hasMinDisplay,
+  respondentsLength,
+  canManageCampaign,
+}: {
+  scanType: 'exit' | 'retention'
+  hasEnoughData: boolean
+  hasMinDisplay: boolean
+  respondentsLength: number
+  canManageCampaign: boolean
+}) {
+  return {
+    analysisOpen: false,
+    focusOpen: hasEnoughData,
+    respondentsOpen: respondentsLength === 0 || (canManageCampaign && !hasMinDisplay),
+    methodologyOpen: !hasEnoughData || scanType === 'exit',
+  }
+}
+
 export function buildInsightWarnings({
   responsesLength,
   hasMinDisplay,
@@ -276,6 +297,8 @@ export function MethodologyCard({
     turnoverIntention: null,
     stayIntent: null,
     hasEnoughData: true,
+    hasMinDisplay: true,
+    pendingCount: 0,
     factorAverages: {},
   }).signaalbandenText
 

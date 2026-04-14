@@ -48,30 +48,79 @@ export function buildExitDashboardViewModel(args: {
   turnoverIntention: number | null
   stayIntent: number | null
   hasEnoughData: boolean
+  hasMinDisplay: boolean
+  pendingCount: number
   factorAverages: Record<string, number>
   topExitReasonLabel?: string | null
   topContributingReasonLabel?: string | null
   signalVisibilityAverage?: number | null
 }): DashboardViewModel {
-  if (!args.hasEnoughData) {
-    return {
-      signaalbandenText:
-        `Laag, midden en hoog laten zien hoeveel aandacht een ${args.signalLabelLower} vraagt. Ze helpen HR en MT bepalen welk vertrekbeeld eerst verificatie nodig heeft.`,
-      supplementalCards: [],
-      managementBlocks: [],
-      profileCards: [],
-    }
-  }
-
   const topFactors = getTopFactors(args.factorAverages)
   const factorLabels = topFactors.map(({ factor }) => FACTOR_LABELS[factor] ?? factor)
+  const topFactorLabel = factorLabels[0] ?? 'de topfactor'
+  const topExitReasonLabel = args.topExitReasonLabel ?? 'Nog geen duidelijke hoofdreden'
+  const topContributingReasonLabel = args.topContributingReasonLabel
+  const visibility = describeSignalVisibility(args.signalVisibilityAverage ?? null)
   const strongSignalRate = args.strongWorkSignalRate
   const averageSignal = args.averageSignal
   const hasBroadWorkSignal = strongSignalRate !== null && strongSignalRate >= 50
   const signalPressure = averageSignal !== null && averageSignal >= 5.5
-  const visibility = describeSignalVisibility(args.signalVisibilityAverage ?? null)
-  const topExitReasonLabel = args.topExitReasonLabel ?? 'Nog geen duidelijke hoofdreden'
-  const topContributingReasonLabel = args.topContributingReasonLabel
+
+  if (!args.hasMinDisplay) {
+    return {
+      signaalbandenText:
+        `Laag, midden en hoog laten zien hoeveel aandacht een ${args.signalLabelLower} vraagt. Ze helpen HR en MT bepalen welk vertrekbeeld eerst verificatie nodig heeft.`,
+      topSummaryCards: [],
+      managementBlocks: [],
+      profileCards: [],
+      primaryQuestion: {
+        title: 'Eerste managementvraag',
+        body:
+          args.pendingCount > 0
+            ? `Welke respondenten ontbreken nog om een eerste veilig vertrekbeeld op te bouwen? Met minder dan 5 responses blijft ExitScan bewust terughoudend.`
+            : 'Welke extra responses zijn nog nodig voordat vertrekduiding veilig op groepsniveau kan worden gelezen?',
+        tone: 'amber',
+      },
+      nextStep: {
+        title: 'Eerst respons opbouwen',
+        body:
+          args.pendingCount > 0
+            ? `Stuur eerst de resterende ${args.pendingCount} respondent(en) een reminder of uitnodiging. Daarna kan ExitScan pas verschuiven van operationele monitoring naar vertrekduiding.`
+            : 'Gebruik deze campagne nog niet als managementinput. Bouw eerst voldoende responses op voor veilige groepsduiding.',
+        tone: 'amber',
+      },
+      focusSectionIntro:
+        'Gebruik focusvragen pas nadat er genoeg responses zijn om vertrekpatronen als groepsbeeld te lezen.',
+    }
+  }
+
+  if (!args.hasEnoughData) {
+    return {
+      signaalbandenText:
+        `Laag, midden en hoog laten zien hoeveel aandacht een ${args.signalLabelLower} vraagt. Ze helpen HR en MT bepalen welk vertrekbeeld eerst verificatie nodig heeft.`,
+      topSummaryCards: [],
+      managementBlocks: [],
+      profileCards: [],
+      primaryQuestion: {
+        title: 'Eerste managementvraag',
+        body:
+          factorLabels.length > 0
+            ? `Lijkt ${topFactorLabel.toLowerCase()} al het eerste vertrekhaakje, of verschuift dat beeld nog zodra meer responses binnenkomen?`
+            : 'Welk vertrekbeeld tekent zich voorzichtig af, zonder het nu al als vast patroon te behandelen?',
+        tone: 'blue',
+      },
+      nextStep: {
+        title: 'Voorzichtig duiden',
+        body:
+          factorLabels.length > 0
+            ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste gesprekshaak, maar behandel deze batch nog als indicatief totdat minimaal 10 responses binnen zijn.`
+            : 'Gebruik de eerste signalen om vervolgvragen te kiezen, niet om al harde managementconclusies te trekken.',
+        tone: 'amber',
+      },
+      focusSectionIntro:
+        'Gebruik deze laag nu vooral om de juiste verificatievragen klaar te zetten voor zodra het patroon steviger wordt.',
+    }
+  }
 
   const profileCards: DashboardViewModel['profileCards'] = []
   if (signalPressure && hasBroadWorkSignal) {
@@ -107,7 +156,7 @@ export function buildExitDashboardViewModel(args: {
   return {
     signaalbandenText:
       `Laag, midden en hoog laten zien hoeveel aandacht een ${args.signalLabelLower} vraagt. Ze helpen HR en MT bepalen welk vertrekbeeld eerst verificatie nodig heeft.`,
-    supplementalCards: [
+    topSummaryCards: [
       {
         title: 'Sterk werksignaal',
         value: strongSignalRate !== null ? `${strongSignalRate}%` : '–',
@@ -168,5 +217,23 @@ export function buildExitDashboardViewModel(args: {
       },
     ],
     profileCards: profileCards.slice(0, 2),
+    primaryQuestion: {
+      title: 'Eerste managementvraag',
+      body:
+        topContributingReasonLabel
+          ? `Wijst ${topExitReasonLabel.toLowerCase()} vooral op een breed werkgerelateerd vertrekbeeld, of maakt ${topContributingReasonLabel.toLowerCase()} duidelijk waar management eerst dieper moet toetsen?`
+          : `Welk deel van ${topExitReasonLabel.toLowerCase()} lijkt echt samen te vallen met ${topFactorLabel.toLowerCase()} en dus met beïnvloedbare werkfrictie?`,
+      tone: 'blue',
+    },
+    nextStep: {
+      title: 'Eerst valideren, dan verbeteren',
+      body:
+        typeof args.signalVisibilityAverage === 'number' && args.signalVisibilityAverage < 3
+          ? `Gebruik ${topFactorLabel.toLowerCase()} en eerdere signalering als eerste gespreksspoor: waar kwam twijfel te laat boven tafel en welke 30-90 dagenactie hoort daarbij?`
+          : `Gebruik ${topFactorLabel.toLowerCase()} en het werksignaal om één gericht managementgesprek te voeren en daar direct een 30-90 dagenverbeteractie aan te koppelen.`,
+      tone: hasBroadWorkSignal ? 'amber' : 'emerald',
+    },
+    focusSectionIntro:
+      'Start met vertrekduiding die zowel bestuurlijk relevant als beïnvloedbaar lijkt. Gebruik de vragen hieronder om eerst te toetsen en daarna pas te verbeteren.',
   }
 }

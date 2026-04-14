@@ -42,15 +42,15 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
 
   const introText =
     scanType === 'exit'
-      ? 'De signaalverdeling laat zien hoeveel exitresponses vallen in laag, midden en hoog frictiesignaal. Dat helpt bepalen of vertrek vooral incidenteel, gemengd of breder werkgerelateerd leest.'
+      ? 'De signaalverdeling laat zien hoeveel exitresponses vallen in laag, midden en hoog frictiesignaal. Dat helpt bepalen of het vertrekbeeld vooral incidenteel, gemengd of breder werkgerelateerd leest.'
       : 'De signaalverdeling laat zien hoe responses zijn verdeeld over laag, midden en hoog aandachtssignaal. Dit zegt iets over de breedte en intensiteit van signalen in de groep, niet over een bewezen oorzaak.'
 
   const insightText = scanType === 'exit'
     ? dominantBand.band === 'HOOG'
       ? `${dominantPercent}% van de exitresponses valt in hoog frictiesignaal. Dat wijst op een breder werkgerelateerd vertrekbeeld dat eerst managementverificatie verdient.`
       : dominantBand.band === 'LAAG'
-        ? `${dominantPercent}% van de exitresponses valt in laag frictiesignaal. Dat wijst niet op een breed werkpatroon, maar laat nog steeds ruimte voor afwijkende factoren of teams.`
-        : `${dominantPercent}% van de exitresponses valt in het middengebied. Dat past vaak bij een gemengd vertrekbeeld: wel signalen, maar nog geen eenduidige managementverklaring.`
+        ? `${dominantPercent}% van de exitresponses valt in laag frictiesignaal. Dat wijst niet op een breed werkpatroon, maar laat nog steeds ruimte voor afwijkende factoren, teams of vertrekredenen.`
+        : `${dominantPercent}% van de exitresponses valt in het middengebied. Dat past vaak bij een gemengd vertrekbeeld: wel signalen, maar nog geen eenduidige managementduiding.`
     : dominantBand.band === 'HOOG'
       ? `${dominantPercent}% van de responses valt in hoog signaal. Voor HR wijst dit op een breed en relatief scherp aandachtssignaal: kijk eerst naar de topfactoren en plan snelle verdieping.`
       : dominantBand.band === 'LAAG'
@@ -61,7 +61,7 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
     <div className="space-y-4">
       <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
         <p className="font-medium text-slate-900">
-          {scanType === 'exit' ? 'Wat zegt dit over vertrekduiding?' : 'Wat betekent signaalverdeling?'}
+          {scanType === 'exit' ? 'Wat zegt dit over het vertrekbeeld?' : 'Wat betekent dit voor behoudsduiding?'}
         </p>
         <p className="mt-1">{introText}</p>
         <p className="mt-2 text-slate-800">{insightText}</p>
