@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface Context {
   params: Promise<{ id: string }>
@@ -73,6 +74,7 @@ export async function PATCH(request: Request, context: Context) {
 export async function DELETE(_request: Request, context: Context) {
   const { id } = await context.params
   const supabase = await createClient()
+  const admin = createAdminClient()
 
   const {
     data: { user },
@@ -114,13 +116,93 @@ export async function DELETE(_request: Request, context: Context) {
     return NextResponse.json({ detail: 'Organisatie niet gevonden.' }, { status: 404 })
   }
 
-  const { error } = await supabase
+  const { data: campaigns, error: campaignsError } = await admin
+    .from('campaigns')
+    .select('id')
+    .eq('organization_id', id)
+
+  if (campaignsError) {
+    return NextResponse.json({ detail: `Campaigns ophalen mislukt: ${campaignsError.message}` }, { status: 500 })
+  }
+
+  const campaignIds = (campaigns ?? []).map((campaign) => campaign.id as string)
+
+  if (campaignIds.length > 0) {
+    const { data: respondents, error: respondentsError } = await admin
+      .from('respondents')
+      .select('id')
+      .in('campaign_id', campaignIds)
+
+    if (respondentsError) {
+      return NextResponse.json({ detail: `Respondenten ophalen mislukt: ${respondentsError.message}` }, { status: 500 })
+    }
+
+    const respondentIds = (respondents ?? []).map((respondent) => respondent.id as string)
+
+    if (respondentIds.length > 0) {
+      const { error: responsesDeleteError } = await admin
+        .from('survey_responses')
+        .delete()
+        .in('respondent_id', respondentIds)
+
+      if (responsesDeleteError) {
+        return NextResponse.json({ detail: `Surveyresponses verwijderen mislukt: ${responsesDeleteError.message}` }, { status: 500 })
+      }
+    }
+
+    const { error: respondentsDeleteError } = await admin
+      .from('respondents')
+      .delete()
+      .in('campaign_id', campaignIds)
+
+    if (respondentsDeleteError) {
+      return NextResponse.json({ detail: `Respondenten verwijderen mislukt: ${respondentsDeleteError.message}` }, { status: 500 })
+    }
+
+    const { error: campaignsDeleteError } = await admin
+      .from('campaigns')
+      .delete()
+      .in('id', campaignIds)
+
+    if (campaignsDeleteError) {
+      return NextResponse.json({ detail: `Campaigns verwijderen mislukt: ${campaignsDeleteError.message}` }, { status: 500 })
+    }
+  }
+
+  const { error: orgInvitesDeleteError } = await admin
+    .from('org_invites')
+    .delete()
+    .eq('org_id', id)
+
+  if (orgInvitesDeleteError) {
+    return NextResponse.json({ detail: `Org-invites verwijderen mislukt: ${orgInvitesDeleteError.message}` }, { status: 500 })
+  }
+
+  const { error: orgMembersDeleteError } = await admin
+    .from('org_members')
+    .delete()
+    .eq('org_id', id)
+
+  if (orgMembersDeleteError) {
+    return NextResponse.json({ detail: `Org-members verwijderen mislukt: ${orgMembersDeleteError.message}` }, { status: 500 })
+  }
+
+  const { error: orgSecretDeleteError } = await admin
+    .from('organization_secrets')
+    .delete()
+    .eq('org_id', id)
+
+  if (orgSecretDeleteError) {
+    return NextResponse.json({ detail: `Organization secret verwijderen mislukt: ${orgSecretDeleteError.message}` }, { status: 500 })
+  }
+
+  const { error: orgDeleteError } = await admin
     .from('organizations')
     .delete()
     .eq('id', id)
 
-  if (error) {
-    return NextResponse.json({ detail: 'Organisatie verwijderen mislukt.' }, { status: 500 })
+  if (orgDeleteError) {
+    return NextResponse.json({ detail: `Organisatie verwijderen mislukt: ${orgDeleteError.message}` }, { status: 500 })
   }
 
   return NextResponse.json({
