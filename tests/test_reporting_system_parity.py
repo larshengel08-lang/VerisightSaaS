@@ -76,6 +76,7 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
     report = _read("backend/report.py")
     product_page = _read("frontend/app/producten/[slug]/page.tsx")
     marketing_products = _read("frontend/lib/marketing-products.ts")
+    trust_page = _read("frontend/app/vertrouwen/page.tsx")
 
     assert "managementsamenvatting" in preview_copy
     assert "eerste managementvraag" in preview_copy
@@ -93,6 +94,12 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
     assert "managementsamenvatting, retentiesignaal" in marketing_products
     assert "bewijstatus" not in preview_copy
     assert "bewijsstatus" in preview_copy
+    assert "intended use" in preview_copy
+    assert "privacygrens" in preview_copy
     assert "trust, interpretatie & claimsgrens" in report
     assert "niet extern gevalideerd als diagnostisch instrument" in exit_report_content
     assert "v1-werkmodel" in retention_report_content
+    assert "detailweergave start pas vanaf 5 responses" in exit_report_content
+    assert "minimale n-grenzen" in retention_report_content
+    assert "publieke trustlaag" in trust_page
+    assert "dpa beschikbaar" in trust_page

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { LegalPageShell } from '@/components/marketing/legal-page-shell'
 
 export const metadata: Metadata = {
@@ -11,9 +12,18 @@ export default function DpaPage() {
   return (
     <LegalPageShell
       title="Verwerkersovereenkomst"
-      description="Onderstaande verwerkersovereenkomst is het standaardtemplate dat Verisight hanteert voor klantorganisaties. Het document is op verzoek beschikbaar als gepersonaliseerde, ondertekende versie. Neem hiervoor contact op via privacy@verisight.nl."
+      description="Onderstaande verwerkersovereenkomst is het standaardtemplate dat Verisight hanteert voor klantorganisaties. Het document is op verzoek beschikbaar als gepersonaliseerde, ondertekende versie. Neem hiervoor contact op via privacy@verisight.nl. Voor de buyer-facing samenvatting van trust en privacy kun je ook de trust & privacy-pagina bekijken."
       lastUpdated="13 april 2026"
     >
+      <section>
+        <h2>Publieke trustlaag</h2>
+        <p>
+          Deze DPA is de formele verwerkerslaag. Voor een compact publiek overzicht van methodiek, privacy,
+          rapportlezing en juridische support kun je ook naar{' '}
+          <Link href="/vertrouwen">Trust & privacy</Link>.
+        </p>
+      </section>
+
       <div className="mb-2 rounded-lg border border-blue-200 bg-blue-50 px-6 py-4 text-sm text-blue-900">
         <strong>Let op:</strong> Dit is een standaardtemplate. Velden aangeduid met{' '}
         <code className="rounded bg-blue-100 px-1 py-0.5 font-mono text-xs">[...]</code> worden ingevuld op basis van
@@ -170,7 +180,9 @@ export default function DpaPage() {
         <h2>10. Contact</h2>
         <p>
           Voor vragen over deze verwerkersovereenkomst of voor een gepersonaliseerde en ondertekende versie kunt u
-          contact opnemen via <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>.
+          contact opnemen via <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>. Bekijk daarnaast ook{' '}
+          <Link href="/privacy">het privacybeleid</Link> en{' '}
+          <Link href="/vertrouwen">Trust & privacy</Link>.
         </p>
       </section>
     </LegalPageShell>

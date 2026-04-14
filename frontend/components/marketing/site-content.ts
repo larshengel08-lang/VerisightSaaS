@@ -1,6 +1,7 @@
 export const marketingNavLinks = [
   { href: '/', label: 'Home' },
   { href: '/producten', label: 'Producten' },
+  { href: '/vertrouwen', label: 'Vertrouwen' },
   { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
 ] as const
@@ -21,11 +22,13 @@ export const marketingFooterLinks = [
   { href: '/producten/exitscan', label: 'ExitScan' },
   { href: '/producten/retentiescan', label: 'RetentieScan' },
   { href: '/producten/combinatie', label: 'Combinatie' },
+  { href: '/vertrouwen', label: 'Vertrouwen' },
   { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
 ] as const
 
 export const marketingLegalLinks = [
+  { href: '/vertrouwen', label: 'Trust & privacy' },
   { href: '/privacy', label: 'Privacybeleid' },
   { href: '/voorwaarden', label: 'Algemene voorwaarden' },
   { href: '/dpa', label: 'Verwerkersovereenkomst' },
@@ -79,6 +82,7 @@ export const homepageComparisonRows = [
 
 export const homepageProofSignals = [
   'Methodische productkeuze: vertrekduiding of vroegsignalering',
+  'Publieke trust-, privacy- en DPA-laag voor kopers',
   'Dashboard en rapport in dezelfde managementtaal',
   'Groepsinzichten met minimale n-grenzen en productspecifieke leeswijzers',
 ] as const
@@ -93,6 +97,11 @@ export const homepageUtilityLinks = [
     href: '/aanpak',
     title: 'Aanpak',
     body: 'Zie hoe baseline, uitvoering en opvolging logisch op elkaar aansluiten.',
+  },
+  {
+    href: '/vertrouwen',
+    title: 'Vertrouwen',
+    body: 'Zie publiek hoe methodiek, privacy, rapportlezing en DPA zijn ingericht.',
   },
   {
     href: '/tarieven',
@@ -144,10 +153,146 @@ export const comparisonCards = [
 ] as const
 
 export const trustItems = [
+  'Nederlandse dienst met publieke trust- en legal routes',
   'Primaire dataopslag in EU-regio',
   'Groepsinzichten met minimale n-grenzen',
   'Dashboard en managementrapport in dezelfde leeslijn',
   'Methodische basis vanuit A&O-psychologie',
+] as const
+
+export const trustQuickLinks = [
+  {
+    href: '/vertrouwen',
+    label: 'Trust & privacy',
+    body: 'Zie publiek hoe Verisight methodiek, privacy, rapportlezing en legitimiteit inricht.',
+  },
+  {
+    href: '/privacy',
+    label: 'Privacybeleid',
+    body: 'Lees hoe data, subverwerkers, cookies en bewaartermijnen zijn ingericht.',
+  },
+  {
+    href: '/dpa',
+    label: 'Verwerkersovereenkomst',
+    body: 'Bekijk het standaardtemplate voor klantorganisaties en due-diligence-vragen.',
+  },
+] as const
+
+export const trustSignalHighlights = [
+  {
+    title: 'Methodische trust',
+    body: 'ExitScan en RetentieScan worden publiek uitgelegd als managementinstrumenten met duidelijke claimsgrenzen, geen diagnose of black-box voorspeller.',
+  },
+  {
+    title: 'Privacy trust',
+    body: 'De buyer-facing laag maakt groepsniveau, minimale n-grenzen, geanonimiseerde open tekst en EU-primary dataopslag expliciet zichtbaar.',
+  },
+  {
+    title: 'Output trust',
+    body: 'Dashboard, rapport en preview volgen dezelfde managementstructuur met leeswijzers, bewijsstatus en productspecifieke interpretatiegrenzen.',
+  },
+  {
+    title: 'Procestrust',
+    body: 'Verisight verkoopt een begeleide productvorm met intake, uitvoering, rapportage en opvolging in plaats van losse surveysoftware.',
+  },
+  {
+    title: 'Legitimiteit',
+    body: 'Publieke contactroutes, privacypagina, DPA, voorwaarden en een Nederlandse buyer-facing trustlaag verlagen first-time buyer twijfel.',
+  },
+] as const
+
+export const trustVerificationCards = [
+  {
+    title: 'Wat je nu publiek kunt verifieren',
+    body: 'Verisight toont publiek hoe productkeuze, privacy, rapportlezing en begeleide delivery zijn ingericht voordat je een demo of gesprek inplant.',
+  },
+  {
+    title: 'Wat management wel ziet',
+    body: 'Geaggregeerde managementsamenvatting, topfactoren, hypotheses, prioriteiten en opvolgsporen in een vaste executive leeslijn.',
+  },
+  {
+    title: 'Wat we bewust niet claimen',
+    body: 'Geen individuele voorspelling, geen persoonsgerichte beoordeling, geen brede people-suite en geen wetenschappelijke validatie die niet door de repo-basis wordt gedragen.',
+  },
+] as const
+
+export const trustHubAnswerCards = [
+  {
+    title: 'Waar draait de data?',
+    body: 'De primaire database draait in een EU-regio. Voor apphosting en mailverwerking gebruikt Verisight daarnaast publieke subverwerkers die in privacybeleid en DPA staan genoemd.',
+  },
+  {
+    title: 'Wat ziet management precies?',
+    body: 'Management ziet groeps- en segmentinzichten, geen individuele signalen. Bij RetentieScan blijven individuele vertrekintentie en persoonsgerichte actieroutes nadrukkelijk buiten beeld.',
+  },
+  {
+    title: 'Hoe voorkom je schijnprecisie?',
+    body: 'Detailweergave start pas vanaf minimale aantallen, segmenten blijven verborgen bij te kleine groepen en open tekst wordt geanonimiseerd waar dat nodig is.',
+  },
+  {
+    title: 'Hoe lees je de output?',
+    body: 'Verisight gebruikt signalen, hypotheses en managementsamenvattingen als gespreksinput. De output ondersteunt verificatie en prioritering, niet causaliteitsclaims of harde diagnoses.',
+  },
+  {
+    title: 'Welke juridische basis is publiek beschikbaar?',
+    body: 'Er zijn publieke pagina\'s voor trust & privacy, privacybeleid, algemene voorwaarden en een standaard DPA-template voor klantorganisaties.',
+  },
+  {
+    title: 'Wat voor productvorm koop je?',
+    body: 'Geen self-serve surveytool en geen open consultancytraject, maar een begeleide productvorm met dashboard, rapportage, uitleg en productspecifieke trustgrenzen.',
+  },
+] as const
+
+export const trustReadingRows = [
+  [
+    'Intended use',
+    'Managementduiding, prioritering en gesprek op groepsniveau',
+    'Niet als diagnose, individuele voorspelling of performance-oordeel',
+  ],
+  [
+    'Wat management ziet',
+    'Dashboard, managementsamenvatting, topfactoren, hypotheses en vervolgstappen',
+    'Niet elke ruwe response, geen persoonsprofielen en geen verborgen black-box score',
+  ],
+  [
+    'Privacygrens',
+    'Minimale n-grenzen, segmentonderdrukking en geanonimiseerde open tekst',
+    'Niet doen alsof kleine groepen of open tekst zonder terughoudendheid veilig te lezen zijn',
+  ],
+  [
+    'Bewijsstatus',
+    'Methodisch onderbouwd, intern consistent en testmatig beschermd',
+    'Niet verkopen als extern gevalideerd diagnostisch instrument of bewezen predictor',
+  ],
+] as const
+
+export const trustSupportCards = [
+  {
+    title: 'Trust & privacy',
+    href: '/vertrouwen',
+    body: 'Publieke due-diligence laag over methodiek, privacy, rapportlezing en buyer reassurance.',
+  },
+  {
+    title: 'Privacybeleid',
+    href: '/privacy',
+    body: 'Praktische uitleg over persoonsgegevens, subverwerkers, bewaartermijnen en rechten onder de AVG.',
+  },
+  {
+    title: 'Verwerkersovereenkomst',
+    href: '/dpa',
+    body: 'Standaard DPA-template voor klantorganisaties die de formele verwerkersrol willen toetsen.',
+  },
+  {
+    title: 'Algemene voorwaarden',
+    href: '/voorwaarden',
+    body: 'Publieke basis voor dienstvorm, beschikbaarheid, facturatie, rollen en aansprakelijkheid.',
+  },
+] as const
+
+export const contactTrustSignals = [
+  'Aanvraag wordt alleen gebruikt voor route-inschatting en follow-up',
+  'Reactie meestal binnen 1 werkdag',
+  'Publieke trust-, privacy- en DPA-pagina beschikbaar',
 ] as const
 
 export const statCards = [

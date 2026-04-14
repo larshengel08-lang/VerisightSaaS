@@ -141,6 +141,7 @@ def get_management_summary_payload(
         "Lees ExitScan als managementsamenvatting van vertrekpatronen. Het rapport bundelt signalen, werkfactoren en hypotheses "
         "tot een bestuurlijk gesprek, zonder causaliteit, diagnose of harde voorspellingen te claimen. "
         "De uitkomst is indicatief, gegroepeerd en bedoeld voor prioritering en verificatie. "
+        "Detailweergave start pas vanaf 5 responses, patroonanalyse pas vanaf 10 en segmenten verschijnen alleen bij voldoende n. "
         "ExitScan is methodisch verdedigbaar, maar niet extern gevalideerd als diagnostisch instrument."
     )
 

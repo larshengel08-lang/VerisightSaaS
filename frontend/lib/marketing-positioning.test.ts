@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { LIVE_MARKETING_PRODUCTS } from '@/lib/marketing-products'
 import { exitScanDefinition } from '@/lib/products/exit/definition'
 import { retentionScanDefinition } from '@/lib/products/retention/definition'
-import { faqs, productOverviewComparisonRows } from '@/components/marketing/site-content'
+import {
+  faqs,
+  homepageUtilityLinks,
+  marketingLegalLinks,
+  marketingNavLinks,
+  productOverviewComparisonRows,
+  trustItems,
+} from '@/components/marketing/site-content'
 
 describe('ExitScan positioning copy', () => {
   it('keeps ExitScan framed as vertrekduiding instead of a hard diagnosis', () => {
@@ -29,6 +36,14 @@ describe('ExitScan positioning copy', () => {
     expect(exitRow?.[2].toLowerCase()).toContain('werkfactoren')
     expect(differenceFaq?.[1].toLowerCase()).toContain('vertrek achteraf duiden')
     expect(differenceFaq?.[1].toLowerCase()).toContain('eerder zien waar behoud op groepsniveau onder druk staat')
+  })
+
+  it('keeps visible trust navigation and quick links available for first-time buyers', () => {
+    expect(marketingNavLinks.map((link) => link.href)).toContain('/vertrouwen')
+    expect(marketingLegalLinks.map((link) => link.href)).toContain('/vertrouwen')
+    expect(homepageUtilityLinks.map((link) => link.href)).toContain('/vertrouwen')
+    expect(trustItems.some((item) => item.toLowerCase().includes('eu-regio'))).toBe(true)
+    expect(trustItems.some((item) => item.toLowerCase().includes('nederlandse dienst'))).toBe(true)
   })
 })
 

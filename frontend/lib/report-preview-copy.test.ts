@@ -11,6 +11,10 @@ describe('REPORT_PREVIEW_COPY', () => {
     expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Bewijsstatus')
     expect(exitCopy.nuance).toContain('geen diagnose')
     expect(exitCopy.hypothesisLead).toContain('eerste eigenaar')
+    expect(exitCopy.trustTitle).toContain('Trust')
+    expect(exitCopy.trustPoints.map(([title]) => title)).toContain('Privacygrens')
+    expect(exitCopy.trustPoints.map(([title]) => title)).toContain('Bewijsstatus')
+    expect(exitCopy.demoBody).toContain('Fictieve voorbeelddata')
   })
 
   it('keeps retention preview aligned with verification-first report language', () => {
@@ -22,5 +26,10 @@ describe('REPORT_PREVIEW_COPY', () => {
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Managementsamenvatting')
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Actielogica')
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Bewijsstatus')
+    expect(retentionCopy.trustPoints.map(([title]) => title)).toContain('Intended use')
+    expect(retentionCopy.trustPoints.map(([title]) => title)).toContain('Privacygrens')
+    expect(retentionCopy.trustPoints.map(([title, body]) => `${title} ${body}`.toLowerCase())).toContain(
+      'bewijsstatus v1-werkmodel: inhoudelijk plausibel, intern consistent en testmatig beschermd; geen bewezen predictor.',
+    )
   })
 })

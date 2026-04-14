@@ -11,9 +11,18 @@ export default function PrivacyPage() {
   return (
     <LegalPageShell
       title="Privacybeleid"
-      description="Op deze pagina lees je hoe Verisight omgaat met persoonsgegevens van klantgebruikers en respondenten binnen ExitScan en RetentieScan."
+      description="Op deze pagina lees je hoe Verisight omgaat met persoonsgegevens van klantgebruikers en respondenten binnen ExitScan en RetentieScan. Voor de buyer-facing trustlaag in gewone taal kun je ook de trust & privacy-pagina bekijken."
       lastUpdated="9 april 2026"
     >
+      <section>
+        <h2>0. Publieke trustlaag</h2>
+        <p>
+          Deze pagina geeft de juridische en operationele basis. Wil je eerst de buyer-facing samenvatting zien van
+          methodiek, privacy, rapportlezing en DPA, bekijk dan ook{' '}
+          <Link href="/vertrouwen">Trust & privacy</Link>.
+        </p>
+      </section>
+
       <section>
         <h2>1. Wie is Verisight?</h2>
         <p>
@@ -157,6 +166,8 @@ export default function PrivacyPage() {
         <p>
           Voor vragen over dit privacybeleid kun je contact opnemen via{' '}
           <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>. Bekijk ook de{' '}
+          <Link href="/vertrouwen">trust & privacy-pagina</Link>, het{' '}
+          <Link href="/dpa">DPA-template</Link> en de{' '}
           <Link href="/voorwaarden">algemene voorwaarden</Link>.
         </p>
       </section>

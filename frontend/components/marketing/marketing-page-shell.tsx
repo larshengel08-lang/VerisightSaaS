@@ -6,7 +6,7 @@ import { MarketingSpotlight } from '@/components/marketing/marketing-spotlight'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { PublicHeader } from '@/components/marketing/public-header'
 import { TrustStrip } from '@/components/marketing/trust-strip'
-import { trustItems } from '@/components/marketing/site-content'
+import { trustItems, trustQuickLinks } from '@/components/marketing/site-content'
 
 type MarketingPageTheme = 'neutral' | 'exit' | 'retention' | 'combination' | 'coming-soon'
 
@@ -134,6 +134,18 @@ export function MarketingPageShell({
             <div className="mt-10">
               <TrustStrip items={trustItems} tone={trustTone} />
             </div>
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              {trustQuickLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
           </div>
 
           <div className="relative">
@@ -172,6 +184,10 @@ export function MarketingPageShell({
                       {
                         title: 'Prijs en pakket',
                         body: 'Bekijk de prijsankers per productvorm zonder productverwarring.',
+                      },
+                      {
+                        title: 'Trust & privacy',
+                        body: 'Bekijk de publieke trustlaag, privacybasis en DPA voordat je een gesprek plant.',
                       },
                     ]}
                   />

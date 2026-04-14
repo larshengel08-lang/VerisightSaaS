@@ -30,6 +30,7 @@ def test_retention_copy_keeps_non_predictive_management_boundary():
     marketing = _read("frontend/components/marketing/site-content.ts")
     privacy_page = _read("frontend/app/privacy/page.tsx")
     dpa_page = _read("frontend/app/dpa/page.tsx")
+    trust_page = _read("frontend/app/vertrouwen/page.tsx")
 
     assert "geen brede mto" in product_page
     assert "geen individuele voorspeller" in product_page
@@ -39,6 +40,8 @@ def test_retention_copy_keeps_non_predictive_management_boundary():
     assert "individuele signalen, individuele vertrekintentie" in dpa_page
     assert "primaire database draait in een eu-regio" in privacy_page
     assert "persoonsgerichte actieroutes" in dpa_page
+    assert "geen individuele voorspelling" in trust_page
+    assert "geen individuele signalen" in trust_page
     assert "risicovoorspelling" not in product_page
 
 

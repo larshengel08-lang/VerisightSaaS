@@ -82,15 +82,30 @@ function ProofRail({ variant }: { variant: ReportPreviewVariant }) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[0.88fr_1.12fr]">
-      <div className="rounded-2xl border border-slate-200 bg-white p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Rapportexcerpt</p>
-        <div className="mt-4 space-y-3">
-          {copy.proofNotes.map(([title, body]) => (
-            <div key={title} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <p className="text-sm font-semibold text-slate-950">{title}</p>
-              <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
-            </div>
-          ))}
+      <div className="space-y-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Rapportexcerpt</p>
+          <div className="mt-4 space-y-3">
+            {copy.proofNotes.map(([title, body]) => (
+              <div key={title} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-sm font-semibold text-slate-950">{title}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">{copy.trustTitle}</p>
+          <p className="mt-3 text-sm leading-6 text-slate-700">{copy.trustIntro}</p>
+          <div className="mt-4 space-y-3">
+            {copy.trustPoints.map(([title, body]) => (
+              <div key={title} className="rounded-xl border border-white/70 bg-white/90 px-4 py-3">
+                <p className="text-sm font-semibold text-slate-950">{title}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -99,11 +114,11 @@ function ProofRail({ variant }: { variant: ReportPreviewVariant }) {
           <div>
             <p className="text-sm font-semibold text-slate-950">Segment deep dive preview</p>
             <p className="mt-1 text-xs leading-5 text-slate-500">
-              Voorbeeld van dezelfde visuele outputtaal in rapport en dashboard.
+              {copy.demoBody}
             </p>
           </div>
           <span className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700">
-            Proof
+            {copy.demoLabel}
           </span>
         </div>
         <Image
@@ -170,6 +185,10 @@ function DashboardSlide({ variant }: { variant: ReportPreviewVariant }) {
           <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
             <p className="text-sm font-semibold text-blue-900">Belangrijke nuance</p>
             <p className="mt-2 text-sm leading-6 text-blue-950">{copy.nuance}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="text-sm font-semibold text-slate-950">Wat deze preview laat zien</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{copy.trustPoints[1]?.[1]}</p>
           </div>
         </div>
       </div>

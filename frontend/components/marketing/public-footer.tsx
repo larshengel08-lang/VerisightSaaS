@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { marketingFooterLinks, marketingLegalLinks } from '@/components/marketing/site-content'
+import { marketingFooterLinks, marketingLegalLinks, trustQuickLinks } from '@/components/marketing/site-content'
 import { Wordmark } from '@/components/marketing/wordmark'
 
 export function PublicFooter() {
@@ -12,13 +12,23 @@ export function PublicFooter() {
             Verisight helpt organisaties kiezen tussen ExitScan en RetentieScan: terugkijken naar vertrek, eerder signaleren op behoud, of beide in een logisch portfolio.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
-            {['Gehost in Europa', 'AVG-bewust', 'Exit + Retentie', 'Dashboard + rapport'].map((item) => (
+            {['Nederlandse dienst', 'EU-primary data', 'DPA beschikbaar', 'Geen trackingcookies'].map((item) => (
               <span
                 key={item}
                 className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600"
               >
                 {item}
               </span>
+            ))}
+          </div>
+          <div className="mt-5 space-y-2 text-sm text-slate-600">
+            {trustQuickLinks.map((link) => (
+              <div key={link.href}>
+                <Link href={link.href} className="font-medium text-slate-700 transition-colors hover:text-slate-950">
+                  {link.label}
+                </Link>
+                <p className="mt-1 max-w-sm leading-6 text-slate-500">{link.body}</p>
+              </div>
             ))}
           </div>
         </div>
@@ -44,7 +54,7 @@ export function PublicFooter() {
               </a>
             </p>
             <p>Voor organisaties vanaf circa 200 medewerkers</p>
-            <p>Gehost in Europa</p>
+            <p>Publieke trustlaag voor methodiek, privacy en rapportlezing</p>
             <div className="pt-2">
               {marketingLegalLinks.map((link) => (
                 <div key={link.href}>

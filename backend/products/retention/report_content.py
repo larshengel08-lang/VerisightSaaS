@@ -135,7 +135,8 @@ def get_management_summary_payload(
     trust_note = (
         "Lees RetentieScan als groeps- en segmentduiding voor verificatie en opvolging. Het rapport is geen brede MTO, "
         "geen individueel performance-instrument en geen gevalideerde voorspeller van vrijwillig vertrek. "
-        "Dit blijft een v1-werkmodel: management ziet groepssignalen, geen individuele scores of persoonsgerichte interventieroutes."
+        "Dit blijft een v1-werkmodel: management ziet groepssignalen, geen individuele scores of persoonsgerichte interventieroutes. "
+        "Detailweergave en segmentvergelijking blijven gekoppeld aan minimale n-grenzen zodat privacy, interpretatie en herleidbaarheid bewaakt blijven."
     )
 
     return {

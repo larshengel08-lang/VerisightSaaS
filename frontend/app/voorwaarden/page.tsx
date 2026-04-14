@@ -11,9 +11,18 @@ export default function VoorwaardenPage() {
   return (
     <LegalPageShell
       title="Algemene voorwaarden"
-      description="Op deze pagina lees je de basisvoorwaarden voor het gebruik van Verisight, ExitScan en RetentieScan."
+      description="Op deze pagina lees je de basisvoorwaarden voor het gebruik van Verisight, ExitScan en RetentieScan. Voor de buyer-facing trustsamenvatting kun je ook de trust & privacy-pagina bekijken."
       lastUpdated="9 april 2026"
     >
+      <section>
+        <h2>0. Trust & privacy in gewone taal</h2>
+        <p>
+          Deze voorwaarden vormen de formele contractlaag. Wil je eerst de publieke samenvatting zien van methodiek,
+          privacy, rapportlezing en juridische support, bekijk dan ook{' '}
+          <Link href="/vertrouwen">Trust & privacy</Link>.
+        </p>
+      </section>
+
       <section>
         <h2>1. Definities</h2>
         <ul>
@@ -173,6 +182,7 @@ export default function VoorwaardenPage() {
         <p>
           Voor vragen over deze voorwaarden kun je mailen naar{' '}
           <a href="mailto:hallo@verisight.nl">hallo@verisight.nl</a>. Bekijk ook het{' '}
+          <Link href="/vertrouwen">trust & privacy-overzicht</Link>, het{' '}
           <Link href="/privacy">privacybeleid</Link> en de{' '}
           <Link href="/dpa">verwerkersovereenkomst</Link>.
         </p>

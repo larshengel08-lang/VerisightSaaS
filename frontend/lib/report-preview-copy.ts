@@ -16,6 +16,11 @@ export interface ReportPreviewCopy {
   hypothesisLead: string
   hypotheses: ReportPreviewHypothesis[]
   proofNotes: [string, string][]
+  trustTitle: string
+  trustIntro: string
+  trustPoints: [string, string][]
+  demoLabel: string
+  demoBody: string
 }
 
 export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy> = {
@@ -53,6 +58,18 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       ['Productspecifieke duiding', 'ExitScan en RetentieScan krijgen een eigen managementverhaal binnen één platform'],
       ['Begeleide output', 'Geen losse survey-export of self-serve tool'],
     ],
+    trustTitle: 'Hoe je deze voorbeeldoutput leest',
+    trustIntro:
+      'Deze preview gebruikt fictieve data, maar volgt dezelfde managementstructuur, leesvolgorde en trustnotities als de live buyer-facing output.',
+    trustPoints: [
+      ['Intended use', 'Gebruik deze laag om te kiezen welke managementroute past: vertrekduiding, vroegsignalering of beide.'],
+      ['Wat management ziet', 'Managementsamenvatting, topfactoren, eerste vraag en eerste logische stap in één executive lijn.'],
+      ['Privacygrens', 'Groepsinzichten met minimale n-grenzen en geen individuele signalen naar management.'],
+      ['Bewijsstatus', 'Methodisch onderbouwde managementoutput, geen diagnose of individuele voorspeller.'],
+    ],
+    demoLabel: 'Illustratief',
+    demoBody:
+      'Fictieve data. De managementstructuur, trustnotities en leesvolgorde volgen dezelfde lijn als de echte Verisight-output.',
   },
   exit: {
     label: 'ExitScan-voorbeeld',
@@ -89,6 +106,18 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       ['Methodische nuance', 'Signalen en hypothesen, geen absolute waarheid of diagnose'],
       ['Bewijsstatus', 'Methodisch verdedigbaar en testmatig geborgd, maar niet extern gevalideerd als diagnostisch instrument'],
     ],
+    trustTitle: 'Trust & interpretatie',
+    trustIntro:
+      'Ook in de preview blijft ExitScan zichtbaar begrensd: gegroepeerde vertrekduiding voor management, met expliciete leeswijzers over claims, privacy en bewijsstatus.',
+    trustPoints: [
+      ['Intended use', 'Terugkijkende vertrekduiding op groepsniveau voor HR, MT en directie.'],
+      ['Wat management ziet', 'Frictiescore, vertrekbeeld, topfactoren, hypotheses en een eerste vervolgstap.'],
+      ['Privacygrens', 'Detail pas vanaf voldoende responses, patroonanalyse pas vanaf 10 en segmenten alleen bij voldoende n.'],
+      ['Bewijsstatus', 'Methodisch verdedigbaar en testmatig geborgd, maar niet extern gevalideerd als diagnostisch instrument.'],
+    ],
+    demoLabel: 'Illustratief voorbeeld',
+    demoBody:
+      'Fictieve voorbeelddata. De trustopbouw, managementtaal en rapportvolgorde zijn gelijk aan de live ExitScan-presentatie.',
   },
   retention: {
     label: 'RetentieScan-voorbeeld',
@@ -125,5 +154,17 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       ['Actielogica', 'Topfactoren en vervolgstappen voor 30-90 dagen, zonder individuele voorspelling'],
       ['Bewijsstatus', 'Inhoudelijk plausibel, intern consistent en testmatig beschermd; nog geen pragmatisch bewezen predictor'],
     ],
+    trustTitle: 'Trust & interpretatie',
+    trustIntro:
+      'De preview maakt dezelfde grens zichtbaar als live output: groeps- en segmentduiding voor verificatie en prioritering, zonder individuele predictor of performance-instrument te worden.',
+    trustPoints: [
+      ['Intended use', 'Vroegsignalering op behoud op groeps- en segmentniveau voor managementgesprek en opvolging.'],
+      ['Wat management ziet', 'Retentiesignaal, stay-intent, vertrekintentie, bevlogenheid en topfactoren in één bestuurslaag.'],
+      ['Privacygrens', 'Geen individuele signalen naar management, segmenten alleen bij voldoende n en open tekst alleen als groepssignaal.'],
+      ['Bewijsstatus', 'V1-werkmodel: inhoudelijk plausibel, intern consistent en testmatig beschermd; geen bewezen predictor.'],
+    ],
+    demoLabel: 'Illustratief voorbeeld',
+    demoBody:
+      'Fictieve voorbeelddata. De live RetentieScan-output gebruikt dezelfde managementstructuur, trustnotes en productspecifieke leeswijzers.',
   },
 }
