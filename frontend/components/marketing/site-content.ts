@@ -105,7 +105,7 @@ export const productOverviewComparisonRows = [
   [
     'ExitScan',
     'Vertrekduiding',
-    'Waarom gingen mensen weg en welke werkfactoren keren terug?',
+    'Welk vertrekbeeld keert terug en welke werkfactoren wegen daarin mee?',
     'Voor terugkijkende analyse op uitstroom',
   ],
   [
@@ -406,7 +406,7 @@ export const pricingFaqs = [
 export const faqs = [
   [
     'Wat is het verschil tussen ExitScan en RetentieScan?',
-    'ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat bij actieve medewerkers.',
+    'ExitScan helpt vertrek achteraf duiden op basis van terugkerende werkfactoren, vertrekredenen en werksignalen. RetentieScan helpt eerder zien waar behoud onder druk staat bij actieve medewerkers.',
   ],
   [
     'Is RetentieScan gewoon een MTO?',
