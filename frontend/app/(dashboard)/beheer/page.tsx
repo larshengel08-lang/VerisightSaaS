@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { NewOrgForm } from '@/components/dashboard/new-org-form'
 import { NewCampaignForm } from '@/components/dashboard/new-campaign-form'
 import { AddRespondentsForm } from '@/components/dashboard/add-respondents-form'
@@ -116,6 +117,14 @@ export default async function BeheerPage() {
           respondentbestand aan. Verisight controleert de import, verstuurt uitnodigingen en activeert vervolgens
           het dashboard voor de klantorganisatie.
         </p>
+        <div className="mt-3">
+          <Link
+            href="/beheer/contact-aanvragen"
+            className="inline-flex items-center rounded-xl border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+          >
+            Open contactaanvragen
+          </Link>
+        </div>
       </div>
 
       <div className="mb-8 flex items-center gap-2">

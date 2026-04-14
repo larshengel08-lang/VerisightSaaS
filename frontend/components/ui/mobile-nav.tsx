@@ -38,13 +38,22 @@ export function MobileNav({ isAdmin }: Props) {
             Campaigns
           </Link>
           {isAdmin && (
-            <Link
-              href="/beheer"
-              onClick={() => setOpen(false)}
-              className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-            >
-              Setup
-            </Link>
+            <>
+              <Link
+                href="/beheer"
+                onClick={() => setOpen(false)}
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+              >
+                Setup
+              </Link>
+              <Link
+                href="/beheer/contact-aanvragen"
+                onClick={() => setOpen(false)}
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+              >
+                Leads
+              </Link>
+            </>
           )}
         </div>
       )}

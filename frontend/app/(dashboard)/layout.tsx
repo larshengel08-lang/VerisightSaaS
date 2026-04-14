@@ -43,6 +43,7 @@ export default async function DashboardLayout({
               <NavLink href="/dashboard">Campaigns</NavLink>
               {/* Setup is alleen zichtbaar voor Verisight-beheerders, niet voor HR-klanten */}
               {isAdmin && <NavLink href="/beheer">Setup</NavLink>}
+              {isAdmin && <NavLink href="/beheer/contact-aanvragen">Leads</NavLink>}
             </nav>
           </div>
           <div className="flex items-center gap-3">
