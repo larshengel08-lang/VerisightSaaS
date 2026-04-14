@@ -21,6 +21,7 @@ def _read(relative_path: str) -> str:
 def test_report_management_payloads_expose_executive_contract_fields():
     exit_payload = get_exit_management_summary_payload(
         top_factor_labels=["Leiderschap", "Groei"],
+        top_factor_keys=["leadership", "growth"],
         top_exit_reason_label="Leiderschap / management",
         top_contributing_reason_label="Gebrek aan groei",
         strong_work_signal_pct=62,
@@ -28,6 +29,7 @@ def test_report_management_payloads_expose_executive_contract_fields():
     )
     retention_payload = get_retention_management_summary_payload(
         top_factor_labels=["Werkbelasting", "Leiderschap"],
+        top_factor_keys=["workload", "leadership"],
         retention_signal_profile="scherp_aandachtssignaal",
         avg_engagement=5.1,
         avg_turnover_intention=6.1,
@@ -41,6 +43,8 @@ def test_report_management_payloads_expose_executive_contract_fields():
         assert payload["trust_note_title"]
         assert payload["trust_note"]
         assert len(payload["highlight_cards"]) >= 3
+        assert any(card["title"] == "Eerste besluit" for card in payload["highlight_cards"])
+        assert any(card["title"] == "Eerste eigenaar" for card in payload["highlight_cards"])
 
 
 def test_report_hypotheses_include_owner_and_actionability():
@@ -76,10 +80,12 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
     assert "managementsamenvatting" in preview_copy
     assert "eerste managementvraag" in preview_copy
     assert "eerste logische stap" in preview_copy
+    assert "eerste eigenaar" in preview_copy
     assert "eerste verificatiespoor" in preview_copy
     assert "vertrekduiding voor hr, mt en directie" in exit_report_content
     assert "behoudssignalen voor hr, mt en directie" in retention_report_content
     assert "eerste eigenaar" in report
+    assert "eerste besluit" in report
     assert "linebefore" in report
     assert "managementsamenvatting, eerste managementvraag en eerste logische stap" in product_page
     assert "managementsamenvatting, eerste verificatiespoor en eerste logische stap" in product_page

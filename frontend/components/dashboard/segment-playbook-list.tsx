@@ -37,6 +37,15 @@ export function SegmentPlaybookList({ segments }: Props) {
             </div>
           </div>
 
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <Column title="Eerste besluit" tone="blue">
+              <p className="text-sm leading-6 text-slate-700">{segment.decision}</p>
+            </Column>
+            <Column title="Eerste eigenaar" tone="slate">
+              <p className="text-sm leading-6 text-slate-700">{segment.owner}</p>
+            </Column>
+          </div>
+
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
             <Column title="Eerst valideren" tone="blue">
               <p className="text-sm leading-6 text-slate-700">{segment.validate}</p>
@@ -67,17 +76,21 @@ function Column({
   children,
 }: {
   title: string
-  tone: 'blue' | 'emerald' | 'amber'
+  tone: 'slate' | 'blue' | 'emerald' | 'amber'
   children: ReactNode
 }) {
   const classes =
-    tone === 'emerald'
+    tone === 'slate'
+      ? 'border-slate-200 bg-slate-50'
+      : tone === 'emerald'
       ? 'border-emerald-100 bg-emerald-50'
       : tone === 'amber'
         ? 'border-amber-100 bg-amber-50'
         : 'border-blue-100 bg-blue-50'
   const labelClass =
-    tone === 'emerald'
+    tone === 'slate'
+      ? 'text-slate-600'
+      : tone === 'emerald'
       ? 'text-emerald-700'
       : tone === 'amber'
         ? 'text-amber-700'

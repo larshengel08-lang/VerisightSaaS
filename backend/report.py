@@ -832,7 +832,9 @@ def _build_retention_playbook_rows(
             "signal_value": signal_value,
             "band": band,
             "title": playbook["title"],
+            "decision": playbook["decision"],
             "validate": playbook["validate"],
+            "owner": playbook["owner"],
             "actions": playbook["actions"],
             "caution": playbook["caution"],
         })
@@ -1168,7 +1170,9 @@ def _build_retention_segment_playbook_rows(
             "factor_label": FACTOR_LABELS_NL.get(factor, factor),
             "signal_value": signal_value,
             "title": playbook["title"],
+            "decision": playbook["decision"],
             "validate": playbook["validate"],
+            "owner": playbook["owner"],
             "actions": playbook["actions"],
             "caution": playbook["caution"],
         })
@@ -1446,7 +1450,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             if response.open_text_raw and response.open_text_raw.strip()
         ]
     ) if is_retention else []
-    top_factor_labels = [FACTOR_LABELS_NL.get(factor, factor) for factor, _ in top_risks[:2]]
+    top_factor_keys = [factor for factor, _ in top_risks[:2]]
+    top_factor_labels = [FACTOR_LABELS_NL.get(factor, factor) for factor in top_factor_keys]
     top_exit_reason_label = (
         pattern.get("top_exit_reasons", [{}])[0].get("label")
         if has_pattern and pattern.get("top_exit_reasons")
@@ -1546,12 +1551,14 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     )
     management_summary_payload = product_module.get_management_summary_payload(
         top_factor_labels=top_factor_labels,
+        top_factor_keys=top_factor_keys,
         top_exit_reason_label=top_exit_reason_label,
         top_contributing_reason_label=top_contributing_reason_label,
         strong_work_signal_pct=strong_work_signal_pct,
         signal_visibility_average=signal_visibility_average,
     ) if not is_retention else product_module.get_management_summary_payload(
         top_factor_labels=top_factor_labels,
+        top_factor_keys=top_factor_keys,
         retention_signal_profile=retention_signal_profile,
         avg_engagement=avg_engagement,
         avg_turnover_intention=avg_turnover_intention,
@@ -1559,7 +1566,10 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         retention_theme_title=retention_themes[0]["title"] if retention_themes else None,
     )
     hypotheses_payload = product_module.get_hypotheses_payload()
-    next_steps_payload = product_module.get_next_steps_payload(top_focus_labels=top_factor_labels)
+    next_steps_payload = product_module.get_next_steps_payload(
+        top_focus_labels=top_factor_labels,
+        top_focus_keys=top_factor_keys,
+    )
 
     cover_metric_cards = [
         {
@@ -2981,7 +2991,9 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                     STYLES["body_bold"],
                 )],
                 [Paragraph(f"<b>{playbook['title']}</b>", STYLES["body_bold"])],
+                [Paragraph(f"<i>Eerste besluit:</i> {playbook['decision']}", STYLES["body"])],
                 [Paragraph(f"<i>Eerst valideren:</i> {playbook['validate']}", STYLES["body"])],
+                [Paragraph(f"<i>Eerste eigenaar:</i> {playbook['owner']}", STYLES["body"])],
                 [Paragraph(
                     "<br/>".join([f"• {action}" for action in playbook["actions"]]),
                     STYLES["body"],
@@ -3023,7 +3035,9 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                     f"(signaalwaarde {segment['signal_value']:.1f} / 10).",
                     STYLES["body"],
                 )],
+                [Paragraph(f"<i>Eerste besluit:</i> {segment['decision']}", STYLES["body"])],
                 [Paragraph(f"<i>Eerst valideren:</i> {segment['validate']}", STYLES["body"])],
+                [Paragraph(f"<i>Eerste eigenaar:</i> {segment['owner']}", STYLES["body"])],
                 [Paragraph(
                     "<br/>".join([f"• {action}" for action in segment["actions"]]),
                     STYLES["body"],

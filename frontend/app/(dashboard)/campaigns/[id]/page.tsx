@@ -586,14 +586,18 @@ export default async function CampaignPage({ params }: Props) {
               </div>
             </div>
 
-            {stats.scan_type === 'retention' ? (
+            {stats.scan_type === 'retention' || stats.scan_type === 'exit' ? (
               <>
                 <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                  <h3 className="text-sm font-semibold text-slate-950">Action playbooks</h3>
+                  <h3 className="text-sm font-semibold text-slate-950">
+                    {stats.scan_type === 'exit' ? 'Besluit- en eigenaarschapsroutes' : 'Action playbooks'}
+                  </h3>
                   <p className="mt-1 text-sm leading-6 text-slate-600">
-                    Deze playbooks helpen RetentieScan om niet bij signalering te blijven hangen.
+                    {stats.scan_type === 'exit'
+                      ? 'Deze routes helpen ExitScan om niet bij vertrekduiding te blijven hangen, maar snel naar keuze, eigenaar en eerste actie te gaan.'
+                      : 'Deze playbooks helpen RetentieScan om niet bij signalering te blijven hangen.'}
                   </p>
-                  {playbookCalibrationNote ? (
+                  {stats.scan_type === 'retention' && playbookCalibrationNote ? (
                     <p className="mt-2 text-xs leading-6 text-slate-500">{playbookCalibrationNote}</p>
                   ) : null}
                   <div className="mt-4">
@@ -601,7 +605,7 @@ export default async function CampaignPage({ params }: Props) {
                   </div>
                 </div>
 
-                {hasSegmentDeepDive ? (
+                {stats.scan_type === 'retention' && hasSegmentDeepDive ? (
                   <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
                     <h3 className="text-sm font-semibold text-slate-950">Segment-specifieke playbooks</h3>
                     <p className="mt-1 text-sm leading-6 text-slate-600">
@@ -619,7 +623,7 @@ export default async function CampaignPage({ params }: Props) {
                   </div>
                 ) : null}
 
-                {retentionThemes.length > 0 ? (
+                {stats.scan_type === 'retention' && retentionThemes.length > 0 ? (
                   <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
                     <h3 className="text-sm font-semibold text-slate-950">Verbetersignalen uit open antwoorden</h3>
                     <p className="mt-1 text-sm leading-6 text-slate-600">

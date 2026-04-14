@@ -571,7 +571,7 @@ export function buildRetentionTrendCards(args: {
 export function buildRetentionSegmentPlaybooks(args: {
   responses: (SurveyResponse & { respondents: Respondent })[]
   orgAverageSignal: number | null
-  playbooks: Record<string, Record<string, { title: string; validate: string; actions: string[]; caution: string }>>
+  playbooks: Record<string, Record<string, { title: string; decision: string; validate: string; owner: string; actions: string[]; caution: string }>>
 }): SegmentPlaybookEntry[] {
   if (args.orgAverageSignal === null) return []
   const orgAverageSignal = args.orgAverageSignal
@@ -626,7 +626,9 @@ export function buildRetentionSegmentPlaybooks(args: {
         deltaVsOrg: Number((avgSignal - orgAverageSignal).toFixed(1)),
         signalValue: Number(topFactor.signalValue.toFixed(1)),
         title: playbook.title,
+        decision: playbook.decision,
         validate: playbook.validate,
+        owner: playbook.owner,
         actions: playbook.actions,
         caution: playbook.caution,
       } satisfies SegmentPlaybookEntry

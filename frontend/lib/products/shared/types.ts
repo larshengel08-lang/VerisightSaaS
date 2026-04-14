@@ -23,7 +23,9 @@ export interface DashboardDecisionCard {
 
 export interface ActionPlaybook {
   title: string
+  decision: string
   validate: string
+  owner: string
   actions: string[]
   caution: string
 }

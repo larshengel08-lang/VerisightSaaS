@@ -26,11 +26,18 @@ describe('buildExitDashboardViewModel', () => {
     expect(model.topSummaryCards.map((card) => card.title)).toEqual([
       'Sterk werksignaal',
       'Meest genoemde hoofdreden',
+      'Eerste besluit',
+      'Eerste eigenaar',
       'Eerdere signalering',
     ])
+    expect(model.topSummaryCards[2]?.body).toContain('Beslis eerst')
+    expect(model.topSummaryCards[3]?.value).toContain('HR')
     expect(model.primaryQuestion.body).toContain('breed werkgerelateerd vertrekbeeld')
     expect(model.nextStep.body).toContain('30-90')
-    expect(model.focusSectionIntro).toContain('vertrekduiding')
+    expect(model.nextStep.body).toContain('eigenaar')
+    expect(model.managementBlocks[1]?.title).toBe('Welk besluit hoort nu eerst?')
+    expect(model.managementBlocks[2]?.items[0]).toContain('Eerste eigenaar')
+    expect(model.focusSectionIntro).toContain('kiezen')
   })
 
   it('keeps the top layer cautious while data is still indicative', () => {
@@ -55,5 +62,6 @@ describe('buildExitDashboardViewModel', () => {
     expect(model.topSummaryCards).toEqual([])
     expect(model.nextStep.title).toBe('Voorzichtig duiden')
     expect(model.nextStep.body).toContain('indicatief')
+    expect(model.nextStep.body).toContain('eerste eigenaar')
   })
 })

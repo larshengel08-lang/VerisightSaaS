@@ -3,9 +3,41 @@ from __future__ import annotations
 from typing import Any
 
 
+EXIT_DECISION_BY_FACTOR = {
+    "leadership": (
+        "Beslis eerst of dit vooral een leidinggevend patroon in enkele teams is of een breder MT-thema dat gezamenlijke opvolging vraagt."
+    ),
+    "culture": (
+        "Beslis of dit vooral een teamspecifiek veiligheidsspoor is of een breder cultuurthema dat MT-aandacht en opvolging vraagt."
+    ),
+    "growth": (
+        "Beslis of de grootste ingreep nu moet zitten in zicht op perspectief, het gesprek daarover of feitelijke ontwikkelruimte."
+    ),
+    "compensation": (
+        "Beslis of de kern nu ligt in hoogte, ervaren fairness of uitlegbaarheid van voorwaarden en welke groep eerst opvolging vraagt."
+    ),
+    "workload": (
+        "Beslis eerst waar structurele druk echt verlicht moet worden en welk team of welke rol als eerste managementingreep vraagt."
+    ),
+    "role_clarity": (
+        "Beslis of het probleem nu vooral zit in prioriteiten, rolgrenzen of onduidelijke besluitvorming, en waar dat eerst hersteld moet worden."
+    ),
+}
+
+EXIT_OWNER_BY_FACTOR = {
+    "leadership": "HR business partner met betrokken leidinggevende",
+    "culture": "HR lead met betrokken MT-lid",
+    "growth": "HR development-owner met betrokken leidinggevende",
+    "compensation": "HR lead met MT of directie",
+    "workload": "Betrokken leidinggevende met HR en operations",
+    "role_clarity": "Betrokken leidinggevende met HR business partner",
+}
+
+
 def get_management_summary_payload(
     *,
     top_factor_labels: list[str],
+    top_factor_keys: list[str],
     top_exit_reason_label: str | None,
     top_contributing_reason_label: str | None,
     strong_work_signal_pct: float | None,
@@ -14,6 +46,19 @@ def get_management_summary_payload(
     top_factor_text = " en ".join(label.lower() for label in top_factor_labels[:2]) if top_factor_labels else "de scherpste werkfactoren"
     top_reason_text = (top_exit_reason_label or "het huidige vertrekbeeld").lower()
     top_factor_value = " / ".join(top_factor_labels[:2]) if top_factor_labels else "Nog geen duidelijke topfactor"
+    lead_factor_key = top_factor_keys[0] if top_factor_keys else None
+    first_decision = (
+        EXIT_DECISION_BY_FACTOR.get(lead_factor_key)
+        if lead_factor_key
+        else None
+    ) or (
+        f"Kies eerst of {top_factor_text} vooral een lokaal managementspoor of een breder organisatievraagstuk vormen."
+    )
+    first_owner = (
+        EXIT_OWNER_BY_FACTOR.get(lead_factor_key)
+        if lead_factor_key
+        else None
+    ) or "HR business partner met betrokken leidinggevende"
 
     if strong_work_signal_pct is not None and strong_work_signal_pct >= 50:
         profile_body = (
@@ -23,7 +68,7 @@ def get_management_summary_payload(
     elif strong_work_signal_pct is not None:
         profile_body = (
             f"{top_reason_text.capitalize()} is zichtbaar, maar het werkgerelateerde beeld blijft gemengd. "
-            f"Gebruik vooral {top_factor_text} om te toetsen waar het vertrekverhaal bestuurlijk het meest beïnvloedbaar lijkt."
+            f"Gebruik vooral {top_factor_text} om te toetsen waar het vertrekverhaal bestuurlijk het meest beinvloedbaar lijkt."
         )
     else:
         profile_body = (
@@ -44,12 +89,12 @@ def get_management_summary_payload(
     else:
         management_question = (
             f"Welk deel van {top_reason_text} valt nu het duidelijkst samen met {top_factor_text} "
-            "en dus met beïnvloedbare werkfrictie?"
+            "en dus met beinvloedbare werkfrictie?"
         )
 
     next_step = (
-        f"Gebruik {top_factor_text} als eerste managementspoor en voer daar één gericht gesprek over met HR, MT of betrokken leidinggevenden. "
-        "Koppel die verificatie daarna direct aan een concrete 30-90 dagenactie."
+        f"Gebruik {top_factor_text} als eerste managementspoor, beleg {first_owner.lower()} als eigenaar "
+        "en koppel die verificatie daarna direct aan een concrete 30-90 dagenactie."
     )
 
     if signal_visibility_average is None:
@@ -79,7 +124,7 @@ def get_management_summary_payload(
     )
     if strong_work_signal_pct is not None and strong_work_signal_pct >= 50:
         executive_intro += (
-            " De antwoorden wijzen daarbij relatief breed op beïnvloedbare werkfrictie, wat het rapport vooral bruikbaar maakt "
+            " De antwoorden wijzen daarbij relatief breed op beinvloedbare werkfrictie, wat het rapport vooral bruikbaar maakt "
             "voor prioritering, eigenaarschap en een gericht managementgesprek."
         )
     else:
@@ -110,8 +155,18 @@ def get_management_summary_payload(
                 "title": "Scherpste werkfactoren",
                 "value": top_factor_value,
                 "body": (
-                    f"Gebruik {top_factor_text} als eerste verificatiespoor om te bepalen welk deel van het vertrekverhaal bestuurlijk het meest beïnvloedbaar is."
+                    f"Gebruik {top_factor_text} als eerste verificatiespoor om te bepalen welk deel van het vertrekverhaal bestuurlijk het meest beinvloedbaar is."
                 ),
+            },
+            {
+                "title": "Eerste besluit",
+                "value": top_factor_labels[0] if top_factor_labels else "Nog geen topfactor",
+                "body": first_decision,
+            },
+            {
+                "title": "Eerste eigenaar",
+                "value": first_owner,
+                "body": "Beleg direct wie het eerste verificatiespoor trekt, zodat vertrekduiding niet blijft hangen in analyse of gesprek.",
             },
             {
                 "title": "Eerdere signalering",
@@ -129,6 +184,14 @@ def get_management_summary_payload(
                 "body": management_question,
             },
             {
+                "title": "Eerste besluit",
+                "body": first_decision,
+            },
+            {
+                "title": "Eerste eigenaar",
+                "body": first_owner,
+            },
+            {
                 "title": "Eerste logische stap",
                 "body": next_step,
             },
@@ -139,7 +202,7 @@ def get_management_summary_payload(
 def get_methodology_payload() -> dict[str, Any]:
     return {
         "intro_text": (
-            "Dit rapport gebruikt verkorte vraagblokken die inhoudelijk zijn geïnspireerd door bestaande wetenschappelijke literatuur. "
+            "Dit rapport gebruikt verkorte vraagblokken die inhoudelijk zijn geinspireerd door bestaande wetenschappelijke literatuur. "
             "Het gaat nadrukkelijk niet om volledige schaalafnames of een diagnostisch instrument. "
             "De uitkomsten zijn bedoeld voor vertrekduiding, prioritering en managementgesprek, niet voor een individueel oordeel of harde voorspelling."
         ),
@@ -151,19 +214,19 @@ def get_methodology_payload() -> dict[str, Any]:
         ),
         "weight_rows": [
             ["Factor", "Gewicht", "Richting in literatuur"],
-            ["Leiderschap", "2.5 ×", "Sterk gekoppeld aan vrijwillig verloop in de literatuur en vaak direct relevant in vertrekduiding."],
-            ["SDT-werkbeleving", "2.0 ×", "Breed signaal voor autonomie, competentie en verbondenheid in de werksituatie."],
-            ["Psychologische veiligheid & cultuurmatch", "1.5 ×", "Veiligheid, fit en cultuur beïnvloeden of signalen bespreekbaar worden en of mensen willen blijven."],
-            ["Groeiperspectief", "1.5 ×", "Ontwikkelruimte en perspectief keren vaak terug in vrijwillig vertrek."],
-            ["Beloning & voorwaarden", "1.0 ×", "Beloning werkt vaak als drempel- of fairnessfactor, niet altijd als enige verklaring."],
-            ["Werkbelasting", "1.0 ×", "Werkdruk werkt vaak als versterkende contextfactor."],
-            ["Rolhelderheid", "1.0 ×", "Onduidelijkheid in prioriteiten of verwachtingen kan vertrek versnellen."],
+            ["Leiderschap", "2.5 x", "Sterk gekoppeld aan vrijwillig verloop in de literatuur en vaak direct relevant in vertrekduiding."],
+            ["SDT-werkbeleving", "2.0 x", "Breed signaal voor autonomie, competentie en verbondenheid in de werksituatie."],
+            ["Psychologische veiligheid & cultuurmatch", "1.5 x", "Veiligheid, fit en cultuur beinvloeden of signalen bespreekbaar worden en of mensen willen blijven."],
+            ["Groeiperspectief", "1.5 x", "Ontwikkelruimte en perspectief keren vaak terug in vrijwillig vertrek."],
+            ["Beloning & voorwaarden", "1.0 x", "Beloning werkt vaak als drempel- of fairnessfactor, niet altijd als enige verklaring."],
+            ["Werkbelasting", "1.0 x", "Werkdruk werkt vaak als versterkende contextfactor."],
+            ["Rolhelderheid", "1.0 x", "Onduidelijkheid in prioriteiten of verwachtingen kan vertrek versnellen."],
         ],
         "band_rows": [
             ["Band", "Score", "Betekenis voor de organisatie"],
             ["LAAG", "< 4.5", "Overwegend positief beeld. Er zijn relatief weinig signalen van terugkerende werkfrictie rondom vertrek."],
-            ["MIDDEN", "4.5–7.0", "Gemengd beeld. Er zijn meerdere aandachtspunten, maar de uitkomst vraagt vooral nadere verificatie."],
-            ["HOOG", "≥ 7.0", "Sterk signaal van ervaren werkfrictie. Dit vraagt om nadere analyse, niet automatisch om een harde conclusie."],
+            ["MIDDEN", "4.5-7.0", "Gemengd beeld. Er zijn meerdere aandachtspunten, maar de uitkomst vraagt vooral nadere verificatie."],
+            ["HOOG", ">= 7.0", "Sterk signaal van ervaren werkfrictie. Dit vraagt om nadere analyse, niet automatisch om een harde conclusie."],
         ],
     }
 
@@ -178,7 +241,7 @@ def get_signal_page_payload(*, retention_signal_profile: str | None = None) -> d
         "summary_title": "Vertrekbeeld in samenhang",
         "signal_profile_title": "Hoe lees je dit vertrekbeeld?",
         "signal_profile_text": (
-            "Lees hoofdredenen, meespelende factoren, eerdere signalering en werksignalen als één managementverhaal. "
+            "Lees hoofdredenen, meespelende factoren, eerdere signalering en werksignalen als een managementverhaal. "
             "De hoofdreden geeft het eerste vertrekhaakje; de werkfactoren en werksignalen laten zien waar vervolgvragen bestuurlijk het meeste opleveren."
         ),
     }
@@ -194,8 +257,21 @@ def get_hypotheses_payload() -> dict[str, str]:
     }
 
 
-def get_next_steps_payload(*, top_focus_labels: list[str]) -> dict[str, Any]:
+def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[str]) -> dict[str, Any]:
     focus_text = " en ".join(top_focus_labels) if top_focus_labels else "de scherpste werkfactoren"
+    lead_factor_key = top_focus_keys[0] if top_focus_keys else None
+    first_decision = (
+        EXIT_DECISION_BY_FACTOR.get(lead_factor_key)
+        if lead_factor_key
+        else None
+    ) or (
+        f"Kies eerst of {focus_text.lower()} vooral een lokaal managementspoor of een breder organisatievraagstuk vormen."
+    )
+    first_owner = (
+        EXIT_OWNER_BY_FACTOR.get(lead_factor_key)
+        if lead_factor_key
+        else None
+    ) or "HR business partner met betrokken leidinggevende"
     return {
         "section_title": "Vervolgstappen",
         "intro_text": (
@@ -204,17 +280,16 @@ def get_next_steps_payload(*, top_focus_labels: list[str]) -> dict[str, Any]:
         "steps": [
             {
                 "number": "1",
-                "title": "Voer binnen 2 weken één gericht managementgesprek",
+                "title": "Kies binnen 2 weken het eerste managementspoor",
                 "body": (
-                    f"Deel de managementsamenvatting met MT en betrokken leidinggevenden en focus het eerste gesprek expliciet op {focus_text}. "
-                    "Gebruik het rapport om te bepalen welke hypothese eerst getoetst moet worden."
+                    f"Deel de managementsamenvatting met MT en betrokken leidinggevenden en maak expliciet welk besluit nu eerst telt: {first_decision}"
                 ),
             },
             {
                 "number": "2",
-                "title": "Koppel het vertrekbeeld aan één eigenaar per thema",
+                "title": "Beleg direct een eerste eigenaar",
                 "body": (
-                    "Wijs per aandachtspunt een verantwoordelijke aan. "
+                    f"Wijs {first_owner.lower()} aan als eerste eigenaar van {focus_text.lower()}. "
                     "Zonder eigenaar blijft vertrekduiding een constatering in plaats van een verbeterroute."
                 ),
             },

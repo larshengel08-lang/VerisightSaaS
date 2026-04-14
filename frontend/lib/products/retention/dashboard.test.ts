@@ -27,13 +27,18 @@ describe('buildRetentionDashboardViewModel', () => {
       'Gemiddelde vertrekintentie',
       'Gemiddelde stay-intent',
       'Topfactor',
+      'Eerste besluit',
+      'Eerste eigenaar',
     ])
     expect(model.signaalbandenText).toContain('groepsniveau')
     expect(model.profileCards[0]?.title).toBe('Groepsbeeld')
     expect(model.primaryQuestion.body).toContain('werkbelasting')
     expect(model.nextStep.body).toContain('30-90')
     expect(model.managementBlocks).toHaveLength(3)
-    expect(model.managementBlocks[0]?.title).toBe('Waar vraagt behoud nu de meeste aandacht?')
+    expect(model.managementBlocks[0]?.title).toBe('Wat is het groepsbeeld nu?')
+    expect(model.managementBlocks[1]?.title).toBe('Welk besluit hoort nu eerst?')
+    expect(model.managementBlocks[2]?.items[0]).toContain('Eerste eigenaar')
+    expect(model.topSummaryCards[3]?.body).toContain('Beslis')
   })
 
   it('keeps retention guidance cautious before the pattern is strong enough', () => {
@@ -60,5 +65,6 @@ describe('buildRetentionDashboardViewModel', () => {
     expect(model.nextStep.title).toBe('Voorzichtig valideren')
     expect(model.signaalbandenText).toContain('niet als individuele voorspelling')
     expect(model.nextStep.body).not.toContain('risicobeeld')
+    expect(model.nextStep.body).toContain('eerste eigenaar')
   })
 })

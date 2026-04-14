@@ -1,4 +1,5 @@
 import { exitScanDefinition } from '@/lib/products/exit/definition'
+import { EXIT_ACTION_PLAYBOOKS } from '@/lib/products/exit/action-playbooks'
 import { buildExitDashboardViewModel } from '@/lib/products/exit/dashboard'
 import { EXIT_FOCUS_QUESTIONS } from '@/lib/products/exit/focus-questions'
 import type { ProductModule } from '@/lib/products/shared/types'
@@ -8,5 +9,5 @@ export const exitProductModule: ProductModule = {
   definition: exitScanDefinition,
   buildDashboardViewModel: (args) => buildExitDashboardViewModel(args),
   getFocusQuestions: () => EXIT_FOCUS_QUESTIONS,
-  getActionPlaybooks: () => ({}),
+  getActionPlaybooks: () => EXIT_ACTION_PLAYBOOKS,
 }

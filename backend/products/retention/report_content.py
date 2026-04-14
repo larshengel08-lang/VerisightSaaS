@@ -3,9 +3,41 @@ from __future__ import annotations
 from typing import Any
 
 
+RETENTION_DECISION_BY_FACTOR = {
+    "leadership": (
+        "Beslis eerst in welke teams dit nu een direct managementgesprek vraagt en of het spoor vooral over feedback, richting of autonomie-ondersteuning gaat."
+    ),
+    "culture": (
+        "Beslis of dit vooral een teamspecifiek veiligheidsspoor is of een breder cultuurthema dat direct MT-opvolging verdient."
+    ),
+    "growth": (
+        "Beslis of de eerste ingreep nu moet zitten in zicht op perspectief, feitelijke ontwikkelruimte of het gesprek daarover."
+    ),
+    "compensation": (
+        "Beslis of het dominante vraagstuk nu hoogte, ervaren fairness of uitlegbaarheid van voorwaarden is en welke groep eerst opvolging vraagt."
+    ),
+    "workload": (
+        "Beslis eerst in welke teams werk of prioriteit direct omlaag moet en welk deel van de druk nu structureel onhoudbaar is."
+    ),
+    "role_clarity": (
+        "Beslis eerst waar prioriteiten, rolgrenzen of besluitvorming het meest uit elkaar lopen en welk team als eerste herstel vraagt."
+    ),
+}
+
+RETENTION_OWNER_BY_FACTOR = {
+    "leadership": "HR business partner met betrokken leidinggevende",
+    "culture": "HR lead met betrokken MT-lid",
+    "growth": "HR development-owner met betrokken leidinggevende",
+    "compensation": "HR lead met MT of directie",
+    "workload": "Betrokken leidinggevende met HR en operations",
+    "role_clarity": "Betrokken leidinggevende met HR business partner",
+}
+
+
 def get_management_summary_payload(
     *,
     top_factor_labels: list[str],
+    top_factor_keys: list[str],
     retention_signal_profile: str | None,
     avg_engagement: float | None,
     avg_turnover_intention: float | None,
@@ -14,6 +46,19 @@ def get_management_summary_payload(
 ) -> dict[str, Any]:
     top_factor_text = " en ".join(label.lower() for label in top_factor_labels[:2]) if top_factor_labels else "de laagst scorende werkfactoren"
     top_factor_value = " / ".join(top_factor_labels[:2]) if top_factor_labels else "Nog geen duidelijke topfactor"
+    lead_factor_key = top_factor_keys[0] if top_factor_keys else None
+    first_decision = (
+        RETENTION_DECISION_BY_FACTOR.get(lead_factor_key)
+        if lead_factor_key
+        else None
+    ) or (
+        f"Beslis eerst of {top_factor_text} nu vooral snelle verificatie of al gerichte 30-90 dagenopvolging vraagt."
+    )
+    first_owner = (
+        RETENTION_OWNER_BY_FACTOR.get(lead_factor_key)
+        if lead_factor_key
+        else None
+    ) or "HR lead met betrokken leidinggevende"
 
     if retention_signal_profile == "scherp_aandachtssignaal":
         group_body = (
@@ -50,8 +95,8 @@ def get_management_summary_payload(
         verification_body += f" In open antwoorden komt {retention_theme_title.lower()} nu het vaakst terug."
 
     next_step = (
-        f"Gebruik {top_factor_text} als eerste managementspoor en koppel daar één verificatiegesprek en één 30-90 dagenactie aan. "
-        "Zo blijft RetentieScan een route van signalering naar gerichte opvolging."
+        f"Gebruik {top_factor_text} als eerste managementspoor, beleg {first_owner.lower()} als eigenaar "
+        "en koppel daar direct een verificatiegesprek en een 30-90 dagenactie aan."
     )
 
     signal_profile_copy = {
@@ -107,6 +152,16 @@ def get_management_summary_payload(
                 "body": verification_body,
             },
             {
+                "title": "Eerste besluit",
+                "value": top_factor_labels[0] if top_factor_labels else "Nog geen topfactor",
+                "body": first_decision,
+            },
+            {
+                "title": "Eerste eigenaar",
+                "value": first_owner,
+                "body": "Beleg meteen wie verificatie en eerste opvolging trekt, zodat RetentieScan niet blijft hangen in alleen signalering.",
+            },
+            {
                 "title": "Eerste managementspoor",
                 "value": signal_profile_value,
                 "body": signal_profile_copy.get(retention_signal_profile, signal_profile_copy["vroegsignaal"]),
@@ -120,6 +175,14 @@ def get_management_summary_payload(
             {
                 "title": "Eerste verificatiespoor",
                 "body": verification_body,
+            },
+            {
+                "title": "Eerste besluit",
+                "body": first_decision,
+            },
+            {
+                "title": "Eerste eigenaar",
+                "body": first_owner,
             },
             {
                 "title": "Eerste logische stap",
@@ -194,27 +257,39 @@ def get_hypotheses_payload() -> dict[str, str]:
     }
 
 
-def get_next_steps_payload(*, top_focus_labels: list[str]) -> dict[str, Any]:
+def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[str]) -> dict[str, Any]:
     focus_text = " en ".join(top_focus_labels) if top_focus_labels else "de scherpste werkfactoren"
+    lead_factor_key = top_focus_keys[0] if top_focus_keys else None
+    first_decision = (
+        RETENTION_DECISION_BY_FACTOR.get(lead_factor_key)
+        if lead_factor_key
+        else None
+    ) or (
+        f"Beslis eerst of {focus_text.lower()} nu vooral snelle verificatie of al gerichte 30-90 dagenopvolging vragen."
+    )
+    first_owner = (
+        RETENTION_OWNER_BY_FACTOR.get(lead_factor_key)
+        if lead_factor_key
+        else None
+    ) or "HR lead met betrokken leidinggevende"
     return {
         "section_title": "Vervolgstappen",
         "intro_text": (
-            "Gebruik RetentieScan eerst om scherp te prioriteren en te verifiëren. Pas daarna schaal je acties op of trek je bredere conclusies over behoud."
+            "Gebruik RetentieScan eerst om scherp te prioriteren en te verifieren. Pas daarna schaal je acties op of trek je bredere conclusies over behoud."
         ),
         "steps": [
             {
                 "number": "1",
-                "title": "Valideer binnen 2 weken het groepsbeeld",
+                "title": "Kies binnen 2 weken het eerste managementspoor",
                 "body": (
-                    f"Bespreek het rapport met HR en betrokken leidinggevenden en gebruik {focus_text} als eerste verificatiespoor. "
-                    "Toets vooral of het signaal breed speelt of geconcentreerd zit in enkele teams of rollen."
+                    f"Bespreek het rapport met HR en betrokken leidinggevenden en maak expliciet welk besluit nu eerst telt: {first_decision}"
                 ),
             },
             {
                 "number": "2",
-                "title": "Koppel elk aandachtspunt aan een eigenaar",
+                "title": "Koppel elk aandachtspunt aan een eerste eigenaar",
                 "body": (
-                    "Wijs per thema één eigenaar aan voor verificatie en opvolging. "
+                    f"Wijs {first_owner.lower()} aan als eerste eigenaar van {focus_text.lower()}. "
                     "Zo voorkom je dat RetentieScan blijft hangen in observatie zonder vervolg."
                 ),
             },
@@ -242,7 +317,9 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
         "leadership": {
             "HOOG": {
                 "title": "Leiderschap vraagt directe opvolging",
+                "decision": "Beslis eerst in welke teams dit nu een direct managementgesprek vraagt en of het spoor vooral over feedback, richting of autonomie-ondersteuning gaat.",
                 "validate": "Toets in welke teams het vooral gaat om richting, feedback, waardering of autonomie-ondersteuning.",
+                "owner": "HR business partner met betrokken leidinggevende",
                 "actions": [
                     "Start een vast manager check-in ritme in de meest afwijkende teams.",
                     "Maak coachend leiderschap en autonomie-ondersteuning expliciet onderdeel van het volgende managementgesprek.",
@@ -251,7 +328,9 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
             },
             "MIDDEN": {
                 "title": "Leiderschap is een corrigeerbaar aandachtspunt",
+                "decision": "Beslis of dit signaal nu al een gerichte leidinggevende opvolging vraagt, of eerst een beperkt verificatiespoor in enkele teams.",
                 "validate": "Controleer of het signaal breed speelt of geconcentreerd zit in een paar teams of rollen.",
+                "owner": "HR business partner",
                 "actions": [
                     "Voeg een korte check toe op feedback, waardering en ontwikkelgesprekken in de eerstvolgende teamcyclus.",
                     "Laat managers ophalen waar medewerkers nu vooral meer steun of richting nodig hebben.",
@@ -262,7 +341,9 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
         "culture": {
             "HOOG": {
                 "title": "Veiligheid en samenwerking vragen snelle validatie",
+                "decision": "Beslis of dit vooral een teamspecifiek veiligheidsspoor is of een breder cultuurthema dat direct MT-opvolging verdient.",
                 "validate": "Toets waar medewerkers zich het minst vrij voelen om zorgen, fouten of afwijkende meningen te delen.",
+                "owner": "HR lead met betrokken MT-lid",
                 "actions": [
                     "Plan een teamsessie over veiligheid en samenwerking in de meest afwijkende groepen.",
                     "Maak concreet welk gedrag gewenst is en welk gedrag niet langer acceptabel is.",
@@ -271,7 +352,9 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
             },
             "MIDDEN": {
                 "title": "Cultuursignalen vragen verfijning",
+                "decision": "Beslis welk deel eerst verificatie vraagt: psychologische veiligheid, samenwerking of fit met de huidige manier van werken.",
                 "validate": "Onderzoek of het vooral gaat om psychologische veiligheid, samenwerking of fit met de huidige manier van werken.",
+                "owner": "HR lead",
                 "actions": [
                     "Gebruik teamleadsessies om te toetsen waar medewerkers zich onvoldoende gehoord of veilig voelen.",
                     "Neem cultuur- en veiligheidssignalen mee in de eerstvolgende leidinggevendendialoog.",
@@ -282,7 +365,9 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
         "growth": {
             "HOOG": {
                 "title": "Groeiperspectief ontbreekt te zichtbaar",
+                "decision": "Beslis of de eerste ingreep nu moet zitten in zicht op perspectief, feitelijke ontwikkelruimte of het gesprek daarover.",
                 "validate": "Toets of medewerkers vooral een volgende stap missen of dat ontwikkelruimte in de huidige rol al tekortschiet.",
+                "owner": "HR development-owner met betrokken leidinggevende",
                 "actions": [
                     "Maak groeipaden en interne kansen zichtbaar voor de sterkst afwijkende groepen.",
                     "Laat managers benoemen welke ontwikkelroute realistisch en uitlegbaar is.",
@@ -291,7 +376,9 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
             },
             "MIDDEN": {
                 "title": "Groei is een oplosbaar aandachtspunt",
+                "decision": "Beslis of medewerkers nu vooral meer zicht, meer gesprek of meer feitelijke ontwikkelruimte nodig hebben.",
                 "validate": "Check of medewerkers vooral meer zicht, meer gesprek of meer feitelijke ontwikkelruimte nodig hebben.",
+                "owner": "HR development-owner",
                 "actions": [
                     "Voeg een compacte ontwikkelvraag toe aan de eerstvolgende check-in.",
                     "Maak bestaande leer- of mobiliteitsopties beter zichtbaar.",
@@ -302,7 +389,9 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
         "compensation": {
             "HOOG": {
                 "title": "Beloning en voorwaarden vragen bestuurlijke duiding",
+                "decision": "Beslis of het dominante vraagstuk nu hoogte, ervaren fairness of uitlegbaarheid van voorwaarden is en welke groep eerst opvolging vraagt.",
                 "validate": "Controleer of de pijn vooral zit in hoogte, transparantie of passendheid van voorwaarden.",
+                "owner": "HR lead met MT of directie",
                 "actions": [
                     "Maak de beloningslogica en groeiregels voor de betrokken groepen beter uitlegbaar.",
                     "Bepaal of een gerichte fairness- of marktcheck nodig is.",
@@ -311,7 +400,9 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
             },
             "MIDDEN": {
                 "title": "Beloning speelt mee, maar vraagt nuance",
+                "decision": "Beslis of dit eerst een communicatie- en uitlegvraag is of al een inhoudelijk voorwaardenbesluit vraagt.",
                 "validate": "Onderzoek of medewerkers vooral meer helderheid of feitelijk betere voorwaarden verwachten.",
+                "owner": "HR lead",
                 "actions": [
                     "Verduidelijk hoe beloning en voorwaarden samenhangen met rol, groei en verwachtingen.",
                     "Inventariseer of het signaal bij enkele groepen sterker is dan organisatiebreed.",
@@ -322,7 +413,9 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
         "workload": {
             "HOOG": {
                 "title": "Werkdruk vraagt directe ontlasting",
+                "decision": "Beslis eerst in welke teams werk of prioriteit direct omlaag moet en welk deel van de druk nu structureel onhoudbaar is.",
                 "validate": "Breng in kaart waar belasting structureel is en waar prioriteiten, planning of bezetting uit balans zijn.",
+                "owner": "Betrokken leidinggevende met HR en operations",
                 "actions": [
                     "Voer direct een werklastreview uit in de meest afwijkende teams.",
                     "Schrap, herprioriteer of verplaats werk binnen 30 dagen waar dat aantoonbaar lucht geeft.",
@@ -331,7 +424,9 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
             },
             "MIDDEN": {
                 "title": "Werkdruk is zichtbaar, maar nog corrigeerbaar",
+                "decision": "Beslis of dit vooral piekdruk, structurele overbelasting of een prioriteringsvraag is voordat je acties breder maakt.",
                 "validate": "Toets of het vooral om piekdruk, structurele overbelasting of onvoldoende regelruimte gaat.",
+                "owner": "Betrokken leidinggevende met HR business partner",
                 "actions": [
                     "Maak in teamoverleggen ruimte om werkdruk, planning en herstel expliciet te bespreken.",
                     "Volg 1-2 teams extra nauw in de komende 30-90 dagen.",
@@ -342,7 +437,9 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
         "role_clarity": {
             "HOOG": {
                 "title": "Prioriteiten en rolgrenzen zijn te diffuus",
+                "decision": "Beslis eerst waar prioriteiten, rolgrenzen of besluitvorming het meest uit elkaar lopen en welk team als eerste herstel vraagt.",
                 "validate": "Toets waar verwachtingen, beslisruimte of tegenstrijdige opdrachten nu het minst helder zijn.",
+                "owner": "Betrokken leidinggevende met HR business partner",
                 "actions": [
                     "Maak per team een kort overzicht van prioriteiten, rolgrenzen en escalatiepunten.",
                     "Laat leidinggevenden expliciet benoemen wat nu wel en niet in elke rol wordt verwacht.",
@@ -351,7 +448,9 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
             },
             "MIDDEN": {
                 "title": "Rolhelderheid vraagt explicitering",
+                "decision": "Beslis welk deel nu eerst scherp moet worden gezet: prioriteiten, eigenaarschap of dagelijkse besluitvorming.",
                 "validate": "Onderzoek of het vooral gaat om prioriteiten, eigenaarschap of onduidelijke besluitvorming.",
+                "owner": "Betrokken leidinggevende",
                 "actions": [
                     "Gebruik teamoverleggen om prioriteiten en rolverwachtingen explicieter te maken.",
                     "Leg voor de meest afwijkende groepen vast waar verwarring nu vooral ontstaat.",

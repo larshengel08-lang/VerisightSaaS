@@ -30,8 +30,8 @@ export function RecommendationList({ factorAverages, scanType }: Props) {
 
   const badgeCopy =
     scanType === 'exit'
-      ? { HOOG: 'Nu bespreken', MIDDEN: 'Verder duiden', LAAG: 'Monitoren' }
-      : { HOOG: 'Urgent', MIDDEN: 'Aandacht', LAAG: 'Monitoren' }
+      ? { HOOG: 'Nu kiezen', MIDDEN: 'Eerst toetsen', LAAG: 'Monitoren' }
+      : { HOOG: 'Nu prioriteren', MIDDEN: 'Eerst valideren', LAAG: 'Monitoren' }
 
   return (
     <div className="space-y-3">
@@ -49,7 +49,7 @@ export function RecommendationList({ factorAverages, scanType }: Props) {
             </span>
           </div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-            {scanType === 'exit' ? 'Managementvragen' : 'Focusvragen'}
+            {scanType === 'exit' ? 'Validatie- en besluitvragen' : 'Validatie- en opvolgvragen'}
           </p>
           <ul className="space-y-2">
             {item.questions.map((question) => (

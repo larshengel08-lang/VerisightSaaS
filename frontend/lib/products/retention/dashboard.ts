@@ -1,3 +1,4 @@
+import { RETENTION_ACTION_PLAYBOOKS } from '@/lib/products/retention/action-playbooks'
 import type { DashboardViewModel } from '@/lib/products/shared/types'
 import { FACTOR_LABELS } from '@/lib/types'
 
@@ -119,6 +120,12 @@ function buildProfileCards(args: {
   return profiles.slice(0, 2)
 }
 
+function getLeadingPlaybook(factor: string | null, signalValue: number | null) {
+  if (!factor || signalValue === null) return null
+  const band = signalValue >= 7 ? 'HOOG' : signalValue >= 4.5 ? 'MIDDEN' : 'LAAG'
+  return RETENTION_ACTION_PLAYBOOKS[factor]?.[band] ?? null
+}
+
 export function buildRetentionDashboardViewModel(args: {
   signalLabelLower: string
   averageSignal: number | null
@@ -135,6 +142,7 @@ export function buildRetentionDashboardViewModel(args: {
   signalVisibilityAverage?: number | null
 }): DashboardViewModel {
   const topFactors = getTopFactors(args.factorAverages)
+  const leadFactor = topFactors[0] ?? null
   const averageSignal =
     args.averageSignal ??
     (Object.keys(args.factorAverages).length > 0
@@ -149,6 +157,14 @@ export function buildRetentionDashboardViewModel(args: {
   )
   const topFactorLabels = topFactors.map(({ factor }) => FACTOR_LABELS[factor] ?? factor)
   const topFactorLabel = topFactorLabels[0] ?? 'de laagst scorende werkfactor'
+  const leadingPlaybook = getLeadingPlaybook(leadFactor?.factor ?? null, leadFactor?.signalValue ?? null)
+  const firstDecision =
+    leadingPlaybook?.decision ??
+    `Beslis eerst of ${topFactorLabel.toLowerCase()} nu vooral snelle verificatie of al een gerichte 30-90 dagenopvolging vraagt.`
+  const firstOwner = leadingPlaybook?.owner ?? 'HR lead met betrokken leidinggevende'
+  const firstAction =
+    leadingPlaybook?.actions[0] ??
+    `Koppel ${topFactorLabel.toLowerCase()} binnen 30 dagen aan een eerste gerichte opvolgactie en leg het evaluatiemoment direct vast.`
 
   if (!args.hasMinDisplay) {
     return {
@@ -195,7 +211,7 @@ export function buildRetentionDashboardViewModel(args: {
         title: 'Voorzichtig valideren',
         body:
           topFactors.length > 0
-            ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste verificatiespoor, maar behandel de huidige uitkomst nog als indicatief totdat minimaal 10 responses binnen zijn.`
+            ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste verificatiespoor, maar behandel de huidige uitkomst nog als indicatief totdat minimaal 10 responses binnen zijn en je een eerste eigenaar kunt beleggen.`
             : 'Gebruik de eerste signalen om vervolgvragen voor HR en MT te kiezen, niet om nu al een scherp behoudsbeeld te claimen.',
         tone: 'amber',
       },
@@ -238,13 +254,13 @@ export function buildRetentionDashboardViewModel(args: {
     topSummaryCards: [
       {
         title: 'Gemiddelde vertrekintentie',
-        value: args.turnoverIntention !== null ? `${args.turnoverIntention.toFixed(1)}/10` : '–',
+        value: args.turnoverIntention !== null ? `${args.turnoverIntention.toFixed(1)}/10` : '-',
         body: 'Hogere scores wijzen op een sterker signaal dat medewerkers nadenken over vertrek. Gebruik dit als groepssignaal, niet als individuele voorspelling.',
         tone: 'blue',
       },
       {
         title: 'Gemiddelde stay-intent',
-        value: args.stayIntent !== null ? `${args.stayIntent.toFixed(1)}/10` : '–',
+        value: args.stayIntent !== null ? `${args.stayIntent.toFixed(1)}/10` : '-',
         body: 'Hogere scores wijzen op een sterkere expliciete bereidheid om te blijven. Lees dit altijd samen met werkfactoren, bevlogenheid en vertrekintentie.',
         tone: 'emerald',
       },
@@ -254,10 +270,22 @@ export function buildRetentionDashboardViewModel(args: {
         body: 'Gebruik de laagst scorende werkfactor als eerste verificatiespoor. Daarna pas bepaal je of het patroon om snelle opvolging of verdere duiding op groepsniveau vraagt.',
         tone: signalProfile === 'scherp_aandachtssignaal' ? 'amber' : 'blue',
       },
+      {
+        title: 'Eerste besluit',
+        value: topFactorLabels[0] ?? 'Nog geen topfactor',
+        body: firstDecision,
+        tone: 'amber',
+      },
+      {
+        title: 'Eerste eigenaar',
+        value: firstOwner,
+        body: 'Beleg meteen wie verificatie en eerste opvolging trekt, zodat RetentieScan niet blijft hangen in alleen signalering.',
+        tone: 'emerald',
+      },
     ],
     managementBlocks: [
       {
-        title: 'Waar vraagt behoud nu de meeste aandacht?',
+        title: 'Wat is het groepsbeeld nu?',
         intro:
           topFactorLabels.length > 0
             ? `${profileText} Op dit moment zitten de scherpste signalen vooral in ${topFactorLabels.join(' en ')}.`
@@ -269,13 +297,18 @@ export function buildRetentionDashboardViewModel(args: {
         tone: 'blue',
       },
       {
-        title: 'Wat moet je eerst valideren?',
-        items: validationItems.slice(0, 3),
+        title: 'Welk besluit hoort nu eerst?',
+        items: [firstDecision, ...validationItems.slice(0, 2)],
         tone: 'amber',
       },
       {
-        title: 'Welke acties zijn logisch in 30-90 dagen?',
-        items: actionItems.slice(0, 3),
+        title: 'Wie trekt dit spoor en wat volgt er nu?',
+        items: [
+          `Eerste eigenaar: ${firstOwner}.`,
+          firstAction,
+          actionItems[1] ??
+            'Plan nu al een vervolgmeting of evaluatiemoment, zodat acties niet los komen te staan van het volgende gesprek.',
+        ],
         tone: 'emerald',
       },
     ],
@@ -297,11 +330,11 @@ export function buildRetentionDashboardViewModel(args: {
       title: 'Eerst valideren, daarna opvolgen',
       body:
         args.turnoverIntention !== null && args.turnoverIntention >= 5.5
-          ? `Gebruik ${topFactorLabel.toLowerCase()} en vertrekintentie als eerste managementspoor: bepaal waar het beeld het scherpst is en koppel daar meteen een 30-90 dagenactie aan.`
-          : `Gebruik ${topFactorLabel.toLowerCase()} als eerste validatiespoor en vertaal dat daarna naar één concrete actie in teamritme, leiderschap of werkinrichting.`,
+          ? `Gebruik ${topFactorLabel.toLowerCase()} en vertrekintentie als eerste managementspoor, beleg ${firstOwner.toLowerCase()} als eigenaar en kies direct welke 30-90 dagenactie eerst telt.`
+          : `Gebruik ${topFactorLabel.toLowerCase()} als eerste validatiespoor, beleg ${firstOwner.toLowerCase()} als eigenaar en vertaal dat daarna naar een concrete actie in teamritme, leiderschap of werkinrichting.`,
       tone: signalProfile === 'scherp_aandachtssignaal' ? 'amber' : 'emerald',
     },
     focusSectionIntro:
-      'Gebruik de vragen en playbooks hieronder om RetentieScan niet bij signalering te laten stoppen, maar gecontroleerd naar validatie en actie te brengen.',
+      'Gebruik de vragen en playbooks hieronder om RetentieScan niet bij signalering te laten stoppen, maar eerst naar keuze en eigenaar te brengen en pas daarna naar gerichte actie.',
   }
 }

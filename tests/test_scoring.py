@@ -362,6 +362,7 @@ class TestExitReportContent:
     def test_exit_management_summary_payload_prioritises_departure_read_and_management_question(self):
         payload = get_exit_management_summary_payload(
             top_factor_labels=["Leiderschap", "Groeiperspectief"],
+            top_factor_keys=["leadership", "growth"],
             top_exit_reason_label="Leiderschap / management",
             top_contributing_reason_label="Gebrek aan groei",
             strong_work_signal_pct=62.0,
@@ -374,14 +375,20 @@ class TestExitReportContent:
         assert payload["cards"][0]["title"] == "Vertrekbeeld nu"
         assert "breed werksignaal" in payload["cards"][0]["body"].lower()
         assert "welke signalen" in payload["cards"][1]["body"].lower()
+        assert payload["cards"][2]["title"] == "Eerste besluit"
+        assert payload["cards"][3]["title"] == "Eerste eigenaar"
 
     def test_exit_follow_up_payload_stays_improvement_oriented(self):
-        payload = get_exit_next_steps_payload(top_focus_labels=["Leiderschap", "Groeiperspectief"])
+        payload = get_exit_next_steps_payload(
+            top_focus_labels=["Leiderschap", "Groeiperspectief"],
+            top_focus_keys=["leadership", "growth"],
+        )
 
         assert payload["section_title"] == "Vervolgstappen"
         assert "managementinstrument" in payload["intro_text"].lower()
         assert payload["steps"][0]["number"] == "1"
-        assert "leiderschap en groeiperspectief" in payload["steps"][0]["body"].lower()
+        assert payload["steps"][0]["title"].lower().startswith("kies")
+        assert "groeiperspectief" in payload["steps"][1]["body"].lower()
 
     def test_exit_hypotheses_payload_stays_non_causal(self):
         payload = get_exit_hypotheses_payload()
@@ -427,6 +434,7 @@ class TestRetentionReportContent:
     def test_retention_management_summary_payload_prioritises_group_picture_and_verification(self):
         payload = get_retention_management_summary_payload(
             top_factor_labels=["Werkbelasting", "Leiderschap"],
+            top_factor_keys=["workload", "leadership"],
             retention_signal_profile="scherp_aandachtssignaal",
             avg_engagement=4.9,
             avg_turnover_intention=6.2,
@@ -439,13 +447,18 @@ class TestRetentionReportContent:
         assert "werkbelasting en leiderschap" in payload["cards"][0]["body"].lower()
         assert payload["cards"][1]["title"] == "Eerste verificatiespoor"
         assert "werkdruk en herstel" in payload["cards"][1]["body"].lower()
+        assert payload["cards"][2]["title"] == "Eerste besluit"
+        assert payload["cards"][3]["title"] == "Eerste eigenaar"
 
     def test_retention_follow_up_payload_keeps_verification_before_action(self):
-        payload = get_retention_next_steps_payload(top_focus_labels=["Werkbelasting", "Leiderschap"])
+        payload = get_retention_next_steps_payload(
+            top_focus_labels=["Werkbelasting", "Leiderschap"],
+            top_focus_keys=["workload", "leadership"],
+        )
 
-        assert "eerst om scherp te prioriteren en te verifiëren" in payload["intro_text"].lower()
-        assert payload["steps"][0]["title"].lower().startswith("valideer")
-        assert "werkbelasting en leiderschap" in payload["steps"][0]["body"].lower()
+        assert "eerst om scherp te prioriteren en te verifi" in payload["intro_text"].lower()
+        assert payload["steps"][0]["title"].lower().startswith("kies")
+        assert "werkbelasting" in payload["steps"][1]["body"].lower()
 
     def test_retention_hypotheses_payload_stays_verification_oriented(self):
         payload = get_retention_hypotheses_payload()
