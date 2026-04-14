@@ -296,13 +296,13 @@ function RetentionScanPage() {
             ExitScan kijkt terug. RetentieScan kijkt eerder vooruit.
           </h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Waar ExitScan helpt begrijpen waarom mensen gingen, helpt RetentieScan om eerder te zien waar behoud op groepsniveau onder druk staat. Zo kan HR eerder prioriteren op de werkfactoren die nog beïnvloedbaar zijn, zonder van de scan een brede MTO of voorspelproduct te maken.
+            Waar ExitScan helpt begrijpen waarom mensen gingen, helpt RetentieScan om eerder te zien waar behoud op groepsniveau onder druk staat. Zo kan HR eerder prioriteren op de werkfactoren die nu de meeste aandacht vragen, zonder van de scan een brede MTO of voorspelproduct te maken.
           </p>
           <div className="mt-8 grid gap-3">
             {[
               'Vroegtijdig zien waar behoud onder druk staat',
               'Managementinformatie over beïnvloedbare werkfactoren',
-              'Geen individuele risicoscores of performance-oordelen naar management',
+              'Geen individuele signalen of performance-oordelen naar management',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-emerald-100 bg-white px-4 py-4 text-sm leading-7 text-slate-700">
                 {item}
@@ -315,7 +315,7 @@ function RetentionScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Wat je krijgt</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">Een vroegsignaal dat bestuurlijk bruikbaar is.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Geen individuele risicovoorspelling en geen brede tevredenheidsmeting, maar een groepsweergave van retentiesignalen, stay-intent, bevlogenheid, vertrekintentie en de factoren die behoud waarschijnlijk het meest beïnvloeden.
+            Geen individuele voorspelling en geen brede tevredenheidsmeting, maar een groepsweergave van retentiesignalen, stay-intent, bevlogenheid, vertrekintentie en de werkfactoren die nu als eerste verificatie en opvolging vragen.
           </p>
           <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             <PreviewSlider variant="retention" />
@@ -335,7 +335,7 @@ function RetentionScanPage() {
           },
           {
             title: 'Gebouwd voor managementactie',
-            text: 'De uitkomst is geen losse survey-export, brede MTO of persoonsrisicoscore, maar een gedeelde taal voor HR, MT en directie over waar retentie nu aandacht vraagt.',
+            text: 'De uitkomst is geen losse survey-export, brede MTO of persoonsgerichte score, maar een gedeelde taal voor HR, MT en directie over waar retentie nu aandacht vraagt.',
           },
         ].map((card) => (
           <div key={card.title} className="rounded-[1.75rem] border border-emerald-100 bg-emerald-50 p-7">

@@ -63,7 +63,7 @@ export function buildHeroDescription({
   }
 
   if (scanType === 'retention') {
-    return `Deze RetentieScan laat zien waar behoud onder druk staat op groepsniveau. Gebruik het beslisoverzicht eerst om te bepalen waar verificatie nodig is, en ga daarna pas de verdieping in. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '–'}/10.`
+      return `Deze RetentieScan laat zien waar behoud onder druk staat op groepsniveau. Gebruik het beslisoverzicht eerst om te bepalen waar verificatie nodig is, en ga daarna pas de verdieping in. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '–'}/10 als samenvattend groepssignaal.`
   }
 
   return 'Deze ExitScan helpt het vertrekverhaal terugbrengen tot de factoren die het meest beïnvloedbaar lijken. Start bovenaan met het beslisoverzicht en gebruik daarna de verdieping om teams, factoren en vervolgacties scherper te maken.'
@@ -525,7 +525,7 @@ export function buildRetentionTrendCards(args: {
       currentValue: args.current.stayIntent,
       previousValue: args.previous.stayIntent,
       improvingDelta: 0.1,
-      improvedBody: 'De expliciete bereidheid om te blijven ligt hoger dan in de vorige meting. Leg vast welke factoren dit waarschijnlijk ondersteunen.',
+      improvedBody: 'De expliciete bereidheid om te blijven ligt hoger dan in de vorige meting. Leg vast welke werkfactoren en keuzes je hier wilt behouden.',
       worsenedBody: 'Stay-intent is gedaald. Dit is vaak een signaal dat managementgesprekken en vervolgacties niet te lang moeten wachten.',
       stableBody: 'Stay-intent is stabiel. Kijk vooral of dat past bij de ontwikkeling van werkfactoren en vertrekintentie.',
     },

@@ -196,7 +196,7 @@ export function buildRetentionDashboardViewModel(args: {
         body:
           topFactors.length > 0
             ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste verificatiespoor, maar behandel de huidige uitkomst nog als indicatief totdat minimaal 10 responses binnen zijn.`
-            : 'Gebruik de eerste signalen om vervolgvragen voor HR en MT te kiezen, niet om al een zwaar risicobeeld te claimen.',
+            : 'Gebruik de eerste signalen om vervolgvragen voor HR en MT te kiezen, niet om nu al een scherp behoudsbeeld te claimen.',
         tone: 'amber',
       },
       focusSectionIntro:
@@ -257,7 +257,7 @@ export function buildRetentionDashboardViewModel(args: {
     ],
     managementBlocks: [
       {
-        title: 'Waar zit het risico nu het duidelijkst?',
+        title: 'Waar vraagt behoud nu de meeste aandacht?',
         intro:
           topFactorLabels.length > 0
             ? `${profileText} Op dit moment zitten de scherpste signalen vooral in ${topFactorLabels.join(' en ')}.`

@@ -1533,7 +1533,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         if is_retention:
             intro += (
                 f"Het gemiddelde {signal_label_lower} bedraagt <b>{avg_risk:.1f} op 10</b>. "
-                f"Dat wijst op een <b>{band_str}</b> in deze groep en helpt bepalen waar behoud waarschijnlijk het meeste gebaat is bij verificatie, verdieping of actie."
+                f"Dat wijst op een <b>{band_str}</b> in deze groep en helpt bepalen waar behoud nu als eerste verificatie, verdieping of actie vraagt."
             )
         else:
             exit_band_str = {"HOOG": "hoog", "MIDDEN": "middelhoog", "LAAG": "laag"}.get(
@@ -2162,7 +2162,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                 f"{avg_turnover_intention:.1f} / 10" if avg_turnover_intention is not None else "-",
             ])
             if retention_signal_profile:
-                summary_rows.append(["Risicoprofiel", profile_labels.get(retention_signal_profile, retention_signal_profile)])
+                summary_rows.append(["Signaalprofiel", profile_labels.get(retention_signal_profile, retention_signal_profile)])
             if trend_delta is not None:
                 summary_rows.append([
                     "Trend sinds vorige meting",
@@ -2482,7 +2482,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             story.append(Paragraph("Segment deep dive", STYLES["sub_title"]))
             story.append(Paragraph(
                 "Deze add-on vergelijkt subgroepen expliciet met het organisatieniveau. "
-                "Zo zie je scherper waar vervolgvalidatie waarschijnlijk het meeste oplevert en welke thema's daar relatief het meest opvallen.",
+                "Zo zie je scherper waar vervolgvalidatie nu het meest relevant is en welke thema's daar relatief het meest opvallen.",
                 STYLES["body"],
             ))
 
@@ -2654,7 +2654,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         story.append(Spacer(1, 0.2 * cm))
 
     if camp.scan_type == "retention" and retention_playbooks:
-        story.append(Paragraph("Action playbooks", STYLES["sub_title"]))
+        story.append(Paragraph("Behoudsplaybooks", STYLES["sub_title"]))
         story.append(Paragraph(
             "Deze playbooks vertalen de sterkste retentiesignalen naar een praktisch eerste handelingskader. "
             "Gebruik ze om gericht te valideren, in actie te komen en overhaaste conclusies te voorkomen.",

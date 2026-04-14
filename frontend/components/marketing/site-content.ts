@@ -133,7 +133,7 @@ export const comparisonCards = [
     title: 'RetentieScan',
     description:
       'Voor organisaties die eerder willen zien waar behoud op groeps- en segmentniveau onder druk staat, voordat signalen zichtbaar worden in vacatures, uitval of exitgesprekken.',
-    outcome: 'Sterk wanneer de vraag vooruitkijkend is: waar vraagt behoud nu aandacht in de actieve populatie zonder van de scan een brede MTO of voorspeller te maken?',
+    outcome: 'Sterk wanneer de vraag vooruitkijkend is: waar vraagt behoud nu aandacht in de actieve populatie zonder van de scan een brede MTO of individuele predictor te maken?',
   },
   {
     title: 'Combinatie',
@@ -273,7 +273,7 @@ export const approachRoutes = [
     body: 'Een eenmalige RetentieScan om te zien waar behoud op groepsniveau onder druk staat, welke werkfactoren prioriteit vragen en hoe bevlogenheid, stay-intent en vertrekintentie zich verhouden.',
     bullets: [
       'Actieve medewerkers in plaats van ex-medewerkers',
-      'Groepsinzichten, geen brede MTO en geen individuele retention-scores',
+      'Groepsinzichten, geen brede MTO en geen individuele signalen naar management',
       'Sterk als startpunt voor gerichte opvolging en herhaalmeting',
     ],
     shellClass: 'border-emerald-200 bg-emerald-50',
@@ -313,8 +313,8 @@ export const pricingCards = [
     description:
       'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.',
     bullets: [
-      'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in een rapport',
-      'Geen individuele retention-scores naar management',
+      'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in een managementrapport',
+      'Geen individuele signalen naar management',
       'Geschikt als basis voor vervolgmeting of gerichte opvolging',
     ],
   },
@@ -391,7 +391,7 @@ export const pricingFaqs = [
   ],
   [
     'Wat ziet management wel en niet?',
-    'Management ziet groeps- en segmentinzichten. Bij RetentieScan tonen we geen individuele retention-scores, geen vertrekintentie op persoonsniveau en geen performance-oordelen.',
+    'Management ziet groeps- en segmentinzichten. Bij RetentieScan tonen we geen individuele signalen, geen vertrekintentie op persoonsniveau en geen performance-oordelen.',
   ],
   [
     'Hoe vaak herhaal je RetentieScan?',
@@ -410,7 +410,7 @@ export const faqs = [
   ],
   [
     'Is RetentieScan gewoon een MTO?',
-    'Nee. RetentieScan is smaller en scherper gepositioneerd: het richt zich op retentiesignalen, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
+    'Nee. RetentieScan is smaller en scherper gepositioneerd: het is een compacte behoudsscan op groeps- en segmentniveau rond retentiesignalen, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
     'Wanneer kies je voor de combinatie?',
@@ -422,7 +422,7 @@ export const faqs = [
   ],
   [
     'Is RetentieScan een gevalideerde vertrekvoorspeller?',
-    'Nee. Voor v1 positioneren we RetentieScan als SDT-gebaseerde managementscan voor behoudssignalen en prioritering, niet als wetenschappelijk gevalideerde voorspeller van vrijwillig vertrek.',
+    'Nee. Voor v1 positioneren we RetentieScan als SDT-gebaseerde managementscan voor behoudssignalen, verificatie en prioritering, niet als wetenschappelijk gevalideerde voorspeller van vrijwillig vertrek.',
   ],
   [
     'Hoe vaak herhaal je RetentieScan?',

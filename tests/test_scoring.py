@@ -371,6 +371,7 @@ class TestRetentionReportContent:
         assert "groepsniveau" in intro
         assert "brede mto" in intro
         assert "v1" in method
+        assert "per response" in method
         assert "niet als causale voorspelling" in method
         assert "gelijkgewogen samenvatting" in method
 
@@ -380,7 +381,7 @@ class TestRetentionReportContent:
         profile = payload["signal_profile_text"].lower()
 
         assert "groepsinformatie" in intro
-        assert "niet als individuele risicoscore" in intro
+        assert "niet als individuele beoordeling of voorspelling" in intro
         assert "niet als individuele voorspelling" in profile
 
 

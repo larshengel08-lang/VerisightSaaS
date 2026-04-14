@@ -56,10 +56,26 @@ Dit plan kiest daarom voor:
 - **wel een volledige inhoudelijke, methodische, commerciële en UX-matige aanscherping van RetentieScan**
 - **wel expliciete regressiebescherming op producttaal, methodologische terughoudendheid en ExitScan/RetentieScan-grens**
 
+Status 2026-04-14:
+
+- Uitgevoerd in deze ronde:
+  - zichtbare producttaal aangescherpt over website, dashboard, rapport, survey-intro, privacy en DPA
+  - `Risicoprofiel` vervangen door `Signaalprofiel` in RetentieScan-rapportage
+  - zichtbare predictor-, MTO- en risicotaal verder teruggedrongen in RetentieScan-copy en managementduiding
+  - survey compact gehouden; geen extra survey-items toegevoegd
+  - parity- en content-QA toegevoegd over frontend, backend, rapport en marketingcopy
+- Bewust niet uitgevoerd in deze ronde:
+  - geen nieuwe surveyblokken of productverbreding
+  - geen interne hernoeming van backend-contracten zoals `risk_score` of `avg_risk_score`
+  - geen grote report-engine of backend-herarchitectuur
+  - geen validatie op pilotdata of predictive modellering
+
 ## 2. Milestones
 
 ### Milestone 0 - Freeze RetentieScan Baseline And Sharpening Target
 Dependency: none
+
+- [x] Uitgevoerd op 2026-04-14: baseline, hoofdspanningen en scopegrenzen zijn repo-gebaseerd vastgelegd; ExitScan alleen als vergelijkingskader gebruikt.
 
 #### Tasks
 - [ ] Leg de huidige RetentieScan-keten vast op basis van de repo:
@@ -95,6 +111,8 @@ Dependency: none
 ### Milestone 1 - Product Promise And Portfolio Boundary
 Dependency: Milestone 0
 
+- [x] Uitgevoerd op 2026-04-14: kernbelofte, portfolio-grens en buyer-facing woordenlijst aangescherpt in marketingcopy, productpagina, dashboard en rapporttaal.
+
 #### Tasks
 - [ ] Herschrijf de kernbelofte van RetentieScan naar één vaste, verdedigbare lijn:
   - vroegsignalering op behoud
@@ -127,6 +145,8 @@ Dependency: Milestone 0
 
 ### Milestone 2 - Survey Content And Input Model Sharpness
 Dependency: Milestone 1
+
+- [x] Uitgevoerd op 2026-04-14: survey compact gehouden, intro/open vraag/helptekst aangescherpt en bewust geen extra survey-items toegevoegd.
 
 #### Tasks
 - [ ] Beoordeel de huidige RetentieScan-survey module voor module:
@@ -165,6 +185,8 @@ Dependency: Milestone 1
 ### Milestone 3 - Scoring, Signal Semantics And Methodology Alignment
 Dependency: Milestone 2
 
+- [x] Uitgevoerd op 2026-04-14: zichtbare `risk`- en predictor-drift teruggedrongen; methodologie en signaaltaal tussen frontend, backend en rapport verder gelijkgetrokken.
+
 #### Tasks
 - [ ] Trek de relatie strak tussen:
   - retentiesignaal
@@ -200,6 +222,8 @@ Dependency: Milestone 2
 
 ### Milestone 4 - Dashboard Decision Support And UX Readability
 Dependency: Milestone 3
+
+- [x] Uitgevoerd op 2026-04-14: RetentieScan-dashboardtaal en hero-/managementduiding aangescherpt naar verificatie, aandachtspunten en samenvattend groepssignaal.
 
 #### Tasks
 - [ ] Maak de bovenste dashboardlaag nog duidelijker RetentieScan-specifiek:
@@ -238,6 +262,8 @@ Dependency: Milestone 3
 ### Milestone 5 - Report Structure And Management Readability
 Dependency: Milestone 4
 
+- [x] Uitgevoerd op 2026-04-14: rapporttaal aangescherpt op managementread, `Signaalprofiel`, behoudsplaybooks en minder risico-/predictorframing.
+
 #### Tasks
 - [ ] Herzie de rapportlijn op managementbruikbaarheid:
   - management summary
@@ -274,6 +300,8 @@ Dependency: Milestone 4
 ### Milestone 6 - Commercial Layer, Buyer Confidence And Packaging Fit
 Dependency: Milestone 5
 
+- [x] Uitgevoerd op 2026-04-14: productpagina, pricing, FAQ, overview, preview en portfolioverhaal op dezelfde RetentieScan-belofte aligned.
+
 #### Tasks
 - [ ] Herzie de publieke RetentieScan-copy op:
   - productpagina
@@ -302,6 +330,8 @@ Dependency: Milestone 5
 
 ### Milestone 7 - Shared Versus Retention-Specific Boundaries
 Dependency: Milestone 6
+
+- [x] Uitgevoerd op 2026-04-14: shared infrastructuur behouden; RetentieScan-specifieke terminologie, duiding en paritychecks expliciet aangescherpt zonder grote herarchitectuur.
 
 #### Tasks
 - [ ] Leg vast wat shared mag blijven:
@@ -338,6 +368,8 @@ Dependency: Milestone 6
 
 ### Milestone 8 - QA, Tests And Acceptance For RetentieScan Sharpening
 Dependency: Milestone 7
+
+- [x] Uitgevoerd op 2026-04-14: unit-, parity- en acceptancechecks uitgebreid; frontend tests, backend tests, lint en build groen uitgevoerd.
 
 #### Tasks
 - [ ] Voeg unit tests toe of breid ze uit voor RetentieScan-specifieke logica:
@@ -377,41 +409,49 @@ Dependency: Milestone 7
 ## 3. Execution Breakdown By Subsystem
 
 ### Product Promise And Positioning
+- [x] Uitgevoerd: vroegsignaalbelofte, ExitScan-grens en non-predictive framing zijn consistent aangescherpt.
 - [ ] RetentieScan herformuleren naar één vaste vroegsignaalbelofte op groepsniveau.
 - [ ] De grens met ExitScan opnieuw vastzetten in productcopy, dashboard en rapport.
 - [ ] Predictor-, diagnose- en MTO-drift systematisch terugdringen.
 
 ### Survey And Input Contract
+- [x] Uitgevoerd: survey compact gehouden en open tekst plus begeleidende surveycopy scherper gekoppeld aan behoudsduiding.
 - [ ] De compacte survey behouden waar die productmatig sterk is.
 - [ ] Alleen extra input toevoegen als die direct productwaarde geeft.
 - [ ] Open tekst, stay-intent, vertrekintentie en bevlogenheid nog scherper aan behoudsduiding koppelen.
 
 ### Scoring And Methodiek
+- [x] Uitgevoerd: methodologie, signaaluitleg en zichtbare scoretaal verder aligned; interne contracten bleven bewust technisch ongewijzigd.
 - [ ] De taal rond retentiesignaal en risk intern en extern uitlijnen.
 - [ ] Methodologie expliciet houden als v1 gelijkgewogen werkmodel.
 - [ ] Signaalprofielen, signal bands en factorbetekenis inhoudelijk scherper uitleggen.
 
 ### Dashboard
+- [x] Uitgevoerd: beslislaag en RetentieScan-specifieke managementduiding zijn aangescherpt.
 - [ ] De beslislaag nog meer centraal zetten.
 - [ ] De detaillaag laten volgen op de hoofdlijn in plaats van andersom.
 - [ ] Trend, segmenten, open antwoorden en playbooks alleen laten lezen als gecontroleerde verdieping.
 
 ### Rapport
+- [x] Uitgevoerd: rapporttaal, signaalprofiel en behoudsplaybooks zijn aangescherpt op managementbruikbaarheid.
 - [ ] De rapportvolgorde aanscherpen op managementbruikbaarheid.
 - [ ] Behoudsbeeld, aanvullende signalen en actieperspectief sterker verbinden.
 - [ ] Risico- en predictorachtige taal verder terugbrengen.
 
 ### Commercial Layer
+- [x] Uitgevoerd: productpagina, pricing, FAQ en marketingpreview spreken nu dezelfde RetentieScan-taal.
 - [ ] Productpagina, pricing, FAQ en productoverview alignen op dezelfde productbelofte.
 - [ ] Buyer confidence versterken zonder methodische overclaiming.
 - [ ] Baseline, ritme en combinatie met ExitScan commercieel logischer kaderen.
 
 ### Shared Versus Product-Specific Boundaries
+- [x] Uitgevoerd: drift tussen frontend, backend, rapport en marketing is verkleind via tekstalignering en paritytests.
 - [ ] Vastleggen wat shared blijft en wat RetentieScan-specifiek moet zijn.
 - [ ] Drift tussen frontend, backend, rapport en marketing verkleinen.
 - [ ] Terminologielijst expliciet maken.
 
 ### QA And Acceptance
+- [x] Uitgevoerd: regressiebescherming uitgebreid met frontend-tests, backend-tests, paritychecks, lint en buildvalidatie.
 - [ ] Unit-, parity- en content-QA uitbreiden.
 - [ ] Handmatige acceptatiecheck toevoegen voor interpretatie, buyer-facing eerlijkheid en productgrenzen.
 - [ ] Regressiebescherming inrichten op methodische terughoudendheid en portfolio-consistentie.
@@ -464,6 +504,8 @@ Dependency: Milestone 7
 
 ## 7. Out of Scope For Now
 
+- [x] Bevestigd in deze uitvoeringsronde: geen productverbreding, geen grote herarchitectuur en geen predictive validatie buiten huidige v1-scope.
+
 - [ ] Grote backend-herarchitectuur buiten wat direct nodig is voor RetentieScan-consistentie.
 - [ ] Nieuwe producten, nieuwe surveyfamilies of verbreding naar algemene MTO-functionaliteit.
 - [ ] Volledige herbouw van ExitScan buiten wat nodig is voor portfolio-afbakening.
@@ -472,6 +514,8 @@ Dependency: Milestone 7
 - [ ] Volledige rewrite van report engine of dashboardframework.
 
 ## 8. Defaults Chosen
+
+- [x] Bevestigd in deze uitvoeringsronde: ExitScan primair, RetentieScan complementair, compact, groepsgericht en methodisch terughoudend.
 
 - [ ] ExitScan blijft het primaire product; RetentieScan blijft complementair.
 - [ ] RetentieScan blijft een groeps- en segmentinstrument, geen individuele predictor.

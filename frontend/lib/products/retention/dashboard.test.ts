@@ -33,6 +33,7 @@ describe('buildRetentionDashboardViewModel', () => {
     expect(model.primaryQuestion.body).toContain('werkbelasting')
     expect(model.nextStep.body).toContain('30-90')
     expect(model.managementBlocks).toHaveLength(3)
+    expect(model.managementBlocks[0]?.title).toBe('Waar vraagt behoud nu de meeste aandacht?')
   })
 
   it('keeps retention guidance cautious before the pattern is strong enough', () => {
@@ -58,5 +59,6 @@ describe('buildRetentionDashboardViewModel', () => {
     expect(model.primaryQuestion.title).toBe('Eerste managementvraag')
     expect(model.nextStep.title).toBe('Voorzichtig valideren')
     expect(model.signaalbandenText).toContain('niet als individuele voorspelling')
+    expect(model.nextStep.body).not.toContain('risicobeeld')
   })
 })

@@ -42,7 +42,7 @@ export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
     ogAlt: 'RetentieScan productpagina van Verisight',
     serviceType: 'Vroegsignalering op behoud en retentiesignalen',
     serviceAudience: 'HR-teams en directies die behoud eerder zichtbaar willen maken',
-    serviceOutput: 'Retentiesignaal, stay-intent, vertrekintentie, bevlogenheid en topfactoren',
+    serviceOutput: 'Retentiesignaal, stay-intent, vertrekintentie, bevlogenheid en topfactoren voor verificatie en opvolging',
     status: 'live',
     href: '/producten/retentiescan',
   },

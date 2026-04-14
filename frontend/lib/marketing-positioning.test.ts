@@ -38,15 +38,19 @@ describe('RetentieScan positioning copy', () => {
     expect(retentionProduct?.description.toLowerCase()).not.toContain('voorspeller')
     expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('geen brede mto')
     expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('geen individuele voorspeller')
+    expect(retentionScanDefinition.signalHelp.toLowerCase()).toContain('samenvattend groepssignaal')
   })
 
   it('keeps retention faq copy explicit about group insight and non-predictive use', () => {
     const mtoFaq = faqs.find(([question]) => question === 'Is RetentieScan gewoon een MTO?')
     const scoreFaq = faqs.find(([question]) => question === 'Ziet management individuele retention-scores?')
+    const predictorFaq = faqs.find(([question]) => question === 'Is RetentieScan een gevalideerde vertrekvoorspeller?')
 
     expect(mtoFaq?.[1].toLowerCase()).toContain('smaller en scherper')
+    expect(mtoFaq?.[1].toLowerCase()).toContain('groeps- en segmentniveau')
     expect(mtoFaq?.[1].toLowerCase()).toContain('stay-intent')
     expect(scoreFaq?.[1].toLowerCase()).toContain('groeps- en segmentinzichten')
     expect(scoreFaq?.[1].toLowerCase()).toContain('performance-sturing')
+    expect(predictorFaq?.[1].toLowerCase()).toContain('verificatie en prioritering')
   })
 })

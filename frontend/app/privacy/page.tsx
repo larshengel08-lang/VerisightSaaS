@@ -107,7 +107,7 @@ export default function PrivacyPage() {
         </p>
         <p>
           Voor RetentieScan geldt aanvullend dat de uitkomsten zijn bedoeld voor groeps- en segmentinzichten over
-          actieve medewerkers. Individuele retention-scores of vertrekintentie worden niet als managementoutput
+          actieve medewerkers. Individuele signalen of vertrekintentie op persoonsniveau worden niet als managementoutput
           gepresenteerd.
         </p>
       </section>

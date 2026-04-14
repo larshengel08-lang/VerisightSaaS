@@ -84,7 +84,7 @@ export default function DpaPage() {
         </p>
         <p>
           Wanneer RetentieScan wordt ingezet op actieve medewerkers, zijn de uitkomsten nadrukkelijk bedoeld voor
-          groeps- en segmentinzichten. Individuele retention-scores of vertrekintentie worden niet als
+          groeps- en segmentinzichten. Individuele signalen of vertrekintentie op persoonsniveau worden niet als
           managementoutput verstrekt.
         </p>
       </section>

@@ -11,8 +11,8 @@ def get_methodology_payload() -> dict[str, Any]:
             "De uitkomsten zijn bedoeld voor prioritering en gesprek op groepsniveau, niet voor een individueel oordeel of harde voorspelling."
         ),
         "method_text": (
-            "Elke respondent krijgt een retentiesignaal op een schaal van 1 tot 10. "
-            "Een hogere score betekent een sterker groepssignaal dat behoud aandacht vraagt. "
+            "In de analyse wordt per response een retentiesignaal op een schaal van 1 tot 10 berekend. "
+            "Een hogere score betekent een sterker samenvattend groepssignaal dat behoud aandacht vraagt. "
             "De score is indicatief en bedoeld als gespreksinput, niet als causale voorspelling, benchmark of objectief oordeel. "
             "Voor RetentieScan is dit in v1 een gelijkgewogen samenvatting van SDT-werkbeleving en zes beinvloedbare werkfactoren. "
             "Bevlogenheid, vertrekintentie en stay-intent worden daarnaast apart gerapporteerd als aanvullende behoudssignalen."
@@ -47,12 +47,12 @@ def get_signal_page_payload(*, retention_signal_profile: str | None = None) -> d
         "title": "Bevlogenheid, Stay-intent & Vertrekintentie",
         "intro": (
             "Deze pagina laat zien hoe retentiesignaal, bevlogenheid, stay-intent en vertrekintentie zich tot elkaar verhouden. "
-            "Lees dit als groepsinformatie over waar behoud onder druk staat en welke werkfactoren daarbij waarschijnlijk het meest meespelen, niet als individuele risicoscore."
+            "Lees dit als groepsinformatie over waar behoud onder druk staat en welke werkfactoren nu als eerste verificatie vragen, niet als individuele beoordeling of voorspelling."
         ),
         "summary_title": "Behoudssignalen in samenhang",
         "signal_profile_text": profile_copy.get(
             retention_signal_profile,
-            "Lees deze combinatie als groepssignaal: werkfactoren verklaren waar aandacht nodig is, bevlogenheid, stay-intent en vertrekintentie laten zien hoe scherp het signaal is.",
+            "Lees deze combinatie als groepssignaal: werkfactoren laten zien waar aandacht nodig is, bevlogenheid, stay-intent en vertrekintentie helpen bepalen hoe scherp het aandachtspunt is.",
         ),
     }
 

@@ -112,7 +112,7 @@ const COPY = {
       },
     ],
     proofNotes: [
-      ['Groepsniveau', 'Geen individuele retention-scores naar management'],
+      ['Groepsniveau', 'Geen individuele signalen naar management'],
       ['Signaalmix', 'Retentiesignaal, bevlogenheid en vertrekintentie in één beeld'],
       ['Actielogica', 'Topfactoren en vervolgvragen voor 30-90 dagen'],
     ],
