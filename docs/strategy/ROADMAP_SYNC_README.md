@@ -1,0 +1,64 @@
+# Roadmap Sync Gebruik
+
+Dit kleine systeem koppelt de checklist en de roadmap aan elkaar zonder dat de `.xlsx` zelf de enige hoofdbron hoeft te zijn.
+
+## Wat nu de rollen zijn
+
+- [ROADMAP_DATA.yaml](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_DATA.yaml)
+  - structuurbron
+  - bevat de volgorde, fases, deliverables en standaard-notities
+
+- [PROMPT_CHECKLIST.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_CHECKLIST.xlsx)
+  - operationele voortgang
+  - hier werk je status, datum, notities en live/gepusht bij
+
+- [ROADMAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP.md)
+  - gegenereerde strategische roadmap
+  - wordt opnieuw opgebouwd op basis van `ROADMAP_DATA.yaml` en de actuele checkliststatus
+
+## Hoe je het gebruikt
+
+### Alleen status bijwerken
+
+Als je een prompt hebt uitgevoerd:
+
+1. werk [PROMPT_CHECKLIST.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_CHECKLIST.xlsx) bij
+2. run:
+
+```bat
+C:\Users\larsh\Desktop\Business\Verisight\sync_planning_artifacts.bat
+```
+
+Dan wordt:
+- de checklist netjes geharmoniseerd
+- de roadmap opnieuw opgebouwd met de nieuwste status
+
+### Volgorde of fases aanpassen
+
+Als je de prioriteitsvolgorde of fase-indeling wilt wijzigen:
+
+1. pas [ROADMAP_DATA.yaml](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_DATA.yaml) aan
+2. run:
+
+```bat
+C:\Users\larsh\Desktop\Business\Verisight\sync_planning_artifacts.bat
+```
+
+Dan wordt:
+- de checklist opnieuw geordend
+- de roadmap opnieuw gegenereerd
+
+## Praktische regels
+
+- pas de volgorde **niet alleen** handmatig in Excel aan als het structureel is; gebruik dan `ROADMAP_DATA.yaml`
+- gebruik Excel voor voortgang en korte statusnotities
+- gebruik YAML voor structuur, volgorde en fase-architectuur
+- commit bij voorkeur zowel de checklist als de roadmap nadat je hebt gesynchroniseerd
+
+## Wat dit niet doet
+
+- het script pusht niets automatisch
+- het script maakt geen nieuwe promptbestanden
+- het script past `STRATEGY.md` niet automatisch aan
+
+Dat is bewust: roadmap-sync moet veilig en voorspelbaar blijven

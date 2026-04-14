@@ -1,98 +1,99 @@
 # Verisight - Roadmap
 
-Levend document. Dit is de strategische source of truth boven de prompt-checklist.
-Laatste update: 2026-04-14
+Levend document. Dit bestand wordt gegenereerd uit `docs/strategy/ROADMAP_DATA.yaml` en de actuele status in `docs/prompts/PROMPT_CHECKLIST.xlsx`.
+Laatst gegenereerd: 2026-04-14
 
 ## Gebruik
 
-- [PROMPT_CHECKLIST.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_CHECKLIST.xlsx) is de tactische uitvoerqueue.
+- [PROMPT_CHECKLIST.xlsx](C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_CHECKLIST.xlsx) is de tactische uitvoerqueue.
 - Deze roadmap beschrijft de strategische fases, gates en afhankelijkheden.
 - Externe documenten in [Docs_External](C:/Users/larsh/Desktop/Business/Docs_External) zijn waardevolle referentie, maar mogen geen concurrerende roadmap vormen.
 
 ## Huidige stand
 
-Verisight is voorbij de ruwe MVP-fase. De kern van product, live flows, rapportage en productduiding is aanzienlijk aangescherpt. De grootste open vragen zitten nu minder in "werkt het technisch?" en meer in:
+- Verisight is voorbij de ruwe MVP-fase. De kern van product, live flows, rapportage en productduiding is aanzienlijk aangescherpt.
+- De grootste open vragen zitten nu minder in 'werkt het technisch?' en meer in beslissing- en koopgereedheid.
+- De nadruk ligt nu op trust, actionability, decision-maker readiness en commerciële packaging, vóór website- en SEO-schalen.
 
-- landt de output overtuigend bij HR en directie
-- oogt het product voldoende professioneel en betrouwbaar
-- is de commerciële propositie overdraagbaar zonder live uitleg van Lars
-- zijn trust, claims, onboarding en eerste verkoopstappen strak genoeg voor echte marktbeweging
-
-## Fase A - Product Credibility Foundation
+## Phase A - Product Credibility Foundation
 
 **Doel**
 De productbasis moet inhoudelijk kloppen, live werken en geloofwaardig genoeg zijn om commercieel op voort te bouwen.
 
 **Hoort in deze fase**
-- ExitScan review en live test
-- RetentieScan review en live test
-- RetentieScan product sharpening
-- RetentieScan v1.1 validation
-- dashboard decision support
-- reporting system sharpening
-- report visual and commercial uplift
+- ExitScan Product Review And Test - afgerond
+- ExitScan Live Test - afgerond
+- RetentieScan Product Review And Test - afgerond
+- RetentieScan Live Test - afgerond
+- RetentieScan Product Sharpening - afgerond
+- Dashboard Decision Support - afgerond
+- RetentieScan v1.1 Validation - afgerond
+- Reporting System Sharpening - afgerond
+- Report Visual And Commercial Uplift - afgerond
 
 **Status**
-- grotendeels afgerond
+- afgerond
 
 **Exit gate**
-- claims sluiten aan op de methodiek
-- kernflows werken live
-- rapport en dashboard zijn professioneel genoeg als managementinstrument
+- Claims sluiten aan op de methodiek
+- Kernflows werken live
+- Rapport en dashboard zijn professioneel genoeg als managementinstrument
 
 **Wacht expliciet tot later**
-- grote SEO-inzet
-- grootschalige websitepolish los van inhoud
-- portfolio-uitbreiding
+- Grote SEO-inzet
+- Grootschalige websitepolish los van inhoud
+- Portfolio-uitbreiding
 
-## Fase B - Decision-Maker Readiness
+## Phase B - Decision-Maker Readiness
 
 **Doel**
 Verisight moet overtuigend landen bij HR-beslissers, directie en eerste kopers zonder dat betekenis of geloofwaardigheid verloren gaat.
 
 **Hoort in deze fase**
-- Management Actionability
-- Method And Trust
-- Trust Signal
+- Management Actionability - afgerond
+- Method And Trust System
+- Trust Signal Program
 - Boardroom Readiness
 - Founder-Led Sales Narrative
 
 **Status**
-- actief, deels uitgevoerd
-- Management Actionability afgerond op 2026-04-14
-- huidige vervolgfocus: Method And Trust, Trust Signal en Boardroom Readiness
+- huidige actieve focus
+- 1 van 5 checklist-items afgerond
 
 **Exit gate**
 - HR en directie begrijpen sneller wat het product oplevert
-- trust- en claimsgrenzen zijn helder
-- het verhaal is overtuigend zonder te overclaimen
+- Trust- en claimsgrenzen zijn helder
+- Het verhaal is overtuigend zonder te overclaimen
 
 **Wacht expliciet tot later**
-- website-redesign als hoofdproject
+- Website-redesign als hoofdproject
 - SEO-conversieschaal
-- bredere contentmachine
+- Bredere contentmachine
 
-## Fase C - Commercial Packaging
+## Phase C - Commercial Packaging
 
 **Doel**
 De propositie, verpakking en ondersteunende assets moeten coherent genoeg zijn om verkoopbaar en herhaalbaar te worden.
 
 **Hoort in deze fase**
 - Product Terminology And Taxonomy
-- Sales Enablement
+- Sales Enablement System
 - Pricing And Packaging
 - Sample Output And Showcase
 
+**Status**
+- gepland
+
 **Exit gate**
-- producttaal is consistent
-- pricing en packaging zijn begrijpelijk
-- voorbeeldoutput en salesmateriaal ondersteunen hetzelfde verhaal
+- Producttaal is consistent
+- Pricing en packaging zijn begrijpelijk
+- Voorbeeldoutput en salesmateriaal ondersteunen hetzelfde verhaal
 
 **Wacht expliciet tot later**
-- website-optimalisatie op schaal
+- Website-optimalisatie op schaal
 - SEO-programma
 
-## Fase D - Website And Funnel System
+## Phase D - Website And Funnel System
 
 **Doel**
 De website en funnel moeten de aangescherpte propositie, trustlaag en voorbeeldoutput helder en commercieel overbrengen.
@@ -102,16 +103,19 @@ De website en funnel moeten de aangescherpte propositie, trustlaag en voorbeeldo
 - Customer Journey And Funnel Alignment
 - SEO Conversion Program
 
+**Status**
+- gepland
+
 **Exit gate**
-- website weerspiegelt de aangescherpte product- en trustlaag
-- funnel volgt een duidelijke route van interesse naar gesprek
+- Website weerspiegelt de aangescherpte product- en trustlaag
+- De funnel volgt een duidelijke route van interesse naar gesprek
 - SEO en conversie worden geoptimaliseerd op stabiele messaging
 
 **Wacht expliciet tot later**
-- brede content-operating-systemen
-- schaalmarketing zonder eerste commerciële bevestiging
+- Brede content-operating-systemen
+- Schaalmarketing zonder eerste commerciële bevestiging
 
-## Fase E - Delivery And Adoption System
+## Phase E - Delivery And Adoption System
 
 **Doel**
 Eerste klanten moeten soepel van akkoord naar intake, campagne, rapportage en opvolging kunnen gaan.
@@ -123,16 +127,19 @@ Eerste klanten moeten soepel van akkoord naar intake, campagne, rapportage en op
 - Pilot And Early Customer Learning
 - Demo And Sample Environment
 
+**Status**
+- gepland
+
 **Exit gate**
-- nieuwe klanttrajecten zijn uitvoerbaar zonder onnodige improvisatie
-- rapporten leiden tot opvolging en leerloops
-- demo en pilotassets zijn schaalbaar genoeg voor hergebruik
+- Nieuwe klanttrajecten zijn uitvoerbaar zonder onnodige improvisatie
+- Rapporten leiden tot opvolging en leerloops
+- Demo en pilotassets zijn schaalbaar genoeg voor hergebruik
 
 **Wacht expliciet tot later**
-- zware self-service uitbreiding
-- grote ops-automatisering
+- Zware self-service uitbreiding
+- Grote ops-automatisering
 
-## Fase F - Scale And Operating System
+## Phase F - Scale And Operating System
 
 **Doel**
 Na eerste tractie moeten commerciële, delivery- en contentprocessen herhaalbaar en schaalbaar worden gemaakt.
@@ -143,29 +150,30 @@ Na eerste tractie moeten commerciële, delivery- en contentprocessen herhaalbaar
 - Portfolio Architecture
 - Content Operating System
 
+**Status**
+- gepland
+
 **Exit gate**
-- herhaalbaar verkoop- en deliveryritme
-- eerste geloofwaardig bewijs en cases
-- portfolio en contentlogica zonder productverwarring
+- Herhaalbaar verkoop- en deliveryritme
+- Eerste geloofwaardig bewijs en cases
+- Portfolio en contentlogica zonder productverwarring
 
 ## Externe afhankelijkheden en gates
 
-Deze items bepalen mede de volgorde van het werk en horen niet als losse notities te blijven rondzweven:
-
 - KvK en formele zakelijke basis
-- zakelijke bankrekening en facturatiegereedheid
+- Zakelijke bankrekening en facturatiegereedheid
 - Resend- en domeinverificatie voor betrouwbare maildelivery
-- timing en ruimte naast huidig werk
-- eerste outreach en echte klantgesprekken
-- privacy/security answer pack voor kopers
+- Timing en ruimte naast huidig werk
+- Eerste outreach en echte klantgesprekken
+- Privacy/security answer pack voor kopers
 - Baseline versus Live commerciële framing
 
 ## Wat we nu bewust niet eerst doen
 
-- geen grote website-redesign voor de trust- en packaginglaag scherp staat
-- geen SEO-schaalprogramma voor messaging stabiel is
-- geen self-service of Stripe als eerste focus
-- geen nieuwe productfamilies voor ExitScan en RetentieScan commercieel scherp genoeg staan
+- Geen grote website-redesign voor de trust- en packaginglaag scherp staat
+- Geen SEO-schaalprogramma voor messaging stabiel is
+- Geen self-service of Stripe als eerste focus
+- Geen nieuwe productfamilies voor ExitScan en RetentieScan commercieel scherp genoeg staan
 
 ## Documentregels
 
