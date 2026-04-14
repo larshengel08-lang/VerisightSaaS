@@ -103,7 +103,7 @@ def compute_org_scores(responses: dict[str, int | float]) -> dict[str, float]:
 
 
 # ---------------------------------------------------------------------------
-# Retention risk score
+# Shared signal score helper
 # ---------------------------------------------------------------------------
 
 def compute_retention_risk(
@@ -116,39 +116,12 @@ def compute_retention_risk(
 
         return _impl(sdt_scores, org_scores, scan_type=scan_type)
 
-    factor_risks: dict[str, float] = {}
-    weighted: dict[str, float] = {}
-    weights = dict(EXIT_SCAN_WEIGHTS)
+    # ExitScan keeps this shared helper for backwards compatibility, but the
+    # actual implementation lives in the ExitScan product module so logic and
+    # terminology cannot silently drift apart.
+    from backend.products.exit.scoring import compute_exit_friction as _exit_impl
 
-    for factor in ORG_FACTOR_KEYS:
-        score = org_scores.get(factor, 5.5)
-        risk = round(11.0 - score, 2)
-        factor_risks[factor] = round(risk, 2)
-        weighted[factor] = round(risk * weights[factor], 2)
-
-    sdt_risk = sdt_scores.get("sdt_risk", 5.5)
-    weights["sdt"] = 2.0
-    factor_risks["sdt"] = round(sdt_risk, 2)
-    weighted["sdt"] = round(sdt_risk * weights["sdt"], 2)
-
-    total_weight = sum(weights.values())
-    raw_risk = sum(weighted.values()) / total_weight
-    risk_score = round(max(1.0, min(10.0, raw_risk)), 2)
-
-    if risk_score >= RISK_HIGH:
-        band = "HOOG"
-    elif risk_score >= RISK_MEDIUM:
-        band = "MIDDEN"
-    else:
-        band = "LAAG"
-
-    return {
-        "risk_score": risk_score,
-        "risk_band": band,
-        "factor_risks": factor_risks,
-        "factor_weights": weights,
-        "weighted_factors": weighted,
-    }
+    return _exit_impl(sdt_scores, org_scores)
 
 
 def compute_retention_supplemental_scores(

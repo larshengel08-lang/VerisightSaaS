@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 from datetime import datetime, timezone
 
+import pytest
 from sqlalchemy.orm import Session
 
 from backend.email import EmailSendResult, send_contact_request_result
@@ -343,6 +344,43 @@ def test_report_route_returns_pdf(client, db_session: Session):
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/pdf"
     assert response.content.startswith(b"%PDF")
+
+
+def test_exit_smoke_flow_covers_submit_stats_and_report(client, db_session: Session):
+    org = _create_org(db_session, api_key="exit-smoke-key")
+    campaign = _create_campaign(db_session, org, name="Exit Smoke")
+    respondent = _create_respondent(db_session, campaign, email="smoke@example.com", department="People")
+
+    submit_response = client.post("/survey/submit", json=_survey_payload(respondent.token))
+
+    assert submit_response.status_code == 200
+
+    stored = db_session.query(SurveyResponse).filter(SurveyResponse.respondent_id == respondent.id).one()
+    assert stored.full_result["exit_context_summary"]["signal_visibility_summary"]["label"] == (
+        "Signalen bleven grotendeels onder de radar"
+    )
+    assert stored.preventability in {"STERK_WERKSIGNAAL", "GEMENGD_WERKSIGNAAL", "BEPERKT_WERKSIGNAAL"}
+
+    stats_response = client.get(
+        f"/api/campaigns/{campaign.id}/stats",
+        headers={"x-api-key": "exit-smoke-key"},
+    )
+
+    assert stats_response.status_code == 200
+    stats_body = stats_response.json()
+    assert stats_body["scan_type"] == "exit"
+    assert stats_body["total_completed"] == 1
+    assert stats_body["avg_risk_score"] is not None
+    assert stats_body["pattern_report"]["sufficient_data"] is False
+
+    report_response = client.get(
+        f"/api/campaigns/{campaign.id}/report",
+        headers={"x-api-key": "exit-smoke-key"},
+    )
+
+    assert report_response.status_code == 200
+    assert report_response.headers["content-type"] == "application/pdf"
+    assert report_response.content.startswith(b"%PDF")
 
 
 def test_report_route_rejects_invalid_api_key(client, db_session: Session):

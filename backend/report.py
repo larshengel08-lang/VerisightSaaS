@@ -1555,8 +1555,8 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             f"<i>Het {signal_label_lower} is een interne samenvatting van behoudssignalen in deze groep. "
             "Gebruik deze score als gesprekssamenvatting en vroegsignaal, niet als individuele voorspelling of externe benchmark.</i>"
             if is_retention else
-            "<i>De frictiescore is een interne samenvatting van ervaren werkfrictie rondom vertrek. "
-            "Gebruik deze score als gesprekssamenvatting, niet als externe benchmark of voorspelling.</i>"
+            "<i>Binnen ExitScan is de frictiescore een interne managementsamenvatting van ervaren werkfrictie rondom vertrek. "
+            "Gebruik deze score altijd samen met vertrekredenen, topfactoren en werksignalen, niet als causaliteitsclaim, externe benchmark of voorspelling.</i>"
         )
         story.append(Paragraph(
             benchmark_text,
@@ -1793,11 +1793,19 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
         # Scoretabel
         story.append(Paragraph("Scoretabel per factor", STYLES["sub_title"]))
-        story.append(Paragraph(
+        score_explanation = (
             "<i>Toelichting: De belevingsscore (1–10) geeft de gemiddelde beleving van medewerkers weer — "
-            "hogere belevingsscore is positiever. De signaalwaarde vertaalt diezelfde uitkomst naar prioriteit — "
-            "hoe hoger de signaalwaarde, hoe eerder dit thema een managementgesprek verdient. "
-            "De signaalwaarde is dus geen aparte meting of telling, maar de omgekeerde lezing van dezelfde onderliggende score.</i>",
+            "hogere belevingsscore is positiever. De signaalwaarde vertaalt diezelfde uitkomst naar prioriteit voor behoudsduiding — "
+            "hoe hoger de signaalwaarde, hoe eerder dit thema verificatie of opvolging vraagt. "
+            "De signaalwaarde is dus geen aparte meting of telling, maar de omgekeerde lezing van dezelfde onderliggende score.</i>"
+            if is_retention else
+            "<i>Toelichting: De belevingsscore (1–10) laat zien hoe vertrekkers een thema gemiddeld ervoeren — "
+            "hogere belevingsscore is positiever. De signaalwaarde vertaalt diezelfde uitkomst naar prioriteit voor vertrekduiding — "
+            "hoe hoger de signaalwaarde, hoe eerder dit thema managementverificatie verdient. "
+            "De signaalwaarde is dus geen aparte meting of telling, maar de omgekeerde lezing van dezelfde onderliggende score.</i>"
+        )
+        story.append(Paragraph(
+            score_explanation,
             ParagraphStyle(
                 "score_explanation",
                 fontName="Helvetica-Oblique",
@@ -1814,11 +1822,11 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             score    = factor_avgs[factor]
             risk_val = round(11 - score, 1)
             if risk_val >= 6.0:
-                urgency = "URGENT"
+                urgency = "URGENT" if is_retention else "NU DUIDEN"
             elif risk_val >= 4.5:
-                urgency = "AANDACHT"
+                urgency = "AANDACHT" if is_retention else "DOORVRAGEN"
             else:
-                urgency = "OK"
+                urgency = "OK" if is_retention else "MONITOREN"
             score_rows.append([
                 FACTOR_LABELS_NL.get(factor, factor),
                 f"{score:.1f}",
