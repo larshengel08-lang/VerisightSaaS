@@ -118,16 +118,18 @@ export function MarketingPageShell({
         <MarketingSection
           tone="plain"
           className={`overflow-hidden border-b border-slate-200 ${themeStyle.heroBg}`}
-          containerClassName="grid gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:items-start"
+          containerClassName="marketing-hero-grid"
         >
-          <div className="max-w-2xl">
+          <div className="marketing-hero-column">
             <p className={`text-xs font-bold uppercase tracking-[0.22em] ${themeStyle.accentText}`}>{eyebrow}</p>
-            <h1 className="font-display mt-5 text-balance text-[3.2rem] leading-[0.96] text-slate-950 md:text-[5rem]">
+            <h1 className="marketing-hero-title font-display mt-5 text-[clamp(2.85rem,8vw,5.2rem)] leading-[0.92] text-slate-950">
               {title}
             </h1>
-            <p className="mt-6 max-w-xl text-[1.05rem] leading-8 text-slate-600">{description}</p>
+            <p className="marketing-hero-copy mt-6 text-[1.02rem] leading-8 text-slate-600 md:text-[1.05rem]">
+              {description}
+            </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="marketing-hero-cta-row mt-8">
               <Link
                 href={ctaHref}
                 className="inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(37,99,235,0.2)] transition-all hover:-translate-y-0.5 hover:bg-blue-700"
@@ -142,8 +144,8 @@ export function MarketingPageShell({
               </Link>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-2.5">
-              <div className="overflow-hidden rounded-[1.75rem] border border-white/70 bg-white/85 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur">
+            <div className="mt-8 max-w-2xl">
+              <div className="overflow-hidden rounded-[1.6rem] border border-white/70 bg-white/85 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur">
                 {highlightItems.map((item, index) => (
                   <div
                     key={item}
@@ -162,42 +164,44 @@ export function MarketingPageShell({
               </div>
             </div>
 
-            <div className="mt-10">
+            <div className="mt-8">
               <TrustStrip items={trustItems} tone={trustTone} />
             </div>
 
-            <div className="mt-5 max-w-xl rounded-[1.5rem] border border-slate-200 bg-white/90 px-5 py-4 text-sm leading-7 text-slate-600 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
-              {heroNote}
-            </div>
+            <div className="marketing-hero-support-grid mt-5">
+              <div className="rounded-[1.5rem] border border-slate-200 bg-white/90 px-5 py-4 text-sm leading-7 text-slate-600 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
+                {heroNote}
+              </div>
 
-            <div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-600">
-              {trustQuickLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="inline-flex items-center gap-2 font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition-colors hover:text-slate-950"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              <div className="marketing-hero-link-grid">
+                {trustQuickLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="marketing-hero-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="relative">
+          <div className="marketing-hero-stage-column relative">
             <div className={`${themeStyle.glowClass} right-[-4rem] top-[-3rem] h-40 w-40`} />
             <div className="marketing-stage p-6 md:p-8">
               <div className={`absolute right-0 top-0 h-56 w-56 bg-gradient-to-bl ${themeStyle.stageAccentClass}`} />
-              <div className="relative grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-                <div>
+              <div className="marketing-hero-stage-grid relative">
+                <div className="min-w-0">
                   <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${themeStyle.stageTagClass}`}>
                     {contextEyebrow}
                   </span>
-                  <h2 className="font-display mt-5 text-4xl leading-[1.02] text-white md:text-[3.2rem]">
+                  <h2 className="font-display mt-5 max-w-[8ch] text-[clamp(2.25rem,5.7vw,4.3rem)] leading-[0.96] text-white sm:max-w-[9ch]">
                     {contextTitle}
                   </h2>
-                  <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">{contextBody}</p>
+                  <p className="mt-5 max-w-xl text-[0.98rem] leading-8 text-slate-300 md:text-base">{contextBody}</p>
 
-                  <div className="mt-8 space-y-3">
+                  <div className="mt-7 space-y-3">
                     {[
                       'Past de route inhoudelijk bij de managementvraag?',
                       'Laat de deliverable eerder zien dan de uitleg.',
@@ -215,8 +219,8 @@ export function MarketingPageShell({
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="rounded-[1.75rem] border border-white/10 bg-white p-5 text-slate-950 shadow-[0_18px_44px_rgba(15,23,42,0.18)]">
+                <div className="min-w-0 space-y-4">
+                  <div className="rounded-[1.55rem] border border-white/10 bg-white p-5 text-slate-950 shadow-[0_18px_44px_rgba(15,23,42,0.18)]">
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Waarom dit anders oogt</p>
                     <h3 className="mt-3 text-2xl font-semibold text-slate-950">Niet nog een productgrid, maar een routecanvas.</h3>
                     <p className="mt-3 text-sm leading-7 text-slate-600">
@@ -225,31 +229,31 @@ export function MarketingPageShell({
                     </p>
                   </div>
 
-                  <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
+                  <div className="rounded-[1.55rem] border border-white/10 bg-white/5 p-5">
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Snelle routecheck</p>
                     <div className="mt-4 grid gap-3">
                       <Link
                         href="/producten"
-                        className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
+                        className="rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
                       >
                         Producten vergelijken
                       </Link>
                       <Link
                         href="/tarieven"
-                        className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
+                        className="rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
                       >
                         Pricing en vervolgvormen
                       </Link>
                       <Link
                         href="/vertrouwen"
-                        className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
+                        className="rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
                       >
                         Trust, privacy en DPA
                       </Link>
                     </div>
                   </div>
 
-                  <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
+                  <div className="rounded-[1.55rem] border border-white/10 bg-white/5 p-5">
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Na kennismaking</p>
                     <div className="mt-4 space-y-3 text-sm leading-7 text-slate-200">
                       <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-3">

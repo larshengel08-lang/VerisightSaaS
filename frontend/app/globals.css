@@ -3,8 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
-  --marketing-shell: 82rem;
-  --marketing-section-space: clamp(5rem, 7vw, 7.5rem);
+  --marketing-shell: 80rem;
+  --marketing-section-space: clamp(4.5rem, 6vw, 7rem);
   --marketing-surface: #ffffff;
   --marketing-surface-soft: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   --marketing-surface-tint: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
@@ -27,10 +27,25 @@ html {
   scroll-behavior: smooth;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
+  margin: 0;
   background: var(--background);
   color: var(--foreground);
   text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+img,
+svg,
+canvas {
+  display: block;
+  max-width: 100%;
 }
 
 a:focus-visible,
@@ -64,7 +79,7 @@ details > summary::-webkit-details-marker {
   .marketing-shell {
     margin-inline: auto;
     width: min(100%, var(--marketing-shell));
-    padding-inline: 1.5rem;
+    padding-inline: clamp(1rem, 2.5vw, 2rem);
   }
 
   .marketing-section {
@@ -88,21 +103,21 @@ details > summary::-webkit-details-marker {
     border: 1px solid var(--marketing-border);
     background: rgba(255, 255, 255, 0.96);
     box-shadow: var(--marketing-shadow-soft);
-    border-radius: 2rem;
+    border-radius: 1.75rem;
   }
 
   .marketing-panel-soft {
     border: 1px solid rgba(191, 219, 254, 0.55);
     background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
     box-shadow: var(--marketing-shadow-soft);
-    border-radius: 2rem;
+    border-radius: 1.75rem;
   }
 
   .marketing-panel-dark {
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(15, 23, 42, 0.92);
     box-shadow: var(--marketing-shadow-strong);
-    border-radius: 2rem;
+    border-radius: 1.75rem;
     color: white;
   }
 
@@ -112,16 +127,16 @@ details > summary::-webkit-details-marker {
     border: 1px solid rgba(15, 23, 42, 0.08);
     background: linear-gradient(180deg, #0f172a 0%, #14243a 100%);
     box-shadow: var(--marketing-shadow-strong);
-    border-radius: 2.5rem;
+    border-radius: 2.1rem;
     color: white;
   }
 
   .marketing-stage::before {
     content: "";
     position: absolute;
-    inset: 1.25rem;
+    inset: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 2rem;
+    border-radius: 1.6rem;
     pointer-events: none;
   }
 
@@ -154,5 +169,111 @@ details > summary::-webkit-details-marker {
 
   .marketing-glow-sky {
     background: var(--marketing-glow-sky);
+  }
+
+  .marketing-hero-grid {
+    display: grid;
+    align-items: start;
+    gap: clamp(2.5rem, 4vw, 4.5rem);
+  }
+
+  .marketing-hero-column,
+  .marketing-hero-stage-column,
+  .marketing-hero-stage-grid > *,
+  .marketing-stage,
+  .marketing-stage * {
+    min-width: 0;
+  }
+
+  .marketing-hero-title {
+    max-width: 8.2ch;
+    text-wrap: pretty;
+    hyphens: auto;
+  }
+
+  .marketing-hero-copy {
+    max-width: 40rem;
+  }
+
+  .marketing-hero-cta-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .marketing-hero-support-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .marketing-hero-link-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .marketing-hero-link-card {
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(255, 255, 255, 0.84);
+    border-radius: 1.25rem;
+    padding: 0.9rem 1rem;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+  }
+
+  .marketing-hero-stage-grid {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .marketing-pill-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.625rem;
+  }
+
+  .marketing-pill {
+    max-width: 100%;
+    border-radius: 9999px;
+  }
+}
+
+@media (min-width: 640px) {
+  @layer components {
+    .marketing-hero-title {
+      max-width: 9.6ch;
+    }
+
+    .marketing-hero-cta-row {
+      flex-direction: row;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+  }
+}
+
+@media (min-width: 1024px) {
+  @layer components {
+    .marketing-hero-grid {
+      grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
+    }
+
+    .marketing-hero-support-grid {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    }
+  }
+}
+
+@media (min-width: 1536px) {
+  @layer components {
+    .marketing-hero-stage-grid {
+      grid-template-columns: minmax(0, 0.88fr) minmax(18rem, 1.12fr);
+      align-items: start;
+    }
+
+    .marketing-pill-stack {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
   }
 }

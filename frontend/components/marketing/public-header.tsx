@@ -26,7 +26,7 @@ export function PublicHeader({
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
-      <div className="mx-auto max-w-6xl px-6 py-4">
+      <div className="marketing-shell py-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Wordmark size="md" />

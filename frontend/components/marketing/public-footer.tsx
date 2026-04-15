@@ -5,7 +5,7 @@ import { Wordmark } from '@/components/marketing/wordmark'
 export function PublicFooter() {
   return (
     <footer className="border-t border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] py-12">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.95fr]">
+      <div className="marketing-shell grid gap-10 lg:grid-cols-[1.15fr_0.85fr_0.95fr]">
         <div>
           <Wordmark size="sm" />
           <p className="mt-4 max-w-sm text-sm leading-7 text-slate-600">
@@ -69,7 +69,7 @@ export function PublicFooter() {
         </div>
       </div>
 
-      <div className="mx-auto mt-10 max-w-6xl border-t border-slate-200 px-5 pt-6 text-xs text-slate-500 sm:px-6">
+      <div className="marketing-shell mt-10 border-t border-slate-200 pt-6 text-xs text-slate-500">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; {new Date().getFullYear()} Verisight. Publieke informatie voor orientatie en kennismaking.</p>
           <p>Geen trackingcookies op de marketing-site.</p>

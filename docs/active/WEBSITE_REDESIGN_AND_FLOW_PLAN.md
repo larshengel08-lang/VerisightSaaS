@@ -24,7 +24,9 @@ Status 2026-04-15:
 - frontend tests, lint en build groen
 - aanvullende code-level checks gedaan op CTA-flow, trust-linking, showcase-koppelingen en responsive breakpoints
 - tweede visuele pass uitgevoerd op homepage en producthero's om de redesign ook boven de vouw duidelijker zichtbaar te maken
-- browsermatige responsive beeld-QA niet uitgevoerd in deze tranche; geen aparte browserharness beschikbaar in deze repo-run
+- gerichte visual integrity pass uitgevoerd op `/`, `/producten`, `/producten/exitscan`, `/producten/retentiescan`, `/tarieven` en `/aanpak`
+- browsermatige breakpoint-QA gedaan op mobiel, tablet en desktop via lokale build- en screenshotcontrole
+- layoutsysteem aangescherpt op shellbreedte, vertical rhythm, hero-measures, CTA-rijen, panelhiërarchie, stage-balans en globale overflow-resets
 - nog niet gepusht in deze tranche
 
 ## 2. Visual Direction
@@ -138,11 +140,13 @@ Dependency: Milestone 5
 - [x] Shared labels en CTA's gealigneerd op kennismaking, routes en deliverables.
 - [x] Frontend tests, lint en build gedraaid.
 - [x] Code-level parity checks gedaan op CTA-flow, trust-linking, showcase-koppelingen en responsive breakpointgebruik.
+- [x] Visual integrity pass uitgevoerd op shellbreedte, heading-measures, panelhiërarchie, CTA-rijen en stage-balans.
+- [x] Browsermatige breakpoint-QA gedaan op home, producten, productdetail, tarieven en aanpak.
 - [x] `PROMPT_CHECKLIST.xlsx` bijgewerkt voor `WEBSITE_REDESIGN_AND_FLOW_PLANMODE_PROMPT.md`.
-- [x] Niet-uitgevoerde browsermatige responsive beeld-QA expliciet vastgelegd.
 
 #### Definition of done
 - [x] De site leest consistenter, rustiger en professioneler.
+- [x] De bovenkanten van de kernpagina's breken rustiger en consistenter op mobiel, tablet en desktop.
 
 #### Validation
 - [x] `npm.cmd test -- --run lib/marketing-positioning.test.ts lib/report-preview-copy.test.ts lib/sample-showcase-assets.test.ts`
@@ -150,6 +154,7 @@ Dependency: Milestone 5
 - [x] `npm.cmd run lint`
 - [x] `npm.cmd run build`
 - [x] Code-level responsive / copy / trust / flow parity checks via inline repo-validatie op aangepaste pagina's en gedeelde marketingcontent.
+- [x] Browsermatige screenshot-QA via lokale production build op mobiel, tablet en desktop voor `/`, `/producten`, `/producten/exitscan`, `/producten/retentiescan`, `/tarieven` en `/aanpak`.
 
 ## 6. Page-Level Redesign Direction
 
@@ -195,6 +200,7 @@ Dependency: Milestone 5
 ### Visual system and shared components
 - `marketing-page-shell`, `public-header`, `public-footer`, `preview-slider` en `sample-showcase-card` aangescherpt op rust, proof en CTA-ritme
 - globale marketingspacing en shellbreedte verfijnd in `globals.css`
+- visual integrity pass toegevoegd voor gedeelde hero-measures, contentbreedte, panelradius, box-sizing, image max-width en stage-compositie
 
 ### Page work
 - homepage herbouwd rond routekeuze, proof, vergelijking en contact

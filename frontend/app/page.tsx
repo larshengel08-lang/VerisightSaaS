@@ -105,7 +105,7 @@ export default function LandingPage() {
               <span>RetentieScan gericht aanvullend</span>
             </div>
 
-            <h1 className="marketing-hero-title font-display mt-6 max-w-[10.8ch] text-[clamp(3rem,8.5vw,6rem)] leading-[0.9] text-slate-950">
+            <h1 className="marketing-hero-title font-display mt-6 text-[clamp(2.85rem,8.7vw,5.8rem)] leading-[0.9] text-slate-950">
               Eerst de juiste managementroute. Daarna pas de analyse.
             </h1>
             <p className="marketing-hero-copy mt-6 text-[1.02rem] leading-8 text-slate-600 md:text-[1.05rem]">
@@ -190,7 +190,7 @@ export default function LandingPage() {
                       2 live routes
                     </span>
                   </div>
-                  <h2 className="font-display mt-5 max-w-[9ch] text-[clamp(2.4rem,6vw,4.6rem)] leading-[0.96] text-white">
+                  <h2 className="font-display mt-5 max-w-[8ch] text-[clamp(2.25rem,5.8vw,4.4rem)] leading-[0.96] text-white sm:max-w-[9ch]">
                     Kies eerst de vraag die nu bestuurlijk telt.
                   </h2>
                   <p className="mt-5 max-w-xl text-[0.98rem] leading-8 text-slate-300 md:text-base">
