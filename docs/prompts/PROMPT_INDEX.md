@@ -132,6 +132,18 @@ Doel:
   - Deliverable: `OPS_AND_DELIVERY_SYSTEM_PLAN.md`
   - Gebruik voor: deliveryflow, opsoverdrachten, nazorg en schaalbare uitvoering
 
+- [ASSISTED_TO_SAAS_READINESS_PROGRAM_PLANMODE_PROMPT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/ASSISTED_TO_SAAS_READINESS_PROGRAM_PLANMODE_PROMPT.md)
+  - Deliverable: `ASSISTED_TO_SAAS_READINESS_PROGRAM_PLAN.md`
+  - Gebruik voor: voorwaarden, gates en grenzen voor de stap van assisted productized aanbod naar SaaS-readiness
+
+- [CUSTOMER_LIFECYCLE_AND_EXPANSION_MODEL_PLANMODE_PROMPT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/CUSTOMER_LIFECYCLE_AND_EXPANSION_MODEL_PLANMODE_PROMPT.md)
+  - Deliverable: `CUSTOMER_LIFECYCLE_AND_EXPANSION_MODEL_PLAN.md`
+  - Gebruik voor: route van eerste sale naar herhaalgebruik, uitbreiding en productdoorstroom
+
+- [ACCOUNT_AND_BILLING_MODEL_READINESS_PLANMODE_PROMPT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/ACCOUNT_AND_BILLING_MODEL_READINESS_PLANMODE_PROMPT.md)
+  - Deliverable: `ACCOUNT_AND_BILLING_MODEL_READINESS_PLAN.md`
+  - Gebruik voor: accountmodel, billing readiness en voorwaarden vóór Stripe/self-service billing
+
 - [CASE_PROOF_AND_EVIDENCE_PROGRAM_PLANMODE_PROMPT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/CASE_PROOF_AND_EVIDENCE_PROGRAM_PLANMODE_PROMPT.md)
   - Deliverable: `CASE_PROOF_AND_EVIDENCE_PROGRAM_PLAN.md`
   - Gebruik voor: cases, bewijsvoering, testimonials en geloofwaardige commerciële proof
@@ -154,7 +166,7 @@ Doel:
 6. Terminologie, sales enablement, pricing en sample output
 7. Website redesign, journey/funnel en daarna SEO
 8. Onboarding, implementation, report-to-action en pilot learning
-9. Ops, case proof, portfolio en content pas later
+9. Ops, SaaS-readiness, lifecycle/billing, case proof, portfolio en content pas later
 
 ## Conflictpreventie
 

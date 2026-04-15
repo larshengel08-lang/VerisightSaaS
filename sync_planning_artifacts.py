@@ -122,6 +122,26 @@ def build_roadmap_markdown(data: dict[str, Any], rows: list[list[Any]]) -> str:
     for bullet in data["metadata"]["current_state_intro"]:
         lines.append(f"- {bullet}")
     lines.append("")
+    saas_readiness = data["metadata"].get("saas_readiness")
+    if saas_readiness:
+        lines.append(f"## {saas_readiness['title']}")
+        lines.append("")
+        lines.append("**Al aanwezig**")
+        for bullet in saas_readiness.get("present", []):
+            lines.append(f"- {bullet}")
+        lines.append("")
+        lines.append("**Deels aanwezig**")
+        for bullet in saas_readiness.get("partial", []):
+            lines.append(f"- {bullet}")
+        lines.append("")
+        lines.append("**Ontbreekt nog**")
+        for bullet in saas_readiness.get("missing", []):
+            lines.append(f"- {bullet}")
+        lines.append("")
+        lines.append("**Pas later doen**")
+        for bullet in saas_readiness.get("later", []):
+            lines.append(f"- {bullet}")
+        lines.append("")
 
     title_by_prompt = {item["prompt_file"]: item["title"] for item in data["checklist"]["items"]}
     for phase in phases:

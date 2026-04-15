@@ -80,6 +80,39 @@ Nog niet de hoofdvorm:
 - volledig self-service
 - consultancy-intensief traject zonder productkader
 
+## SaaS-readiness nu
+
+Verisight beweegt wel richting een SaaS-model, maar zit nu nog in een assisted/productized fase en niet in een pure self-service SaaS-vorm.
+
+### Al aanwezig
+
+- productfundament met scans, dashboards, rapportage en organisatie-/campagnestructuur
+- beveiligde appflows met auth, login, invites en beheer
+- demo- en sample-infrastructuur voor assisted verkoop, validatie en showcase
+
+### Deels aanwezig
+
+- herhaalbare productvorm en steeds scherpere packaging
+- assisted buyer journey die SaaS-readiness ondersteunt
+- groeiende standaardisatie in output, demo's en operationele flows
+
+### Ontbreekt nog
+
+- billing/subscription-logica als kern van het model
+- echte self-service onboarding en provisioning als standaardpad
+- volwassen lifecycle-logica rond plans, seats, usage en automated customer operations
+
+### Strategische conclusie
+
+De juiste stap nu is niet om Verisight kunstmatig als volledige SaaS te forceren, maar om doelgericht te bouwen aan SaaS-readiness via:
+
+- pricing en packaging
+- sales enablement
+- sample output en showcase
+- onboarding en adoption
+- implementation readiness
+- demo- en sample-omgeving
+
 ## Actieve strategische focus
 
 De hoogste prioriteit ligt nu op:
