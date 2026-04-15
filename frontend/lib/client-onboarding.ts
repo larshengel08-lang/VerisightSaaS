@@ -140,6 +140,70 @@ export const PRODUCT_ROUTE_VARIANTS = [
   },
 ] as const
 
+export const CANONICAL_CUSTOMER_LIFECYCLE = [
+  {
+    key: 'first_route',
+    title: 'Eerste route',
+    body: 'Kies eerst welke managementvraag nu telt: meestal ExitScan Baseline, en alleen RetentieScan Baseline als de actieve behoudsvraag echt voorop staat.',
+  },
+  {
+    key: 'first_value',
+    title: 'Eerste waarde',
+    body: 'Gebruik dashboard en rapport eerst om prioriteit, eerste eigenaar, eerste actie en reviewmoment expliciet te maken.',
+  },
+  {
+    key: 'repeat_or_expand',
+    title: 'Herhalen of uitbreiden',
+    body: 'Kies pas daarna of dezelfde route logisch terugkomt, een verdieping nodig is of een tweede product de volgende managementvraag beter bedient.',
+  },
+] as const
+
+type LifecycleDecisionCard = {
+  title: string
+  fit: string
+  body: string
+}
+
+export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecisionCard[] {
+  if (scanType === 'retention') {
+    return [
+      {
+        title: 'Blijf op dezelfde route',
+        fit: 'Standaard vervolg',
+        body: 'RetentieScan ritme is de logische vervolgvorm zodra baseline, eerste managementopvolging en een reviewmoment al staan.',
+      },
+      {
+        title: 'Verdiep bewust',
+        fit: 'Alleen bij scherpe segmentvraag',
+        body: 'Segment deep dive past alleen wanneer metadata op orde zijn en extra segmentduiding echt helpt bij prioritering of interventiekeuze.',
+      },
+      {
+        title: 'Breid uit naar ExitScan',
+        fit: 'Tweede product pas bij nieuwe vraag',
+        body: 'Ga pas naar ExitScan wanneer retrospectieve vertrekduiding nodig blijkt om dezelfde behoudsthema\'s achteraf scherper te begrijpen.',
+      },
+    ] as const
+  }
+
+  return [
+    {
+      title: 'Blijf op dezelfde route',
+      fit: 'Quote-only vervolg',
+      body: 'ExitScan Live wordt pas logisch wanneer proces, volume en eigenaarschap al staan en een begeleide vervolgroute op actuele uitstroom echt meerwaarde geeft.',
+    },
+    {
+      title: 'Verdiep bewust',
+      fit: 'Alleen bij metadata die het dragen',
+      body: 'Segment deep dive hoort alleen bij de route wanneer afdeling, functieniveau en minimale n sterk genoeg zijn om extra segmentduiding geloofwaardig te maken.',
+    },
+    {
+      title: 'Breid uit naar RetentieScan',
+      fit: 'Tweede product pas na eerste waarde',
+      body: 'RetentieScan Baseline wordt logisch zodra dezelfde thema\'s niet alleen achteraf moeten worden geduid, maar ook eerder in de actieve populatie moeten worden gesignaleerd.',
+    },
+  ] as const
+}
+
 export function getFirstManagementReadSteps(scanType: ScanType) {
   if (scanType === 'retention') {
     return [

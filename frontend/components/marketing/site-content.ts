@@ -453,6 +453,63 @@ export const approachRoutes = [
   },
 ] as const
 
+export const customerLifecycleStages = [
+  {
+    title: '1. Eerste routekeuze',
+    body: 'Meestal start je met ExitScan Baseline om vertrek eerst bestuurlijk leesbaar te maken. RetentieScan Baseline is de eerste route als de actieve behoudsvraag nu echt primair is.',
+  },
+  {
+    title: '2. Betaald eerste traject',
+    body: 'De eerste koop blijft een afgebakend baseline-traject met dashboard, managementrapport, bestuurlijke handoff en een eerste managementsessie.',
+  },
+  {
+    title: '3. Eerste managementwaarde',
+    body: 'Vanaf een bruikbare responsbasis vertalen dashboard en rapport de scan naar prioriteit nu, eerste eigenaar, eerste actie en een concreet reviewmoment.',
+  },
+  {
+    title: '4. Zelfde route herhalen of verdiepen',
+    body: 'Pas na die eerste waarde wordt een vervolgvorm logisch: ExitScan Live als begeleide vervolgroute, RetentieScan ritme als vaste herhaalvorm of segment deep dive als bewuste verdieping.',
+  },
+  {
+    title: '5. Uitbreiden naar tweede product',
+    body: 'Expansion volgt alleen wanneer de volgende managementvraag echt op tafel ligt: van ExitScan naar RetentieScan voor vroegsignalering op behoud, of omgekeerd voor terugkijkende vertrekduiding.',
+  },
+] as const
+
+export const pricingLifecycleLadder = [
+  {
+    route: 'ExitScan',
+    firstSale: 'ExitScan Baseline als standaard eerste koop',
+    nextStep: 'ExitScan Live alleen als quote-only vervolgroute bij voldoende volume, proces en eigenaar.',
+    expansion: 'RetentieScan Baseline wordt logisch zodra dezelfde thema\'s eerder in de actieve populatie moeten worden gesignaleerd.',
+  },
+  {
+    route: 'RetentieScan',
+    firstSale: 'RetentieScan Baseline alleen wanneer de actieve behoudsvraag nu het echte startpunt is.',
+    nextStep: 'RetentieScan ritme blijft de vaste buyer-facing vervolgvorm na baseline en eerste opvolging.',
+    expansion: 'ExitScan Baseline wordt pas logisch als retrospectieve vertrekduiding alsnog nodig blijkt.',
+  },
+] as const
+
+export const expansionTriggerCards = [
+  {
+    title: 'Eerste managementwaarde is bewezen',
+    body: 'Expansion hoort pas op tafel nadat de eerste route al heeft geleid tot een bruikbare managementread in plaats van alleen respons of nieuwsgierigheid.',
+  },
+  {
+    title: 'Er is een eigenaar en eerste actie',
+    body: 'Een vervolgstap voelt geloofwaardig wanneer prioriteit, eerste eigenaar en eerste actie al zijn benoemd in de eerste managementsessie.',
+  },
+  {
+    title: 'Er is een reviewmoment afgesproken',
+    body: 'Repeat en expansion worden verkoopbaar zodra het reviewmoment duidelijk is en de organisatie weet wanneer zij terugkijkt op voortgang, effect of nieuwe signalen.',
+  },
+  {
+    title: 'De volgende route vult een echte vraag aan',
+    body: 'Combinatie of productdoorstroom is alleen logisch als de huidige route de volgende managementvraag niet volledig afdekt, zodat expansion niet voelt als losse upsell.',
+  },
+] as const
+
 export const pricingCards = [
   {
     eyebrow: 'ExitScan Baseline',

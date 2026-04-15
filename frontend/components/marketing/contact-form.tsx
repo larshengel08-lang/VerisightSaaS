@@ -224,7 +224,7 @@ export function ContactForm({
             required
             value={form.name}
             onChange={(event) => updateField('name', event.target.value)}
-            className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
             placeholder="Voor- en achternaam"
           />
         </div>
@@ -239,7 +239,7 @@ export function ContactForm({
             required
             value={form.workEmail}
             onChange={(event) => updateField('workEmail', event.target.value)}
-            className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
             placeholder="naam@organisatie.nl"
           />
         </div>
@@ -254,7 +254,7 @@ export function ContactForm({
             required
             value={form.organization}
             onChange={(event) => updateField('organization', event.target.value)}
-            className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
             placeholder="Naam organisatie"
           />
         </div>
@@ -268,7 +268,7 @@ export function ContactForm({
             required
             value={form.employeeCount}
             onChange={(event) => updateField('employeeCount', event.target.value)}
-            className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           >
             <option value="" disabled>
               Kies een range
@@ -289,7 +289,7 @@ export function ContactForm({
             required
             value={form.routeInterest}
             onChange={(event) => updateField('routeInterest', normalizeContactRouteInterest(event.target.value))}
-            className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           >
             {CONTACT_ROUTE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -308,7 +308,7 @@ export function ContactForm({
             required
             value={form.desiredTiming}
             onChange={(event) => updateField('desiredTiming', normalizeContactDesiredTiming(event.target.value))}
-            className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           >
             {CONTACT_DESIRED_TIMING_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -329,7 +329,7 @@ export function ContactForm({
           rows={5}
           value={form.currentQuestion}
           onChange={(event) => updateField('currentQuestion', event.target.value)}
-          className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+          className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           placeholder="Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar managementbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven."
         />
       </div>
@@ -341,6 +341,7 @@ export function ContactForm({
         <div className="mt-2 space-y-2">
           <p>We reageren meestal binnen 1 werkdag met een eerste route-inschatting en de logischste eerste stap.</p>
           <p>In het gesprek toetsen we managementvraag, timing, databasis en of een baseline of vervolgvorm nu past.</p>
+          <p>Een vervolgvorm, combinatieroute of live route wordt pas concreet zodra de eerste route en eerste managementwaarde logisch zijn.</p>
           <p>We plannen in deze stap nog geen live inrichting, geen losse tooltoegang en geen definitieve offerte zonder intake.</p>
         </div>
       </div>
@@ -371,6 +372,7 @@ export function ContactForm({
               <span className="font-semibold">{successState.desiredTimingLabel}</span>) en welke intake of
               databasis nodig is om vlot naar uitvoering en eerste waarde te gaan.
             </p>
+            <p>Een vervolgvorm of combinatieroute wordt pas concreet zodra de eerste route en eerste managementwaarde helder zijn.</p>
             <p>In deze stap krijg je nog geen live inrichting of definitieve offerte zonder intake.</p>
             {successState.leadId ? <p className="text-xs opacity-80">Referentie: {successState.leadId}.</p> : null}
           </div>

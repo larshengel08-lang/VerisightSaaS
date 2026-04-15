@@ -1,5 +1,6 @@
 import type { ScanType } from '@/lib/types'
 import {
+  CANONICAL_CUSTOMER_LIFECYCLE,
   CANONICAL_ONBOARDING_PHASES,
   CLIENT_FILE_SPEC,
   FIRST_VALUE_THRESHOLDS,
@@ -7,6 +8,7 @@ import {
   PRODUCT_ROUTE_VARIANTS,
   getAdoptionSuccessDefinition,
   getFirstManagementReadSteps,
+  getLifecycleDecisionCards,
 } from '@/lib/client-onboarding'
 
 export function OperatorOnboardingBlueprint() {
@@ -108,6 +110,7 @@ export function ManagementReadGuide({
   hasEnoughData: boolean
 }) {
   const steps = getFirstManagementReadSteps(scanType)
+  const lifecycleDecisionCards = getLifecycleDecisionCards(scanType)
   const stateLabel = hasEnoughData
     ? 'Stevig genoeg voor eerste patroonduiding'
     : hasMinDisplay
@@ -150,6 +153,36 @@ export function ManagementReadGuide({
                 </p>
                 <p className="mt-2 text-sm font-semibold text-slate-950">{threshold.label}</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{threshold.summary}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[0.96fr,1.04fr]">
+        <div className="rounded-[22px] border border-slate-200 bg-white p-4 sm:p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Lifecycle na eerste read</p>
+          <div className="mt-4 grid gap-3">
+            {CANONICAL_CUSTOMER_LIFECYCLE.map((phase) => (
+              <div key={phase.key} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-950">{phase.title}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{phase.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[22px] border border-blue-100 bg-blue-50 p-4 sm:p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">Logische vervolgroutes</p>
+          <p className="mt-3 text-sm leading-6 text-blue-950">
+            Kies pas nu of je op dezelfde route blijft, verdiept of uitbreidt. Zo blijft expansion een geloofwaardige vervolgstap op basis van eerdere waarde.
+          </p>
+          <div className="mt-4 grid gap-3">
+            {lifecycleDecisionCards.map((card) => (
+              <div key={card.title} className="rounded-2xl border border-white/80 bg-white/90 p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">{card.fit}</p>
+                <p className="mt-2 text-sm font-semibold text-slate-950">{card.title}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">{card.body}</p>
               </div>
             ))}
           </div>

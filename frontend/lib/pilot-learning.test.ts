@@ -93,4 +93,26 @@ describe('pilot learning defaults', () => {
     expect(signals.join(' ')).toContain('Pattern-level drempel bereikt')
     expect(signals.join(' ')).toContain('2 klantinvite(s) wachten nog op activatie.')
   })
+
+  it('keeps follow-up review signals tied to management value before expansion', () => {
+    const signals = buildLearningObjectiveSignals({
+      checkpointKey: 'follow_up_review',
+      dossier: {
+        route_interest: 'exitscan',
+        delivery_mode: 'baseline',
+        scan_type: 'exit',
+        expected_first_value: 'Eerste managementduiding op vertrekpatronen',
+        next_route: 'RetentieScan Baseline',
+        stop_reason: null,
+        management_action_outcome: 'MT heeft eigenaar, eerste actie en reviewmoment vastgelegd.',
+        adoption_outcome: 'Eerste managementsessie succesvol gevoerd.',
+        trust_friction: null,
+      },
+    })
+
+    expect(signals.join(' ')).toContain('Gekozen vervolgroute: RetentieScan Baseline.')
+    expect(signals.join(' ')).toContain('Adoptionuitkomst is expliciet vastgelegd.')
+    expect(signals.join(' ')).toContain('eerste managementactie of reviewuitkomst')
+    expect(signals.join(' ')).toContain('in plaats van een losse upsell')
+  })
 })

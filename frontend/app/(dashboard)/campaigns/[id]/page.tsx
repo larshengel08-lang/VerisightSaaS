@@ -46,6 +46,7 @@ import {
   SdtGauge,
 } from './page-helpers'
 import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/implementation-readiness'
+import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
 import { getProductModule } from '@/lib/products/shared/registry'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
@@ -252,6 +253,7 @@ export default async function CampaignPage({ params }: Props) {
     triage_status: string
     updated_at: string
   }>
+  const lifecycleDecisionCards = getLifecycleDecisionCards(stats.scan_type)
 
   return (
     <div className="space-y-6">
@@ -377,7 +379,7 @@ export default async function CampaignPage({ params }: Props) {
         <DashboardSection
           eyebrow="Learning"
           title="Pilot- en early-customer-learning"
-          description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementread en follow-up expliciet vast te leggen voor deze campaign."
+          description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementread en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
           aside={
             <DashboardChip
               label={learningDossiers.length > 0 ? `${learningDossiers.length} gekoppeld` : 'Nog geen dossier'}
@@ -391,8 +393,8 @@ export default async function CampaignPage({ params }: Props) {
               title={learningDossiers.length > 0 ? 'Campaign is al opgenomen in de learninglus' : 'Koppel deze campaign aan een learningdossier'}
               body={
                 learningDossiers.length > 0
-                  ? 'Gebruik gekoppelde dossiers om implementationfrictie, launchsignalen, managementgebruik en 30-90 dagen follow-up expliciet terug te laten landen in product, report, onboarding, sales en operations.'
-                  : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de learning-workbench. Zo blijven echte deliverylessen niet hangen in losse handover-notes.'
+                  ? 'Gebruik gekoppelde dossiers om implementationfrictie, launchsignalen, managementgebruik en gekozen vervolgroutes expliciet terug te laten landen in product, report, onboarding, sales en operations.'
+                  : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de learning-workbench. Zo blijven echte deliverylessen en vervolgkeuzes niet hangen in losse handover-notes.'
               }
               tone={learningDossiers.length > 0 ? 'blue' : 'amber'}
             />
@@ -733,6 +735,24 @@ export default async function CampaignPage({ params }: Props) {
                 </div>
               </div>
             ) : null}
+
+            <div className="rounded-[22px] border border-blue-100 bg-blue-50 p-4 sm:p-5">
+              <h3 className="text-sm font-semibold text-slate-950">Na de eerste managementsessie</h3>
+              <p className="mt-1 text-sm leading-6 text-slate-700">
+                Gebruik het eerste reviewmoment om bewust te kiezen: blijf je op dezelfde route, verdiep je deze scan of wordt een tweede product logisch op basis van de waarde die al zichtbaar is?
+              </p>
+              <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {lifecycleDecisionCards.map((card) => (
+                  <DashboardPanel
+                    key={card.title}
+                    eyebrow={card.fit}
+                    title={card.title}
+                    body={card.body}
+                    tone="blue"
+                  />
+                ))}
+              </div>
+            </div>
 
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
               <h3 className="text-sm font-semibold text-slate-950">Prioritaire focusvragen</h3>

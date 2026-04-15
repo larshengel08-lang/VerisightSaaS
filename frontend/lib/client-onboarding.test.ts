@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  CANONICAL_CUSTOMER_LIFECYCLE,
   CANONICAL_ONBOARDING_PHASES,
   CLIENT_FILE_SPEC,
   FIRST_VALUE_THRESHOLDS,
@@ -7,6 +8,7 @@ import {
   PRODUCT_ROUTE_VARIANTS,
   getAdoptionSuccessDefinition,
   getFirstManagementReadSteps,
+  getLifecycleDecisionCards,
 } from '@/lib/client-onboarding'
 
 describe('client onboarding defaults', () => {
@@ -67,5 +69,20 @@ describe('client onboarding defaults', () => {
     expect(getAdoptionSuccessDefinition('retention').toLowerCase()).toContain('behoud')
     expect(getAdoptionSuccessDefinition('exit').toLowerCase()).toContain('reviewmoment')
     expect(getAdoptionSuccessDefinition('retention').toLowerCase()).toContain('eerste managementsessie')
+  })
+
+  it('keeps the canonical lifecycle and expansion routes explicit per product', () => {
+    const exitDecisions = getLifecycleDecisionCards('exit')
+    const retentionDecisions = getLifecycleDecisionCards('retention')
+
+    expect(CANONICAL_CUSTOMER_LIFECYCLE.map((phase) => phase.key)).toEqual([
+      'first_route',
+      'first_value',
+      'repeat_or_expand',
+    ])
+    expect(exitDecisions[0]?.body.toLowerCase()).toContain('exitscan live')
+    expect(exitDecisions[2]?.body.toLowerCase()).toContain('retentiescan baseline')
+    expect(retentionDecisions[0]?.body.toLowerCase()).toContain('retentiescan ritme')
+    expect(retentionDecisions[2]?.body.toLowerCase()).toContain('exitscan')
   })
 })

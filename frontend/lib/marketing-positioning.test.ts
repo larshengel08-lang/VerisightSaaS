@@ -3,6 +3,7 @@ import { LIVE_MARKETING_PRODUCTS } from '@/lib/marketing-products'
 import { exitScanDefinition } from '@/lib/products/exit/definition'
 import { retentionScanDefinition } from '@/lib/products/retention/definition'
 import {
+  expansionTriggerCards,
   faqs,
   homepageUtilityLinks,
   marketingLegalLinks,
@@ -12,6 +13,7 @@ import {
   pricingFollowOnRoutes,
   pricingFaqs,
   pricingCards,
+  pricingLifecycleLadder,
   productOverviewComparisonRows,
   trustItems,
 } from '@/components/marketing/site-content'
@@ -56,13 +58,23 @@ describe('ExitScan positioning copy', () => {
     const exitBaselineCard = pricingCards.find((card) => card.eyebrow === 'ExitScan Baseline')
     const exitLiveRoute = pricingFollowOnRoutes.find((route) => route.title === 'ExitScan Live')
     const combinationRoute = pricingChoiceGuide.find(([title]) => title === 'Combinatie op aanvraag')
+    const exitLifecycle = pricingLifecycleLadder.find((route) => route.route === 'ExitScan')
 
     expect(exitBaselineCard?.price).toBe('EUR 2.950')
     expect(exitLiveRoute?.fit.toLowerCase()).toContain('quote-only')
     expect(exitLiveRoute?.bullets.join(' ').toLowerCase()).toContain('geen self-serve')
     expect(combinationRoute?.[1].toLowerCase()).toContain('eerste route helder staat')
+    expect(exitLifecycle?.firstSale.toLowerCase()).toContain('standaard eerste koop')
+    expect(exitLifecycle?.expansion.toLowerCase()).toContain('retentiescan baseline')
     expect(freePilotFaq?.[1].toLowerCase()).toContain('betaald baseline-traject')
     expect(freePilotFaq?.[1].toLowerCase()).toContain('echte urgentie')
+  })
+
+  it('keeps expansion framed as a value-based follow-up instead of a loose upsell', () => {
+    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('eerste route al heeft geleid'))).toBe(true)
+    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('eerste eigenaar'))).toBe(true)
+    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('reviewmoment'))).toBe(true)
+    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('upsell'))).toBe(true)
   })
 })
 
@@ -107,5 +119,13 @@ describe('RetentieScan positioning copy', () => {
     expect(rhythmFaq?.[1].toLowerCase()).toContain('vaste buyer-facing vervolgvorm')
     expect(retentionRhythm?.price).toBe('vanaf EUR 4.950')
     expect(compactFollowUp?.[2].toLowerCase()).toContain('parallel hoofdpackage')
+  })
+
+  it('keeps RetentieScan repeat and ExitScan expansion paths explicit', () => {
+    const retentionLifecycle = pricingLifecycleLadder.find((route) => route.route === 'RetentieScan')
+
+    expect(retentionLifecycle?.firstSale.toLowerCase()).toContain('actieve behoudsvraag')
+    expect(retentionLifecycle?.nextStep.toLowerCase()).toContain('vaste buyer-facing vervolgvorm')
+    expect(retentionLifecycle?.expansion.toLowerCase()).toContain('exitscan baseline')
   })
 })

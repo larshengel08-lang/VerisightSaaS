@@ -279,13 +279,19 @@ export function buildLearningObjectiveSignals({
 
   if (checkpointKey === 'follow_up_review') {
     if (dossier.next_route) {
-      items.push(`Vervolgroute: ${dossier.next_route}.`)
+      items.push(`Gekozen vervolgroute: ${dossier.next_route}.`)
     }
     if (dossier.stop_reason) {
       items.push(`Stopreden vastgelegd: ${dossier.stop_reason}.`)
     }
     if (dossier.adoption_outcome) {
       items.push('Adoptionuitkomst is expliciet vastgelegd.')
+    }
+    if (dossier.management_action_outcome) {
+      items.push('De eerste managementactie of reviewuitkomst is expliciet vastgelegd.')
+    }
+    if (dossier.next_route && dossier.management_action_outcome) {
+      items.push('De vervolgrichting is gekoppeld aan eerdere managementwaarde in plaats van een losse upsell.')
     }
   }
 
