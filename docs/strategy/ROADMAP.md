@@ -97,13 +97,13 @@ De propositie, verpakking en ondersteunende assets moeten coherent genoeg zijn o
 
 **Hoort in deze fase**
 - Product Terminology And Taxonomy - afgerond
-- Sales Enablement System
+- Sales Enablement System - afgerond
 - Pricing And Packaging
 - Sample Output And Showcase
 
 **Status**
 - huidige actieve focus
-- 1 van 4 checklist-items afgerond
+- 2 van 4 checklist-items afgerond
 
 **Exit gate**
 - Producttaal is consistent
