@@ -141,7 +141,7 @@ De website en funnel moeten de aangescherpte propositie, trustlaag en voorbeeldo
 Eerste klanten moeten soepel van akkoord naar intake, campagne, rapportage en opvolging kunnen gaan.
 
 **Hoort in deze fase**
-- Client Onboarding And Adoption
+- Client Onboarding And Adoption - afgerond
 - Implementation Readiness
 - Report To Action
 - Pilot And Early Customer Learning
@@ -149,6 +149,7 @@ Eerste klanten moeten soepel van akkoord naar intake, campagne, rapportage en op
 
 **Status**
 - huidige actieve focus
+- 1 van 5 checklist-items afgerond
 
 **Exit gate**
 - Nieuwe klanttrajecten zijn uitvoerbaar zonder onnodige improvisatie
