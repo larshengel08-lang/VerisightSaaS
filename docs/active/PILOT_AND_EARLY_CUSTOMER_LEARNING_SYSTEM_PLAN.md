@@ -157,6 +157,7 @@ Uitgevoerd in deze tranche:
 - [x] `npm.cmd test -- --run lib/pilot-learning.test.ts`
 - [x] `npm.cmd run lint -- "app/(dashboard)/beheer/klantlearnings/page.tsx" "app/(dashboard)/beheer/contact-aanvragen/page.tsx" "app/(dashboard)/beheer/page.tsx" "app/(dashboard)/campaigns/[id]/page.tsx" "components/dashboard/pilot-learning-workbench.tsx" "app/api/learning-dossiers/route.ts" "app/api/learning-dossiers/[id]/route.ts" "app/api/learning-checkpoints/[id]/route.ts" "lib/pilot-learning.ts" "lib/contact-requests.ts"`
 - [x] `npm.cmd run build`
+- [x] Vercel production-check bevestigd via linked project `verisight-saa-s`: `verisight.nl` en `verisight-saa-s.vercel.app` wijzen naar een `READY` production deployment op `main`.
 
 Niet uitgevoerd:
 
