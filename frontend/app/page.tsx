@@ -96,7 +96,7 @@ export default function LandingPage() {
           className="overflow-hidden border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,#dbeafe_0%,transparent_22%),radial-gradient(circle_at_bottom_right,#dcfce7_0%,transparent_24%),linear-gradient(180deg,#f9fbff_0%,#eef5ff_38%,#ffffff_100%)]"
           containerClassName="marketing-hero-grid"
         >
-          <div className="marketing-hero-column">
+          <div className="marketing-hero-primary">
             <div className="flex max-w-full flex-wrap items-center gap-2 rounded-[1.5rem] border border-white/70 bg-white/85 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:w-fit">
               <span className="text-blue-600">Verisight voor HR-teams</span>
               <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block" />
@@ -127,51 +127,6 @@ export default function LandingPage() {
               >
                 Bekijk de routes
               </Link>
-            </div>
-
-            <div className="marketing-pill-stack mt-8 max-w-2xl">
-              {homepageProofSignals.map((signal) => (
-                <span
-                  key={signal}
-                  className="marketing-pill border border-white/70 bg-white/90 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
-                >
-                  {signal}
-                </span>
-              ))}
-            </div>
-
-            <div className="mt-8 max-w-2xl overflow-hidden rounded-[1.8rem] border border-white/70 bg-white/88 shadow-[0_22px_48px_rgba(15,23,42,0.08)] backdrop-blur">
-              {statCards.map((item, index) => (
-                <div
-                  key={item.label}
-                  className={`grid gap-2 px-5 py-4 md:grid-cols-[8rem_1fr_auto] md:items-center ${
-                    index !== 0 ? 'border-t border-slate-200/80' : ''
-                  }`}
-                >
-                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">{item.label}</p>
-                  <p className="text-sm leading-7 text-slate-600">{item.detail}</p>
-                  <p className="text-2xl font-semibold text-slate-950 md:text-right">{item.value}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="marketing-hero-support-grid mt-5">
-              <div className="rounded-[1.5rem] border border-slate-200 bg-white/85 px-5 py-5 text-sm leading-7 text-slate-600 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
-                Trust is hier reassurance, geen openingspitch. Daarom blijft de route helder en is de due-diligence
-                laag publiek bereikbaar zodra een buyer wil verifieren hoe methodiek, privacy en rapportlezing werken.
-              </div>
-
-              <div className="marketing-hero-link-grid">
-                {trustQuickLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="marketing-hero-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
             </div>
           </div>
 
@@ -272,6 +227,53 @@ export default function LandingPage() {
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="marketing-hero-secondary gap-5">
+            <div className="marketing-pill-stack max-w-2xl">
+              {homepageProofSignals.map((signal) => (
+                <span
+                  key={signal}
+                  className="marketing-pill border border-white/70 bg-white/90 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
+                >
+                  {signal}
+                </span>
+              ))}
+            </div>
+
+            <div className="max-w-2xl overflow-hidden rounded-[1.8rem] border border-white/70 bg-white/88 shadow-[0_22px_48px_rgba(15,23,42,0.08)] backdrop-blur">
+              {statCards.map((item, index) => (
+                <div
+                  key={item.label}
+                  className={`grid gap-2 px-5 py-4 md:grid-cols-[8rem_1fr_auto] md:items-center ${
+                    index !== 0 ? 'border-t border-slate-200/80' : ''
+                  }`}
+                >
+                  <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">{item.label}</p>
+                  <p className="text-sm leading-7 text-slate-600">{item.detail}</p>
+                  <p className="text-2xl font-semibold text-slate-950 md:text-right">{item.value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="marketing-hero-support-grid">
+              <div className="rounded-[1.5rem] border border-slate-200 bg-white/85 px-5 py-5 text-sm leading-7 text-slate-600 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
+                Trust is hier reassurance, geen openingspitch. Daarom blijft de route helder en is de due-diligence
+                laag publiek bereikbaar zodra een buyer wil verifieren hoe methodiek, privacy en rapportlezing werken.
+              </div>
+
+              <div className="marketing-hero-link-grid">
+                {trustQuickLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="marketing-hero-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
             </div>
           </div>

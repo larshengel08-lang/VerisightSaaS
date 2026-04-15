@@ -120,7 +120,7 @@ export function MarketingPageShell({
           className={`overflow-hidden border-b border-slate-200 ${themeStyle.heroBg}`}
           containerClassName="marketing-hero-grid"
         >
-          <div className="marketing-hero-column">
+          <div className="marketing-hero-primary">
             <p className={`text-xs font-bold uppercase tracking-[0.22em] ${themeStyle.accentText}`}>{eyebrow}</p>
             <h1 className="marketing-hero-title marketing-hero-title-page font-display mt-5 text-slate-950">
               {title}
@@ -142,48 +142,6 @@ export function MarketingPageShell({
               >
                 Bekijk de routes
               </Link>
-            </div>
-
-            <div className="mt-8 max-w-2xl">
-              <div className="overflow-hidden rounded-[1.6rem] border border-white/70 bg-white/85 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur">
-                {highlightItems.map((item, index) => (
-                  <div
-                    key={item}
-                    className={`flex items-center gap-3 px-5 py-3.5 text-sm text-slate-700 ${
-                      index !== 0 ? 'border-t border-slate-200/80' : ''
-                    }`}
-                  >
-                    <span
-                      className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold uppercase tracking-[0.12em] ${themeStyle.chipClass}`}
-                    >
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <span className="font-medium">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-8">
-              <TrustStrip items={trustItems} tone={trustTone} />
-            </div>
-
-            <div className="marketing-hero-support-grid mt-5">
-              <div className="rounded-[1.5rem] border border-slate-200 bg-white/90 px-5 py-4 text-sm leading-7 text-slate-600 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
-                {heroNote}
-              </div>
-
-              <div className="marketing-hero-link-grid">
-                {trustQuickLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="marketing-hero-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
             </div>
           </div>
 
@@ -268,6 +226,50 @@ export function MarketingPageShell({
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="marketing-hero-secondary gap-5">
+            <div className="max-w-2xl">
+              <div className="overflow-hidden rounded-[1.6rem] border border-white/70 bg-white/85 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur">
+                {highlightItems.map((item, index) => (
+                  <div
+                    key={item}
+                    className={`flex items-center gap-3 px-5 py-3.5 text-sm text-slate-700 ${
+                      index !== 0 ? 'border-t border-slate-200/80' : ''
+                    }`}
+                  >
+                    <span
+                      className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold uppercase tracking-[0.12em] ${themeStyle.chipClass}`}
+                    >
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="font-medium">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <TrustStrip items={trustItems} tone={trustTone} />
+            </div>
+
+            <div className="marketing-hero-support-grid">
+              <div className="rounded-[1.5rem] border border-slate-200 bg-white/90 px-5 py-4 text-sm leading-7 text-slate-600 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
+                {heroNote}
+              </div>
+
+              <div className="marketing-hero-link-grid">
+                {trustQuickLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="marketing-hero-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
             </div>
           </div>

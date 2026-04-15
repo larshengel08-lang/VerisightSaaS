@@ -174,15 +174,22 @@ details > summary::-webkit-details-marker {
   .marketing-hero-grid {
     display: grid;
     align-items: start;
-    gap: clamp(2.5rem, 4vw, 4.5rem);
+    gap: clamp(2rem, 4vw, 4rem);
   }
 
-  .marketing-hero-column,
+  .marketing-hero-primary,
+  .marketing-hero-secondary,
   .marketing-hero-stage-column,
   .marketing-hero-stage-grid > *,
   .marketing-stage,
   .marketing-stage * {
     min-width: 0;
+  }
+
+  .marketing-hero-primary,
+  .marketing-hero-secondary {
+    display: grid;
+    align-content: start;
   }
 
   .marketing-hero-title {
@@ -194,17 +201,17 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-hero-title-home {
-    font-size: clamp(2.35rem, 8.4vw, 5.2rem);
-    line-height: 0.9;
+    font-size: clamp(2rem, 7vw, 4.8rem);
+    line-height: 0.92;
   }
 
   .marketing-hero-title-page {
-    font-size: clamp(2.2rem, 7vw, 4.8rem);
+    font-size: clamp(1.95rem, 6.4vw, 4.45rem);
     line-height: 0.92;
   }
 
   .marketing-hero-copy {
-    max-width: 40rem;
+    max-width: 38rem;
   }
 
   .marketing-hero-cta-row {
@@ -238,11 +245,11 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-stage-title {
-    max-width: min(10ch, 100%);
-    font-size: clamp(2rem, 5.2vw, 4.05rem);
+    max-width: min(11.5ch, 100%);
+    font-size: clamp(1.85rem, 4.8vw, 3.55rem);
     line-height: 0.96;
-    text-wrap: balance;
-    overflow-wrap: anywhere;
+    text-wrap: pretty;
+    overflow-wrap: break-word;
   }
 
   .marketing-pill-stack {
@@ -271,7 +278,22 @@ details > summary::-webkit-details-marker {
 @media (min-width: 1024px) {
   @layer components {
     .marketing-hero-grid {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
+    }
+
+    .marketing-hero-primary {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .marketing-hero-secondary {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .marketing-hero-stage-column {
+      grid-column: 2;
+      grid-row: 1 / span 2;
     }
 
     .marketing-hero-support-grid {

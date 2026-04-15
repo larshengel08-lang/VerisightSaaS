@@ -54,7 +54,7 @@ export function PublicHeader({
             ))}
           </nav>
 
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden items-center gap-3 lg:flex">
             <Link
               href="/login"
               className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
@@ -74,7 +74,7 @@ export function PublicHeader({
             aria-expanded={mobileOpen}
             aria-controls="public-mobile-menu"
             onClick={() => setMobileOpen((current) => !current)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-colors hover:text-slate-950 md:hidden"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-colors hover:text-slate-950 lg:hidden"
           >
             <span className="sr-only">Open menu</span>
             <svg
@@ -96,7 +96,7 @@ export function PublicHeader({
         {mobileOpen ? (
           <div
             id="public-mobile-menu"
-            className="mt-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_24px_60px_rgba(15,23,42,0.08)] md:hidden"
+            className="mt-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_24px_60px_rgba(15,23,42,0.08)] lg:hidden"
           >
             <div className="space-y-1">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
