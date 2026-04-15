@@ -196,10 +196,10 @@ export function ContactForm({
   return (
     <form onSubmit={handleSubmit} className={shellClass}>
       <div className={`mb-5 rounded-2xl border px-4 py-4 text-sm leading-7 ${isLight ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'}`}>
-        Gebruik dit formulier voor ExitScan, RetentieScan of de combinatie. We helpen eerst bepalen welke
-        managementvraag en eerste productroute logisch zijn, en pas daarna hoe intake, uitvoering, livegang en
-        eerste waarde eruit moeten zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te
-        duiden en gericht op te volgen.
+        Gebruik dit formulier voor ExitScan, RetentieScan of de combinatieroute. We helpen eerst bepalen welk
+        kernproduct en welke eerste productroute logisch zijn, en pas daarna hoe intake, uitvoering, livegang en
+        eerste waarde eruit moeten zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden
+        en gericht op te volgen.
       </div>
 
       <div className="mb-5 flex flex-wrap gap-2">

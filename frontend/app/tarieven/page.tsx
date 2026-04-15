@@ -33,12 +33,12 @@ const retentionSampleAsset = getPrimarySampleShowcaseAsset('retention')
 export const metadata: Metadata = {
   title: 'Tarieven',
   description:
-    'Bekijk de prijsankers voor eerste trajecten, vervolgvormen, add-ons en de combinatieroute van Verisight, zonder premature SaaS-planlogica.',
+    'Bekijk de prijsankers voor de twee kernproducten, vervolgvormen, add-ons en de portfolioroute van Verisight, zonder premature SaaS-planlogica.',
   alternates: { canonical: '/tarieven' },
   openGraph: {
     title: 'Tarieven | Verisight',
     description:
-      'Bekijk de prijsankers voor eerste trajecten, vervolgvormen, add-ons en de combinatieroute van Verisight.',
+      'Bekijk de prijsankers voor de twee kernproducten, vervolgvormen, add-ons en de portfolioroute van Verisight.',
     url: 'https://www.verisight.nl/tarieven',
     images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Verisight tarieven voor ExitScan en RetentieScan' }],
   },
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Tarieven | Verisight',
     description:
-      'Bekijk de prijsankers voor eerste trajecten, vervolgvormen, add-ons en de combinatieroute van Verisight.',
+      'Bekijk de prijsankers voor de twee kernproducten, vervolgvormen, add-ons en de portfolioroute van Verisight.',
     images: ['/opengraph-image'],
   },
 }
@@ -77,7 +77,7 @@ export default function TarievenPage() {
             <p className="marketing-hero-copy text-slate-600">
               Verisight verkoopt duidelijke productvormen met dashboard, rapportage, bestuurlijke handoff en
               begeleiding. Geen licentieconstructie met losse modules, geen planmatrix en geen open eind aan
-              consultancy-uren.
+              consultancy-uren. Eerst landen twee kernproducten, daarna pas de vervolgvormen en de portfolioroute.
             </p>
             <div className="marketing-hero-actions">
               <div className="marketing-hero-cta-row">

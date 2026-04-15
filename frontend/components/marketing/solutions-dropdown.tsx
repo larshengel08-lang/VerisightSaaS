@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { LIVE_MARKETING_PRODUCTS } from '@/lib/marketing-products'
+import { CORE_MARKETING_PRODUCTS, PORTFOLIO_ROUTE_MARKETING_PRODUCTS } from '@/lib/marketing-products'
 
 export function SolutionsDropdown() {
   const [open, setOpen] = useState(false)
@@ -49,9 +49,9 @@ export function SolutionsDropdown() {
 
           <div className="p-2">
             <div className="px-3 pb-2 pt-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Live producten</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Kernproducten</p>
             </div>
-            {LIVE_MARKETING_PRODUCTS.map((product) => (
+            {CORE_MARKETING_PRODUCTS.map((product) => (
               <Link
                 key={product.href}
                 href={product.href}
@@ -64,7 +64,31 @@ export function SolutionsDropdown() {
                       {product.label}
                     </span>
                     <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                      Live
+                      Kern
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs leading-snug text-slate-500">{product.description}</p>
+                </div>
+              </Link>
+            ))}
+
+            <div className="px-3 pb-2 pt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Portfolioroute</p>
+            </div>
+            {PORTFOLIO_ROUTE_MARKETING_PRODUCTS.map((product) => (
+              <Link
+                key={product.href}
+                href={product.href}
+                onClick={() => setOpen(false)}
+                className="group flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-slate-50"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-slate-900 transition-colors group-hover:text-blue-600">
+                      {product.label}
+                    </span>
+                    <span className="inline-flex items-center rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700">
+                      Route
                     </span>
                   </div>
                   <p className="mt-0.5 text-xs leading-snug text-slate-500">{product.description}</p>
@@ -78,7 +102,7 @@ export function SolutionsDropdown() {
                 onClick={() => setOpen(false)}
                 className="text-sm font-semibold text-slate-900 transition-colors hover:text-blue-600"
               >
-                Bekijk ExitScan, RetentieScan en Combinatie -&gt;
+                Bekijk de kernproducten en portfolioroute -&gt;
               </Link>
             </div>
           </div>

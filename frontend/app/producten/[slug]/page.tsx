@@ -16,7 +16,12 @@ import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { SampleShowcaseCard } from '@/components/marketing/sample-showcase-card'
 import { MarketingSection } from '@/components/marketing/marketing-section'
 import { buildContactHref } from '@/lib/contact-funnel'
-import { ALL_MARKETING_PRODUCTS, type MarketingProduct, getMarketingProductBySlug } from '@/lib/marketing-products'
+import {
+  ALL_MARKETING_PRODUCTS,
+  type MarketingProduct,
+  getMarketingProductBySlug,
+  isCoreMarketingProduct,
+} from '@/lib/marketing-products'
 import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
 
 type Props = { params: Promise<{ slug: string }> }
@@ -38,7 +43,7 @@ export async function generateMetadata({ params }: Props) {
   const imageAlt =
     product.status === 'live'
       ? product.ogAlt ?? `${product.label} productpagina van Verisight`
-      : `${product.label} binnenkort bij Verisight`
+      : `${product.label} als gereserveerde future route bij Verisight`
   const imageUrl = `${product.href}/opengraph-image`
 
   return {
@@ -117,7 +122,7 @@ function getProductStructuredData(product: MarketingProduct) {
     ],
   }
 
-  if (product.status !== 'live') {
+  if (!isCoreMarketingProduct(product)) {
     return [webpageSchema, breadcrumbSchema]
   }
 
@@ -537,7 +542,8 @@ function CombinatiePage() {
           </h1>
           <p className="marketing-hero-copy text-slate-600">
             De combinatie is logisch voor organisaties die zowel willen leren van uitstroom als eerder willen
-            signaleren waar behoud nu onder druk staat, zonder daarvan een bundel of derde standaardpakket te maken.
+            signaleren waar behoud nu onder druk staat, zonder daarvan een bundel of standaardpakket te maken. Het is
+            geen derde kernproduct.
           </p>
           <div className="marketing-hero-actions">
             <div className="marketing-hero-cta-row">
@@ -586,7 +592,8 @@ function CombinatiePage() {
         <MarketingHeroSupport>
           <div className="marketing-support-note text-sm leading-7 text-slate-600">
             Combinatie betekent niet meer features, maar twee gerichte routes die pas logisch naast elkaar komen te
-            staan wanneer de eerste keuze al landt.
+            staan wanneer de eerste keuze al landt. Deze pagina verkoopt dus geen extra productfamilie, maar een
+            route tussen twee bestaande kernproducten.
           </div>
           <div className="marketing-link-grid">
             <Link
@@ -724,7 +731,7 @@ function UpcomingProductPage({ slug }: { slug: string }) {
       ctaHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: `upcoming_${slug}_hero` })}
       heroIntro={
         <MarketingHeroIntro>
-          <p className="marketing-hero-eyebrow text-slate-600">Binnenkort</p>
+          <p className="marketing-hero-eyebrow text-slate-600">Bewust nog niet actief</p>
           <h1 className="marketing-hero-title marketing-hero-title-page font-display text-slate-950">{product.label}</h1>
           <p className="marketing-hero-copy text-slate-600">{product.description}</p>
           <div className="marketing-hero-actions">
@@ -748,7 +755,7 @@ function UpcomingProductPage({ slug }: { slug: string }) {
       heroStage={
         <MarketingHeroStage>
           <div className="space-y-5">
-            <span className="marketing-stage-tag bg-white/10 text-slate-200">Gereseveerde route</span>
+            <span className="marketing-stage-tag bg-white/10 text-slate-200">Gereserveerde future route</span>
             <h2 className="marketing-stage-title font-display text-white">
               Deze productroute blijft ondersteunend zolang ExitScan en RetentieScan de live propositie dragen.
             </h2>
@@ -762,7 +769,7 @@ function UpcomingProductPage({ slug }: { slug: string }) {
       heroSupport={
         <MarketingHeroSupport>
           <div className="marketing-support-note text-sm leading-7 text-slate-600">
-            Deze route is nog geen onderdeel van de primaire publieke verkoopflow.
+            Deze route is bewust nog geen onderdeel van de actieve publieke kernportfolio.
           </div>
         </MarketingHeroSupport>
       }
@@ -770,12 +777,12 @@ function UpcomingProductPage({ slug }: { slug: string }) {
       <MarketingSection tone="plain">
         <div className="marketing-panel p-8 text-center md:p-12">
           <span className="inline-flex items-center rounded-full bg-slate-100 px-4 py-1.5 text-sm font-semibold text-slate-600">
-            Binnenkort beschikbaar
+            Bewust nog niet actief
           </span>
           <h2 className="mt-6 text-3xl font-semibold text-slate-950">{product.tagline}</h2>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600">
-            Deze productpagina is alvast gereserveerd binnen de bredere productstructuur. Daardoor kan Verisight later
-            groeien zonder dat de huidige live propositie opnieuw op de schop hoeft.
+            Deze productpagina is bewust gereserveerd binnen de bredere productstructuur. Daardoor kan Verisight later
+            groeien zonder dat de huidige kernportfolio opnieuw op de schop hoeft of nu al productverwarring krijgt.
           </p>
         </div>
       </MarketingSection>

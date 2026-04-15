@@ -13,7 +13,7 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
-function getTheme(slug: string) {
+function getTheme(slug: string, product: { status: string } | null) {
   if (slug === 'retentiescan') {
     return {
       accent: '#059669',
@@ -28,7 +28,16 @@ function getTheme(slug: string) {
       accent: '#0284c7',
       accentSoft: '#dbeafe',
       panel: '#f0f9ff',
-      badge: 'Portfolio-aanpak',
+      badge: 'Portfolioroute',
+    }
+  }
+
+  if (product?.status === 'reserved_future') {
+    return {
+      accent: '#475569',
+      accentSoft: '#e2e8f0',
+      panel: '#f8fafc',
+      badge: 'Bewust nog niet actief',
     }
   }
 
@@ -48,7 +57,7 @@ export default async function OpenGraphImage({ params }: Props) {
     notFound()
   }
 
-  const theme = getTheme(slug)
+  const theme = getTheme(slug, product)
 
   return new ImageResponse(
     (

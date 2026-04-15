@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { LIVE_MARKETING_PRODUCTS } from '@/lib/marketing-products'
+import {
+  CORE_MARKETING_PRODUCTS,
+  LIVE_MARKETING_PRODUCTS,
+  PORTFOLIO_ROUTE_MARKETING_PRODUCTS,
+  RESERVED_MARKETING_PRODUCTS,
+} from '@/lib/marketing-products'
 import { exitScanDefinition } from '@/lib/products/exit/definition'
 import { retentionScanDefinition } from '@/lib/products/retention/definition'
 import {
@@ -17,6 +22,25 @@ import {
   productOverviewComparisonRows,
   trustItems,
 } from '@/components/marketing/site-content'
+
+describe('Portfolio architecture marketing model', () => {
+  it('keeps two core products, one portfolio route and reserved future routes separate', () => {
+    const combination = PORTFOLIO_ROUTE_MARKETING_PRODUCTS[0]
+
+    expect(CORE_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual(['exitscan', 'retentiescan'])
+    expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS).toHaveLength(1)
+    expect(combination.slug).toBe('combinatie')
+    expect(combination.portfolioRole).toBe('portfolio_route')
+    expect(combination.description.toLowerCase()).toContain('portfolioroute')
+    expect(combination.description.toLowerCase()).toContain('derde kernproduct')
+    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(3)
+    expect(RESERVED_MARKETING_PRODUCTS.length).toBeGreaterThan(0)
+    expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.status === 'reserved_future')).toBe(true)
+    expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'future_reserved_route')).toBe(
+      true,
+    )
+  })
+})
 
 describe('ExitScan positioning copy', () => {
   it('keeps ExitScan framed as vertrekduiding instead of a hard diagnosis', () => {

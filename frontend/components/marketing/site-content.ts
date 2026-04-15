@@ -44,7 +44,7 @@ export const homepageProductRoutes = [
     body: 'Voor organisaties die wel exitinput hebben, maar nog geen vergelijkbaar managementbeeld van terugkerende uitstroompatronen.',
     href: '/producten/exitscan',
     accent: 'border-blue-200 bg-blue-50',
-    chip: 'Primaire route',
+    chip: 'Kernproduct - primair',
   },
   {
     name: 'RetentieScan',
@@ -52,7 +52,7 @@ export const homepageProductRoutes = [
     body: 'Voor organisaties die eerder willen zien waar behoud onder druk staat, zonder van de scan een brede MTO of individuele voorspeller te maken.',
     href: '/producten/retentiescan',
     accent: 'border-emerald-200 bg-emerald-50',
-    chip: 'Complementair',
+    chip: 'Kernproduct - complementair',
   },
   {
     name: 'Combinatie',
@@ -60,7 +60,7 @@ export const homepageProductRoutes = [
     body: 'Voor organisaties die beide managementvragen echt hebben en de tweede route pas toevoegen nadat de eerste helder staat.',
     href: '/producten/combinatie',
     accent: 'border-sky-200 bg-sky-50',
-    chip: 'Portfolio',
+    chip: 'Portfolioroute',
   },
 ] as const
 
@@ -301,9 +301,9 @@ export const contactTrustSignals = [
 
 export const statCards = [
   {
-    value: '2 live routes',
-    label: 'heldere productkeuze',
-    detail: 'ExitScan als primaire wedge en RetentieScan als gerichte vroegsignaleringsroute.',
+    value: '2 kernproducten',
+    label: 'heldere kernportfolio',
+    detail: 'ExitScan als primaire wedge en RetentieScan als gerichte complementaire route.',
   },
   {
     value: '1 leeslijn',
@@ -311,9 +311,9 @@ export const statCards = [
     detail: 'Preview, dashboard, managementrapport en bestuurlijke handoff vertellen hetzelfde verhaal.',
   },
   {
-    value: '0 template-theater',
-    label: 'alleen relevante proof',
-    detail: 'Trust, pricing en sample-output ondersteunen de route zonder generieke SaaS-opmaak of holle badges.',
+    value: '1 portfolioroute',
+    label: 'bewust aanvullend',
+    detail: 'Combinatie blijft zichtbaar als route tussen twee producten en niet als derde kernpropositie.',
   },
 ] as const
 

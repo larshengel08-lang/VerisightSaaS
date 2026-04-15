@@ -13,6 +13,7 @@ De combinatie van ExitScan en RetentieScan is een bewuste portfolioroute voor or
 
 - niet als bundel
 - niet als all-in pakket
+- niet als derde kernproduct
 - niet als feature-upgrade
 - wel als twee gerichte producten in een gedeelde managementtaal
 

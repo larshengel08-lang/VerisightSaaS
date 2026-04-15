@@ -1,4 +1,5 @@
-export type MarketingProductStatus = 'live' | 'coming_soon'
+export type MarketingProductStatus = 'live' | 'reserved_future'
+export type MarketingProductPortfolioRole = 'core_product' | 'portfolio_route' | 'future_reserved_route'
 
 export interface MarketingProduct {
   slug: string
@@ -12,10 +13,11 @@ export interface MarketingProduct {
   serviceAudience?: string
   serviceOutput?: string
   status: MarketingProductStatus
+  portfolioRole: MarketingProductPortfolioRole
   href: string
 }
 
-export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
+export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
   {
     slug: 'exitscan',
     label: 'ExitScan',
@@ -27,8 +29,10 @@ export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
     ogAlt: 'ExitScan productpagina van Verisight',
     serviceType: 'Vertrekduiding en managementrapportage',
     serviceAudience: 'HR-teams en directies die uitstroom achteraf willen duiden',
-    serviceOutput: 'Managementsamenvatting, bestuurlijke handoff, eerste managementsessie, vertrekduiding, signalen van werkfrictie, prioritaire werkfactoren en interpretatiekaders',
+    serviceOutput:
+      'Managementsamenvatting, bestuurlijke handoff, eerste managementsessie, vertrekduiding, signalen van werkfrictie, prioritaire werkfactoren en interpretatiekaders',
     status: 'live',
+    portfolioRole: 'core_product',
     href: '/producten/exitscan',
   },
   {
@@ -42,36 +46,48 @@ export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
     ogAlt: 'RetentieScan productpagina van Verisight',
     serviceType: 'Vroegsignalering op behoud met retentiesignaal',
     serviceAudience: 'HR-teams en directies die behoud eerder zichtbaar willen maken',
-    serviceOutput: 'Managementsamenvatting, bestuurlijke handoff, eerste managementsessie, retentiesignaal, stay-intent, vertrekintentie, bevlogenheid, topfactoren en groepsgerichte leeswijzers voor verificatie, opvolging en reviewmoment',
+    serviceOutput:
+      'Managementsamenvatting, bestuurlijke handoff, eerste managementsessie, retentiesignaal, stay-intent, vertrekintentie, bevlogenheid, topfactoren en groepsgerichte leeswijzers voor verificatie, opvolging en reviewmoment',
     status: 'live',
+    portfolioRole: 'core_product',
     href: '/producten/retentiescan',
   },
+]
+
+export const PORTFOLIO_ROUTE_MARKETING_PRODUCTS: MarketingProduct[] = [
   {
     slug: 'combinatie',
     label: 'Combinatie',
     shortLabel: 'Combinatie',
-    tagline: 'Kijk terug en vooruit in dezelfde managementtaal',
+    tagline: 'Voeg een tweede route pas toe wanneer beide vragen echt spelen',
     description:
-      'Combineer ExitScan en RetentieScan in een portfolio-aanpak voor terugkijkende duiding en vroegsignalering.',
-    seoTitle: 'Combinatie | ExitScan en RetentieScan in één portfolio',
+      'Buyer-facing portfolioroute voor organisaties die ExitScan en RetentieScan bewust naast elkaar willen organiseren, zonder daarvan een derde kernproduct, bundel of all-in pakket te maken.',
+    seoTitle: 'Combinatie | Portfolioroute tussen ExitScan en RetentieScan',
     ogAlt: 'Combinatiepagina van ExitScan en RetentieScan bij Verisight',
-    serviceType: 'Portfolio-aanpak voor vertrekduiding en vroegsignalering',
+    serviceType: 'Portfolioroute voor vertrekduiding en vroegsignalering',
     serviceAudience: 'HR-teams en directies met zowel uitstroom- als behoudsvragen',
-    serviceOutput: 'Twee gerichte scans in een gedeelde managementstructuur',
+    serviceOutput: 'Twee gerichte routes in een gedeelde managementstructuur',
     status: 'live',
+    portfolioRole: 'portfolio_route',
     href: '/producten/combinatie',
   },
 ]
 
-export const UPCOMING_MARKETING_PRODUCTS: MarketingProduct[] = [
+export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
+  ...CORE_MARKETING_PRODUCTS,
+  ...PORTFOLIO_ROUTE_MARKETING_PRODUCTS,
+]
+
+export const RESERVED_MARKETING_PRODUCTS: MarketingProduct[] = [
   {
     slug: 'mto',
     label: 'Medewerkerstevredenheidsonderzoek',
     shortLabel: 'MTO',
     tagline: 'Brede tevredenheidsmeting voor je team',
     description:
-      'Een bredere tevredenheidsmeting voor organisaties die meer algemeen willen luisteren naar medewerkers.',
-    status: 'coming_soon',
+      'Bewust nog niet actieve route voor organisaties die later een bredere tevredenheidsmeting willen toetsen zonder de huidige kernportfolio te verbreden.',
+    status: 'reserved_future',
+    portfolioRole: 'future_reserved_route',
     href: '/producten/mto',
   },
   {
@@ -79,8 +95,10 @@ export const UPCOMING_MARKETING_PRODUCTS: MarketingProduct[] = [
     label: 'Pulse',
     shortLabel: 'Pulse',
     tagline: 'Korte, frequente peilingen tussen teams',
-    description: 'Korte metingen om sneller op ritme te luisteren tussen grotere meetmomenten door.',
-    status: 'coming_soon',
+    description:
+      'Bewust nog niet actieve route voor kortere ritmemetingen zodra de huidige kernportfolio commercieel en operationeel stabiel genoeg is.',
+    status: 'reserved_future',
+    portfolioRole: 'future_reserved_route',
     href: '/producten/pulse',
   },
   {
@@ -88,8 +106,10 @@ export const UPCOMING_MARKETING_PRODUCTS: MarketingProduct[] = [
     label: 'Teamscan',
     shortLabel: 'Teamscan',
     tagline: 'Samenwerking en dynamiek per team meten',
-    description: 'Gerichte teamscan voor samenwerking, rolverdeling en teamdynamiek.',
-    status: 'coming_soon',
+    description:
+      'Bewust nog niet actieve route voor samenwerking, rolverdeling en teamdynamiek buiten de huidige ExitScan- en RetentieScan-kern.',
+    status: 'reserved_future',
+    portfolioRole: 'future_reserved_route',
     href: '/producten/teamscan',
   },
   {
@@ -97,8 +117,10 @@ export const UPCOMING_MARKETING_PRODUCTS: MarketingProduct[] = [
     label: 'Leadership Scan',
     shortLabel: 'Leadership Scan',
     tagline: 'Leiderschapsstijl en -effectiviteit in beeld',
-    description: 'Gerichte scan voor leiderschapsgedrag en de impact daarvan op teams.',
-    status: 'coming_soon',
+    description:
+      'Bewust nog niet actieve route voor leiderschapsgedrag en teamimpact, gereserveerd buiten de huidige kernportfolio.',
+    status: 'reserved_future',
+    portfolioRole: 'future_reserved_route',
     href: '/producten/leadership-scan',
   },
   {
@@ -107,14 +129,20 @@ export const UPCOMING_MARKETING_PRODUCTS: MarketingProduct[] = [
     shortLabel: 'Customer Feedback',
     tagline: 'Klantfeedback structureel verzamelen',
     description:
-      'Een toekomstige uitbreiding voor organisaties die dezelfde productfilosofie ook op klantfeedback willen toepassen.',
-    status: 'coming_soon',
+      'Bewust nog niet actieve route voor klantfeedback, pas logisch nadat de huidige people-insight portfolio-architectuur stabiel genoeg is.',
+    status: 'reserved_future',
+    portfolioRole: 'future_reserved_route',
     href: '/producten/customer-feedback',
   },
 ]
 
-export const ALL_MARKETING_PRODUCTS = [...LIVE_MARKETING_PRODUCTS, ...UPCOMING_MARKETING_PRODUCTS]
+export const UPCOMING_MARKETING_PRODUCTS = RESERVED_MARKETING_PRODUCTS
+export const ALL_MARKETING_PRODUCTS = [...LIVE_MARKETING_PRODUCTS, ...RESERVED_MARKETING_PRODUCTS]
 
 export function getMarketingProductBySlug(slug: string) {
   return ALL_MARKETING_PRODUCTS.find((product) => product.slug === slug) ?? null
+}
+
+export function isCoreMarketingProduct(product: MarketingProduct) {
+  return product.portfolioRole === 'core_product'
 }

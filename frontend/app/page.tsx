@@ -37,7 +37,7 @@ const retentionSampleAsset = getPrimarySampleShowcaseAsset('retention')
 export const metadata: Metadata = {
   title: 'ExitScan en RetentieScan voor HR-teams',
   description:
-    'Kies eerst de juiste route voor HR-teams: ExitScan voor vertrekduiding en verloopanalyse, RetentieScan voor vroegsignalering op behoud, of een bewuste combinatie van beide.',
+    'Kies eerst tussen twee kernproducten voor HR-teams: ExitScan voor vertrekduiding en RetentieScan voor vroegsignalering op behoud. Gebruik de combinatie pas als bewuste portfolioroute.',
   alternates: {
     canonical: '/',
   },
@@ -49,7 +49,7 @@ export default function LandingPage() {
     '@type': 'WebPage',
     name: 'Verisight | ExitScan en RetentieScan voor HR-teams',
     description:
-      'Kies eerst de juiste route: ExitScan voor vertrekduiding, RetentieScan voor vroegsignalering op behoud, of een bewuste combinatie van beide.',
+      'Kies eerst tussen twee kernproducten: ExitScan voor vertrekduiding en RetentieScan voor vroegsignalering op behoud. Gebruik de combinatie pas als bewuste portfolioroute.',
     url: 'https://www.verisight.nl/',
     inLanguage: 'nl-NL',
     mainEntity: {
@@ -66,12 +66,6 @@ export default function LandingPage() {
           position: 2,
           name: 'RetentieScan',
           url: 'https://www.verisight.nl/producten/retentiescan',
-        },
-        {
-          '@type': 'ListItem',
-          position: 3,
-          name: 'Combinatie',
-          url: 'https://www.verisight.nl/producten/combinatie',
         },
       ],
     },
@@ -97,21 +91,21 @@ export default function LandingPage() {
         pageType="home"
         heroIntro={
           <MarketingHeroIntro>
-            <div className="flex max-w-full flex-wrap items-center gap-2 rounded-[1.4rem] border border-white/70 bg-white/88 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:w-fit">
-              <span className="text-blue-600">Verisight voor HR-teams</span>
-              <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block" />
-              <span>ExitScan eerst</span>
-              <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block" />
-              <span>RetentieScan gericht aanvullend</span>
-            </div>
+              <div className="flex max-w-full flex-wrap items-center gap-2 rounded-[1.4rem] border border-white/70 bg-white/88 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:w-fit">
+                <span className="text-blue-600">Verisight voor HR-teams</span>
+                <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block" />
+                <span>2 kernproducten</span>
+                <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block" />
+                <span>1 bewuste portfolioroute</span>
+              </div>
 
             <h1 className="marketing-hero-title marketing-hero-title-home font-display text-slate-950">
               Eerst de juiste route. Daarna pas de analyse.
             </h1>
-            <p className="marketing-hero-copy text-slate-600">
-              Verisight helpt HR sneller kiezen tussen vertrekduiding en vroegsignalering op behoud. Je krijgt geen
-              losse survey-output, maar een eerste traject met dashboard, managementrapport en bestuurlijke handoff in
-              dezelfde taal.
+              <p className="marketing-hero-copy text-slate-600">
+              Verisight helpt HR sneller kiezen tussen twee kernproducten: vertrekduiding met ExitScan of
+              vroegsignalering op behoud met RetentieScan. Je krijgt geen losse survey-output, maar een eerste traject
+              met dashboard, managementrapport en bestuurlijke handoff in dezelfde taal.
             </p>
 
             <div className="marketing-hero-actions">
@@ -146,7 +140,8 @@ export default function LandingPage() {
               </h2>
               <p className="marketing-stage-copy text-slate-300">
                 De bovenkant van de site hoeft niet alles tegelijk te bewijzen. Eerst landt de keuze tussen vertrek
-                begrijpen en behoud eerder signaleren. Daarna volgt pas de prooflaag.
+                begrijpen en behoud eerder signaleren. De combinatie blijft bewust een tweede route nadat de eerste
+                productkeuze helder staat. Daarna volgt pas de prooflaag.
               </p>
 
               <div className="grid gap-3">
@@ -223,7 +218,8 @@ export default function LandingPage() {
             <div className="grid gap-4">
               <div className="marketing-support-note text-sm leading-7 text-slate-600">
                 Trust blijft hier bewust compact: genoeg reassurance om de route geloofwaardig te maken, maar niet zo
-                breed dat pricing, proof en contactflow al boven de vouw concurreren.
+                breed dat pricing, proof en contactflow al boven de vouw concurreren. Andere proposities blijven
+                bewust buiten de actieve kernportfolio tot een later traject.
               </div>
               <div className="marketing-link-grid">
                 {homepageUtilityLinks.map((link) => (

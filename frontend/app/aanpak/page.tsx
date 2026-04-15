@@ -22,12 +22,12 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Aanpak',
   description:
-    'Bekijk hoe Verisight eerste trajecten, vervolgvormen en combinatieroutes opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
+    'Bekijk hoe Verisight eerste trajecten, vervolgvormen en de portfolioroute opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
   alternates: { canonical: '/aanpak' },
   openGraph: {
     title: 'Aanpak | Verisight',
     description:
-      'Bekijk hoe Verisight eerste trajecten, vervolgvormen en combinatieroutes opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
+      'Bekijk hoe Verisight eerste trajecten, vervolgvormen en de portfolioroute opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
     url: 'https://www.verisight.nl/aanpak',
     images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Verisight aanpak voor ExitScan en RetentieScan' }],
   },
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Aanpak | Verisight',
     description:
-      'Bekijk hoe Verisight eerste trajecten, vervolgvormen en combinatieroutes opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
+      'Bekijk hoe Verisight eerste trajecten, vervolgvormen en de portfolioroute opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
     images: ['/opengraph-image'],
   },
 }
@@ -261,7 +261,7 @@ export default function AanpakPage() {
           <MarketingCalloutBand
             eyebrow="Volgende stap"
             title="Wil je bepalen welke vorm nu het best past?"
-            body="In een kort gesprek bepalen we of jullie beter starten met ExitScan Baseline, RetentieScan Baseline of een combinatieroute, en wanneer een vervolgvorm of segment deep dive logisch wordt."
+            body="In een kort gesprek bepalen we of jullie beter starten met ExitScan Baseline, RetentieScan Baseline of pas later een portfolioroute toevoegen, en wanneer een vervolgvorm of segment deep dive logisch wordt."
             primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_callout' })}
             primaryLabel="Plan kennismaking"
             secondaryHref="/tarieven"

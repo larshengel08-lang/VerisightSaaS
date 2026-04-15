@@ -170,12 +170,12 @@ Na eerste tractie moeten commerciële, delivery- en contentprocessen herhaalbaar
 - Account And Billing Model Readiness - afgerond
 - Ops And Delivery System - afgerond
 - Case Proof And Evidence - afgerond
-- Portfolio Architecture
+- Portfolio Architecture - afgerond
 - Content Operating System
 
 **Status**
 - huidige actieve focus
-- 5 van 7 checklist-items afgerond
+- 6 van 7 checklist-items afgerond
 
 **Exit gate**
 - Herhaalbaar verkoop- en deliveryritme
