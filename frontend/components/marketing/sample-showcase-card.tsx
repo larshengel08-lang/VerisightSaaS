@@ -1,4 +1,5 @@
 import type { SampleShowcaseAsset } from '@/lib/sample-showcase-assets'
+import { getEvidenceTierLabel } from '@/lib/case-proof-evidence'
 
 interface SampleShowcaseCardProps {
   eyebrow: string
@@ -47,6 +48,9 @@ export function SampleShowcaseCard({
       <p className={`mt-4 text-sm leading-7 ${palette.body}`}>{body}</p>
       <div className={`mt-5 rounded-2xl border px-4 py-4 text-sm leading-7 ${palette.note}`}>
         <p className="font-semibold">{asset.label}</p>
+        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] opacity-75">
+          {getEvidenceTierLabel(asset.evidenceTier)} - {asset.buyerUse}
+        </p>
         <p className="mt-2">{asset.claimBoundary}</p>
         <p className="mt-2 text-xs leading-6 opacity-80">{asset.trustFrame}</p>
       </div>

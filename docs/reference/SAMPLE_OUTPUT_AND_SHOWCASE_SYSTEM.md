@@ -14,6 +14,7 @@ Gebruik het als eerste referentie voor:
 - preview-versus-pdf parity
 - sales- en pricing-prooflagen
 - trust- en claimsgrenzen rond voorbeeldoutput
+- evidence-tiering ten opzichte van echte case-proof
 - acceptance en refresh-governance
 
 Voor internal sales demo, QA/live-fixtures en validation-sandboxes geldt:
@@ -32,8 +33,9 @@ Gebruik bij spanning deze volgorde:
 4. `docs/active/BOARDROOM_READINESS_PLAN.md`
 5. `docs/active/REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PLAN.md`
 6. `docs/active/SAMPLE_OUTPUT_AND_SHOWCASE_PLAN.md`
-7. dit document
-8. `frontend/lib/sample-showcase-assets.ts`
+7. `docs/reference/CASE_PROOF_AND_EVIDENCE_SYSTEM.md`
+8. dit document
+9. `frontend/lib/sample-showcase-assets.ts`
 
 ## Canonieke asset stack
 
@@ -81,6 +83,8 @@ Elke actieve sample-asset volgt deze regels:
 - draagt geen vertrouwelijkheidsframing
 - verkoopt geen diagnose, individuele predictor of bewezen causaliteit
 - blijft binnen de claimsgrenzen uit de trust- en methodiekdocs
+- telt als `deliverable_proof` en ondersteunend `trust_proof`
+- telt nooit als `approved_case_proof` of `reference_ready`
 
 ## Routing
 
@@ -111,5 +115,6 @@ Werk sample-output en showcase bij wanneer:
 - RetentieScan blijft complementair en verification-first.
 - Demo-output mag niet rijker ogen dan het echte product.
 - Sample-output is deliverable-proof, geen case-proof.
+- Voor echte case-proof en references geldt `docs/reference/CASE_PROOF_AND_EVIDENCE_SYSTEM.md`.
 - Buyer-facing sample-output vervangt nooit de internal sales demo, en internal demo vervangt nooit de buyer-facing prooflaag.
 - Legacy-assets mogen geen normbeeld meer verstoren.

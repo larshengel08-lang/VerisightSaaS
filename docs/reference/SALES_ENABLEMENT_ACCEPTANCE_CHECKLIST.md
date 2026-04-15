@@ -20,6 +20,7 @@
 - [ ] Preview, voorbeeldrapport en trustlaag worden in een vaste volgorde ingezet.
 - [ ] Buyer-facing assets verwijzen naar echte deliverables zoals managementsamenvatting en bestuurlijke handoff.
 - [ ] Geen asset verkoopt voorbeeldoutput als klantproof of verzonnen case.
+- [ ] Alleen approved case-proof of reference-ready wordt als klantbewijs gebruikt.
 
 ## Proposal And Pricing Read
 
@@ -48,3 +49,4 @@
 - [ ] Het is duidelijk wanneer sales enablement docs moeten worden bijgewerkt.
 - [ ] Het is duidelijk wanneer pricing of sample-output trajecten mee moeten veranderen.
 - [ ] Toekomstige wijzigingen hebben een expliciete parity- en checklistroute.
+- [ ] De case-proof- en evidence-system docs zijn zichtbaar opgenomen in de sales guardrails.

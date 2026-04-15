@@ -1,3 +1,5 @@
+import type { EvidenceTier } from '@/lib/case-proof-evidence'
+
 export type SampleShowcaseStatus =
   | 'buyer-facing active'
   | 'internal demo support'
@@ -16,6 +18,8 @@ export interface SampleShowcaseAsset {
   docsPath?: string
   publicHref?: string
   intendedUse: string
+  evidenceTier: EvidenceTier
+  buyerUse: string
   claimBoundary: string
   trustFrame: string
 }
@@ -31,6 +35,8 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     publicHref: '/examples/voorbeeldrapport_verisight.pdf',
     intendedUse:
       'Primaire buyer-facing prooflaag voor ExitScan op productpagina, in sales en als deliverable-preview.',
+    evidenceTier: 'deliverable_proof',
+    buyerUse: 'Gebruik als deliverable-proof en trustproof; nooit als klantcase of effectbewijs.',
     claimBoundary:
       'Illustratief voorbeeld met fictieve data in dezelfde managementstructuur als echte ExitScan-output; geen diagnose of causale bewijsclaim.',
     trustFrame:
@@ -46,6 +52,8 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     publicHref: '/examples/voorbeeldrapport_retentiescan.pdf',
     intendedUse:
       'Buyer-facing prooflaag voor RetentieScan wanneer de vraag expliciet over actieve-populatie behoud gaat.',
+    evidenceTier: 'deliverable_proof',
+    buyerUse: 'Gebruik als deliverable-proof en trustproof; nooit als klantcase of effectbewijs.',
     claimBoundary:
       'Illustratief voorbeeld met fictieve data in dezelfde managementstructuur als echte RetentieScan-output; geen brede MTO of individuele predictor.',
     trustFrame:
@@ -59,6 +67,8 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     status: 'buyer-facing active',
     intendedUse:
       'Teaserlaag op home en producten-overzicht om routekeuze te versnellen voordat een buyer een volledig voorbeeldrapport opent.',
+    evidenceTier: 'deliverable_proof',
+    buyerUse: 'Gebruik als teaser naar de sample-rapporten, niet als rijkere of hardere prooflaag.',
     claimBoundary:
       'Illustratieve preview, geen volwaardig rapport en geen rijkere output dan de echte voorbeeldrapporten.',
     trustFrame:
@@ -72,6 +82,8 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     status: 'buyer-facing active',
     intendedUse:
       'Teaserlaag op de ExitScan-productpagina om de buyer vanaf preview door te leiden naar het volledige ExitScan-voorbeeldrapport.',
+    evidenceTier: 'deliverable_proof',
+    buyerUse: 'Gebruik als teaser naar het primaire ExitScan sample, niet als case-proof.',
     claimBoundary:
       'Preview op basis van dezelfde managementtaal en voorbeeldstructuur als het actieve ExitScan-sample-pdf.',
     trustFrame:
@@ -85,6 +97,8 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     status: 'buyer-facing active',
     intendedUse:
       'Teaserlaag op de RetentieScan-productpagina om de buyer vanaf preview door te leiden naar het volledige RetentieScan-voorbeeldrapport.',
+    evidenceTier: 'deliverable_proof',
+    buyerUse: 'Gebruik als teaser naar het RetentieScan sample, niet als case-proof.',
     claimBoundary:
       'Preview op basis van dezelfde managementtaal en voorbeeldstructuur als het actieve RetentieScan-sample-pdf.',
     trustFrame:
@@ -100,6 +114,8 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     publicHref: '/segment-deep-dive-preview.png',
     intendedUse:
       'Ondersteunende visual voor preview en demo wanneer segmentverdieping wordt getoond als gecontroleerde verdieping.',
+    evidenceTier: 'trust_proof',
+    buyerUse: 'Ondersteunende visual; niet inzetten als primaire prooflaag of casebewijs.',
     claimBoundary:
       'Visuele teaser voor segmentverdieping; niet verkopen als standaard deliverable voor elke buyer of elke dataset.',
     trustFrame:
@@ -114,6 +130,8 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     docsPath: 'docs/examples/voorbeeldrapport_exitscan_35_fictief.pdf',
     intendedUse:
       'Historisch referentiepunt voor eerdere reportvormen; niet meer buyer-facing leidend.',
+    evidenceTier: 'deliverable_proof',
+    buyerUse: 'Alleen archief; niet buyer-facing gebruiken.',
     claimBoundary:
       'Niet gebruiken als normbeeld voor actuele site-, sales- of pricinglagen.',
     trustFrame:
@@ -128,6 +146,8 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     docsPath: 'docs/examples/voorbeeldrapport_retentiescan_35_fictief.pdf',
     intendedUse:
       'Historisch referentiepunt voor eerdere reportvormen; niet meer buyer-facing leidend.',
+    evidenceTier: 'deliverable_proof',
+    buyerUse: 'Alleen archief; niet buyer-facing gebruiken.',
     claimBoundary:
       'Niet gebruiken als normbeeld voor actuele site-, sales- of pricinglagen.',
     trustFrame:

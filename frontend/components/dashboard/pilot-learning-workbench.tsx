@@ -16,6 +16,12 @@ import {
 import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import {
   buildLearningObjectiveSignals,
+  CASE_APPROVAL_STATUS_OPTIONS,
+  CASE_EVIDENCE_CLOSURE_OPTIONS,
+  CASE_OUTCOME_CLASS_OPTIONS,
+  CASE_OUTCOME_QUALITY_OPTIONS,
+  CASE_PERMISSION_STATUS_OPTIONS,
+  CASE_POTENTIAL_OPTIONS,
   getCheckpointDefinition,
   getLearningStatusLabel,
   getLearningStrengthLabel,
@@ -46,10 +52,23 @@ type DossierDraft = Pick<
   | 'buying_reason'
   | 'trust_friction'
   | 'implementation_risk'
+  | 'first_management_value'
+  | 'first_action_taken'
+  | 'review_moment'
   | 'adoption_outcome'
   | 'management_action_outcome'
   | 'next_route'
   | 'stop_reason'
+  | 'case_evidence_closure_status'
+  | 'case_approval_status'
+  | 'case_permission_status'
+  | 'case_quote_potential'
+  | 'case_reference_potential'
+  | 'case_outcome_quality'
+  | 'case_outcome_classes'
+  | 'claimable_observations'
+  | 'supporting_artifacts'
+  | 'case_public_summary'
   | 'lead_contact_name'
   | 'lead_organization_name'
   | 'lead_work_email'
@@ -114,10 +133,23 @@ function buildDossierDrafts(dossiers: PilotLearningDossier[]) {
         buying_reason: dossier.buying_reason,
         trust_friction: dossier.trust_friction,
         implementation_risk: dossier.implementation_risk,
+        first_management_value: dossier.first_management_value,
+        first_action_taken: dossier.first_action_taken,
+        review_moment: dossier.review_moment,
         adoption_outcome: dossier.adoption_outcome,
         management_action_outcome: dossier.management_action_outcome,
         next_route: dossier.next_route,
         stop_reason: dossier.stop_reason,
+        case_evidence_closure_status: dossier.case_evidence_closure_status,
+        case_approval_status: dossier.case_approval_status,
+        case_permission_status: dossier.case_permission_status,
+        case_quote_potential: dossier.case_quote_potential,
+        case_reference_potential: dossier.case_reference_potential,
+        case_outcome_quality: dossier.case_outcome_quality,
+        case_outcome_classes: dossier.case_outcome_classes,
+        claimable_observations: dossier.claimable_observations,
+        supporting_artifacts: dossier.supporting_artifacts,
+        case_public_summary: dossier.case_public_summary,
         lead_contact_name: dossier.lead_contact_name,
         lead_organization_name: dossier.lead_organization_name,
         lead_work_email: dossier.lead_work_email,
@@ -315,6 +347,10 @@ export function PilotLearningWorkbench({
   ).length
   const confirmedDossiers = dossiers.filter((dossier) => dossier.triage_status === 'bevestigd').length
   const linkedCampaignDossiers = dossiers.filter((dossier) => dossier.campaign_id).length
+  const salesUsableDossiers = dossiers.filter(
+    (dossier) => dossier.case_evidence_closure_status === 'sales_usable' || dossier.case_evidence_closure_status === 'public_usable',
+  ).length
+  const approvedCaseProofDossiers = dossiers.filter((dossier) => dossier.case_approval_status === 'approved').length
 
   async function handleCreate(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -399,7 +435,7 @@ export function PilotLearningWorkbench({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-4">
         <DashboardPanel
           eyebrow="Dossiers"
           title="Open leerwerk"
@@ -420,6 +456,13 @@ export function PilotLearningWorkbench({
           value={`${linkedCampaignDossiers}/${dossiers.length || 0}`}
           body="Koppel een dossier aan een campaign zodra implementation, launch of managementgebruik in echte delivery meelopen."
           tone={linkedCampaignDossiers > 0 ? 'amber' : 'slate'}
+        />
+        <DashboardPanel
+          eyebrow="Case-proof"
+          title="Sales- of public-usable"
+          value={`${salesUsableDossiers}/${approvedCaseProofDossiers}`}
+          body="Links telt dossiers met closure-status sales/public usable; rechts telt dossiers die de volledige approvalflow al hebben doorlopen."
+          tone={approvedCaseProofDossiers > 0 ? 'emerald' : salesUsableDossiers > 0 ? 'blue' : 'slate'}
         />
       </div>
 
@@ -597,10 +640,162 @@ export function PilotLearningWorkbench({
                     <TextAreaField label="Koopreden" value={draft.buying_reason ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'buying_reason', value)} />
                     <TextAreaField label="Trust- of koopfrictie" value={draft.trust_friction ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'trust_friction', value)} />
                     <TextAreaField label="Implementatierisico" value={draft.implementation_risk ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'implementation_risk', value)} />
+                    <TextAreaField label="Eerste managementwaarde" value={draft.first_management_value ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'first_management_value', value)} />
+                    <TextAreaField label="Eerste actie" value={draft.first_action_taken ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'first_action_taken', value)} />
+                    <TextAreaField label="Reviewmoment" value={draft.review_moment ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'review_moment', value)} />
                     <TextAreaField label="Adoptionuitkomst" value={draft.adoption_outcome ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'adoption_outcome', value)} />
                     <TextAreaField label="Managementactie-uitkomst" value={draft.management_action_outcome ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'management_action_outcome', value)} />
                     <TextAreaField label="Vervolgroute" value={draft.next_route ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'next_route', value)} />
                     <TextAreaField label="Stopreden" value={draft.stop_reason ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'stop_reason', value)} />
+                  </div>
+
+                  <div className="rounded-[22px] border border-blue-100 bg-blue-50/60 p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-950">Case-readiness en evidence governance</p>
+                        <p className="mt-1 text-sm leading-6 text-slate-600">
+                          Deze velden bepalen of een les alleen intern blijft, al bruikbaar is in sales of later pas als approved case-proof naar buiten mag.
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <DashboardChip label={draft.case_evidence_closure_status.replaceAll('_', ' ')} tone="blue" />
+                        <DashboardChip label={draft.case_approval_status.replaceAll('_', ' ')} tone="slate" />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 xl:grid-cols-3">
+                      <div>
+                        <FieldLabel htmlFor={`case-closure-${dossier.id}`}>Closure-status</FieldLabel>
+                        <select
+                          id={`case-closure-${dossier.id}`}
+                          value={draft.case_evidence_closure_status}
+                          onChange={(event) => updateDossierDraft(dossier.id, 'case_evidence_closure_status', event.target.value as DossierDraft['case_evidence_closure_status'])}
+                          className={fieldClass}
+                        >
+                          {CASE_EVIDENCE_CLOSURE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <FieldLabel htmlFor={`case-approval-${dossier.id}`}>Approvalstatus</FieldLabel>
+                        <select
+                          id={`case-approval-${dossier.id}`}
+                          value={draft.case_approval_status}
+                          onChange={(event) => updateDossierDraft(dossier.id, 'case_approval_status', event.target.value as DossierDraft['case_approval_status'])}
+                          className={fieldClass}
+                        >
+                          {CASE_APPROVAL_STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <FieldLabel htmlFor={`case-permission-${dossier.id}`}>Toestemmingstatus</FieldLabel>
+                        <select
+                          id={`case-permission-${dossier.id}`}
+                          value={draft.case_permission_status}
+                          onChange={(event) => updateDossierDraft(dossier.id, 'case_permission_status', event.target.value as DossierDraft['case_permission_status'])}
+                          className={fieldClass}
+                        >
+                          {CASE_PERMISSION_STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 xl:grid-cols-3">
+                      <div>
+                        <FieldLabel htmlFor={`case-quote-${dossier.id}`}>Quote-potentie</FieldLabel>
+                        <select
+                          id={`case-quote-${dossier.id}`}
+                          value={draft.case_quote_potential}
+                          onChange={(event) => updateDossierDraft(dossier.id, 'case_quote_potential', event.target.value as DossierDraft['case_quote_potential'])}
+                          className={fieldClass}
+                        >
+                          {CASE_POTENTIAL_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <FieldLabel htmlFor={`case-reference-${dossier.id}`}>Referentiepotentie</FieldLabel>
+                        <select
+                          id={`case-reference-${dossier.id}`}
+                          value={draft.case_reference_potential}
+                          onChange={(event) => updateDossierDraft(dossier.id, 'case_reference_potential', event.target.value as DossierDraft['case_reference_potential'])}
+                          className={fieldClass}
+                        >
+                          {CASE_POTENTIAL_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <FieldLabel htmlFor={`case-outcome-quality-${dossier.id}`}>Outcome-kwaliteit</FieldLabel>
+                        <select
+                          id={`case-outcome-quality-${dossier.id}`}
+                          value={draft.case_outcome_quality}
+                          onChange={(event) => updateDossierDraft(dossier.id, 'case_outcome_quality', event.target.value as DossierDraft['case_outcome_quality'])}
+                          className={fieldClass}
+                        >
+                          {CASE_OUTCOME_QUALITY_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                      <TextAreaField label="Claimbare observaties" value={draft.claimable_observations ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'claimable_observations', value)} />
+                      <TextAreaField label="Supporting artifacts" value={draft.supporting_artifacts ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'supporting_artifacts', value)} />
+                      <TextAreaField label="Buyer-safe summary" value={draft.case_public_summary ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'case_public_summary', value)} />
+                    </div>
+
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-slate-900">Outcome-klassen</p>
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        {CASE_OUTCOME_CLASS_OPTIONS.map((option) => {
+                          const checked = draft.case_outcome_classes.includes(option.value)
+                          return (
+                            <label
+                              key={option.value}
+                              className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm ${
+                                checked ? 'border-blue-200 bg-white text-blue-900' : 'border-blue-100 bg-blue-50 text-slate-700'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  const current = draft.case_outcome_classes
+                                  updateDossierDraft(
+                                    dossier.id,
+                                    'case_outcome_classes',
+                                    checked ? current.filter((entry) => entry !== option.value) : [...current, option.value],
+                                  )
+                                }}
+                                className="rounded"
+                              />
+                              {option.label}
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

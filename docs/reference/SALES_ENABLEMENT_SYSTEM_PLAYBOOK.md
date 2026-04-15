@@ -45,8 +45,9 @@ Gebruik bij spanning deze volgorde:
 4. `docs/active/BOARDROOM_READINESS_PLAN.md`
 5. `docs/reference/FOUNDER_LED_SALES_PLAYBOOK.md`
 6. `docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md`
-7. dit document
-8. buyer-facing salesassets uit deze tranche
+7. `docs/reference/CASE_PROOF_AND_EVIDENCE_SYSTEM.md`
+8. dit document
+9. buyer-facing salesassets uit deze tranche
 
 ## Het Verisight Sales Enablement Contract
 
@@ -154,6 +155,8 @@ Deze tranche gebruikt de volgende vaste artefacten:
 - `docs/reference/COMBINATIE_PORTFOLIO_MEMO.md`
 - `docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md`
 - `docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_ACCEPTANCE_CHECKLIST.md`
+- `docs/reference/CASE_PROOF_AND_EVIDENCE_SYSTEM.md`
+- `docs/reference/CASE_PROOF_AND_EVIDENCE_ACCEPTANCE_CHECKLIST.md`
 
 ## Guardrails
 
@@ -164,6 +167,8 @@ Deze tranche gebruikt de volgende vaste artefacten:
 - Salesassets mogen geen losse beloften toevoegen die niet in pricing, preview, rapportoutput of trustdocs terugkomen.
 - Geen enkel asset verkoopt Verisight als people-suite, individuele predictor, diagnose-instrument of vrijblijvende gratis proef.
 - Geen enkel asset gebruikt testimonials, cases of bewijsclaims die de repo nog niet draagt.
+- Sample-output blijft `deliverable_proof`; alleen `approved_case_proof` of `reference_ready` mag als klantbewijs worden ingezet.
+- `reference_ready` blijft beperkt tot warme salescontext en is geen generieke publieke claimlaag.
 
 ## Governance
 

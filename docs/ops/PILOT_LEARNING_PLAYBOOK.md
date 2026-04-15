@@ -14,6 +14,7 @@ Belangrijke defaults:
 - De learninglaag is internal-only en admin-first.
 - Manual-first is acceptabel, zolang de les persistente capture krijgt.
 - Een lesson sluit pas wanneer repo-bestemming of bewuste afwijzing expliciet is.
+- Case-proof groeit vanuit learningdossiers, nooit vanuit sample-output of losse anekdotes.
 
 ## Canonieke workflow
 
@@ -33,6 +34,9 @@ Minimaal invullen:
 - koopreden
 - trust- of koopfrictie
 - implementationrisico
+- case closure-status
+- approvalstatus
+- toestemmingstatus
 
 ### 3. Doorloop de vijf vaste checkpoints
 
@@ -51,6 +55,19 @@ Per checkpoint leg je vast:
 - status
 - lesson strength
 - destination areas
+
+Leg daarnaast op dossierniveau vast zodra dat kan:
+
+- eerste managementwaarde
+- eerste actie
+- reviewmoment
+- vervolguitkomst
+- quote-potentie
+- referentiepotentie
+- outcome-kwaliteit
+- outcome-klassen
+- claimbare observaties
+- supporting artifacts
 
 ### 4. Gebruik triage expliciet
 
@@ -99,3 +116,4 @@ Pas daarna voeg je interpretatie toe.
 - Daarna data- of UI-contracten aanpassen
 - Daarna tests draaien
 - Daarna `PROMPT_CHECKLIST.xlsx` bijwerken
+- Gebruik `docs/ops/CASE_PROOF_CAPTURE_PLAYBOOK.md` zodra een dossier richting case-candidate beweegt.

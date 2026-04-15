@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import {
+  CASE_APPROVAL_STATUS_OPTIONS,
+  CASE_EVIDENCE_CLOSURE_OPTIONS,
+  CASE_OUTCOME_CLASS_OPTIONS,
+  CASE_OUTCOME_QUALITY_OPTIONS,
+  CASE_PERMISSION_STATUS_OPTIONS,
+  CASE_POTENTIAL_OPTIONS,
   LEARNING_ROUTE_OPTIONS,
   LEARNING_TRIAGE_STATUS_OPTIONS,
 } from '@/lib/pilot-learning'
@@ -21,10 +27,23 @@ type UpdateLearningDossierBody = {
   buying_reason?: string | null
   trust_friction?: string | null
   implementation_risk?: string | null
+  first_management_value?: string | null
+  first_action_taken?: string | null
+  review_moment?: string | null
   adoption_outcome?: string | null
   management_action_outcome?: string | null
   next_route?: string | null
   stop_reason?: string | null
+  case_evidence_closure_status?: 'lesson_only' | 'internal_proof_only' | 'sales_usable' | 'public_usable' | 'rejected'
+  case_approval_status?: 'draft' | 'internal_review' | 'claim_check' | 'customer_permission' | 'approved'
+  case_permission_status?: 'not_requested' | 'internal_only' | 'anonymous_case_only' | 'named_quote_allowed' | 'named_case_allowed' | 'reference_only' | 'declined'
+  case_quote_potential?: 'laag' | 'middel' | 'hoog'
+  case_reference_potential?: 'laag' | 'middel' | 'hoog'
+  case_outcome_quality?: 'nog_onvoldoende' | 'indicatief' | 'stevig'
+  case_outcome_classes?: Array<'kwalitatieve_les' | 'operationele_uitkomst' | 'management_adoptie' | 'herhaalgebruik' | 'kwantitatieve_uitkomst'>
+  claimable_observations?: string | null
+  supporting_artifacts?: string | null
+  case_public_summary?: string | null
   lead_contact_name?: string | null
   lead_organization_name?: string | null
   lead_work_email?: string | null
@@ -91,6 +110,12 @@ export async function PATCH(request: Request, context: Context) {
 
   const routeValues = new Set(LEARNING_ROUTE_OPTIONS.map((option) => option.value))
   const triageValues = new Set(LEARNING_TRIAGE_STATUS_OPTIONS.map((option) => option.value))
+  const caseClosureValues = new Set(CASE_EVIDENCE_CLOSURE_OPTIONS.map((option) => option.value))
+  const caseApprovalValues = new Set(CASE_APPROVAL_STATUS_OPTIONS.map((option) => option.value))
+  const casePermissionValues = new Set(CASE_PERMISSION_STATUS_OPTIONS.map((option) => option.value))
+  const casePotentialValues = new Set(CASE_POTENTIAL_OPTIONS.map((option) => option.value))
+  const caseOutcomeQualityValues = new Set(CASE_OUTCOME_QUALITY_OPTIONS.map((option) => option.value))
+  const caseOutcomeClassValues = new Set(CASE_OUTCOME_CLASS_OPTIONS.map((option) => option.value))
 
   if (body.route_interest && !routeValues.has(body.route_interest)) {
     return NextResponse.json({ detail: 'Ongeldige route_interest.' }, { status: 400 })
@@ -98,6 +123,27 @@ export async function PATCH(request: Request, context: Context) {
 
   if (body.triage_status && !triageValues.has(body.triage_status)) {
     return NextResponse.json({ detail: 'Ongeldige triage_status.' }, { status: 400 })
+  }
+  if (body.case_evidence_closure_status && !caseClosureValues.has(body.case_evidence_closure_status)) {
+    return NextResponse.json({ detail: 'Ongeldige case_evidence_closure_status.' }, { status: 400 })
+  }
+  if (body.case_approval_status && !caseApprovalValues.has(body.case_approval_status)) {
+    return NextResponse.json({ detail: 'Ongeldige case_approval_status.' }, { status: 400 })
+  }
+  if (body.case_permission_status && !casePermissionValues.has(body.case_permission_status)) {
+    return NextResponse.json({ detail: 'Ongeldige case_permission_status.' }, { status: 400 })
+  }
+  if (body.case_quote_potential && !casePotentialValues.has(body.case_quote_potential)) {
+    return NextResponse.json({ detail: 'Ongeldige case_quote_potential.' }, { status: 400 })
+  }
+  if (body.case_reference_potential && !casePotentialValues.has(body.case_reference_potential)) {
+    return NextResponse.json({ detail: 'Ongeldige case_reference_potential.' }, { status: 400 })
+  }
+  if (body.case_outcome_quality && !caseOutcomeQualityValues.has(body.case_outcome_quality)) {
+    return NextResponse.json({ detail: 'Ongeldige case_outcome_quality.' }, { status: 400 })
+  }
+  if (body.case_outcome_classes && body.case_outcome_classes.some((entry) => !caseOutcomeClassValues.has(entry))) {
+    return NextResponse.json({ detail: 'Ongeldige case_outcome_classes.' }, { status: 400 })
   }
 
   if (typeof body.title === 'string' && body.title.trim().length < 3) {
@@ -184,6 +230,15 @@ export async function PATCH(request: Request, context: Context) {
   if ('implementation_risk' in body) {
     updatePayload.implementation_risk = cleanOptionalText(body.implementation_risk)
   }
+  if ('first_management_value' in body) {
+    updatePayload.first_management_value = cleanOptionalText(body.first_management_value)
+  }
+  if ('first_action_taken' in body) {
+    updatePayload.first_action_taken = cleanOptionalText(body.first_action_taken)
+  }
+  if ('review_moment' in body) {
+    updatePayload.review_moment = cleanOptionalText(body.review_moment)
+  }
   if ('adoption_outcome' in body) {
     updatePayload.adoption_outcome = cleanOptionalText(body.adoption_outcome)
   }
@@ -195,6 +250,36 @@ export async function PATCH(request: Request, context: Context) {
   }
   if ('stop_reason' in body) {
     updatePayload.stop_reason = cleanOptionalText(body.stop_reason)
+  }
+  if ('case_evidence_closure_status' in body) {
+    updatePayload.case_evidence_closure_status = body.case_evidence_closure_status
+  }
+  if ('case_approval_status' in body) {
+    updatePayload.case_approval_status = body.case_approval_status
+  }
+  if ('case_permission_status' in body) {
+    updatePayload.case_permission_status = body.case_permission_status
+  }
+  if ('case_quote_potential' in body) {
+    updatePayload.case_quote_potential = body.case_quote_potential
+  }
+  if ('case_reference_potential' in body) {
+    updatePayload.case_reference_potential = body.case_reference_potential
+  }
+  if ('case_outcome_quality' in body) {
+    updatePayload.case_outcome_quality = body.case_outcome_quality
+  }
+  if ('case_outcome_classes' in body) {
+    updatePayload.case_outcome_classes = body.case_outcome_classes ?? []
+  }
+  if ('claimable_observations' in body) {
+    updatePayload.claimable_observations = cleanOptionalText(body.claimable_observations)
+  }
+  if ('supporting_artifacts' in body) {
+    updatePayload.supporting_artifacts = cleanOptionalText(body.supporting_artifacts)
+  }
+  if ('case_public_summary' in body) {
+    updatePayload.case_public_summary = cleanOptionalText(body.case_public_summary)
   }
 
   const { error } = await admin.supabase

@@ -10,6 +10,7 @@ describe('sample showcase asset registry', () => {
     const exitAsset = getPrimarySampleShowcaseAsset('exit')
 
     expect(exitAsset?.status).toBe('buyer-facing active')
+    expect(exitAsset?.evidenceTier).toBe('deliverable_proof')
     expect(exitAsset?.publicHref).toBe('/examples/voorbeeldrapport_verisight.pdf')
     expect(exitAsset?.claimBoundary.toLowerCase()).toContain('fictieve data')
   })
@@ -18,6 +19,7 @@ describe('sample showcase asset registry', () => {
     const retentionAsset = getPrimarySampleShowcaseAsset('retention')
 
     expect(retentionAsset?.status).toBe('buyer-facing active')
+    expect(retentionAsset?.buyerUse.toLowerCase()).toContain('deliverable-proof')
     expect(retentionAsset?.publicHref).toBe('/examples/voorbeeldrapport_retentiescan.pdf')
     expect(retentionAsset?.trustFrame.toLowerCase()).toContain('verification-first')
   })
@@ -27,6 +29,7 @@ describe('sample showcase asset registry', () => {
     const legacyAssets = SAMPLE_SHOWCASE_ASSETS.filter((asset) => asset.status === 'legacy archive')
 
     expect(buyerFacingAssets.length).toBeGreaterThan(legacyAssets.length)
+    expect(buyerFacingAssets.every((asset) => asset.evidenceTier === 'deliverable_proof')).toBe(true)
     expect(legacyAssets.map((asset) => asset.docsPath)).toContain('docs/examples/voorbeeldrapport_exitscan_35_fictief.pdf')
     expect(legacyAssets.map((asset) => asset.docsPath)).toContain('docs/examples/voorbeeldrapport_retentiescan_35_fictief.pdf')
   })

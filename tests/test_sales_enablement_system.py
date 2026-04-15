@@ -50,8 +50,8 @@ def test_sales_routing_and_comparison_stay_aligned_with_site_and_preview_languag
     assert "vertrekduiding" in comparison
     assert "vroegsignalering op behoud" in comparison
     assert "signalen van werkfrictie" in comparison
-    assert "managementsamenvatting, bestuurlijke handoff, vertrekduiding" in marketing_products
-    assert "managementsamenvatting, bestuurlijke handoff, retentiesignaal" in marketing_products
+    assert "managementsamenvatting, bestuurlijke handoff, eerste managementsessie, vertrekduiding" in marketing_products
+    assert "managementsamenvatting, bestuurlijke handoff, eerste managementsessie, retentiesignaal" in marketing_products
     assert "exitscan baseline" in site_content
     assert "retentiescan baseline" in site_content
     assert "compacte retentie vervolgmeting" in site_content

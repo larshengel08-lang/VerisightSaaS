@@ -134,7 +134,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
       <DashboardHero
         eyebrow="Internal learning system"
         title="Pilot- en early-customer-learning"
-        description="Gebruik deze workbench als vaste source of truth voor wat pilots en vroege klanttrajecten Verisight echt leren over product, report, onboarding, sales en operations. Start vanuit lead of campaign, capture daarna dezelfde vijf lifecycle-checkpoints en sluit lessen pas wanneer de repo-bestemming expliciet is."
+        description="Gebruik deze workbench als vaste source of truth voor wat pilots en vroege klanttrajecten Verisight echt leren over product, report, onboarding, sales en operations. Start vanuit lead of campaign, capture daarna dezelfde vijf lifecycle-checkpoints en leg ook case-readiness, approval en buyer-safe claimruimte vast voordat iets als klantbewijs mag bewegen."
         tone="blue"
         meta={
           <>
@@ -170,7 +170,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
               <li>30-90 dagen review</li>
             </ol>
             <p className="text-xs text-slate-500">
-              Manual-first blijft prima, zolang de les hier expliciet wordt vastgelegd en terugkrijgt waar die moet landen.
+              Manual-first blijft prima, zolang de les hier expliciet wordt vastgelegd en terugkrijgt waar die moet landen. Sample-output blijft deliverable-proof; echte case-proof groeit pas uit dossiers met approval.
             </p>
           </div>
         }
@@ -230,7 +230,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
       <DashboardSection
         eyebrow="Workbench"
         title="Canonical learning source of truth"
-        description="Elke vroege klantroute hoort vanaf nu dezelfde minimale learning-output op te leveren: objective signals, interpreted observation, confirmed lesson en triagebestemming."
+        description="Elke vroege klantroute hoort vanaf nu dezelfde minimale learning-output op te leveren: objective signals, interpreted observation, confirmed lesson, triagebestemming en case-readiness zodra buyer-safe bewijs in zicht komt."
         aside={<DashboardChip label={`${activeOrgs.length} actieve organisatie${activeOrgs.length === 1 ? '' : 's'}`} tone="slate" />}
       >
         <PilotLearningWorkbench
