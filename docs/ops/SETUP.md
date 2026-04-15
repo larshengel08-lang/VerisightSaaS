@@ -162,13 +162,16 @@ Open [http://localhost:3000](http://localhost:3000) — je wordt doorgestuurd na
 6. Verstuur uitnodigingen pas nadat het bestand bruikbaar is en activeer daarna klanttoegang
 7. Gebruik dashboard en rapport daarna voor de eerste managementread in plaats van alleen als livegangsignaal
 8. Leg buyer-signalen, implementationlessen en managementfollow-up vast in `/beheer/klantlearnings`
+9. Gebruik op campagneniveau de persistente delivery control voor lifecycle, exceptions, checkpoints en first management use in plaats van losse browserchecklists of handoff-notities
 
 ## Operationele gidsen
 
 - Canonieke assisted route: `docs/ops/CLIENT_ONBOARDING_PLAYBOOK.md`
 - Acceptance-gates voor livegang en eerste managementgebruik: `docs/ops/ONBOARDING_ACCEPTANCE_CHECKLIST.md`
+- Foutopvang en recoverypad: `docs/ops/OPS_DELIVERY_FAILURE_MATRIX.md`
 - Pilot- en early-customer-learning: `docs/ops/PILOT_LEARNING_PLAYBOOK.md`
 - Vaste capturetemplates: `docs/ops/PILOT_LEARNING_TEMPLATES.md`
+- Actieve ops-source-of-truth voor deze tranche: `docs/active/OPS_AND_DELIVERY_SYSTEM_PLAN.md`
 
 ---
 

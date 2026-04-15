@@ -20,6 +20,7 @@ import { RecommendationList } from '@/components/dashboard/recommendation-list'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
 import { SegmentPlaybookList } from '@/components/dashboard/segment-playbook-list'
+import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import {
   buildDecisionPanels,
   buildHeroDescription,
@@ -47,6 +48,7 @@ import {
 } from './page-helpers'
 import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
+import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import { getProductModule } from '@/lib/products/shared/registry'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
@@ -117,7 +119,30 @@ export default async function CampaignPage({ params }: Props) {
     profile?.is_verisight_admin === true ||
     membership?.role === 'owner' ||
     membership?.role === 'member'
+  const isVerisightAdmin = profile?.is_verisight_admin === true
   const hasSegmentDeepDive = hasCampaignAddOn(campaignMeta, 'segment_deep_dive')
+  const { data: deliveryRecordRaw } = await supabase
+    .from('campaign_delivery_records')
+    .select('*')
+    .eq('campaign_id', id)
+    .maybeSingle()
+  const deliveryRecord = (deliveryRecordRaw ?? null) as CampaignDeliveryRecord | null
+  const { data: deliveryCheckpointsRaw } = deliveryRecord
+    ? await supabase
+        .from('campaign_delivery_checkpoints')
+        .select('*')
+        .eq('delivery_record_id', deliveryRecord.id)
+        .order('created_at', { ascending: true })
+    : { data: [] }
+  const deliveryCheckpoints = (deliveryCheckpointsRaw ?? []) as CampaignDeliveryCheckpoint[]
+  const {
+    rows: deliveryLeadOptions,
+    configError: deliveryLeadConfigError,
+    loadError: deliveryLeadLoadError,
+  } = isVerisightAdmin
+    ? await getContactRequestsForAdmin(100)
+    : { rows: [], configError: null, loadError: null }
+  const deliveryLeadError = deliveryLeadConfigError ?? deliveryLeadLoadError
 
   const { data: responsesRaw } = await supabase
     .from('survey_responses')
@@ -581,7 +606,7 @@ export default async function CampaignPage({ params }: Props) {
         <DashboardSection
           eyebrow="Operatie"
           title="Campagnestatus en launchcontrole"
-          description="Deze laag is bewust operationeel gehouden: gebruik hem voor reminders, archiveren, launchchecks en responsmonitoring nadat het managementbeeld helder is."
+          description="Deze laag is nu de persistente operations- en deliverylaag: gebruik hem voor lifecycle, handoff, launch readiness, first value, foutopvang en follow-through nadat het managementbeeld helder is."
         >
           <div className="space-y-4">
             <CampaignActions
@@ -630,6 +655,11 @@ export default async function CampaignPage({ params }: Props) {
                 hasEnoughData={hasEnoughData}
                 activeClientAccessCount={activeClientAccessCount ?? 0}
                 pendingClientInviteCount={pendingClientInviteCount ?? 0}
+                record={deliveryRecord}
+                checkpoints={deliveryCheckpoints}
+                leadOptions={deliveryLeadOptions}
+                leadLoadError={deliveryLeadError}
+                editable={isVerisightAdmin}
               />
             ) : (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">

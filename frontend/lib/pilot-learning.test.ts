@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildLearningObjectiveSignals,
+  CASE_APPROVAL_STATUS_OPTIONS,
+  CASE_EVIDENCE_CLOSURE_OPTIONS,
+  CASE_OUTCOME_CLASS_OPTIONS,
+  CASE_OUTCOME_QUALITY_OPTIONS,
+  CASE_PERMISSION_STATUS_OPTIONS,
+  CASE_POTENTIAL_OPTIONS,
   createDefaultLearningCheckpoints,
   LEARNING_CHECKPOINT_DEFINITIONS,
   LEARNING_DESTINATION_OPTIONS,
@@ -40,6 +46,28 @@ describe('pilot learning defaults', () => {
       'sales',
       'operations',
     ])
+    expect(CASE_EVIDENCE_CLOSURE_OPTIONS.map((option) => option.value)).toEqual([
+      'lesson_only',
+      'internal_proof_only',
+      'sales_usable',
+      'public_usable',
+      'rejected',
+    ])
+    expect(CASE_APPROVAL_STATUS_OPTIONS.map((option) => option.value)).toEqual([
+      'draft',
+      'internal_review',
+      'claim_check',
+      'customer_permission',
+      'approved',
+    ])
+    expect(CASE_PERMISSION_STATUS_OPTIONS.map((option) => option.value)).toContain('anonymous_case_only')
+    expect(CASE_POTENTIAL_OPTIONS.map((option) => option.value)).toEqual(['laag', 'middel', 'hoog'])
+    expect(CASE_OUTCOME_QUALITY_OPTIONS.map((option) => option.value)).toEqual([
+      'nog_onvoldoende',
+      'indicatief',
+      'stevig',
+    ])
+    expect(CASE_OUTCOME_CLASS_OPTIONS.map((option) => option.value)).toContain('management_adoptie')
   })
 
   it('builds route-aware objective signals from lead and campaign context', () => {
@@ -50,6 +78,9 @@ describe('pilot learning defaults', () => {
         delivery_mode: 'baseline',
         scan_type: 'exit',
         expected_first_value: 'Eerste managementduiding op vertrekpatronen',
+        first_management_value: null,
+        first_action_taken: null,
+        review_moment: null,
         next_route: null,
         stop_reason: null,
         management_action_outcome: null,
@@ -68,6 +99,12 @@ describe('pilot learning defaults', () => {
         current_question: 'Waarom vertrekken mensen nu?',
         notification_sent: true,
         notification_error: null,
+        ops_stage: 'lead_captured',
+        ops_exception_status: 'none',
+        ops_owner: null,
+        ops_next_step: null,
+        ops_handoff_note: null,
+        last_contacted_at: null,
         created_at: '2026-04-15T10:00:00Z',
       },
       campaignStats: {
@@ -102,6 +139,9 @@ describe('pilot learning defaults', () => {
         delivery_mode: 'baseline',
         scan_type: 'exit',
         expected_first_value: 'Eerste managementduiding op vertrekpatronen',
+        first_management_value: 'MT ziet voor het eerst welke vertrekredenen bestuurlijk prioriteit vragen.',
+        first_action_taken: 'Eerste handoff naar leidinggevenden ingepland.',
+        review_moment: 'Review over 45 dagen.',
         next_route: 'RetentieScan Baseline',
         stop_reason: null,
         management_action_outcome: 'MT heeft eigenaar, eerste actie en reviewmoment vastgelegd.',
@@ -111,6 +151,7 @@ describe('pilot learning defaults', () => {
     })
 
     expect(signals.join(' ')).toContain('Gekozen vervolgroute: RetentieScan Baseline.')
+    expect(signals.join(' ')).toContain('Reviewmoment vastgelegd: Review over 45 dagen.')
     expect(signals.join(' ')).toContain('Adoptionuitkomst is expliciet vastgelegd.')
     expect(signals.join(' ')).toContain('eerste managementactie of reviewuitkomst')
     expect(signals.join(' ')).toContain('in plaats van een losse upsell')

@@ -1,29 +1,15 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import {
-  getContactDesiredTimingLabel,
-  getContactRouteLabel,
-} from '@/lib/contact-funnel'
+import { LeadOpsTable } from '@/components/dashboard/lead-ops-table'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
+import type { DeliveryLifecycleStage } from '@/lib/ops-delivery'
 import {
   DashboardChip,
   DashboardHero,
   DashboardPanel,
   DashboardSection,
 } from '@/components/dashboard/dashboard-primitives'
-
-function formatAmsterdamDate(value: string) {
-  try {
-    return new Intl.DateTimeFormat('nl-NL', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-      timeZone: 'Europe/Amsterdam',
-    }).format(new Date(value))
-  } catch {
-    return value
-  }
-}
 
 export default async function ContactAanvragenPage() {
   const supabase = await createClient()
@@ -45,8 +31,53 @@ export default async function ContactAanvragenPage() {
     redirect('/dashboard')
   }
 
+  const { data: memberships } = await supabase
+    .from('org_members')
+    .select('organizations(id)')
+    .eq('user_id', user.id)
+
+  const orgIds = (memberships ?? [])
+    .flatMap((membership) => {
+      const organizations = Array.isArray(membership.organizations)
+        ? membership.organizations
+        : membership.organizations
+          ? [membership.organizations]
+          : []
+      return organizations.filter((organization): organization is { id: string } => Boolean(organization?.id))
+    })
+    .map((organization) => organization.id)
+
   const { rows, configError, loadError } = await getContactRequestsForAdmin(50)
   const pendingCount = rows.filter((row) => !row.notification_sent).length
+  const { data: linkedDeliveryRaw } = orgIds.length
+    ? await supabase
+        .from('campaign_delivery_records')
+        .select('contact_request_id, lifecycle_stage, campaign_id, campaigns(name)')
+        .in('organization_id', orgIds)
+        .not('contact_request_id', 'is', null)
+    : { data: [] }
+  const linkedDelivery = (linkedDeliveryRaw ?? []) as Array<{
+    contact_request_id: string | null
+    lifecycle_stage: string
+    campaign_id: string
+    campaigns: { name: string } | { name: string }[] | null
+  }>
+
+  const linkedCampaignsByLead = linkedDelivery.reduce<Record<string, Array<{
+    campaignId: string
+    campaignName: string
+    lifecycleStage: DeliveryLifecycleStage
+  }>>>((acc, record) => {
+    const leadId = record.contact_request_id
+    if (!leadId) return acc
+    acc[leadId] ??= []
+    acc[leadId].push({
+      campaignId: record.campaign_id,
+      campaignName: Array.isArray(record.campaigns) ? record.campaigns[0]?.name ?? 'Onbekende campaign' : record.campaigns?.name ?? 'Onbekende campaign',
+      lifecycleStage: record.lifecycle_stage as DeliveryLifecycleStage,
+    })
+    return acc
+  }, {})
 
   return (
     <div className="space-y-6">
@@ -129,7 +160,7 @@ export default async function ContactAanvragenPage() {
       <DashboardSection
         eyebrow="Leads"
         title="Recente contactaanvragen"
-        description="Nieuwe records staan bovenaan. Routecontext en timing helpen om de eerste opvolging meteen productspecifiek te doen en om een learningdossier direct vanuit de echte lead te starten."
+        description="Nieuwe records staan bovenaan. Routecontext en timing helpen om de eerste opvolging meteen productspecifiek te doen, leadtriage expliciet vast te leggen en de handoff naar delivery of learning niet in losse notities te laten verdwijnen."
         aside={<DashboardChip label="Maximaal 50 recente leads" tone="slate" />}
       >
         {rows.length === 0 ? (
@@ -137,62 +168,7 @@ export default async function ContactAanvragenPage() {
             Er zijn nog geen contactaanvragen zichtbaar, of de lijst kon nog niet worden opgehaald.
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-[24px] border border-slate-200">
-            <table className="min-w-full divide-y divide-slate-200 bg-white text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">Moment</th>
-                  <th className="px-4 py-3">Naam</th>
-                  <th className="px-4 py-3">Organisatie</th>
-                  <th className="px-4 py-3">Werk e-mail</th>
-                  <th className="px-4 py-3">Omvang</th>
-                  <th className="px-4 py-3">Route</th>
-                  <th className="px-4 py-3">Timing</th>
-                  <th className="px-4 py-3">CTA-bron</th>
-                  <th className="px-4 py-3">Notificatie</th>
-                  <th className="px-4 py-3">Foutreden</th>
-                  <th className="px-4 py-3">Actie</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {rows.map((row) => (
-                  <tr key={row.id} className="align-top">
-                    <td className="px-4 py-4 text-slate-600">
-                      <div>{formatAmsterdamDate(row.created_at)}</div>
-                      <div className="mt-1 text-xs text-slate-400">{row.id}</div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-semibold text-slate-950">{row.name}</div>
-                      <div className="mt-2 max-w-md text-xs leading-6 text-slate-600">{row.current_question}</div>
-                    </td>
-                    <td className="px-4 py-4 text-slate-700">{row.organization}</td>
-                    <td className="px-4 py-4 text-slate-700">{row.work_email}</td>
-                    <td className="px-4 py-4 text-slate-700">{row.employee_count}</td>
-                    <td className="px-4 py-4">
-                      <DashboardChip label={getContactRouteLabel(row.route_interest)} tone="blue" />
-                    </td>
-                    <td className="px-4 py-4 text-slate-700">{getContactDesiredTimingLabel(row.desired_timing)}</td>
-                    <td className="px-4 py-4 text-xs leading-6 text-slate-500">{row.cta_source ? row.cta_source : 'Onbekend'}</td>
-                    <td className="px-4 py-4">
-                      <DashboardChip
-                        label={row.notification_sent ? 'Verstuurd' : 'Niet verstuurd'}
-                        tone={row.notification_sent ? 'emerald' : 'amber'}
-                      />
-                    </td>
-                    <td className="px-4 py-4 text-slate-600">{row.notification_error ? row.notification_error : 'Geen fout opgeslagen'}</td>
-                    <td className="px-4 py-4">
-                      <Link
-                        href={`/beheer/klantlearnings?lead=${row.id}`}
-                        className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
-                      >
-                        Start dossier
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <LeadOpsTable rows={rows} linkedCampaignsByLead={linkedCampaignsByLead} />
         )}
       </DashboardSection>
     </div>

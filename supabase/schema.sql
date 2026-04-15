@@ -228,6 +228,12 @@ create table if not exists public.contact_requests (
   website           text,
   notification_sent boolean not null default false,
   notification_error text,
+  ops_stage         text not null default 'lead_captured' check (ops_stage in ('lead_captured', 'route_qualified', 'implementation_intake_ready', 'awaiting_follow_up', 'closed')),
+  ops_exception_status text not null default 'none' check (ops_exception_status in ('none', 'blocked', 'needs_operator_recovery', 'awaiting_client_input', 'awaiting_external_delivery')),
+  ops_owner         text,
+  ops_next_step     text,
+  ops_handoff_note  text,
+  last_contacted_at timestamptz,
   created_at        timestamptz default now()
 );
 
@@ -256,7 +262,81 @@ do $$ begin
   ) then
     alter table public.contact_requests add column notification_error text;
   end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'ops_stage'
+  ) then
+    alter table public.contact_requests add column ops_stage text not null default 'lead_captured';
+    alter table public.contact_requests
+      add constraint contact_requests_ops_stage_check
+      check (ops_stage in ('lead_captured', 'route_qualified', 'implementation_intake_ready', 'awaiting_follow_up', 'closed'));
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'ops_exception_status'
+  ) then
+    alter table public.contact_requests add column ops_exception_status text not null default 'none';
+    alter table public.contact_requests
+      add constraint contact_requests_ops_exception_status_check
+      check (ops_exception_status in ('none', 'blocked', 'needs_operator_recovery', 'awaiting_client_input', 'awaiting_external_delivery'));
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'ops_owner'
+  ) then
+    alter table public.contact_requests add column ops_owner text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'ops_next_step'
+  ) then
+    alter table public.contact_requests add column ops_next_step text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'ops_handoff_note'
+  ) then
+    alter table public.contact_requests add column ops_handoff_note text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'last_contacted_at'
+  ) then
+    alter table public.contact_requests add column last_contacted_at timestamptz;
+  end if;
 end $$;
+
+create table if not exists public.campaign_delivery_records (
+  id                              uuid primary key default gen_random_uuid(),
+  organization_id                 uuid references public.organizations(id) on delete cascade not null,
+  campaign_id                     uuid references public.campaigns(id) on delete cascade not null unique,
+  contact_request_id              uuid references public.contact_requests(id) on delete set null,
+  lifecycle_stage                 text not null default 'setup_in_progress' check (lifecycle_stage in ('setup_in_progress', 'import_cleared', 'invites_live', 'client_activation_pending', 'client_activation_confirmed', 'first_value_reached', 'first_management_use', 'follow_up_decided', 'learning_closed')),
+  exception_status                text not null default 'none' check (exception_status in ('none', 'blocked', 'needs_operator_recovery', 'awaiting_client_input', 'awaiting_external_delivery')),
+  operator_owner                  text,
+  next_step                       text,
+  operator_notes                  text,
+  customer_handoff_note           text,
+  first_management_use_confirmed_at timestamptz,
+  follow_up_decided_at            timestamptz,
+  learning_closed_at              timestamptz,
+  created_at                      timestamptz default now(),
+  updated_at                      timestamptz default now()
+);
+
+create table if not exists public.campaign_delivery_checkpoints (
+  id                uuid primary key default gen_random_uuid(),
+  delivery_record_id uuid references public.campaign_delivery_records(id) on delete cascade not null,
+  checkpoint_key    text not null check (checkpoint_key in ('implementation_intake', 'import_qa', 'invite_readiness', 'client_activation', 'first_value', 'report_delivery', 'first_management_use')),
+  auto_state        text not null default 'unknown' check (auto_state in ('unknown', 'not_ready', 'warning', 'ready')),
+  manual_state      text not null default 'pending' check (manual_state in ('pending', 'confirmed', 'not_applicable')),
+  exception_status  text not null default 'none' check (exception_status in ('none', 'blocked', 'needs_operator_recovery', 'awaiting_client_input', 'awaiting_external_delivery')),
+  last_auto_summary text,
+  operator_note     text,
+  created_at        timestamptz default now(),
+  updated_at        timestamptz default now(),
+  unique (delivery_record_id, checkpoint_key)
+);
 
 create table if not exists public.pilot_learning_dossiers (
   id                      uuid primary key default gen_random_uuid(),
@@ -277,15 +357,128 @@ create table if not exists public.pilot_learning_dossiers (
   buying_reason           text,
   trust_friction          text,
   implementation_risk     text,
+  first_management_value  text,
+  first_action_taken      text,
+  review_moment           text,
   adoption_outcome        text,
   management_action_outcome text,
   next_route              text,
   stop_reason             text,
+  case_evidence_closure_status text not null default 'lesson_only' check (case_evidence_closure_status in ('lesson_only', 'internal_proof_only', 'sales_usable', 'public_usable', 'rejected')),
+  case_approval_status    text not null default 'draft' check (case_approval_status in ('draft', 'internal_review', 'claim_check', 'customer_permission', 'approved')),
+  case_permission_status  text not null default 'not_requested' check (case_permission_status in ('not_requested', 'internal_only', 'anonymous_case_only', 'named_quote_allowed', 'named_case_allowed', 'reference_only', 'declined')),
+  case_quote_potential    text not null default 'laag' check (case_quote_potential in ('laag', 'middel', 'hoog')),
+  case_reference_potential text not null default 'laag' check (case_reference_potential in ('laag', 'middel', 'hoog')),
+  case_outcome_quality    text not null default 'nog_onvoldoende' check (case_outcome_quality in ('nog_onvoldoende', 'indicatief', 'stevig')),
+  case_outcome_classes    jsonb not null default '[]'::jsonb,
+  claimable_observations  text,
+  supporting_artifacts    text,
+  case_public_summary     text,
   created_by              uuid references auth.users(id) on delete set null,
   updated_by              uuid references auth.users(id) on delete set null,
   created_at              timestamptz default now(),
   updated_at              timestamptz default now()
 );
+
+do $$ begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'first_management_value'
+  ) then
+    alter table public.pilot_learning_dossiers add column first_management_value text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'first_action_taken'
+  ) then
+    alter table public.pilot_learning_dossiers add column first_action_taken text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'review_moment'
+  ) then
+    alter table public.pilot_learning_dossiers add column review_moment text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'case_evidence_closure_status'
+  ) then
+    alter table public.pilot_learning_dossiers add column case_evidence_closure_status text not null default 'lesson_only';
+    alter table public.pilot_learning_dossiers
+      add constraint pilot_learning_dossiers_case_evidence_closure_status_check
+      check (case_evidence_closure_status in ('lesson_only', 'internal_proof_only', 'sales_usable', 'public_usable', 'rejected'));
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'case_approval_status'
+  ) then
+    alter table public.pilot_learning_dossiers add column case_approval_status text not null default 'draft';
+    alter table public.pilot_learning_dossiers
+      add constraint pilot_learning_dossiers_case_approval_status_check
+      check (case_approval_status in ('draft', 'internal_review', 'claim_check', 'customer_permission', 'approved'));
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'case_permission_status'
+  ) then
+    alter table public.pilot_learning_dossiers add column case_permission_status text not null default 'not_requested';
+    alter table public.pilot_learning_dossiers
+      add constraint pilot_learning_dossiers_case_permission_status_check
+      check (case_permission_status in ('not_requested', 'internal_only', 'anonymous_case_only', 'named_quote_allowed', 'named_case_allowed', 'reference_only', 'declined'));
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'case_quote_potential'
+  ) then
+    alter table public.pilot_learning_dossiers add column case_quote_potential text not null default 'laag';
+    alter table public.pilot_learning_dossiers
+      add constraint pilot_learning_dossiers_case_quote_potential_check
+      check (case_quote_potential in ('laag', 'middel', 'hoog'));
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'case_reference_potential'
+  ) then
+    alter table public.pilot_learning_dossiers add column case_reference_potential text not null default 'laag';
+    alter table public.pilot_learning_dossiers
+      add constraint pilot_learning_dossiers_case_reference_potential_check
+      check (case_reference_potential in ('laag', 'middel', 'hoog'));
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'case_outcome_quality'
+  ) then
+    alter table public.pilot_learning_dossiers add column case_outcome_quality text not null default 'nog_onvoldoende';
+    alter table public.pilot_learning_dossiers
+      add constraint pilot_learning_dossiers_case_outcome_quality_check
+      check (case_outcome_quality in ('nog_onvoldoende', 'indicatief', 'stevig'));
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'case_outcome_classes'
+  ) then
+    alter table public.pilot_learning_dossiers add column case_outcome_classes jsonb not null default '[]'::jsonb;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'claimable_observations'
+  ) then
+    alter table public.pilot_learning_dossiers add column claimable_observations text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'supporting_artifacts'
+  ) then
+    alter table public.pilot_learning_dossiers add column supporting_artifacts text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'pilot_learning_dossiers' and column_name = 'case_public_summary'
+  ) then
+    alter table public.pilot_learning_dossiers add column case_public_summary text;
+  end if;
+exception when duplicate_object then null;
+end $$;
 
 create table if not exists public.pilot_learning_checkpoints (
   id                      uuid primary key default gen_random_uuid(),
@@ -317,10 +510,16 @@ create index if not exists idx_org_members_org      on public.org_members(org_id
 create index if not exists idx_org_invites_org      on public.org_invites(org_id);
 create index if not exists idx_org_invites_email    on public.org_invites(email);
 create index if not exists idx_contact_requests_created_at on public.contact_requests(created_at desc);
+create index if not exists idx_contact_requests_ops_stage on public.contact_requests(ops_stage);
 create index if not exists idx_learning_dossiers_org on public.pilot_learning_dossiers(organization_id);
 create index if not exists idx_learning_dossiers_campaign on public.pilot_learning_dossiers(campaign_id);
 create index if not exists idx_learning_dossiers_contact_request on public.pilot_learning_dossiers(contact_request_id);
 create index if not exists idx_learning_checkpoints_dossier on public.pilot_learning_checkpoints(dossier_id);
+create index if not exists idx_delivery_records_org on public.campaign_delivery_records(organization_id);
+create index if not exists idx_delivery_records_contact_request on public.campaign_delivery_records(contact_request_id);
+create index if not exists idx_delivery_records_lifecycle on public.campaign_delivery_records(lifecycle_stage);
+create index if not exists idx_delivery_records_exception on public.campaign_delivery_records(exception_status);
+create index if not exists idx_delivery_checkpoints_record on public.campaign_delivery_checkpoints(delivery_record_id);
 
 -- ============================================================
 -- ROW LEVEL SECURITY
@@ -333,6 +532,8 @@ alter table public.org_invites      enable row level security;
 alter table public.campaigns        enable row level security;
 alter table public.respondents      enable row level security;
 alter table public.survey_responses enable row level security;
+alter table public.campaign_delivery_records enable row level security;
+alter table public.campaign_delivery_checkpoints enable row level security;
 alter table public.pilot_learning_dossiers enable row level security;
 alter table public.pilot_learning_checkpoints enable row level security;
 
@@ -578,6 +779,70 @@ create policy "org_members_can_select_responses"
     )
   );
 
+-- Campaign delivery records
+drop policy if exists "org_managers_can_select_delivery_records" on public.campaign_delivery_records;
+drop policy if exists "org_managers_can_insert_delivery_records" on public.campaign_delivery_records;
+drop policy if exists "org_managers_can_update_delivery_records" on public.campaign_delivery_records;
+
+create policy "org_managers_can_select_delivery_records"
+  on public.campaign_delivery_records for select
+  using (public.is_org_manager(organization_id));
+
+create policy "org_managers_can_insert_delivery_records"
+  on public.campaign_delivery_records for insert
+  with check (public.is_org_manager(organization_id));
+
+create policy "org_managers_can_update_delivery_records"
+  on public.campaign_delivery_records for update
+  using (public.is_org_manager(organization_id))
+  with check (public.is_org_manager(organization_id));
+
+-- Campaign delivery checkpoints
+drop policy if exists "org_managers_can_select_delivery_checkpoints" on public.campaign_delivery_checkpoints;
+drop policy if exists "org_managers_can_insert_delivery_checkpoints" on public.campaign_delivery_checkpoints;
+drop policy if exists "org_managers_can_update_delivery_checkpoints" on public.campaign_delivery_checkpoints;
+
+create policy "org_managers_can_select_delivery_checkpoints"
+  on public.campaign_delivery_checkpoints for select
+  using (
+    exists (
+      select 1
+      from public.campaign_delivery_records d
+      where d.id = delivery_record_id
+        and public.is_org_manager(d.organization_id)
+    )
+  );
+
+create policy "org_managers_can_insert_delivery_checkpoints"
+  on public.campaign_delivery_checkpoints for insert
+  with check (
+    exists (
+      select 1
+      from public.campaign_delivery_records d
+      where d.id = delivery_record_id
+        and public.is_org_manager(d.organization_id)
+    )
+  );
+
+create policy "org_managers_can_update_delivery_checkpoints"
+  on public.campaign_delivery_checkpoints for update
+  using (
+    exists (
+      select 1
+      from public.campaign_delivery_records d
+      where d.id = delivery_record_id
+        and public.is_org_manager(d.organization_id)
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.campaign_delivery_records d
+      where d.id = delivery_record_id
+        and public.is_org_manager(d.organization_id)
+    )
+  );
+
 -- Pilot learning dossiers
 drop policy if exists "verisight_admins_can_select_learning_dossiers" on public.pilot_learning_dossiers;
 drop policy if exists "verisight_admins_can_insert_learning_dossiers" on public.pilot_learning_dossiers;
@@ -700,6 +965,114 @@ drop trigger if exists on_org_created on public.organizations;
 create trigger on_org_created
   after insert on public.organizations
   for each row execute function public.handle_new_org();
+
+-- ============================================================
+-- TRIGGER: na aanmaken campaign → delivery record + checkpoints
+-- ============================================================
+
+create or replace function public.handle_new_campaign_delivery_record()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  resolved_record_id uuid;
+begin
+  insert into public.campaign_delivery_records (
+    organization_id,
+    campaign_id,
+    lifecycle_stage,
+    exception_status
+  )
+  values (
+    new.organization_id,
+    new.id,
+    'setup_in_progress',
+    'none'
+  )
+  on conflict (campaign_id) do nothing;
+
+  select id
+  into resolved_record_id
+  from public.campaign_delivery_records
+  where campaign_id = new.id;
+
+  if resolved_record_id is not null then
+    insert into public.campaign_delivery_checkpoints (
+      delivery_record_id,
+      checkpoint_key,
+      auto_state,
+      manual_state,
+      exception_status
+    )
+    select
+      resolved_record_id,
+      defaults.checkpoint_key,
+      'unknown',
+      'pending',
+      'none'
+    from (
+      values
+        ('implementation_intake'),
+        ('import_qa'),
+        ('invite_readiness'),
+        ('client_activation'),
+        ('first_value'),
+        ('report_delivery'),
+        ('first_management_use')
+    ) as defaults(checkpoint_key)
+    on conflict (delivery_record_id, checkpoint_key) do nothing;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_campaign_created on public.campaigns;
+create trigger on_campaign_created
+  after insert on public.campaigns
+  for each row execute function public.handle_new_campaign_delivery_record();
+
+insert into public.campaign_delivery_records (
+  organization_id,
+  campaign_id,
+  lifecycle_stage,
+  exception_status
+)
+select
+  c.organization_id,
+  c.id,
+  'setup_in_progress',
+  'none'
+from public.campaigns c
+on conflict (campaign_id) do nothing;
+
+insert into public.campaign_delivery_checkpoints (
+  delivery_record_id,
+  checkpoint_key,
+  auto_state,
+  manual_state,
+  exception_status
+)
+select
+  d.id,
+  defaults.checkpoint_key,
+  'unknown',
+  'pending',
+  'none'
+from public.campaign_delivery_records d
+cross join (
+  values
+    ('implementation_intake'),
+    ('import_qa'),
+    ('invite_readiness'),
+    ('client_activation'),
+    ('first_value'),
+    ('report_delivery'),
+    ('first_management_use')
+) as defaults(checkpoint_key)
+on conflict (delivery_record_id, checkpoint_key) do nothing;
 
 -- ============================================================
 -- VIEW: campaign_stats

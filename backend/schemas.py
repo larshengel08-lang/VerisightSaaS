@@ -180,7 +180,34 @@ class ContactRequestRead(BaseModel):
     current_question: str
     notification_sent: bool
     notification_error: str | None = None
+    ops_stage: str
+    ops_exception_status: str
+    ops_owner: str | None = None
+    ops_next_step: str | None = None
+    ops_handoff_note: str | None = None
+    last_contacted_at: datetime | None = None
     created_at: datetime
+
+
+class ContactRequestUpdate(BaseModel):
+    ops_stage: Literal[
+        "lead_captured",
+        "route_qualified",
+        "implementation_intake_ready",
+        "awaiting_follow_up",
+        "closed",
+    ] | None = None
+    ops_exception_status: Literal[
+        "none",
+        "blocked",
+        "needs_operator_recovery",
+        "awaiting_client_input",
+        "awaiting_external_delivery",
+    ] | None = None
+    ops_owner: str | None = Field(default=None, max_length=120)
+    ops_next_step: str | None = Field(default=None, max_length=2000)
+    ops_handoff_note: str | None = Field(default=None, max_length=4000)
+    last_contacted_at: datetime | None = None
 
 
 # ---------------------------------------------------------------------------

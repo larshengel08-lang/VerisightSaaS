@@ -168,14 +168,14 @@ Na eerste tractie moeten commerciële, delivery- en contentprocessen herhaalbaar
 - Assisted To SaaS Readiness Program - afgerond
 - Customer Lifecycle And Expansion Model - afgerond
 - Account And Billing Model Readiness - afgerond
-- Ops And Delivery System
-- Case Proof And Evidence
+- Ops And Delivery System - afgerond
+- Case Proof And Evidence - afgerond
 - Portfolio Architecture
 - Content Operating System
 
 **Status**
 - huidige actieve focus
-- 3 van 7 checklist-items afgerond
+- 5 van 7 checklist-items afgerond
 
 **Exit gate**
 - Herhaalbaar verkoop- en deliveryritme

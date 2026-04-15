@@ -10,6 +10,7 @@ import { DeleteOrgButton } from '@/components/dashboard/delete-org-button'
 import { ArchiveOrgButton } from '@/components/dashboard/archive-org-button'
 import { OperatorOnboardingBlueprint } from '@/components/dashboard/onboarding-panels'
 import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
+import { getDeliveryCheckpointTitle, getDeliveryExceptionLabel, getDeliveryLifecycleLabel } from '@/lib/ops-delivery'
 import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Organization, type Campaign, type OrgInvite, type CampaignStats } from '@/lib/types'
 
 export default async function BeheerPage() {
@@ -98,6 +99,84 @@ export default async function BeheerPage() {
   })) as OrgInvite[]
 
   const pendingInviteCount = invites.filter(invite => !invite.accepted_at).length
+  const { data: deliveryRecordsRaw } = campaignIds.length
+    ? await supabase
+        .from('campaign_delivery_records')
+        .select('id, campaign_id, lifecycle_stage, exception_status, next_step, operator_owner, campaigns(id, name, scan_type)')
+        .in('campaign_id', campaignIds)
+        .order('updated_at', { ascending: false })
+    : { data: [] }
+
+  const deliveryRecords = (deliveryRecordsRaw ?? []) as Array<{
+    id: string
+    campaign_id: string
+    lifecycle_stage: string
+    exception_status: string
+    next_step: string | null
+    operator_owner: string | null
+    campaigns: { id: string; name: string; scan_type: 'exit' | 'retention' } | { id: string; name: string; scan_type: 'exit' | 'retention' }[] | null
+  }>
+  const blockedDeliveries = deliveryRecords.filter(record => record.exception_status !== 'none')
+  const deliveryRecordIds = deliveryRecords.map(record => record.id)
+  const { data: deliveryCheckpointsRaw } = deliveryRecordIds.length
+    ? await supabase
+        .from('campaign_delivery_checkpoints')
+        .select('id, delivery_record_id, checkpoint_key, manual_state, exception_status, last_auto_summary')
+        .in('delivery_record_id', deliveryRecordIds)
+    : { data: [] }
+  const deliveryCheckpoints = (deliveryCheckpointsRaw ?? []) as Array<{
+    id: string
+    delivery_record_id: string
+    checkpoint_key: string
+    manual_state: string
+    exception_status: string
+    last_auto_summary: string | null
+  }>
+  const firstValueReachedCount = deliveryRecords.filter(
+    record => ['first_value_reached', 'first_management_use', 'follow_up_decided', 'learning_closed'].includes(record.lifecycle_stage),
+  ).length
+  const openFollowUpCount = deliveryRecords.filter(
+    record => !['follow_up_decided', 'learning_closed'].includes(record.lifecycle_stage),
+  ).length
+  const deliveriesNeedingAttention = deliveryRecords.filter(
+    record => record.exception_status !== 'none' || ['setup_in_progress', 'import_cleared', 'client_activation_pending'].includes(record.lifecycle_stage),
+  ).slice(0, 4)
+  const pendingCheckpointConfirmations = deliveryCheckpoints.filter(checkpoint => checkpoint.manual_state === 'pending')
+  const checkpointExceptions = deliveryCheckpoints.filter(checkpoint => checkpoint.exception_status !== 'none')
+  const deliveryRecordById = Object.fromEntries(deliveryRecords.map(record => [record.id, record]))
+  const reportDeliveryGaps = pendingCheckpointConfirmations.filter((checkpoint) => {
+    if (checkpoint.checkpoint_key !== 'report_delivery') return false
+    const record = deliveryRecordById[checkpoint.delivery_record_id]
+    return Boolean(record && ['first_value_reached', 'first_management_use', 'follow_up_decided', 'learning_closed'].includes(record.lifecycle_stage))
+  })
+  const clientActivationGaps = pendingCheckpointConfirmations.filter((checkpoint) => {
+    if (checkpoint.checkpoint_key !== 'client_activation') return false
+    const record = deliveryRecordById[checkpoint.delivery_record_id]
+    return Boolean(record && ['client_activation_pending', 'client_activation_confirmed', 'first_value_reached', 'first_management_use'].includes(record.lifecycle_stage))
+  })
+  const opsAttentionRows = pendingCheckpointConfirmations
+    .map((checkpoint) => {
+      const record = deliveryRecordById[checkpoint.delivery_record_id]
+      const campaign = record ? (Array.isArray(record.campaigns) ? record.campaigns[0] : record.campaigns) : null
+      if (!record || !campaign) return null
+      return {
+        checkpoint,
+        record,
+        campaign,
+      }
+    })
+    .filter(Boolean)
+    .slice(0, 6) as Array<{
+    checkpoint: {
+      id: string
+      checkpoint_key: string
+      manual_state: string
+      exception_status: string
+      last_auto_summary: string | null
+    }
+    record: (typeof deliveryRecords)[number]
+    campaign: { id: string; name: string; scan_type: 'exit' | 'retention' }
+  }>
 
   const step1Done = activeOrgs.length > 0
   const step2Done = campaigns.some(campaign => campaign.is_active)
@@ -136,6 +215,150 @@ export default async function BeheerPage() {
           </div>
         </div>
       </div>
+
+      {deliveryRecords.length > 0 && (
+        <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-5 border-b border-slate-100 pb-4">
+            <h2 className="text-sm font-semibold text-slate-900">Operations cadence</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-500">
+              Deze laag houdt open deliverywerk zichtbaar: welke campaigns nog in setup zitten, waar klantactivatie of first value nog niet bevestigd is en waar exception-recovery nodig blijft.
+            </p>
+          </div>
+          <div className="grid gap-4 xl:grid-cols-4">
+            <OpsCard
+              title="Actieve deliveryrecords"
+              value={`${deliveryRecords.length}`}
+              body="Elke campaign krijgt nu een persistente deliveryrecord met lifecycle en exception-status."
+              tone="blue"
+            />
+            <OpsCard
+              title="Exceptions"
+              value={`${blockedDeliveries.length}`}
+              body="Blocked, operator-recovery of wacht-op-klant blijft hier zichtbaar in plaats van in losse notities."
+              tone={blockedDeliveries.length > 0 ? 'amber' : 'emerald'}
+            />
+            <OpsCard
+              title="First value bereikt"
+              value={`${firstValueReachedCount}`}
+              body="Campaigns die al op first value of verder zitten binnen dezelfde assisted cadence."
+              tone={firstValueReachedCount > 0 ? 'emerald' : 'slate'}
+            />
+            <OpsCard
+              title="Open follow-up"
+              value={`${openFollowUpCount}`}
+              body="Campaigns die nog niet expliciet op follow-up besloten of learning gesloten staan."
+              tone={openFollowUpCount > 0 ? 'blue' : 'slate'}
+            />
+          </div>
+
+          <div className="mt-4 grid gap-4 xl:grid-cols-4">
+            <OpsCard
+              title="Pending checkpoints"
+              value={`${pendingCheckpointConfirmations.length}`}
+              body="Handmatige acceptance of recoverybevestigingen die nog open staan op intake, import, activation, report of management use."
+              tone={pendingCheckpointConfirmations.length > 0 ? 'amber' : 'emerald'}
+            />
+            <OpsCard
+              title="Checkpoint exceptions"
+              value={`${checkpointExceptions.length}`}
+              body="Exceptions die op checkpointniveau expliciet zijn opgeslagen."
+              tone={checkpointExceptions.length > 0 ? 'amber' : 'emerald'}
+            />
+            <OpsCard
+              title="Activation gaps"
+              value={`${clientActivationGaps.length}`}
+              body="Campaigns waar klantactivatie volgens de cadence aandacht of recovery vraagt."
+              tone={clientActivationGaps.length > 0 ? 'amber' : 'slate'}
+            />
+            <OpsCard
+              title="Report gaps"
+              value={`${reportDeliveryGaps.length}`}
+              body="Campaigns die first value naderen of al bereikt hebben, maar nog geen bevestigde report delivery kennen."
+              tone={reportDeliveryGaps.length > 0 ? 'amber' : 'slate'}
+            />
+          </div>
+
+          {deliveriesNeedingAttention.length > 0 && (
+            <div className="mt-5 grid gap-3 lg:grid-cols-2">
+              {deliveriesNeedingAttention.map((record) => {
+                const campaign = Array.isArray(record.campaigns) ? record.campaigns[0] : record.campaigns
+                return (
+                  <div key={record.id} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-slate-600">
+                        {campaign?.scan_type === 'retention' ? 'RetentieScan' : 'ExitScan'}
+                      </span>
+                      <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-slate-600">
+                        {getDeliveryLifecycleLabel(record.lifecycle_stage as never)}
+                      </span>
+                      {record.exception_status !== 'none' && (
+                        <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800">
+                          {getDeliveryExceptionLabel(record.exception_status as never)}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-3 font-semibold text-slate-950">{campaign?.name ?? 'Onbekende campaign'}</p>
+                    <p className="mt-1 leading-6 text-slate-600">
+                      {record.next_step ? `Volgende stap: ${record.next_step}` : 'Nog geen expliciete volgende stap opgeslagen.'}
+                    </p>
+                    {record.operator_owner ? (
+                      <p className="mt-2 text-xs text-slate-500">Eigenaar: {record.operator_owner}</p>
+                    ) : null}
+                    <a
+                      href={`/campaigns/${record.campaign_id}`}
+                      className="mt-3 inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
+                    >
+                      Open deliverylaag
+                    </a>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {opsAttentionRows.length > 0 && (
+            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex flex-col gap-1 border-b border-slate-200 pb-3">
+                <h3 className="text-sm font-semibold text-slate-900">Open ops loops</h3>
+                <p className="text-sm leading-6 text-slate-500">
+                  Gebruik dit als compact command-center voor acceptance, escalation en follow-through op open deliverywerk.
+                </p>
+              </div>
+              <div className="mt-3 space-y-3">
+                {opsAttentionRows.map(({ checkpoint, record, campaign }) => (
+                  <div key={checkpoint.id} className="rounded-xl border border-white bg-white px-4 py-3 text-sm text-slate-700">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
+                        {campaign.scan_type === 'retention' ? 'RetentieScan' : 'ExitScan'}
+                      </span>
+                      <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
+                        {getDeliveryLifecycleLabel(record.lifecycle_stage as never)}
+                      </span>
+                      <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-800">
+                        {getDeliveryCheckpointTitle(checkpoint.checkpoint_key as never)}
+                      </span>
+                    </div>
+                    <p className="mt-3 font-semibold text-slate-950">{campaign.name}</p>
+                    <p className="mt-1 leading-6 text-slate-600">
+                      {checkpoint.last_auto_summary ?? 'Nog geen autosamenvatting opgeslagen; open de deliverylaag om acceptance en recovery expliciet te bevestigen.'}
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                      <span>Handmatige status: nog bevestigen</span>
+                      {record.operator_owner ? <span>Eigenaar: {record.operator_owner}</span> : null}
+                    </div>
+                    <a
+                      href={`/campaigns/${record.campaign_id}`}
+                      className="mt-3 inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
+                    >
+                      Open checkpoint
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="mb-8 flex items-center gap-2">
         <StepBadge n={1} label="Organisatie" done={step1Done} />
@@ -482,6 +705,35 @@ function LockedStep({ message }: { message: string }) {
     <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-400">
       <span>🔒</span>
       <span>{message}</span>
+    </div>
+  )
+}
+
+function OpsCard({
+  title,
+  value,
+  body,
+  tone,
+}: {
+  title: string
+  value: string
+  body: string
+  tone: 'blue' | 'emerald' | 'amber' | 'slate'
+}) {
+  const toneClass =
+    tone === 'emerald'
+      ? 'border-emerald-100 bg-emerald-50'
+      : tone === 'amber'
+        ? 'border-amber-100 bg-amber-50'
+        : tone === 'slate'
+          ? 'border-slate-200 bg-slate-50'
+          : 'border-blue-100 bg-blue-50'
+
+  return (
+    <div className={`rounded-xl border px-4 py-4 ${toneClass}`}>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{title}</p>
+      <p className="mt-3 text-2xl font-semibold text-slate-950">{value}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-700">{body}</p>
     </div>
   )
 }

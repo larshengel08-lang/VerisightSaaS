@@ -64,6 +64,7 @@ from backend.schemas import (
     ContactRequestCreate,
     ContactRequestRead,
     ContactRequestResponse,
+    ContactRequestUpdate,
     InviteSendResult,
     OrganizationCreate,
     OrganizationRead,
@@ -630,6 +631,38 @@ async def list_contact_requests(
         .limit(limit)
         .all()
     )
+
+
+@app.patch("/api/contact-requests/{lead_id}", response_model=ContactRequestRead)
+async def update_contact_request(
+    lead_id: str,
+    body: ContactRequestUpdate,
+    x_admin_token: Annotated[str | None, Header()] = None,
+    db: Session = Depends(get_db),
+) -> ContactRequest:
+    require_backend_admin_token(x_admin_token, is_production=_IS_PRODUCTION)
+
+    lead = db.query(ContactRequest).filter(ContactRequest.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail="Contactaanvraag niet gevonden.")
+
+    if body.ops_stage is not None:
+        lead.ops_stage = body.ops_stage
+    if body.ops_exception_status is not None:
+        lead.ops_exception_status = body.ops_exception_status
+    if body.ops_owner is not None:
+        lead.ops_owner = body.ops_owner.strip() or None
+    if body.ops_next_step is not None:
+        lead.ops_next_step = body.ops_next_step.strip() or None
+    if body.ops_handoff_note is not None:
+        lead.ops_handoff_note = body.ops_handoff_note.strip() or None
+    if body.last_contacted_at is not None:
+        lead.last_contacted_at = body.last_contacted_at
+
+    db.add(lead)
+    db.commit()
+    db.refresh(lead)
+    return lead
 
 
 @app.get("/survey/complete", response_class=HTMLResponse)

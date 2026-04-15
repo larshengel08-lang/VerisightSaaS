@@ -4,6 +4,14 @@ import {
   type ContactDesiredTiming,
   type ContactRouteInterest,
 } from '@/lib/contact-funnel'
+import type {
+  CaseEvidenceClosureStatus,
+  CaseOutcomeClass,
+  CaseOutcomeQuality,
+  CasePermissionStatus,
+  CasePotential,
+  EvidenceApprovalStatus,
+} from '@/lib/case-proof-evidence'
 import type { CampaignStats, DeliveryMode, ScanType } from '@/lib/types'
 
 export type LearningTriageStatus = 'nieuw' | 'bevestigd' | 'geparkeerd' | 'uitgevoerd' | 'verworpen'
@@ -31,6 +39,12 @@ export interface ContactRequestRecord {
   current_question: string
   notification_sent: boolean
   notification_error: string | null
+  ops_stage: string
+  ops_exception_status: string
+  ops_owner: string | null
+  ops_next_step: string | null
+  ops_handoff_note: string | null
+  last_contacted_at: string | null
   created_at: string
 }
 
@@ -53,10 +67,23 @@ export interface PilotLearningDossier {
   buying_reason: string | null
   trust_friction: string | null
   implementation_risk: string | null
+  first_management_value: string | null
+  first_action_taken: string | null
+  review_moment: string | null
   adoption_outcome: string | null
   management_action_outcome: string | null
   next_route: string | null
   stop_reason: string | null
+  case_evidence_closure_status: CaseEvidenceClosureStatus
+  case_approval_status: EvidenceApprovalStatus
+  case_permission_status: CasePermissionStatus
+  case_quote_potential: CasePotential
+  case_reference_potential: CasePotential
+  case_outcome_quality: CaseOutcomeQuality
+  case_outcome_classes: CaseOutcomeClass[]
+  claimable_observations: string | null
+  supporting_artifacts: string | null
+  case_public_summary: string | null
   created_by: string | null
   updated_by: string | null
   created_at: string
@@ -148,6 +175,52 @@ export const LEARNING_ROUTE_OPTIONS: Array<{ value: ContactRouteInterest; label:
   { value: 'nog-onzeker', label: 'Nog niet zeker' },
 ]
 
+export const CASE_EVIDENCE_CLOSURE_OPTIONS: Array<{ value: CaseEvidenceClosureStatus; label: string }> = [
+  { value: 'lesson_only', label: 'Lesson only' },
+  { value: 'internal_proof_only', label: 'Internal proof only' },
+  { value: 'sales_usable', label: 'Sales-usable' },
+  { value: 'public_usable', label: 'Public-usable' },
+  { value: 'rejected', label: 'Rejected' },
+]
+
+export const CASE_APPROVAL_STATUS_OPTIONS: Array<{ value: EvidenceApprovalStatus; label: string }> = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'internal_review', label: 'Internal review' },
+  { value: 'claim_check', label: 'Claim check' },
+  { value: 'customer_permission', label: 'Customer permission' },
+  { value: 'approved', label: 'Approved' },
+]
+
+export const CASE_PERMISSION_STATUS_OPTIONS: Array<{ value: CasePermissionStatus; label: string }> = [
+  { value: 'not_requested', label: 'Nog niet gevraagd' },
+  { value: 'internal_only', label: 'Alleen intern' },
+  { value: 'anonymous_case_only', label: 'Alleen anonieme case' },
+  { value: 'named_quote_allowed', label: 'Named quote toegestaan' },
+  { value: 'named_case_allowed', label: 'Named case toegestaan' },
+  { value: 'reference_only', label: 'Alleen reference' },
+  { value: 'declined', label: 'Geweigerd' },
+]
+
+export const CASE_POTENTIAL_OPTIONS: Array<{ value: CasePotential; label: string }> = [
+  { value: 'laag', label: 'Laag' },
+  { value: 'middel', label: 'Middel' },
+  { value: 'hoog', label: 'Hoog' },
+]
+
+export const CASE_OUTCOME_QUALITY_OPTIONS: Array<{ value: CaseOutcomeQuality; label: string }> = [
+  { value: 'nog_onvoldoende', label: 'Nog onvoldoende' },
+  { value: 'indicatief', label: 'Indicatief' },
+  { value: 'stevig', label: 'Stevig' },
+]
+
+export const CASE_OUTCOME_CLASS_OPTIONS: Array<{ value: CaseOutcomeClass; label: string }> = [
+  { value: 'kwalitatieve_les', label: 'Kwalitatieve les' },
+  { value: 'operationele_uitkomst', label: 'Operationele uitkomst' },
+  { value: 'management_adoptie', label: 'Managementadoptie' },
+  { value: 'herhaalgebruik', label: 'Herhaalgebruik' },
+  { value: 'kwantitatieve_uitkomst', label: 'Kwantitatieve uitkomst' },
+]
+
 export function getCheckpointDefinition(key: LearningCheckpointKey) {
   return LEARNING_CHECKPOINT_DEFINITIONS.find((definition) => definition.key === key) ?? null
 }
@@ -194,6 +267,9 @@ type ObjectiveSignalArgs = {
     | 'delivery_mode'
     | 'scan_type'
     | 'expected_first_value'
+    | 'first_management_value'
+    | 'first_action_taken'
+    | 'review_moment'
     | 'next_route'
     | 'stop_reason'
     | 'management_action_outcome'
@@ -275,9 +351,18 @@ export function buildLearningObjectiveSignals({
     if (dossier.management_action_outcome) {
       items.push('Er is al een managementactie-uitkomst of eerste eigenaar vastgelegd in het dossier.')
     }
+    if (dossier.first_management_value) {
+      items.push('De eerste managementwaarde is expliciet vastgelegd.')
+    }
+    if (dossier.first_action_taken) {
+      items.push('De eerste gekozen actie is expliciet vastgelegd.')
+    }
   }
 
   if (checkpointKey === 'follow_up_review') {
+    if (dossier.review_moment) {
+      items.push(`Reviewmoment vastgelegd: ${dossier.review_moment}.`)
+    }
     if (dossier.next_route) {
       items.push(`Gekozen vervolgroute: ${dossier.next_route}.`)
     }
