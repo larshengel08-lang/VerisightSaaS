@@ -89,7 +89,7 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
     assert "eerste eigenaar" in preview_copy
     assert "eerste verificatiespoor" in preview_copy
     assert "vertrekduiding voor hr, mt en directie" in exit_report_content
-    assert "behoudssignalen voor hr, mt en directie" in retention_report_content
+    assert "vroegsignalering op behoud voor hr, mt en directie" in retention_report_content
     assert "wat je hier niet uit moet concluderen" in exit_report_content
     assert "wat je hier niet uit moet concluderen" in retention_report_content
     assert "bestuurlijke handoff" in report

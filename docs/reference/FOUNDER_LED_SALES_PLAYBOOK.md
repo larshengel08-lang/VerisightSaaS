@@ -15,6 +15,10 @@ Gebruik het als eerste referentie voor:
 - pricing- en voorstelovergangen
 - follow-up na kennismaking
 
+Voor canonieke producttaal:
+
+- zie ook `docs/reference/PRODUCT_TERMINOLOGY_AND_TAXONOMY.md`
+
 ## Kernpitch
 
 Verisight helpt organisaties vanaf circa 200 medewerkers om uitstroom en behoud niet langer als losse signalen te bespreken, maar als bestuurbare managementvraag te lezen.
@@ -41,7 +45,7 @@ Open met het herkenbare buyer-probleem:
 
 Aanbevolen opener:
 
-> Veel organisaties hebben wel exitgesprekken of losse behoudssignalen, maar nog geen vergelijkbaar managementbeeld dat laat zien welke vraag nu echt als eerste telt.
+> Veel organisaties hebben wel exitgesprekken of losse signalen rond behoud, maar nog geen vergelijkbaar managementbeeld dat laat zien welke vraag nu echt als eerste telt.
 
 ### 2. Waarom de huidige aanpak tekortschiet
 
@@ -63,7 +67,7 @@ Breng Verisight daarna terug tot de productvorm:
 
 Aanbevolen kernzin:
 
-> Verisight maakt van losse uitstroom- of behoudssignalen een bestuurbare managementvraag, zonder dat HR zelf een nieuw surveyproces of analyseproject hoeft op te tuigen.
+> Verisight maakt van losse uitstroom- of signalen rond behoud een bestuurbare managementvraag, zonder dat HR zelf een nieuw surveyproces of analyseproject hoeft op te tuigen.
 
 ### 4. Waarom ExitScan eerst
 
@@ -226,7 +230,7 @@ Gebruik voor elk bezwaar hetzelfde patroon:
 
 - Erkenning: het lijkt soms op een medewerkergerichte scan.
 - Herframing: de scope is smaller en besluitgerichter dan een brede MTO.
-- Truthful claim: RetentieScan richt zich op behoudssignalen, stay-intent, vertrekintentie en beinvloedbare werkfactoren.
+- Truthful claim: RetentieScan richt zich op vroegsignalering op behoud via retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.
 - Next step: toetsen of de vraag echt breed cultuur/tevredenheid is of juist behoud en opvolging.
 
 ### Is RetentieScan een predictor?

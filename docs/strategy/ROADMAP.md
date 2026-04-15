@@ -15,6 +15,27 @@ Laatst gegenereerd: 2026-04-15
 - De grootste open vragen zitten nu minder in 'werkt het technisch?' en meer in beslissing- en koopgereedheid.
 - De nadruk ligt nu op trust, actionability, decision-maker readiness en commerciële packaging, vóór website- en SEO-schalen.
 
+## SaaS-readiness nu
+
+**Al aanwezig**
+- Productfundament aanwezig: scans, dashboards, rapportage en organisatie-/campagnestructuur bestaan al.
+- Beveiligde appflows aanwezig: auth, login, forgot-password, invites en afgeschermde dashboardroutes werken als productbasis.
+- Demo- en sample-infrastructuur aanwezig: voorbeeldrapporten, seed-scripts en demo-omgevingen ondersteunen assisted verkoop en validatie.
+
+**Deels aanwezig**
+- Verkoopvorm is al productized en herhaalbaar, maar nog primair begeleid in plaats van no-touch self-service.
+- Website, rapporten en demo-output bewegen richting SaaS-achtige packaging, maar de commerciële motion is nog geen volledige product-led flow.
+- Onboarding, implementation en adoptie krijgen al een plek in de roadmap, maar zijn nog geen gestandaardiseerd schaalmechanisme.
+
+**Ontbreekt nog**
+- Geen echte billing- of subscriptionlaag zichtbaar als kern van het model.
+- Geen volwaardige self-service onboarding of account provisioning als hoofdpad.
+- Geen duidelijke plan-, seat-, usage- of customer-lifecyclelogica zoals bij volwassen SaaS.
+
+**Pas later doen**
+- Stripe, self-service billing en zwaardere automation pas oppakken nadat packaging, website en deliverystandaard scherp genoeg zijn.
+- Eerst assisted SaaS-readiness bouwen via pricing, sales enablement, onboarding, implementation readiness en demo/showcase.
+
 ## Phase A - Product Credibility Foundation
 
 **Doel**
@@ -75,13 +96,14 @@ Verisight moet overtuigend landen bij HR-beslissers, directie en eerste kopers z
 De propositie, verpakking en ondersteunende assets moeten coherent genoeg zijn om verkoopbaar en herhaalbaar te worden.
 
 **Hoort in deze fase**
-- Product Terminology And Taxonomy
+- Product Terminology And Taxonomy - afgerond
 - Sales Enablement System
 - Pricing And Packaging
 - Sample Output And Showcase
 
 **Status**
 - huidige actieve focus
+- 1 van 4 checklist-items afgerond
 
 **Exit gate**
 - Producttaal is consistent

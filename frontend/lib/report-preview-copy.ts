@@ -162,7 +162,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     nuance:
       'RetentieScan is bedoeld voor groeps- en segmentduiding. De output is nadrukkelijk geen individuele voorspeller of performance-instrument, maar een v1-werkmodel voor verificatie en prioritering.',
     factorLead:
-      'De factoranalyse laat zien waar behoudssignalen samenhangen met beinvloedbare werkfactoren zoals leiderschap, groei en werkbelasting.',
+      'De factoranalyse laat zien waar het retentiesignaal samenhangt met beinvloedbare werkfactoren zoals leiderschap, groei en werkbelasting.',
     hypothesisLead:
       'De rapportage helpt management niet alleen zien wat spannend is, maar ook wie eerst moet valideren en welke 30-90 dagenactie logisch is.',
     hypotheses: [

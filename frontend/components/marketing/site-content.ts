@@ -119,7 +119,7 @@ export const productOverviewComparisonRows = [
   ],
   [
     'RetentieScan',
-    'Behoudsignalering',
+    'Vroegsignalering op behoud',
     'Waar staat behoud nu onder druk in de actieve populatie?',
     'Voor vroegsignalering en prioritering',
   ],
@@ -324,7 +324,7 @@ export const outcomeCards = [
   ],
   [
     'Ga van losse signalen naar bestuurbare prioriteiten',
-    'Verisight vertaalt losse exitdata of behoudssignalen naar een eerste managementvraag, een eerste eigenaar en een logische vervolgstap.',
+    'Verisight vertaalt losse exitdata of losse signalen rond behoud naar een eerste managementvraag, een eerste eigenaar en een logische vervolgstap.',
   ],
   [
     'Geen extra toolbeheer voor HR',
@@ -351,7 +351,7 @@ export const processHighlights = [
   },
   {
     title: 'Voor directie',
-    text: 'Compacte besluitinformatie die laat zien waar terugkerende vertrekpatronen of vroege behoudssignalen bestuurlijke aandacht, eigenaarschap en vervolgrichting verdienen.',
+    text: 'Compacte besluitinformatie die laat zien waar terugkerende vertrekpatronen of vroege signalen dat behoud onder druk staat bestuurlijke aandacht, eigenaarschap en vervolgrichting verdienen.',
   },
 ] as const
 
@@ -428,7 +428,7 @@ export const approachRoutes = [
   {
     eyebrow: 'RetentieScan ritme',
     title: 'Voor organisaties die periodiek willen volgen',
-    body: 'Herhaalmeting per kwartaal of halfjaar om te zien of retentiesignalen, stay-intent, bevlogenheid en prioritaire werkfactoren verbeteren. Meestal een vervolgstap nadat de eerste baseline en opvolging staan.',
+    body: 'Herhaalmeting per kwartaal of halfjaar om te zien of het retentiesignaal, stay-intent, bevlogenheid en prioritaire werkfactoren verbeteren. Meestal een vervolgstap nadat de eerste baseline en opvolging staan.',
     bullets: [
       'Compacter vervolg op een baseline',
       'Geschikt om effect van acties zichtbaar te maken in dezelfde signaallogica',
@@ -464,7 +464,7 @@ export const pricingCards = [
     ],
   },
   {
-    eyebrow: 'Retention Loop',
+    eyebrow: 'RetentieScan ritme',
     price: 'vanaf EUR 4.950',
     description:
       'Voor organisaties die van een eerste RetentieScan willen doorgroeien naar een ritme met herhaalmeting, trendduiding en beter onderbouwde opvolging op behoud, passend bij terugkerende prioriteits- en continuiteitsgesprekken.',
@@ -490,7 +490,7 @@ export const retentionPackages = [
     bullets: ['Alles uit Baseline', 'Segmentanalyse op afdeling en functieniveau', 'Extra duiding op afwijkende groepen'],
   },
   {
-    title: 'Retention Loop',
+    title: 'RetentieScan ritme',
     fit: 'Voor structurele opvolging',
     body: 'Voor organisaties die retentie niet als momentopname maar als terugkerend stuurthema willen benaderen.',
     bullets: ['Herhaalmeting en trendduiding', 'Betere opvolging van acties', 'Basis voor latere validatie en vergelijking'],
@@ -498,7 +498,7 @@ export const retentionPackages = [
 ] as const
 
 export const pricingChoiceGuide = [
-  ['ExitScan', 'Je wilt vertrek achteraf duiden en zien welke werkfactoren en werksignalen daarin terugkeren.'],
+  ['ExitScan', 'Je wilt vertrek achteraf duiden en zien welke werkfactoren en signalen van werkfrictie daarin terugkeren.'],
   ['RetentieScan', 'Je wilt eerder zien waar behoud in de actieve populatie onder druk staat.'],
   ['Combinatie', 'Je wilt zowel leren van vertrek als eerder kunnen bijsturen op behoud.'],
 ] as const
@@ -532,7 +532,7 @@ export const pricingFaqs = [
   ],
   [
     'Is RetentieScan een MTO-vervanger?',
-    'Nee. Het product is smaller en scherper: het richt zich op behoudssignalen, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
+    'Nee. Het product is smaller en scherper: het richt zich op vroegsignalering op behoud via retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
     'Wanneer kies je voor een combinatiepakket?',
@@ -555,11 +555,11 @@ export const pricingFaqs = [
 export const faqs = [
   [
     'Wat is het verschil tussen ExitScan en RetentieScan?',
-    'ExitScan helpt vertrek achteraf duiden op basis van terugkerende werkfactoren, vertrekredenen en werksignalen. RetentieScan helpt eerder zien waar behoud op groepsniveau onder druk staat bij actieve medewerkers.',
+    'ExitScan helpt vertrek achteraf duiden op basis van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie. RetentieScan helpt eerder zien waar behoud op groepsniveau onder druk staat bij actieve medewerkers.',
   ],
   [
     'Is RetentieScan gewoon een MTO?',
-    'Nee. RetentieScan is smaller en scherper gepositioneerd: het is een compacte behoudsscan op groeps- en segmentniveau rond retentiesignalen, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
+    'Nee. RetentieScan is smaller en scherper gepositioneerd: het is een compacte scan voor vroegsignalering op behoud op groeps- en segmentniveau rond retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
     'Wanneer kies je voor de combinatie?',
@@ -571,7 +571,7 @@ export const faqs = [
   ],
   [
     'Is RetentieScan een gevalideerde vertrekvoorspeller?',
-    'Nee. Voor v1 positioneren we RetentieScan als SDT-gebaseerde managementscan voor behoudssignalen, verificatie en prioritering: inhoudelijk plausibel en testmatig beschermd, maar niet als wetenschappelijk gevalideerde voorspeller van vrijwillig vertrek.',
+    'Nee. Voor v1 positioneren we RetentieScan als SDT-gebaseerde managementscan voor vroegsignalering op behoud, verificatie en prioritering: inhoudelijk plausibel en testmatig beschermd, maar niet als wetenschappelijk gevalideerde voorspeller van vrijwillig vertrek.',
   ],
   [
     'Hoe vaak herhaal je RetentieScan?',

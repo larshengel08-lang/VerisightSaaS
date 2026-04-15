@@ -5,11 +5,11 @@ export const retentionScanDefinition: ScanDefinition = {
   productName: 'RetentieScan',
   signalLabel: 'Retentiesignaal',
   signalLabelLower: 'retentiesignaal',
-  summaryLabel: 'Gem. stay-intent',
+  summaryLabel: 'Stay-intent (aanvullend)',
   methodologyText:
-    'Verisight maakt zichtbaar waar behoud op groeps- en segmentniveau onder druk staat en welke beinvloedbare werkfactoren als eerste verificatie vragen. RetentieScan is geen brede MTO en geen individuele voorspeller: het is een SDT-gebaseerd vroegsignaal waarin werkbeleving en werkfactoren samen een v1-retentiesignaal vormen, terwijl bevlogenheid, vertrekintentie en stay-intent apart leesbaar blijven als aanvullende behoudssignalen.',
+    'Verisight maakt zichtbaar waar behoud op groeps- en segmentniveau onder druk staat en welke beinvloedbare werkfactoren als eerste verificatie vragen. RetentieScan is geen brede MTO en geen individuele voorspeller: het is een SDT-gebaseerd vroegsignaal waarin werkbeleving en werkfactoren samen een v1-retentiesignaal vormen, terwijl bevlogenheid, vertrekintentie en stay-intent apart leesbaar blijven als aanvullende signalen rond behoud.',
   whatItIsText:
-    'Een compacte behoudsscan voor groeps- en segmentniveau, bedoeld om eerder zichtbaar te maken waar behoud aandacht vraagt in actieve populaties.',
+    'Een compacte scan voor vroegsignalering op behoud op groeps- en segmentniveau, bedoeld om eerder zichtbaar te maken waar behoud aandacht vraagt in actieve populaties.',
   whatItIsNotText:
     'Geen brede MTO, geen individuele voorspeller, geen performance-instrument en geen selectie- of interventietool op persoonsniveau.',
   howToReadText:
@@ -23,5 +23,5 @@ export const retentionScanDefinition: ScanDefinition = {
   reliabilityText:
     'Grafieken en patroonanalyse tonen we pas vanaf minimaal 10 responses. Individuele scores blijven uit beeld; segmentvergelijkingen tonen we alleen bij voldoende aantallen. De uitkomst is bedoeld voor prioritering en verificatie op groepsniveau, niet als gevalideerde voorspeller van vrijwillig vertrek.',
   segmentText:
-    'Als segment deep dive aanstaat, laat Verisight zien welke afdelingen of functieniveaus relatief sterker afwijken op retentiesignalen. De vergelijking is beschrijvend en bedoeld voor prioritering, niet als causaal bewijs.',
+    'Als segment deep dive aanstaat, laat Verisight zien welke afdelingen of functieniveaus relatief sterker afwijken op het retentiesignaal. De vergelijking is beschrijvend en bedoeld voor prioritering, niet als causaal bewijs.',
 }

@@ -1,7 +1,7 @@
 export const RETENTION_FOCUS_QUESTIONS: Record<string, Record<string, string[]>> = {
   leadership: {
     HOOG: [
-      'In welke teams lijkt leidinggevend gedrag het sterkst samen te hangen met behoudssignalen?',
+      'In welke teams lijkt leidinggevend gedrag het sterkst samen te hangen met het retentiesignaal?',
       'Welke ondersteuning missen medewerkers nu het meest van hun leidinggevende?',
       'Is dit eerst een teamspoor of al een breder managementthema dat snelle opvolging vraagt?',
     ],

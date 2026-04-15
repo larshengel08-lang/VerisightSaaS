@@ -66,7 +66,7 @@ export default function PrivacyPage() {
           <li>Om ExitScan en RetentieScan uit te voeren en rapportages beschikbaar te maken voor de klantorganisatie.</li>
           <li>Om uitnodigingen en herinneringen te versturen aan respondenten.</li>
           <li>Om de veiligheid, betrouwbaarheid en beschikbaarheid van het platform te bewaken.</li>
-          <li>Om klantorganisaties te helpen hun uitstroom te duiden en retentiesignalen op groepsniveau te analyseren.</li>
+          <li>Om klantorganisaties te helpen hun uitstroom te duiden en behoud eerder op groepsniveau te signaleren via RetentieScan.</li>
         </ul>
       </section>
 

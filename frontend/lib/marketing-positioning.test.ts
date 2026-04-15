@@ -18,7 +18,7 @@ describe('ExitScan positioning copy', () => {
 
     expect(exitProduct).toBeTruthy()
     expect(exitProduct?.description.toLowerCase()).toContain('vertrekduiding')
-    expect(exitProduct?.description.toLowerCase()).toContain('werksignalen')
+    expect(exitProduct?.description.toLowerCase()).toContain('signalen van werkfrictie')
     expect(exitProduct?.description.toLowerCase()).not.toContain('voorspeller')
     expect(exitProduct?.description.toLowerCase()).not.toContain('diagnose')
     expect(exitScanDefinition.methodologyText.toLowerCase()).toContain('zonder oorzaken definitief vast te stellen')
@@ -72,7 +72,7 @@ describe('RetentieScan positioning copy', () => {
     expect(retentionScanDefinition.evidenceStatusText.toLowerCase()).toContain('v1-werkmodel')
     expect(retentionScanDefinition.signalHelp.toLowerCase()).toContain('samenvattend groepssignaal')
     expect(retentionScanDefinition.signalHelp.toLowerCase()).toContain('eerst verificatie')
-    expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('aanvullende behoudssignalen')
+    expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('aanvullende signalen rond behoud')
   })
 
   it('keeps retention faq copy explicit about group insight and non-predictive use', () => {

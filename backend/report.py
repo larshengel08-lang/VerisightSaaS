@@ -756,7 +756,7 @@ def _build_retention_action_hypotheses(
 
     if retention_signal_profile == "scherp_aandachtssignaal":
         items.append({
-            "title": "Hypothese: meerdere behoudssignalen wijzen dezelfde kant op",
+            "title": "Hypothese: retentiesignaal en aanvullende signalen wijzen dezelfde kant op",
             "body": (
                 "De combinatie van retentiesignaal, bevlogenheid, stay-intent en vertrekintentie wijst op een scherp groepssignaal. "
                 "Dit vraagt snelle verificatie in de teams of segmenten waar de laagste werkfactoren samenkomen."
@@ -1910,11 +1910,11 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         story.append(Paragraph(f"{signal_label} (gemiddeld)", STYLES["sub_title"]))
         story.append(_risk_gauge_image(avg_risk, band_label))
         benchmark_text = (
-            f"<i>Het {signal_label_lower} is een interne samenvatting van behoudssignalen in deze groep. "
+            f"<i>Het {signal_label_lower} is een interne samenvatting van het retentiebeeld in deze groep. "
             "Gebruik deze score als gesprekssamenvatting en vroegsignaal, niet als individuele voorspelling of externe benchmark.</i>"
             if is_retention else
             "<i>Binnen ExitScan is de frictiescore een interne managementsamenvatting van ervaren werkfrictie rondom vertrek. "
-            "Gebruik deze score altijd samen met vertrekredenen, topfactoren en werksignalen, niet als causaliteitsclaim, externe benchmark of voorspelling.</i>"
+            "Gebruik deze score altijd samen met vertrekredenen, topfactoren en signalen van werkfrictie, niet als causaliteitsclaim, externe benchmark of voorspelling.</i>"
         )
         _append_emphasis_note(
             story,
@@ -2568,7 +2568,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
             story.append(Spacer(1, 0.3 * cm))
 
             if previous_campaign_label and retention_trend_rows:
-                story.append(Paragraph("Trend op behoudssignalen", STYLES["sub_title"]))
+                story.append(Paragraph("Trend op retentiesignaal en aanvullende signalen", STYLES["sub_title"]))
                 story.append(Paragraph(
                     f"Vergeleken met <b>{previous_campaign_label}</b> zie je hieronder hoe bevlogenheid, stay-intent en vertrekintentie verschoven. "
                     "Gebruik dit om te bepalen of de huidige verandering breed genoeg is om actie op te schalen.",
@@ -3034,7 +3034,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     if camp.scan_type == "retention" and retention_playbooks:
         story.append(Paragraph("Behoudsplaybooks", STYLES["sub_title"]))
         story.append(Paragraph(
-            "Deze playbooks vertalen de sterkste retentiesignalen naar een praktisch eerste handelingskader. "
+            "Deze playbooks vertalen het retentiesignaal en de aanvullende signalen rond behoud naar een praktisch eerste handelingskader. "
             "Gebruik ze om gericht te valideren, in actie te komen en overhaaste conclusies te voorkomen.",
             STYLES["body"],
         ))

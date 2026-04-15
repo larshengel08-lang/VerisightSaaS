@@ -173,7 +173,7 @@ function ExitScanPage() {
     <MarketingPageShell
       eyebrow="ExitScan"
       title="Maak vertrek bestuurlijk leesbaar."
-      description="ExitScan helpt organisaties vertrekduiding opbouwen uit terugkerende werkfactoren, vertrekredenen en werksignalen. Geen harde oorzaakverklaring, wel een managementbeeld met compacte bestuurlijke handoff dat helpt prioriteren."
+      description="ExitScan helpt organisaties vertrekduiding opbouwen uit terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie. Geen harde oorzaakverklaring, wel een managementbeeld met compacte bestuurlijke handoff dat helpt prioriteren."
       theme="exit"
       highlightItems={['Terugkijkend', 'Vertrekduiding', 'Managementrapport']}
       contextTitle="Een product voor organisaties die willen leren van vertrek dat al heeft plaatsgevonden."
@@ -186,7 +186,7 @@ function ExitScanPage() {
             Als je wilt leren van uitstroom zonder te blijven hangen in losse verhalen.
           </h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            ExitScan helpt patronen zichtbaar te maken in werkfactoren, vertrekredenen en werksignalen. Daarmee wordt vertrekduiding bestuurlijk leesbaar, vergelijkbaar en beter bespreekbaar, zonder van de scan een diagnose of voorspelproduct te maken.
+            ExitScan helpt patronen zichtbaar te maken in werkfactoren, vertrekredenen en signalen van werkfrictie. Daarmee wordt vertrekduiding bestuurlijk leesbaar, vergelijkbaar en beter bespreekbaar, zonder van de scan een diagnose of voorspelproduct te maken.
           </p>
           <div className="mt-8 space-y-3">
             {[
@@ -229,7 +229,7 @@ function ExitScanPage() {
         items={[
           {
             title: 'Terugkijkend patroonbeeld',
-            body: 'ExitScan helpt organisaties vertrek duiden op basis van terugkerende werkfactoren, vertrekredenen en werksignalen.',
+            body: 'ExitScan helpt organisaties vertrek duiden op basis van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie.',
           },
           {
             title: 'Meer dan losse exitgesprekken',
@@ -248,7 +248,7 @@ function ExitScanPage() {
           rows={[
             ['Hoofdvraag', 'Welk vertrekbeeld keert terug en welke werkfactoren wegen daarin mee?'],
             ['Leesrichting', 'Terugkijkend patroonbeeld op uitstroom'],
-            ['Managementoutput', 'Frictiescore, vertrekduiding, werksignalen en prioritaire werkfactoren'],
+            ['Managementoutput', 'Frictiescore, vertrekduiding, signalen van werkfrictie en prioritaire werkfactoren'],
             ['Niet bedoeld als', 'Vroegsignalering in de actieve populatie'],
           ]}
         />
@@ -256,7 +256,7 @@ function ExitScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Voorbeeldoutput</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">Zo ziet ExitScan eruit voor management.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            De output combineert managementsamenvatting, bestuurlijke handoff, vertrekduiding, werksignalen, prioritaire werkfactoren en een leeswijzer over claims, privacy en interpretatie in een compacte managementstructuur.
+            De output combineert managementsamenvatting, bestuurlijke handoff, vertrekduiding, signalen van werkfrictie, prioritaire werkfactoren en een leeswijzer over claims, privacy en interpretatie in een compacte managementstructuur.
           </p>
           <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             <PreviewSlider variant="exit" />
@@ -285,9 +285,9 @@ function RetentionScanPage() {
       title="Zie eerder waar behoud onder druk staat."
       description="RetentieScan helpt organisaties om op groeps- en segmentniveau eerder zichtbaar te maken waar behoud onder druk staat, met dashboard, rapport en compacte bestuurlijke handoff in dezelfde professionele Verisight-structuur. Geen brede MTO en geen individuele voorspeller."
       theme="retention"
-      highlightItems={['Vroegsignalering', 'Groepsniveau', 'Behoudssignalen']}
+      highlightItems={['Vroegsignalering', 'Groepsniveau', 'Retentiesignaal']}
       contextTitle="Een product voor organisaties die eerder willen zien waar behoud begint te schuiven."
-      contextBody="RetentieScan is geen brede tevredenheidsmeting en geen individuele voorspeller, maar een managementroute die zichtbaar maakt waar retentiesignalen, stay-intent, bevlogenheid en vertrekintentie nu aandacht vragen."
+      contextBody="RetentieScan is geen brede tevredenheidsmeting en geen individuele voorspeller, maar een managementroute die zichtbaar maakt waar het retentiesignaal, stay-intent, bevlogenheid en vertrekintentie nu aandacht vragen."
     >
       <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
         <div className="marketing-panel-soft p-8">
@@ -315,7 +315,7 @@ function RetentionScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Wat je krijgt</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">Een vroegsignaal dat bestuurlijk bruikbaar is.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Geen individuele voorspelling en geen brede tevredenheidsmeting, maar een groepsweergave die opent met managementsamenvatting, bestuurlijke handoff, eerste verificatiespoor en eerste logische stap. Daarna volgen retentiesignalen, stay-intent, bevlogenheid, vertrekintentie en de werkfactoren die nu als eerste opvolging vragen, inclusief een expliciete leeswijzer over privacy, claims en bewijsstatus.
+            Geen individuele voorspelling en geen brede tevredenheidsmeting, maar een groepsweergave die opent met managementsamenvatting, bestuurlijke handoff, eerste verificatiespoor en eerste logische stap. Daarna volgen retentiesignaal, stay-intent, bevlogenheid, vertrekintentie en de werkfactoren die nu als eerste opvolging vragen, inclusief een expliciete leeswijzer over privacy, claims en bewijsstatus.
           </p>
           <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             <PreviewSlider variant="retention" />

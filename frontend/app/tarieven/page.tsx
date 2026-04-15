@@ -97,7 +97,7 @@ export default function TarievenPage() {
       <div className="mt-16 marketing-panel p-8 md:p-10">
         <SectionHeading
           eyebrow="RetentieScan pakketten"
-          title="Drie logische productvormen voor behoudssignalering."
+          title="Drie logische productvormen voor vroegsignalering op behoud."
           description="Zo blijft RetentieScan een eigen product met een eigen opbouw, in plaats van een afgeleide feature van ExitScan."
         />
         <div className="mt-10 grid gap-5 lg:grid-cols-3">

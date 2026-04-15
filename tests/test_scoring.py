@@ -475,7 +475,7 @@ class TestRetentionReportContent:
     def test_retention_hypotheses_payload_stays_verification_oriented(self):
         payload = get_retention_hypotheses_payload()
 
-        assert "behoudssignalen" in payload["intro_text"].lower()
+        assert "aanvullende signalen rond behoud" in payload["intro_text"].lower()
         assert "eerst geverifieerd" in payload["intro_text"].lower()
 
 
@@ -489,7 +489,7 @@ class TestReportingParity:
         assert "eerdere signalering" in exit_definition
         assert "eerst verificatie" in retention_definition
         assert "v1-werkmodel" in retention_definition
-        assert "aanvullende behoudssignalen" in retention_definition
+        assert "aanvullende signalen rond behoud" in retention_definition
 
 
 class TestDetectPatterns:

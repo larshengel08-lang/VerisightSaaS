@@ -26,7 +26,7 @@ Gebruik deze matrix wanneer copy, reporttaal of salesuitleg moet worden beoordee
 ### Wel zeggen
 
 - ExitScan helpt vertrekduiding bestuurlijk leesbaar maken.
-- ExitScan bundelt vertrekredenen, meespelende factoren, eerdere signalering en werksignalen.
+- ExitScan bundelt vertrekredenen, meespelende factoren, eerdere signalering en signalen van werkfrictie.
 - ExitScan helpt bepalen welke werkfactoren eerst managementverificatie verdienen.
 - ExitScan is sterker dan losse exitgesprekken of spreadsheetduiding.
 

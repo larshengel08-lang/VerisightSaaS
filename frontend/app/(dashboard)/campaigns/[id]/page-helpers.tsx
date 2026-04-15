@@ -129,8 +129,8 @@ export function buildDecisionPanels({
         title: 'Bevlogenheid',
         value: retentionSupplemental.engagement !== null ? `${retentionSupplemental.engagement.toFixed(1)}/10` : '–',
         body: topFactorLabel
-          ? `Gebruik bevlogenheid samen met ${topFactorLabel.toLowerCase()} en vertrekintentie om te bepalen hoe scherp het behoudssignaal echt is.`
-          : 'Gebruik bevlogenheid samen met stay-intent en vertrekintentie om te bepalen hoe scherp het behoudssignaal echt is.',
+          ? `Gebruik bevlogenheid samen met ${topFactorLabel.toLowerCase()} en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.`
+          : 'Gebruik bevlogenheid samen met stay-intent en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.',
         tone: 'emerald',
       },
     ]

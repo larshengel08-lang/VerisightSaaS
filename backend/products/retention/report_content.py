@@ -67,7 +67,7 @@ def get_management_summary_payload(
 
     if retention_signal_profile == "scherp_aandachtssignaal":
         group_body = (
-            f"Meerdere behoudssignalen wijzen dezelfde kant op. De scherpste managementduiding zit nu vooral in {top_factor_text}, "
+            f"Het retentiesignaal en de aanvullende signalen wijzen dezelfde kant op. De scherpste managementduiding zit nu vooral in {top_factor_text}, "
             "in combinatie met aanvullende signalen die snelle verificatie vragen."
         )
     elif retention_signal_profile == "vertrekdenken_zichtbaar":
@@ -90,7 +90,7 @@ def get_management_summary_payload(
         metrics.append(f"stay-intent {avg_stay_intent:.1f}/10")
     if avg_engagement is not None:
         metrics.append(f"bevlogenheid {avg_engagement:.1f}/10")
-    metric_text = ", ".join(metrics) if metrics else "de aanvullende behoudssignalen"
+    metric_text = ", ".join(metrics) if metrics else "de aanvullende signalen rond behoud"
 
     verification_body = (
         f"Toets eerst hoe {top_factor_text} samenhangen met {metric_text}. "
@@ -106,7 +106,7 @@ def get_management_summary_payload(
 
     signal_profile_copy = {
         "scherp_aandachtssignaal": (
-            "Meerdere behoudssignalen wijzen dezelfde kant op. Dat vraagt snelle verificatie en duidelijke eigenaarschap op groepsniveau."
+            "Retentiesignaal en aanvullende signalen wijzen dezelfde kant op. Dat vraagt snelle verificatie en duidelijke eigenaarschap op groepsniveau."
         ),
         "vertrekdenken_zichtbaar": (
             "Expliciet vertrekdenken is zichtbaar. Gebruik dit vooral om te bepalen waar een managementgesprek nu niet langer kan wachten."
@@ -141,7 +141,7 @@ def get_management_summary_payload(
 
     if retention_signal_profile == "scherp_aandachtssignaal":
         boardroom_relevance = (
-            f"Meerdere behoudssignalen wijzen dezelfde kant op. Daardoor verschuift {top_factor_text} van HR-signaal naar bestuurlijk aandachtspunt "
+            f"Retentiesignaal en aanvullende signalen wijzen dezelfde kant op. Daardoor verschuift {top_factor_text} van HR-signaal naar bestuurlijk aandachtspunt "
             "voor teamcontinuiteit, leiding en uitvoerbaarheid."
         )
     elif retention_signal_profile == "vertrekdenken_zichtbaar":
@@ -172,9 +172,9 @@ def get_management_summary_payload(
 
     return {
         "section_title": "Managementsamenvatting",
-        "distribution_title": "Verdeling van behoudssignalen",
+        "distribution_title": "Verdeling van het retentiesignaal",
         "findings_title": "Scherpste managementlezing",
-        "executive_title": "Behoudssignalen voor HR, MT en directie",
+        "executive_title": "Vroegsignalering op behoud voor HR, MT en directie",
         "executive_intro": executive_intro,
         "trust_note_title": "Leeswijzer voor bestuur en management",
         "trust_note": trust_note,
@@ -281,7 +281,7 @@ def get_methodology_payload() -> dict[str, Any]:
             "Een hogere score betekent een sterker samenvattend groepssignaal dat behoud aandacht vraagt. "
             "De score is indicatief en bedoeld als gespreksinput, niet als causale voorspelling, benchmark of objectief oordeel. "
             "Voor RetentieScan is dit in v1 een gelijkgewogen samenvatting van SDT-werkbeleving en zes beinvloedbare werkfactoren. "
-            "Bevlogenheid, vertrekintentie en stay-intent worden daarnaast apart gerapporteerd als aanvullende behoudssignalen."
+            "Bevlogenheid, vertrekintentie en stay-intent worden daarnaast apart gerapporteerd als aanvullende signalen rond behoud."
         ),
         "weight_rows": [
             ["Factor", "Bijdrage", "Hoe te lezen"],
@@ -317,12 +317,12 @@ def get_signal_page_payload(*, retention_signal_profile: str | None = None) -> d
         "overwegend_stabiel": "Het totaalbeeld oogt overwegend stabiel. Controleer vooral of de laagst scorende werkfactoren en open signalen aansluiten op wat teams nu nodig hebben.",
     }
     return {
-        "title": "Behoudssignalen in samenhang",
+        "title": "Retentiesignaal en aanvullende signalen",
         "intro": (
             "Deze pagina laat zien hoe retentiesignaal, bevlogenheid, stay-intent en vertrekintentie zich tot elkaar verhouden. "
             "Lees dit als groepsinformatie over waar behoud onder druk staat en welke werkfactoren nu als eerste verificatie vragen, niet als individuele beoordeling of voorspelling."
         ),
-        "summary_title": "Behoudssignalen in samenhang",
+        "summary_title": "Retentiesignaal en aanvullende signalen",
         "signal_profile_title": "Hoe lees je deze combinatie?",
         "signal_profile_text": profile_copy.get(
             retention_signal_profile,
@@ -335,7 +335,7 @@ def get_hypotheses_payload() -> dict[str, str]:
     return {
         "section_title": "Werkhypothesen",
         "intro_text": (
-            "Onderstaande hypothesen zijn afgeleid van werkfactoren, behoudssignalen en open verbetersignalen. "
+            "Onderstaande hypothesen zijn afgeleid van werkfactoren, het retentiesignaal, aanvullende signalen rond behoud en open verbetersignalen. "
             "Ze helpen bepalen wat eerst geverifieerd moet worden voordat je acties opschaalt."
         ),
     }
@@ -381,7 +381,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
                 "number": "3",
                 "title": "Vertaal verificatie naar maximaal 3 gerichte acties",
                 "body": (
-                    "Kies alleen acties die logisch volgen uit het groepsbeeld, de topfactoren en de aanvullende behoudssignalen. "
+                    "Kies alleen acties die logisch volgen uit het groepsbeeld, de topfactoren en de aanvullende signalen rond behoud. "
                     "Voorkom dat open antwoorden of segmenten de hoofdlijn gaan overschrijven."
                 ),
             },
@@ -389,7 +389,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
                 "number": "4",
                 "title": "Plan direct een evaluatie- of vervolgmeting",
                 "body": (
-                    "Leg nu al vast wanneer je terugkijkt of acties effect hebben en of retentiesignalen, stay-intent en vertrekintentie verschuiven."
+                    "Leg nu al vast wanneer je terugkijkt of acties effect hebben en of het retentiesignaal, stay-intent en vertrekintentie verschuiven."
                 ),
             },
         ],

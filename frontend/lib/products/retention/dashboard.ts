@@ -25,7 +25,7 @@ const FACTOR_ACTION_HINTS: Record<string, string> = {
 }
 
 const SIGNAL_BANDS_TEXT =
-  'Laag, verhoogd en sterk aandachtssignaal laten zien hoe breed en hoe scherp behoudssignalen zich in de groep verdelen. Gebruik deze banding voor prioritering en verificatie op groepsniveau in HR, sponsor en MT, niet als individuele voorspelling.'
+  'Laag, verhoogd en sterk aandachtssignaal laten zien hoe breed en hoe scherp het retentiesignaal zich in de groep verdeelt. Gebruik deze banding voor prioritering en verificatie op groepsniveau in HR, sponsor en MT, niet als individuele voorspelling.'
 
 function deriveSignalProfile(
   riskScore: number | null,
@@ -74,7 +74,7 @@ function buildProfileCards(args: {
   if (turnoverHigh && stayLow && (signalHigh || engagementLow)) {
     profiles.push({
       title: 'Groepsbeeld',
-      value: 'Acuut behoudssignaal',
+      value: 'Scherp retentiesignaal',
       body: 'Hoge vertrekintentie en lage stay-intent vallen samen met werkfactoren of bevlogenheid die onder druk staan. Lees dit als scherp groepssignaal dat snelle verificatie en gerichte opvolging vraagt.',
       tone: 'amber',
     })
@@ -96,7 +96,7 @@ function buildProfileCards(args: {
     profiles.push({
       title: 'Groepsbeeld',
       value: 'Overwegend stabiel',
-      body: 'De combinatie van werkfactoren en behoudssignalen oogt op groepsniveau gezond. Blijf vooral de laagst scorende factoren monitoren en leg vast wat je wilt behouden.',
+      body: 'De combinatie van werkfactoren en aanvullende signalen rond behoud oogt op groepsniveau gezond. Blijf vooral de laagst scorende factoren monitoren en leg vast wat je wilt behouden.',
       tone: 'emerald',
     })
   } else {
@@ -182,8 +182,8 @@ export function buildRetentionDashboardViewModel(args: {
         title: 'Eerste managementvraag',
         body:
           args.pendingCount > 0
-            ? 'Welke respondenten of teams ontbreken nog om een eerste veilig groepsbeeld van behoudssignalen te krijgen?'
-            : 'Welke extra responses zijn nog nodig voordat behoudssignalen veilig als groepsinput gebruikt kunnen worden?',
+            ? 'Welke respondenten of teams ontbreken nog om een eerste veilig groepsbeeld van het retentiesignaal te krijgen?'
+            : 'Welke extra responses zijn nog nodig voordat het retentiesignaal veilig als groepsinput gebruikt kan worden?',
         tone: 'amber',
       },
       nextStep: {
@@ -195,7 +195,7 @@ export function buildRetentionDashboardViewModel(args: {
         tone: 'amber',
       },
       focusSectionIntro:
-        'Zodra genoeg responses binnen zijn helpt deze laag om van behoudssignaal naar verificatie en opvolging te gaan.',
+        'Zodra genoeg responses binnen zijn helpt deze laag om van retentiesignaal naar verificatie en opvolging te gaan.',
     }
   }
 
@@ -210,7 +210,7 @@ export function buildRetentionDashboardViewModel(args: {
         body:
           topFactors.length > 0
             ? `Lijkt ${topFactorLabel.toLowerCase()} nu al het eerste behoudsspoor, of verschuift dat beeld nog zodra de groep vollediger is?`
-            : 'Welk behoudssignaal tekent zich voorzichtig af zonder het nu al te zwaar te maken?',
+            : 'Welk retentiesignaal tekent zich voorzichtig af zonder het nu al te zwaar te maken?',
         tone: 'blue',
       },
       nextStep: {
@@ -228,7 +228,7 @@ export function buildRetentionDashboardViewModel(args: {
 
   const profileText =
     signalProfile === 'scherp_aandachtssignaal'
-      ? 'Meerdere behoudssignalen wijzen dezelfde kant op: dit vraagt snelle verificatie in de groepen waar de laagste werkfactoren samenkomen.'
+      ? 'Retentiesignaal en aanvullende signalen wijzen dezelfde kant op: dit vraagt snelle verificatie in de groepen waar de laagste werkfactoren samenkomen.'
       : signalProfile === 'vertrekdenken_zichtbaar'
         ? 'Expliciet vertrekdenken is zichtbaar. Toets snel of dit vooral geconcentreerd zit in bepaalde teams, rollen of leidinggevende contexten.'
         : signalProfile === 'overwegend_stabiel'

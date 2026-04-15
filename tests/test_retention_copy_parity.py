@@ -48,6 +48,6 @@ def test_retention_copy_keeps_non_predictive_management_boundary():
 def test_retention_survey_copy_stays_compact_and_actionable():
     backend_definition = _read("backend/products/retention/definition.py")
 
-    assert "compacte behoudsscan" in backend_definition
+    assert "compacte scan voor vroegsignalering op behoud" in backend_definition
     assert "welke verandering in je werk, leiding of samenwerking" in backend_definition
     assert "groepssignaal voor verificatie en opvolging" in backend_definition

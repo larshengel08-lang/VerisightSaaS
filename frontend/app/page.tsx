@@ -93,7 +93,7 @@ export default function LandingPage() {
               ExitScan en RetentieScan in één heldere commerciële lijn.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
-              Kies eerst de juiste route: begrijpen waarom mensen gingen, eerder zien waar behoud schuift, of beide bewust combineren. Daarna krijg je dashboard, rapport en een compacte bestuurlijke handoff in dezelfde taal.
+              Kies eerst de juiste route: begrijpen waarom mensen gingen, eerder zien waar behoud onder druk staat, of beide bewust combineren. Daarna krijg je dashboard, rapport en een compacte bestuurlijke handoff in dezelfde taal.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">

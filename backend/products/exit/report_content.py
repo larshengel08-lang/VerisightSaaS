@@ -318,7 +318,7 @@ def get_methodology_payload() -> dict[str, Any]:
 
 def get_signal_page_payload(*, retention_signal_profile: str | None = None) -> dict[str, Any]:
     return {
-        "title": "Vertrekbeeld, redenen & werksignalen",
+        "title": "Vertrekbeeld, redenen & signalen van werkfrictie",
         "intro": (
             "Deze pagina combineert hoofdredenen, meespelende factoren, eerdere signalering en een indicatieve duiding van werkinvloed. "
             "De uitkomsten helpen om vertrekpatronen te verkennen en managementvragen te richten, niet om één causale vertrekverklaring vast te stellen."
@@ -326,8 +326,8 @@ def get_signal_page_payload(*, retention_signal_profile: str | None = None) -> d
         "summary_title": "Vertrekbeeld in samenhang",
         "signal_profile_title": "Hoe lees je dit vertrekbeeld?",
         "signal_profile_text": (
-            "Lees hoofdredenen, meespelende factoren, eerdere signalering en werksignalen als een managementverhaal. "
-            "De hoofdreden geeft het eerste vertrekhaakje; de werkfactoren en werksignalen laten zien waar vervolgvragen bestuurlijk het meeste opleveren."
+            "Lees hoofdredenen, meespelende factoren, eerdere signalering en signalen van werkfrictie als een managementverhaal. "
+            "De hoofdreden geeft het eerste vertrekhaakje; de werkfactoren en signalen van werkfrictie laten zien waar vervolgvragen bestuurlijk het meeste opleveren."
         ),
     }
 
