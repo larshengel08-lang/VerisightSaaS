@@ -31,6 +31,7 @@ Status 2026-04-15:
 - tabletnavigatie hersteld via publieke header-breakpoints zodat menu-toegang niet meer wegvalt tussen mobile en desktop
 - midden- en onderlaag verder genormaliseerd via gedeelde flow-stack, compacter sectieritme en minder hoge preview/proof-rails
 - gecontroleerde compositiepass per paginatype uitgevoerd: overview, productdetail, pricing, aanpak en support gebruiken nu verschillende hero-measures, stage-dichtheid, supportgewicht en linkrollen binnen dezelfde gedeelde marketing-shell
+- live opnieuw bevestigd via productie-URL's op desktop, tablet en mobiel nadat de paginatype-pass naar `main` is gepusht
 - naar `main` gepusht en live opnieuw geverifieerd in deze tranche
 
 ## 2. Visual Direction
@@ -159,6 +160,7 @@ Dependency: Milestone 5
 - [x] `npm.cmd run build`
 - [x] Code-level responsive / copy / trust / flow parity checks via inline repo-validatie op aangepaste pagina's en gedeelde marketingcontent.
 - [x] Browsermatige screenshot-QA via lokale production build op mobiel, tablet en desktop voor `/`, `/producten`, `/producten/exitscan`, `/producten/retentiescan`, `/tarieven` en `/aanpak`.
+- [x] Browsermatige screenshot-QA via live productie-URL's op mobiel, tablet en desktop voor `/`, `/producten`, `/producten/exitscan`, `/producten/retentiescan`, `/tarieven` en `/aanpak`.
 
 ## 6. Page-Level Redesign Direction
 
@@ -225,7 +227,7 @@ Dependency: Milestone 5
 - Conversierisico blijft bestaan wanneer trust of pricing opnieuw te vroeg of te breed in de flow komt.
 - Generieke SaaS-uitstraling kan terugkeren zodra nieuwe secties zonder ritmediscipline worden toegevoegd.
 - Taalrisico blijft bestaan wanneer copy buiten de centrale contentlaag opnieuw los evolueert.
-- Repo-release-risico blijft relevant zolang deze tranche nog niet is gepusht.
+- Nieuwe visual passes blijven releasegevoelig zolang live-check per breakpoint niet direct na deploy wordt herhaald.
 
 ## 9. Open Questions
 
