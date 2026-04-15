@@ -16,6 +16,12 @@ Gebruik het als eerste referentie voor:
 - trust- en claimsgrenzen rond voorbeeldoutput
 - acceptance en refresh-governance
 
+Voor internal sales demo, QA/live-fixtures en validation-sandboxes geldt:
+
+- gebruik `docs/reference/DEMO_AND_SAMPLE_ENVIRONMENT_SYSTEM.md`
+- gebruik `docs/ops/DEMO_ENVIRONMENT_PLAYBOOK.md`
+- gebruik `manage_demo_environment.py` als canonieke orchestrator
+
 ## Source-of-truth volgorde
 
 Gebruik bij spanning deze volgorde:
@@ -56,6 +62,8 @@ Gebruik bij spanning deze volgorde:
 - `frontend/public/segment-deep-dive-preview.png`
   - Gebruik: ondersteunende visual voor preview of demo
   - Niet gebruiken als primaire prooflaag
+
+Deze laag blijft bewust klein. Interne sales demo, QA/live-fixtures en validation-sandboxes horen niet thuis in deze buyer-facing asset stack.
 
 ### Legacy archive
 
@@ -103,4 +111,5 @@ Werk sample-output en showcase bij wanneer:
 - RetentieScan blijft complementair en verification-first.
 - Demo-output mag niet rijker ogen dan het echte product.
 - Sample-output is deliverable-proof, geen case-proof.
+- Buyer-facing sample-output vervangt nooit de internal sales demo, en internal demo vervangt nooit de buyer-facing prooflaag.
 - Legacy-assets mogen geen normbeeld meer verstoren.

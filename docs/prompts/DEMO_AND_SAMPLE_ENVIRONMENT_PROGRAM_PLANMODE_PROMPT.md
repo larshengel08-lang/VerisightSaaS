@@ -11,13 +11,23 @@ Belangrijk:
 Lees eerst voor context:
 - [PLANMODE_PROMPT_TEMPLATE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PLANMODE_PROMPT_TEMPLATE.md)
 - [PROMPT_INDEX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_INDEX.md)
-- [docs/examples/voorbeeldrapport_verisight.pdf](/C:/Users/larsh/Desktop/Business/Verisight/docs/examples/voorbeeldrapport_verisight.pdf)
-- [docs/examples/voorbeeldrapport_retentiescan.pdf](/C:/Users/larsh/Desktop/Business/Verisight/docs/examples/voorbeeldrapport_retentiescan.pdf)
-- [create_demo_tenant.py](C:/Users/larsh/Desktop/Business/Docs_External/Verisight_Docs/99_Archief/Repo_Werkbestanden_2026-04-12/create_demo_tenant.py)
+- [docs/active/SAMPLE_OUTPUT_AND_SHOWCASE_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/SAMPLE_OUTPUT_AND_SHOWCASE_PLAN.md)
+- [docs/examples/README.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/examples/README.md)
+- [docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md)
+- [docs/reference/DEMO_AND_SAMPLE_ENVIRONMENT_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reference/DEMO_AND_SAMPLE_ENVIRONMENT_SYSTEM.md)
+- [docs/ops/DEMO_ENVIRONMENT_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/DEMO_ENVIRONMENT_PLAYBOOK.md)
+- [generate_voorbeeldrapport.py](/C:/Users/larsh/Desktop/Business/Verisight/generate_voorbeeldrapport.py)
+- [seed_exit_live_test_environment.py](/C:/Users/larsh/Desktop/Business/Verisight/seed_exit_live_test_environment.py)
+- [seed_retention_demo_environment.py](/C:/Users/larsh/Desktop/Business/Verisight/seed_retention_demo_environment.py)
+- [simulate_retention_validation_pilot.py](/C:/Users/larsh/Desktop/Business/Verisight/simulate_retention_validation_pilot.py)
+- [manage_demo_environment.py](/C:/Users/larsh/Desktop/Business/Verisight/manage_demo_environment.py)
+- [demo_environment.py](/C:/Users/larsh/Desktop/Business/Verisight/demo_environment.py)
 
 Scope:
 - demo-tenant
-- voorbeeldcampagnes
+- internal sales demo
+- QA/live-test fixtures
+- validation/pilot sandbox
 - sampledata
 - voorbeeldrapporten
 - demo-flow
@@ -29,22 +39,22 @@ Maak een plan om demo- en sampleomgevingen betrouwbaarder en verkoopbaarder te m
 - demo's sneller inzetbaar zijn
 - voorbeelden geloofwaardig maar veilig blijven
 - productdemonstraties minder kwetsbaar zijn
-- sales en website beter ondersteund worden
-- sample-assets gemakkelijker bijgehouden kunnen worden
+- sales, onboarding en website beter ondersteund worden
+- sample-assets en demo-scenario's gemakkelijker bijgehouden kunnen worden
 
 Wat expliciet beoordeeld en meegenomen moet worden:
-1. huidige demo-tenant
-2. voorbeeldcampagnes
-3. voorbeeldrapporten
-4. sampledata
-5. veiligheid en privacy van demo-assets
-6. parity met echte productoutput
-7. demo-scripts en flow
-8. welke demo-elementen ontbreken
-9. onderhoudslast
-10. risico op verouderde of kapotte demo's
-11. risico op gevoelige data in demo-assets
-12. wat per product minimaal nodig is
+1. huidige buyer-facing sample-output
+2. huidige internal demo-scenario's
+3. huidige QA/live-test fixtures
+4. huidige validation/pilot sandbox
+5. voorbeeldcampagnes en campaign states
+6. sampledata en veilige demo-identiteiten
+7. parity met echte productoutput
+8. demo-scripts en flow
+9. welke demo-elementen ontbreken
+10. onderhoudslast
+11. risico op verouderde of kapotte demo's
+12. risico op gevoelige data in demo-assets
 13. welke omgeving of tooling nodig is
 14. welke smoke-checks nodig zijn
 
