@@ -59,7 +59,7 @@ export default function ProductenPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <MarketingPageShell
         eyebrow="Producten"
-        title="Twee live routes en een bewuste combinatieroute."
+        title="Twee live routes en een bewuste combinatie."
         description="Gebruik deze pagina om snel te bepalen of jullie eerst vertrek willen duiden, eerder willen signaleren waar behoud schuift, of beide vragen pas daarna bewust naast elkaar willen organiseren."
         contextTitle="Begin met de vraag die nu bestuurlijk het meeste gewicht heeft."
         contextBody="De producten zijn niet symmetrisch bedoeld. ExitScan blijft meestal de eerste wedge. RetentieScan wordt sterker zodra de actieve behoudsvraag expliciet op tafel ligt."

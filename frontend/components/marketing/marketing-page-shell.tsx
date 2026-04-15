@@ -122,7 +122,7 @@ export function MarketingPageShell({
         >
           <div className="marketing-hero-column">
             <p className={`text-xs font-bold uppercase tracking-[0.22em] ${themeStyle.accentText}`}>{eyebrow}</p>
-            <h1 className="marketing-hero-title font-display mt-5 text-[clamp(2.85rem,8vw,5.2rem)] leading-[0.92] text-slate-950">
+            <h1 className="marketing-hero-title marketing-hero-title-page font-display mt-5 text-slate-950">
               {title}
             </h1>
             <p className="marketing-hero-copy mt-6 text-[1.02rem] leading-8 text-slate-600 md:text-[1.05rem]">
@@ -196,7 +196,7 @@ export function MarketingPageShell({
                   <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${themeStyle.stageTagClass}`}>
                     {contextEyebrow}
                   </span>
-                  <h2 className="font-display mt-5 max-w-[8ch] text-[clamp(2.25rem,5.7vw,4.3rem)] leading-[0.96] text-white sm:max-w-[9ch]">
+                  <h2 className="marketing-stage-title font-display mt-5 text-white">
                     {contextTitle}
                   </h2>
                   <p className="mt-5 max-w-xl text-[0.98rem] leading-8 text-slate-300 md:text-base">{contextBody}</p>
