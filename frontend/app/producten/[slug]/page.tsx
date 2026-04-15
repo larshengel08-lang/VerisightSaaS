@@ -6,9 +6,13 @@ import { MarketingComparisonTable } from '@/components/marketing/marketing-compa
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingProofStrip } from '@/components/marketing/marketing-proof-strip'
 import { PreviewSlider } from '@/components/marketing/preview-slider'
+import { SampleShowcaseCard } from '@/components/marketing/sample-showcase-card'
 import { ALL_MARKETING_PRODUCTS, type MarketingProduct, getMarketingProductBySlug } from '@/lib/marketing-products'
+import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
 
 type Props = { params: Promise<{ slug: string }> }
+const exitSampleAsset = getPrimarySampleShowcaseAsset('exit')
+const retentionSampleAsset = getPrimarySampleShowcaseAsset('retention')
 
 export async function generateStaticParams() {
   return ALL_MARKETING_PRODUCTS.map((product) => ({ slug: product.slug }))
@@ -264,11 +268,23 @@ function ExitScanPage() {
         </div>
       </div>
 
+      {exitSampleAsset ? (
+        <div className="mt-16">
+          <SampleShowcaseCard
+            eyebrow="Volledig voorbeeldrapport"
+            title="Open de canonieke ExitScan showcase."
+            body="Gebruik de preview als teaser en dit buyer-facing voorbeeldrapport als echte prooflaag voor sales, pricing en interne doorvertaling. De pdf gebruikt fictieve data, maar dezelfde managementstructuur als live output."
+            asset={exitSampleAsset}
+            linkLabel="Open ExitScan-voorbeeldrapport"
+          />
+        </div>
+      ) : null}
+
       <MarketingCalloutBand
         className="mt-16"
         eyebrow="Verschil met RetentieScan"
         title="ExitScan kijkt terug. RetentieScan signaleert eerder."
-        body="ExitScan helpt vertrek achteraf duiden. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen vormen ze een logisch portfolio, maar ExitScan blijft het product voor terugkijkende vertrekduiding."
+        body="ExitScan helpt vertrek achteraf duiden en is meestal het eerste traject. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen vormen ze een logisch portfolio, maar ExitScan blijft het product voor terugkijkende vertrekduiding."
         primaryHref="/#kennismaking"
         primaryLabel="Plan mijn gesprek"
         secondaryHref="/producten/retentiescan"
@@ -373,11 +389,23 @@ function RetentionScanPage() {
         />
       </div>
 
+      {retentionSampleAsset ? (
+        <div className="mt-16">
+          <SampleShowcaseCard
+            eyebrow="Volledig voorbeeldrapport"
+            title="Open de buyer-facing RetentieScan showcase."
+            body="Deze pdf laat dezelfde verification-first managementstructuur zien als live RetentieScan-output. Daarmee blijft de demo bruikbaar voor buyers die expliciet een behoudsvraag op groepsniveau willen toetsen."
+            asset={retentionSampleAsset}
+            linkLabel="Open RetentieScan-voorbeeldrapport"
+          />
+        </div>
+      ) : null}
+
       <MarketingCalloutBand
         className="mt-16"
         eyebrow="Combinatie met ExitScan"
         title="Samen vormen ze een logisch portfolio."
-        body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen geven ze een scherper beeld van zowel achteraf duiden als vooruit kijken, zonder dat RetentieScan een diagnose-, MTO- of voorspelproduct hoeft te worden."
+        body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen geven ze een scherper beeld van zowel achteraf duiden als vooruit kijken, meestal eerst via een baseline en pas daarna via ritme of combinatie."
         primaryHref="/#kennismaking"
         primaryLabel="Plan mijn gesprek"
         secondaryHref="/producten/combinatie"
@@ -392,7 +420,7 @@ function CombinatiePage() {
     <MarketingPageShell
       eyebrow="Combinatie"
       title="Gebruik ExitScan en RetentieScan als bewuste portfolioroute."
-      description="De combinatie is logisch voor organisaties die zowel willen leren van uitstroom als eerder willen signaleren waar behoud nu onder druk staat."
+      description="De combinatie is logisch voor organisaties die zowel willen leren van uitstroom als eerder willen signaleren waar behoud nu onder druk staat, zonder daarvan een bundel of derde standaardpakket te maken."
       theme="combination"
       highlightItems={['Portfolio-aanpak', 'Twee producten', 'Eén platform']}
       contextTitle="Een route voor organisaties waar uitstroom en behoud tegelijk op tafel liggen."

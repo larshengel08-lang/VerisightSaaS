@@ -13,14 +13,14 @@ Verisight ExitScan is de primaire route voor organisaties die vertrek niet lange
 - managementsamenvatting
 - bestuurlijke handoff
 - vertrekduiding
-- werksignalen
+- signalen van werkfrictie
 - prioritaire werkfactoren
 - hypotheses, eerste besluit en eerste eigenaar
 
 ## Hoe je ExitScan leest
 
 ExitScan is gegroepeerde vertrekduiding voor HR, MT en directie.
-De uitkomst helpt prioriteren, verifieren en vervolgstappen bepalen.
+De uitkomst helpt prioriteren, verifiëren en vervolgstappen bepalen.
 Het rapport en de preview openen met dezelfde managementstructuur, zodat de eerste managementvraag snel zichtbaar wordt.
 
 ## Wat ExitScan nadrukkelijk niet is
@@ -35,7 +35,7 @@ Het rapport en de preview openen met dezelfde managementstructuur, zodat de eers
 Losse exitgesprekken geven context per persoon.
 ExitScan maakt meerdere reacties vergelijkbaar, zodat management sneller ziet welk vertrekbeeld terugkeert en waar eerst verdiepend gesprek nodig is.
 
-## Eerste commerciele stap
+## Eerste commerciële stap
 
 - standaard eerste route: ExitScan Baseline
 - prijsanker: EUR 2.950

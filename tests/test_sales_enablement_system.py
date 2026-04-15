@@ -42,17 +42,19 @@ def test_sales_routing_and_comparison_stay_aligned_with_site_and_preview_languag
 
     assert "exitscan baseline" in decision_tree
     assert "retentiescan baseline" in decision_tree
-    assert "retention loop" in decision_tree
+    assert "retentiescan ritme (retention loop)" in decision_tree
     assert "combinatie" in decision_tree
     assert "exitscan is de default eerste route" in decision_tree
     assert "managementsamenvatting" in comparison
     assert "bestuurlijke handoff" in comparison
     assert "vertrekduiding" in comparison
     assert "vroegsignalering op behoud" in comparison
+    assert "signalen van werkfrictie" in comparison
     assert "managementsamenvatting, bestuurlijke handoff, vertrekduiding" in marketing_products
     assert "managementsamenvatting, bestuurlijke handoff, retentiesignaal" in marketing_products
     assert "exitscan baseline" in site_content
     assert "retentiescan baseline" in site_content
+    assert "compacte retentie vervolgmeting" in site_content
     assert "bestuurlijke handoff" in preview_copy
     assert "eerste verificatiespoor" in preview_copy
 
@@ -93,6 +95,7 @@ def test_buyer_assets_reuse_existing_output_language_without_invented_case_proof
     assert "geen brede mto" in retention_one_pager
     assert "geen individuele predictor" in retention_one_pager
     assert "eur 3.450" in retention_one_pager
+    assert "retentiescan ritme vanaf eur 4.950" in retention_one_pager
     assert "bundel" in combination_memo
     assert "op aanvraag" in combination_memo
     assert "fictieve voorbeelddata" in preview_copy

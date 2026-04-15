@@ -106,7 +106,7 @@ export const homepageUtilityLinks = [
   {
     href: '/tarieven',
     title: 'Tarieven',
-    body: 'Bekijk pricing, pakketopbouw en wanneer een combinatie commercieel logisch wordt.',
+    body: 'Bekijk eerste trajecten, vervolgvormen, add-ons en wanneer een combinatie commercieel logisch wordt.',
   },
 ] as const
 
@@ -402,11 +402,11 @@ export const approachRoutes = [
   {
     eyebrow: 'ExitScan Live',
     title: 'Voor organisaties die uitstroom doorlopend willen volgen',
-    body: 'Doorlopende ExitScan voor nieuwe vertrekkers. Past vooral als vervolg op een eerste baseline of wanneer uitstroom al structureel en met voldoende volume wordt gevolgd.',
+    body: 'Doorlopende ExitScan voor nieuwe vertrekkers. Past vooral als quote-only vervolg op een eerste baseline of wanneer uitstroom al structureel en met voldoende volume wordt gevolgd.',
     bullets: [
       'Vast proces met HR voor nieuwe vertrekkers',
       'Actuelere signalen, trends pas zinvol bij voldoende volume',
-      'Vooral geschikt als vervolg of op aanvraag',
+      'Op aanvraag na baseline of bij bestaand exitvolume',
     ],
     shellClass: 'border-slate-200 bg-slate-50',
     eyebrowClass: 'text-slate-500',
@@ -427,12 +427,12 @@ export const approachRoutes = [
   },
   {
     eyebrow: 'RetentieScan ritme',
-    title: 'Voor organisaties die periodiek willen volgen',
-    body: 'Herhaalmeting per kwartaal of halfjaar om te zien of het retentiesignaal, stay-intent, bevlogenheid en prioritaire werkfactoren verbeteren. Meestal een vervolgstap nadat de eerste baseline en opvolging staan.',
+    title: 'De vaste vervolgvorm na een baseline',
+    body: 'Herhaalmeting per kwartaal of halfjaar om te zien of het retentiesignaal, stay-intent, bevlogenheid en prioritaire werkfactoren verbeteren. Dit is de buyer-facing vervolgvorm nadat de eerste baseline en opvolging staan.',
     bullets: [
       'Compacter vervolg op een baseline',
       'Geschikt om effect van acties zichtbaar te maken in dezelfde signaallogica',
-      'Blijft groeps- en segmentgericht, niet persoonsgericht',
+      'Publieke vervolgvorm na baseline, niet als parallel eerste pakket',
     ],
     shellClass: 'border-amber-200 bg-amber-50',
     eyebrowClass: 'text-amber-700',
@@ -463,15 +463,31 @@ export const pricingCards = [
       'Geschikt als basis voor vervolgmeting of gerichte opvolging',
     ],
   },
+ ] as const
+
+export const pricingFollowOnRoutes = [
   {
-    eyebrow: 'RetentieScan ritme',
-    price: 'vanaf EUR 4.950',
+    title: 'ExitScan Live',
+    price: 'op aanvraag',
+    fit: 'Quote-only vervolg na baseline',
     description:
-      'Voor organisaties die van een eerste RetentieScan willen doorgroeien naar een ritme met herhaalmeting, trendduiding en beter onderbouwde opvolging op behoud, passend bij terugkerende prioriteits- en continuiteitsgesprekken.',
+      'Voor organisaties die na een eerste ExitScan Baseline actuele uitstroomsignalen willen blijven volgen. Alleen logisch wanneer proces, volume en eigenaarschap al staan.',
     bullets: [
+      'Geen concurrerend eerste pakket naast ExitScan Baseline',
+      'Alleen verkopen na nulmeting of bij bestaand structureel exitproces',
+      'Blijft een begeleide vervolgroute en geen self-serve monitoringlaag',
+    ],
+  },
+  {
+    title: 'RetentieScan ritme',
+    price: 'vanaf EUR 4.950',
+    fit: 'Publieke vervolgvorm na baseline',
+    description:
+      'Voor organisaties die van een eerste RetentieScan willen doorgroeien naar een ritme met herhaalmeting, trendduiding en beter onderbouwde opvolging op behoud.',
+    bullets: [
+      'Buyer-facing vervolgvorm na RetentieScan Baseline',
       'Baseline plus herhaalmeting per kwartaal of halfjaar',
       'Trendbeeld op retentiesignaal, bevlogenheid en stay-intent',
-      'Geschikt voor organisaties die retentie actief willen sturen',
     ],
   },
 ] as const
@@ -484,40 +500,40 @@ export const retentionPackages = [
     bullets: ['Eenmalige scan', 'Dashboard en managementrapport', 'Topfactoren en focusvragen'],
   },
   {
-    title: 'Baseline + Deep Dive',
+    title: 'Baseline + Segment deep dive',
     fit: 'Voor scherpere segmentprioritering',
-    body: 'Voor organisaties die niet alleen het totaalbeeld willen zien, maar ook welke afdelingen of functieniveaus het meest afwijken.',
-    bullets: ['Alles uit Baseline', 'Segmentanalyse op afdeling en functieniveau', 'Extra duiding op afwijkende groepen'],
+    body: 'Voor organisaties die na een eerste baseline ook willen zien welke afdelingen of functieniveaus het meest afwijken, mits metadata en minimale n dat dragen.',
+    bullets: ['Alles uit Baseline', 'Segmentanalyse op afdeling en functieniveau', 'Bewuste verdieping, geen standaard inbegrepen laag'],
   },
   {
     title: 'RetentieScan ritme',
     fit: 'Voor structurele opvolging',
-    body: 'Voor organisaties die retentie niet als momentopname maar als terugkerend stuurthema willen benaderen.',
-    bullets: ['Herhaalmeting en trendduiding', 'Betere opvolging van acties', 'Basis voor latere validatie en vergelijking'],
+    body: 'Voor organisaties die retentie niet als momentopname maar als terugkerend stuurthema willen benaderen nadat baseline en eerste opvolging staan.',
+    bullets: ['Herhaalmeting en trendduiding', 'Betere opvolging van acties', 'Buyer-facing vervolgvorm na de eerste baseline'],
   },
 ] as const
 
 export const pricingChoiceGuide = [
-  ['ExitScan', 'Je wilt vertrek achteraf duiden en zien welke werkfactoren en signalen van werkfrictie daarin terugkeren.'],
-  ['RetentieScan', 'Je wilt eerder zien waar behoud in de actieve populatie onder druk staat.'],
-  ['Combinatie', 'Je wilt zowel leren van vertrek als eerder kunnen bijsturen op behoud.'],
+  ['ExitScan Baseline', 'Je wilt vertrek achteraf duiden en zoekt meestal het eerste betaalde traject dat losse exitinput bestuurlijk leesbaar maakt.'],
+  ['RetentieScan Baseline', 'Je wilt eerder zien waar behoud in de actieve populatie onder druk staat en zoekt daarvoor een gerichte eerste baseline.'],
+  ['Combinatie op aanvraag', 'Je wilt zowel leren van vertrek als eerder kunnen bijsturen op behoud, maar pas nadat de eerste route helder staat.'],
 ] as const
 
 export const pricingAddOns = [
   [
     'Segment deep dive',
     'EUR 950',
-    'Extra segmentanalyse voor ExitScan of RetentieScan, met scherpere uitsplitsing naar afdeling en functieniveau wanneer de metadata daar geschikt voor is.',
+    'Extra segmentanalyse voor ExitScan of RetentieScan, met scherpere uitsplitsing naar afdeling en functieniveau wanneer metadata en minimale n daar geschikt voor zijn.',
   ],
   [
-    'Retentie vervolgmeting',
+    'Compacte retentie vervolgmeting',
     'vanaf EUR 1.250',
-    'Compactere herhaalmeting na een RetentieScan Baseline, bijvoorbeeld per kwartaal of halfjaar, om voortgang te volgen zonder de baseline opnieuw op te tuigen.',
+    'Compacte vervolgcomponent binnen RetentieScan ritme, bijvoorbeeld per kwartaal of halfjaar, om voortgang te volgen zonder daarvan een parallel hoofdpackage te maken.',
   ],
   [
-    'Combinatiepakket',
+    'Combinatieroute',
     'op aanvraag',
-    'Voor organisaties die ExitScan en RetentieScan bewust naast elkaar willen inzetten. We prijzen dit niet als korting op inhoud, maar als logische pakketvorming in een gedeeld platform.',
+    'Voor organisaties die ExitScan en RetentieScan bewust naast elkaar willen inzetten. We prijzen dit niet als korting of bundel, maar als portfolioroute in een gedeelde managementstructuur.',
   ],
 ] as const
 
@@ -535,8 +551,16 @@ export const pricingFaqs = [
     'Nee. Het product is smaller en scherper: het richt zich op vroegsignalering op behoud via retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
-    'Wanneer kies je voor een combinatiepakket?',
-    'Als je zowel achteraf wilt begrijpen waarom mensen gingen als eerder wilt zien waar behoud nu onder druk staat.',
+    'Wanneer wordt ExitScan Live logisch?',
+    'Meestal pas na een ExitScan Baseline of wanneer uitstroom al structureel met voldoende volume wordt gevolgd. Daarom houden we ExitScan Live bewust als vervolgroute op aanvraag.',
+  ],
+  [
+    'Hoe verhouden RetentieScan ritme en compacte vervolgmeting zich tot elkaar?',
+    'RetentieScan ritme is de vaste buyer-facing vervolgvorm na baseline. Een compacte retentie vervolgmeting is daarbinnen een lichtere vervolgcomponent, geen parallel eerste pakket.',
+  ],
+  [
+    'Wanneer kies je voor de combinatieroute?',
+    'Als je zowel achteraf wilt begrijpen waarom mensen gingen als eerder wilt zien waar behoud nu onder druk staat, en beide managementvragen echt bestaan.',
   ],
   [
     'Wat ziet management wel en niet?',

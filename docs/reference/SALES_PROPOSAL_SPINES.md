@@ -94,9 +94,9 @@ Elk voorstel volgt deze volgorde:
 - Timing: eenmalige baseline als standaard eerste stap
 - Trustkader: v1-werkmodel, geen brede MTO, geen individuele predictor, geen performance-instrument
 - Prijsanker: EUR 3.450
-- Logische vervolgrichting: Retention Loop, retentie vervolgmeting of combinatie wanneer vertrekduiding daarnaast ook urgent wordt
+- Logische vervolgrichting: RetentieScan ritme, compacte retentie vervolgmeting binnen dat ritme of combinatie wanneer vertrekduiding daarnaast ook urgent wordt
 
-## Retention Loop
+## RetentieScan ritme (Retention Loop)
 
 ### Gebruik wanneer
 
@@ -106,7 +106,7 @@ Elk voorstel volgt deze volgorde:
 ### Voorstelruggengraat
 
 - Managementvraag: hoe volgen we of behoudssignalen verbeteren in dezelfde managementlogica?
-- Route: Retention Loop
+- Route: RetentieScan ritme
 - Waarom nu: ritme wordt pas waardevol nadat baseline en eerste opvolging staan
 - Deliverables:
   - herhaalmeting per kwartaal of halfjaar
@@ -119,7 +119,7 @@ Elk voorstel volgt deze volgorde:
 - Timing: per kwartaal of halfjaar
 - Trustkader: blijft groepsduiding en verificatiehulp, geen bewezen predictor
 - Prijsanker: vanaf EUR 4.950
-- Logische vervolgrichting: structureel retentieritme of combinatie met ExitScan
+- Logische vervolgrichting: structureel retentieritme, compacte vervolgmetingen binnen dat ritme of combinatie met ExitScan
 
 ## Combinatie
 
@@ -149,5 +149,5 @@ Elk voorstel volgt deze volgorde:
 ## Add-ons en vervolg
 
 - Segment deep dive: EUR 950 wanneer metadata en n dat dragen
-- Retentie vervolgmeting: vanaf EUR 1.250 als compact vervolg op een baseline
-- Combinatiepakket: op aanvraag en alleen als inhoudelijk logisch, niet als korting op inhoud
+- Compacte retentie vervolgmeting: vanaf EUR 1.250 als compacte vervolgcomponent binnen een bestaand RetentieScan ritme
+- Combinatieroute: op aanvraag en alleen als inhoudelijk logisch, niet als korting op inhoud

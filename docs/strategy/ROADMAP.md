@@ -98,12 +98,11 @@ De propositie, verpakking en ondersteunende assets moeten coherent genoeg zijn o
 **Hoort in deze fase**
 - Product Terminology And Taxonomy - afgerond
 - Sales Enablement System - afgerond
-- Pricing And Packaging
-- Sample Output And Showcase
+- Pricing And Packaging - afgerond
+- Sample Output And Showcase - afgerond
 
 **Status**
-- huidige actieve focus
-- 2 van 4 checklist-items afgerond
+- afgerond
 
 **Exit gate**
 - Producttaal is consistent
@@ -125,7 +124,7 @@ De website en funnel moeten de aangescherpte propositie, trustlaag en voorbeeldo
 - SEO Conversion Program
 
 **Status**
-- gepland
+- huidige actieve focus
 
 **Exit gate**
 - Website weerspiegelt de aangescherpte product- en trustlaag

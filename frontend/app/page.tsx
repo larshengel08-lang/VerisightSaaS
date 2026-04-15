@@ -27,7 +27,7 @@ import {
 export const metadata: Metadata = {
   title: 'Verisight',
   description:
-    'Kies tussen ExitScan, RetentieScan en een bewuste combinatie. Verisight helpt HR-teams met dashboard, rapport, bestuurlijke handoff en managementduiding in één commerciële flow.',
+    'Kies tussen ExitScan Baseline, RetentieScan Baseline en een bewuste combinatieroute. Verisight helpt HR-teams met dashboard, rapport, bestuurlijke handoff en managementduiding in één commerciële flow.',
   alternates: {
     canonical: '/',
   },
@@ -39,7 +39,7 @@ export default function LandingPage() {
     '@type': 'WebPage',
     name: 'Verisight | ExitScan en RetentieScan voor HR-teams',
     description:
-      'Kies tussen ExitScan, RetentieScan en een bewuste combinatie. Verisight helpt HR-teams met dashboard, rapport en managementduiding in één commerciële flow.',
+      'Kies tussen ExitScan Baseline, RetentieScan Baseline en een bewuste combinatieroute. Verisight helpt HR-teams met dashboard, rapport en managementduiding in één commerciële flow.',
     url: 'https://www.verisight.nl/',
     inLanguage: 'nl-NL',
     mainEntity: {
@@ -93,7 +93,7 @@ export default function LandingPage() {
               ExitScan en RetentieScan in één heldere commerciële lijn.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
-              Kies eerst de juiste route: begrijpen waarom mensen gingen, eerder zien waar behoud onder druk staat, of beide bewust combineren. Daarna krijg je dashboard, rapport en een compacte bestuurlijke handoff in dezelfde taal.
+              Kies eerst de juiste route: begrijpen waarom mensen gingen, eerder zien waar behoud onder druk staat, of beide bewust combineren. Daarna krijg je een eerste traject met dashboard, rapport en compacte bestuurlijke handoff in dezelfde taal, plus alleen een vervolgvorm als die echt logisch is.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -191,7 +191,7 @@ export default function LandingPage() {
           <SectionHeading
             eyebrow="Kies je product"
             title="Twee live producten en één bewuste combinatieroute."
-            description="Geen generieke surveyverpakking, maar drie duidelijke routes die elk een eigen managementgesprek oproepen."
+            description="Geen generieke surveyverpakking, maar twee duidelijke eerste routes en één portfolioroute die elk een eigen managementgesprek oproepen."
             align="center"
           />
 
@@ -274,7 +274,7 @@ export default function LandingPage() {
           <MarketingCalloutBand
             eyebrow="Kennismaking"
             title="Binnen een kort gesprek weet je welke scan nu het best past."
-            body="Deel kort je organisatieomvang en of je nu vooral vertrek wilt duiden, behoud eerder wilt signaleren of beide wilt combineren. Daarna weet je snel welke productvorm logisch is."
+            body="Deel kort je organisatieomvang en of je nu vooral vertrek wilt duiden, behoud eerder wilt signaleren of beide wilt combineren. Daarna weet je snel wat het juiste eerste traject is en wanneer een vervolgvorm logisch wordt."
             primaryHref="/producten"
             primaryLabel="Bekijk producten"
             secondaryHref="/tarieven"

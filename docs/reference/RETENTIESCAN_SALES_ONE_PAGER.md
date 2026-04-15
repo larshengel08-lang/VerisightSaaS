@@ -37,11 +37,11 @@ Preview, rapport en pricing gebruiken dezelfde managementtaal.
 RetentieScan is niet de goedkopere of lichtere versie van ExitScan.
 Het vraagt een eigen managementverhaal, strengere privacyguardrails en een expliciete verification-first lezing op groepsniveau.
 
-## Eerste commerciele stap
+## Eerste commerciële stap
 
 - standaard eerste route: RetentieScan Baseline
 - prijsanker: EUR 3.450
-- logische vervolgstap: Retention Loop vanaf EUR 4.950 of combinatie wanneer vertrekduiding daarnaast ook urgent wordt
+- logische vervolgstap: RetentieScan ritme vanaf EUR 4.950 of combinatie wanneer vertrekduiding daarnaast ook urgent wordt
 
 ## Trust in gewone taal
 
