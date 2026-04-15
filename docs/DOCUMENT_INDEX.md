@@ -43,6 +43,7 @@ Source-of-truth volgorde:
 ## Ops
 
 - [SETUP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SETUP.md)
+- [LIVE_RELEASE_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/LIVE_RELEASE_CHECKLIST.md)
 - [SUPABASE_LIVE_HARDENING_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/SUPABASE_LIVE_HARDENING_CHECKLIST.md)
 - [RETENTION_V11_VALIDATION_WORKFLOW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/RETENTION_V11_VALIDATION_WORKFLOW.md)
 
