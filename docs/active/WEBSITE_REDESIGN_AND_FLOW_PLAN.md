@@ -29,6 +29,7 @@ Status 2026-04-15:
 - layoutsysteem aangescherpt op shellbreedte, vertical rhythm, hero-measures, CTA-rijen, panelhiërarchie, stage-balans en globale overflow-resets
 - aanvullende brede visual repair uitgevoerd op de gedeelde hero-shell: intro, stage en support losgetrokken zodat tablet- en mobile-compositie rustiger en logischer opbouwt
 - tabletnavigatie hersteld via publieke header-breakpoints zodat menu-toegang niet meer wegvalt tussen mobile en desktop
+- midden- en onderlaag verder genormaliseerd via gedeelde flow-stack, compacter sectieritme en minder hoge preview/proof-rails
 - naar `main` gepusht en live opnieuw geverifieerd in deze tranche
 
 ## 2. Visual Direction
