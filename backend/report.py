@@ -1371,7 +1371,12 @@ def _make_header_footer(org_name: str, camp_name: str, generated: str, product_n
 # ---------------------------------------------------------------------------
 
 
-def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
+def generate_campaign_report(
+    campaign_id: str,
+    db: Session,
+    *,
+    sample_output_mode: bool = False,
+) -> bytes:
     """
     Genereer een PDF-rapport voor de gegeven campaign-ID.
     Geeft ruwe bytes terug (geschikt voor HTTP-response of opslaan).
@@ -1390,6 +1395,11 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
 
     org      = camp.organization
     now_str  = datetime.now(timezone.utc).strftime("%d-%m-%Y %H:%M UTC")
+    cover_distribution_note = (
+        "Illustratief voorbeeld — fictieve data in dezelfde managementstructuur als live output."
+        if sample_output_mode
+        else "Vertrouwelijk — uitsluitend bestemd voor geautoriseerde gebruikers."
+    )
     _mode     = (camp.delivery_mode or "baseline").lower()
     _mode_lbl = "Live" if _mode == "live" else "Baseline"
     scan_lbl  = f"ExitScan {_mode_lbl}" if camp.scan_type == "exit" else "RetentieScan"
@@ -1847,10 +1857,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         story.append(Spacer(1, 1.0 * cm))
 
     story.append(Paragraph(f"Gegenereerd op {now_str}", STYLES["cover_meta"]))
-    story.append(Paragraph(
-        "Vertrouwelijk — uitsluitend bestemd voor geautoriseerde gebruikers.",
-        STYLES["cover_meta"],
-    ))
+    story.append(Paragraph(cover_distribution_note, STYLES["cover_meta"]))
 
     story.append(NextPageTemplate("body"))
     story.append(PageBreak())

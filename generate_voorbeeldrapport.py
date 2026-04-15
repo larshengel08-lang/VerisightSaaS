@@ -42,6 +42,8 @@ random.seed(RANDOM_SEED)
 DEMO_ORG_NAME = "TechBouw B.V."
 DEMO_ORG_SLUG = "techbouw-demo"
 DEMO_ORG_EMAIL = "demo@techbouw.nl"
+DOCS_EXAMPLES_DIR = Path("docs/examples")
+PUBLIC_EXAMPLES_DIR = Path("frontend/public/examples")
 
 DEPARTMENTS = [
     "Operations", "Operations", "Operations",
@@ -62,7 +64,8 @@ TENURES = [0.5, 1.0, 1.5, 2.0, 2.0, 3.0, 4.0, 5.5, 7.0]
 EXIT_CONFIG = {
     "scan_type": "exit",
     "campaign_name": "ExitScan Q1 2026",
-    "output_name": "docs/examples/voorbeeldrapport_verisight.pdf",
+    "docs_output_name": "voorbeeldrapport_verisight.pdf",
+    "public_output_name": "voorbeeldrapport_verisight.pdf",
     "invited": 51,
     "responses": 35,
 }
@@ -70,7 +73,8 @@ EXIT_CONFIG = {
 RETENTION_CONFIG = {
     "scan_type": "retention",
     "campaign_name": "RetentieScan Voorjaar 2026",
-    "output_name": "docs/examples/voorbeeldrapport_retentiescan.pdf",
+    "docs_output_name": "voorbeeldrapport_retentiescan.pdf",
+    "public_output_name": "voorbeeldrapport_retentiescan.pdf",
     "invited": 58,
     "responses": 39,
 }
@@ -308,8 +312,16 @@ def _stay_intent(turnover_base: float) -> int:
 
 
 def _get_or_create_demo_org(db) -> tuple[Organization, bool]:
-    org = db.query(Organization).first()
+    org = (
+        db.query(Organization)
+        .filter(Organization.slug == DEMO_ORG_SLUG)
+        .one_or_none()
+    )
     if org:
+        org.name = DEMO_ORG_NAME
+        org.contact_email = DEMO_ORG_EMAIL
+        org.is_active = True
+        db.flush()
         return org, False
 
     org = Organization(
@@ -322,6 +334,20 @@ def _get_or_create_demo_org(db) -> tuple[Organization, bool]:
     db.add(org)
     db.flush()
     return org, True
+
+
+def _resolved_output_paths(config: dict[str, str | int]) -> list[Path]:
+    docs_path = Path(__file__).parent / DOCS_EXAMPLES_DIR / str(config["docs_output_name"])
+    public_path = Path(__file__).parent / PUBLIC_EXAMPLES_DIR / str(config["public_output_name"])
+    return [docs_path, public_path]
+
+
+def _write_pdf_outputs(pdf_bytes: bytes, config: dict[str, str | int]) -> list[Path]:
+    output_paths = _resolved_output_paths(config)
+    for output_path in output_paths:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(pdf_bytes)
+    return output_paths
 
 
 def _purge_campaign(db, campaign: Campaign) -> None:
@@ -605,12 +631,12 @@ def main() -> None:
     print("")
     print(f"{invited} respondenten totaal opgeslagen ({responses} ingevuld). Rapport genereren...")
 
-    pdf_bytes = generate_campaign_report(campaign.id, db)
-    output_path = Path(__file__).parent / str(config["output_name"])
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_bytes(pdf_bytes)
+    pdf_bytes = generate_campaign_report(campaign.id, db, sample_output_mode=True)
+    output_paths = _write_pdf_outputs(pdf_bytes, config)
 
-    print(f"Rapport opgeslagen: {output_path}")
+    print("Rapport opgeslagen:")
+    for output_path in output_paths:
+        print(f"  - {output_path}")
     print(f"Grootte: {len(pdf_bytes) / 1024:.1f} KB")
 
     if args.keep_data:

@@ -44,8 +44,9 @@ Gebruik bij spanning deze volgorde:
 3. `docs/reference/TRUST_AND_CLAIMS_MATRIX.md`
 4. `docs/active/BOARDROOM_READINESS_PLAN.md`
 5. `docs/reference/FOUNDER_LED_SALES_PLAYBOOK.md`
-6. dit document
-7. buyer-facing salesassets uit deze tranche
+6. `docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md`
+7. dit document
+8. buyer-facing salesassets uit deze tranche
 
 ## Het Verisight Sales Enablement Contract
 
@@ -151,6 +152,8 @@ Deze tranche gebruikt de volgende vaste artefacten:
 - `docs/reference/EXITSCAN_SALES_ONE_PAGER.md`
 - `docs/reference/RETENTIESCAN_SALES_ONE_PAGER.md`
 - `docs/reference/COMBINATIE_PORTFOLIO_MEMO.md`
+- `docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md`
+- `docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_ACCEPTANCE_CHECKLIST.md`
 
 ## Guardrails
 

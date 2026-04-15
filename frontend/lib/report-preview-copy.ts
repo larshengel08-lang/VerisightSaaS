@@ -1,9 +1,27 @@
+import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
+
 export type ReportPreviewVariant = 'portfolio' | 'exit' | 'retention'
 
 export interface ReportPreviewHypothesis {
   title: string
   body: string
   question: string
+}
+
+export interface ReportPreviewDashboardRow {
+  label: string
+  value: string
+  band: string
+  width: string
+  tone: 'red' | 'amber' | 'emerald'
+}
+
+export interface ReportPreviewFactorCard {
+  label: string
+  score: string
+  signal: string
+  band: string
+  tone: 'red' | 'amber' | 'emerald'
 }
 
 export interface ReportPreviewCopy {
@@ -14,8 +32,10 @@ export interface ReportPreviewCopy {
   boardroomIntro: string
   boardroomPoints: [string, string][]
   focusTitle: string
+  dashboardRows: ReportPreviewDashboardRow[]
   nuance: string
   factorLead: string
+  factorCards: ReportPreviewFactorCard[]
   hypothesisLead: string
   hypotheses: ReportPreviewHypothesis[]
   proofNotes: [string, string][]
@@ -24,7 +44,16 @@ export interface ReportPreviewCopy {
   trustPoints: [string, string][]
   demoLabel: string
   demoBody: string
+  supportVisualTitle: string
+  supportVisualAlt: string
+  sampleReportTitle?: string
+  sampleReportBody?: string
+  sampleReportHref?: string
+  sampleReportLabel?: string
 }
+
+const exitSampleAsset = getPrimarySampleShowcaseAsset('exit')
+const retentionSampleAsset = getPrimarySampleShowcaseAsset('retention')
 
 export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy> = {
   portfolio: {
@@ -46,10 +75,23 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       ['Wat niet concluderen', 'Verisight versnelt weging en gesprek, maar verkoopt geen diagnose, individuele voorspeller of sluitende causaliteit.'],
     ],
     focusTitle: 'Welke managementroute past nu het best?',
+    dashboardRows: [
+      { label: 'ExitScan', value: 'Vertrekduiding', band: 'Eerste route', width: '64%', tone: 'red' },
+      { label: 'RetentieScan', value: 'Behoud eerst signaleren', band: 'Specifieke route', width: '52%', tone: 'amber' },
+      { label: 'Combinatie', value: 'Bewuste portfolioroute', band: 'Pas daarna', width: '45%', tone: 'emerald' },
+    ],
     nuance:
       'De output helpt kiezen waar gesprek, verificatie of actie het meeste oplevert. Verisight claimt geen individuele voorspelling of sluitende diagnose.',
     factorLead:
       'Per factor zie je de belevingsscore en de signaalwaarde. Zo kun je dezelfde managementtaal gebruiken voor vertrekduiding en vroegsignalering.',
+    factorCards: [
+      { label: 'Leiderschap', score: '4,7', signal: '6,3', band: 'Nu bespreken', tone: 'red' },
+      { label: 'Groei', score: '4,9', signal: '6,1', band: 'Nu bespreken', tone: 'red' },
+      { label: 'Psychologische veiligheid', score: '5,6', signal: '5,4', band: 'Verder bekijken', tone: 'amber' },
+      { label: 'Beloning & voorwaarden', score: '6,1', signal: '4,9', band: 'Verder bekijken', tone: 'amber' },
+      { label: 'Werkbelasting', score: '6,4', signal: '4,6', band: 'Verder bekijken', tone: 'amber' },
+      { label: 'Rolhelderheid', score: '7,1', signal: '3,9', band: 'OK', tone: 'emerald' },
+    ],
     hypothesisLead:
       'Verisight vertaalt uitkomsten niet naar absolute conclusies, maar naar een managementgesprek met duidelijke verificatievragen, eigenaarschap en vervolgstappen.',
     hypotheses: [
@@ -82,6 +124,13 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     demoLabel: 'Illustratief',
     demoBody:
       'Fictieve data. De managementstructuur, trustnotities en leesvolgorde volgen dezelfde lijn als de echte Verisight-output.',
+    supportVisualTitle: 'Segment deep dive preview',
+    supportVisualAlt: 'Voorbeeld van een Verisight segment deep dive',
+    sampleReportTitle: 'Waar je het volledige voorbeeld ziet',
+    sampleReportBody:
+      'Gebruik de portfolio-preview als routekiezer. Het volledige buyer-facing voorbeeldrapport open je daarna op de productspecifieke ExitScan- of RetentieScan-pagina.',
+    sampleReportHref: '/producten',
+    sampleReportLabel: 'Bekijk productspecifieke voorbeelden',
   },
   exit: {
     label: 'ExitScan-voorbeeld',
@@ -102,10 +151,24 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       ['Wat niet concluderen', 'Dit is vertrekduiding op groepsniveau, geen bewijs van de ene oorzaak en geen garantie op lagere uitstroom.'],
     ],
     focusTitle: 'Wat moet management nu eerst bespreken?',
+    dashboardRows: [
+      { label: 'Leiderschap', value: '6,3', band: 'Nu bespreken', width: '63%', tone: 'red' },
+      { label: 'Groei', value: '6,1', band: 'Nu bespreken', width: '61%', tone: 'red' },
+      { label: 'Beloning & voorwaarden', value: '4,9', band: 'Verder bekijken', width: '49%', tone: 'amber' },
+      { label: 'Werkbelasting', value: '4,6', band: 'Verder bekijken', width: '46%', tone: 'amber' },
+    ],
     nuance:
       'ExitScan maakt patronen zichtbaar en helpt bepalen waar vervolgactie het meeste oplevert. Het blijft gegroepeerde vertrekduiding: geen individueel oordeel, geen diagnose, geen harde voorspelling en geen geforceerde ROI-claim.',
     factorLead:
       'Per factor zie je de belevingsscore en de signaalwaarde. Die signaalwaarde helpt bepalen welke werkfactor eerst bestuurlijke verificatie en eigenaarschap verdient.',
+    factorCards: [
+      { label: 'Leiderschap', score: '4,7', signal: '6,3', band: 'Nu bespreken', tone: 'red' },
+      { label: 'Groei', score: '4,9', signal: '6,1', band: 'Nu bespreken', tone: 'red' },
+      { label: 'Psychologische veiligheid', score: '5,6', signal: '5,4', band: 'Verder bekijken', tone: 'amber' },
+      { label: 'Beloning & voorwaarden', score: '6,1', signal: '4,9', band: 'Verder bekijken', tone: 'amber' },
+      { label: 'Werkbelasting', score: '6,4', signal: '4,6', band: 'Verder bekijken', tone: 'amber' },
+      { label: 'Rolhelderheid', score: '7,1', signal: '3,9', band: 'OK', tone: 'emerald' },
+    ],
     hypothesisLead:
       'De rapportage vertaalt uitkomsten niet naar harde conclusies, maar naar werkhypothesen, bestuurlijke handoff, een eerste eigenaar en een eerste logische 30-90 dagenactie.',
     hypotheses: [
@@ -139,6 +202,13 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     demoLabel: 'Illustratief voorbeeld',
     demoBody:
       'Fictieve voorbeelddata. De trustopbouw, managementtaal en rapportvolgorde zijn gelijk aan de live ExitScan-presentatie waarmee Lars normaal de eerste route uitlegt.',
+    supportVisualTitle: 'Segment deep dive preview',
+    supportVisualAlt: 'Voorbeeld van een ExitScan segment deep dive',
+    sampleReportTitle: 'Volledig buyer-facing voorbeeldrapport',
+    sampleReportBody:
+      'Open hier het actuele ExitScan-voorbeeldrapport met fictieve data, zonder vertrouwelijke klantframing en in dezelfde managementstructuur als de echte output.',
+    sampleReportHref: exitSampleAsset?.publicHref,
+    sampleReportLabel: 'Open ExitScan-voorbeeldrapport',
   },
   retention: {
     label: 'RetentieScan-voorbeeld',
@@ -159,10 +229,24 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       ['Wat niet concluderen', 'Dit blijft een verification-first groepssignaal en geen individuele predictor, performance-score of bewezen risicomodel.'],
     ],
     focusTitle: 'Waar vraagt behoud nu de meeste aandacht?',
+    dashboardRows: [
+      { label: 'Groei', value: '5,9', band: 'Eerst verifieren', width: '59%', tone: 'red' },
+      { label: 'Werkbelasting', value: '5,6', band: 'Eerst verifieren', width: '56%', tone: 'red' },
+      { label: 'Leiderschap', value: '5,1', band: 'Verder bekijken', width: '51%', tone: 'amber' },
+      { label: 'Psychologische veiligheid', value: '4,7', band: 'Verder bekijken', width: '47%', tone: 'amber' },
+    ],
     nuance:
       'RetentieScan is bedoeld voor groeps- en segmentduiding. De output is nadrukkelijk geen individuele voorspeller of performance-instrument, maar een v1-werkmodel voor verificatie en prioritering.',
     factorLead:
       'De factoranalyse laat zien waar het retentiesignaal samenhangt met beinvloedbare werkfactoren zoals leiderschap, groei en werkbelasting.',
+    factorCards: [
+      { label: 'Groei', score: '4,8', signal: '5,9', band: 'Eerst verifieren', tone: 'red' },
+      { label: 'Werkbelasting', score: '5,0', signal: '5,6', band: 'Eerst verifieren', tone: 'red' },
+      { label: 'Leiderschap', score: '5,8', signal: '5,1', band: 'Verder bekijken', tone: 'amber' },
+      { label: 'Psychologische veiligheid', score: '7,5', signal: '4,7', band: 'Verder bekijken', tone: 'amber' },
+      { label: 'Beloning & voorwaarden', score: '7,0', signal: '4,0', band: 'Stabiel', tone: 'emerald' },
+      { label: 'Rolhelderheid', score: '7,1', signal: '3,8', band: 'Stabiel', tone: 'emerald' },
+    ],
     hypothesisLead:
       'De rapportage helpt management niet alleen zien wat spannend is, maar ook wie eerst moet valideren en welke 30-90 dagenactie logisch is.',
     hypotheses: [
@@ -196,5 +280,12 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     demoLabel: 'Illustratief voorbeeld',
     demoBody:
       'Fictieve voorbeelddata. De live RetentieScan-output gebruikt dezelfde managementstructuur, trustnotes en productspecifieke leeswijzers als in een specifieke behoudsdemo.',
+    supportVisualTitle: 'Segment deep dive preview',
+    supportVisualAlt: 'Voorbeeld van een RetentieScan segment deep dive',
+    sampleReportTitle: 'Volledig buyer-facing voorbeeldrapport',
+    sampleReportBody:
+      'Open hier het actuele RetentieScan-voorbeeldrapport met fictieve data, verification-first lezing en dezelfde trustgrenzen als de echte output.',
+    sampleReportHref: retentionSampleAsset?.publicHref,
+    sampleReportLabel: 'Open RetentieScan-voorbeeldrapport',
   },
 }

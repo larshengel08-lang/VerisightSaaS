@@ -156,6 +156,7 @@ def test_generate_exit_report_smoke(db_session: Session):
     assert 'Bestuurlijke handoff' in pdf_text
     assert 'Wat je hier niet uit moet concluderen' in pdf_text
     assert 'Indicatieve exposure' in pdf_text
+    assert 'Vertrouwelijk' in pdf_text
 
 
 def test_generate_exit_report_smoke_with_indicative_batch(db_session: Session):
@@ -262,3 +263,43 @@ def test_generate_retention_report_smoke_with_trend_and_segment_deep_dive(db_ses
     pdf_text = _extract_pdf_text(pdf_bytes)
     assert 'Bestuurlijke handoff' in pdf_text
     assert 'Wat je hier niet uit moet concluderen' in pdf_text
+
+
+def test_generate_exit_report_sample_output_mode_uses_buyer_facing_cover_note(db_session: Session):
+    org = Organization(name="Voorbeeldzorg", slug="voorbeeldzorg-sample", contact_email="hr@voorbeeldzorg.nl")
+    db_session.add(org)
+    db_session.flush()
+
+    campaign = _build_campaign(
+        db_session,
+        organization=org,
+        name="Exit Sample 2026",
+        scan_type="exit",
+        created_at=datetime.now(timezone.utc),
+    )
+
+    for idx in range(10):
+        _add_response(
+            db_session,
+            campaign=campaign,
+            idx=idx,
+            department="Zorg",
+            role_level="specialist",
+            exit_reason_code="P1",
+            risk_score=6.1,
+            risk_band="MIDDEN",
+            preventability="STERK_WERKSIGNAAL",
+            stay_intent_score=2,
+            uwes_score=None,
+            turnover_intention_score=None,
+            signal_visibility_score=2.5,
+        )
+
+    db_session.commit()
+
+    pdf_bytes = generate_campaign_report(campaign.id, db_session, sample_output_mode=True)
+
+    pdf_text = _extract_pdf_text(pdf_bytes)
+    assert 'Illustratief voorbeeld' in pdf_text
+    assert 'fictieve data' in pdf_text.lower()
+    assert 'Vertrouwelijk' not in pdf_text

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
 import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
+import { SampleShowcaseCard } from '@/components/marketing/sample-showcase-card'
 import { SectionHeading } from '@/components/marketing/section-heading'
 import { TrustStrip } from '@/components/marketing/trust-strip'
 import {
@@ -14,6 +15,10 @@ import {
   trustSupportCards,
   trustVerificationCards,
 } from '@/components/marketing/site-content'
+import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
+
+const exitSampleAsset = getPrimarySampleShowcaseAsset('exit')
+const retentionSampleAsset = getPrimarySampleShowcaseAsset('retention')
 
 export const metadata: Metadata = {
   title: 'Vertrouwen',
@@ -148,6 +153,25 @@ export default function VertrouwenPage() {
             rows={trustReadingRows}
           />
         </div>
+
+        {exitSampleAsset && retentionSampleAsset ? (
+          <div className="mt-16 grid gap-5 lg:grid-cols-2">
+            <SampleShowcaseCard
+              eyebrow="Voorbeeld lezen"
+              title="ExitScan laat publiek zien wat management werkelijk leest."
+              body="Dit buyer-facing voorbeeldrapport gebruikt fictieve data, maar dezelfde managementstructuur, claimsgrenzen en privacyframing als de live output. Daardoor werkt het als trustproof zonder vertrouwelijke klantlaag."
+              asset={exitSampleAsset}
+              linkLabel="Open ExitScan-voorbeeldrapport"
+            />
+            <SampleShowcaseCard
+              eyebrow="Verification-first"
+              title="RetentieScan blijft ook in de showcase begrensd."
+              body="Gebruik dit voorbeeldrapport om te zien hoe RetentieScan groepsduiding, verificatie en opvolging toont zonder individuele predictor of performance-instrument te worden."
+              asset={retentionSampleAsset}
+              linkLabel="Open RetentieScan-voorbeeldrapport"
+            />
+          </div>
+        ) : null}
 
         <div className="mt-16 rounded-[2rem] border border-slate-200 bg-white p-8 md:p-10">
           <SectionHeading

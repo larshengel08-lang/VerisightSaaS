@@ -24,6 +24,10 @@ data/retention_validation_report/
 # Gegenereerde bestanden
 *.pdf
 !Verisight_Demo_Rapport.pdf
+!docs/examples/voorbeeldrapport_verisight.pdf
+!docs/examples/voorbeeldrapport_retentiescan.pdf
+!frontend/public/examples/voorbeeldrapport_verisight.pdf
+!frontend/public/examples/voorbeeldrapport_retentiescan.pdf
 
 # OS
 .DS_Store

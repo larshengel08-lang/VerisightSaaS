@@ -11,9 +11,11 @@ Belangrijk:
 Lees eerst voor context:
 - [PLANMODE_PROMPT_TEMPLATE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PLANMODE_PROMPT_TEMPLATE.md)
 - [PROMPT_INDEX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_INDEX.md)
+- [docs/examples/README.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/examples/README.md)
 - [docs/examples/voorbeeldrapport_verisight.pdf](/C:/Users/larsh/Desktop/Business/Verisight/docs/examples/voorbeeldrapport_verisight.pdf)
 - [docs/examples/voorbeeldrapport_retentiescan.pdf](/C:/Users/larsh/Desktop/Business/Verisight/docs/examples/voorbeeldrapport_retentiescan.pdf)
-- [REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PLAN.md)
+- [REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PLAN.md)
+- [SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md)
 - [frontend/lib/marketing-products.ts](/C:/Users/larsh/Desktop/Business/Verisight/frontend/lib/marketing-products.ts)
 - [frontend/components/marketing/site-content.ts](/C:/Users/larsh/Desktop/Business/Verisight/frontend/components/marketing/site-content.ts)
 

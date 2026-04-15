@@ -1,9 +1,11 @@
 'use client'
 
 import Image from 'next/image'
+import Link from 'next/link'
 import { useState } from 'react'
 import {
   REPORT_PREVIEW_COPY,
+  type ReportPreviewFactorCard,
   type ReportPreviewVariant,
 } from '@/lib/report-preview-copy'
 
@@ -14,68 +16,48 @@ interface PreviewSliderProps {
 const SLIDES = ['Dashboard', 'Factoranalyse', 'Managementduiding'] as const
 const COPY = REPORT_PREVIEW_COPY
 
-const FACTORS = [
-  {
-    label: 'Leiderschap',
-    score: 4.7,
-    signal: 6.3,
-    band: 'NU BESPREKEN',
-    color: 'bg-red-500',
+const toneStyles = {
+  red: {
+    bar: 'bg-red-400',
     text: 'text-red-700',
     border: 'border-red-200',
     bg: 'bg-red-50',
   },
-  {
-    label: 'Groei',
-    score: 4.9,
-    signal: 6.1,
-    band: 'NU BESPREKEN',
-    color: 'bg-red-500',
-    text: 'text-red-700',
-    border: 'border-red-200',
-    bg: 'bg-red-50',
-  },
-  {
-    label: 'Psychologische veiligheid',
-    score: 5.6,
-    signal: 5.4,
-    band: 'VERDER BEKIJKEN',
-    color: 'bg-amber-400',
+  amber: {
+    bar: 'bg-amber-400',
     text: 'text-amber-700',
     border: 'border-amber-200',
     bg: 'bg-amber-50',
   },
-  {
-    label: 'Beloning & voorwaarden',
-    score: 6.1,
-    signal: 4.9,
-    band: 'VERDER BEKIJKEN',
-    color: 'bg-amber-400',
-    text: 'text-amber-700',
-    border: 'border-amber-200',
-    bg: 'bg-amber-50',
-  },
-  {
-    label: 'Werkbelasting',
-    score: 6.4,
-    signal: 4.6,
-    band: 'VERDER BEKIJKEN',
-    color: 'bg-amber-400',
-    text: 'text-amber-700',
-    border: 'border-amber-200',
-    bg: 'bg-amber-50',
-  },
-  {
-    label: 'Rolhelderheid',
-    score: 7.1,
-    signal: 3.9,
-    band: 'OK',
-    color: 'bg-emerald-500',
+  emerald: {
+    bar: 'bg-emerald-500',
     text: 'text-emerald-700',
     border: 'border-emerald-200',
     bg: 'bg-emerald-50',
   },
-] as const
+} as const
+
+function SampleReportCard({ variant }: { variant: ReportPreviewVariant }) {
+  const copy = COPY[variant]
+  if (!copy.sampleReportHref || !copy.sampleReportLabel || !copy.sampleReportTitle || !copy.sampleReportBody) {
+    return null
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{copy.sampleReportTitle}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{copy.sampleReportBody}</p>
+      <div className="mt-4">
+        <Link
+          href={copy.sampleReportHref}
+          className="inline-flex rounded-full border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-white hover:text-slate-950"
+        >
+          {copy.sampleReportLabel}
+        </Link>
+      </div>
+    </div>
+  )
+}
 
 function ProofRail({ variant }: { variant: ReportPreviewVariant }) {
   const copy = COPY[variant]
@@ -108,6 +90,8 @@ function ProofRail({ variant }: { variant: ReportPreviewVariant }) {
           </div>
         </div>
 
+        <SampleReportCard variant={variant} />
+
         <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">{copy.trustTitle}</p>
           <p className="mt-3 text-sm leading-6 text-slate-700">{copy.trustIntro}</p>
@@ -125,10 +109,8 @@ function ProofRail({ variant }: { variant: ReportPreviewVariant }) {
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
           <div>
-            <p className="text-sm font-semibold text-slate-950">Segment deep dive preview</p>
-            <p className="mt-1 text-xs leading-5 text-slate-500">
-              {copy.demoBody}
-            </p>
+            <p className="text-sm font-semibold text-slate-950">{copy.supportVisualTitle}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">{copy.demoBody}</p>
           </div>
           <span className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-blue-700">
             {copy.demoLabel}
@@ -136,7 +118,7 @@ function ProofRail({ variant }: { variant: ReportPreviewVariant }) {
         </div>
         <Image
           src="/segment-deep-dive-preview.png"
-          alt="Voorbeeld van een Verisight segment deep dive"
+          alt={copy.supportVisualAlt}
           width={1600}
           height={960}
           className="h-full w-full object-cover"
@@ -171,21 +153,19 @@ function DashboardSlide({ variant }: { variant: ReportPreviewVariant }) {
           <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{copy.focusTitle}</p>
             <div className="mt-4 space-y-3">
-              {[
-                ['Leiderschap', '6,3', 'Nu bespreken', '63%', 'bg-red-400'],
-                ['Groei', '6,1', 'Nu bespreken', '61%', 'bg-red-400'],
-                ['Beloning & voorwaarden', '4,9', 'Verder bekijken', '49%', 'bg-amber-400'],
-                ['Werkbelasting', '4,6', 'Verder bekijken', '46%', 'bg-amber-400'],
-              ].map(([label, value, band, width, color]) => (
-                <div key={label} className="grid grid-cols-[minmax(0,10rem)_1fr_auto_auto] items-center gap-3">
-                  <span className="text-sm text-slate-200">{label}</span>
-                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                    <div className={color} style={{ width, height: '100%', borderRadius: 9999 }} />
+              {copy.dashboardRows.map((row) => {
+                const tone = toneStyles[row.tone]
+                return (
+                  <div key={row.label} className="grid grid-cols-[minmax(0,10rem)_1fr_auto_auto] items-center gap-3">
+                    <span className="text-sm text-slate-200">{row.label}</span>
+                    <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                      <div className={tone.bar} style={{ width: row.width, height: '100%', borderRadius: 9999 }} />
+                    </div>
+                    <span className="text-sm font-semibold text-white">{row.value}</span>
+                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-300">{row.band}</span>
                   </div>
-                  <span className="text-sm font-semibold text-white">{value}</span>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-300">{band}</span>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>
@@ -211,6 +191,34 @@ function DashboardSlide({ variant }: { variant: ReportPreviewVariant }) {
   )
 }
 
+function FactorCard({ card }: { card: ReportPreviewFactorCard }) {
+  const tone = toneStyles[card.tone]
+
+  return (
+    <div className={`rounded-2xl border p-4 ${tone.border} ${tone.bg}`}>
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-slate-900">{card.label}</p>
+        <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${tone.text} ${tone.border}`}>
+          {card.band}
+        </span>
+      </div>
+      <div className="mt-3 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-slate-500">Belevingsscore</p>
+          <span className="text-3xl font-bold text-slate-950">{card.score}</span>
+        </div>
+        <div className="text-right">
+          <p className="text-xs uppercase tracking-wide text-slate-500">Signaalwaarde</p>
+          <p className={`text-lg font-bold ${tone.text}`}>{card.signal}</p>
+        </div>
+      </div>
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/70">
+        <div className={tone.bar} style={{ width: `${Number(card.signal.replace(',', '.')) * 10}%`, height: '100%', borderRadius: 9999 }} />
+      </div>
+    </div>
+  )
+}
+
 function FactorSlide({ variant }: { variant: ReportPreviewVariant }) {
   const copy = COPY[variant]
 
@@ -223,26 +231,8 @@ function FactorSlide({ variant }: { variant: ReportPreviewVariant }) {
         <p className="mt-1 text-sm text-slate-700">{copy.factorLead}</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {FACTORS.map(({ label, score, signal, band, color, text, border, bg }) => (
-          <div key={label} className={`rounded-2xl border p-4 ${border} ${bg}`}>
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">{label}</p>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${text} border ${border}`}>{band}</span>
-            </div>
-            <div className="mt-3 flex items-end justify-between gap-3">
-              <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">Belevingsscore</p>
-                <span className="text-3xl font-bold text-slate-950">{score}</span>
-              </div>
-              <div className="text-right">
-                <p className="text-xs uppercase tracking-wide text-slate-500">Signaalwaarde</p>
-                <p className={`text-lg font-bold ${text}`}>{signal}</p>
-              </div>
-            </div>
-            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/70">
-              <div className={color} style={{ width: `${signal * 10}%`, height: '100%', borderRadius: 9999 }} />
-            </div>
-          </div>
+        {copy.factorCards.map((card) => (
+          <FactorCard key={card.label} card={card} />
         ))}
       </div>
       <ProofRail variant={variant} />
