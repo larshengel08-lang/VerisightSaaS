@@ -57,6 +57,7 @@ export function PublicHeader({
           <div className="hidden items-center gap-3 lg:flex">
             <Link
               href="/login"
+              prefetch={false}
               className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
             >
               Inloggen
@@ -135,6 +136,7 @@ export function PublicHeader({
             <div className="mt-3 border-t border-slate-200 pt-3">
               <Link
                 href="/login"
+                prefetch={false}
                 onClick={closeMenu}
                 className="block rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950"
               >

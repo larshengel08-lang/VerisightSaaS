@@ -3,8 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
-  --marketing-shell: 80rem;
-  --marketing-section-space: clamp(3.75rem, 5.2vw, 5.75rem);
+  --marketing-shell: 84rem;
+  --marketing-section-space: clamp(3.75rem, 5vw, 5.75rem);
+  --marketing-hero-space: clamp(3.25rem, 5vw, 5.5rem);
   --marketing-surface: #ffffff;
   --marketing-surface-soft: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   --marketing-surface-tint: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
@@ -12,9 +13,6 @@
   --marketing-border: rgba(148, 163, 184, 0.22);
   --marketing-shadow-soft: 0 20px 48px rgba(15, 23, 42, 0.07);
   --marketing-shadow-strong: 0 28px 72px rgba(15, 23, 42, 0.13);
-  --marketing-glow-blue: rgba(191, 219, 254, 0.75);
-  --marketing-glow-emerald: rgba(167, 243, 208, 0.72);
-  --marketing-glow-sky: rgba(186, 230, 253, 0.7);
 }
 
 @theme inline {
@@ -63,14 +61,12 @@ summary:focus-visible {
   color: #0f172a;
 }
 
-/* Display font utility used on hero headings and section titles. */
 .font-display {
   font-family: var(--font-display), var(--font-inter), sans-serif;
   font-weight: 600;
   letter-spacing: -0.03em;
 }
 
-/* FAQ open/close indicator */
 details > summary::-webkit-details-marker {
   display: none;
 }
@@ -79,7 +75,7 @@ details > summary::-webkit-details-marker {
   .marketing-shell {
     margin-inline: auto;
     width: min(100%, var(--marketing-shell));
-    padding-inline: clamp(1rem, 2.5vw, 2rem);
+    padding-inline: clamp(1rem, 2.4vw, 2rem);
   }
 
   .marketing-section {
@@ -104,6 +100,9 @@ details > summary::-webkit-details-marker {
     background: rgba(255, 255, 255, 0.96);
     box-shadow: var(--marketing-shadow-soft);
     border-radius: 1.75rem;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .marketing-panel-soft {
@@ -111,6 +110,9 @@ details > summary::-webkit-details-marker {
     background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
     box-shadow: var(--marketing-shadow-soft);
     border-radius: 1.75rem;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .marketing-panel-dark {
@@ -119,6 +121,9 @@ details > summary::-webkit-details-marker {
     box-shadow: var(--marketing-shadow-strong);
     border-radius: 1.75rem;
     color: white;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .marketing-stage {
@@ -127,8 +132,11 @@ details > summary::-webkit-details-marker {
     border: 1px solid rgba(15, 23, 42, 0.08);
     background: linear-gradient(180deg, #0f172a 0%, #14243a 100%);
     box-shadow: var(--marketing-shadow-strong);
-    border-radius: 2.1rem;
+    border-radius: 2rem;
     color: white;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .marketing-stage::before {
@@ -136,7 +144,7 @@ details > summary::-webkit-details-marker {
     position: absolute;
     inset: 1rem;
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 1.6rem;
+    border-radius: 1.45rem;
     pointer-events: none;
   }
 
@@ -145,78 +153,78 @@ details > summary::-webkit-details-marker {
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(circle at top right, rgba(59, 130, 246, 0.22), transparent 30%),
-      radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.12), transparent 26%);
+      radial-gradient(circle at top right, rgba(59, 130, 246, 0.18), transparent 32%),
+      radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 26%);
     pointer-events: none;
   }
 
-  .marketing-glow-blue,
-  .marketing-glow-emerald,
-  .marketing-glow-sky {
-    position: absolute;
-    border-radius: 9999px;
-    filter: blur(64px);
-    pointer-events: none;
-  }
-
-  .marketing-glow-blue {
-    background: var(--marketing-glow-blue);
-  }
-
-  .marketing-glow-emerald {
-    background: var(--marketing-glow-emerald);
-  }
-
-  .marketing-glow-sky {
-    background: var(--marketing-glow-sky);
+  .marketing-hero-shell {
+    padding-block: var(--marketing-hero-space);
   }
 
   .marketing-hero-grid {
     display: grid;
+    gap: clamp(1.5rem, 3vw, 2.75rem);
     align-items: start;
-    gap: clamp(2rem, 4vw, 4rem);
   }
 
-  .marketing-hero-primary,
-  .marketing-hero-secondary,
-  .marketing-hero-stage-column,
-  .marketing-hero-stage-grid > *,
-  .marketing-stage,
-  .marketing-stage * {
+  .marketing-hero-region-intro,
+  .marketing-hero-region-stage,
+  .marketing-hero-region-support,
+  .marketing-hero-intro,
+  .marketing-hero-stage-block,
+  .marketing-hero-support-block,
+  .marketing-hero-stage-surface,
+  .marketing-preview-shell {
     min-width: 0;
   }
 
-  .marketing-hero-primary,
-  .marketing-hero-secondary {
+  .marketing-hero-intro,
+  .marketing-hero-support-block {
     display: grid;
     align-content: start;
+    gap: 1rem;
+  }
+
+  .marketing-hero-stage-surface {
+    padding: clamp(1.4rem, 2vw, 1.9rem);
+  }
+
+  .marketing-hero-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
   }
 
   .marketing-hero-title {
-    max-width: 100%;
+    margin: 0;
+    max-width: min(13ch, 100%);
     text-wrap: pretty;
     overflow-wrap: break-word;
-    word-break: normal;
-    hyphens: none;
+    font-size: clamp(2.2rem, 7vw, 4.6rem);
+    line-height: 0.94;
   }
 
   .marketing-hero-title-home {
-    font-size: clamp(2rem, 7vw, 4.8rem);
-    line-height: 0.92;
+    max-width: min(12ch, 100%);
+    font-size: clamp(2.4rem, 8vw, 5rem);
   }
 
   .marketing-hero-title-page {
-    font-size: clamp(1.95rem, 6.4vw, 4.45rem);
-    line-height: 0.92;
+    max-width: min(14ch, 100%);
+    font-size: clamp(2rem, 6vw, 4.1rem);
   }
 
   .marketing-hero-title-detail {
-    font-size: clamp(1.95rem, 6vw, 4.15rem);
-    line-height: 0.93;
+    max-width: min(13ch, 100%);
+    font-size: clamp(2rem, 6vw, 3.85rem);
   }
 
   .marketing-hero-copy {
-    max-width: 38rem;
+    max-width: 41rem;
+    font-size: 1rem;
+    line-height: 1.9;
   }
 
   .marketing-hero-cta-row {
@@ -226,68 +234,87 @@ details > summary::-webkit-details-marker {
     gap: 0.75rem;
   }
 
-  .marketing-hero-support-grid {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .marketing-hero-link-grid {
-    display: grid;
-    gap: 0.75rem;
-  }
-
-  .marketing-hero-link-card {
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    background: rgba(255, 255, 255, 0.84);
-    border-radius: 1.25rem;
-    padding: 0.9rem 1rem;
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
-  }
-
-  .marketing-hero-stage-grid {
-    display: grid;
-    gap: 1.25rem;
-  }
-
-  .marketing-stage-title {
-    max-width: min(11.5ch, 100%);
-    font-size: clamp(1.85rem, 4.8vw, 3.55rem);
-    line-height: 0.96;
-    text-wrap: pretty;
-    overflow-wrap: break-word;
-    hyphens: none;
-  }
-
-  .marketing-stage-title-overview,
-  .marketing-stage-title-pricing,
-  .marketing-stage-title-approach {
-    max-width: min(14.5ch, 100%);
-    font-size: clamp(1.45rem, 3vw, 2.65rem);
-    line-height: 1;
-  }
-
-  .marketing-stage-title-product {
-    max-width: min(13.4ch, 100%);
-    font-size: clamp(1.55rem, 3.4vw, 2.85rem);
-    line-height: 1;
-  }
-
-  .marketing-stage-title-support {
-    max-width: min(13.8ch, 100%);
-    font-size: clamp(1.5rem, 3.1vw, 2.75rem);
-    line-height: 1;
+  .marketing-hero-actions {
+    margin-top: 0.75rem;
   }
 
   .marketing-pill-stack {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-wrap: wrap;
     gap: 0.625rem;
   }
 
   .marketing-pill {
-    max-width: 100%;
     border-radius: 9999px;
+  }
+
+  .marketing-support-note {
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(255, 255, 255, 0.84);
+    border-radius: 1.4rem;
+    padding: 1rem 1.15rem;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .marketing-link-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .marketing-link-card {
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 1.25rem;
+    padding: 0.95rem 1rem;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .marketing-stage-tag {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .marketing-stage-title {
+    margin: 0;
+    max-width: min(15ch, 100%);
+    font-size: clamp(1.8rem, 4vw, 3.3rem);
+    line-height: 0.98;
+    text-wrap: pretty;
+  }
+
+  .marketing-stage-copy {
+    max-width: 40rem;
+    font-size: 0.98rem;
+    line-height: 1.85;
+  }
+
+  .marketing-stage-list {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .marketing-stage-list-item {
+    border-radius: 1.35rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.95rem 1rem;
+  }
+
+  .marketing-preview-shell {
+    display: grid;
+    gap: 1rem;
   }
 
   .marketing-flow-stack > * {
@@ -296,6 +323,10 @@ details > summary::-webkit-details-marker {
 
   .marketing-flow-stack > * + * {
     margin-top: clamp(2.75rem, 4vw, 3.75rem) !important;
+  }
+
+  .marketing-shell .grid > * {
+    min-width: 0;
   }
 }
 
@@ -309,7 +340,20 @@ details > summary::-webkit-details-marker {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
+  @layer components {
+    .marketing-hero-support-block {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 1rem;
+    }
+
+    .marketing-hero-support-block > :first-child:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+@media (min-width: 1200px) {
   @layer components {
     .marketing-hero-grid {
       grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
@@ -317,99 +361,60 @@ details > summary::-webkit-details-marker {
 
     .marketing-hero-grid-home,
     .marketing-hero-grid-product {
-      grid-template-columns: minmax(0, 0.96fr) minmax(0, 1.04fr);
+      grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
     }
 
     .marketing-hero-grid-overview,
     .marketing-hero-grid-pricing,
     .marketing-hero-grid-approach,
     .marketing-hero-grid-support {
-      grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+      grid-template-columns: minmax(0, 1.02fr) minmax(0, 0.98fr);
     }
 
-    .marketing-hero-primary {
+    .marketing-hero-region-intro {
       grid-column: 1;
       grid-row: 1;
     }
 
-    .marketing-hero-secondary {
+    .marketing-hero-region-stage {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .marketing-hero-region-support {
       grid-column: 1;
       grid-row: 2;
     }
 
-    .marketing-hero-stage-column {
-      grid-column: 2;
-      grid-row: 1 / span 2;
+    .marketing-hero-grid-home .marketing-hero-region-support,
+    .marketing-hero-grid-overview .marketing-hero-region-support,
+    .marketing-hero-grid-product .marketing-hero-region-support {
+      max-width: 44rem;
     }
 
-    .marketing-hero-support-grid {
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    .marketing-hero-support-block {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     }
 
-    .marketing-hero-support-grid-product,
-    .marketing-hero-support-grid-pricing,
-    .marketing-hero-support-grid-approach {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .marketing-hero-support-grid-overview {
-      grid-template-columns: minmax(0, 1fr);
-      max-width: 40rem;
-    }
-
-    .marketing-hero-secondary-overview,
-    .marketing-hero-secondary-pricing,
-    .marketing-hero-secondary-approach {
-      max-width: 42rem;
-    }
-
-    .marketing-hero-grid-overview .marketing-hero-title,
     .marketing-hero-grid-pricing .marketing-hero-title,
     .marketing-hero-grid-approach .marketing-hero-title,
-    .marketing-hero-grid-support .marketing-hero-title {
-      max-width: min(14.8ch, 100%);
-      font-size: clamp(1.8rem, 4.4vw, 3.55rem);
-      line-height: 0.96;
+    .marketing-hero-grid-support .marketing-hero-title,
+    .marketing-hero-grid-overview .marketing-hero-title {
+      max-width: min(15ch, 100%);
+      font-size: clamp(2rem, 4vw, 3.55rem);
     }
 
     .marketing-hero-grid-product .marketing-hero-title {
-      max-width: min(13.4ch, 100%);
-      font-size: clamp(1.9rem, 4.8vw, 3.8rem);
-      line-height: 0.95;
-    }
-
-    .marketing-hero-title {
-      max-width: min(12.6ch, 100%);
-    }
-
-    .marketing-hero-grid-overview .marketing-stage,
-    .marketing-hero-grid-pricing .marketing-stage,
-    .marketing-hero-grid-approach .marketing-stage {
-      border-radius: 1.9rem;
+      max-width: min(13ch, 100%);
+      font-size: clamp(2rem, 4vw, 3.75rem);
     }
   }
 }
 
-@media (min-width: 1536px) {
+@media (min-width: 1440px) {
   @layer components {
-    .marketing-hero-stage-grid {
-      grid-template-columns: minmax(0, 0.88fr) minmax(18rem, 1.12fr);
-      align-items: start;
-    }
-
-    .marketing-hero-stage-grid-overview,
-    .marketing-hero-stage-grid-pricing,
-    .marketing-hero-stage-grid-approach {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .marketing-hero-stage-grid-product {
-      grid-template-columns: minmax(0, 0.92fr) minmax(18rem, 1.08fr);
-    }
-
-    .marketing-pill-stack {
-      flex-direction: row;
-      flex-wrap: wrap;
+    .marketing-shell {
+      padding-inline: clamp(1.25rem, 2vw, 2.25rem);
     }
   }
 }

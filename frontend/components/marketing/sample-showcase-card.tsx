@@ -41,7 +41,7 @@ export function SampleShowcaseCard({
   const palette = toneClasses[tone]
 
   return (
-    <div className={`rounded-[1.75rem] border p-6 shadow-sm ${palette.card}`}>
+    <div className={`min-w-0 rounded-[1.75rem] border p-6 shadow-sm ${palette.card}`}>
       <p className={`text-xs font-bold uppercase tracking-[0.22em] ${palette.eyebrow}`}>{eyebrow}</p>
       <h3 className={`mt-4 text-2xl font-semibold ${palette.title}`}>{title}</h3>
       <p className={`mt-4 text-sm leading-7 ${palette.body}`}>{body}</p>

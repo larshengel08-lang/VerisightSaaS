@@ -59,7 +59,11 @@ export function PublicFooter() {
             <div className="pt-2">
               {marketingLegalLinks.map((link) => (
                 <div key={link.href}>
-                  <Link href={link.href} className="transition-colors hover:text-slate-950">
+                  <Link
+                    href={link.href}
+                    prefetch={link.href === '/login' ? false : undefined}
+                    className="transition-colors hover:text-slate-950"
+                  >
                     {link.label}
                   </Link>
                 </div>
