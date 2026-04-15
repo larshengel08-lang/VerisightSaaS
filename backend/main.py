@@ -980,6 +980,7 @@ async def create_campaign(
         organization_id=org.id,
         name=body.name,
         scan_type=body.scan_type,
+        delivery_mode=body.delivery_mode or "baseline",
         enabled_modules=body.enabled_modules,
     )
     db.add(campaign)

@@ -142,14 +142,14 @@ Eerste klanten moeten soepel van akkoord naar intake, campagne, rapportage en op
 
 **Hoort in deze fase**
 - Client Onboarding And Adoption - afgerond
-- Implementation Readiness
+- Implementation Readiness - afgerond
 - Report To Action
 - Pilot And Early Customer Learning
 - Demo And Sample Environment
 
 **Status**
 - huidige actieve focus
-- 1 van 5 checklist-items afgerond
+- 2 van 5 checklist-items afgerond
 
 **Exit gate**
 - Nieuwe klanttrajecten zijn uitvoerbaar zonder onnodige improvisatie

@@ -9,6 +9,7 @@ import { ClientAccessList } from '@/components/dashboard/client-access-list'
 import { DeleteOrgButton } from '@/components/dashboard/delete-org-button'
 import { ArchiveOrgButton } from '@/components/dashboard/archive-org-button'
 import { OperatorOnboardingBlueprint } from '@/components/dashboard/onboarding-panels'
+import { getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Organization, type Campaign, type OrgInvite, type CampaignStats } from '@/lib/types'
 
 export default async function BeheerPage() {
@@ -101,7 +102,7 @@ export default async function BeheerPage() {
   const step1Done = activeOrgs.length > 0
   const step2Done = campaigns.some(campaign => campaign.is_active)
   const step3Done = (respondentCount ?? 0) > 0
-  const step4Done = step2Done && ((clientAccessCount ?? 0) > 0 || invites.length > 0)
+  const step4Done = step2Done && (clientAccessCount ?? 0) > 0
 
   return (
     <div>
@@ -147,6 +148,20 @@ export default async function BeheerPage() {
           </p>
         </div>
         <OperatorOnboardingBlueprint />
+        <div className="mt-5 grid gap-3 lg:grid-cols-2">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <p className="font-semibold text-slate-900">Interne handover-assets</p>
+            <p className="mt-1 leading-6">
+              Gebruik voor de assisted route voortaan de repo-checklists <code className="font-mono">docs/IMPLEMENTATION_OPERATOR_CHECKLIST.md</code> en <code className="font-mono">docs/CLIENT_ONBOARDING_CHECKLIST.md</code>.
+            </p>
+          </div>
+          <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            <p className="font-semibold">Acceptatiegrens</p>
+            <p className="mt-1 leading-6">
+              Behandel klanttoegang pas als afgerond wanneer activatie echt bevestigd is. Een verstuurde invite is wel gestart, maar nog geen complete oplevering.
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* ── Campagne statusoverzicht ───────────────────────────────────── */}
@@ -342,6 +357,9 @@ export default async function BeheerPage() {
                         <span className="rounded bg-blue-50 px-1.5 py-0.5 text-xs font-semibold text-blue-600">
                           {campaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'}
                         </span>
+                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600">
+                          {getDeliveryModeLabel(campaign.delivery_mode, campaign.scan_type)}
+                        </span>
                         <span className={`text-xs font-medium ${campaign.is_active ? 'text-green-600' : 'text-gray-400'}`}>
                           {campaign.is_active ? '● Actief' : '○ Gearchiveerd'}
                         </span>
@@ -390,6 +408,11 @@ export default async function BeheerPage() {
                 Nodig daarna een klantgebruiker uit voor het dashboard. Nieuwe gebruikers ontvangen een activatiemail;
                 bestaande accounts worden direct aan de organisatie gekoppeld.
               </p>
+              {pendingInviteCount > 0 && (clientAccessCount ?? 0) === 0 ? (
+                <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  Er lopen al klantactivaties, maar er is nog geen bevestigde dashboardtoegang. Houd deze stap pas voor afgerond na echte activatie.
+                </p>
+              ) : null}
               <InviteClientUserForm orgs={activeOrgs} />
               <div className="space-y-3 border-t border-gray-100 pt-4">
                 <div className="flex flex-wrap items-center gap-2">

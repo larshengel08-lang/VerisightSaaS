@@ -45,6 +45,7 @@ import {
   RetentionTrendSection,
   SdtGauge,
 } from './page-helpers'
+import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { getProductModule } from '@/lib/products/shared/registry'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
@@ -80,7 +81,13 @@ export default async function CampaignPage({ params }: Props) {
     .limit(1)
   const previousStats = (previousStatsRows?.[0] as CampaignStats | undefined) ?? null
 
-  const [{ data: profile }, { data: membership }, { data: campaignMeta }] = await Promise.all([
+  const [
+    { data: profile },
+    { data: membership },
+    { data: campaignMeta },
+    { count: activeClientAccessCount },
+    { count: pendingClientInviteCount },
+  ] = await Promise.all([
     user
       ? supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -92,7 +99,17 @@ export default async function CampaignPage({ params }: Props) {
           .eq('user_id', user.id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
-    supabase.from('campaigns').select('enabled_modules').eq('id', id).maybeSingle(),
+    supabase.from('campaigns').select('enabled_modules, delivery_mode').eq('id', id).maybeSingle(),
+    supabase
+      .from('org_members')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', stats.organization_id)
+      .in('role', ['viewer', 'member']),
+    supabase
+      .from('org_invites')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', stats.organization_id)
+      .is('accepted_at', null),
   ])
 
   const canManageCampaign =
@@ -179,6 +196,16 @@ export default async function CampaignPage({ params }: Props) {
 
   const invitesNotSent = respondents.filter((respondent) => !respondent.sent_at && !respondent.completed).length
   const incompleteScores = responses.filter((response) => !response.org_scores || !response.sdt_scores).length
+  const readinessState = buildCampaignReadinessState({
+    totalInvited: stats.total_invited,
+    totalCompleted: stats.total_completed,
+    invitesNotSent,
+    incompleteScores,
+    hasMinDisplay,
+    hasEnoughData,
+    activeClientAccessCount: activeClientAccessCount ?? 0,
+    pendingClientInviteCount: pendingClientInviteCount ?? 0,
+  })
   const riskDistribution = {
     HOOG: stats.band_high,
     MIDDEN: stats.band_medium,
@@ -250,6 +277,10 @@ export default async function CampaignPage({ params }: Props) {
               }
               tone={hasEnoughData ? 'blue' : 'amber'}
             />
+            <DashboardChip
+              label={getDeliveryModeLabel(campaignMeta?.delivery_mode ?? null, stats.scan_type)}
+              tone="slate"
+            />
           </>
         }
         actions={
@@ -283,6 +314,9 @@ export default async function CampaignPage({ params }: Props) {
                 {pendingCount > 0
                   ? `${pendingCount} respondent(en) zijn nog niet afgerond.`
                   : 'Alle uitgenodigde respondenten hebben afgerond.'}
+              </p>
+              <p className="mt-2 text-xs leading-5 text-slate-500">
+                Route: {getDeliveryModeLabel(campaignMeta?.delivery_mode ?? null, stats.scan_type)}.
               </p>
             </div>
           </div>
@@ -495,14 +529,38 @@ export default async function CampaignPage({ params }: Props) {
               hasEnoughData={hasEnoughData}
               hasMinDisplay={hasMinDisplay}
             />
+            <div
+              className={`rounded-[22px] border px-4 py-4 ${
+                readinessState.launchReady
+                  ? 'border-emerald-200 bg-emerald-50'
+                  : 'border-amber-200 bg-amber-50'
+              }`}
+            >
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Implementation readiness</p>
+                  <p className="mt-1 text-base font-semibold text-slate-950">{readinessState.headline}</p>
+                </div>
+                <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600">
+                  {readinessState.launchReady ? 'Launch-ready' : 'Nog niet launch-ready'}
+                </span>
+              </div>
+              <p className="mt-3 text-sm leading-6 text-slate-700">{readinessState.detail}</p>
+              <p className="mt-3 text-sm font-medium leading-6 text-slate-800">Volgende stap: {readinessState.nextStep}</p>
+            </div>
             {stats.is_active ? (
               <PreflightChecklist
                 campaignId={id}
                 scanType={stats.scan_type}
+                deliveryMode={campaignMeta?.delivery_mode ?? null}
                 totalInvited={stats.total_invited}
+                totalCompleted={stats.total_completed}
                 invitesNotSent={invitesNotSent}
                 incompleteScores={incompleteScores}
                 hasMinDisplay={hasMinDisplay}
+                hasEnoughData={hasEnoughData}
+                activeClientAccessCount={activeClientAccessCount ?? 0}
+                pendingClientInviteCount={pendingClientInviteCount ?? 0}
               />
             ) : (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">

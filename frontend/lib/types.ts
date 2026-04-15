@@ -3,6 +3,7 @@
 export type ScanType = 'exit' | 'retention'
 export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
 export type CampaignAddOn = 'segment_deep_dive'
+export type DeliveryMode = 'baseline' | 'live'
 // owner  = Verisight-beheerder (volledige toegang)
 // member = intern Verisight (zelfde rechten als owner)
 // viewer = HR-klant (alleen lezen: dashboard + PDF)
@@ -23,6 +24,7 @@ export interface Campaign {
   organization_id: string
   name: string
   scan_type: ScanType
+  delivery_mode: DeliveryMode | null
   is_active: boolean
   enabled_modules: string[] | null
   created_at: string

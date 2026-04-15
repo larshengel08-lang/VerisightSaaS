@@ -125,6 +125,40 @@ def _retention_payload(token: str):
     }
 
 
+def test_create_campaign_defaults_to_baseline_delivery_mode(client, db_session: Session):
+    org = _create_org(db_session, api_key="campaign-default-key")
+
+    response = client.post(
+        "/api/campaigns",
+        headers={"x-api-key": "campaign-default-key"},
+        json={"name": "Exit Baseline", "scan_type": "exit"},
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["delivery_mode"] == "baseline"
+
+    stored = db_session.query(Campaign).filter(Campaign.organization_id == org.id).one()
+    assert stored.delivery_mode == "baseline"
+
+
+def test_create_campaign_accepts_live_delivery_mode(client, db_session: Session):
+    org = _create_org(db_session, api_key="campaign-live-key")
+
+    response = client.post(
+        "/api/campaigns",
+        headers={"x-api-key": "campaign-live-key"},
+        json={"name": "Exit Live", "scan_type": "exit", "delivery_mode": "live"},
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["delivery_mode"] == "live"
+
+    stored = db_session.query(Campaign).filter(Campaign.organization_id == org.id).one()
+    assert stored.delivery_mode == "live"
+
+
 def test_survey_submit_persists_response_and_marks_respondent_complete(client, db_session: Session):
     org = _create_org(db_session)
     campaign = _create_campaign(db_session, org)
@@ -286,6 +320,69 @@ def test_respondent_import_dry_run_reports_duplicate_email_without_persisting(cl
 
     rows = db_session.query(Respondent).filter(Respondent.campaign_id == campaign.id).all()
     assert len(rows) == 1
+
+
+def test_implementation_smoke_flow_imports_sends_invites_and_generates_output(
+    client,
+    db_session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setattr("backend.main.send_survey_invite", lambda **kwargs: True)
+    org = _create_org(db_session, api_key="implementation-smoke-key")
+
+    create_response = client.post(
+        "/api/campaigns",
+        headers={"x-api-key": "implementation-smoke-key"},
+        json={"name": "Implementation Smoke", "scan_type": "exit"},
+    )
+
+    assert create_response.status_code == 201
+    campaign_id = create_response.json()["id"]
+    csv_content = (
+        "email,department,role_level,exit_month,annual_salary_eur\n"
+        "launch.one@example.com,Operations,specialist,2026-03,55000\n"
+        "launch.two@example.com,People,manager,2026-02,68000\n"
+    )
+
+    import_response = client.post(
+        f"/api/campaigns/{campaign_id}/respondents/import",
+        headers={"x-api-key": "implementation-smoke-key"},
+        data={"dry_run": "false", "send_invites": "true"},
+        files={"upload": ("implementation.csv", io.BytesIO(csv_content.encode("utf-8")), "text/csv")},
+    )
+
+    assert import_response.status_code == 200
+    import_body = import_response.json()
+    assert import_body["imported"] == 2
+    assert import_body["emails_sent"] == 2
+
+    campaign = db_session.query(Campaign).filter(Campaign.id == campaign_id).one()
+    respondents = (
+        db_session.query(Respondent)
+        .filter(Respondent.campaign_id == campaign.id)
+        .order_by(Respondent.email.asc())
+        .all()
+    )
+    assert len(respondents) == 2
+    assert all(respondent.sent_at is not None for respondent in respondents)
+
+    survey_response = client.post("/survey/submit", json=_survey_payload(respondents[0].token))
+    assert survey_response.status_code == 200
+
+    stats_response = client.get(
+        f"/api/campaigns/{campaign.id}/stats",
+        headers={"x-api-key": "implementation-smoke-key"},
+    )
+    assert stats_response.status_code == 200
+    assert stats_response.json()["total_invited"] == 2
+    assert stats_response.json()["total_completed"] == 1
+
+    report_response = client.get(
+        f"/api/campaigns/{campaign.id}/report",
+        headers={"x-api-key": "implementation-smoke-key"},
+    )
+    assert report_response.status_code == 200
+    assert report_response.headers["content-type"] == "application/pdf"
 
 
 def test_campaign_stats_returns_expected_counts_and_distribution(client, db_session: Session):

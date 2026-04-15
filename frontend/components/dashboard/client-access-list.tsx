@@ -103,6 +103,11 @@ export function ClientAccessList({ invites }: Props) {
                       year: 'numeric',
                     })}
                   </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {isActive
+                      ? 'Dashboardtoegang is actief. Volgende stap: bevestig het eerste dashboard- of rapportgebruik.'
+                      : 'Activatie loopt nog. Bevestig de activatiemail en plan daarna het eerste klantcontact rond dashboardtoegang.'}
+                  </p>
                   {!isActive && resendBlocked && (
                     <p className="mt-1 text-xs text-amber-700">
                       Activatiemail recent verstuurd. Opnieuw uitnodigen kan over ongeveer {cooldownMinutes} minuut{cooldownMinutes === 1 ? '' : 'en'}.

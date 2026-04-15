@@ -11,12 +11,23 @@ import { metadata as trustMetadata } from '@/app/vertrouwen/page'
 import { generateMetadata as generateProductMetadata } from '@/app/producten/[slug]/page'
 import { SEO_SOLUTION_PAGES, getSeoSolutionPageBySlug } from '@/lib/seo-solution-pages'
 
+function firstImage(
+  image:
+    | string
+    | URL
+    | { url?: string | URL }
+    | Array<string | URL | { url?: string | URL }>
+    | undefined,
+) {
+  return Array.isArray(image) ? image[0] : image
+}
+
 describe('SEO conversion tranche', () => {
   it('keeps the homepage and support-page metadata aligned with current SEO positioning', () => {
     expect(homePageMetadata.title).toBe('ExitScan en RetentieScan voor HR-teams')
-    expect(aanpakMetadata.openGraph?.images?.[0]).toMatchObject({ url: '/opengraph-image' })
-    expect(pricingMetadata.openGraph?.images?.[0]).toMatchObject({ url: '/opengraph-image' })
-    expect(trustMetadata.openGraph?.images?.[0]).toBe('/opengraph-image')
+    expect(firstImage(aanpakMetadata.openGraph?.images)).toMatchObject({ url: '/opengraph-image' })
+    expect(firstImage(pricingMetadata.openGraph?.images)).toMatchObject({ url: '/opengraph-image' })
+    expect(firstImage(trustMetadata.openGraph?.images)).toBe('/opengraph-image')
   })
 
   it('adds solution routes to the sitemap and excludes example pdfs', () => {

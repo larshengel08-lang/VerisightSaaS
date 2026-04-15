@@ -46,6 +46,7 @@ class OrganizationRead(OrmBase):
 class CampaignCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=255)
     scan_type: str = Field(..., pattern=r"^(exit|retention)$")
+    delivery_mode: str = Field(default="baseline", pattern=r"^(baseline|live)$")
     enabled_modules: Optional[list[str]] = None
 
     @field_validator("enabled_modules")
@@ -72,6 +73,7 @@ class CampaignRead(OrmBase):
     organization_id: str
     name: str
     scan_type: str
+    delivery_mode: Optional[str]
     is_active: bool
     enabled_modules: Optional[list[str]]
     created_at: datetime

@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import type { Organization } from '@/lib/types'
+import { getDeliveryModeDescription } from '@/lib/implementation-readiness'
+import type { DeliveryMode, Organization } from '@/lib/types'
 import { FACTOR_LABELS, REPORT_ADD_ON_DESCRIPTIONS, REPORT_ADD_ON_LABELS } from '@/lib/types'
 
 const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity']
@@ -17,6 +18,7 @@ export function NewCampaignForm({ orgs }: Props) {
   const [orgId, setOrgId] = useState(orgs[0]?.id ?? '')
   const [name, setName] = useState('')
   const [scanType, setScanType] = useState<'exit' | 'retention'>('exit')
+  const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>('baseline')
   const [modules, setModules] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -41,6 +43,7 @@ export function NewCampaignForm({ orgs }: Props) {
       organization_id: orgId,
       name,
       scan_type: scanType,
+      delivery_mode: deliveryMode,
       enabled_modules: modules.length > 0 ? modules : null,
     })
 
@@ -52,6 +55,7 @@ export function NewCampaignForm({ orgs }: Props) {
 
     setSuccess(true)
     setName('')
+    setDeliveryMode('baseline')
     setTimeout(() => {
       setSuccess(false)
       router.refresh()
@@ -117,13 +121,69 @@ export function NewCampaignForm({ orgs }: Props) {
       <div className="rounded-[22px] border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700">
         <p className="font-semibold text-slate-900">Onboardingverwachting voor deze route</p>
         <p className="mt-2">
-          {scanType === 'exit'
+          {deliveryMode === 'live'
+            ? scanType === 'exit'
+              ? 'Je kiest nu bewust voor een live / doorlopende ExitScan-route. Gebruik dit alleen als baseline, volumelogica en intern eigenaarschap al staan.'
+              : 'Je kiest nu bewust voor een ritme- of live-route voor RetentieScan. Gebruik dit alleen als baseline, eerste opvolging en meetritme al scherp zijn.'
+            : scanType === 'exit'
             ? 'ExitScan wordt meestal eerst als baseline opgezet. Live opvolging wordt pas logisch nadat de nulmeting, het volume en het eigenaarschap scherp staan.'
             : 'RetentieScan start meestal als baseline. Ritme of herhaalmeting komt pas daarna, zodra de eerste duiding en opvolging helder zijn.'}
         </p>
         <p className="mt-2 text-xs text-slate-500">
           Deze setup blijft assisted: Verisight beheert campaign, importcontrole en activatie; de klant levert input en gebruikt daarna dashboard en rapport.
         </p>
+      </div>
+
+      <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+        <p className="text-sm font-semibold text-slate-900">3. Kies implementatieroute</p>
+        <p className="mt-1 text-sm text-slate-600">
+          Baseline is de standaard eerste route. Kies live alleen als je bewust afwijkt van de canonical assisted flow.
+        </p>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        {([
+          {
+            value: 'baseline',
+            title: 'Baseline',
+            body: 'Standaard eerste route voor gecontroleerde setup, import en eerste managementwaarde.',
+          },
+          {
+            value: 'live',
+            title: 'Live / vervolgroute',
+            body: 'Bewuste vervolgroute voor doorlopend of ritmisch gebruik nadat baseline en eigenaarschap staan.',
+          },
+        ] as const).map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setDeliveryMode(option.value)}
+            className={`rounded-[22px] border p-4 text-left transition-colors ${
+              deliveryMode === option.value ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300'
+            }`}
+          >
+            <p className="text-sm font-semibold">{option.title}</p>
+            <p className={`mt-1 text-sm ${deliveryMode === option.value ? 'text-blue-100' : 'text-slate-500'}`}>
+              {option.body}
+            </p>
+          </button>
+        ))}
+      </div>
+
+      <div
+        className={`rounded-[22px] border p-4 text-sm leading-6 ${
+          deliveryMode === 'baseline'
+            ? 'border-emerald-100 bg-emerald-50 text-emerald-950'
+            : 'border-amber-100 bg-amber-50 text-amber-950'
+        }`}
+      >
+        <p className="font-semibold">{deliveryMode === 'baseline' ? 'Aanbevolen default' : 'Bewuste afwijking op de standaardroute'}</p>
+        <p className="mt-2">{getDeliveryModeDescription(deliveryMode, scanType)}</p>
+        {deliveryMode === 'live' ? (
+          <p className="mt-2 text-xs text-amber-900">
+            Gebruik live pas nadat importkwaliteit, inviteflow en eerste klantread bij eerdere trajecten stabiel genoeg zijn.
+          </p>
+        ) : null}
       </div>
 
       {scanType === 'retention' ? (

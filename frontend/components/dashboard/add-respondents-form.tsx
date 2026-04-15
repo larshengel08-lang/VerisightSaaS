@@ -1,7 +1,13 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  getDeliveryModeDescription,
+  getDeliveryModeLabel,
+  getInviteDefaultForDeliveryMode,
+  normalizeDeliveryMode,
+} from '@/lib/implementation-readiness'
 import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Campaign, type Organization } from '@/lib/types'
 import { CLIENT_FILE_SPEC } from '@/lib/client-onboarding'
 import {
@@ -67,6 +73,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
     () => Object.fromEntries(organizations.map(organization => [organization.id, organization.name])),
     [organizations],
   )
+  const selectedDeliveryMode = normalizeDeliveryMode(selectedCampaign?.delivery_mode)
   const hasSegmentDeepDive = hasCampaignAddOn(selectedCampaign, 'segment_deep_dive')
   const [mode, setMode] = useState<Mode>('emails')
 
@@ -85,6 +92,10 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
   const [loading, setLoading] = useState<'submit' | 'preview' | 'import' | null>(null)
   const [result, setResult] = useState<{ tokens: string[]; emailsSent: number } | null>(null)
   const [importSuccess, setImportSuccess] = useState<ImportResponse | null>(null)
+
+  useEffect(() => {
+    setUploadSendInvites(getInviteDefaultForDeliveryMode(selectedCampaign?.delivery_mode))
+  }, [selectedCampaign?.id, selectedCampaign?.delivery_mode])
 
   function parseEmails(raw: string): string[] {
     return parseEmailList(raw)
@@ -226,6 +237,8 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
 
   const hasPreviewErrors = (previewResult?.errors.length ?? 0) > 0
   const canImportPreview = !!previewResult && !hasPreviewErrors && previewResult.valid_rows > 0
+  const previewMissingDepartmentCount = previewResult?.preview_rows.filter(row => !row.department?.trim()).length ?? 0
+  const previewMissingRoleLevelCount = previewResult?.preview_rows.filter(row => !row.role_level?.trim()).length ?? 0
 
   return (
     <div className="space-y-5">
@@ -287,6 +300,24 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             ))}
           </select>
         </div>
+
+        {selectedCampaign ? (
+          <div
+            className={`rounded-lg border px-4 py-3 text-sm ${
+              selectedDeliveryMode === 'baseline'
+                ? 'border-emerald-100 bg-emerald-50 text-emerald-950'
+                : 'border-amber-100 bg-amber-50 text-amber-950'
+            }`}
+          >
+            <p className="font-semibold mb-1">
+              {selectedCampaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'} {getDeliveryModeLabel(selectedDeliveryMode, selectedCampaign.scan_type)}
+            </p>
+            <p>{getDeliveryModeDescription(selectedDeliveryMode, selectedCampaign.scan_type)}</p>
+            <p className="mt-2 text-xs">
+              Standaard invite-instelling voor deze route: {uploadSendInvites ? 'direct uitnodigen na gecontroleerde import' : 'eerst klaarzetten, daarna bewust uitnodigen'}.
+            </p>
+          </div>
+        ) : null}
 
         {hasSegmentDeepDive && (
           <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
@@ -477,7 +508,9 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             <span>
               Verstuur direct uitnodigingen na import
               <span className="block text-xs text-gray-400">
-                Zet dit uit als je eerst alleen respondenten wilt klaarzetten.
+                {selectedDeliveryMode === 'live'
+                  ? 'Voor live of ritme is eerst klaarzetten vaak veiliger, zodat timing en klantcommunicatie nog één keer gecontroleerd kunnen worden.'
+                  : 'Voor baseline is direct uitnodigen logisch nadat preview, foutregels en dubbelen zijn gecontroleerd.'}
               </span>
             </span>
           </label>
@@ -541,6 +574,22 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                   </div>
                 </div>
               )}
+
+              {!hasPreviewErrors && previewResult.preview_rows.length > 0 ? (
+                <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-xs leading-6 text-slate-700">
+                  <p className="font-semibold text-slate-900">Implementation checks vóór definitieve import</p>
+                  <p className="mt-1">
+                    {selectedDeliveryMode === 'baseline'
+                      ? 'Baseline-route: import pas definitief nadat preview, duplicaten en invitekeuze kloppen.'
+                      : 'Live-route: import pas definitief nadat preview, timing en klantcommunicatie nog één keer zijn gecontroleerd.'}
+                  </p>
+                  {selectedCampaign?.scan_type === 'retention' || hasSegmentDeepDive ? (
+                    <p className="mt-1">
+                      Metadata-alert: {previewMissingDepartmentCount} rij(en) zonder <code className="font-mono">department</code> en {previewMissingRoleLevelCount} rij(en) zonder <code className="font-mono">role_level</code>.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
 
               {previewResult.errors.length > 0 && (
                 <div>
@@ -609,6 +658,9 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             {uploadSendInvites
               ? `${importSuccess.emails_sent} uitnodigingen direct verstuurd.`
               : 'Respondenten zijn toegevoegd zonder directe uitnodiging.'}
+          </p>
+          <p className="mt-2 text-xs text-green-800">
+            Volgende stap: {uploadSendInvites ? 'controleer campagnestatus en klantactivatie.' : 'verstuur uitnodigingen pas nadat timing en contactmoment bevestigd zijn.'}
           </p>
         </div>
       )}
