@@ -221,6 +221,9 @@ create table if not exists public.contact_requests (
   work_email        text not null,
   organization      text not null,
   employee_count    text not null,
+  route_interest    text not null default 'exitscan',
+  cta_source        text not null default 'website_contact_form',
+  desired_timing    text not null default 'orienterend',
   current_question  text not null,
   website           text,
   notification_sent boolean not null default false,
@@ -231,11 +234,75 @@ create table if not exists public.contact_requests (
 do $$ begin
   if not exists (
     select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'route_interest'
+  ) then
+    alter table public.contact_requests add column route_interest text not null default 'exitscan';
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'cta_source'
+  ) then
+    alter table public.contact_requests add column cta_source text not null default 'website_contact_form';
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'desired_timing'
+  ) then
+    alter table public.contact_requests add column desired_timing text not null default 'orienterend';
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
     where table_name = 'contact_requests' and column_name = 'notification_error'
   ) then
     alter table public.contact_requests add column notification_error text;
   end if;
 end $$;
+
+create table if not exists public.pilot_learning_dossiers (
+  id                      uuid primary key default gen_random_uuid(),
+  organization_id         uuid references public.organizations(id) on delete cascade,
+  campaign_id             uuid references public.campaigns(id) on delete cascade,
+  contact_request_id      uuid references public.contact_requests(id) on delete set null,
+  title                   text not null,
+  route_interest          text not null default 'exitscan' check (route_interest in ('exitscan', 'retentiescan', 'combinatie', 'nog-onzeker')),
+  scan_type               text check (scan_type in ('exit', 'retention')),
+  delivery_mode           text check (delivery_mode in ('baseline', 'live')),
+  triage_status           text not null default 'nieuw' check (triage_status in ('nieuw', 'bevestigd', 'geparkeerd', 'uitgevoerd', 'verworpen')),
+  lead_contact_name       text,
+  lead_organization_name  text,
+  lead_work_email         text,
+  lead_employee_count     text,
+  buyer_question          text,
+  expected_first_value    text,
+  buying_reason           text,
+  trust_friction          text,
+  implementation_risk     text,
+  adoption_outcome        text,
+  management_action_outcome text,
+  next_route              text,
+  stop_reason             text,
+  created_by              uuid references auth.users(id) on delete set null,
+  updated_by              uuid references auth.users(id) on delete set null,
+  created_at              timestamptz default now(),
+  updated_at              timestamptz default now()
+);
+
+create table if not exists public.pilot_learning_checkpoints (
+  id                      uuid primary key default gen_random_uuid(),
+  dossier_id              uuid references public.pilot_learning_dossiers(id) on delete cascade not null,
+  checkpoint_key          text not null check (checkpoint_key in ('lead_route_hypothesis', 'implementation_intake', 'launch_output', 'first_management_use', 'follow_up_review')),
+  owner_label             text not null,
+  status                  text not null default 'nieuw' check (status in ('nieuw', 'bevestigd', 'geparkeerd', 'uitgevoerd', 'verworpen')),
+  objective_signal_notes  text,
+  qualitative_notes       text,
+  interpreted_observation text,
+  confirmed_lesson        text,
+  lesson_strength         text not null default 'incidentele_observatie' check (lesson_strength in ('incidentele_observatie', 'terugkerend_patroon', 'direct_uitvoerbare_verbetering')),
+  destination_areas       jsonb not null default '[]'::jsonb,
+  created_at              timestamptz default now(),
+  updated_at              timestamptz default now(),
+  unique (dossier_id, checkpoint_key)
+);
 
 -- ============================================================
 -- INDEXES
@@ -250,6 +317,10 @@ create index if not exists idx_org_members_org      on public.org_members(org_id
 create index if not exists idx_org_invites_org      on public.org_invites(org_id);
 create index if not exists idx_org_invites_email    on public.org_invites(email);
 create index if not exists idx_contact_requests_created_at on public.contact_requests(created_at desc);
+create index if not exists idx_learning_dossiers_org on public.pilot_learning_dossiers(organization_id);
+create index if not exists idx_learning_dossiers_campaign on public.pilot_learning_dossiers(campaign_id);
+create index if not exists idx_learning_dossiers_contact_request on public.pilot_learning_dossiers(contact_request_id);
+create index if not exists idx_learning_checkpoints_dossier on public.pilot_learning_checkpoints(dossier_id);
 
 -- ============================================================
 -- ROW LEVEL SECURITY
@@ -262,6 +333,8 @@ alter table public.org_invites      enable row level security;
 alter table public.campaigns        enable row level security;
 alter table public.respondents      enable row level security;
 alter table public.survey_responses enable row level security;
+alter table public.pilot_learning_dossiers enable row level security;
+alter table public.pilot_learning_checkpoints enable row level security;
 
 -- ── Hulpfuncties ─────────────────────────────────────────────────────────────
 
@@ -502,6 +575,70 @@ create policy "org_members_can_select_responses"
       join public.campaigns   c on c.id = r.campaign_id
       where r.id = respondent_id
         and public.is_org_member(c.organization_id)
+    )
+  );
+
+-- Pilot learning dossiers
+drop policy if exists "verisight_admins_can_select_learning_dossiers" on public.pilot_learning_dossiers;
+drop policy if exists "verisight_admins_can_insert_learning_dossiers" on public.pilot_learning_dossiers;
+drop policy if exists "verisight_admins_can_update_learning_dossiers" on public.pilot_learning_dossiers;
+
+create policy "verisight_admins_can_select_learning_dossiers"
+  on public.pilot_learning_dossiers for select
+  using (public.is_verisight_admin_user());
+
+create policy "verisight_admins_can_insert_learning_dossiers"
+  on public.pilot_learning_dossiers for insert
+  with check (public.is_verisight_admin_user());
+
+create policy "verisight_admins_can_update_learning_dossiers"
+  on public.pilot_learning_dossiers for update
+  using (public.is_verisight_admin_user())
+  with check (public.is_verisight_admin_user());
+
+-- Pilot learning checkpoints
+drop policy if exists "verisight_admins_can_select_learning_checkpoints" on public.pilot_learning_checkpoints;
+drop policy if exists "verisight_admins_can_insert_learning_checkpoints" on public.pilot_learning_checkpoints;
+drop policy if exists "verisight_admins_can_update_learning_checkpoints" on public.pilot_learning_checkpoints;
+
+create policy "verisight_admins_can_select_learning_checkpoints"
+  on public.pilot_learning_checkpoints for select
+  using (
+    exists (
+      select 1
+      from public.pilot_learning_dossiers d
+      where d.id = dossier_id
+        and public.is_verisight_admin_user()
+    )
+  );
+
+create policy "verisight_admins_can_insert_learning_checkpoints"
+  on public.pilot_learning_checkpoints for insert
+  with check (
+    exists (
+      select 1
+      from public.pilot_learning_dossiers d
+      where d.id = dossier_id
+        and public.is_verisight_admin_user()
+    )
+  );
+
+create policy "verisight_admins_can_update_learning_checkpoints"
+  on public.pilot_learning_checkpoints for update
+  using (
+    exists (
+      select 1
+      from public.pilot_learning_dossiers d
+      where d.id = dossier_id
+        and public.is_verisight_admin_user()
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.pilot_learning_dossiers d
+      where d.id = dossier_id
+        and public.is_verisight_admin_user()
     )
   );
 

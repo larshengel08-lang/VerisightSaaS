@@ -54,6 +54,10 @@ class Organization(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     campaigns: Mapped[list["Campaign"]] = relationship(back_populates="organization", cascade="all, delete-orphan")
+    learning_dossiers: Mapped[list["PilotLearningDossier"]] = relationship(
+        back_populates="organization",
+        cascade="all, delete-orphan",
+    )
     secret: Mapped["OrganizationSecret | None"] = relationship(
         back_populates="organization",
         cascade="all, delete-orphan",
@@ -88,6 +92,10 @@ class Campaign(Base):
 
     organization: Mapped["Organization"] = relationship(back_populates="campaigns")
     respondents: Mapped[list["Respondent"]] = relationship(back_populates="campaign", cascade="all, delete-orphan")
+    learning_dossiers: Mapped[list["PilotLearningDossier"]] = relationship(
+        back_populates="campaign",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self) -> str:
         return f"<Campaign {self.name!r} ({self.scan_type})>"
@@ -243,6 +251,98 @@ class ContactRequest(Base):
     notification_sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     notification_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    learning_dossiers: Mapped[list["PilotLearningDossier"]] = relationship(
+        back_populates="contact_request",
+    )
 
     def __repr__(self) -> str:
         return f"<ContactRequest {self.work_email!r} org={self.organization!r}>"
+
+
+# ---------------------------------------------------------------------------
+# PilotLearningDossier / PilotLearningCheckpoint — internal learning system
+# ---------------------------------------------------------------------------
+
+class PilotLearningDossier(Base):
+    __tablename__ = "pilot_learning_dossiers"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    organization_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    campaign_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("campaigns.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    contact_request_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("contact_requests.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    route_interest: Mapped[str] = mapped_column(String(32), nullable=False, default="exitscan")
+    scan_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    delivery_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    triage_status: Mapped[str] = mapped_column(String(20), nullable=False, default="nieuw")
+
+    lead_contact_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    lead_organization_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    lead_work_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    lead_employee_count: Mapped[str | None] = mapped_column(String(80), nullable=True)
+
+    buyer_question: Mapped[str | None] = mapped_column(Text, nullable=True)
+    expected_first_value: Mapped[str | None] = mapped_column(Text, nullable=True)
+    buying_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    trust_friction: Mapped[str | None] = mapped_column(Text, nullable=True)
+    implementation_risk: Mapped[str | None] = mapped_column(Text, nullable=True)
+    adoption_outcome: Mapped[str | None] = mapped_column(Text, nullable=True)
+    management_action_outcome: Mapped[str | None] = mapped_column(Text, nullable=True)
+    next_route: Mapped[str | None] = mapped_column(Text, nullable=True)
+    stop_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_by: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    updated_by: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+    organization: Mapped["Organization | None"] = relationship(back_populates="learning_dossiers")
+    campaign: Mapped["Campaign | None"] = relationship(back_populates="learning_dossiers")
+    contact_request: Mapped["ContactRequest | None"] = relationship(back_populates="learning_dossiers")
+    checkpoints: Mapped[list["PilotLearningCheckpoint"]] = relationship(
+        back_populates="dossier",
+        cascade="all, delete-orphan",
+    )
+
+    def __repr__(self) -> str:
+        return f"<PilotLearningDossier title={self.title!r} status={self.triage_status!r}>"
+
+
+class PilotLearningCheckpoint(Base):
+    __tablename__ = "pilot_learning_checkpoints"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    dossier_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("pilot_learning_dossiers.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    checkpoint_key: Mapped[str] = mapped_column(String(40), nullable=False)
+    owner_label: Mapped[str] = mapped_column(String(120), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="nieuw")
+    objective_signal_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    qualitative_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    interpreted_observation: Mapped[str | None] = mapped_column(Text, nullable=True)
+    confirmed_lesson: Mapped[str | None] = mapped_column(Text, nullable=True)
+    lesson_strength: Mapped[str] = mapped_column(String(40), nullable=False, default="incidentele_observatie")
+    destination_areas: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+    dossier: Mapped["PilotLearningDossier"] = relationship(back_populates="checkpoints")
+
+    def __repr__(self) -> str:
+        return f"<PilotLearningCheckpoint key={self.checkpoint_key!r} status={self.status!r}>"

@@ -14,6 +14,7 @@ Belangrijke defaults:
 - Verisight beheert setup, importcontrole, invite-activatie en dashboardtoegang.
 - De klant levert input aan en gebruikt daarna dashboard en rapport.
 - Adoptie is pas geslaagd wanneer de klant de output echt gebruikt voor het eerste managementgesprek.
+- Vroege learnings worden voortaan vastgelegd in `/beheer/klantlearnings`.
 
 ## Canonieke route
 
@@ -86,6 +87,18 @@ Nuance:
 - Eigenaar: klant
 - Type: gedeeld
 - Doel: eerste eigenaar, eerste vraag en eerste vervolgstap expliciet maken
+
+## Verplichte learning handoff
+
+Leg bij elk vroeg traject minimaal deze checkpoints vast in `/beheer/klantlearnings`:
+
+- lead en routehypothese
+- implementation intake
+- launch en eerste output
+- eerste managementgebruik
+- 30-90 dagen review
+
+Gebruik daarvoor `docs/ops/PILOT_LEARNING_PLAYBOOK.md` en `docs/ops/PILOT_LEARNING_TEMPLATES.md`.
 
 ## Productvarianten
 

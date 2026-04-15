@@ -45,6 +45,15 @@ Praktische signalen zonder zware analytics-stack:
 - eerste rapportdownload
 - eerste managementgesprek of opvolging
 
+## Learning capture
+
+- [ ] Learningdossier gestart in `/beheer/klantlearnings`
+- [ ] Checkpoint `lead en routehypothese` ingevuld
+- [ ] Checkpoint `implementation intake` ingevuld
+- [ ] Checkpoint `launch en eerste output` ingevuld zodra responses bruikbaar zijn
+- [ ] Checkpoint `eerste managementgebruik` ingevuld na walkthrough of managementread
+- [ ] Volgende review of stopreden vastgelegd voor 30-90 dagen follow-up
+
 ## Governance
 
 - Eerst plan en docs aanpassen

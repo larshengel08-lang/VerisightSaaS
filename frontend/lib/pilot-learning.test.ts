@@ -1,0 +1,96 @@
+import { describe, expect, it } from 'vitest'
+import {
+  buildLearningObjectiveSignals,
+  createDefaultLearningCheckpoints,
+  LEARNING_CHECKPOINT_DEFINITIONS,
+  LEARNING_DESTINATION_OPTIONS,
+  LEARNING_TRIAGE_STATUS_OPTIONS,
+} from '@/lib/pilot-learning'
+
+describe('pilot learning defaults', () => {
+  it('keeps the canonical checkpoint order aligned with the lifecycle', () => {
+    expect(LEARNING_CHECKPOINT_DEFINITIONS.map((definition) => definition.key)).toEqual([
+      'lead_route_hypothesis',
+      'implementation_intake',
+      'launch_output',
+      'first_management_use',
+      'follow_up_review',
+    ])
+  })
+
+  it('creates default checkpoints with neutral triage defaults', () => {
+    expect(createDefaultLearningCheckpoints()).toEqual([
+      expect.objectContaining({ checkpoint_key: 'lead_route_hypothesis', status: 'nieuw', lesson_strength: 'incidentele_observatie' }),
+      expect.objectContaining({ checkpoint_key: 'implementation_intake', status: 'nieuw', lesson_strength: 'incidentele_observatie' }),
+      expect.objectContaining({ checkpoint_key: 'launch_output', status: 'nieuw', lesson_strength: 'incidentele_observatie' }),
+      expect.objectContaining({ checkpoint_key: 'first_management_use', status: 'nieuw', lesson_strength: 'incidentele_observatie' }),
+      expect.objectContaining({ checkpoint_key: 'follow_up_review', status: 'nieuw', lesson_strength: 'incidentele_observatie' }),
+    ])
+    expect(LEARNING_TRIAGE_STATUS_OPTIONS.map((option) => option.value)).toEqual([
+      'nieuw',
+      'bevestigd',
+      'geparkeerd',
+      'uitgevoerd',
+      'verworpen',
+    ])
+    expect(LEARNING_DESTINATION_OPTIONS.map((option) => option.value)).toEqual([
+      'product',
+      'report',
+      'onboarding',
+      'sales',
+      'operations',
+    ])
+  })
+
+  it('builds route-aware objective signals from lead and campaign context', () => {
+    const signals = buildLearningObjectiveSignals({
+      checkpointKey: 'launch_output',
+      dossier: {
+        route_interest: 'exitscan',
+        delivery_mode: 'baseline',
+        scan_type: 'exit',
+        expected_first_value: 'Eerste managementduiding op vertrekpatronen',
+        next_route: null,
+        stop_reason: null,
+        management_action_outcome: null,
+        adoption_outcome: null,
+        trust_friction: null,
+      },
+      contactRequest: {
+        id: 'lead-1',
+        name: 'Lars',
+        work_email: 'lars@example.com',
+        organization: 'Verisight',
+        employee_count: '50-100',
+        route_interest: 'exitscan',
+        cta_source: 'website_primary_cta',
+        desired_timing: 'deze-maand',
+        current_question: 'Waarom vertrekken mensen nu?',
+        notification_sent: true,
+        notification_error: null,
+        created_at: '2026-04-15T10:00:00Z',
+      },
+      campaignStats: {
+        campaign_id: 'cmp-1',
+        campaign_name: 'ExitScan Q2',
+        scan_type: 'exit',
+        organization_id: 'org-1',
+        is_active: true,
+        created_at: '2026-04-15T10:00:00Z',
+        total_invited: 20,
+        total_completed: 12,
+        completion_rate_pct: 60,
+        avg_risk_score: 6.2,
+        band_high: 4,
+        band_medium: 5,
+        band_low: 3,
+      },
+      activeClientAccessCount: 1,
+      pendingClientInviteCount: 2,
+    })
+
+    expect(signals.join(' ')).toContain('Respons: 12/20 (60%).')
+    expect(signals.join(' ')).toContain('Pattern-level drempel bereikt')
+    expect(signals.join(' ')).toContain('2 klantinvite(s) wachten nog op activatie.')
+  })
+})

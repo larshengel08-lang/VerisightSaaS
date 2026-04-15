@@ -237,6 +237,21 @@ export default async function CampaignPage({ params }: Props) {
     respondentsLength: respondents.length,
     canManageCampaign,
   })
+  const { data: learningDossiersRaw } =
+    profile?.is_verisight_admin === true
+      ? await supabase
+          .from('pilot_learning_dossiers')
+          .select('id, title, triage_status, updated_at')
+          .eq('campaign_id', id)
+          .order('updated_at', { ascending: false })
+          .limit(3)
+      : { data: [] }
+  const learningDossiers = (learningDossiersRaw ?? []) as Array<{
+    id: string
+    title: string
+    triage_status: string
+    updated_at: string
+  }>
 
   return (
     <div className="space-y-6">
@@ -357,6 +372,58 @@ export default async function CampaignPage({ params }: Props) {
       >
         <ManagementReadGuide scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} />
       </DashboardSection>
+
+      {profile?.is_verisight_admin ? (
+        <DashboardSection
+          eyebrow="Learning"
+          title="Pilot- en early-customer-learning"
+          description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementread en follow-up expliciet vast te leggen voor deze campaign."
+          aside={
+            <DashboardChip
+              label={learningDossiers.length > 0 ? `${learningDossiers.length} gekoppeld` : 'Nog geen dossier'}
+              tone={learningDossiers.length > 0 ? 'blue' : 'amber'}
+            />
+          }
+        >
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr),minmax(320px,0.9fr)]">
+            <DashboardPanel
+              eyebrow="Waarom nu"
+              title={learningDossiers.length > 0 ? 'Campaign is al opgenomen in de learninglus' : 'Koppel deze campaign aan een learningdossier'}
+              body={
+                learningDossiers.length > 0
+                  ? 'Gebruik gekoppelde dossiers om implementationfrictie, launchsignalen, managementgebruik en 30-90 dagen follow-up expliciet terug te laten landen in product, report, onboarding, sales en operations.'
+                  : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de learning-workbench. Zo blijven echte deliverylessen niet hangen in losse handover-notes.'
+              }
+              tone={learningDossiers.length > 0 ? 'blue' : 'amber'}
+            />
+            <div className="rounded-[22px] border border-slate-200 bg-slate-50/70 p-4">
+              <p className="text-sm font-semibold text-slate-950">Gekoppelde dossiers</p>
+              {learningDossiers.length === 0 ? (
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  Er is nog geen dossier gekoppeld aan deze campaign.
+                </p>
+              ) : (
+                <div className="mt-3 space-y-3">
+                  {learningDossiers.map((dossier) => (
+                    <div key={dossier.id} className="rounded-2xl border border-white/80 bg-white px-4 py-3">
+                      <p className="text-sm font-semibold text-slate-950">{dossier.title}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Status: {dossier.triage_status}. Laatst bijgewerkt: {new Intl.DateTimeFormat('nl-NL', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(dossier.updated_at))}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Link
+                href={`/beheer/klantlearnings?campaign=${id}`}
+                className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
+              >
+                Open learning-workbench
+              </Link>
+            </div>
+          </div>
+        </DashboardSection>
+      ) : null}
 
       <DashboardSection
         eyebrow="Eerst lezen"

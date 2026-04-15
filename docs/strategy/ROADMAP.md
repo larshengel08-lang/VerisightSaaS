@@ -144,12 +144,11 @@ Eerste klanten moeten soepel van akkoord naar intake, campagne, rapportage en op
 - Client Onboarding And Adoption - afgerond
 - Implementation Readiness - afgerond
 - Report To Action - afgerond
-- Pilot And Early Customer Learning
-- Demo And Sample Environment
+- Pilot And Early Customer Learning - afgerond
+- Demo And Sample Environment - afgerond
 
 **Status**
-- huidige actieve focus
-- 3 van 5 checklist-items afgerond
+- afgerond
 
 **Exit gate**
 - Nieuwe klanttrajecten zijn uitvoerbaar zonder onnodige improvisatie
@@ -175,7 +174,7 @@ Na eerste tractie moeten commerciële, delivery- en contentprocessen herhaalbaar
 - Content Operating System
 
 **Status**
-- gepland
+- huidige actieve focus
 
 **Exit gate**
 - Herhaalbaar verkoop- en deliveryritme

@@ -161,11 +161,14 @@ Open [http://localhost:3000](http://localhost:3000) — je wordt doorgestuurd na
 5. Voeg respondenten toe via bestand-upload of e-mailimport en controleer eerst de preview
 6. Verstuur uitnodigingen pas nadat het bestand bruikbaar is en activeer daarna klanttoegang
 7. Gebruik dashboard en rapport daarna voor de eerste managementread in plaats van alleen als livegangsignaal
+8. Leg buyer-signalen, implementationlessen en managementfollow-up vast in `/beheer/klantlearnings`
 
 ## Operationele gidsen
 
 - Canonieke assisted route: `docs/ops/CLIENT_ONBOARDING_PLAYBOOK.md`
 - Acceptance-gates voor livegang en eerste managementgebruik: `docs/ops/ONBOARDING_ACCEPTANCE_CHECKLIST.md`
+- Pilot- en early-customer-learning: `docs/ops/PILOT_LEARNING_PLAYBOOK.md`
+- Vaste capturetemplates: `docs/ops/PILOT_LEARNING_TEMPLATES.md`
 
 ---
 

@@ -5,73 +5,13 @@ import {
   getContactDesiredTimingLabel,
   getContactRouteLabel,
 } from '@/lib/contact-funnel'
-import { getBackendApiUrl } from '@/lib/server-env'
+import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import {
   DashboardChip,
   DashboardHero,
   DashboardPanel,
   DashboardSection,
 } from '@/components/dashboard/dashboard-primitives'
-
-interface ContactRequestRow {
-  id: string
-  name: string
-  work_email: string
-  organization: string
-  employee_count: string
-  route_interest: string | null
-  cta_source: string | null
-  desired_timing: string | null
-  current_question: string
-  notification_sent: boolean
-  notification_error: string | null
-  created_at: string
-}
-
-async function getContactRequests(): Promise<{
-  rows: ContactRequestRow[]
-  configError: string | null
-  loadError: string | null
-}> {
-  const adminToken = process.env.BACKEND_ADMIN_TOKEN?.trim()
-  if (!adminToken) {
-    return {
-      rows: [],
-      configError: 'BACKEND_ADMIN_TOKEN ontbreekt in de frontend-omgeving, waardoor de interne leadlijst niet kan worden opgehaald.',
-      loadError: null,
-    }
-  }
-
-  try {
-    const response = await fetch(`${getBackendApiUrl()}/api/contact-requests?limit=50`, {
-      headers: {
-        'x-admin-token': adminToken,
-      },
-      cache: 'no-store',
-    })
-
-    if (!response.ok) {
-      const payload = await response.json().catch(() => ({}))
-      return {
-        rows: [],
-        configError: null,
-        loadError: payload.detail ?? 'Contactaanvragen konden niet worden opgehaald.',
-      }
-    }
-
-    return {
-      rows: (await response.json()) as ContactRequestRow[],
-      configError: null,
-      loadError: null,
-    }
-  } catch {
-    return {
-      rows: [],
-      configError: null,
-      loadError: 'De interne leadlijst kon niet worden geladen door een netwerk- of backendfout.',
-    }
-  }
-}
 
 function formatAmsterdamDate(value: string) {
   try {
@@ -105,7 +45,7 @@ export default async function ContactAanvragenPage() {
     redirect('/dashboard')
   }
 
-  const { rows, configError, loadError } = await getContactRequests()
+  const { rows, configError, loadError } = await getContactRequestsForAdmin(50)
   const pendingCount = rows.filter((row) => !row.notification_sent).length
 
   return (
@@ -113,7 +53,7 @@ export default async function ContactAanvragenPage() {
       <DashboardHero
         eyebrow="Interne leadlijst"
         title="Contactaanvragen"
-        description="Bekijk nieuwe website-aanvragen direct in de UI, inclusief routecontext, gewenste timing en afleverstatus van de notificatiemail. Zo hoef je niet telkens Supabase handmatig te openen als een lead of mailflow twijfel geeft."
+        description="Bekijk nieuwe website-aanvragen direct in de UI, inclusief routecontext, gewenste timing en afleverstatus van de notificatiemail. Gebruik vanaf hier ook meteen de learning-workbench, zodat vroege buyer-signalen niet in losse opvolgnotities verdwijnen."
         tone="blue"
         meta={
           <>
@@ -142,6 +82,12 @@ export default async function ContactAanvragenPage() {
             >
               Vernieuwen
             </Link>
+            <Link
+              href="/beheer/klantlearnings"
+              className="inline-flex items-center rounded-2xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+            >
+              Open learning-workbench
+            </Link>
           </>
         }
         aside={
@@ -154,7 +100,7 @@ export default async function ContactAanvragenPage() {
               <span className="font-semibold">foutreden</span>.
             </p>
             <p className="text-xs text-slate-500">
-              Gebruik dit scherm als snelle operationele check na contactformulier-tests of bij twijfel over maillevering.
+              Gebruik de actieknop per rij om buyer-vraag, trustfrictie en eerste hypothese meteen in het learningdossier te trekken.
             </p>
           </div>
         }
@@ -166,11 +112,7 @@ export default async function ContactAanvragenPage() {
           title="Interne leadlijst niet beschikbaar"
           description="De pagina is wel bereikbaar, maar de backend kan de aanvragen nog niet server-side ophalen."
         >
-          <DashboardPanel
-            title="Ontbrekende configuratie"
-            body={configError}
-            tone="amber"
-          />
+          <DashboardPanel title="Ontbrekende configuratie" body={configError} tone="amber" />
         </DashboardSection>
       ) : null}
 
@@ -187,7 +129,7 @@ export default async function ContactAanvragenPage() {
       <DashboardSection
         eyebrow="Leads"
         title="Recente contactaanvragen"
-        description="Nieuwe records staan bovenaan. Routecontext en timing helpen om de eerste opvolging meteen productspecifiek te doen."
+        description="Nieuwe records staan bovenaan. Routecontext en timing helpen om de eerste opvolging meteen productspecifiek te doen en om een learningdossier direct vanuit de echte lead te starten."
         aside={<DashboardChip label="Maximaal 50 recente leads" tone="slate" />}
       >
         {rows.length === 0 ? (
@@ -209,6 +151,7 @@ export default async function ContactAanvragenPage() {
                   <th className="px-4 py-3">CTA-bron</th>
                   <th className="px-4 py-3">Notificatie</th>
                   <th className="px-4 py-3">Foutreden</th>
+                  <th className="px-4 py-3">Actie</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -229,17 +172,21 @@ export default async function ContactAanvragenPage() {
                       <DashboardChip label={getContactRouteLabel(row.route_interest)} tone="blue" />
                     </td>
                     <td className="px-4 py-4 text-slate-700">{getContactDesiredTimingLabel(row.desired_timing)}</td>
-                    <td className="px-4 py-4 text-xs leading-6 text-slate-500">
-                      {row.cta_source ? row.cta_source : 'Onbekend'}
-                    </td>
+                    <td className="px-4 py-4 text-xs leading-6 text-slate-500">{row.cta_source ? row.cta_source : 'Onbekend'}</td>
                     <td className="px-4 py-4">
                       <DashboardChip
                         label={row.notification_sent ? 'Verstuurd' : 'Niet verstuurd'}
                         tone={row.notification_sent ? 'emerald' : 'amber'}
                       />
                     </td>
-                    <td className="px-4 py-4 text-slate-600">
-                      {row.notification_error ? row.notification_error : '—'}
+                    <td className="px-4 py-4 text-slate-600">{row.notification_error ? row.notification_error : 'Geen fout opgeslagen'}</td>
+                    <td className="px-4 py-4">
+                      <Link
+                        href={`/beheer/klantlearnings?lead=${row.id}`}
+                        className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
+                      >
+                        Start dossier
+                      </Link>
                     </td>
                   </tr>
                 ))}
