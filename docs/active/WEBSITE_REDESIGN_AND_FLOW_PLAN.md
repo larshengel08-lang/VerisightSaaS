@@ -10,6 +10,7 @@ Uitgevoerde richting in deze tranche:
 - productdetail scherper gemaakt als echte wedge-pagina's met eerdere proof, minder structurele gelijkenis en een secundaire rol voor de combinatieroute
 - tarieven en aanpak compacter en geloofwaardiger gemaakt als kooprust-pagina's
 - gedeelde marketinglaag aangescherpt op visual rhythm, CTA-hierarchie, trustdistributie en natuurlijker Nederlands
+- publieke sample-output routes expliciet bereikbaar gehouden via gedeelde public-route-access in middleware
 - source-of-truth vastgelegd in gedeelde content en bijgewerkte prompt-administratie
 
 Hybride baseline:
@@ -117,6 +118,7 @@ Dependency: Milestone 4
 - [x] Benefits, proof, preview, sample-output en trust compacter en logischer geordend.
 - [x] Pricing en aanpak gekoppeld aan dezelfde commerciële leeslijn als productdetail.
 - [x] Contactflow behouden als eindpunt van de route, niet als los formulierenblok.
+- [x] Publieke voorbeeldrapporten expliciet publiek toegankelijk gehouden in route-access en middleware.
 
 #### Definition of done
 - [x] Midden- en onderkant van de site verkopen productwaarde en vervolgstap helderder.
@@ -197,6 +199,10 @@ Dependency: Milestone 5
 - ExitScan en RetentieScan eerder proof-driven gemaakt
 - combinatie duidelijker secundair gepositioneerd
 - tarieven en aanpak herbouwd op kooprust
+
+### Public access and proof delivery
+- publieke voorbeeldrapporten en contactroute expliciet gecentraliseerd in `public-route-access` zodat sample-output buyer-facing blijft zonder loginfrictie
+- `middleware.ts` gebruikt deze gedeelde toegangslijst nu als canonieke publieke toegangsbasis
 
 ## 8. Current Product Risks
 
