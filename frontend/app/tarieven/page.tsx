@@ -79,6 +79,7 @@ export default function TarievenPage() {
         contextTitle="Gebruik pricing om kooprust te geven, niet om het gesprek ingewikkelder te maken."
         contextBody="De prijslaag moet eerst laten zien wat het eerste traject is, daarna welke vervolgvormen logisch worden en pas daarna welke verdieping eventueel meerwaarde heeft."
         ctaHref="#kennismaking"
+        pageType="pricing"
       >
         <div className="grid items-start gap-6 xl:grid-cols-2">
           {pricingCards.map((card) => (

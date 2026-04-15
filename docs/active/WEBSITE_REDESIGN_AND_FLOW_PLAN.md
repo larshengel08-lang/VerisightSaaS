@@ -30,6 +30,7 @@ Status 2026-04-15:
 - aanvullende brede visual repair uitgevoerd op de gedeelde hero-shell: intro, stage en support losgetrokken zodat tablet- en mobile-compositie rustiger en logischer opbouwt
 - tabletnavigatie hersteld via publieke header-breakpoints zodat menu-toegang niet meer wegvalt tussen mobile en desktop
 - midden- en onderlaag verder genormaliseerd via gedeelde flow-stack, compacter sectieritme en minder hoge preview/proof-rails
+- gecontroleerde compositiepass per paginatype uitgevoerd: overview, productdetail, pricing, aanpak en support gebruiken nu verschillende hero-measures, stage-dichtheid, supportgewicht en linkrollen binnen dezelfde gedeelde marketing-shell
 - naar `main` gepusht en live opnieuw geverifieerd in deze tranche
 
 ## 2. Visual Direction
@@ -204,6 +205,7 @@ Dependency: Milestone 5
 - `marketing-page-shell`, `public-header`, `public-footer`, `preview-slider` en `sample-showcase-card` aangescherpt op rust, proof en CTA-ritme
 - globale marketingspacing en shellbreedte verfijnd in `globals.css`
 - visual integrity pass toegevoegd voor gedeelde hero-measures, contentbreedte, panelradius, box-sizing, image max-width en stage-compositie
+- aanvullende paginatype-pass toegevoegd in `marketing-page-shell` en `globals.css`, zodat overview, productdetail, pricing, aanpak en support niet langer als dezelfde hero-compositie aanvoelen
 
 ### Page work
 - homepage herbouwd rond routekeuze, proof, vergelijking en contact
@@ -211,6 +213,7 @@ Dependency: Milestone 5
 - ExitScan en RetentieScan eerder proof-driven gemaakt
 - combinatie duidelijker secundair gepositioneerd
 - tarieven en aanpak herbouwd op kooprust
+- paginatypes verder uit elkaar getrokken via verschillende hero-grid-verhoudingen, title-scales, stage-title-scales, support-layouts en snellere vervolglinks
 
 ### Public access and proof delivery
 - publieke voorbeeldrapporten en contactroute expliciet gecentraliseerd in `public-route-access` zodat sample-output buyer-facing blijft zonder loginfrictie

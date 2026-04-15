@@ -66,6 +66,7 @@ export default function AanpakPage() {
         contextTitle="Gebruik de aanpakpagina om voorspelbaarheid te toetsen, niet om een los procesplaatje te bekijken."
         contextBody="Na productkeuze moet snel duidelijk worden hoe een traject loopt, wat inbegrepen is en waar begeleiding het verschil maakt. Deze pagina moet die kooprust geven."
         ctaHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_hero' })}
+        pageType="approach"
       >
         <div className="grid gap-5 lg:grid-cols-4">
           {approachSteps.map(({ title, body }) => (

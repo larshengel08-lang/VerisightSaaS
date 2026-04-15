@@ -64,6 +64,7 @@ export default function ProductenPage() {
         contextTitle="Begin met de vraag die nu bestuurlijk het meeste gewicht heeft."
         contextBody="De producten zijn niet symmetrisch bedoeld. ExitScan blijft meestal de eerste wedge. RetentieScan wordt sterker zodra de actieve behoudsvraag expliciet op tafel ligt."
         ctaHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'products_hero' })}
+        pageType="overview"
       >
         <div className="grid gap-6 lg:grid-cols-2">
           {primaryProducts.map((product, index) => (

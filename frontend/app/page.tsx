@@ -94,7 +94,7 @@ export default function LandingPage() {
         <MarketingSection
           tone="plain"
           className="overflow-hidden border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,#dbeafe_0%,transparent_22%),radial-gradient(circle_at_bottom_right,#dcfce7_0%,transparent_24%),linear-gradient(180deg,#f9fbff_0%,#eef5ff_38%,#ffffff_100%)]"
-          containerClassName="marketing-hero-grid"
+          containerClassName="marketing-hero-grid marketing-hero-grid-home"
         >
           <div className="marketing-hero-primary">
             <div className="flex max-w-full flex-wrap items-center gap-2 rounded-[1.5rem] border border-white/70 bg-white/85 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:w-fit">

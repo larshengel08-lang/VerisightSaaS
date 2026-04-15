@@ -7,6 +7,7 @@ import { marketingPrimaryCta, trustItems, trustQuickLinks } from '@/components/m
 import { TrustStrip } from '@/components/marketing/trust-strip'
 
 type MarketingPageTheme = 'neutral' | 'exit' | 'retention' | 'combination' | 'coming-soon'
+type MarketingPageType = 'support' | 'overview' | 'product' | 'pricing' | 'approach'
 
 interface MarketingPageShellProps {
   eyebrow: string
@@ -22,6 +23,7 @@ interface MarketingPageShellProps {
   heroNote?: string
   ctaHref?: string
   ctaLabel?: string
+  pageType?: MarketingPageType
 }
 
 const defaultHighlights = [
@@ -108,8 +110,114 @@ export function MarketingPageShell({
   heroNote = 'Verisight blijft een begeleide productvorm: trust ondersteunt de route, maar verdringt de productkeuze niet.',
   ctaHref = marketingPrimaryCta.href,
   ctaLabel = marketingPrimaryCta.label,
+  pageType = 'support',
 }: MarketingPageShellProps) {
   const themeStyle = themeMap[theme]
+  const contextStepsByPageType: Record<MarketingPageType, readonly string[]> = {
+    support: [
+      'Past de route inhoudelijk bij de managementvraag?',
+      'Laat de deliverable eerder zien dan de uitleg.',
+      'Gebruik trust en pricing pas nadat de route landt.',
+    ],
+    overview: [
+      'Versnel eerst de productkeuze.',
+      'Geef de combinatie bewust minder gewicht.',
+      'Laat productdetail daarna het besliswerk doen.',
+    ],
+    product: [
+      'Laat sample-output de pagina dragen.',
+      'Maak managementoutput eerder concreet.',
+      'Gebruik pricing en trust als bevestiging, niet als opening.',
+    ],
+    pricing: [
+      'Begin bij het eerste prijsanker.',
+      'Gebruik vervolgvormen als logische route, niet als planmatrix.',
+      'Laat pricing kooprust geven voordat verdieping volgt.',
+    ],
+    approach: [
+      'Laat intake, setup en eerste managementread in volgorde landen.',
+      'Maak begeleiding en rolverdeling expliciet.',
+      'Gebruik trust als proceszekerheid, niet als extra pitch.',
+    ],
+  }
+  const accentCardByPageType: Record<
+    MarketingPageType,
+    { eyebrow: string; title: string; body: string }
+  > = {
+    support: {
+      eyebrow: 'Waarom dit anders oogt',
+      title: 'Niet nog een productgrid, maar een routecanvas.',
+      body: 'Deze hero is bedoeld om eerst de bestuurlijke vraag te kaderen, daarna de output te tonen en pas dan de vervolgstap te openen.',
+    },
+    overview: {
+      eyebrow: 'Rol van deze pagina',
+      title: 'Dit overzicht moet kiezen versnellen.',
+      body: 'Gebruik deze laag om ExitScan en RetentieScan snel uit elkaar te trekken. De echte beslissing hoort daarna op de detailpagina te landen.',
+    },
+    product: {
+      eyebrow: 'Beslispagina',
+      title: 'Hier moet proof zwaarder wegen dan uitleg.',
+      body: 'De productpagina hoort eerder te laten zien wat management krijgt, waarom dit product past en waar de methodische grens loopt.',
+    },
+    pricing: {
+      eyebrow: 'Prijscontext',
+      title: 'Pricing moet een eerste stap verhelderen.',
+      body: 'Deze pagina werkt pas goed wanneer het prijsanker helder is en vervolgvormen compact en logisch onder dat eerste traject vallen.',
+    },
+    approach: {
+      eyebrow: 'Procesritme',
+      title: 'Aanpak moet rust geven, niet extra volume.',
+      body: 'Gebruik deze pagina om te laten zien hoe route, setup, begeleiding en first value elkaar opvolgen zonder nieuwe productpitch.',
+    },
+  }
+  const stageQuickLinksByPageType: Record<MarketingPageType, readonly { href: string; label: string }[]> = {
+    support: [
+      { href: '/producten', label: 'Producten vergelijken' },
+      { href: '/tarieven', label: 'Pricing en vervolgvormen' },
+      { href: '/vertrouwen', label: 'Trust, privacy en DPA' },
+    ],
+    overview: [
+      { href: '/producten/exitscan', label: 'Bekijk ExitScan' },
+      { href: '/producten/retentiescan', label: 'Bekijk RetentieScan' },
+      { href: '/producten/combinatie', label: 'Bekijk combinatie' },
+    ],
+    product: [
+      { href: '/tarieven', label: 'Bekijk pricing' },
+      { href: '/vertrouwen', label: 'Bekijk trustlaag' },
+    ],
+    pricing: [
+      { href: '/aanpak', label: 'Bekijk aanpak' },
+      { href: '/vertrouwen', label: 'Bekijk trustlaag' },
+    ],
+    approach: [
+      { href: '/tarieven', label: 'Bekijk tarieven' },
+      { href: '/vertrouwen', label: 'Bekijk trustlaag' },
+    ],
+  }
+  const supportLinksByPageType: Record<MarketingPageType, readonly { href: string; label: string }[]> = {
+    support: trustQuickLinks.map((link) => ({ href: link.href, label: link.label })),
+    overview: [
+      { href: '/aanpak', label: 'Bekijk aanpak' },
+      { href: '/vertrouwen', label: 'Bekijk trustlaag' },
+    ],
+    product: [
+      { href: '/tarieven', label: 'Bekijk tarieven' },
+      { href: '/vertrouwen', label: 'Bekijk trustlaag' },
+    ],
+    pricing: [
+      { href: '/aanpak', label: 'Bekijk aanpak' },
+      { href: '/vertrouwen', label: 'Bekijk trustlaag' },
+    ],
+    approach: [
+      { href: '/tarieven', label: 'Bekijk tarieven' },
+      { href: '/vertrouwen', label: 'Bekijk trustlaag' },
+    ],
+  }
+  const showTrustStrip = pageType === 'product' || pageType === 'support'
+  const supportLinks = supportLinksByPageType[pageType]
+  const accentCard = accentCardByPageType[pageType]
+  const stageQuickLinks = stageQuickLinksByPageType[pageType]
+  const contextSteps = contextStepsByPageType[pageType]
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -117,12 +225,16 @@ export function MarketingPageShell({
       <main>
         <MarketingSection
           tone="plain"
-          className={`overflow-hidden border-b border-slate-200 ${themeStyle.heroBg}`}
-          containerClassName="marketing-hero-grid"
+          className={`marketing-hero-shell marketing-hero-shell-${pageType} overflow-hidden border-b border-slate-200 ${themeStyle.heroBg}`}
+          containerClassName={`marketing-hero-grid marketing-hero-grid-${pageType}`}
         >
           <div className="marketing-hero-primary">
             <p className={`text-xs font-bold uppercase tracking-[0.22em] ${themeStyle.accentText}`}>{eyebrow}</p>
-            <h1 className="marketing-hero-title marketing-hero-title-page font-display mt-5 text-slate-950">
+            <h1
+              className={`marketing-hero-title font-display mt-5 text-slate-950 ${
+                pageType === 'product' ? 'marketing-hero-title-detail' : 'marketing-hero-title-page'
+              }`}
+            >
               {title}
             </h1>
             <p className="marketing-hero-copy mt-6 text-[1.02rem] leading-8 text-slate-600 md:text-[1.05rem]">
@@ -145,26 +257,22 @@ export function MarketingPageShell({
             </div>
           </div>
 
-          <div className="marketing-hero-stage-column relative">
+          <div className={`marketing-hero-stage-column marketing-hero-stage-column-${pageType} relative`}>
             <div className={`${themeStyle.glowClass} right-[-4rem] top-[-3rem] h-40 w-40`} />
             <div className="marketing-stage p-6 md:p-8">
               <div className={`absolute right-0 top-0 h-56 w-56 bg-gradient-to-bl ${themeStyle.stageAccentClass}`} />
-              <div className="marketing-hero-stage-grid relative">
+              <div className={`marketing-hero-stage-grid marketing-hero-stage-grid-${pageType} relative`}>
                 <div className="min-w-0">
                   <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${themeStyle.stageTagClass}`}>
                     {contextEyebrow}
                   </span>
-                  <h2 className="marketing-stage-title font-display mt-5 text-white">
+                  <h2 className={`marketing-stage-title marketing-stage-title-${pageType} font-display mt-5 text-white`}>
                     {contextTitle}
                   </h2>
                   <p className="mt-5 max-w-xl text-[0.98rem] leading-8 text-slate-300 md:text-base">{contextBody}</p>
 
                   <div className="mt-7 space-y-3">
-                    {[
-                      'Past de route inhoudelijk bij de managementvraag?',
-                      'Laat de deliverable eerder zien dan de uitleg.',
-                      'Gebruik trust en pricing pas nadat de route landt.',
-                    ].map((item, index) => (
+                    {contextSteps.map((item, index) => (
                       <div key={item} className="flex items-start gap-4 rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-4">
                         <span
                           className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold uppercase tracking-[0.12em] ${themeStyle.stageNumberClass}`}
@@ -179,58 +287,50 @@ export function MarketingPageShell({
 
                 <div className="min-w-0 space-y-4">
                   <div className="rounded-[1.55rem] border border-white/10 bg-white p-5 text-slate-950 shadow-[0_18px_44px_rgba(15,23,42,0.18)]">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Waarom dit anders oogt</p>
-                    <h3 className="mt-3 text-2xl font-semibold text-slate-950">Niet nog een productgrid, maar een routecanvas.</h3>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">
-                      Deze hero is bedoeld om eerst de bestuurlijke vraag te kaderen, daarna de output te tonen en pas
-                      dan de vervolgstap te openen.
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">{accentCard.eyebrow}</p>
+                    <h3 className="mt-3 text-2xl font-semibold text-slate-950">{accentCard.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-600">{accentCard.body}</p>
+                  </div>
+
+                  <div className="rounded-[1.55rem] border border-white/10 bg-white/5 p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                      {pageType === 'product' ? 'Snelle vervolgstap' : 'Snelle routecheck'}
                     </p>
-                  </div>
-
-                  <div className="rounded-[1.55rem] border border-white/10 bg-white/5 p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Snelle routecheck</p>
                     <div className="mt-4 grid gap-3">
-                      <Link
-                        href="/producten"
-                        className="rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
-                      >
-                        Producten vergelijken
-                      </Link>
-                      <Link
-                        href="/tarieven"
-                        className="rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
-                      >
-                        Pricing en vervolgvormen
-                      </Link>
-                      <Link
-                        href="/vertrouwen"
-                        className="rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
-                      >
-                        Trust, privacy en DPA
-                      </Link>
+                      {stageQuickLinks.map((link) => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          className="rounded-[1.25rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="rounded-[1.55rem] border border-white/10 bg-white/5 p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Na kennismaking</p>
-                    <div className="mt-4 space-y-3 text-sm leading-7 text-slate-200">
-                      <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-3">
-                        We bevestigen eerst route, timing, databasis en wat de eerste betaalde stap hoort te zijn.
-                      </div>
-                      <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-3">
-                        Daarna richt Verisight campaign, respondentimport en uitnodigingen begeleid in.
-                      </div>
-                      <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-3">
-                        Eerste signalen landen na de eerste responses; een steviger patroonbeeld volgt pas bij voldoende respons.
+                  {pageType === 'support' || pageType === 'product' ? (
+                    <div className="rounded-[1.55rem] border border-white/10 bg-white/5 p-5">
+                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Na kennismaking</p>
+                      <div className="mt-4 space-y-3 text-sm leading-7 text-slate-200">
+                        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-3">
+                          We bevestigen eerst route, timing, databasis en wat de eerste betaalde stap hoort te zijn.
+                        </div>
+                        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-3">
+                          Daarna richt Verisight campaign, respondentimport en uitnodigingen begeleid in.
+                        </div>
+                        <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-3">
+                          Eerste signalen landen na de eerste responses; een steviger patroonbeeld volgt pas bij voldoende respons.
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : null}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="marketing-hero-secondary gap-5">
+          <div className={`marketing-hero-secondary marketing-hero-secondary-${pageType} gap-5`}>
             <div className="max-w-2xl">
               <div className="overflow-hidden rounded-[1.6rem] border border-white/70 bg-white/85 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur">
                 {highlightItems.map((item, index) => (
@@ -251,17 +351,19 @@ export function MarketingPageShell({
               </div>
             </div>
 
-            <div>
-              <TrustStrip items={trustItems} tone={trustTone} />
-            </div>
+            {showTrustStrip ? (
+              <div>
+                <TrustStrip items={trustItems} tone={trustTone} />
+              </div>
+            ) : null}
 
-            <div className="marketing-hero-support-grid">
+            <div className={`marketing-hero-support-grid marketing-hero-support-grid-${pageType}`}>
               <div className="rounded-[1.5rem] border border-slate-200 bg-white/90 px-5 py-4 text-sm leading-7 text-slate-600 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
                 {heroNote}
               </div>
 
               <div className="marketing-hero-link-grid">
-                {trustQuickLinks.map((link) => (
+                {supportLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}

@@ -187,6 +187,7 @@ function ExitScanPage() {
       contextBody="Deze pagina moet snel laten zien waarom ExitScan meestal de eerste route is: het product maakt losse exitinput bestuurlijk leesbaar en intern doorvertelbaar."
       heroNote="ExitScan blijft terugkijkend, groepsgericht en methodisch begrensd. Dat maakt de route scherper, niet smaller."
       ctaHref="#kennismaking"
+      pageType="product"
     >
       <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
         <div className="marketing-panel p-8">
@@ -343,6 +344,7 @@ function RetentionScanPage() {
       contextBody="Deze pagina moet snel laten zien waarom RetentieScan geen brede MTO is, maar een gerichte managementroute voor vroegsignalering, verificatie en prioritering."
       heroNote="RetentieScan blijft groepsgericht, privacybewust en niet-predictief. Dat houdt de route geloofwaardig en bestuurlijk bruikbaar."
       ctaHref="#kennismaking"
+      pageType="product"
     >
       <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
         <div className="marketing-panel-soft p-8">
@@ -495,6 +497,7 @@ function CombinatiePage() {
       contextBody="Deze pagina moet duidelijk maken dat het portfolio pas sterker wordt zodra beide vragen bestaan en de eerste route al scherp staat."
       heroNote="Combinatie betekent niet 'meer features'. Het betekent twee gerichte routes in een gedeelde managementtaal."
       ctaHref={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_hero' })}
+      pageType="product"
     >
       <div className="marketing-panel-soft p-8">
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-700">Wanneer kies je de combinatie?</p>

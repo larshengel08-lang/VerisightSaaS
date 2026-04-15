@@ -73,6 +73,7 @@ export default function VertrouwenPage() {
         highlightItems={['Methodiek', 'Privacy', 'Rapportlezing', 'DPA beschikbaar']}
         contextTitle="Wat je hier publiek kunt verifieren"
         contextBody="Geen losse trustclaims, maar een buyer-facing overzicht van hoe Verisight methodiek, privacy, gegroepeerde output, bestuurlijke handoff en juridische basis zichtbaar organiseert. Dat betekent ook: geen individuele voorspelling, geen individuele signalen naar management en geen persoonsgerichte managementoutput."
+        pageType="support"
       >
         <div className="grid gap-5 lg:grid-cols-3">
           {trustSignalHighlights.map((item) => (

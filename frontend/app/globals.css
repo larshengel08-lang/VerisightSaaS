@@ -197,7 +197,7 @@ details > summary::-webkit-details-marker {
     text-wrap: pretty;
     overflow-wrap: break-word;
     word-break: normal;
-    hyphens: auto;
+    hyphens: none;
   }
 
   .marketing-hero-title-home {
@@ -208,6 +208,11 @@ details > summary::-webkit-details-marker {
   .marketing-hero-title-page {
     font-size: clamp(1.95rem, 6.4vw, 4.45rem);
     line-height: 0.92;
+  }
+
+  .marketing-hero-title-detail {
+    font-size: clamp(1.95rem, 6vw, 4.15rem);
+    line-height: 0.93;
   }
 
   .marketing-hero-copy {
@@ -250,6 +255,27 @@ details > summary::-webkit-details-marker {
     line-height: 0.96;
     text-wrap: pretty;
     overflow-wrap: break-word;
+    hyphens: none;
+  }
+
+  .marketing-stage-title-overview,
+  .marketing-stage-title-pricing,
+  .marketing-stage-title-approach {
+    max-width: min(14.5ch, 100%);
+    font-size: clamp(1.45rem, 3vw, 2.65rem);
+    line-height: 1;
+  }
+
+  .marketing-stage-title-product {
+    max-width: min(13.4ch, 100%);
+    font-size: clamp(1.55rem, 3.4vw, 2.85rem);
+    line-height: 1;
+  }
+
+  .marketing-stage-title-support {
+    max-width: min(13.8ch, 100%);
+    font-size: clamp(1.5rem, 3.1vw, 2.75rem);
+    line-height: 1;
   }
 
   .marketing-pill-stack {
@@ -289,6 +315,18 @@ details > summary::-webkit-details-marker {
       grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
     }
 
+    .marketing-hero-grid-home,
+    .marketing-hero-grid-product {
+      grid-template-columns: minmax(0, 0.96fr) minmax(0, 1.04fr);
+    }
+
+    .marketing-hero-grid-overview,
+    .marketing-hero-grid-pricing,
+    .marketing-hero-grid-approach,
+    .marketing-hero-grid-support {
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+    }
+
     .marketing-hero-primary {
       grid-column: 1;
       grid-row: 1;
@@ -308,8 +346,46 @@ details > summary::-webkit-details-marker {
       grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
     }
 
+    .marketing-hero-support-grid-product,
+    .marketing-hero-support-grid-pricing,
+    .marketing-hero-support-grid-approach {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .marketing-hero-support-grid-overview {
+      grid-template-columns: minmax(0, 1fr);
+      max-width: 40rem;
+    }
+
+    .marketing-hero-secondary-overview,
+    .marketing-hero-secondary-pricing,
+    .marketing-hero-secondary-approach {
+      max-width: 42rem;
+    }
+
+    .marketing-hero-grid-overview .marketing-hero-title,
+    .marketing-hero-grid-pricing .marketing-hero-title,
+    .marketing-hero-grid-approach .marketing-hero-title,
+    .marketing-hero-grid-support .marketing-hero-title {
+      max-width: min(14.8ch, 100%);
+      font-size: clamp(1.8rem, 4.4vw, 3.55rem);
+      line-height: 0.96;
+    }
+
+    .marketing-hero-grid-product .marketing-hero-title {
+      max-width: min(13.4ch, 100%);
+      font-size: clamp(1.9rem, 4.8vw, 3.8rem);
+      line-height: 0.95;
+    }
+
     .marketing-hero-title {
       max-width: min(12.6ch, 100%);
+    }
+
+    .marketing-hero-grid-overview .marketing-stage,
+    .marketing-hero-grid-pricing .marketing-stage,
+    .marketing-hero-grid-approach .marketing-stage {
+      border-radius: 1.9rem;
     }
   }
 }
@@ -319,6 +395,16 @@ details > summary::-webkit-details-marker {
     .marketing-hero-stage-grid {
       grid-template-columns: minmax(0, 0.88fr) minmax(18rem, 1.12fr);
       align-items: start;
+    }
+
+    .marketing-hero-stage-grid-overview,
+    .marketing-hero-stage-grid-pricing,
+    .marketing-hero-stage-grid-approach {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .marketing-hero-stage-grid-product {
+      grid-template-columns: minmax(0, 0.92fr) minmax(18rem, 1.08fr);
     }
 
     .marketing-pill-stack {
