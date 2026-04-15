@@ -3,8 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
-  --marketing-shell: 80rem;
-  --marketing-section-space: clamp(4.5rem, 7vw, 7rem);
+  --marketing-shell: 82rem;
+  --marketing-section-space: clamp(5rem, 7vw, 7.5rem);
   --marketing-surface: #ffffff;
   --marketing-surface-soft: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   --marketing-surface-tint: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
@@ -30,6 +30,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
+  text-rendering: optimizeLegibility;
 }
 
 a:focus-visible,
@@ -85,7 +86,7 @@ details > summary::-webkit-details-marker {
 
   .marketing-panel {
     border: 1px solid var(--marketing-border);
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(255, 255, 255, 0.96);
     box-shadow: var(--marketing-shadow-soft);
     border-radius: 2rem;
   }

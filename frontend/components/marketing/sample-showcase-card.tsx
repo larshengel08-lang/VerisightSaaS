@@ -48,6 +48,7 @@ export function SampleShowcaseCard({
       <div className={`mt-5 rounded-2xl border px-4 py-4 text-sm leading-7 ${palette.note}`}>
         <p className="font-semibold">{asset.label}</p>
         <p className="mt-2">{asset.claimBoundary}</p>
+        <p className="mt-2 text-xs leading-6 opacity-80">{asset.trustFrame}</p>
       </div>
       {asset.publicHref ? (
         <div className="mt-5">

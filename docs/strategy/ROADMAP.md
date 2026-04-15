@@ -119,12 +119,13 @@ De propositie, verpakking en ondersteunende assets moeten coherent genoeg zijn o
 De website en funnel moeten de aangescherpte propositie, trustlaag en voorbeeldoutput helder en commercieel overbrengen.
 
 **Hoort in deze fase**
-- Website Redesign And Flow
+- Website Redesign And Flow - afgerond
 - Customer Journey And Funnel Alignment
 - SEO Conversion Program
 
 **Status**
 - huidige actieve focus
+- 1 van 3 checklist-items afgerond
 
 **Exit gate**
 - Website weerspiegelt de aangescherpte product- en trustlaag

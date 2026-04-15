@@ -13,7 +13,7 @@ interface PreviewSliderProps {
   variant?: ReportPreviewVariant
 }
 
-const SLIDES = ['Dashboard', 'Factoranalyse', 'Managementduiding'] as const
+const SLIDES = ['Dashboardbeeld', 'Factorbeeld', 'Bestuurlijke duiding'] as const
 const COPY = REPORT_PREVIEW_COPY
 
 const toneStyles = {
@@ -277,6 +277,7 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
         {SLIDES.map((label, index) => (
           <button
             key={label}
+            type="button"
             onClick={() => setCurrent(index)}
             className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
               index === current

@@ -5,11 +5,12 @@ import { Wordmark } from '@/components/marketing/wordmark'
 export function PublicFooter() {
   return (
     <footer className="border-t border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] py-12">
-      <div className="mx-auto grid max-w-6xl gap-10 px-5 sm:px-6 lg:grid-cols-[1.2fr_0.85fr_0.85fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-5 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.95fr]">
         <div>
           <Wordmark size="sm" />
           <p className="mt-4 max-w-sm text-sm leading-7 text-slate-600">
-            Verisight helpt organisaties kiezen tussen ExitScan en RetentieScan: terugkijken naar vertrek, eerder signaleren op behoud, of beide in een logisch portfolio.
+            Verisight helpt organisaties kiezen tussen ExitScan en RetentieScan: terugkijken naar vertrek,
+            eerder signaleren op behoud, of beide bewust combineren in een gedeelde managementtaal.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {['Nederlandse dienst', 'EU-primary data', 'DPA beschikbaar', 'Geen trackingcookies'].map((item) => (
@@ -34,7 +35,7 @@ export function PublicFooter() {
         </div>
 
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Navigatie</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Waar start je?</p>
           <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600">
             {marketingFooterLinks.map((link) => (
               <Link key={link.href} href={link.href} className="transition-colors hover:text-slate-950">
@@ -70,7 +71,7 @@ export function PublicFooter() {
 
       <div className="mx-auto mt-10 max-w-6xl border-t border-slate-200 px-5 pt-6 text-xs text-slate-500 sm:px-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} Verisight. Publieke informatie voor oriëntatie en kennismaking.</p>
+          <p>&copy; {new Date().getFullYear()} Verisight. Publieke informatie voor orientatie en kennismaking.</p>
           <p>Geen trackingcookies op de marketing-site.</p>
         </div>
       </div>

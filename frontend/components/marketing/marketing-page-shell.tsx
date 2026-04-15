@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
-import { MarketingProofStrip } from '@/components/marketing/marketing-proof-strip'
 import { MarketingSection } from '@/components/marketing/marketing-section'
 import { MarketingSpotlight } from '@/components/marketing/marketing-spotlight'
 import { PublicFooter } from '@/components/marketing/public-footer'
@@ -21,11 +20,12 @@ interface MarketingPageShellProps {
   contextEyebrow?: string
   contextTitle?: string
   contextBody?: string
+  heroNote?: string
 }
 
 const defaultHighlights = [
   'Duidelijke productkeuze',
-  'Dashboard en rapport',
+  'Dashboard, rapport en bestuurlijke handoff',
   'Geschikt voor HR, MT en directie',
 ] as const
 
@@ -84,8 +84,9 @@ export function MarketingPageShell({
   theme = 'neutral',
   highlightItems = defaultHighlights,
   contextEyebrow = 'Wat je hier ziet',
-  contextTitle = 'Een productpagina in een schaalbare portfolio-structuur.',
-  contextBody = 'Deze pagina hangt binnen een productportfolio waarin elk product een eigen managementbelofte heeft, maar dezelfde basis houdt van dashboard, rapport en begeleiding.',
+  contextTitle = 'Gebruik deze pagina om de juiste route, output en vervolgstap te toetsen.',
+  contextBody = 'Deze pagina helpt eerst bepalen of de route inhoudelijk klopt. Daarna laat Verisight zien wat management terugkrijgt, welke proof daarbij hoort en wanneer een gesprek logisch wordt.',
+  heroNote = 'Verisight blijft een begeleide productvorm: trust ondersteunt de route, maar verdringt de productkeuze niet.',
 }: MarketingPageShellProps) {
   const themeStyle = themeMap[theme]
 
@@ -100,31 +101,31 @@ export function MarketingPageShell({
         >
           <div className="max-w-2xl">
             <p className={`text-xs font-bold uppercase tracking-[0.22em] ${themeStyle.accentText}`}>{eyebrow}</p>
-            <h1 className="font-display mt-5 text-balance text-[3rem] leading-[1.02] text-slate-950 md:text-[4.4rem]">
+            <h1 className="font-display mt-5 text-balance text-[3rem] leading-[1] text-slate-950 md:text-[4.5rem]">
               {title}
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">{description}</p>
+            <p className="mt-6 max-w-xl text-[1.05rem] leading-8 text-slate-600">{description}</p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/#kennismaking"
                 className="inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(37,99,235,0.2)] transition-all hover:-translate-y-0.5 hover:bg-blue-700"
               >
-                Plan mijn gesprek
+                Plan kennismaking
               </Link>
               <Link
-                href="/tarieven"
+                href="/producten"
                 className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
               >
-                Bekijk tarieven
+                Bekijk de routes
               </Link>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-2">
+            <div className="mt-8 flex flex-wrap gap-2.5">
               {highlightItems.map((item) => (
                 <span
                   key={item}
-                  className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] ${themeStyle.chipClass}`}
+                  className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] ${themeStyle.chipClass}`}
                 >
                   {item}
                 </span>
@@ -135,12 +136,14 @@ export function MarketingPageShell({
               <TrustStrip items={trustItems} tone={trustTone} />
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-3">
+            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-600">{heroNote}</p>
+
+            <div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-600">
               {trustQuickLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
+                  className="inline-flex items-center gap-2 font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition-colors hover:text-slate-950"
                 >
                   {link.label}
                 </Link>
@@ -160,37 +163,40 @@ export function MarketingPageShell({
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Hoe je verder leest</p>
                     <div className="mt-4 space-y-3">
                       <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                        Eerst: past dit product bij de vraag?
+                        Eerst: past de route inhoudelijk bij de managementvraag?
                       </div>
                       <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                        Daarna: wat krijgt management terug?
+                        Daarna: wat krijgt management echt terug?
                       </div>
                       <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                        Tot slot: wanneer kies je een andere route?
+                        Tot slot: welke proof en vervolgstap maken dit geloofwaardig?
                       </div>
                     </div>
                   </div>
 
-                  <MarketingProofStrip
-                    items={[
-                      {
-                        title: 'Alle producten',
-                        body: 'Bekijk hoe ExitScan, RetentieScan en de combinatie zich tot elkaar verhouden.',
-                      },
-                      {
-                        title: 'Aanpak en ritme',
-                        body: 'Zie wanneer een baseline, deep dive of herhaalmeting het meest logisch wordt.',
-                      },
-                      {
-                        title: 'Prijs en pakket',
-                        body: 'Bekijk de prijsankers per productvorm zonder productverwarring.',
-                      },
-                      {
-                        title: 'Trust & privacy',
-                        body: 'Bekijk de publieke trustlaag, privacybasis en DPA voordat je een gesprek plant.',
-                      },
-                    ]}
-                  />
+                  <div className="marketing-panel p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Snelle routecheck</p>
+                    <div className="mt-4 space-y-3">
+                      <Link
+                        href="/producten"
+                        className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-300 hover:bg-white hover:text-slate-950"
+                      >
+                        Producten vergelijken
+                      </Link>
+                      <Link
+                        href="/tarieven"
+                        className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-300 hover:bg-white hover:text-slate-950"
+                      >
+                        Pricing en vervolgvormen
+                      </Link>
+                      <Link
+                        href="/vertrouwen"
+                        className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-300 hover:bg-white hover:text-slate-950"
+                      >
+                        Trust, privacy en DPA
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               }
             />

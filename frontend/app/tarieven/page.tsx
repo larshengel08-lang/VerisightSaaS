@@ -7,8 +7,8 @@ import {
   pricingAddOns,
   pricingCards,
   pricingChoiceGuide,
-  pricingFollowOnRoutes,
   pricingFaqs,
+  pricingFollowOnRoutes,
   retentionPackages,
   trustItems,
 } from '@/components/marketing/site-content'
@@ -73,19 +73,17 @@ export default function TarievenPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <MarketingPageShell
         eyebrow="Tarieven"
-        title="Heldere prijsankers voor eerste trajecten, vervolgvormen en bewuste verdieping."
+        title="Heldere prijsankers voor eerste trajecten en logische vervolgvormen."
         description="Verisight verkoopt duidelijke productvormen met dashboard, rapportage, bestuurlijke handoff en begeleiding. Geen licentieconstructie met losse modules, geen planmatrix en geen open eind aan consultancy-uren."
+        contextTitle="Gebruik pricing om kooprust te geven, niet om het gesprek ingewikkelder te maken."
+        contextBody="De prijslaag moet eerst laten zien wat het eerste traject is, daarna welke vervolgvormen logisch worden en pas daarna welke verdieping eventueel meerwaarde heeft."
       >
         <div className="grid items-start gap-6 xl:grid-cols-2">
           {pricingCards.map((card) => (
-            <div
-              key={card.eyebrow}
-              className="marketing-panel-dark border-slate-900 bg-[#0d1b2e] p-8 md:p-10"
-            >
+            <div key={card.eyebrow} className="marketing-panel-dark border-slate-900 bg-[#0d1b2e] p-8 md:p-10">
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">{card.eyebrow}</p>
               <h2 className="font-display mt-4 text-5xl text-white md:text-6xl">{card.price}</h2>
               <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">{card.description}</p>
-
               <div className="mt-8 grid gap-3">
                 {card.bullets.map((item) => (
                   <div
@@ -98,6 +96,41 @@ export default function TarievenPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        {exitSampleAsset && retentionSampleAsset ? (
+          <div className="mt-16 grid gap-5 lg:grid-cols-2">
+            <SampleShowcaseCard
+              eyebrow="ExitScan-proof"
+              title="Pricing wordt sterker wanneer de deliverable zichtbaar klopt."
+              body="Gebruik het actuele ExitScan-voorbeeldrapport om te laten zien wat dashboard, managementrapport en bestuurlijke handoff in de praktijk betekenen voordat pricing verder wordt uitgediept."
+              asset={exitSampleAsset}
+              linkLabel="Open ExitScan-voorbeeldrapport"
+            />
+            <SampleShowcaseCard
+              eyebrow="RetentieScan-proof"
+              title="RetentieScan houdt een eigen proofrol binnen pricing."
+              body="Voor buyers met een expliciete behoudsvraag op groepsniveau laat dit voorbeeldrapport zien wat de route werkelijk oplevert, zonder bredere MTO- of predictorclaim."
+              asset={retentionSampleAsset}
+              linkLabel="Open RetentieScan-voorbeeldrapport"
+            />
+          </div>
+        ) : null}
+
+        <div className="mt-16 marketing-panel-soft p-8 md:p-10">
+          <SectionHeading
+            eyebrow="Keuzehulp"
+            title="Wat is je eerste route?"
+            description="Kies eerst het juiste betaalde eerste traject. Voeg pas daarna een vervolgvorm, add-on of combinatieroute toe."
+          />
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {pricingChoiceGuide.map(([title, body]) => (
+              <div key={title} className="rounded-2xl border border-slate-200 bg-white p-5">
+                <p className="text-sm font-semibold text-slate-950">{title}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{body}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mt-16 marketing-panel p-8 md:p-10">
@@ -129,27 +162,41 @@ export default function TarievenPage() {
           </div>
         </div>
 
-        <div className="mt-16 marketing-panel p-8 md:p-10">
-          <SectionHeading
-            eyebrow="RetentieScan opbouw"
-            title="Drie logische vormen binnen dezelfde retentie-route."
-            description="Zo blijft RetentieScan een eigen product met een eigen opbouw, zonder dat een compacte vervolgmeting als parallel eerste pakket gaat voelen."
-          />
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
-            {retentionPackages.map((pkg) => (
-              <div key={pkg.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-                <p className="text-sm font-semibold text-slate-950">{pkg.title}</p>
-                <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">{pkg.fit}</p>
-                <p className="mt-4 text-sm leading-7 text-slate-600">{pkg.body}</p>
-                <div className="mt-5 grid gap-2">
-                  {pkg.bullets.map((bullet) => (
-                    <div key={bullet} className="rounded-xl border border-white bg-white px-3 py-3 text-sm leading-6 text-slate-700">
-                      {bullet}
-                    </div>
-                  ))}
+        <div className="mt-16 grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
+          <div className="marketing-panel p-8 md:p-10">
+            <SectionHeading
+              eyebrow="RetentieScan-opbouw"
+              title="Drie logische vormen binnen dezelfde retentie-route."
+              description="Zo blijft RetentieScan een eigen product met een eigen opbouw, zonder dat een compacte vervolgmeting als parallel eerste pakket gaat voelen."
+            />
+            <div className="mt-10 grid gap-5 lg:grid-cols-3">
+              {retentionPackages.map((pkg) => (
+                <div key={pkg.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+                  <p className="text-sm font-semibold text-slate-950">{pkg.title}</p>
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">{pkg.fit}</p>
+                  <p className="mt-4 text-sm leading-7 text-slate-600">{pkg.body}</p>
+                  <div className="mt-5 grid gap-2">
+                    {pkg.bullets.map((bullet) => (
+                      <div key={bullet} className="rounded-xl border border-white bg-white px-3 py-3 text-sm leading-6 text-slate-700">
+                        {bullet}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          <div className="marketing-panel-dark p-8 md:p-10">
+            <SectionHeading
+              eyebrow="Trustlaag"
+              title="Een duidelijke prijs, een begeleid proces en output met expliciete claimsgrenzen."
+              description="Voor een eerste traject is vertrouwen vaak belangrijker dan maximale productbreedte. Daarom blijft Verisight bewust compact, begeleid, privacybewust en methodisch helder opgezet."
+              light
+            />
+            <div className="mt-8">
+              <TrustStrip items={trustItems} tone="dark" />
+            </div>
           </div>
         </div>
 
@@ -172,43 +219,8 @@ export default function TarievenPage() {
 
         <div className="mt-16 marketing-panel-soft p-8 md:p-10">
           <SectionHeading
-            eyebrow="Keuzehulp"
-            title="Wat is je eerste route?"
-            description="Kies eerst het juiste betaalde eerste traject. Voeg pas daarna een vervolgvorm, add-on of combinatieroute toe."
-          />
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {pricingChoiceGuide.map(([title, body]) => (
-              <div key={title} className="rounded-2xl border border-slate-200 bg-white p-5">
-                <p className="text-sm font-semibold text-slate-950">{title}</p>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {exitSampleAsset && retentionSampleAsset ? (
-          <div className="mt-16 grid gap-5 lg:grid-cols-2">
-            <SampleShowcaseCard
-              eyebrow="Deliverable-proof"
-              title="Deze prijsankers rusten op echte buyer-facing output."
-              body="Gebruik de actuele voorbeeldrapporten om te laten zien wat dashboard, managementrapport en bestuurlijke handoff in de praktijk betekenen voordat pricing verder wordt uitgediept."
-              asset={exitSampleAsset}
-              linkLabel="Open ExitScan-voorbeeldrapport"
-            />
-            <SampleShowcaseCard
-              eyebrow="Complementaire prooflaag"
-              title="RetentieScan houdt een eigen proofrol binnen pricing."
-              body="Voor buyers met een expliciete behoudsvraag op groepsniveau laat dit voorbeeldrapport zien wat de route werkelijk oplevert, zonder bredere MTO- of predictorclaim."
-              asset={retentionSampleAsset}
-              linkLabel="Open RetentieScan-voorbeeldrapport"
-            />
-          </div>
-        ) : null}
-
-        <div className="mt-16 marketing-panel-soft p-8 md:p-10">
-          <SectionHeading
             eyebrow="Sales FAQ"
-            title="Veelgestelde commerciële vragen"
+            title="Veelgestelde commerciele vragen"
             description="Deze antwoorden helpen de productkeuze en prijsuitleg zuiver te houden."
           />
           <div className="mt-10 grid gap-4 md:grid-cols-2">
@@ -221,25 +233,13 @@ export default function TarievenPage() {
           </div>
         </div>
 
-        <div className="mt-16 marketing-panel-dark p-8 md:p-10">
-          <SectionHeading
-            eyebrow="Trustlaag"
-            title="Een duidelijke prijs, een begeleid proces en output met expliciete claimsgrenzen."
-            description="Voor een eerste traject is vertrouwen vaak belangrijker dan maximale productbreedte. Daarom blijft Verisight bewust compact, begeleid, privacybewust en methodisch helder opgezet."
-            light
-          />
-          <div className="mt-8">
-            <TrustStrip items={trustItems} tone="dark" />
-          </div>
-        </div>
-
         <MarketingCalloutBand
           className="mt-16"
           eyebrow="Volgende stap"
           title="Wil je bepalen welk prijsanker nu past?"
           body="In een kort gesprek kijken we wat nu jullie eerste route is, wanneer een vervolgvorm logisch wordt en of segment deep dive of een combinatieroute echt meerwaarde heeft."
           primaryHref="/#kennismaking"
-          primaryLabel="Plan mijn gesprek"
+          primaryLabel="Plan kennismaking"
           secondaryHref="/aanpak"
           secondaryLabel="Bekijk aanpak"
         />

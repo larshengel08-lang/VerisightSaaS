@@ -11,6 +11,7 @@ import { ALL_MARKETING_PRODUCTS, type MarketingProduct, getMarketingProductBySlu
 import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
 
 type Props = { params: Promise<{ slug: string }> }
+
 const exitSampleAsset = getPrimarySampleShowcaseAsset('exit')
 const retentionSampleAsset = getPrimarySampleShowcaseAsset('retention')
 
@@ -177,26 +178,29 @@ function ExitScanPage() {
     <MarketingPageShell
       eyebrow="ExitScan"
       title="Maak vertrek bestuurlijk leesbaar."
-      description="ExitScan helpt organisaties vertrekduiding opbouwen uit terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie. Geen harde oorzaakverklaring, wel een managementbeeld met compacte bestuurlijke handoff dat helpt prioriteren."
+      description="ExitScan helpt organisaties vertrekduiding opbouwen uit terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie. Geen harde oorzaakverklaring, wel een managementbeeld dat helpt prioriteren."
       theme="exit"
-      highlightItems={['Terugkijkend', 'Vertrekduiding', 'Managementrapport']}
-      contextTitle="Een product voor organisaties die willen leren van vertrek dat al heeft plaatsgevonden."
-      contextBody="ExitScan is het sterkst wanneer losse exitgesprekken te anekdotisch blijven en management sneller een terugkerend patroonbeeld nodig heeft."
+      highlightItems={['Primaire wedge', 'Vertrekduiding', 'Bestuurlijke handoff']}
+      contextTitle="ExitScan verkoopt het sterkst wanneer de vraag eerst achteraf begrijpen is."
+      contextBody="Deze pagina moet snel laten zien waarom ExitScan meestal de eerste route is: het product maakt losse exitinput bestuurlijk leesbaar en intern doorvertelbaar."
+      heroNote="ExitScan blijft terugkijkend, groepsgericht en methodisch begrensd. Dat maakt de route scherper, niet smaller."
     >
-      <div className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
+      <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
         <div className="marketing-panel p-8">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-600">Wanneer past ExitScan?</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">
             Als je wilt leren van uitstroom zonder te blijven hangen in losse verhalen.
           </h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            ExitScan helpt patronen zichtbaar te maken in werkfactoren, vertrekredenen en signalen van werkfrictie. Daarmee wordt vertrekduiding bestuurlijk leesbaar, vergelijkbaar en beter bespreekbaar, zonder van de scan een diagnose of voorspelproduct te maken.
+            ExitScan helpt patronen zichtbaar te maken in werkfactoren, vertrekredenen en signalen van
+            werkfrictie. Daarmee wordt vertrekduiding bestuurlijk leesbaar, vergelijkbaar en beter bespreekbaar,
+            zonder van de scan een diagnose of voorspelproduct te maken.
           </p>
           <div className="mt-8 space-y-3">
             {[
               'Voor terugkijkende analyse op ex-medewerkers',
               'Meer dan losse exitgesprekken of spreadsheetduiding',
-              'Logisch als nulmeting of eerste patroonanalyse met gegroepeerde managementoutput',
+              'Sterk als eerste nulmeting met gegroepeerde managementoutput',
             ].map((item) => (
               <div key={item} className="flex items-center gap-3 text-sm text-slate-700">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
@@ -212,13 +216,15 @@ function ExitScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">Wat management krijgt</p>
           <h2 className="font-display mt-4 text-4xl text-white">Een serieus managementinstrument voor uitstroomduiding.</h2>
           <p className="mt-5 text-base leading-8 text-slate-300">
-            Geen losse verzameling exitinput, maar een compacte rapportvorm die opent met managementsamenvatting, bestuurlijke handoff, eerste managementvraag en eerste logische stap. Zo zien HR, sponsor, MT en directie sneller welk vertrekbeeld terugkeert, welke werkfactoren meewegen en waar vervolgactie logisch is, terwijl claims, privacy en interpretatiegrenzen expliciet leesbaar blijven.
+            Geen losse verzameling exitinput, maar een compacte rapportvorm die opent met managementsamenvatting,
+            bestuurlijke handoff, eerste managementvraag en eerste logische stap. Zo zien HR, sponsor, MT en
+            directie sneller welk vertrekbeeld terugkeert en waar vervolgactie logisch is.
           </p>
           <div className="mt-8 grid gap-3">
             {[
-              'Frictiescore en vertrekduiding in één overzicht',
-              'Werkfactoren die terugkomen in vrijwillig vertrek',
-              'Een rapport dat direct bespreekbaar is in MT, directie en sponsoroverleg, zonder diagnoseclaim',
+              'Vertrekbeeld, werkfrictie en topfactoren in een leeslijn',
+              'Bestuurlijke handoff voor sponsor, MT of directie',
+              'Expliciete claims-, privacy- en interpretatiegrenzen',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200">
                 {item}
@@ -226,6 +232,30 @@ function ExitScanPage() {
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="mt-16 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="marketing-panel p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Voorbeeldoutput</p>
+          <h2 className="mt-4 text-3xl font-semibold text-slate-950">Laat de deliverable vroeg in het verhaal landen.</h2>
+          <p className="mt-4 text-sm leading-7 text-slate-600">
+            De output combineert managementsamenvatting, bestuurlijke handoff, vertrekduiding, signalen van
+            werkfrictie en prioritaire werkfactoren in een compacte managementstructuur.
+          </p>
+          <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+            <PreviewSlider variant="exit" />
+          </div>
+        </div>
+
+        {exitSampleAsset ? (
+          <SampleShowcaseCard
+            eyebrow="Volledig voorbeeldrapport"
+            title="Open de canonieke ExitScan showcase."
+            body="Gebruik de preview als teaser en dit buyer-facing voorbeeldrapport als echte prooflaag voor sales, pricing en interne doorvertaling."
+            asset={exitSampleAsset}
+            linkLabel="Open ExitScan-voorbeeldrapport"
+          />
+        ) : null}
       </div>
 
       <MarketingProofStrip
@@ -237,11 +267,11 @@ function ExitScanPage() {
           },
           {
             title: 'Meer dan losse exitgesprekken',
-            body: 'De scan vertaalt meerdere reacties naar een vergelijkbaar managementbeeld, zodat HR en MT sneller prioriteren.',
+            body: 'Meerdere responses worden vertaald naar een vergelijkbaar managementbeeld dat intern beter te bespreken is.',
           },
           {
-            title: 'Gericht op beïnvloedbare factoren',
-            body: 'Leiderschap, cultuur, groei, werkbelasting en rolhelderheid worden zichtbaar als terugkerende vertrekduiding, zonder harde diagnose of causaliteitsclaim.',
+            title: 'Gericht op beinvloedbare factoren',
+            body: 'Leiderschap, cultuur, groei, werkbelasting en rolhelderheid worden zichtbaar zonder harde diagnose of causaliteitsclaim.',
           },
         ]}
       />
@@ -252,41 +282,34 @@ function ExitScanPage() {
           rows={[
             ['Hoofdvraag', 'Welk vertrekbeeld keert terug en welke werkfactoren wegen daarin mee?'],
             ['Leesrichting', 'Terugkijkend patroonbeeld op uitstroom'],
-            ['Managementoutput', 'Frictiescore, vertrekduiding, signalen van werkfrictie en prioritaire werkfactoren'],
-            ['Niet bedoeld als', 'Vroegsignalering in de actieve populatie'],
+            ['Managementoutput', 'Vertrekduiding, signalen van werkfrictie en prioritaire werkfactoren'],
+            ['Niet bedoeld als', 'Vroegsignalering in de actieve populatie of een diagnose-instrument'],
           ]}
         />
-        <div className="marketing-panel p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Voorbeeldoutput</p>
-          <h2 className="mt-4 text-3xl font-semibold text-slate-950">Zo ziet ExitScan eruit voor management.</h2>
-          <p className="mt-4 text-sm leading-7 text-slate-600">
-            De output combineert managementsamenvatting, bestuurlijke handoff, vertrekduiding, signalen van werkfrictie, prioritaire werkfactoren en een leeswijzer over claims, privacy en interpretatie in een compacte managementstructuur.
-          </p>
-          <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-            <PreviewSlider variant="exit" />
+
+        <div className="marketing-panel-soft p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-700">Wat ExitScan niet doet</p>
+          <div className="mt-5 space-y-3">
+            {[
+              'Geen harde oorzaakverklaring van individueel vertrek',
+              'Geen predictor van toekomstig verloop',
+              'Geen ROI-theater of garantie op lager verloop',
+            ].map((item) => (
+              <div key={item} className="rounded-2xl border border-white bg-white px-4 py-4 text-sm leading-7 text-slate-700">
+                {item}
+              </div>
+            ))}
           </div>
         </div>
       </div>
-
-      {exitSampleAsset ? (
-        <div className="mt-16">
-          <SampleShowcaseCard
-            eyebrow="Volledig voorbeeldrapport"
-            title="Open de canonieke ExitScan showcase."
-            body="Gebruik de preview als teaser en dit buyer-facing voorbeeldrapport als echte prooflaag voor sales, pricing en interne doorvertaling. De pdf gebruikt fictieve data, maar dezelfde managementstructuur als live output."
-            asset={exitSampleAsset}
-            linkLabel="Open ExitScan-voorbeeldrapport"
-          />
-        </div>
-      ) : null}
 
       <MarketingCalloutBand
         className="mt-16"
         eyebrow="Verschil met RetentieScan"
         title="ExitScan kijkt terug. RetentieScan signaleert eerder."
-        body="ExitScan helpt vertrek achteraf duiden en is meestal het eerste traject. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen vormen ze een logisch portfolio, maar ExitScan blijft het product voor terugkijkende vertrekduiding."
+        body="ExitScan helpt vertrek achteraf duiden en is meestal het eerste traject. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen vormen ze een logisch portfolio, maar ExitScan blijft de primaire wedge."
         primaryHref="/#kennismaking"
-        primaryLabel="Plan mijn gesprek"
+        primaryLabel="Plan kennismaking"
         secondaryHref="/producten/retentiescan"
         secondaryLabel="Bekijk RetentieScan"
       />
@@ -299,26 +322,29 @@ function RetentionScanPage() {
     <MarketingPageShell
       eyebrow="RetentieScan"
       title="Zie eerder waar behoud onder druk staat."
-      description="RetentieScan helpt organisaties om op groeps- en segmentniveau eerder zichtbaar te maken waar behoud onder druk staat, met dashboard, rapport en compacte bestuurlijke handoff in dezelfde professionele Verisight-structuur. Geen brede MTO en geen individuele voorspeller."
+      description="RetentieScan helpt organisaties om op groeps- en segmentniveau eerder zichtbaar te maken waar behoud onder druk staat, met dashboard, rapport en bestuurlijke handoff in dezelfde professionele Verisight-structuur."
       theme="retention"
-      highlightItems={['Vroegsignalering', 'Groepsniveau', 'Retentiesignaal']}
-      contextTitle="Een product voor organisaties die eerder willen zien waar behoud begint te schuiven."
-      contextBody="RetentieScan is geen brede tevredenheidsmeting en geen individuele voorspeller, maar een managementroute die zichtbaar maakt waar het retentiesignaal, stay-intent, bevlogenheid en vertrekintentie nu aandacht vragen."
+      highlightItems={['Complementaire route', 'Groepsniveau', 'Verification-first']}
+      contextTitle="RetentieScan verkoopt het sterkst wanneer de actieve behoudsvraag expliciet op tafel ligt."
+      contextBody="Deze pagina moet snel laten zien waarom RetentieScan geen brede MTO is, maar een gerichte managementroute voor vroegsignalering, verificatie en prioritering."
+      heroNote="RetentieScan blijft groepsgericht, privacybewust en niet-predictief. Dat houdt de route geloofwaardig en bestuurlijk bruikbaar."
     >
       <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
         <div className="marketing-panel-soft p-8">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Waarom nu</p>
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-700">Wanneer past RetentieScan?</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">
-            ExitScan kijkt terug. RetentieScan kijkt eerder vooruit.
+            Als je eerder wilt zien waar behoud op groepsniveau begint te schuiven.
           </h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Waar ExitScan helpt begrijpen waarom mensen gingen, helpt RetentieScan om eerder te zien waar behoud op groepsniveau onder druk staat. Zo kan HR eerder prioriteren op de werkfactoren die nu de meeste aandacht vragen, zonder van de scan een brede MTO, performance-instrument of voorspelproduct te maken.
+            Waar ExitScan helpt begrijpen waarom mensen gingen, helpt RetentieScan om eerder te zien waar behoud
+            onder druk staat. Zo kan HR eerder prioriteren op de werkfactoren die nu aandacht vragen, zonder van de
+            scan een brede MTO, performance-instrument of voorspelproduct te maken.
           </p>
           <div className="mt-8 grid gap-3">
             {[
               'Vroegtijdig zien waar behoud onder druk staat',
-              'Managementinformatie over beïnvloedbare werkfactoren',
-              'Geen individuele signalen, geen performance-oordelen en geen persoonsgerichte actieroutes naar management',
+              'Managementinformatie over beinvloedbare werkfactoren',
+              'Geen individuele signalen of persoonsgerichte actieroutes naar management',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-emerald-100 bg-white px-4 py-4 text-sm leading-7 text-slate-700">
                 {item}
@@ -329,37 +355,66 @@ function RetentionScanPage() {
 
         <div className="marketing-panel p-8">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Wat je krijgt</p>
-          <h2 className="mt-4 text-3xl font-semibold text-slate-950">Een vroegsignaal dat bestuurlijk bruikbaar is.</h2>
+          <h2 className="mt-4 text-3xl font-semibold text-slate-950">Een vroegsignaal dat bestuurlijk bruikbaar blijft.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Geen individuele voorspelling en geen brede tevredenheidsmeting, maar een groepsweergave die opent met managementsamenvatting, bestuurlijke handoff, eerste verificatiespoor en eerste logische stap. Daarna volgen retentiesignaal, stay-intent, bevlogenheid, vertrekintentie en de werkfactoren die nu als eerste opvolging vragen, inclusief een expliciete leeswijzer over privacy, claims en bewijsstatus.
+            Geen individuele voorspelling en geen brede tevredenheidsmeting, maar een groepsweergave die opent met
+            managementsamenvatting, bestuurlijke handoff, eerste verificatiespoor en eerste logische stap.
+          </p>
+          <div className="mt-8 grid gap-3">
+            {[
+              'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in een leeslijn',
+              'Bestuurlijke handoff voor sponsor, MT of directie',
+              'Expliciete privacy-, claims- en bewijsstatuskaders',
+            ].map((item) => (
+              <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-7 text-slate-700">
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-16 grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="marketing-panel p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Voorbeeldoutput</p>
+          <h2 className="mt-4 text-3xl font-semibold text-slate-950">Laat de verification-first output vroeg zien.</h2>
+          <p className="mt-4 text-sm leading-7 text-slate-600">
+            De preview laat zien hoe retentiesignaal, stay-intent, bevlogenheid, vertrekintentie en topfactoren
+            samenkomen in een compacte managementweergave.
           </p>
           <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             <PreviewSlider variant="retention" />
           </div>
         </div>
+
+        {retentionSampleAsset ? (
+          <SampleShowcaseCard
+            eyebrow="Volledig voorbeeldrapport"
+            title="Open de buyer-facing RetentieScan showcase."
+            body="Deze pdf laat dezelfde verification-first managementstructuur zien als live RetentieScan-output. Daarmee blijft de demo bruikbaar voor buyers die expliciet een behoudsvraag op groepsniveau willen toetsen."
+            asset={retentionSampleAsset}
+            linkLabel="Open RetentieScan-voorbeeldrapport"
+          />
+        ) : null}
       </div>
 
-      <div className="mt-16 grid gap-5 md:grid-cols-3">
-        {[
+      <MarketingProofStrip
+        className="mt-16"
+        items={[
           {
             title: 'Eerder signaleren',
-            text: 'RetentieScan maakt zichtbaar waar behoud al begint te schuiven, voordat verloop zichtbaar wordt in vacatures, uitval of exitgesprekken.',
+            body: 'RetentieScan maakt zichtbaar waar behoud begint te schuiven voordat verloop zichtbaar wordt in vacatures, uitval of exitgesprekken.',
           },
           {
-            title: 'Focus op beïnvloedbare factoren',
-            text: 'De scan kijkt niet alleen naar sentiment, maar naar leiderschap, cultuur, groei, werkbelasting, rolhelderheid en SDT-werkbeleving als beïnvloedbare werkfactoren.',
+            title: 'Focus op beinvloedbare factoren',
+            body: 'De scan kijkt naar leiderschap, cultuur, groei, werkbelasting, rolhelderheid en SDT-werkbeleving als werkbare managementthema\'s.',
           },
           {
             title: 'Gebouwd voor managementactie',
-            text: 'De uitkomst is geen losse survey-export, brede MTO of persoonsgerichte score, maar een gedeelde taal voor HR, sponsor, MT en directie over waar retentie nu aandacht vraagt, met groepsgrenzen, bestuurlijke handoff en een v1-bewijsstatus die expliciet blijven.',
+            body: 'De uitkomst is geen losse survey-export of brede MTO, maar een gedeelde taal voor HR, sponsor, MT en directie.',
           },
-        ].map((card) => (
-          <div key={card.title} className="rounded-[1.75rem] border border-emerald-100 bg-emerald-50 p-7">
-            <h2 className="text-2xl font-semibold text-slate-950">{card.title}</h2>
-            <p className="mt-4 text-sm leading-7 text-slate-700">{card.text}</p>
-          </div>
-        ))}
-      </div>
+        ]}
+      />
 
       <div className="mt-16 grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
         <div className="marketing-panel-dark p-8">
@@ -368,8 +423,8 @@ function RetentionScanPage() {
           <div className="mt-8 space-y-3">
             {[
               'Retentiesignaal op groeps- en segmentniveau',
-              'Stay-intent, bevlogenheid, vertrekintentie en beïnvloedbare topfactoren',
-              'Niet bedoeld als performance-instrument, brede MTO, individuele voorspeller of black-box risicomodel',
+              'Stay-intent, bevlogenheid, vertrekintentie en beinvloedbare topfactoren',
+              'Niet bedoeld als performance-instrument, brede MTO of individuele voorspeller',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200">
                 {item}
@@ -389,27 +444,15 @@ function RetentionScanPage() {
         />
       </div>
 
-      {retentionSampleAsset ? (
-        <div className="mt-16">
-          <SampleShowcaseCard
-            eyebrow="Volledig voorbeeldrapport"
-            title="Open de buyer-facing RetentieScan showcase."
-            body="Deze pdf laat dezelfde verification-first managementstructuur zien als live RetentieScan-output. Daarmee blijft de demo bruikbaar voor buyers die expliciet een behoudsvraag op groepsniveau willen toetsen."
-            asset={retentionSampleAsset}
-            linkLabel="Open RetentieScan-voorbeeldrapport"
-          />
-        </div>
-      ) : null}
-
       <MarketingCalloutBand
         className="mt-16"
         eyebrow="Combinatie met ExitScan"
         title="Samen vormen ze een logisch portfolio."
-        body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen geven ze een scherper beeld van zowel achteraf duiden als vooruit kijken, meestal eerst via een baseline en pas daarna via ritme of combinatie."
+        body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen geven ze een scherper beeld van zowel achteraf duiden als vooruitkijken, meestal eerst via een baseline en pas daarna via ritme of combinatie."
         primaryHref="/#kennismaking"
-        primaryLabel="Plan mijn gesprek"
+        primaryLabel="Plan kennismaking"
         secondaryHref="/producten/combinatie"
-        secondaryLabel="Bekijk Combinatie"
+        secondaryLabel="Bekijk combinatie"
       />
     </MarketingPageShell>
   )
@@ -422,15 +465,20 @@ function CombinatiePage() {
       title="Gebruik ExitScan en RetentieScan als bewuste portfolioroute."
       description="De combinatie is logisch voor organisaties die zowel willen leren van uitstroom als eerder willen signaleren waar behoud nu onder druk staat, zonder daarvan een bundel of derde standaardpakket te maken."
       theme="combination"
-      highlightItems={['Portfolio-aanpak', 'Twee producten', 'Eén platform']}
-      contextTitle="Een route voor organisaties waar uitstroom en behoud tegelijk op tafel liggen."
-      contextBody="De combinatie is vooral sterk wanneer management zowel oorzaken achteraf wil begrijpen als eerder wil weten waar behoud in de actieve populatie begint te schuiven."
+      highlightItems={['Portfolio-aanpak', 'Twee producten', 'Secundaire route']}
+      contextTitle="De combinatie is geen verplichte instap, maar een route voor organisaties met twee echte managementvragen."
+      contextBody="Deze pagina moet duidelijk maken dat het portfolio pas sterker wordt zodra beide vragen bestaan en de eerste route al scherp staat."
+      heroNote="Combinatie betekent niet 'meer features'. Het betekent twee gerichte routes in een gedeelde managementtaal."
     >
       <div className="marketing-panel-soft p-8">
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-700">Wanneer kies je de combinatie?</p>
-        <h2 className="mt-4 text-3xl font-semibold text-slate-950">Niet als derde losse scan, maar als route tussen twee gerichte producten.</h2>
+        <h2 className="mt-4 text-3xl font-semibold text-slate-950">
+          Niet als derde losse scan, maar als route tussen twee gerichte producten.
+        </h2>
         <p className="mt-4 text-sm leading-7 text-slate-600">
-          Voor organisaties die niet alleen willen begrijpen waarom mensen zijn gegaan, maar ook eerder willen weten waar behoud in de actieve populatie aandacht vraagt. De combinatie is vooral sterk wanneer beide managementvragen tegelijk bestaan.
+          Voor organisaties die niet alleen willen begrijpen waarom mensen zijn gegaan, maar ook eerder willen weten
+          waar behoud in de actieve populatie aandacht vraagt. De combinatie is vooral sterk wanneer beide
+          managementvragen tegelijk bestaan.
         </p>
       </div>
 
@@ -443,10 +491,10 @@ function CombinatiePage() {
           },
           {
             title: 'Stap 2: signaleer behoud',
-            body: 'Gebruik RetentieScan om eerder zichtbaar te maken waar dezelfde thema’s nu nog doorwerken in actieve teams.',
+            body: 'Gebruik RetentieScan om eerder zichtbaar te maken waar dezelfde thema\'s nu nog doorwerken in actieve teams.',
           },
           {
-            title: 'Stap 3: stuur in één lijn',
+            title: 'Stap 3: stuur in een lijn',
             body: 'Gebruik een gedeelde managementtaal voor prioritering, opvolging en herhaalmeting.',
           },
         ]}
@@ -465,9 +513,10 @@ function CombinatiePage() {
 
         <div className="marketing-panel-dark p-8">
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300">Hoe je het verkoopt</p>
-          <h2 className="font-display mt-4 text-4xl text-white">Start vaak met één product, maar houd de tweede route bewust klaar.</h2>
+          <h2 className="font-display mt-4 text-4xl text-white">Start vaak met een product, maar houd de tweede route bewust klaar.</h2>
           <p className="mt-5 text-base leading-8 text-slate-300">
-            De combinatie is geen verplichte instap. Het is een koopreden voor organisaties die beide vragen tegelijk serieus willen adresseren in dezelfde managementtaal.
+            De combinatie is geen verplichte instap. Het is een koopreden voor organisaties die beide vragen tegelijk
+            serieus willen adresseren in dezelfde managementtaal.
           </p>
         </div>
       </div>
@@ -476,11 +525,11 @@ function CombinatiePage() {
         className="mt-16"
         eyebrow="Volgende stap"
         title="Wil je bepalen of de combinatie logisch is?"
-        body="In een kort gesprek kijken we of jullie vooral met één product moeten starten of direct baat hebben bij een portfolio-aanpak met beide scans."
+        body="In een kort gesprek kijken we of jullie vooral met een product moeten starten of direct baat hebben bij een portfolio-aanpak met beide scans."
         primaryHref="/#kennismaking"
-        primaryLabel="Plan mijn gesprek"
+        primaryLabel="Plan kennismaking"
         secondaryHref="/producten"
-        secondaryLabel="Bekijk alle producten"
+        secondaryLabel="Bekijk producten"
       />
     </MarketingPageShell>
   )
@@ -496,9 +545,10 @@ function UpcomingProductPage({ slug }: { slug: string }) {
       title={product.label}
       description={product.description}
       theme="coming-soon"
-      highlightItems={['Productroute gereserveerd', 'Nog niet live', 'Portfolio-proof']}
-      contextTitle="Deze productroute staat klaar binnen dezelfde productstructuur."
-      contextBody="Zo groeit het portfolio straks door zonder dat live producten onduidelijk worden of de navigatie opnieuw moet worden uitgevonden."
+      highlightItems={['Productroute gereserveerd', 'Nog niet live', 'Buiten primaire salesflow']}
+      contextTitle="Deze productroute blijft bewust ondersteunend zolang ExitScan en RetentieScan de live propositie dragen."
+      contextBody="Zo kan het portfolio later groeien zonder dat de huidige publieke navigatie of verkoopflow productverwarring krijgt."
+      heroNote="Deze route is nog geen onderdeel van de primaire publieke verkoopflow."
     >
       <div className="marketing-panel p-8 text-center md:p-12">
         <span className="inline-flex items-center rounded-full bg-slate-100 px-4 py-1.5 text-sm font-semibold text-slate-600">
@@ -506,7 +556,8 @@ function UpcomingProductPage({ slug }: { slug: string }) {
         </span>
         <h2 className="mt-6 text-3xl font-semibold text-slate-950">{product.tagline}</h2>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600">
-          Deze productpagina is alvast gereserveerd binnen de nieuwe productstructuur. Daardoor kan Verisight nieuwe producten live zetten zonder dat de huidige portfolio-ervaring opnieuw op de schop hoeft.
+          Deze productpagina is alvast gereserveerd binnen de bredere productstructuur. Daardoor kan Verisight later
+          groeien zonder dat de huidige live propositie opnieuw op de schop hoeft.
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link

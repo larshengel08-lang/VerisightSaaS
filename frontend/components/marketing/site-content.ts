@@ -1,34 +1,34 @@
 export const marketingNavLinks = [
   { href: '/', label: 'Home' },
   { href: '/producten', label: 'Producten' },
-  { href: '/vertrouwen', label: 'Vertrouwen' },
   { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
+  { href: '/vertrouwen', label: 'Vertrouwen' },
 ] as const
 
 export const marketingPrimaryCta = {
   href: '/#kennismaking',
-  label: 'Plan mijn gesprek',
+  label: 'Plan kennismaking',
 } as const
 
 export const marketingSecondaryCta = {
   href: '/producten',
-  label: 'Bekijk producten',
+  label: 'Bekijk de routes',
 } as const
 
 export const marketingFooterLinks = [
   { href: '/', label: 'Home' },
-  { href: '/producten', label: 'Alle producten' },
+  { href: '/producten', label: 'Producten' },
   { href: '/producten/exitscan', label: 'ExitScan' },
   { href: '/producten/retentiescan', label: 'RetentieScan' },
   { href: '/producten/combinatie', label: 'Combinatie' },
-  { href: '/vertrouwen', label: 'Vertrouwen' },
   { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
+  { href: '/vertrouwen', label: 'Vertrouwen' },
 ] as const
 
 export const marketingLegalLinks = [
-  { href: '/vertrouwen', label: 'Trust & privacy' },
+  { href: '/vertrouwen', label: 'Trust en privacy' },
   { href: '/privacy', label: 'Privacybeleid' },
   { href: '/voorwaarden', label: 'Algemene voorwaarden' },
   { href: '/dpa', label: 'Verwerkersovereenkomst' },
@@ -39,23 +39,23 @@ export const homepageProductRoutes = [
   {
     name: 'ExitScan',
     title: 'Maak vertrek bestuurlijk leesbaar',
-    body: 'Voor organisaties die exitgesprekken of losse signalen hebben, maar nog geen vergelijkbaar managementbeeld van terugkerende uitstroompatronen.',
+    body: 'Voor organisaties die wel exitinput hebben, maar nog geen vergelijkbaar managementbeeld van terugkerende uitstroompatronen.',
     href: '/producten/exitscan',
     accent: 'border-blue-200 bg-blue-50',
-    chip: 'Terugkijkend',
+    chip: 'Primaire route',
   },
   {
     name: 'RetentieScan',
     title: 'Zie eerder waar behoud schuift',
-    body: 'Voor organisaties die niet willen wachten tot behoud pas zichtbaar wordt in vacatures, uitval of exitgesprekken, zonder er een brede MTO of individuele voorspeller van te maken.',
+    body: 'Voor organisaties die eerder willen zien waar behoud onder druk staat, zonder van de scan een brede MTO of individuele voorspeller te maken.',
     href: '/producten/retentiescan',
     accent: 'border-emerald-200 bg-emerald-50',
-    chip: 'Vroegsignalering',
+    chip: 'Complementair',
   },
   {
     name: 'Combinatie',
-    title: 'Kijk terug en vooruit in een lijn',
-    body: 'Voor organisaties die eerst een duidelijke route willen kiezen, maar beide managementvragen uiteindelijk bewust naast elkaar willen organiseren.',
+    title: 'Verbind terugkijken en vooruitkijken',
+    body: 'Voor organisaties die beide managementvragen echt hebben en de tweede route pas toevoegen nadat de eerste helder staat.',
     href: '/producten/combinatie',
     accent: 'border-sky-200 bg-sky-50',
     chip: 'Portfolio',
@@ -64,49 +64,48 @@ export const homepageProductRoutes = [
 
 export const homepageComparisonRows = [
   [
-    'Je kijkt terug op uitstroom',
+    'Je wilt begrijpen waarom mensen zijn gegaan',
     'ExitScan',
-    'Vertrekduiding, werkfactoren en managementrapport',
+    'Vertrekduiding, werkfactoren en bestuurlijke handoff in een eerste managementrapport',
   ],
   [
-    'Je wilt eerder signaleren in actieve teams',
+    'Je wilt eerder zien waar behoud onder druk staat',
     'RetentieScan',
-    'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie',
+    'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie op groepsniveau',
   ],
   [
-    'Je wilt beide sporen naast elkaar gebruiken',
+    'Je wilt beide vragen bewust naast elkaar organiseren',
     'Combinatie',
-    'Een portfolio-aanpak met twee gerichte producten',
+    'Twee gerichte producten in een gedeelde managementlijn',
   ],
 ] as const
 
 export const homepageProofSignals = [
-  'Methodische productkeuze: vertrekduiding of vroegsignalering',
-  'Publieke trust-, privacy- en DPA-laag voor kopers',
-  'Dashboard, rapport en preview in dezelfde bestuurlijke leeslijn',
-  'Groepsinzichten met minimale n-grenzen en productspecifieke leeswijzers',
+  'ExitScan eerst, RetentieScan gericht aanvullend',
+  'Dashboard, rapport en bestuurlijke handoff in dezelfde leeslijn',
+  'Groepsinzichten met expliciete claims- en privacygrenzen',
 ] as const
 
 export const homepageUtilityLinks = [
   {
     href: '/producten',
-    title: 'Alle producten',
-    body: 'Bekijk ExitScan, RetentieScan en de combinatie in een heldere productstructuur.',
+    title: 'Bekijk de productroutes',
+    body: 'Zie snel wanneer ExitScan, RetentieScan of de combinatie logisch wordt.',
   },
   {
     href: '/aanpak',
-    title: 'Aanpak',
-    body: 'Zie hoe baseline, uitvoering en opvolging logisch op elkaar aansluiten.',
-  },
-  {
-    href: '/vertrouwen',
-    title: 'Vertrouwen',
-    body: 'Zie publiek hoe methodiek, privacy, rapportlezing en DPA zijn ingericht.',
+    title: 'Bekijk de aanpak',
+    body: 'Lees hoe intake, uitvoering, rapportage en opvolging in een begeleide productvorm samenkomen.',
   },
   {
     href: '/tarieven',
-    title: 'Tarieven',
-    body: 'Bekijk eerste trajecten, vervolgvormen, add-ons en wanneer een combinatie commercieel logisch wordt.',
+    title: 'Bekijk de prijsankers',
+    body: 'Zie hoe eerste trajecten, vervolgvormen en combinatie commercieel zijn opgebouwd.',
+  },
+  {
+    href: '/vertrouwen',
+    title: 'Bekijk trust en privacy',
+    body: 'Controleer publiek hoe methodiek, privacy, rapportlezing en DPA zijn ingericht.',
   },
 ] as const
 
@@ -133,22 +132,25 @@ export const productOverviewComparisonRows = [
 
 export const comparisonCards = [
   {
-    title: 'ExitScan',
+    title: 'Geen generieke survey',
     description:
-      'Voor organisaties waar uitstroom wel besproken wordt, maar management nog geen vergelijkbaar beeld heeft van wat structureel terugkeert.',
-    outcome: 'Sterk wanneer de eerste commerciële vraag is: hoe maken we losse exitinput bestuurlijk leesbaar en bruikbaar voor een eerste besluit?',
+      'Verisight verkoopt geen brede vragenlijst die later nog betekenis moet krijgen, maar een gerichte route voor een concrete managementvraag.',
+    outcome:
+      'De site moet daarom routekeuze en besluitrelevantie sneller duidelijk maken dan een klassieke SaaS-landing of onderzoeksbureau-pagina.',
   },
   {
-    title: 'RetentieScan',
+    title: 'Output die intern doorverteld kan worden',
     description:
-      'Voor organisaties die al scherper willen zien waar behoud op groeps- en segmentniveau onder druk staat, voordat dat pas zichtbaar wordt in vacatures, uitval of exitgesprekken.',
-    outcome: 'Sterk wanneer de vraag vooruitkijkend is: waar vraagt behoud nu als eerste verificatie en opvolging, zonder van de scan een brede MTO of individuele predictor te maken?',
+      'De waarde zit in wat HR, MT en directie straks echt lezen: managementsamenvatting, bestuurlijke handoff, topfactoren en vervolgvraag.',
+    outcome:
+      'Preview en voorbeeldrapporten moeten voelen als echte deliverable-proof, niet als losse demo-UI of feature-illustratie.',
   },
   {
-    title: 'Combinatie',
+    title: 'Trust als reassurance',
     description:
-      'Voor organisaties die zowel vertrekduiding als behoudsignalering willen opbouwen binnen eenzelfde managementtaal, maar niet als eerste alles tegelijk willen kopen.',
-    outcome: 'Sterk wanneer beide managementvragen echt bestaan en je de tweede route pas toevoegt nadat de eerste helder staat.',
+      'Methodiek, privacy en claimsgrenzen zijn belangrijk, maar horen de eerste pitch niet te verdringen.',
+    outcome:
+      'Trust moet compact meebewegen in de flow en pas verdiepen wanneer een buyer wil controleren of doorvragen.',
   },
 ] as const
 
@@ -163,48 +165,48 @@ export const trustItems = [
 export const trustQuickLinks = [
   {
     href: '/vertrouwen',
-    label: 'Trust & privacy',
-    body: 'Zie publiek hoe Verisight methodiek, privacy, rapportlezing en legitimiteit inricht.',
+    label: 'Trust en privacy',
+    body: 'Bekijk publiek hoe Verisight methodiek, rapportlezing en privacy inricht.',
   },
   {
     href: '/privacy',
     label: 'Privacybeleid',
-    body: 'Lees hoe data, subverwerkers, cookies en bewaartermijnen zijn ingericht.',
+    body: 'Lees hoe data, subverwerkers, bewaartermijnen en rechten onder de AVG zijn geregeld.',
   },
   {
     href: '/dpa',
     label: 'Verwerkersovereenkomst',
-    body: 'Bekijk het standaardtemplate voor klantorganisaties en due-diligence-vragen.',
+    body: 'Bekijk het standaardtemplate voor due diligence en formele afstemming met klantorganisaties.',
   },
 ] as const
 
 export const trustSignalHighlights = [
   {
-    title: 'Methodische trust',
-    body: 'ExitScan en RetentieScan worden publiek uitgelegd als managementinstrumenten met duidelijke claimsgrenzen, geen diagnose of black-box voorspeller.',
+    title: 'Methodische duidelijkheid',
+    body: 'ExitScan en RetentieScan worden buyer-facing uitgelegd als managementinstrumenten met heldere claimsgrenzen, niet als diagnose of black-box voorspeller.',
   },
   {
-    title: 'Privacy trust',
-    body: 'De buyer-facing laag maakt groepsniveau, minimale n-grenzen, geanonimiseerde open tekst en EU-primary dataopslag expliciet zichtbaar.',
+    title: 'Privacy op groepsniveau',
+    body: 'De publieke trustlaag benoemt minimale n-grenzen, segmentonderdrukking en geanonimiseerde open tekst in gewone taal.',
   },
   {
-    title: 'Output trust',
-    body: 'Dashboard, rapport en preview volgen dezelfde bestuurlijke leeslijn met compacte handoff, bewijsstatus en productspecifieke interpretatiegrenzen.',
+    title: 'Output die klopt met de propositie',
+    body: 'Dashboard, rapport en preview volgen dezelfde bestuurlijke leeslijn, zodat de site niet rijker verkoopt dan het product werkelijk levert.',
   },
   {
-    title: 'Procestrust',
-    body: 'Verisight verkoopt een begeleide productvorm met intake, uitvoering, rapportage en opvolging in plaats van losse surveysoftware.',
+    title: 'Begeleide productvorm',
+    body: 'Verisight verkoopt een strakke productvorm met intake, uitvoering, rapportage en opvolging in plaats van losse surveysoftware of open consultancy.',
   },
   {
-    title: 'Legitimiteit',
-    body: 'Publieke contactroutes, privacypagina, DPA, voorwaarden en een Nederlandse buyer-facing trustlaag verlagen first-time buyer twijfel.',
+    title: 'Publiek verifieerbare basis',
+    body: 'Trusthub, privacybeleid, DPA, voorwaarden en publieke contactroutes verlagen first-time buyer twijfel zonder badges of theater.',
   },
 ] as const
 
 export const trustVerificationCards = [
   {
     title: 'Wat je nu publiek kunt verifieren',
-    body: 'Verisight toont publiek hoe productkeuze, privacy, rapportlezing en begeleide delivery zijn ingericht voordat je een demo of gesprek inplant.',
+    body: 'Verisight laat publiek zien hoe productkeuze, privacy, rapportlezing en begeleide delivery zijn ingericht voordat je een demo of gesprek plant.',
   },
   {
     title: 'Wat management wel ziet',
@@ -212,7 +214,7 @@ export const trustVerificationCards = [
   },
   {
     title: 'Wat we bewust niet claimen',
-    body: 'Geen individuele voorspelling, geen persoonsgerichte beoordeling, geen brede people-suite en geen wetenschappelijke validatie die niet door de repo-basis wordt gedragen.',
+    body: 'Geen individuele voorspelling, geen persoonsgerichte beoordeling, geen brede people-suite en geen bewijsclaims die niet door de repo-basis worden gedragen.',
   },
 ] as const
 
@@ -235,7 +237,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Welke juridische basis is publiek beschikbaar?',
-    body: 'Er zijn publieke pagina\'s voor trust & privacy, privacybeleid, algemene voorwaarden en een standaard DPA-template voor klantorganisaties.',
+    body: 'Er zijn publieke pagina\'s voor trust en privacy, privacybeleid, algemene voorwaarden en een standaard DPA-template voor klantorganisaties.',
   },
   {
     title: 'Wat voor productvorm koop je?',
@@ -268,7 +270,7 @@ export const trustReadingRows = [
 
 export const trustSupportCards = [
   {
-    title: 'Trust & privacy',
+    title: 'Trust en privacy',
     href: '/vertrouwen',
     body: 'Publieke due-diligence laag over methodiek, privacy, rapportlezing en buyer reassurance.',
   },
@@ -297,46 +299,46 @@ export const contactTrustSignals = [
 
 export const statCards = [
   {
-    value: '2 producten',
-    label: 'een logisch portfolio',
-    detail: 'ExitScan voor vertrekduiding, RetentieScan voor vroegsignalering op behoud.',
+    value: '2 live routes',
+    label: 'heldere productkeuze',
+    detail: 'ExitScan als primaire wedge en RetentieScan als gerichte vroegsignaleringsroute.',
   },
   {
-    value: 'Dashboard + rapport',
-    label: 'vaste output',
-    detail: 'Voor HR, MT en directie in dezelfde professionele Verisight-structuur.',
+    value: '1 leeslijn',
+    label: 'van demo tot rapport',
+    detail: 'Preview, dashboard, managementrapport en bestuurlijke handoff vertellen hetzelfde verhaal.',
   },
   {
-    value: 'Baseline of ritme',
-    label: 'heldere productvorm',
-    detail: 'Eenmalig starten of periodiek herhalen, afhankelijk van je vraag en volwassenheid.',
+    value: '0 template-theater',
+    label: 'alleen relevante proof',
+    detail: 'Trust, pricing en sample-output ondersteunen de route zonder generieke SaaS-opmaak of holle badges.',
   },
 ] as const
 
 export const outcomeCards = [
   [
-    'Begin met de juiste eerste managementvraag',
+    'Sneller kiezen welke vraag eerst telt',
     'Je voorkomt dat ExitScan en RetentieScan door elkaar gaan lopen: meestal start je met vertrekduiding en voeg je behoudsignalering pas toe wanneer die vraag echt op tafel ligt.',
   ],
   [
-    'Werk met een gedeelde taal voor HR, MT en directie',
-    'Dashboard en rapportage helpen om sneller op een lijn te komen over waar verdieping, prioriteit of eerste actie het meeste oplevert, inclusief compacte bestuurlijke handoff en vaste leeswijzers over claims, privacy en interpretatie.',
+    'Beter intern doorvertellen',
+    'De output helpt HR, sponsor, MT en directie sneller op een lijn komen over waar prioriteit, verdieping of eerste actie het meeste oplevert.',
   ],
   [
-    'Ga van losse signalen naar bestuurbare prioriteiten',
-    'Verisight vertaalt losse exitdata of losse signalen rond behoud naar een eerste managementvraag, een eerste eigenaar en een logische vervolgstap.',
+    'Proof die kooprust geeft',
+    'Voorbeeldrapporten, pricing en trust werken samen als bewijs van de productvorm in plaats van als losse supportblokken.',
   ],
   [
-    'Geen extra toolbeheer voor HR',
-    'Verisight begeleidt de uitvoering, zodat jouw team niet ook nog een nieuwe surveytool hoeft te implementeren.',
+    'Geen extra toolbeheer',
+    'Verisight begeleidt de uitvoering, zodat jouw team niet ook nog een nieuwe surveytool hoeft in te richten of te beheren.',
   ],
   [
-    'Privacy by design in beide producten',
+    'Privacy by design',
     'Output blijft bedoeld voor groepsinzichten en managementduiding, met extra terughoudendheid bij actieve medewerkers en zonder individuele managementoutput in RetentieScan.',
   ],
   [
     'Herhaalbaar zonder productverwarring',
-    'Je kunt starten met een eerste baseline en daarna bewust kiezen welke scan wanneer logisch is om te herhalen.',
+    'Je kunt starten met een eerste baseline en daarna bewust kiezen welke scan, verdiepend spoor of vervolgritme het meest logisch is.',
   ],
 ] as const
 
@@ -351,7 +353,7 @@ export const processHighlights = [
   },
   {
     title: 'Voor directie',
-    text: 'Compacte besluitinformatie die laat zien waar terugkerende vertrekpatronen of vroege signalen dat behoud onder druk staat bestuurlijke aandacht, eigenaarschap en vervolgrichting verdienen.',
+    text: 'Compacte besluitinformatie die laat zien waar terugkerende vertrekpatronen of vroege signalen van behoudsdruk bestuurlijke aandacht en eigenaarschap verdienen.',
   },
 ] as const
 
@@ -360,28 +362,28 @@ export const included = [
   'Uitnodigingen en herinneringen voor respondenten',
   'Dashboard met prioriteiten en managementduiding',
   'Zelfstandig leesbaar rapport voor HR, MT en directie',
+  'Bestuurlijke handoff voor sponsor, directie of MT',
   'Privacy-, claims- en interpretatiekaders in gewone taal',
   'Begeleide productvorm in plaats van losse surveysoftware',
-  'Binnen enkele weken eerste inzichten zonder implementatietraject',
-  'Methodische basis vanuit arbeids- en organisatiepsychologie',
+  'Binnen enkele weken eerste inzichten zonder zwaar implementatietraject',
 ] as const
 
 export const approachSteps = [
   {
-    title: '1. Intake en scan-keuze',
-    body: 'We bepalen samen welke managementvraag eerst telt: vertrek achteraf duiden, behoud eerder signaleren of later bewust combineren, en welke respondentdata daarvoor nodig is.',
+    title: '1. Route kiezen',
+    body: 'We bepalen samen welke managementvraag eerst telt: vertrek achteraf duiden, behoud eerder signaleren of later bewust combineren.',
   },
   {
-    title: '2. Datavoorbereiding',
-    body: 'We spreken af welke respondentdata, segmentinformatie en timing nodig zijn om dashboard en rapport straks goed leesbaar te maken, inclusief minimale n-grenzen en privacygrenzen voor segmenten.',
+    title: '2. Voorbereiden',
+    body: 'We spreken af welke respondentdata, segmentinformatie en timing nodig zijn om dashboard en rapport leesbaar en privacyveilig te maken.',
   },
   {
-    title: '3. Uitnodigen en uitvoeren',
+    title: '3. Uitvoeren',
     body: 'Verisight richt de flow in, verstuurt uitnodigingen en bewaakt de dataverzameling zonder extra toolbeheer voor HR.',
   },
   {
-    title: '4. Rapport en opvolging',
-    body: 'Je krijgt een dashboard en rapport waarmee HR, sponsor, MT en directie sneller zien wat nu het eerste managementspoor is, welke validatie logisch is en welke vervolgactie eerst moet worden belegd, inclusief compacte bestuurlijke handoff en leeswijzers over methodiek, claimsgrenzen en privacy.',
+    title: '4. Lezen en opvolgen',
+    body: 'Je krijgt dashboard, rapport en bestuurlijke handoff waarmee HR, sponsor, MT en directie sneller zien welke vervolgvraag, validatie of actie eerst telt.',
   },
 ] as const
 
@@ -389,7 +391,7 @@ export const approachRoutes = [
   {
     eyebrow: 'ExitScan Baseline',
     title: 'De standaard eerste instap voor vertrekduiding',
-    body: 'Retrospectief traject op ex-medewerkers van bijvoorbeeld de afgelopen 12 maanden. Dit is meestal de logischste eerste commerciële instap wanneer organisaties wel exitinput hebben, maar nog geen bestuurbaar patroonbeeld.',
+    body: 'Retrospectief traject op ex-medewerkers van bijvoorbeeld de afgelopen 12 maanden. Dit is meestal de logische eerste commerciële instap wanneer organisaties wel exitinput hebben, maar nog geen bestuurbaar patroonbeeld.',
     bullets: [
       'Eenmalige aanlevering van respondentbestand',
       'Bij voorkeur inclusief afdeling, functieniveau en exitmaand',
@@ -415,7 +417,7 @@ export const approachRoutes = [
   {
     eyebrow: 'RetentieScan Baseline',
     title: 'De eerste meetvorm voor actieve medewerkers',
-    body: 'Een eenmalige RetentieScan om te zien waar behoud op groepsniveau onder druk staat, welke werkfactoren prioriteit vragen en hoe bevlogenheid, stay-intent en vertrekintentie zich verhouden. Logisch wanneer de buyer-vraag expliciet over actieve medewerkers en vroegsignalering gaat.',
+    body: 'Een eenmalige RetentieScan om te zien waar behoud op groepsniveau onder druk staat, welke werkfactoren prioriteit vragen en hoe bevlogenheid, stay-intent en vertrekintentie zich verhouden.',
     bullets: [
       'Actieve medewerkers in plaats van ex-medewerkers',
       'Groepsinzichten, geen brede MTO en geen individuele signalen naar management',
@@ -447,8 +449,8 @@ export const pricingCards = [
     description:
       'De standaard eerste instap voor organisaties die snel een betrouwbaar organisatiebeeld, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen dat ook in sponsor-, prioriteits- en budgetgesprekken overeind blijft.',
     bullets: [
-      'Inrichting van de exit-campaign en respondentflow',
-      'Dashboard en rapport voor vertrekduiding',
+      'Inrichting van de exit-campagne en respondentflow',
+      'Dashboard, managementrapport en bestuurlijke handoff',
       'Geschikt als eerste nulmeting of start van structurele opvolging',
     ],
   },
@@ -456,14 +458,14 @@ export const pricingCards = [
     eyebrow: 'RetentieScan Baseline',
     price: 'EUR 3.450',
     description:
-      'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding, compacte bestuurlijke handoff en een gerichte managementscan in plaats van een brede MTO.',
+      'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.',
     bullets: [
       'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in een managementrapport',
       'Geen individuele signalen naar management',
       'Geschikt als basis voor vervolgmeting of gerichte opvolging',
     ],
   },
- ] as const
+] as const
 
 export const pricingFollowOnRoutes = [
   {
@@ -481,7 +483,7 @@ export const pricingFollowOnRoutes = [
   {
     title: 'RetentieScan ritme',
     price: 'vanaf EUR 4.950',
-    fit: 'Publieke vervolgvorm na baseline',
+    fit: 'Vaste vervolgvorm na baseline',
     description:
       'Voor organisaties die van een eerste RetentieScan willen doorgroeien naar een ritme met herhaalmeting, trendduiding en beter onderbouwde opvolging op behoud.',
     bullets: [
@@ -514,9 +516,18 @@ export const retentionPackages = [
 ] as const
 
 export const pricingChoiceGuide = [
-  ['ExitScan Baseline', 'Je wilt vertrek achteraf duiden en zoekt meestal het eerste betaalde traject dat losse exitinput bestuurlijk leesbaar maakt.'],
-  ['RetentieScan Baseline', 'Je wilt eerder zien waar behoud in de actieve populatie onder druk staat en zoekt daarvoor een gerichte eerste baseline.'],
-  ['Combinatie op aanvraag', 'Je wilt zowel leren van vertrek als eerder kunnen bijsturen op behoud, maar pas nadat de eerste route helder staat.'],
+  [
+    'ExitScan Baseline',
+    'Je wilt vertrek achteraf duiden en zoekt meestal het eerste betaalde traject dat losse exitinput bestuurlijk leesbaar maakt.',
+  ],
+  [
+    'RetentieScan Baseline',
+    'Je wilt eerder zien waar behoud in de actieve populatie onder druk staat en zoekt daarvoor een gerichte eerste baseline.',
+  ],
+  [
+    'Combinatie op aanvraag',
+    'Je wilt zowel leren van vertrek als eerder kunnen bijsturen op behoud, maar pas nadat de eerste route helder staat.',
+  ],
 ] as const
 
 export const pricingAddOns = [
@@ -608,8 +619,8 @@ export const faqs = [
 ] as const
 
 export const marketingPagePurposes = {
-  home: 'Product choice + trust + conversion',
-  producten: 'Buyer-oriented overview of the two live products and combination route',
+  home: 'Product choice + premium proof + conversion',
+  producten: 'Buyer-oriented overview of the two live routes and the combination path',
   aanpak: 'Process clarity and buying confidence',
   tarieven: 'Commercial packaging and price framing',
 } as const

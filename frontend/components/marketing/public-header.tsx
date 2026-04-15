@@ -28,7 +28,12 @@ export function PublicHeader({
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
       <div className="mx-auto max-w-6xl px-6 py-4">
         <div className="flex items-center justify-between gap-4">
-          <Wordmark size="md" />
+          <div className="flex items-center gap-4">
+            <Wordmark size="md" />
+            <span className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 xl:inline-flex">
+              Vanaf circa 200 medewerkers
+            </span>
+          </div>
 
           <nav className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50/80 p-1 lg:flex">
             <div className="px-2">
@@ -97,6 +102,9 @@ export function PublicHeader({
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <SolutionsDropdown />
               </div>
+              <p className="px-4 pt-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                Vanaf circa 200 medewerkers
+              </p>
               <Link
                 href="/producten"
                 onClick={closeMenu}
