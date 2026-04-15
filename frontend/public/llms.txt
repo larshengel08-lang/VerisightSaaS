@@ -1,16 +1,32 @@
 # Verisight
 
-> Verisight helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om
-> terugkerende vertrekpatronen zichtbaar te maken via een begeleide ExitScan.
+> Verisight helpt HR-teams bij organisaties vanaf circa 200 medewerkers om
+> eerst de juiste managementroute te kiezen: ExitScan voor vertrekduiding en
+> verloopanalyse, RetentieScan voor vroegsignalering op behoud, of een bewuste
+> combinatie van beide.
 
-## Product
+## Publieke routes
 
-- [Homepage](https://www.verisight.nl): begeleide ExitScan met dashboard en rapport
-- [Tarieven](https://www.verisight.nl/#tarieven): EUR 2.925 early adopter, EUR 6.499 standaard
-- [Segment deep dive](https://www.verisight.nl/#tarieven): optionele add-on voor extra segmentanalyse
+- [Homepage](https://www.verisight.nl): routekeuze, proof en kennismaking
+- [Producten](https://www.verisight.nl/producten): overzicht van ExitScan, RetentieScan en Combinatie
+- [ExitScan](https://www.verisight.nl/producten/exitscan): primaire route voor vertrekduiding en verloopanalyse
+- [RetentieScan](https://www.verisight.nl/producten/retentiescan): gerichte route voor medewerkersbehoud en vroegsignalering
+- [Tarieven](https://www.verisight.nl/tarieven): eerste trajecten, vervolgvormen en add-ons
+- [Aanpak](https://www.verisight.nl/aanpak): intake, setup, livegang en eerste managementwaarde
+- [Vertrouwen](https://www.verisight.nl/vertrouwen): methodiek, privacy, rapportlezing en DPA
 
-## Publieke informatie
+## Pricing
 
+- ExitScan Baseline: EUR 2.950
+- RetentieScan Baseline: EUR 3.450
+- ExitScan Live: op aanvraag
+- RetentieScan ritme: vanaf EUR 4.950
+- Segment deep dive: EUR 950
+
+## Proof en documenten
+
+- [ExitScan voorbeeldrapport](https://www.verisight.nl/examples/voorbeeldrapport_verisight.pdf)
+- [RetentieScan voorbeeldrapport](https://www.verisight.nl/examples/voorbeeldrapport_retentiescan.pdf)
 - [Privacybeleid](https://www.verisight.nl/privacy)
 - [Algemene voorwaarden](https://www.verisight.nl/voorwaarden)
 - [Verwerkersovereenkomst](https://www.verisight.nl/dpa)

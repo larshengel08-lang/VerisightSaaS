@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
+import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { SampleShowcaseCard } from '@/components/marketing/sample-showcase-card'
 import { SectionHeading } from '@/components/marketing/section-heading'
@@ -13,7 +14,6 @@ import {
   trustItems,
 } from '@/components/marketing/site-content'
 import { TrustStrip } from '@/components/marketing/trust-strip'
-import { buildContactHref } from '@/lib/contact-funnel'
 import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
 
 const exitSampleAsset = getPrimarySampleShowcaseAsset('exit')
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     url: 'https://www.verisight.nl/tarieven',
     images: [
       {
-        url: '/og-image.png',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
         alt: 'Verisight tarieven voor ExitScan en RetentieScan',
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     title: 'Tarieven | Verisight',
     description:
       'Bekijk de prijsankers voor eerste trajecten, vervolgvormen, add-ons en de combinatieroute van Verisight.',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
 }
 
@@ -78,7 +78,7 @@ export default function TarievenPage() {
         description="Verisight verkoopt duidelijke productvormen met dashboard, rapportage, bestuurlijke handoff en begeleiding. Geen licentieconstructie met losse modules, geen planmatrix en geen open eind aan consultancy-uren."
         contextTitle="Gebruik pricing om kooprust te geven, niet om het gesprek ingewikkelder te maken."
         contextBody="De prijslaag moet eerst laten zien wat het eerste traject is, daarna welke vervolgvormen logisch worden en pas daarna welke verdieping eventueel meerwaarde heeft."
-        ctaHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'pricing_hero' })}
+        ctaHref="#kennismaking"
       >
         <div className="grid items-start gap-6 xl:grid-cols-2">
           {pricingCards.map((card) => (
@@ -254,12 +254,22 @@ export default function TarievenPage() {
           </div>
         </div>
 
+        <div className="mt-16">
+          <MarketingInlineContactPanel
+            eyebrow="Kennismaking"
+            title="Plan een gesprek over pricing en productfit"
+            body="Beschrijf kort welke route nu het meest logisch lijkt. Dan toetsen we of jullie beter starten met ExitScan Baseline, RetentieScan Baseline of een gerichte vervolgvorm, en welke timing daarbij past."
+            defaultRouteInterest="exitscan"
+            defaultCtaSource="pricing_form"
+          />
+        </div>
+
         <MarketingCalloutBand
           className="mt-16"
           eyebrow="Volgende stap"
           title="Wil je bepalen welk prijsanker nu past?"
           body="In een kort gesprek kijken we wat nu jullie eerste route is, wanneer een vervolgvorm logisch wordt en of segment deep dive of een combinatieroute echt meerwaarde heeft."
-          primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'pricing_callout' })}
+          primaryHref="#kennismaking"
           primaryLabel="Plan kennismaking"
           secondaryHref="/aanpak"
           secondaryLabel="Bekijk aanpak"

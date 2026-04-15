@@ -31,9 +31,9 @@ const exitSampleAsset = getPrimarySampleShowcaseAsset('exit')
 const retentionSampleAsset = getPrimarySampleShowcaseAsset('retention')
 
 export const metadata: Metadata = {
-  title: 'Verisight',
+  title: 'ExitScan en RetentieScan voor HR-teams',
   description:
-    'Kies eerst de juiste route: ExitScan voor vertrekduiding, RetentieScan voor vroegsignalering op behoud, of een bewuste combinatie van beide.',
+    'Kies eerst de juiste route voor HR-teams: ExitScan voor vertrekduiding en verloopanalyse, RetentieScan voor vroegsignalering op behoud, of een bewuste combinatie van beide.',
   alternates: {
     canonical: '/',
   },
@@ -94,10 +94,10 @@ export default function LandingPage() {
         <MarketingSection
           tone="plain"
           className="overflow-hidden border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,#dbeafe_0%,transparent_22%),radial-gradient(circle_at_bottom_right,#dcfce7_0%,transparent_24%),linear-gradient(180deg,#f9fbff_0%,#eef5ff_38%,#ffffff_100%)]"
-          containerClassName="grid gap-12 lg:grid-cols-[0.82fr_1.18fr] lg:items-start"
+          containerClassName="marketing-hero-grid"
         >
-          <div className="max-w-2xl">
-            <div className="inline-flex flex-wrap items-center gap-3 rounded-full border border-white/70 bg-white/85 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+          <div className="marketing-hero-column">
+            <div className="flex max-w-full flex-wrap items-center gap-2 rounded-[1.5rem] border border-white/70 bg-white/85 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.06)] sm:w-fit">
               <span className="text-blue-600">Verisight voor HR-teams</span>
               <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:inline-block" />
               <span>ExitScan eerst</span>
@@ -105,16 +105,16 @@ export default function LandingPage() {
               <span>RetentieScan gericht aanvullend</span>
             </div>
 
-            <h1 className="font-display mt-6 text-balance text-[3.45rem] leading-[0.92] text-slate-950 md:text-[5.7rem]">
+            <h1 className="marketing-hero-title font-display mt-6 max-w-[10.8ch] text-[clamp(3rem,8.5vw,6rem)] leading-[0.9] text-slate-950">
               Eerst de juiste managementroute. Daarna pas de analyse.
             </h1>
-            <p className="mt-6 max-w-xl text-[1.05rem] leading-8 text-slate-600">
+            <p className="marketing-hero-copy mt-6 text-[1.02rem] leading-8 text-slate-600 md:text-[1.05rem]">
               Verisight helpt HR sneller kiezen tussen vertrekduiding en vroegsignalering op behoud. Je krijgt
               geen losse survey-output, maar een eerste traject met dashboard, managementrapport en bestuurlijke
               handoff in dezelfde taal.
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="marketing-hero-cta-row mt-8">
               <a
                 href={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero' })}
                 className="inline-flex items-center justify-center rounded-full bg-blue-600 px-7 py-3.5 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(37,99,235,0.2)] transition-all hover:-translate-y-0.5 hover:bg-blue-700"
@@ -129,18 +129,18 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-2.5">
+            <div className="marketing-pill-stack mt-8 max-w-2xl">
               {homepageProofSignals.map((signal) => (
                 <span
                   key={signal}
-                  className="rounded-full border border-white/70 bg-white/90 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
+                  className="marketing-pill border border-white/70 bg-white/90 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.05)]"
                 >
                   {signal}
                 </span>
               ))}
             </div>
 
-            <div className="mt-10 overflow-hidden rounded-[2rem] border border-white/70 bg-white/88 shadow-[0_22px_48px_rgba(15,23,42,0.08)] backdrop-blur">
+            <div className="mt-8 max-w-2xl overflow-hidden rounded-[1.8rem] border border-white/70 bg-white/88 shadow-[0_22px_48px_rgba(15,23,42,0.08)] backdrop-blur">
               {statCards.map((item, index) => (
                 <div
                   key={item.label}
@@ -155,31 +155,33 @@ export default function LandingPage() {
               ))}
             </div>
 
-            <div className="mt-6 rounded-[1.75rem] border border-slate-200 bg-white/85 px-5 py-5 text-sm leading-7 text-slate-600 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
-              Trust is hier reassurance, geen openingspitch. Daarom blijft de route helder en is de due-diligence
-              laag publiek bereikbaar zodra een buyer wil verifieren hoe methodiek, privacy en rapportlezing werken.
-            </div>
+            <div className="marketing-hero-support-grid mt-5">
+              <div className="rounded-[1.5rem] border border-slate-200 bg-white/85 px-5 py-5 text-sm leading-7 text-slate-600 shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
+                Trust is hier reassurance, geen openingspitch. Daarom blijft de route helder en is de due-diligence
+                laag publiek bereikbaar zodra een buyer wil verifieren hoe methodiek, privacy en rapportlezing werken.
+              </div>
 
-            <div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-600">
-              {trustQuickLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="inline-flex items-center gap-2 font-medium text-slate-700 underline decoration-slate-300 underline-offset-4 transition-colors hover:text-slate-950"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              <div className="marketing-hero-link-grid">
+                {trustQuickLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="marketing-hero-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="relative">
+          <div className="marketing-hero-stage-column relative">
             <div className="marketing-glow-blue right-[-4rem] top-[-2rem] h-44 w-44" />
             <div className="marketing-glow-emerald bottom-[-2rem] right-[3rem] h-40 w-40" />
             <div className="marketing-stage p-6 md:p-8">
               <div className="absolute right-0 top-0 h-56 w-56 bg-gradient-to-bl from-blue-400/24 via-blue-500/10 to-transparent" />
-              <div className="relative grid gap-6 xl:grid-cols-[0.86fr_1.14fr]">
-                <div>
+              <div className="marketing-hero-stage-grid relative">
+                <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="rounded-full bg-blue-400/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-blue-100">
                       Boardroom route builder
@@ -188,10 +190,10 @@ export default function LandingPage() {
                       2 live routes
                     </span>
                   </div>
-                  <h2 className="font-display mt-5 text-4xl leading-[1.02] text-white md:text-[3.25rem]">
+                  <h2 className="font-display mt-5 max-w-[9ch] text-[clamp(2.4rem,6vw,4.6rem)] leading-[0.96] text-white">
                     Kies eerst de vraag die nu bestuurlijk telt.
                   </h2>
-                  <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">
+                  <p className="mt-5 max-w-xl text-[0.98rem] leading-8 text-slate-300 md:text-base">
                     De bovenkant van de site moet niet voelen als een productcatalogus. Eerst landt de managementvraag,
                     daarna pas welke route en deliverable logisch zijn.
                   </p>
@@ -201,7 +203,7 @@ export default function LandingPage() {
                       <Link
                         key={route.name}
                         href={route.href}
-                        className="group block rounded-[1.8rem] border border-white/10 bg-white/5 p-5 transition-all hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/8"
+                        className="group block rounded-[1.55rem] border border-white/10 bg-white/5 p-5 transition-all hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/8"
                       >
                         <div className="flex items-start gap-4">
                           <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/8 text-[11px] font-bold uppercase tracking-[0.12em] text-white ring-1 ring-white/10">
@@ -219,7 +221,7 @@ export default function LandingPage() {
 
                   <Link
                     href={combinationRoute.href}
-                    className="mt-4 block rounded-[1.65rem] border border-white/10 bg-white/5 px-5 py-5 transition-colors hover:border-white/20 hover:bg-white/8"
+                    className="mt-4 block rounded-[1.45rem] border border-white/10 bg-white/5 px-5 py-5 transition-colors hover:border-white/20 hover:bg-white/8"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
@@ -234,8 +236,8 @@ export default function LandingPage() {
                   </Link>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="rounded-[1.9rem] border border-white/10 bg-white p-5 text-slate-950 shadow-[0_18px_44px_rgba(15,23,42,0.18)]">
+                <div className="min-w-0 space-y-4">
+                  <div className="rounded-[1.55rem] border border-white/10 bg-white p-5 text-slate-950 shadow-[0_18px_44px_rgba(15,23,42,0.18)]">
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Voorbeeld van de managementweergave</p>
@@ -250,11 +252,11 @@ export default function LandingPage() {
                     </p>
                   </div>
 
-                  <div className="rounded-[1.9rem] border border-white/10 bg-white/5 p-5">
+                  <div className="rounded-[1.55rem] border border-white/10 bg-white/5 p-5">
                     <PreviewSlider variant="portfolio" />
                   </div>
 
-                  <div className="grid gap-4 lg:grid-cols-3">
+                  <div className="grid gap-4 md:grid-cols-3">
                     {[
                       ['Vraag', 'Vertrek of behoud?'],
                       ['Leeslijn', 'Dashboard naar rapport'],

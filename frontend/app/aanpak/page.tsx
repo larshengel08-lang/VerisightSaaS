@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     url: 'https://www.verisight.nl/aanpak',
     images: [
       {
-        url: '/og-image.png',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
         alt: 'Verisight aanpak voor ExitScan en RetentieScan',
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     title: 'Aanpak | Verisight',
     description:
       'Bekijk hoe Verisight eerste trajecten, vervolgvormen en combinatieroutes opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
 }
 

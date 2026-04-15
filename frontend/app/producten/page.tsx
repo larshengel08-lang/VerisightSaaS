@@ -9,6 +9,7 @@ import { TrustStrip } from '@/components/marketing/trust-strip'
 import { productOverviewComparisonRows, trustItems } from '@/components/marketing/site-content'
 import { buildContactHref } from '@/lib/contact-funnel'
 import { LIVE_MARKETING_PRODUCTS } from '@/lib/marketing-products'
+import { SEO_SOLUTION_PAGES } from '@/lib/seo-solution-pages'
 
 export const metadata: Metadata = {
   title: 'Producten',
@@ -142,6 +143,28 @@ export default function ProductenPage() {
             <PreviewSlider variant="portfolio" />
           </div>
         </div>
+
+        {SEO_SOLUTION_PAGES.length > 0 ? (
+          <div className="mt-16 marketing-panel-soft p-8 md:p-10">
+            <SectionHeading
+              eyebrow="Veelgezochte insteken"
+              title="Gebruik een gerichte oplossingspagina als de vraag al scherp is."
+              description="Deze routes zijn compact opgezet voor buyers die niet eerst het hele portfolio willen vergelijken, maar meteen willen landen op de juiste managementvraag."
+            />
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              {SEO_SOLUTION_PAGES.map((page) => (
+                <Link
+                  key={page.slug}
+                  href={page.canonical}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 transition-colors hover:border-slate-300 hover:bg-slate-50"
+                >
+                  <p className="text-sm font-semibold text-slate-950">{page.title}</p>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{page.heroDescription}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="mt-16 marketing-panel-soft p-8 md:p-10">
           <SectionHeading

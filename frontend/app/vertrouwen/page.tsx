@@ -32,14 +32,14 @@ export const metadata: Metadata = {
     description:
       'Publieke trustlaag van Verisight: methodiek, privacy, rapportlezing, DPA en buyer-facing vertrouwen voor ExitScan en RetentieScan.',
     url: 'https://www.verisight.nl/vertrouwen',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Vertrouwen | Verisight',
     description:
       'Publieke trustlaag van Verisight: methodiek, privacy, rapportlezing, DPA en buyer-facing vertrouwen voor ExitScan en RetentieScan.',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
 }
 

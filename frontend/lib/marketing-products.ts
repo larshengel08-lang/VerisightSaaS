@@ -22,8 +22,8 @@ export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
     shortLabel: 'ExitScan',
     tagline: 'Breng vertrekpatronen scherp in beeld',
     description:
-      'Vertrekduiding op basis van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie voor HR, MT en directie, met compacte bestuurlijke handoff en expliciete leeswijzers over claims, privacy en interpretatie.',
-    seoTitle: 'ExitScan | Verisight',
+      'Vertrekduiding en verloopanalyse op basis van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie voor HR, MT en directie, met compacte bestuurlijke handoff en expliciete leeswijzers over claims, privacy en interpretatie.',
+    seoTitle: 'ExitScan | Verloopanalyse en vertrekduiding voor HR-teams',
     ogAlt: 'ExitScan productpagina van Verisight',
     serviceType: 'Vertrekduiding en managementrapportage',
     serviceAudience: 'HR-teams en directies die uitstroom achteraf willen duiden',
@@ -37,8 +37,8 @@ export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
     shortLabel: 'RetentieScan',
     tagline: 'Zie eerder waar behoud onder druk staat',
     description:
-      'Vroegsignalering op behoud op groeps- en segmentniveau, met retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren in dezelfde managementlijn, inclusief compacte bestuurlijke handoff en zonder individuele voorspelling.',
-    seoTitle: 'RetentieScan | Verisight',
+      'Vroegsignalering op medewerkersbehoud op groeps- en segmentniveau, met retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren in dezelfde managementlijn, inclusief compacte bestuurlijke handoff en zonder individuele voorspelling.',
+    seoTitle: 'RetentieScan | Medewerkersbehoud en vroegsignalering voor HR-teams',
     ogAlt: 'RetentieScan productpagina van Verisight',
     serviceType: 'Vroegsignalering op behoud met retentiesignaal',
     serviceAudience: 'HR-teams en directies die behoud eerder zichtbaar willen maken',
@@ -53,7 +53,7 @@ export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
     tagline: 'Kijk terug en vooruit in dezelfde managementtaal',
     description:
       'Combineer ExitScan en RetentieScan in een portfolio-aanpak voor terugkijkende duiding en vroegsignalering.',
-    seoTitle: 'Combinatie | Verisight',
+    seoTitle: 'Combinatie | ExitScan en RetentieScan in één portfolio',
     ogAlt: 'Combinatiepagina van ExitScan en RetentieScan bij Verisight',
     serviceType: 'Portfolio-aanpak voor vertrekduiding en vroegsignalering',
     serviceAudience: 'HR-teams en directies met zowel uitstroom- als behoudsvragen',

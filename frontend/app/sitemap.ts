@@ -51,6 +51,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: 'https://www.verisight.nl/oplossingen/verloop-analyse',
+      lastModified: new Date('2026-04-15'),
+      changeFrequency: 'monthly',
+      priority: 0.75,
+    },
+    {
+      url: 'https://www.verisight.nl/oplossingen/exitgesprekken-analyse',
+      lastModified: new Date('2026-04-15'),
+      changeFrequency: 'monthly',
+      priority: 0.75,
+    },
+    {
+      url: 'https://www.verisight.nl/oplossingen/medewerkersbehoud-analyse',
+      lastModified: new Date('2026-04-15'),
+      changeFrequency: 'monthly',
+      priority: 0.72,
+    },
+    {
       url: 'https://www.verisight.nl/privacy',
       lastModified: new Date('2026-04-11'),
       changeFrequency: 'yearly',

@@ -52,6 +52,15 @@ const nextConfig: NextConfig = {
         source: '/(.*)',
         headers: securityHeaders,
       },
+      {
+        source: '/examples/:path*',
+        headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, noarchive, nosnippet',
+          },
+        ],
+      },
     ]
   },
   images: {

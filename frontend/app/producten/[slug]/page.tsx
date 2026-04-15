@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
+import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingProofStrip } from '@/components/marketing/marketing-proof-strip'
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: Props) {
   const imageUrl = `${product.href}/opengraph-image`
 
   return {
-    title: product.label,
+    title: product.seoTitle ?? `${product.label} | Verisight`,
     description,
     alternates: {
       canonical: product.href,
@@ -185,7 +186,7 @@ function ExitScanPage() {
       contextTitle="ExitScan verkoopt het sterkst wanneer de vraag eerst achteraf begrijpen is."
       contextBody="Deze pagina moet snel laten zien waarom ExitScan meestal de eerste route is: het product maakt losse exitinput bestuurlijk leesbaar en intern doorvertelbaar."
       heroNote="ExitScan blijft terugkijkend, groepsgericht en methodisch begrensd. Dat maakt de route scherper, niet smaller."
-      ctaHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_hero' })}
+      ctaHref="#kennismaking"
     >
       <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
         <div className="marketing-panel p-8">
@@ -305,12 +306,22 @@ function ExitScanPage() {
         </div>
       </div>
 
+      <div className="mt-16">
+        <MarketingInlineContactPanel
+          eyebrow="Kennismaking"
+          title="Plan een gesprek over ExitScan"
+          body="Beschrijf kort welke vertrekvraag nu bestuurlijk aandacht vraagt. Dan toetsen we of ExitScan Baseline de juiste eerste stap is en hoe jullie route naar een eerste managementread eruitziet."
+          defaultRouteInterest="exitscan"
+          defaultCtaSource="product_exit_form"
+        />
+      </div>
+
       <MarketingCalloutBand
         className="mt-16"
         eyebrow="Verschil met RetentieScan"
         title="ExitScan kijkt terug. RetentieScan signaleert eerder."
         body="ExitScan helpt vertrek achteraf duiden en is meestal het eerste traject. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen vormen ze een logisch portfolio, maar ExitScan blijft de primaire wedge."
-        primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_callout' })}
+        primaryHref="#kennismaking"
         primaryLabel="Plan kennismaking"
         secondaryHref="/producten/retentiescan"
         secondaryLabel="Bekijk RetentieScan"
@@ -330,7 +341,7 @@ function RetentionScanPage() {
       contextTitle="RetentieScan verkoopt het sterkst wanneer de actieve behoudsvraag expliciet op tafel ligt."
       contextBody="Deze pagina moet snel laten zien waarom RetentieScan geen brede MTO is, maar een gerichte managementroute voor vroegsignalering, verificatie en prioritering."
       heroNote="RetentieScan blijft groepsgericht, privacybewust en niet-predictief. Dat houdt de route geloofwaardig en bestuurlijk bruikbaar."
-      ctaHref={buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_hero' })}
+      ctaHref="#kennismaking"
     >
       <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
         <div className="marketing-panel-soft p-8">
@@ -447,12 +458,22 @@ function RetentionScanPage() {
         />
       </div>
 
+      <div className="mt-16">
+        <MarketingInlineContactPanel
+          eyebrow="Kennismaking"
+          title="Plan een gesprek over RetentieScan"
+          body="Beschrijf kort waar behoud nu onder druk staat. Dan toetsen we of RetentieScan Baseline de juiste eerste stap is en hoe jullie eerste meetroute geloofwaardig kan landen."
+          defaultRouteInterest="retentiescan"
+          defaultCtaSource="product_retention_form"
+        />
+      </div>
+
       <MarketingCalloutBand
         className="mt-16"
         eyebrow="Combinatie met ExitScan"
         title="Samen vormen ze een logisch portfolio."
         body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen geven ze een scherper beeld van zowel achteraf duiden als vooruitkijken, meestal eerst via een baseline en pas daarna via ritme of combinatie."
-        primaryHref={buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_callout' })}
+        primaryHref="#kennismaking"
         primaryLabel="Plan kennismaking"
         secondaryHref="/producten/combinatie"
         secondaryLabel="Bekijk combinatie"

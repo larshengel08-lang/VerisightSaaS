@@ -121,11 +121,10 @@ De website en funnel moeten de aangescherpte propositie, trustlaag en voorbeeldo
 **Hoort in deze fase**
 - Website Redesign And Flow - afgerond
 - Customer Journey And Funnel Alignment - afgerond
-- SEO Conversion Program
+- SEO Conversion Program - afgerond
 
 **Status**
-- huidige actieve focus
-- 2 van 3 checklist-items afgerond
+- afgerond
 
 **Exit gate**
 - Website weerspiegelt de aangescherpte product- en trustlaag
@@ -149,7 +148,7 @@ Eerste klanten moeten soepel van akkoord naar intake, campagne, rapportage en op
 - Demo And Sample Environment
 
 **Status**
-- gepland
+- huidige actieve focus
 
 **Exit gate**
 - Nieuwe klanttrajecten zijn uitvoerbaar zonder onnodige improvisatie
