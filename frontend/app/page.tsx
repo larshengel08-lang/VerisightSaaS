@@ -421,7 +421,7 @@ export default function LandingPage() {
                   </div>
                 }
               >
-                <ContactForm surface="light" defaultCtaSource="homepage_contact_panel" />
+                <ContactForm surface="light" />
               </Suspense>
             </div>
           </div>
