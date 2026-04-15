@@ -106,6 +106,35 @@ details > summary::-webkit-details-marker {
     color: white;
   }
 
+  .marketing-stage {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: linear-gradient(180deg, #0f172a 0%, #14243a 100%);
+    box-shadow: var(--marketing-shadow-strong);
+    border-radius: 2.5rem;
+    color: white;
+  }
+
+  .marketing-stage::before {
+    content: "";
+    position: absolute;
+    inset: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 2rem;
+    pointer-events: none;
+  }
+
+  .marketing-stage::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at top right, rgba(59, 130, 246, 0.22), transparent 30%),
+      radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.12), transparent 26%);
+    pointer-events: none;
+  }
+
   .marketing-glow-blue,
   .marketing-glow-emerald,
   .marketing-glow-sky {

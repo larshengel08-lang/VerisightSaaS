@@ -1,11 +1,10 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { MarketingSection } from '@/components/marketing/marketing-section'
-import { MarketingSpotlight } from '@/components/marketing/marketing-spotlight'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { PublicHeader } from '@/components/marketing/public-header'
+import { marketingPrimaryCta, trustItems, trustQuickLinks } from '@/components/marketing/site-content'
 import { TrustStrip } from '@/components/marketing/trust-strip'
-import { trustItems, trustQuickLinks } from '@/components/marketing/site-content'
 
 type MarketingPageTheme = 'neutral' | 'exit' | 'retention' | 'combination' | 'coming-soon'
 
@@ -21,6 +20,8 @@ interface MarketingPageShellProps {
   contextTitle?: string
   contextBody?: string
   heroNote?: string
+  ctaHref?: string
+  ctaLabel?: string
 }
 
 const defaultHighlights = [
@@ -36,6 +37,9 @@ const themeMap: Record<
     accentText: string
     glowClass: string
     chipClass: string
+    stageAccentClass: string
+    stageNumberClass: string
+    stageTagClass: string
   }
 > = {
   neutral: {
@@ -44,6 +48,9 @@ const themeMap: Record<
     accentText: 'text-blue-600',
     glowClass: 'marketing-glow-blue',
     chipClass: 'bg-blue-100 text-blue-800',
+    stageAccentClass: 'from-blue-400/24 via-blue-500/10 to-transparent',
+    stageNumberClass: 'bg-blue-400/15 text-blue-100 ring-1 ring-blue-300/25',
+    stageTagClass: 'bg-blue-400/12 text-blue-100',
   },
   exit: {
     heroBg:
@@ -51,6 +58,9 @@ const themeMap: Record<
     accentText: 'text-blue-600',
     glowClass: 'marketing-glow-blue',
     chipClass: 'bg-blue-100 text-blue-800',
+    stageAccentClass: 'from-blue-400/26 via-blue-500/10 to-transparent',
+    stageNumberClass: 'bg-blue-400/15 text-blue-100 ring-1 ring-blue-300/25',
+    stageTagClass: 'bg-blue-400/12 text-blue-100',
   },
   retention: {
     heroBg:
@@ -58,6 +68,9 @@ const themeMap: Record<
     accentText: 'text-emerald-700',
     glowClass: 'marketing-glow-emerald',
     chipClass: 'bg-emerald-100 text-emerald-800',
+    stageAccentClass: 'from-emerald-400/24 via-emerald-500/10 to-transparent',
+    stageNumberClass: 'bg-emerald-400/15 text-emerald-100 ring-1 ring-emerald-300/25',
+    stageTagClass: 'bg-emerald-400/12 text-emerald-100',
   },
   combination: {
     heroBg:
@@ -65,6 +78,9 @@ const themeMap: Record<
     accentText: 'text-sky-700',
     glowClass: 'marketing-glow-sky',
     chipClass: 'bg-sky-100 text-sky-800',
+    stageAccentClass: 'from-sky-400/22 via-sky-500/10 to-transparent',
+    stageNumberClass: 'bg-sky-400/15 text-sky-100 ring-1 ring-sky-300/25',
+    stageTagClass: 'bg-sky-400/12 text-sky-100',
   },
   'coming-soon': {
     heroBg:
@@ -72,6 +88,9 @@ const themeMap: Record<
     accentText: 'text-slate-600',
     glowClass: 'marketing-glow-blue',
     chipClass: 'bg-slate-200 text-slate-700',
+    stageAccentClass: 'from-slate-300/16 via-slate-400/8 to-transparent',
+    stageNumberClass: 'bg-slate-300/15 text-slate-100 ring-1 ring-slate-300/25',
+    stageTagClass: 'bg-slate-300/12 text-slate-100',
   },
 }
 
@@ -87,31 +106,33 @@ export function MarketingPageShell({
   contextTitle = 'Gebruik deze pagina om de juiste route, output en vervolgstap te toetsen.',
   contextBody = 'Deze pagina helpt eerst bepalen of de route inhoudelijk klopt. Daarna laat Verisight zien wat management terugkrijgt, welke proof daarbij hoort en wanneer een gesprek logisch wordt.',
   heroNote = 'Verisight blijft een begeleide productvorm: trust ondersteunt de route, maar verdringt de productkeuze niet.',
+  ctaHref = marketingPrimaryCta.href,
+  ctaLabel = marketingPrimaryCta.label,
 }: MarketingPageShellProps) {
   const themeStyle = themeMap[theme]
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
-      <PublicHeader />
+      <PublicHeader ctaHref={ctaHref} ctaLabel={ctaLabel} />
       <main>
         <MarketingSection
           tone="plain"
           className={`overflow-hidden border-b border-slate-200 ${themeStyle.heroBg}`}
-          containerClassName="grid gap-10 lg:grid-cols-[0.94fr_1.06fr] lg:items-start"
+          containerClassName="grid gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:items-start"
         >
           <div className="max-w-2xl">
             <p className={`text-xs font-bold uppercase tracking-[0.22em] ${themeStyle.accentText}`}>{eyebrow}</p>
-            <h1 className="font-display mt-5 text-balance text-[3rem] leading-[1] text-slate-950 md:text-[4.5rem]">
+            <h1 className="font-display mt-5 text-balance text-[3.2rem] leading-[0.96] text-slate-950 md:text-[5rem]">
               {title}
             </h1>
             <p className="mt-6 max-w-xl text-[1.05rem] leading-8 text-slate-600">{description}</p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/#kennismaking"
+                href={ctaHref}
                 className="inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(37,99,235,0.2)] transition-all hover:-translate-y-0.5 hover:bg-blue-700"
               >
-                Plan kennismaking
+                {ctaLabel}
               </Link>
               <Link
                 href="/producten"
@@ -122,21 +143,32 @@ export function MarketingPageShell({
             </div>
 
             <div className="mt-8 flex flex-wrap gap-2.5">
-              {highlightItems.map((item) => (
-                <span
-                  key={item}
-                  className={`rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] ${themeStyle.chipClass}`}
-                >
-                  {item}
-                </span>
-              ))}
+              <div className="overflow-hidden rounded-[1.75rem] border border-white/70 bg-white/85 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur">
+                {highlightItems.map((item, index) => (
+                  <div
+                    key={item}
+                    className={`flex items-center gap-3 px-5 py-3.5 text-sm text-slate-700 ${
+                      index !== 0 ? 'border-t border-slate-200/80' : ''
+                    }`}
+                  >
+                    <span
+                      className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold uppercase tracking-[0.12em] ${themeStyle.chipClass}`}
+                    >
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span className="font-medium">{item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="mt-10">
               <TrustStrip items={trustItems} tone={trustTone} />
             </div>
 
-            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-600">{heroNote}</p>
+            <div className="mt-5 max-w-xl rounded-[1.5rem] border border-slate-200 bg-white/90 px-5 py-4 text-sm leading-7 text-slate-600 shadow-[0_12px_32px_rgba(15,23,42,0.05)]">
+              {heroNote}
+            </div>
 
             <div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-600">
               {trustQuickLinks.map((link) => (
@@ -153,53 +185,87 @@ export function MarketingPageShell({
 
           <div className="relative">
             <div className={`${themeStyle.glowClass} right-[-4rem] top-[-3rem] h-40 w-40`} />
-            <MarketingSpotlight
-              eyebrow={contextEyebrow}
-              title={contextTitle}
-              body={contextBody}
-              aside={
+            <div className="marketing-stage p-6 md:p-8">
+              <div className={`absolute right-0 top-0 h-56 w-56 bg-gradient-to-bl ${themeStyle.stageAccentClass}`} />
+              <div className="relative grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+                <div>
+                  <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${themeStyle.stageTagClass}`}>
+                    {contextEyebrow}
+                  </span>
+                  <h2 className="font-display mt-5 text-4xl leading-[1.02] text-white md:text-[3.2rem]">
+                    {contextTitle}
+                  </h2>
+                  <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">{contextBody}</p>
+
+                  <div className="mt-8 space-y-3">
+                    {[
+                      'Past de route inhoudelijk bij de managementvraag?',
+                      'Laat de deliverable eerder zien dan de uitleg.',
+                      'Gebruik trust en pricing pas nadat de route landt.',
+                    ].map((item, index) => (
+                      <div key={item} className="flex items-start gap-4 rounded-[1.5rem] border border-white/10 bg-white/5 px-4 py-4">
+                        <span
+                          className={`inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold uppercase tracking-[0.12em] ${themeStyle.stageNumberClass}`}
+                        >
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <p className="text-sm leading-7 text-slate-200">{item}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="space-y-4">
-                  <div className="marketing-panel-dark p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Hoe je verder leest</p>
-                    <div className="mt-4 space-y-3">
-                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                        Eerst: past de route inhoudelijk bij de managementvraag?
-                      </div>
-                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                        Daarna: wat krijgt management echt terug?
-                      </div>
-                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200">
-                        Tot slot: welke proof en vervolgstap maken dit geloofwaardig?
-                      </div>
-                    </div>
+                  <div className="rounded-[1.75rem] border border-white/10 bg-white p-5 text-slate-950 shadow-[0_18px_44px_rgba(15,23,42,0.18)]">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Waarom dit anders oogt</p>
+                    <h3 className="mt-3 text-2xl font-semibold text-slate-950">Niet nog een productgrid, maar een routecanvas.</h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-600">
+                      Deze hero is bedoeld om eerst de bestuurlijke vraag te kaderen, daarna de output te tonen en pas
+                      dan de vervolgstap te openen.
+                    </p>
                   </div>
 
-                  <div className="marketing-panel p-5">
+                  <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
                     <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Snelle routecheck</p>
-                    <div className="mt-4 space-y-3">
+                    <div className="mt-4 grid gap-3">
                       <Link
                         href="/producten"
-                        className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-300 hover:bg-white hover:text-slate-950"
+                        className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
                       >
                         Producten vergelijken
                       </Link>
                       <Link
                         href="/tarieven"
-                        className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-300 hover:bg-white hover:text-slate-950"
+                        className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
                       >
                         Pricing en vervolgvormen
                       </Link>
                       <Link
                         href="/vertrouwen"
-                        className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-300 hover:bg-white hover:text-slate-950"
+                        className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-4 text-sm text-slate-200 transition-colors hover:border-white/20 hover:bg-white/8 hover:text-white"
                       >
                         Trust, privacy en DPA
                       </Link>
                     </div>
                   </div>
+
+                  <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Na kennismaking</p>
+                    <div className="mt-4 space-y-3 text-sm leading-7 text-slate-200">
+                      <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-3">
+                        We bevestigen eerst route, timing, databasis en wat de eerste betaalde stap hoort te zijn.
+                      </div>
+                      <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-3">
+                        Daarna richt Verisight campaign, respondentimport en uitnodigingen begeleid in.
+                      </div>
+                      <div className="rounded-[1.4rem] border border-white/10 bg-white/5 px-4 py-3">
+                        Eerste signalen landen na de eerste responses; een steviger patroonbeeld volgt pas bij voldoende respons.
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              }
-            />
+              </div>
+            </div>
           </div>
         </MarketingSection>
 

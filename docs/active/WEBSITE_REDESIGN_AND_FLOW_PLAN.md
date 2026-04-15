@@ -23,6 +23,7 @@ Status 2026-04-15:
 - uitgevoerd in repo
 - frontend tests, lint en build groen
 - aanvullende code-level checks gedaan op CTA-flow, trust-linking, showcase-koppelingen en responsive breakpoints
+- tweede visuele pass uitgevoerd op homepage en producthero's om de redesign ook boven de vouw duidelijker zichtbaar te maken
 - browsermatige responsive beeld-QA niet uitgevoerd in deze tranche; geen aparte browserharness beschikbaar in deze repo-run
 - nog niet gepusht in deze tranche
 
@@ -76,6 +77,7 @@ Dependency: Milestone 1
 - [x] Gedeelde marketing-contentlaag herschreven.
 - [x] Shell, header, footer en globale marketing-ritmes aangescherpt.
 - [x] Visual direction doorvertaald naar grotere panelen, rustiger CTA-hierarchie en minder herhaalde componentpatronen.
+- [x] Tweede visuele pass toegevoegd met donker stage-hero contrast, sterkere asymmetrie en minder catalogusgevoel boven de vouw.
 
 #### Definition of done
 - [x] Er ligt een concreter, consistenter en rustiger marketingfundament.
@@ -104,6 +106,7 @@ Dependency: Milestone 3
 - [x] Homepage-hero herbouwd rond managementroute in plaats van brede uitleg.
 - [x] Producthero's aangescherpt op route, deliverable en productgrens.
 - [x] ExitScan visueel primair gehouden; RetentieScan complementair; Combinatie secundair.
+- [x] Homepage en productdetail visueel verder uit elkaar getrokken van de eerdere template-achtige compositie.
 
 #### Definition of done
 - [x] De eerste schermen maken sneller duidelijk wat Verisight is en welke route logisch is.
