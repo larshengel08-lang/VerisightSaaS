@@ -204,6 +204,7 @@ Dependency: Milestone 5
 #### Validation
 - [x] Frontend checks groen bevestigd via `vitest` en `next build`.
 - [x] Backend parity- en smokechecks groen bevestigd via `pytest`.
+- [x] Live publieke routes bevestigd op 2026-04-15 via `https://www.verisight.nl`, `/tarieven` en `/vertrouwen` met founder-led termen zoals `bestuurlijke handoff`, `managementvraag` en `routekeuze`.
 - [x] Checkliststatus bijgewerkt met datum en oplevernotitie.
 
 ## 3. Execution Breakdown By Subsystem
