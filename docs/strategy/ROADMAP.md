@@ -166,6 +166,9 @@ Eerste klanten moeten soepel van akkoord naar intake, campagne, rapportage en op
 Na eerste tractie moeten commerciële, delivery- en contentprocessen herhaalbaar en schaalbaar worden gemaakt.
 
 **Hoort in deze fase**
+- Assisted To SaaS Readiness Program
+- Customer Lifecycle And Expansion Model
+- Account And Billing Model Readiness
 - Ops And Delivery System
 - Case Proof And Evidence
 - Portfolio Architecture
