@@ -46,7 +46,7 @@ checklist:
     - "Status"
     - "Last Updated"
     - "Notes"
-    - "Live/Gepusht"
+    - "Repo/Main/Deploy/Live"
   items:
     - prompt_file: "EXITSCAN_PLANMODE_PRODUCT_REVIEW_AND_TEST_PROMPT.md"
       deliverable: "EXITSCAN_PRODUCT_REVIEW_AND_TEST_PLAN.md"

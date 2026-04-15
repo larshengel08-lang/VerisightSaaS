@@ -72,6 +72,31 @@ def save_checklist(data: dict[str, Any], rows: list[list[Any]]) -> None:
     wb.save(CHECKLIST_PATH)
 
 
+def release_status_warnings(rows: list[list[Any]]) -> list[str]:
+    warnings: list[str] = []
+    legacy_markers = (
+        "live via main",
+        "live op main",
+        "uitgevoerd in repo",
+    )
+    for row in rows:
+        prompt_file = str(row[0])
+        status = "" if row[2] is None else str(row[2]).strip().lower()
+        release_state = "" if row[5] is None else str(row[5]).strip()
+        release_state_lower = release_state.lower()
+        if status != "voldaan":
+            continue
+        if not release_state:
+            warnings.append(f"{prompt_file}: status is Voldaan maar repo/main/deploy/live-status ontbreekt.")
+            continue
+        if any(marker in release_state_lower for marker in legacy_markers):
+            warnings.append(
+                f"{prompt_file}: gebruikt legacy release-status '{release_state}'. "
+                "Vervang door expliciete repo-only of live-bevestigde formulering."
+            )
+    return warnings
+
+
 def phase_status(rows_by_prompt: dict[str, list[Any]], items: list[str], current_phase_id: str, phase_id: str) -> list[str]:
     completed = sum(1 for key in items if rows_by_prompt.get(key, [None, None, "Niet voldaan"])[2] == "Voldaan")
     total = len(items)
@@ -208,6 +233,7 @@ def main() -> None:
     ROADMAP_PATH.write_text(build_roadmap_markdown(data, rows), encoding="utf-8")
 
     missing = verify_prompt_files(data)
+    warnings = release_status_warnings(rows)
     print(f"Synced checklist: {CHECKLIST_PATH}")
     print(f"Synced roadmap:   {ROADMAP_PATH}")
     if missing:
@@ -216,6 +242,10 @@ def main() -> None:
             print(f"- {item}")
     else:
         print("All prompt files referenced in the checklist exist.")
+    if warnings:
+        print("Checklist release-status warnings:")
+        for item in warnings:
+            print(f"- {item}")
 
 
 if __name__ == "__main__":

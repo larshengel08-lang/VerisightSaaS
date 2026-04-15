@@ -10,7 +10,7 @@ Dit kleine systeem koppelt de checklist en de roadmap aan elkaar zonder dat de `
 
 - [PROMPT_CHECKLIST.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_CHECKLIST.xlsx)
   - operationele voortgang
-  - hier werk je status, datum, notities en live/gepusht bij
+  - hier werk je status, datum, notities en repo/main/deploy/live-status bij
 
 - [ROADMAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP.md)
   - gegenereerde strategische roadmap
@@ -76,6 +76,15 @@ De hook draait bewust alleen op deze planningsbestanden, zodat normale codecommi
 - gebruik Excel voor voortgang en korte statusnotities
 - gebruik YAML voor structuur, volgorde en fase-architectuur
 - commit bij voorkeur zowel de checklist als de roadmap nadat je hebt gesynchroniseerd
+- zet `Status = Voldaan` voor live-impactvolle wijzigingen pas als het relevante eindstation bereikt is:
+  - code op `main`
+  - relevante deploy geslaagd
+  - live bevestigd waar nodig
+- gebruik voor repo-only trajecten expliciet een formulering als:
+  - `Naar main gepusht op YYYY-MM-DD (commit); live-status niet lokaal geverifieerd.`
+- gebruik voor live bevestigde trajecten expliciet een formulering als:
+  - `Live bevestigd op YYYY-MM-DD via productie-URL('s'); commit <hash>.`
+- behandel oude korte formuleringen zoals `Live via main` of `Live op main` als legacy en vervang ze bij voorkeur bij de eerstvolgende checklist-update
 
 ## Wat dit niet doet
 

@@ -124,6 +124,9 @@ Pas `docs/prompts/PROMPT_CHECKLIST.xlsx` pas aan nadat livevalidatie echt rond i
 
 - [ ] statuskolom klopt
 - [ ] live-kolom noemt expliciet:
+  - repo/main-status
+  - deploy-status waar relevant
+  - live-bevestiging of repo-only-afronding
   - gepusht naar `main`
   - datum
   - commit hash
@@ -153,3 +156,16 @@ Een release is pas volledig live afgerond wanneer:
 - [ ] relevante deploy(s) geslaagd zijn
 - [ ] productie-URL's de nieuwe wijziging aantoonbaar tonen
 - [ ] `PROMPT_CHECKLIST.xlsx` correct onderscheid maakt tussen repo-afronding en live-bevestiging
+
+## 11. Historische Rijen
+
+Oudere checklistregels kunnen nog legacy-formuleringen bevatten zoals:
+
+- `Live via main`
+- `Live op main`
+- `Uitgevoerd in repo`
+
+Behandel die niet meer als voorkeursformaat.
+
+- [ ] vervang legacy-teksten bij de eerstvolgende relevante update
+- [ ] gebruik voor nieuwe regels alleen expliciete repo-only of live-bevestigde formuleringen
