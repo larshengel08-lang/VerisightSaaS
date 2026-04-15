@@ -186,7 +186,7 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-hero-title {
-    max-width: 8.2ch;
+    max-width: 7.4ch;
     text-wrap: pretty;
     hyphens: auto;
   }
@@ -241,7 +241,7 @@ details > summary::-webkit-details-marker {
 @media (min-width: 640px) {
   @layer components {
     .marketing-hero-title {
-      max-width: 9.6ch;
+      max-width: 8.4ch;
     }
 
     .marketing-hero-cta-row {
@@ -255,11 +255,15 @@ details > summary::-webkit-details-marker {
 @media (min-width: 1024px) {
   @layer components {
     .marketing-hero-grid {
-      grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.06fr);
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
     }
 
     .marketing-hero-support-grid {
       grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    }
+
+    .marketing-hero-title {
+      max-width: 7.8ch;
     }
   }
 }
