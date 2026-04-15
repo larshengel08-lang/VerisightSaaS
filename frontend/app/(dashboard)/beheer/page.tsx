@@ -8,6 +8,7 @@ import { InviteClientUserForm } from '@/components/dashboard/invite-client-user-
 import { ClientAccessList } from '@/components/dashboard/client-access-list'
 import { DeleteOrgButton } from '@/components/dashboard/delete-org-button'
 import { ArchiveOrgButton } from '@/components/dashboard/archive-org-button'
+import { OperatorOnboardingBlueprint } from '@/components/dashboard/onboarding-panels'
 import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Organization, type Campaign, type OrgInvite, type CampaignStats } from '@/lib/types'
 
 export default async function BeheerPage() {
@@ -136,6 +137,17 @@ export default async function BeheerPage() {
         <div className="h-px w-6 bg-gray-200" />
         <StepBadge n={4} label="Klanttoegang" done={step4Done} />
       </div>
+
+      <section className="mb-8 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <div className="mb-5 border-b border-gray-100 pb-4">
+          <h2 className="text-sm font-semibold text-gray-900">Onboardingblueprint</h2>
+          <p className="mt-1 text-sm leading-6 text-gray-500">
+            Gebruik deze assisted route als vaste handoff van akkoord naar eerste managementwaarde. Zo blijven
+            intake, setup, import, klantactivatie en eerste gebruik in dezelfde leeslijn.
+          </p>
+        </div>
+        <OperatorOnboardingBlueprint />
+      </section>
 
       {/* ── Campagne statusoverzicht ───────────────────────────────────── */}
       {campaignStats.length > 0 && (

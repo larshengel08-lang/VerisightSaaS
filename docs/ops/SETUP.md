@@ -157,8 +157,15 @@ Open [http://localhost:3000](http://localhost:3000) — je wordt doorgestuurd na
 1. Klik op **Beheer** in de navigatiebalk
 2. Maak een organisatie aan (naam + e-mailadres)
 3. Maak een campaign aan (kies organisatie, geef naam, kies type: ExitScan of RetentieScan)
-4. Voeg respondenten toe: kies het aantal, optioneel afdeling + niveau + salaris
-5. Kopieer de gegenereerde survey-links — stuur deze naar medewerkers
+4. Gebruik de onboardingblueprint bovenaan `Beheer` om route, intake-inputs en klantverwachting te checken
+5. Voeg respondenten toe via bestand-upload of e-mailimport en controleer eerst de preview
+6. Verstuur uitnodigingen pas nadat het bestand bruikbaar is en activeer daarna klanttoegang
+7. Gebruik dashboard en rapport daarna voor de eerste managementread in plaats van alleen als livegangsignaal
+
+## Operationele gidsen
+
+- Canonieke assisted route: `docs/ops/CLIENT_ONBOARDING_PLAYBOOK.md`
+- Acceptance-gates voor livegang en eerste managementgebruik: `docs/ops/ONBOARDING_ACCEPTANCE_CHECKLIST.md`
 
 ---
 

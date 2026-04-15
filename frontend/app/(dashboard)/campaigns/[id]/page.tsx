@@ -13,6 +13,7 @@ import {
   DashboardSection,
 } from '@/components/dashboard/dashboard-primitives'
 import { FactorTable } from '@/components/dashboard/factor-table'
+import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
 import { OnboardingAdvancer, OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
 import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import { RecommendationList } from '@/components/dashboard/recommendation-list'
@@ -308,6 +309,20 @@ export default async function CampaignPage({ params }: Props) {
           <p className="mt-1 leading-6">{notice.body}</p>
         </div>
       ))}
+
+      <DashboardSection
+        eyebrow="Adoptie"
+        title="Eerste managementgebruik"
+        description="Gebruik deze route om van live output naar eerste bruikbare managementduiding te gaan. Het dashboard helpt eerst met lezen, dan met prioriteren en pas daarna met verdieping."
+        aside={
+          <DashboardChip
+            label={hasEnoughData ? 'Klaar voor managementread' : hasMinDisplay ? 'Nog indicatief' : 'Nog in opbouw'}
+            tone={hasEnoughData ? 'blue' : 'amber'}
+          />
+        }
+      >
+        <ManagementReadGuide scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} />
+      </DashboardSection>
 
       <DashboardSection
         eyebrow="Eerst lezen"

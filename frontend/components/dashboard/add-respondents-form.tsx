@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Campaign, type Organization } from '@/lib/types'
+import { CLIENT_FILE_SPEC } from '@/lib/client-onboarding'
 import {
   getDefaultCampaignId,
   parseEmails as parseEmailList,
@@ -235,6 +236,27 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
           campagne op, controleert de import en verstuurt uitnodigingen. Daarna krijgt de organisatie toegang tot
           het eigen dashboard en rapport.
         </p>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-700">
+          <p className="font-semibold text-slate-900">Canonieke klantaanlevering</p>
+          <p className="mt-2 leading-6">
+            Gebruik bij voorkeur een eenvoudig Excel- of CSV-bestand met minimaal <code className="font-mono">email</code>.
+            Voor segmentatie en scherpere opvolging blijven <code className="font-mono">department</code> en{' '}
+            <code className="font-mono">role_level</code> de aanbevolen standaard.
+          </p>
+          <p className="mt-2 text-xs leading-5 text-slate-500">
+            Verplicht: {CLIENT_FILE_SPEC.required.join(', ')}. Aanbevolen: {CLIENT_FILE_SPEC.recommended.join(', ')}.
+          </p>
+        </div>
+        <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+          <p className="font-semibold">Acceptance-gate voor import</p>
+          <p className="mt-2 leading-6">
+            Importeer pas definitief nadat preview, foutregels en dubbelen kloppen. Zo blijft de handoff van klantbestand
+            naar inviteflow controleerbaar en hoeft de klant geen technische correcties in de app te doen.
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">

@@ -361,6 +361,7 @@ export const processHighlights = [
 
 export const included = [
   'Inrichting van de gekozen scan of meetronde',
+  'Assisted onboarding van akkoord tot eerste managementread',
   'Uitnodigingen en herinneringen voor respondenten',
   'Dashboard met prioriteiten en managementduiding',
   'Zelfstandig leesbaar rapport voor HR, MT en directie',
@@ -385,11 +386,11 @@ export const approachSteps = [
   },
   {
     title: '4. Eerste responses',
-    body: 'De eerste signalen komen zichtbaar binnen zodra responses opbouwen, maar we lezen nog terughoudend zolang het patroonbeeld beperkt is.',
+    body: 'De eerste signalen komen zichtbaar binnen zodra responses opbouwen, maar we lezen nog terughoudend zolang het patroonbeeld beperkt is en bereiden tegelijk de klantactivatie voor.',
   },
   {
     title: '5. Dashboard en rapport',
-    body: 'Vanaf een bruikbare responsbasis krijg je dashboard, rapport en bestuurlijke handoff in dezelfde managementleeslijn.',
+    body: 'Vanaf een bruikbare responsbasis krijg je dashboard, rapport en bestuurlijke handoff in dezelfde managementleeslijn, inclusief uitleg over wat al indicatief is en wat nog niet.',
   },
   {
     title: '6. Eerste managementgesprek',

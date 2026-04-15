@@ -78,6 +78,27 @@ export default function AanpakPage() {
 
         <div className="mt-16 rounded-[2rem] border border-slate-200 bg-white p-8 md:p-10">
           <SectionHeading
+            eyebrow="Na akkoord"
+            title="Wat de klant zelf doet en wat Verisight begeleidt."
+            description="Zo blijft de handoff van sales naar delivery voorspelbaar: de klant levert input, Verisight beheert setup, importcontrole en activatie, en daarna start het eerste managementgebruik."
+          />
+          <div className="mt-8 grid gap-4 md:grid-cols-4">
+            {[
+              'De klant bevestigt route, timing, doelgroep en contactpersoon.',
+              'Verisight zet organisatie en campaign op en controleert het respondentbestand.',
+              'Verisight start uitnodigingen en activeert daarna het juiste dashboard voor de klant.',
+              'De klant gebruikt dashboard en rapport voor de eerste managementread en het eerste vervolggesprek.',
+            ].map((item, index) => (
+              <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-700">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Stap {index + 1}</p>
+                <p className="mt-3">{item}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-16 rounded-[2rem] border border-slate-200 bg-white p-8 md:p-10">
+          <SectionHeading
             eyebrow="Eerste waarde"
             title="Van eerste respons naar eerste managementread."
             description="Verisight verkoopt geen instant inzicht zonder responsbasis. Daarom hoort ook first value voorspelbaar en geloofwaardig te worden uitgelegd."

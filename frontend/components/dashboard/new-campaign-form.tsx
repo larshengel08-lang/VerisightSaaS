@@ -114,6 +114,18 @@ export function NewCampaignForm({ orgs }: Props) {
         ))}
       </div>
 
+      <div className="rounded-[22px] border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700">
+        <p className="font-semibold text-slate-900">Onboardingverwachting voor deze route</p>
+        <p className="mt-2">
+          {scanType === 'exit'
+            ? 'ExitScan wordt meestal eerst als baseline opgezet. Live opvolging wordt pas logisch nadat de nulmeting, het volume en het eigenaarschap scherp staan.'
+            : 'RetentieScan start meestal als baseline. Ritme of herhaalmeting komt pas daarna, zodra de eerste duiding en opvolging helder zijn.'}
+        </p>
+        <p className="mt-2 text-xs text-slate-500">
+          Deze setup blijft assisted: Verisight beheert campaign, importcontrole en activatie; de klant levert input en gebruikt daarna dashboard en rapport.
+        </p>
+      </div>
+
       {scanType === 'retention' ? (
         <div className="rounded-[22px] border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-950">
           <p className="font-semibold">RetentieScan v1.1-validatievoorbereiding</p>

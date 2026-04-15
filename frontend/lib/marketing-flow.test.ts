@@ -3,8 +3,10 @@ import { REPORT_PREVIEW_COPY } from '@/lib/report-preview-copy'
 import { buildContactHref, getContactFirstStepLabel, getContactRouteLabel } from '@/lib/contact-funnel'
 import { getBuyerFacingShowcaseAssets } from '@/lib/sample-showcase-assets'
 import {
+  approachSteps,
   homepageProductRoutes,
   homepageUtilityLinks,
+  included,
   marketingNavLinks,
   marketingPrimaryCta,
   marketingSecondaryCta,
@@ -46,6 +48,12 @@ describe('marketing flow defaults', () => {
       '/tarieven',
       '/vertrouwen',
     ])
+  })
+
+  it('keeps the approach flow explicit about assisted onboarding and first use', () => {
+    expect(included).toContain('Assisted onboarding van akkoord tot eerste managementread')
+    expect(approachSteps.find((step) => step.title === '5. Dashboard en rapport')?.body.toLowerCase()).toContain('indicatief')
+    expect(approachSteps.find((step) => step.title === '4. Eerste responses')?.body.toLowerCase()).toContain('klantactivatie')
   })
 
   it('keeps preview copy and buyer-facing showcase assets linked to the same proof paths', () => {

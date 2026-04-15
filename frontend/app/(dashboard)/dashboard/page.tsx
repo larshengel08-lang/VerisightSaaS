@@ -8,6 +8,7 @@ import {
   DashboardPanel,
   DashboardSection,
 } from '@/components/dashboard/dashboard-primitives'
+import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
 import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { CampaignStats } from '@/lib/types'
@@ -42,6 +43,7 @@ export default async function DashboardHomePage() {
   const campaigns = (stats ?? []) as CampaignStats[]
   const groups = groupCampaigns(campaigns)
   const activeCampaigns = campaigns.filter((campaign) => campaign.is_active)
+  const primaryGuideCampaign = activeCampaigns[0] ?? campaigns[0] ?? null
   const avgResponse =
     campaigns.length > 0
       ? Math.round(campaigns.reduce((sum, campaign) => sum + (campaign.completion_rate_pct ?? 0), 0) / campaigns.length)
@@ -95,6 +97,21 @@ export default async function DashboardHomePage() {
           />
         </div>
       </DashboardSection>
+
+      {!isAdmin ? (
+        <DashboardSection
+          eyebrow="Eerste route"
+          title="Van eerste login naar eerste managementread"
+          description="Deze laag maakt expliciet hoe je dashboard en rapport als eerste managementinstrument gebruikt, zonder setupverantwoordelijkheid of self-service verwachtingen."
+          aside={<DashboardChip label="Assisted onboarding" tone="blue" />}
+        >
+          <ManagementReadGuide
+            scanType={primaryGuideCampaign?.scan_type ?? 'exit'}
+            hasMinDisplay={(primaryGuideCampaign?.total_completed ?? 0) >= 5}
+            hasEnoughData={(primaryGuideCampaign?.total_completed ?? 0) >= 10}
+          />
+        </DashboardSection>
+      ) : null}
 
       {campaigns.length === 0 ? (
         isAdmin ? <AdminEmptyState /> : <ViewerEmptyState />
@@ -309,8 +326,22 @@ function ViewerEmptyState() {
       title="Jouw dashboard wordt voorbereid"
       description="Verisight zet de campagne op, controleert de import en activeert daarna automatisch dit overzicht."
     >
-      <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-5 text-sm leading-6 text-slate-700">
-        Zodra de eerste responses binnenkomen, verschijnen hier automatisch je campagnes, status en rapportacties.
+      <div className="space-y-4">
+        <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-5 text-sm leading-6 text-slate-700">
+          Zodra de eerste responses binnenkomen, verschijnen hier automatisch je campagnes, status en rapportacties.
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {[
+            'Verisight beheert organisatie, campaign en respondentimport.',
+            'Jij krijgt daarna toegang tot het juiste dashboard en rapport.',
+            'De eerste managementwaarde zit in lezen, duiden en prioriteren, niet in technische setup.',
+          ].map((item, index) => (
+            <div key={item} className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-700">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Stap {index + 1}</p>
+              <p className="mt-2">{item}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </DashboardSection>
   )
