@@ -27,7 +27,9 @@ Status 2026-04-15:
 - gerichte visual integrity pass uitgevoerd op `/`, `/producten`, `/producten/exitscan`, `/producten/retentiescan`, `/tarieven` en `/aanpak`
 - browsermatige breakpoint-QA gedaan op mobiel, tablet en desktop via lokale build- en screenshotcontrole
 - layoutsysteem aangescherpt op shellbreedte, vertical rhythm, hero-measures, CTA-rijen, panelhiërarchie, stage-balans en globale overflow-resets
-- nog niet gepusht in deze tranche
+- aanvullende brede visual repair uitgevoerd op de gedeelde hero-shell: intro, stage en support losgetrokken zodat tablet- en mobile-compositie rustiger en logischer opbouwt
+- tabletnavigatie hersteld via publieke header-breakpoints zodat menu-toegang niet meer wegvalt tussen mobile en desktop
+- naar `main` gepusht en live opnieuw geverifieerd in deze tranche
 
 ## 2. Visual Direction
 
