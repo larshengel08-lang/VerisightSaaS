@@ -67,7 +67,7 @@ export default function VertrouwenPage() {
         description="Deze pagina bundelt wat een eerste koper publiek moet kunnen verifieren voordat er een demo of kennismaking plaatsvindt: productgrenzen, privacybasis, rapportlezing en formele supportlagen."
         highlightItems={['Methodiek', 'Privacy', 'Rapportlezing', 'DPA beschikbaar']}
         contextTitle="Wat je hier publiek kunt verifieren"
-        contextBody="Geen losse trustclaims, maar een buyer-facing overzicht van hoe Verisight methodiek, privacy, gegroepeerde output en juridische basis zichtbaar organiseert. Dat betekent ook: geen individuele voorspelling, geen individuele signalen naar management en geen persoonsgerichte managementoutput."
+        contextBody="Geen losse trustclaims, maar een buyer-facing overzicht van hoe Verisight methodiek, privacy, gegroepeerde output, bestuurlijke handoff en juridische basis zichtbaar organiseert. Dat betekent ook: geen individuele voorspelling, geen individuele signalen naar management en geen persoonsgerichte managementoutput."
       >
         <div className="grid gap-5 lg:grid-cols-3">
           {trustSignalHighlights.map((item) => (

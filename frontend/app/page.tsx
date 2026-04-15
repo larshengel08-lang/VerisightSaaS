@@ -27,7 +27,7 @@ import {
 export const metadata: Metadata = {
   title: 'Verisight',
   description:
-    'Kies tussen ExitScan, RetentieScan en een bewuste combinatie. Verisight helpt HR-teams met dashboard, rapport en managementduiding in één commerciële flow.',
+    'Kies tussen ExitScan, RetentieScan en een bewuste combinatie. Verisight helpt HR-teams met dashboard, rapport, bestuurlijke handoff en managementduiding in één commerciële flow.',
   alternates: {
     canonical: '/',
   },
@@ -93,7 +93,7 @@ export default function LandingPage() {
               ExitScan en RetentieScan in één heldere commerciële lijn.
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-slate-600">
-              Kies eerst de juiste route: begrijpen waarom mensen gingen, eerder zien waar behoud schuift, of beide bewust combineren. Daarna krijg je dashboard, rapport en managementduiding in dezelfde taal.
+              Kies eerst de juiste route: begrijpen waarom mensen gingen, eerder zien waar behoud schuift, of beide bewust combineren. Daarna krijg je dashboard, rapport en een compacte bestuurlijke handoff in dezelfde taal.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -172,7 +172,7 @@ export default function LandingPage() {
                   <div>
                     <p className="text-sm font-semibold text-slate-950">Voorbeeld van de managementweergave</p>
                     <p className="mt-1 text-xs leading-6 text-slate-500">
-                      Fictieve data in dezelfde managementstructuur, trustnotities en leesvolgorde als echte output.
+                      Fictieve data in dezelfde managementstructuur, bestuurlijke handoff, trustnotities en leesvolgorde als echte output.
                     </p>
                   </div>
                   <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
@@ -246,7 +246,7 @@ export default function LandingPage() {
           <SectionHeading
             eyebrow="Waarom Verisight"
             title="Meer managementwaarde dan een generieke survey of losse export."
-            description="De meerwaarde zit niet alleen in meten, maar in hoe snel HR, MT en directie snappen wat aandacht vraagt."
+            description="De meerwaarde zit niet alleen in meten, maar in hoe snel HR, sponsor, MT en directie snappen wat aandacht vraagt en welk spoor eerst telt."
             light
             align="center"
           />

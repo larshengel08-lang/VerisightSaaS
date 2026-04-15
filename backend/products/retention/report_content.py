@@ -139,6 +139,37 @@ def get_management_summary_payload(
         "Detailweergave en segmentvergelijking blijven gekoppeld aan minimale n-grenzen zodat privacy, interpretatie en herleidbaarheid bewaakt blijven."
     )
 
+    if retention_signal_profile == "scherp_aandachtssignaal":
+        boardroom_relevance = (
+            f"Meerdere behoudssignalen wijzen dezelfde kant op. Daardoor verschuift {top_factor_text} van HR-signaal naar bestuurlijk aandachtspunt "
+            "voor teamcontinuiteit, leiding en uitvoerbaarheid."
+        )
+    elif retention_signal_profile == "vertrekdenken_zichtbaar":
+        boardroom_relevance = (
+            f"Expliciet vertrekdenken is zichtbaar op groepsniveau. Dat maakt dit relevant voor prioritering en opvolging voordat druk op teams, "
+            f"leiding of continuiteit verder oploopt rond {top_factor_text}."
+        )
+    else:
+        boardroom_relevance = (
+            f"Het beeld is vooral een vroegsignaal. Juist daarom vraagt {top_factor_text} nu bestuurlijke weging: wat moet eerst gevalideerd worden "
+            "en wat kan nog wachten."
+        )
+
+    if avg_turnover_intention is not None and avg_turnover_intention >= 5.5:
+        continuity_body = (
+            "Vertrekintentie is zichtbaar genoeg om dit niet alleen als HR-signaal te behandelen. "
+            "Zonder snelle verificatie en eigenaarschap groeit de kans dat teamcontinuiteit of leiderschapsbelasting onder druk komen te staan."
+        )
+    else:
+        continuity_body = (
+            "Het risico zit nu vooral in gemiste verificatie: te laat reageren maakt van een corrigeerbaar vroegsignaal sneller een breder behoudsvraagstuk."
+        )
+
+    boardroom_watchout = (
+        "Lees dit niet als individuele risicolijst, predictor of performance-oordeel. "
+        "RetentieScan helpt sneller wegen waar behoud op groepsniveau verificatie en opvolging vraagt, maar blijft een v1-werkmodel."
+    )
+
     return {
         "section_title": "Managementsamenvatting",
         "distribution_title": "Verdeling van behoudssignalen",
@@ -147,6 +178,45 @@ def get_management_summary_payload(
         "executive_intro": executive_intro,
         "trust_note_title": "Leeswijzer voor bestuur en management",
         "trust_note": trust_note,
+        "boardroom_title": "Bestuurlijke handoff",
+        "boardroom_intro": (
+            "Deze bestuurlijke handoff helpt een sponsor, MT of directie snel zien waar behoudsdruk nu oploopt, "
+            "waarom dat bestuurlijk telt, welk besluit eerst hoort en wat de eerste vervolgrichting is."
+        ),
+        "boardroom_cards": [
+            {
+                "title": "Wat speelt nu",
+                "value": signal_profile_value,
+                "body": group_body,
+            },
+            {
+                "title": "Wat als je niets doet",
+                "value": "Continuiteitsdruk",
+                "body": continuity_body,
+            },
+            {
+                "title": "Eerste besluit",
+                "value": top_factor_labels[0] if top_factor_labels else "Nog geen topfactor",
+                "body": first_decision,
+            },
+            {
+                "title": "Eerste eigenaar",
+                "value": first_owner,
+                "body": "Beleg meteen wie verificatie en eerste opvolging trekt, zodat het groepssignaal niet tussen HR en management blijft hangen.",
+            },
+            {
+                "title": "Eerste stap",
+                "value": "Binnen 30-90 dagen",
+                "body": next_step,
+            },
+            {
+                "title": "Waarom telt dit nu",
+                "value": "Bestuurlijke relevantie",
+                "body": boardroom_relevance,
+            },
+        ],
+        "boardroom_watchout_title": "Wat je hier niet uit moet concluderen",
+        "boardroom_watchout": boardroom_watchout,
         "highlight_cards": [
             {
                 "title": "Groepsbeeld nu",

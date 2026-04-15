@@ -47,6 +47,7 @@ def get_management_summary_payload(
     top_contributing_reason_label: str | None,
     strong_work_signal_pct: float | None,
     signal_visibility_average: float | None,
+    total_replacement_cost_eur: float | None = None,
 ) -> dict[str, Any]:
     top_factor_text = " en ".join(label.lower() for label in top_factor_labels[:2]) if top_factor_labels else "de scherpste werkfactoren"
     top_reason_text = (top_exit_reason_label or "het huidige vertrekbeeld").lower()
@@ -145,6 +146,67 @@ def get_management_summary_payload(
         "ExitScan is methodisch verdedigbaar, maar niet extern gevalideerd als diagnostisch instrument."
     )
 
+    if strong_work_signal_pct is not None and strong_work_signal_pct >= 50:
+        boardroom_relevance = (
+            f"Een relatief groot deel van de exitbatch wijst op beinvloedbare werkfrictie rond {top_factor_text}. "
+            "Daardoor is dit niet alleen HR-nazorg, maar een bestuurlijk prioriteitsspoor voor leiding, inrichting en opvolging."
+        )
+    else:
+        boardroom_relevance = (
+            f"Het vertrekbeeld is nog niet breed genoeg voor grote conclusies, maar wel scherp genoeg om {top_factor_text} "
+            "als bestuurlijk verificatiespoor te behandelen."
+        )
+
+    exposure_value = None
+    exposure_body = (
+        "Gebruik deze noot alleen als indicatieve exposure op basis van interne vervangingskosten van de huidige exitbatch, "
+        "niet als bewezen besparingsclaim of ROI."
+    )
+    if total_replacement_cost_eur is not None and total_replacement_cost_eur > 0:
+        if total_replacement_cost_eur >= 1_000_000:
+            exposure_value = f"EUR {total_replacement_cost_eur / 1_000_000:.1f} mln"
+        else:
+            exposure_value = f"EUR {round(total_replacement_cost_eur / 1000):.0f}k"
+
+    boardroom_cards = [
+        {
+            "title": "Wat speelt nu",
+            "value": top_exit_reason_label or "Nog geen duidelijk vertrekbeeld",
+            "body": profile_body,
+        },
+        {
+            "title": "Waarom telt dit nu",
+            "value": "Bestuurlijke relevantie",
+            "body": boardroom_relevance,
+        },
+        {
+            "title": "Eerste besluit",
+            "value": top_factor_labels[0] if top_factor_labels else "Nog geen topfactor",
+            "body": first_decision,
+        },
+        {
+            "title": "Eerste eigenaar",
+            "value": first_owner,
+            "body": "Beleg meteen wie dit spoor trekt, zodat vertrekduiding niet stilvalt tussen HR-signaal en managementbesluit.",
+        },
+        {
+            "title": "Eerste stap",
+            "value": "Binnen 30-90 dagen",
+            "body": next_step,
+        },
+    ]
+    if exposure_value:
+        boardroom_cards.append({
+            "title": "Indicatieve exposure",
+            "value": exposure_value,
+            "body": exposure_body,
+        })
+
+    boardroom_watchout = (
+        "Lees dit niet als bewijs van de ene oorzaak van vertrek en ook niet als garantie dat een interventie het patroon oplost. "
+        "ExitScan helpt sneller wegen waar management moet toetsen en kiezen, niet om achteraf absolute zekerheid te claimen."
+    )
+
     return {
         "section_title": "Managementsamenvatting",
         "distribution_title": "Verdeling van het vertrekbeeld",
@@ -153,6 +215,14 @@ def get_management_summary_payload(
         "executive_intro": executive_intro,
         "trust_note_title": "Leeswijzer voor bestuur en management",
         "trust_note": trust_note,
+        "boardroom_title": "Bestuurlijke handoff",
+        "boardroom_intro": (
+            "Deze bestuurlijke handoff helpt een sponsor, MT of directie snel zien wat nu speelt, waarom het telt, "
+            "welk besluit eerst hoort en waar de eerste vervolgrichting ligt."
+        ),
+        "boardroom_cards": boardroom_cards,
+        "boardroom_watchout_title": "Wat je hier niet uit moet concluderen",
+        "boardroom_watchout": boardroom_watchout,
         "highlight_cards": [
             {
                 "title": "Vertrekbeeld nu",

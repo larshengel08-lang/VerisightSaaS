@@ -25,7 +25,7 @@ const FACTOR_ACTION_HINTS: Record<string, string> = {
 }
 
 const SIGNAL_BANDS_TEXT =
-  'Laag, verhoogd en sterk aandachtssignaal laten zien hoe breed en hoe scherp behoudssignalen zich in de groep verdelen. Gebruik deze banding voor prioritering en verificatie op groepsniveau, niet als individuele voorspelling.'
+  'Laag, verhoogd en sterk aandachtssignaal laten zien hoe breed en hoe scherp behoudssignalen zich in de groep verdelen. Gebruik deze banding voor prioritering en verificatie op groepsniveau in HR, sponsor en MT, niet als individuele voorspelling.'
 
 function deriveSignalProfile(
   riskScore: number | null,
@@ -165,6 +165,12 @@ export function buildRetentionDashboardViewModel(args: {
   const firstAction =
     leadingPlaybook?.actions[0] ??
     `Koppel ${topFactorLabel.toLowerCase()} binnen 30 dagen aan een eerste gerichte opvolgactie en leg het evaluatiemoment direct vast.`
+  const boardroomRelevance =
+    signalProfile === 'scherp_aandachtssignaal' || signalProfile === 'vertrekdenken_zichtbaar'
+      ? `Dit beeld vraagt bestuurlijke weging omdat ${topFactorLabel.toLowerCase()} samenvalt met signalen die teamcontinuiteit, leiding en uitvoerbaarheid kunnen raken.`
+      : `Dit blijft vooral een vroegsignaal, maar wel een vroegsignaal dat sponsor, MT en HR moeten wegen voordat het breder oploopt.`
+  const boardroomWatchout =
+    'Lees RetentieScan niet als individuele risicolijst, predictor of performance-oordeel. Het is een verification-first groepssignaal dat sneller helpt kiezen waar behoud nu aandacht vraagt.'
 
   if (!args.hasMinDisplay) {
     return {
@@ -253,16 +259,25 @@ export function buildRetentionDashboardViewModel(args: {
     signaalbandenText: SIGNAL_BANDS_TEXT,
     topSummaryCards: [
       {
-        title: 'Gemiddelde vertrekintentie',
-        value: args.turnoverIntention !== null ? `${args.turnoverIntention.toFixed(1)}/10` : '-',
-        body: 'Hogere scores wijzen op een sterker signaal dat medewerkers nadenken over vertrek. Gebruik dit als groepssignaal, niet als individuele voorspelling.',
+        title: 'Groepsbeeld nu',
+        value: signalProfile === 'scherp_aandachtssignaal'
+          ? 'Scherp aandachtssignaal'
+          : signalProfile === 'vertrekdenken_zichtbaar'
+            ? 'Vertrekdenken zichtbaar'
+            : signalProfile === 'overwegend_stabiel'
+              ? 'Overwegend stabiel'
+              : 'Vroegsignaal',
+        body: profileText,
         tone: 'blue',
       },
       {
-        title: 'Gemiddelde stay-intent',
-        value: args.stayIntent !== null ? `${args.stayIntent.toFixed(1)}/10` : '-',
-        body: 'Hogere scores wijzen op een sterkere expliciete bereidheid om te blijven. Lees dit altijd samen met werkfactoren, bevlogenheid en vertrekintentie.',
-        tone: 'emerald',
+        title: 'Waarom telt dit nu',
+        value:
+          args.turnoverIntention !== null && args.turnoverIntention >= 5.5
+            ? `${args.turnoverIntention.toFixed(1)}/10 vertrekintentie`
+            : 'Bestuurlijke relevantie',
+        body: boardroomRelevance,
+        tone: signalProfile === 'scherp_aandachtssignaal' ? 'amber' : 'blue',
       },
       {
         title: 'Topfactor',
@@ -282,10 +297,16 @@ export function buildRetentionDashboardViewModel(args: {
         body: 'Beleg meteen wie verificatie en eerste opvolging trekt, zodat RetentieScan niet blijft hangen in alleen signalering.',
         tone: 'emerald',
       },
+      {
+        title: 'Wat niet concluderen',
+        value: 'Geen predictor',
+        body: boardroomWatchout,
+        tone: 'blue',
+      },
     ],
     managementBlocks: [
       {
-        title: 'Wat is het groepsbeeld nu?',
+        title: 'Wat speelt nu op groepsniveau?',
         intro:
           topFactorLabels.length > 0
             ? `${profileText} Op dit moment zitten de scherpste signalen vooral in ${topFactorLabels.join(' en ')}.`

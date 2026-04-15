@@ -62,7 +62,7 @@ TENURES = [0.5, 1.0, 1.5, 2.0, 2.0, 3.0, 4.0, 5.5, 7.0]
 EXIT_CONFIG = {
     "scan_type": "exit",
     "campaign_name": "ExitScan Q1 2026",
-    "output_name": "voorbeeldrapport_verisight.pdf",
+    "output_name": "docs/examples/voorbeeldrapport_verisight.pdf",
     "invited": 51,
     "responses": 35,
 }
@@ -70,7 +70,7 @@ EXIT_CONFIG = {
 RETENTION_CONFIG = {
     "scan_type": "retention",
     "campaign_name": "RetentieScan Voorjaar 2026",
-    "output_name": "voorbeeldrapport_retentiescan.pdf",
+    "output_name": "docs/examples/voorbeeldrapport_retentiescan.pdf",
     "invited": 58,
     "responses": 39,
 }
@@ -183,7 +183,7 @@ def _pick_profile(profiles: list[tuple]) -> dict[str, float | str]:
     for profile in profiles:
         cumulative += profile[1]
         if r <= cumulative:
-            if len(profile) == 11:
+            if isinstance(profile[-1], (int, float)) and isinstance(profile[-2], (int, float)):
                 (
                     name, _weight,
                     sdt_b, lead_b, growth_b, work_b, culture_b, comp_b, role_b,
@@ -607,6 +607,7 @@ def main() -> None:
 
     pdf_bytes = generate_campaign_report(campaign.id, db)
     output_path = Path(__file__).parent / str(config["output_name"])
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_bytes(pdf_bytes)
 
     print(f"Rapport opgeslagen: {output_path}")

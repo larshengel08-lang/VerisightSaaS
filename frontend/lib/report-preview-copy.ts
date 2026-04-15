@@ -10,6 +10,9 @@ export interface ReportPreviewCopy {
   label: string
   intro: string
   kpis: [string, string, string][]
+  boardroomTitle: string
+  boardroomIntro: string
+  boardroomPoints: [string, string][]
   focusTitle: string
   nuance: string
   factorLead: string
@@ -27,12 +30,20 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
   portfolio: {
     label: 'Portfolio-overzicht',
     intro:
-      'Verisight vertaalt scans naar dezelfde managementstructuur: eerst de managementsamenvatting, daarna de eerste managementvraag en vervolgens de eerste logische stap.',
+      'Verisight vertaalt scans naar dezelfde boardroom-structuur: eerst de managementsamenvatting, daarna de bestuurlijke weging en vervolgens de eerste logische stap. Gebruik dit overzicht in gesprekken om eerst de juiste route te kiezen, niet om meteen alles tegelijk te verkopen.',
     kpis: [
       ['Actieve campagnes', '2 scans actief', 'ExitScan en RetentieScan'],
-      ['Gemiddeld hoofdsignaal', '5,4 op 10', 'Bespreek met HR en MT'],
+      ['Gemiddeld hoofdsignaal', '5,4 op 10', 'Bespreek met HR, sponsor en MT'],
       ['Belangrijkste aandachtspunt', 'Groei', 'Hier is het meeste te winnen'],
       ['Stuurvraag', 'Vertrek of behoud?', 'Kies de juiste scanvorm'],
+    ],
+    boardroomTitle: 'Bestuurlijke handoff',
+    boardroomIntro:
+      'Dezelfde executive lijn loopt door in dashboard, rapport en preview: wat speelt nu, waarom telt dat, welk besluit hoort eerst en wat moet management vooral niet overclaimen.',
+    boardroomPoints: [
+      ['Wat speelt nu', 'Per product zie je het hoofdbeeld in een compacte sponsor- en directieread.'],
+      ['Waarom telt dit nu', 'De toplaag maakt zichtbaar waarom dit een bestuurlijk prioriteitsspoor is en niet alleen een HR-observatie.'],
+      ['Wat niet concluderen', 'Verisight versnelt weging en gesprek, maar verkoopt geen diagnose, individuele voorspeller of sluitende causaliteit.'],
     ],
     focusTitle: 'Welke managementroute past nu het best?',
     nuance:
@@ -55,7 +66,8 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     proofNotes: [
       ['Managementsamenvatting', 'Dashboard en rapport openen met dezelfde bestuurlijke leesvolgorde'],
-      ['Productspecifieke duiding', 'ExitScan en RetentieScan krijgen een eigen managementverhaal binnen één platform'],
+      ['Productspecifieke duiding', 'ExitScan en RetentieScan krijgen een eigen managementverhaal binnen een platform'],
+      ['Routekeuze eerst', 'ExitScan is meestal de eerste demo; RetentieScan volgt wanneer de actieve behoudsvraag echt centraal staat'],
       ['Begeleide output', 'Geen losse survey-export of self-serve tool'],
     ],
     trustTitle: 'Hoe je deze voorbeeldoutput leest',
@@ -63,7 +75,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       'Deze preview gebruikt fictieve data, maar volgt dezelfde managementstructuur, leesvolgorde en trustnotities als de live buyer-facing output.',
     trustPoints: [
       ['Intended use', 'Gebruik deze laag om te kiezen welke managementroute past: vertrekduiding, vroegsignalering of beide.'],
-      ['Wat management ziet', 'Managementsamenvatting, topfactoren, eerste vraag en eerste logische stap in één executive lijn.'],
+      ['Wat management ziet', 'Managementsamenvatting, topfactoren, eerste vraag en eerste logische stap in een executive lijn.'],
       ['Privacygrens', 'Groepsinzichten met minimale n-grenzen en geen individuele signalen naar management.'],
       ['Bewijsstatus', 'Methodisch onderbouwde managementoutput, geen diagnose of individuele voorspeller.'],
     ],
@@ -74,20 +86,28 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
   exit: {
     label: 'ExitScan-voorbeeld',
     intro:
-      'ExitScan opent met een managementsamenvatting die het vertrekbeeld terugbrengt tot hoofdreden, scherpste werkfactoren en eerste managementvraag.',
+      'ExitScan opent met een managementsamenvatting die het vertrekbeeld terugbrengt tot hoofdreden, bestuurlijke relevantie, eerste managementvraag en compacte handoff voor sponsor of directie. Dit is meestal de logischste eerste demo voor nieuwe buyers.',
     kpis: [
       ['Reacties', '14 van 18', '78% respons'],
       ['Gemiddelde frictiescore', '5,8 op 10', 'Vergt nadere duiding'],
       ['Belangrijkste aandachtspunt', 'Groei', 'Hier is het meeste te winnen'],
       ['Gemiddelde diensttijd', '2,4 jaar', 'Van vertrekkende medewerkers'],
     ],
+    boardroomTitle: 'Bestuurlijke handoff',
+    boardroomIntro:
+      'ExitScan vat de top van het rapport samen in een compacte sponsor-read: wat speelt nu, waarom is dit bestuurlijk relevant, wie trekt het spoor en welke stap hoort als eerste.',
+    boardroomPoints: [
+      ['Wat speelt nu', 'Leiderschap en groeiperspectief kleuren het terugkerende vertrekbeeld.'],
+      ['Waarom telt dit nu', 'Een breed werksignaal maakt dit relevant voor managementprioritering en niet alleen voor HR-nazorg.'],
+      ['Wat niet concluderen', 'Dit is vertrekduiding op groepsniveau, geen bewijs van de ene oorzaak en geen garantie op lagere uitstroom.'],
+    ],
     focusTitle: 'Wat moet management nu eerst bespreken?',
     nuance:
-      'ExitScan maakt patronen zichtbaar en helpt bepalen waar vervolgactie het meeste oplevert. Het blijft gegroepeerde vertrekduiding: geen individueel oordeel, geen diagnose en geen harde voorspelling.',
+      'ExitScan maakt patronen zichtbaar en helpt bepalen waar vervolgactie het meeste oplevert. Het blijft gegroepeerde vertrekduiding: geen individueel oordeel, geen diagnose, geen harde voorspelling en geen geforceerde ROI-claim.',
     factorLead:
-      'Per factor zie je de belevingsscore en de signaalwaarde. Die signaalwaarde helpt bepalen welke werkfactor eerst bestuurlijke verificatie verdient.',
+      'Per factor zie je de belevingsscore en de signaalwaarde. Die signaalwaarde helpt bepalen welke werkfactor eerst bestuurlijke verificatie en eigenaarschap verdient.',
     hypothesisLead:
-      'De rapportage vertaalt uitkomsten niet naar harde conclusies, maar naar werkhypothesen, een eerste eigenaar en een eerste logische 30-90 dagenactie.',
+      'De rapportage vertaalt uitkomsten niet naar harde conclusies, maar naar werkhypothesen, bestuurlijke handoff, een eerste eigenaar en een eerste logische 30-90 dagenactie.',
     hypotheses: [
       {
         title: 'Hypothese: leiderschap vraagt verdiepende validatie',
@@ -101,7 +121,8 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       },
     ],
     proofNotes: [
-      ['Managementsamenvatting', 'Vertrekbeeld nu, eerste managementvraag en eerste logische stap in één leeslaag'],
+      ['Managementsamenvatting', 'Vertrekbeeld nu, bestuurlijke relevantie en eerste logische stap in een leeslaag'],
+      ['Bestuurlijke handoff', 'Compacte sponsor-read met eerste besluit, eerste eigenaar en wat je niet moet overclaimen'],
       ['Werkhypothesen', 'Topfactoren worden vertaald naar te toetsen vragen en concrete opvolging'],
       ['Methodische nuance', 'Signalen en hypothesen, geen absolute waarheid of diagnose'],
       ['Bewijsstatus', 'Methodisch verdedigbaar en testmatig geborgd, maar niet extern gevalideerd als diagnostisch instrument'],
@@ -117,23 +138,31 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     demoLabel: 'Illustratief voorbeeld',
     demoBody:
-      'Fictieve voorbeelddata. De trustopbouw, managementtaal en rapportvolgorde zijn gelijk aan de live ExitScan-presentatie.',
+      'Fictieve voorbeelddata. De trustopbouw, managementtaal en rapportvolgorde zijn gelijk aan de live ExitScan-presentatie waarmee Lars normaal de eerste route uitlegt.',
   },
   retention: {
     label: 'RetentieScan-voorbeeld',
     intro:
-      'RetentieScan opent met een managementsamenvatting die het groepsbeeld terugbrengt tot signaalprofiel, topfactoren en eerste verificatiespoor.',
+      'RetentieScan opent met een managementsamenvatting die het groepsbeeld terugbrengt tot signaalprofiel, bestuurlijke weging, eerste verificatiespoor en compacte handoff voor sponsor of directie. In demo\'s komt deze route meestal na ExitScan, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.',
     kpis: [
       ['Reacties', '63 van 92', '68% respons'],
       ['Gemiddeld retentiesignaal', '5,6 op 10', 'Breed aandachtssignaal'],
       ['Gemiddelde bevlogenheid', '6,8 op 10', 'Niet laag, wel ongelijk verdeeld'],
       ['Gemiddelde vertrekintentie', '4,7 op 10', 'Vraagt gerichte opvolging'],
     ],
+    boardroomTitle: 'Bestuurlijke handoff',
+    boardroomIntro:
+      'RetentieScan vat de top van het rapport samen in een compacte sponsor-read: waar staat behoud onder druk, waarom moet dit nu gewogen worden en wie trekt verificatie en eerste opvolging.',
+    boardroomPoints: [
+      ['Wat speelt nu', 'Het groepsbeeld laat zien waar behoudsdruk oploopt en welke werkfactoren dat het scherpst kleuren.'],
+      ['Waarom telt dit nu', 'Zichtbare vertrekintentie of stille behoudsdruk raken teamcontinuiteit, leiding en uitvoerbaarheid.'],
+      ['Wat niet concluderen', 'Dit blijft een verification-first groepssignaal en geen individuele predictor, performance-score of bewezen risicomodel.'],
+    ],
     focusTitle: 'Waar vraagt behoud nu de meeste aandacht?',
     nuance:
       'RetentieScan is bedoeld voor groeps- en segmentduiding. De output is nadrukkelijk geen individuele voorspeller of performance-instrument, maar een v1-werkmodel voor verificatie en prioritering.',
     factorLead:
-      'De factoranalyse laat zien waar behoudssignalen samenhangen met beïnvloedbare werkfactoren zoals leiderschap, groei en werkbelasting.',
+      'De factoranalyse laat zien waar behoudssignalen samenhangen met beinvloedbare werkfactoren zoals leiderschap, groei en werkbelasting.',
     hypothesisLead:
       'De rapportage helpt management niet alleen zien wat spannend is, maar ook wie eerst moet valideren en welke 30-90 dagenactie logisch is.',
     hypotheses: [
@@ -149,8 +178,9 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       },
     ],
     proofNotes: [
-      ['Managementsamenvatting', 'Groepsbeeld nu, eerste verificatiespoor en eerste logische stap in één executive laag'],
-      ['Signaalmix', 'Retentiesignaal, stay-intent en vertrekintentie in één bestuurssamenvatting'],
+      ['Managementsamenvatting', 'Groepsbeeld nu, bestuurlijke weging en eerste logische stap in een executive laag'],
+      ['Bestuurlijke handoff', 'Compacte sponsor-read met eerste besluit, eerste eigenaar en expliciete watchout tegen overinterpretatie'],
+      ['Signaalmix', 'Retentiesignaal, stay-intent en vertrekintentie in een bestuurssamenvatting'],
       ['Actielogica', 'Topfactoren en vervolgstappen voor 30-90 dagen, zonder individuele voorspelling'],
       ['Bewijsstatus', 'Inhoudelijk plausibel, intern consistent en testmatig beschermd; nog geen pragmatisch bewezen predictor'],
     ],
@@ -159,12 +189,12 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       'De preview maakt dezelfde grens zichtbaar als live output: groeps- en segmentduiding voor verificatie en prioritering, zonder individuele predictor of performance-instrument te worden.',
     trustPoints: [
       ['Intended use', 'Vroegsignalering op behoud op groeps- en segmentniveau voor managementgesprek en opvolging.'],
-      ['Wat management ziet', 'Retentiesignaal, stay-intent, vertrekintentie, bevlogenheid en topfactoren in één bestuurslaag.'],
+      ['Wat management ziet', 'Retentiesignaal, stay-intent, vertrekintentie, bevlogenheid en topfactoren in een bestuurslaag.'],
       ['Privacygrens', 'Geen individuele signalen naar management, segmenten alleen bij voldoende n en open tekst alleen als groepssignaal.'],
       ['Bewijsstatus', 'V1-werkmodel: inhoudelijk plausibel, intern consistent en testmatig beschermd; geen bewezen predictor.'],
     ],
     demoLabel: 'Illustratief voorbeeld',
     demoBody:
-      'Fictieve voorbeelddata. De live RetentieScan-output gebruikt dezelfde managementstructuur, trustnotes en productspecifieke leeswijzers.',
+      'Fictieve voorbeelddata. De live RetentieScan-output gebruikt dezelfde managementstructuur, trustnotes en productspecifieke leeswijzers als in een specifieke behoudsdemo.',
   },
 }

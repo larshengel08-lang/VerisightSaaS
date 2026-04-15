@@ -83,6 +83,19 @@ function ProofRail({ variant }: { variant: ReportPreviewVariant }) {
   return (
     <div className="grid gap-4 lg:grid-cols-[0.88fr_1.12fr]">
       <div className="space-y-4">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">{copy.boardroomTitle}</p>
+          <p className="mt-3 text-sm leading-6 text-slate-700">{copy.boardroomIntro}</p>
+          <div className="mt-4 space-y-3">
+            {copy.boardroomPoints.map(([title, body]) => (
+              <div key={title} className="rounded-xl border border-white/70 bg-white/90 px-4 py-3">
+                <p className="text-sm font-semibold text-slate-950">{title}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Rapportexcerpt</p>
           <div className="mt-4 space-y-3">

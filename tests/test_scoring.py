@@ -375,6 +375,9 @@ class TestExitReportContent:
         assert payload["section_title"] == "Managementsamenvatting"
         assert payload["distribution_title"] == "Verdeling van het vertrekbeeld"
         assert payload["findings_title"] == "Scherpste managementlezing"
+        assert payload["boardroom_title"] == "Bestuurlijke handoff"
+        assert payload["boardroom_watchout_title"] == "Wat je hier niet uit moet concluderen"
+        assert len(payload["boardroom_cards"]) >= 5
         assert payload["cards"][0]["title"] == "Vertrekbeeld nu"
         assert "breed werksignaal" in payload["cards"][0]["body"].lower()
         assert "welke signalen" in payload["cards"][1]["body"].lower()
@@ -449,6 +452,9 @@ class TestRetentionReportContent:
         )
 
         assert payload["section_title"] == "Managementsamenvatting"
+        assert payload["boardroom_title"] == "Bestuurlijke handoff"
+        assert payload["boardroom_watchout_title"] == "Wat je hier niet uit moet concluderen"
+        assert len(payload["boardroom_cards"]) >= 5
         assert payload["cards"][0]["title"] == "Groepsbeeld nu"
         assert "werkbelasting en leiderschap" in payload["cards"][0]["body"].lower()
         assert payload["cards"][1]["title"] == "Eerste verificatiespoor"

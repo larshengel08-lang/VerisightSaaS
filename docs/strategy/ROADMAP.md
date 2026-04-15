@@ -1,7 +1,7 @@
 # Verisight - Roadmap
 
 Levend document. Dit bestand wordt gegenereerd uit `docs/strategy/ROADMAP_DATA.yaml` en de actuele status in `docs/prompts/PROMPT_CHECKLIST.xlsx`.
-Laatst gegenereerd: 2026-04-14
+Laatst gegenereerd: 2026-04-15
 
 ## Gebruik
 
@@ -53,12 +53,11 @@ Verisight moet overtuigend landen bij HR-beslissers, directie en eerste kopers z
 - Management Actionability - afgerond
 - Method And Trust System - afgerond
 - Trust Signal Program - afgerond
-- Boardroom Readiness
-- Founder-Led Sales Narrative
+- Boardroom Readiness - afgerond
+- Founder-Led Sales Narrative - afgerond
 
 **Status**
-- huidige actieve focus
-- 3 van 5 checklist-items afgerond
+- afgerond
 
 **Exit gate**
 - HR en directie begrijpen sneller wat het product oplevert
@@ -82,7 +81,7 @@ De propositie, verpakking en ondersteunende assets moeten coherent genoeg zijn o
 - Sample Output And Showcase
 
 **Status**
-- gepland
+- huidige actieve focus
 
 **Exit gate**
 - Producttaal is consistent

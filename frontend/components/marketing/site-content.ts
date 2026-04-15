@@ -39,7 +39,7 @@ export const homepageProductRoutes = [
   {
     name: 'ExitScan',
     title: 'Maak vertrek bestuurlijk leesbaar',
-    body: 'Voor organisaties die terugkijkend willen leren van uitstroom en daar meer uit willen halen dan losse exitgesprekken.',
+    body: 'Voor organisaties die exitgesprekken of losse signalen hebben, maar nog geen vergelijkbaar managementbeeld van terugkerende uitstroompatronen.',
     href: '/producten/exitscan',
     accent: 'border-blue-200 bg-blue-50',
     chip: 'Terugkijkend',
@@ -47,7 +47,7 @@ export const homepageProductRoutes = [
   {
     name: 'RetentieScan',
     title: 'Zie eerder waar behoud schuift',
-    body: 'Voor organisaties die eerder willen zien waar behoud in actieve teams onder druk staat, zonder er een brede MTO of individuele voorspeller van te maken.',
+    body: 'Voor organisaties die niet willen wachten tot behoud pas zichtbaar wordt in vacatures, uitval of exitgesprekken, zonder er een brede MTO of individuele voorspeller van te maken.',
     href: '/producten/retentiescan',
     accent: 'border-emerald-200 bg-emerald-50',
     chip: 'Vroegsignalering',
@@ -55,7 +55,7 @@ export const homepageProductRoutes = [
   {
     name: 'Combinatie',
     title: 'Kijk terug en vooruit in een lijn',
-    body: 'Voor organisaties die uitstroom willen duiden en tegelijk eerder willen bijsturen op behoud.',
+    body: 'Voor organisaties die eerst een duidelijke route willen kiezen, maar beide managementvragen uiteindelijk bewust naast elkaar willen organiseren.',
     href: '/producten/combinatie',
     accent: 'border-sky-200 bg-sky-50',
     chip: 'Portfolio',
@@ -83,7 +83,7 @@ export const homepageComparisonRows = [
 export const homepageProofSignals = [
   'Methodische productkeuze: vertrekduiding of vroegsignalering',
   'Publieke trust-, privacy- en DPA-laag voor kopers',
-  'Dashboard en rapport in dezelfde managementtaal',
+  'Dashboard, rapport en preview in dezelfde bestuurlijke leeslijn',
   'Groepsinzichten met minimale n-grenzen en productspecifieke leeswijzers',
 ] as const
 
@@ -135,20 +135,20 @@ export const comparisonCards = [
   {
     title: 'ExitScan',
     description:
-      'Voor organisaties die vertrek willen duiden op basis van terugkerende werkfactoren, vertrekredenen en werksignalen.',
-    outcome: 'Sterk wanneer de vraag terugkijkend is: wat leren we van vertrek dat al heeft plaatsgevonden?',
+      'Voor organisaties waar uitstroom wel besproken wordt, maar management nog geen vergelijkbaar beeld heeft van wat structureel terugkeert.',
+    outcome: 'Sterk wanneer de eerste commerciële vraag is: hoe maken we losse exitinput bestuurlijk leesbaar en bruikbaar voor een eerste besluit?',
   },
   {
     title: 'RetentieScan',
     description:
-      'Voor organisaties die eerder willen zien waar behoud op groeps- en segmentniveau onder druk staat, voordat signalen zichtbaar worden in vacatures, uitval of exitgesprekken.',
-    outcome: 'Sterk wanneer de vraag vooruitkijkend is: waar vraagt behoud nu aandacht in de actieve populatie zonder van de scan een brede MTO of individuele predictor te maken?',
+      'Voor organisaties die al scherper willen zien waar behoud op groeps- en segmentniveau onder druk staat, voordat dat pas zichtbaar wordt in vacatures, uitval of exitgesprekken.',
+    outcome: 'Sterk wanneer de vraag vooruitkijkend is: waar vraagt behoud nu als eerste verificatie en opvolging, zonder van de scan een brede MTO of individuele predictor te maken?',
   },
   {
     title: 'Combinatie',
     description:
-      'Voor organisaties die zowel vertrekduiding als behoudsignalering willen opbouwen binnen eenzelfde managementtaal en platform.',
-    outcome: 'Sterk wanneer je achteraf wilt begrijpen en tegelijk eerder wilt kunnen bijsturen.',
+      'Voor organisaties die zowel vertrekduiding als behoudsignalering willen opbouwen binnen eenzelfde managementtaal, maar niet als eerste alles tegelijk willen kopen.',
+    outcome: 'Sterk wanneer beide managementvragen echt bestaan en je de tweede route pas toevoegt nadat de eerste helder staat.',
   },
 ] as const
 
@@ -189,7 +189,7 @@ export const trustSignalHighlights = [
   },
   {
     title: 'Output trust',
-    body: 'Dashboard, rapport en preview volgen dezelfde managementstructuur met leeswijzers, bewijsstatus en productspecifieke interpretatiegrenzen.',
+    body: 'Dashboard, rapport en preview volgen dezelfde bestuurlijke leeslijn met compacte handoff, bewijsstatus en productspecifieke interpretatiegrenzen.',
   },
   {
     title: 'Procestrust',
@@ -208,7 +208,7 @@ export const trustVerificationCards = [
   },
   {
     title: 'Wat management wel ziet',
-    body: 'Geaggregeerde managementsamenvatting, topfactoren, hypotheses, prioriteiten en opvolgsporen in een vaste executive leeslijn.',
+    body: 'Geaggregeerde managementsamenvatting, bestuurlijke handoff, topfactoren, hypotheses, prioriteiten en opvolgsporen in een vaste executive leeslijn.',
   },
   {
     title: 'Wat we bewust niet claimen',
@@ -251,7 +251,7 @@ export const trustReadingRows = [
   ],
   [
     'Wat management ziet',
-    'Dashboard, managementsamenvatting, topfactoren, hypotheses en vervolgstappen',
+    'Dashboard, managementsamenvatting, bestuurlijke handoff, topfactoren, hypotheses en vervolgstappen',
     'Niet elke ruwe response, geen persoonsprofielen en geen verborgen black-box score',
   ],
   [
@@ -315,16 +315,16 @@ export const statCards = [
 
 export const outcomeCards = [
   [
-    'Kies de juiste scan voor de juiste managementvraag',
-    'Je voorkomt dat ExitScan en RetentieScan door elkaar gaan lopen: de ene kijkt terug, de andere signaleert eerder vooruit.',
+    'Begin met de juiste eerste managementvraag',
+    'Je voorkomt dat ExitScan en RetentieScan door elkaar gaan lopen: meestal start je met vertrekduiding en voeg je behoudsignalering pas toe wanneer die vraag echt op tafel ligt.',
   ],
   [
     'Werk met een gedeelde taal voor HR, MT en directie',
-    'Dashboard en rapportage helpen om sneller op een lijn te komen over waar verdieping of actie het meeste oplevert, inclusief vaste leeswijzers over claims, privacy en interpretatie.',
+    'Dashboard en rapportage helpen om sneller op een lijn te komen over waar verdieping, prioriteit of eerste actie het meeste oplevert, inclusief compacte bestuurlijke handoff en vaste leeswijzers over claims, privacy en interpretatie.',
   ],
   [
-    'Combineer signalering met duiding',
-    'Je kunt behoudssignalen volgen zonder van RetentieScan een brede MTO of individuele voorspeller te maken.',
+    'Ga van losse signalen naar bestuurbare prioriteiten',
+    'Verisight vertaalt losse exitdata of behoudssignalen naar een eerste managementvraag, een eerste eigenaar en een logische vervolgstap.',
   ],
   [
     'Geen extra toolbeheer voor HR',
@@ -343,15 +343,15 @@ export const outcomeCards = [
 export const processHighlights = [
   {
     title: 'Voor HR',
-    text: 'Minder losse signalen en sneller een bruikbare keuze tussen vertrekduiding en behoudsignalering.',
+    text: 'Minder losse signalen, minder improvisatie in uitleg en sneller een bruikbare keuze tussen vertrekduiding en behoudsignalering.',
   },
   {
     title: 'Voor MT',
-    text: 'Een compact managementbeeld dat helpt bepalen waar gesprek, validatie of actie het meeste oplevert.',
+    text: 'Een compact managementbeeld dat helpt bepalen welke vraag nu eerst op tafel moet en waar gesprek, validatie of actie het meeste oplevert.',
   },
   {
     title: 'Voor directie',
-    text: 'Stuurinformatie over zowel terugkerende vertrekpatronen als vroege signalen rond behoud.',
+    text: 'Compacte besluitinformatie die laat zien waar terugkerende vertrekpatronen of vroege behoudssignalen bestuurlijke aandacht, eigenaarschap en vervolgrichting verdienen.',
   },
 ] as const
 
@@ -369,7 +369,7 @@ export const included = [
 export const approachSteps = [
   {
     title: '1. Intake en scan-keuze',
-    body: 'We bepalen samen of de vraag vooral om ExitScan, RetentieScan of een combinatie vraagt, en welke respondentdata nodig is.',
+    body: 'We bepalen samen welke managementvraag eerst telt: vertrek achteraf duiden, behoud eerder signaleren of later bewust combineren, en welke respondentdata daarvoor nodig is.',
   },
   {
     title: '2. Datavoorbereiding',
@@ -381,7 +381,7 @@ export const approachSteps = [
   },
   {
     title: '4. Rapport en opvolging',
-    body: 'Je krijgt een dashboard en rapport waarmee HR, MT en directie sneller zien waar gesprek, validatie of vervolgactie logisch is, inclusief leeswijzers over methodiek, claimsgrenzen en privacy.',
+    body: 'Je krijgt een dashboard en rapport waarmee HR, sponsor, MT en directie sneller zien wat nu het eerste managementspoor is, welke validatie logisch is en welke vervolgactie eerst moet worden belegd, inclusief compacte bestuurlijke handoff en leeswijzers over methodiek, claimsgrenzen en privacy.',
   },
 ] as const
 
@@ -389,7 +389,7 @@ export const approachRoutes = [
   {
     eyebrow: 'ExitScan Baseline',
     title: 'De standaard eerste instap voor vertrekduiding',
-    body: 'Retrospectief traject op ex-medewerkers van bijvoorbeeld de afgelopen 12 maanden. Geschikt als eerste patroonbeeld en startpunt voor actie.',
+    body: 'Retrospectief traject op ex-medewerkers van bijvoorbeeld de afgelopen 12 maanden. Dit is meestal de logischste eerste commerciële instap wanneer organisaties wel exitinput hebben, maar nog geen bestuurbaar patroonbeeld.',
     bullets: [
       'Eenmalige aanlevering van respondentbestand',
       'Bij voorkeur inclusief afdeling, functieniveau en exitmaand',
@@ -402,7 +402,7 @@ export const approachRoutes = [
   {
     eyebrow: 'ExitScan Live',
     title: 'Voor organisaties die uitstroom doorlopend willen volgen',
-    body: 'Doorlopende ExitScan voor nieuwe vertrekkers. Past vooral wanneer je uitstroom structureel wilt monitoren en periodiek wilt verversen.',
+    body: 'Doorlopende ExitScan voor nieuwe vertrekkers. Past vooral als vervolg op een eerste baseline of wanneer uitstroom al structureel en met voldoende volume wordt gevolgd.',
     bullets: [
       'Vast proces met HR voor nieuwe vertrekkers',
       'Actuelere signalen, trends pas zinvol bij voldoende volume',
@@ -415,7 +415,7 @@ export const approachRoutes = [
   {
     eyebrow: 'RetentieScan Baseline',
     title: 'De eerste meetvorm voor actieve medewerkers',
-    body: 'Een eenmalige RetentieScan om te zien waar behoud op groepsniveau onder druk staat, welke werkfactoren prioriteit vragen en hoe bevlogenheid, stay-intent en vertrekintentie zich verhouden.',
+    body: 'Een eenmalige RetentieScan om te zien waar behoud op groepsniveau onder druk staat, welke werkfactoren prioriteit vragen en hoe bevlogenheid, stay-intent en vertrekintentie zich verhouden. Logisch wanneer de buyer-vraag expliciet over actieve medewerkers en vroegsignalering gaat.',
     bullets: [
       'Actieve medewerkers in plaats van ex-medewerkers',
       'Groepsinzichten, geen brede MTO en geen individuele signalen naar management',
@@ -428,7 +428,7 @@ export const approachRoutes = [
   {
     eyebrow: 'RetentieScan ritme',
     title: 'Voor organisaties die periodiek willen volgen',
-    body: 'Herhaalmeting per kwartaal of halfjaar om te zien of retentiesignalen, stay-intent, bevlogenheid en prioritaire werkfactoren verbeteren.',
+    body: 'Herhaalmeting per kwartaal of halfjaar om te zien of retentiesignalen, stay-intent, bevlogenheid en prioritaire werkfactoren verbeteren. Meestal een vervolgstap nadat de eerste baseline en opvolging staan.',
     bullets: [
       'Compacter vervolg op een baseline',
       'Geschikt om effect van acties zichtbaar te maken in dezelfde signaallogica',
@@ -445,7 +445,7 @@ export const pricingCards = [
     eyebrow: 'ExitScan Baseline',
     price: 'EUR 2.950',
     description:
-      'De standaard eerste instap voor organisaties die snel een betrouwbaar organisatiebeeld, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen.',
+      'De standaard eerste instap voor organisaties die snel een betrouwbaar organisatiebeeld, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen dat ook in sponsor-, prioriteits- en budgetgesprekken overeind blijft.',
     bullets: [
       'Inrichting van de exit-campaign en respondentflow',
       'Dashboard en rapport voor vertrekduiding',
@@ -456,7 +456,7 @@ export const pricingCards = [
     eyebrow: 'RetentieScan Baseline',
     price: 'EUR 3.450',
     description:
-      'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding, methodische leeswijzers en een gerichte managementscan in plaats van een brede MTO.',
+      'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding, compacte bestuurlijke handoff en een gerichte managementscan in plaats van een brede MTO.',
     bullets: [
       'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in een managementrapport',
       'Geen individuele signalen naar management',
@@ -467,7 +467,7 @@ export const pricingCards = [
     eyebrow: 'Retention Loop',
     price: 'vanaf EUR 4.950',
     description:
-      'Voor organisaties die van een eerste RetentieScan willen doorgroeien naar een ritme met herhaalmeting, trendduiding en beter onderbouwde opvolging op behoud.',
+      'Voor organisaties die van een eerste RetentieScan willen doorgroeien naar een ritme met herhaalmeting, trendduiding en beter onderbouwde opvolging op behoud, passend bij terugkerende prioriteits- en continuiteitsgesprekken.',
     bullets: [
       'Baseline plus herhaalmeting per kwartaal of halfjaar',
       'Trendbeeld op retentiesignaal, bevlogenheid en stay-intent',
@@ -525,6 +525,10 @@ export const pricingFaqs = [
   [
     'Waarom is RetentieScan niet goedkoper dan ExitScan?',
     'Omdat RetentieScan geen lichtere algemene survey of MTO-light is. Het product vraagt juist scherpere privacykaders, actieve-medewerkersduiding en een eigen managementverhaal.',
+  ],
+  [
+    'Waarom starten jullie niet met een gratis pilot?',
+    'Omdat Verisight bedoeld is als serieus eerste traject met duidelijke scope, deliverables en opvolging. Een betaald baseline-traject test echte urgentie, geeft scherpere samenwerking en voorkomt vrijblijvende validatie zonder besluitvorming.',
   ],
   [
     'Is RetentieScan een MTO-vervanger?',

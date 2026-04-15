@@ -312,7 +312,7 @@ export default async function CampaignPage({ params }: Props) {
       <DashboardSection
         eyebrow="Eerst lezen"
         title="Beslisoverzicht"
-        description="Deze bovenste laag laat eerst het managementbeeld zien: hoe stevig het patroon is, wat dit product nu zegt en welke vraag of vervolgstap als eerste telt."
+        description="Deze bovenste laag laat eerst de senior decision read zien: hoe stevig het patroon is, waarom dit nu bestuurlijk telt en welke vraag, eigenaar of vervolgstap als eerste telt."
         aside={
           <DashboardChip
             label={hasEnoughData ? 'Decision dashboard' : 'Nog in opbouw'}

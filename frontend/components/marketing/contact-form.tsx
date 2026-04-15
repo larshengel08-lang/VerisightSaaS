@@ -87,7 +87,7 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
 
       const reference = payload.lead_id ? ` Referentie: ${payload.lead_id}.` : ''
       setSuccessMessage(
-        `Aanvraag ontvangen. We reageren meestal binnen 1 werkdag met een eerste route-inschatting voor ExitScan, RetentieScan of de combinatie.${reference}`,
+        `Aanvraag ontvangen. We reageren meestal binnen 1 werkdag met een eerste route-inschatting voor ExitScan, RetentieScan of de combinatie, inclusief welke eerste baseline of vervolgstap logisch lijkt.${reference}`,
       )
       if (payload.notification_sent === false) {
         setWarningMessage(
@@ -127,7 +127,7 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
   return (
     <form onSubmit={handleSubmit} className={shellClass}>
       <div className={`mb-5 rounded-2xl border px-4 py-4 text-sm leading-7 ${isLight ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'}`}>
-        Gebruik dit formulier voor ExitScan, RetentieScan of de combinatie. We helpen eerst kiezen welke productroute logisch is en pas daarna hoe een traject eruit moet zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.
+        Gebruik dit formulier voor ExitScan, RetentieScan of de combinatie. We helpen eerst bepalen welke managementvraag en eerste productroute logisch zijn, en pas daarna hoe een traject eruit moet zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.
       </div>
 
       <div className="mb-5 flex flex-wrap gap-2">
@@ -220,7 +220,7 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
           value={form.currentQuestion}
           onChange={(event) => updateField('currentQuestion', event.target.value)}
           className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
-          placeholder="Bijvoorbeeld: we doen al exitgesprekken, maar missen overzicht. Of: we willen eerder zien waar behoud onder druk staat in specifieke teams."
+          placeholder="Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar managementbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven."
         />
       </div>
 
@@ -250,7 +250,7 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-6 ${helperClass}`}>
-          Verkennend gesprek van 20 minuten. Eerst productkeuze, daarna aanpak en prijs. Reactie meestal binnen 1 werkdag.
+          Verkennend gesprek van 20 minuten. Eerst managementvraag en productroute, daarna eerste traject, aanpak en prijs. Reactie meestal binnen 1 werkdag.
         </p>
         <button
           type="submit"

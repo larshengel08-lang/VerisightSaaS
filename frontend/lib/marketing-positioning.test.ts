@@ -7,6 +7,7 @@ import {
   homepageUtilityLinks,
   marketingLegalLinks,
   marketingNavLinks,
+  pricingFaqs,
   productOverviewComparisonRows,
   trustItems,
 } from '@/components/marketing/site-content'
@@ -45,6 +46,13 @@ describe('ExitScan positioning copy', () => {
     expect(trustItems.some((item) => item.toLowerCase().includes('eu-regio'))).toBe(true)
     expect(trustItems.some((item) => item.toLowerCase().includes('nederlandse dienst'))).toBe(true)
   })
+
+  it('keeps ExitScan framed as the default first route in commercial conversations', () => {
+    const freePilotFaq = pricingFaqs.find(([question]) => question === 'Waarom starten jullie niet met een gratis pilot?')
+
+    expect(freePilotFaq?.[1].toLowerCase()).toContain('betaald baseline-traject')
+    expect(freePilotFaq?.[1].toLowerCase()).toContain('echte urgentie')
+  })
 })
 
 describe('RetentieScan positioning copy', () => {
@@ -71,6 +79,7 @@ describe('RetentieScan positioning copy', () => {
     const mtoFaq = faqs.find(([question]) => question === 'Is RetentieScan gewoon een MTO?')
     const scoreFaq = faqs.find(([question]) => question === 'Ziet management individuele retention-scores?')
     const predictorFaq = faqs.find(([question]) => question === 'Is RetentieScan een gevalideerde vertrekvoorspeller?')
+    const pricingFaq = pricingFaqs.find(([question]) => question === 'Waarom is RetentieScan niet goedkoper dan ExitScan?')
 
     expect(mtoFaq?.[1].toLowerCase()).toContain('smaller en scherper')
     expect(mtoFaq?.[1].toLowerCase()).toContain('groeps- en segmentniveau')
@@ -78,5 +87,6 @@ describe('RetentieScan positioning copy', () => {
     expect(scoreFaq?.[1].toLowerCase()).toContain('groeps- en segmentinzichten')
     expect(scoreFaq?.[1].toLowerCase()).toContain('performance-sturing')
     expect(predictorFaq?.[1].toLowerCase()).toContain('verificatie en prioritering')
+    expect(pricingFaq?.[1].toLowerCase()).toContain('eigen managementverhaal')
   })
 })

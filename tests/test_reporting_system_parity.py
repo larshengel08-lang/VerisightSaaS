@@ -42,6 +42,10 @@ def test_report_management_payloads_expose_executive_contract_fields():
         assert payload["executive_intro"]
         assert payload["trust_note_title"]
         assert payload["trust_note"]
+        assert payload["boardroom_title"]
+        assert payload["boardroom_intro"]
+        assert payload["boardroom_watchout"]
+        assert len(payload["boardroom_cards"]) >= 5
         assert len(payload["highlight_cards"]) >= 3
         assert any(card["title"] == "Eerste besluit" for card in payload["highlight_cards"])
         assert any(card["title"] == "Eerste eigenaar" for card in payload["highlight_cards"])
@@ -79,19 +83,23 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
     trust_page = _read("frontend/app/vertrouwen/page.tsx")
 
     assert "managementsamenvatting" in preview_copy
+    assert "bestuurlijke handoff" in preview_copy
     assert "eerste managementvraag" in preview_copy
     assert "eerste logische stap" in preview_copy
     assert "eerste eigenaar" in preview_copy
     assert "eerste verificatiespoor" in preview_copy
     assert "vertrekduiding voor hr, mt en directie" in exit_report_content
     assert "behoudssignalen voor hr, mt en directie" in retention_report_content
+    assert "wat je hier niet uit moet concluderen" in exit_report_content
+    assert "wat je hier niet uit moet concluderen" in retention_report_content
+    assert "bestuurlijke handoff" in report
     assert "eerste eigenaar" in report
     assert "eerste besluit" in report
     assert "linebefore" in report
-    assert "managementsamenvatting, eerste managementvraag en eerste logische stap" in product_page
-    assert "managementsamenvatting, eerste verificatiespoor en eerste logische stap" in product_page
-    assert "managementsamenvatting, vertrekduiding" in marketing_products
-    assert "managementsamenvatting, retentiesignaal" in marketing_products
+    assert "managementsamenvatting, bestuurlijke handoff, eerste managementvraag en eerste logische stap" in product_page
+    assert "managementsamenvatting, bestuurlijke handoff, eerste verificatiespoor en eerste logische stap" in product_page
+    assert "managementsamenvatting, bestuurlijke handoff, vertrekduiding" in marketing_products
+    assert "managementsamenvatting, bestuurlijke handoff, retentiesignaal" in marketing_products
     assert "bewijstatus" not in preview_copy
     assert "bewijsstatus" in preview_copy
     assert "intended use" in preview_copy

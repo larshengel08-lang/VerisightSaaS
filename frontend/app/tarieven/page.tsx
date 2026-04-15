@@ -15,7 +15,7 @@ import { TrustStrip } from '@/components/marketing/trust-strip'
 export const metadata: Metadata = {
   title: 'Tarieven',
   description:
-    'Bekijk de prijsankers voor ExitScan, RetentieScan en de combinatie, inclusief baseline, deep dive en periodieke opvolging.',
+    'Bekijk de prijsankers voor ExitScan, RetentieScan en de combinatie, inclusief baseline, deep dive en periodieke opvolging in een boardroom-geschikte productstructuur.',
   alternates: {
     canonical: '/tarieven',
   },
@@ -68,7 +68,7 @@ export default function TarievenPage() {
       <MarketingPageShell
         eyebrow="Tarieven"
         title="Heldere prijsankers per product, zonder dat ExitScan en RetentieScan elkaar kannibaliseren."
-        description="Verisight verkoopt duidelijke productvormen met dashboard, rapportage en begeleiding. Geen licentieconstructie met losse modules en geen open eind aan consultancy-uren."
+        description="Verisight verkoopt duidelijke productvormen met dashboard, rapportage, bestuurlijke handoff en begeleiding. Geen licentieconstructie met losse modules en geen open eind aan consultancy-uren."
       >
         <div className="grid items-start gap-6 xl:grid-cols-3">
         {pricingCards.map((card) => (

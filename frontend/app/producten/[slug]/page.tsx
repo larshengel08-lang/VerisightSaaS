@@ -173,7 +173,7 @@ function ExitScanPage() {
     <MarketingPageShell
       eyebrow="ExitScan"
       title="Maak vertrek bestuurlijk leesbaar."
-      description="ExitScan helpt organisaties vertrekduiding opbouwen uit terugkerende werkfactoren, vertrekredenen en werksignalen. Geen harde oorzaakverklaring, wel een managementbeeld dat helpt prioriteren."
+      description="ExitScan helpt organisaties vertrekduiding opbouwen uit terugkerende werkfactoren, vertrekredenen en werksignalen. Geen harde oorzaakverklaring, wel een managementbeeld met compacte bestuurlijke handoff dat helpt prioriteren."
       theme="exit"
       highlightItems={['Terugkijkend', 'Vertrekduiding', 'Managementrapport']}
       contextTitle="Een product voor organisaties die willen leren van vertrek dat al heeft plaatsgevonden."
@@ -208,13 +208,13 @@ function ExitScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">Wat management krijgt</p>
           <h2 className="font-display mt-4 text-4xl text-white">Een serieus managementinstrument voor uitstroomduiding.</h2>
           <p className="mt-5 text-base leading-8 text-slate-300">
-            Geen losse verzameling exitinput, maar een compacte rapportvorm die opent met managementsamenvatting, eerste managementvraag en eerste logische stap. Zo zien HR, MT en directie sneller welk vertrekbeeld terugkeert, welke werkfactoren meewegen en waar vervolgactie logisch is, terwijl claims, privacy en interpretatiegrenzen expliciet leesbaar blijven.
+            Geen losse verzameling exitinput, maar een compacte rapportvorm die opent met managementsamenvatting, bestuurlijke handoff, eerste managementvraag en eerste logische stap. Zo zien HR, sponsor, MT en directie sneller welk vertrekbeeld terugkeert, welke werkfactoren meewegen en waar vervolgactie logisch is, terwijl claims, privacy en interpretatiegrenzen expliciet leesbaar blijven.
           </p>
           <div className="mt-8 grid gap-3">
             {[
               'Frictiescore en vertrekduiding in één overzicht',
               'Werkfactoren die terugkomen in vrijwillig vertrek',
-              'Een rapport dat direct bespreekbaar is in MT en directie, zonder diagnoseclaim',
+              'Een rapport dat direct bespreekbaar is in MT, directie en sponsoroverleg, zonder diagnoseclaim',
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200">
                 {item}
@@ -256,7 +256,7 @@ function ExitScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Voorbeeldoutput</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">Zo ziet ExitScan eruit voor management.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            De output combineert managementsamenvatting, vertrekduiding, werksignalen, prioritaire werkfactoren en een leeswijzer over claims, privacy en interpretatie in een compacte managementstructuur.
+            De output combineert managementsamenvatting, bestuurlijke handoff, vertrekduiding, werksignalen, prioritaire werkfactoren en een leeswijzer over claims, privacy en interpretatie in een compacte managementstructuur.
           </p>
           <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             <PreviewSlider variant="exit" />
@@ -283,7 +283,7 @@ function RetentionScanPage() {
     <MarketingPageShell
       eyebrow="RetentieScan"
       title="Zie eerder waar behoud onder druk staat."
-      description="RetentieScan helpt organisaties om op groeps- en segmentniveau eerder zichtbaar te maken waar behoud onder druk staat, met dashboard en rapport in dezelfde professionele Verisight-structuur. Geen brede MTO en geen individuele voorspeller."
+      description="RetentieScan helpt organisaties om op groeps- en segmentniveau eerder zichtbaar te maken waar behoud onder druk staat, met dashboard, rapport en compacte bestuurlijke handoff in dezelfde professionele Verisight-structuur. Geen brede MTO en geen individuele voorspeller."
       theme="retention"
       highlightItems={['Vroegsignalering', 'Groepsniveau', 'Behoudssignalen']}
       contextTitle="Een product voor organisaties die eerder willen zien waar behoud begint te schuiven."
@@ -315,7 +315,7 @@ function RetentionScanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">Wat je krijgt</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">Een vroegsignaal dat bestuurlijk bruikbaar is.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Geen individuele voorspelling en geen brede tevredenheidsmeting, maar een groepsweergave die opent met managementsamenvatting, eerste verificatiespoor en eerste logische stap. Daarna volgen retentiesignalen, stay-intent, bevlogenheid, vertrekintentie en de werkfactoren die nu als eerste opvolging vragen, inclusief een expliciete leeswijzer over privacy, claims en bewijsstatus.
+            Geen individuele voorspelling en geen brede tevredenheidsmeting, maar een groepsweergave die opent met managementsamenvatting, bestuurlijke handoff, eerste verificatiespoor en eerste logische stap. Daarna volgen retentiesignalen, stay-intent, bevlogenheid, vertrekintentie en de werkfactoren die nu als eerste opvolging vragen, inclusief een expliciete leeswijzer over privacy, claims en bewijsstatus.
           </p>
           <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
             <PreviewSlider variant="retention" />
@@ -335,7 +335,7 @@ function RetentionScanPage() {
           },
           {
             title: 'Gebouwd voor managementactie',
-            text: 'De uitkomst is geen losse survey-export, brede MTO of persoonsgerichte score, maar een gedeelde taal voor HR, MT en directie over waar retentie nu aandacht vraagt, met groepsgrenzen en een v1-bewijsstatus die expliciet blijven.',
+            text: 'De uitkomst is geen losse survey-export, brede MTO of persoonsgerichte score, maar een gedeelde taal voor HR, sponsor, MT en directie over waar retentie nu aandacht vraagt, met groepsgrenzen, bestuurlijke handoff en een v1-bewijsstatus die expliciet blijven.',
           },
         ].map((card) => (
           <div key={card.title} className="rounded-[1.75rem] border border-emerald-100 bg-emerald-50 p-7">

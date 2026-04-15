@@ -24,21 +24,24 @@ describe('buildRetentionDashboardViewModel', () => {
     })
 
     expect(model.topSummaryCards.map((card) => card.title)).toEqual([
-      'Gemiddelde vertrekintentie',
-      'Gemiddelde stay-intent',
+      'Groepsbeeld nu',
+      'Waarom telt dit nu',
       'Topfactor',
       'Eerste besluit',
       'Eerste eigenaar',
+      'Wat niet concluderen',
     ])
     expect(model.signaalbandenText).toContain('groepsniveau')
+    expect(model.signaalbandenText).toContain('sponsor')
     expect(model.profileCards[0]?.title).toBe('Groepsbeeld')
     expect(model.primaryQuestion.body).toContain('werkbelasting')
     expect(model.nextStep.body).toContain('30-90')
     expect(model.managementBlocks).toHaveLength(3)
-    expect(model.managementBlocks[0]?.title).toBe('Wat is het groepsbeeld nu?')
+    expect(model.managementBlocks[0]?.title).toBe('Wat speelt nu op groepsniveau?')
     expect(model.managementBlocks[1]?.title).toBe('Welk besluit hoort nu eerst?')
     expect(model.managementBlocks[2]?.items[0]).toContain('Eerste eigenaar')
     expect(model.topSummaryCards[3]?.body).toContain('Beslis')
+    expect(model.topSummaryCards[5]?.body).toContain('verification-first')
   })
 
   it('keeps retention guidance cautious before the pattern is strong enough', () => {

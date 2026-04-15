@@ -24,19 +24,22 @@ describe('buildExitDashboardViewModel', () => {
     })
 
     expect(model.topSummaryCards.map((card) => card.title)).toEqual([
-      'Sterk werksignaal',
-      'Meest genoemde hoofdreden',
+      'Vertrekbeeld nu',
+      'Waarom telt dit nu',
       'Eerste besluit',
       'Eerste eigenaar',
-      'Eerdere signalering',
+      'Wat niet concluderen',
     ])
+    expect(model.signaalbandenText).toContain('sponsor')
     expect(model.topSummaryCards[2]?.body).toContain('Beslis eerst')
     expect(model.topSummaryCards[3]?.value).toContain('HR')
+    expect(model.topSummaryCards[4]?.body).toContain('ROI-garantie')
     expect(model.primaryQuestion.body).toContain('breed werkgerelateerd vertrekbeeld')
     expect(model.nextStep.body).toContain('30-90')
     expect(model.nextStep.body).toContain('eigenaar')
     expect(model.managementBlocks[1]?.title).toBe('Welk besluit hoort nu eerst?')
     expect(model.managementBlocks[2]?.items[0]).toContain('Eerste eigenaar')
+    expect(model.managementBlocks[0]?.title).toBe('Wat speelt nu?')
     expect(model.focusSectionIntro).toContain('kiezen')
   })
 

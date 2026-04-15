@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import io
 from datetime import datetime, timedelta, timezone
 
+from pypdf import PdfReader
 from sqlalchemy.orm import Session
 
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
@@ -106,6 +108,14 @@ def _build_campaign(
     return campaign
 
 
+def _extract_pdf_text(pdf_bytes: bytes, max_pages: int = 6) -> str:
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+    text_parts = []
+    for page in reader.pages[:max_pages]:
+        text_parts.append((page.extract_text() or '').replace('\n', ' '))
+    return ' '.join(' '.join(text_parts).split())
+
+
 def test_generate_exit_report_smoke(db_session: Session):
     org = Organization(name="Voorbeeldzorg", slug="voorbeeldzorg", contact_email="hr@voorbeeldzorg.nl")
     db_session.add(org)
@@ -142,6 +152,10 @@ def test_generate_exit_report_smoke(db_session: Session):
 
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 8000
+    pdf_text = _extract_pdf_text(pdf_bytes)
+    assert 'Bestuurlijke handoff' in pdf_text
+    assert 'Wat je hier niet uit moet concluderen' in pdf_text
+    assert 'Indicatieve exposure' in pdf_text
 
 
 def test_generate_exit_report_smoke_with_indicative_batch(db_session: Session):
@@ -180,6 +194,8 @@ def test_generate_exit_report_smoke_with_indicative_batch(db_session: Session):
 
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 5000
+    pdf_text = _extract_pdf_text(pdf_bytes)
+    assert 'Bestuurlijke handoff' not in pdf_text
 
 
 def test_generate_retention_report_smoke_with_trend_and_segment_deep_dive(db_session: Session):
@@ -243,3 +259,6 @@ def test_generate_retention_report_smoke_with_trend_and_segment_deep_dive(db_ses
 
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 9000
+    pdf_text = _extract_pdf_text(pdf_bytes)
+    assert 'Bestuurlijke handoff' in pdf_text
+    assert 'Wat je hier niet uit moet concluderen' in pdf_text

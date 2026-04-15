@@ -81,11 +81,16 @@ export function buildExitDashboardViewModel(args: {
   const firstAction =
     leadingPlaybook?.actions[0] ??
     `Vertaal ${topFactorLabel.toLowerCase()} binnen 30 dagen naar een eerste gerichte verbeteractie met duidelijke eigenaar.`
+  const boardroomRelevance = hasBroadWorkSignal
+    ? `Een breed werksignaal rond ${topFactorLabel.toLowerCase()} maakt dit relevant voor sponsor, MT en directie: hier zit beinvloedbare organisatiefrictie die je niet alleen als HR-nazorg wilt lezen.`
+    : `Ook zonder breed werksignaal is ${topFactorLabel.toLowerCase()} scherp genoeg om bestuurlijk te wegen welk spoor nu eerst verificatie en eigenaarschap vraagt.`
+  const boardroomWatchout =
+    'Gebruik ExitScan om sneller te wegen welk managementspoor eerst telt, niet om achteraf de ene oorzaak van vertrek te bewijzen of een ROI-garantie te suggereren.'
 
   if (!args.hasMinDisplay) {
     return {
       signaalbandenText:
-        `Laag, midden en hoog laten zien hoeveel aandacht een ${args.signalLabelLower} vraagt. Ze helpen HR en MT bepalen welk vertrekbeeld eerst verificatie nodig heeft.`,
+        `Laag, midden en hoog laten zien hoeveel aandacht een ${args.signalLabelLower} vraagt. Ze helpen HR, sponsor en MT bepalen welk vertrekbeeld eerst verificatie nodig heeft.`,
       topSummaryCards: [],
       managementBlocks: [],
       profileCards: [],
@@ -113,7 +118,7 @@ export function buildExitDashboardViewModel(args: {
   if (!args.hasEnoughData) {
     return {
       signaalbandenText:
-        `Laag, midden en hoog laten zien hoeveel aandacht een ${args.signalLabelLower} vraagt. Ze helpen HR en MT bepalen welk vertrekbeeld eerst verificatie nodig heeft.`,
+        `Laag, midden en hoog laten zien hoeveel aandacht een ${args.signalLabelLower} vraagt. Ze helpen HR, sponsor en MT bepalen welk vertrekbeeld eerst verificatie nodig heeft.`,
       topSummaryCards: [],
       managementBlocks: [],
       profileCards: [],
@@ -171,20 +176,20 @@ export function buildExitDashboardViewModel(args: {
 
   return {
     signaalbandenText:
-      `Laag, midden en hoog laten zien hoeveel aandacht een ${args.signalLabelLower} vraagt. Ze helpen HR en MT bepalen welk vertrekbeeld eerst verificatie nodig heeft.`,
+      `Laag, midden en hoog laten zien hoeveel aandacht een ${args.signalLabelLower} vraagt. Ze helpen HR, sponsor en MT bepalen welk vertrekbeeld eerst verificatie nodig heeft.`,
     topSummaryCards: [
       {
-        title: 'Sterk werksignaal',
-        value: strongSignalRate !== null ? `${strongSignalRate}%` : '-',
-        body: 'Geeft aan welk deel van de vertrekkers antwoorden gaf die relatief sterk wijzen op beinvloedbare werkfactoren. Gebruik dit als managementsignaal, niet als bewijs van een oorzaak.',
+        title: 'Vertrekbeeld nu',
+        value: topExitReasonLabel,
+        body: topContributingReasonLabel
+          ? `${topContributingReasonLabel} kleurt dit beeld mee. Lees hoofdreden en meespelende factor samen als vertrekduiding op groepsniveau.`
+          : 'Gebruik dit als eerste vertrekhaak en toets daarna pas welke werkfactoren er bestuurlijk echt onder liggen.',
         tone: hasBroadWorkSignal ? 'amber' : 'blue',
       },
       {
-        title: 'Meest genoemde hoofdreden',
-        value: topExitReasonLabel,
-        body: topContributingReasonLabel
-          ? `${topContributingReasonLabel} komt daarnaast vaak mee als extra vertrekcontext. Lees hoofdreden en meespelende factor altijd samen.`
-          : 'Gebruik deze hoofdreden als vertrekhaak, maar toets daarna pas welke werkfactoren er bestuurlijk echt onder liggen.',
+        title: 'Waarom telt dit nu',
+        value: strongSignalRate !== null ? `${strongSignalRate}% werksignaal` : 'Bestuurlijke relevantie',
+        body: boardroomRelevance,
         tone: 'blue',
       },
       {
@@ -200,15 +205,15 @@ export function buildExitDashboardViewModel(args: {
         tone: 'emerald',
       },
       {
-        title: 'Eerdere signalering',
-        value: typeof args.signalVisibilityAverage === 'number' ? `${args.signalVisibilityAverage.toFixed(1)}/5` : '-',
-        body: visibility.body,
-        tone: typeof args.signalVisibilityAverage === 'number' && args.signalVisibilityAverage < 3 ? 'amber' : 'emerald',
+        title: 'Wat niet concluderen',
+        value: 'Geen diagnose',
+        body: boardroomWatchout,
+        tone: 'blue',
       },
     ],
     managementBlocks: [
       {
-        title: 'Wat ligt nu op tafel?',
+        title: 'Wat speelt nu?',
         intro:
           factorLabels.length > 0
             ? `${topExitReasonLabel} komt het vaakst terug. De scherpste werkfactoren zitten nu vooral in ${factorLabels.join(' en ')}.`

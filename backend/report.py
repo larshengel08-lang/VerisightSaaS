@@ -1572,6 +1572,9 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         if is_retention and has_segment_deep_dive and has_pattern and hasattr(product_module, "get_action_playbooks_payload")
         else []
     )
+    total_cost = sum(
+        r.replacement_cost_eur for r in responses if r.replacement_cost_eur
+    )
     management_summary_payload = product_module.get_management_summary_payload(
         top_factor_labels=top_factor_labels,
         top_factor_keys=top_factor_keys,
@@ -1579,6 +1582,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
         top_contributing_reason_label=top_contributing_reason_label,
         strong_work_signal_pct=strong_work_signal_pct,
         signal_visibility_average=signal_visibility_average,
+        total_replacement_cost_eur=total_cost if not is_retention else None,
     ) if not is_retention else product_module.get_management_summary_payload(
         top_factor_labels=top_factor_labels,
         top_factor_keys=top_factor_keys,
@@ -1654,11 +1658,6 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
                 "body": "Expliciet vertrekdenken op groepsniveau; bedoeld voor verificatie en prioritering, niet voor individuele voorspelling.",
             },
         ]
-
-    # Replacement cost totaal (exit only)
-    total_cost = sum(
-        r.replacement_cost_eur for r in responses if r.replacement_cost_eur
-    )
 
     # ── PDF opbouwen ───────────────────────────────────────────────────────
     buf = io.BytesIO()
@@ -2022,7 +2021,41 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(PageBreak())
 
     # ==================================================================== #
-    # PAGINA 3 — METHODIEK & VERANTWOORDING                                #
+    # PAGINA 3 — BESTUURLIJKE HANDOFF                                      #
+    # ==================================================================== #
+
+    if has_pattern and (
+        management_summary_payload.get("boardroom_cards")
+        or management_summary_payload.get("boardroom_intro")
+        or management_summary_payload.get("boardroom_watchout")
+    ):
+        story.append(Paragraph(
+            management_summary_payload.get("boardroom_title", "Bestuurlijke handoff"),
+            STYLES["section_title"],
+        ))
+        story.append(Paragraph(
+            management_summary_payload.get("boardroom_intro", ""),
+            STYLES["body"],
+        ))
+        story.append(Spacer(1, 0.25 * cm))
+        _append_highlight_cards(
+            story,
+            management_summary_payload.get("boardroom_cards", []),
+            content_width=content_width,
+            theme=report_theme,
+        )
+        if management_summary_payload.get("boardroom_watchout"):
+            _append_emphasis_note(
+                story,
+                title=management_summary_payload.get("boardroom_watchout_title", "Leesgrens"),
+                body=management_summary_payload.get("boardroom_watchout", ""),
+                content_width=content_width,
+                theme=report_theme,
+            )
+        story.append(PageBreak())
+
+    # ==================================================================== #
+    # PAGINA 4 — METHODIEK & VERANTWOORDING                                #
     # ==================================================================== #
 
     _append_methodology_section(
@@ -2035,7 +2068,7 @@ def generate_campaign_report(campaign_id: str, db: Session) -> bytes:
     story.append(PageBreak())
 
     # ==================================================================== #
-    # PAGINA 4 — SDT BASISBEHOEFTEN                                        #
+    # PAGINA 5 — SDT BASISBEHOEFTEN                                        #
     # ==================================================================== #
 
     story.append(Paragraph("SDT Basisbehoeften", STYLES["section_title"]))
