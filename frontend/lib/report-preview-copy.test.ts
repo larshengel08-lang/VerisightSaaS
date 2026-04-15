@@ -18,6 +18,10 @@ describe('REPORT_PREVIEW_COPY', () => {
     expect(exitCopy.nuance).toContain('geen diagnose')
     expect(exitCopy.nuance).toContain('geen geforceerde ROI-claim')
     expect(exitCopy.hypothesisLead).toContain('eerste eigenaar')
+    expect(exitCopy.intro).toContain('eerste managementsessie')
+    expect(exitCopy.proofNotes.find(([title]) => title === 'Managementsamenvatting')?.[1]).toContain(
+      'eerste managementsessie',
+    )
     expect(exitCopy.trustTitle).toContain('Trust')
     expect(exitCopy.trustPoints.map(([title]) => title)).toContain('Privacygrens')
     expect(exitCopy.trustPoints.map(([title]) => title)).toContain('Bewijsstatus')
@@ -35,6 +39,8 @@ describe('REPORT_PREVIEW_COPY', () => {
     expect(retentionCopy.boardroomPoints.map(([title]) => title)).toContain('Waarom telt dit nu')
     expect(retentionCopy.nuance).toContain('geen individuele voorspeller')
     expect(retentionCopy.nuance).toContain('v1-werkmodel')
+    expect(retentionCopy.intro).toContain('eerste managementsessie')
+    expect(retentionCopy.hypothesisLead).toContain('reviewmoment')
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Managementsamenvatting')
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Bestuurlijke handoff')
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Actielogica')

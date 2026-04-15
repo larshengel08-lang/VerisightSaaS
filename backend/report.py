@@ -837,8 +837,16 @@ def _build_retention_playbook_rows(
             "owner": playbook["owner"],
             "actions": playbook["actions"],
             "caution": playbook["caution"],
+            "review": playbook.get("review") or _retention_review_note(FACTOR_LABELS_NL.get(factor, factor)),
         })
     return rows
+
+
+def _retention_review_note(factor_label: str) -> str:
+    return (
+        f"Plan binnen 45-90 dagen een review of vervolgmeting op {factor_label.lower()}: "
+        "wat is geverifieerd, welke eerste interventie loopt en wat verschuift er in retentiesignaal en aanvullende signalen."
+    )
 
 
 def _compute_retention_signal_averages(responses: list[SurveyResponse]) -> dict[str, float | None]:
@@ -3038,6 +3046,24 @@ def generate_campaign_report(
 
         story.append(Spacer(1, 0.2 * cm))
 
+    if next_steps_payload.get("session_cards"):
+        story.append(Paragraph(next_steps_payload["session_title"], STYLES["sub_title"]))
+        story.append(Paragraph(next_steps_payload["session_intro"], STYLES["body"]))
+        _append_highlight_cards(
+            story,
+            next_steps_payload["session_cards"],
+            content_width=content_width,
+            theme=report_theme,
+        )
+        _append_emphasis_note(
+            story,
+            title=next_steps_payload.get("session_watchout_title", "Leesgrens"),
+            body=next_steps_payload.get("session_watchout", ""),
+            content_width=content_width,
+            theme=report_theme,
+        )
+        story.append(Spacer(1, 0.2 * cm))
+
     if camp.scan_type == "retention" and retention_playbooks:
         story.append(Paragraph("Behoudsplaybooks", STYLES["sub_title"]))
         story.append(Paragraph(
@@ -3061,6 +3087,7 @@ def generate_campaign_report(
                     "<br/>".join([f"• {action}" for action in playbook["actions"]]),
                     STYLES["body"],
                 )],
+                [Paragraph(f"<i>Reviewmoment:</i> {playbook['review']}", STYLES["body"])],
                 [Paragraph(f"<i>Niet overhaasten:</i> {playbook['caution']}", STYLES["body"])],
             ]
             table = Table(rows, colWidths=[content_width])
@@ -3103,6 +3130,10 @@ def generate_campaign_report(
                 [Paragraph(f"<i>Eerste eigenaar:</i> {segment['owner']}", STYLES["body"])],
                 [Paragraph(
                     "<br/>".join([f"• {action}" for action in segment["actions"]]),
+                    STYLES["body"],
+                )],
+                [Paragraph(
+                    f"<i>Reviewmoment:</i> {segment.get('review') or _retention_review_note(segment['factor_label'])}",
                     STYLES["body"],
                 )],
                 [Paragraph(f"<i>Niet overhaasten:</i> {segment['caution']}", STYLES["body"])],

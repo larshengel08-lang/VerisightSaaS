@@ -126,6 +126,20 @@ function getLeadingPlaybook(factor: string | null, signalValue: number | null) {
   return RETENTION_ACTION_PLAYBOOKS[factor]?.[band] ?? null
 }
 
+function getRetentionReviewMoment(
+  topFactorLabel: string,
+  turnoverIntention: number | null,
+  stayIntent: number | null,
+) {
+  if (
+    (typeof turnoverIntention === 'number' && turnoverIntention >= 5.5) ||
+    (typeof stayIntent === 'number' && stayIntent < 5.5)
+  ) {
+    return `Plan binnen 45-60 dagen een review op ${topFactorLabel.toLowerCase()}, vertrekintentie, stay-intent en de eerste interventie.`
+  }
+  return `Plan binnen 60-90 dagen een review of vervolgmeting om te toetsen of ${topFactorLabel.toLowerCase()} en het retentiesignaal verschuiven.`
+}
+
 export function buildRetentionDashboardViewModel(args: {
   signalLabelLower: string
   averageSignal: number | null
@@ -165,6 +179,10 @@ export function buildRetentionDashboardViewModel(args: {
   const firstAction =
     leadingPlaybook?.actions[0] ??
     `Koppel ${topFactorLabel.toLowerCase()} binnen 30 dagen aan een eerste gerichte opvolgactie en leg het evaluatiemoment direct vast.`
+  const firstConversation = `Voer eerst een verificatiegesprek over hoe ${topFactorLabel.toLowerCase()} terugkomt in teamcontext, aanvullende signalen en open verbetersignalen.`
+  const participants =
+    'HR, betrokken leidinggevende en het MT-lid of de sponsor die het eerste behoudsspoor moet wegen.'
+  const reviewMoment = getRetentionReviewMoment(topFactorLabel, args.turnoverIntention, args.stayIntent)
   const boardroomRelevance =
     signalProfile === 'scherp_aandachtssignaal' || signalProfile === 'vertrekdenken_zichtbaar'
       ? `Dit beeld vraagt bestuurlijke weging omdat ${topFactorLabel.toLowerCase()} samenvalt met signalen die teamcontinuiteit, leiding en uitvoerbaarheid kunnen raken.`
@@ -196,6 +214,10 @@ export function buildRetentionDashboardViewModel(args: {
       },
       focusSectionIntro:
         'Zodra genoeg responses binnen zijn helpt deze laag om van retentiesignaal naar verificatie en opvolging te gaan.',
+      followThroughTitle: 'Van rapport naar managementactie',
+      followThroughIntro:
+        'De vaste opvolgroute verschijnt zodra RetentieScan veilig genoeg is om als groepsinput voor management te worden gebruikt.',
+      followThroughCards: [],
     }
   }
 
@@ -223,6 +245,41 @@ export function buildRetentionDashboardViewModel(args: {
       },
       focusSectionIntro:
         'Gebruik focusvragen nu vooral om te bepalen welke teams, rollen of werkfactoren straks als eerste verdieping vragen.',
+      followThroughTitle: 'Van rapport naar managementactie',
+      followThroughIntro:
+        'Bij een indicatief beeld blijft de route bewust licht: bereid wel al het eerste verificatiegesprek, de eerste eigenaar en het reviewmoment voor.',
+      followThroughCards: [
+        {
+          title: 'Prioriteit nu',
+          body: `Gebruik ${topFactorLabel.toLowerCase()} voorlopig als eerste verificatiespoor, zonder dit al als hard behoudspatroon te behandelen.`,
+          tone: 'blue',
+        },
+        {
+          title: 'Eerste gesprek',
+          body: `Voer een beperkt verificatiegesprek over ${topFactorLabel.toLowerCase()} en kijk pas daarna of een bredere interventie logisch is.`,
+          tone: 'blue',
+        },
+        {
+          title: 'Wie moet aan tafel',
+          body: 'HR en de betrokken leidinggevende; sponsor of MT sluit aan zodra het patroon steviger wordt.',
+          tone: 'amber',
+        },
+        {
+          title: 'Eerste eigenaar',
+          body: firstOwner,
+          tone: 'emerald',
+        },
+        {
+          title: 'Eerste actie',
+          body: 'Kies nog geen brede interventie; bereid alleen de eerste gerichte verificatie- of opvolgstap voor.',
+          tone: 'amber',
+        },
+        {
+          title: 'Reviewmoment',
+          body: 'Herlees deze route zodra minimaal 10 responses binnen zijn en leg dan pas het vaste review- of vervolgmeetmoment vast.',
+          tone: 'emerald',
+        },
+      ],
     }
   }
 
@@ -357,5 +414,40 @@ export function buildRetentionDashboardViewModel(args: {
     },
     focusSectionIntro:
       'Gebruik de vragen en playbooks hieronder om RetentieScan niet bij signalering te laten stoppen, maar eerst naar keuze en eigenaar te brengen en pas daarna naar gerichte actie.',
+    followThroughTitle: 'Van retentiesignaal naar managementactie',
+    followThroughIntro:
+      'Gebruik deze route om RetentieScan te laten landen in een eerste managementsessie met verificatie, eigenaar, interventie en reviewmoment in dezelfde lijn.',
+    followThroughCards: [
+      {
+        title: 'Prioriteit nu',
+        body: `${topFactorLabel} is nu het eerste behoudsspoor om te verifieren en te prioriteren.`,
+        tone: 'blue',
+      },
+      {
+        title: 'Eerste gesprek',
+        body: firstConversation,
+        tone: 'blue',
+      },
+      {
+        title: 'Wie moet aan tafel',
+        body: participants,
+        tone: 'amber',
+      },
+      {
+        title: 'Eerste eigenaar',
+        body: firstOwner,
+        tone: 'emerald',
+      },
+      {
+        title: 'Eerste actie',
+        body: firstAction,
+        tone: 'amber',
+      },
+      {
+        title: 'Reviewmoment',
+        body: reviewMoment,
+        tone: 'emerald',
+      },
+    ],
   }
 }

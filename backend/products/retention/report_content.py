@@ -39,6 +39,13 @@ RETENTION_OWNER_BY_FACTOR = {
 }
 
 
+def _retention_review_moment_text(focus_text: str) -> str:
+    return (
+        f"Plan binnen 45-90 dagen een review of vervolgmeting op {focus_text.lower()}: wat is geverifieerd, "
+        "welke eerste interventie loopt en wat verschuift er in retentiesignaal, stay-intent en vertrekintentie."
+    )
+
+
 def get_management_summary_payload(
     *,
     top_factor_labels: list[str],
@@ -356,10 +363,52 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         if lead_factor_key
         else None
     ) or "HR lead met betrokken leidinggevende"
+    first_action = (
+        f"Koppel {focus_text.lower()} binnen 30 dagen aan één gerichte verificatie- of interventiestap en leg de opvolging direct vast."
+    )
+    review_moment = _retention_review_moment_text(focus_text)
     return {
         "section_title": "Vervolgstappen",
         "intro_text": (
             "Gebruik RetentieScan eerst om scherp te prioriteren en te verifieren. Pas daarna schaal je acties op of trek je bredere conclusies over behoud."
+        ),
+        "session_title": "Eerste managementsessie na oplevering",
+        "session_intro": (
+            "Gebruik deze route om de eerste managementsessie compact te houden: kies eerst het verificatiespoor, "
+            "beleg een eigenaar, bepaal de eerste interventie en leg direct het review- of vervolgmeetmoment vast."
+        ),
+        "session_cards": [
+            {
+                "title": "Prioriteit nu",
+                "body": f"{focus_text} vormen nu het eerste behoudsspoor om te verifieren en te prioriteren.",
+            },
+            {
+                "title": "Eerste gesprek",
+                "body": (
+                    f"Voer eerst een verificatiegesprek over hoe {focus_text.lower()} terugkomen in teamcontext, "
+                    "aanvullende signalen en open verbetersignalen."
+                ),
+            },
+            {
+                "title": "Wie moet aan tafel",
+                "body": "HR, betrokken leidinggevende en het MT-lid of de sponsor die het eerste behoudsspoor moet wegen.",
+            },
+            {
+                "title": "Eerste eigenaar",
+                "body": first_owner,
+            },
+            {
+                "title": "Eerste actie",
+                "body": first_action,
+            },
+            {
+                "title": "Reviewmoment",
+                "body": review_moment,
+            },
+        ],
+        "session_watchout_title": "Leesgrens bij de eerste managementsessie",
+        "session_watchout": (
+            "Gebruik deze sessie om verificatie, eigenaar en eerste interventie te kiezen, niet om RetentieScan als individuele predictor te lezen."
         ),
         "steps": [
             {
@@ -389,7 +438,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
                 "number": "4",
                 "title": "Plan direct een evaluatie- of vervolgmeting",
                 "body": (
-                    "Leg nu al vast wanneer je terugkijkt of acties effect hebben en of het retentiesignaal, stay-intent en vertrekintentie verschuiven."
+                    review_moment
                 ),
             },
         ],

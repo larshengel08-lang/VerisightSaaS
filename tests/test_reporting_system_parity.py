@@ -84,6 +84,7 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
 
     assert "managementsamenvatting" in preview_copy
     assert "bestuurlijke handoff" in preview_copy
+    assert "eerste managementsessie" in preview_copy
     assert "eerste managementvraag" in preview_copy
     assert "eerste logische stap" in preview_copy
     assert "eerste eigenaar" in preview_copy
@@ -93,13 +94,19 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
     assert "wat je hier niet uit moet concluderen" in exit_report_content
     assert "wat je hier niet uit moet concluderen" in retention_report_content
     assert "bestuurlijke handoff" in report
+    assert "session_title" in report
+    assert "eerste managementsessie na oplevering" in exit_report_content
+    assert "eerste managementsessie na oplevering" in retention_report_content
     assert "eerste eigenaar" in report
     assert "eerste besluit" in report
+    assert "reviewmoment" in report
     assert "linebefore" in report
-    assert "managementsamenvatting, bestuurlijke handoff, eerste managementvraag en eerste logische stap" in product_page
-    assert "managementsamenvatting, bestuurlijke handoff, eerste verificatiespoor en eerste logische stap" in product_page
-    assert "managementsamenvatting, bestuurlijke handoff, vertrekduiding" in marketing_products
-    assert "managementsamenvatting, bestuurlijke handoff, retentiesignaal" in marketing_products
+    assert "eerste managementsessie" in product_page
+    assert "eerste managementvraag" in product_page
+    assert "eerste verificatiespoor" in product_page
+    assert "eerste logische stap" in product_page
+    assert "managementsamenvatting, bestuurlijke handoff, eerste managementsessie, vertrekduiding" in marketing_products
+    assert "managementsamenvatting, bestuurlijke handoff, eerste managementsessie, retentiesignaal" in marketing_products
     assert "bewijstatus" not in preview_copy
     assert "bewijsstatus" in preview_copy
     assert "intended use" in preview_copy

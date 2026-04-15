@@ -42,6 +42,17 @@ describe('buildRetentionDashboardViewModel', () => {
     expect(model.managementBlocks[2]?.items[0]).toContain('Eerste eigenaar')
     expect(model.topSummaryCards[3]?.body).toContain('Beslis')
     expect(model.topSummaryCards[5]?.body).toContain('verification-first')
+    expect(model.followThroughTitle).toContain('managementactie')
+    expect(model.followThroughCards.map((card) => card.title)).toEqual([
+      'Prioriteit nu',
+      'Eerste gesprek',
+      'Wie moet aan tafel',
+      'Eerste eigenaar',
+      'Eerste actie',
+      'Reviewmoment',
+    ])
+    expect(model.followThroughCards[4]?.body).toMatch(/30 dagen|werklastreview/i)
+    expect(model.followThroughCards[5]?.body).toContain('45-60')
   })
 
   it('keeps retention guidance cautious before the pattern is strong enough', () => {
@@ -69,5 +80,7 @@ describe('buildRetentionDashboardViewModel', () => {
     expect(model.signaalbandenText).toContain('niet als individuele voorspelling')
     expect(model.nextStep.body).not.toContain('risicobeeld')
     expect(model.nextStep.body).toContain('eerste eigenaar')
+    expect(model.followThroughCards[0]?.title).toBe('Prioriteit nu')
+    expect(model.followThroughCards[5]?.body).toContain('10 responses')
   })
 })

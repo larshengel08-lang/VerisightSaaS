@@ -28,6 +28,13 @@ export interface ActionPlaybook {
   owner: string
   actions: string[]
   caution: string
+  review?: string
+}
+
+export interface DashboardFollowThroughCard {
+  title: string
+  body: string
+  tone: 'blue' | 'emerald' | 'amber'
 }
 
 export interface SignalTrendCard {
@@ -60,6 +67,9 @@ export interface DashboardViewModel {
   primaryQuestion: DashboardDecisionCard
   nextStep: DashboardDecisionCard
   focusSectionIntro: string
+  followThroughTitle: string
+  followThroughIntro: string
+  followThroughCards: DashboardFollowThroughCard[]
 }
 
 export interface ProductModule {

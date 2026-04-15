@@ -392,6 +392,9 @@ class TestExitReportContent:
 
         assert payload["section_title"] == "Vervolgstappen"
         assert "managementinstrument" in payload["intro_text"].lower()
+        assert payload["session_title"] == "Eerste managementsessie na oplevering"
+        assert len(payload["session_cards"]) == 6
+        assert payload["session_cards"][-1]["title"] == "Reviewmoment"
         assert payload["steps"][0]["number"] == "1"
         assert payload["steps"][0]["title"].lower().startswith("kies")
         assert "groeiperspectief" in payload["steps"][1]["body"].lower()
@@ -469,6 +472,9 @@ class TestRetentionReportContent:
         )
 
         assert "eerst om scherp te prioriteren en te verifi" in payload["intro_text"].lower()
+        assert payload["session_title"] == "Eerste managementsessie na oplevering"
+        assert len(payload["session_cards"]) == 6
+        assert payload["session_cards"][-1]["title"] == "Reviewmoment"
         assert payload["steps"][0]["title"].lower().startswith("kies")
         assert "werkbelasting" in payload["steps"][1]["body"].lower()
 

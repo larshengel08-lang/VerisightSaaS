@@ -64,7 +64,7 @@ export function ActionPlaybookList({ factorAverages, scanType }: Props) {
               <ul className="space-y-2">
                 {item.playbook?.actions.map((action) => (
                   <li key={action} className="flex gap-2 text-sm leading-6 text-slate-700">
-                    <span className="text-slate-400">•</span>
+                    <span className="text-slate-400">&bull;</span>
                     <span>{action}</span>
                   </li>
                 ))}
@@ -72,6 +72,17 @@ export function ActionPlaybookList({ factorAverages, scanType }: Props) {
             </PlaybookColumn>
             <PlaybookColumn title="Niet overhaasten" tone="amber">
               <p className="text-sm leading-6 text-slate-700">{item.playbook?.caution}</p>
+            </PlaybookColumn>
+          </div>
+
+          <div className="mt-4">
+            <PlaybookColumn title="Reviewmoment" tone="slate">
+              <p className="text-sm leading-6 text-slate-700">
+                {item.playbook?.review ??
+                  (scanType === 'exit'
+                    ? 'Plan binnen 60-90 dagen een review op dit spoor: wat is gekozen, wat is uitgevoerd en wat keert terug in de volgende exitbatch?'
+                    : 'Plan binnen 45-90 dagen een review of vervolgmeting: wat is geverifieerd, welke eerste interventie loopt en wat verschuift er in het retentiesignaal?')}
+              </p>
             </PlaybookColumn>
           </div>
         </div>
@@ -93,18 +104,18 @@ function PlaybookColumn({
     tone === 'slate'
       ? 'border-slate-200 bg-slate-50'
       : tone === 'emerald'
-      ? 'border-emerald-100 bg-emerald-50'
-      : tone === 'amber'
-        ? 'border-amber-100 bg-amber-50'
-        : 'border-blue-100 bg-blue-50'
+        ? 'border-emerald-100 bg-emerald-50'
+        : tone === 'amber'
+          ? 'border-amber-100 bg-amber-50'
+          : 'border-blue-100 bg-blue-50'
   const labelClass =
     tone === 'slate'
       ? 'text-slate-600'
       : tone === 'emerald'
-      ? 'text-emerald-700'
-      : tone === 'amber'
-        ? 'text-amber-700'
-        : 'text-blue-700'
+        ? 'text-emerald-700'
+        : tone === 'amber'
+          ? 'text-amber-700'
+          : 'text-blue-700'
 
   return (
     <div className={`rounded-2xl border p-4 ${classes}`}>

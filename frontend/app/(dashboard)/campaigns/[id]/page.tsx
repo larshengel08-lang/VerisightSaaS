@@ -649,10 +649,28 @@ export default async function CampaignPage({ params }: Props) {
       >
         {hasEnoughData ? (
           <div className="space-y-5">
+            {dashboardViewModel.followThroughCards.length > 0 ? (
+              <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                <h3 className="text-sm font-semibold text-slate-950">{dashboardViewModel.followThroughTitle}</h3>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{dashboardViewModel.followThroughIntro}</p>
+                <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {dashboardViewModel.followThroughCards.map((card) => (
+                    <DashboardPanel
+                      key={card.title}
+                      eyebrow="Eerste managementsessie"
+                      title={card.title}
+                      body={card.body}
+                      tone={card.tone}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
               <h3 className="text-sm font-semibold text-slate-950">Prioritaire focusvragen</h3>
               <p className="mt-1 text-sm leading-6 text-slate-600">
-                Start met de factoren die het scherpst afwijken.
+                Start met de factoren die het scherpst afwijken en gebruik de vragen direct als brug naar gesprek, eigenaar, eerste actie en reviewmoment.
               </p>
               <div className="mt-4">
                 <RecommendationList factorAverages={factorData.orgAverages} scanType={stats.scan_type} />
@@ -667,8 +685,8 @@ export default async function CampaignPage({ params }: Props) {
                   </h3>
                   <p className="mt-1 text-sm leading-6 text-slate-600">
                     {stats.scan_type === 'exit'
-                      ? 'Deze routes helpen ExitScan om niet bij vertrekduiding te blijven hangen, maar snel naar keuze, eigenaar en eerste actie te gaan.'
-                      : 'Deze playbooks helpen RetentieScan om niet bij signalering te blijven hangen.'}
+                      ? 'Deze routes helpen ExitScan om niet bij vertrekduiding te blijven hangen, maar snel naar keuze, eigenaar, eerste actie en reviewmoment te gaan.'
+                      : 'Deze playbooks helpen RetentieScan om niet bij signalering te blijven hangen, maar te landen in verificatie, interventie en review.'}
                   </p>
                   {stats.scan_type === 'retention' && playbookCalibrationNote ? (
                     <p className="mt-2 text-xs leading-6 text-slate-500">{playbookCalibrationNote}</p>

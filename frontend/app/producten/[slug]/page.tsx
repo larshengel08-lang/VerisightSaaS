@@ -220,8 +220,9 @@ function ExitScanPage() {
           <h2 className="font-display mt-4 text-4xl text-white">Een serieus managementinstrument voor uitstroomduiding.</h2>
           <p className="mt-5 text-base leading-8 text-slate-300">
             Geen losse verzameling exitinput, maar een compacte rapportvorm die opent met managementsamenvatting,
-            bestuurlijke handoff, eerste managementvraag en eerste logische stap. Zo zien HR, sponsor, MT en
-            directie sneller welk vertrekbeeld terugkeert en waar vervolgactie logisch is.
+            bestuurlijke handoff, eerste managementsessie, eerste managementvraag en eerste logische stap. Zo zien
+            HR, sponsor, MT en directie sneller welk vertrekbeeld terugkeert, wie het eerste spoor trekt en waar
+            vervolgactie logisch is.
           </p>
           <div className="mt-8 grid gap-3">
             {[
@@ -372,7 +373,7 @@ function RetentionScanPage() {
           <h2 className="mt-4 text-3xl font-semibold text-slate-950">Een vroegsignaal dat bestuurlijk bruikbaar blijft.</h2>
           <p className="mt-4 text-sm leading-7 text-slate-600">
             Geen individuele voorspelling en geen brede tevredenheidsmeting, maar een groepsweergave die opent met
-            managementsamenvatting, bestuurlijke handoff, eerste verificatiespoor en eerste logische stap.
+            managementsamenvatting, bestuurlijke handoff, eerste managementsessie, eerste verificatiespoor en eerste logische stap.
           </p>
           <div className="mt-8 grid gap-3">
             {[

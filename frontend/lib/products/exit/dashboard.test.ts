@@ -37,6 +37,17 @@ describe('buildExitDashboardViewModel', () => {
     expect(model.primaryQuestion.body).toContain('breed werkgerelateerd vertrekbeeld')
     expect(model.nextStep.body).toContain('30-90')
     expect(model.nextStep.body).toContain('eigenaar')
+    expect(model.followThroughTitle).toContain('managementactie')
+    expect(model.followThroughCards.map((card) => card.title)).toEqual([
+      'Prioriteit nu',
+      'Eerste gesprek',
+      'Wie moet aan tafel',
+      'Eerste eigenaar',
+      'Eerste actie',
+      'Reviewmoment',
+    ])
+    expect(model.followThroughCards[3]?.body).toContain('HR')
+    expect(model.followThroughCards[5]?.body).toMatch(/6-8 weken|60-90/i)
     expect(model.managementBlocks[1]?.title).toBe('Welk besluit hoort nu eerst?')
     expect(model.managementBlocks[2]?.items[0]).toContain('Eerste eigenaar')
     expect(model.managementBlocks[0]?.title).toBe('Wat speelt nu?')
@@ -66,5 +77,7 @@ describe('buildExitDashboardViewModel', () => {
     expect(model.nextStep.title).toBe('Voorzichtig duiden')
     expect(model.nextStep.body).toContain('indicatief')
     expect(model.nextStep.body).toContain('eerste eigenaar')
+    expect(model.followThroughCards[0]?.title).toBe('Prioriteit nu')
+    expect(model.followThroughCards[5]?.body).toContain('10 responses')
   })
 })

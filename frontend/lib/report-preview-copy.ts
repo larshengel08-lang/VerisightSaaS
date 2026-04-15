@@ -59,7 +59,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
   portfolio: {
     label: 'Portfolio-overzicht',
     intro:
-      'Verisight vertaalt scans naar dezelfde boardroom-structuur: eerst de managementsamenvatting, daarna de bestuurlijke weging en vervolgens de eerste logische stap. Gebruik dit overzicht in gesprekken om eerst de juiste route te kiezen, niet om meteen alles tegelijk te verkopen.',
+      'Verisight vertaalt scans naar dezelfde boardroom-structuur: eerst de managementsamenvatting, daarna de bestuurlijke weging, vervolgens de eerste managementsessie en pas daarna de eerste logische stap. Gebruik dit overzicht in gesprekken om eerst de juiste route te kiezen, niet om meteen alles tegelijk te verkopen.',
     kpis: [
       ['Actieve campagnes', '2 scans actief', 'ExitScan en RetentieScan'],
       ['Gemiddeld hoofdsignaal', '5,4 op 10', 'Bespreek met HR, sponsor en MT'],
@@ -117,7 +117,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       'Deze preview gebruikt fictieve data, maar volgt dezelfde managementstructuur, leesvolgorde en trustnotities als de live buyer-facing output.',
     trustPoints: [
       ['Intended use', 'Gebruik deze laag om te kiezen welke managementroute past: vertrekduiding, vroegsignalering of beide.'],
-      ['Wat management ziet', 'Managementsamenvatting, topfactoren, eerste vraag en eerste logische stap in een executive lijn.'],
+      ['Wat management ziet', 'Managementsamenvatting, topfactoren, eerste managementsessie, eerste vraag en eerste logische stap in een executive lijn.'],
       ['Privacygrens', 'Groepsinzichten met minimale n-grenzen en geen individuele signalen naar management.'],
       ['Bewijsstatus', 'Methodisch onderbouwde managementoutput, geen diagnose of individuele voorspeller.'],
     ],
@@ -135,7 +135,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
   exit: {
     label: 'ExitScan-voorbeeld',
     intro:
-      'ExitScan opent met een managementsamenvatting die het vertrekbeeld terugbrengt tot hoofdreden, bestuurlijke relevantie, eerste managementvraag en compacte handoff voor sponsor of directie. Dit is meestal de logischste eerste demo voor nieuwe buyers.',
+      'ExitScan opent met een managementsamenvatting die het vertrekbeeld terugbrengt tot hoofdreden, bestuurlijke relevantie, eerste managementvraag, eerste managementsessie en compacte handoff voor sponsor of directie. Dit is meestal de logischste eerste demo voor nieuwe buyers.',
     kpis: [
       ['Reacties', '14 van 18', '78% respons'],
       ['Gemiddelde frictiescore', '5,8 op 10', 'Vergt nadere duiding'],
@@ -170,7 +170,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       { label: 'Rolhelderheid', score: '7,1', signal: '3,9', band: 'OK', tone: 'emerald' },
     ],
     hypothesisLead:
-      'De rapportage vertaalt uitkomsten niet naar harde conclusies, maar naar werkhypothesen, bestuurlijke handoff, een eerste eigenaar en een eerste logische 30-90 dagenactie.',
+      'De rapportage vertaalt uitkomsten niet naar harde conclusies, maar naar werkhypothesen, bestuurlijke handoff, een eerste managementsessie, eerste eigenaar en een eerste logische 30-90 dagenactie met reviewmoment.',
     hypotheses: [
       {
         title: 'Hypothese: leiderschap vraagt verdiepende validatie',
@@ -184,7 +184,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       },
     ],
     proofNotes: [
-      ['Managementsamenvatting', 'Vertrekbeeld nu, bestuurlijke relevantie en eerste logische stap in een leeslaag'],
+      ['Managementsamenvatting', 'Vertrekbeeld nu, bestuurlijke relevantie, eerste managementsessie en eerste logische stap in een leeslaag'],
       ['Bestuurlijke handoff', 'Compacte sponsor-read met eerste besluit, eerste eigenaar en wat je niet moet overclaimen'],
       ['Werkhypothesen', 'Topfactoren worden vertaald naar te toetsen vragen en concrete opvolging'],
       ['Methodische nuance', 'Signalen en hypothesen, geen absolute waarheid of diagnose'],
@@ -213,7 +213,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
   retention: {
     label: 'RetentieScan-voorbeeld',
     intro:
-      'RetentieScan opent met een managementsamenvatting die het groepsbeeld terugbrengt tot signaalprofiel, bestuurlijke weging, eerste verificatiespoor en compacte handoff voor sponsor of directie. In demo\'s komt deze route meestal na ExitScan, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.',
+      'RetentieScan opent met een managementsamenvatting die het groepsbeeld terugbrengt tot signaalprofiel, bestuurlijke weging, eerste verificatiespoor, eerste managementsessie en compacte handoff voor sponsor of directie. In demo\'s komt deze route meestal na ExitScan, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.',
     kpis: [
       ['Reacties', '63 van 92', '68% respons'],
       ['Gemiddeld retentiesignaal', '5,6 op 10', 'Breed aandachtssignaal'],
@@ -248,7 +248,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       { label: 'Rolhelderheid', score: '7,1', signal: '3,8', band: 'Stabiel', tone: 'emerald' },
     ],
     hypothesisLead:
-      'De rapportage helpt management niet alleen zien wat spannend is, maar ook wie eerst moet valideren en welke 30-90 dagenactie logisch is.',
+      'De rapportage helpt management niet alleen zien wat spannend is, maar ook wie eerst moet valideren, welke eerste interventie logisch is en wanneer het reviewmoment volgt.',
     hypotheses: [
       {
         title: 'Hypothese: werkdruk zet behoud in delen van de organisatie onder druk',
@@ -262,7 +262,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       },
     ],
     proofNotes: [
-      ['Managementsamenvatting', 'Groepsbeeld nu, bestuurlijke weging en eerste logische stap in een executive laag'],
+      ['Managementsamenvatting', 'Groepsbeeld nu, bestuurlijke weging, eerste managementsessie en eerste logische stap in een executive laag'],
       ['Bestuurlijke handoff', 'Compacte sponsor-read met eerste besluit, eerste eigenaar en expliciete watchout tegen overinterpretatie'],
       ['Signaalmix', 'Retentiesignaal, stay-intent en vertrekintentie in een bestuurssamenvatting'],
       ['Actielogica', 'Topfactoren en vervolgstappen voor 30-90 dagen, zonder individuele voorspelling'],

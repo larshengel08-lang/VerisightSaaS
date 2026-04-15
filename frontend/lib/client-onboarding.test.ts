@@ -61,7 +61,11 @@ describe('client onboarding defaults', () => {
   it('keeps scan-specific first-read guidance and adoption success definitions aligned', () => {
     expect(getFirstManagementReadSteps('exit')[0]?.toLowerCase()).toContain('beslisoverzicht')
     expect(getFirstManagementReadSteps('retention')[2]?.toLowerCase()).toContain('behoud')
+    expect(getFirstManagementReadSteps('exit')[2]?.toLowerCase()).toContain('reviewmoment')
+    expect(getFirstManagementReadSteps('retention')[2]?.toLowerCase()).toContain('eerste eigenaar')
     expect(getAdoptionSuccessDefinition('exit').toLowerCase()).toContain('dashboard en rapport')
     expect(getAdoptionSuccessDefinition('retention').toLowerCase()).toContain('behoud')
+    expect(getAdoptionSuccessDefinition('exit').toLowerCase()).toContain('reviewmoment')
+    expect(getAdoptionSuccessDefinition('retention').toLowerCase()).toContain('eerste managementsessie')
   })
 })

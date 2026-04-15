@@ -108,7 +108,7 @@ def _build_campaign(
     return campaign
 
 
-def _extract_pdf_text(pdf_bytes: bytes, max_pages: int = 6) -> str:
+def _extract_pdf_text(pdf_bytes: bytes, max_pages: int = 20) -> str:
     reader = PdfReader(io.BytesIO(pdf_bytes))
     text_parts = []
     for page in reader.pages[:max_pages]:
@@ -156,6 +156,8 @@ def test_generate_exit_report_smoke(db_session: Session):
     assert 'Bestuurlijke handoff' in pdf_text
     assert 'Wat je hier niet uit moet concluderen' in pdf_text
     assert 'Indicatieve exposure' in pdf_text
+    assert 'Eerste managementsessie na oplevering' in pdf_text
+    assert 'Reviewmoment' in pdf_text
     assert 'Vertrouwelijk' in pdf_text
 
 
@@ -263,6 +265,8 @@ def test_generate_retention_report_smoke_with_trend_and_segment_deep_dive(db_ses
     pdf_text = _extract_pdf_text(pdf_bytes)
     assert 'Bestuurlijke handoff' in pdf_text
     assert 'Wat je hier niet uit moet concluderen' in pdf_text
+    assert 'Eerste managementsessie na oplevering' in pdf_text
+    assert 'Reviewmoment' in pdf_text
 
 
 def test_generate_exit_report_sample_output_mode_uses_buyer_facing_cover_note(db_session: Session):

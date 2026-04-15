@@ -10,14 +10,22 @@ interface Props {
 }
 
 export function RecommendationList({ factorAverages, scanType }: Props) {
-  const questionSet = getProductModule(scanType).getFocusQuestions()
+  const productModule = getProductModule(scanType)
+  const questionSet = productModule.getFocusQuestions()
+  const playbooks = productModule.getActionPlaybooks()
   const items = ORG_FACTORS
     .filter((factor) => factor in factorAverages)
     .map((factor) => {
       const score = factorAverages[factor]
       const signalValue = 11 - score
       const band = signalValue >= 7 ? 'HOOG' : signalValue >= 4.5 ? 'MIDDEN' : 'LAAG'
-      return { factor, signalValue, band, questions: questionSet[factor]?.[band] ?? [] }
+      return {
+        factor,
+        signalValue,
+        band,
+        questions: questionSet[factor]?.[band] ?? [],
+        playbook: playbooks[factor]?.[band] ?? null,
+      }
     })
     .sort((a, b) => b.signalValue - a.signalValue)
     .filter((item) => item.questions.length > 0)
@@ -54,13 +62,38 @@ export function RecommendationList({ factorAverages, scanType }: Props) {
           <ul className="space-y-2">
             {item.questions.map((question) => (
               <li key={question} className="flex gap-2 text-sm leading-6 text-slate-700">
-                <span className="text-slate-400">•</span>
+                <span className="text-slate-400">&bull;</span>
                 <span>{question}</span>
               </li>
             ))}
           </ul>
+          {item.playbook ? (
+            <div className="mt-4 grid gap-3 border-t border-white/70 pt-4 md:grid-cols-2 xl:grid-cols-4">
+              <FollowThroughCell title="Eerste gesprek" body={item.questions[0] ?? item.playbook.validate} />
+              <FollowThroughCell title="Eerste eigenaar" body={item.playbook.owner} />
+              <FollowThroughCell title="Eerste actie" body={item.playbook.actions[0] ?? item.playbook.decision} />
+              <FollowThroughCell
+                title="Reviewmoment"
+                body={
+                  item.playbook.review ??
+                  (scanType === 'exit'
+                    ? 'Check binnen 60-90 dagen of dit spoor terugkomt in de volgende exitbatch en in managementgesprekken.'
+                    : 'Check binnen 45-90 dagen of dit spoor verschuift in teamgesprekken, opvolging en een volgende meting.')
+                }
+              />
+            </div>
+          ) : null}
         </div>
       ))}
+    </div>
+  )
+}
+
+function FollowThroughCell({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="rounded-2xl border border-white/80 bg-white/80 px-3 py-3 shadow-sm">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-700">{body}</p>
     </div>
   )
 }

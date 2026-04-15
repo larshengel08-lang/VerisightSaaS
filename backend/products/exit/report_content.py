@@ -39,6 +39,13 @@ EXIT_OWNER_BY_FACTOR = {
 }
 
 
+def _exit_review_moment_text(focus_text: str) -> str:
+    return (
+        f"Plan binnen 60-90 dagen een review op {focus_text.lower()}: wat is gekozen, wat is uitgevoerd "
+        "en welke signalen keren terug in de volgende exitbatch of in managementgesprekken."
+    )
+
+
 def get_management_summary_payload(
     *,
     top_factor_labels: list[str],
@@ -357,10 +364,53 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         if lead_factor_key
         else None
     ) or "HR business partner met betrokken leidinggevende"
+    first_action = (
+        f"Vertaal {focus_text.lower()} binnen 30 dagen naar één gerichte verbeteractie met duidelijke eigenaar "
+        "en zichtbare opvolging."
+    )
+    review_moment = _exit_review_moment_text(focus_text)
     return {
         "section_title": "Vervolgstappen",
         "intro_text": (
             "Gebruik ExitScan niet alleen als terugblik, maar als managementinstrument om het vertrekbeeld te toetsen, te prioriteren en te vertalen naar zichtbare verbeteracties."
+        ),
+        "session_title": "Eerste managementsessie na oplevering",
+        "session_intro": (
+            "Gebruik deze route om de eerste managementsessie compact te houden: kies eerst het prioriteitsspoor, "
+            "beleg een eigenaar, bepaal de eerste actie en leg direct het reviewmoment vast."
+        ),
+        "session_cards": [
+            {
+                "title": "Prioriteit nu",
+                "body": f"{focus_text} vormen nu het eerste vertrekspoor om bestuurlijk te wegen.",
+            },
+            {
+                "title": "Eerste gesprek",
+                "body": (
+                    f"Voer eerst een managementgesprek over hoe {focus_text.lower()} terugkomen in vertrekduiding, "
+                    "teamcontext en eerdere signalering."
+                ),
+            },
+            {
+                "title": "Wie moet aan tafel",
+                "body": "HR, betrokken leidinggevende en sponsor of MT-lid dat het eerste managementspoor moet wegen.",
+            },
+            {
+                "title": "Eerste eigenaar",
+                "body": first_owner,
+            },
+            {
+                "title": "Eerste actie",
+                "body": first_action,
+            },
+            {
+                "title": "Reviewmoment",
+                "body": review_moment,
+            },
+        ],
+        "session_watchout_title": "Leesgrens bij de eerste managementsessie",
+        "session_watchout": (
+            "Gebruik deze sessie om prioriteit, gesprek en actie te kiezen, niet om achteraf de ene oorzaak van vertrek te bewijzen."
         ),
         "steps": [
             {
@@ -390,7 +440,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
                 "number": "4",
                 "title": "Leg een evaluatiemoment vast binnen 90 dagen",
                 "body": (
-                    "Plan direct wanneer je terugkijkt of de gekozen acties zijn uitgevoerd en of dezelfde signalen in een volgende exitbatch terugkeren."
+                    review_moment
                 ),
             },
         ],

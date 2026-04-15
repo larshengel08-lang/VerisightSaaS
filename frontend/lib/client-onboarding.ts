@@ -145,19 +145,19 @@ export function getFirstManagementReadSteps(scanType: ScanType) {
     return [
       'Open eerst het beslisoverzicht en lees het retentiesignaal als groepssignaal, niet als individuele voorspelling.',
       'Gebruik een indicatief beeld vanaf 5 responses om richting te houden, maar wacht voor stevige patroonduiding bij voorkeur tot 10 responses of meer.',
-      'Plan daarna het eerste managementgesprek rond de vraag waar behoud nu onder druk staat en welke factor of doelgroep eerst validatie vraagt.',
+      'Plan daarna de eerste managementsessie rond de vraag waar behoud nu onder druk staat, wie eerste eigenaar wordt, welke eerste interventie logisch is en wanneer het reviewmoment volgt.',
     ] as const
   }
 
   return [
     'Open eerst het beslisoverzicht en lees het vertrekbeeld als managementsamenvatting van terugkerende werkfrictie, niet als losse exitfeedback.',
     'Gebruik een indicatief beeld vanaf 5 responses om richting te houden, maar wacht voor stevige patroonduiding bij voorkeur tot 10 responses of meer.',
-    'Plan daarna het eerste managementgesprek rond de vraag welk vertrekpatroon terugkeert en welke eerste eigenaar of verbeterroute logisch is.',
+    'Plan daarna de eerste managementsessie rond de vraag welk vertrekpatroon terugkeert, wie eerste eigenaar wordt, welke eerste verbeteractie logisch is en wanneer het reviewmoment volgt.',
   ] as const
 }
 
 export function getAdoptionSuccessDefinition(scanType: ScanType) {
   return scanType === 'retention'
-    ? 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste gesprek over behoud, verificatie en opvolging te voeren.'
-    : 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste gesprek over vertrekduiding, prioriteiten en eigenaarschap te voeren.'
+    ? 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over behoud, verificatie, eerste interventie en reviewmoment te voeren.'
+    : 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over vertrekduiding, prioriteiten, eerste actie en reviewmoment te voeren.'
 }

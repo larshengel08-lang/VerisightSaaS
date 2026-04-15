@@ -47,6 +47,13 @@ function getLeadingPlaybook(factor: string | null, signalValue: number | null) {
   return EXIT_ACTION_PLAYBOOKS[factor]?.[band] ?? null
 }
 
+function getExitReviewMoment(topFactorLabel: string, signalVisibilityAverage: number | null | undefined) {
+  if (typeof signalVisibilityAverage === 'number' && signalVisibilityAverage < 3) {
+    return `Plan binnen 6-8 weken een MT-review op ${topFactorLabel.toLowerCase()}, eerdere signalering en de eerste verbeteractie.`
+  }
+  return `Plan binnen 60-90 dagen een MT-review om te toetsen of ${topFactorLabel.toLowerCase()} minder terugkomt in gesprekken, signalen en de volgende exitbatch.`
+}
+
 export function buildExitDashboardViewModel(args: {
   signalLabelLower: string
   averageSignal: number | null
@@ -81,6 +88,10 @@ export function buildExitDashboardViewModel(args: {
   const firstAction =
     leadingPlaybook?.actions[0] ??
     `Vertaal ${topFactorLabel.toLowerCase()} binnen 30 dagen naar een eerste gerichte verbeteractie met duidelijke eigenaar.`
+  const firstConversation = `Voer eerst een managementgesprek over hoe ${topFactorLabel.toLowerCase()} terugkomt in vertrekduiding, teamcontext en eerdere signalering.`
+  const participants =
+    'HR, betrokken leidinggevende en sponsor of MT-lid dat het eerste managementspoor moet wegen.'
+  const reviewMoment = getExitReviewMoment(topFactorLabel, args.signalVisibilityAverage)
   const boardroomRelevance = hasBroadWorkSignal
     ? `Een breed werksignaal rond ${topFactorLabel.toLowerCase()} maakt dit relevant voor sponsor, MT en directie: hier zit beinvloedbare organisatiefrictie die je niet alleen als HR-nazorg wilt lezen.`
     : `Ook zonder breed werksignaal is ${topFactorLabel.toLowerCase()} scherp genoeg om bestuurlijk te wegen welk spoor nu eerst verificatie en eigenaarschap vraagt.`
@@ -112,6 +123,10 @@ export function buildExitDashboardViewModel(args: {
       },
       focusSectionIntro:
         'Gebruik focusvragen pas nadat er genoeg responses zijn om vertrekpatronen als groepsbeeld te lezen.',
+      followThroughTitle: 'Van rapport naar managementactie',
+      followThroughIntro:
+        'De vaste vervolgrouting verschijnt zodra er genoeg responses zijn om vertrekduiding veilig als managementinput te gebruiken.',
+      followThroughCards: [],
     }
   }
 
@@ -140,6 +155,41 @@ export function buildExitDashboardViewModel(args: {
       },
       focusSectionIntro:
         'Gebruik deze laag nu vooral om de juiste verificatievragen klaar te zetten voor zodra het patroon steviger wordt.',
+      followThroughTitle: 'Van rapport naar managementactie',
+      followThroughIntro:
+        'Bij een indicatief beeld blijft deze route nog bewust compact: bereid wel al het eerste gesprek, de eerste eigenaar en het reviewmoment voor.',
+      followThroughCards: [
+        {
+          title: 'Prioriteit nu',
+          body: `Gebruik ${topFactorLabel.toLowerCase()} voorlopig als eerste vertrekspoor, maar behandel de uitkomst nog als indicatief.`,
+          tone: 'blue',
+        },
+        {
+          title: 'Eerste gesprek',
+          body: `Voer een beperkt verificatiegesprek over ${topFactorLabel.toLowerCase()} en wacht met brede conclusies tot het patroon steviger is.`,
+          tone: 'blue',
+        },
+        {
+          title: 'Wie moet aan tafel',
+          body: 'HR en de meest betrokken leidinggevende; sponsor of MT sluit aan zodra het patroon steviger wordt.',
+          tone: 'amber',
+        },
+        {
+          title: 'Eerste eigenaar',
+          body: firstOwner,
+          tone: 'emerald',
+        },
+        {
+          title: 'Eerste actie',
+          body: 'Kies nog geen breed programma; bereid alleen de eerste gerichte verbeteractie of verificatiestap voor.',
+          tone: 'amber',
+        },
+        {
+          title: 'Reviewmoment',
+          body: 'Herlees deze route zodra minimaal 10 responses binnen zijn en leg dan pas het vaste 60-90 dagen reviewmoment vast.',
+          tone: 'emerald',
+        },
+      ],
     }
   }
 
@@ -266,5 +316,40 @@ export function buildExitDashboardViewModel(args: {
     },
     focusSectionIntro:
       'Start met vertrekduiding die zowel bestuurlijk relevant als beinvloedbaar lijkt. Gebruik de vragen en routes hieronder om eerst te toetsen, daarna te kiezen en vervolgens expliciet te beleggen.',
+    followThroughTitle: 'Van vertrekduiding naar managementactie',
+    followThroughIntro:
+      'Gebruik deze route om het rapport niet als eindpunt te lezen, maar als start van een eerste managementsessie met expliciete keuze, eigenaar, actie en reviewmoment.',
+    followThroughCards: [
+      {
+        title: 'Prioriteit nu',
+        body: `${topFactorLabel} is nu het eerste vertrekspoor om bestuurlijk te wegen.`,
+        tone: 'blue',
+      },
+      {
+        title: 'Eerste gesprek',
+        body: firstConversation,
+        tone: 'blue',
+      },
+      {
+        title: 'Wie moet aan tafel',
+        body: participants,
+        tone: 'amber',
+      },
+      {
+        title: 'Eerste eigenaar',
+        body: firstOwner,
+        tone: 'emerald',
+      },
+      {
+        title: 'Eerste actie',
+        body: firstAction,
+        tone: 'amber',
+      },
+      {
+        title: 'Reviewmoment',
+        body: reviewMoment,
+        tone: 'emerald',
+      },
+    ],
   }
 }
