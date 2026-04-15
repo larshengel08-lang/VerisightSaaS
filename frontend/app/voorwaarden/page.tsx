@@ -62,6 +62,10 @@ export default function VoorwaardenPage() {
           <li>dashboardtoegang en rapportage;</li>
           <li>persoonlijke toelichting op de uitkomsten.</li>
         </ul>
+        <p>
+          De standaarddienst is organisatiegebonden en assisted van opzet. Verisight levert op dit moment geen
+          publiek self-serve checkout-, seat- of usageabonnement tenzij schriftelijk anders overeengekomen.
+        </p>
       </section>
 
       <section>
@@ -132,6 +136,11 @@ export default function VoorwaardenPage() {
           Verisight stuurt bij aanvang van het traject een factuur voor het overeengekomen bedrag. De betalingstermijn
           bedraagt 14 dagen na factuurdatum, tenzij schriftelijk anders afgesproken. Bij overschrijding van de
           betalingstermijn is Verisight gerechtigd de dienst tijdelijk op te schorten totdat betaling is ontvangen.
+        </p>
+        <p>
+          Verisight werkt in de huidige productvorm met offerte, trajectafspraak en handmatige facturatie. Er geldt
+          geen standaard self-serve checkout, seatbilling of automatisch recurring abonnement, tenzij partijen dat
+          later schriftelijk expliciet overeenkomen.
         </p>
         <p>
           Prijzen zijn exclusief btw, tenzij anders vermeld. Verisight behoudt zich het recht voor om bij uitgebreide

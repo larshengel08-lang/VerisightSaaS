@@ -4,12 +4,15 @@ export type ScanType = 'exit' | 'retention'
 export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
 export type CampaignAddOn = 'segment_deep_dive'
 export type DeliveryMode = 'baseline' | 'live'
+// Access roles only. These are not billable seats or plan licenses.
 // owner  = Verisight-beheerder (volledige toegang)
 // member = intern Verisight (zelfde rechten als owner)
 // viewer = HR-klant (alleen lezen: dashboard + PDF)
 export type MemberRole = 'owner' | 'member' | 'viewer'
 export type Preventability = 'STERK_WERKSIGNAAL' | 'GEMENGD_WERKSIGNAAL' | 'BEPERKT_WERKSIGNAAL'
 
+// Current tenant boundary and v1 customer account boundary.
+// A separate billing account abstraction does not exist in runtime yet.
 export interface Organization {
   id: string
   name: string
@@ -19,6 +22,8 @@ export interface Organization {
   created_at: string
 }
 
+// Campaigns are operational fulfillment units.
+// They are not subscriptions, seats, or standalone billing units.
 export interface Campaign {
   id: string
   organization_id: string

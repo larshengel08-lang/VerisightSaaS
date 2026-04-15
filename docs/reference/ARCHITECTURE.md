@@ -132,6 +132,46 @@ const isAdmin = memberships.some(m => m.role === 'owner' || m.role === 'member')
 
 ---
 
+## 4A. Account- en billingmodel (v1)
+
+De leidende source of truth voor account- en billingreadiness is
+`docs/active/ACCOUNT_AND_BILLING_MODEL_READINESS_PLAN.md`.
+Deze architectuursectie vat alleen de runtime-betekenis van die keuzes samen.
+
+### Huidige accountgrens
+
+- `organizations` is in v1 zowel de tenantgrens als de primaire accounteenheid.
+- Een aparte runtime-entiteit voor `billing_account`, `subscription`, `seat` of `usage_record`
+  bestaat bewust nog niet.
+- Een bovenliggende multi-org billing account blijft buiten scope voor v1 en is pas relevant
+  als een echte enterprise-uitzondering daarom vraagt.
+
+### Access is niet hetzelfde als commercieel entitlement
+
+- `org_members` en `org_invites` modelleren toegang, niet facturatie.
+- Rollen `owner`, `member` en `viewer` zijn accessrollen en mogen niet als seats of licenties
+  worden geinterpreteerd.
+- Invite-acceptatie en dashboardtoegang mogen daarom niet afhankelijk worden gemaakt van een
+  toekomstige billingstate zolang assisted delivery de operationele waarheid blijft.
+
+### Fulfillment is niet hetzelfde als billing
+
+- `campaigns` zijn de huidige fulfillment- en operationele eenheid voor ExitScan en
+  RetentieScan.
+- `scan_type`, `delivery_mode` en `enabled_modules` dragen package- en deliverycontext,
+  maar vormen samen nog geen volwaardig plan- of billingmodel.
+- Respondenten, responses en campaigns zijn waardevolle operationele signalen, maar zijn nog
+  geen bewezen billable units of usage drivers.
+
+### Assisted verkoop en handmatige facturatie blijven leidend
+
+- Verisight verkoopt momenteel begeleide trajecten, geen self-serve seat- of usageabonnementen.
+- Facturatie verloopt handmatig op basis van offerte, trajectafspraak en aanvullende scope.
+- Stripe, recurring billing, seat billing en self-serve planwissels zijn expliciet pas later
+  aan de orde na extra product-, ops- en evidence-readiness.
+
+---
+
 ## 5. Datamodel (kernentiteiten)
 
 ```
