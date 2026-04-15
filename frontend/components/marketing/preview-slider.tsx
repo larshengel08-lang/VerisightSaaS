@@ -63,7 +63,7 @@ function ProofRail({ variant }: { variant: ReportPreviewVariant }) {
   const copy = COPY[variant]
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[0.88fr_1.12fr]">
+    <div className="grid items-start gap-4 lg:grid-cols-[0.92fr_1.08fr]">
       <div className="space-y-4">
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">{copy.boardroomTitle}</p>
@@ -121,7 +121,7 @@ function ProofRail({ variant }: { variant: ReportPreviewVariant }) {
           alt={copy.supportVisualAlt}
           width={1600}
           height={960}
-          className="h-full w-full object-cover"
+          className="max-h-[34rem] w-full object-cover"
         />
       </div>
     </div>

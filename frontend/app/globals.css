@@ -4,14 +4,14 @@
   --background: #ffffff;
   --foreground: #0f172a;
   --marketing-shell: 80rem;
-  --marketing-section-space: clamp(4.5rem, 6vw, 7rem);
+  --marketing-section-space: clamp(3.75rem, 5.2vw, 5.75rem);
   --marketing-surface: #ffffff;
   --marketing-surface-soft: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   --marketing-surface-tint: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
   --marketing-surface-dark: linear-gradient(180deg, #12233a 0%, #0f172a 100%);
   --marketing-border: rgba(148, 163, 184, 0.22);
-  --marketing-shadow-soft: 0 24px 60px rgba(15, 23, 42, 0.08);
-  --marketing-shadow-strong: 0 32px 90px rgba(15, 23, 42, 0.14);
+  --marketing-shadow-soft: 0 20px 48px rgba(15, 23, 42, 0.07);
+  --marketing-shadow-strong: 0 28px 72px rgba(15, 23, 42, 0.13);
   --marketing-glow-blue: rgba(191, 219, 254, 0.75);
   --marketing-glow-emerald: rgba(167, 243, 208, 0.72);
   --marketing-glow-sky: rgba(186, 230, 253, 0.7);
@@ -262,6 +262,14 @@ details > summary::-webkit-details-marker {
   .marketing-pill {
     max-width: 100%;
     border-radius: 9999px;
+  }
+
+  .marketing-flow-stack > * {
+    margin-top: 0 !important;
+  }
+
+  .marketing-flow-stack > * + * {
+    margin-top: clamp(2.75rem, 4vw, 3.75rem) !important;
   }
 }
 

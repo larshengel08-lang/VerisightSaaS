@@ -276,7 +276,7 @@ export function MarketingPageShell({
         </MarketingSection>
 
         <MarketingSection tone="plain">
-          {children}
+          <div className="marketing-flow-stack">{children}</div>
         </MarketingSection>
       </main>
       <PublicFooter />
