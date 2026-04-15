@@ -7,6 +7,7 @@ import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingProofStrip } from '@/components/marketing/marketing-proof-strip'
 import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { SampleShowcaseCard } from '@/components/marketing/sample-showcase-card'
+import { buildContactHref } from '@/lib/contact-funnel'
 import { ALL_MARKETING_PRODUCTS, type MarketingProduct, getMarketingProductBySlug } from '@/lib/marketing-products'
 import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
 
@@ -184,6 +185,7 @@ function ExitScanPage() {
       contextTitle="ExitScan verkoopt het sterkst wanneer de vraag eerst achteraf begrijpen is."
       contextBody="Deze pagina moet snel laten zien waarom ExitScan meestal de eerste route is: het product maakt losse exitinput bestuurlijk leesbaar en intern doorvertelbaar."
       heroNote="ExitScan blijft terugkijkend, groepsgericht en methodisch begrensd. Dat maakt de route scherper, niet smaller."
+      ctaHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_hero' })}
     >
       <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
         <div className="marketing-panel p-8">
@@ -308,7 +310,7 @@ function ExitScanPage() {
         eyebrow="Verschil met RetentieScan"
         title="ExitScan kijkt terug. RetentieScan signaleert eerder."
         body="ExitScan helpt vertrek achteraf duiden en is meestal het eerste traject. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen vormen ze een logisch portfolio, maar ExitScan blijft de primaire wedge."
-        primaryHref="/#kennismaking"
+        primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_callout' })}
         primaryLabel="Plan kennismaking"
         secondaryHref="/producten/retentiescan"
         secondaryLabel="Bekijk RetentieScan"
@@ -328,6 +330,7 @@ function RetentionScanPage() {
       contextTitle="RetentieScan verkoopt het sterkst wanneer de actieve behoudsvraag expliciet op tafel ligt."
       contextBody="Deze pagina moet snel laten zien waarom RetentieScan geen brede MTO is, maar een gerichte managementroute voor vroegsignalering, verificatie en prioritering."
       heroNote="RetentieScan blijft groepsgericht, privacybewust en niet-predictief. Dat houdt de route geloofwaardig en bestuurlijk bruikbaar."
+      ctaHref={buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_hero' })}
     >
       <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
         <div className="marketing-panel-soft p-8">
@@ -449,7 +452,7 @@ function RetentionScanPage() {
         eyebrow="Combinatie met ExitScan"
         title="Samen vormen ze een logisch portfolio."
         body="ExitScan helpt begrijpen waarom mensen gingen. RetentieScan helpt eerder zien waar behoud onder druk staat. Samen geven ze een scherper beeld van zowel achteraf duiden als vooruitkijken, meestal eerst via een baseline en pas daarna via ritme of combinatie."
-        primaryHref="/#kennismaking"
+        primaryHref={buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_callout' })}
         primaryLabel="Plan kennismaking"
         secondaryHref="/producten/combinatie"
         secondaryLabel="Bekijk combinatie"
@@ -469,6 +472,7 @@ function CombinatiePage() {
       contextTitle="De combinatie is geen verplichte instap, maar een route voor organisaties met twee echte managementvragen."
       contextBody="Deze pagina moet duidelijk maken dat het portfolio pas sterker wordt zodra beide vragen bestaan en de eerste route al scherp staat."
       heroNote="Combinatie betekent niet 'meer features'. Het betekent twee gerichte routes in een gedeelde managementtaal."
+      ctaHref={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_hero' })}
     >
       <div className="marketing-panel-soft p-8">
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-700">Wanneer kies je de combinatie?</p>
@@ -526,7 +530,7 @@ function CombinatiePage() {
         eyebrow="Volgende stap"
         title="Wil je bepalen of de combinatie logisch is?"
         body="In een kort gesprek kijken we of jullie vooral met een product moeten starten of direct baat hebben bij een portfolio-aanpak met beide scans."
-        primaryHref="/#kennismaking"
+        primaryHref={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_callout' })}
         primaryLabel="Plan kennismaking"
         secondaryHref="/producten"
         secondaryLabel="Bekijk producten"
@@ -549,6 +553,7 @@ function UpcomingProductPage({ slug }: { slug: string }) {
       contextTitle="Deze productroute blijft bewust ondersteunend zolang ExitScan en RetentieScan de live propositie dragen."
       contextBody="Zo kan het portfolio later groeien zonder dat de huidige publieke navigatie of verkoopflow productverwarring krijgt."
       heroNote="Deze route is nog geen onderdeel van de primaire publieke verkoopflow."
+      ctaHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: `upcoming_${slug}_hero` })}
     >
       <div className="marketing-panel p-8 text-center md:p-12">
         <span className="inline-flex items-center rounded-full bg-slate-100 px-4 py-1.5 text-sm font-semibold text-slate-600">
@@ -561,7 +566,7 @@ function UpcomingProductPage({ slug }: { slug: string }) {
         </p>
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
-            href="/#kennismaking"
+            href={buildContactHref({ routeInterest: 'exitscan', ctaSource: `upcoming_${slug}_contact` })}
             className="inline-flex rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(37,99,235,0.18)] transition-all hover:-translate-y-0.5 hover:bg-blue-700"
           >
             Neem contact op

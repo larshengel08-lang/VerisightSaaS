@@ -7,6 +7,7 @@ import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { SectionHeading } from '@/components/marketing/section-heading'
 import { TrustStrip } from '@/components/marketing/trust-strip'
 import { productOverviewComparisonRows, trustItems } from '@/components/marketing/site-content'
+import { buildContactHref } from '@/lib/contact-funnel'
 import { LIVE_MARKETING_PRODUCTS } from '@/lib/marketing-products'
 
 export const metadata: Metadata = {
@@ -61,6 +62,7 @@ export default function ProductenPage() {
         description="Gebruik deze pagina om snel te bepalen of jullie eerst vertrek willen duiden, eerder willen signaleren waar behoud schuift, of beide vragen pas daarna bewust naast elkaar willen organiseren."
         contextTitle="Begin met de vraag die nu bestuurlijk het meeste gewicht heeft."
         contextBody="De producten zijn niet symmetrisch bedoeld. ExitScan blijft meestal de eerste wedge. RetentieScan wordt sterker zodra de actieve behoudsvraag expliciet op tafel ligt."
+        ctaHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'products_hero' })}
       >
         <div className="grid gap-6 lg:grid-cols-2">
           {primaryProducts.map((product, index) => (
@@ -141,12 +143,31 @@ export default function ProductenPage() {
           </div>
         </div>
 
+        <div className="mt-16 marketing-panel-soft p-8 md:p-10">
+          <SectionHeading
+            eyebrow="Handoff"
+            title="Na routekeuze volgt geen losse demo, maar een begeleide intake."
+            description="Na kennismaking bevestigen we eerst welke route nu past, welke respondentbasis beschikbaar is en hoe de eerste waarde geloofwaardig wordt opgebouwd."
+          />
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {[
+              'ExitScan blijft de default eerste stap als de vraag vooral vertrek achteraf begrijpen is.',
+              'RetentieScan wordt alleen de eerste route wanneer de actieve behoudsvraag expliciet op tafel ligt.',
+              'De combinatie blijft een bewuste tweede route, niet de standaard eerste contactinsteek.',
+            ].map((item) => (
+              <div key={item} className="rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-7 text-slate-700">
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
         <MarketingCalloutBand
           className="mt-16"
           eyebrow="Volgende stap"
           title="Twijfel je welke route nu het best past?"
           body="In een kort gesprek bepalen we of jullie vooral terugkijken naar vertrek, eerder willen signaleren op behoud of beide productsporen slim naast elkaar willen inzetten."
-          primaryHref="/#kennismaking"
+          primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'products_callout' })}
           primaryLabel="Plan kennismaking"
           secondaryHref="/tarieven"
           secondaryLabel="Bekijk tarieven"

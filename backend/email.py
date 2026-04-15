@@ -30,6 +30,18 @@ _CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "hallo@verisight.nl")
 _FRONTEND_URL = os.getenv("FRONTEND_URL", "")
 _BACKEND_URL = os.getenv("BACKEND_URL", "")
 _EMAIL_TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates" / "emails"
+_CONTACT_ROUTE_LABELS = {
+    "exitscan": "ExitScan",
+    "retentiescan": "RetentieScan",
+    "combinatie": "Combinatie",
+    "nog-onzeker": "Nog niet zeker",
+}
+_CONTACT_TIMING_LABELS = {
+    "zo-snel-mogelijk": "Zo snel mogelijk",
+    "deze-maand": "Deze maand",
+    "dit-kwartaal": "Dit kwartaal",
+    "orienterend": "Orienterend",
+}
 
 try:
     import resend as _resend
@@ -188,6 +200,9 @@ def send_contact_request(
     work_email: str,
     organization: str,
     employee_count: str,
+    route_interest: str,
+    cta_source: str,
+    desired_timing: str,
     current_question: str,
 ) -> bool:
     return send_contact_request_result(
@@ -195,6 +210,9 @@ def send_contact_request(
         work_email=work_email,
         organization=organization,
         employee_count=employee_count,
+        route_interest=route_interest,
+        cta_source=cta_source,
+        desired_timing=desired_timing,
         current_question=current_question,
     ).ok
 
@@ -205,6 +223,9 @@ def send_contact_request_result(
     work_email: str,
     organization: str,
     employee_count: str,
+    route_interest: str,
+    cta_source: str,
+    desired_timing: str,
     current_question: str,
 ) -> EmailSendResult:
     """Stuur een contactaanvraag vanaf de marketing-site naar het interne inboxadres."""
@@ -218,6 +239,9 @@ def send_contact_request_result(
         work_email=work_email,
         organization=organization,
         employee_count=employee_count,
+        route_interest_label=_CONTACT_ROUTE_LABELS.get(route_interest, route_interest),
+        desired_timing_label=_CONTACT_TIMING_LABELS.get(desired_timing, desired_timing),
+        cta_source=cta_source,
         current_question=current_question,
     )
 

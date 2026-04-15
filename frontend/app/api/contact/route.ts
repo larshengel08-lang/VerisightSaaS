@@ -1,4 +1,10 @@
 import { NextResponse } from 'next/server'
+import {
+  inferRouteInterestFromSource,
+  normalizeContactCtaSource,
+  normalizeContactDesiredTiming,
+  normalizeContactRouteInterest,
+} from '@/lib/contact-funnel'
 import { getBackendApiUrl } from '@/lib/server-env'
 
 function isNonEmptyString(value: unknown, min = 1) {
@@ -22,6 +28,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Vul alle verplichte velden volledig in.' }, { status: 400 })
   }
 
+  const ctaSource = normalizeContactCtaSource(body.cta_source)
+  const routeInterest = body.route_interest
+    ? normalizeContactRouteInterest(body.route_interest)
+    : inferRouteInterestFromSource(ctaSource)
+  const desiredTiming = normalizeContactDesiredTiming(body.desired_timing)
+
   const forwardedFor = request.headers.get('x-forwarded-for')
   const realIp = request.headers.get('x-real-ip')
 
@@ -32,7 +44,12 @@ export async function POST(request: Request) {
       ...(forwardedFor ? { 'x-forwarded-for': forwardedFor } : {}),
       ...(realIp ? { 'x-real-ip': realIp } : {}),
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      ...body,
+      route_interest: routeInterest,
+      cta_source: ctaSource,
+      desired_timing: desiredTiming,
+    }),
     cache: 'no-store',
   })
 

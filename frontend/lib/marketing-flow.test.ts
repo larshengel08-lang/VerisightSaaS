@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { REPORT_PREVIEW_COPY } from '@/lib/report-preview-copy'
+import { buildContactHref, getContactFirstStepLabel, getContactRouteLabel } from '@/lib/contact-funnel'
 import { getBuyerFacingShowcaseAssets } from '@/lib/sample-showcase-assets'
 import {
   homepageProductRoutes,
@@ -12,7 +13,7 @@ import {
 describe('marketing flow defaults', () => {
   it('keeps the primary and secondary CTA labels aligned with the redesign', () => {
     expect(marketingPrimaryCta).toEqual({
-      href: '/#kennismaking',
+      href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
       label: 'Plan kennismaking',
     })
     expect(marketingSecondaryCta).toEqual({
@@ -53,5 +54,11 @@ describe('marketing flow defaults', () => {
     expect(assetHrefs).toContain(REPORT_PREVIEW_COPY.exit.sampleReportHref)
     expect(assetHrefs).toContain(REPORT_PREVIEW_COPY.retention.sampleReportHref)
     expect(REPORT_PREVIEW_COPY.portfolio.sampleReportHref).toBe('/producten')
+  })
+
+  it('keeps route labels and first-step defaults aligned with the funnel', () => {
+    expect(getContactRouteLabel('exitscan')).toBe('ExitScan')
+    expect(getContactRouteLabel('retentiescan')).toBe('RetentieScan')
+    expect(getContactFirstStepLabel('combinatie')).toBe('een gefaseerde combinatieroute')
   })
 })

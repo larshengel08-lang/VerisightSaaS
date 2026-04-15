@@ -1,3 +1,5 @@
+import { buildContactHref } from '@/lib/contact-funnel'
+
 export const marketingNavLinks = [
   { href: '/', label: 'Home' },
   { href: '/producten', label: 'Producten' },
@@ -7,7 +9,7 @@ export const marketingNavLinks = [
 ] as const
 
 export const marketingPrimaryCta = {
-  href: '/#kennismaking',
+  href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
   label: 'Plan kennismaking',
 } as const
 
@@ -370,20 +372,28 @@ export const included = [
 
 export const approachSteps = [
   {
-    title: '1. Route kiezen',
-    body: 'We bepalen samen welke managementvraag eerst telt: vertrek achteraf duiden, behoud eerder signaleren of later bewust combineren.',
+    title: '1. Kennismaking',
+    body: 'We bepalen welke managementvraag nu eerst telt en of ExitScan, RetentieScan of een gefaseerde combinatie logisch is.',
   },
   {
-    title: '2. Voorbereiden',
+    title: '2. Intake en databasis',
     body: 'We spreken af welke respondentdata, segmentinformatie en timing nodig zijn om dashboard en rapport leesbaar en privacyveilig te maken.',
   },
   {
-    title: '3. Uitvoeren',
-    body: 'Verisight richt de flow in, verstuurt uitnodigingen en bewaakt de dataverzameling zonder extra toolbeheer voor HR.',
+    title: '3. Campaign setup',
+    body: 'Verisight richt de campaign in, helpt met respondentimport en zet uitnodigingen en herinneringen klaar zonder extra toolbeheer voor HR.',
   },
   {
-    title: '4. Lezen en opvolgen',
-    body: 'Je krijgt dashboard, rapport en bestuurlijke handoff waarmee HR, sponsor, MT en directie sneller zien welke vervolgvraag, validatie of actie eerst telt.',
+    title: '4. Eerste responses',
+    body: 'De eerste signalen komen zichtbaar binnen zodra responses opbouwen, maar we lezen nog terughoudend zolang het patroonbeeld beperkt is.',
+  },
+  {
+    title: '5. Dashboard en rapport',
+    body: 'Vanaf een bruikbare responsbasis krijg je dashboard, rapport en bestuurlijke handoff in dezelfde managementleeslijn.',
+  },
+  {
+    title: '6. Eerste managementgesprek',
+    body: 'Samen vertalen we de eerste output naar prioriteiten, verificatievragen en logische vervolgstappen voor HR, sponsor, MT en directie.',
   },
 ] as const
 

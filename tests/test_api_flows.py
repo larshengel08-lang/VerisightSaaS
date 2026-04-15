@@ -423,6 +423,9 @@ def test_contact_request_persists_when_email_notification_fails(client, db_sessi
     stored = db_session.query(ContactRequest).one()
     assert stored.notification_sent is False
     assert stored.notification_error == "missing_resend_api_key"
+    assert stored.route_interest == "exitscan"
+    assert stored.cta_source == "website_contact_form"
+    assert stored.desired_timing == "orienterend"
     assert response.json()["lead_id"] == stored.id
 
 
@@ -439,6 +442,9 @@ def test_contact_request_marks_notification_sent_and_clears_error(client, db_ses
             "work_email": "lars@verisight.nl",
             "organization": "Verisight",
             "employee_count": "200-500",
+            "route_interest": "retentiescan",
+            "cta_source": "product_retention_hero",
+            "desired_timing": "deze-maand",
             "current_question": "Wij willen weten hoe de live scan werkt.",
             "website": "",
         },
@@ -452,6 +458,9 @@ def test_contact_request_marks_notification_sent_and_clears_error(client, db_ses
     stored = db_session.query(ContactRequest).one()
     assert stored.notification_sent is True
     assert stored.notification_error is None
+    assert stored.route_interest == "retentiescan"
+    assert stored.cta_source == "product_retention_hero"
+    assert stored.desired_timing == "deze-maand"
 
 
 def test_contact_requests_list_returns_recent_leads(client, db_session: Session, monkeypatch: pytest.MonkeyPatch):
@@ -467,6 +476,9 @@ def test_contact_requests_list_returns_recent_leads(client, db_session: Session,
             "work_email": "lars@verisight.nl",
             "organization": "Verisight",
             "employee_count": "200-500",
+            "route_interest": "combinatie",
+            "cta_source": "product_combination_callout",
+            "desired_timing": "dit-kwartaal",
             "current_question": "Wij willen weten hoe de baseline werkt.",
             "website": "",
         },
@@ -480,6 +492,9 @@ def test_contact_requests_list_returns_recent_leads(client, db_session: Session,
     assert len(payload) == 1
     assert payload[0]["organization"] == "Verisight"
     assert payload[0]["notification_sent"] is True
+    assert payload[0]["route_interest"] == "combinatie"
+    assert payload[0]["cta_source"] == "product_combination_callout"
+    assert payload[0]["desired_timing"] == "dit-kwartaal"
 
 
 def test_send_contact_request_result_returns_missing_contact_email_reason(monkeypatch: pytest.MonkeyPatch):
@@ -490,6 +505,9 @@ def test_send_contact_request_result_returns_missing_contact_email_reason(monkey
         work_email="lars@verisight.nl",
         organization="Verisight",
         employee_count="200-500",
+        route_interest="exitscan",
+        cta_source="website_contact_form",
+        desired_timing="orienterend",
         current_question="Hoe werkt dit?",
     )
 

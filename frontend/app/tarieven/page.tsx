@@ -13,6 +13,7 @@ import {
   trustItems,
 } from '@/components/marketing/site-content'
 import { TrustStrip } from '@/components/marketing/trust-strip'
+import { buildContactHref } from '@/lib/contact-funnel'
 import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
 
 const exitSampleAsset = getPrimarySampleShowcaseAsset('exit')
@@ -77,6 +78,7 @@ export default function TarievenPage() {
         description="Verisight verkoopt duidelijke productvormen met dashboard, rapportage, bestuurlijke handoff en begeleiding. Geen licentieconstructie met losse modules, geen planmatrix en geen open eind aan consultancy-uren."
         contextTitle="Gebruik pricing om kooprust te geven, niet om het gesprek ingewikkelder te maken."
         contextBody="De prijslaag moet eerst laten zien wat het eerste traject is, daarna welke vervolgvormen logisch worden en pas daarna welke verdieping eventueel meerwaarde heeft."
+        ctaHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'pricing_hero' })}
       >
         <div className="grid items-start gap-6 xl:grid-cols-2">
           {pricingCards.map((card) => (
@@ -162,6 +164,25 @@ export default function TarievenPage() {
           </div>
         </div>
 
+        <div className="mt-16 marketing-panel-soft p-8 md:p-10">
+          <SectionHeading
+            eyebrow="Wat hierna gebeurt"
+            title="Gebruik pricing als kooprust, niet als losse prijslijst."
+            description="Na een kennismaking bevestigen we eerst welke route nu past, welke databasis beschikbaar is en of een baseline of vervolgvorm echt logisch is."
+          />
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {[
+              'Eerst route en eerste betaalde stap bevestigen, niet meteen een losse bundel verkopen.',
+              'Daarna intake op databasis, segmenten, timing en privacygrenzen voordat een campaign live gaat.',
+              'Vervolgens begeleidt Verisight setup, uitnodigingen, dashboard en eerste managementread in dezelfde leeslijn.',
+            ].map((item) => (
+              <div key={item} className="rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-7 text-slate-700">
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="mt-16 grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
           <div className="marketing-panel p-8 md:p-10">
             <SectionHeading
@@ -238,7 +259,7 @@ export default function TarievenPage() {
           eyebrow="Volgende stap"
           title="Wil je bepalen welk prijsanker nu past?"
           body="In een kort gesprek kijken we wat nu jullie eerste route is, wanneer een vervolgvorm logisch wordt en of segment deep dive of een combinatieroute echt meerwaarde heeft."
-          primaryHref="/#kennismaking"
+          primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'pricing_callout' })}
           primaryLabel="Plan kennismaking"
           secondaryHref="/aanpak"
           secondaryLabel="Bekijk aanpak"

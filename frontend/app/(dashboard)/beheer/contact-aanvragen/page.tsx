@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import {
+  getContactDesiredTimingLabel,
+  getContactRouteLabel,
+} from '@/lib/contact-funnel'
 import { getBackendApiUrl } from '@/lib/server-env'
 import {
   DashboardChip,
@@ -15,6 +19,9 @@ interface ContactRequestRow {
   work_email: string
   organization: string
   employee_count: string
+  route_interest: string | null
+  cta_source: string | null
+  desired_timing: string | null
   current_question: string
   notification_sent: boolean
   notification_error: string | null
@@ -106,7 +113,7 @@ export default async function ContactAanvragenPage() {
       <DashboardHero
         eyebrow="Interne leadlijst"
         title="Contactaanvragen"
-        description="Bekijk nieuwe website-aanvragen direct in de UI, inclusief afleverstatus van de notificatiemail. Zo hoef je niet telkens Supabase handmatig te openen als een lead of mailflow twijfel geeft."
+        description="Bekijk nieuwe website-aanvragen direct in de UI, inclusief routecontext, gewenste timing en afleverstatus van de notificatiemail. Zo hoef je niet telkens Supabase handmatig te openen als een lead of mailflow twijfel geeft."
         tone="blue"
         meta={
           <>
@@ -142,7 +149,9 @@ export default async function ContactAanvragenPage() {
             <p className="font-semibold text-slate-950">Wat je hier ziet</p>
             <p>
               Elke lead wordt opgeslagen, ook als Resend of de notificatieroute vastloopt. Let vooral op
-              <span className="font-semibold"> notificatie</span> en <span className="font-semibold">foutreden</span>.
+              <span className="font-semibold"> route</span>, <span className="font-semibold"> timing</span>,
+              <span className="font-semibold"> notificatie</span> en{' '}
+              <span className="font-semibold">foutreden</span>.
             </p>
             <p className="text-xs text-slate-500">
               Gebruik dit scherm als snelle operationele check na contactformulier-tests of bij twijfel over maillevering.
@@ -178,7 +187,7 @@ export default async function ContactAanvragenPage() {
       <DashboardSection
         eyebrow="Leads"
         title="Recente contactaanvragen"
-        description="Nieuwe records staan bovenaan. De kolom notificatie laat zien of de interne mail daadwerkelijk is afgeleverd."
+        description="Nieuwe records staan bovenaan. Routecontext en timing helpen om de eerste opvolging meteen productspecifiek te doen."
         aside={<DashboardChip label="Maximaal 50 recente leads" tone="slate" />}
       >
         {rows.length === 0 ? (
@@ -195,6 +204,9 @@ export default async function ContactAanvragenPage() {
                   <th className="px-4 py-3">Organisatie</th>
                   <th className="px-4 py-3">Werk e-mail</th>
                   <th className="px-4 py-3">Omvang</th>
+                  <th className="px-4 py-3">Route</th>
+                  <th className="px-4 py-3">Timing</th>
+                  <th className="px-4 py-3">CTA-bron</th>
                   <th className="px-4 py-3">Notificatie</th>
                   <th className="px-4 py-3">Foutreden</th>
                 </tr>
@@ -213,6 +225,13 @@ export default async function ContactAanvragenPage() {
                     <td className="px-4 py-4 text-slate-700">{row.organization}</td>
                     <td className="px-4 py-4 text-slate-700">{row.work_email}</td>
                     <td className="px-4 py-4 text-slate-700">{row.employee_count}</td>
+                    <td className="px-4 py-4">
+                      <DashboardChip label={getContactRouteLabel(row.route_interest)} tone="blue" />
+                    </td>
+                    <td className="px-4 py-4 text-slate-700">{getContactDesiredTimingLabel(row.desired_timing)}</td>
+                    <td className="px-4 py-4 text-xs leading-6 text-slate-500">
+                      {row.cta_source ? row.cta_source : 'Onbekend'}
+                    </td>
                     <td className="px-4 py-4">
                       <DashboardChip
                         label={row.notification_sent ? 'Verstuurd' : 'Niet verstuurd'}

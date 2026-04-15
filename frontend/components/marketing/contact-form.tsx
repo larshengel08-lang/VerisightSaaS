@@ -1,20 +1,45 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { contactTrustSignals } from '@/components/marketing/site-content'
+import {
+  CONTACT_DESIRED_TIMING_OPTIONS,
+  CONTACT_ROUTE_OPTIONS,
+  getContactDesiredTimingLabel,
+  getContactFirstStepLabel,
+  getContactRouteLabel,
+  inferRouteInterestFromSource,
+  normalizeContactCtaSource,
+  normalizeContactDesiredTiming,
+  normalizeContactRouteInterest,
+  type ContactDesiredTiming,
+  type ContactRouteInterest,
+} from '@/lib/contact-funnel'
 
 interface FormState {
   name: string
   workEmail: string
   organization: string
   employeeCount: string
+  routeInterest: ContactRouteInterest
+  desiredTiming: ContactDesiredTiming
   currentQuestion: string
   website: string
 }
 
 interface ContactFormProps {
   surface?: 'dark' | 'light'
+  defaultRouteInterest?: ContactRouteInterest
+  defaultCtaSource?: string
+}
+
+interface SuccessState {
+  leadId: string | null
+  routeLabel: string
+  firstStepLabel: string
+  desiredTimingLabel: string
 }
 
 const initialState: FormState = {
@@ -22,18 +47,49 @@ const initialState: FormState = {
   workEmail: '',
   organization: '',
   employeeCount: '',
+  routeInterest: 'exitscan',
+  desiredTiming: 'orienterend',
   currentQuestion: '',
   website: '',
 }
 
-export function ContactForm({ surface = 'dark' }: ContactFormProps) {
-  const [form, setForm] = useState<FormState>(initialState)
+export function ContactForm({
+  surface = 'dark',
+  defaultRouteInterest = 'exitscan',
+  defaultCtaSource = 'website_contact_form',
+}: ContactFormProps) {
+  const searchParams = useSearchParams()
+  const [form, setForm] = useState<FormState>({
+    ...initialState,
+    routeInterest: defaultRouteInterest,
+  })
+  const [ctaSource, setCtaSource] = useState(normalizeContactCtaSource(defaultCtaSource))
   const [loading, setLoading] = useState(false)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [successState, setSuccessState] = useState<SuccessState | null>(null)
   const [warningMessage, setWarningMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const isLight = surface === 'light'
+
+  useEffect(() => {
+    const sourceFromQuery = searchParams.get('cta_source')
+    const routeFromQuery = searchParams.get('route_interest')
+    const desiredTimingFromQuery = searchParams.get('desired_timing')
+    const resolvedSource = normalizeContactCtaSource(sourceFromQuery ?? defaultCtaSource)
+    const resolvedRoute =
+      routeFromQuery?.trim()
+        ? normalizeContactRouteInterest(routeFromQuery)
+        : inferRouteInterestFromSource(resolvedSource) || defaultRouteInterest
+
+    setForm((current) => ({
+      ...current,
+      routeInterest: resolvedRoute,
+      desiredTiming: desiredTimingFromQuery
+        ? normalizeContactDesiredTiming(desiredTimingFromQuery)
+        : current.desiredTiming,
+    }))
+    setCtaSource(resolvedSource)
+  }, [defaultCtaSource, defaultRouteInterest, searchParams])
 
   function updateField<K extends keyof FormState>(field: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -42,7 +98,7 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setLoading(true)
-    setSuccessMessage(null)
+    setSuccessState(null)
     setWarningMessage(null)
     setErrorMessage(null)
 
@@ -69,6 +125,9 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
           work_email: form.workEmail,
           organization: form.organization,
           employee_count: form.employeeCount,
+          route_interest: form.routeInterest,
+          cta_source: ctaSource,
+          desired_timing: form.desiredTiming,
           current_question: form.currentQuestion,
           website: form.website,
         }),
@@ -85,16 +144,26 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
         return
       }
 
-      const reference = payload.lead_id ? ` Referentie: ${payload.lead_id}.` : ''
-      setSuccessMessage(
-        `Aanvraag ontvangen. We reageren meestal binnen 1 werkdag met een eerste route-inschatting voor ExitScan, RetentieScan of de combinatie, inclusief welke eerste baseline of vervolgstap logisch lijkt.${reference}`,
-      )
+      const routeLabel = getContactRouteLabel(form.routeInterest)
+      const firstStepLabel = getContactFirstStepLabel(form.routeInterest)
+      const desiredTimingLabel = getContactDesiredTimingLabel(form.desiredTiming)
+      setSuccessState({
+        leadId: payload.lead_id ?? null,
+        routeLabel,
+        firstStepLabel,
+        desiredTimingLabel,
+      })
       if (payload.notification_sent === false) {
+        const reference = payload.lead_id ? ` Referentie: ${payload.lead_id}.` : ''
         setWarningMessage(
           `${payload.warning ?? 'Je aanvraag is opgeslagen, maar de e-mailnotificatie liep vast.'}${reference} Je aanvraag blijft wel veilig geregistreerd in Verisight.`,
         )
       }
-      setForm(initialState)
+      setForm((current) => ({
+        ...initialState,
+        routeInterest: current.routeInterest,
+        desiredTiming: current.desiredTiming,
+      }))
     } catch {
       setErrorMessage('Je aanvraag kon niet worden verzonden. Probeer het opnieuw of mail naar hallo@verisight.nl.')
     } finally {
@@ -127,7 +196,10 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
   return (
     <form onSubmit={handleSubmit} className={shellClass}>
       <div className={`mb-5 rounded-2xl border px-4 py-4 text-sm leading-7 ${isLight ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'}`}>
-        Gebruik dit formulier voor ExitScan, RetentieScan of de combinatie. We helpen eerst bepalen welke managementvraag en eerste productroute logisch zijn, en pas daarna hoe een traject eruit moet zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.
+        Gebruik dit formulier voor ExitScan, RetentieScan of de combinatie. We helpen eerst bepalen welke
+        managementvraag en eerste productroute logisch zijn, en pas daarna hoe intake, uitvoering, livegang en
+        eerste waarde eruit moeten zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te
+        duiden en gericht op te volgen.
       </div>
 
       <div className="mb-5 flex flex-wrap gap-2">
@@ -207,6 +279,44 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
             <option value="Anders / nog niet zeker">Anders / nog niet zeker</option>
           </select>
         </div>
+
+        <div>
+          <label htmlFor="routeInterest" className={`mb-2 block text-sm font-medium ${labelClass}`}>
+            Welke route lijkt nu het meest logisch?
+          </label>
+          <select
+            id="routeInterest"
+            required
+            value={form.routeInterest}
+            onChange={(event) => updateField('routeInterest', normalizeContactRouteInterest(event.target.value))}
+            className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+          >
+            {CONTACT_ROUTE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} - {option.description}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="desiredTiming" className={`mb-2 block text-sm font-medium ${labelClass}`}>
+            Wanneer wil je de eerste stap zetten?
+          </label>
+          <select
+            id="desiredTiming"
+            required
+            value={form.desiredTiming}
+            onChange={(event) => updateField('desiredTiming', normalizeContactDesiredTiming(event.target.value))}
+            className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+          >
+            {CONTACT_DESIRED_TIMING_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} - {option.description}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="mt-4">
@@ -224,6 +334,17 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
         />
       </div>
 
+      <div
+        className={`mt-4 rounded-2xl border px-4 py-4 text-sm leading-7 ${isLight ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'}`}
+      >
+        <p className="font-semibold">Wat er na dit bericht gebeurt</p>
+        <div className="mt-2 space-y-2">
+          <p>We reageren meestal binnen 1 werkdag met een eerste route-inschatting en de logischste eerste stap.</p>
+          <p>In het gesprek toetsen we managementvraag, timing, databasis en of een baseline of vervolgvorm nu past.</p>
+          <p>We plannen in deze stap nog geen live inrichting, geen losse tooltoegang en geen definitieve offerte zonder intake.</p>
+        </div>
+      </div>
+
       <div className="hidden" aria-hidden="true">
         <label htmlFor="website">Website</label>
         <input
@@ -236,8 +357,24 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
         />
       </div>
 
-      {successMessage ? (
-        <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${successClass}`}>{successMessage}</div>
+      {successState ? (
+        <div className={`mt-4 rounded-2xl border px-4 py-4 text-sm ${successClass}`}>
+          <p className="font-semibold">Aanvraag ontvangen.</p>
+          <div className="mt-2 space-y-2 leading-7">
+            <p>
+              We reageren meestal binnen 1 werkdag met een eerste route-inschatting voor{' '}
+              <span className="font-semibold">{successState.routeLabel}</span> en of{' '}
+              <span className="font-semibold">{successState.firstStepLabel}</span> nu logisch is.
+            </p>
+            <p>
+              In het gesprek toetsen we jullie managementvraag, gewenste timing (
+              <span className="font-semibold">{successState.desiredTimingLabel}</span>) en welke intake of
+              databasis nodig is om vlot naar uitvoering en eerste waarde te gaan.
+            </p>
+            <p>In deze stap krijg je nog geen live inrichting of definitieve offerte zonder intake.</p>
+            {successState.leadId ? <p className="text-xs opacity-80">Referentie: {successState.leadId}.</p> : null}
+          </div>
+        </div>
       ) : null}
 
       {warningMessage ? (
@@ -250,7 +387,8 @@ export function ContactForm({ surface = 'dark' }: ContactFormProps) {
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-6 ${helperClass}`}>
-          Verkennend gesprek van 20 minuten. Eerst managementvraag en productroute, daarna eerste traject, aanpak en prijs. Reactie meestal binnen 1 werkdag.
+          Verkennend gesprek van 20 minuten. Eerst managementvraag en productroute, daarna intake, eerste traject,
+          aanpak en prijs. Reactie meestal binnen 1 werkdag.
         </p>
         <button
           type="submit"

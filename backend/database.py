@@ -21,7 +21,7 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from sqlalchemy.pool import NullPool, StaticPool
 
@@ -117,3 +117,30 @@ def init_db() -> None:
     # Import models so SQLAlchemy knows about them before create_all
     from backend import models  # noqa: F401
     Base.metadata.create_all(bind=engine)
+    _repair_contact_request_schema()
+
+
+def _repair_contact_request_schema() -> None:
+    inspector = inspect(engine)
+    if "contact_requests" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("contact_requests")}
+    required_columns = {
+        "route_interest": "VARCHAR(32) NOT NULL DEFAULT 'exitscan'",
+        "cta_source": "VARCHAR(120) NOT NULL DEFAULT 'website_contact_form'",
+        "desired_timing": "VARCHAR(32) NOT NULL DEFAULT 'orienterend'",
+    }
+
+    missing_columns = {
+        column_name: ddl
+        for column_name, ddl in required_columns.items()
+        if column_name not in existing_columns
+    }
+    if not missing_columns:
+        return
+
+    with engine.begin() as connection:
+        for column_name, ddl in missing_columns.items():
+            logger.info("Voeg ontbrekende kolom toe aan contact_requests: %s", column_name)
+            connection.execute(text(f"ALTER TABLE contact_requests ADD COLUMN {column_name} {ddl}"))

@@ -4,6 +4,7 @@ import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { SectionHeading } from '@/components/marketing/section-heading'
 import { approachRoutes, approachSteps, included, trustItems } from '@/components/marketing/site-content'
 import { TrustStrip } from '@/components/marketing/trust-strip'
+import { buildContactHref } from '@/lib/contact-funnel'
 
 export const metadata: Metadata = {
   title: 'Aanpak',
@@ -64,6 +65,7 @@ export default function AanpakPage() {
         description="Verisight is geen losse surveytool en ook geen zwaar consultancytraject. Je koopt een duidelijke route van intake en uitvoering naar rapport, bestuurlijke handoff en eerste opvolging."
         contextTitle="Gebruik de aanpakpagina om voorspelbaarheid te toetsen, niet om een los procesplaatje te bekijken."
         contextBody="Na productkeuze moet snel duidelijk worden hoe een traject loopt, wat inbegrepen is en waar begeleiding het verschil maakt. Deze pagina moet die kooprust geven."
+        ctaHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_hero' })}
       >
         <div className="grid gap-5 lg:grid-cols-4">
           {approachSteps.map(({ title, body }) => (
@@ -72,6 +74,25 @@ export default function AanpakPage() {
               <p className="mt-4 text-sm leading-7 text-slate-600">{body}</p>
             </div>
           ))}
+        </div>
+
+        <div className="mt-16 rounded-[2rem] border border-slate-200 bg-white p-8 md:p-10">
+          <SectionHeading
+            eyebrow="Eerste waarde"
+            title="Van eerste respons naar eerste managementread."
+            description="Verisight verkoopt geen instant inzicht zonder responsbasis. Daarom hoort ook first value voorspelbaar en geloofwaardig te worden uitgelegd."
+          />
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {[
+              'Na de eerste responses zie je dat de campaign op gang komt, maar lezen we nog terughoudend.',
+              'Vanaf ongeveer 5 responses ontstaat de eerste bruikbare detailweergave in dashboard en rapport.',
+              'Vanaf ongeveer 10 responses ontstaat een steviger patroonbeeld voor prioritering, managementduiding en eerste besluiten.',
+            ].map((item) => (
+              <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-700">
+                {item}
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mt-16 grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
@@ -129,7 +150,7 @@ export default function AanpakPage() {
           eyebrow="Volgende stap"
           title="Wil je bepalen welke vorm nu het best past?"
           body="In een kort gesprek bepalen we of jullie beter starten met ExitScan Baseline, RetentieScan Baseline of een combinatieroute, en wanneer een vervolgvorm of segment deep dive logisch wordt."
-          primaryHref="/#kennismaking"
+          primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_callout' })}
           primaryLabel="Plan kennismaking"
           secondaryHref="/tarieven"
           secondaryLabel="Bekijk tarieven"

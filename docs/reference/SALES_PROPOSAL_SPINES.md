@@ -17,6 +17,23 @@ Elk voorstel volgt deze volgorde:
 8. prijsanker
 9. logische vervolgrichting
 
+## Verplichte funnelcontext bij eerste opvolging
+
+Neem bij iedere nieuwe website-lead deze velden over uit de contactflow voordat je belt of mailt:
+
+- `route_interest`
+- `desired_timing`
+- `cta_source`
+
+Gebruik ze zo:
+
+- `route_interest = exitscan` -> voorstel standaard openen op `ExitScan Baseline`
+- `route_interest = retentiescan` -> voorstel alleen openen op `RetentieScan Baseline` als de actieve behoudsvraag expliciet is
+- `route_interest = combinatie` -> eerst toetsen of er echt twee managementvragen zijn en meestal alsnog een gefaseerde volgorde voorstellen
+- `route_interest = nog-onzeker` -> discovery eerst gebruiken om de managementvraag te versmallen, geen productforcering
+- `desired_timing` -> bepaalt vooral hoe snel intake, databasischeck en eerste planning in de opvolging landen
+- `cta_source` -> helpt zien vanuit welke routepagina of CTA de lead binnenkwam en welke framing al is meegegeven
+
 ## ExitScan Baseline
 
 ### Gebruik wanneer

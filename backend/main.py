@@ -560,6 +560,9 @@ async def create_contact_request(
         work_email=body.work_email,
         organization=body.organization,
         employee_count=body.employee_count,
+        route_interest=body.route_interest,
+        cta_source=body.cta_source,
+        desired_timing=body.desired_timing,
         current_question=body.current_question,
         website=body.website,
         notification_sent=False,
@@ -574,6 +577,9 @@ async def create_contact_request(
         work_email=body.work_email,
         organization=body.organization,
         employee_count=body.employee_count,
+        route_interest=body.route_interest,
+        cta_source=body.cta_source,
+        desired_timing=body.desired_timing,
         current_question=body.current_question,
     )
 

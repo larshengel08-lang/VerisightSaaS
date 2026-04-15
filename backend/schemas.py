@@ -8,9 +8,7 @@ Keeps API contract separate from ORM models.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional
-
-from datetime import datetime
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
@@ -154,6 +152,9 @@ class ContactRequestCreate(BaseModel):
     work_email: EmailStr
     organization: str = Field(..., min_length=2, max_length=255)
     employee_count: str = Field(..., min_length=2, max_length=80)
+    route_interest: Literal["exitscan", "retentiescan", "combinatie", "nog-onzeker"] = "exitscan"
+    cta_source: str = Field(default="website_contact_form", min_length=2, max_length=120)
+    desired_timing: Literal["zo-snel-mogelijk", "deze-maand", "dit-kwartaal", "orienterend"] = "orienterend"
     current_question: str = Field(..., min_length=5, max_length=2000)
     website: Optional[str] = Field(default=None, max_length=255)
 
@@ -171,6 +172,9 @@ class ContactRequestRead(BaseModel):
     work_email: EmailStr
     organization: str
     employee_count: str
+    route_interest: str | None = None
+    cta_source: str | None = None
+    desired_timing: str | None = None
     current_question: str
     notification_sent: bool
     notification_error: str | None = None

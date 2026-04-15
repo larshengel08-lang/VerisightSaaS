@@ -8,6 +8,18 @@ Laatste update: 2026-04-15
 Gebruik deze beslisboom nadat de buyer-vraag is geopend.
 De beslisboom kiest eerst de managementroute, daarna het juiste eerste traject, en pas daarna een vervolgvorm, add-on of portfolioroute.
 
+Gebruik vanaf nu ook altijd de funnelcontext uit de websitelead:
+
+- `route_interest` bevestigt welke route de buyer zelf of impliciet al koos
+- `desired_timing` laat zien hoe snel intake of eerste planning moet landen
+- `cta_source` laat zien vanuit welke pagina of CTA de lead binnenkwam
+
+Deze context verfijnt discovery, maar overschrijft de productdefaults niet:
+
+- ExitScan blijft de default eerste route
+- RetentieScan wordt alleen primair bij expliciete actieve-populatievraag
+- Combinatie blijft een bewuste tweede route
+
 ## Stap 1 - Welke managementvraag telt nu eerst?
 
 ### Route A - Vertrek achteraf beter begrijpen
