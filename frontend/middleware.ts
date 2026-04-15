@@ -13,6 +13,7 @@ const PUBLIC_ROUTES = [
   '/privacy',
   '/voorwaarden',
   '/dpa',
+  '/vertrouwen',
   '/survey',
   '/product',
   '/producten',

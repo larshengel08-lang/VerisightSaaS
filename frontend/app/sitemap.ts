@@ -45,6 +45,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: 'https://www.verisight.nl/vertrouwen',
+      lastModified: new Date('2026-04-15'),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
       url: 'https://www.verisight.nl/privacy',
       lastModified: new Date('2026-04-11'),
       changeFrequency: 'yearly',
