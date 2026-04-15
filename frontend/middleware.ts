@@ -1,27 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-
-// Routes die altijd publiek toegankelijk zijn (geen login vereist)
-const PUBLIC_ROUTES = [
-  '/',
-  '/signup',
-  '/login',
-  '/forgot-password',
-  '/reset-password',
-  '/complete-account',
-  '/auth',
-  '/privacy',
-  '/voorwaarden',
-  '/dpa',
-  '/vertrouwen',
-  '/survey',
-  '/product',
-  '/producten',
-  '/aanpak',
-  '/tarieven',
-  '/oplossingen',
-]
-const PUBLIC_API_ROUTES = ['/api/contact']
+import {
+  isPublicApiRoutePath,
+  isPublicRoutePath,
+} from '@/lib/public-route-access'
 
 // Eenvoudige in-memory rate limiter voor auth-routes
 // (per deployment instance - voldoende voor MVP, vervang door Redis bij schalen)
@@ -105,12 +87,8 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isPublicRoute = PUBLIC_ROUTES.some(route =>
-    pathname === route || pathname.startsWith(route + '/'),
-  )
-  const isPublicApiRoute = PUBLIC_API_ROUTES.some(route =>
-    pathname === route || pathname.startsWith(route + '/'),
-  )
+  const isPublicRoute = isPublicRoutePath(pathname)
+  const isPublicApiRoute = isPublicApiRoutePath(pathname)
 
   // Niet ingelogd + beveiligde route -> login
   if (!user && !isPublicRoute && !isPublicApiRoute) {
@@ -131,6 +109,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|llms.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|llms.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|pdf)$).*)',
   ],
 }
