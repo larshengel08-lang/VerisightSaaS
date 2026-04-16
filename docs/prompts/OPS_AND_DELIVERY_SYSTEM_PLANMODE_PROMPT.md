@@ -22,7 +22,7 @@ Lees eerst voor context:
 - [ROADMAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP.md)
 - [STRATEGY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/STRATEGY.md)
 - [CLIENT_ONBOARDING_AND_ADOPTION_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/CLIENT_ONBOARDING_AND_ADOPTION_PROGRAM_PLAN.md)
-- [IMPLEMENTATION_READINESS_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/IMPLEMENTATION_READINESS_PROGRAM_PLAN.md)
+- [IMPLEMENTATION_READINESS_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/IMPLEMENTATION_READINESS_PROGRAM_PLAN.md)
 - [PILOT_AND_EARLY_CUSTOMER_LEARNING_SYSTEM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PILOT_AND_EARLY_CUSTOMER_LEARNING_SYSTEM_PLAN.md)
 - [DEMO_AND_SAMPLE_ENVIRONMENT_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/DEMO_AND_SAMPLE_ENVIRONMENT_PROGRAM_PLAN.md)
 - [docs/ops/SETUP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SETUP.md)

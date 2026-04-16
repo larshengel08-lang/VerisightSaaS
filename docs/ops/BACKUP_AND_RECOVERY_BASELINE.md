@@ -150,6 +150,7 @@ Deze stap is nog steeds nodig naast de lokale baseline:
 Gebruik voor een lokale baseline:
 
 - [create_backup_baseline.ps1](C:\Users\larsh\Desktop\Business\Verisight\create_backup_baseline.ps1)
+- [REMOTE_PLATFORM_BACKUP_CHECKLIST.md](C:\Users\larsh\Desktop\Business\Verisight\docs\ops\REMOTE_PLATFORM_BACKUP_CHECKLIST.md) voor de remote laag
 
 Standaard outputlocatie:
 

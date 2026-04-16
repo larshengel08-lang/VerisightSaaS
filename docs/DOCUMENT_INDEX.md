@@ -44,6 +44,10 @@ Source-of-truth volgorde:
 
 - [SETUP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SETUP.md)
 - [LIVE_RELEASE_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/LIVE_RELEASE_CHECKLIST.md)
+- [BACKUP_AND_RECOVERY_BASELINE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/BACKUP_AND_RECOVERY_BASELINE.md)
+- [REMOTE_PLATFORM_BACKUP_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/REMOTE_PLATFORM_BACKUP_CHECKLIST.md)
+- [REPO_STRUCTURE_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/REPO_STRUCTURE_REVIEW.md)
+- [CHECKLIST_AUDIT_TRACKER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CHECKLIST_AUDIT_TRACKER.md)
 - [SUPABASE_LIVE_HARDENING_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/SUPABASE_LIVE_HARDENING_CHECKLIST.md)
 - [RETENTION_V11_VALIDATION_WORKFLOW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/RETENTION_V11_VALIDATION_WORKFLOW.md)
 
