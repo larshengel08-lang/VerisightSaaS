@@ -13,6 +13,15 @@ Dit document maakt expliciet wat binnen founder-led lean realistisch is en waar 
 - Dominante focus: revenue + proof
 - Parallelle focus: delivery stability
 
+## Baseline reading on 2026-04-16
+
+- De grootste managementwinst zit nu in focusdiscipline, niet in meer parallel werk.
+- Elk nieuw initiatief buiten revenue, proof of deliverystabiliteit verhoogt de kans op versnippering.
+- Capaciteitsuitbreiding is nu pas logisch als:
+  - echte dealflow stijgt
+  - deliverykwaliteit onder druk komt
+  - of structureel werk duidelijk te standaardiseren is
+
 ## Capacity map
 
 ### Available weekly capacity
@@ -44,3 +53,4 @@ Escaleren of herprioriteren zodra:
 - Nieuwe grote initiatieven alleen starten als er een duidelijke omzet-, marge- of risicoreden is.
 - Geen teamuitbreiding om structurele onduidelijkheid te maskeren.
 - Eerst ritme en route versimpelen, daarna pas capaciteit toevoegen.
+- Maximaal 1 dominante groeifase tegelijk en hooguit 1 parallelle stabilisatielaag.

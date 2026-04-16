@@ -56,6 +56,7 @@ Source-of-truth volgorde:
 - [QUARTERLY_RESET_MEMO.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/QUARTERLY_RESET_MEMO.md)
 - [DECISION_LOG.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/DECISION_LOG.md)
 - [FOUNDER_CAPACITY_MAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/FOUNDER_CAPACITY_MAP.md)
+- [CEO_FIRST_30_DAYS.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_FIRST_30_DAYS.md)
 - [SUPABASE_LIVE_HARDENING_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/SUPABASE_LIVE_HARDENING_CHECKLIST.md)
 - [RETENTION_V11_VALIDATION_WORKFLOW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/RETENTION_V11_VALIDATION_WORKFLOW.md)
 

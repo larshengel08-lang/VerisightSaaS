@@ -10,6 +10,14 @@ Status: active
 - Parallelle fase: Phase 2 - Delivery Stability Engine
 - Owner: founder-led
 
+## Baseline on 2026-04-16
+
+- Product-, trust-, packaging-, website- en deliverybasis zijn repo-breed afgerond en geaudit.
+- De grootste open vraag is niet meer productbouw, maar herhaalbare omzet plus bewijs.
+- ExitScan blijft de primaire eerste kooproute.
+- RetentieScan blijft complementair en verification-first.
+- Checklist en roadmap zijn nu historische en auditlagen; dit scorecardritme is de nieuwe bestuurlijke stuurlaag.
+
 ## Revenue proof
 
 - Gekwalificeerde gesprekken deze week:
@@ -60,3 +68,12 @@ Status: active
 
 - Nieuwe beslissingen deze week:
 - Bestaande open beslissingen die aandacht vragen:
+
+## First-use reminder
+
+Bij de eerste echte invulling:
+
+- vul alleen echte gesprekken, deals en trajecten in
+- gebruik geen "aspiratiecijfers" als scorecard-data
+- noteer onbekende velden als `nog niet gemeten`
+- kies pas nieuwe initiatieven nadat de top 3 prioriteiten en top 3 stopdingen expliciet zijn
