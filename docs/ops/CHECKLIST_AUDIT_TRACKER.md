@@ -65,10 +65,10 @@ Volgorde voor gerichte hercontrole:
   Waarom: live-impact vermoedelijk aanwezig, maar checklist noemt alleen pushhistorie.
 - `RETENTIESCAN_V1_1_VALIDATION_PLANMODE_PROMPT.md` -> `B`
   Waarom: validatiegericht traject; live-impact minder direct, maar geen aparte livecheck.
-- `REPORTING_SYSTEM_SHARPENING_PLANMODE_PROMPT.md` -> `C`
-  Waarom: rapportsysteem lijkt productimpact te hebben, maar live-status ontbreekt.
-- `REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PROGRAM_PLANMODE_PROMPT.md` -> `C`
-  Waarom: visuele/productimpact; historisch geen aparte livebevestiging.
+- `REPORTING_SYSTEM_SHARPENING_PLANMODE_PROMPT.md` -> `B`
+  Waarom: commit staat op `origin/main`, rapport-/paritytests zijn expliciet vastgelegd en buyer-facing reporttaal is publiek zichtbaar, maar authenticated rapportgeneratie is niet opnieuw live geverifieerd.
+- `REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PROGRAM_PLANMODE_PROMPT.md` -> `B`
+  Waarom: commit staat op `origin/main`, preview/reportcopy is publiek zichtbaar en voorbeeldrapporten zijn live bereikbaar, maar de volledige generated-reportflow is niet opnieuw live geverifieerd.
 
 ### Phase B - Decision-Maker Readiness
 
@@ -85,8 +85,8 @@ Volgorde voor gerichte hercontrole:
 
 ### Phase C - Commercial Packaging
 
-- `PRODUCT_TERMINOLOGY_AND_TAXONOMY_SYSTEM_PLANMODE_PROMPT.md` -> `C`
-  Waarom: brede copy/productimpact, maar geen liveverificatie.
+- `PRODUCT_TERMINOLOGY_AND_TAXONOMY_SYSTEM_PLANMODE_PROMPT.md` -> `A`
+  Waarom: commit staat op `origin/main` en canonieke termen zijn live bevestigd op homepage, pricing, product- en trustroutes.
 - `SALES_ENABLEMENT_SYSTEM_PLANMODE_PROMPT.md` -> `B`
   Waarom: repo-assets-only formulering is plausibel, mits deze tranche echt geen live buyer-surface had.
 - `PRICING_AND_PACKAGING_PROGRAM_PLANMODE_PROMPT.md` -> `A`
@@ -137,9 +137,7 @@ Volgorde voor gerichte hercontrole:
 
 Deze items verdienen als eerste een echte auditpass:
 
-- `PRODUCT_TERMINOLOGY_AND_TAXONOMY_SYSTEM_PLANMODE_PROMPT.md`
-- `REPORTING_SYSTEM_SHARPENING_PLANMODE_PROMPT.md`
-- `REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PROGRAM_PLANMODE_PROMPT.md`
+- geen directe `C`-items meer over
 
 ## 6A. Auditronde 1 - 2026-04-16
 
@@ -188,6 +186,57 @@ Gerichte audit uitgevoerd op de eerste zwakke of ambigue checklistregels.
 - `REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PROGRAM_PLANMODE_PROMPT.md`
   - commit staat op `origin/main`
   - rapport-/previewbewijs is nog onvoldoende uitgesplitst
+
+## 6C. Auditronde 3 - 2026-04-16
+
+Gerichte audit uitgevoerd op:
+
+- `PRODUCT_TERMINOLOGY_AND_TAXONOMY_SYSTEM_PLANMODE_PROMPT.md`
+- `REPORTING_SYSTEM_SHARPENING_PLANMODE_PROMPT.md`
+- `REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PROGRAM_PLANMODE_PROMPT.md`
+
+### Bevestigd in deze ronde
+
+- `PRODUCT_TERMINOLOGY_AND_TAXONOMY_SYSTEM_PLANMODE_PROMPT.md`
+  - commit `82a439c` staat aantoonbaar op `origin/main`
+  - canonieke termen live bevestigd op:
+    - `https://www.verisight.nl/`
+    - `https://www.verisight.nl/tarieven`
+    - `https://www.verisight.nl/producten/exitscan`
+    - `https://www.verisight.nl/producten/retentiescan`
+    - `https://www.verisight.nl/vertrouwen`
+  - concrete strings bevestigd:
+    - `signalen van werkfrictie`
+    - `retentiesignaal`
+    - `managementsamenvatting`
+    - `bestuurlijke handoff`
+    - `frictiescore`
+  - conclusie: verdict opgehoogd van `C` naar `A`
+
+- `REPORTING_SYSTEM_SHARPENING_PLANMODE_PROMPT.md`
+  - commit `026b711` staat aantoonbaar op `origin/main`
+  - rapport-/paritytesten zijn expliciet vastgelegd in het plan
+  - buyer-facing reporttaal is publiek zichtbaar via:
+    - `managementsamenvatting`
+    - `bestuurlijke handoff`
+    - `eerste managementsessie`
+  - conclusie: verdict opgehoogd van `C` naar `B`
+
+- `REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PROGRAM_PLANMODE_PROMPT.md`
+  - commit `aa73fc7` staat aantoonbaar op `origin/main`
+  - publieke productroutes tonen preview/report-taal live met `200 OK`
+  - voorbeeldrapporten zijn live bereikbaar met `200 OK`:
+    - `https://www.verisight.nl/examples/voorbeeldrapport_verisight.pdf`
+    - `https://www.verisight.nl/examples/voorbeeldrapport_retentiescan.pdf`
+  - conclusie: verdict opgehoogd van `C` naar `B`
+
+### Resterende nuance
+
+- `REPORTING_SYSTEM_SHARPENING_PLANMODE_PROMPT.md`
+  - authenticated of lokaal gegenereerde rapportverificatie is in deze auditronde niet opnieuw uitgevoerd
+
+- `REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PROGRAM_PLANMODE_PROMPT.md`
+  - volledige generated-reportflow is in deze auditronde niet opnieuw live geverifieerd
 
 ## 6B. Auditronde 2 - 2026-04-16
 
