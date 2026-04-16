@@ -13,9 +13,7 @@ Laatste auditbasis: 2026-04-16
 
 - Checkliststatus: `33 van 33` regels staan op `Voldaan`
 - Roadmapstatus: [docs/strategy/ROADMAP.md](C:\Users\larsh\Desktop\Business\Verisight\docs\strategy\ROADMAP.md) is in sync met de checklist en toont nu alleen nog afgesloten fases
-- Repo-status is niet schoon:
-  - gewijzigde [docs/active/WEBSITE_REDESIGN_AND_FLOW_PLAN.md](C:\Users\larsh\Desktop\Business\Verisight\docs\active\WEBSITE_REDESIGN_AND_FLOW_PLAN.md)
-  - ongetrackte `.codex-artifacts/` met veel browser-/screenshot-output
+- Repo-status: schoon na cleanup op 2026-04-16
 
 ## 2. Verdict Labels
 
@@ -28,15 +26,17 @@ Laatste auditbasis: 2026-04-16
 - `D - eerst repo hygiëne`
   Niet inhoudelijk afkeuren, maar eerst worktree opschonen voor verdere audit.
 
-## 3. Repo-Hygiëne Eerst
+## 3. Repo-Hygiëne
 
-Deze punten eerst oplossen voordat de eindaudit echt wordt afgetekend:
+Opgeruimd op 2026-04-16:
 
-- Herbeoordeel of de nieuwe inhoud van [docs/active/WEBSITE_REDESIGN_AND_FLOW_PLAN.md](C:\Users\larsh\Desktop\Business\Verisight\docs\active\WEBSITE_REDESIGN_AND_FLOW_PLAN.md) bewust bewaard moet blijven of teruggebracht moet worden naar de laatst gecommitte state.
-- Beslis wat `.codex-artifacts/` moet zijn:
-  - lokaal tijdelijk
-  - of structureel genegeerd via `.gitignore`
-- Vermijd dat browserprofielen, screenshots en QA-output telkens opnieuw de worktree vervuilen.
+- lokale restwijziging in [docs/active/WEBSITE_REDESIGN_AND_FLOW_PLAN.md](C:\Users\larsh\Desktop\Business\Verisight\docs\active\WEBSITE_REDESIGN_AND_FLOW_PLAN.md) teruggezet naar HEAD
+- `.codex-artifacts/` verwijderd uit de worktree
+- `.codex-artifacts/` toegevoegd aan [.gitignore](C:\Users\larsh\Desktop\Business\Verisight\.gitignore)
+
+Vervolgregel:
+
+- houd browserprofielen, screenshots en QA-output buiten git tenzij expliciet als artefact nodig
 
 ## 4. Audit-Order
 
@@ -88,11 +88,11 @@ Volgorde voor gerichte hercontrole:
 - `PRODUCT_TERMINOLOGY_AND_TAXONOMY_SYSTEM_PLANMODE_PROMPT.md` -> `C`
   Waarom: brede copy/productimpact, maar geen liveverificatie.
 - `SALES_ENABLEMENT_SYSTEM_PLANMODE_PROMPT.md` -> `B`
-  Waarom: repo-assets-only formulering is plausibel, mits deze tranche echt geen livebuyer-surface had.
+  Waarom: repo-assets-only formulering is plausibel, mits deze tranche echt geen live buyer-surface had.
 - `PRICING_AND_PACKAGING_PROGRAM_PLANMODE_PROMPT.md` -> `A`
   Waarom: live route, deployment-id en zichtbare pricingcopy expliciet bevestigd.
-- `SAMPLE_OUTPUT_AND_SHOWCASE_PROGRAM_PLANMODE_PROMPT.md` -> `C`
-  Waarom: buyer-facing impact waarschijnlijk, maar live-status niet lokaal geverifieerd.
+- `SAMPLE_OUTPUT_AND_SHOWCASE_PROGRAM_PLANMODE_PROMPT.md` -> `B`
+  Waarom: commit staat op `origin/main` en publieke voorbeeldrapporten reageren live met `200 OK`, maar preview/showcasebewijs kan nog specifieker.
 
 ### Phase D - Website And Funnel System
 
@@ -100,8 +100,8 @@ Volgorde voor gerichte hercontrole:
   Waarom: live bevestigd met breakpoint- en compositiepass.
 - `CUSTOMER_JOURNEY_AND_FUNNEL_ALIGNMENT_PLANMODE_PROMPT.md` -> `A`
   Waarom: deployment, commit en buyer-facing CTA/funnelcopy expliciet bevestigd.
-- `SEO_CONVERSION_PROGRAM_PLANMODE_PROMPT.md` -> `C`
-  Waarom: checklisttekst zegt expliciet `uitgevoerd in repo` en nog niet gepusht/live geverifieerd; dit is te zwak voor definitieve aftekening.
+- `SEO_CONVERSION_PROGRAM_PLANMODE_PROMPT.md` -> `A`
+  Waarom: commit `10862d9` staat op `origin/main` en de drie SEO-oplossingsroutes reageren live met `200 OK` en buyer-facing bewijsstrings.
 
 ### Phase E - Delivery And Adoption System
 
@@ -137,14 +137,60 @@ Volgorde voor gerichte hercontrole:
 
 Deze items verdienen als eerste een echte auditpass:
 
-- `SEO_CONVERSION_PROGRAM_PLANMODE_PROMPT.md`
 - `CLIENT_ONBOARDING_AND_ADOPTION_PROGRAM_PLANMODE_PROMPT.md`
 - `REPORT_TO_ACTION_PROGRAM_PLANMODE_PROMPT.md`
 - `PRODUCT_TERMINOLOGY_AND_TAXONOMY_SYSTEM_PLANMODE_PROMPT.md`
-- `SAMPLE_OUTPUT_AND_SHOWCASE_PROGRAM_PLANMODE_PROMPT.md`
 - `METHOD_AND_TRUST_SYSTEM_PLANMODE_PROMPT.md`
 - `REPORTING_SYSTEM_SHARPENING_PLANMODE_PROMPT.md`
 - `REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PROGRAM_PLANMODE_PROMPT.md`
+
+## 6A. Auditronde 1 - 2026-04-16
+
+Gerichte audit uitgevoerd op de eerste zwakke of ambigue checklistregels.
+
+### Bevestigd in deze ronde
+
+- `SEO_CONVERSION_PROGRAM_PLANMODE_PROMPT.md`
+  - commit `10862d9` staat aantoonbaar op `origin/main`
+  - live `200 OK` bevestigd op:
+    - `https://www.verisight.nl/oplossingen/verloop-analyse`
+    - `https://www.verisight.nl/oplossingen/exitgesprekken-analyse`
+    - `https://www.verisight.nl/oplossingen/medewerkersbehoud-analyse`
+  - concrete strings bevestigd:
+    - `Verloopanalyse`
+    - `Exitgesprekken analyseren`
+    - `Medewerkersbehoud analyseren`
+    - `bestuurlijke handoff`
+    - `verification-first`
+
+- `SAMPLE_OUTPUT_AND_SHOWCASE_PROGRAM_PLANMODE_PROMPT.md`
+  - commit `d12b35b` staat aantoonbaar op `origin/main`
+  - publieke voorbeeldrapporten reageren live met `200 OK`:
+    - `https://www.verisight.nl/examples/voorbeeldrapport_verisight.pdf`
+    - `https://www.verisight.nl/examples/voorbeeldrapport_retentiescan.pdf`
+  - `Content-Type` bevestigd als `application/pdf`
+
+### Nog bewust open gelaten
+
+- `CLIENT_ONBOARDING_AND_ADOPTION_PROGRAM_PLANMODE_PROMPT.md`
+  - commit staat op `origin/main`
+  - authenticated live-check ontbreekt nog
+
+- `REPORT_TO_ACTION_PROGRAM_PLANMODE_PROMPT.md`
+  - commit staat op `origin/main`
+  - dashboard/report-output controle ontbreekt nog
+
+- `PRODUCT_TERMINOLOGY_AND_TAXONOMY_SYSTEM_PLANMODE_PROMPT.md`
+  - commit staat op `origin/main`
+  - zelfstandige termen-audit is nog niet expliciet genoeg vastgelegd
+
+- `REPORTING_SYSTEM_SHARPENING_PLANMODE_PROMPT.md`
+  - historische basis is aanwezig
+  - functioneel of live bewijs blijft nog te dun
+
+- `REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PROGRAM_PLANMODE_PROMPT.md`
+  - commit staat op `origin/main`
+  - rapport-/previewbewijs is nog onvoldoende uitgesplitst
 
 ## 7. Audit Method Per Item
 
