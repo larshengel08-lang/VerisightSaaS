@@ -13,7 +13,7 @@ Lees eerst voor context:
 - [PROMPT_INDEX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_INDEX.md)
 - [frontend/components/marketing/site-content.ts](/C:/Users/larsh/Desktop/Business/Verisight/frontend/components/marketing/site-content.ts)
 - [frontend/lib/marketing-products.ts](/C:/Users/larsh/Desktop/Business/Verisight/frontend/lib/marketing-products.ts)
-- [SEO_CONVERSION_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/SEO_CONVERSION_PROGRAM_PLAN.md)
+- [SEO_CONVERSION_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/SEO_CONVERSION_PROGRAM_PLAN.md)
 
 Scope:
 - sitecontent

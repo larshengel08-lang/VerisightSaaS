@@ -1,7 +1,7 @@
 # Verisight - Roadmap
 
 Levend document. Dit bestand wordt gegenereerd uit `docs/strategy/ROADMAP_DATA.yaml` en de actuele status in `docs/prompts/PROMPT_CHECKLIST.xlsx`.
-Laatst gegenereerd: 2026-04-15
+Laatst gegenereerd: 2026-04-16
 
 ## Gebruik
 
