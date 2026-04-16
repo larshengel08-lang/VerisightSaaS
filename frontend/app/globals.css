@@ -265,11 +265,11 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-support-note {
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    background: rgba(255, 255, 255, 0.84);
-    border-radius: 1.4rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 1rem;
     padding: 1rem 1.15rem;
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+    box-shadow: var(--marketing-shadow-soft);
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -281,11 +281,11 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-link-card {
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    background: rgba(255, 255, 255, 0.9);
-    border-radius: 1.25rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 1rem;
     padding: 0.95rem 1rem;
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.04);
+    box-shadow: var(--marketing-shadow-soft);
     width: 100%;
     min-width: 0;
     max-width: 100%;
