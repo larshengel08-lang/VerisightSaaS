@@ -11,9 +11,9 @@ Laatst gegenereerd: 2026-04-16
 
 ## Huidige stand
 
-- Verisight is voorbij de ruwe MVP-fase. De kern van product, live flows, rapportage en productduiding is aanzienlijk aangescherpt.
-- De grootste open vragen zitten nu minder in 'werkt het technisch?' en meer in beslissing- en koopgereedheid.
-- De nadruk ligt nu op trust, actionability, decision-maker readiness en commerciële packaging, vóór website- en SEO-schalen.
+- Verisight is voorbij de ruwe MVP-fase en de checklistgedreven opbouw van product, trust, packaging, website en delivery is grotendeels afgerond.
+- De grootste open vragen zitten nu minder in 'werkt het technisch?' en meer in omzet, bewijs, deliverystabiliteit en bestuurlijk ritme.
+- De volgende bedrijfslaag is daarom geen nieuwe losse verbeterqueue, maar een strak CEO-gestuurd groeisysteem.
 
 ## SaaS-readiness nu
 
@@ -35,6 +35,12 @@ Laatst gegenereerd: 2026-04-16
 **Pas later doen**
 - Stripe, self-service billing en zwaardere automation pas oppakken nadat packaging, website en deliverystandaard scherp genoeg zijn.
 - Eerst assisted SaaS-readiness bouwen via pricing, sales enablement, onboarding, implementation readiness en demo/showcase.
+
+## Na de checklist
+
+- Gebruik `docs/strategy/CEO_GROWTH_SYSTEM_2026.md` als forward-looking groeisysteem voor de komende 6-12 maanden.
+- Behandel `PROMPT_CHECKLIST.xlsx` en `ROADMAP.md` voortaan primair als historische uitvoer- en auditlaag.
+- Stuur nu vooral op revenue + proof, deliverystabiliteit, lifecycle, operating rhythm en selectieve SaaS-readiness.
 
 ## Phase A - Product Credibility Foundation
 

@@ -1,7 +1,7 @@
 # Verisight - Strategie En Beslissingen
 
 Levend document. Dit is de strategische samenvatting van wat Verisight nu verkoopt, hoe we het positioneren en welke guardrails gelden.
-Laatste update: 2026-04-14
+Laatste update: 2026-04-16
 
 ## Wat we nu bouwen en verkopen
 
@@ -19,29 +19,39 @@ Verisight is nu geen brede people-suite en ook nog geen self-service SaaS in vol
 
 ## Huidige fase
 
-Verisight zit nu in een fase tussen productcredibiliteit en commerciële gereedheid:
+De checklistgedreven opbouw van product, trust, packaging, website en delivery is grotendeels afgerond.
+
+Dat betekent:
 
 - de technische en inhoudelijke basis is veel verder dan een ruwe MVP
-- de grootste open vragen zitten nu in verkoopbaarheid, vertrouwen, decision support en eerste echte klantbeweging
+- de grootste open vragen zitten nu in omzet, bewijs, deliverystabiliteit en bestuurlijk ritme
+- de volgende systeemlaag is geen nieuwe losse promptqueue, maar een CEO-gestuurd groeisysteem
 
 De actieve lijn is daarom:
 
-1. decision-maker readiness
-2. commerciële packaging
-3. website en funnel
-4. delivery en adoption
+1. revenue + proof
+2. deliverystabiliteit
+3. lifecycle en expansion
+4. professioneel operating rhythm
+5. selectieve SaaS-readiness
 
-## Source-of-truth hiërarchie
+De leidende uitwerking daarvan staat in:
+
+- [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
+
+## Source-of-truth hierarchie
 
 Gebruik deze volgorde als er spanning ontstaat tussen documenten:
 
 1. [PROMPT_CHECKLIST.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_CHECKLIST.xlsx)
-   - tactische uitvoervolgorde
+   - historische uitvoer- en auditstatus van de afgeronde promptfases
 2. [ROADMAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP.md)
-   - strategische fasevolgorde en gates
-3. deze strategie
+   - fasehistorie, exit gates en strategische volgorde van het opgebouwde systeem
+3. [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
+   - huidig forward-looking bedrijfsbesturingssysteem
+4. deze strategie
    - positionering, guardrails en beslissingen
-4. [Docs_External](C:/Users/larsh/Desktop/Business/Docs_External)
+5. [Docs_External](C:/Users/larsh/Desktop/Business/Docs_External)
    - referentie, uitwerking, assets, archief of gevoelige operationele context
 
 ## Product- en commerciële guardrails
@@ -117,18 +127,23 @@ De juiste stap nu is niet om Verisight kunstmatig als volledige SaaS te forceren
 
 De hoogste prioriteit ligt nu op:
 
-- actionability van output
-- methodiek en trust
-- zichtbare trust-signals
-- boardroom-geschikte taal en packaging
-- founder-led salesnarratief
-- voorbeeldoutput en commerciële verpakking
+- herhaalbare omzet en geloofwaardig bewijs
+- strakke eerste kooproute met ExitScan als entree
+- voorspelbare delivery van akkoord naar managementwaarde
+- capture van case proof, bezwaren en leerfeedback
+- wekelijkse en maandelijkse bestuurlijke ritmes
 
-Daarna pas:
+Ondersteunend daaraan:
 
-- website-redesign
-- funneloptimalisatie
-- SEO en bredere content
+- lifecycle en expansion
+- portfoliohelderheid
+- selectieve SaaS-readiness waar die echt werk of risico verlaagt
+
+Niet meer leidend als losse groeimotor:
+
+- extra websitewerk zonder commerciele reden
+- brede contentproductie zonder proof-basis
+- automation of billingwerk zonder tractie- of margedoel
 
 ## Externe afhankelijkheden
 
@@ -155,3 +170,6 @@ Niet alles wat nu belangrijk is, zit in code. Deze afhankelijkheden tellen mee i
 - sample output is een fundament voor sales en website
 - externe documentmappen zijn in scope voor alignment, maar niet leidend boven repo truth
 - gevoelige operationele data hoort niet in plandocumenten of roadmaps thuis
+- founder-led lean blijft de default totdat omzet, bewijs en deliveryritme sterk genoeg zijn voor structurele capaciteitsuitbreiding
+- ExitScan blijft de primaire entreepropositie
+- RetentieScan blijft complementair en wordt niet als losse hoofdroute geforceerd

@@ -14,8 +14,9 @@ Gebruik deze indeling:
 Source-of-truth volgorde:
 1. `docs/prompts/PROMPT_CHECKLIST.xlsx`
 2. `docs/strategy/ROADMAP.md`
-3. `docs/strategy/STRATEGY.md`
-4. `Docs_External` als gesynchroniseerde referentie- en assetlaag
+3. `docs/strategy/CEO_GROWTH_SYSTEM_2026.md`
+4. `docs/strategy/STRATEGY.md`
+5. `Docs_External` als gesynchroniseerde referentie- en assetlaag
 
 ## Active
 
@@ -36,6 +37,7 @@ Source-of-truth volgorde:
 
 - [ROADMAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP.md)
 - [STRATEGY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/STRATEGY.md)
+- [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
 - [EXTERNAL_DOCS_ALIGNMENT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/EXTERNAL_DOCS_ALIGNMENT.md)
 - [ROADMAP_DATA.yaml](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_DATA.yaml)
 - [ROADMAP_SYNC_README.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_SYNC_README.md)
@@ -48,6 +50,12 @@ Source-of-truth volgorde:
 - [REMOTE_PLATFORM_BACKUP_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/REMOTE_PLATFORM_BACKUP_CHECKLIST.md)
 - [REPO_STRUCTURE_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/REPO_STRUCTURE_REVIEW.md)
 - [CHECKLIST_AUDIT_TRACKER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CHECKLIST_AUDIT_TRACKER.md)
+- [CEO_OPERATING_CADENCE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_OPERATING_CADENCE.md)
+- [CEO_WEEKLY_SCORECARD.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_WEEKLY_SCORECARD.md)
+- [MONTHLY_PHASE_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/MONTHLY_PHASE_REVIEW.md)
+- [QUARTERLY_RESET_MEMO.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/QUARTERLY_RESET_MEMO.md)
+- [DECISION_LOG.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/DECISION_LOG.md)
+- [FOUNDER_CAPACITY_MAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/FOUNDER_CAPACITY_MAP.md)
 - [SUPABASE_LIVE_HARDENING_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/SUPABASE_LIVE_HARDENING_CHECKLIST.md)
 - [RETENTION_V11_VALIDATION_WORKFLOW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/RETENTION_V11_VALIDATION_WORKFLOW.md)
 

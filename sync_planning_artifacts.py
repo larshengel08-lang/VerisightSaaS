@@ -168,6 +168,14 @@ def build_roadmap_markdown(data: dict[str, Any], rows: list[list[Any]]) -> str:
             lines.append(f"- {bullet}")
         lines.append("")
 
+    post_checklist_system = data["metadata"].get("post_checklist_system")
+    if post_checklist_system:
+        lines.append(f"## {post_checklist_system['title']}")
+        lines.append("")
+        for bullet in post_checklist_system.get("bullets", []):
+            lines.append(f"- {bullet}")
+        lines.append("")
+
     title_by_prompt = {item["prompt_file"]: item["title"] for item in data["checklist"]["items"]}
     for phase in phases:
         lines.append(f"## {phase['title']}")

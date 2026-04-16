@@ -15,6 +15,9 @@ Dit kleine systeem koppelt de checklist en de roadmap aan elkaar zonder dat de `
 - [ROADMAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP.md)
   - gegenereerde strategische roadmap
   - wordt opnieuw opgebouwd op basis van `ROADMAP_DATA.yaml` en de actuele checkliststatus
+- [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
+  - forward-looking bedrijfsbesturingssysteem na afronding van de checklistfases
+  - wordt niet automatisch gegenereerd; dit document beheer je bewust handmatig
 
 ## Hoe je het gebruikt
 
@@ -76,6 +79,7 @@ De hook draait bewust alleen op deze planningsbestanden, zodat normale codecommi
 - gebruik Excel voor voortgang en korte statusnotities
 - gebruik YAML voor structuur, volgorde en fase-architectuur
 - commit bij voorkeur zowel de checklist als de roadmap nadat je hebt gesynchroniseerd
+- gebruik het CEO Growth System voor de vraag "waar sturen we nu het bedrijf op?"
 - zet `Status = Voldaan` voor live-impactvolle wijzigingen pas als het relevante eindstation bereikt is:
   - code op `main`
   - relevante deploy geslaagd
