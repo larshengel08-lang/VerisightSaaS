@@ -74,8 +74,8 @@ Volgorde voor gerichte hercontrole:
 
 - `MANAGEMENT_ACTIONABILITY_PROGRAM_PLANMODE_PROMPT.md` -> `C`
   Waarom: wel commit genoemd, maar geen aparte liveverificatie.
-- `METHOD_AND_TRUST_SYSTEM_PLANMODE_PROMPT.md` -> `C`
-  Waarom: method/trust raakt buyer-facing output; alleen main genoemd.
+- `METHOD_AND_TRUST_SYSTEM_PLANMODE_PROMPT.md` -> `A`
+  Waarom: commit staat op `origin/main`, regressietests zijn expliciet vastgelegd en publieke trust/productroutes tonen live de aangescherpte verification-first-, groepsniveau-, privacygrens- en minimale-n-taal.
 - `TRUST_SIGNAL_PROGRAM_PLANMODE_PROMPT.md` -> `A`
   Waarom: tests, build en productie smoke checks expliciet genoemd.
 - `BOARDROOM_READINESS_PROGRAM_PLANMODE_PROMPT.md` -> `B`
@@ -105,12 +105,12 @@ Volgorde voor gerichte hercontrole:
 
 ### Phase E - Delivery And Adoption System
 
-- `CLIENT_ONBOARDING_AND_ADOPTION_PROGRAM_PLANMODE_PROMPT.md` -> `C`
-  Waarom: tekst is ambigu over push/main en noemt vooral repo/lokale checks.
+- `CLIENT_ONBOARDING_AND_ADOPTION_PROGRAM_PLANMODE_PROMPT.md` -> `B`
+  Waarom: commit staat op `origin/main` en buyer-facing onboarding/handoff-copy is live zichtbaar, maar authenticated live-checks op dashboard/onboardingflow ontbreken nog.
 - `IMPLEMENTATION_READINESS_PROGRAM_PLANMODE_PROMPT.md` -> `B`
   Waarom: naar main gepusht; livecheck ontbreekt, maar traject kan deels intern/ops zijn.
-- `REPORT_TO_ACTION_PROGRAM_PLANMODE_PROMPT.md` -> `C`
-  Waarom: checklist zegt alleen repo/source-of-truth, geen main/deploy/live stap.
+- `REPORT_TO_ACTION_PROGRAM_PLANMODE_PROMPT.md` -> `B`
+  Waarom: commit staat op `origin/main`, tests zijn expliciet vastgelegd en buyer-facing productlagen tonen live de nieuwe managementsessie-, eerste stap- en reviewmoment-taal, maar authenticated dashboard/reportverificatie ontbreekt nog.
 - `PILOT_AND_EARLY_CUSTOMER_LEARNING_SYSTEM_PLANMODE_PROMPT.md` -> `B`
   Waarom: main en Vercel-ready genoemd, maar inhoudelijke livebewijslast blijft licht.
 - `DEMO_AND_SAMPLE_ENVIRONMENT_PROGRAM_PLANMODE_PROMPT.md` -> `B`
@@ -137,10 +137,7 @@ Volgorde voor gerichte hercontrole:
 
 Deze items verdienen als eerste een echte auditpass:
 
-- `CLIENT_ONBOARDING_AND_ADOPTION_PROGRAM_PLANMODE_PROMPT.md`
-- `REPORT_TO_ACTION_PROGRAM_PLANMODE_PROMPT.md`
 - `PRODUCT_TERMINOLOGY_AND_TAXONOMY_SYSTEM_PLANMODE_PROMPT.md`
-- `METHOD_AND_TRUST_SYSTEM_PLANMODE_PROMPT.md`
 - `REPORTING_SYSTEM_SHARPENING_PLANMODE_PROMPT.md`
 - `REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PROGRAM_PLANMODE_PROMPT.md`
 
@@ -191,6 +188,62 @@ Gerichte audit uitgevoerd op de eerste zwakke of ambigue checklistregels.
 - `REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PROGRAM_PLANMODE_PROMPT.md`
   - commit staat op `origin/main`
   - rapport-/previewbewijs is nog onvoldoende uitgesplitst
+
+## 6B. Auditronde 2 - 2026-04-16
+
+Gerichte audit uitgevoerd op:
+
+- `CLIENT_ONBOARDING_AND_ADOPTION_PROGRAM_PLANMODE_PROMPT.md`
+- `REPORT_TO_ACTION_PROGRAM_PLANMODE_PROMPT.md`
+- `METHOD_AND_TRUST_SYSTEM_PLANMODE_PROMPT.md`
+
+### Bevestigd in deze ronde
+
+- `CLIENT_ONBOARDING_AND_ADOPTION_PROGRAM_PLANMODE_PROMPT.md`
+  - commit `7559bdc` staat aantoonbaar op `origin/main`
+  - publieke route `https://www.verisight.nl/aanpak` reageert live met `200 OK`
+  - buyer-facing onboarding/handoff-taal live bevestigd via strings als:
+    - `bestuurlijke handoff`
+    - `groepsniveau`
+    - `minimale n`
+    - `reviewmoment`
+  - conclusie: verdict opgehoogd van `C` naar `B`
+
+- `REPORT_TO_ACTION_PROGRAM_PLANMODE_PROMPT.md`
+  - commit `632a208` staat aantoonbaar op `origin/main`
+  - tests, lint en build zijn expliciet vastgelegd in het plan
+  - publieke productroutes reageren live met `200 OK`
+  - buyer-facing vervolgtaal live bevestigd via strings als:
+    - `eerste managementsessie`
+    - `eerste logische stap`
+    - `eerste managementvraag`
+    - `reviewmoment`
+  - conclusie: verdict opgehoogd van `C` naar `B`
+
+- `METHOD_AND_TRUST_SYSTEM_PLANMODE_PROMPT.md`
+  - commit `7e512ea` staat aantoonbaar op `origin/main`
+  - publieke routes reageren live met `200 OK`:
+    - `https://www.verisight.nl/aanpak`
+    - `https://www.verisight.nl/privacy`
+    - `https://www.verisight.nl/producten/exitscan`
+    - `https://www.verisight.nl/producten/retentiescan`
+    - `https://www.verisight.nl/vertrouwen`
+  - trust/method-stringbewijs bevestigd via:
+    - `verification-first`
+    - `groepsniveau`
+    - `privacygrens`
+    - `minimale n`
+    - `bestuurlijke handoff`
+    - `reviewmoment`
+  - conclusie: verdict opgehoogd van `C` naar `A`
+
+### Nog bewust open gelaten
+
+- `CLIENT_ONBOARDING_AND_ADOPTION_PROGRAM_PLANMODE_PROMPT.md`
+  - authenticated live-checks op complete-account/dashboard/onboardingflow ontbreken nog
+
+- `REPORT_TO_ACTION_PROGRAM_PLANMODE_PROMPT.md`
+  - expliciete authenticated dashboard- of generated-report verificatie ontbreekt nog
 
 ## 7. Audit Method Per Item
 
