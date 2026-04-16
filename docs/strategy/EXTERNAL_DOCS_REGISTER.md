@@ -176,3 +176,7 @@ Wanneer je in `Docs_External` iets waardevols ziet:
 2. bepaal het repo-target
 3. vat de duurzame waarheid samen in de repo
 4. voeg of houd de bronlink in dit register
+
+Voor de huidige prioriteitenlijst:
+
+- zie [EXTERNAL_DOCS_TOP10_SYNC_SHORTLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/EXTERNAL_DOCS_TOP10_SYNC_SHORTLIST.md)
