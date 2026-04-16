@@ -1,24 +1,45 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  /* Brand tokens */
+  --ink:        #132033;
+  --navy:       #1B2E45;
+  --petrol:     #234B57;
+  --bg:         #F7F5F1;
+  --surface:    #FFFFFF;
+  --teal:       #3C8D8A;
+  --teal-light: #DCEFEA;
+  --text:       #4A5563;
+  --muted:      #9CA3AF;
+  --border:     #E5E0D6;
+
+  /* Legacy compat */
+  --background: var(--surface);
+  --foreground: var(--ink);
+
+  /* Layout */
   --marketing-shell: 84rem;
-  --marketing-section-space: clamp(3.75rem, 5vw, 5.75rem);
-  --marketing-hero-space: clamp(3.25rem, 5vw, 5.5rem);
-  --marketing-surface: #ffffff;
-  --marketing-surface-soft: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  --marketing-surface-tint: linear-gradient(180deg, #f8fbff 0%, #eff6ff 100%);
-  --marketing-surface-dark: linear-gradient(180deg, #12233a 0%, #0f172a 100%);
-  --marketing-border: rgba(148, 163, 184, 0.22);
-  --marketing-shadow-soft: 0 20px 48px rgba(15, 23, 42, 0.07);
-  --marketing-shadow-strong: 0 28px 72px rgba(15, 23, 42, 0.13);
+  --marketing-section-space: clamp(4rem, 6vw, 6.5rem);
+  --marketing-hero-space: clamp(3.5rem, 5.5vw, 5.75rem);
+
+  /* Shadows */
+  --marketing-shadow-soft: 0 20px 48px rgba(19, 32, 51, 0.06);
+  --marketing-shadow-strong: 0 28px 72px rgba(19, 32, 51, 0.11);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-display: var(--font-display);
+  --color-ink: var(--ink);
+  --color-navy: var(--navy);
+  --color-petrol: var(--petrol);
+  --color-bg-warm: var(--bg);
+  --color-teal-brand: var(--teal);
+  --color-teal-light: var(--teal-light);
+  --color-text-body: var(--text);
+  --color-muted: var(--muted);
+  --color-border-warm: var(--border);
+  --font-sans: var(--font-ibm-plex-sans), system-ui, sans-serif;
 }
 
 html {
@@ -52,19 +73,19 @@ input:focus-visible,
 textarea:focus-visible,
 select:focus-visible,
 summary:focus-visible {
-  outline: 2px solid #60a5fa;
+  outline: 2px solid var(--teal);
   outline-offset: 3px;
 }
 
 ::selection {
-  background: #dbeafe;
-  color: #0f172a;
+  background: var(--teal-light);
+  color: var(--ink);
 }
 
 .font-display {
-  font-family: var(--font-display), var(--font-inter), sans-serif;
-  font-weight: 600;
-  letter-spacing: -0.03em;
+  font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }
 
 details > summary::-webkit-details-marker {
@@ -75,7 +96,7 @@ details > summary::-webkit-details-marker {
   .marketing-shell {
     margin-inline: auto;
     width: min(100%, var(--marketing-shell));
-    padding-inline: clamp(1rem, 2.4vw, 2rem);
+    padding-inline: clamp(1.25rem, 3vw, 2.5rem);
   }
 
   .marketing-section {
@@ -83,44 +104,49 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-section-surface {
-    background: var(--marketing-surface-soft);
+    background: var(--bg);
   }
 
   .marketing-section-tint {
-    background: var(--marketing-surface-tint);
+    background: var(--surface);
   }
 
   .marketing-section-dark {
-    background: var(--marketing-surface-dark);
-    color: white;
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  .marketing-section-navy {
+    background: var(--navy);
+    color: var(--bg);
   }
 
   .marketing-panel {
-    border: 1px solid var(--marketing-border);
-    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid var(--border);
+    background: var(--surface);
     box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1.75rem;
+    border-radius: 1rem;
     width: 100%;
     min-width: 0;
     max-width: 100%;
   }
 
   .marketing-panel-soft {
-    border: 1px solid rgba(191, 219, 254, 0.55);
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid var(--border);
+    background: var(--bg);
     box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1.75rem;
+    border-radius: 1rem;
     width: 100%;
     min-width: 0;
     max-width: 100%;
   }
 
   .marketing-panel-dark {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--navy);
     box-shadow: var(--marketing-shadow-strong);
-    border-radius: 1.75rem;
-    color: white;
+    border-radius: 1rem;
+    color: var(--bg);
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -129,11 +155,11 @@ details > summary::-webkit-details-marker {
   .marketing-stage {
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    background: linear-gradient(180deg, #0f172a 0%, #14243a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--navy);
     box-shadow: var(--marketing-shadow-strong);
-    border-radius: 2rem;
-    color: white;
+    border-radius: 1rem;
+    color: var(--bg);
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -142,19 +168,9 @@ details > summary::-webkit-details-marker {
   .marketing-stage::before {
     content: "";
     position: absolute;
-    inset: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 1.45rem;
-    pointer-events: none;
-  }
-
-  .marketing-stage::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(circle at top right, rgba(59, 130, 246, 0.18), transparent 32%),
-      radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 26%);
+    inset: 1px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: calc(1rem - 1px);
     pointer-events: none;
   }
 
@@ -418,3 +434,4 @@ details > summary::-webkit-details-marker {
     }
   }
 }
+
