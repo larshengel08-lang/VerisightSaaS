@@ -31,6 +31,13 @@ De standaard commerciële route is:
 4. Maak trust en claimsgrenzen expliciet
 5. Beweeg naar een betaald eerste traject met duidelijke scope
 
+De default doelgroep voor deze fase is:
+
+- HR-managers
+- HR-directeuren
+- People Leads
+- meestal bij organisaties met ongeveer 200 tot 1.000 medewerkers
+
 ## Canonieke storyline
 
 ### 1. Probleemopening
@@ -84,6 +91,41 @@ Aanbevolen zin:
 
 > In veel eerste gesprekken starten we met ExitScan, omdat dat de snelste route is van losse exitinput naar een bestuurlijk leesbaar patroonbeeld.
 
+### 4A. ExitScan Baseline versus ExitScan Live
+
+Gebruik deze regel strak:
+
+- ExitScan blijft één product
+- Baseline en Live zijn uitvoeringsvormen
+- Baseline is de standaard commerciële instap
+- Live is een doorgroeivorm of maatwerkroute
+
+Gebruik Baseline als default wanneer:
+
+- de klant nog geen eerdere ExitScan heeft gedaan
+- de vraag retrospectief is
+- de organisatie vooral eerst patroonbeeld en nulmeting nodig heeft
+- de buyer nog moet landen op scope, deliverables en besluitwaarde
+
+Gebruik Live pas serieus als vervolgroute wanneer:
+
+- er al een succesvolle baseline of vergelijkbare basis is
+- er structureel nieuw exitvolume blijft binnenkomen
+- de buyer expliciet doorlopende signalering wil
+- de organisatie groot of volwassen genoeg is voor ritme boven nulmeting
+
+Zeg expliciet niet:
+
+- dat Live een los tweede hoofdproduct is
+- dat Live al een brede self-service standaardroute is
+- dat Baseline en Live aparte websites of productfamilies nodig hebben
+
+Zeg wel:
+
+- dat Baseline de standaard eerste stap is
+- dat Live op aanvraag of als vervolglogica beschikbaar is
+- dat publieke pricing primair om Baseline draait
+
 ### 5. Wanneer RetentieScan logisch wordt
 
 RetentieScan komt als primaire route alleen naar voren wanneer de buyer-vraag expliciet gaat over:
@@ -127,6 +169,13 @@ Default:
 - geen gratis pilot als standaard
 - wel een betaald eerste traject
 - eventueel vriendelijk instaptarief via pricing, maar nooit framed als vrijblijvende proef
+
+Gebruik als default overgang:
+
+1. discovery call
+2. demo of verdiepend contextgesprek
+3. voorstel voor betaald eerste traject
+4. follow-up op besluit en timing
 
 ## Buyer Variants
 
@@ -180,6 +229,29 @@ Gebruik deze vaste volgorde:
 5. Trust en interpretatiegrenzen
 6. Aanpak en deliverables
 7. Prijsanker en volgende stap
+
+## Outbound operating default
+
+Gebruik voor de eerste outboundfase deze regels:
+
+- werk in batches van 10 prospects tegelijk
+- start met A-prioriteit en duidelijke ICP-fit
+- stuur de eerste 20 tot 30 mails semi-handmatig
+- gebruik sobere plain-text mails
+- personaliseer altijd de eerste zin van mail 1
+- houd per lead precies één volgende actie en één datum aan
+
+De minimale sequence is:
+
+1. LinkedIn connectieverzoek zonder pitch
+2. Mail 1
+3. Follow-up 1 na 4-5 dagen
+4. Follow-up 2 na 10-14 dagen
+5. Bij reactie: call of demo plannen
+
+Voor het werkritme:
+
+- zie ook [OUTBOUND_OPERATING_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/OUTBOUND_OPERATING_PLAYBOOK.md)
 
 ### Wanneer RetentieScan eerder komt
 

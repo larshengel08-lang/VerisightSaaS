@@ -17,6 +17,12 @@ Verisight is nu geen brede people-suite en ook nog geen self-service SaaS in vol
   - vroegsignalering in actieve populaties
   - bedoeld om behoudsrelevante signalen eerder zichtbaar te maken
 
+De commerciele default in deze fase is:
+
+- ExitScan Baseline als standaard eerste instap
+- ExitScan Live als doorgroeivorm of maatwerkroute, niet als los hoofdproduct
+- RetentieScan alleen als primaire eerste route wanneer de buyer-vraag expliciet draait om actieve-populatie vroegsignalering
+
 ## Huidige fase
 
 De checklistgedreven opbouw van product, trust, packaging, website en delivery is grotendeels afgerond.
@@ -34,6 +40,13 @@ De actieve lijn is daarom:
 3. lifecycle en expansion
 4. professioneel operating rhythm
 5. selectieve SaaS-readiness
+
+De werkhypothese voor deze fase blijft:
+
+- post-prototype
+- pre-product-market-fit
+- eerst 1 tot 3 betaalde pilots of vergelijkbare betalende eerste trajecten
+- daarna pas zwaarder standaardiseren
 
 De leidende uitwerking daarvan staat in:
 
@@ -77,6 +90,8 @@ Wat nu niet te hard geclaimd mag worden:
 - ExitScan blijft de primaire entree
 - RetentieScan blijft complementair
 - Baseline versus Live is een belangrijke commerciële structuur, maar geen reden om productverwarring te creëren
+- ExitScan blijft één product; Baseline en Live zijn uitvoeringsvormen, geen aparte productfamilies of aparte websites
+- publieke pricing blijft in beginsel op Baseline gericht; Live blijft op aanvraag of vervolgroute totdat de commerciële en operationele realiteit dat breder draagt
 
 ### Verkoopvorm nu
 
@@ -129,6 +144,7 @@ De hoogste prioriteit ligt nu op:
 
 - herhaalbare omzet en geloofwaardig bewijs
 - strakke eerste kooproute met ExitScan als entree
+- een duidelijke ICP-focus op organisaties met ongeveer 200 tot 1.000 medewerkers waar uitstroom structureel speelt
 - voorspelbare delivery van akkoord naar managementwaarde
 - capture van case proof, bezwaren en leerfeedback
 - wekelijkse en maandelijkse bestuurlijke ritmes
@@ -173,3 +189,4 @@ Niet alles wat nu belangrijk is, zit in code. Deze afhankelijkheden tellen mee i
 - founder-led lean blijft de default totdat omzet, bewijs en deliveryritme sterk genoeg zijn voor structurele capaciteitsuitbreiding
 - ExitScan blijft de primaire entreepropositie
 - RetentieScan blijft complementair en wordt niet als losse hoofdroute geforceerd
+- de eerste commerciële mijlpaal is niet een nieuwe feature, maar een eerste reeks betaalde trajecten via dezelfde kernpropositie

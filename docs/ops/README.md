@@ -37,6 +37,11 @@ Voor de huidige bedrijfssturing gebruik je deze volgorde:
 - [OPS_DELIVERY_FAILURE_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/OPS_DELIVERY_FAILURE_MATRIX.md)
   - recovery- en uitzonderingslogica
 
+### Revenue engine
+
+- [OUTBOUND_OPERATING_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/OUTBOUND_OPERATING_PLAYBOOK.md)
+  - eenvoudige outbounddiscipline voor de huidige founder-led fase
+
 ### Proof en learning
 
 - [CASE_PROOF_CAPTURE_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CASE_PROOF_CAPTURE_PLAYBOOK.md)

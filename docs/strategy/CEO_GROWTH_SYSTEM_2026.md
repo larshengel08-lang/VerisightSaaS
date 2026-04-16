@@ -27,6 +27,9 @@ De volgende stap is daarom:
 - Product model: assisted/productized, niet full self-service
 - ExitScan blijft de primaire eerste kooproute
 - RetentieScan blijft complementair
+- ExitScan Baseline blijft de standaard eerste commerciële instap
+- ExitScan Live blijft voorlopig een doorgroeivorm of maatwerkroute op aanvraag
+- Doel-ICP voor deze fase: organisaties met ongeveer 200 tot 1.000 medewerkers waar uitstroom structureel speelt
 
 ## System order
 
@@ -62,6 +65,7 @@ Dat betekent concreet:
 - capture bij elk traject proof, bezwaren en next-step signaal
 - houd delivery strak genoeg dat nieuwe deals geen chaos veroorzaken
 - start nog geen nieuw groot systeemproject zonder duidelijke omzet- of risicoreden
+- behandel 1 tot 3 betaalde pilots of vergelijkbare eerste trajecten als de eerstvolgende commerciële bewijsgrens
 
 ## Phase 1 - Revenue Proof Engine
 

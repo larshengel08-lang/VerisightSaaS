@@ -31,7 +31,9 @@ De commerciële route moet zo scherp worden dat elk nieuw gesprek via dezelfde l
 
 - actualiseer de actieve ICP-lijst naar maximaal 2-3 echte buyerprofielen
 - gebruik [FOUNDER_LED_SALES_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reference/FOUNDER_LED_SALES_PLAYBOOK.md) als vaste discovery- en demoroute
+- gebruik [OUTBOUND_OPERATING_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/OUTBOUND_OPERATING_PLAYBOOK.md) als vaste outreachdiscipline
 - maak een actieve lijst van warme gesprekken, lauwe gesprekken en outreach-candidates
+- werk in batches van 10 outbound-prospects tegelijk
 - dwing bij elk nieuw gesprek expliciet de eerste routekeuze af:
   - ExitScan eerst
   - RetentieScan alleen als de buyer-vraag duidelijk actief-populatiegericht is
@@ -43,6 +45,7 @@ De commerciële route moet zo scherp worden dat elk nieuw gesprek via dezelfde l
 - shortlist met echte ICP's
 - lijst met actieve deals per fase
 - lijst met top 5 terugkerende bezwaren
+- eerste outbound-batch met duidelijke volgende acties
 
 ## Week 2 - Proposal and proof discipline
 
