@@ -8,6 +8,8 @@ De repo bevat de leidende strategische en operationele waarheid:
 
 - [PROMPT_CHECKLIST.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_CHECKLIST.xlsx)
 - [ROADMAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP.md)
+- [ROADMAP_WORKBOOK.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_WORKBOOK.xlsx)
+- [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
 - [STRATEGY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/STRATEGY.md)
 
 `Docs_External` blijft waardevol voor:
@@ -18,6 +20,11 @@ De repo bevat de leidende strategische en operationele waarheid:
 - archief
 
 Maar `Docs_External` mag niet zelfstandig een afwijkende roadmap of prioriteitsvolgorde bepalen.
+
+Gebruik daarnaast:
+
+- [EXTERNAL_DOCS_REGISTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/EXTERNAL_DOCS_REGISTER.md)
+  - als index, classificatie- en synclaag voor waardevolle externe documenten
 
 ## Classificatie-defaults
 

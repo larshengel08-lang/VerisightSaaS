@@ -15,6 +15,9 @@ Dit kleine systeem koppelt de checklist en de roadmap aan elkaar zonder dat de `
 - [ROADMAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP.md)
   - gegenereerde strategische roadmap
   - wordt opnieuw opgebouwd op basis van `ROADMAP_DATA.yaml` en de actuele checkliststatus
+- [ROADMAP_WORKBOOK.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_WORKBOOK.xlsx)
+  - dezelfde roadmap in Excel-vorm
+  - handig als werkbestand voor filteren, scannen en voortgangsbespreking
 - [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
   - forward-looking bedrijfsbesturingssysteem na afronding van de checklistfases
   - wordt niet automatisch gegenereerd; dit document beheer je bewust handmatig
@@ -35,6 +38,7 @@ C:\Users\larsh\Desktop\Business\Verisight\sync_planning_artifacts.bat
 Dan wordt:
 - de checklist netjes geharmoniseerd
 - de roadmap opnieuw opgebouwd met de nieuwste status
+- het roadmap-werkboek in Excel opnieuw gegenereerd
 
 Je kunt hiervoor ook gewoon dubbelklikken op:
 
@@ -56,6 +60,7 @@ C:\Users\larsh\Desktop\Business\Verisight\sync_planning_artifacts.bat
 Dan wordt:
 - de checklist opnieuw geordend
 - de roadmap opnieuw gegenereerd
+- het roadmap-werkboek opnieuw gegenereerd
 
 ## Automatische sync bij commit
 

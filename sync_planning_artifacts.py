@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parent
 DATA_PATH = ROOT / "docs" / "strategy" / "ROADMAP_DATA.yaml"
 CHECKLIST_PATH = ROOT / "docs" / "prompts" / "PROMPT_CHECKLIST.xlsx"
 ROADMAP_PATH = ROOT / "docs" / "strategy" / "ROADMAP.md"
+ROADMAP_WORKBOOK_PATH = ROOT / "docs" / "strategy" / "ROADMAP_WORKBOOK.xlsx"
 
 
 @dataclass
@@ -70,6 +71,117 @@ def save_checklist(data: dict[str, Any], rows: list[list[Any]]) -> None:
     for row in rows:
         ws.append(row)
     wb.save(CHECKLIST_PATH)
+
+
+def save_roadmap_workbook(data: dict[str, Any], rows: list[list[Any]]) -> None:
+    wb = openpyxl.Workbook()
+
+    overview = wb.active
+    overview.title = "Overview"
+    overview.append(["Field", "Value"])
+    overview.append(["Title", f"{data['metadata']['title']} - Roadmap"])
+    overview.append(["Generated", datetime.now(timezone.utc).date().isoformat()])
+    overview.append(["Checklist Path", data["metadata"]["tactical_queue_path"]])
+    overview.append(["Roadmap Path", data["metadata"]["roadmap_path"]])
+    overview.append(["Strategy Path", data["metadata"]["strategy_path"]])
+    overview.append(["External Docs Path", data["metadata"]["external_docs_path"]])
+    overview.append([])
+    overview.append(["Current State", ""])
+    for bullet in data["metadata"]["current_state_intro"]:
+        overview.append(["", bullet])
+
+    post_checklist_system = data["metadata"].get("post_checklist_system")
+    if post_checklist_system:
+        overview.append([])
+        overview.append([post_checklist_system["title"], ""])
+        for bullet in post_checklist_system.get("bullets", []):
+            overview.append(["", bullet])
+
+    phases_sheet = wb.create_sheet("Phases")
+    phases_sheet.append(
+        [
+            "Phase ID",
+            "Title",
+            "Objective",
+            "Status",
+            "Checklist Items",
+            "Exit Gate",
+            "Waits Until Later",
+        ]
+    )
+    rows_by_prompt = {str(row[0]): row for row in rows}
+    phases = data["phases"]
+    current_phase_id = next(
+        (
+            phase["id"]
+            for phase in phases
+            if any(rows_by_prompt.get(key, [None, None, "Niet voldaan"])[2] != "Voldaan" for key in phase["items"])
+        ),
+        phases[-1]["id"],
+    )
+    title_by_prompt = {item["prompt_file"]: item["title"] for item in data["checklist"]["items"]}
+    for phase in phases:
+        status_lines = phase_status(rows_by_prompt, phase["items"], current_phase_id, phase["id"])
+        checklist_items = "\n".join(
+            [
+                f"{title_by_prompt[key]} - {'afgerond' if rows_by_prompt.get(key, [None, None, 'Niet voldaan'])[2] == 'Voldaan' else 'open'}"
+                for key in phase["items"]
+            ]
+        )
+        phases_sheet.append(
+            [
+                phase["id"],
+                phase["title"],
+                phase["objective"],
+                " | ".join(status_lines).replace("- ", ""),
+                checklist_items,
+                "\n".join(phase["exit_gate"]),
+                "\n".join(phase["waits_until_later"]),
+            ]
+        )
+
+    checklist_sheet = wb.create_sheet("Checklist Mirror")
+    checklist_sheet.append(
+        [
+            "Prompt File",
+            "Deliverable",
+            "Title",
+            "Phase",
+            "Status",
+            "Last Updated",
+            "Notes",
+            "Repo/Main/Deploy/Live",
+        ]
+    )
+    item_lookup = {item["prompt_file"]: item for item in data["checklist"]["items"]}
+    for row in rows:
+        prompt_file = str(row[0])
+        item = item_lookup[prompt_file]
+        checklist_sheet.append(
+            [
+                prompt_file,
+                row[1],
+                item["title"],
+                item["phase"],
+                row[2],
+                row[3],
+                row[4],
+                row[5],
+            ]
+        )
+
+    for sheet in wb.worksheets:
+        for column in sheet.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                value = "" if cell.value is None else str(cell.value)
+                max_length = max(max_length, len(value))
+                cell.alignment = openpyxl.styles.Alignment(vertical="top", wrap_text=True)
+            sheet.column_dimensions[column_letter].width = min(max(max_length + 2, 14), 60)
+        sheet.freeze_panes = "A2"
+
+    wb.save(ROADMAP_WORKBOOK_PATH)
 
 
 def release_status_warnings(rows: list[list[Any]]) -> list[str]:
@@ -238,12 +350,14 @@ def main() -> None:
     existing = load_existing_checklist_state()
     rows = build_checklist_rows(data, existing)
     save_checklist(data, rows)
+    save_roadmap_workbook(data, rows)
     ROADMAP_PATH.write_text(build_roadmap_markdown(data, rows), encoding="utf-8")
 
     missing = verify_prompt_files(data)
     warnings = release_status_warnings(rows)
     print(f"Synced checklist: {CHECKLIST_PATH}")
     print(f"Synced roadmap:   {ROADMAP_PATH}")
+    print(f"Synced workbook:  {ROADMAP_WORKBOOK_PATH}")
     if missing:
         print("Missing prompt files:")
         for item in missing:

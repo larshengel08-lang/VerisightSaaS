@@ -36,9 +36,11 @@ Source-of-truth volgorde:
 ## Strategy
 
 - [ROADMAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP.md)
+- [ROADMAP_WORKBOOK.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_WORKBOOK.xlsx)
 - [STRATEGY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/STRATEGY.md)
 - [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
 - [EXTERNAL_DOCS_ALIGNMENT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/EXTERNAL_DOCS_ALIGNMENT.md)
+- [EXTERNAL_DOCS_REGISTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/EXTERNAL_DOCS_REGISTER.md)
 - [ROADMAP_DATA.yaml](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_DATA.yaml)
 - [ROADMAP_SYNC_README.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_SYNC_README.md)
 
