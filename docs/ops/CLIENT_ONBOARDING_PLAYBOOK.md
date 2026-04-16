@@ -15,6 +15,7 @@ Belangrijke defaults:
 - De klant levert input aan en gebruikt daarna dashboard en rapport.
 - Adoptie is pas geslaagd wanneer de klant de output echt gebruikt voor het eerste managementgesprek.
 - Vroege learnings worden voortaan vastgelegd in `/beheer/klantlearnings`.
+- Een campaign meet standaard live vanaf campagnestart; een retrospectieve baseline of 12-maandsbeeld moet expliciet zo worden ingericht.
 
 ## Canonieke route
 
@@ -35,6 +36,9 @@ Verplichte intake-inputs:
 - gekozen route
 - gewenste timing
 - scanmodus
+- scanperiode expliciet vastgelegd:
+  - live vanaf start
+  - of bewust retrospectief opgezet
 - doelgroep
 - benodigde metadata
 - contactpersoon
@@ -59,10 +63,33 @@ Canonieke klantaanlevering:
 - ExitScan extra: `exit_month`, `annual_salary_eur`
 - RetentieScan extra: `annual_salary_eur`
 
+Aanvullende praktische regels:
+
+- klant levert bij voorkeur `.xlsx` of `.csv`
+- gebruik waar mogelijk exact deze kolomnamen:
+  - `email`
+  - `department`
+  - `role_level`
+  - `annual_salary_eur`
+  - `exit_month`
+- geen extra tabbladen of samengevoegde cellen
+- bij klantdistributie via anonieme links moet het gewenste aantal links expliciet zijn afgestemd
+
+Voor vaste aanleverspecificatie:
+
+- zie ook [CLIENT_INPUT_SPEC.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_INPUT_SPEC.md)
+
 Nuance:
 
 - `segment_deep_dive` vraagt extra datadiscipline.
 - Zonder nette metadata verliest segmentverdieping snel waarde.
+- `role_level` moet idealiter naar een vaste waardelijst kunnen worden gemapt:
+  - `uitvoerend`
+  - `specialist`
+  - `senior`
+  - `manager`
+  - `director`
+  - `c_level`
 
 ### 5. Klantactivatie
 
@@ -107,12 +134,14 @@ Gebruik daarvoor `docs/ops/PILOT_LEARNING_PLAYBOOK.md` en `docs/ops/PILOT_LEARNI
 - Primaire eerste route
 - Meestal retrospectieve batch op ex-medewerkers
 - Logisch startpunt voor vertrekduiding en nulmeting
+- `exit_month` hoort hier praktisch bij de standaard metadata
 
 ### ExitScan Live
 
 - Vervolgroute na baseline
 - Alleen logisch zodra proces, volume en eigenaarschap staan
 - Geen concurrerend eerste pakket
+- Geen standaard hoofdroute in eerste gesprekken
 
 ### RetentieScan Baseline
 
@@ -124,6 +153,25 @@ Gebruik daarvoor `docs/ops/PILOT_LEARNING_PLAYBOOK.md` en `docs/ops/PILOT_LEARNI
 
 - Vervolgroute na baseline
 - Gericht op trendduiding, herhaalmeting en opvolging
+
+## Setup reality
+
+Verisight doet in V1 zelf:
+
+- organisatie aanmaken
+- campaign aanmaken
+- scanroute en add-ons bevestigen
+- import QA en mapping
+- uitnodigingen versturen
+- dashboardtoegang uitsturen
+
+De klant hoeft in V1 niet zelf:
+
+- organisaties aan te maken
+- campaigns te configureren
+- importstructuren of validatieregels te begrijpen
+
+Deze managed route blijft bewust de standaard totdat self-service economisch en operationeel logisch is.
 
 ## First-value drempels
 

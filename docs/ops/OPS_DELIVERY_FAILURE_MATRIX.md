@@ -42,6 +42,32 @@ Belangrijke defaults:
 - Klantcommunicatie:
   nodig wanneer klantbestand inhoudelijk onbruikbaar is of extra metadata moet aanleveren
 
+### 2A. Scan period mismatch
+
+- Detectie:
+  klant verwacht retrospectieve nulmeting terwijl campaign feitelijk live vanaf start is ingericht, of andersom
+- Operator-signaal:
+  intake, proposal of campaigninstellingen spreken elkaar tegen
+- Safe fallback:
+  geen impliciete aannames doen; eerst expliciet resetten wat de scanperiode is
+- Recovery:
+  scanperiode en route opnieuw bevestigen, eventuele deliveryverwachting corrigeren en zo nodig campagne-opzet aanpassen
+- Klantcommunicatie:
+  ja, direct; dit raakt de verwachting van uitkomst en timing
+
+### 2B. Client input spec mismatch
+
+- Detectie:
+  klantbestand wijkt structureel af van de afgesproken kolommen, formaten of mappings
+- Operator-signaal:
+  preview klopt niet, import QA blijft hangen of `segment_deep_dive` is inhoudelijk niet veilig
+- Safe fallback:
+  niet importeren en niet "half goed" live zetten
+- Recovery:
+  klantaanlevering terugleggen op de vaste inputspecificatie, mapping expliciteren of scope terugschalen
+- Klantcommunicatie:
+  ja, wanneer extra metadata of bestandsherstel nodig is
+
 ### 3. Invite send gaps
 
 - Detectie:

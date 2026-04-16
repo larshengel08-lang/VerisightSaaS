@@ -10,6 +10,7 @@ Dit document beschrijft het vaste bestuurlijke ritme waarmee Verisight het CEO G
 Gebruik altijd samen met:
 
 - [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
+- [CEO_WEEKLY_SCORECARD.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_WEEKLY_SCORECARD.xlsx)
 - [CEO_WEEKLY_SCORECARD.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_WEEKLY_SCORECARD.md)
 - [MONTHLY_PHASE_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/MONTHLY_PHASE_REVIEW.md)
 - [QUARTERLY_RESET_MEMO.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/QUARTERLY_RESET_MEMO.md)
@@ -32,7 +33,7 @@ Gebruik dit ritme een keer per week, bij voorkeur op een vaste ochtend.
 
 ### Verplichte outputs
 
-- bijgewerkte [CEO_WEEKLY_SCORECARD.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_WEEKLY_SCORECARD.md)
+- bijgewerkte [CEO_WEEKLY_SCORECARD.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_WEEKLY_SCORECARD.xlsx)
 - eventuele aanvulling in [DECISION_LOG.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/DECISION_LOG.md)
 
 ## Monthly cadence

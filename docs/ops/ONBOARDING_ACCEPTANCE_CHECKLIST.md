@@ -10,6 +10,7 @@ Gebruik deze checklist om te beoordelen of een assisted klantstart niet alleen l
 - [ ] Juiste route gekozen
 - [ ] Gewenste timing bevestigd
 - [ ] Scanmodus en doelgroep bevestigd
+- [ ] Scanperiode expliciet vastgelegd als live vanaf start of bewust retrospectief opgezet
 - [ ] Contactpersoon en eerste managementdoel vastgelegd
 - [ ] Metadata-verwachting expliciet gemaakt
 
@@ -17,9 +18,20 @@ Gebruik deze checklist om te beoordelen of een assisted klantstart niet alleen l
 
 - [ ] Organisatie correct aangemaakt
 - [ ] Campaign correct aangemaakt
+- [ ] Campaigntype en eventuele add-ons bewust gekozen
 - [ ] Respondentbestand bruikbaar of gecorrigeerd na preview
+- [ ] Verplichte kolommen gecontroleerd tegen de klantaanleverspecificatie
+- [ ] `role_level` waar nodig naar de vaste waardelijst gemapt
 - [ ] `segment_deep_dive` alleen gebruikt wanneer metadata dit ondersteunt
 - [ ] Uitnodigingen verstuurd
+
+### Client input spec check
+
+- [ ] `email` aanwezig in invited flow
+- [ ] `.xlsx` of `.csv` aanlevering is schoon en enkelvoudig
+- [ ] `department` en `role_level` beoordeeld op bruikbaarheid
+- [ ] `exit_month` expliciet meegenomen bij ExitScan Baseline of bewust niet beschikbaar
+- [ ] Anonieme links alleen gebruikt als dat vooraf is afgesproken
 
 ## Activation and first use
 
@@ -27,6 +39,11 @@ Gebruik deze checklist om te beoordelen of een assisted klantstart niet alleen l
 - [ ] Eerste dashboardread mogelijk
 - [ ] Eerste rapportuitleg geleverd of ingepland
 - [ ] Eerste managementgebruik bevestigd
+
+### Managed V1 route check
+
+- [ ] Klant hoefde organisatie en campaign niet zelf te configureren
+- [ ] Verisight heeft import, uitnodigingen en eerste activatie begeleid
 
 ## First-value guardrails
 

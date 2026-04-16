@@ -10,8 +10,8 @@ Voor de huidige bedrijfssturing gebruik je deze volgorde:
    - hoofdrichting voor de komende 6-12 maanden
 2. [CEO_FIRST_30_DAYS.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_FIRST_30_DAYS.md)
    - directe uitvoerlaag voor de eerstvolgende 30 dagen
-3. [CEO_WEEKLY_SCORECARD.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_WEEKLY_SCORECARD.md)
-   - wekelijkse stuurkaart
+3. [CEO_WEEKLY_SCORECARD.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_WEEKLY_SCORECARD.xlsx)
+   - wekelijkse invulbare stuurkaart
 4. [MONTHLY_PHASE_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/MONTHLY_PHASE_REVIEW.md)
    - maandelijkse reality check
 5. [QUARTERLY_RESET_MEMO.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/QUARTERLY_RESET_MEMO.md)
@@ -23,6 +23,8 @@ Voor de huidige bedrijfssturing gebruik je deze volgorde:
 
 - [CEO_OPERATING_CADENCE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_OPERATING_CADENCE.md)
   - vast ritme voor week, maand en kwartaal
+- [CEO_WEEKLY_SCORECARD.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_WEEKLY_SCORECARD.xlsx)
+  - primair invulbestand voor de wekelijkse scorecard
 - [DECISION_LOG.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/DECISION_LOG.md)
   - grote koersbesluiten
 - [FOUNDER_CAPACITY_MAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/FOUNDER_CAPACITY_MAP.md)
@@ -77,3 +79,8 @@ Gebruik deze map voor:
 - deliverydiscipline
 - bewijsopbouw
 - bestuurlijke keuzes
+
+Praktische noot:
+
+- gebruik voor de wekelijkse scorecard voortaan de Excel-werkmap
+- gebruik de `.md`-variant alleen als referentiestructuur, niet als primair invulvlak
