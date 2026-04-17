@@ -10,12 +10,12 @@ export const marketingNavLinks = [
 
 export const marketingPrimaryCta = {
   href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-  label: 'Plan kennismaking',
+  label: 'Plan een kennismaking',
 } as const
 
 export const marketingSecondaryCta = {
   href: '/producten',
-  label: 'Bekijk de routes',
+  label: 'Bekijk de producten',
 } as const
 
 export const marketingFooterLinks = [
@@ -40,26 +40,26 @@ export const marketingLegalLinks = [
 export const homepageProductRoutes = [
   {
     name: 'ExitScan',
-    title: 'Maak vertrek bestuurlijk leesbaar',
-    body: 'Voor organisaties die wel exitinput hebben, maar nog geen vergelijkbaar managementbeeld van terugkerende uitstroompatronen.',
+    title: 'Begrijp waarom medewerkers vertrekken',
+    body: 'Breng vertrekpatronen in beeld. Beschikbaar als retrospectieve analyse of live scan.',
     href: '/producten/exitscan',
-    accent: 'border-blue-200 bg-blue-50',
-    chip: 'Kernproduct - primair',
+    accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
+    chip: 'Uitstroom',
   },
   {
     name: 'RetentieScan',
-    title: 'Zie eerder waar behoud schuift',
-    body: 'Voor organisaties die eerder willen zien waar behoud onder druk staat, zonder van de scan een brede MTO of individuele voorspeller te maken.',
+    title: 'Zie waar behoud onder druk staat',
+    body: 'Vroegtijdig inzicht in retentiesignalen. Beschikbaar als live meting of momentopname.',
     href: '/producten/retentiescan',
-    accent: 'border-emerald-200 bg-emerald-50',
-    chip: 'Kernproduct - complementair',
+    accent: 'border-[#DCEFEA] bg-[#F7F5F1]',
+    chip: 'Behoud',
   },
   {
     name: 'Combinatie',
-    title: 'Verbind terugkijken en vooruitkijken',
-    body: 'Voor organisaties die beide managementvragen echt hebben en de tweede route pas toevoegen nadat de eerste helder staat.',
+    title: 'Verbind vertrek- en retentieanalyse',
+    body: 'Voor organisaties die beide managementvragen hebben en bewust willen combineren.',
     href: '/producten/combinatie',
-    accent: 'border-sky-200 bg-sky-50',
+    accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
     chip: 'Portfolioroute',
   },
 ] as const
@@ -134,51 +134,48 @@ export const productOverviewComparisonRows = [
 
 export const comparisonCards = [
   {
-    title: 'Geen generieke survey',
+    title: 'Gerichte scan, geen brede vragenlijst',
     description:
-      'Verisight verkoopt geen brede vragenlijst die later nog betekenis moet krijgen, maar een gerichte route voor een concrete managementvraag.',
-    outcome:
-      'De site moet daarom routekeuze en besluitrelevantie sneller duidelijk maken dan een klassieke SaaS-landing of onderzoeksbureau-pagina.',
+      'Verisight is opgebouwd rondom een specifieke managementvraag — niet een generieke tool die achteraf betekenis moet krijgen.',
+    outcome: 'U koopt een gerichte route, geen open instrument.',
   },
   {
-    title: 'Output die intern doorverteld kan worden',
+    title: 'Output die u intern kunt gebruiken',
     description:
-      'De waarde zit in wat HR, MT en directie straks echt lezen: managementsamenvatting, bestuurlijke handoff, topfactoren en vervolgvraag.',
-    outcome:
-      'Preview en voorbeeldrapporten moeten voelen als echte deliverable-proof, niet als losse demo-UI of feature-illustratie.',
+      'Dashboard, managementsamenvatting en factoranalyse zijn direct deelbaar met HR, MT en directie.',
+    outcome: 'Geen losse datadump — een leesbaar rapport dat intern doorverteld kan worden.',
   },
   {
-    title: 'Trust als reassurance',
+    title: 'Methodisch onderbouwd, heldere grenzen',
     description:
-      'Methodiek, privacy en claimsgrenzen zijn belangrijk, maar horen de eerste pitch niet te verdringen.',
-    outcome:
-      'Trust moet compact meebewegen in de flow en pas verdiepen wanneer een buyer wil controleren of doorvragen.',
+      'Uitkomsten tonen patronen, geen absolute waarheden. We benoemen bewust wat we niet claimen.',
+    outcome: 'Bruikbare stuurinformatie zonder schijnzekerheid.',
   },
 ] as const
 
 export const trustItems = [
-  'Nederlandse dienst met publieke trust- en legal routes',
-  'Primaire dataopslag in EU-regio',
-  'Groepsinzichten met minimale n-grenzen',
-  'Dashboard en managementrapport in dezelfde leeslijn',
-  'Methodische basis vanuit A&O-psychologie',
+  'Signalen, geen schijnzekerheid',
+  'Rapportage op geaggregeerd niveau',
+  'Vraagblokken gebaseerd op relevante literatuur',
+  'AVG-conform, primaire dataopslag in EU',
+  'Vertrouwelijke verwerking — geen koppeling aan individuen in rapportage',
 ] as const
 
 export const trustQuickLinks = [
   {
     href: '/vertrouwen',
-    label: 'Trust en privacy',
-    body: 'Bekijk publiek hoe Verisight methodiek, rapportlezing en privacy inricht.',
+    label: 'Methodiek en vertrouwelijkheid',
+    body: 'Hoe Verisight is opgebouwd en wat u ervan kunt verwachten.',
   },
   {
     href: '/privacy',
     label: 'Privacybeleid',
-    body: 'Lees hoe data, subverwerkers, bewaartermijnen en rechten onder de AVG zijn geregeld.',
+    body: 'Dataverwerking, bewaartermijnen en AVG-rechten.',
   },
   {
     href: '/dpa',
     label: 'Verwerkersovereenkomst',
-    body: 'Bekijk het standaardtemplate voor due diligence en formele afstemming met klantorganisaties.',
+    body: 'Standaardtemplate voor formele afstemming.',
   },
 ] as const
 
