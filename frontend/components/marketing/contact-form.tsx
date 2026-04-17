@@ -172,7 +172,7 @@ export function ContactForm({
   }
 
   const shellClass = isLight
-    ? 'rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.10)]'
+    ? 'w-full'
     : 'rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.22)]'
 
   const labelClass = isLight ? 'text-slate-700' : 'text-slate-200'
@@ -195,14 +195,18 @@ export function ContactForm({
 
   return (
     <form onSubmit={handleSubmit} className={shellClass}>
-      <div className={`mb-5 rounded-2xl border px-4 py-4 text-sm leading-7 ${isLight ? 'border-[#E5E0D6] bg-[#F7F5F1] text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'}`}>
+      <div
+        className={`mb-6 rounded-[1.5rem] border px-5 py-5 text-sm leading-7 ${
+          isLight ? 'border-[#E5E0D6] bg-[#F7F5F1] text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'
+        }`}
+      >
         Gebruik dit formulier voor ExitScan, RetentieScan, TeamScan of de combinatieroute. We helpen eerst bepalen welk
         kernproduct en welke eerste productroute logisch zijn, en pas daarna hoe intake, uitvoering, livegang en
         eerste waarde eruit moeten zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden
         en gericht op te volgen.
       </div>
 
-      <div className="mb-5 flex flex-wrap gap-2">
+      <div className="mb-6 flex flex-wrap gap-2">
         {contactTrustSignals.map((signal) => (
           <span
             key={signal}
@@ -213,7 +217,7 @@ export function ContactForm({
         ))}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="name" className={`mb-2 block text-sm font-medium ${labelClass}`}>
             Naam
@@ -319,7 +323,7 @@ export function ContactForm({
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-5">
         <label htmlFor="currentQuestion" className={`mb-2 block text-sm font-medium ${labelClass}`}>
           Wat wil je nu vooral begrijpen van behoud of uitstroom?
         </label>
@@ -332,18 +336,6 @@ export function ContactForm({
           className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           placeholder="Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar managementbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven."
         />
-      </div>
-
-      <div
-        className={`mt-4 rounded-2xl border px-4 py-4 text-sm leading-7 ${isLight ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'}`}
-      >
-        <p className="font-semibold">Wat er na dit bericht gebeurt</p>
-        <div className="mt-2 space-y-2">
-          <p>We reageren meestal binnen 1 werkdag met een eerste route-inschatting en de logischste eerste stap.</p>
-          <p>In het gesprek toetsen we managementvraag, timing, databasis en of een baseline of vervolgvorm nu past.</p>
-          <p>Een vervolgvorm, combinatieroute of live route wordt pas concreet zodra de eerste route en eerste managementwaarde logisch zijn.</p>
-          <p>We plannen in deze stap nog geen live inrichting, geen losse tooltoegang en geen definitieve offerte zonder intake.</p>
-        </div>
       </div>
 
       <div className="hidden" aria-hidden="true">
@@ -359,7 +351,7 @@ export function ContactForm({
       </div>
 
       {successState ? (
-        <div className={`mt-4 rounded-2xl border px-4 py-4 text-sm ${successClass}`}>
+        <div className={`mt-5 rounded-[1.5rem] border px-5 py-5 text-sm ${successClass}`}>
           <p className="font-semibold">Aanvraag ontvangen.</p>
           <div className="mt-2 space-y-2 leading-7">
             <p>
@@ -380,22 +372,18 @@ export function ContactForm({
       ) : null}
 
       {warningMessage ? (
-        <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${warningClass}`}>{warningMessage}</div>
+        <div className={`mt-5 rounded-[1.5rem] border px-5 py-4 text-sm ${warningClass}`}>{warningMessage}</div>
       ) : null}
 
       {errorMessage ? (
-        <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${errorClass}`}>{errorMessage}</div>
+        <div className={`mt-5 rounded-[1.5rem] border px-5 py-4 text-sm ${errorClass}`}>{errorMessage}</div>
       ) : null}
 
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className={`text-sm leading-6 ${helperClass}`}>
-          Verkennend gesprek van 20 minuten. Eerst managementvraag en productroute, daarna intake, eerste traject,
-          aanpak en prijs. Reactie meestal binnen 1 werkdag.
-        </p>
+      <div className="mt-7 flex flex-col gap-4 border-t border-[var(--border)] pt-6 sm:flex-row sm:items-center sm:justify-end">
         <button
           type="submit"
           disabled={loading}
-          className={`inline-flex items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${buttonClass}`}
+          className={`inline-flex min-w-[14rem] items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${buttonClass}`}
         >
           {loading ? 'Verstuur bericht...' : 'Verstuur bericht'}
         </button>

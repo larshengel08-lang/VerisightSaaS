@@ -26,7 +26,7 @@ export function LegalPageShell({
               Home
             </Link>
             <Link href="/login" className="transition-colors hover:text-slate-950">
-              Voor klanten: inloggen
+              Inloggen
             </Link>
           </div>
         </div>

@@ -35,11 +35,11 @@ export function MarketingInlineContactPanel({
           Eerste route-inschatting
         </div>
       </div>
-      <p className="max-w-3xl text-[1.02rem] leading-8 text-[var(--text)]">{body}</p>
-      <div className="mt-6">
+      <p className="text-[1.02rem] leading-8 text-[var(--text)]">{body}</p>
+      <div className="mt-8">
         <Suspense
           fallback={
-            <div className="rounded-[1.6rem] border border-[var(--border)] bg-[var(--surface)] p-6 text-sm leading-7 text-[var(--text)] shadow-[var(--marketing-shadow-soft)]">
+            <div className="rounded-[1.6rem] border border-[var(--border)] bg-[var(--surface)] p-6 text-sm leading-7 text-[var(--text)]">
               Het kennismakingsformulier wordt geladen.
             </div>
           }

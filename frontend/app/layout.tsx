@@ -11,7 +11,7 @@ const ibmPlexSans = IBM_Plex_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Verisight | ExitScan en RetentieScan voor HR-teams',
+    default: 'Verisight',
     template: '%s | Verisight',
   },
   description:
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     locale: 'nl_NL',
     url: 'https://www.verisight.nl',
     siteName: 'Verisight',
-    title: 'Verisight | ExitScan en RetentieScan voor HR-teams',
+    title: 'Verisight',
     description:
       'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Verisight levert ExitScan en RetentieScan in een begeleide productvorm.',
     images: [
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Verisight | ExitScan en RetentieScan voor HR-teams',
+    title: 'Verisight',
     description:
       'Begrijp waarom medewerkers vertrekken en zie eerder waar behoud onder druk staat. Verisight levert ExitScan en RetentieScan in een begeleide productvorm.',
     images: ['/opengraph-image'],

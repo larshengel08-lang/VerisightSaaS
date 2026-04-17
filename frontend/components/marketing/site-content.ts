@@ -34,7 +34,7 @@ export const marketingLegalLinks = [
   { href: '/privacy', label: 'Privacybeleid' },
   { href: '/voorwaarden', label: 'Algemene voorwaarden' },
   { href: '/dpa', label: 'Verwerkersovereenkomst' },
-  { href: '/login', label: 'Voor klanten: inloggen' },
+  { href: '/login', label: 'Inloggen' },
 ] as const
 
 export const homepageProductRoutes = [
