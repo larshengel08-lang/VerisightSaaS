@@ -61,9 +61,40 @@ export interface CampaignDeliveryCheckpoint {
   updated_at: string
 }
 
+export type DeliveryRecordGovernanceContext = Pick<
+  CampaignDeliveryRecord,
+  | 'contact_request_id'
+  | 'lifecycle_stage'
+  | 'exception_status'
+  | 'first_management_use_confirmed_at'
+  | 'follow_up_decided_at'
+  | 'learning_closed_at'
+>
+
 type DeliveryAutoSignal = {
   autoState: DeliveryAutoState
   summary: string
+}
+
+export type DeliveryGovernanceSnapshot = {
+  checkpointMap: Partial<Record<DeliveryCheckpointKey, CampaignDeliveryCheckpoint>>
+  globalBlockers: string[]
+  intakeBlockers: string[]
+  importBlockers: string[]
+  inviteBlockers: string[]
+  activationBlockers: string[]
+  firstValueBlockers: string[]
+  reportDeliveryBlockers: string[]
+  managementUseBlockers: string[]
+  followUpBlockers: string[]
+  learningCloseoutBlockers: string[]
+  launchReady: boolean
+  activationReady: boolean
+  firstValueReady: boolean
+  reportDeliveryReady: boolean
+  managementUseReady: boolean
+  followUpReady: boolean
+  learningCloseoutReady: boolean
 }
 
 type DeliveryAutoSignalArgs = {
@@ -175,6 +206,12 @@ export function getDeliveryAutoStateLabel(value: DeliveryAutoState) {
     default:
       return 'Nog geen autosignaal'
   }
+}
+
+export function buildDeliveryCheckpointMap(checkpoints: CampaignDeliveryCheckpoint[]) {
+  return Object.fromEntries(
+    checkpoints.map((checkpoint) => [checkpoint.checkpoint_key, checkpoint]),
+  ) as Partial<Record<DeliveryCheckpointKey, CampaignDeliveryCheckpoint>>
 }
 
 export function buildDeliveryAutoSignals({
@@ -300,58 +337,361 @@ export function buildDeliveryAutoSignals({
   }
 }
 
-function checkpointIsConfirmed(checkpoint: CampaignDeliveryCheckpoint | undefined) {
+export function checkpointCountsAsConfirmed(checkpoint: CampaignDeliveryCheckpoint | undefined) {
   return checkpoint?.manual_state === 'confirmed' || checkpoint?.manual_state === 'not_applicable'
 }
 
-export function buildDeliveryOpsSummary(args: {
-  record: CampaignDeliveryRecord | null
+function dedupeMessages(items: string[]) {
+  return Array.from(new Set(items.filter((item) => item.trim().length > 0)))
+}
+
+function collectCheckpointBlockers(args: {
+  checkpoint: CampaignDeliveryCheckpoint | undefined
+  autoSignal: DeliveryAutoSignal
+  pendingMessage: string
+  requireReadyAutoState?: boolean
+}) {
+  const items: string[] = []
+
+  if (!checkpointCountsAsConfirmed(args.checkpoint)) {
+    items.push(args.pendingMessage)
+  }
+
+  if (args.requireReadyAutoState) {
+    if (args.autoSignal.autoState !== 'ready') {
+      items.push(args.autoSignal.summary)
+    }
+  } else if (args.autoSignal.autoState === 'not_ready') {
+    items.push(args.autoSignal.summary)
+  }
+
+  if (args.checkpoint?.exception_status && args.checkpoint.exception_status !== 'none') {
+    items.push(`Checkpoint-exception open: ${getDeliveryExceptionLabel(args.checkpoint.exception_status)}.`)
+  }
+
+  return dedupeMessages(items)
+}
+
+export function buildDeliveryGovernanceSnapshot(args: {
+  scanType: ScanType
+  record: DeliveryRecordGovernanceContext | null
   checkpoints: CampaignDeliveryCheckpoint[]
   autoSignals: Record<DeliveryCheckpointKey, DeliveryAutoSignal>
+  hasLearningCloseoutEvidence?: boolean
 }) {
-  const checkpointMap = Object.fromEntries(
-    args.checkpoints.map((checkpoint) => [checkpoint.checkpoint_key, checkpoint]),
-  ) as Partial<Record<DeliveryCheckpointKey, CampaignDeliveryCheckpoint>>
+  const checkpointMap = buildDeliveryCheckpointMap(args.checkpoints)
+  const globalBlockers =
+    args.record?.exception_status && args.record.exception_status !== 'none'
+      ? [`Open delivery-exception: ${getDeliveryExceptionLabel(args.record.exception_status)}.`]
+      : []
 
-  const launchConfirmed =
-    checkpointIsConfirmed(checkpointMap.implementation_intake) &&
-    checkpointIsConfirmed(checkpointMap.import_qa) &&
-    args.autoSignals.invite_readiness.autoState === 'ready'
-  const launchReady = launchConfirmed && checkpointIsConfirmed(checkpointMap.client_activation)
-  const adoptionConfirmed = checkpointIsConfirmed(checkpointMap.first_management_use)
+  const intakeBlockers = collectCheckpointBlockers({
+    checkpoint: checkpointMap.implementation_intake,
+    autoSignal: args.autoSignals.implementation_intake,
+    pendingMessage: 'Implementation intake is nog niet expliciet bevestigd.',
+  })
+  const importBlockers = collectCheckpointBlockers({
+    checkpoint: checkpointMap.import_qa,
+    autoSignal: args.autoSignals.import_qa,
+    pendingMessage: 'Import QA is nog niet expliciet bevestigd.',
+  })
+  const inviteBlockers = collectCheckpointBlockers({
+    checkpoint: checkpointMap.invite_readiness,
+    autoSignal: args.autoSignals.invite_readiness,
+    pendingMessage: 'Invite readiness is nog niet expliciet bevestigd.',
+  })
+  const activationBlockers = collectCheckpointBlockers({
+    checkpoint: checkpointMap.client_activation,
+    autoSignal: args.autoSignals.client_activation,
+    pendingMessage: 'Klantactivatie is nog niet expliciet bevestigd.',
+    requireReadyAutoState: true,
+  })
+  const firstValueBlockers = collectCheckpointBlockers({
+    checkpoint: checkpointMap.first_value,
+    autoSignal: args.autoSignals.first_value,
+    pendingMessage: 'First value is nog niet expliciet bevestigd.',
+    requireReadyAutoState: true,
+  })
+  const reportDeliveryBlockers = collectCheckpointBlockers({
+    checkpoint: checkpointMap.report_delivery,
+    autoSignal: args.autoSignals.report_delivery,
+    pendingMessage:
+      args.scanType === 'exit' || args.scanType === 'retention'
+        ? 'Rapportdelivery is nog niet expliciet bevestigd.'
+        : 'Management-output delivery is nog niet expliciet bevestigd.',
+  })
+  const managementUseBlockers = collectCheckpointBlockers({
+    checkpoint: checkpointMap.first_management_use,
+    autoSignal: args.autoSignals.first_management_use,
+    pendingMessage: 'Eerste managementgebruik is nog niet expliciet bevestigd.',
+  })
+  const followUpBlockers =
+    args.record?.follow_up_decided_at || args.record?.lifecycle_stage === 'follow_up_decided' || args.record?.lifecycle_stage === 'learning_closed'
+      ? []
+      : ['Follow-up is nog niet expliciet besloten.']
+  const learningCloseoutBlockers = dedupeMessages([
+    ...followUpBlockers,
+    ...(args.hasLearningCloseoutEvidence === false
+      ? ['Learning closure mist nog expliciete review- of vervolgbewijslaag.']
+      : []),
+  ])
+
+  const launchReady =
+    dedupeMessages([...globalBlockers, ...intakeBlockers, ...importBlockers, ...inviteBlockers]).length === 0
+  const activationReady = dedupeMessages([...globalBlockers, ...intakeBlockers, ...importBlockers, ...inviteBlockers, ...activationBlockers]).length === 0
+  const firstValueReady = dedupeMessages([
+    ...globalBlockers,
+    ...intakeBlockers,
+    ...importBlockers,
+    ...inviteBlockers,
+    ...activationBlockers,
+    ...firstValueBlockers,
+  ]).length === 0
+  const reportDeliveryReady = dedupeMessages([
+    ...globalBlockers,
+    ...intakeBlockers,
+    ...importBlockers,
+    ...inviteBlockers,
+    ...activationBlockers,
+    ...firstValueBlockers,
+    ...reportDeliveryBlockers,
+  ]).length === 0
+  const managementUseReady = dedupeMessages([
+    ...globalBlockers,
+    ...intakeBlockers,
+    ...importBlockers,
+    ...inviteBlockers,
+    ...activationBlockers,
+    ...firstValueBlockers,
+    ...reportDeliveryBlockers,
+    ...managementUseBlockers,
+  ]).length === 0
+  const followUpReady = dedupeMessages([
+    ...globalBlockers,
+    ...intakeBlockers,
+    ...importBlockers,
+    ...inviteBlockers,
+    ...activationBlockers,
+    ...firstValueBlockers,
+    ...reportDeliveryBlockers,
+    ...managementUseBlockers,
+    ...followUpBlockers,
+  ]).length === 0
+  const learningCloseoutReady = dedupeMessages([
+    ...globalBlockers,
+    ...intakeBlockers,
+    ...importBlockers,
+    ...inviteBlockers,
+    ...activationBlockers,
+    ...firstValueBlockers,
+    ...reportDeliveryBlockers,
+    ...managementUseBlockers,
+    ...learningCloseoutBlockers,
+  ]).length === 0
 
   return {
-    launchStatus: launchReady ? 'Launch-ready' : launchConfirmed ? 'Bijna launch-ready' : 'Launch nog niet rond',
-    launchTone: launchReady ? 'emerald' : launchConfirmed ? 'amber' : 'slate',
-    firstValueStatus:
-      args.autoSignals.first_value.autoState === 'ready'
-        ? checkpointIsConfirmed(checkpointMap.report_delivery)
-          ? 'First value bevestigd'
-          : 'First value inhoudelijk klaar'
-        : args.autoSignals.first_value.autoState === 'warning'
-          ? 'Indicatief first value'
-          : 'First value nog in opbouw',
-    firstValueTone:
-      args.autoSignals.first_value.autoState === 'ready'
-        ? 'emerald'
-        : args.autoSignals.first_value.autoState === 'warning'
-          ? 'amber'
-          : 'slate',
-    adoptionStatus: adoptionConfirmed
+    checkpointMap,
+    globalBlockers,
+    intakeBlockers,
+    importBlockers,
+    inviteBlockers,
+    activationBlockers,
+    firstValueBlockers,
+    reportDeliveryBlockers,
+    managementUseBlockers,
+    followUpBlockers,
+    learningCloseoutBlockers,
+    launchReady,
+    activationReady,
+    firstValueReady,
+    reportDeliveryReady,
+    managementUseReady,
+    followUpReady,
+    learningCloseoutReady,
+  } satisfies DeliveryGovernanceSnapshot
+}
+
+const DELIVERY_LIFECYCLE_ORDER: DeliveryLifecycleStage[] = [
+  'setup_in_progress',
+  'import_cleared',
+  'invites_live',
+  'client_activation_pending',
+  'client_activation_confirmed',
+  'first_value_reached',
+  'first_management_use',
+  'follow_up_decided',
+  'learning_closed',
+]
+
+export function validateDeliveryLifecycleTransition(args: {
+  scanType: ScanType
+  currentStage: DeliveryLifecycleStage
+  targetStage: DeliveryLifecycleStage
+  record: DeliveryRecordGovernanceContext | null
+  checkpoints: CampaignDeliveryCheckpoint[]
+  autoSignals: Record<DeliveryCheckpointKey, DeliveryAutoSignal>
+  hasLearningCloseoutEvidence?: boolean
+}) {
+  const currentIndex = DELIVERY_LIFECYCLE_ORDER.indexOf(args.currentStage)
+  const targetIndex = DELIVERY_LIFECYCLE_ORDER.indexOf(args.targetStage)
+
+  if (targetIndex <= currentIndex) {
+    return { allowed: true, blockers: [] as string[] }
+  }
+
+  const governance = buildDeliveryGovernanceSnapshot({
+    scanType: args.scanType,
+    record: args.record,
+    checkpoints: args.checkpoints,
+    autoSignals: args.autoSignals,
+    hasLearningCloseoutEvidence: args.hasLearningCloseoutEvidence,
+  })
+
+  const blockers =
+    args.targetStage === 'import_cleared'
+      ? dedupeMessages([...governance.globalBlockers, ...governance.intakeBlockers])
+      : args.targetStage === 'invites_live' || args.targetStage === 'client_activation_pending'
+        ? dedupeMessages([
+            ...governance.globalBlockers,
+            ...governance.intakeBlockers,
+            ...governance.importBlockers,
+            ...governance.inviteBlockers,
+          ])
+        : args.targetStage === 'client_activation_confirmed'
+          ? dedupeMessages([
+              ...governance.globalBlockers,
+              ...governance.intakeBlockers,
+              ...governance.importBlockers,
+              ...governance.inviteBlockers,
+              ...governance.activationBlockers,
+            ])
+          : args.targetStage === 'first_value_reached'
+            ? dedupeMessages([
+                ...governance.globalBlockers,
+                ...governance.intakeBlockers,
+                ...governance.importBlockers,
+                ...governance.inviteBlockers,
+                ...governance.activationBlockers,
+                ...governance.firstValueBlockers,
+              ])
+            : args.targetStage === 'first_management_use'
+              ? dedupeMessages([
+                  ...governance.globalBlockers,
+                  ...governance.intakeBlockers,
+                  ...governance.importBlockers,
+                  ...governance.inviteBlockers,
+                  ...governance.activationBlockers,
+                  ...governance.firstValueBlockers,
+                  ...governance.reportDeliveryBlockers,
+                  ...governance.managementUseBlockers,
+                ])
+              : args.targetStage === 'follow_up_decided'
+                ? dedupeMessages([
+                    ...governance.globalBlockers,
+                    ...governance.intakeBlockers,
+                    ...governance.importBlockers,
+                    ...governance.inviteBlockers,
+                    ...governance.activationBlockers,
+                    ...governance.firstValueBlockers,
+                    ...governance.reportDeliveryBlockers,
+                    ...governance.managementUseBlockers,
+                  ])
+                : dedupeMessages([
+                    ...governance.globalBlockers,
+                    ...governance.intakeBlockers,
+                    ...governance.importBlockers,
+                    ...governance.inviteBlockers,
+                    ...governance.activationBlockers,
+                    ...governance.firstValueBlockers,
+                    ...governance.reportDeliveryBlockers,
+                    ...governance.managementUseBlockers,
+                    ...governance.learningCloseoutBlockers,
+                  ])
+
+  return {
+    allowed: blockers.length === 0,
+    blockers,
+    governance,
+  }
+}
+
+export function validateDeliveryCheckpointUpdate(args: {
+  checkpointKey: DeliveryCheckpointKey
+  manualState: DeliveryManualState
+  exceptionStatus: DeliveryExceptionStatus
+  autoState: DeliveryAutoState
+  operatorNote: string | null | undefined
+}) {
+  const note = args.operatorNote?.trim() ?? ''
+
+  if (args.exceptionStatus !== 'none' && note.length === 0) {
+    return 'Een checkpoint met open exception vraagt een operator-note.'
+  }
+
+  if (args.manualState === 'not_applicable' && note.length === 0) {
+    return 'Gebruik alleen "niet van toepassing" met een expliciete operator-note.'
+  }
+
+  if (args.manualState === 'confirmed' && args.autoState === 'not_ready' && note.length === 0) {
+    return 'Bevestigen tegen een "nog niet klaar" autosignaal vraagt een expliciete operator-note.'
+  }
+
+  if (args.manualState === 'confirmed' && args.autoState === 'warning' && note.length === 0) {
+    return 'Bevestigen tegen een warning-autosignaal vraagt een expliciete operator-note.'
+  }
+
+  return null
+}
+
+export function buildDeliveryOpsSummary(args: {
+  scanType: ScanType
+  record: DeliveryRecordGovernanceContext | null
+  checkpoints: CampaignDeliveryCheckpoint[]
+  autoSignals: Record<DeliveryCheckpointKey, DeliveryAutoSignal>
+  hasLearningCloseoutEvidence?: boolean
+}) {
+  const governance = buildDeliveryGovernanceSnapshot({
+    scanType: args.scanType,
+    record: args.record,
+    checkpoints: args.checkpoints,
+    autoSignals: args.autoSignals,
+    hasLearningCloseoutEvidence: args.hasLearningCloseoutEvidence,
+  })
+  const checkpointMap = governance.checkpointMap
+
+  return {
+    launchStatus: governance.launchReady
+      ? 'Launch-ready'
+      : governance.intakeBlockers.length === 0
+        ? 'Launchdiscipline nog open'
+        : 'Launch nog niet rond',
+    launchTone: governance.launchReady ? 'emerald' : governance.inviteBlockers.length > 0 || governance.importBlockers.length > 0 ? 'amber' : 'slate',
+    firstValueStatus: governance.firstValueReady
+      ? 'First value bevestigd'
+      : args.autoSignals.first_value.autoState === 'warning'
+        ? 'First value nog indicatief'
+        : 'First value nog in opbouw',
+    firstValueTone: governance.firstValueReady ? 'emerald' : args.autoSignals.first_value.autoState === 'warning' ? 'amber' : 'slate',
+    adoptionStatus: governance.managementUseReady
       ? 'Eerste managementgebruik bevestigd'
-      : args.autoSignals.first_management_use.autoState === 'warning'
+      : governance.reportDeliveryReady
         ? 'Managementgebruik nog bevestigen'
         : 'Nog geen managementgebruik',
-    adoptionTone: adoptionConfirmed ? 'emerald' : args.autoSignals.first_management_use.autoState === 'warning' ? 'amber' : 'slate',
+    adoptionTone: governance.managementUseReady ? 'emerald' : governance.reportDeliveryReady ? 'amber' : 'slate',
     followUpStatus:
-      args.record?.lifecycle_stage === 'follow_up_decided' || args.record?.lifecycle_stage === 'learning_closed'
-        ? 'Follow-up besloten'
-        : 'Follow-up nog open',
+      governance.learningCloseoutReady
+        ? 'Learning klaar voor closeout'
+        : governance.followUpReady
+          ? 'Follow-up besloten'
+          : 'Follow-up nog open',
     followUpTone:
-      args.record?.lifecycle_stage === 'follow_up_decided' || args.record?.lifecycle_stage === 'learning_closed'
+      governance.learningCloseoutReady || args.record?.lifecycle_stage === 'learning_closed'
         ? 'emerald'
-        : 'slate',
+        : governance.followUpReady
+          ? 'blue'
+          : 'slate',
     learningClosed: args.record?.lifecycle_stage === 'learning_closed',
     checkpointMap,
+    governance,
   } as const
 }

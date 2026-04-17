@@ -301,7 +301,7 @@ export default async function CampaignPage({ params }: Props) {
     profile?.is_verisight_admin === true
       ? await supabase
           .from('pilot_learning_dossiers')
-          .select('id, title, triage_status, updated_at')
+          .select('id, title, triage_status, updated_at, review_moment, next_route, stop_reason, management_action_outcome, adoption_outcome')
           .eq('campaign_id', id)
           .order('updated_at', { ascending: false })
           .limit(3)
@@ -311,7 +311,21 @@ export default async function CampaignPage({ params }: Props) {
     title: string
     triage_status: string
     updated_at: string
+    review_moment: string | null
+    next_route: string | null
+    stop_reason: string | null
+    management_action_outcome: string | null
+    adoption_outcome: string | null
   }>
+  const learningCloseoutEvidenceCount = learningDossiers.filter((dossier) =>
+    Boolean(
+      dossier.review_moment ||
+        dossier.next_route ||
+        dossier.stop_reason ||
+        dossier.management_action_outcome ||
+        dossier.adoption_outcome,
+    ),
+  ).length
   const lifecycleDecisionCards = getLifecycleDecisionCards(stats.scan_type)
   const primaryTeamPriority =
     stats.scan_type === 'team' && teamPriorityRead?.status === 'ready'
@@ -975,7 +989,7 @@ export default async function CampaignPage({ params }: Props) {
                   {!profile?.is_verisight_admin ? (
                     <OnboardingBalloon step={2} label="Download hier je rapport" align="left" />
                   ) : null}
-                  <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
+                  <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
                 </div>
               </>
             )
@@ -1046,7 +1060,7 @@ export default async function CampaignPage({ params }: Props) {
                     : 'Leadership Scan: management read live'}
             </div>
           ) : (
-            <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
+            <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
           )
         }
       />
@@ -1559,6 +1573,8 @@ export default async function CampaignPage({ params }: Props) {
                       checkpoints={deliveryCheckpoints}
                       leadOptions={deliveryLeadOptions}
                       leadLoadError={deliveryLeadError}
+                      linkedLearningDossierCount={learningDossiers.length}
+                      learningCloseoutEvidenceCount={learningCloseoutEvidenceCount}
                       editable={isVerisightAdmin}
                     />
                   ) : (
@@ -1609,8 +1625,14 @@ export default async function CampaignPage({ params }: Props) {
                 description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementread en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
                 badge={
                   <DashboardChip
-                    label={learningDossiers.length > 0 ? `${learningDossiers.length} gekoppeld` : 'Nog geen dossier'}
-                    tone={learningDossiers.length > 0 ? 'blue' : 'amber'}
+                    label={
+                      learningDossiers.length === 0
+                        ? 'Nog geen dossier'
+                        : learningCloseoutEvidenceCount > 0
+                          ? `${learningCloseoutEvidenceCount} closeout-signaal`
+                          : `${learningDossiers.length} gekoppeld, closeout open`
+                    }
+                    tone={learningDossiers.length > 0 && learningCloseoutEvidenceCount > 0 ? 'blue' : 'amber'}
                   />
                 }
               >
@@ -1624,6 +1646,24 @@ export default async function CampaignPage({ params }: Props) {
                         : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de learning-workbench. Zo blijven echte deliverylessen en vervolgkeuzes niet hangen in losse handover-notes.'
                     }
                     tone={learningDossiers.length > 0 ? 'blue' : 'amber'}
+                  />
+                  <DashboardPanel
+                    eyebrow="Closeoutdiscipline"
+                    title={
+                      learningCloseoutEvidenceCount > 0
+                        ? 'Learning kan naar formele closeout toewerken'
+                        : learningDossiers.length > 0
+                          ? 'Learning bestaat, maar closeout-evidence mist nog'
+                          : 'Nog geen learning-closeout mogelijk'
+                    }
+                    body={
+                      learningCloseoutEvidenceCount > 0
+                        ? 'Er is al minstens één expliciete review-, vervolg- of stopuitkomst vastgelegd. Daarmee kan delivery later eerlijker naar follow-up of learning closeout bewegen.'
+                        : learningDossiers.length > 0
+                          ? 'Er zijn al gekoppelde dossiers, maar nog geen expliciete review-, vervolg- of stopuitkomst. Houd delivery dus bewust open tot die follow-through echt is vastgelegd.'
+                          : 'Zonder gekoppeld learningdossier hoort delivery-closeout nog niet als afgerond te voelen.'
+                    }
+                    tone={learningCloseoutEvidenceCount > 0 ? 'emerald' : 'amber'}
                   />
                   <div className="rounded-[22px] border border-slate-200 bg-slate-50/70 p-4">
                     <p className="text-sm font-semibold text-slate-950">Gekoppelde dossiers</p>

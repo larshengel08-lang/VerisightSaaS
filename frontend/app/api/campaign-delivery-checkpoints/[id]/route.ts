@@ -7,6 +7,7 @@ import {
   type DeliveryAutoState,
   type DeliveryExceptionStatus,
   type DeliveryManualState,
+  validateDeliveryCheckpointUpdate,
 } from '@/lib/ops-delivery'
 
 interface Context {
@@ -102,6 +103,17 @@ export async function PATCH(request: Request, context: Context) {
 
   const updatePayload: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
+  }
+  const checkpointDisciplineError = validateDeliveryCheckpointUpdate({
+    checkpointKey: checkpoint.checkpoint_key,
+    manualState: body.manual_state ?? 'pending',
+    exceptionStatus: body.exception_status ?? 'none',
+    autoState: body.auto_state ?? 'unknown',
+    operatorNote: body.operator_note,
+  })
+
+  if (checkpointDisciplineError) {
+    return NextResponse.json({ detail: checkpointDisciplineError }, { status: 400 })
   }
 
   if ('manual_state' in body) {
