@@ -29,6 +29,14 @@ Voor de huidige bedrijfssturing gebruik je deze volgorde:
   - grote koersbesluiten
 - [FOUNDER_CAPACITY_MAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/FOUNDER_CAPACITY_MAP.md)
   - wat binnen founder-led lean nog gezond en realistisch is
+- [SCALABILITY_REVIEW_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_REVIEW_2026.md)
+  - eerste harde schaalbaarheidsbeoordeling van processen, systemen en werkwijze
+- [SCALABILITY_GAP_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_GAP_MATRIX.md)
+  - concrete bottlenecks met oorzaak, impact en prioriteit
+- [SCALABILITY_IMPROVEMENT_WAVES.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_IMPROVEMENT_WAVES.md)
+  - 30/60/90-dagen verbetervoorstel na de review
+- [SCALABILITY_REVIEW_WORKBOOK.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_REVIEW_WORKBOOK.xlsx)
+  - invulbaar en scanbaar werkboek voor review, scoring en evidenceregistratie
 
 ### Delivery en onboarding
 
@@ -79,6 +87,7 @@ Gebruik deze map voor:
 - deliverydiscipline
 - bewijsopbouw
 - bestuurlijke keuzes
+- schaalbaarheidsreview en verbeterwaves
 
 Praktische noot:
 

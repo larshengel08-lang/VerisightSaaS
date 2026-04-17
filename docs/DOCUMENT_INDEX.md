@@ -63,6 +63,10 @@ Source-of-truth volgorde:
 - [CEO_FIRST_30_DAYS.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_FIRST_30_DAYS.md)
 - [OUTBOUND_OPERATING_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/OUTBOUND_OPERATING_PLAYBOOK.md)
 - [CLIENT_INPUT_SPEC.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_INPUT_SPEC.md)
+- [SCALABILITY_REVIEW_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_REVIEW_2026.md)
+- [SCALABILITY_GAP_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_GAP_MATRIX.md)
+- [SCALABILITY_IMPROVEMENT_WAVES.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_IMPROVEMENT_WAVES.md)
+- [SCALABILITY_REVIEW_WORKBOOK.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_REVIEW_WORKBOOK.xlsx)
 - [SUPABASE_LIVE_HARDENING_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/SUPABASE_LIVE_HARDENING_CHECKLIST.md)
 - [RETENTION_V11_VALIDATION_WORKFLOW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/RETENTION_V11_VALIDATION_WORKFLOW.md)
 
