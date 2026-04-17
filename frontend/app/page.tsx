@@ -26,7 +26,7 @@ import {
 import { buildContactHref } from '@/lib/contact-funnel'
 
 export const metadata: Metadata = {
-  title: 'ExitScan en RetentieScan voor HR-teams',
+  title: 'Verisight',
   description:
     'Verisight helpt HR en management scherp zien welke vertrek- en retentiesignalen aandacht vragen, zodat prioriteiten duidelijk worden.',
   alternates: {
@@ -59,7 +59,7 @@ export default function LandingPage() {
   const homepageSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Verisight | ExitScan en RetentieScan voor HR-teams',
+    name: 'Verisight',
     description:
       'Verisight helpt HR en management scherp zien welke vertrek- en retentiesignalen aandacht vragen, zodat prioriteiten duidelijk worden.',
     url: 'https://www.verisight.nl/',
