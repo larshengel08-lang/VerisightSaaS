@@ -124,7 +124,7 @@ export const DELIVERY_LIFECYCLE_OPTIONS: Array<{ value: DeliveryLifecycleStage; 
 
 export const DELIVERY_EXCEPTION_OPTIONS: Array<{ value: DeliveryExceptionStatus; label: string }> = [
   { value: 'none', label: 'Geen exception' },
-  { value: 'blocked', label: 'Blocked' },
+  { value: 'blocked', label: 'Geblokkeerd' },
   { value: 'needs_operator_recovery', label: 'Operator recovery nodig' },
   { value: 'awaiting_client_input', label: 'Wacht op klantinput' },
   { value: 'awaiting_external_delivery', label: 'Wacht op externe delivery' },

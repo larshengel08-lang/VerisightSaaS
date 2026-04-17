@@ -96,7 +96,7 @@ function buildOpsWarnings(args: {
   if (args.pendingClientInviteCount > 0 && args.activeClientAccessCount === 0) items.push(`${args.pendingClientInviteCount} klantinvite(s) wachten nog op activatie.`)
   if (args.incompleteScores > 0) items.push(`${args.incompleteScores} opgeslagen responses hebben nog incomplete scoredata.`)
   if (args.totalCompleted >= 5 && !args.hasEnoughData) items.push('De campaign heeft een indicatief first-value beeld, maar nog geen stevig patroonniveau.')
-  if (args.record?.exception_status && args.record.exception_status !== 'none') items.push(`Exception open: ${getDeliveryExceptionLabel(args.record.exception_status)}.`)
+  if (args.record?.exception_status && args.record.exception_status !== 'none') items.push(`Open exception: ${getDeliveryExceptionLabel(args.record.exception_status)}.`)
   items.push(...args.governanceBlockers)
 
   return Array.from(new Set(items))
@@ -337,10 +337,10 @@ export function PreflightChecklist({
           </div>
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-600">
-              Exception: {getDeliveryExceptionLabel(record?.exception_status)}
+              Exceptionstatus: {getDeliveryExceptionLabel(record?.exception_status)}
             </span>
             <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-600">
-              First management use: {formatAmsterdamDate(record?.first_management_use_confirmed_at)}
+              Eerste managementgebruik: {formatAmsterdamDate(record?.first_management_use_confirmed_at)}
             </span>
           </div>
         </div>
@@ -458,7 +458,7 @@ export function PreflightChecklist({
               </label>
 
               <label className="space-y-1 text-sm text-slate-700">
-                <span className="font-medium text-slate-900">Klant-handoff note</span>
+                <span className="font-medium text-slate-900">Klant-handoffnotitie</span>
                 {editable ? (
                   <textarea
                     value={recordDraft.customer_handoff_note}
@@ -468,7 +468,7 @@ export function PreflightChecklist({
                     className={`${inputClass} min-h-32 resize-y`}
                   />
                 ) : (
-                  <ReadOnlyBlock value={record?.customer_handoff_note ?? 'Nog geen klant-handoff note opgeslagen.'} />
+                  <ReadOnlyBlock value={record?.customer_handoff_note ?? 'Nog geen klant-handoffnotitie opgeslagen.'} />
                 )}
               </label>
             </div>
@@ -609,7 +609,7 @@ export function PreflightChecklist({
           <div>
             <p className="text-sm font-semibold text-slate-900">Persistente delivery checkpoints</p>
             <p className="mt-1 text-sm text-slate-500">
-              Auto-signalen en handmatige confirmations leven hier samen, zodat launch, activatie en first management use overdraagbaar blijven.
+              Auto-signalen en handmatige bevestigingen leven hier samen, zodat launch, activatie en eerste managementgebruik overdraagbaar blijven.
             </p>
           </div>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
