@@ -12,6 +12,24 @@ export const CONTACT_ROUTE_OPTIONS = [
     firstStepLabel: 'RetentieScan Baseline',
   },
   {
+    value: 'teamscan',
+    label: 'TeamScan',
+    description: 'We willen lokaal bepalen waar eerst verificatie of gesprek nodig is.',
+    firstStepLabel: 'een bounded TeamScan follow-on route',
+  },
+  {
+    value: 'onboarding',
+    label: 'Onboarding 30-60-90',
+    description: 'We willen vroeg zien hoe nieuwe medewerkers in een checkpoint landen.',
+    firstStepLabel: 'een bounded onboarding follow-on route',
+  },
+  {
+    value: 'leadership',
+    label: 'Leadership Scan',
+    description: 'We willen bepalen welke managementcontext nu eerst duiding of verificatie vraagt.',
+    firstStepLabel: 'een bounded Leadership Scan follow-on route',
+  },
+  {
     value: 'combinatie',
     label: 'Combinatie',
     description: 'We willen beide vragen bewust naast elkaar organiseren.',
@@ -89,6 +107,15 @@ export function inferRouteInterestFromSource(source: string | null | undefined):
   }
   if (normalizedSource.includes('combin')) {
     return 'combinatie'
+  }
+  if (normalizedSource.includes('team')) {
+    return 'teamscan'
+  }
+  if (normalizedSource.includes('onboarding')) {
+    return 'onboarding'
+  }
+  if (normalizedSource.includes('leadership')) {
+    return 'leadership'
   }
   if (normalizedSource.includes('onzeker')) {
     return 'nog-onzeker'
