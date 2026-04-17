@@ -49,6 +49,11 @@ export interface ContactRequestRecord {
   ops_owner: string | null
   ops_next_step: string | null
   ops_handoff_note: string | null
+  qualification_status: string
+  qualified_route: ContactRouteInterest | null
+  qualification_note: string | null
+  qualification_reviewed_by: string | null
+  qualification_reviewed_at: string | null
   commercial_agreement_status: CommerceAgreementStatus
   commercial_pricing_mode: CommercePricingMode | null
   commercial_start_readiness_status: CommerceStartReadinessStatus

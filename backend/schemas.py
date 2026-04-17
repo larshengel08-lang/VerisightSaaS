@@ -8,9 +8,10 @@ Keeps API contract separate from ORM models.
 from __future__ import annotations
 
 from datetime import datetime
+from uuid import UUID
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
 # ---------------------------------------------------------------------------
@@ -32,7 +33,7 @@ class OrganizationCreate(BaseModel):
 
 
 class OrganizationRead(OrmBase):
-    id: str
+    id: UUID | str
     name: str
     slug: str
     is_active: bool
@@ -45,7 +46,7 @@ class OrganizationRead(OrmBase):
 
 class CampaignCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=255)
-    scan_type: str = Field(..., pattern=r"^(exit|retention)$")
+    scan_type: str = Field(..., pattern=r"^(exit|retention|pulse|team|onboarding|leadership)$")
     delivery_mode: str = Field(default="baseline", pattern=r"^(baseline|live)$")
     enabled_modules: Optional[list[str]] = None
 
@@ -67,10 +68,25 @@ class CampaignCreate(BaseModel):
                 raise ValueError(f"Ongeldige modules: {invalid}")
         return v
 
+    @model_validator(mode="after")
+    def validate_delivery_mode_for_scan(self) -> "CampaignCreate":
+        if self.scan_type in {"pulse", "team", "onboarding", "leadership"} and self.delivery_mode == "live":
+            product_name = (
+                "Pulse"
+                if self.scan_type == "pulse"
+                else "TeamScan"
+                if self.scan_type == "team"
+                else "Onboarding 30-60-90"
+                if self.scan_type == "onboarding"
+                else "Leadership Scan"
+            )
+            raise ValueError(f"{product_name} ondersteunt in deze wave alleen baseline campaigns.")
+        return self
+
 
 class CampaignRead(OrmBase):
-    id: str
-    organization_id: str
+    id: UUID | str
+    organization_id: UUID | str
     name: str
     scan_type: str
     delivery_mode: Optional[str]
@@ -93,9 +109,9 @@ class RespondentCreate(BaseModel):
 
 
 class RespondentRead(OrmBase):
-    id: str
-    campaign_id: str
-    token: str
+    id: UUID | str
+    campaign_id: UUID | str
+    token: UUID | str
     department: Optional[str]
     role_level: Optional[str]
     exit_month: Optional[str]
@@ -154,7 +170,15 @@ class ContactRequestCreate(BaseModel):
     work_email: EmailStr
     organization: str = Field(..., min_length=2, max_length=255)
     employee_count: str = Field(..., min_length=2, max_length=80)
-    route_interest: Literal["exitscan", "retentiescan", "combinatie", "nog-onzeker"] = "exitscan"
+    route_interest: Literal[
+        "exitscan",
+        "retentiescan",
+        "teamscan",
+        "onboarding",
+        "leadership",
+        "combinatie",
+        "nog-onzeker",
+    ] = "exitscan"
     cta_source: str = Field(default="website_contact_form", min_length=2, max_length=120)
     desired_timing: Literal["zo-snel-mogelijk", "deze-maand", "dit-kwartaal", "orienterend"] = "orienterend"
     current_question: str = Field(..., min_length=5, max_length=2000)
@@ -165,11 +189,11 @@ class ContactRequestResponse(BaseModel):
     message: str
     notification_sent: bool = True
     warning: str | None = None
-    lead_id: str | None = None
+    lead_id: UUID | str | None = None
 
 
 class ContactRequestRead(BaseModel):
-    id: str
+    id: UUID | str
     name: str
     work_email: EmailStr
     organization: str
@@ -185,6 +209,19 @@ class ContactRequestRead(BaseModel):
     ops_owner: str | None = None
     ops_next_step: str | None = None
     ops_handoff_note: str | None = None
+    qualification_status: str
+    qualified_route: str | None = None
+    qualification_note: str | None = None
+    qualification_reviewed_by: str | None = None
+    qualification_reviewed_at: datetime | None = None
+    commercial_agreement_status: str
+    commercial_pricing_mode: str | None = None
+    commercial_start_readiness_status: str
+    commercial_start_blocker: str | None = None
+    commercial_agreement_confirmed_by: str | None = None
+    commercial_agreement_confirmed_at: datetime | None = None
+    commercial_readiness_reviewed_by: str | None = None
+    commercial_readiness_reviewed_at: datetime | None = None
     last_contacted_at: datetime | None = None
     created_at: datetime
 
@@ -207,6 +244,23 @@ class ContactRequestUpdate(BaseModel):
     ops_owner: str | None = Field(default=None, max_length=120)
     ops_next_step: str | None = Field(default=None, max_length=2000)
     ops_handoff_note: str | None = Field(default=None, max_length=4000)
+    qualification_status: Literal["not_reviewed", "needs_route_review", "route_confirmed"] | None = None
+    qualified_route: Literal[
+        "exitscan",
+        "retentiescan",
+        "teamscan",
+        "onboarding",
+        "leadership",
+        "combinatie",
+    ] | None = None
+    qualification_note: str | None = Field(default=None, max_length=2000)
+    qualification_reviewed_by: str | None = Field(default=None, max_length=120)
+    commercial_agreement_status: Literal["not_started", "confirmed", "blocked"] | None = None
+    commercial_pricing_mode: Literal["public_anchor", "custom_quote"] | None = None
+    commercial_start_readiness_status: Literal["not_ready", "ready", "blocked"] | None = None
+    commercial_start_blocker: str | None = Field(default=None, max_length=2000)
+    commercial_agreement_confirmed_by: str | None = Field(default=None, max_length=120)
+    commercial_readiness_reviewed_by: str | None = Field(default=None, max_length=120)
     last_contacted_at: datetime | None = None
 
 
@@ -230,7 +284,7 @@ class SurveySubmit(BaseModel):
     signal_visibility_score: Optional[int] = Field(None, ge=1, le=5)
 
     # Module B — SDT (12 items, required)
-    sdt_raw: dict[str, int] = Field(..., min_length=12, max_length=12)
+    sdt_raw: dict[str, int] = Field(default_factory=dict)
 
     # Module C — org factors (dict of all answered items)
     org_raw: dict[str, int] = Field(default_factory=dict)
@@ -250,10 +304,6 @@ class SurveySubmit(BaseModel):
     @field_validator("sdt_raw")
     @classmethod
     def validate_sdt(cls, v: dict[str, int]) -> dict[str, int]:
-        expected = {f"B{i}" for i in range(1, 13)}
-        missing = expected - set(v.keys())
-        if missing:
-            raise ValueError(f"Ontbrekende SDT-items: {missing}")
         for key, val in v.items():
             if val not in range(1, 6):
                 raise ValueError(f"SDT item {key} heeft waarde {val}, verwacht 1-5.")
@@ -288,8 +338,8 @@ class SurveySubmit(BaseModel):
 # ---------------------------------------------------------------------------
 
 class SurveyResponseRead(OrmBase):
-    id: str
-    respondent_id: str
+    id: UUID | str
+    respondent_id: UUID | str
     risk_score: Optional[float]
     risk_band: Optional[str]
     preventability: Optional[str]
@@ -303,7 +353,7 @@ class SurveyResponseRead(OrmBase):
 # ---------------------------------------------------------------------------
 
 class CampaignStats(BaseModel):
-    campaign_id: str
+    campaign_id: UUID | str
     campaign_name: str
     scan_type: str
     total_invited: int
