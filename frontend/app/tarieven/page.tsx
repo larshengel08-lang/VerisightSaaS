@@ -1,52 +1,28 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import {
-  MarketingHeroIntro,
-  MarketingHeroStage,
-  MarketingHeroSupport,
-} from '@/components/marketing/marketing-hero'
-import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
 import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
-import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
-import { PreviewEvidenceRail } from '@/components/marketing/preview-evidence-rail'
-import { PreviewSlider } from '@/components/marketing/preview-slider'
-import { SampleShowcaseCard } from '@/components/marketing/sample-showcase-card'
 import { MarketingSection } from '@/components/marketing/marketing-section'
-import { SectionHeading } from '@/components/marketing/section-heading'
-import {
-  expansionTriggerCards,
-  pricingAddOns,
-  pricingCards,
-  pricingChoiceGuide,
-  pricingFaqs,
-  pricingFollowOnRoutes,
-  pricingLifecycleLadder,
-  retentionPackages,
-  trustItems,
-} from '@/components/marketing/site-content'
-import { TrustStrip } from '@/components/marketing/trust-strip'
-import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
-
-const exitSampleAsset = getPrimarySampleShowcaseAsset('exit')
-const retentionSampleAsset = getPrimarySampleShowcaseAsset('retention')
+import { PublicFooter } from '@/components/marketing/public-footer'
+import { PublicHeader } from '@/components/marketing/public-header'
+import { buildContactHref } from '@/lib/contact-funnel'
 
 export const metadata: Metadata = {
   title: 'Tarieven',
   description:
-    'Bekijk de prijsankers voor de twee kernproducten, vervolgvormen, add-ons en de portfolioroute van Verisight, zonder premature SaaS-planlogica.',
+    'Vaste tarieven per scanvorm. ExitScan vanaf EUR 2.950, RetentieScan vanaf EUR 3.450. Geen licenties, heldere scope per traject.',
   alternates: { canonical: '/tarieven' },
   openGraph: {
     title: 'Tarieven | Verisight',
     description:
-      'Bekijk de prijsankers voor de twee kernproducten, vervolgvormen, add-ons en de portfolioroute van Verisight.',
+      'Vaste tarieven per scanvorm. ExitScan vanaf EUR 2.950, RetentieScan vanaf EUR 3.450. Geen licenties, heldere scope per traject.',
     url: 'https://www.verisight.nl/tarieven',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Verisight tarieven voor ExitScan en RetentieScan' }],
+    images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Tarieven | Verisight',
     description:
-      'Bekijk de prijsankers voor de twee kernproducten, vervolgvormen, add-ons en de portfolioroute van Verisight.',
+      'Vaste tarieven per scanvorm. ExitScan vanaf EUR 2.950, RetentieScan vanaf EUR 3.450. Geen licenties, heldere scope per traject.',
     images: ['/opengraph-image'],
   },
 }
@@ -64,344 +40,238 @@ export default function TarievenPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <MarketingPageShell
-        theme="neutral"
-        pageType="pricing"
-        ctaHref="#kennismaking"
-        heroIntro={
-          <MarketingHeroIntro>
-            <p className="marketing-hero-eyebrow text-blue-600">Tarieven</p>
-            <h1 className="marketing-hero-title marketing-hero-title-page font-display text-slate-950">
-              Heldere prijsankers voor eerste trajecten en logische vervolgvormen.
-            </h1>
-            <p className="marketing-hero-copy text-slate-600">
-              Verisight verkoopt duidelijke productvormen met dashboard, rapportage, bestuurlijke handoff en
-              begeleiding. Geen licentieconstructie met losse modules, geen planmatrix en geen open eind aan
-              consultancy-uren. Eerst landen twee kernproducten, daarna pas de vervolgvormen en de portfolioroute.
-            </p>
-            <div className="marketing-hero-actions">
-              <div className="marketing-hero-cta-row">
-                <a
-                  href="#kennismaking"
-                  className="inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(37,99,235,0.18)] transition-all hover:-translate-y-0.5 hover:bg-blue-700"
-                >
-                  Plan kennismaking
-                </a>
-                <Link
-                  href="/aanpak"
-                  className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
-                >
-                  Bekijk aanpak
-                </Link>
-              </div>
-            </div>
-          </MarketingHeroIntro>
-        }
-        heroStage={
-          <MarketingHeroStage>
-            <div className="space-y-5">
-              <span className="marketing-stage-tag bg-blue-400/12 text-blue-100">Pricing-first</span>
-              <h2 className="marketing-stage-title font-display text-white">
-                Gebruik pricing om kooprust te geven, niet om het gesprek ingewikkelder te maken.
-              </h2>
-              <p className="marketing-stage-copy text-slate-300">
-                De prijslaag moet eerst laten zien wat het eerste traject is, daarna welke vervolgvormen logisch
-                worden en pas daarna welke verdieping eventueel meerwaarde heeft.
+
+      <div className="min-h-screen bg-white">
+        <PublicHeader />
+        <main>
+
+          {/* Hero */}
+          <section className="bg-[#F7F5F1] border-b border-[#E5E0D6]">
+            <div className="marketing-shell py-14">
+              <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">
+                Tarieven
               </p>
-              <div className="grid gap-3">
-                {pricingCards.map((card) => (
-                  <div key={card.eyebrow} className="rounded-[1.45rem] border border-white/10 bg-white/5 p-5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-200">{card.eyebrow}</p>
-                    <p className="mt-2 text-3xl font-semibold text-white">{card.price}</p>
-                    <p className="mt-3 text-sm leading-7 text-slate-300">{card.description}</p>
-                  </div>
-                ))}
+              <h1 className="mt-3 max-w-[28ch] font-display text-[clamp(1.6rem,3.5vw,2.2rem)] font-light leading-[1.15] tracking-[-0.02em] text-[#132033]">
+                Transparante tarieven, heldere scope
+              </h1>
+              <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-[#4A5563]">
+                Vaste tarieven per scanvorm. Geen licenties, heldere scope per traject.
+              </p>
+            </div>
+          </section>
+
+          {/* ExitScan groep */}
+          <MarketingSection tone="tint">
+            <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">
+              Uitstroom
+            </p>
+            <h2 className="mt-3 text-2xl font-medium text-[#132033]">ExitScan</h2>
+            <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-[#4A5563]">
+              Begrijp waarom medewerkers vertrekken. Beschikbaar als retrospectieve analyse of doorlopende live scan.
+            </p>
+
+            <div className="mt-8 grid gap-5 lg:grid-cols-2">
+              {/* Retrospectief */}
+              <div className="flex flex-col rounded-xl border border-[#E5E0D6] bg-white p-7">
+                <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#9CA3AF]">
+                  Retrospectief
+                </p>
+                <p className="mt-3 text-3xl font-light text-[#132033]">EUR 2.950</p>
+                <p className="mt-3 flex-1 text-sm leading-relaxed text-[#4A5563]">
+                  Analyse van vertrek in een afgebakende periode. De standaard eerste instap voor een betrouwbaar organisatiebeeld en professioneel managementrapport over uitstroom.
+                </p>
+                <ul className="mt-5 space-y-2">
+                  {[
+                    'Inrichting exit-campagne en respondentflow',
+                    'Dashboard en managementrapport',
+                    'Toelichting op de uitkomsten',
+                    'Bestuurlijke handoff inbegrepen',
+                  ].map((bullet) => (
+                    <li key={bullet} className="flex items-start gap-2.5 text-sm text-[#4A5563]">
+                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#3C8D8A]" />
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Live */}
+              <div className="flex flex-col rounded-xl border border-[#E5E0D6] bg-white p-7">
+                <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#9CA3AF]">
+                  Live
+                </p>
+                <p className="mt-3 text-3xl font-light text-[#132033]">Op aanvraag</p>
+                <p className="mt-3 flex-1 text-sm leading-relaxed text-[#4A5563]">
+                  Doorlopende scan bij nieuwe vertrekkers. Logisch vervolg na een eerste retrospectieve analyse, wanneer proces, volume en eigenaarschap al staan.
+                </p>
+                <ul className="mt-5 space-y-2">
+                  {[
+                    'Uitbreidbaar na eerste retrospectief traject',
+                    'Actuele uitstroomsignalen doorlopend gevolgd',
+                    'Begeleide vervolgroute, geen self-serve laag',
+                  ].map((bullet) => (
+                    <li key={bullet} className="flex items-start gap-2.5 text-sm text-[#4A5563]">
+                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#3C8D8A]" />
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
-          </MarketingHeroStage>
-        }
-        heroSupport={
-          <MarketingHeroSupport>
-            <div className="marketing-support-note text-sm leading-7 text-slate-600">
-              Pricing hoeft hier niet alle trust en sample-output tegelijk te dragen. De taak boven de vouw is: eerste
-              prijsanker, wat inbegrepen is en welke route logisch volgt.
+
+            {/* Segment Deep Dive add-on */}
+            <div className="mt-5 rounded-xl border border-dashed border-[#E5E0D6] bg-[#F7F5F1] p-6">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#9CA3AF]">
+                    Add-on
+                  </p>
+                  <p className="mt-1 text-base font-medium text-[#132033]">Segment Deep Dive</p>
+                  <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-[#4A5563]">
+                    Extra segmentanalyse voor scherpere uitsplitsing naar afdeling of functieniveau — wanneer metadata en minimale respondentengroep dat dragen.
+                  </p>
+                </div>
+                <p className="text-xl font-light text-[#132033]">EUR 950</p>
+              </div>
             </div>
-            <div className="marketing-link-grid">
+
+            <div className="mt-6">
               <Link
                 href="/producten/exitscan"
-                className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
+                className="text-sm font-medium text-[#3C8D8A] hover:underline"
               >
-                Bekijk ExitScan
+                Meer over ExitScan →
               </Link>
+            </div>
+          </MarketingSection>
+
+          {/* RetentieScan groep */}
+          <MarketingSection tone="surface">
+            <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">
+              Behoud
+            </p>
+            <h2 className="mt-3 text-2xl font-medium text-[#132033]">RetentieScan</h2>
+            <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-[#4A5563]">
+              Zie waar behoud onder druk staat. Beschikbaar als live meting of momentopname.
+            </p>
+
+            <div className="mt-8 grid gap-5 lg:grid-cols-2">
+              {/* Momentopname */}
+              <div className="flex flex-col rounded-xl border border-[#E5E0D6] bg-white p-7">
+                <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#9CA3AF]">
+                  Momentopname
+                </p>
+                <p className="mt-3 text-3xl font-light text-[#132033]">EUR 3.450</p>
+                <p className="mt-3 flex-1 text-sm leading-relaxed text-[#4A5563]">
+                  Gerichte baseline om retentierisico's in kaart te brengen. Met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.
+                </p>
+                <ul className="mt-5 space-y-2">
+                  {[
+                    'Retentiesignaal, stay-intent en vertrekintentie in managementrapport',
+                    'Geen individuele signalen naar management',
+                    'Basis voor gerichte opvolging of vervolgmeting',
+                  ].map((bullet) => (
+                    <li key={bullet} className="flex items-start gap-2.5 text-sm text-[#4A5563]">
+                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#3C8D8A]" />
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Live */}
+              <div className="flex flex-col rounded-xl border border-[#E5E0D6] bg-white p-7">
+                <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#9CA3AF]">
+                  Live
+                </p>
+                <p className="mt-3 text-3xl font-light text-[#132033]">Vanaf EUR 4.950</p>
+                <p className="mt-3 flex-1 text-sm leading-relaxed text-[#4A5563]">
+                  Voor organisaties die retentie als terugkerend stuurthema benaderen. Met herhaalmeting, trendduiding en betere opvolging van acties na de eerste baseline.
+                </p>
+                <ul className="mt-5 space-y-2">
+                  {[
+                    'Herhaalmeting per kwartaal of halfjaar',
+                    'Trendbeeld op retentiesignaal en bevlogenheid',
+                    'Logische vervolgvorm na eerste momentopname',
+                  ].map((bullet) => (
+                    <li key={bullet} className="flex items-start gap-2.5 text-sm text-[#4A5563]">
+                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#3C8D8A]" />
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-6">
               <Link
                 href="/producten/retentiescan"
-                className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
+                className="text-sm font-medium text-[#3C8D8A] hover:underline"
               >
-                Bekijk RetentieScan
+                Meer over RetentieScan →
               </Link>
+            </div>
+          </MarketingSection>
+
+          {/* Wat altijd inbegrepen is */}
+          <MarketingSection tone="tint">
+            <h2 className="text-xl font-medium text-[#132033]">Wat altijd inbegrepen is</h2>
+            <p className="mt-2 text-sm leading-relaxed text-[#4A5563]">
+              Elke scan — ongeacht variant — bevat onderstaande deliverables. Geen losse modules, geen verborgen kosten.
+            </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { title: 'Dashboard', body: 'Interactief dashboard met resultaten per factor en segment.' },
+                { title: 'Managementrapport', body: 'Leesbaar rapport met patronen, prioriteiten en focusvragen.' },
+                { title: 'Toelichting op de uitkomsten', body: 'Begeleid gesprek over wat de uitkomsten betekenen en wat u kunt verwachten.' },
+                { title: 'AVG-conforme dataverwerking', body: 'Primaire dataopslag in EU. Geen koppeling aan individuen in rapportage.' },
+              ].map(({ title, body }) => (
+                <div key={title} className="rounded-lg border border-[#E5E0D6] bg-white p-5">
+                  <p className="flex items-center gap-2 text-sm font-medium text-[#132033]">
+                    <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#3C8D8A]" />
+                    {title}
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-[#4A5563]">{body}</p>
+                </div>
+              ))}
+            </div>
+          </MarketingSection>
+
+          {/* Closing CTA */}
+          <MarketingSection tone="surface">
+            <div className="text-center">
+              <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">
+                Kennismaking
+              </p>
+              <h2 className="mt-3 max-w-[32ch] mx-auto font-display text-[clamp(1.4rem,3vw,2rem)] font-light leading-[1.2] tracking-[-0.02em] text-[#132033]">
+                Benieuwd welke scan en variant bij uw vraagstuk past?
+              </h2>
+              <p className="mt-4 max-w-[48ch] mx-auto text-sm leading-relaxed text-[#4A5563]">
+                In een kort gesprek kijken we samen welke scan en variant nu het meest logisch is en welke timing daarbij past.
+              </p>
               <Link
-                href="/vertrouwen"
-                className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
+                href={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'pricing_closing_cta' })}
+                className="mt-6 inline-flex rounded-md bg-[#3C8D8A] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2d6e6b]"
               >
-                Bekijk trustlaag
+                Plan een kennismaking
               </Link>
             </div>
-          </MarketingHeroSupport>
-        }
-      >
-        <MarketingSection tone="plain">
-          <div className="grid items-start gap-6 xl:grid-cols-2">
-            {pricingCards.map((card) => (
-              <div key={card.eyebrow} className="marketing-panel-dark border-slate-900 bg-[#0d1b2e] p-8 md:p-10">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-300">{card.eyebrow}</p>
-                <h2 className="font-display mt-4 text-5xl text-white md:text-6xl">{card.price}</h2>
-                <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">{card.description}</p>
-                <div className="mt-8 grid gap-3">
-                  {card.bullets.map((item) => (
-                    <div
-                      key={item}
-                      className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-200"
-                    >
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </MarketingSection>
+          </MarketingSection>
 
-        <MarketingSection tone="surface">
-          <div className="grid gap-10 xl:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
-            <div>
-              <SectionHeading
-                eyebrow="Proof onder pricing"
-                title="De deliverable moet pricing bevestigen, niet verdringen."
-                description="Sample-output en preview horen direct na het prijsanker te landen, zodat de buyer ziet wat het eerste traject werkelijk oplevert."
-              />
-              <div className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-6">
-                <PreviewSlider variant="portfolio" />
-              </div>
-              <PreviewEvidenceRail className="mt-6" variant="portfolio" />
-            </div>
-
-            <div className="grid gap-5">
-              {exitSampleAsset ? (
-                <SampleShowcaseCard
-                  eyebrow="ExitScan-proof"
-                  title="Pricing wordt sterker wanneer de deliverable zichtbaar klopt."
-                  body="Gebruik het actuele ExitScan-voorbeeldrapport om te laten zien wat dashboard, managementrapport en bestuurlijke handoff in de praktijk betekenen voordat pricing verder wordt uitgediept."
-                  asset={exitSampleAsset}
-                  linkLabel="Open ExitScan-voorbeeldrapport"
-                />
-              ) : null}
-              {retentionSampleAsset ? (
-                <SampleShowcaseCard
-                  eyebrow="RetentieScan-proof"
-                  title="RetentieScan houdt een eigen proofrol binnen pricing."
-                  body="Voor buyers met een expliciete behoudsvraag op groepsniveau laat dit voorbeeldrapport zien wat de route werkelijk oplevert, zonder bredere MTO- of predictorclaim."
-                  asset={retentionSampleAsset}
-                  linkLabel="Open RetentieScan-voorbeeldrapport"
-                />
-              ) : null}
-            </div>
-          </div>
-        </MarketingSection>
-
-        <MarketingSection tone="plain">
-          <div className="marketing-panel-soft p-8 md:p-10">
-            <SectionHeading
-              eyebrow="Keuzehulp"
-              title="Wat is je eerste route?"
-              description="Kies eerst het juiste betaalde eerste traject. Voeg pas daarna een vervolgvorm, add-on of combinatieroute toe."
+          {/* Contact form */}
+          <MarketingSection tone="tint">
+            <MarketingInlineContactPanel
+              eyebrow="Plan kennismaking"
+              title="Vertel kort welke managementvraag nu speelt."
+              body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy en prijs."
+              defaultRouteInterest="exitscan"
+              defaultCtaSource="pricing_form"
             />
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {pricingChoiceGuide.map(([title, body]) => (
-                <div key={title} className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <p className="text-sm font-semibold text-slate-950">{title}</p>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </MarketingSection>
+          </MarketingSection>
 
-        <MarketingSection tone="plain">
-          <div className="grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
-            <div className="marketing-panel p-8 md:p-10">
-              <SectionHeading
-                eyebrow="Lifecycle"
-                title="Van eerste koop naar logisch vervolg"
-                description="Pricing moet eerst laten zien wat de eerste koop is per route, daarna wat de vaste vervolgvorm is en pas daarna waar expansion geloofwaardig wordt."
-              />
-              <div className="mt-10 grid gap-4">
-                {pricingLifecycleLadder.map((route) => (
-                  <div key={route.route} className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-                    <p className="text-sm font-semibold text-slate-950">{route.route}</p>
-                    <div className="mt-4 grid gap-3">
-                      <div className="rounded-xl border border-white bg-white px-4 py-3 text-sm leading-6 text-slate-700">
-                        <span className="font-semibold text-slate-950">Eerste koop:</span> {route.firstSale}
-                      </div>
-                      <div className="rounded-xl border border-white bg-white px-4 py-3 text-sm leading-6 text-slate-700">
-                        <span className="font-semibold text-slate-950">Logisch vervolg:</span> {route.nextStep}
-                      </div>
-                      <div className="rounded-xl border border-white bg-white px-4 py-3 text-sm leading-6 text-slate-700">
-                        <span className="font-semibold text-slate-950">Expansion:</span> {route.expansion}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="marketing-panel-soft p-8 md:p-10">
-              <SectionHeading
-                eyebrow="Expansiongrenzen"
-                title="Breid pas uit als de eerste route al waarde heeft geleverd."
-                description="Zo blijft geen enkele vervolgstap voelen als losse upsell of verkapte planmatrix."
-              />
-              <div className="mt-10 grid gap-4">
-                {expansionTriggerCards.map((card) => (
-                  <div key={card.title} className="rounded-2xl border border-slate-200 bg-white p-6">
-                    <p className="text-sm font-semibold text-slate-950">{card.title}</p>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">{card.body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </MarketingSection>
-
-        <MarketingSection tone="plain">
-          <div className="grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
-            <div className="marketing-panel p-8 md:p-10">
-              <SectionHeading
-                eyebrow="Vervolgvormen"
-                title="Zo groeit een eerste traject door naar een logisch vervolg."
-                description="ExitScan Live blijft een quote-only vervolgroute. RetentieScan ritme blijft de vaste buyer-facing vervolgvorm na een baseline."
-              />
-              <div className="mt-10 grid gap-5 lg:grid-cols-2">
-                {pricingFollowOnRoutes.map((route) => (
-                  <div key={route.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-950">{route.title}</p>
-                        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">{route.fit}</p>
-                      </div>
-                      <p className="text-sm font-bold text-blue-700">{route.price}</p>
-                    </div>
-                    <p className="mt-4 text-sm leading-7 text-slate-600">{route.description}</p>
-                    <div className="mt-5 grid gap-2">
-                      {route.bullets.map((bullet) => (
-                        <div key={bullet} className="rounded-xl border border-white bg-white px-3 py-3 text-sm leading-6 text-slate-700">
-                          {bullet}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="marketing-panel-dark p-8 md:p-10">
-              <SectionHeading
-                eyebrow="Trustlaag"
-                title="Een duidelijke prijs, een begeleid proces en output met expliciete claimsgrenzen."
-                description="Voor een eerste traject is vertrouwen vaak belangrijker dan maximale productbreedte. Daarom blijft Verisight bewust compact, begeleid, privacybewust en methodisch helder opgezet."
-                light
-              />
-              <div className="mt-8">
-                <TrustStrip items={trustItems} tone="dark" />
-              </div>
-            </div>
-          </div>
-        </MarketingSection>
-
-        <MarketingSection tone="plain">
-          <div className="grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
-            <div className="marketing-panel p-8 md:p-10">
-              <SectionHeading
-                eyebrow="RetentieScan-opbouw"
-                title="Drie logische vormen binnen dezelfde retentie-route."
-                description="Zo blijft RetentieScan een eigen product met een eigen opbouw, zonder dat een compacte vervolgmeting als parallel eerste pakket gaat voelen."
-              />
-              <div className="mt-10 grid gap-5 lg:grid-cols-3">
-                {retentionPackages.map((pkg) => (
-                  <div key={pkg.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-                    <p className="text-sm font-semibold text-slate-950">{pkg.title}</p>
-                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-700">{pkg.fit}</p>
-                    <p className="mt-4 text-sm leading-7 text-slate-600">{pkg.body}</p>
-                    <div className="mt-5 grid gap-2">
-                      {pkg.bullets.map((bullet) => (
-                        <div key={bullet} className="rounded-xl border border-white bg-white px-3 py-3 text-sm leading-6 text-slate-700">
-                          {bullet}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="marketing-panel-soft p-8 md:p-10">
-              <SectionHeading
-                eyebrow="Add-ons en route-uitbreiding"
-                title="Breid alleen uit waar het inhoudelijk klopt."
-                description="Zo blijft verdieping een bewuste keuze, blijft combinatie een portfolioroute en voelt geen enkele vervolglaag als verkapte planmatrix."
-              />
-              <div className="mt-10 grid gap-5 lg:grid-cols-1">
-                {pricingAddOns.map(([title, price, body]) => (
-                  <div key={title} className="rounded-2xl border border-slate-200 bg-white p-6">
-                    <p className="text-sm font-semibold text-slate-950">{title}</p>
-                    <p className="mt-2 text-sm font-bold text-blue-700">{price}</p>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">{body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </MarketingSection>
-
-        <MarketingSection tone="plain">
-          <div className="marketing-panel-soft p-8 md:p-10">
-            <SectionHeading
-              eyebrow="Sales FAQ"
-              title="Veelgestelde commerciele vragen"
-              description="Deze antwoorden helpen de productkeuze en prijsuitleg zuiver te houden."
-            />
-            <div className="mt-10 grid gap-4 md:grid-cols-2">
-              {pricingFaqs.map(([question, answer]) => (
-                <div key={question} className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <p className="text-sm font-semibold text-slate-950">{question}</p>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{answer}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </MarketingSection>
-
-        <MarketingSection tone="plain">
-          <MarketingInlineContactPanel
-            eyebrow="Kennismaking"
-            title="Plan een gesprek over pricing en productfit"
-            body="Beschrijf kort welke route nu het meest logisch lijkt. Dan toetsen we of jullie beter starten met ExitScan Baseline, RetentieScan Baseline of een gerichte vervolgvorm, en welke timing daarbij past."
-            defaultRouteInterest="exitscan"
-            defaultCtaSource="pricing_form"
-          />
-        </MarketingSection>
-
-        <MarketingSection tone="plain">
-          <MarketingCalloutBand
-            eyebrow="Volgende stap"
-            title="Wil je bepalen welk prijsanker nu past?"
-            body="In een kort gesprek kijken we wat nu jullie eerste route is, wanneer een vervolgvorm logisch wordt en of segment deep dive of een combinatieroute echt meerwaarde heeft."
-            primaryHref="#kennismaking"
-            primaryLabel="Plan kennismaking"
-            secondaryHref="/aanpak"
-            secondaryLabel="Bekijk aanpak"
-          />
-        </MarketingSection>
-      </MarketingPageShell>
+        </main>
+        <PublicFooter />
+      </div>
     </>
   )
 }
