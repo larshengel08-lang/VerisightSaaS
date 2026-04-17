@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { MarketingSection } from '@/components/marketing/marketing-section'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { PublicHeader } from '@/components/marketing/public-header'
-import { SectionHeading } from '@/components/marketing/section-heading'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 export const metadata: Metadata = {
@@ -47,11 +46,15 @@ export default function ProductenPage() {
           {/* Hero */}
           <section className="bg-[#F7F5F1] border-b border-[#E5E0D6]">
             <div className="marketing-shell py-14">
-              <SectionHeading
-                eyebrow="Twee scans, één richting"
-                title="Kies de scan die past bij uw vraagstuk"
-                description="ExitScan helpt vertrek achteraf begrijpen. RetentieScan helpt eerder signaleren waar behoud onder druk staat. Beide producten zijn gericht op een concrete managementvraag."
-              />
+              <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">
+                Twee scans, één richting
+              </p>
+              <h1 className="mt-3 max-w-[22ch] font-display text-[clamp(1.6rem,3.5vw,2.2rem)] font-light leading-[1.15] tracking-[-0.02em] text-[#132033]">
+                Kies de scan die past bij uw vraagstuk
+              </h1>
+              <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-[#4A5563]">
+                ExitScan helpt vertrek achteraf begrijpen. RetentieScan helpt eerder signaleren waar behoud onder druk staat. Beide producten zijn gericht op een concrete managementvraag.
+              </p>
             </div>
           </section>
 
