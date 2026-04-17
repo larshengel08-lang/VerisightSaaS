@@ -1,9 +1,13 @@
 import type { Metadata } from 'next'
-import { Inter, Sora } from 'next/font/google'
+import { IBM_Plex_Sans } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
-const sora = Sora({ subsets: ['latin'], display: 'swap', variable: '--font-display' })
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  display: 'swap',
+  variable: '--font-ibm-plex-sans',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -68,7 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="nl">
-      <body className={`${inter.variable} ${sora.variable} font-[family-name:var(--font-inter)] bg-white antialiased`}>
+      <body className={`${ibmPlexSans.variable} font-[family-name:var(--font-ibm-plex-sans)] bg-[#F7F5F1] antialiased`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
