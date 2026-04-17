@@ -97,7 +97,7 @@ export function PublicHeader({
             className="mt-4 rounded-xl border border-[#E5E0D6] bg-white p-4 shadow-[0_24px_60px_rgba(19,32,51,0.08)] lg:hidden"
           >
             <div className="space-y-1">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="rounded-2xl border border-[#E5E0D6] bg-[#F7F5F1] px-4 py-3">
                 <SolutionsDropdown />
               </div>
               <Link
@@ -127,7 +127,7 @@ export function PublicHeader({
               ))}
             </div>
 
-            <div className="mt-3 border-t border-slate-200 pt-3">
+            <div className="mt-3 border-t border-[#E5E0D6] pt-3">
               <Link
                 href="/login"
                 prefetch={false}
