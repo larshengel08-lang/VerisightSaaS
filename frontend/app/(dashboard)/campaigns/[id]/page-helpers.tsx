@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { getProductModule } from '@/lib/products/shared/registry'
 import type { SegmentPlaybookEntry, SignalTrendCard } from '@/lib/products/shared/types'
+import { buildFactorPresentation, getManagementBandLabel } from '@/lib/management-language'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { EXIT_REASON_LABELS, FACTOR_LABELS } from '@/lib/types'
 import type { CampaignStats, Respondent, ScanType, SurveyResponse } from '@/lib/types'
@@ -97,6 +98,18 @@ export function buildHeroDescription({
     return `Deze Pulse laat een compacte managementread zien van werkbeleving en geselecteerde werkfactoren. Lees de uitkomst als bounded reviewlaag voor dit meetmoment, met alleen een beperkte vergelijking naar de vorige vergelijkbare Pulse. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
   }
 
+  if (scanType === 'team') {
+    return `Deze TeamScan laat een begrensde lokale read zien van het huidige teamsignaal. Gebruik de uitkomst om veilig te bepalen welke afdelingen eerst verificatie vragen, met expliciete onderdrukking zodra metadata of groepsgrootte dat niet dragen. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+  }
+
+  if (scanType === 'onboarding') {
+    return `Deze onboarding-campaign laat een begrensde checkpoint-read zien van nieuwe instroom op groepsniveau. Gebruik de uitkomst om te bepalen welke vroege succes- of frictiefactor nu eerst aandacht vraagt, zonder dit al als volledige 30-60-90-journey of individuele voorspelling te lezen. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+  }
+
+  if (scanType === 'leadership') {
+    return `Deze Leadership Scan laat een begrensde managementcontext-read zien op groepsniveau. Gebruik de uitkomst om te bepalen welke leiderschaps- of prioriteringscontext nu eerst duiding vraagt, zonder dit te lezen als named leader view, 360-output of performance-oordeel. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+  }
+
   return 'Deze ExitScan helpt het vertrekverhaal terugbrengen tot de factoren die het meest beinvloedbaar lijken. Start bovenaan met het beslisoverzicht en gebruik daarna de verdieping om teams, factoren en vervolgacties scherper te maken.'
 }
 
@@ -182,6 +195,51 @@ export function buildDecisionPanels({
     ]
   }
 
+  if (stats.scan_type === 'team') {
+    return [
+      ...sharedPanels,
+      {
+        eyebrow: 'Lokale richting',
+        title: 'Department-first read',
+        value: retentionSupplemental.stayIntent !== null ? `${retentionSupplemental.stayIntent.toFixed(1)}/10` : '-',
+        body: topFactorLabel
+          ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste lokaal verificatiespoor en lees de richtingsvraag alleen als extra indicatie of afdelingscontext nu steunend of juist schurend voelt.`
+          : 'Gebruik de richtingsvraag als extra indicatie of de huidige werkcontext vooral lokale stabiliteit of juist lokale frictie laat zien.',
+        tone: retentionSupplemental.stayIntent !== null && retentionSupplemental.stayIntent < 5.5 ? 'amber' : 'emerald',
+      },
+    ]
+  }
+
+  if (stats.scan_type === 'onboarding') {
+    return [
+      ...sharedPanels,
+      {
+        eyebrow: 'Checkpoint richting',
+        title: 'Richting in deze fase',
+        value: retentionSupplemental.stayIntent !== null ? `${retentionSupplemental.stayIntent.toFixed(1)}/10` : '-',
+        body: topFactorLabel
+          ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste checkpointspoor en lees de richtingsvraag als extra indicatie of deze instroomfase nu stabiliseert of juist meer steun vraagt.`
+          : 'Gebruik de richtingsvraag als extra indicatie of deze onboardingfase nu vooral stabiel of juist frictievol voelt.',
+        tone: retentionSupplemental.stayIntent !== null && retentionSupplemental.stayIntent < 5.5 ? 'amber' : 'emerald',
+      },
+    ]
+  }
+
+  if (stats.scan_type === 'leadership') {
+    return [
+      ...sharedPanels,
+      {
+        eyebrow: 'Managementrichting',
+        title: 'Geaggregeerde context-read',
+        value: retentionSupplemental.stayIntent !== null ? `${retentionSupplemental.stayIntent.toFixed(1)}/10` : '-',
+        body: topFactorLabel
+          ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste managementspoor en lees de richtingsvraag alleen als extra indicatie of de huidige aansturing werkbaarder of juist frictievoller voelt.`
+          : 'Gebruik de richtingsvraag als extra indicatie of de huidige managementcontext vooral stabiliteit of juist meer frictie laat zien.',
+        tone: retentionSupplemental.stayIntent !== null && retentionSupplemental.stayIntent < 5.5 ? 'amber' : 'emerald',
+      },
+    ]
+  }
+
   return [
     ...sharedPanels,
     {
@@ -200,6 +258,9 @@ export function buildNextStepTitle(scanType: ScanType, hasEnoughData: boolean, h
   if (!hasMinDisplay) return 'Eerst respons opbouwen'
   if (!hasEnoughData) return 'Voorzichtig verdiepen'
   if (scanType === 'pulse') return 'Reviewen en bijsturen'
+  if (scanType === 'team') return 'Lokaal verifieren'
+  if (scanType === 'onboarding') return 'Checkpoint duiden'
+  if (scanType === 'leadership') return 'Managementcontext duiden'
   return scanType === 'retention' ? 'Valideren en prioriteren' : 'Duiden en verbeteren'
 }
 
@@ -240,6 +301,24 @@ export function buildNextStepBody({
       : 'Gebruik de compact gemeten werkfactoren om te kiezen welk spoor nu de eerste review of bijsturing vraagt.'
   }
 
+  if (scanType === 'team') {
+    return topFactor
+      ? `Gebruik ${topFactor.toLowerCase()} als eerste lokaal verificatiespoor en bepaal welke afdeling of werkcontext nu eerst een beperkte check of correctie vraagt.`
+      : 'Gebruik de compact gemeten werkfactoren om te kiezen welke lokale context nu als eerste verificatie verdient.'
+  }
+
+  if (scanType === 'onboarding') {
+    return topFactor
+      ? `Gebruik ${topFactor.toLowerCase()} als eerste checkpointspoor en bepaal welke beperkte correctie of extra steun in deze instroomfase nu het meest logisch is.`
+      : 'Gebruik de compact gemeten werkfactoren om te kiezen welke vroege succes- of frictiefactor nu als eerste aandacht vraagt.'
+  }
+
+  if (scanType === 'leadership') {
+    return topFactor
+      ? `Gebruik ${topFactor.toLowerCase()} als eerste managementspoor en bepaal welke geaggregeerde managementcontext nu eerst een korte check of kleine correctie vraagt.`
+      : 'Gebruik de compact gemeten werkfactoren om te kiezen welke managementcontext nu als eerste duiding verdient.'
+  }
+
   return topFactor
     ? `Gebruik ${topFactor.toLowerCase()} en het werksignaal om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
     : 'Gebruik het werksignaal en de topfactoren om het eerstvolgende verbetergesprek te richten.'
@@ -262,7 +341,12 @@ export function getDisclosureDefaults({
     analysisOpen: false,
     focusOpen: hasEnoughData,
     respondentsOpen: respondentsLength === 0 || (canManageCampaign && !hasMinDisplay),
-    methodologyOpen: !hasEnoughData || scanType === 'exit' || scanType === 'pulse',
+    methodologyOpen:
+      !hasEnoughData ||
+      scanType === 'exit' ||
+      scanType === 'pulse' ||
+      scanType === 'onboarding' ||
+      scanType === 'leadership',
   }
 }
 
@@ -300,12 +384,24 @@ export function buildInsightWarnings({
           ? 'Lees de signalen als groepsinput'
           : scanType === 'pulse'
             ? 'Lees Pulse als snapshot'
+            : scanType === 'team'
+              ? 'Lees TeamScan als lokale contextlaag'
+              : scanType === 'onboarding'
+                ? 'Lees onboarding als checkpoint-read'
+                : scanType === 'leadership'
+                  ? 'Lees Leadership Scan als managementcontext-read'
             : 'Lees dit als managementinput',
       body:
         scanType === 'retention'
           ? 'RetentieScan blijft een groeps- en segmentinstrument. Gebruik signalen voor prioritering en verificatie, niet als individuele voorspelling.'
           : scanType === 'pulse'
             ? 'Pulse blijft een compacte groepsread. Gebruik de uitkomst voor review, bijsturing en een bounded hercheck op dit meetmoment, niet als breed trendbewijs of individuele score.'
+            : scanType === 'team'
+              ? 'TeamScan blijft een privacy-first lokale read. Gebruik de uitkomst om afdelingen te lokaliseren en te verifieren, niet om managers of individuen te rangschikken.'
+              : scanType === 'onboarding'
+                ? 'Onboarding blijft een checkpoint-read op groepsniveau. Gebruik de uitkomst om vroege integratie en frictie te duiden, niet als performance-oordeel, retentievoorspelling of volledige 30-60-90-journey.'
+                : scanType === 'leadership'
+                  ? 'Leadership Scan blijft een geaggregeerde managementread op groepsniveau. Gebruik de uitkomst om managementcontext te duiden, niet om individuele leidinggevenden te beoordelen of named leaders te rangschikken.'
             : 'ExitScan bundelt vertrekervaringen tot managementpatronen. Gebruik deze uitkomsten om gesprekken te richten, niet om een score als sluitend bewijs te behandelen.',
       tone: 'blue',
     })
@@ -999,23 +1095,28 @@ export function computeAverageRiskScore(responses: SurveyResponse[]) {
 export function RecommendationList({
   factorAverages,
   scanType,
+  bandOverride,
 }: {
   factorAverages: Record<string, number>
   scanType: ScanType
+  bandOverride?: 'HOOG' | 'MIDDEN' | 'LAAG' | null
 }) {
   const focusQuestions = getProductModule(scanType).getFocusQuestions()
   const items = ORG_FACTORS
     .filter((factor) => factor in factorAverages)
-    .map((factor) => {
-      const score = factorAverages[factor]
-      const signalValue = 11 - score
-      const band = signalValue >= 7 ? 'HOOG' : signalValue >= 4.5 ? 'MIDDEN' : 'LAAG'
-      const questions = focusQuestions[factor]?.[band] ?? []
+      .map((factor) => {
+        const score = factorAverages[factor]
+        const signalValue = 11 - score
+        const band = bandOverride ?? (signalValue >= 7 ? 'HOOG' : signalValue >= 4.5 ? 'MIDDEN' : 'LAAG')
+        const questions = focusQuestions[factor]?.[band] ?? []
+        const presentation = buildFactorPresentation({ score, signalScore: signalValue, managementLabel: getManagementBandLabel(band) })
 
       return {
         factor,
+        score,
         signalValue,
         band,
+        presentation,
         questions,
       }
     })
@@ -1039,7 +1140,7 @@ export function RecommendationList({
               </h3>
             </div>
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
-              Signaal {item.signalValue.toFixed(1)}/10
+              Ervaren score {item.presentation.scoreDisplay}
             </span>
           </div>
 
@@ -1060,21 +1161,26 @@ export function RecommendationList({
 export function ActionPlaybookList({
   factorAverages,
   scanType,
+  bandOverride,
 }: {
   factorAverages: Record<string, number>
   scanType: ScanType
+  bandOverride?: 'HOOG' | 'MIDDEN' | 'LAAG' | null
 }) {
   const playbooks = getProductModule(scanType).getActionPlaybooks()
   const items = ORG_FACTORS
     .filter((factor) => factor in factorAverages)
-    .map((factor) => {
-      const score = factorAverages[factor]
-      const signalValue = 11 - score
-      const band = signalValue >= 7 ? 'HOOG' : signalValue >= 4.5 ? 'MIDDEN' : 'LAAG'
-      return {
+      .map((factor) => {
+        const score = factorAverages[factor]
+        const signalValue = 11 - score
+        const band = bandOverride ?? (signalValue >= 7 ? 'HOOG' : signalValue >= 4.5 ? 'MIDDEN' : 'LAAG')
+        const presentation = buildFactorPresentation({ score, signalScore: signalValue, managementLabel: getManagementBandLabel(band) })
+        return {
         factor,
+        score,
         signalValue,
         band,
+        presentation,
         playbook: playbooks[factor]?.[band] ?? null,
       }
     })
@@ -1096,7 +1202,7 @@ export function ActionPlaybookList({
               <h3 className="mt-2 text-base font-semibold text-slate-950">{item.playbook?.title}</h3>
             </div>
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
-              Prioriteit {item.signalValue.toFixed(1)}/10
+              Ervaren score {item.presentation.scoreDisplay}
             </span>
           </div>
 
@@ -1134,7 +1240,7 @@ export function ActionPlaybookList({
                 {item.playbook?.review ??
                   (scanType === 'exit'
                     ? 'Plan binnen 60-90 dagen een review op dit spoor: wat is gekozen, wat is uitgevoerd en wat keert terug in de volgende exitbatch?'
-                    : 'Plan binnen 45-90 dagen een review of vervolgmeting: wat is geverifieerd, welke eerste interventie loopt en wat verschuift er in het retentiesignaal?')}
+                    : 'Plan binnen 45-90 dagen een review of vervolgmeting: wat is geverifieerd, welke eerste stap loopt en wat verschuift er in het retentiesignaal?')}
               </p>
             </CardColumn>
           </div>

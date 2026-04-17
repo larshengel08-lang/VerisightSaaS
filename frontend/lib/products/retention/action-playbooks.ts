@@ -137,7 +137,7 @@ export const RETENTION_ACTION_PLAYBOOKS: Record<string, Record<string, ActionPla
         'Maak in teamoverleggen ruimte om werkdruk, planning en herstel expliciet te bespreken.',
         'Volg 1-2 teams extra nauw in de komende 30-90 dagen.',
       ],
-      caution: 'Een gemengd signaal kan snel verslechteren als het genegeerd wordt.',
+      caution: 'Een aandachtspunt kan snel opschuiven richting direct aandachtspunt als het genegeerd wordt.',
     },
   },
   role_clarity: {

@@ -32,6 +32,24 @@ function getTheme(slug: string, product: { status: string } | null) {
     }
   }
 
+  if (slug === 'pulse') {
+    return {
+      accent: '#d97706',
+      accentSoft: '#fde68a',
+      panel: '#fffbeb',
+      badge: 'Vervolgroute',
+    }
+  }
+
+  if (slug === 'onboarding-30-60-90') {
+    return {
+      accent: '#ea580c',
+      accentSoft: '#fed7aa',
+      panel: '#fff7ed',
+      badge: 'Lifecycle-check',
+    }
+  }
+
   if (product?.status === 'reserved_future') {
     return {
       accent: '#475569',
@@ -209,7 +227,7 @@ export default async function OpenGraphImage({ params }: Props) {
             />
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a' }}>www.verisight.nl</div>
           </div>
-          <div style={{ fontSize: '24px', color: '#334155' }}>ExitScan en RetentieScan voor HR-teams</div>
+          <div style={{ fontSize: '24px', color: '#334155' }}>Verisight productroutes voor HR-teams</div>
         </div>
       </div>
     ),

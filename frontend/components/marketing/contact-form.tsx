@@ -200,10 +200,10 @@ export function ContactForm({
           isLight ? 'border-[#E5E0D6] bg-[#F7F5F1] text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'
         }`}
       >
-        Gebruik dit formulier voor ExitScan, RetentieScan, TeamScan of de combinatieroute. We helpen eerst bepalen welk
-        kernproduct en welke eerste productroute logisch zijn, en pas daarna hoe intake, uitvoering, livegang en
-        eerste waarde eruit moeten zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden
-        en gericht op te volgen.
+        Gebruik dit formulier voor ExitScan, RetentieScan, TeamScan, Onboarding 30-60-90, Leadership Scan of de
+        combinatieroute. We helpen eerst bepalen welk kernproduct en welke eerste productroute logisch zijn, en pas
+        daarna hoe intake, uitvoering, livegang en eerste waarde eruit moeten zien. De informatie uit dit formulier
+        gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">

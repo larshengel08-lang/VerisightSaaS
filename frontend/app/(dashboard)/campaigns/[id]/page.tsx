@@ -55,6 +55,7 @@ import {
 import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
+import { buildTeamLocalReadState, buildTeamPriorityReadState } from '@/lib/products/team'
 import { getProductModule } from '@/lib/products/shared/registry'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
@@ -221,11 +222,21 @@ export default async function CampaignPage({ params }: Props) {
           previousResponsesLength: previousResponses.length,
         })
       : null
+  const teamLocalRead =
+    stats.scan_type === 'team'
+      ? buildTeamLocalReadState(responses)
+      : null
+  const teamPriorityRead =
+    stats.scan_type === 'team' && teamLocalRead
+      ? buildTeamPriorityReadState(teamLocalRead)
+      : null
 
   const hasEnoughData = responses.length >= MIN_N_PATTERNS
   const hasMinDisplay = responses.length >= MIN_N_DISPLAY
   const scanDefinition = getScanDefinition(stats.scan_type)
   const productModule = getProductModule(stats.scan_type)
+  const teamPriorityBand = (signalValue: number) =>
+    signalValue >= 7 ? 'HOOG' : signalValue >= 4.5 ? 'MIDDEN' : 'LAAG'
   const pendingCount = stats.total_invited - stats.total_completed
   const dashboardViewModel = productModule.buildDashboardViewModel({
     signalLabelLower: scanDefinition.signalLabelLower,
@@ -302,17 +313,45 @@ export default async function CampaignPage({ params }: Props) {
     updated_at: string
   }>
   const lifecycleDecisionCards = getLifecycleDecisionCards(stats.scan_type)
+  const primaryTeamPriority =
+    stats.scan_type === 'team' && teamPriorityRead?.status === 'ready'
+      ? teamPriorityRead.groups.find((group) => group.isPrimary) ?? null
+      : null
+  const primaryTeamQuestions =
+    stats.scan_type === 'team' && primaryTeamPriority
+      ? productModule.getFocusQuestions()[primaryTeamPriority.topFactorKey]?.[
+          teamPriorityBand(primaryTeamPriority.topFactorSignalValue)
+        ] ?? []
+      : []
+  const primaryTeamPlaybook =
+    stats.scan_type === 'team' && primaryTeamPriority
+      ? productModule.getActionPlaybooks()[primaryTeamPriority.topFactorKey]?.[
+          teamPriorityBand(primaryTeamPriority.topFactorSignalValue)
+        ] ?? null
+      : null
   const handoffTitle =
     stats.scan_type === 'retention'
       ? 'Bestuurlijke handoff en prioritering'
       : stats.scan_type === 'pulse'
         ? 'Pulse duiding en eerste vervolgactie'
+        : stats.scan_type === 'team'
+          ? 'Lokale duiding en eerste verificatie'
+          : stats.scan_type === 'onboarding'
+            ? 'Checkpoint duiding en eerste vervolgstap'
+            : stats.scan_type === 'leadership'
+              ? 'Managementcontext en eerste verificatie'
         : 'Vertrekduiding en managementgesprek'
   const handoffDescription =
     stats.scan_type === 'retention'
       ? 'Deze laag vertaalt RetentieScan naar een duidelijke lijn: wat is het beeld, wat moet je eerst toetsen en welke acties verdienen nu bestuurlijke aandacht.'
       : stats.scan_type === 'pulse'
         ? 'Deze laag vertaalt Pulse naar een bestuurlijk leesbare momentopname: wat vraagt nu aandacht, wat moet je als eerste bijsturen en welke review hoort hier direct achteraan.'
+        : stats.scan_type === 'team'
+          ? 'Deze laag vertaalt TeamScan naar een bestuurlijk leesbare lokale read: welke afdelingen vallen op, wat moet je eerst toetsen en welke lokale context vraagt nu als eerste aandacht.'
+          : stats.scan_type === 'onboarding'
+            ? 'Deze laag vertaalt onboarding naar een bestuurlijk leesbaar checkpointbeeld: wat valt nu op in vroege integratie, wat moet je eerst toetsen en welke beperkte correctie hoort hier direct achteraan.'
+            : stats.scan_type === 'leadership'
+              ? 'Deze laag vertaalt Leadership Scan naar een bestuurlijk leesbare managementread: welke context valt op, wat moet je eerst toetsen en welke begrensde managementstap hoort hier direct achteraan.'
         : 'Deze laag brengt ExitScan terug tot een bestuurlijk leesbaar vertrekbeeld: wat keert terug, wat lijkt beinvloedbaar en waar moet management eerst doorvragen.'
   const readinessLabel = hasEnoughData
     ? 'Beslisniveau bereikt'
@@ -322,12 +361,24 @@ export default async function CampaignPage({ params }: Props) {
   const focusBadgeLabel =
     stats.scan_type === 'pulse'
       ? 'Signaal -> bijsturen -> opnieuw meten'
+      : stats.scan_type === 'team'
+        ? 'Lokaliseren -> verifieren -> begrenzen'
+        : stats.scan_type === 'onboarding'
+          ? 'Checkpoint -> corrigeren -> opnieuw toetsen'
+          : stats.scan_type === 'leadership'
+            ? 'Duiden -> verifieren -> begrenzen'
       : stats.scan_type === 'retention'
         ? 'Signaleren -> valideren -> handelen'
         : 'Terugblik -> duiden -> verbeteren'
   const methodologyBadgeLabel =
     stats.scan_type === 'pulse'
       ? 'Snapshotcontext'
+      : stats.scan_type === 'team'
+        ? 'Lokale context'
+        : stats.scan_type === 'onboarding'
+          ? 'Checkpointcontext'
+          : stats.scan_type === 'leadership'
+            ? 'Managementcontext'
       : stats.scan_type === 'retention'
         ? 'Privacy-first'
         : 'Rapportcontext'
@@ -340,12 +391,12 @@ export default async function CampaignPage({ params }: Props) {
           summaryContextTone: 'emerald' as const,
           summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
           summaryLeadDescription:
-            'Lees RetentieScan eerst als groepssignaal: waar staat behoud onder druk, wat vraagt eerst verificatie en welk spoor verdient nu expliciet eigenaarschap.',
+            'Lees RetentieScan eerst als groepssignaal: waar staat behoud onder druk, wat vraagt eerst verificatie en welk spoor moet daarna in Wat nu als eerste route worden gekozen.',
           summaryCardEyebrow: 'Behoudsspoor',
           promotedSummaryCards: 2,
           driverTitle: 'Signaalbeeld en behoudsdruk',
           driverDescription:
-            'Start bij retentiesignaal, trend en aanvullende signalen. Gebruik factoren en segmenten daarna om te bepalen waar behoud eerst verificatie of opvolging vraagt.',
+            'Start bij retentiesignaal, trend en aanvullende signalen. Gebruik factoren en segmenten daarna om te bepalen waarom dit beeld ontstaat en waar behoud eerst nadere toetsing vraagt.',
           driverIntro:
             'Begin met het groepssignaal en open pas daarna factoren, trend en aanvullende lagen. Zo blijft RetentieScan een verification-first managementinstrument in plaats van een losse analysetabel.',
           driverAsideLabel: hasEnoughData ? 'Behoudsdrivers live' : 'Wacht op meer data',
@@ -358,7 +409,7 @@ export default async function CampaignPage({ params }: Props) {
           factorTabLabel: 'Behoudsdrivers',
           factorTabTitle: 'Werkfactoren achter behoudsdruk',
           factorTabDescription:
-            'Gebruik de laagst scorende werkfactoren als eerste verificatiespoor voor managementgesprekken en teamopvolging.',
+            'Gebruik de laagst scorende werkfactoren als eerste verklarende laag voor managementgesprekken en gerichte verificatie.',
           supplementalTabLabel: 'Aanvullende signalen',
           supplementalTitle: 'Aanvullende signalen en SDT-basis',
           supplementalDescription:
@@ -366,18 +417,156 @@ export default async function CampaignPage({ params }: Props) {
           actionTitle: 'Waar behoud eerst aandacht vraagt',
           focusQuestionTitle: 'Prioritaire verificatievragen',
           focusQuestionDescription:
-            'Start met de factoren en signalen die het eerst verificatie vragen. Gebruik de vragen direct als brug naar eigenaar, eerste interventie en reviewmoment.',
-          playbookTitle: 'Behoudsplaybooks en eerste interventies',
+            'Start met de factoren en signalen die het eerst verificatie vragen. Gebruik de vragen om te bepalen wat in Wat nu de eerste managementroute wordt.',
+          playbookTitle: 'Behoudsplaybooks onder de gekozen route',
           playbookDescription:
-            'Deze routes helpen RetentieScan om niet bij signalering te blijven hangen, maar te landen in verificatie, interventie en review.',
+            'Deze playbooks vormen de uitvoerlaag onder de gekozen managementroute. Ze helpen van verificatie naar uitvoering te gaan zonder nieuwe prioriteiten te openen.',
           routeTitle: 'Van retentiesignaal naar managementroute',
           routeDescription:
-            'Deze laag brengt de eerste managementread, verificatie en het logische reviewmoment samen zonder de executive hoofdlijn te verstoren.',
+            'Deze laag bundelt de gekozen route, eerste eigenaar, eerste stap en het logische reviewmoment zonder de executive hoofdlijn te verstoren.',
           routeBadgeLabel: 'Behoudsroute',
           afterSessionTitle: 'Na de eerste managementsessie',
           afterSessionDescription:
             'Gebruik het eerste reviewmoment om bewust te kiezen: blijf je op hetzelfde behoudsspoor, is segmentverdieping logisch of vraagt de volgende stap vooral een gerichte interventie en vervolgmeting?',
         }
+      : stats.scan_type === 'team'
+        ? {
+            summaryTone: 'blue' as const,
+            summarySignalLabel: 'Teamsignaal',
+            summaryContextLabel: 'Lokale read · department-first',
+            summaryContextTone: 'blue' as const,
+            summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
+          summaryLeadDescription:
+              'Lees TeamScan eerst als veilige lokale contextlaag: welke afdelingen vallen op, welke factor kleurt dat beeld en welke lokale verificatie hoort nu als eerste.',
+            summaryCardEyebrow: 'Lokaal spoor',
+            promotedSummaryCards: 2,
+            driverTitle: 'Teamsignaal en lokale context',
+            driverDescription:
+              'Gebruik deze laag om het actuele teamsignaal gecontroleerd te verdiepen zonder TeamScan te verwarren met segment deep dive of manager ranking.',
+            driverIntro:
+              'Start bij de lokale read en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke afdelingen eerst verificatie vragen.',
+            driverAsideLabel: hasEnoughData ? 'Lokale read live' : 'Wacht op meer data',
+            driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
+            driverTabOrder: ['lokaal', 'factoren', 'signalen', 'aanvullend'],
+            signalTabLabel: 'Signaalverdeling',
+            signalTabTitle: 'Teamsignaal op groepsniveau',
+            signalTabDescription:
+              'Laat zien hoe breed en hoe scherp het teamsignaal zich over de totale groep verdeelt voordat je naar afdelingen kijkt.',
+            factorTabLabel: 'Lokale drivers',
+            factorTabTitle: 'Werkfactoren achter lokale frictie',
+          factorTabDescription:
+              'Gebruik de scherpste werkfactoren als eerste verklarende laag om te bepalen welke afdelingen lokale verificatie verdienen.',
+            supplementalTabLabel: 'SDT-basis',
+            supplementalTitle: 'Werkbeleving en SDT-basis',
+            supplementalDescription:
+              'Deze laag laat zien hoe autonomie, competentie en verbondenheid onder het huidige teamsignaal liggen en welke lokale context daardoor meer spanning laat zien.',
+            actionTitle: 'Waar eerst lokaal op handelen',
+            focusQuestionTitle: 'Prioritaire lokale verificatievragen',
+            focusQuestionDescription:
+              'Start met de factoren die het teamsignaal het scherpst kleuren en gebruik de vragen om te bepalen wat lokaal eerst getoetst moet worden.',
+            playbookTitle: 'Lokale playbooks en eerste verificatie',
+            playbookDescription:
+              'Deze playbooks vormen de uitvoerlaag onder de gekozen lokale route. Ze helpen van verificatie naar een begrensde vervolgstap te gaan zonder de vraag breder te maken dan nodig.',
+            routeTitle: 'Van TeamScan naar lokale managementroute',
+            routeDescription:
+              'Deze laag bundelt de gekozen lokale route, eerste eigenaar, eerste stap en de bewuste begrenzing van TeamScan zonder de executive hoofdlijn te verstoren.',
+            routeBadgeLabel: 'Lokale route',
+            afterSessionTitle: 'Na de eerste managementsessie',
+            afterSessionDescription:
+              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een lokale vervolgstap logisch, is bredere diagnose weer nodig of vraagt dit signaal juist minder lokalisatie dan gedacht?',
+          }
+      : stats.scan_type === 'onboarding'
+        ? {
+            summaryTone: 'blue' as const,
+            summarySignalLabel: 'Onboardingsignaal',
+            summaryContextLabel: 'Checkpoint-read · enkel meetmoment',
+            summaryContextTone: 'blue' as const,
+            summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
+            summaryLeadDescription:
+              'Lees onboarding eerst als vroege lifecycle-read: welke succesvoorwaarden vallen op, welke frictie is nu zichtbaar en welke beperkte correctie hoort bij dit checkpoint.',
+            summaryCardEyebrow: 'Checkpointspoor',
+            promotedSummaryCards: 2,
+            driverTitle: 'Onboardingsignaal en checkpointcontext',
+            driverDescription:
+              'Gebruik deze laag om het actuele checkpointbeeld gecontroleerd te verdiepen zonder onboarding te verwarren met client onboarding of een volledige 30-60-90-journey.',
+            driverIntro:
+              'Start bij de checkpointread en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke vroege factor nu eerst aandacht vraagt.',
+            driverAsideLabel: hasEnoughData ? 'Checkpoint read live' : 'Wacht op meer data',
+            driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
+            driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
+            signalTabLabel: 'Checkpointbeeld',
+            signalTabTitle: 'Onboardingsignaal op groepsniveau',
+            signalTabDescription:
+              'Laat zien hoe breed en hoe scherp het huidige checkpointsignaal zich over de groep verdeelt zonder dit als journey- of retentieclaim te lezen.',
+            factorTabLabel: 'Checkpointdrivers',
+            factorTabTitle: 'Werkfactoren achter vroege frictie',
+            factorTabDescription:
+              'Gebruik de scherpste werkfactoren als eerste managementspoor om te bepalen waar nieuwe instroom nu meer steun, duidelijkheid of inbedding nodig heeft.',
+            supplementalTabLabel: 'SDT-basis',
+            supplementalTitle: 'Werkbeleving en SDT-basis',
+            supplementalDescription:
+              'Deze laag laat zien hoe autonomie, competentie en verbondenheid onder het huidige onboardingcheckpoint liggen en welke vroege context daardoor meer spanning laat zien.',
+            actionTitle: 'Waar eerst op handelen',
+            focusQuestionTitle: 'Prioritaire checkpointvragen',
+            focusQuestionDescription:
+              'Start met de factoren die het checkpointbeeld het scherpst kleuren en gebruik de vragen om te bepalen wat eerst getoetst moet worden voordat een correctieroute wordt gekozen.',
+            playbookTitle: 'Checkpointplaybooks en eerste correctie',
+            playbookDescription:
+              'Deze playbooks vormen de uitvoerlaag onder de gekozen correctieroute. Ze helpen van verificatie naar een beperkte eerste correctie en een logisch volgend checkpoint te gaan.',
+            routeTitle: 'Van onboardingread naar managementroute',
+            routeDescription:
+              'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische vervolgmoment samen zonder onboarding te verwarren met een brede lifecycle-suite.',
+            routeBadgeLabel: 'Checkpointroute',
+            afterSessionTitle: 'Na de eerste managementsessie',
+            afterSessionDescription:
+              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een later checkpoint logisch, vraagt deze instroomfrictie eerst extra verificatie of hoort de vraag thuis in een andere productvorm?',
+          }
+      : stats.scan_type === 'leadership'
+        ? {
+            summaryTone: 'blue' as const,
+            summarySignalLabel: 'Leadershipsignaal',
+            summaryContextLabel: 'Managementread · group-level only',
+            summaryContextTone: 'blue' as const,
+            summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
+            summaryLeadDescription:
+              'Lees Leadership Scan eerst als geaggregeerde managementcontext-read: welke leiderschaps- of prioriteringsfactor valt op, welke context vraagt nu duiding en welke kleine managementstap hoort daar logisch bij.',
+            summaryCardEyebrow: 'Managementspoor',
+            promotedSummaryCards: 2,
+            driverTitle: 'Leadershipsignaal en managementcontext',
+            driverDescription:
+              'Gebruik deze laag om het actuele leadershipbeeld gecontroleerd te verdiepen zonder Leadership Scan te verwarren met TeamScan, segment deep dive of een named leader view.',
+            driverIntro:
+              'Start bij de managementread en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke context eerst duiding verdient.',
+            driverAsideLabel: hasEnoughData ? 'Managementread live' : 'Wacht op meer data',
+            driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
+            driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
+            signalTabLabel: 'Managementbeeld',
+            signalTabTitle: 'Leadershipsignaal op groepsniveau',
+            signalTabDescription:
+              'Laat zien hoe breed en hoe scherp het huidige managementcontextsignaal zich over de groep verdeelt zonder dit te lezen als named leader of performanceclaim.',
+            factorTabLabel: 'Managementdrivers',
+            factorTabTitle: 'Werkfactoren achter managementfrictie',
+            factorTabDescription:
+              'Gebruik de scherpste werkfactoren als eerste managementspoor om te bepalen waar de huidige aansturing of prioritering eerst duiding vraagt.',
+            supplementalTabLabel: 'SDT-basis',
+            supplementalTitle: 'Werkbeleving en SDT-basis',
+            supplementalDescription:
+              'Deze laag laat zien hoe autonomie, competentie en verbondenheid onder het huidige leadershipsignaal liggen en welke managementcontext daardoor meer spanning laat zien.',
+            actionTitle: 'Waar eerst op handelen',
+            focusQuestionTitle: 'Prioritaire managementvragen',
+            focusQuestionDescription:
+              'Start met de factoren die het leadershipbeeld het scherpst kleuren en gebruik de vragen om te bepalen wat eerst getoetst moet worden voordat een managementroute wordt gekozen.',
+            playbookTitle: 'Managementplaybooks en eerste verificatie',
+            playbookDescription:
+              'Deze playbooks vormen de uitvoerlaag onder de gekozen managementroute. Ze helpen van duiding naar een begrensde eerste stap te gaan zonder named leader output te openen.',
+            routeTitle: 'Van Leadership Scan naar managementroute',
+            routeDescription:
+              'Deze laag brengt eerste managementgebruik, de gekozen verificatie of correctie en het logische reviewmoment samen zonder Leadership Scan te verwarren met een hierarchy- of 360-suite.',
+            routeBadgeLabel: 'Managementroute',
+            afterSessionTitle: 'Na de eerste managementsessie',
+            afterSessionDescription:
+              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een begrensde managementroute logisch, vraagt de vraag toch bredere diagnose of hoort Leadership Scan juist niet verder op te schalen binnen deze context?',
+          }
       : stats.scan_type === 'exit'
         ? {
             summaryTone: 'blue' as const,
@@ -412,13 +601,13 @@ export default async function CampaignPage({ params }: Props) {
             actionTitle: 'Waar eerst op handelen',
             focusQuestionTitle: 'Prioritaire focusvragen',
             focusQuestionDescription:
-              'Start met de factoren die het vertrekbeeld het scherpst kleuren en gebruik de vragen direct als brug naar gesprek, eigenaar, eerste actie en reviewmoment.',
+              'Start met de factoren die het vertrekbeeld het scherpst kleuren en gebruik de vragen om te bepalen wat eerst getoetst moet worden voordat de eerste route wordt gekozen.',
             playbookTitle: 'Besluit- en eigenaarschapsroutes',
             playbookDescription:
-              'Deze routes helpen ExitScan om niet bij vertrekduiding te blijven hangen, maar snel naar keuze, eigenaar, eerste actie en reviewmoment te gaan.',
+              'Deze playbooks vormen de uitvoerlaag onder de gekozen managementroute. Ze helpen van vertrekduiding naar uitvoering te gaan zonder nieuwe prioriteiten buiten het gekozen spoor te openen.',
             routeTitle: 'Van vertrekduiding naar managementroute',
             routeDescription:
-              'Deze laag brengt de eerste managementread, de gekozen verbeterrichting en het logische reviewmoment samen zonder de kernflow bovenin te verstoren.',
+              'Deze laag bundelt de gekozen managementroute, eerste eigenaar, eerste stap en het logische reviewmoment zonder de kernflow bovenin te verstoren.',
             routeBadgeLabel: 'Vertrekroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
@@ -431,7 +620,7 @@ export default async function CampaignPage({ params }: Props) {
             summaryContextTone: 'blue' as const,
             summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
             summaryLeadDescription:
-              'Gebruik deze eerste laag om het primaire managementsignaal, het eerste werkspoor, de eerste eigenaar en het logische hercheckmoment snel scherp te krijgen.',
+              'Gebruik deze eerste laag om het primaire managementsignaal en het eerste werkspoor snel scherp te krijgen, voordat een route, eigenaar en hercheckmoment worden gekozen.',
             summaryCardEyebrow: 'Pulse handoff',
             promotedSummaryCards: 2,
             driverTitle: 'Pulse snapshot en reviewdelta',
@@ -453,13 +642,13 @@ export default async function CampaignPage({ params }: Props) {
             supplementalTitle: 'SDT basisbehoeften',
             supplementalDescription:
               'Deze laag laat zien hoe de fundamentele werkbeleving onder de actuele Pulse-signalen mee beweegt.',
-            actionTitle: 'Prioriteiten, playbooks en eerste acties',
+            actionTitle: 'Prioriteiten en route-uitvoer',
             focusQuestionTitle: 'Prioritaire focusvragen',
             focusQuestionDescription:
-              'Start met de factoren die het scherpst afwijken en gebruik de vragen direct als brug naar gesprek, eigenaar, eerste correctie en bounded reviewmoment.',
+              'Start met de factoren die het scherpst afwijken en gebruik de vragen om te bepalen wat eerst getoetst moet worden voordat een bounded route wordt gekozen.',
             playbookTitle: 'Pulse playbooks en eerstvolgende correctie',
             playbookDescription:
-              'Deze playbooks helpen Pulse om niet bij signalering te blijven hangen, maar te landen in keuze, actie, eigenaar en een logisch bounded hercheckmoment.',
+              'Deze playbooks vormen de uitvoerlaag onder de gekozen bounded route. Ze helpen van verificatie naar correctie en een logisch hercheckmoment te gaan.',
             routeTitle: 'Van Pulse read naar bounded repeat motion',
             routeDescription:
               'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische volgende meetmoment samen zonder Pulse te verwarren met een brede diagnose- of rapportroute.',
@@ -473,7 +662,11 @@ export default async function CampaignPage({ params }: Props) {
     value: string
     tone?: 'slate' | 'blue' | 'emerald' | 'amber'
   }> = [
-    { label: 'Scan', value: scanDefinition.productName, tone: stats.scan_type === 'retention' ? 'emerald' : 'blue' },
+    {
+      label: 'Scan',
+      value: scanDefinition.productName,
+      tone: stats.scan_type === 'retention' ? 'emerald' : 'blue',
+    },
     {
       label: productExperience.summarySignalLabel,
       value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : 'Nog geen veilig beeld',
@@ -488,10 +681,22 @@ export default async function CampaignPage({ params }: Props) {
   ]
   const sectionAnchors = [
     { id: 'samenvatting', label: 'Samenvatting' },
-    { id: 'handoff', label: stats.scan_type === 'retention' ? 'Behoudsread' : 'Handoff' },
-    { id: 'drivers', label: stats.scan_type === 'retention' ? 'Signalen' : 'Drivers' },
-    { id: 'acties', label: stats.scan_type === 'retention' ? 'Behoudsacties' : 'Acties' },
-    { id: 'route', label: stats.scan_type === 'retention' ? 'Behoudsroute' : 'Route' },
+    {
+      id: 'handoff',
+      label: stats.scan_type === 'retention' ? 'Behoudsread' : stats.scan_type === 'team' ? 'Lokale read' : 'Handoff',
+    },
+    {
+      id: 'drivers',
+      label: stats.scan_type === 'retention' ? 'Signalen' : stats.scan_type === 'team' ? 'Lokaal' : 'Drivers',
+    },
+    {
+      id: 'acties',
+      label: stats.scan_type === 'retention' ? 'Behoudsacties' : stats.scan_type === 'team' ? 'Lokale acties' : 'Acties',
+    },
+    {
+      id: 'route',
+      label: stats.scan_type === 'retention' ? 'Behoudsroute' : stats.scan_type === 'team' ? 'Lokale route' : 'Route',
+    },
     { id: 'methodiek', label: 'Methodiek' },
     { id: 'operatie', label: 'Operatie' },
   ]
@@ -506,6 +711,69 @@ export default async function CampaignPage({ params }: Props) {
       : dashboardViewModel.topSummaryCards
   const availableDriverTabs = hasEnoughData
     ? [
+        ...(
+          stats.scan_type === 'team' && teamLocalRead
+            ? [
+                {
+                  id: 'lokaal',
+                  label: 'Lokale read',
+                  content: (
+                    <div className="space-y-5">
+                      <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <h3 className="text-sm font-semibold text-slate-950">{teamLocalRead.summaryTitle}</h3>
+                          <DashboardChip label={`${teamLocalRead.coverageCount}/${teamLocalRead.totalResponses} met afdeling`} tone="slate" />
+                          <DashboardChip
+                            label={
+                              teamLocalRead.status === 'ready'
+                                ? `${teamLocalRead.safeGroupCount} veilige afdelingen`
+                                : 'Fallback actief'
+                            }
+                            tone={teamLocalRead.status === 'ready' ? 'emerald' : 'amber'}
+                          />
+                          <DashboardChip
+                            label={
+                              teamPriorityRead?.status === 'ready'
+                                ? `Meenemen in verificatie: ${teamPriorityRead.firstPriorityLabel}`
+                                : teamPriorityRead?.status === 'no_hard_order'
+                                  ? 'Nog geen harde volgorde'
+                                  : 'Prioriteit nog niet vrijgegeven'
+                            }
+                            tone={teamPriorityRead?.status === 'ready' ? 'amber' : 'blue'}
+                          />
+                        </div>
+                        <p className="mt-1 text-sm leading-6 text-slate-600">
+                          {teamPriorityRead?.summaryBody ?? teamLocalRead.summaryBody}
+                        </p>
+                        <p className="mt-3 text-xs leading-6 text-slate-500">
+                          {teamPriorityRead?.caution ?? teamLocalRead.caution}
+                        </p>
+                      </div>
+
+                      {teamLocalRead.status === 'ready' && teamPriorityRead ? (
+                        <div className="grid gap-4 lg:grid-cols-3">
+                          {teamPriorityRead.groups.map((group) => (
+                            <DashboardPanel
+                              key={group.label}
+                              eyebrow={`${group.priorityTitle} · Afdeling · n = ${group.n}`}
+                              title={group.label}
+                              value={`${group.avgSignal.toFixed(1)}/10`}
+                              body={`${group.summary} ${group.priorityBody} Eerste lokale factor: ${group.topFactorLabel}.`}
+                              tone={group.priorityTone}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
+                          TeamScan blijft in deze situatie bewust op organisatieniveau. Zodra genoeg afdelingsmetadata en veilige groepsgroottes beschikbaar zijn, verschijnt de lokale read hier.
+                        </div>
+                      )}
+                    </div>
+                  ),
+                },
+              ]
+            : []
+        ),
         {
           id: 'signalen',
           label: productExperience.signalTabLabel,
@@ -687,15 +955,30 @@ export default async function CampaignPage({ params }: Props) {
             </>
           }
           actions={
-            <>
-              {!profile?.is_verisight_admin ? <OnboardingAdvancer fromStep={1} /> : null}
-              <div className="relative">
-                {!profile?.is_verisight_admin ? (
-                  <OnboardingBalloon step={2} label="Download hier je rapport" align="left" />
-                ) : null}
-                <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
-              </div>
-            </>
+            stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
+              <>
+                {!profile?.is_verisight_admin ? <OnboardingAdvancer fromStep={1} /> : null}
+                <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
+                  {stats.scan_type === 'pulse'
+                    ? 'Pulse: management handoff live'
+                    : stats.scan_type === 'team'
+                      ? 'TeamScan: lokale read live'
+                      : stats.scan_type === 'onboarding'
+                        ? 'Onboarding: checkpoint read live'
+                        : 'Leadership Scan: management read live'}
+                </div>
+              </>
+            ) : (
+              <>
+                {!profile?.is_verisight_admin ? <OnboardingAdvancer fromStep={1} /> : null}
+                <div className="relative">
+                  {!profile?.is_verisight_admin ? (
+                    <OnboardingBalloon step={2} label="Download hier je rapport" align="left" />
+                  ) : null}
+                  <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
+                </div>
+              </>
+            )
           }
           aside={
             <div className="space-y-3">
@@ -752,9 +1035,15 @@ export default async function CampaignPage({ params }: Props) {
         items={summaryItems}
         anchors={sectionAnchors}
         actions={
-          stats.scan_type === 'pulse' ? (
+          stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
             <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
-              Pulse: management handoff live
+              {stats.scan_type === 'pulse'
+                ? 'Pulse: management handoff live'
+                : stats.scan_type === 'team'
+                  ? 'TeamScan: lokale read live'
+                  : stats.scan_type === 'onboarding'
+                    ? 'Onboarding: checkpoint read live'
+                    : 'Leadership Scan: management read live'}
             </div>
           ) : (
             <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
@@ -851,6 +1140,57 @@ export default async function CampaignPage({ params }: Props) {
             </div>
           </div>
 
+          {stats.scan_type === 'team' && hasEnoughData ? (
+            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+              <div className="flex flex-wrap items-center gap-3">
+                <h3 className="text-sm font-semibold text-slate-950">Lokale managementhandoff</h3>
+                <DashboardChip
+                  label={primaryTeamPriority ? `Eerst: ${primaryTeamPriority.label}` : 'Bounded handoff'}
+                  tone={primaryTeamPriority ? 'amber' : 'blue'}
+                />
+              </div>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                {primaryTeamPriority && primaryTeamPlaybook
+                ? `Gebruik deze TeamScan nu als compacte handoff: ${primaryTeamPriority.label} vraagt eerst verificatie op ${primaryTeamPriority.topFactorLabel.toLowerCase()}, daarna kies je bewust wie de eerste lokale stap trekt en hoe begrensd de review blijft.`
+                  : 'TeamScan geeft al wel lokale richting, maar houdt de handoff hier bewust bounded zolang er nog geen eerlijke eerste prioriteit kan worden vrijgegeven.'}
+              </p>
+              <div className="mt-4 grid gap-4 lg:grid-cols-4">
+                <DashboardPanel
+                  eyebrow="Afdeling"
+                  title={primaryTeamPriority?.label ?? 'Nog niet vrijgegeven'}
+                  value={primaryTeamPriority?.priorityTitle}
+                  body={
+                    primaryTeamPriority
+                      ? `${primaryTeamPriority.topFactorLabel} is hier nu het scherpste lokale spoor.`
+                      : 'Gebruik meerdere zichtbare afdelingen voorlopig als gespreksinput zonder geforceerde top-1.'
+                  }
+                  tone={primaryTeamPriority ? 'amber' : 'blue'}
+                />
+                <DashboardPanel
+                  eyebrow="Eerste eigenaar"
+                  title={primaryTeamPlaybook?.owner ?? 'HR + afdelingsleider'}
+                  body="Maak expliciet wie de eerste lokale managementhuddle trekt en wie de vervolgstap terugbrengt in de review."
+                  tone="emerald"
+                />
+                <DashboardPanel
+                  eyebrow="Begrensde eerste actie"
+                  title={primaryTeamPlaybook?.actions[0] ?? 'Kies eerst een kleine lokale check'}
+                  body={
+                    primaryTeamPlaybook?.decision ??
+                    'TeamScan blijft hier gericht op een kleine lokale verificatie of correctie, niet op een brede interventie.'
+                  }
+                  tone="blue"
+                />
+                <DashboardPanel
+                  eyebrow="Reviewgrens"
+                  title={primaryTeamPlaybook?.review ?? 'Lokale hercheck eerst'}
+                  body="Gebruik het reviewmoment om bewust te kiezen: nog een lokale vervolgstap, terug naar bredere diagnose of juist stoppen met verder lokaliseren."
+                  tone="amber"
+                />
+              </div>
+            </div>
+          ) : null}
+
           {dashboardViewModel.profileCards.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
               {dashboardViewModel.profileCards.map((card) => (
@@ -936,17 +1276,75 @@ export default async function CampaignPage({ params }: Props) {
       >
         {hasEnoughData ? (
           <div className="space-y-5">
+            {stats.scan_type === 'team' && teamPriorityRead ? (
+              <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                <h3 className="text-sm font-semibold text-slate-950">
+                  {teamPriorityRead.status === 'ready'
+                    ? 'Eerste lokale verificatie en handoff'
+                    : 'Lokale prioriteit blijft bounded'}
+                </h3>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{teamPriorityRead.summaryBody}</p>
+                {primaryTeamPriority && primaryTeamPlaybook ? (
+                  <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+                    <DashboardPanel
+                      eyebrow="Afdeling eerst"
+                      title={primaryTeamPriority.label}
+                      value={primaryTeamPriority.priorityTitle}
+                      body={`${primaryTeamPriority.topFactorLabel} is hier nu het scherpste lokale spoor. Gebruik deze afdeling als eerste bounded managementcheck, niet als definitieve eindconclusie.`}
+                      tone="amber"
+                    />
+                    <DashboardPanel
+                      eyebrow="Eerste eigenaar"
+                      title={primaryTeamPlaybook.owner}
+                      body="Deze combinatie trekt de eerste lokale check en bewaakt tegelijk dat TeamScan bounded blijft."
+                      tone="blue"
+                    />
+                    <DashboardPanel
+                      eyebrow="Eerste bounded check"
+                      title={primaryTeamPlaybook.validate}
+                      body={
+                        primaryTeamQuestions[0] ??
+                        'Gebruik het eerstvolgende afdelingsgesprek om dit lokale spoor expliciet te verifieren.'
+                      }
+                      tone="emerald"
+                    />
+                    <DashboardPanel
+                      eyebrow="Reviewgrens"
+                      title={primaryTeamPlaybook.actions[0] ?? primaryTeamPlaybook.title}
+                      body={
+                        primaryTeamPlaybook.review ??
+                        'Leg direct vast wanneer deze lokale check opnieuw wordt gelezen en of TeamScan daarna nog een tweede bounded stap nodig heeft.'
+                      }
+                      tone="blue"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
+                    TeamScan toont hier bewust nog geen harde eerste volgorde. Gebruik de lokale read om meerdere afdelingen te bespreken, een eigenaar te benoemen en pas na de eerste bounded check te bepalen of een hardere volgorde nodig is.
+                  </div>
+                )}
+              </div>
+            ) : null}
+
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
               <h3 className="text-sm font-semibold text-slate-950">{productExperience.focusQuestionTitle}</h3>
               <p className="mt-1 text-sm leading-6 text-slate-600">
                 {productExperience.focusQuestionDescription}
               </p>
               <div className="mt-4">
-                <RecommendationList factorAverages={factorData.orgAverages} scanType={stats.scan_type} />
+                <RecommendationList
+                  factorAverages={factorData.orgAverages}
+                  scanType={stats.scan_type}
+                  bandOverride={
+                    stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
+                      ? dashboardViewModel.managementBandOverride
+                      : undefined
+                  }
+                />
               </div>
             </div>
 
-            {stats.scan_type === 'retention' || stats.scan_type === 'exit' || stats.scan_type === 'pulse' ? (
+            {stats.scan_type === 'retention' || stats.scan_type === 'exit' || stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
               <>
                 <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
                   <h3 className="text-sm font-semibold text-slate-950">{productExperience.playbookTitle}</h3>
@@ -957,7 +1355,15 @@ export default async function CampaignPage({ params }: Props) {
                     <p className="mt-2 text-xs leading-6 text-slate-500">{playbookCalibrationNote}</p>
                   ) : null}
                   <div className="mt-4">
-                    <ActionPlaybookList factorAverages={factorData.orgAverages} scanType={stats.scan_type} />
+                    <ActionPlaybookList
+                      factorAverages={factorData.orgAverages}
+                      scanType={stats.scan_type}
+                      bandOverride={
+                        stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
+                          ? dashboardViewModel.managementBandOverride
+                          : undefined
+                      }
+                    />
                   </div>
                 </div>
 
@@ -983,7 +1389,7 @@ export default async function CampaignPage({ params }: Props) {
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-            Focusvragen en playbooks worden betekenisvoller zodra het dashboard minstens {MIN_N_PATTERNS} responses heeft.
+            Focusvragen en route-uitvoer worden betekenisvoller zodra het dashboard minstens {MIN_N_PATTERNS} responses heeft.
           </div>
         )}
       </DashboardSection>
@@ -1011,6 +1417,50 @@ export default async function CampaignPage({ params }: Props) {
             <p className="mt-1 text-sm leading-6 text-slate-700">
               {productExperience.afterSessionDescription}
             </p>
+            {stats.scan_type === 'team' ? (
+              <div className="mt-4 grid gap-4 lg:grid-cols-3">
+                <DashboardPanel
+                  eyebrow="Als de lokale check bevestigt"
+                  title="Blijf bounded op dezelfde route"
+                  body="Doe alleen een volgende lokale check als route, lokale actie en reviewmoment uit deze TeamScan al expliciet zijn gemaakt."
+                  tone="blue"
+                />
+                <DashboardPanel
+                  eyebrow="Als de vraag breder wordt"
+                  title="Ga terug naar bredere diagnose"
+                  body="Schakel niet door naar extra lokalisatie als de echte vraag weer organisatieniveau, behoudsbeeld of bredere diagnose vraagt."
+                  tone="amber"
+                />
+                <DashboardPanel
+                  eyebrow="Als de onderbouwing te smal blijft"
+                  title="Stop met verder lokaliseren"
+                  body="Open geen extra TeamScan-verbreding zolang metadata, groepsgrootte of lokale bevestiging daar nog geen eerlijke basis voor geven."
+                  tone="emerald"
+                />
+              </div>
+            ) : null}
+            {stats.scan_type === 'leadership' ? (
+              <div className="mt-4 grid gap-4 lg:grid-cols-3">
+                <DashboardPanel
+                  eyebrow="Als de managementcheck bevestigt"
+                  title="Blijf bounded op dezelfde route"
+                  body="Doe alleen een volgende Leadership-check als eigenaar, kleine verificatie of correctie en reviewmoment uit deze managementread al expliciet zijn gemaakt."
+                  tone="blue"
+                />
+                <DashboardPanel
+                  eyebrow="Als de vraag breder wordt"
+                  title="Ga terug naar bredere diagnose"
+                  body="Schakel niet door naar extra Leadership-verbreding als de echte vraag weer lokale lokalisatie, bredere diagnose of een ander productspoor vraagt."
+                  tone="amber"
+                />
+                <DashboardPanel
+                  eyebrow="Als de onderbouwing te smal blijft"
+                  title="Open geen named leaders of 360"
+                  body="Maak Leadership Scan niet groter dan deze wave draagt zolang groepsniveau, suppressie en de huidige data nog geen eerlijke basis geven voor named leader of 360-output."
+                  tone="emerald"
+                />
+              </div>
+            ) : null}
             <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {lifecycleDecisionCards.map((card) => (
                 <DashboardPanel

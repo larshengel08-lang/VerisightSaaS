@@ -25,12 +25,12 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Vertrouwen',
   description:
-    'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan en bounded vervolgroutes.',
+    'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan, Pulse, TeamScan, onboarding en Leadership Scan.',
   alternates: { canonical: '/vertrouwen' },
   openGraph: {
     title: 'Vertrouwen | Verisight',
     description:
-      'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan en bounded vervolgroutes.',
+      'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan, Pulse, TeamScan, onboarding en Leadership Scan.',
     url: 'https://www.verisight.nl/vertrouwen',
     images: ['/opengraph-image'],
   },
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vertrouwen | Verisight',
     description:
-      'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan en bounded vervolgroutes.',
+      'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan, Pulse, TeamScan, onboarding en Leadership Scan.',
     images: ['/opengraph-image'],
   },
 }
@@ -64,11 +64,11 @@ export default function VertrouwenPage() {
         ctaLabel="Plan een kennismaking"
         heroIntro={
           <MarketingHeroIntro>
-            <p className="marketing-hero-eyebrow text-[#3C8D8A]">Vertrouwen</p>
-            <h1 className="marketing-hero-title marketing-hero-title-page font-display text-[#132033]">
+            <p className="marketing-hero-eyebrow text-[var(--teal)]">Vertrouwen</p>
+            <h1 className="marketing-hero-title marketing-hero-title-page font-display text-[var(--ink)]">
               Methodiek, privacy en rapportgrenzen in gewone managementtaal.
             </h1>
-            <p className="marketing-hero-copy text-[#4A5563]">
+            <p className="marketing-hero-copy text-[var(--text)]">
               Verisight laat publiek zien hoe methodiek, privacy, rapportlezing en formele basis zijn ingericht.
               Deze publieke trustlaag maakt toetsbaar wat de output wel en niet belooft, zodat u dit kunt verifiëren
               voordat een traject start.
@@ -91,9 +91,9 @@ export default function VertrouwenPage() {
           <MarketingHeroSupport>
             {trustQuickLinks.slice(0, 2).map((link) => (
               <Link key={link.href} href={link.href} className="marketing-link-card transition-colors hover:border-[#3C8D8A]">
-                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#9CA3AF]">Publieke basis</p>
-                <p className="mt-2 text-base font-semibold text-[#132033]">{link.label}</p>
-                <p className="mt-2 text-sm leading-6 text-[#4A5563]">{link.body}</p>
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Publieke basis</p>
+                <p className="mt-2 text-base font-semibold text-[var(--ink)]">{link.label}</p>
+                <p className="mt-2 text-sm leading-6 text-[var(--text)]">{link.body}</p>
               </Link>
             ))}
           </MarketingHeroSupport>
@@ -108,8 +108,8 @@ export default function VertrouwenPage() {
           <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {trustSignalHighlights.map((item) => (
               <div key={item.title} className="marketing-feature-card">
-                <p className="text-base font-semibold text-[#132033]">{item.title}</p>
-                <p className="mt-3 text-sm leading-7 text-[#4A5563]">{item.body}</p>
+                <p className="text-base font-semibold text-[var(--ink)]">{item.title}</p>
+                <p className="mt-3 text-sm leading-7 text-[var(--text)]">{item.body}</p>
               </div>
             ))}
           </div>
@@ -118,12 +118,12 @@ export default function VertrouwenPage() {
         <MarketingSection tone="plain">
           <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
             <div className="marketing-feature-card">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#3C8D8A]">Wat u publiek kunt verifieren</p>
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--teal)]">Wat u publiek kunt verifieren</p>
               <div className="mt-4 space-y-3">
                 {trustVerificationCards.map((card) => (
-                  <div key={card.title} className="rounded-[1.15rem] border border-[#E5E0D6] bg-white px-4 py-4">
-                    <p className="text-base font-semibold text-[#132033]">{card.title}</p>
-                    <p className="mt-2 text-sm leading-7 text-[#4A5563]">{card.body}</p>
+                  <div key={card.title} className="rounded-[1.15rem] border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
+                    <p className="text-base font-semibold text-[var(--ink)]">{card.title}</p>
+                    <p className="mt-2 text-sm leading-7 text-[var(--text)]">{card.body}</p>
                   </div>
                 ))}
               </div>
@@ -135,7 +135,7 @@ export default function VertrouwenPage() {
               </h2>
               <p className="mt-4 text-sm leading-7 text-[rgba(247,245,241,0.72)]">
                 Verisight werkt met geaggregeerde uitkomsten en benoemt bewust wat wel en niet geconcludeerd kan
-                worden.
+                worden, inclusief de grens tussen Leadership Scan, TeamScan, named leaders en 360-verwachtingen.
               </p>
               <div className="mt-6 space-y-3">
                 {trustItems.map((item) => (
@@ -171,17 +171,17 @@ export default function VertrouwenPage() {
           <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {trustHubAnswerCards.map((card) => (
               <div key={card.title} className="marketing-feature-card">
-                <p className="text-base font-semibold text-[#132033]">{card.title}</p>
-                <p className="mt-3 text-sm leading-7 text-[#4A5563]">{card.body}</p>
+                <p className="text-base font-semibold text-[var(--ink)]">{card.title}</p>
+                <p className="mt-3 text-sm leading-7 text-[var(--text)]">{card.body}</p>
               </div>
             ))}
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {trustSupportCards.map((card) => (
               <Link key={card.href} href={card.href} className="marketing-feature-card transition-colors hover:border-[#3C8D8A]">
-                <p className="text-base font-semibold text-[#132033]">{card.title}</p>
-                <p className="mt-3 text-sm leading-7 text-[#4A5563]">{card.body}</p>
-                <p className="mt-4 text-sm font-semibold text-[#3C8D8A]">Bekijken</p>
+                <p className="text-base font-semibold text-[var(--ink)]">{card.title}</p>
+                <p className="mt-3 text-sm leading-7 text-[var(--text)]">{card.body}</p>
+                <p className="mt-4 text-sm font-semibold text-[var(--teal)]">Bekijken</p>
               </Link>
             ))}
           </div>
@@ -189,10 +189,10 @@ export default function VertrouwenPage() {
 
         <MarketingSection tone="plain">
           <MarketingCalloutBand
-            eyebrow="Volgende stap"
-            title="Klaar om te toetsen welke route voor uw organisatie logisch is?"
-            body="Gebruik deze pagina als publieke basis. In een kort gesprek vertalen we dat naar ExitScan, RetentieScan of een kleinere vervolgronde, inclusief aanpak, timing en prijs."
-            primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'trust_closing_cta' })}
+          eyebrow="Volgende stap"
+          title="Klaar om te toetsen welke route voor uw organisatie logisch is?"
+          body="Gebruik deze pagina als publieke basis. In een kort gesprek vertalen we dat naar ExitScan, RetentieScan of een kleinere vervolgronde zoals Pulse, TeamScan, onboarding of Leadership Scan, inclusief aanpak, timing en prijs."
+          primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'trust_closing_cta' })}
             primaryLabel="Plan een kennismaking"
             secondaryHref="/producten"
             secondaryLabel="Bekijk de producten"

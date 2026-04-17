@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { RiskBadge } from '@/components/ui/risk-badge'
+import { getManagementPreventabilityLabel } from '@/lib/management-language'
 import type { Preventability, Respondent, RiskBand } from '@/lib/types'
 
 interface Props {
@@ -18,12 +19,6 @@ interface Props {
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
-
-const PREVENTABILITY_LABELS: Record<string, string> = {
-  STERK_WERKSIGNAAL: 'Sterk werksignaal',
-  GEMENGD_WERKSIGNAAL: 'Gemengd werksignaal',
-  BEPERKT_WERKSIGNAAL: 'Beperkt werksignaal',
-}
 
 export function RespondentTable({ respondents, responses, scanType, hasMinDisplay, canManageCampaign }: Props) {
   const [copied, setCopied] = useState(false)
@@ -87,8 +82,8 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
                   <td className="px-4 py-3 font-mono text-xs text-slate-500">
                     {canManageCampaign ? `${respondent.token.slice(0, 8)}...` : 'Verborgen'}
                   </td>
-                  <td className="px-4 py-3 text-slate-700">{respondent.department ?? '–'}</td>
-                  <td className="px-4 py-3 text-slate-700">{respondent.role_level ?? '–'}</td>
+                  <td className="px-4 py-3 text-slate-700">{respondent.department ?? '-'}</td>
+                  <td className="px-4 py-3 text-slate-700">{respondent.role_level ?? '-'}</td>
                   <td className="px-4 py-3">
                     {respondent.completed ? (
                       <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
@@ -108,15 +103,15 @@ export function RespondentTable({ respondents, responses, scanType, hasMinDispla
                           <RiskBadge band={response.risk_band ?? undefined} />
                         </div>
                       ) : (
-                        '–'
+                        '-'
                       )}
                     </td>
                   ) : null}
                   {showIndividualScores && scanType === 'exit' ? (
                     <td className="px-4 py-3 text-right text-xs text-slate-500">
                       {response?.preventability
-                        ? PREVENTABILITY_LABELS[response.preventability] ?? response.preventability.replaceAll('_', ' ')
-                        : '–'}
+                        ? getManagementPreventabilityLabel(response.preventability) ?? response.preventability.replaceAll('_', ' ')
+                        : '-'}
                     </td>
                   ) : null}
                 </tr>

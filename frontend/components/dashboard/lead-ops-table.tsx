@@ -4,6 +4,16 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import {
+  buildBoundedCommerceVisibilitySummary,
+  getCommerceAgreementStatusLabel,
+  getCommercePricingModeLabel,
+  getCommerceStartReadinessLabel,
+  supportsBoundedCommerceRoute,
+  type CommerceAgreementStatus,
+  type CommercePricingMode,
+  type CommerceStartReadinessStatus,
+} from '@/lib/contact-commerce'
+import {
   getContactDesiredTimingLabel,
   getContactRouteLabel,
 } from '@/lib/contact-funnel'
@@ -42,8 +52,35 @@ const LEAD_EXCEPTION_OPTIONS: Array<{ value: ContactRequestRecord['ops_exception
 
 type LeadDraft = Pick<
   ContactRequestRecord,
-  'ops_stage' | 'ops_exception_status' | 'ops_owner' | 'ops_next_step' | 'ops_handoff_note'
+  | 'ops_stage'
+  | 'ops_exception_status'
+  | 'ops_owner'
+  | 'ops_next_step'
+  | 'ops_handoff_note'
+  | 'commercial_agreement_status'
+  | 'commercial_pricing_mode'
+  | 'commercial_start_readiness_status'
+  | 'commercial_start_blocker'
+  | 'commercial_agreement_confirmed_by'
+  | 'commercial_readiness_reviewed_by'
 >
+
+const COMMERCE_AGREEMENT_OPTIONS: Array<{ value: CommerceAgreementStatus; label: string }> = [
+  { value: 'not_started', label: 'Nog niet bevestigd' },
+  { value: 'confirmed', label: 'Commercieel bevestigd' },
+  { value: 'blocked', label: 'Commercieel geblokkeerd' },
+]
+
+const COMMERCE_PRICING_OPTIONS: Array<{ value: CommercePricingMode; label: string }> = [
+  { value: 'public_anchor', label: 'Publiek prijsanker' },
+  { value: 'custom_quote', label: 'Custom quote' },
+]
+
+const COMMERCE_START_OPTIONS: Array<{ value: CommerceStartReadinessStatus; label: string }> = [
+  { value: 'not_ready', label: 'Nog niet startklaar' },
+  { value: 'ready', label: 'Startklaar' },
+  { value: 'blocked', label: 'Start geblokkeerd' },
+]
 
 function formatAmsterdamDate(value: string | null) {
   if (!value) return 'Nog niet bijgewerkt'
@@ -70,6 +107,12 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
           ops_owner: row.ops_owner,
           ops_next_step: row.ops_next_step,
           ops_handoff_note: row.ops_handoff_note,
+          commercial_agreement_status: row.commercial_agreement_status,
+          commercial_pricing_mode: row.commercial_pricing_mode,
+          commercial_start_readiness_status: row.commercial_start_readiness_status,
+          commercial_start_blocker: row.commercial_start_blocker,
+          commercial_agreement_confirmed_by: row.commercial_agreement_confirmed_by,
+          commercial_readiness_reviewed_by: row.commercial_readiness_reviewed_by,
         },
       ]),
     ),
@@ -95,23 +138,48 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
     setSaveMessage(null)
     setSavingLeadId(leadId)
 
-    const response = await fetch(`/api/contact-requests/${leadId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...drafts[leadId],
-        last_contacted_at: new Date().toISOString(),
-      }),
-    })
-
-    const payload = (await response.json().catch(() => null)) as { detail?: string } | null
-    if (!response.ok) {
-      setSaveError(payload?.detail ?? 'Leadtriage opslaan mislukt.')
+    const row = rows.find((item) => item.id === leadId)
+    if (!row) {
+      setSaveError('Lead niet gevonden in de huidige tabel.')
       setSavingLeadId(null)
       return
     }
 
-    setSaveMessage('Leadtriage bijgewerkt.')
+    const draft = drafts[leadId]
+    const supportsCommerce = supportsBoundedCommerceRoute(row.route_interest)
+    const requestBody = {
+      ops_stage: draft.ops_stage,
+      ops_exception_status: draft.ops_exception_status,
+      ops_owner: draft.ops_owner,
+      ops_next_step: draft.ops_next_step,
+      ops_handoff_note: draft.ops_handoff_note,
+      ...(supportsCommerce
+        ? {
+            commercial_agreement_status: draft.commercial_agreement_status,
+            commercial_pricing_mode: draft.commercial_pricing_mode,
+            commercial_start_readiness_status: draft.commercial_start_readiness_status,
+            commercial_start_blocker: draft.commercial_start_blocker,
+            commercial_agreement_confirmed_by: draft.commercial_agreement_confirmed_by,
+            commercial_readiness_reviewed_by: draft.commercial_readiness_reviewed_by,
+          }
+        : {}),
+      last_contacted_at: new Date().toISOString(),
+    }
+
+    const response = await fetch(`/api/contact-requests/${leadId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+    })
+
+    const responsePayload = (await response.json().catch(() => null)) as { detail?: string } | null
+    if (!response.ok) {
+      setSaveError(responsePayload?.detail ?? 'Leadtriage opslaan mislukt.')
+      setSavingLeadId(null)
+      return
+    }
+
+    setSaveMessage(supportsCommerce ? 'Leadtriage en commercestatus bijgewerkt.' : 'Leadtriage bijgewerkt.')
     router.refresh()
     setSavingLeadId(null)
   }
@@ -149,6 +217,20 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
             {rows.map((row) => {
               const draft = drafts[row.id]
               const linkedCampaigns = linkedCampaignsByLead[row.id] ?? []
+              const supportsCommerce = supportsBoundedCommerceRoute(row.route_interest)
+              const commerceVisibility = buildBoundedCommerceVisibilitySummary({
+                routeInterest: row.route_interest,
+                agreementStatus: draft.commercial_agreement_status,
+                pricingMode: draft.commercial_pricing_mode,
+                startReadinessStatus: draft.commercial_start_readiness_status,
+                startBlocker: draft.commercial_start_blocker,
+                agreementConfirmedBy: draft.commercial_agreement_confirmed_by,
+                agreementConfirmedAt: row.commercial_agreement_confirmed_at,
+                readinessReviewedBy: draft.commercial_readiness_reviewed_by,
+                readinessReviewedAt: row.commercial_readiness_reviewed_at,
+                linkedDeliveryCount: linkedCampaigns.length,
+                linkedDeliveryLifecycle: linkedCampaigns[0]?.lifecycleStage ?? null,
+              })
               return (
                 <tr key={row.id} className="align-top">
                   <td className="px-4 py-4 text-slate-600">
@@ -182,6 +264,27 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
                   </td>
                   <td className="px-4 py-4">
                     <div className="space-y-2">
+                      <div className={`rounded-2xl border px-3 py-3 ${getCommerceVisibilityClassName(commerceVisibility.tone)}`}>
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em]">
+                          Commerce summary
+                        </p>
+                        <p className="mt-2 text-sm font-semibold">{commerceVisibility.headline}</p>
+                        <p className="mt-1 text-xs leading-5">{commerceVisibility.detail}</p>
+                        {commerceVisibility.blocker ? (
+                          <p className="mt-2 rounded-xl bg-white/70 px-2.5 py-2 text-xs font-medium text-red-900">
+                            Blocker: {commerceVisibility.blocker}
+                          </p>
+                        ) : null}
+                        <div className="mt-2 space-y-1 text-xs leading-5">
+                          <p>{commerceVisibility.agreementAuditLabel}</p>
+                          <p>{commerceVisibility.readinessAuditLabel}</p>
+                        </div>
+                        <div className="mt-2 rounded-xl bg-white/70 px-2.5 py-2 text-xs leading-5">
+                          <p className="font-semibold">{commerceVisibility.deliveryReleaseLabel}</p>
+                          <p className="mt-1">{commerceVisibility.deliveryReleaseDetail}</p>
+                        </div>
+                        <p className="mt-2 text-xs leading-5">{commerceVisibility.deliveryHint}</p>
+                      </div>
                       <select
                         value={draft.ops_stage}
                         onChange={(event) => updateDraft(row.id, 'ops_stage', event.target.value as LeadDraft['ops_stage'])}
@@ -214,6 +317,109 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
                       <p className="text-xs text-slate-500">
                         Huidige exception: {getDeliveryExceptionLabel(row.ops_exception_status as DeliveryExceptionStatus)}
                       </p>
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                          Bounded commerce
+                        </p>
+                        {supportsCommerce ? (
+                          <div className="mt-2 space-y-2">
+                            <select
+                              value={draft.commercial_agreement_status}
+                              onChange={(event) =>
+                                updateDraft(
+                                  row.id,
+                                  'commercial_agreement_status',
+                                  event.target.value as LeadDraft['commercial_agreement_status'],
+                                )
+                              }
+                              className={selectClass}
+                            >
+                              {COMMERCE_AGREEMENT_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            <select
+                              value={draft.commercial_pricing_mode ?? ''}
+                              onChange={(event) =>
+                                updateDraft(
+                                  row.id,
+                                  'commercial_pricing_mode',
+                                  (event.target.value || null) as LeadDraft['commercial_pricing_mode'],
+                                )
+                              }
+                              className={selectClass}
+                            >
+                              <option value="">Nog niet gekozen</option>
+                              {COMMERCE_PRICING_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            <select
+                              value={draft.commercial_start_readiness_status}
+                              onChange={(event) =>
+                                updateDraft(
+                                  row.id,
+                                  'commercial_start_readiness_status',
+                                  event.target.value as LeadDraft['commercial_start_readiness_status'],
+                                )
+                              }
+                              className={selectClass}
+                            >
+                              {COMMERCE_START_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            <textarea
+                              value={draft.commercial_start_blocker ?? ''}
+                              onChange={(event) => updateDraft(row.id, 'commercial_start_blocker', event.target.value)}
+                              placeholder="Waarom kan start nog niet vrijgegeven worden?"
+                              rows={3}
+                              className={`${inputClass} min-h-20 resize-y`}
+                            />
+                            <input
+                              type="text"
+                              value={draft.commercial_agreement_confirmed_by ?? ''}
+                              onChange={(event) =>
+                                updateDraft(row.id, 'commercial_agreement_confirmed_by', event.target.value)
+                              }
+                              placeholder="Intern bevestigd door"
+                              className={inputClass}
+                            />
+                            <input
+                              type="text"
+                              value={draft.commercial_readiness_reviewed_by ?? ''}
+                              onChange={(event) =>
+                                updateDraft(row.id, 'commercial_readiness_reviewed_by', event.target.value)
+                              }
+                              placeholder="Readiness herzien door"
+                              className={inputClass}
+                            />
+                            <div className="space-y-1 text-xs text-slate-500">
+                              <p>Akkoord: {getCommerceAgreementStatusLabel(draft.commercial_agreement_status)}</p>
+                              <p>Prijsmodus: {getCommercePricingModeLabel(draft.commercial_pricing_mode)}</p>
+                              <p>Startstatus: {getCommerceStartReadinessLabel(draft.commercial_start_readiness_status)}</p>
+                              <p>
+                                Akkoord bevestigd op:{' '}
+                                {formatAmsterdamDate(row.commercial_agreement_confirmed_at)}
+                              </p>
+                              <p>
+                                Readiness herzien op:{' '}
+                                {formatAmsterdamDate(row.commercial_readiness_reviewed_at)}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="mt-2 text-xs leading-5 text-slate-500">
+                            In deze wave is bounded commerce alleen beschikbaar voor ExitScan en RetentieScan.
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="px-4 py-4">
@@ -236,7 +442,15 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
                   </td>
                   <td className="px-4 py-4">
                     {linkedCampaigns.length === 0 ? (
-                      <p className="text-xs leading-6 text-slate-500">Nog geen deliveryrecord aan deze lead gekoppeld.</p>
+                      <div className="space-y-2">
+                        <p className="text-xs leading-6 text-slate-500">Nog geen deliveryrecord aan deze lead gekoppeld.</p>
+                        {supportsCommerce ? (
+                          <div className={`rounded-2xl px-3 py-2 text-xs ${getCommerceHintClassName(commerceVisibility.tone)}`}>
+                            <p className="font-semibold">{commerceVisibility.deliveryReleaseLabel}</p>
+                            <p className="mt-1">{commerceVisibility.deliveryHint}</p>
+                          </div>
+                        ) : null}
+                      </div>
                     ) : (
                       <div className="space-y-2">
                         {linkedCampaigns.map((item) => (
@@ -284,3 +498,31 @@ const inputClass =
   'w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
 
 const selectClass = `${inputClass} pr-8`
+
+function getCommerceVisibilityClassName(tone: 'slate' | 'amber' | 'emerald' | 'red') {
+  switch (tone) {
+    case 'emerald':
+      return 'border-emerald-200 bg-emerald-50 text-emerald-950'
+    case 'amber':
+      return 'border-amber-200 bg-amber-50 text-amber-950'
+    case 'red':
+      return 'border-red-200 bg-red-50 text-red-950'
+    case 'slate':
+    default:
+      return 'border-slate-200 bg-slate-50 text-slate-900'
+  }
+}
+
+function getCommerceHintClassName(tone: 'slate' | 'amber' | 'emerald' | 'red') {
+  switch (tone) {
+    case 'emerald':
+      return 'bg-emerald-50 text-emerald-900'
+    case 'amber':
+      return 'bg-amber-50 text-amber-900'
+    case 'red':
+      return 'bg-red-50 text-red-900'
+    case 'slate':
+    default:
+      return 'bg-slate-100 text-slate-700'
+  }
+}

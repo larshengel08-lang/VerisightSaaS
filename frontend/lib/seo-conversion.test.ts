@@ -22,12 +22,28 @@ function firstImage(
   return Array.isArray(image) ? image[0] : image
 }
 
+function imageUrl(
+  image:
+    | string
+    | URL
+    | { url?: string | URL }
+    | Array<string | URL | { url?: string | URL }>
+    | undefined,
+) {
+  const first = firstImage(image)
+  if (typeof first === 'string') return first
+  if (first instanceof URL) return first.toString()
+  if (first?.url instanceof URL) return first.url.toString()
+  return first?.url
+}
+
 describe('SEO conversion tranche', () => {
   it('keeps the homepage and support-page metadata aligned with current SEO positioning', () => {
-    expect(homePageMetadata.title).toBe('ExitScan en RetentieScan voor HR-teams')
-    expect(firstImage(aanpakMetadata.openGraph?.images)).toMatchObject({ url: '/opengraph-image' })
-    expect(firstImage(pricingMetadata.openGraph?.images)).toMatchObject({ url: '/opengraph-image' })
-    expect(firstImage(trustMetadata.openGraph?.images)).toBe('/opengraph-image')
+    expect(homePageMetadata.title).toBe('Verisight')
+    expect(homePageMetadata.alternates?.canonical).toBe('/')
+    expect(imageUrl(aanpakMetadata.openGraph?.images)).toBe('/opengraph-image')
+    expect(imageUrl(pricingMetadata.openGraph?.images)).toBe('/opengraph-image')
+    expect(imageUrl(trustMetadata.openGraph?.images)).toBe('/opengraph-image')
   })
 
   it('adds solution routes to the sitemap and excludes example pdfs', () => {
@@ -36,6 +52,10 @@ describe('SEO conversion tranche', () => {
     expect(urls).toContain('https://www.verisight.nl/oplossingen/verloop-analyse')
     expect(urls).toContain('https://www.verisight.nl/oplossingen/exitgesprekken-analyse')
     expect(urls).toContain('https://www.verisight.nl/oplossingen/medewerkersbehoud-analyse')
+    expect(urls).toContain('https://www.verisight.nl/producten/pulse')
+    expect(urls).toContain('https://www.verisight.nl/producten/teamscan')
+    expect(urls).toContain('https://www.verisight.nl/producten/onboarding-30-60-90')
+    expect(urls).toContain('https://www.verisight.nl/producten/leadership-scan')
     expect(urls.some((url) => url.includes('/examples/'))).toBe(false)
   })
 
@@ -65,17 +85,37 @@ describe('SEO conversion tranche', () => {
     const solutionMetadata = await generateSolutionMetadata({
       params: Promise.resolve({ slug: 'verloop-analyse' }),
     })
-    const productMetadata = await generateProductMetadata({
+    const exitProductMetadata = await generateProductMetadata({
       params: Promise.resolve({ slug: 'exitscan' }),
+    })
+    const pulseProductMetadata = await generateProductMetadata({
+      params: Promise.resolve({ slug: 'pulse' }),
+    })
+    const teamProductMetadata = await generateProductMetadata({
+      params: Promise.resolve({ slug: 'teamscan' }),
+    })
+    const onboardingProductMetadata = await generateProductMetadata({
+      params: Promise.resolve({ slug: 'onboarding-30-60-90' }),
+    })
+    const leadershipProductMetadata = await generateProductMetadata({
+      params: Promise.resolve({ slug: 'leadership-scan' }),
     })
 
     expect(solutionMetadata.title).toBe('Verloopanalyse | ExitScan voor vertrekduiding bij HR-teams')
     expect(solutionMetadata.alternates?.canonical).toBe('/oplossingen/verloop-analyse')
-    expect(productMetadata.title).toBe('ExitScan | Verloopanalyse en vertrekduiding voor HR-teams')
-    expect(productMetadata.alternates?.canonical).toBe('/producten/exitscan')
+    expect(exitProductMetadata.title).toBe('ExitScan | Verloopanalyse en vertrekduiding voor HR-teams')
+    expect(exitProductMetadata.alternates?.canonical).toBe('/producten/exitscan')
+    expect(pulseProductMetadata.title).toBe('Pulse | Compacte reviewmetingen na diagnose of baseline')
+    expect(pulseProductMetadata.alternates?.canonical).toBe('/producten/pulse')
+    expect(teamProductMetadata.title).toBe('TeamScan | Lokale verificatie na een breder signaal')
+    expect(teamProductMetadata.alternates?.canonical).toBe('/producten/teamscan')
+    expect(onboardingProductMetadata.title).toBe('Onboarding 30-60-90 | Vroege lifecycle-check voor nieuwe medewerkers')
+    expect(onboardingProductMetadata.alternates?.canonical).toBe('/producten/onboarding-30-60-90')
+    expect(leadershipProductMetadata.title).toBe('Leadership Scan | Begrensde managementread na een bestaand signaal')
+    expect(leadershipProductMetadata.alternates?.canonical).toBe('/producten/leadership-scan')
   })
 
-  it('keeps inline route-aware forms on the intended money pages', () => {
+  it('keeps route-aware CTA wiring on the intended money pages', () => {
     const productPageSource = fs.readFileSync(
       path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),
       'utf8',
@@ -91,8 +131,13 @@ describe('SEO conversion tranche', () => {
 
     expect(productPageSource).toContain('defaultCtaSource="product_exit_form"')
     expect(productPageSource).toContain('defaultCtaSource="product_retention_form"')
-    expect(productPageSource).toContain('ctaHref="#kennismaking"')
-    expect(pricingPageSource).toContain('defaultCtaSource="pricing_form"')
+    expect(productPageSource).toContain('defaultCtaSource="product_pulse_form"')
+    expect(productPageSource).toContain('defaultCtaSource="product_team_form"')
+    expect(productPageSource).toContain('defaultCtaSource="product_onboarding_form"')
+    expect(productPageSource).toContain('defaultCtaSource="product_leadership_form"')
+    expect(productPageSource.includes('ctaHref="#kennismaking"') || productPageSource.includes('href="#kennismaking"')).toBe(true)
+    expect(pricingPageSource).toContain("ctaSource: 'pricing_primary_cta'")
+    expect(pricingPageSource).toContain("ctaSource: 'pricing_closing_cta'")
     expect(solutionPageSource).toContain('MarketingInlineContactPanel')
     expect(solutionPageSource).toContain('defaultCtaSource={solutionPage.ctaSource}')
   })
@@ -102,7 +147,15 @@ describe('SEO conversion tranche', () => {
 
     expect(llmsText).toContain('ExitScan Baseline: EUR 2.950')
     expect(llmsText).toContain('RetentieScan Baseline: EUR 3.450')
+    expect(llmsText).toContain('Pulse: op aanvraag')
+    expect(llmsText).toContain('TeamScan: op aanvraag')
+    expect(llmsText).toContain('Onboarding 30-60-90: op aanvraag')
+    expect(llmsText).toContain('Leadership Scan: op aanvraag')
     expect(llmsText).toContain('https://www.verisight.nl/producten/exitscan')
     expect(llmsText).toContain('https://www.verisight.nl/producten/retentiescan')
+    expect(llmsText).toContain('https://www.verisight.nl/producten/pulse')
+    expect(llmsText).toContain('https://www.verisight.nl/producten/teamscan')
+    expect(llmsText).toContain('https://www.verisight.nl/producten/onboarding-30-60-90')
+    expect(llmsText).toContain('https://www.verisight.nl/producten/leadership-scan')
   })
 })

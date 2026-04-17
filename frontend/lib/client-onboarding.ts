@@ -89,7 +89,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
     title: 'Eerste managementgesprek',
     owner: 'Klant',
     boundary: 'shared',
-    outcome: 'Eerste eigenaar, eerste vraag en eerste vervolgstap zijn expliciet gemaakt.',
+    outcome: 'Eerste vraag, eerste eigenaar, eerste actie en vervolgstap zijn expliciet gemaakt.',
     customerAction: 'Plan het eerste gesprek met sponsor, HR of MT op basis van de leeswijzer.',
   },
 ] as const
@@ -149,7 +149,7 @@ export const CANONICAL_CUSTOMER_LIFECYCLE = [
   {
     key: 'first_value',
     title: 'Eerste waarde',
-    body: 'Gebruik dashboard en rapport eerst om prioriteit, eerste eigenaar, eerste actie en reviewmoment expliciet te maken.',
+    body: 'Gebruik dashboard en rapport eerst om prioriteit, gekozen route, eerste stap en reviewmoment expliciet te maken.',
   },
   {
     key: 'repeat_or_expand',
@@ -170,7 +170,7 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
       {
         title: 'Blijf op dezelfde route',
         fit: 'Standaard vervolg',
-        body: 'RetentieScan ritme is de logische vervolgvorm zodra baseline, eerste managementopvolging en een reviewmoment al staan.',
+        body: 'RetentieScan ritme is de logische vervolgvorm zodra baseline, eerste managementroute en een reviewmoment al staan.',
       },
       {
         title: 'Verdiep bewust',
@@ -205,6 +205,66 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
     ] as const
   }
 
+  if (scanType === 'team') {
+    return [
+      {
+        title: 'Blijf op dezelfde route',
+        fit: 'Standaard vervolg',
+        body: 'Nog een TeamScan-verdichting wordt pas logisch zodra deze eerste lokale read al gebruikt is voor een expliciete afdelingscheck, begrensde actie en lokaal reviewmoment.',
+      },
+      {
+        title: 'Verdiep bewust',
+        fit: 'Alleen bij scherpere lokale vraag',
+        body: 'Verdiep pas verder wanneer dezelfde signalen echt om scherpere lokale handoff, extra boundary-support of zwaardere managementduiding vragen die TeamScan nu nog niet eerlijk ondersteunt.',
+      },
+      {
+        title: 'Ga terug naar bredere diagnose of review',
+        fit: 'Andere productvorm bij andere vraag',
+        body: 'Kies pas een ander product wanneer de vraag niet meer lokaal is, maar weer een bredere behouds-, diagnose- of reviewvraag wordt die TeamScan niet eerlijk kan dragen na de eerste lokale managementhuddle.',
+      },
+    ] as const
+  }
+
+  if (scanType === 'onboarding') {
+    return [
+      {
+        title: 'Blijf op dezelfde route',
+        fit: 'Checkpoint vervolg pas later',
+        body: 'Een volgend onboardingcheckpoint wordt pas logisch zodra deze eerste checkpointread al gebruikt is voor een expliciete managementvraag, een eerste eigenaar, een begrensde borg- of correctiestap en een afgesproken vervolgmoment.',
+      },
+      {
+        title: 'Verdiep bewust',
+        fit: 'Alleen bij scherpere lifecyclevraag',
+        body: 'Verdiep pas verder wanneer dezelfde signalen echt om scherpere checkpointgrenzen, extra context of later een tweede checkpoint vragen die onboarding in deze wave nog niet eerlijk ondersteunt.',
+      },
+      {
+        title: 'Ga naar een andere productvorm',
+        fit: 'Andere vraag, ander product',
+        body: 'Kies pas een ander product wanneer de vraag niet meer over vroege instroom gaat, maar over bredere behoudsdruk in RetentieScan, lokale lokalisatie in TeamScan of retrospectieve vertrekduiding in ExitScan die onboarding niet eerlijk kan dragen.',
+      },
+    ] as const
+  }
+
+  if (scanType === 'leadership') {
+    return [
+      {
+        title: 'Blijf op dezelfde route',
+        fit: 'Begrensd vervolg pas na eerste handoff',
+        body: 'Nog een Leadership-check wordt pas logisch zodra deze eerste managementread al gebruikt is voor een expliciete eigenaar, een kleine verificatie of correctie en een afgesproken reviewmoment.',
+      },
+      {
+        title: 'Verdiep bewust',
+        fit: 'Alleen bij scherpere managementvraag',
+        body: 'Verdiep pas verder wanneer dezelfde signalen echt om scherpere managementduiding vragen die nog steeds group-level en bounded kunnen blijven zonder named leaders of 360-logica te openen.',
+      },
+      {
+        title: 'Ga terug naar bredere diagnose',
+        fit: 'Andere productvorm bij andere vraag',
+        body: 'Kies pas een ander product wanneer de vraag niet meer primair gaat over geaggregeerde managementcontext, maar om bredere diagnose, lokale lokalisatie in TeamScan of een andere suitevraag die Leadership Scan niet eerlijk kan dragen.',
+      },
+    ] as const
+  }
+
   return [
     {
       title: 'Blijf op dezelfde route',
@@ -229,7 +289,7 @@ export function getFirstManagementReadSteps(scanType: ScanType) {
     return [
       'Open eerst het beslisoverzicht en lees het retentiesignaal als groepssignaal, niet als individuele voorspelling.',
       'Gebruik een indicatief beeld vanaf 5 responses om richting te houden, maar wacht voor stevige patroonduiding bij voorkeur tot 10 responses of meer.',
-      'Plan daarna de eerste managementsessie rond de vraag waar behoud nu onder druk staat, wie eerste eigenaar wordt, welke eerste interventie logisch is en wanneer het reviewmoment volgt.',
+      'Plan daarna de eerste managementsessie rond de vraag waar behoud nu onder druk staat, wie de eerste eigenaar wordt, welke route eerst gekozen wordt en wanneer het reviewmoment volgt.',
     ] as const
   }
 
@@ -237,23 +297,56 @@ export function getFirstManagementReadSteps(scanType: ScanType) {
     return [
       'Open eerst het beslisoverzicht en lees Pulse als compacte managementread van dit meetmoment, niet als brede trendclaim.',
       'Gebruik een indicatief beeld vanaf 5 responses om een eerste reviewrichting te kiezen, maar wacht voor stevigere patroonduiding bij voorkeur tot 10 responses of meer.',
-      'Plan daarna de eerste managementreview rond de vraag welk spoor nu bijsturing vraagt, wie eerste eigenaar wordt, welke kleine correctie volgt en wanneer de volgende bounded check plaatsvindt.',
+      'Plan daarna de eerste managementreview rond de vraag welk spoor nu bijsturing vraagt, welke kleine correctie volgt en wanneer de volgende bounded check plaatsvindt.',
+    ] as const
+  }
+
+  if (scanType === 'team') {
+    return [
+      'Open eerst het beslisoverzicht en lees TeamScan als lokale contextlaag, niet als manager ranking of bewijs van een teamoorzaak.',
+      'Gebruik een indicatief beeld vanaf 5 responses om een eerste lokale richting te zien, maar wacht voor stevigere lokale duiding bij voorkeur tot 10 responses of meer.',
+      'Plan daarna de eerste managementreview rond de vraag welke afdeling eerst verificatie vraagt, welke begrensde actie nu logisch is en wanneer de lokale hercheck volgt.',
+    ] as const
+  }
+
+  if (scanType === 'onboarding') {
+    return [
+      'Open eerst het beslisoverzicht en lees onboarding als checkpoint-read van nieuwe instroom op groepsniveau, niet als individuele, performance- of journey-claim.',
+      'Gebruik een indicatief beeld vanaf 5 responses om een eerste stabiel, gemengd of scherp checkpoint te zien, maar wacht voor stevigere checkpointduiding bij voorkeur tot 10 responses of meer.',
+      'Plan daarna de eerste managementreview rond de vraag welke vroege factor nu schuurt of juist werkt, wie de eerste eigenaar is, welke begrensde borg- of correctiestap volgt en wanneer een volgend checkpoint logisch is.',
+    ] as const
+  }
+
+  if (scanType === 'leadership') {
+    return [
+      'Open eerst het beslisoverzicht en lees Leadership Scan als geaggregeerde managementread, niet als named leader view, manager ranking of performanceclaim.',
+      'Gebruik een indicatief beeld vanaf 5 responses om een eerste stabiele, gemengde of scherpe managementcontext te zien, maar wacht voor stevigere managementduiding bij voorkeur tot 10 responses of meer.',
+      'Plan daarna de eerste managementreview rond de vraag welke context nu eerst aandacht vraagt, wie de eerste eigenaar is, welke begrensde verificatie of correctie volgt en wanneer een bounded vervolgcheck logisch is.',
     ] as const
   }
 
   return [
     'Open eerst het beslisoverzicht en lees het vertrekbeeld als managementsamenvatting van terugkerende werkfrictie, niet als losse exitfeedback.',
     'Gebruik een indicatief beeld vanaf 5 responses om richting te houden, maar wacht voor stevige patroonduiding bij voorkeur tot 10 responses of meer.',
-    'Plan daarna de eerste managementsessie rond de vraag welk vertrekpatroon terugkeert, wie eerste eigenaar wordt, welke eerste verbeteractie logisch is en wanneer het reviewmoment volgt.',
+    'Plan daarna de eerste managementsessie rond de vraag welk vertrekpatroon terugkeert, welke eerste verbeterroute logisch is en wanneer het reviewmoment volgt.',
   ] as const
 }
 
 export function getAdoptionSuccessDefinition(scanType: ScanType) {
   if (scanType === 'retention') {
-    return 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over behoud, verificatie, eerste interventie en reviewmoment te voeren.'
+    return 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over behoud, verificatie, eerste eigenaar, routekeuze en reviewmoment te voeren.'
   }
   if (scanType === 'pulse') {
-    return 'Adoptie is pas geslaagd wanneer de klant Pulse gebruikt om een eerste reviewvraag, eigenaar, kleine correctie en volgend bounded checkmoment expliciet te maken.'
+    return 'Adoptie is pas geslaagd wanneer de klant Pulse gebruikt om een eerste reviewvraag, kleine correctie en volgend bounded checkmoment expliciet te maken.'
   }
-  return 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over vertrekduiding, prioriteiten, eerste actie en reviewmoment te voeren.'
+  if (scanType === 'team') {
+    return 'Adoptie is pas geslaagd wanneer de klant TeamScan gebruikt om een eerste lokale verificatievraag, afdeling, begrensde actie en lokaal reviewmoment expliciet te maken.'
+  }
+  if (scanType === 'onboarding') {
+    return 'Adoptie is pas geslaagd wanneer de klant onboarding gebruikt om een eerste checkpointread, eerste eigenaar, begrensde borg- of correctiestap en logisch vervolgmoment expliciet te maken.'
+  }
+  if (scanType === 'leadership') {
+    return 'Adoptie is pas geslaagd wanneer de klant Leadership Scan gebruikt om een eerste managementread, eerste eigenaar, begrensde verificatie of correctie en logisch reviewmoment expliciet te maken.'
+  }
+  return 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over vertrekduiding, prioriteiten, routekeuze en reviewmoment te voeren.'
 }

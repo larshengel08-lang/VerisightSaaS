@@ -1,4 +1,9 @@
 import {
+  type CommerceAgreementStatus,
+  type CommercePricingMode,
+  type CommerceStartReadinessStatus,
+} from '@/lib/contact-commerce'
+import {
   getContactDesiredTimingLabel,
   getContactRouteLabel,
   type ContactDesiredTiming,
@@ -12,7 +17,7 @@ import type {
   CasePotential,
   EvidenceApprovalStatus,
 } from '@/lib/case-proof-evidence'
-import type { CampaignStats, DeliveryMode, ScanType } from '@/lib/types'
+import { SCAN_TYPE_LABELS, type CampaignStats, type DeliveryMode, type ScanType } from '@/lib/types'
 
 export type LearningTriageStatus = 'nieuw' | 'bevestigd' | 'geparkeerd' | 'uitgevoerd' | 'verworpen'
 export type LearningCheckpointKey =
@@ -44,6 +49,14 @@ export interface ContactRequestRecord {
   ops_owner: string | null
   ops_next_step: string | null
   ops_handoff_note: string | null
+  commercial_agreement_status: CommerceAgreementStatus
+  commercial_pricing_mode: CommercePricingMode | null
+  commercial_start_readiness_status: CommerceStartReadinessStatus
+  commercial_start_blocker: string | null
+  commercial_agreement_confirmed_by: string | null
+  commercial_agreement_confirmed_at: string | null
+  commercial_readiness_reviewed_by: string | null
+  commercial_readiness_reviewed_at: string | null
   last_contacted_at: string | null
   created_at: string
 }
@@ -309,7 +322,7 @@ export function buildLearningObjectiveSignals({
 
   if (checkpointKey === 'implementation_intake') {
     if (dossier.scan_type) {
-      items.push(`Scantype: ${dossier.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'}.`)
+      items.push(`Scantype: ${SCAN_TYPE_LABELS[dossier.scan_type]}.`)
     }
     if (dossier.delivery_mode) {
       items.push(`Implementatieroute: ${dossier.delivery_mode === 'live' ? 'Live / vervolgroute' : 'Baseline'}.`)

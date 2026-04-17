@@ -8,7 +8,7 @@ import {
   getInviteDefaultForDeliveryMode,
   normalizeDeliveryMode,
 } from '@/lib/implementation-readiness'
-import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, type Campaign, type Organization } from '@/lib/types'
+import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, SCAN_TYPE_LABELS, type Campaign, type Organization } from '@/lib/types'
 import { CLIENT_FILE_SPEC } from '@/lib/client-onboarding'
 import {
   getDefaultCampaignId,
@@ -75,6 +75,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
   )
   const selectedDeliveryMode = normalizeDeliveryMode(selectedCampaign?.delivery_mode)
   const hasSegmentDeepDive = hasCampaignAddOn(selectedCampaign, 'segment_deep_dive')
+  const isExitCampaign = selectedCampaign?.scan_type === 'exit'
   const [mode, setMode] = useState<Mode>('emails')
 
   const [emailInput, setEmailInput] = useState('')
@@ -256,11 +257,12 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
           <p className="font-semibold text-slate-900">Canonieke klantaanlevering</p>
           <p className="mt-2 leading-6">
             Gebruik bij voorkeur een eenvoudig Excel- of CSV-bestand met minimaal <code className="font-mono">email</code>.
-            Voor segmentatie en scherpere opvolging blijven <code className="font-mono">department</code> en{' '}
+            Voor segmentatie, teamcontext en scherpere opvolging blijven <code className="font-mono">department</code> en{' '}
             <code className="font-mono">role_level</code> de aanbevolen standaard.
           </p>
           <p className="mt-2 text-xs leading-5 text-slate-500">
             Verplicht: {CLIENT_FILE_SPEC.required.join(', ')}. Aanbevolen: {CLIENT_FILE_SPEC.recommended.join(', ')}.
+            {isExitCampaign ? ` Exit-specifiek optioneel: ${CLIENT_FILE_SPEC.exitOptional.join(', ')}.` : ''}
           </p>
         </div>
         <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-4 text-sm text-amber-950">
@@ -294,7 +296,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
           >
             {campaigns.map(campaign => (
               <option key={campaign.id} value={campaign.id}>
-                {organizationById[campaign.organization_id] ?? 'Onbekende organisatie'} — {campaign.name} ({campaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'})
+                {organizationById[campaign.organization_id] ?? 'Onbekende organisatie'} — {campaign.name} ({SCAN_TYPE_LABELS[campaign.scan_type]})
                 {campaign.is_active ? '' : ' — gearchiveerd'}
               </option>
             ))}
@@ -310,7 +312,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             }`}
           >
             <p className="font-semibold mb-1">
-              {selectedCampaign.scan_type === 'exit' ? 'ExitScan' : 'RetentieScan'} {getDeliveryModeLabel(selectedDeliveryMode, selectedCampaign.scan_type)}
+              {SCAN_TYPE_LABELS[selectedCampaign.scan_type]} {getDeliveryModeLabel(selectedDeliveryMode, selectedCampaign.scan_type)}
             </p>
             <p>{getDeliveryModeDescription(selectedDeliveryMode, selectedCampaign.scan_type)}</p>
             <p className="mt-2 text-xs">
@@ -388,7 +390,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
 
         {mode !== 'upload' && (
           <>
-            <div className="grid sm:grid-cols-4 gap-3 pt-1">
+            <div className={`grid gap-3 pt-1 ${isExitCampaign ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Afdeling <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
@@ -413,17 +415,19 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Exitmaand <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
-                </label>
-                <input
-                  type="month"
-                  value={exitMonth}
-                  onChange={e => setExitMonth(e.target.value)}
-                  className={inputCls}
-                />
-              </div>
+              {isExitCampaign ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Exitmaand <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
+                  </label>
+                  <input
+                    type="month"
+                    value={exitMonth}
+                    onChange={e => setExitMonth(e.target.value)}
+                    className={inputCls}
+                  />
+                </div>
+              ) : null}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Bruto jaarsalaris € <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
@@ -456,8 +460,8 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             <p className="text-sm font-semibold text-gray-800 mb-1">Upload respondentbestand</p>
             <p className="text-xs text-gray-500 leading-relaxed">
               Gebruik één rij per respondent met minimaal een kolom <code className="font-mono">email</code>. Optioneel
-              kun je <code className="font-mono">department</code>, <code className="font-mono">role_level</code>, <code className="font-mono">exit_month</code> en
-              <code className="font-mono">annual_salary_eur</code> meesturen. Upload een <code className="font-mono">.csv</code>
+              kun je <code className="font-mono">department</code>, <code className="font-mono">role_level</code>
+              {isExitCampaign ? <>, <code className="font-mono">exit_month</code></> : null} en <code className="font-mono">annual_salary_eur</code> meesturen. Upload een <code className="font-mono">.csv</code>
               {' '}of <code className="font-mono">.xlsx</code> bestand.
             </p>
             {selectedCampaign?.scan_type === 'retention' && (
@@ -556,7 +560,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                           <th className="px-2 py-2 text-left">E-mail</th>
                           <th className="px-2 py-2 text-left">Afdeling</th>
                           <th className="px-2 py-2 text-left">Niveau</th>
-                          <th className="px-2 py-2 text-left">Exitmaand</th>
+                          {isExitCampaign ? <th className="px-2 py-2 text-left">Exitmaand</th> : null}
                         </tr>
                       </thead>
                       <tbody>
@@ -566,7 +570,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                             <td className="px-2 py-2 font-mono">{row.email}</td>
                             <td className="px-2 py-2">{row.department || '—'}</td>
                             <td className="px-2 py-2">{row.role_level || '—'}</td>
-                            <td className="px-2 py-2">{row.exit_month || '—'}</td>
+                            {isExitCampaign ? <td className="px-2 py-2">{row.exit_month || '—'}</td> : null}
                           </tr>
                         ))}
                       </tbody>

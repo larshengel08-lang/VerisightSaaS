@@ -70,6 +70,7 @@ export interface DashboardViewModel {
   followThroughTitle: string
   followThroughIntro: string
   followThroughCards: DashboardFollowThroughCard[]
+  managementBandOverride?: 'HOOG' | 'MIDDEN' | 'LAAG' | null
 }
 
 export interface ProductModule {

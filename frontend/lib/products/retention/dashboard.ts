@@ -25,7 +25,7 @@ const FACTOR_ACTION_HINTS: Record<string, string> = {
 }
 
 const SIGNAL_BANDS_TEXT =
-  'Laag, verhoogd en sterk aandachtssignaal laten zien hoe breed en hoe scherp het retentiesignaal zich in de groep verdeelt. Gebruik deze banding voor prioritering en verificatie op groepsniveau in HR, sponsor en MT, niet als individuele voorspelling.'
+  'Voorlopig stabiel, aandacht nodig en direct aandachtspunt laten zien hoe breed en hoe scherp het retentiesignaal zich in de groep verdeelt. Gebruik deze banding voor prioritering en verificatie op groepsniveau in HR, sponsor en MT, niet als individuele voorspelling.'
 
 function deriveSignalProfile(
   riskScore: number | null,
@@ -135,7 +135,7 @@ function getRetentionReviewMoment(
     (typeof turnoverIntention === 'number' && turnoverIntention >= 5.5) ||
     (typeof stayIntent === 'number' && stayIntent < 5.5)
   ) {
-    return `Plan binnen 45-60 dagen een review op ${topFactorLabel.toLowerCase()}, vertrekintentie, stay-intent en de eerste interventie.`
+    return `Plan binnen 45-60 dagen een review op ${topFactorLabel.toLowerCase()}, vertrekintentie, stay-intent en de eerste gekozen stap.`
   }
   return `Plan binnen 60-90 dagen een review of vervolgmeting om te toetsen of ${topFactorLabel.toLowerCase()} en het retentiesignaal verschuiven.`
 }

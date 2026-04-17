@@ -10,6 +10,7 @@ import {
   getFirstManagementReadSteps,
   getLifecycleDecisionCards,
 } from '@/lib/client-onboarding'
+import { SCAN_TYPE_LABELS } from '@/lib/types'
 
 export function OperatorOnboardingBlueprint() {
   return (
@@ -123,7 +124,7 @@ export function ManagementReadGuide({
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">{stateLabel}</span>
           <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-            {scanType === 'retention' ? 'RetentieScan leesroute' : scanType === 'pulse' ? 'Pulse leesroute' : 'ExitScan leesroute'}
+            {SCAN_TYPE_LABELS[scanType]} leesroute
           </span>
         </div>
         <div className="mt-4 grid gap-3 lg:grid-cols-3">

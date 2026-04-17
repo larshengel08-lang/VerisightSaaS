@@ -28,7 +28,7 @@ export const EXIT_ACTION_PLAYBOOKS: Record<string, Record<string, ActionPlaybook
         'Koppel het gekozen spoor aan 1 opvolgactie die binnen 30-90 dagen zichtbaar moet worden.',
       ],
       caution:
-        'Behandel een gemengd signaal niet als definitieve verklaring voor vertrek voordat het patroon steviger is gevalideerd.',
+        'Behandel een aandachtspunt niet als definitieve verklaring voor vertrek voordat het patroon steviger is gevalideerd.',
     },
   },
   culture: {
@@ -58,7 +58,7 @@ export const EXIT_ACTION_PLAYBOOKS: Record<string, Record<string, ActionPlaybook
         'Koppel daar 1 gerichte 30-90 dagenactie aan in plaats van een brede cultuuragenda.',
       ],
       caution:
-        'Een gemengd signaal vraagt afbakening; ga niet te snel naar brede cultuurinterventies zonder extra toetsing.',
+        'Een aandachtspunt vraagt afbakening; ga niet te snel naar brede cultuurinterventies zonder extra toetsing.',
     },
   },
   growth: {
