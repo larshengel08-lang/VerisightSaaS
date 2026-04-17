@@ -55,7 +55,7 @@ export function PublicHeader({
             <Link
               href="/login"
               prefetch={false}
-              className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
+              className="text-sm font-medium text-[#4A5563] transition-colors hover:text-[#132033]"
             >
               Inloggen
             </Link>
