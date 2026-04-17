@@ -12,6 +12,14 @@ interface Props {
   bandOverride?: 'HOOG' | 'MIDDEN' | 'LAAG' | null
 }
 
+function getDefaultReviewCopy(scanType: ScanType) {
+  if (scanType === 'exit') {
+    return 'Plan binnen 60-90 dagen een review op dit spoor: wat is gekozen, wat is uitgevoerd en wat keert terug in de volgende exitbatch?'
+  }
+
+  return 'Plan binnen 45-90 dagen een review of vervolgmeting: wat is geverifieerd, welke eerste stap loopt en wat verschuift er in het retentiesignaal?'
+}
+
 export function ActionPlaybookList({ factorAverages, scanType, bandOverride }: Props) {
   const playbooks = getProductModule(scanType).getActionPlaybooks()
   const items = ORG_FACTORS
@@ -103,12 +111,7 @@ export function ActionPlaybookList({ factorAverages, scanType, bandOverride }: P
             <div className="mt-4">
               <PlaybookColumn title="Reviewmoment" tone="slate">
                 <p className="text-sm leading-6 text-[color:var(--text)]">
-                  {item.playbook?.review ??
-                    (scanType === 'exit'
-                      ? 'Plan binnen 60-90 dagen een review op dit spoor: wat is gekozen, wat is uitgevoerd en wat keert terug in de volgende exitbatch?'
-                      : scanType === 'onboarding'
-                        ? 'Plan een volgend onboardingcheckpoint pas nadat de eerste correctie of steunmaatregel bewust is belegd. Gebruik dat volgende moment als bounded vervolglezing, niet als automatische journey-claim.'
-                      : 'Plan binnen 45-90 dagen een review of vervolgmeting: wat is geverifieerd, welke eerste stap loopt en wat verschuift er in het retentiesignaal?')}
+                  {item.playbook?.review ?? getDefaultReviewCopy(scanType)}
                 </p>
               </PlaybookColumn>
             </div>
