@@ -37,11 +37,42 @@ def build_overview_sheet(wb: Workbook) -> None:
         ("Dominant phase", "Phase 1 - Revenue Proof Engine"),
         ("Parallel phase", "Phase 2 - Delivery Stability Engine"),
         ("Core rule", "Focus op revenue + proof en delivery stability; geen nieuwe grote projecten buiten deze command window."),
+        ("Lead source of truth", "Verisight_CRM.xlsx"),
+        ("Delivery source of truth", "/beheer en /campaigns/[id]"),
+        ("Mirror rule", "Deals en Clients zijn weekmirrors; werk eerst het primaire systeem bij."),
     ]
     for row in rows:
         ws.append(row)
     style_row(ws[1])
     set_widths(ws, {"A": 22, "B": 110})
+
+
+def build_weekly_focus_sheet(wb: Workbook) -> None:
+    ws = wb.create_sheet("Weekly Focus")
+    ws.append(["Field", "Value", "Prompt"])
+    style_row(ws[1])
+
+    rows = [
+        ("Week van", "", "Kies alleen de week die nu loopt."),
+        ("Deze week telt vooral", "", "Welke ene beweging maakt deze week succesvol?"),
+        ("Belangrijkste commerciële push", "", "Welk gesprek, voorstel of outbound-batch moet deze week echt bewegen?"),
+        ("Belangrijkste delivery-risk", "", "Welk klanttraject vraagt nu de meeste aandacht?"),
+        ("Topprioriteit 1", "", "Hou het concreet en uitvoerbaar."),
+        ("Topprioriteit 2", "", "Alleen invullen als je het deze week echt doet."),
+        ("Topprioriteit 3", "", "Alleen invullen als je het deze week echt doet."),
+        ("Niet doen 1", "", "Wat laat je deze week bewust liggen?"),
+        ("Niet doen 2", "", "Wat laat je deze week bewust liggen?"),
+        ("Niet doen 3", "", "Wat laat je deze week bewust liggen?"),
+        ("Besluit deze week", "", "Welk besluit moet expliciet in de decision log landen?"),
+    ]
+    for row in rows:
+        ws.append(row)
+
+    set_widths(ws, {"A": 28, "B": 38, "C": 68})
+    ws.freeze_panes = "A2"
+    for row in ws.iter_rows(min_row=2):
+        for cell in row:
+            cell.alignment = Alignment(vertical="top", wrap_text=True)
 
 
 def build_scorecard_sheet(wb: Workbook) -> None:
@@ -54,6 +85,8 @@ def build_scorecard_sheet(wb: Workbook) -> None:
         ("Current frame", "Dominante fase", "Phase 1 - Revenue Proof Engine", ""),
         ("Current frame", "Parallelle fase", "Phase 2 - Delivery Stability Engine", ""),
         ("Current frame", "Owner", "Founder-led", ""),
+        ("Current frame", "Lead source of truth", "Verisight_CRM.xlsx", "Werk eerst de CRM-pipeline bij en spiegel daarna naar Deals."),
+        ("Current frame", "Delivery source of truth", "/beheer en /campaigns/[id]", "Werk eerst de app-deliverylaag bij en spiegel daarna naar Clients."),
         ("Revenue proof", "Gekwalificeerde gesprekken deze week", "", ""),
         ("Revenue proof", "Lopende proposals/offertes", "", ""),
         ("Revenue proof", "Betaalde klanten of pilots in flight", "", ""),
@@ -87,9 +120,9 @@ def build_scorecard_sheet(wb: Workbook) -> None:
 
 def build_deals_sheet(wb: Workbook) -> None:
     ws = wb.create_sheet("Deals")
-    ws.append(["Company", "Contact", "Route", "Stage", "Next action", "Due date", "Biggest objection", "Notes"])
+    ws.append(["Company", "Contact", "Route", "Stage", "Owner", "Next action", "Due date", "Biggest objection", "Notes"])
     style_row(ws[1])
-    set_widths(ws, {"A": 24, "B": 24, "C": 18, "D": 18, "E": 32, "F": 16, "G": 30, "H": 42})
+    set_widths(ws, {"A": 24, "B": 24, "C": 18, "D": 18, "E": 16, "F": 32, "G": 16, "H": 30, "I": 42})
     ws.freeze_panes = "A2"
 
 
@@ -101,6 +134,7 @@ def build_clients_sheet(wb: Workbook) -> None:
             "Route",
             "Stage",
             "Risk",
+            "Owner",
             "Intake complete",
             "Import ready",
             "Activation ready",
@@ -110,7 +144,7 @@ def build_clients_sheet(wb: Workbook) -> None:
         ]
     )
     style_row(ws[1])
-    set_widths(ws, {"A": 24, "B": 18, "C": 18, "D": 14, "E": 16, "F": 14, "G": 16, "H": 16, "I": 18, "J": 32})
+    set_widths(ws, {"A": 24, "B": 18, "C": 18, "D": 14, "E": 14, "F": 16, "G": 14, "H": 16, "I": 16, "J": 18, "K": 32})
     ws.freeze_panes = "A2"
 
 
@@ -134,13 +168,30 @@ def build_priorities_sheet(wb: Workbook) -> None:
     ws.freeze_panes = "A2"
 
 
+def build_operating_rules_sheet(wb: Workbook) -> None:
+    ws = wb.create_sheet("Operating Rules")
+    ws.append(["Type", "Primary system", "Weekly mirror", "Rule"])
+    style_row(ws[1])
+    entries = [
+        ("Leads", "Verisight_CRM.xlsx", "Deals", "Deals is alleen een weekmirror van de live CRM-pipeline."),
+        ("Delivery", "/beheer en /campaigns/[id]", "Clients", "Clients is alleen een weekmirror van de live deliverylaag."),
+        ("Governance", "Weekly Scorecard", "", "Gebruik alleen echte data of noteer nog niet gemeten."),
+    ]
+    for row in entries:
+        ws.append(row)
+    set_widths(ws, {"A": 18, "B": 28, "C": 18, "D": 72})
+    ws.freeze_panes = "A2"
+
+
 def main() -> None:
     wb = Workbook()
     build_overview_sheet(wb)
+    build_weekly_focus_sheet(wb)
     build_scorecard_sheet(wb)
     build_deals_sheet(wb)
     build_clients_sheet(wb)
     build_priorities_sheet(wb)
+    build_operating_rules_sheet(wb)
     wb.save(OUTPUT_PATH)
     print(f"Created {OUTPUT_PATH}")
 

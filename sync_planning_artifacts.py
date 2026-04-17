@@ -97,6 +97,15 @@ def save_roadmap_workbook(data: dict[str, Any], rows: list[list[Any]]) -> None:
         for bullet in post_checklist_system.get("bullets", []):
             overview.append(["", bullet])
 
+    execution_priorities = data["metadata"].get("execution_priorities")
+    if execution_priorities:
+        overview.append([])
+        overview.append(["Current Focus", ""])
+        for item in execution_priorities.get("active_initiatives", []):
+            overview.append(["", item["priority"]])
+        for item in execution_priorities.get("next_30_days", []):
+            overview.append(["", f"Next 30d: {item['priority']}"])
+
     phases_sheet = wb.create_sheet("Phases")
     phases_sheet.append(
         [
@@ -169,6 +178,46 @@ def save_roadmap_workbook(data: dict[str, Any], rows: list[list[Any]]) -> None:
                 row[5],
             ]
         )
+
+    if execution_priorities:
+        priorities_sheet = wb.create_sheet("Current Priorities")
+        priorities_sheet.append(["Horizon", "Priority", "Why now", "Owner", "Status / guardrail"])
+
+        def append_priority_block(label: str, items: list[dict[str, str]]) -> None:
+            for item in items:
+                priorities_sheet.append(
+                    [
+                        label,
+                        item["priority"],
+                        item["why"],
+                        item["owner"],
+                        "",
+                    ]
+                )
+
+        append_priority_block("Active now", execution_priorities.get("active_initiatives", []))
+        append_priority_block("Next 30 days", execution_priorities.get("next_30_days", []))
+        append_priority_block("30-60 days", execution_priorities.get("next_30_60_days", []))
+        append_priority_block("60-90 days", execution_priorities.get("next_60_90_days", []))
+
+        priorities_sheet.append([])
+        priorities_sheet.append(["Not now", "Guardrail", "", "", ""])
+        for item in execution_priorities.get("not_now", []):
+            priorities_sheet.append(["Not now", item, "", "", ""])
+
+        weekly_focus = wb.create_sheet("Weekly Focus")
+        weekly_focus.append(["Field", "Value", "Prompt"])
+        weekly_focus.append(["Week van", "", "Kies de week die nu loopt."])
+        weekly_focus.append(["Deze week telt vooral", "", "Welke ene beweging maakt deze week succesvol?"])
+        weekly_focus.append(["Belangrijkste commerciële push", "", "Welk gesprek, voorstel of batch moet deze week echt bewegen?"])
+        weekly_focus.append(["Belangrijkste delivery-risk", "", "Welk klanttraject vraagt nu de meeste aandacht?"])
+        weekly_focus.append(["Topprioriteit 1", execution_priorities.get("active_initiatives", [{}])[0].get("priority", ""), "Houd dit concreet en uitvoerbaar."])
+        weekly_focus.append(["Topprioriteit 2", execution_priorities.get("next_30_days", [{}])[0].get("priority", ""), "Kies een echte fix, geen abstract thema."])
+        weekly_focus.append(["Topprioriteit 3", execution_priorities.get("next_30_days", [{}, {}])[1].get("priority", ""), "Alleen invullen als je het deze week echt doet."])
+        weekly_focus.append(["Niet doen 1", "", "Wat laat je deze week bewust liggen?"])
+        weekly_focus.append(["Niet doen 2", "", "Wat laat je deze week bewust liggen?"])
+        weekly_focus.append(["Niet doen 3", "", "Wat laat je deze week bewust liggen?"])
+        weekly_focus.append(["Besluit deze week", "", "Welk besluit moet expliciet in de decision log landen?"])
 
     for sheet in wb.worksheets:
         for column in sheet.columns:

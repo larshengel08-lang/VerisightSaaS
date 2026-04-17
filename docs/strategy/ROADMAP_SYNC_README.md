@@ -18,6 +18,7 @@ Dit kleine systeem koppelt de checklist en de roadmap aan elkaar zonder dat de `
 - [ROADMAP_WORKBOOK.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_WORKBOOK.xlsx)
   - dezelfde roadmap in Excel-vorm
   - handig als werkbestand voor filteren, scannen en voortgangsbespreking
+  - bevat nu ook `Current Priorities` en `Weekly Focus` als praktische 30-60-90 en weekstartlaag
 - [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
   - forward-looking bedrijfsbesturingssysteem na afronding van de checklistfases
   - wordt niet automatisch gegenereerd; dit document beheer je bewust handmatig
