@@ -14,7 +14,7 @@ export function MobileNav({ isAdmin }: Props) {
     <div className="sm:hidden">
       <button
         onClick={() => setOpen(o => !o)}
-        className="p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+        className="rounded-md p-2 text-[color:var(--text)] transition-colors hover:bg-[color:var(--bg)] hover:text-[color:var(--ink)]"
         aria-label="Menu openen"
       >
         {open ? (
@@ -29,11 +29,11 @@ export function MobileNav({ isAdmin }: Props) {
       </button>
 
       {open && (
-        <div className="absolute top-14 left-0 right-0 bg-white border-b border-gray-200 shadow-md z-50 px-4 py-3 flex flex-col gap-1">
+        <div className="absolute left-0 right-0 top-14 z-50 flex flex-col gap-1 border-b border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-3 shadow-md">
           <Link
             href="/dashboard"
             onClick={() => setOpen(false)}
-            className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+            className="rounded-md px-3 py-2 text-sm font-medium text-[color:var(--text)] transition-colors hover:bg-[color:var(--bg)] hover:text-[color:var(--ink)]"
           >
             Campaigns
           </Link>
@@ -42,14 +42,14 @@ export function MobileNav({ isAdmin }: Props) {
               <Link
                 href="/beheer"
                 onClick={() => setOpen(false)}
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                className="rounded-md px-3 py-2 text-sm font-medium text-[color:var(--text)] transition-colors hover:bg-[color:var(--bg)] hover:text-[color:var(--ink)]"
               >
                 Setup
               </Link>
               <Link
                 href="/beheer/contact-aanvragen"
                 onClick={() => setOpen(false)}
-                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                className="rounded-md px-3 py-2 text-sm font-medium text-[color:var(--text)] transition-colors hover:bg-[color:var(--bg)] hover:text-[color:var(--ink)]"
               >
                 Leads
               </Link>

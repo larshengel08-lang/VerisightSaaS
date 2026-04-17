@@ -25,6 +25,8 @@
   /* Shadows */
   --marketing-shadow-soft: 0 20px 48px rgba(19, 32, 51, 0.06);
   --marketing-shadow-strong: 0 28px 72px rgba(19, 32, 51, 0.11);
+  --dashboard-shadow-soft: 0 16px 42px rgba(19, 32, 51, 0.06);
+  --dashboard-shadow-strong: 0 18px 44px rgba(19, 32, 51, 0.1);
 }
 
 @theme inline {
@@ -333,6 +335,39 @@ details > summary::-webkit-details-marker {
     gap: 1rem;
   }
 
+  .dashboard-shell {
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .dashboard-surface {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    box-shadow: var(--dashboard-shadow-soft);
+    border-radius: 1.5rem;
+  }
+
+  .dashboard-surface-soft {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    box-shadow: var(--dashboard-shadow-soft);
+    border-radius: 1.5rem;
+  }
+
+  .dashboard-surface-accent {
+    border: 1px solid rgba(35, 75, 87, 0.14);
+    background: #f3f8f8;
+    box-shadow: var(--dashboard-shadow-soft);
+    border-radius: 1.5rem;
+  }
+
+  .dashboard-hierarchy-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
   .marketing-flow-stack > * {
     margin-top: 0 !important;
   }
@@ -434,4 +469,3 @@ details > summary::-webkit-details-marker {
     }
   }
 }
-
