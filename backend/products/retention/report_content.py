@@ -5,7 +5,7 @@ from typing import Any
 from backend.products.retention.definition import SCAN_DEFINITION
 from backend.products.shared.management_language import (
     MANAGEMENT_BAND_LABELS,
-    management_context_label,
+    management_band_label,
 )
 
 
@@ -214,7 +214,7 @@ def get_management_summary_payload(
             },
             {
                 "title": "Wat vraagt verificatie",
-                "value": management_context_label("verification"),
+                "value": management_band_label(band="MIDDEN"),
                 "body": verification_body,
             },
             {
@@ -243,7 +243,7 @@ def get_management_summary_payload(
             },
             {
                 "title": "Wat verdient verificatie",
-                "value": management_context_label("verification"),
+                "value": management_band_label(band="MIDDEN"),
                 "body": first_decision,
             },
             {
@@ -309,9 +309,9 @@ def get_methodology_payload() -> dict[str, Any]:
         ],
         "band_rows": [
             ["Band", "Score", "Betekenis voor de organisatie"],
-            [MANAGEMENT_BAND_LABELS["LAAG"], "< 4.5", "Het behoudsbeeld oogt voorlopig stabiel. Er zijn relatief weinig directe signalen dat behoud nu breed onder druk staat."],
-            [MANAGEMENT_BAND_LABELS["MIDDEN"], "4.5-7.0", "Er zijn zichtbare aandachtspunten die verificatie en prioritering vragen."],
-            [MANAGEMENT_BAND_LABELS["HOOG"], ">= 7.0", "Het groepssignaal vraagt directe managementaandacht, zonder dat dit een individuele voorspelling of causaliteitsclaim wordt."],
+            [MANAGEMENT_BAND_LABELS["LAAG"], "< 4.5", "Dit thema is nu niet leidend, maar blijft relevant om te volgen in het behoudsbeeld."],
+            [MANAGEMENT_BAND_LABELS["MIDDEN"], "4.5-7.0", "Dit thema vraagt eerst verificatie voordat management het zwaarder maakt in route of opvolging."],
+            [MANAGEMENT_BAND_LABELS["HOOG"], ">= 7.0", "Dit thema moet nu bestuurlijk als eerste worden gewogen, zonder dat dit een individuele voorspelling of causaliteitsclaim wordt."],
         ],
         "trust_rows": [
             ["Wat dit product wel is", TRUST_CONTRACT["what_it_is"]],

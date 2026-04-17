@@ -1,19 +1,26 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, TypedDict
 
 
 ManagementBand = Literal["LAAG", "MIDDEN", "HOOG"]
 ManagementContext = Literal["verification", "stabilizing"]
 
+
+class FactorPresentation(TypedDict):
+    score_display: str
+    management_label: str
+    signal_display: str
+    show_signal: bool
+
 MANAGEMENT_BAND_LABELS: dict[ManagementBand, str] = {
-    "LAAG": "Voorlopig stabiel",
-    "MIDDEN": "Aandacht nodig",
-    "HOOG": "Direct aandachtspunt",
+    "LAAG": "Volgen",
+    "MIDDEN": "Eerst toetsen",
+    "HOOG": "Direct prioriteren",
 }
 
 MANAGEMENT_CONTEXT_LABELS: dict[ManagementContext, str] = {
-    "verification": "Meenemen in verificatie",
+    "verification": "Eerst toetsen",
     "stabilizing": "Stabiliserende factor",
 }
 
@@ -21,14 +28,18 @@ _LEGACY_BAND_ALIASES: dict[str, str] = {
     "laag": "LAAG",
     "beperkt": "LAAG",
     "stabiel": "LAAG",
+    "volgen": "LAAG",
     "midden": "MIDDEN",
     "gemengd": "MIDDEN",
     "verhoogd": "MIDDEN",
     "aandacht": "MIDDEN",
+    "toets": "MIDDEN",
+    "verificatie": "MIDDEN",
     "hoog": "HOOG",
     "sterk": "HOOG",
     "urgent": "HOOG",
     "direct": "HOOG",
+    "priorit": "HOOG",
 }
 
 
@@ -58,7 +69,7 @@ def normalize_management_label(label: str | None) -> str | None:
     normalized = label.strip().lower()
     if "stabilis" in normalized:
         return MANAGEMENT_CONTEXT_LABELS["stabilizing"]
-    if "verificatie" in normalized:
+    if "verificatie" in normalized or "toets" in normalized:
         return MANAGEMENT_CONTEXT_LABELS["verification"]
 
     for needle, band in _LEGACY_BAND_ALIASES.items():
@@ -89,3 +100,18 @@ def management_preventability_label(value: str | None) -> str | None:
         "GEMENGD_WERKSIGNAAL": MANAGEMENT_BAND_LABELS["MIDDEN"],
         "BEPERKT_WERKSIGNAAL": MANAGEMENT_BAND_LABELS["LAAG"],
     }.get(value, normalize_management_label(value))
+
+
+def build_factor_presentation(
+    *,
+    score: float,
+    signal_score: float,
+    management_label: str | None = None,
+    show_signal: bool = False,
+) -> FactorPresentation:
+    return {
+        "score_display": f"{score:.1f}/10",
+        "management_label": management_label or management_band_label(score=signal_score),
+        "signal_display": f"{signal_score:.1f}/10",
+        "show_signal": show_signal,
+    }

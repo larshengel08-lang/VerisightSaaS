@@ -77,6 +77,7 @@ function DashboardCanvas({ variant }: { variant: ReportPreviewVariant }) {
 
 function FactorCard({ card }: { card: ReportPreviewFactorCard }) {
   const tone = toneStyles[card.tone]
+  const signalWidth = card.signalDisplay ? `${Number(card.signalDisplay.replace('/10', '').replace(',', '.')) * 10}%` : '0%'
 
   return (
     <div className={`rounded-[1.35rem] border p-4 ${tone.surface}`}>
@@ -86,20 +87,24 @@ function FactorCard({ card }: { card: ReportPreviewFactorCard }) {
       </div>
       <div className="mt-3 flex items-end justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">Belevingsscore</p>
-          <span className="text-3xl font-bold text-slate-950">{card.score}</span>
-        </div>
-        <div className="text-right">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Signaalwaarde</p>
-          <p className="text-lg font-bold text-slate-900">{card.signal}</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">Ervaren score</p>
+          <span className="text-3xl font-bold text-slate-950">{card.scoreDisplay}</span>
         </div>
       </div>
-      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/70">
-        <div
-          className={tone.bar}
-          style={{ width: `${Number(card.signal.replace(',', '.')) * 10}%`, height: '100%', borderRadius: 9999 }}
-        />
-      </div>
+      {card.showSignal && card.signalDisplay ? (
+        <>
+          <div className="mt-3 rounded-[1rem] border border-white/70 bg-white/80 px-3 py-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Verdieping</p>
+            <p className="mt-1 text-sm font-semibold text-slate-900">Signaalsterkte {card.signalDisplay}</p>
+          </div>
+          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/70">
+            <div
+              className={tone.bar}
+              style={{ width: signalWidth, height: '100%', borderRadius: 9999 }}
+            />
+          </div>
+        </>
+      ) : null}
     </div>
   )
 }

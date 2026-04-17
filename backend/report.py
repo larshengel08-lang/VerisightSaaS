@@ -56,6 +56,7 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
 from backend.products.shared.management_language import (
+    build_factor_presentation,
     management_band_label,
     management_context_label,
     management_label_kind,
@@ -1762,7 +1763,8 @@ def _append_focus_question_block(
     left_card = _build_card_flowable(
         {
             "title": "Wat dit nu vraagt",
-            "value": f"{signal_value:.1f}/10 signaal",
+            "value": f"{score:.1f}/10",
+            "badge": _risk_badge(label=management_band_label(score=signal_value)),
             "body": decision_text,
             "background": theme["soft"],
         },
@@ -1772,7 +1774,7 @@ def _append_focus_question_block(
     right_card = _build_card_flowable(
         {
             "title": "Waar deze factor voor staat" if explanation else "Te toetsen vraag",
-            "value": f"{score:.1f}/10 score",
+            "value": f"{signal_value:.1f}/10 signaal",
             "body": "<br/><br/>".join(right_body_parts) if right_body_parts else "Nog geen aanvullende duiding beschikbaar.",
             "background": TOKENS["surface"],
         },
@@ -2019,13 +2021,13 @@ def _build_boardroom_story(
         evidence_cards = []
         if strong_work_signal_pct is not None:
             evidence_cards.append({
-                "title": "Direct aandachtspunt zichtbaar",
+                "title": "Direct prioriteren zichtbaar",
                 "value": f"{strong_work_signal_pct:.0f}%",
                 "body": "Aandeel van de exitbatch waar beïnvloedbare werkfrictie duidelijk zichtbaar terugkomt.",
             })
         if any_work_signal_pct is not None:
             evidence_cards.append({
-                "title": "Aandacht nodig zichtbaar",
+                "title": "Eerst toetsen zichtbaar",
                 "value": f"{any_work_signal_pct:.0f}%",
                 "body": "Aandeel van de exitbatch waar minstens één aandachtspunt zichtbaar is.",
             })
@@ -2264,6 +2266,7 @@ def _build_boardroom_story(
 def _build_retention_action_hypotheses(
     *,
     top_risks: list[tuple[str, float]],
+    factor_avgs: dict[str, float],
     retention_signal_profile: str | None,
     retention_themes: list[dict[str, Any]],
     avg_engagement: float | None,
@@ -2301,9 +2304,11 @@ def _build_retention_action_hypotheses(
     if top_risks:
         factor, signal_value = top_risks[0]
         label = FACTOR_LABELS_NL.get(factor, factor)
+        score = factor_avgs.get(factor, 5.5)
+        management_label = management_band_label(score=signal_value)
         matching_theme = next((theme for theme in decision_themes if theme["key"] == factor), None)
         body = (
-            f"{label} is nu het sterkste aandachtssignaal (signaalwaarde {signal_value:.1f}/10). "
+            f"{label} wordt nu ervaren als {score:.1f}/10 en vraagt daarmee bestuurlijk {management_label.lower()}. "
             "Dat maakt dit het logischste startpunt voor verificatie en eerste managementactie."
         )
         if matching_theme:
@@ -2513,6 +2518,8 @@ def _build_exit_hypotheses(
 
     for factor, risk_value in top_risks[:3]:
         label = FACTOR_LABELS_NL.get(factor, factor)
+        score = factor_avgs.get(factor, 5.5)
+        management_label = management_band_label(score=risk_value)
         matching_primary = next(
             (item for item in top_exit_reasons if item["code"] == primary_reason_by_factor.get(factor)),
             None,
@@ -2529,8 +2536,7 @@ def _build_exit_hypotheses(
         hypotheses.append({
             "title": f"Hypothese: {label} vraagt verdiepende validatie",
             "body": (
-                f"De score op {label.lower()} behoort tot de sterkste aandachtssignalen "
-                f"(signaalwaarde {risk_value:.1f}). "
+                f"{label} wordt nu ervaren als {score:.1f}/10 en vraagt daarmee {management_label.lower()}. "
                 + (support_text if support_text else "Dit signaal verdient vooral verificatie in gesprek voordat er actie wordt bepaald.")
             ).strip(),
             "question": (
@@ -3090,21 +3096,13 @@ def _append_rebrand_executive(
             ),
         },
         {
-            "title": "Eerste besluit",
+            "title": "Wat eerst doen",
             "body": _truncate_copy(
                 next_steps_payload.get("first_decision")
                 or next((card.get("body") for card in boardroom_cards if "verificatie" in card.get("title", "").lower()), None)
                 or "Kies eerst het spoor dat de meeste verificatiewaarde heeft.",
                 limit=165,
             ),
-        },
-        {
-            "title": "Eerste eigenaar",
-            "body": _truncate_copy(next_steps_payload.get("first_owner") or "Nog geen eigenaar benoemd.", limit=140),
-        },
-        {
-            "title": "Eerste stap",
-            "body": _truncate_copy(next_steps_payload.get("first_action") or "Maak de eerste stap expliciet binnen 30 dagen.", limit=165),
         },
     ]
     _append_executive_pathway(
@@ -3113,15 +3111,6 @@ def _append_rebrand_executive(
         content_width=content_width,
         theme=report_theme,
     )
-    extra_boardroom_cards = boardroom_cards[5:]
-    if extra_boardroom_cards:
-        _append_metric_band(
-            story,
-            [{**card, "background": TOKENS["cream"]} for card in extra_boardroom_cards[:2]],
-            content_width=content_width,
-            theme=report_theme,
-            columns=min(2, len(extra_boardroom_cards[:2])),
-        )
     compact_summary_card = management_summary_payload.get("executive_compact_card")
     if compact_summary_card:
         story.append(Spacer(1, 0.08 * cm))
@@ -3138,7 +3127,10 @@ def _append_rebrand_executive(
     _append_emphasis_note(
         story,
         title=management_summary_payload.get("boardroom_watchout_title", management_summary_payload.get("trust_note_title", "Leeswijzer")),
-        body=management_summary_payload.get("boardroom_watchout", management_summary_payload.get("trust_note", "")),
+        body=_truncate_copy(
+            management_summary_payload.get("boardroom_watchout", management_summary_payload.get("trust_note", "")),
+            limit=220,
+        ),
         content_width=content_width,
         theme=report_theme,
     )
@@ -3181,36 +3173,39 @@ def _append_rebrand_factor_analysis(
     if matrix_frame:
         story.append(matrix_frame)
         story.append(Spacer(1, 0.14 * cm))
-    table_rows = [["Factor", "Score", "Signaal", "Band"]]
+    table_rows = [["Factor", "Ervaring", "Managementstatus", "Signaalsterkte"]]
     signal_colors: list[colors.Color] = []
     factor_explanations = _factor_explanation_lookup()
     for factor, signal_value in factor_items:
         score = factor_avgs.get(factor, 5.5)
-        badge = _risk_badge(signal_value)
+        presentation = build_factor_presentation(score=score, signal_score=signal_value, show_signal=True)
+        badge = _risk_badge(label=presentation["management_label"])
         signal_colors.append(badge["fg"] if badge else TEXT)
         table_rows.append([
             FACTOR_LABELS_NL.get(factor, factor),
-            f"{score:.1f}/10",
-            f"{signal_value:.1f}/10",
-            str(badge["label"]) if badge else "",
+            presentation["score_display"],
+            presentation["management_label"],
+            presentation["signal_display"],
         ])
     score_table = _build_data_table_flowable(
         rows=table_rows,
         col_widths=[content_width * 0.42, content_width * 0.18, content_width * 0.18, content_width * 0.22],
         theme=report_theme,
-        highlight_columns={2: signal_colors, 3: signal_colors},
+        highlight_columns={2: signal_colors, 3: [TEXT for _ in signal_colors]},
         align_columns=[1, 2, 3],
         bold_columns=[1, 2, 3],
     )
     story.append(score_table)
     story.append(Spacer(1, 0.2 * cm))
     factor_cards = []
-    for factor, signal_value in factor_items[:4]:
+    for factor, signal_value in factor_items[:2]:
         label = FACTOR_LABELS_NL.get(factor, factor)
+        score = factor_avgs.get(factor, 5.5)
+        presentation = build_factor_presentation(score=score, signal_score=signal_value)
         factor_cards.append({
             "title": label,
-            "badge": _risk_badge(signal_value),
-            "value": f"{factor_avgs.get(factor, 5.5):.1f}/10",
+            "badge": _risk_badge(label=presentation["management_label"]),
+            "value": presentation["score_display"],
             "body": factor_explanations.get(label.lower(), "Gebruik deze factor als uitleglijn voor het huidige groepsbeeld."),
         })
     _append_metric_band(
@@ -3218,7 +3213,7 @@ def _append_rebrand_factor_analysis(
         factor_cards,
         content_width=content_width,
         theme=report_theme,
-        columns=2,
+        columns=min(2, len(factor_cards)),
     )
     story.append(PageBreak())
 
@@ -3238,8 +3233,8 @@ def _append_rebrand_focus_questions(
     _append_section_heading(
         story,
         eyebrow="Prioriteiten",
-        title="Waar eerst op handelen",
-        intro="Deze pagina zet de eerste prioriteiten om naar concrete verificatievragen. Gebruik dit als schakel tussen het prioriteitenbeeld en de eerste acties.",
+        title="Wat eerst begrijpen en toetsen",
+        intro="Gebruik deze pagina om eerst scherp te krijgen wat dit beeld waarschijnlijk verklaart. Nog geen actieplan: alleen de vragen en observaties die eerst bevestigd moeten worden.",
         content_width=content_width,
     )
     factor_explanations = _factor_explanation_lookup()
@@ -3265,14 +3260,20 @@ def _append_rebrand_focus_questions(
             )
             verification_question = matching_hypothesis.get("question") if matching_hypothesis else _factor_decision_text(factor, is_retention=is_retention)
             observation = explanation or (matching_hypothesis.get("body") if matching_hypothesis else None)
-            role_label = management_band_label(score=signal_value) if index == 0 else management_context_label("verification")
+            role_label = management_band_label(score=signal_value) if index == 0 else management_band_label(band="MIDDEN")
+            score = factor_avgs.get(factor, 5.5)
+            presentation = build_factor_presentation(
+                score=score,
+                signal_score=signal_value,
+                management_label=role_label,
+            )
             priority_cards.append({
                 "title": label,
-                "badge": _risk_badge(signal_value) if index == 0 else _risk_badge(label=role_label),
-                "value": f"{factor_avgs.get(factor, 5.5):.1f}/10 score · {signal_value:.1f}/10 signaal",
+                "badge": _risk_badge(label=presentation["management_label"]),
+                "value": presentation["score_display"],
                 "body": (
                     f"<b>Te toetsen vraag:</b> {verification_question}<br/>"
-                    f"<b>Waarom dit telt:</b> {observation or 'Nog geen aanvullende observatie beschikbaar.'}"
+                    f"<b>Wat we eerst moeten begrijpen:</b> {observation or 'Nog geen aanvullende observatie beschikbaar.'}"
                 ),
                 "background": TOKENS["cream"] if index == 0 else TOKENS["surface"],
             })
@@ -3365,8 +3366,12 @@ def _append_rebrand_risk_and_prevention(
     )
     if avg_risk is not None:
         band_label = "HOOG" if avg_risk >= 7 else "MIDDEN" if avg_risk >= 4.5 else "LAAG"
-        left_width = 86 * mm
-        right_width = content_width - left_width - (5 * mm)
+        if is_retention:
+            left_width = 86 * mm
+            right_width = content_width - left_width - (5 * mm)
+        else:
+            left_width = (content_width - (8 * mm)) / 3
+            right_width = left_width
         gauge_frame = _build_chart_frame_flowable(
             label=f"Gemiddeld {signal_label_lower}",
             image=_risk_gauge_image(avg_risk, band_label),
@@ -3429,8 +3434,7 @@ def _append_rebrand_risk_and_prevention(
         else:
             preventability_image = _preventability_image(pattern.get("preventability_counts", {}))
             if preventability_image is not None:
-                right_items.insert(
-                    0,
+                right_items.append(
                     _build_chart_frame_flowable(
                         label="Preventability",
                         image=preventability_image,
@@ -3439,25 +3443,35 @@ def _append_rebrand_risk_and_prevention(
                         caption="Verdeling van beïnvloedbare werkfactoren in de exitbatch.",
                         ),
                     )
-        risk_columns = _build_columns_flowable(
-            column_items=[[gauge_frame] if gauge_frame else [], [item for item in right_items if item]],
-            col_widths=[left_width, right_width],
-        )
+        if is_retention:
+            risk_columns = _build_columns_flowable(
+                column_items=[[gauge_frame] if gauge_frame else [], [item for item in right_items if item]],
+                col_widths=[left_width, right_width],
+            )
+        else:
+            risk_columns = _build_columns_flowable(
+                column_items=[
+                    [gauge_frame] if gauge_frame else [],
+                    [item for item in right_items[:1] if item],
+                    [item for item in right_items[1:2] if item],
+                ],
+                col_widths=[left_width, right_width, right_width],
+            )
         story.append(risk_columns)
-        story.append(Spacer(1, 0.2 * cm))
+        story.append(Spacer(1, 0.12 * cm))
 
     if not is_retention and top_reasons:
         story.append(Paragraph("Vertrekbeeld in thema's", STYLES["sub_title"]))
         primary_reason_frame = _build_chart_frame_flowable(
             label="Hoofdredenen van vertrek",
-            image=_ranked_bar_image(top_reasons[:4], width_cm=8.2, color=MPL_BRAND),
+            image=_ranked_bar_image(top_reasons[:3], width_cm=7.2, color=MPL_BRAND),
             content_width=content_width * 0.50,
             theme=report_theme,
             caption="Zakelijke ranglijst; geen causale claim.",
         )
         contributing_frame = _build_chart_frame_flowable(
             label="Meespelende factoren",
-            image=_ranked_bar_image(top_contributing_reasons[:4], width_cm=8.2, color=MPL_MED),
+            image=_ranked_bar_image(top_contributing_reasons[:3], width_cm=7.2, color=MPL_MED),
             content_width=content_width * 0.50,
             theme=report_theme,
             caption="Indicatieve samenhang die helpt om het eerste gesprek te richten.",
@@ -3465,14 +3479,14 @@ def _append_rebrand_risk_and_prevention(
         evidence_cards: list[dict[str, Any]] = []
         if strong_work_signal_pct is not None:
             evidence_cards.append({
-                "title": management_band_label(band="HOOG"),
+                "title": "Beïnvloedbare werkfrictie zichtbaar",
                 "value": f"{strong_work_signal_pct:.0f}%",
                 "body": "Aandeel van de exitbatch waar beïnvloedbare werkfrictie duidelijk zichtbaar terugkomt.",
                 "background": TOKENS["cream"],
             })
         if any_work_signal_pct is not None:
             evidence_cards.append({
-                "title": management_band_label(band="MIDDEN"),
+                "title": "Werkgerelateerde frictie aanwezig",
                 "value": f"{any_work_signal_pct:.0f}%",
                 "body": "Aandeel van de exitbatch waar minstens een aandachtspunt rond beïnvloedbare werkfrictie zichtbaar is.",
                 "background": TOKENS["cream"],
@@ -3496,7 +3510,7 @@ def _append_rebrand_risk_and_prevention(
         story.append(Paragraph("Stemmen uit de survey", STYLES["sub_title"]))
         _append_quote_cards(
             story,
-            quotes=quotes[:2],
+            quotes=quotes[:1],
             content_width=content_width,
             theme=report_theme,
         )
@@ -3526,19 +3540,19 @@ def _append_rebrand_actions(
     _append_section_heading(
         story,
         eyebrow="Route",
-        title="30-90 dagenroute",
-        intro="Deze pagina zet de eerste route om in volgorde: kies eerst het spoor, beleg een eigenaar, maak de eerste stap concreet en plan daarna een reviewmoment.",
+        title="Wat besluiten en doen we als eerste",
+        intro="Vanaf hier gaat het niet meer om toetsen, maar om kiezen en uitvoeren: welke route nemen we eerst, wie trekt die en welke eerste stap en review horen daarbij.",
         content_width=content_width,
     )
     if hypotheses:
         action_cards = []
-        for item in hypotheses[:3]:
+        for item in hypotheses[:1]:
             action_cards.append({
-                "title": item["title"],
-                "value": "Eerste actiekaart",
+                "title": "Eerste route",
+                "value": "Besluit nu",
                 "body": (
-                    f"<b>Te toetsen vraag:</b> {item.get('question', 'Nog geen verificatievraag beschikbaar.')}<br/>"
-                    f"<b>Waarom dit nu telt:</b> {item['body']}"
+                    f"<b>Waarom deze route eerst:</b> {item['body']}<br/>"
+                    f"<b>Eerste stap:</b> {next_steps_payload.get('first_action', 'Maak de eerste stap expliciet binnen 30 dagen.')}"
                 ),
                 "background": TOKENS["cream"],
             })
@@ -3569,12 +3583,6 @@ def _append_rebrand_actions(
         "title": scan_meta["report_repeat_title"],
         "body": scan_meta["report_repeat_body"],
     }]
-    _append_roadmap_timeline(
-        story,
-        steps=roadmap_steps,
-        content_width=content_width,
-        theme=report_theme,
-    )
     _append_numbered_action_rows(
         story,
         steps=roadmap_steps,
@@ -3597,31 +3605,21 @@ def _append_rebrand_actions(
             signal_label_lower=signal_label_lower,
         )
     if is_retention and retention_playbooks:
-        story.append(Paragraph("Behoudsplaybooks", STYLES["sub_title"]))
+        primary_playbook = retention_playbooks[0]
         if retention_playbook_calibration_note:
+            story.append(Paragraph("Behoudsplaybook", STYLES["sub_title"]))
             story.append(Paragraph(retention_playbook_calibration_note, STYLES["body"]))
-        playbook_cards = []
-        for playbook in retention_playbooks[:2]:
-            playbook_cards.append({
-                "title": playbook["label"],
-                "value": f"{playbook['signal_value']:.1f}/10",
-                "body": (
-                    f"<b>{playbook['title']}</b><br/>"
-                    f"<b>Eerste besluit:</b> {playbook['decision']}<br/>"
-                    f"<b>Eerste eigenaar:</b> {playbook['owner']}<br/>"
-                    + " ".join([f"• {action}" for action in playbook["actions"][:2]])
-                ),
-                "background": TOKENS["cream"],
-                "accent_color": report_theme["accent"],
-            })
-        _append_highlight_cards(
+        _append_emphasis_note(
             story,
-            playbook_cards,
+            title=f"{primary_playbook['label']} · {primary_playbook['title']}",
+            body=(
+                f"<b>Eerste besluit:</b> {primary_playbook['decision']}<br/>"
+                f"<b>Eerste eigenaar:</b> {primary_playbook['owner']}<br/>"
+                f"<b>Logische acties:</b> {' • '.join(primary_playbook['actions'][:2])}"
+            ),
             content_width=content_width,
             theme=report_theme,
-            columns=min(2, len(playbook_cards)),
         )
-        story.append(Spacer(1, 0.12 * cm))
     if is_retention and retention_segment_playbooks and not retention_playbooks:
         _append_emphasis_note(
             story,
@@ -3733,7 +3731,13 @@ def _append_rebrand_methodology(
     intro_card = _build_card_flowable(
         {
             "title": f"Hoe lees je het {scan_meta['signal_short_label']}?",
-            "body": methodology_payload["method_text"],
+            "body": (
+                methodology_payload["method_text"]
+                + " Op factorniveau is de ervaren score het hoofdgetal; het managementlabel vertaalt dat naar bestuurlijke actietaal; "
+                + "signaalsterkte blijft verdiepende logica voor prioritering. "
+                + "Direct prioriteren betekent: nu bestuurlijk eerst wegen. Eerst toetsen betekent: eerst valideren voordat je verzwaart. "
+                + "Volgen betekent: niet leidend, wel blijven monitoren. Stabiliserende factor betekent: dit werkt nu als dempende of beschermende factor in het groepsbeeld."
+            ),
             "background": TOKENS["surface"],
             "accent_color": report_theme["accent"],
         },
@@ -4128,6 +4132,7 @@ def generate_campaign_report(
             signal_visibility_average = sum(signal_visibility_scores) / len(signal_visibility_scores)
     retention_hypotheses = _build_retention_action_hypotheses(
         top_risks=top_risks,
+        factor_avgs=factor_avgs,
         retention_signal_profile=retention_signal_profile,
         retention_themes=retention_themes,
         avg_engagement=avg_engagement,
@@ -5225,9 +5230,9 @@ def generate_campaign_report(
                 prev_table_data[0][1] = Table([
                     [Paragraph("<b>Sterk werkfactorsignaal</b>", STYLES["body"]),
                      Paragraph(f"{prev_counts.get('STERK_WERKSIGNAAL', 0)} responses", STYLES["body"])],
-                    [Paragraph("<b>Aandacht nodig</b>", STYLES["body"]),
+                    [Paragraph("<b>Eerst toetsen</b>", STYLES["body"]),
                      Paragraph(f"{prev_counts.get('GEMENGD_WERKSIGNAAL', 0)} responses", STYLES["body"])],
-                    [Paragraph("<b>Voorlopig stabiel</b>", STYLES["body"]),
+                    [Paragraph("<b>Volgen</b>", STYLES["body"]),
                      Paragraph(f"{prev_counts.get('BEPERKT_WERKSIGNAAL', 0)} responses", STYLES["body"])],
                 ], colWidths=[content_width * 0.30, content_width * 0.22])
 

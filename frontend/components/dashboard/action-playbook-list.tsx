@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { getProductModule } from '@/lib/products/shared/registry'
+import { buildFactorPresentation, getManagementBandBadgeClasses, getRiskBandFromScore } from '@/lib/management-language'
 import type { ScanType } from '@/lib/types'
 import { FACTOR_LABELS } from '@/lib/types'
 
@@ -8,20 +9,24 @@ const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workloa
 interface Props {
   factorAverages: Record<string, number>
   scanType: ScanType
+  bandOverride?: 'HOOG' | 'MIDDEN' | 'LAAG' | null
 }
 
-export function ActionPlaybookList({ factorAverages, scanType }: Props) {
+export function ActionPlaybookList({ factorAverages, scanType, bandOverride }: Props) {
   const playbooks = getProductModule(scanType).getActionPlaybooks()
   const items = ORG_FACTORS
     .filter((factor) => factor in factorAverages)
     .map((factor) => {
       const score = factorAverages[factor]
       const signalValue = 11 - score
-      const band = signalValue >= 7 ? 'HOOG' : signalValue >= 4.5 ? 'MIDDEN' : 'LAAG'
+      const band = bandOverride ?? getRiskBandFromScore(signalValue)
+      const presentation = buildFactorPresentation({ score, signalScore: signalValue })
       return {
         factor,
+        score,
         signalValue,
         band,
+        presentation,
         playbook: playbooks[factor]?.[band] ?? null,
       }
     })
@@ -41,17 +46,22 @@ export function ActionPlaybookList({ factorAverages, scanType }: Props) {
         >
           <summary className="flex cursor-pointer list-none flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                {FACTOR_LABELS[item.factor]} - {item.band === 'HOOG' ? 'urgent playbook' : 'aandacht playbook'}
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                  {FACTOR_LABELS[item.factor]}
+                </p>
+                <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${getManagementBandBadgeClasses(item.band)}`}>
+                  {item.presentation.managementLabel}
+                </span>
+              </div>
               <h3 className="mt-2 text-base font-semibold text-[color:var(--ink)]">{item.playbook?.title}</h3>
               <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">
-                Open voor besluit, eigenaar, validatie, eerste acties en reviewmoment.
+                Dit is de uitvoerlaag onder de gekozen route: eigenaar, eerste stap, reviewmoment en wat je bewust niet moet overhaasten.
               </p>
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-[color:var(--bg)] px-3 py-1 text-xs font-semibold text-[color:var(--text)]">
-                Prioriteit {item.signalValue.toFixed(1)}/10
+                Ervaren score {item.presentation.scoreDisplay}
               </span>
               <span className="rounded-full border border-[color:var(--border)] bg-white px-3 py-1 text-xs font-semibold text-[color:var(--text)]">
                 <span className="group-open:hidden">Open</span>
@@ -96,7 +106,9 @@ export function ActionPlaybookList({ factorAverages, scanType }: Props) {
                   {item.playbook?.review ??
                     (scanType === 'exit'
                       ? 'Plan binnen 60-90 dagen een review op dit spoor: wat is gekozen, wat is uitgevoerd en wat keert terug in de volgende exitbatch?'
-                      : 'Plan binnen 45-90 dagen een review of vervolgmeting: wat is geverifieerd, welke eerste interventie loopt en wat verschuift er in het retentiesignaal?')}
+                      : scanType === 'onboarding'
+                        ? 'Plan een volgend onboardingcheckpoint pas nadat de eerste correctie of steunmaatregel bewust is belegd. Gebruik dat volgende moment als bounded vervolglezing, niet als automatische journey-claim.'
+                      : 'Plan binnen 45-90 dagen een review of vervolgmeting: wat is geverifieerd, welke eerste stap loopt en wat verschuift er in het retentiesignaal?')}
                 </p>
               </PlaybookColumn>
             </div>

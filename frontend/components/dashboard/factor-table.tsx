@@ -1,5 +1,6 @@
 'use client'
 
+import { buildFactorPresentation, getManagementBandBadgeClasses, getRiskBandFromScore } from '@/lib/management-language'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { FACTOR_LABELS } from '@/lib/types'
 import type { ScanType } from '@/lib/types'
@@ -18,32 +19,19 @@ export function FactorTable({ factorAverages, scanType }: Props) {
     .map(f => {
       const score    = factorAverages[f]
       const riskVal  = 11 - score
-      const urgency  = riskVal >= 7 ? 'URGENT' : riskVal >= 4.5 ? 'AANDACHT' : 'OK'
-      return { factor: f, score, riskVal, urgency }
+      const band = getRiskBandFromScore(riskVal)
+      const presentation = buildFactorPresentation({ score, signalScore: riskVal })
+      return { factor: f, score, riskVal, band, presentation }
     })
     .sort((a, b) => b.riskVal - a.riskVal)
-
-  const urgencyStyle: Record<string, string> = {
-    URGENT:   'bg-red-100 text-red-700',
-    AANDACHT: 'bg-amber-100 text-amber-700',
-    OK:       'bg-green-100 text-green-700',
-  }
-  const urgencyCopy =
-    scanType === 'exit'
-      ? {
-          URGENT: 'NU DUIDEN',
-          AANDACHT: 'DOORVRAGEN',
-          OK: 'MONITOREN',
-        }
-      : {
-          URGENT: 'URGENT',
-          AANDACHT: 'AANDACHT',
-          OK: 'MONITOREN',
-        }
   const introText =
     scanType === 'exit'
-      ? 'De belevingsscore laat zien hoe vertrekkers een thema gemiddeld ervoeren. De frictiescore per factor vertaalt dat naar prioriteit voor vertrekduiding: hoe hoger de signalering, hoe eerder dit thema managementverificatie verdient.'
-      : `De belevingsscore laat zien hoe medewerkers een thema gemiddeld ervaren. Het ${scanDefinition.signalLabelLower} per factor vertaalt dat naar prioriteit voor behoudsduiding: hoe hoger de signalering, hoe eerder dit thema verificatie en opvolging vraagt.`
+      ? 'De belevingsscore laat zien hoe vertrekkers een thema gemiddeld ervoeren. Het managementlabel vertaalt dat naar wat dit bestuurlijk nu vraagt. De signaallogica blijft ondersteunend en is geen tweede hoofdscore.'
+      : scanType === 'team'
+        ? `De belevingsscore laat zien hoe medewerkers hun directe werkcontext gemiddeld ervaren. Het managementlabel vertaalt dat naar wat dit lokaal bestuurlijk vraagt. Het ${scanDefinition.signalLabelLower} per factor blijft ondersteunende logica, geen tweede hoofdscore.`
+      : scanType === 'onboarding'
+        ? `De belevingsscore laat zien hoe nieuwe medewerkers dit checkpoint gemiddeld ervaren. Het managementlabel vertaalt dat naar wat dit in de vroege managementread vraagt. Het ${scanDefinition.signalLabelLower} per factor blijft ondersteunende logica, geen tweede hoofdscore.`
+      : `De belevingsscore laat zien hoe medewerkers een thema gemiddeld ervaren. Het managementlabel vertaalt dat naar wat dit bestuurlijk vraagt voor behoud. Het ${scanDefinition.signalLabelLower} per factor blijft ondersteunende logica, geen tweede hoofdscore.`
 
   return (
     <div className="space-y-2">
@@ -64,8 +52,8 @@ export function FactorTable({ factorAverages, scanType }: Props) {
               style={{
                 width: `${((row.score - 1) / 9) * 100}%`,
                 backgroundColor:
-                  row.urgency === 'URGENT' ? '#DC2626'
-                  : row.urgency === 'AANDACHT' ? '#F59E0B'
+                  row.band === 'HOOG' ? '#DC2626'
+                  : row.band === 'MIDDEN' ? '#F59E0B'
                   : '#16A34A',
               }}
             />
@@ -73,12 +61,12 @@ export function FactorTable({ factorAverages, scanType }: Props) {
 
           {/* Score */}
           <span className="text-sm font-semibold text-gray-800 w-20 text-right">
-            {row.riskVal.toFixed(1)}
+            {row.presentation.scoreDisplay}
           </span>
 
           {/* Badge */}
-          <span className={`text-xs font-bold px-1.5 py-0.5 rounded w-20 text-center ${urgencyStyle[row.urgency]}`}>
-            {urgencyCopy[row.urgency as keyof typeof urgencyCopy]}
+          <span className={`text-xs font-bold px-2 py-0.5 rounded min-w-[124px] text-center ${getManagementBandBadgeClasses(row.band)}`}>
+            {row.presentation.managementLabel}
           </span>
         </div>
       ))}
