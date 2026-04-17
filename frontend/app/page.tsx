@@ -55,8 +55,8 @@ export default function LandingPage() {
 
           {/* 1 — Hero */}
           <section className="bg-[#F7F5F1] border-b border-[#E5E0D6]">
-            <div className="marketing-shell grid gap-12 py-16 lg:grid-cols-2 lg:items-center lg:py-20">
-              <div>
+            <div className="marketing-shell py-16 lg:py-20">
+              <div className="max-w-3xl">
                 <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">
                   Exit- &amp; retentie-analyse
                 </p>
@@ -65,7 +65,7 @@ export default function LandingPage() {
                   <strong className="font-semibold">vertrek- en retentiesignalen</strong>
                 </h1>
                 <p className="mt-5 max-w-[48ch] text-base leading-relaxed text-[#4A5563]">
-                  Verisight helpt HR en management scherp zien welke patronen spelen en waar gerichte actie nodig is.
+                  Verisight helpt HR en management scherp zien welke patronen spelen, waar gerichte actie nodig is en wanneer een compacte hercheck logisch wordt.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-4">
                   <Link
@@ -86,7 +86,7 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div>
+              <div className="mt-12">
                 <p className="mb-2 text-[0.6rem] font-medium uppercase tracking-[0.12em] text-[#9CA3AF]">
                   Voorbeeld van rapportopbouw
                 </p>
@@ -161,6 +161,14 @@ export default function LandingPage() {
                   </Link>
                 </div>
               ))}
+            </div>
+            <div className="mt-6 rounded-xl border border-[rgba(247,245,241,0.12)] bg-[rgba(247,245,241,0.06)] p-6">
+              <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#D6A14D]">Vervolgroute</p>
+              <h3 className="mt-3 text-xl font-medium text-[#F7F5F1]">Pulse blijft bewust een compacte follow-on route.</h3>
+              <p className="mt-3 max-w-[58ch] text-sm leading-relaxed text-[rgba(247,245,241,0.68)]">
+                Pas na een eerste diagnose, baseline of eerste actie komt Pulse in beeld als korte managementcheck. Zo
+                blijft de eerste koop scherp en de vervolgstap kleiner dan een nieuwe brede meting.
+              </p>
             </div>
           </MarketingSection>
 
