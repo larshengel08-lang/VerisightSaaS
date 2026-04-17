@@ -96,7 +96,7 @@ export function SolutionsDropdown() {
               </Link>
             ))}
 
-            <div className="mx-2 mt-2 rounded-lg border border-[#E5E0D6] bg-[#F7F5F1] px-3 py-3">
+            <div className="mx-2 mt-2 rounded-lg border border-[#E5E0D6] bg-[#F7F5F1] p-3">
               <Link
                 href="/producten"
                 onClick={() => setOpen(false)}
