@@ -25,17 +25,14 @@ export function PublicHeader({
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-[#E5E0D6] bg-white">
       <div className="marketing-shell py-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Wordmark size="md" />
-            <span className="hidden rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 xl:inline-flex">
-              Vanaf circa 200 medewerkers
-            </span>
           </div>
 
-          <nav className="hidden items-center gap-2 rounded-full border border-slate-200 bg-slate-50/80 p-1 lg:flex">
+          <nav className="hidden items-center gap-1 lg:flex">
             <div className="px-2">
               <SolutionsDropdown />
             </div>
@@ -43,10 +40,10 @@ export function PublicHeader({
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                className={`rounded-md px-3 py-2 text-sm transition-colors ${
                   pathname === link.href
-                    ? 'bg-white text-slate-950 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-950'
+                    ? 'font-medium text-[#132033]'
+                    : 'text-[#4A5563] hover:text-[#132033]'
                 }`}
               >
                 {link.label}
@@ -64,7 +61,7 @@ export function PublicHeader({
             </Link>
             <Link
               href={ctaHref}
-              className="inline-flex rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.18)] transition-all hover:-translate-y-0.5 hover:bg-blue-700"
+              className="inline-flex rounded-md bg-[#3C8D8A] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#2d6e6b]"
             >
               {ctaLabel}
             </Link>
@@ -75,7 +72,7 @@ export function PublicHeader({
             aria-expanded={mobileOpen}
             aria-controls="public-mobile-menu"
             onClick={() => setMobileOpen((current) => !current)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-colors hover:text-slate-950 lg:hidden"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#E5E0D6] bg-white text-[#4A5563] transition-colors hover:text-[#132033] lg:hidden"
           >
             <span className="sr-only">Open menu</span>
             <svg
@@ -97,22 +94,19 @@ export function PublicHeader({
         {mobileOpen ? (
           <div
             id="public-mobile-menu"
-            className="mt-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-[0_24px_60px_rgba(15,23,42,0.08)] lg:hidden"
+            className="mt-4 rounded-xl border border-[#E5E0D6] bg-white p-4 shadow-[0_24px_60px_rgba(19,32,51,0.08)] lg:hidden"
           >
             <div className="space-y-1">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <SolutionsDropdown />
               </div>
-              <p className="px-4 pt-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                Vanaf circa 200 medewerkers
-              </p>
               <Link
                 href="/producten"
                 onClick={closeMenu}
                 className={`block rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
                   pathname === '/producten'
-                    ? 'bg-slate-100 text-slate-950'
-                    : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950'
+                    ? 'bg-[#F7F5F1] text-[#132033]'
+                    : 'text-[#4A5563] hover:bg-[#F7F5F1] hover:text-[#132033]'
                 }`}
               >
                 Alle producten
@@ -124,8 +118,8 @@ export function PublicHeader({
                   onClick={closeMenu}
                   className={`block rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
                     pathname === link.href
-                      ? 'bg-slate-100 text-slate-950'
-                      : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950'
+                      ? 'bg-[#F7F5F1] text-[#132033]'
+                      : 'text-[#4A5563] hover:bg-[#F7F5F1] hover:text-[#132033]'
                   }`}
                 >
                   {link.label}
@@ -138,14 +132,14 @@ export function PublicHeader({
                 href="/login"
                 prefetch={false}
                 onClick={closeMenu}
-                className="block rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950"
+                className="block rounded-2xl px-4 py-3 text-sm font-medium text-[#4A5563] transition-colors hover:bg-[#F7F5F1] hover:text-[#132033]"
               >
                 Inloggen
               </Link>
               <Link
                 href={ctaHref}
                 onClick={closeMenu}
-                className="mt-3 inline-flex w-full items-center justify-center rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(37,99,235,0.18)] transition-colors hover:bg-blue-700"
+                className="mt-3 inline-flex w-full items-center justify-center rounded-md bg-[#3C8D8A] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2d6e6b]"
               >
                 {ctaLabel}
               </Link>
