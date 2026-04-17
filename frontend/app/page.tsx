@@ -272,12 +272,14 @@ export default function LandingPage() {
                     Plan een kennismaking
                   </Link>
                   <p>
-                    <Link
-                      href="/producten"
+                    <a
+                      href="/examples/voorbeeldrapport_verisight.pdf"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-sm text-[#4A5563] hover:text-[#132033] hover:underline"
                     >
                       Bekijk voorbeeldrapport →
-                    </Link>
+                    </a>
                   </p>
                 </div>
               </div>
