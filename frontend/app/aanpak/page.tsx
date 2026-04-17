@@ -1,41 +1,29 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import {
-  MarketingHeroIntro,
-  MarketingHeroStage,
-  MarketingHeroSupport,
-} from '@/components/marketing/marketing-hero'
-import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
-import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
+import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { MarketingSection } from '@/components/marketing/marketing-section'
-import { SectionHeading } from '@/components/marketing/section-heading'
-import {
-  approachRoutes,
-  approachSteps,
-  customerLifecycleStages,
-  included,
-  trustItems,
-} from '@/components/marketing/site-content'
-import { TrustStrip } from '@/components/marketing/trust-strip'
+import { PublicFooter } from '@/components/marketing/public-footer'
+import { PublicHeader } from '@/components/marketing/public-header'
+import { approachSteps, included } from '@/components/marketing/site-content'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 export const metadata: Metadata = {
   title: 'Aanpak',
   description:
-    'Bekijk hoe Verisight eerste trajecten, vervolgvormen en de portfolioroute opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
+    'Van kennismaking tot bruikbaar managementinzicht — in gemiddeld drie weken. Heldere stappen, vaste deliverables, geen open eind.',
   alternates: { canonical: '/aanpak' },
   openGraph: {
     title: 'Aanpak | Verisight',
     description:
-      'Bekijk hoe Verisight eerste trajecten, vervolgvormen en de portfolioroute opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
+      'Van kennismaking tot bruikbaar managementinzicht — in gemiddeld drie weken. Heldere stappen, vaste deliverables, geen open eind.',
     url: 'https://www.verisight.nl/aanpak',
-    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Verisight aanpak voor ExitScan en RetentieScan' }],
+    images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Aanpak | Verisight',
     description:
-      'Bekijk hoe Verisight eerste trajecten, vervolgvormen en de portfolioroute opbouwt van intake en uitnodiging tot dashboard, rapport en opvolging.',
+      'Van kennismaking tot bruikbaar managementinzicht — in gemiddeld drie weken. Heldere stappen, vaste deliverables, geen open eind.',
     images: ['/opengraph-image'],
   },
 }
@@ -53,222 +41,153 @@ export default function AanpakPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <MarketingPageShell
-        theme="neutral"
-        pageType="approach"
-        ctaHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_hero' })}
-        heroIntro={
-          <MarketingHeroIntro>
-            <p className="marketing-hero-eyebrow text-blue-600">Aanpak</p>
-            <h1 className="marketing-hero-title marketing-hero-title-page font-display text-slate-950">
-              Een begeleide productvorm die kooprust en uitvoerbaarheid combineert.
-            </h1>
-            <p className="marketing-hero-copy text-slate-600">
-              Verisight is geen losse surveytool en ook geen zwaar consultancytraject. Je koopt een duidelijke route
-              van intake en uitvoering naar rapport, bestuurlijke handoff en eerste opvolging.
+
+      <div className="min-h-screen bg-white">
+        <PublicHeader />
+        <main>
+
+          {/* Hero */}
+          <section className="bg-[#F7F5F1] border-b border-[#E5E0D6]">
+            <div className="marketing-shell py-14">
+              <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">
+                Aanpak
+              </p>
+              <h1 className="mt-3 max-w-[28ch] font-display text-[clamp(1.6rem,3.5vw,2.2rem)] font-light leading-[1.15] tracking-[-0.02em] text-[#132033]">
+                Van eerste contact tot bruikbaar inzicht
+              </h1>
+              <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-[#4A5563]">
+                Geen losse surveytool en geen zwaar consultancytraject. U koopt een duidelijke route van intake en uitvoering naar rapport, bestuurlijke handoff en eerste opvolging.
+              </p>
+            </div>
+          </section>
+
+          {/* Processtappen */}
+          <MarketingSection tone="tint">
+            <h2 className="text-xl font-medium text-[#132033]">Hoe een traject verloopt</h2>
+            <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-[#4A5563]">
+              Van kennismaking tot eerste managementread — gemiddeld binnen drie weken operationeel.
             </p>
-            <div className="marketing-hero-actions">
-              <div className="marketing-hero-cta-row">
-                <a
-                  href={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_hero' })}
-                  className="inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(37,99,235,0.18)] transition-all hover:-translate-y-0.5 hover:bg-blue-700"
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {approachSteps.map(({ title, body }) => (
+                <div key={title} className="flex flex-col gap-3 rounded-xl border border-[#E5E0D6] bg-white p-6">
+                  <span className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">
+                    {title.split('.')[0].trim()}
+                  </span>
+                  <h3 className="text-base font-medium text-[#132033]">
+                    {title.replace(/^\d+\.\s*/, '')}
+                  </h3>
+                  <p className="text-sm leading-relaxed text-[#4A5563]">{body}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-6 text-sm text-[#9CA3AF]">Gemiddeld binnen 3 weken operationeel.</p>
+          </MarketingSection>
+
+          {/* Wat u zelf doet */}
+          <MarketingSection tone="surface">
+            <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
+              <div>
+                <h2 className="text-xl font-medium text-[#132033]">Wat u zelf doet</h2>
+                <p className="mt-3 max-w-[48ch] text-sm leading-relaxed text-[#4A5563]">
+                  Verisight begeleidt de setup en uitvoering. Uw bijdrage is beperkt en voorspelbaar — zo blijft de doorlooptijd kort.
+                </p>
+                <div className="mt-6 space-y-4">
+                  {[
+                    { step: '01', title: 'Route bevestigen', body: 'U bevestigt scan, variant, timing, doelgroep en contactpersoon na akkoord.' },
+                    { step: '02', title: 'Respondentbestand aanleveren', body: 'U levert het respondentbestand aan — Verisight controleert de import en zet uitnodigingen klaar.' },
+                    { step: '03', title: 'Dashboard en rapport ontvangen', body: 'U ontvangt dashboard, managementrapport en toelichting en gebruikt dit voor de eerste managementread en het vervolgesprek.' },
+                  ].map(({ step, title, body }) => (
+                    <div key={step} className="flex gap-4">
+                      <span className="mt-0.5 text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A] tabular-nums">{step}</span>
+                      <div>
+                        <p className="text-sm font-medium text-[#132033]">{title}</p>
+                        <p className="mt-1 text-sm leading-relaxed text-[#4A5563]">{body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h2 className="text-xl font-medium text-[#132033]">Eerste waarde</h2>
+                <p className="mt-3 max-w-[48ch] text-sm leading-relaxed text-[#4A5563]">
+                  Verisight verkoopt geen instant inzicht zonder responsbasis. Daarom wordt ook first value voorspelbaar uitgelegd.
+                </p>
+                <div className="mt-6 space-y-3">
+                  {[
+                    'Na de eerste responses is de campaign zichtbaar op gang, maar lezen we nog terughoudend.',
+                    'Vanaf ongeveer 5 responses ontstaat de eerste bruikbare detailweergave in dashboard en rapport.',
+                    'Vanaf ongeveer 10 responses ontstaat een steviger patroonbeeld voor prioritering, managementduiding en eerste besluiten.',
+                  ].map((item) => (
+                    <div key={item} className="flex items-start gap-2.5 rounded-lg border border-[#E5E0D6] bg-white p-4 text-sm leading-relaxed text-[#4A5563]">
+                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#3C8D8A]" />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </MarketingSection>
+
+          {/* Wat altijd inbegrepen is */}
+          <MarketingSection tone="tint">
+            <h2 className="text-xl font-medium text-[#132033]">Wat altijd inbegrepen is</h2>
+            <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-[#4A5563]">
+              Een duidelijke productvorm met vaste output, expliciete leeswijzers en heldere grenzen.
+            </p>
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+              {included.map((item) => (
+                <li key={item} className="flex items-start gap-2.5 text-sm text-[#4A5563]">
+                  <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#3C8D8A]" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </MarketingSection>
+
+          {/* Closing CTA */}
+          <MarketingSection tone="surface">
+            <div className="text-center">
+              <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">
+                Kennismaking
+              </p>
+              <h2 className="mt-3 max-w-[32ch] mx-auto font-display text-[clamp(1.4rem,3vw,2rem)] font-light leading-[1.2] tracking-[-0.02em] text-[#132033]">
+                Benieuwd hoe een traject voor uw organisatie eruitziet?
+              </h2>
+              <p className="mt-4 max-w-[48ch] mx-auto text-sm leading-relaxed text-[#4A5563]">
+                In een kort gesprek kijken we samen welke scan nu het meest logisch is, hoe de aanpak eruitziet en wat u kunt verwachten.
+              </p>
+              <div className="mt-6 flex flex-wrap justify-center gap-4">
+                <Link
+                  href={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_closing_cta' })}
+                  className="inline-flex rounded-md bg-[#3C8D8A] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2d6e6b]"
                 >
-                  Plan kennismaking
-                </a>
+                  Plan een kennismaking
+                </Link>
                 <Link
                   href="/tarieven"
-                  className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
+                  className="inline-flex rounded-md border border-[#E5E0D6] bg-white px-6 py-3 text-sm font-medium text-[#4A5563] transition-colors hover:border-[#3C8D8A] hover:text-[#132033]"
                 >
                   Bekijk tarieven
                 </Link>
               </div>
             </div>
-          </MarketingHeroIntro>
-        }
-        heroStage={
-          <MarketingHeroStage>
-            <div className="space-y-5">
-              <span className="marketing-stage-tag bg-blue-400/12 text-blue-100">Proces-first</span>
-              <h2 className="marketing-stage-title font-display text-white">
-                Gebruik de aanpakpagina om voorspelbaarheid te toetsen, niet om een los procesplaatje te bekijken.
-              </h2>
-              <p className="marketing-stage-copy text-slate-300">
-                Na productkeuze moet snel duidelijk worden hoe een traject loopt, wat inbegrepen is en waar begeleiding
-                het verschil maakt. Deze pagina moet die kooprust geven.
-              </p>
-              <div className="marketing-stage-list">
-                {approachSteps.slice(0, 3).map((step) => (
-                  <div key={step.title} className="marketing-stage-list-item">
-                    <p className="text-sm font-semibold text-white">{step.title}</p>
-                    <p className="mt-2 text-sm leading-7 text-slate-300">{step.body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </MarketingHeroStage>
-        }
-        heroSupport={
-          <MarketingHeroSupport>
-            <div className="marketing-support-note text-sm leading-7 text-slate-600">
-              Trust zit hier in proceszekerheid: heldere rolverdeling, begeleide setup en een geloofwaardige uitleg van
-              wanneer de eerste managementread echt bruikbaar wordt.
-            </div>
-            <div className="marketing-link-grid">
-              <Link
-                href="/producten"
-                className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
-              >
-                Bekijk producten
-              </Link>
-              <Link
-                href="/vertrouwen"
-                className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
-              >
-                Bekijk trustlaag
-              </Link>
-            </div>
-          </MarketingHeroSupport>
-        }
-      >
-        <MarketingSection tone="plain">
-          <div className="grid gap-5 lg:grid-cols-4">
-            {approachSteps.map(({ title, body }) => (
-              <div key={title} className="rounded-[1.75rem] border border-slate-200 bg-white p-7 shadow-sm">
-                <p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-600">{title}</p>
-                <p className="mt-4 text-sm leading-7 text-slate-600">{body}</p>
-              </div>
-            ))}
-          </div>
-        </MarketingSection>
+          </MarketingSection>
 
-        <MarketingSection tone="surface">
-          <div className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-8 md:p-10">
-              <SectionHeading
-                eyebrow="Na akkoord"
-                title="Wat de klant zelf doet en wat Verisight begeleidt."
-                description="Zo blijft de handoff van sales naar delivery voorspelbaar: de klant levert input, Verisight beheert setup, importcontrole en activatie, en daarna start het eerste managementgebruik."
-              />
-              <div className="mt-8 grid gap-4 md:grid-cols-2">
-                {[
-                  'De klant bevestigt route, timing, doelgroep en contactpersoon.',
-                  'Verisight zet organisatie en campaign op en controleert het respondentbestand.',
-                  'Verisight start uitnodigingen en activeert daarna het juiste dashboard voor de klant.',
-                  'De klant gebruikt dashboard en rapport voor de eerste managementread en het eerste vervolggesprek.',
-                ].map((item, index) => (
-                  <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-700">
-                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Stap {index + 1}</p>
-                    <p className="mt-3">{item}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-[2rem] border border-slate-200 bg-white p-8 md:p-10">
-              <SectionHeading
-                eyebrow="Eerste waarde"
-                title="Van eerste respons naar eerste managementread."
-                description="Verisight verkoopt geen instant inzicht zonder responsbasis. Daarom hoort ook first value voorspelbaar en geloofwaardig te worden uitgelegd."
-              />
-              <div className="mt-8 grid gap-4">
-                {[
-                  'Na de eerste responses zie je dat de campaign op gang komt, maar lezen we nog terughoudend.',
-                  'Vanaf ongeveer 5 responses ontstaat de eerste bruikbare detailweergave in dashboard en rapport.',
-                  'Vanaf ongeveer 10 responses ontstaat een steviger patroonbeeld voor prioritering, managementduiding en eerste besluiten.',
-                ].map((item) => (
-                  <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-700">
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </MarketingSection>
-
-        <MarketingSection tone="plain">
-          <div className="grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
-            <div className="rounded-[2rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-8 md:p-10">
-              <SectionHeading
-                eyebrow="Wat standaard inbegrepen is"
-                title="Je koopt een route van scan-keuze tot rapportage."
-                description="Geen losse tool en geen open eind aan consultancy-uren, maar een duidelijke productvorm met vaste output, expliciete leeswijzers en productspecifieke trustgrenzen."
-              />
-              <div className="mt-10 grid gap-3 sm:grid-cols-2">
-                {included.map((item) => (
-                  <div
-                    key={item}
-                    className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-700"
-                  >
-                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
-                      +
-                    </span>
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid gap-5 md:grid-cols-2">
-              {approachRoutes.map((route) => (
-                <div key={route.title} className={`rounded-[2rem] border p-8 ${route.shellClass}`}>
-                  <p className={`text-xs font-bold uppercase tracking-[0.22em] ${route.eyebrowClass}`}>{route.eyebrow}</p>
-                  <h2 className="mt-4 text-2xl font-semibold text-slate-950">{route.title}</h2>
-                  <p className={`mt-4 text-sm leading-7 ${route.bodyClass}`}>{route.body}</p>
-                  <ul className={`mt-6 space-y-3 text-sm leading-7 ${route.bodyClass}`}>
-                    {route.bullets.map((bullet) => (
-                      <li key={bullet}>{bullet}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-        </MarketingSection>
-
-        <MarketingSection tone="plain">
-          <div className="marketing-panel-soft p-8 md:p-10">
-            <SectionHeading
-              eyebrow="Customer lifecycle"
-              title="De route stopt niet bij het rapport."
-              description="De assisted aanpak moet ook duidelijk maken wat de eerste koop is, wanneer dezelfde route logisch terugkomt en wanneer een tweede product pas geloofwaardig wordt."
+          {/* Contact form */}
+          <MarketingSection tone="tint">
+            <MarketingInlineContactPanel
+              eyebrow="Plan kennismaking"
+              title="Vertel kort welke managementvraag nu speelt."
+              body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy en prijs."
+              defaultRouteInterest="exitscan"
+              defaultCtaSource="approach_form"
             />
-            <div className="mt-10 grid gap-4 xl:grid-cols-5">
-              {customerLifecycleStages.map((stage) => (
-                <div key={stage.title} className="rounded-2xl border border-slate-200 bg-white p-5">
-                  <p className="text-sm font-semibold text-slate-950">{stage.title}</p>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{stage.body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </MarketingSection>
+          </MarketingSection>
 
-        <MarketingSection tone="dark">
-          <div className="rounded-[2rem] border border-white/10 bg-[#0d1b2e] p-8 text-white shadow-[0_28px_70px_rgba(15,23,42,0.16)]">
-            <SectionHeading
-              eyebrow="Proceszekerheid"
-              title="Trust zit in de productvorm, niet in extra theater."
-              description="Voor organisaties vanaf circa 200 medewerkers is niet alleen de analyse belangrijk, maar ook dat de route netjes, voorspelbaar, privacybewust en methodisch uitlegbaar blijft."
-              light
-            />
-            <div className="mt-8">
-              <TrustStrip items={trustItems} tone="dark" />
-            </div>
-          </div>
-        </MarketingSection>
-
-        <MarketingSection tone="plain">
-          <MarketingCalloutBand
-            eyebrow="Volgende stap"
-            title="Wil je bepalen welke vorm nu het best past?"
-            body="In een kort gesprek bepalen we of jullie beter starten met ExitScan Baseline, RetentieScan Baseline of pas later een portfolioroute toevoegen, en wanneer een vervolgvorm of segment deep dive logisch wordt."
-            primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_callout' })}
-            primaryLabel="Plan kennismaking"
-            secondaryHref="/tarieven"
-            secondaryLabel="Bekijk tarieven"
-          />
-        </MarketingSection>
-      </MarketingPageShell>
+        </main>
+        <PublicFooter />
+      </div>
     </>
   )
 }
