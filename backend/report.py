@@ -2877,10 +2877,22 @@ def _append_methodology_section(
         )))
 
 
-def _cover_pill_text(*, scan_lbl: str, is_retention: bool) -> str:
+def _cover_pill_text(*, scan_type: str, scan_lbl: str, is_retention: bool) -> str:
     if "Live" in scan_lbl:
-        return "RetentieScan Live" if is_retention else "ExitScan Live"
-    return "RetentieScan Momentopname" if is_retention else "ExitScan Retrospectief"
+        if is_retention:
+            return "RetentieScan Live"
+        if scan_type == "exit":
+            return "ExitScan Live"
+        if scan_type == "team":
+            return "TeamScan Lokale Read"
+        return scan_lbl
+    if is_retention:
+        return "RetentieScan Momentopname"
+    if scan_type == "exit":
+        return "ExitScan Retrospectief"
+    if scan_type == "team":
+        return "TeamScan Formele Output"
+    return scan_lbl
 
 
 def _append_rebrand_cover(
@@ -2899,7 +2911,7 @@ def _append_rebrand_cover(
     is_retention: bool,
 ) -> None:
     pill = Table(
-        [[Paragraph(_cover_pill_text(scan_lbl=scan_lbl, is_retention=is_retention), ParagraphStyle(
+        [[Paragraph(_cover_pill_text(scan_type=camp.scan_type, scan_lbl=scan_lbl, is_retention=is_retention), ParagraphStyle(
             "cover_pill",
             fontName=REPORT_FONTS["medium"],
             fontSize=8.5,
@@ -4209,23 +4221,60 @@ def generate_campaign_report(
     total_cost = sum(
         r.replacement_cost_eur for r in responses if r.replacement_cost_eur
     )
-    management_summary_payload = product_module.get_management_summary_payload(
-        top_factor_labels=top_factor_labels,
-        top_factor_keys=top_factor_keys,
-        top_exit_reason_label=top_exit_reason_label,
-        top_contributing_reason_label=top_contributing_reason_label,
-        strong_work_signal_pct=strong_work_signal_pct,
-        signal_visibility_average=signal_visibility_average,
-        total_replacement_cost_eur=total_cost if not is_retention else None,
-    ) if not is_retention else product_module.get_management_summary_payload(
-        top_factor_labels=top_factor_labels,
-        top_factor_keys=top_factor_keys,
-        retention_signal_profile=retention_signal_profile,
-        avg_engagement=avg_engagement,
-        avg_turnover_intention=avg_turnover_intention,
-        avg_stay_intent=avg_stay_intent,
-        retention_theme_title=retention_themes[0]["title"] if retention_themes else None,
-    )
+    if is_retention:
+        management_summary_payload = product_module.get_management_summary_payload(
+            top_factor_labels=top_factor_labels,
+            top_factor_keys=top_factor_keys,
+            retention_signal_profile=retention_signal_profile,
+            avg_engagement=avg_engagement,
+            avg_turnover_intention=avg_turnover_intention,
+            avg_stay_intent=avg_stay_intent,
+            retention_theme_title=retention_themes[0]["title"] if retention_themes else None,
+        )
+    elif camp.scan_type == "team":
+        management_summary_payload = product_module.get_management_summary_payload(
+            top_factor_labels=top_factor_labels,
+            top_factor_keys=top_factor_keys,
+            avg_stay_intent=avg_stay_intent,
+            responses=responses,
+            top_exit_reason_label=top_exit_reason_label,
+            top_contributing_reason_label=top_contributing_reason_label,
+            strong_work_signal_pct=strong_work_signal_pct,
+            signal_visibility_average=signal_visibility_average,
+            total_replacement_cost_eur=None,
+        )
+    elif camp.scan_type == "onboarding":
+        management_summary_payload = product_module.get_management_summary_payload(
+            top_factor_labels=top_factor_labels,
+            top_factor_keys=top_factor_keys,
+            avg_stay_intent=avg_stay_intent,
+            top_exit_reason_label=top_exit_reason_label,
+            top_contributing_reason_label=top_contributing_reason_label,
+            strong_work_signal_pct=strong_work_signal_pct,
+            signal_visibility_average=signal_visibility_average,
+            total_replacement_cost_eur=None,
+        )
+    elif camp.scan_type == "leadership":
+        management_summary_payload = product_module.get_management_summary_payload(
+            top_factor_labels=top_factor_labels,
+            top_factor_keys=top_factor_keys,
+            avg_stay_intent=avg_stay_intent,
+            top_exit_reason_label=top_exit_reason_label,
+            top_contributing_reason_label=top_contributing_reason_label,
+            strong_work_signal_pct=strong_work_signal_pct,
+            signal_visibility_average=signal_visibility_average,
+            total_replacement_cost_eur=None,
+        )
+    else:
+        management_summary_payload = product_module.get_management_summary_payload(
+            top_factor_labels=top_factor_labels,
+            top_factor_keys=top_factor_keys,
+            top_exit_reason_label=top_exit_reason_label,
+            top_contributing_reason_label=top_contributing_reason_label,
+            strong_work_signal_pct=strong_work_signal_pct,
+            signal_visibility_average=signal_visibility_average,
+            total_replacement_cost_eur=total_cost,
+        )
     hypotheses_payload = product_module.get_hypotheses_payload()
     next_steps_payload = product_module.get_next_steps_payload(
         top_focus_labels=top_factor_labels,
@@ -4239,7 +4288,16 @@ def generate_campaign_report(
             top_exit_reasons=pattern.get("top_exit_reasons", []),
             top_contributing_reasons=pattern.get("top_contributing_reasons", []),
             factor_avgs=factor_avgs,
-        ) if has_pattern else []
+        )
+        if camp.scan_type == "exit" and has_pattern
+        else product_module.get_hypothesis_rows(
+            top_risks=top_risks,
+            factor_avgs=factor_avgs,
+            top_factor_labels=top_factor_labels,
+            top_factor_keys=top_factor_keys,
+        )
+        if has_pattern and hasattr(product_module, "get_hypothesis_rows")
+        else []
     )
 
     cover_metric_cards = [
@@ -4265,7 +4323,16 @@ def generate_campaign_report(
         },
     ]
     signal_page_cards: list[dict[str, str]] = []
-    if camp.scan_type == "exit":
+    if hasattr(product_module, "get_signal_page_cards_payload"):
+        signal_page_cards = product_module.get_signal_page_cards_payload(
+            responses=responses,
+            avg_signal=avg_risk,
+            avg_stay_intent=avg_stay_intent,
+            avg_turnover_intention=avg_turnover_intention,
+            top_factor_labels=top_factor_labels,
+            top_factor_keys=top_factor_keys,
+        )
+    elif camp.scan_type == "exit":
         signal_page_cards = [
             {
                 "title": "Hoofdreden",

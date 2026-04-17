@@ -149,7 +149,7 @@ export function buildTeamLocalReadState(
       summaryBody:
         'TeamScan toont lokale context pas zodra er genoeg groepsresponses zijn om afdelingsuitsplitsing veilig te lezen.',
       caution:
-        'Gebruik TeamScan nu nog niet om afdelingen te vergelijken. Bouw eerst genoeg responses op voor een veilige lokale read.',
+        'Gebruik TeamScan nu nog niet om afdelingen te vergelijken. Bouw eerst genoeg responses op voor een veilige lokale read en schakel intussen terug naar bredere diagnose of organisatieniveau.',
     }
   }
 
@@ -165,7 +165,7 @@ export function buildTeamLocalReadState(
       summaryBody:
         'Er zijn wel genoeg responses voor een algemene TeamScan-read, maar te weinig responses bevatten een bruikbare afdeling om lokale context veilig te tonen.',
       caution:
-        'Laat TeamScan hier bewust op organisatieniveau staan en verbeter eerst department-metadata voordat je lokale uitsplitsing probeert te lezen.',
+        'Laat TeamScan hier bewust op organisatieniveau staan, verbeter eerst department-metadata en schakel terug naar bredere diagnose totdat lokale uitsplitsing eerlijk leesbaar is.',
     }
   }
 
@@ -226,9 +226,14 @@ export function buildTeamLocalReadState(
       summaryBody:
         'Afdelingsmetadata is aanwezig, maar nog geen enkele afdeling haalt de minimale groepsgrootte voor veilige lokale weergave.',
       caution:
-        'Lees TeamScan nu alleen als organisatieniveau. Lokale vergelijking blijft onderdrukt totdat afdelingen voldoende responses hebben.',
+        `Lees TeamScan nu alleen als organisatieniveau. ${suppressedGroupCount} afdeling(en) blijven bewust onderdrukt totdat ze voldoende responses hebben, dus schakel terug naar bredere diagnose in plaats van lokale volgorde te suggereren.`,
     }
   }
+
+  const suppressedSummary =
+    suppressedGroupCount > 0
+      ? ` ${suppressedGroupCount} kleinere afdeling(en) blijven bewust onderdrukt en vragen nu geen aparte lokale conclusie.`
+      : ''
 
   return {
     status: 'ready',
@@ -239,9 +244,9 @@ export function buildTeamLocalReadState(
     groups: safeGroups,
     summaryTitle: 'Veilige lokale read beschikbaar',
     summaryBody:
-      'De afdelingsuitsplitsing hieronder laat zien waar het huidige teamsignaal lokaal het scherpst speelt. Lees dit als verificatiehulp, niet als bewijs dat de oorzaak vaststaat.',
+      `De afdelingsuitsplitsing hieronder laat zien waar het huidige teamsignaal lokaal het scherpst speelt. Lees dit als verificatiehulp, niet als bewijs dat de oorzaak vaststaat.${suppressedSummary}`,
     caution:
-      'Gebruik deze lokale read om het eerste afdelingsgesprek te richten. Kleine of ontbrekende groepen blijven bewust buiten beeld.',
+      'Gebruik deze lokale read om het eerste afdelingsgesprek te richten. Kleine of ontbrekende groepen blijven bewust buiten beeld; zodra lokale leesbaarheid te dun wordt, schakel je terug naar bredere diagnose in plaats van naar schijnprecisie.',
   }
 }
 
@@ -307,7 +312,7 @@ export function buildTeamPriorityReadState(localRead: TeamLocalReadState): TeamP
       summaryBody:
         'TeamScan toont pas een bounded eerste verificatieprioriteit zodra er veilige afdelingen zichtbaar zijn en de lokale verschillen scherp genoeg uit elkaar lopen om management echt richting te geven.',
       caution:
-        'Gebruik de huidige TeamScan-uitkomst nu alleen als lokale contextlaag. Harde volgorde blijft bewust uit totdat metadata, groepsgrootte en verschilsterkte dat eerlijk dragen.',
+        'Gebruik de huidige TeamScan-uitkomst nu alleen als lokale contextlaag. Harde volgorde blijft bewust uit totdat metadata, groepsgrootte en verschilsterkte dat eerlijk dragen; schakel anders terug naar bredere diagnose.',
       groups: [],
     }
   }

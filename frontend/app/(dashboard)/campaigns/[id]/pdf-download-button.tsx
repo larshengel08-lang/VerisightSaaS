@@ -5,20 +5,40 @@ import { useState } from 'react'
 interface Props {
   campaignId: string
   campaignName: string
+  scanType?: string
 }
 
-export function PdfDownloadButton({ campaignId, campaignName }: Props) {
+const UNSUPPORTED_REPORT_MESSAGES: Record<string, string> = {
+  pulse: 'Pulse ondersteunt in deze fase nog geen formeel PDF-rapport. Gebruik voorlopig de dashboardread als managementoutput.',
+}
+
+export function PdfDownloadButton({ campaignId, campaignName, scanType }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function handleDownload() {
+    const unsupportedMessage = scanType ? UNSUPPORTED_REPORT_MESSAGES[scanType] : undefined
+    if (unsupportedMessage) {
+      setError(unsupportedMessage)
+      return
+    }
+
     setLoading(true)
     setError(null)
 
     try {
       const response = await fetch(`/api/campaigns/${campaignId}/report`)
       if (!response.ok) {
-        setError(`Rapport kon niet worden gegenereerd (${response.status}). Probeer het opnieuw.`)
+        let detail = `Rapport kon niet worden gegenereerd (${response.status}). Probeer het opnieuw.`
+        try {
+          const payload = (await response.json()) as { detail?: string }
+          if (typeof payload.detail === 'string' && payload.detail.trim()) {
+            detail = payload.detail
+          }
+        } catch {
+          // Keep the generic fallback when no JSON detail is available.
+        }
+        setError(detail)
         setLoading(false)
         return
       }

@@ -49,6 +49,8 @@ type LeadershipInterpretation = {
   firstActionBody: string
   reviewBoundaryBody: string
   escalationBoundaryBody: string
+  operatorBody: string
+  broaderDiagnosisBody: string
   decisionItems: string[]
   scopeItems: string[]
 }
@@ -195,7 +197,7 @@ function buildLeadershipInterpretation(args: {
         'Gebruik dit stabiele leadershipbeeld niet als bewijs van individuele leiderschapskwaliteit, named leader kwaliteit of performance. Het blijft een group-level managementread.',
       profileValue: args.strength === 'pattern' ? 'Borggerichte managementread' : 'Indicatieve managementread',
       profileBody:
-        'Leadership Scan is bedoeld als geaggregeerde managementcontext-read: compacte groepssnapshot, eerste borgspoor en expliciete boundary tegen individuele claims.',
+        'Leadership Scan is bedoeld als geaggregeerde management-context triage: compacte groepssnapshot, eerste borgspoor en expliciete boundary tegen named leader, 360- en individuele claims.',
       primaryQuestionTitle: 'Eerste borgvraag',
       primaryQuestionBody: `Wat moet er nu expliciet behouden blijven rond ${args.topFactorLabel.toLowerCase()} zodat dit stabiele managementbeeld ook in de volgende review overeind blijft?`,
       nextStepTitle: 'Beleg borging nu',
@@ -226,6 +228,10 @@ function buildLeadershipInterpretation(args: {
         'Gebruik een volgende review alleen als bounded bevestiging dat deze stabiele managementcontext overeind blijft.',
       escalationBoundaryBody:
         'Schaal niet op naar named leaders, 360 of TeamScan-logica zolang de vraag nog vooral gaat over het behouden van een stabiele managementcontext.',
+      operatorBody:
+        'Leg vast wie de borgroute trekt, welke managementroutine bewust behouden blijft en wanneer HR of MT opnieuw reviewt.',
+      broaderDiagnosisBody:
+        'Schaal niet op naar bredere diagnose zolang de vraag nog vooral gaat over het behouden van een stabiele managementcontext op groepsniveau.',
       decisionItems: [
         playbook?.decision ??
           `Beslis wat in ${args.topFactorLabel.toLowerCase()} nu expliciet behouden moet blijven.`,
@@ -258,7 +264,7 @@ function buildLeadershipInterpretation(args: {
         'Zelfs bij een scherp attention-signaal blijft Leadership Scan group-level only. Gebruik dit niet als named leader oordeel, performanceclaim of bewijs dat causaliteit al vaststaat.',
       profileValue: args.strength === 'pattern' ? 'Corrigerende managementread' : 'Indicatieve corrigerende read',
       profileBody:
-        'Leadership Scan blijft een compacte managementcontext-read: scherp genoeg voor een eerste verificatie of correctie, maar niet voor individuele claims of hierarchy-output.',
+        'Leadership Scan blijft een compacte management-context triage: scherp genoeg voor een eerste verificatie of correctie, maar niet voor named leaders, 360, individuele claims of hierarchy-output.',
       primaryQuestionTitle: 'Eerste correctievraag',
       primaryQuestionBody: `Wat moet nu als eerste worden geverifieerd of gecorrigeerd rond ${args.topFactorLabel.toLowerCase()} zodat dit managementsignaal niet diffuus blijft?`,
       nextStepTitle: 'Beleg correctie en review',
@@ -289,6 +295,10 @@ function buildLeadershipInterpretation(args: {
         'Gebruik een volgende review alleen als bounded vervolg nadat de eerste correctie expliciet is belegd.',
       escalationBoundaryBody:
         'Open geen named leaders, hierarchy of 360-logica zolang deze wave alleen een geaggregeerde managementread draagt.',
+      operatorBody:
+        'Leg vast wie de eerste correctie trekt, welke zichtbare verandering binnen 30 dagen merkbaar moet zijn en wanneer de bounded review terugkomt.',
+      broaderDiagnosisBody:
+        'Ga pas terug naar bredere diagnose als de vraag groter blijkt dan deze geaggregeerde managementcontext of als de eerste correctie te weinig grip geeft.',
       decisionItems: [
         playbook?.decision ??
           `Beslis of ${args.topFactorLabel.toLowerCase()} nu eerst een kleine correctie of een gerichte verificatie vraagt.`,
@@ -320,7 +330,7 @@ function buildLeadershipInterpretation(args: {
       'Leadership Scan lokaliseert niet welke afdeling of leider het probleem “is”. Het blijft een geaggregeerde managementcontext-read, niet een department-first of named leader product.',
     profileValue: args.strength === 'pattern' ? 'Managementcontext-read' : 'Indicatieve managementcontext-read',
     profileBody:
-      'Leadership Scan is bedoeld als compacte managementsnapshot: actuele groepsread, eerste managementspoor en een expliciet begrensde vervolgstap zonder hierarchy of named leader output.',
+      'Leadership Scan is bedoeld als compacte management-context triage: actuele groepsread, eerste managementspoor en een expliciet begrensde vervolgstap zonder hierarchy, named leader of 360-output.',
     primaryQuestionTitle: 'Eerste managementvraag',
     primaryQuestionBody: `Welk gesprek of welke kleine correctie rond ${args.topFactorLabel.toLowerCase()} helpt nu het meest om dit managementbeeld scherper te begrijpen of te verbeteren?`,
     nextStepTitle: 'Beleg eerste verificatie',
@@ -351,6 +361,10 @@ function buildLeadershipInterpretation(args: {
       'Gebruik een volgende review alleen als bounded vervolg nadat de eerste verificatie of correctie expliciet is belegd.',
     escalationBoundaryBody:
       'Maak deze managementread niet groter dan nodig; als de echte vraag lokalere of bredere diagnose vraagt, zeg dat expliciet in plaats van Leadership Scan te overrekken.',
+    operatorBody:
+      'Leg vast wie het eerste gesprek voorbereidt, welke kleine verificatie of correctie nu echt eigenaarschap krijgt en hoe je voorkomt dat de managementread open blijft hangen.',
+    broaderDiagnosisBody:
+      'Schakel terug naar bredere diagnose als de echte vraag niet meer past binnen een geaggregeerde managementcontext of als een volgende bounded review eerst geen extra duidelijkheid geeft.',
     decisionItems: [
       playbook?.decision ??
         `Beslis of ${args.topFactorLabel.toLowerCase()} nu een kleine correctie vraagt of eerst gerichte verificatie in gesprekken.`,
@@ -534,14 +548,19 @@ export function buildLeadershipDashboardViewModel(args: {
         title: 'Wie trekt dit en waar ligt de grens?',
         items: [
           `Eerste eigenaar: ${interpretation.ownerValue}.`,
+          interpretation.ownerBody,
+          interpretation.operatorBody,
           interpretation.reviewBoundaryBody,
-          interpretation.escalationBoundaryBody,
         ],
         tone: 'emerald',
       },
       {
-        title: 'Wat blijft bewust begrensd?',
-        items: interpretation.scopeItems,
+        title: 'Wanneer blijft dit leadership en wanneer niet?',
+        items: [
+          interpretation.escalationBoundaryBody,
+          interpretation.broaderDiagnosisBody,
+          ...interpretation.scopeItems,
+        ],
         tone: 'amber',
       },
     ],
@@ -551,6 +570,13 @@ export function buildLeadershipDashboardViewModel(args: {
         value: interpretation.profileValue,
         body: interpretation.profileBody,
         tone: 'blue',
+      },
+      {
+        title: 'Handoffvorm',
+        value: 'Owner -> actie -> review',
+        body:
+          'Leadership wordt pas managementwaardig als groepsread, eerste eigenaar, eerste bounded actie en reviewgrens als een expliciete handoff worden gelezen.',
+        tone: managementState === 'stable_management_context' ? 'emerald' : 'blue',
       },
     ],
     primaryQuestion: {
@@ -593,8 +619,8 @@ export function buildLeadershipDashboardViewModel(args: {
         tone: 'emerald',
       },
       {
-        title: 'Wanneer niet opschalen',
-        body: interpretation.escalationBoundaryBody,
+        title: 'Wanneer terug naar bredere diagnose',
+        body: interpretation.broaderDiagnosisBody,
         tone: 'amber',
       },
     ],

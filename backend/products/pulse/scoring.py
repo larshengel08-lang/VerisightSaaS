@@ -1,0 +1,128 @@
+from __future__ import annotations
+
+from typing import Any
+
+from fastapi import HTTPException
+
+from backend.products.pulse.definition import DEFAULT_PULSE_MODULES
+from backend.products.shared.org_factors import compute_org_scores
+from backend.products.shared.sdt import compute_sdt_scores, scale_to_ten
+from backend.scoring import get_recommendations
+from backend.scoring_config import ORG_FACTOR_KEYS, RISK_HIGH, RISK_MEDIUM, SCORING_VERSION
+
+PULSE_SDT_ITEMS = {"B1", "B5", "B9"}
+
+
+def _extract_active_factors(org_raw: dict[str, int]) -> list[str]:
+    factors = []
+    for factor in ORG_FACTOR_KEYS:
+        if any(key.startswith(f"{factor}_") for key in org_raw.keys()):
+            factors.append(factor)
+    return factors or list(DEFAULT_PULSE_MODULES)
+
+
+def validate_submission(payload: Any) -> None:
+    keys = set(payload.sdt_raw.keys())
+    missing = PULSE_SDT_ITEMS - keys
+    extra = keys - PULSE_SDT_ITEMS
+    if missing:
+        raise HTTPException(status_code=422, detail="Pulse vereist 3 vaste werkbelevingsitems.")
+    if extra:
+        raise HTTPException(
+            status_code=422,
+            detail="Pulse accepteert in deze wave alleen de compacte werkbelevingsset.",
+        )
+    if payload.stay_intent_score is None:
+        raise HTTPException(status_code=422, detail="Pulse vereist een check-in antwoord op de huidige richting.")
+    if not payload.org_raw:
+        raise HTTPException(status_code=422, detail="Pulse vereist minimaal een actieve werkfactor.")
+
+
+def compute_pulse_risk(
+    sdt_scores: dict[str, Any],
+    org_scores: dict[str, float],
+    active_factors: list[str],
+) -> dict[str, Any]:
+    factor_risks: dict[str, float] = {}
+    weighted: dict[str, float] = {}
+    weights: dict[str, float] = {}
+
+    for factor in active_factors:
+        score = org_scores.get(factor, 5.5)
+        risk = round(11.0 - score, 2)
+        factor_risks[factor] = risk
+        weights[factor] = 1.0
+        weighted[factor] = risk
+
+    sdt_risk = round(float(sdt_scores.get("sdt_risk", 5.5)), 2)
+    factor_risks["sdt"] = sdt_risk
+    weights["sdt"] = 1.0
+    weighted["sdt"] = sdt_risk
+
+    risk_score = round(sum(weighted.values()) / max(len(weighted), 1), 2)
+    risk_score = max(1.0, min(10.0, risk_score))
+
+    if risk_score >= RISK_HIGH:
+        band = "HOOG"
+    elif risk_score >= RISK_MEDIUM:
+        band = "MIDDEN"
+    else:
+        band = "LAAG"
+
+    return {
+        "risk_score": risk_score,
+        "risk_band": band,
+        "factor_risks": factor_risks,
+        "factor_weights": weights,
+        "weighted_factors": weighted,
+        "active_factors": active_factors,
+    }
+
+
+def score_submission(
+    *,
+    payload: Any,
+    campaign: Any,
+    respondent: Any,
+    exit_reason_code: str | None = None,
+    contributing_reason_codes: list[str],
+) -> dict[str, Any]:
+    active_factors = _extract_active_factors(payload.org_raw)
+    sdt_scores = compute_sdt_scores(payload.sdt_raw)
+    full_org_scores = compute_org_scores(payload.org_raw)
+    org_scores = {factor: full_org_scores[factor] for factor in active_factors}
+    risk_result = compute_pulse_risk(sdt_scores, org_scores, active_factors)
+    stay_score = round(scale_to_ten(float(payload.stay_intent_score)), 2)
+    recommendations = get_recommendations(risk_result["factor_risks"])
+
+    pulse_summary = {
+        "pulse_signal_score": risk_result["risk_score"],
+        "pulse_signal_band": risk_result["risk_band"],
+        "stay_intent_score": stay_score,
+        "active_factors": active_factors,
+        "snapshot_type": "current_cycle",
+    }
+
+    full_result = {
+        "sdt_scores": sdt_scores,
+        "org_scores": org_scores,
+        "risk_result": risk_result,
+        "pulse_summary": pulse_summary,
+        "recommendations": recommendations,
+        "active_factors": active_factors,
+        "survey_scope": "compact_pulse_wave_01",
+    }
+
+    return {
+        "sdt_scores": sdt_scores,
+        "org_scores": org_scores,
+        "risk_result": risk_result,
+        "preventability_result": {},
+        "replacement_cost_eur": None,
+        "recommendations": recommendations,
+        "uwes_score": None,
+        "turnover_intention_score": None,
+        "retention_summary": None,
+        "full_result": full_result,
+        "scoring_version": SCORING_VERSION,
+    }

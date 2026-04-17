@@ -29,6 +29,8 @@ type OnboardingHandoffSupport = {
   escalationBoundaryBody: string
   conversationBody: string
   decisionBody: string
+  operatorBody: string
+  broaderDiagnosisBody: string
 }
 
 type OnboardingCheckpointInterpretation = {
@@ -61,6 +63,8 @@ type OnboardingCheckpointInterpretation = {
   firstActionBody: string
   reviewBoundaryBody: string
   escalationBoundaryBody: string
+  operatorBody: string
+  broaderDiagnosisBody: string
   decisionItems: string[]
   scopeItems: string[]
 }
@@ -181,6 +185,10 @@ function getPlaybookSupport(args: {
       decisionBody:
         playbook?.decision ??
         `Beslis wat in ${args.topFactorLabel.toLowerCase()} nu expliciet behouden of bevestigd moet blijven voor het volgende checkpoint.`,
+      operatorBody:
+        `Leg vast wie de borgactie werkelijk uitvoert, welke signalen op het volgende checkpoint gelijk moeten blijven en wanneer HR weer actief meeleest.`,
+      broaderDiagnosisBody:
+        'Schaal niet op naar bredere diagnose zolang de vraag nog vooral gaat over het behouden van een stabiele startervaring binnen dit checkpoint.',
     }
   }
 
@@ -207,6 +215,10 @@ function getPlaybookSupport(args: {
       decisionBody:
         playbook?.decision ??
         `Beslis of ${args.topFactorLabel.toLowerCase()} nu eerst een kleine correctie of een expliciete verificatie in gesprekken vraagt.`,
+      operatorBody:
+        `Leg vast wie de corrigerende stap trekt, welke zichtbare verandering voor nieuwe medewerkers merkbaar moet zijn en wanneer HR opnieuw reviewt.`,
+      broaderDiagnosisBody:
+        'Ga pas terug naar bredere diagnose als de vraag groter blijkt dan dit checkpoint of als de eerste correctie te weinig grip geeft.',
     }
   }
 
@@ -232,6 +244,10 @@ function getPlaybookSupport(args: {
     decisionBody:
       playbook?.decision ??
       `Beslis of ${args.topFactorLabel.toLowerCase()} nu een kleine correctie vraagt of eerst een gerichte verificatie in gesprekken.`,
+    operatorBody:
+      `Leg vast wie het eerstvolgende gesprek voorbereidt, welke kleine correctie of verificatie nu echt eigenaarschap krijgt en hoe je voorkomt dat dit checkpoint open blijft hangen.`,
+    broaderDiagnosisBody:
+      'Schakel terug naar bredere diagnose als de vraag niet meer past binnen een enkele onboardingcorrectie of als een later checkpoint eerst geen extra duidelijkheid gaat geven.',
   }
 }
 
@@ -281,7 +297,7 @@ function buildOnboardingInterpretation(args: {
         'Gebruik deze onboardingread als bounded checkpointlaag. Dit is geen performance-read, geen retentievoorspelling en nog geen volledige 30-60-90 journey.',
       profileValue: args.strength === 'pattern' ? 'Checkpoint-handshake' : 'Indicatieve checkpoint-handshake',
       profileBody:
-        'Onboarding is bedoeld als compacte managementhandoff van dit ene meetmoment: actuele groepssnapshot, eerste borgspoor, eerste eigenaar en een expliciet begrensde review.',
+        'Onboarding is bedoeld als compacte managementhandoff van dit ene meetmoment: actuele groepssnapshot, eerste borgspoor, eerste eigenaar en een expliciet begrensde review. Lees dit als single-checkpoint lifecycle triage, niet als journey-engine of client onboarding-route.',
       primaryQuestionTitle: 'Eerste borgvraag',
       primaryQuestionBody: `Wat moet er nu expliciet behouden of bevestigd worden rond ${args.topFactorLabel.toLowerCase()} zodat het volgende checkpoint dezelfde stabiele landing laat zien?`,
       nextStepTitle: 'Beleg borging nu',
@@ -299,6 +315,8 @@ function buildOnboardingInterpretation(args: {
       firstActionBody: handoff.firstActionBody,
       reviewBoundaryBody: handoff.reviewBoundaryBody,
       escalationBoundaryBody: handoff.escalationBoundaryBody,
+      operatorBody: handoff.operatorBody,
+      broaderDiagnosisBody: handoff.broaderDiagnosisBody,
       decisionItems: [
         handoff.decisionBody,
         secondaryFactorText,
@@ -330,7 +348,7 @@ function buildOnboardingInterpretation(args: {
         'Zelfs bij een scherp vroegsignaal blijft onboarding een checkpointread op groepsniveau. Gebruik dit niet als individuele benchmark, geen individuele voorspelling, performance-oordeel of complete journey-read.',
       profileValue: args.strength === 'pattern' ? 'Checkpoint-handoff' : 'Indicatieve checkpoint-handoff',
       profileBody:
-        'Onboarding blijft een vroege managementread van dit ene meetmoment: scherp genoeg voor een eerste corrigerende stap, maar nog geen journey-engine of retentievoorspeller.',
+        'Onboarding blijft een vroege managementread van dit ene meetmoment: scherp genoeg voor een eerste corrigerende stap, maar nog geen journey-engine, client onboarding-route of retentievoorspeller.',
       primaryQuestionTitle: 'Eerste correctievraag',
       primaryQuestionBody: `Wat moet er nu als eerste gecorrigeerd of expliciet geverifieerd worden rond ${args.topFactorLabel.toLowerCase()} zodat dit aandachtsspoor niet doorschuift naar het volgende checkpoint?`,
       nextStepTitle: 'Beleg correctie en review',
@@ -348,6 +366,8 @@ function buildOnboardingInterpretation(args: {
       firstActionBody: handoff.firstActionBody,
       reviewBoundaryBody: handoff.reviewBoundaryBody,
       escalationBoundaryBody: handoff.escalationBoundaryBody,
+      operatorBody: handoff.operatorBody,
+      broaderDiagnosisBody: handoff.broaderDiagnosisBody,
       decisionItems: [
         handoff.decisionBody,
         secondaryFactorText,
@@ -378,7 +398,7 @@ function buildOnboardingInterpretation(args: {
       'Gebruik deze onboardingread als begrensde checkpointlaag. Dit is geen performance-instrument, geen retentievoorspeller en nog geen volledige 30-60-90 journey.',
     profileValue: args.strength === 'pattern' ? 'Checkpoint-handoff' : 'Indicatieve checkpoint-handoff',
     profileBody:
-      'Onboarding is bedoeld als compacte managementread van dit ene meetmoment: actuele snapshot, eerste werkspoor, eerste eigenaar en een expliciet begrensde volgende check.',
+      'Onboarding is bedoeld als compacte managementread van dit ene meetmoment: actuele snapshot, eerste werkspoor, eerste eigenaar en een expliciet begrensde volgende check. Lees dit als single-checkpoint lifecycle triage, niet als journey-engine of client onboarding-route.',
     primaryQuestionTitle: 'Eerste managementvraag',
     primaryQuestionBody: `Welk beperkt gesprek of welke kleine correctie rond ${args.topFactorLabel.toLowerCase()} helpt nu het meest om dit checkpoint op een volgend meetmoment scherper te begrijpen of te verbeteren?`,
     nextStepTitle: 'Beleg eerste checkpointactie',
@@ -396,6 +416,8 @@ function buildOnboardingInterpretation(args: {
     firstActionBody: handoff.firstActionBody,
     reviewBoundaryBody: handoff.reviewBoundaryBody,
     escalationBoundaryBody: handoff.escalationBoundaryBody,
+    operatorBody: handoff.operatorBody,
+    broaderDiagnosisBody: handoff.broaderDiagnosisBody,
     decisionItems: [
       handoff.decisionBody,
       secondaryFactorText,
@@ -574,10 +596,18 @@ export function buildOnboardingDashboardViewModel(args: {
         title: 'Wie trekt dit en waar ligt de grens?',
         items: [
           `Eerste eigenaar: ${interpretation.ownerValue}.`,
+          interpretation.operatorBody,
           interpretation.reviewBoundaryBody,
-          interpretation.escalationBoundaryBody,
         ],
         tone: 'emerald',
+      },
+      {
+        title: 'Wanneer blijft dit onboarding en wanneer niet?',
+        items: [
+          interpretation.escalationBoundaryBody,
+          interpretation.broaderDiagnosisBody,
+        ],
+        tone: 'amber',
       },
     ],
     profileCards: [
@@ -586,6 +616,12 @@ export function buildOnboardingDashboardViewModel(args: {
         value: interpretation.profileValue,
         body: interpretation.profileBody,
         tone: 'blue',
+      },
+      {
+        title: 'Handoffvorm',
+        value: 'Owner -> actie -> review',
+        body: 'Deze route is pas managementwaardig als checkpointread, eerste eigenaar, eerste kleine actie en reviewgrens als één bounded handoff worden gelezen.',
+        tone: checkpointState === 'stable_checkpoint' ? 'emerald' : 'blue',
       },
     ],
     primaryQuestion: {
@@ -628,8 +664,8 @@ export function buildOnboardingDashboardViewModel(args: {
         tone: 'emerald',
       },
       {
-        title: 'Wanneer geen nieuw checkpoint',
-        body: interpretation.escalationBoundaryBody,
+        title: 'Wanneer terug naar bredere diagnose',
+        body: interpretation.broaderDiagnosisBody,
         tone: 'amber',
       },
     ],
