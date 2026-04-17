@@ -69,8 +69,9 @@ export default function VertrouwenPage() {
               Methodiek, privacy en rapportgrenzen in gewone managementtaal.
             </h1>
             <p className="marketing-hero-copy text-[#4A5563]">
-              Verisight laat publiek zien hoe methodiek, privacy, rapportlezing en formele basis zijn ingericht,
-              zodat u dit kunt toetsen voordat een traject start.
+              Verisight laat publiek zien hoe methodiek, privacy, rapportlezing en formele basis zijn ingericht.
+              Deze publieke trustlaag maakt toetsbaar wat de output wel en niet belooft, zodat u dit kunt verifiëren
+              voordat een traject start.
             </p>
           </MarketingHeroIntro>
         }
@@ -165,7 +166,7 @@ export default function VertrouwenPage() {
           <SectionHeading
             eyebrow="Privacy en due diligence"
             title="Snelle antwoorden op voorspelbare vragen."
-            description="Zo kan een buyer de basis toetsen voordat er een gesprek plaatsvindt."
+            description="Zo kan een buyer de basis toetsen voordat er een gesprek plaatsvindt, inclusief privacybasis, DPA beschikbaar en due-diligencevragen."
           />
           <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {trustHubAnswerCards.map((card) => (

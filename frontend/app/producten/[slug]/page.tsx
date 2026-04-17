@@ -275,6 +275,10 @@ function ExitScanPage() {
         <MarketingSection tone="surface">
           <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Uitkomsten</p>
           <h2 className="mt-3 text-xl font-medium text-[#132033]">Wat u ermee kunt doen</h2>
+          <p className="mt-4 max-w-[64ch] text-sm leading-relaxed text-[#4A5563]">
+            De leesrichting blijft compact en bestuurlijk: eerst de managementsamenvatting, daarna de bestuurlijke handoff,
+            vervolgens de eerste managementvraag, het eerste verificatiespoor en pas daarna de eerste logische stap.
+          </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             {[
               { title: 'Patronen zichtbaar maken', body: 'Geef management een herkenbaar beeld van terugkerende uitstroomthema\'s.' },
@@ -297,7 +301,7 @@ function ExitScanPage() {
             <ul className="mt-6 space-y-2">
               {[
                 'Dashboard met prioriteiten en factoranalyse',
-                'Managementrapport voor HR, MT en directie',
+                'Managementrapport voor HR, MT en directie met een eerste managementsessie als vaste vervolgstap',
                 'Toelichting op de uitkomsten en vervolgstappen',
                 'AVG-conforme dataverwerking',
               ].map((item) => (
@@ -412,6 +416,10 @@ function RetentionScanPage() {
         <MarketingSection tone="tint">
           <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Uitkomsten</p>
           <h2 className="mt-3 text-xl font-medium text-[#132033]">Wat u ermee kunt doen</h2>
+          <p className="mt-4 max-w-[64ch] text-sm leading-relaxed text-[#4A5563]">
+            Ook hier volgt de route dezelfde managementopbouw: managementsamenvatting, bestuurlijke handoff, eerste
+            managementsessie, eerste verificatiespoor en daarna de eerste logische stap rond retentiesignaal en opvolging.
+          </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             {[
               { title: 'Risico\'s vroegtijdig zichtbaar', body: 'Geef management een beeld van waar behoud nu aandacht vraagt.' },
@@ -472,7 +480,7 @@ function RetentionScanPage() {
             <ul className="mt-6 space-y-2">
               {[
                 'Dashboard met retentiesignaal en factoranalyse',
-                'Managementrapport voor HR, MT en directie',
+                'Managementrapport voor HR, MT en directie met een eerste managementsessie als vaste vervolgstap',
                 'Toelichting op de uitkomsten en vervolgstappen',
                 'Geen individuele signalen — groepsduiding',
                 'AVG-conforme dataverwerking',
