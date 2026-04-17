@@ -33,6 +33,9 @@ _EMAIL_TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "templates" / "em
 _CONTACT_ROUTE_LABELS = {
     "exitscan": "ExitScan",
     "retentiescan": "RetentieScan",
+    "teamscan": "TeamScan",
+    "onboarding": "Onboarding 30-60-90",
+    "leadership": "Leadership Scan",
     "combinatie": "Combinatie",
     "nog-onzeker": "Nog niet zeker",
 }

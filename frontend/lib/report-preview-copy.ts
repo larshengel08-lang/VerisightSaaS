@@ -112,6 +112,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       ['Managementsamenvatting', 'Dashboard en rapport openen met dezelfde bestuurlijke leesvolgorde'],
       ['Productspecifieke duiding', 'ExitScan en RetentieScan krijgen een eigen managementverhaal binnen een platform'],
       ['Routekeuze eerst', 'ExitScan is meestal de eerste demo; RetentieScan volgt wanneer de actieve behoudsvraag echt centraal staat'],
+      ['Core proof blijft leidend', 'Publieke deliverable-proof blijft bewust bij ExitScan en RetentieScan; bounded follow-on routes worden publiek vooral via productpagina en trustlaag gekaderd.'],
       ['Begeleide output', 'Geen losse survey-export of self-serve tool'],
     ],
     trustTitle: 'Hoe je deze voorbeeldoutput leest',
@@ -130,7 +131,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     supportVisualAlt: 'Voorbeeld van een Verisight segment deep dive',
     sampleReportTitle: 'Waar je het volledige voorbeeld ziet',
     sampleReportBody:
-      'Gebruik de portfolio-preview als routekiezer. Het volledige buyer-facing voorbeeldrapport open je daarna op de productspecifieke ExitScan- of RetentieScan-pagina.',
+      'Gebruik de portfolio-preview als routekiezer. De publieke deliverable-proof blijft bewust core-first: het volledige buyer-facing voorbeeldrapport open je daarna op de productspecifieke ExitScan- of RetentieScan-pagina, terwijl bounded follow-on routes hun bewijs vooral via productpagina en trustlaag dragen.',
     sampleReportHref: '/producten',
     sampleReportLabel: 'Bekijk productspecifieke voorbeelden',
   },

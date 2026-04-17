@@ -67,6 +67,7 @@ const comparisonRows = [
   ['Pulse', 'Op aanvraag', 'Compacte reviewlaag na diagnose of baseline, geen nieuwe eerste instap.'],
   ['TeamScan', 'Op aanvraag', 'Bounded lokale verdieping nadat een breder signaal al zichtbaar is.'],
   ['Onboarding 30-60-90', 'Op aanvraag', 'Gerichte lifecycle-check wanneer vroege landing van nieuwe medewerkers centraal staat.'],
+  ['Leadership Scan', 'Op aanvraag', 'Begrensde managementread nadat een bestaand people-signaal eerst duiding of verificatie vraagt.'],
 ] as const
 
 export default function TarievenPage() {
@@ -96,7 +97,7 @@ export default function TarievenPage() {
             </h1>
             <p className="marketing-hero-copy text-[#4A5563]">
               U koopt een gerichte route met vaste output, geen licentie. ExitScan en RetentieScan vormen de twee
-              kerninstappen; vervolgtrajecten openen alleen als ze inhoudelijk echt logisch zijn.
+              kerninstappen; combinatie en bounded vervolgtrajecten openen alleen als ze inhoudelijk echt logisch zijn.
             </p>
           </MarketingHeroIntro>
         }
@@ -121,7 +122,7 @@ export default function TarievenPage() {
             </div>
             <div className="marketing-support-note">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#9CA3AF]">Geen prijs theater</p>
-              <p className="mt-2 text-sm leading-7 text-[#4A5563]">Quote-only routes blijven bewust kleiner dan een nieuwe brede instap.</p>
+              <p className="mt-2 text-sm leading-7 text-[#4A5563]">Quote-only routes blijven bewust kleiner dan een nieuwe brede instap of vlakke routecatalogus.</p>
             </div>
           </MarketingHeroSupport>
         }
@@ -157,7 +158,7 @@ export default function TarievenPage() {
           <SectionHeading
             eyebrow="Vervolg en add-ons"
             title="Kleinere routes na de eerste diagnose."
-            description="De vervolglaag blijft bewust bounded. Zo blijven vervolgprijzen logisch in verhouding tot de eerste managementvraag."
+            description="De vervolglaag blijft bewust bounded. Zo blijven vervolgprijzen logisch in verhouding tot de eerste managementvraag en niet gelijkgeschakeld aan de kerninstap."
           />
           <div className="mt-10">
             <MarketingComparisonTable
@@ -171,7 +172,7 @@ export default function TarievenPage() {
           <MarketingCalloutBand
             eyebrow="Prijs in context"
             title="Twijfelt u welke eerste route commercieel en inhoudelijk het best past?"
-            body="Gebruik het kennismakingsgesprek om de eerste route, timing, privacygrenzen en eventuele vervolgvorm logisch te bepalen. Zo blijft de offerte kleiner, helderder en beter verdedigbaar."
+            body="Gebruik het kennismakingsgesprek om eerst de kernroute, timing en privacygrenzen logisch te bepalen. Pas daarna kijken we of een combinatie of bounded vervolgvorm echt nodig is. Zo blijft de offerte kleiner, helderder en beter verdedigbaar."
             primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'pricing_closing_cta' })}
             primaryLabel="Plan een kennismaking"
             secondaryHref="/aanpak"

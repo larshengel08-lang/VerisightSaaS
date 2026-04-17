@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   CORE_MARKETING_PRODUCTS,
+  FOLLOW_ON_MARKETING_PRODUCTS,
   LIVE_MARKETING_PRODUCTS,
   PORTFOLIO_ROUTE_MARKETING_PRODUCTS,
   RESERVED_MARKETING_PRODUCTS,
@@ -24,8 +25,10 @@ import {
 } from '@/components/marketing/site-content'
 
 describe('Portfolio architecture marketing model', () => {
-  it('keeps two core products, one portfolio route and reserved future routes separate', () => {
+  it('keeps a core-first seven-route suite with live bounded follow-on routes', () => {
     const combination = PORTFOLIO_ROUTE_MARKETING_PRODUCTS[0]
+    const followOnSlugs = FOLLOW_ON_MARKETING_PRODUCTS.map((product) => product.slug)
+    const reservedSlugs = RESERVED_MARKETING_PRODUCTS.map((product) => product.slug)
 
     expect(CORE_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual(['exitscan', 'retentiescan'])
     expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS).toHaveLength(1)
@@ -33,8 +36,11 @@ describe('Portfolio architecture marketing model', () => {
     expect(combination.portfolioRole).toBe('portfolio_route')
     expect(combination.description.toLowerCase()).toContain('portfolioroute')
     expect(combination.description.toLowerCase()).toContain('derde kernproduct')
-    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(3)
-    expect(RESERVED_MARKETING_PRODUCTS.length).toBeGreaterThan(0)
+    expect(followOnSlugs).toEqual(['pulse', 'teamscan', 'onboarding-30-60-90', 'leadership-scan'])
+    expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.status === 'live')).toBe(true)
+    expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'follow_on_route')).toBe(true)
+    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(7)
+    expect(reservedSlugs).toEqual(['mto', 'customer-feedback'])
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.status === 'reserved_future')).toBe(true)
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'future_reserved_route')).toBe(
       true,

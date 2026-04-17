@@ -10,12 +10,12 @@ export const marketingNavLinks = [
 
 export const marketingPrimaryCta = {
   href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-  label: 'Plan een kennismaking',
+  label: 'Plan kennismaking',
 } as const
 
 export const marketingSecondaryCta = {
   href: '/producten',
-  label: 'Bekijk de producten',
+  label: 'Bekijk de routes',
 } as const
 
 export const marketingFooterLinks = [
@@ -44,7 +44,7 @@ export const homepageProductRoutes = [
     body: 'Breng vertrekpatronen in beeld. Beschikbaar als retrospectieve analyse of live scan.',
     href: '/producten/exitscan',
     accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
-    chip: 'Uitstroom',
+    chip: 'Primaire route',
   },
   {
     name: 'RetentieScan',
@@ -52,12 +52,12 @@ export const homepageProductRoutes = [
     body: 'Vroegtijdig inzicht in retentiesignalen. Beschikbaar als live meting of momentopname.',
     href: '/producten/retentiescan',
     accent: 'border-[#DCEFEA] bg-[#F7F5F1]',
-    chip: 'Behoud',
+    chip: 'Complementair',
   },
   {
     name: 'Combinatie',
     title: 'Verbind vertrek- en retentieanalyse',
-    body: 'Voor organisaties die beide managementvragen hebben en bewust willen combineren.',
+    body: 'Voor organisaties die beide managementvragen hebben en bewust willen combineren nadat de eerste helder staat.',
     href: '/producten/combinatie',
     accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
     chip: 'Portfolioroute',
@@ -157,7 +157,8 @@ export const trustItems = [
   'Signalen, geen schijnzekerheid',
   'Rapportage op geaggregeerd niveau',
   'Vraagblokken gebaseerd op relevante literatuur',
-  'AVG-conform, primaire dataopslag in EU',
+  'AVG-conform, primaire dataopslag in een EU-regio',
+  'Nederlandse dienst met begeleide productvorm en publieke trustlaag',
   'Vertrouwelijke verwerking — geen koppeling aan individuen in rapportage',
 ] as const
 
@@ -193,6 +194,10 @@ export const trustSignalHighlights = [
     body: 'Dashboard, rapport en preview volgen dezelfde bestuurlijke leeslijn, zodat de site niet rijker verkoopt dan het product werkelijk levert.',
   },
   {
+    title: 'Core proof blijft expliciet',
+    body: 'Publieke deliverable-proof blijft bewust anchored op ExitScan en RetentieScan. Bounded follow-on routes zijn wel formeel, maar krijgen publiek vooral bewijs via productpagina en trustlaag.',
+  },
+  {
     title: 'Begeleide productvorm',
     body: 'Verisight verkoopt een strakke productvorm met intake, uitvoering, rapportage en opvolging in plaats van losse surveysoftware of open consultancy.',
   },
@@ -206,6 +211,10 @@ export const trustVerificationCards = [
   {
     title: 'Wat je nu publiek kunt verifieren',
     body: 'Verisight laat publiek zien hoe productkeuze, privacy, rapportlezing en begeleide delivery zijn ingericht voordat je een demo of gesprek plant.',
+  },
+  {
+    title: 'Waar sample-proof bewust stopt',
+    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Pulse, TeamScan, onboarding en Leadership Scan blijven bounded follow-on routes met formele output, maar zonder aparte publieke samplebibliotheek.',
   },
   {
     title: 'Wat management wel ziet',
@@ -241,6 +250,10 @@ export const trustHubAnswerCards = [
   {
     title: 'Wat voor productvorm koop je?',
     body: 'Geen self-serve surveytool en geen open consultancytraject, maar een begeleide productvorm met dashboard, rapportage, uitleg en productspecifieke trustgrenzen.',
+  },
+  {
+    title: 'Heeft elke route een publiek voorbeeldrapport?',
+    body: 'Nee. Publieke deliverable-proof blijft bewust core-first op ExitScan en RetentieScan. Bounded follow-on routes zijn buyer-facing volwassen, maar worden publiek vooral via productpagina, trustlaag en formele routegrenzen uitgelegd.',
   },
 ] as const
 

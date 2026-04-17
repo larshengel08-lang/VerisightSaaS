@@ -223,8 +223,9 @@ export default function LandingPage() {
             <div className="mt-8 rounded-[1.75rem] border border-[rgba(247,245,241,0.12)] bg-[rgba(247,245,241,0.06)] p-6 md:p-7">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#DCEFEA]">Vervolgroutes blijven bounded</p>
               <p className="mt-3 max-w-[64ch] text-sm leading-7 text-[rgba(247,245,241,0.72)]">
-                Pulse, TeamScan en onboarding blijven bewust kleinere vervolgroutes. Zo blijft de eerste koop scherp,
-                de eerste managementread duidelijk en de volgende stap kleiner dan een nieuwe brede meting.
+                Pulse, TeamScan, onboarding en Leadership Scan blijven bewust kleinere vervolgroutes. Zo blijft de
+                eerste koop scherp, de eerste managementread duidelijk en de volgende stap kleiner dan een nieuwe brede
+                meting.
               </p>
             </div>
           </MarketingSection>

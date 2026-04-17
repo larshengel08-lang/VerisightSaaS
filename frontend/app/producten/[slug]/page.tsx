@@ -92,8 +92,9 @@ export default async function ProductDetailPage({ params }: Props) {
       {slug === 'pulse' ? <PulsePage /> : null}
       {slug === 'teamscan' ? <TeamScanPage /> : null}
       {slug === 'onboarding-30-60-90' ? <OnboardingPage /> : null}
+      {slug === 'leadership-scan' ? <LeadershipScanPage /> : null}
       {slug === 'combinatie' ? <CombinatiePage /> : null}
-      {!['retentiescan', 'exitscan', 'pulse', 'teamscan', 'onboarding-30-60-90', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
+      {!['retentiescan', 'exitscan', 'pulse', 'teamscan', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
     </>
   )
 }
@@ -1125,6 +1126,103 @@ function OnboardingPage() {
           primaryLabel="Plan kennismaking"
           secondaryHref="/tarieven"
           secondaryLabel="Bekijk tarieven"
+        />
+      </MarketingSection>
+    </MarketingPageShell>
+  )
+}
+
+function LeadershipScanPage() {
+  return (
+    <MarketingPageShell
+      theme="support"
+      pageType="product"
+      ctaHref={buildContactHref({ routeInterest: 'leadership', ctaSource: 'product_leadership_hero' })}
+      heroIntro={
+        <MarketingHeroIntro>
+          <p className="marketing-hero-eyebrow text-slate-700">Leadership Scan</p>
+          <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
+            Begrensde managementread na een bestaand people-signaal.
+          </h1>
+          <p className="marketing-hero-copy text-slate-600">
+            Leadership Scan helpt bepalen welke managementcontext nu als eerste duiding of verificatie vraagt, zonder
+            named leaders, 360-logica of performanceframing te openen.
+          </p>
+        </MarketingHeroIntro>
+      }
+      heroStage={
+        <MarketingHeroStage>
+          <div className="space-y-5">
+            <span className="marketing-stage-tag bg-white/10 text-slate-200">Bounded follow-on route</span>
+            <h2 className="marketing-stage-title font-display text-white">
+              Gebruik Leadership Scan pas nadat een breder signaal al zichtbaar is.
+            </h2>
+            <p className="marketing-stage-copy text-slate-300">
+              De waarde zit in een groepsniveau-managementread: welke context vraagt eerst gesprek, verificatie of
+              een kleine correctie, zonder named leaders of hierarchy-output.
+            </p>
+          </div>
+        </MarketingHeroStage>
+      }
+      heroSupport={
+        <MarketingHeroSupport>
+          <div className="marketing-support-note text-sm leading-7 text-slate-600">
+            Deze route blijft group-level only: geen 360-tool, geen performance-instrument en geen oordeel over
+            individuele leidinggevenden.
+          </div>
+        </MarketingHeroSupport>
+      }
+    >
+      <MarketingSection tone="surface">
+        <MarketingProofStrip
+          items={[
+            {
+              title: 'Managementcontext eerst',
+              body: 'De route helpt bepalen waar leidingcontext als eerste bounded verificatie vraagt na een bestaand people-signaal.',
+            },
+            {
+              title: 'Groepsniveau blijft leidend',
+              body: 'Output blijft geaggregeerd, suppressie-aware en zonder named leader readouts.',
+            },
+            {
+              title: 'Kleine vervolgstap',
+              body: 'De eerste uitkomst is een eigenaar, een eerste managementcheck en een reviewgrens, niet een brede leadership-suite.',
+            },
+          ]}
+        />
+      </MarketingSection>
+
+      <MarketingSection tone="plain">
+        <div className="grid gap-6 lg:grid-cols-3">
+          {[
+            {
+              title: 'Wanneer deze route logisch wordt',
+              body: 'Na een bestaand signaal uit ExitScan, RetentieScan, TeamScan of onboarding, wanneer de vraag verschuift naar managementcontext en eerste verificatie.',
+            },
+            {
+              title: 'Wat je nu krijgt',
+              body: 'Een bounded managementread met groepssignaal, eerste eigenaar, eerste verificatievraag en duidelijke reviewgrens.',
+            },
+            {
+              title: 'Wat het nadrukkelijk niet is',
+              body: 'Geen named leader report, geen hierarchy-model, geen 360-beoordeling en geen performance-instrument.',
+            },
+          ].map((card) => (
+            <div key={card.title} className="marketing-panel p-7">
+              <h2 className="text-xl font-semibold text-slate-950">{card.title}</h2>
+              <p className="mt-4 text-sm leading-7 text-slate-600">{card.body}</p>
+            </div>
+          ))}
+        </div>
+      </MarketingSection>
+
+      <MarketingSection tone="plain">
+        <MarketingInlineContactPanel
+          eyebrow="Kennismaking"
+          title="Toets of Leadership Scan nu de logische vervolgronde is."
+          body="Beschrijf kort welk bestaand signaal nu speelt en waarom de vraag verschuift naar managementcontext. Dan bepalen we of Leadership Scan echt de juiste bounded follow-on route is."
+          defaultRouteInterest="leadership"
+          defaultCtaSource="product_leadership_form"
         />
       </MarketingSection>
     </MarketingPageShell>

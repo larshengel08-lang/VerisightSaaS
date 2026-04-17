@@ -1,5 +1,9 @@
 export type MarketingProductStatus = 'live' | 'reserved_future'
-export type MarketingProductPortfolioRole = 'core_product' | 'portfolio_route' | 'future_reserved_route'
+export type MarketingProductPortfolioRole =
+  | 'core_product'
+  | 'portfolio_route'
+  | 'follow_on_route'
+  | 'future_reserved_route'
 
 export interface MarketingProduct {
   slug: string
@@ -73,9 +77,81 @@ export const PORTFOLIO_ROUTE_MARKETING_PRODUCTS: MarketingProduct[] = [
   },
 ]
 
+export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
+  {
+    slug: 'pulse',
+    label: 'Pulse',
+    shortLabel: 'Pulse',
+    tagline: 'Compacte reviewmetingen na diagnose of baseline',
+    description:
+      'Live bounded follow-on route voor kortere, frequente reviewmetingen nadat een eerste diagnose of baseline al staat. Bedoeld voor ritme, effectcheck en managementreview, niet als derde brede instap.',
+    seoTitle: 'Pulse | Compacte reviewmetingen na diagnose of baseline',
+    ogAlt: 'Pulse productpagina van Verisight',
+    serviceType: 'Compacte reviewmeting na diagnose of baseline',
+    serviceAudience: 'HR-teams en directies die na een eerste scan gericht willen blijven volgen',
+    serviceOutput:
+      'Compacte managementreview, ritmesignaal, delta-uitleg, bounded vervolgactie en expliciete reviewgrens',
+    status: 'live',
+    portfolioRole: 'follow_on_route',
+    href: '/producten/pulse',
+  },
+  {
+    slug: 'teamscan',
+    label: 'TeamScan',
+    shortLabel: 'TeamScan',
+    tagline: 'Lokale verificatie na een breder signaal',
+    description:
+      'Live bounded follow-on route voor department-first lokalisatie nadat een breder signaal al zichtbaar is. Bedoeld voor lokale verificatie en prioriteit, niet voor manager ranking of brede teamsoftware.',
+    seoTitle: 'TeamScan | Lokale verificatie na een breder signaal',
+    ogAlt: 'TeamScan productpagina van Verisight',
+    serviceType: 'Lokale verificatie en bounded teamprioritering',
+    serviceAudience: 'HR-teams en directies die na een breder signaal lokale verificatie willen starten',
+    serviceOutput:
+      'Lokale prioriteitsread, bounded managementhandoff, formele reportoutput en suppressie-aware lokale duiding',
+    status: 'live',
+    portfolioRole: 'follow_on_route',
+    href: '/producten/teamscan',
+  },
+  {
+    slug: 'onboarding-30-60-90',
+    label: 'Onboarding 30-60-90',
+    shortLabel: 'Onboarding 30-60-90',
+    tagline: 'Vroege lifecycle-check voor nieuwe medewerkers',
+    description:
+      'Live bounded follow-on route voor een assisted single-checkpoint onboardingread. Bedoeld om vroege landing en eerste frictie zichtbaar te maken, niet als journey-engine of brede lifecycle-suite.',
+    seoTitle: 'Onboarding 30-60-90 | Vroege lifecycle-check voor nieuwe medewerkers',
+    ogAlt: 'Onboarding 30-60-90 productpagina van Verisight',
+    serviceType: 'Assisted single-checkpoint onboardingread',
+    serviceAudience: 'HR-teams en directies die een vroege onboardingcheck buyer-facing willen openen',
+    serviceOutput:
+      'Checkpointsignaal, owner, eerste actie, managementhandoff en bounded formele output zonder brede journey-claims',
+    status: 'live',
+    portfolioRole: 'follow_on_route',
+    href: '/producten/onboarding-30-60-90',
+  },
+  {
+    slug: 'leadership-scan',
+    label: 'Leadership Scan',
+    shortLabel: 'Leadership Scan',
+    tagline: 'Begrensde managementread na een bestaand signaal',
+    description:
+      'Live bounded follow-on route voor een group-level leadershipread nadat een bestaand people-signaal al zichtbaar is. Bedoeld voor managementcontext en eerste verificatie, niet voor named leaders, 360 of performanceframing.',
+    seoTitle: 'Leadership Scan | Begrensde managementread na een bestaand signaal',
+    ogAlt: 'Leadership Scan productpagina van Verisight',
+    serviceType: 'Group-level leadershipread na een bestaand signaal',
+    serviceAudience: 'HR-teams en directies die managementcontext bounded willen duiden',
+    serviceOutput:
+      'Geaggregeerde leadershipread, managementhandoff, bounded first action en formele output zonder named leader readouts',
+    status: 'live',
+    portfolioRole: 'follow_on_route',
+    href: '/producten/leadership-scan',
+  },
+]
+
 export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
   ...CORE_MARKETING_PRODUCTS,
   ...PORTFOLIO_ROUTE_MARKETING_PRODUCTS,
+  ...FOLLOW_ON_MARKETING_PRODUCTS,
 ]
 
 export const RESERVED_MARKETING_PRODUCTS: MarketingProduct[] = [
@@ -89,39 +165,6 @@ export const RESERVED_MARKETING_PRODUCTS: MarketingProduct[] = [
     status: 'reserved_future',
     portfolioRole: 'future_reserved_route',
     href: '/producten/mto',
-  },
-  {
-    slug: 'pulse',
-    label: 'Pulse',
-    shortLabel: 'Pulse',
-    tagline: 'Korte, frequente peilingen tussen teams',
-    description:
-      'Bewust nog niet actieve route voor kortere ritmemetingen zodra de huidige kernportfolio commercieel en operationeel stabiel genoeg is.',
-    status: 'reserved_future',
-    portfolioRole: 'future_reserved_route',
-    href: '/producten/pulse',
-  },
-  {
-    slug: 'teamscan',
-    label: 'Teamscan',
-    shortLabel: 'Teamscan',
-    tagline: 'Samenwerking en dynamiek per team meten',
-    description:
-      'Bewust nog niet actieve route voor samenwerking, rolverdeling en teamdynamiek buiten de huidige ExitScan- en RetentieScan-kern.',
-    status: 'reserved_future',
-    portfolioRole: 'future_reserved_route',
-    href: '/producten/teamscan',
-  },
-  {
-    slug: 'leadership-scan',
-    label: 'Leadership Scan',
-    shortLabel: 'Leadership Scan',
-    tagline: 'Leiderschapsstijl en -effectiviteit in beeld',
-    description:
-      'Bewust nog niet actieve route voor leiderschapsgedrag en teamimpact, gereserveerd buiten de huidige kernportfolio.',
-    status: 'reserved_future',
-    portfolioRole: 'future_reserved_route',
-    href: '/producten/leadership-scan',
   },
   {
     slug: 'customer-feedback',
@@ -145,4 +188,8 @@ export function getMarketingProductBySlug(slug: string) {
 
 export function isCoreMarketingProduct(product: MarketingProduct) {
   return product.portfolioRole === 'core_product'
+}
+
+export function isFollowOnMarketingProduct(product: MarketingProduct) {
+  return product.portfolioRole === 'follow_on_route'
 }
