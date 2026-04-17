@@ -14,9 +14,9 @@ export function SectionHeading({
   light = false,
 }: SectionHeadingProps) {
   const wrapper = align === 'center' ? 'mx-auto max-w-4xl text-center' : 'max-w-[56rem] text-left'
-  const eyebrowColor = light ? 'text-[#DCEFEA]' : 'text-[#3C8D8A]'
-  const titleColor = light ? 'text-[#F7F5F1]' : 'text-[#132033]'
-  const descriptionColor = light ? 'text-[rgba(247,245,241,0.72)]' : 'text-[#4A5563]'
+  const eyebrowColor = light ? 'text-[var(--teal-light)]' : 'text-[var(--teal)]'
+  const titleColor = light ? 'text-[var(--bg)]' : 'text-[var(--ink)]'
+  const descriptionColor = light ? 'text-[rgba(247,245,241,0.72)]' : 'text-[var(--text)]'
 
   return (
     <div className={wrapper}>
