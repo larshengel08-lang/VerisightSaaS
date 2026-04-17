@@ -24,6 +24,7 @@ import io
 import math
 from datetime import datetime, timezone
 from typing import Any
+from xml.sax.saxutils import escape
 
 import matplotlib
 matplotlib.use("Agg")  # geen GUI vereist
@@ -32,9 +33,9 @@ import matplotlib.patches as mpatches
 import numpy as np
 
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm, mm
 from reportlab.platypus import (
     BaseDocTemplate,
@@ -53,8 +54,28 @@ from reportlab.lib.utils import ImageReader
 
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from backend.models import Campaign, Respondent, SurveyResponse
+from backend.models import Campaign, Organization, Respondent, SurveyResponse
+from backend.products.shared.management_language import (
+    management_band_label,
+    management_context_label,
+    management_label_kind,
+    management_preventability_label,
+)
 from backend.products.shared.registry import get_product_module
+from backend.report_design import (
+    BODY_FRAME_GAP,
+    CONTENT_WIDTH,
+    COVER_FRAME_INSET,
+    HEADER_HEIGHT,
+    MPL_TOKENS,
+    PAGE_MARGINS,
+    REPORT_FONTS,
+    TOKENS,
+    build_report_styles,
+    ensure_report_fonts,
+    get_report_theme,
+    make_page_callbacks,
+)
 from backend.report_content import FACTOR_EXPLANATIONS, METHODOLOGY_REFERENCES
 from backend.scan_definitions import get_scan_definition
 from backend.scoring import (
@@ -66,154 +87,31 @@ from backend.scoring import (
     detect_patterns,
 )
 
-# ---------------------------------------------------------------------------
-# Brandkleuren
-# ---------------------------------------------------------------------------
+ensure_report_fonts()
 
-BRAND       = colors.HexColor("#2563EB")
-BRAND_DARK  = colors.HexColor("#1D4ED8")
-BRAND_LIGHT = colors.HexColor("#EFF6FF")
-RISK_HIGH   = colors.HexColor("#DC2626")
-RISK_MED    = colors.HexColor("#F59E0B")
-RISK_LOW    = colors.HexColor("#16A34A")
-MUTED       = colors.HexColor("#6B7280")
-TEXT        = colors.HexColor("#111827")
-BORDER      = colors.HexColor("#E5E7EB")
-WHITE       = colors.white
-BG          = colors.HexColor("#F9FAFB")
+RISK_HIGH = TOKENS["danger"]
+RISK_MED = TOKENS["warning"]
+RISK_LOW = TOKENS["success"]
+MUTED = TOKENS["muted"]
+TEXT = TOKENS["text"]
+BORDER = TOKENS["border"]
+WHITE = colors.white
+BG = TOKENS["bg"]
 
-# Matplotlib equivalenten
-MPL_BRAND = "#2563EB"
-MPL_HIGH  = "#DC2626"
-MPL_MED   = "#F59E0B"
-MPL_LOW   = "#16A34A"
-MPL_MUTED = "#9CA3AF"
+MPL_BRAND = MPL_TOKENS["petrol"]
+MPL_HIGH = MPL_TOKENS["danger"]
+MPL_MED = MPL_TOKENS["warning"]
+MPL_LOW = MPL_TOKENS["success"]
+MPL_MUTED = MPL_TOKENS["muted"]
 
 PAGE_W, PAGE_H = A4  # 595 × 842 pt
 
 
 def _report_theme(scan_type: str) -> dict[str, colors.Color]:
-    if scan_type == "retention":
-        return {
-            "accent": colors.HexColor("#059669"),
-            "accent_dark": colors.HexColor("#047857"),
-            "accent_light": colors.HexColor("#ECFDF5"),
-            "border": colors.HexColor("#A7F3D0"),
-            "soft": colors.HexColor("#F0FDF4"),
-            "text": colors.HexColor("#065F46"),
-        }
-    return {
-        "accent": BRAND,
-        "accent_dark": BRAND_DARK,
-        "accent_light": colors.HexColor("#EFF6FF"),
-        "border": colors.HexColor("#BFDBFE"),
-        "soft": colors.HexColor("#F8FBFF"),
-        "text": colors.HexColor("#1E3A8A"),
-    }
-
-# ---------------------------------------------------------------------------
-# Stijlen
-# ---------------------------------------------------------------------------
-
-_base_styles = getSampleStyleSheet()
+    return get_report_theme(scan_type)
 
 
-def _style(name: str, **kw) -> ParagraphStyle:
-    return ParagraphStyle(name, **kw)
-
-
-STYLES: dict[str, ParagraphStyle] = {
-    "cover_title": _style(
-        "cover_title",
-        fontName="Helvetica-Bold",
-        fontSize=28,
-        leading=34,
-        textColor=WHITE,
-        alignment=TA_LEFT,
-    ),
-    "cover_sub": _style(
-        "cover_sub",
-        fontName="Helvetica",
-        fontSize=14,
-        leading=20,
-        textColor=colors.HexColor("#BFDBFE"),
-        alignment=TA_LEFT,
-    ),
-    "cover_meta": _style(
-        "cover_meta",
-        fontName="Helvetica",
-        fontSize=11,
-        leading=16,
-        textColor=WHITE,
-        alignment=TA_LEFT,
-    ),
-    "section_title": _style(
-        "section_title",
-        fontName="Helvetica-Bold",
-        fontSize=16,
-        leading=22,
-        textColor=BRAND,
-        spaceAfter=8,
-    ),
-    "sub_title": _style(
-        "sub_title",
-        fontName="Helvetica-Bold",
-        fontSize=12,
-        leading=18,
-        textColor=TEXT,
-        spaceBefore=10,
-        spaceAfter=4,
-    ),
-    "body": _style(
-        "body",
-        fontName="Helvetica",
-        fontSize=10,
-        leading=15,
-        textColor=TEXT,
-        spaceAfter=6,
-    ),
-    "body_bold": _style(
-        "body_bold",
-        fontName="Helvetica-Bold",
-        fontSize=10,
-        leading=15,
-        textColor=TEXT,
-    ),
-    "caption": _style(
-        "caption",
-        fontName="Helvetica-Oblique",
-        fontSize=8,
-        leading=12,
-        textColor=MUTED,
-        alignment=TA_CENTER,
-    ),
-    "footer": _style(
-        "footer",
-        fontName="Helvetica",
-        fontSize=8,
-        leading=12,
-        textColor=MUTED,
-        alignment=TA_RIGHT,
-    ),
-    "badge_high": _style(
-        "badge_high",
-        fontName="Helvetica-Bold",
-        fontSize=9,
-        textColor=colors.HexColor("#991B1B"),
-    ),
-    "badge_med": _style(
-        "badge_med",
-        fontName="Helvetica-Bold",
-        fontSize=9,
-        textColor=colors.HexColor("#92400E"),
-    ),
-    "badge_low": _style(
-        "badge_low",
-        fontName="Helvetica-Bold",
-        fontSize=9,
-        textColor=colors.HexColor("#166534"),
-    ),
-}
+STYLES: dict[str, ParagraphStyle] = build_report_styles()
 
 # ---------------------------------------------------------------------------
 # Matplotlib → ReportLab Image helper
@@ -245,9 +143,9 @@ def _risk_gauge_image(score: float, band: str) -> Image:
     ax.axis("off")
 
     # Achtergrond zones — clear demarcation at 4.5 and 7.0
-    ax.barh(0.65, 3.5, left=1,   height=0.5, color=MPL_LOW,  alpha=0.30)
-    ax.barh(0.65, 2.5, left=4.5, height=0.5, color=MPL_MED,  alpha=0.30)
-    ax.barh(0.65, 3.0, left=7.0, height=0.5, color=MPL_HIGH, alpha=0.30)
+    ax.barh(0.65, 3.5, left=1,   height=0.42, color=MPL_LOW,  alpha=0.20)
+    ax.barh(0.65, 2.5, left=4.5, height=0.42, color=MPL_MED,  alpha=0.18)
+    ax.barh(0.65, 3.0, left=7.0, height=0.42, color=MPL_HIGH, alpha=0.18)
 
     # Naald — dikkere lijn, kleur passend bij band
     color = {"HOOG": MPL_HIGH, "MIDDEN": MPL_MED, "LAAG": MPL_LOW}.get(band, MPL_BRAND)
@@ -256,10 +154,10 @@ def _risk_gauge_image(score: float, band: str) -> Image:
 
     # Zone labels — groter en vetter
     for x, lbl, col in [(2.75, "LAAG", MPL_LOW), (5.75, "MIDDEN", MPL_MED), (8.5, "HOOG", MPL_HIGH)]:
-        ax.text(x, 0.65, lbl, ha="center", va="center", fontsize=8, color=col, fontweight="bold")
+        ax.text(x, 0.65, lbl, ha="center", va="center", fontsize=7.5, color=MPL_TOKENS["text"], fontweight="bold")
 
     # Score label direct onder de naald
-    ax.text(score, 0.08, f"{score:.1f}", ha="center", va="bottom", fontsize=10, color=color, fontweight="bold")
+    ax.text(score, 0.08, f"{score:.1f}", ha="center", va="bottom", fontsize=9.5, color=MPL_TOKENS["ink"], fontweight="bold")
 
     return _fig_to_image(fig, width_cm=10)
 
@@ -323,22 +221,26 @@ def _factor_bar_image(factor_avgs: dict[str, float], width_cm: float = 12.0) -> 
     ax.set_yticks(list(y))
     ax.set_yticklabels(labels_s, fontsize=9)
     ax.set_xlabel("Score (1 = laag, 10 = hoog)", fontsize=8)
-    ax.axvline(x=5.5, color="#D1D5DB", lw=1, linestyle="--")
+    ax.axvline(x=5.5, color=MPL_TOKENS["border"], lw=1, linestyle="--")
+    ax.grid(axis="x", color=MPL_TOKENS["border"], alpha=0.35, linewidth=0.8)
+    ax.set_axisbelow(True)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
 
     for bar, score in zip(bars, scores_s):
         ax.text(
             score + 0.15, bar.get_y() + bar.get_height() / 2,
-            f"{score:.1f}", va="center", fontsize=8, color="#374151",
+            f"{score:.1f}", va="center", fontsize=8, color=MPL_TOKENS["text"],
         )
 
     patches = [
-        mpatches.Patch(color=MPL_HIGH, label="Hoog aandachtssignaal"),
-        mpatches.Patch(color=MPL_MED,  label="Gemengd signaal"),
-        mpatches.Patch(color=MPL_LOW,  label="Beperkt signaal"),
+        mpatches.Patch(color=MPL_HIGH, label=management_band_label(band="HOOG")),
+        mpatches.Patch(color=MPL_MED, label=management_band_label(band="MIDDEN")),
+        mpatches.Patch(color=MPL_LOW, label=management_band_label(band="LAAG")),
     ]
-    ax.legend(handles=patches, fontsize=7, loc="lower right")
-    ax.set_facecolor("white")
-    fig.patch.set_facecolor("white")
+    ax.legend(handles=patches, fontsize=7, loc="lower right", frameon=False)
+    ax.set_facecolor(MPL_TOKENS["surface"])
+    fig.patch.set_facecolor(MPL_TOKENS["surface"])
     fig.tight_layout()
     return _fig_to_image(fig, width_cm=width_cm)
 
@@ -354,7 +256,11 @@ def _preventability_image(counts: dict[str, int], width_cm: float = 7.0) -> Imag
         counts.get("GEMENGD_WERKSIGNAAL", 0),
         counts.get("BEPERKT_WERKSIGNAAL", 0),
     ]
-    labels = ["Sterk\nwerksignaal", "Gemengd\nsignaal", "Beperkt\nsignaal"]
+    labels = [
+        management_band_label(band="HOOG").replace(" ", "\n"),
+        management_band_label(band="MIDDEN").replace(" ", "\n"),
+        management_band_label(band="LAAG").replace(" ", "\n"),
+    ]
     colors_list = [MPL_LOW, MPL_MED, MPL_MUTED]
     if sum(vals) == 0:
         return None
@@ -423,6 +329,172 @@ def _risk_color(score: float) -> colors.Color:
     return RISK_LOW
 
 
+def _color_to_hex(color_value: colors.Color) -> str:
+    return "#{:02X}{:02X}{:02X}".format(
+        int(round(color_value.red * 255)),
+        int(round(color_value.green * 255)),
+        int(round(color_value.blue * 255)),
+    )
+
+
+def _truncate_copy(text: str | None, *, limit: int = 160) -> str:
+    if not text:
+        return ""
+    compact = " ".join(str(text).split())
+    if len(compact) <= limit:
+        return compact
+    clipped = compact[: limit - 1].rsplit(" ", 1)[0].rstrip(" ,;:")
+    return f"{clipped}…"
+
+
+def _priority_matrix_image(factor_avgs: dict[str, float], width_cm: float = 12.2) -> Image | None:
+    if not factor_avgs:
+        return None
+
+    points: list[tuple[str, float, float, float]] = []
+    for factor in ORG_FACTOR_KEYS:
+        if factor not in factor_avgs:
+            continue
+        label = FACTOR_LABELS_NL.get(factor, factor)
+        score = round(float(factor_avgs[factor]), 1)
+        signal = _factor_signal_score(factor, factor_avgs)
+        points.append((label, score, signal, 90 + (signal * 28)))
+
+    if not points:
+        return None
+
+    fig, ax = plt.subplots(figsize=(7.2, 4.2))
+    ax.set_xlim(1, 10)
+    ax.set_ylim(1, 10)
+    ax.axvspan(1, 4.5, color=MPL_TOKENS["cream"], alpha=0.9, zorder=0)
+    ax.axhspan(7.0, 10, color=MPL_TOKENS["teal_light"], alpha=0.55, zorder=0)
+    ax.axvline(5.5, color=MPL_TOKENS["border"], linestyle="--", linewidth=1)
+    ax.axhline(5.5, color=MPL_TOKENS["border"], linestyle="--", linewidth=1)
+    ax.grid(color=MPL_TOKENS["border"], linestyle=":", linewidth=0.6, alpha=0.9)
+
+    for label, score, signal, bubble_size in points:
+        point_color = MPL_HIGH if signal >= 7.0 else MPL_MED if signal >= 4.5 else MPL_BRAND
+        ax.scatter(
+            score,
+            signal,
+            s=bubble_size,
+            color=point_color,
+            edgecolor=MPL_TOKENS["navy"],
+            linewidth=0.8,
+            alpha=0.92,
+            zorder=3,
+        )
+        ax.text(
+            score + 0.10,
+            signal + 0.10,
+            label,
+            fontsize=7.4,
+            color=MPL_TOKENS["ink"],
+            fontweight="medium",
+            zorder=4,
+        )
+
+    ax.set_xlabel("Beleving / score", fontsize=8)
+    ax.set_ylabel("Signaal / aandacht", fontsize=8)
+    ax.set_xticks([2, 4, 6, 8, 10])
+    ax.set_yticks([2, 4, 6, 8, 10])
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_color(MPL_TOKENS["border"])
+    ax.spines["bottom"].set_color(MPL_TOKENS["border"])
+    ax.set_facecolor(MPL_TOKENS["surface"])
+    fig.patch.set_facecolor(MPL_TOKENS["surface"])
+    fig.tight_layout()
+    return _fig_to_image(fig, width_cm=width_cm)
+
+
+def _ranked_bar_image(
+    items: list[dict[str, Any]],
+    *,
+    width_cm: float = 8.8,
+    color: str = MPL_BRAND,
+) -> Image | None:
+    if not items:
+        return None
+
+    labels = [str(item.get("label", "")) for item in items]
+    values = [float(item.get("count", 0) or 0) for item in items]
+    if not any(values):
+        return None
+
+    positions = np.arange(len(labels))
+    max_value = max(values)
+    fig_height = max(2.2, 1.15 + (len(labels) * 0.52))
+    fig, ax = plt.subplots(figsize=(6.0, fig_height))
+    bars = ax.barh(positions, values, color=color, alpha=0.9, height=0.56)
+    ax.set_yticks(positions)
+    ax.set_yticklabels(labels, fontsize=8)
+    ax.invert_yaxis()
+    ax.set_xlim(0, max_value * 1.18)
+    ax.xaxis.set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.set_facecolor(MPL_TOKENS["surface"])
+    fig.patch.set_facecolor(MPL_TOKENS["surface"])
+
+    for bar, value in zip(bars, values):
+        ax.text(
+            value + (max_value * 0.03),
+            bar.get_y() + (bar.get_height() / 2),
+            f"{int(value)}",
+            va="center",
+            fontsize=8.2,
+            color=MPL_TOKENS["ink"],
+            fontweight="bold",
+        )
+    fig.tight_layout()
+    return _fig_to_image(fig, width_cm=width_cm)
+
+
+def _segment_small_multiple_image(
+    rows: list[dict[str, Any]],
+    *,
+    org_avg_risk: float | None,
+    width_cm: float = 5.4,
+) -> Image | None:
+    if not rows or org_avg_risk is None:
+        return None
+
+    labels = [row["segment_label"] for row in rows[:3]]
+    values = [float(row["avg_risk"]) for row in rows[:3]]
+    positions = np.arange(len(labels))
+    fig_height = max(1.9, 1.0 + (len(labels) * 0.48))
+    fig, ax = plt.subplots(figsize=(3.4, fig_height))
+    colors_list = [MPL_HIGH if value >= org_avg_risk else MPL_BRAND for value in values]
+    bars = ax.barh(positions, values, color=colors_list, alpha=0.92, height=0.52)
+    ax.axvline(org_avg_risk, color=MPL_TOKENS["border"], linestyle="--", linewidth=1)
+    ax.set_xlim(0, 10)
+    ax.set_yticks(positions)
+    ax.set_yticklabels(labels, fontsize=7.2)
+    ax.invert_yaxis()
+    ax.xaxis.set_visible(False)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+    ax.spines["bottom"].set_visible(False)
+    ax.set_facecolor(MPL_TOKENS["surface"])
+    fig.patch.set_facecolor(MPL_TOKENS["surface"])
+    for bar, value in zip(bars, values):
+        ax.text(
+            value + 0.15,
+            bar.get_y() + (bar.get_height() / 2),
+            f"{value:.1f}",
+            va="center",
+            fontsize=7.2,
+            color=MPL_TOKENS["ink"],
+            fontweight="bold",
+        )
+    fig.tight_layout()
+    return _fig_to_image(fig, width_cm=width_cm)
+
+
 def _top_factor_cluster(top_risks: list[tuple[str, float]], delta: float = 0.4) -> list[tuple[str, float]]:
     if not top_risks:
         return []
@@ -476,6 +548,10 @@ def _select_relevant_quotes(
             if len(selected) >= max_quotes:
                 break
     return selected[:max_quotes]
+
+
+def _has_exit_open_signal_decision_value(quotes: list[str]) -> bool:
+    return len(quotes) >= 2
 
 
 def _cluster_retention_open_signals(quotes: list[str], max_themes: int = 3) -> list[dict[str, Any]]:
@@ -568,6 +644,20 @@ def _cluster_retention_open_signals(quotes: list[str], max_themes: int = 3) -> l
     return themes[:max_themes]
 
 
+def _select_retention_decision_themes(
+    retention_themes: list[dict[str, Any]],
+    top_risks: list[tuple[str, float]],
+    max_themes: int = 2,
+) -> list[dict[str, Any]]:
+    top_factor_keys = {factor for factor, _signal_value in top_risks[:2]}
+    selected = [
+        theme
+        for theme in retention_themes
+        if theme.get("key") in top_factor_keys and theme.get("count", 0) >= 2
+    ]
+    return selected[:max_themes]
+
+
 def _append_report_cards(
     story: list,
     cards: list[dict[str, str]],
@@ -586,16 +676,55 @@ def _append_report_cards(
             colWidths=[content_width],
         )
         table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EFF6FF")),
+            ("BACKGROUND", (0, 0), (-1, 0), TOKENS["teal_light"]),
             ("BACKGROUND", (0, 1), (-1, -1), WHITE),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#BFDBFE")),
-            ("TOPPADDING", (0, 0), (-1, -1), 6),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-            ("LEFTPADDING", (0, 0), (-1, -1), 10),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+            ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
+            ("TOPPADDING", (0, 0), (-1, -1), 8),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+            ("LEFTPADDING", (0, 0), (-1, -1), 12),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 12),
         ]))
         story.append(table)
         story.append(Spacer(1, 0.2 * cm))
+
+
+def _risk_badge(score: float | None = None, *, label: str | None = None) -> dict[str, colors.Color | str] | None:
+    if score is None and not label:
+        return None
+    if score is not None:
+        label = management_band_label(score=score)
+    resolved_label = label or management_band_label(band="LAAG")
+    kind = management_label_kind(resolved_label)
+    if kind == "HOOG":
+        return {"label": resolved_label, "bg": TOKENS["risk_high_bg"], "fg": RISK_HIGH}
+    if kind == "MIDDEN":
+        return {"label": resolved_label, "bg": TOKENS["risk_med_bg"], "fg": RISK_MED}
+    if kind == "stabilizing":
+        return {"label": resolved_label, "bg": TOKENS["teal_light"], "fg": get_report_theme("exit")["accent"]}
+    if kind == "verification":
+        return {"label": resolved_label, "bg": TOKENS["surface"], "fg": TEXT}
+    return {"label": resolved_label, "bg": TOKENS["risk_low_bg"], "fg": RISK_LOW}
+
+
+def _build_badge_table(badge: dict[str, colors.Color | str], width: float) -> Table:
+    badge_style = ParagraphStyle(
+        f"badge_{badge['label']}",
+        fontName=REPORT_FONTS["semibold"],
+        fontSize=7.2,
+        leading=8.8,
+        textColor=badge["fg"],
+        alignment=TA_CENTER,
+    )
+    badge_table = Table([[Paragraph(str(badge["label"]).upper(), badge_style)]], colWidths=[width])
+    badge_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), badge["bg"]),
+        ("BOX", (0, 0), (-1, -1), 0.4, badge["bg"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+    ]))
+    return badge_table
 
 
 def _append_highlight_cards(
@@ -604,55 +733,61 @@ def _append_highlight_cards(
     *,
     content_width: float,
     theme: dict[str, colors.Color],
+    columns: int = 3,
 ) -> None:
     if not cards:
         return
 
     card_tables: list[Table] = []
+    column_count = max(1, min(columns, 3))
+    cell_width = content_width / column_count - 12
     for card in cards:
         rows = []
         if card.get("title"):
             rows.append([Paragraph(card["title"], ParagraphStyle(
                 f"highlight_title_{card['title']}",
-                fontName="Helvetica-Bold",
-                fontSize=8.5,
-                leading=11,
+                fontName=REPORT_FONTS["semibold"],
+                fontSize=7.2,
+                leading=9.4,
                 textColor=theme["text"],
-                spaceAfter=2,
+                spaceAfter=1,
             ))])
+        if card.get("badge"):
+            rows.append([_build_badge_table(card["badge"], min(cell_width * 0.55, 40 * mm))])
         if card.get("value"):
             rows.append([Paragraph(card["value"], ParagraphStyle(
                 f"highlight_value_{card['title']}",
-                fontName="Helvetica-Bold",
-                fontSize=13,
-                leading=16,
-                textColor=TEXT,
-                spaceAfter=3,
+                fontName=REPORT_FONTS["bold"],
+                fontSize=11.4,
+                leading=13.5,
+                textColor=card.get("value_color", theme["ink"]),
+                spaceAfter=2,
             ))])
         rows.append([Paragraph(card["body"], ParagraphStyle(
             f"highlight_body_{card['title']}",
-            fontName="Helvetica",
-            fontSize=8.5,
-            leading=12,
-            textColor=TEXT,
+            fontName=REPORT_FONTS["regular"],
+            fontSize=7.6,
+            leading=10.6,
+            textColor=theme["text"],
         ))])
-        card_table = Table(rows, colWidths=[content_width / min(len(cards), 3) - 12])
+        card_table = Table(rows, colWidths=[cell_width])
         card_table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, -1), WHITE),
-            ("BOX", (0, 0), (-1, -1), 0.75, theme["border"]),
-            ("LINEABOVE", (0, 0), (-1, 0), 2.5, theme["accent"]),
-            ("TOPPADDING", (0, 0), (-1, -1), 8),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-            ("LEFTPADDING", (0, 0), (-1, -1), 10),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+            ("BACKGROUND", (0, 0), (-1, -1), card.get("background", theme["surface"])),
+            ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
+            ("LINEABOVE", (0, 0), (-1, 0), 2, card.get("accent_color", theme["accent"])),
+            ("TOPPADDING", (0, 0), (-1, -1), 7),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ]))
         card_tables.append(card_table)
 
-    rows = [card_tables[i:i + 3] for i in range(0, len(card_tables), 3)]
+    rows = [card_tables[i:i + column_count] for i in range(0, len(card_tables), column_count)]
     for row_cards in rows:
-        if len(row_cards) < 3:
-            row_cards = row_cards + [""] * (3 - len(row_cards))
-        table = Table([row_cards], colWidths=[content_width / 3] * 3)
+        if len(row_cards) < column_count:
+            row_cards = row_cards + [""] * (column_count - len(row_cards))
+        table = Table([row_cards], colWidths=[content_width / column_count] * column_count)
         table.setStyle(TableStyle([
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
             ("LEFTPADDING", (0, 0), (-1, -1), 0),
@@ -661,7 +796,7 @@ def _append_highlight_cards(
             ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
         ]))
         story.append(table)
-        story.append(Spacer(1, 0.2 * cm))
+        story.append(Spacer(1, 0.12 * cm))
 
 
 def _append_emphasis_note(
@@ -678,10 +813,10 @@ def _append_emphasis_note(
                 f"<b>{title}</b><br/>{body}",
                 ParagraphStyle(
                     f"emphasis_note_{title}",
-                    fontName="Helvetica",
-                    fontSize=9,
-                    leading=13,
-                    textColor=TEXT,
+                    fontName=REPORT_FONTS["regular"],
+                    fontSize=8.0,
+                    leading=11.2,
+                    textColor=theme["text"],
                 ),
             )
         ]],
@@ -689,15 +824,1441 @@ def _append_emphasis_note(
     )
     note_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, -1), theme["soft"]),
-        ("BOX", (0, 0), (-1, -1), 0.75, theme["border"]),
-        ("LINEBEFORE", (0, 0), (0, -1), 3, theme["accent"]),
-        ("TOPPADDING", (0, 0), (-1, -1), 8),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-        ("LEFTPADDING", (0, 0), (-1, -1), 10),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+        ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
+        ("LINEBEFORE", (0, 0), (0, -1), 2.5, theme["accent"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
     ]))
     story.append(note_table)
+    story.append(Spacer(1, 0.14 * cm))
+
+
+def _append_metric_band(
+    story: list,
+    cards: list[dict[str, str]],
+    *,
+    content_width: float,
+    theme: dict[str, colors.Color],
+    columns: int = 3,
+) -> None:
+    if not cards:
+        return
+
+    usable_cards = cards[: max(1, columns * 2)]
+    cell_width = content_width / columns - 10
+    card_tables: list[Table] = []
+    for card in usable_cards:
+        rows = []
+        if card.get("title"):
+            rows.append([Paragraph(card["title"], ParagraphStyle(
+                f"metric_title_{card['title']}",
+                fontName=REPORT_FONTS["semibold"],
+                fontSize=7.0,
+                leading=9.2,
+                textColor=theme["text"],
+            ))])
+        if card.get("badge"):
+            rows.append([_build_badge_table(card["badge"], min(cell_width * 0.55, 38 * mm))])
+        if card.get("value"):
+            rows.append([Paragraph(card["value"], ParagraphStyle(
+                f"metric_value_{card['title']}",
+                fontName=REPORT_FONTS["bold"],
+                fontSize=14.0,
+                leading=16.2,
+                textColor=card.get("value_color", theme["ink"]),
+            ))])
+        if card.get("body"):
+            rows.append([Paragraph(card["body"], ParagraphStyle(
+                f"metric_body_{card['title']}",
+                fontName=REPORT_FONTS["regular"],
+                fontSize=7.2,
+                leading=9.8,
+                textColor=theme["muted"],
+            ))])
+        card_table = Table(rows, colWidths=[cell_width])
+        card_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), card.get("background", theme["surface"])),
+            ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
+            ("LINEABOVE", (0, 0), (-1, 0), 2, card.get("accent_color", theme["accent"])),
+            ("TOPPADDING", (0, 0), (-1, -1), 7),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ]))
+        card_tables.append(card_table)
+
+    rows = [card_tables[i:i + columns] for i in range(0, len(card_tables), columns)]
+    for row_cards in rows:
+        if len(row_cards) < columns:
+            row_cards = row_cards + [""] * (columns - len(row_cards))
+        row = Table([row_cards], colWidths=[content_width / columns] * columns)
+        row.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+        ]))
+        story.append(row)
+        story.append(Spacer(1, 0.12 * cm))
+
+
+def _append_factor_priority_rows(
+    story: list,
+    *,
+    factor_rows: list[dict[str, str]],
+    content_width: float,
+    theme: dict[str, colors.Color],
+) -> None:
+    if not factor_rows:
+        return
+
+    rows = [["Driver", "Beleving", "Signaal", "Wat dit nu vraagt"]]
+    for row in factor_rows:
+        rows.append([
+            row["label"],
+            row["score"],
+            row["signal"],
+            row["decision"],
+        ])
+
+    table = Table(
+        rows,
+        colWidths=[
+            content_width * 0.23,
+            content_width * 0.12,
+            content_width * 0.12,
+            content_width * 0.53,
+        ],
+    )
+    style = TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), theme["navy"]),
+        ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
+        ("FONTNAME", (0, 0), (-1, 0), REPORT_FONTS["semibold"]),
+        ("FONTSIZE", (0, 0), (-1, -1), 8.2),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [theme["surface"], theme["soft"]]),
+        ("GRID", (0, 0), (-1, -1), 0.45, theme["border"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("ALIGN", (1, 1), (2, -1), "CENTER"),
+        ("FONTNAME", (1, 1), (2, -1), REPORT_FONTS["semibold"]),
+    ])
+    for row_idx, row in enumerate(factor_rows, start=1):
+        signal_value = float(row["signal_value"])
+        style.add("TEXTCOLOR", (2, row_idx), (2, row_idx), _risk_color(signal_value))
+    table.setStyle(style)
+    story.append(table)
     story.append(Spacer(1, 0.25 * cm))
+
+
+def _append_numbered_action_rows(
+    story: list,
+    *,
+    steps: list[dict[str, str]],
+    content_width: float,
+    theme: dict[str, colors.Color],
+) -> None:
+    if not steps:
+        return
+    rows: list[list[Any]] = [["Stap", "Actie", "Wat dit vraagt"]]
+    for step in steps:
+        rows.append([
+            step["number"],
+            step["title"],
+            step["body"],
+        ])
+    action_table = _build_data_table_flowable(
+        rows=rows,
+        col_widths=[content_width * 0.10, content_width * 0.25, content_width * 0.65],
+        theme=theme,
+        align_columns=[0],
+        bold_columns=[0, 1],
+    )
+    action_table.setStyle(TableStyle([
+        ("TEXTCOLOR", (0, 1), (0, -1), theme["accent_dark"]),
+        ("FONTNAME", (0, 1), (0, -1), REPORT_FONTS["bold"]),
+    ]))
+    story.append(action_table)
+    story.append(Spacer(1, 0.14 * cm))
+
+
+def _append_quote_cards(
+    story: list,
+    *,
+    quotes: list[str],
+    content_width: float,
+    theme: dict[str, colors.Color],
+) -> None:
+    if not quotes:
+        return
+
+    cards = []
+    for quote in quotes[:2]:
+        cards.append({
+            "title": "Stem uit de survey",
+            "value": "",
+            "body": f'"{quote}"',
+        })
+    _append_highlight_cards(story, cards, content_width=content_width, theme=theme)
+
+
+def _append_compact_read_guide(
+    story: list,
+    *,
+    scan_type: str,
+    content_width: float,
+    has_segment_deep_dive: bool,
+    theme: dict[str, colors.Color],
+) -> None:
+    scan_meta = get_scan_definition(scan_type)
+    product_module = get_product_module(scan_type)
+    methodology_payload = product_module.get_methodology_payload()
+
+    story.append(Paragraph("Compacte leeswijzer", STYLES["section_title"]))
+    story.append(Paragraph(methodology_payload["intro_text"], STYLES["body"]))
+    story.append(Spacer(1, 0.2 * cm))
+    story.append(Paragraph(
+        f"Hoe lees je het {scan_meta['signal_short_label']}?",
+        STYLES["sub_title"],
+    ))
+    story.append(Paragraph(methodology_payload["method_text"], STYLES["body"]))
+    story.append(Spacer(1, 0.2 * cm))
+
+    band_rows = methodology_payload["band_rows"]
+    band_table = Table(
+        band_rows,
+        colWidths=[content_width * 0.20, content_width * 0.18, content_width * 0.62],
+    )
+    band_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), theme["navy"]),
+        ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
+        ("FONTNAME", (0, 0), (-1, 0), REPORT_FONTS["semibold"]),
+        ("FONTSIZE", (0, 0), (-1, -1), 8.2),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [theme["surface"], theme["soft"]]),
+        ("GRID", (0, 0), (-1, -1), 0.45, theme["border"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("ALIGN", (0, 1), (1, -1), "CENTER"),
+        ("FONTNAME", (0, 1), (1, -1), REPORT_FONTS["semibold"]),
+    ]))
+    story.append(band_table)
+    story.append(Spacer(1, 0.2 * cm))
+
+    trust_rows = methodology_payload.get("trust_rows", [])[:4]
+    if trust_rows:
+        trust_table = Table(
+            trust_rows,
+            colWidths=[content_width * 0.27, content_width * 0.73],
+        )
+        trust_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (0, -1), theme["accent_light"]),
+            ("BACKGROUND", (1, 0), (1, -1), theme["surface"]),
+            ("TEXTCOLOR", (0, 0), (0, -1), theme["accent_dark"]),
+            ("FONTNAME", (0, 0), (0, -1), REPORT_FONTS["semibold"]),
+            ("FONTSIZE", (0, 0), (-1, -1), 8.2),
+            ("GRID", (0, 0), (-1, -1), 0.45, theme["border"]),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("LEFTPADDING", (0, 0), (-1, -1), 10),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+        ]))
+        story.append(trust_table)
+        story.append(Spacer(1, 0.2 * cm))
+
+    stats_note = (
+        f"Resultaten verschijnen pas vanaf voldoende responses. Patroonanalyse vraagt minimaal 10 responses; segmentvergelijkingen tonen we vanaf minimaal {MIN_SEGMENT_N} per groep."
+    )
+    if has_segment_deep_dive:
+        stats_note += " Segment deep dive blijft beschrijvend en is bedoeld om vervolgvragen te richten, niet om oorzaken te bewijzen."
+    _append_emphasis_note(
+        story,
+        title="Methodiek in één zin",
+        body=stats_note,
+        content_width=content_width,
+        theme=theme,
+    )
+
+
+def _append_divider_line(story: list, *, content_width: float, color: colors.Color = BORDER, gap_mm: float = 4.0) -> None:
+    divider = Table([[""]], colWidths=[content_width], rowHeights=[0.5])
+    divider.setStyle(TableStyle([
+        ("LINEABOVE", (0, 0), (-1, 0), 0.5, color),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    story.append(divider)
+    story.append(Spacer(1, gap_mm * mm))
+
+
+def _append_section_heading(
+    story: list,
+    *,
+    eyebrow: str,
+    title: str,
+    intro: str | None = None,
+    content_width: float,
+    divider: bool = False,
+) -> None:
+    story.append(Paragraph(escape(eyebrow.upper()), STYLES["eyebrow"]))
+    story.append(Paragraph(title, STYLES["section_title"]))
+    if intro:
+        story.append(Paragraph(intro, STYLES["body"]))
+    if divider:
+        _append_divider_line(story, content_width=content_width)
+
+
+def _append_chart_frame(
+    story: list,
+    *,
+    label: str,
+    image: Image | None,
+    content_width: float,
+    theme: dict[str, colors.Color],
+    caption: str | None = None,
+) -> None:
+    if image is None:
+        return
+    frame = _build_chart_frame_flowable(
+        label=label,
+        image=image,
+        content_width=content_width,
+        theme=theme,
+        caption=caption,
+    )
+    story.append(frame)
+    story.append(Spacer(1, 0.2 * cm))
+
+
+def _build_chart_frame_flowable(
+    *,
+    label: str,
+    image: Image | None,
+    content_width: float,
+    theme: dict[str, colors.Color],
+    caption: str | None = None,
+) -> Table | None:
+    if image is None:
+        return None
+    rows: list[list[Any]] = [[Paragraph(label, STYLES["label"])]]
+    rows.append([image])
+    if caption:
+        rows.append([Paragraph(caption, STYLES["caption"])])
+    frame = Table(rows, colWidths=[content_width])
+    frame.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), theme["surface"]),
+        ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+    return frame
+
+
+def _build_stacked_distribution_flowable(
+    *,
+    title: str,
+    counts: dict[str, int],
+    width: float,
+    theme: dict[str, colors.Color],
+    caption: str | None = None,
+) -> Table:
+    total = max(sum(counts.values()), 1)
+    segments = [
+        {
+            "band": "LAAG",
+            "label": management_band_label(band="LAAG"),
+            "count": counts.get("LAAG", 0),
+            "bg": theme["surface"],
+            "fg": theme["text"],
+        },
+        {
+            "band": "MIDDEN",
+            "label": management_band_label(band="MIDDEN"),
+            "count": counts.get("MIDDEN", 0),
+            "bg": TOKENS["cream"],
+            "fg": theme["text"],
+        },
+        {
+            "band": "HOOG",
+            "label": management_band_label(band="HOOG"),
+            "count": counts.get("HOOG", 0),
+            "bg": theme["accent"],
+            "fg": WHITE,
+        },
+    ]
+    base_widths = [max(width * (segment["count"] / total), 22 * mm) for segment in segments]
+    scale = width / sum(base_widths)
+    bar_widths = [segment_width * scale for segment_width in base_widths]
+    bar_cells = []
+    for segment in segments:
+        pct = round(segment["count"] / total * 100)
+        bar_cells.append(
+            Paragraph(
+                f"<b>{segment['label']}</b><br/>{pct}% · n={segment['count']}",
+                ParagraphStyle(
+                    f"stacked_{segment['band']}",
+                    fontName=REPORT_FONTS["semibold"],
+                    fontSize=7.0,
+                    leading=9.0,
+                    textColor=segment["fg"],
+                    alignment=TA_CENTER,
+                ),
+            )
+        )
+    bar = Table([bar_cells], colWidths=bar_widths)
+    bar.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (0, 0), segments[0]["bg"]),
+        ("BACKGROUND", (1, 0), (1, 0), segments[1]["bg"]),
+        ("BACKGROUND", (2, 0), (2, 0), segments[2]["bg"]),
+        ("BOX", (0, 0), (-1, -1), 0.6, theme["border"]),
+        ("INNERGRID", (0, 0), (-1, -1), 0.4, theme["border"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+    rows: list[list[Any]] = [[Paragraph(title, STYLES["label"])], [bar]]
+    if caption:
+        rows.append([Paragraph(caption, STYLES["caption"])])
+    frame = Table(rows, colWidths=[width])
+    frame.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), theme["surface"]),
+        ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+    return frame
+
+
+def _append_executive_pathway(
+    story: list,
+    *,
+    steps: list[dict[str, str]],
+    content_width: float,
+    theme: dict[str, colors.Color],
+) -> None:
+    if not steps:
+        return
+
+    label_tables = []
+    for index, step in enumerate(steps, start=1):
+        label_tables.append(
+            _build_badge_table(
+                {
+                    "label": f"{index}. {step['title']}",
+                    "bg": TOKENS["teal_light"] if index < len(steps) else TOKENS["risk_low_bg"],
+                    "fg": theme["accent_dark"],
+                },
+                max(content_width / max(len(steps), 1) - 8, 24 * mm),
+            )
+        )
+    label_row = Table([label_tables], colWidths=[content_width / len(label_tables)] * len(label_tables))
+    label_row.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    story.append(label_row)
+    story.append(Spacer(1, 0.12 * cm))
+    for index, step in enumerate(steps, start=1):
+        story.append(_build_metric_band_flowable(
+            {
+                "title": step["title"],
+                "value": str(index),
+                "body": step["body"],
+                "background": TOKENS["cream"] if index % 2 == 0 else theme["surface"],
+                "accent_color": theme["accent"] if index == 3 else theme["border"],
+            },
+            width=content_width,
+            theme=theme,
+        ))
+        story.append(Spacer(1, 0.10 * cm))
+
+
+def _append_roadmap_timeline(
+    story: list,
+    *,
+    steps: list[dict[str, str]],
+    content_width: float,
+    theme: dict[str, colors.Color],
+) -> None:
+    if not steps:
+        return
+
+    compact_cards: list[Table] = []
+    columns = len(steps)
+    card_width = max((content_width / max(columns, 1)) - 10, 24 * mm)
+    for index, step in enumerate(steps, start=1):
+        card = Table(
+            [[
+                Paragraph(
+                    f"<b>{index}</b><br/>{_truncate_copy(step['title'], limit=48)}",
+                    ParagraphStyle(
+                        f"timeline_{index}",
+                        fontName=REPORT_FONTS["semibold"],
+                        fontSize=7.0,
+                        leading=9.0,
+                        alignment=TA_CENTER,
+                        textColor=theme["ink"],
+                    ),
+                )
+            ]],
+            colWidths=[card_width],
+        )
+        card.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), TOKENS["cream"] if index % 2 else theme["surface"]),
+            ("BOX", (0, 0), (-1, -1), 0.6, theme["border"]),
+            ("LINEABOVE", (0, 0), (-1, 0), 2.2, theme["accent"] if index == 1 else theme["border"]),
+            ("TOPPADDING", (0, 0), (-1, -1), 7),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+            ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+        ]))
+        compact_cards.append(card)
+    roadmap = Table([compact_cards], colWidths=[content_width / columns] * columns)
+    roadmap.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    story.append(roadmap)
+    story.append(Spacer(1, 0.14 * cm))
+
+
+def _append_theme_chip_band(
+    story: list,
+    *,
+    themes: list[dict[str, Any]],
+    content_width: float,
+    theme: dict[str, colors.Color],
+) -> None:
+    if not themes:
+        return
+
+    chips = []
+    for item in themes[:3]:
+        chips.append(
+            Table(
+                [[Paragraph(
+                    f"{item['title']} · n={item['count']}",
+                    ParagraphStyle(
+                        f"chip_{item['key']}",
+                        fontName=REPORT_FONTS["semibold"],
+                        fontSize=7.0,
+                        leading=9.0,
+                        textColor=theme["ink"],
+                        alignment=TA_CENTER,
+                    ),
+                )]],
+                colWidths=[max((content_width / min(len(themes[:3]), 3)) - 8, 34 * mm)],
+            )
+        )
+    for chip in chips:
+        chip.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), TOKENS["cream"]),
+            ("BOX", (0, 0), (-1, -1), 0.6, theme["border"]),
+            ("TOPPADDING", (0, 0), (-1, -1), 5),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+            ("LEFTPADDING", (0, 0), (-1, -1), 7),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+        ]))
+    band = Table([chips], colWidths=[content_width / len(chips)] * len(chips))
+    band.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    story.append(band)
+    story.append(Spacer(1, 0.10 * cm))
+
+
+def _append_segment_small_multiples(
+    story: list,
+    *,
+    segment_rows: list[dict[str, Any]],
+    org_avg_risk: float | None,
+    content_width: float,
+    theme: dict[str, colors.Color],
+    signal_label_lower: str,
+) -> None:
+    if not segment_rows or org_avg_risk is None:
+        return
+
+    grouped = {
+        "department": [row for row in segment_rows if row["segment_type"] == "department"][:3],
+        "tenure": [row for row in segment_rows if row["segment_type"] == "tenure"][:3],
+        "role_level": [row for row in segment_rows if row["segment_type"] == "role_level"][:3],
+    }
+    frames: list[Table] = []
+    labels = {
+        "department": "Afdeling",
+        "tenure": "Diensttijd",
+        "role_level": "Functieniveau",
+    }
+    for key, rows in grouped.items():
+        image = _segment_small_multiple_image(rows, org_avg_risk=org_avg_risk)
+        if not image:
+            continue
+        frames.append(_build_chart_frame_flowable(
+            label=labels[key],
+            image=image,
+            content_width=(content_width / 3) - 6,
+            theme=theme,
+            caption=f"Zelfde schaal als organisatiegemiddelde {signal_label_lower}.",
+        ))
+    if not frames:
+        return
+    while len(frames) < 3:
+        frames.append(Spacer(1, 0.01 * cm))
+    row = Table([frames], colWidths=[content_width / 3] * 3)
+    row.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    story.append(row)
+    story.append(Spacer(1, 0.12 * cm))
+
+
+def _build_columns_flowable(
+    *,
+    column_items: list[list[Any]],
+    col_widths: list[float],
+) -> Table:
+    columns = [
+        _build_stack_table(items, width)
+        for items, width in zip(column_items, col_widths)
+    ]
+    table = Table([columns], colWidths=col_widths)
+    table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    return table
+
+
+def _build_divider_flowable(*, width: float, color: colors.Color = BORDER) -> Table:
+    divider = Table([[""]], colWidths=[width], rowHeights=[0.5])
+    divider.setStyle(TableStyle([
+        ("LINEABOVE", (0, 0), (-1, 0), 0.5, color),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    return divider
+
+
+def _build_data_table_flowable(
+    *,
+    rows: list[list[Any]],
+    col_widths: list[float],
+    theme: dict[str, colors.Color],
+    highlight_columns: dict[int, list[colors.Color]] | None = None,
+    align_columns: list[int] | None = None,
+    bold_columns: list[int] | None = None,
+) -> Table:
+    table = Table(rows, colWidths=col_widths)
+    style = TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), theme["navy"]),
+        ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
+        ("FONTNAME", (0, 0), (-1, 0), REPORT_FONTS["semibold"]),
+        ("FONTSIZE", (0, 0), (-1, -1), 7.6),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [theme["surface"], TOKENS["cream"]]),
+        ("GRID", (0, 0), (-1, -1), 0.45, theme["border"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ])
+    for column_idx in align_columns or []:
+        style.add("ALIGN", (column_idx, 1), (column_idx, -1), "CENTER")
+    for column_idx in bold_columns or []:
+        style.add("FONTNAME", (column_idx, 1), (column_idx, -1), REPORT_FONTS["semibold"])
+    if highlight_columns:
+        for column_idx, color_values in highlight_columns.items():
+            for row_idx, text_color in enumerate(color_values, start=1):
+                style.add("TEXTCOLOR", (column_idx, row_idx), (column_idx, row_idx), text_color)
+                style.add("FONTNAME", (column_idx, row_idx), (column_idx, row_idx), REPORT_FONTS["semibold"])
+    table.setStyle(style)
+    return table
+
+
+def _build_metric_band_flowable(
+    card: dict[str, Any],
+    *,
+    width: float,
+    theme: dict[str, colors.Color],
+) -> Table:
+    value_width = width * 0.28
+    detail_width = width - value_width
+    value = Paragraph(
+        card.get("value", ""),
+        ParagraphStyle(
+            f"metric_band_value_{card.get('title', 'band')}",
+            fontName=REPORT_FONTS["bold"],
+            fontSize=15,
+            leading=17,
+            textColor=card.get("value_color", theme["ink"]),
+            alignment=TA_LEFT,
+        ),
+    )
+    detail_rows: list[list[Any]] = []
+    if card.get("title"):
+        detail_rows.append([Paragraph(card["title"], STYLES["body_bold"])])
+    if card.get("body"):
+        detail_rows.append([Paragraph(card["body"], STYLES["body"])])
+    detail = Table(detail_rows or [[Spacer(1, 0.01 * cm)]], colWidths=[detail_width])
+    detail.setStyle(TableStyle([
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    band = Table([[value, detail]], colWidths=[value_width, detail_width])
+    band.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), card.get("background", theme["surface"])),
+        ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
+        ("LINEBEFORE", (0, 0), (0, -1), 2.5, card.get("accent_color", theme["accent"])),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    return band
+
+
+def _append_data_table(
+    story: list,
+    *,
+    rows: list[list[Any]],
+    col_widths: list[float],
+    content_width: float,
+    theme: dict[str, colors.Color],
+    highlight_columns: dict[int, list[colors.Color]] | None = None,
+) -> None:
+    table = _build_data_table_flowable(
+        rows=rows,
+        col_widths=col_widths,
+        theme=theme,
+        highlight_columns=highlight_columns,
+    )
+    story.append(table)
+    story.append(Spacer(1, 0.22 * cm))
+
+
+def _factor_signal_score(factor: str, factor_avgs: dict[str, float]) -> float:
+    return round(11.0 - factor_avgs.get(factor, 5.5), 1)
+
+
+def _factor_explanation_lookup() -> dict[str, str]:
+    lookup: dict[str, str] = {}
+    for name, _source, explanation in FACTOR_EXPLANATIONS:
+        normalized = name.strip().lower()
+        lookup[normalized] = explanation
+    return lookup
+
+
+def _factor_label_to_key(label: str) -> str:
+    normalized = label.lower().strip()
+    for key, value in FACTOR_LABELS_NL.items():
+        if value.lower() == normalized:
+            return key
+    return normalized
+
+
+def _factor_decision_text(factor: str, *, is_retention: bool) -> str:
+    decision_lookup = {
+        "exit": {
+            "leadership": "Bepaal of dit vooral een lokaal leidinggevingsspoor of een breder MT-thema is.",
+            "culture": "Toets of dit vooral teamveiligheid of breder cultuurgedrag weerspiegelt.",
+            "growth": "Kies of perspectief, gesprek of ontwikkelruimte als eerste ingreep telt.",
+            "compensation": "Maak zichtbaar of hoogte, fairness of uitlegbaarheid nu het belangrijkste gesprek is.",
+            "workload": "Bepaal waar werkdruk direct omlaag moet en waar vooral prioriteiten scherper moeten.",
+            "role_clarity": "Toets waar prioriteiten, rolgrenzen of besluitvorming nu het meest schuren.",
+        },
+        "retention": {
+            "leadership": "Gebruik dit als eerste verificatiespoor voor richting, feedback en autonomie-ondersteuning.",
+            "culture": "Toets of dit nu een teamspecifiek veiligheidsspoor of een breder cultuurthema is.",
+            "growth": "Bepaal of medewerkers vooral zicht op perspectief of feitelijke ontwikkelruimte missen.",
+            "compensation": "Toets of dit vooral gaat over hoogte, fairness of uitlegbaarheid van voorwaarden.",
+            "workload": "Bepaal in welke teams druk echt onhoudbaar wordt en wat eerst verlichting vraagt.",
+            "role_clarity": "Maak zichtbaar waar prioriteiten, verwachtingen of eigenaarschap nu uit elkaar lopen.",
+        },
+    }
+    product_key = "retention" if is_retention else "exit"
+    return decision_lookup[product_key].get(
+        factor,
+        "Gebruik dit als eerste managementspoor voor verificatie en opvolging.",
+    )
+
+
+def _factor_current_state_text(factor: str, *, is_retention: bool) -> str:
+    label = FACTOR_LABELS_NL.get(factor, factor)
+    explanation = _factor_explanation_lookup().get(label.lower())
+    if explanation:
+        return explanation
+    if is_retention:
+        return f"{label} kleurt nu waar behoud onder druk staat en helpt verklaren waarom dit beeld zichtbaar wordt."
+    return f"{label} kleurt nu waar het vertrekbeeld bestuurlijk de meeste spanning laat zien."
+
+
+def _build_card_flowable(
+    card: dict[str, Any],
+    *,
+    width: float,
+    theme: dict[str, colors.Color],
+    large_value: bool = False,
+) -> Table:
+    rows: list[list[Any]] = []
+    if card.get("title"):
+        rows.append([Paragraph(card["title"], ParagraphStyle(
+            f"single_card_title_{card['title']}",
+            fontName=REPORT_FONTS["semibold"],
+            fontSize=7.2,
+            leading=9.4,
+            textColor=theme["text"],
+        ))])
+    if card.get("badge"):
+        rows.append([_build_badge_table(card["badge"], min(width * 0.48, 42 * mm))])
+    if card.get("value"):
+        rows.append([Paragraph(card["value"], ParagraphStyle(
+            f"single_card_value_{card['title']}",
+            fontName=REPORT_FONTS["bold"],
+            fontSize=14.4 if large_value else 11.6,
+            leading=16.0 if large_value else 13.4,
+            textColor=card.get("value_color", theme["ink"]),
+        ))])
+    if card.get("body"):
+        rows.append([Paragraph(card["body"], ParagraphStyle(
+            f"single_card_body_{card['title']}",
+            fontName=REPORT_FONTS["regular"],
+            fontSize=7.6,
+            leading=10.6,
+            textColor=theme["text"],
+        ))])
+    table = Table(rows, colWidths=[width])
+    table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), card.get("background", theme["surface"])),
+        ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
+        ("LINEABOVE", (0, 0), (-1, 0), 2, card.get("accent_color", theme["accent"])),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+    return table
+
+
+def _append_card_grid(
+    story: list,
+    cards: list[dict[str, Any]],
+    *,
+    content_width: float,
+    theme: dict[str, colors.Color],
+    columns: int = 3,
+    large_value: bool = False,
+) -> None:
+    if not cards:
+        return
+    column_count = max(1, min(columns, 3))
+    cell_width = content_width / column_count - 10
+    rows = [cards[i:i + column_count] for i in range(0, len(cards), column_count)]
+    for row_cards in rows:
+        flowables = [
+            _build_card_flowable(card, width=cell_width, theme=theme, large_value=large_value)
+            for card in row_cards
+        ]
+        if len(flowables) < column_count:
+            flowables += [""] * (column_count - len(flowables))
+        row = Table([flowables], colWidths=[content_width / column_count] * column_count)
+        row.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+        ]))
+        story.append(row)
+        story.append(Spacer(1, 0.12 * cm))
+
+
+def _build_stack_table(items: list[Any], width: float) -> Table:
+    if not items:
+        items = [Spacer(1, 0.01 * cm)]
+    rows = [[item] for item in items]
+    table = Table(rows, colWidths=[width])
+    table.setStyle(TableStyle([
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 0),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+    return table
+
+
+def _append_focus_question_block(
+    story: list,
+    *,
+    label: str,
+    score: float,
+    signal_value: float,
+    decision_text: str,
+    explanation: str | None,
+    hypothesis: dict[str, str] | None,
+    content_width: float,
+    theme: dict[str, colors.Color],
+    add_divider: bool,
+) -> None:
+    story.append(Paragraph(label, STYLES["sub_title"]))
+    summary_table = _build_data_table_flowable(
+        rows=[
+            ["Factor", "Score", "Signaal"],
+            [label, f"{score:.1f}/10", f"{signal_value:.1f}/10"],
+        ],
+        col_widths=[content_width * 0.58, content_width * 0.20, content_width * 0.22],
+        theme=theme,
+        align_columns=[1, 2],
+        bold_columns=[1, 2],
+        highlight_columns={2: [_risk_color(signal_value)]},
+    )
+    story.append(summary_table)
+    story.append(Spacer(1, 0.10 * cm))
+    hypothesis_body = None
+    if hypothesis:
+        hypothesis_body = hypothesis.get("question", hypothesis["body"])
+    right_body_parts = []
+    if explanation:
+        right_body_parts.append(explanation)
+    if hypothesis_body:
+        right_body_parts.append(f"<b>Te toetsen vraag:</b> {hypothesis_body}")
+    left_card = _build_card_flowable(
+        {
+            "title": "Wat dit nu vraagt",
+            "value": f"{signal_value:.1f}/10 signaal",
+            "body": decision_text,
+            "background": theme["soft"],
+        },
+        width=content_width * 0.49,
+        theme=theme,
+    )
+    right_card = _build_card_flowable(
+        {
+            "title": "Waar deze factor voor staat" if explanation else "Te toetsen vraag",
+            "value": f"{score:.1f}/10 score",
+            "body": "<br/><br/>".join(right_body_parts) if right_body_parts else "Nog geen aanvullende duiding beschikbaar.",
+            "background": TOKENS["surface"],
+        },
+        width=content_width * 0.49,
+        theme=theme,
+    )
+    story.append(_build_columns_flowable(
+        column_items=[[left_card], [right_card]],
+        col_widths=[content_width * 0.49, content_width * 0.49],
+    ))
+    story.append(Spacer(1, 0.10 * cm))
+    if add_divider:
+        _append_divider_line(story, content_width=content_width, gap_mm=2.5)
+
+
+def _build_boardroom_story(
+    *,
+    camp: Campaign,
+    org: Organization,
+    scan_lbl: str,
+    signal_label: str,
+    signal_label_lower: str,
+    now_str: str,
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+    management_summary_payload: dict[str, Any],
+    cover_metric_cards: list[dict[str, str]],
+    avg_risk: float | None,
+    trend_delta: float | None,
+    previous_campaign_label: str | None,
+    has_pattern: bool,
+    n_completed: int,
+    band_counts: dict[str, int],
+    signal_page_payload: dict[str, Any],
+    signal_page_cards: list[dict[str, str]],
+    factor_avgs: dict[str, float],
+    top_risks: list[tuple[str, float]],
+    top_factor_keys: list[str],
+    top_factor_labels: list[str],
+    is_retention: bool,
+    avg_engagement: float | None,
+    avg_turnover_intention: float | None,
+    avg_stay_intent: float | None,
+    retention_themes: list[dict[str, Any]],
+    retention_trend_rows: list[dict[str, Any]],
+    strong_work_signal_pct: float | None,
+    any_work_signal_pct: float | None,
+    top_exit_reason_label: str | None,
+    top_contributing_reason_label: str | None,
+    signal_visibility_average: float | None,
+    pattern: dict[str, Any],
+    responses: list[SurveyResponse],
+    hypotheses: list[dict[str, str]],
+    hypotheses_payload: dict[str, str],
+    next_steps_payload: dict[str, Any],
+    retention_playbooks: list[dict[str, Any]],
+    retention_playbook_calibration_note: str | None,
+    retention_segment_playbooks: list[dict[str, Any]],
+    scan_meta: dict[str, Any],
+    has_segment_deep_dive: bool,
+    cover_distribution_note: str,
+) -> list:
+    story: list = []
+
+    # Cover
+    story.append(Spacer(1, 1.6 * cm))
+    story.append(Paragraph("VERISIGHT", ParagraphStyle(
+        "cover_brand_label",
+        parent=STYLES["cover_sub"],
+        fontName=REPORT_FONTS["semibold"],
+        fontSize=8.2,
+        textColor=report_theme["accent"],
+    )))
+    story.append(Spacer(1, 0.2 * cm))
+    story.append(Paragraph(camp.name, STYLES["cover_title"]))
+    story.append(Spacer(1, 0.3 * cm))
+    story.append(Paragraph(f"{scan_lbl}  ·  {org.name}", STYLES["cover_sub"]))
+    story.append(Spacer(1, 0.35 * cm))
+    story.append(Paragraph(
+        management_summary_payload.get("executive_title", "Executive snapshot"),
+        ParagraphStyle(
+                "cover_exec_title_v2",
+                fontName=REPORT_FONTS["semibold"],
+                fontSize=15,
+                leading=20,
+                textColor=report_theme["ink"],
+            ),
+        ))
+    story.append(Spacer(1, 0.08 * cm))
+    story.append(Paragraph(
+        management_summary_payload.get("executive_intro", ""),
+        ParagraphStyle(
+                "cover_exec_intro_v2",
+                fontName=REPORT_FONTS["regular"],
+                fontSize=9.3,
+                leading=14.5,
+                textColor=report_theme["text"],
+            ),
+        ))
+    story.append(Spacer(1, 0.3 * cm))
+    _append_metric_band(
+        story,
+        cover_metric_cards[:4],
+        content_width=content_width,
+        theme=report_theme,
+        columns=4,
+    )
+    if trend_delta is not None:
+        comparison_label = previous_campaign_label or "vorige campagne"
+        trend_phrase = "verbeterd" if trend_delta < -0.1 else "verslechterd" if trend_delta > 0.1 else "stabiel"
+        _append_emphasis_note(
+            story,
+            title="Trend sinds vorige meting",
+            body=(
+                f"Ten opzichte van {comparison_label} is het gemiddelde {signal_label_lower} {trend_phrase} "
+                f"({'+' if trend_delta > 0 else ''}{trend_delta:.1f}). Lees dit als richting voor gesprek en opvolging."
+            ),
+            content_width=content_width,
+            theme=report_theme,
+        )
+    _append_highlight_cards(
+        story,
+        management_summary_payload.get("highlight_cards", [])[:3],
+        content_width=content_width,
+        theme=report_theme,
+    )
+    story.append(Spacer(1, 0.4 * cm))
+    story.append(Paragraph(f"Gegenereerd op {now_str}", STYLES["cover_meta"]))
+    story.append(Paragraph(cover_distribution_note, STYLES["cover_meta"]))
+    story.append(PageBreak())
+
+    # Executive snapshot
+    story.append(Paragraph(
+        "Bestuurlijke handoff" if has_pattern else "Executive snapshot",
+        STYLES["section_title"],
+    ))
+    story.append(Paragraph(
+        "Lees eerst wat nu speelt, waarom het bestuurlijk telt en welk eerste besluit bij deze meetronde hoort.",
+        STYLES["body"],
+    ))
+    story.append(Spacer(1, 0.2 * cm))
+    _append_highlight_cards(
+        story,
+        management_summary_payload.get("boardroom_cards", [])[:6],
+        content_width=content_width,
+        theme=report_theme,
+    )
+
+    if avg_risk is not None:
+        band_label = "HOOG" if avg_risk >= 7 else "MIDDEN" if avg_risk >= 4.5 else "LAAG"
+        story.append(Spacer(1, 0.1 * cm))
+        story.append(Paragraph(f"Gemiddeld {signal_label_lower}", STYLES["sub_title"]))
+        gauge = _risk_gauge_image(avg_risk, band_label)
+        distribution_rows = [
+            ["Band", "n", "%"],
+            ["Hoog", str(band_counts["HOOG"]), f"{band_counts['HOOG'] / max(n_completed, 1) * 100:.0f}%"],
+            ["Midden", str(band_counts["MIDDEN"]), f"{band_counts['MIDDEN'] / max(n_completed, 1) * 100:.0f}%"],
+            ["Laag", str(band_counts["LAAG"]), f"{band_counts['LAAG'] / max(n_completed, 1) * 100:.0f}%"],
+        ]
+        dist = Table(
+            distribution_rows,
+            colWidths=[content_width * 0.14, content_width * 0.10, content_width * 0.10],
+        )
+        dist.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), report_theme["navy"]),
+            ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
+            ("FONTNAME", (0, 0), (-1, 0), REPORT_FONTS["semibold"]),
+            ("FONTSIZE", (0, 0), (-1, -1), 8.2),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [report_theme["surface"], report_theme["soft"]]),
+            ("GRID", (0, 0), (-1, -1), 0.45, report_theme["border"]),
+            ("ALIGN", (1, 1), (-1, -1), "CENTER"),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ]))
+        gauge_block = Table(
+            [[gauge, dist]],
+            colWidths=[content_width * 0.66, content_width * 0.34],
+        )
+        gauge_block.setStyle(TableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ]))
+        story.append(gauge_block)
+        story.append(Spacer(1, 0.2 * cm))
+
+    if signal_page_cards:
+        if is_retention:
+            _append_metric_band(
+                story,
+                signal_page_cards[:3],
+                content_width=content_width,
+                theme=report_theme,
+                columns=3,
+            )
+    if management_summary_payload.get("boardroom_watchout"):
+        _append_emphasis_note(
+            story,
+            title=management_summary_payload.get("boardroom_watchout_title", "Leesgrens"),
+            body=management_summary_payload.get("boardroom_watchout", ""),
+            content_width=content_width,
+            theme=report_theme,
+        )
+    story.append(PageBreak())
+
+    if not is_retention:
+        story.append(Paragraph("Kernsignalen en vertrekbeeld", STYLES["section_title"]))
+        story.append(Paragraph(signal_page_payload["intro"], STYLES["body"]))
+        story.append(Spacer(1, 0.2 * cm))
+
+        if signal_page_cards:
+            _append_metric_band(
+                story,
+                signal_page_cards[:3],
+                content_width=content_width,
+                theme=report_theme,
+                columns=3,
+            )
+
+        top_reasons = pattern.get("top_exit_reasons", [])
+        if top_reasons:
+            story.append(Paragraph("Hoofdredenen van vertrek", STYLES["sub_title"]))
+            reason_rows = [["Code", "Reden", "Aantal"]]
+            for item in top_reasons[:4]:
+                reason_rows.append([item["code"], item["label"], str(item["count"])])
+            reason_table = Table(
+                reason_rows,
+                colWidths=[content_width * 0.12, content_width * 0.68, content_width * 0.20],
+            )
+            reason_table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), report_theme["navy"]),
+                ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
+                ("FONTNAME", (0, 0), (-1, 0), REPORT_FONTS["semibold"]),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [report_theme["surface"], report_theme["soft"]]),
+                ("GRID", (0, 0), (-1, -1), 0.45, report_theme["border"]),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                ("ALIGN", (2, 1), (2, -1), "CENTER"),
+                ("FONTNAME", (2, 1), (2, -1), REPORT_FONTS["semibold"]),
+            ]))
+            story.append(reason_table)
+            story.append(Spacer(1, 0.2 * cm))
+
+        evidence_cards = []
+        if strong_work_signal_pct is not None:
+            evidence_cards.append({
+                "title": "Direct aandachtspunt zichtbaar",
+                "value": f"{strong_work_signal_pct:.0f}%",
+                "body": "Aandeel van de exitbatch waar beïnvloedbare werkfrictie duidelijk zichtbaar terugkomt.",
+            })
+        if any_work_signal_pct is not None:
+            evidence_cards.append({
+                "title": "Aandacht nodig zichtbaar",
+                "value": f"{any_work_signal_pct:.0f}%",
+                "body": "Aandeel van de exitbatch waar minstens één aandachtspunt zichtbaar is.",
+            })
+        if signal_visibility_average is not None:
+            evidence_cards.append({
+                "title": "Eerdere signalering",
+                "value": f"{signal_visibility_average:.1f}/5",
+                "body": "Laat zien in hoeverre twijfel of vertrek vooraf zichtbaar of bespreekbaar was.",
+            })
+        if evidence_cards:
+            _append_metric_band(
+                story,
+                evidence_cards,
+                content_width=content_width,
+                theme=report_theme,
+                columns=min(3, len(evidence_cards)),
+            )
+
+        quotes = _select_relevant_quotes(
+            [
+                r.open_text_raw
+                for r in responses
+                if r.open_text_raw and r.open_text_raw.strip()
+            ],
+            [factor for factor, _ in top_risks[:3]],
+            [item["code"] for item in top_reasons[:3]],
+            max_quotes=2,
+        )
+        if quotes:
+            story.append(Paragraph("Open signalen uit de survey", STYLES["sub_title"]))
+            _append_quote_cards(story, quotes=quotes, content_width=content_width, theme=report_theme)
+
+        story.append(PageBreak())
+
+    # Drivers
+    story.append(Paragraph("Wat drijft dit beeld?", STYLES["section_title"]))
+    story.append(Paragraph(signal_page_payload["intro"], STYLES["body"]))
+    story.append(Spacer(1, 0.2 * cm))
+
+    summary_cards: list[dict[str, str]] = []
+
+    if factor_avgs:
+        story.append(_factor_bar_image(factor_avgs, width_cm=14.5))
+        story.append(Spacer(1, 0.2 * cm))
+        if top_risks:
+            decision_lookup = {
+                "exit": {
+                    "leadership": "Bepaal of dit vooral een lokaal leidinggevingsspoor of een breder MT-thema is.",
+                    "culture": "Toets of dit vooral teamveiligheid of breder cultuurgedrag weerspiegelt.",
+                    "growth": "Kies of perspectief, gesprek of ontwikkelruimte als eerste ingreep telt.",
+                    "compensation": "Maak zichtbaar of hoogte, fairness of uitlegbaarheid nu het belangrijkste gesprek is.",
+                    "workload": "Bepaal waar werkdruk direct omlaag moet en waar vooral prioriteiten scherper moeten.",
+                    "role_clarity": "Toets waar prioriteiten, rolgrenzen of besluitvorming nu het meest schuren.",
+                },
+                "retention": {
+                    "leadership": "Gebruik dit als eerste verificatiespoor voor richting, feedback en autonomie-ondersteuning.",
+                    "culture": "Toets of dit nu een teamspecifiek veiligheidsspoor of een breder cultuurthema is.",
+                    "growth": "Bepaal of medewerkers vooral zicht op perspectief of feitelijke ontwikkelruimte missen.",
+                    "compensation": "Toets of dit vooral gaat over hoogte, fairness of uitlegbaarheid van voorwaarden.",
+                    "workload": "Bepaal in welke teams druk echt onhoudbaar wordt en wat eerst verlichting vraagt.",
+                    "role_clarity": "Maak zichtbaar waar prioriteiten, verwachtingen of eigenaarschap nu uit elkaar lopen.",
+                },
+            }
+            factor_rows = []
+            for factor, signal_value in top_risks[:3]:
+                score = factor_avgs.get(factor, 5.5)
+                factor_rows.append({
+                    "label": FACTOR_LABELS_NL.get(factor, factor),
+                    "score": f"{score:.1f}/10",
+                    "signal": f"{signal_value:.1f}/10",
+                    "signal_value": signal_value,
+                    "decision": decision_lookup["retention" if is_retention else "exit"].get(
+                        factor,
+                        "Gebruik dit als eerste managementspoor voor verificatie en opvolging.",
+                    ),
+                })
+            _append_factor_priority_rows(
+                story,
+                factor_rows=factor_rows,
+                content_width=content_width,
+                theme=report_theme,
+            )
+
+        if is_retention:
+            for row in retention_trend_rows[:3]:
+                summary_cards.append({
+                    "title": row["label"],
+                    "value": f"{row['current']:.1f}/10 ({'+' if row['delta'] > 0 else ''}{row['delta']:.1f})",
+                    "body": row["explanation"],
+                })
+        if summary_cards:
+            story.append(Paragraph("Ontwikkeling van aanvullende signalen", STYLES["sub_title"]))
+            _append_metric_band(
+                story,
+                summary_cards,
+                content_width=content_width,
+                theme=report_theme,
+                columns=3,
+            )
+        if retention_themes:
+            story.append(Paragraph("Open verbetersignalen", STYLES["sub_title"]))
+            theme_cards = [
+                {
+                    "title": theme_item["title"],
+                    "value": f"{theme_item['count']} signalen",
+                    "body": theme_item["implication"],
+                }
+                for theme_item in retention_themes[:3]
+            ]
+            _append_highlight_cards(story, theme_cards, content_width=content_width, theme=report_theme)
+    story.append(PageBreak())
+
+    # Action page
+    story.append(Paragraph("Waar eerst op handelen", STYLES["section_title"]))
+    story.append(Paragraph(
+        "Gebruik deze pagina om prioriteiten te kiezen, eigenaarschap te beleggen en van signaal naar eerste actie te gaan.",
+        STYLES["body"],
+    ))
+    story.append(Spacer(1, 0.2 * cm))
+
+    if hypotheses:
+        hypothesis_cards = []
+        for item in hypotheses[:3]:
+            body = item["body"]
+            if item.get("question"):
+                body += f" <br/><br/><b>Te toetsen vraag:</b> {item['question']}"
+            if item.get("action"):
+                body += f" <br/><b>Eerste actie:</b> {item['action']}"
+            hypothesis_cards.append({
+                "title": item["title"],
+                "value": item.get("owner", ""),
+                "body": body,
+            })
+        _append_highlight_cards(
+            story,
+            hypothesis_cards,
+            content_width=content_width,
+            theme=report_theme,
+        )
+
+    story.append(PageBreak())
+
+    story.append(Paragraph(
+        "Eerste managementsessie en 30–90 dagenroute" if is_retention else "30–90 dagenroute en reviewmoment",
+        STYLES["section_title"],
+    ))
+    story.append(Paragraph(next_steps_payload["session_title"], STYLES["sub_title"]))
+    story.append(Paragraph(next_steps_payload["session_intro"], STYLES["body"]))
+    if next_steps_payload.get("session_cards"):
+        _append_highlight_cards(
+            story,
+            next_steps_payload["session_cards"][:6],
+            content_width=content_width,
+            theme=report_theme,
+        )
+    _append_numbered_action_rows(
+        story,
+        steps=list(next_steps_payload["steps"]) + [{
+            "number": "5",
+            "title": scan_meta["report_repeat_title"],
+            "body": scan_meta["report_repeat_body"],
+        }],
+        content_width=content_width,
+        theme=report_theme,
+    )
+
+    if is_retention and retention_playbooks:
+        story.append(Spacer(1, 0.15 * cm))
+        story.append(Paragraph("Behoudsplaybooks", STYLES["sub_title"]))
+        if retention_playbook_calibration_note:
+            story.append(Paragraph(retention_playbook_calibration_note, STYLES["body"]))
+        playbook_cards = []
+        for playbook in retention_playbooks[:2]:
+            actions_text = " ".join([f"• {action}" for action in playbook["actions"][:2]])
+            playbook_cards.append({
+                "title": playbook["label"],
+                "value": f"{playbook['signal_value']:.1f}/10",
+                "body": (
+                    f"<b>{playbook['title']}</b><br/>"
+                    f"<b>Eerste besluit:</b> {playbook['decision']}<br/>"
+                    f"<b>Eerste eigenaar:</b> {playbook['owner']}<br/>"
+                    f"{actions_text}"
+                ),
+            })
+        _append_highlight_cards(story, playbook_cards, content_width=content_width, theme=report_theme)
+        if retention_segment_playbooks:
+            _append_emphasis_note(
+                story,
+                title="Segment deep dive",
+                body=(
+                    f"Voor deze campagne waren {len(retention_segment_playbooks)} segment-specifieke behoudssporen beschikbaar. "
+                    "Gebruik die alleen als verdiepingslaag nadat het organisatieniveau is gewogen."
+                ),
+                content_width=content_width,
+                theme=report_theme,
+            )
+
+    story.append(PageBreak())
+
+    # Compact read guide
+    _append_compact_read_guide(
+        story,
+        scan_type=camp.scan_type,
+        content_width=content_width,
+        has_segment_deep_dive=has_segment_deep_dive,
+        theme=report_theme,
+    )
+
+    contact_table = Table([[
+        Paragraph(
+            "<b>Vragen over dit rapport?</b><br/>"
+            "Neem contact op via <font color='#234B57'>hallo@verisight.nl</font>. "
+            "We lopen de bevindingen graag door en helpen bij de vertaling naar een eerstvolgende stap.",
+            ParagraphStyle(
+                "contact_note_boardroom",
+                fontName=REPORT_FONTS["regular"],
+                fontSize=8.8,
+                leading=13.5,
+                textColor=TEXT,
+            ),
+        )
+    ]], colWidths=[content_width])
+    contact_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), report_theme["accent_light"]),
+        ("BOX", (0, 0), (-1, -1), 0.5, report_theme["border"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+        ("LEFTPADDING", (0, 0), (-1, -1), 12),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+    ]))
+    story.append(Spacer(1, 0.2 * cm))
+    story.append(contact_table)
+    return story
 
 
 def _build_retention_action_hypotheses(
@@ -735,17 +2296,18 @@ def _build_retention_action_hypotheses(
     }
 
     items: list[dict[str, str]] = []
+    decision_themes = _select_retention_decision_themes(retention_themes, top_risks, max_themes=1)
 
     if top_risks:
         factor, signal_value = top_risks[0]
         label = FACTOR_LABELS_NL.get(factor, factor)
-        matching_theme = next((theme for theme in retention_themes if theme["key"] == factor), None)
+        matching_theme = next((theme for theme in decision_themes if theme["key"] == factor), None)
         body = (
             f"{label} is nu het sterkste aandachtssignaal (signaalwaarde {signal_value:.1f}/10). "
             "Dat maakt dit het logischste startpunt voor verificatie en eerste managementactie."
         )
         if matching_theme:
-            body += f" In open antwoorden komt dit ook terug via het thema <b>{matching_theme['title'].lower()}</b>."
+            body += f" In open antwoorden komt dit ook terug via het thema '{matching_theme['title'].lower()}'."
         items.append({
             "title": f"Hypothese: {label} zet behoud het sterkst onder druk",
             "body": body,
@@ -786,19 +2348,6 @@ def _build_retention_action_hypotheses(
             "question": "Welke signalen zijn nog te vroeg om hard te duiden, maar sterk genoeg om nu wel gericht te bespreken?",
             "action": "Beperk de eerste ronde tot maximaal drie concrete acties en leg direct vast wanneer je de uitkomst opnieuw toetst.",
             "owner": "HR owner van de meetronde",
-        })
-
-    if retention_themes:
-        theme = retention_themes[0]
-        items.append({
-            "title": f"Hypothese: open antwoorden geven richting via {theme['title'].lower()}",
-            "body": (
-                f"In open antwoorden komt <b>{theme['title'].lower()}</b> het vaakst terug ({theme['count']} signalen). "
-                "Dat maakt dit een logisch thema om als eerste te valideren in gesprek."
-            ),
-            "question": f"Welke concrete voorbeelden zitten er achter dit thema, en gaat het om één groep of een breder patroon?",
-            "action": "Vertaal dit thema naar een korte validatievraag voor managers en neem het mee in de eerste 30-90 dagenactie.",
-            "owner": "HR business partner",
         })
 
     if avg_engagement is not None and avg_turnover_intention is not None and avg_stay_intent is not None:
@@ -845,7 +2394,7 @@ def _build_retention_playbook_rows(
 def _retention_review_note(factor_label: str) -> str:
     return (
         f"Plan binnen 45-90 dagen een review of vervolgmeting op {factor_label.lower()}: "
-        "wat is geverifieerd, welke eerste interventie loopt en wat verschuift er in retentiesignaal en aanvullende signalen."
+        "wat is geverifieerd, welke eerste stap loopt en wat verschuift er in retentiesignaal en aanvullende signalen."
     )
 
 
@@ -1322,56 +2871,1118 @@ def _append_methodology_section(
         )))
 
 
+def _cover_pill_text(*, scan_lbl: str, is_retention: bool) -> str:
+    if "Live" in scan_lbl:
+        return "RetentieScan Live" if is_retention else "ExitScan Live"
+    return "RetentieScan Momentopname" if is_retention else "ExitScan Retrospectief"
+
+
+def _append_rebrand_cover(
+    story: list,
+    *,
+    camp: Campaign,
+    org: Organization,
+    scan_lbl: str,
+    now_str: str,
+    report_theme: dict[str, colors.Color],
+    cover_distribution_note: str,
+    management_summary_payload: dict[str, Any],
+    cover_metric_cards: list[dict[str, str]],
+    top_factor_labels: list[str],
+    next_steps_payload: dict[str, Any],
+    is_retention: bool,
+) -> None:
+    pill = Table(
+        [[Paragraph(_cover_pill_text(scan_lbl=scan_lbl, is_retention=is_retention), ParagraphStyle(
+            "cover_pill",
+            fontName=REPORT_FONTS["medium"],
+            fontSize=8.5,
+            leading=11,
+            textColor=report_theme["accent"],
+            alignment=TA_CENTER,
+        ))]],
+        colWidths=[64 * mm],
+    )
+    pill.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), report_theme["accent_light"]),
+        ("BOX", (0, 0), (-1, -1), 0.4, report_theme["accent_light"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 12),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+    ]))
+    boardroom_cards = management_summary_payload.get("boardroom_cards", [])
+    cover_playing_now = next(
+        (card for card in boardroom_cards if card.get("title") == "Wat speelt nu"),
+        boardroom_cards[0] if boardroom_cards else None,
+    )
+    pressure_card = next(
+        (card for card in boardroom_cards if "meeste druk" in card.get("title", "").lower()),
+        None,
+    )
+    first_decision = next_steps_payload.get("first_decision") or next(
+        (
+            card.get("body")
+            for card in boardroom_cards
+            if "verificatie" in card.get("title", "").lower() or "waarom" in card.get("title", "").lower()
+        ),
+        "Kies eerst het bestuurlijke spoor dat nu de meeste verificatiewaarde heeft.",
+    )
+    executive_cards = [
+        {
+            "title": "Wat speelt nu",
+            "value": (cover_playing_now or {}).get("value", management_summary_payload.get("executive_title", "Managementbeeld")),
+            "body": _truncate_copy((cover_playing_now or {}).get("body"), limit=145),
+            "background": TOKENS["surface"],
+        },
+        {
+            "title": "Scherpste factor(en)",
+            "value": " · ".join(top_factor_labels[:2]) if top_factor_labels else (pressure_card or {}).get("value", "Nog geen topfactor"),
+            "body": _truncate_copy(
+                (pressure_card or {}).get("body")
+                or "Gebruik dit als eerste prioriteitenbeeld voor verdere verificatie en managementkeuze.",
+                limit=145,
+            ),
+            "background": TOKENS["surface"],
+        },
+        {
+            "title": "Eerste besluit",
+            "value": "Kies route",
+            "body": _truncate_copy(first_decision, limit=150),
+            "background": TOKENS["teal_light"],
+            "accent_color": report_theme["accent"],
+        },
+    ]
+    cover_metrics = [
+        {
+            **card,
+            "body": _truncate_copy(card.get("body"), limit=62),
+            "background": TOKENS["surface"],
+        }
+        for card in cover_metric_cards
+    ]
+    meta_band = Table([[
+        Paragraph(
+            f"<b>{org.name}</b><br/>{scan_lbl}",
+            ParagraphStyle(
+                "cover_meta_org_band",
+                fontName=REPORT_FONTS["regular"],
+                fontSize=8.2,
+                leading=11.4,
+                textColor=TOKENS["cover_muted"],
+            ),
+        ),
+        Paragraph(
+            f"<b>Periode</b><br/>{camp.name}",
+            ParagraphStyle(
+                "cover_meta_campaign_band",
+                fontName=REPORT_FONTS["regular"],
+                fontSize=8.2,
+                leading=11.4,
+                textColor=TOKENS["cover_muted"],
+            ),
+        ),
+        Paragraph(
+            f"<b>Context</b><br/>{cover_distribution_note}",
+            ParagraphStyle(
+                "cover_meta_context_band",
+                fontName=REPORT_FONTS["regular"],
+                fontSize=8.2,
+                leading=11.4,
+                textColor=TOKENS["cover_muted"],
+            ),
+        ),
+    ]], colWidths=[CONTENT_WIDTH * 0.24, CONTENT_WIDTH * 0.24, CONTENT_WIDTH * 0.52])
+    meta_band.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), colors.Color(1, 1, 1, alpha=0.05)),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.Color(1, 1, 1, alpha=0.16)),
+        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.Color(1, 1, 1, alpha=0.08)),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ("LEFTPADDING", (0, 0), (-1, -1), 9),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 9),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+    story.append(Spacer(1, 2.2 * cm))
+    story.append(pill)
+    story.append(Spacer(1, 0.35 * cm))
+    story.append(Paragraph(camp.name, STYLES["cover_title"]))
+    story.append(Spacer(1, 0.15 * cm))
+    story.append(Paragraph(f"{org.name} · {scan_lbl}", STYLES["cover_sub"]))
+    story.append(Spacer(1, 0.30 * cm))
+    story.append(Paragraph(f"Gegenereerd op {now_str}", STYLES["cover_meta"]))
+    story.append(Spacer(1, 0.30 * cm))
+    story.append(meta_band)
+    story.append(Spacer(1, 0.28 * cm))
+    _append_metric_band(
+        story,
+        cover_metrics,
+        content_width=CONTENT_WIDTH,
+        theme=report_theme,
+        columns=4,
+    )
+    story.append(Spacer(1, 0.08 * cm))
+    _append_highlight_cards(
+        story,
+        executive_cards,
+        content_width=CONTENT_WIDTH,
+        theme=report_theme,
+        columns=3,
+    )
+    story.append(NextPageTemplate("body"))
+    story.append(PageBreak())
+
+
+def _append_rebrand_executive(
+    story: list,
+    *,
+    management_summary_payload: dict[str, Any],
+    next_steps_payload: dict[str, Any],
+    has_pattern: bool,
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    if not has_pattern:
+        _append_section_heading(
+            story,
+            eyebrow="Samenvatting",
+            title=management_summary_payload.get("section_title", "Managementsamenvatting"),
+            intro=management_summary_payload.get("executive_intro"),
+            content_width=content_width,
+        )
+        _append_emphasis_note(
+            story,
+            title="Bestuurlijke vervolglaag volgt zodra patroondata steviger is",
+            body=(
+                "Zodra voldoende responses beschikbaar zijn, vertaalt Verisight dit scherm naar een volledige beslisroute met signaal, besluit, eigenaar en eerste stap. "
+                "Tot die tijd blijft de hoofdwaarde: compact wegen wat nu zichtbaar is zonder te veel zekerheid te suggereren."
+            ),
+            content_width=content_width,
+            theme=report_theme,
+        )
+        story.append(PageBreak())
+        return
+
+    _append_section_heading(
+        story,
+        eyebrow="Bestuurlijke handoff",
+        title=management_summary_payload.get("boardroom_title", "Bestuurlijke handoff"),
+        intro=management_summary_payload.get("boardroom_intro"),
+        content_width=content_width,
+    )
+    boardroom_cards = management_summary_payload.get("boardroom_cards", [])
+    steps = [
+        {
+            "title": "Signaal",
+            "body": _truncate_copy(
+                (next((card for card in boardroom_cards if card.get("title") == "Wat speelt nu"), boardroom_cards[0] if boardroom_cards else {}) or {}).get("body")
+                or "Nog geen bestuurlijk signaal beschikbaar.",
+                limit=165,
+            ),
+        },
+        {
+            "title": "Waarom telt dit",
+            "body": _truncate_copy(
+                next((card.get("body") for card in boardroom_cards if "waarom telt" in card.get("title", "").lower()), None)
+                or next_steps_payload.get("session_intro")
+                or "Gebruik dit alleen als bestuurlijke weging op groepsniveau.",
+                limit=165,
+            ),
+        },
+        {
+            "title": "Eerste besluit",
+            "body": _truncate_copy(
+                next_steps_payload.get("first_decision")
+                or next((card.get("body") for card in boardroom_cards if "verificatie" in card.get("title", "").lower()), None)
+                or "Kies eerst het spoor dat de meeste verificatiewaarde heeft.",
+                limit=165,
+            ),
+        },
+        {
+            "title": "Eerste eigenaar",
+            "body": _truncate_copy(next_steps_payload.get("first_owner") or "Nog geen eigenaar benoemd.", limit=140),
+        },
+        {
+            "title": "Eerste stap",
+            "body": _truncate_copy(next_steps_payload.get("first_action") or "Maak de eerste stap expliciet binnen 30 dagen.", limit=165),
+        },
+    ]
+    _append_executive_pathway(
+        story,
+        steps=steps,
+        content_width=content_width,
+        theme=report_theme,
+    )
+    extra_boardroom_cards = boardroom_cards[5:]
+    if extra_boardroom_cards:
+        _append_metric_band(
+            story,
+            [{**card, "background": TOKENS["cream"]} for card in extra_boardroom_cards[:2]],
+            content_width=content_width,
+            theme=report_theme,
+            columns=min(2, len(extra_boardroom_cards[:2])),
+        )
+    compact_summary_card = management_summary_payload.get("executive_compact_card")
+    if compact_summary_card:
+        story.append(Spacer(1, 0.08 * cm))
+        story.append(_build_card_flowable(
+            {
+                **compact_summary_card,
+                "background": TOKENS["cream"],
+                "accent_color": report_theme["border"],
+            },
+            width=content_width,
+            theme=report_theme,
+        ))
+        story.append(Spacer(1, 0.12 * cm))
+    _append_emphasis_note(
+        story,
+        title=management_summary_payload.get("boardroom_watchout_title", management_summary_payload.get("trust_note_title", "Leeswijzer")),
+        body=management_summary_payload.get("boardroom_watchout", management_summary_payload.get("trust_note", "")),
+        content_width=content_width,
+        theme=report_theme,
+    )
+    story.append(PageBreak())
+
+
+def _append_rebrand_factor_analysis(
+    story: list,
+    *,
+    factor_avgs: dict[str, float],
+    factor_items: list[tuple[str, float]],
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    _append_section_heading(
+        story,
+        eyebrow="Drivers",
+        title="Wat drijft dit beeld?",
+        intro="Lees dit prioriteitenbeeld als verificatiehulp: welke factoren vragen nu de meeste aandacht, welke lezen relatief laag en waar zit bestuurlijk de meeste druk.",
+        content_width=content_width,
+    )
+    if not factor_avgs:
+        _append_emphasis_note(
+            story,
+            title="Onvoldoende patroondata",
+            body="De factoranalyse wordt pas zichtbaar zodra voldoende responses beschikbaar zijn voor patroonherkenning.",
+            content_width=content_width,
+            theme=report_theme,
+        )
+        story.append(PageBreak())
+        return
+
+    matrix_frame = _build_chart_frame_flowable(
+        label="Prioriteitenbeeld",
+        image=_priority_matrix_image(factor_avgs, width_cm=12.4),
+        content_width=content_width,
+        theme=report_theme,
+        caption="Indicatief prioriteitenbeeld: lager op de x-as betekent lagere beleving; hoger op de y-as betekent meer bestuurlijke aandacht.",
+    )
+    if matrix_frame:
+        story.append(matrix_frame)
+        story.append(Spacer(1, 0.14 * cm))
+    table_rows = [["Factor", "Score", "Signaal", "Band"]]
+    signal_colors: list[colors.Color] = []
+    factor_explanations = _factor_explanation_lookup()
+    for factor, signal_value in factor_items:
+        score = factor_avgs.get(factor, 5.5)
+        badge = _risk_badge(signal_value)
+        signal_colors.append(badge["fg"] if badge else TEXT)
+        table_rows.append([
+            FACTOR_LABELS_NL.get(factor, factor),
+            f"{score:.1f}/10",
+            f"{signal_value:.1f}/10",
+            str(badge["label"]) if badge else "",
+        ])
+    score_table = _build_data_table_flowable(
+        rows=table_rows,
+        col_widths=[content_width * 0.42, content_width * 0.18, content_width * 0.18, content_width * 0.22],
+        theme=report_theme,
+        highlight_columns={2: signal_colors, 3: signal_colors},
+        align_columns=[1, 2, 3],
+        bold_columns=[1, 2, 3],
+    )
+    story.append(score_table)
+    story.append(Spacer(1, 0.2 * cm))
+    factor_cards = []
+    for factor, signal_value in factor_items[:4]:
+        label = FACTOR_LABELS_NL.get(factor, factor)
+        factor_cards.append({
+            "title": label,
+            "badge": _risk_badge(signal_value),
+            "value": f"{factor_avgs.get(factor, 5.5):.1f}/10",
+            "body": factor_explanations.get(label.lower(), "Gebruik deze factor als uitleglijn voor het huidige groepsbeeld."),
+        })
+    _append_metric_band(
+        story,
+        factor_cards,
+        content_width=content_width,
+        theme=report_theme,
+        columns=2,
+    )
+    story.append(PageBreak())
+
+
+def _append_rebrand_focus_questions(
+    story: list,
+    *,
+    top_risks: list[tuple[str, float]],
+    factor_avgs: dict[str, float],
+    hypotheses: list[dict[str, str]],
+    retention_trend_rows: list[dict[str, Any]],
+    retention_themes: list[dict[str, Any]],
+    is_retention: bool,
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    _append_section_heading(
+        story,
+        eyebrow="Prioriteiten",
+        title="Waar eerst op handelen",
+        intro="Deze pagina zet de eerste prioriteiten om naar concrete verificatievragen. Gebruik dit als schakel tussen het prioriteitenbeeld en de eerste acties.",
+        content_width=content_width,
+    )
+    factor_explanations = _factor_explanation_lookup()
+    if not top_risks:
+        _append_emphasis_note(
+            story,
+            title="Nog geen focusvragen zichtbaar",
+            body="Zodra de patroonanalyse voldoende data heeft, verschijnen hier de factoren en hun gesprekshaken in dezelfde managementvolgorde.",
+            content_width=content_width,
+            theme=report_theme,
+        )
+    if top_risks:
+        priority_cards: list[dict[str, Any]] = []
+        for index, (factor, signal_value) in enumerate(top_risks[:2]):
+            label = FACTOR_LABELS_NL.get(factor, factor)
+            explanation = factor_explanations.get(label.lower())
+            matching_hypothesis = next(
+                (
+                    item for item in hypotheses
+                    if _factor_label_to_key(label) in item["title"].lower() or label.lower() in item["title"].lower()
+                ),
+                None,
+            )
+            verification_question = matching_hypothesis.get("question") if matching_hypothesis else _factor_decision_text(factor, is_retention=is_retention)
+            observation = explanation or (matching_hypothesis.get("body") if matching_hypothesis else None)
+            role_label = management_band_label(score=signal_value) if index == 0 else management_context_label("verification")
+            priority_cards.append({
+                "title": label,
+                "badge": _risk_badge(signal_value) if index == 0 else _risk_badge(label=role_label),
+                "value": f"{factor_avgs.get(factor, 5.5):.1f}/10 score · {signal_value:.1f}/10 signaal",
+                "body": (
+                    f"<b>Te toetsen vraag:</b> {verification_question}<br/>"
+                    f"<b>Waarom dit telt:</b> {observation or 'Nog geen aanvullende observatie beschikbaar.'}"
+                ),
+                "background": TOKENS["cream"] if index == 0 else TOKENS["surface"],
+            })
+        _append_highlight_cards(
+            story,
+            priority_cards,
+            content_width=content_width,
+            theme=report_theme,
+            columns=min(2, len(priority_cards)),
+        )
+        story.append(Spacer(1, 0.12 * cm))
+    if is_retention and retention_trend_rows:
+        story.append(Paragraph("Ontwikkeling aanvullende signalen", STYLES["sub_title"]))
+        story.append(_build_data_table_flowable(
+            rows=[["Signaal", "Nu", "Delta", "Duiding"]] + [
+                [
+                    row["label"],
+                    f"{row['current']:.1f}/10",
+                    f"{'+' if row['delta'] > 0 else ''}{row['delta']:.1f}",
+                    row["explanation"],
+                ]
+                for row in retention_trend_rows[:3]
+            ],
+            col_widths=[content_width * 0.20, content_width * 0.12, content_width * 0.12, content_width * 0.56],
+            theme=report_theme,
+            align_columns=[1, 2],
+            bold_columns=[1, 2],
+        ))
+        story.append(Spacer(1, 0.12 * cm))
+    if is_retention:
+        decision_themes = _select_retention_decision_themes(retention_themes, top_risks)
+    else:
+        decision_themes = []
+    if is_retention and decision_themes:
+        story.append(Paragraph("Open verbetersignalen met besliswaarde", STYLES["sub_title"]))
+        story.append(_build_data_table_flowable(
+            rows=[["Thema", "n", "Implicatie"]] + [
+                [theme_item["title"], str(theme_item["count"]), theme_item["implication"]]
+                for theme_item in decision_themes
+            ],
+            col_widths=[content_width * 0.24, content_width * 0.08, content_width * 0.68],
+            theme=report_theme,
+            align_columns=[1],
+            bold_columns=[1],
+        ))
+    story.append(PageBreak())
+
+
+def _append_rebrand_risk_and_prevention(
+    story: list,
+    *,
+    avg_risk: float | None,
+    signal_label: str,
+    signal_label_lower: str,
+    band_counts: dict[str, int],
+    pattern: dict[str, Any],
+    signal_page_payload: dict[str, Any],
+    signal_page_cards: list[dict[str, str]],
+    retention_trend_rows: list[dict[str, Any]],
+    top_reasons: list[dict[str, Any]],
+    top_contributing_reasons: list[dict[str, Any]],
+    strong_work_signal_pct: float | None,
+    any_work_signal_pct: float | None,
+    signal_visibility_average: float | None,
+    avg_engagement: float | None,
+    avg_turnover_intention: float | None,
+    avg_stay_intent: float | None,
+    retention_themes: list[dict[str, Any]],
+    quotes: list[str],
+    is_retention: bool,
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    intro_text = signal_page_payload.get("signal_profile_text", signal_page_payload["intro"])
+    if not is_retention and signal_visibility_average is None:
+        intro_text = intro_text.replace(
+            "Lees hoofdredenen, meespelende factoren, eerdere signalering en signalen van werkfrictie als een managementverhaal. ",
+            "Lees hoofdredenen, meespelende factoren en signalen van werkfrictie als een managementverhaal. ",
+        )
+        intro_text = intro_text.replace(
+            "De hoofdreden geeft het eerste vertrekhaakje; de werkfactoren en signalen van werkfrictie laten zien waar vervolgvragen bestuurlijk het meeste opleveren.",
+            "De hoofdreden geeft het eerste vertrekhaakje; de werkfactoren en signalen van werkfrictie laten zien waar vervolgvragen bestuurlijk het meeste opleveren.",
+        )
+    _append_section_heading(
+        story,
+        eyebrow="Verdieping",
+        title="Kernsignalen en verdieping",
+        intro=intro_text,
+        content_width=content_width,
+    )
+    if avg_risk is not None:
+        band_label = "HOOG" if avg_risk >= 7 else "MIDDEN" if avg_risk >= 4.5 else "LAAG"
+        left_width = 86 * mm
+        right_width = content_width - left_width - (5 * mm)
+        gauge_frame = _build_chart_frame_flowable(
+            label=f"Gemiddeld {signal_label_lower}",
+            image=_risk_gauge_image(avg_risk, band_label),
+            content_width=left_width,
+            theme=report_theme,
+            caption=f"{signal_label} {avg_risk:.1f}/10",
+        )
+        distribution_band = _build_stacked_distribution_flowable(
+            title=f"Verdeling {signal_label_lower}",
+            counts=band_counts,
+            width=right_width,
+            theme=report_theme,
+            caption="Snel verdelingsbeeld op groepsniveau; lees dit als indicatie en niet als individuele classificatie.",
+        )
+        right_items: list[Any] = [distribution_band]
+        if is_retention:
+            signal_panel_cards = list(signal_page_cards[:3])
+            signal_panel_cards.append({
+                "title": "Bevlogenheid",
+                "value": f"{avg_engagement:.1f}/10" if avg_engagement is not None else "-",
+                "body": "Aanvullend signaal rond energie en betrokkenheid. Lees dit samen met het retentiesignaal, stay-intent en vertrekintentie.",
+            })
+            _append_metric_band(
+                story,
+                [
+                    {**card, "background": TOKENS["surface"] if idx % 2 else TOKENS["cream"]}
+                    for idx, card in enumerate(signal_panel_cards)
+                ],
+                content_width=content_width,
+                theme=report_theme,
+                columns=2,
+            )
+            story.append(Spacer(1, 0.10 * cm))
+            if retention_themes:
+                decision_themes = retention_themes[:2]
+                story.append(Paragraph("Open signalen als bewijslaag", STYLES["sub_title"]))
+                _append_theme_chip_band(
+                    story,
+                    themes=decision_themes,
+                    content_width=content_width,
+                    theme=report_theme,
+                )
+                quote_cards = [
+                    {
+                        "title": theme_item["title"],
+                        "body": f"\"{theme_item['sample_quote']}\"<br/><br/>{theme_item['implication']}",
+                        "background": TOKENS["cream"],
+                    }
+                    for theme_item in decision_themes[:2]
+                    if theme_item.get("sample_quote")
+                ]
+                if quote_cards:
+                    _append_highlight_cards(
+                        story,
+                        quote_cards,
+                        content_width=content_width,
+                        theme=report_theme,
+                        columns=min(2, len(quote_cards)),
+                    )
+        else:
+            preventability_image = _preventability_image(pattern.get("preventability_counts", {}))
+            if preventability_image is not None:
+                right_items.insert(
+                    0,
+                    _build_chart_frame_flowable(
+                        label="Preventability",
+                        image=preventability_image,
+                        content_width=right_width,
+                        theme=report_theme,
+                        caption="Verdeling van beïnvloedbare werkfactoren in de exitbatch.",
+                        ),
+                    )
+        risk_columns = _build_columns_flowable(
+            column_items=[[gauge_frame] if gauge_frame else [], [item for item in right_items if item]],
+            col_widths=[left_width, right_width],
+        )
+        story.append(risk_columns)
+        story.append(Spacer(1, 0.2 * cm))
+
+    if not is_retention and top_reasons:
+        story.append(Paragraph("Vertrekbeeld in thema's", STYLES["sub_title"]))
+        primary_reason_frame = _build_chart_frame_flowable(
+            label="Hoofdredenen van vertrek",
+            image=_ranked_bar_image(top_reasons[:4], width_cm=8.2, color=MPL_BRAND),
+            content_width=content_width * 0.50,
+            theme=report_theme,
+            caption="Zakelijke ranglijst; geen causale claim.",
+        )
+        contributing_frame = _build_chart_frame_flowable(
+            label="Meespelende factoren",
+            image=_ranked_bar_image(top_contributing_reasons[:4], width_cm=8.2, color=MPL_MED),
+            content_width=content_width * 0.50,
+            theme=report_theme,
+            caption="Indicatieve samenhang die helpt om het eerste gesprek te richten.",
+        )
+        evidence_cards: list[dict[str, Any]] = []
+        if strong_work_signal_pct is not None:
+            evidence_cards.append({
+                "title": management_band_label(band="HOOG"),
+                "value": f"{strong_work_signal_pct:.0f}%",
+                "body": "Aandeel van de exitbatch waar beïnvloedbare werkfrictie duidelijk zichtbaar terugkomt.",
+                "background": TOKENS["cream"],
+            })
+        if any_work_signal_pct is not None:
+            evidence_cards.append({
+                "title": management_band_label(band="MIDDEN"),
+                "value": f"{any_work_signal_pct:.0f}%",
+                "body": "Aandeel van de exitbatch waar minstens een aandachtspunt rond beïnvloedbare werkfrictie zichtbaar is.",
+                "background": TOKENS["cream"],
+            })
+        evidence_table = _build_data_table_flowable(
+            rows=[["Indicatie", "Waarde", "Duiding"]] + [[card["title"], card["value"], card["body"]] for card in evidence_cards],
+            col_widths=[content_width * 0.18, content_width * 0.14, content_width * 0.68],
+            theme=report_theme,
+            bold_columns=[1],
+        ) if evidence_cards else None
+        story.append(_build_columns_flowable(
+            column_items=[[
+                item for item in [primary_reason_frame, evidence_table] if item
+            ], [
+                item for item in [contributing_frame] if item
+            ]],
+            col_widths=[content_width * 0.56, content_width * 0.44],
+        ))
+        story.append(Spacer(1, 0.12 * cm))
+    if not is_retention and _has_exit_open_signal_decision_value(quotes):
+        story.append(Paragraph("Stemmen uit de survey", STYLES["sub_title"]))
+        _append_quote_cards(
+            story,
+            quotes=quotes[:2],
+            content_width=content_width,
+            theme=report_theme,
+        )
+    if is_retention:
+        story.append(PageBreak())
+    else:
+        story.append(Spacer(1, 0.12 * cm))
+
+
+def _append_rebrand_actions(
+    story: list,
+    *,
+    hypotheses_payload: dict[str, str],
+    hypotheses: list[dict[str, str]],
+    next_steps_payload: dict[str, Any],
+    scan_meta: dict[str, Any],
+    signal_label_lower: str,
+    avg_risk: float | None,
+    segment_deep_dive: dict[str, Any],
+    retention_playbooks: list[dict[str, Any]],
+    retention_playbook_calibration_note: str | None,
+    retention_segment_playbooks: list[dict[str, Any]],
+    is_retention: bool,
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    _append_section_heading(
+        story,
+        eyebrow="Route",
+        title="30-90 dagenroute",
+        intro="Deze pagina zet de eerste route om in volgorde: kies eerst het spoor, beleg een eigenaar, maak de eerste stap concreet en plan daarna een reviewmoment.",
+        content_width=content_width,
+    )
+    if hypotheses:
+        action_cards = []
+        for item in hypotheses[:3]:
+            action_cards.append({
+                "title": item["title"],
+                "value": "Eerste actiekaart",
+                "body": (
+                    f"<b>Te toetsen vraag:</b> {item.get('question', 'Nog geen verificatievraag beschikbaar.')}<br/>"
+                    f"<b>Waarom dit nu telt:</b> {item['body']}"
+                ),
+                "background": TOKENS["cream"],
+            })
+        _append_highlight_cards(
+            story,
+            action_cards,
+            content_width=content_width,
+            theme=report_theme,
+            columns=min(2, len(action_cards)),
+        )
+        story.append(Spacer(1, 0.12 * cm))
+    story.append(Paragraph(next_steps_payload["session_title"], STYLES["sub_title"]))
+    story.append(Paragraph(next_steps_payload["session_intro"], STYLES["body"]))
+    if next_steps_payload.get("session_cards"):
+        _append_metric_band(
+            story,
+            [
+                {**card, "background": TOKENS["surface"] if index % 2 else TOKENS["cream"]}
+                for index, card in enumerate(next_steps_payload["session_cards"])
+            ],
+            content_width=content_width,
+            theme=report_theme,
+            columns=2,
+        )
+        story.append(Spacer(1, 0.12 * cm))
+    roadmap_steps = list(next_steps_payload["steps"]) + [{
+        "number": "5",
+        "title": scan_meta["report_repeat_title"],
+        "body": scan_meta["report_repeat_body"],
+    }]
+    _append_roadmap_timeline(
+        story,
+        steps=roadmap_steps,
+        content_width=content_width,
+        theme=report_theme,
+    )
+    _append_numbered_action_rows(
+        story,
+        steps=roadmap_steps,
+        content_width=content_width,
+        theme=report_theme,
+    )
+    segment_rows = (segment_deep_dive or {}).get("rows", [])
+    if segment_rows and avg_risk is not None:
+        story.append(Paragraph("Subgroepen in één oogopslag", STYLES["sub_title"]))
+        story.append(Paragraph(
+            "Gebruik deze small multiples alleen als verdiepingslaag. Ze laten zien waar groepssignalen relatief sterker of zwakker terugkomen, niet waarom dat zo is.",
+            STYLES["body"],
+        ))
+        _append_segment_small_multiples(
+            story,
+            segment_rows=segment_rows,
+            org_avg_risk=avg_risk,
+            content_width=content_width,
+            theme=report_theme,
+            signal_label_lower=signal_label_lower,
+        )
+    if is_retention and retention_playbooks:
+        story.append(Paragraph("Behoudsplaybooks", STYLES["sub_title"]))
+        if retention_playbook_calibration_note:
+            story.append(Paragraph(retention_playbook_calibration_note, STYLES["body"]))
+        playbook_cards = []
+        for playbook in retention_playbooks[:2]:
+            playbook_cards.append({
+                "title": playbook["label"],
+                "value": f"{playbook['signal_value']:.1f}/10",
+                "body": (
+                    f"<b>{playbook['title']}</b><br/>"
+                    f"<b>Eerste besluit:</b> {playbook['decision']}<br/>"
+                    f"<b>Eerste eigenaar:</b> {playbook['owner']}<br/>"
+                    + " ".join([f"• {action}" for action in playbook["actions"][:2]])
+                ),
+                "background": TOKENS["cream"],
+                "accent_color": report_theme["accent"],
+            })
+        _append_highlight_cards(
+            story,
+            playbook_cards,
+            content_width=content_width,
+            theme=report_theme,
+            columns=min(2, len(playbook_cards)),
+        )
+        story.append(Spacer(1, 0.12 * cm))
+    if is_retention and retention_segment_playbooks and not retention_playbooks:
+        _append_emphasis_note(
+            story,
+            title="Segment deep dive",
+            body=(
+                f"Voor deze campagne waren {len(retention_segment_playbooks)} segment-specifieke behoudssporen beschikbaar. "
+                "Gebruik die alleen als verdiepingslaag nadat het organisatieniveau is gewogen."
+            ),
+            content_width=content_width,
+            theme=report_theme,
+        )
+    if is_retention and retention_segment_playbooks:
+        _append_emphasis_note(
+            story,
+            title="Segment deep dive",
+            body=(
+                f"Voor deze campagne waren {len(retention_segment_playbooks)} segment-specifieke behoudssporen beschikbaar. "
+                "Gebruik die alleen als verdiepingslaag nadat het organisatieniveau is gewogen."
+            ),
+            content_width=content_width,
+            theme=report_theme,
+        )
+    story.append(PageBreak())
+
+
+def _append_rebrand_retention_playbooks(
+    story: list,
+    *,
+    retention_playbooks: list[dict[str, Any]],
+    retention_playbook_calibration_note: str | None,
+    retention_segment_playbooks: list[dict[str, Any]],
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    if not retention_playbooks and not retention_segment_playbooks:
+        return
+
+    intro = retention_playbook_calibration_note or (
+        "Gebruik deze behoudsplaybooks als gecontroleerde vervolglaag na de hoofdprioriteiten uit de actiepagina."
+    )
+    _append_section_heading(
+        story,
+        eyebrow="Wat nu",
+        title="Behoudsplaybooks",
+        intro=intro,
+        content_width=content_width,
+    )
+    if retention_playbooks:
+        playbook_cards = []
+        for playbook in retention_playbooks[:2]:
+            actions_text = " ".join([f"• {action}" for action in playbook["actions"][:2]])
+            playbook_cards.append({
+                "title": playbook["label"],
+                "badge": _risk_badge(playbook["signal_value"]),
+                "value": f"{playbook['signal_value']:.1f}/10",
+                "body": (
+                    f"<b>{playbook['title']}</b><br/>"
+                    f"<b>Eerste besluit:</b> {playbook['decision']}<br/>"
+                    f"<b>Eerste eigenaar:</b> {playbook['owner']}<br/>"
+                    f"{actions_text}"
+                ),
+                "background": TOKENS["cream"],
+            })
+        _append_highlight_cards(
+            story,
+            playbook_cards,
+            content_width=content_width,
+            theme=report_theme,
+            columns=min(2, len(playbook_cards)),
+        )
+    if retention_segment_playbooks:
+        _append_emphasis_note(
+            story,
+            title="Segment deep dive",
+            body=(
+                f"Voor deze campagne waren {len(retention_segment_playbooks)} segment-specifieke behoudssporen beschikbaar. "
+                "Gebruik die alleen als verdiepingslaag nadat het organisatieniveau is gewogen."
+            ),
+            content_width=content_width,
+            theme=report_theme,
+        )
+    story.append(PageBreak())
+
+
+def _append_rebrand_methodology(
+    story: list,
+    *,
+    scan_type: str,
+    has_segment_deep_dive: bool,
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    scan_meta = get_scan_definition(scan_type)
+    product_module = get_product_module(scan_type)
+    methodology_payload = product_module.get_methodology_payload()
+    _append_section_heading(
+        story,
+        eyebrow="Methodiek",
+        title="Methodiek & Verantwoording",
+        intro=methodology_payload["intro_text"],
+        content_width=content_width,
+    )
+    stats_note = (
+        f"Resultaten verschijnen pas vanaf voldoende responses. Patroonanalyse vraagt minimaal 10 responses; segmentvergelijkingen tonen we vanaf minimaal {MIN_SEGMENT_N} per groep."
+    )
+    if has_segment_deep_dive:
+        stats_note += " Segment deep dive blijft beschrijvend en is bedoeld om vervolgvragen te richten, niet om oorzaken te bewijzen."
+    trust_rows = methodology_payload.get("trust_rows", [])[:4]
+    intro_card = _build_card_flowable(
+        {
+            "title": f"Hoe lees je het {scan_meta['signal_short_label']}?",
+            "body": methodology_payload["method_text"],
+            "background": TOKENS["surface"],
+            "accent_color": report_theme["accent"],
+        },
+        width=content_width * 0.48,
+        theme=report_theme,
+    )
+    stats_card = _build_card_flowable(
+        {
+            "title": "Methodiek in één zin",
+            "body": stats_note,
+            "background": TOKENS["surface"],
+            "accent_color": report_theme["border"],
+        },
+        width=content_width * 0.48,
+        theme=report_theme,
+    )
+    story.append(_build_columns_flowable(
+        column_items=[[intro_card], [stats_card]],
+        col_widths=[content_width * 0.48, content_width * 0.48],
+    ))
+    story.append(Spacer(1, 0.12 * cm))
+    if trust_rows:
+        trust_table = _build_data_table_flowable(
+            rows=[["Aandachtspunt", "Duiding"]] + trust_rows,
+            col_widths=[content_width * 0.29, content_width * 0.71],
+            theme=report_theme,
+            bold_columns=[0],
+        )
+        story.append(trust_table)
+        story.append(Spacer(1, 0.12 * cm))
+    story.append(_build_columns_flowable(
+        column_items=[[
+            _build_data_table_flowable(
+                rows=methodology_payload["weight_rows"],
+                col_widths=[content_width * 0.14, content_width * 0.06, content_width * 0.26],
+                theme=report_theme,
+                align_columns=[1],
+                bold_columns=[1],
+            )
+        ], [
+            _build_data_table_flowable(
+                rows=methodology_payload["band_rows"],
+                col_widths=[content_width * 0.12, content_width * 0.10, content_width * 0.32],
+                theme=report_theme,
+                align_columns=[1],
+                bold_columns=[0, 1],
+            )
+        ]],
+        col_widths=[content_width * 0.46, content_width * 0.54],
+    ))
+    contact_table = Table([[
+        Paragraph(
+            "<b>Vragen over dit rapport?</b><br/>"
+            f"Neem contact op via <font color='{_color_to_hex(report_theme['accent'])}'>hallo@verisight.nl</font>. "
+            "We lopen de bevindingen graag door en helpen bij de vertaling naar een eerstvolgende stap.",
+                ParagraphStyle(
+                    "contact_note_rebrand",
+                    fontName=REPORT_FONTS["regular"],
+                    fontSize=8.0,
+                    leading=11.2,
+                    textColor=TEXT,
+                ),
+            )
+    ]], colWidths=[content_width])
+    contact_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), TOKENS["cream"]),
+        ("BOX", (0, 0), (-1, -1), 0.5, report_theme["border"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    story.append(Spacer(1, 0.12 * cm))
+    story.append(contact_table)
+
+
+def _build_rebrand_story(
+    *,
+    camp: Campaign,
+    org: Organization,
+    scan_lbl: str,
+    signal_label: str,
+    signal_label_lower: str,
+    now_str: str,
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+    management_summary_payload: dict[str, Any],
+    cover_metric_cards: list[dict[str, str]],
+    avg_risk: float | None,
+    trend_delta: float | None,
+    previous_campaign_label: str | None,
+    has_pattern: bool,
+    n_completed: int,
+    band_counts: dict[str, int],
+    signal_page_payload: dict[str, Any],
+    signal_page_cards: list[dict[str, str]],
+    factor_avgs: dict[str, float],
+    top_risks: list[tuple[str, float]],
+    top_factor_keys: list[str],
+    top_factor_labels: list[str],
+    is_retention: bool,
+    avg_engagement: float | None,
+    avg_turnover_intention: float | None,
+    avg_stay_intent: float | None,
+    retention_themes: list[dict[str, Any]],
+    retention_trend_rows: list[dict[str, Any]],
+    strong_work_signal_pct: float | None,
+    any_work_signal_pct: float | None,
+    top_exit_reason_label: str | None,
+    top_contributing_reason_label: str | None,
+    top_contributing_reasons: list[dict[str, Any]],
+    signal_visibility_average: float | None,
+    pattern: dict[str, Any],
+    responses: list[SurveyResponse],
+    hypotheses: list[dict[str, str]],
+    hypotheses_payload: dict[str, str],
+    next_steps_payload: dict[str, Any],
+    retention_playbooks: list[dict[str, Any]],
+    retention_playbook_calibration_note: str | None,
+    retention_segment_playbooks: list[dict[str, Any]],
+    segment_deep_dive: dict[str, Any],
+    scan_meta: dict[str, Any],
+    has_segment_deep_dive: bool,
+    cover_distribution_note: str,
+) -> list:
+    story: list = []
+    factor_items = [(factor, _factor_signal_score(factor, factor_avgs)) for factor in ORG_FACTOR_KEYS if factor in factor_avgs]
+    factor_items.sort(key=lambda item: item[1], reverse=True)
+    top_reasons = pattern.get("top_exit_reasons", [])[:4] if not is_retention else []
+    quotes = _select_relevant_quotes(
+        [response.open_text_raw for response in responses if response.open_text_raw and response.open_text_raw.strip()],
+        [factor for factor, _ in top_risks[:3]],
+        [item["code"] for item in top_reasons[:3]],
+        max_quotes=2,
+    ) if responses else []
+
+    _append_rebrand_cover(
+        story,
+        camp=camp,
+        org=org,
+        scan_lbl=scan_lbl,
+        now_str=now_str,
+        report_theme=report_theme,
+        cover_distribution_note=cover_distribution_note,
+        management_summary_payload=management_summary_payload,
+        cover_metric_cards=cover_metric_cards,
+        top_factor_labels=top_factor_labels,
+        next_steps_payload=next_steps_payload,
+        is_retention=is_retention,
+    )
+    _append_rebrand_executive(
+        story,
+        management_summary_payload=management_summary_payload,
+        next_steps_payload=next_steps_payload,
+        has_pattern=has_pattern,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_rebrand_factor_analysis(
+        story,
+        factor_avgs=factor_avgs,
+        factor_items=factor_items,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_rebrand_focus_questions(
+        story,
+        top_risks=top_risks,
+        factor_avgs=factor_avgs,
+        hypotheses=hypotheses,
+        retention_trend_rows=retention_trend_rows,
+        retention_themes=retention_themes,
+        is_retention=is_retention,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_rebrand_risk_and_prevention(
+        story,
+        avg_risk=avg_risk,
+        signal_label=signal_label,
+        signal_label_lower=signal_label_lower,
+        band_counts=band_counts,
+        pattern=pattern,
+        signal_page_payload=signal_page_payload,
+        signal_page_cards=signal_page_cards,
+        retention_trend_rows=retention_trend_rows,
+        top_reasons=top_reasons,
+        top_contributing_reasons=top_contributing_reasons,
+        strong_work_signal_pct=strong_work_signal_pct,
+        any_work_signal_pct=any_work_signal_pct,
+        signal_visibility_average=signal_visibility_average,
+        avg_engagement=avg_engagement,
+        avg_turnover_intention=avg_turnover_intention,
+        avg_stay_intent=avg_stay_intent,
+        retention_themes=retention_themes,
+        quotes=quotes,
+        is_retention=is_retention,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_rebrand_actions(
+        story,
+        hypotheses_payload=hypotheses_payload,
+        hypotheses=hypotheses,
+        next_steps_payload=next_steps_payload,
+        scan_meta=scan_meta,
+        signal_label_lower=signal_label_lower,
+        avg_risk=avg_risk,
+        segment_deep_dive=segment_deep_dive,
+        retention_playbooks=retention_playbooks,
+        retention_playbook_calibration_note=retention_playbook_calibration_note,
+        retention_segment_playbooks=retention_segment_playbooks,
+        is_retention=is_retention,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_rebrand_methodology(
+        story,
+        scan_type=camp.scan_type,
+        has_segment_deep_dive=has_segment_deep_dive,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    return story
+
+
 # ---------------------------------------------------------------------------
 # Header/Footer callbacks
 # ---------------------------------------------------------------------------
 
 
-def _make_header_footer(org_name: str, camp_name: str, generated: str, product_name: str, scan_type: str):
-    """Geeft onFirstPage en onLaterPages callbacks terug voor platypus."""
-    theme = _report_theme(scan_type)
-
-    def _later_pages(canvas, doc):
-        canvas.saveState()
-        # Boven-lijn
-        canvas.setStrokeColor(theme["accent"])
-        canvas.setLineWidth(2)
-        canvas.line(1.5 * cm, PAGE_H - 1.2 * cm, PAGE_W - 1.5 * cm, PAGE_H - 1.2 * cm)
-
-        # Kopnaam links
-        canvas.setFont("Helvetica-Bold", 8)
-        canvas.setFillColor(theme["accent"])
-        canvas.drawString(1.5 * cm, PAGE_H - 1.8 * cm, "Verisight")
-
-        # Campaign rechts
-        canvas.setFont("Helvetica", 8)
-        canvas.setFillColor(MUTED)
-        canvas.drawRightString(PAGE_W - 1.5 * cm, PAGE_H - 1.8 * cm, f"{org_name}  |  {camp_name}")
-
-        # Onderlijn
-        canvas.setStrokeColor(BORDER)
-        canvas.setLineWidth(0.5)
-        canvas.line(1.5 * cm, 1.5 * cm, PAGE_W - 1.5 * cm, 1.5 * cm)
-
-        # Paginanummer + versie
-        canvas.setFont("Helvetica", 8)
-        canvas.setFillColor(MUTED)
-        canvas.drawString(1.5 * cm, 1.0 * cm, f"{product_name} v1.0  ·  Verisight")
-        canvas.drawCentredString(PAGE_W / 2, 1.0 * cm, f"Pagina {doc.page}")
-        canvas.drawRightString(PAGE_W - 1.5 * cm, 1.0 * cm, f"Gegenereerd {generated}")
-
-        canvas.restoreState()
-
-    def _first_page(canvas, doc):
-        # Voorblad: productspecifieke hoofdkleur
-        canvas.saveState()
-        canvas.setFillColor(theme["accent_dark"])
-        canvas.rect(0, 0, PAGE_W, PAGE_H, fill=1, stroke=0)
-        canvas.setFillColor(theme["accent"])
-        canvas.rect(0, PAGE_H - (2.2 * cm), PAGE_W, 1.4 * cm, fill=1, stroke=0)
-        canvas.restoreState()
-
-    return _first_page, _later_pages
+def _make_header_footer(
+    org_name: str,
+    camp_name: str,
+    generated: str,
+    product_name: str,
+    scan_type: str,
+    *,
+    footer_label: str,
+):
+    """Geeft branded cover- en bodycallbacks terug voor platypus."""
+    return make_page_callbacks(
+        org_name=org_name,
+        camp_name=camp_name,
+        generated=generated,
+        product_name=product_name,
+        scan_type=scan_type,
+        footer_label=footer_label,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -1615,6 +4226,16 @@ def generate_campaign_report(
         top_focus_labels=top_factor_labels,
         top_focus_keys=top_factor_keys,
     )
+    action_hypotheses = (
+        retention_hypotheses
+        if is_retention
+        else _build_exit_hypotheses(
+            top_risks=top_risks,
+            top_exit_reasons=pattern.get("top_exit_reasons", []),
+            top_contributing_reasons=pattern.get("top_contributing_reasons", []),
+            factor_avgs=factor_avgs,
+        ) if has_pattern else []
+    )
 
     cover_metric_cards = [
         {
@@ -1676,6 +4297,9 @@ def generate_campaign_report(
                 "body": "Expliciet vertrekdenken op groepsniveau; bedoeld voor verificatie en prioritering, niet voor individuele voorspelling.",
             },
         ]
+    signal_page_payload = product_module.get_signal_page_payload(
+        retention_signal_profile=retention_signal_profile,
+    )
 
     # ── PDF opbouwen ───────────────────────────────────────────────────────
     buf = io.BytesIO()
@@ -1686,17 +4310,24 @@ def generate_campaign_report(
         now_str,
         scan_meta["product_name"],
         camp.scan_type,
+        footer_label=(
+            "Illustratief voorbeeld - Verisight"
+            if sample_output_mode
+            else "Vertrouwelijk - Verisight"
+        ),
     )
 
-    content_x      = 1.5 * cm
-    content_y      = 2.5 * cm
-    content_width  = PAGE_W - 3.0 * cm
-    content_height = PAGE_H - 4.5 * cm
+    content_x = PAGE_MARGINS["left"]
+    content_y = PAGE_MARGINS["bottom"] + BODY_FRAME_GAP
+    content_width = CONTENT_WIDTH
+    content_height = PAGE_H - content_y - PAGE_MARGINS["top"] - HEADER_HEIGHT - BODY_FRAME_GAP
 
     # Frame voor voorblad (vrij, geen header/footer)
     cover_frame = Frame(
-        content_x, 3.0 * cm,
-        content_width, PAGE_H - 6.0 * cm,
+        content_x,
+        PAGE_MARGINS["bottom"] + COVER_FRAME_INSET,
+        content_width,
+        PAGE_H - (PAGE_MARGINS["bottom"] + PAGE_MARGINS["top"] + (2 * COVER_FRAME_INSET)),
         id="cover",
     )
     # Frame voor reguliere pagina's
@@ -1718,7 +4349,56 @@ def generate_campaign_report(
     body_template  = PageTemplate(id="body",  frames=[body_frame],  onPage=later_pages_cb)
     doc.addPageTemplates([cover_template, body_template])
 
-    story: list = []
+    story = _build_rebrand_story(
+        camp=camp,
+        org=org,
+        scan_lbl=scan_lbl,
+        signal_label=signal_label,
+        signal_label_lower=signal_label_lower,
+        now_str=now_str,
+        content_width=content_width,
+        report_theme=report_theme,
+        management_summary_payload=management_summary_payload,
+        cover_metric_cards=cover_metric_cards,
+        avg_risk=avg_risk,
+        trend_delta=trend_delta,
+        previous_campaign_label=previous_campaign_label,
+        has_pattern=has_pattern,
+        n_completed=n_completed,
+        band_counts=band_counts,
+        signal_page_payload=signal_page_payload,
+        signal_page_cards=signal_page_cards,
+        factor_avgs=factor_avgs,
+        top_risks=top_risks,
+        top_factor_keys=top_factor_keys,
+        top_factor_labels=top_factor_labels,
+        is_retention=is_retention,
+        avg_engagement=avg_engagement,
+        avg_turnover_intention=avg_turnover_intention,
+        avg_stay_intent=avg_stay_intent,
+        retention_themes=retention_themes,
+        retention_trend_rows=retention_trend_rows,
+        strong_work_signal_pct=strong_work_signal_pct,
+        any_work_signal_pct=any_work_signal_pct,
+        top_exit_reason_label=top_exit_reason_label,
+        top_contributing_reason_label=top_contributing_reason_label,
+        top_contributing_reasons=pattern.get("top_contributing_reasons", []) if has_pattern else [],
+        signal_visibility_average=signal_visibility_average,
+        pattern=pattern,
+        responses=responses,
+        hypotheses=action_hypotheses,
+        hypotheses_payload=hypotheses_payload,
+        next_steps_payload=next_steps_payload,
+        retention_playbooks=retention_playbooks,
+        retention_playbook_calibration_note=retention_playbook_calibration_note,
+        retention_segment_playbooks=retention_segment_playbooks,
+        segment_deep_dive=segment_deep_dive,
+        scan_meta=scan_meta,
+        has_segment_deep_dive=has_segment_deep_dive,
+        cover_distribution_note=cover_distribution_note,
+    )
+    doc.build(story)
+    return buf.getvalue()
 
     # ==================================================================== #
     # PAGINA 1 — VOORBLAD                                                  #
@@ -1884,7 +4564,7 @@ def generate_campaign_report(
         f"{n_invited} uitgenodigde medewerkers deel (respons: {completion}%). "
     )
     if avg_risk:
-        band_str = {"HOOG": "sterk aandachtssignaal", "MIDDEN": "verhoogd aandachtssignaal", "LAAG": "laag aandachtssignaal"}.get(
+        band_str = {"HOOG": "direct aandachtspunt", "MIDDEN": "aandacht nodig", "LAAG": "voorlopig stabiel"}.get(
             ("HOOG" if avg_risk >= 7 else "MIDDEN" if avg_risk >= 4.5 else "LAAG"), ""
         )
         if is_retention:
@@ -2011,12 +4691,12 @@ def generate_campaign_report(
         )
     if strong_work_signal_pct is not None:
         findings.append(
-            f"Bij <b>{strong_work_signal_pct:.0f}% van het vertrek</b> is sprake van een sterk signaal van beïnvloedbare werkfactoren. "
+            f"Bij <b>{strong_work_signal_pct:.0f}% van het vertrek</b> is sprake van een direct aandachtspunt rond beïnvloedbare werkfactoren. "
             "Dit is een hypothese-indicatie, geen causale vaststelling."
         )
     if any_work_signal_pct is not None:
         findings.append(
-            f"Bij <b>{any_work_signal_pct:.0f}% van het vertrek</b> is ten minste een gemengd signaal van werkinvloed zichtbaar. "
+            f"Bij <b>{any_work_signal_pct:.0f}% van het vertrek</b> is ten minste één aandachtspunt van werkinvloed zichtbaar. "
             "Gebruik dit vooral om vervolgvragen te prioriteren."
         )
     if not findings:
@@ -2545,9 +5225,9 @@ def generate_campaign_report(
                 prev_table_data[0][1] = Table([
                     [Paragraph("<b>Sterk werkfactorsignaal</b>", STYLES["body"]),
                      Paragraph(f"{prev_counts.get('STERK_WERKSIGNAAL', 0)} responses", STYLES["body"])],
-                    [Paragraph("<b>Gemengd signaal</b>", STYLES["body"]),
+                    [Paragraph("<b>Aandacht nodig</b>", STYLES["body"]),
                      Paragraph(f"{prev_counts.get('GEMENGD_WERKSIGNAAL', 0)} responses", STYLES["body"])],
-                    [Paragraph("<b>Beperkt signaal</b>", STYLES["body"]),
+                    [Paragraph("<b>Voorlopig stabiel</b>", STYLES["body"]),
                      Paragraph(f"{prev_counts.get('BEPERKT_WERKSIGNAAL', 0)} responses", STYLES["body"])],
                 ], colWidths=[content_width * 0.30, content_width * 0.22])
 

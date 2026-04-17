@@ -3,6 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 from backend.products.retention.definition import SCAN_DEFINITION
+from backend.products.shared.management_language import (
+    MANAGEMENT_BAND_LABELS,
+    management_context_label,
+)
 
 
 TRUST_CONTRACT = SCAN_DEFINITION["trust_contract"]
@@ -126,18 +130,16 @@ def get_management_summary_payload(
         ),
     }
     signal_profile_value = {
-        "scherp_aandachtssignaal": "Scherp aandachtssignaal",
-        "vertrekdenken_zichtbaar": "Vertrekdenken zichtbaar",
-        "overwegend_stabiel": "Overwegend stabiel",
-        "vroegsignaal": "Vroegsignaal",
-    }.get(retention_signal_profile, "Vroegsignaal")
+        "scherp_aandachtssignaal": MANAGEMENT_BAND_LABELS["HOOG"],
+        "vertrekdenken_zichtbaar": MANAGEMENT_BAND_LABELS["HOOG"],
+        "overwegend_stabiel": MANAGEMENT_BAND_LABELS["LAAG"],
+        "vroegsignaal": MANAGEMENT_BAND_LABELS["MIDDEN"],
+    }.get(retention_signal_profile, MANAGEMENT_BAND_LABELS["MIDDEN"])
 
     executive_intro = (
         f"RetentieScan maakt zichtbaar waar behoud op groepsniveau onder druk staat. Op dit moment zitten de scherpste signalen vooral in {top_factor_text}, "
         f"gelezen in samenhang met {metric_text}."
     )
-    if retention_theme_title:
-        executive_intro += f" In open antwoorden komt {retention_theme_title.lower()} nu het vaakst terug."
 
     trust_note = (
         "Lees RetentieScan als groeps- en segmentduiding voor verificatie en opvolging. Het rapport is geen brede MTO, "
@@ -165,7 +167,7 @@ def get_management_summary_payload(
     if avg_turnover_intention is not None and avg_turnover_intention >= 5.5:
         continuity_body = (
             "Vertrekintentie is zichtbaar genoeg om dit niet alleen als HR-signaal te behandelen. "
-            "Zonder snelle verificatie en eigenaarschap groeit de kans dat teamcontinuiteit of leiderschapsbelasting onder druk komen te staan."
+            "Zonder snelle verificatie groeit de kans dat teamcontinuiteit of leiderschapsbelasting onder druk komen te staan."
         )
     else:
         continuity_body = (
@@ -177,6 +179,14 @@ def get_management_summary_payload(
         "RetentieScan helpt sneller wegen waar behoud op groepsniveau verificatie en opvolging vraagt, maar blijft een v1-werkmodel."
     )
 
+    executive_compact_card = None
+    if avg_turnover_intention is not None or avg_stay_intent is not None:
+        executive_compact_card = {
+            "title": "Wat als je niets doet",
+            "value": "Continuiteitsdruk",
+            "body": continuity_body,
+        }
+
     return {
         "section_title": "Managementsamenvatting",
         "distribution_title": "Verdeling van het retentiesignaal",
@@ -185,10 +195,11 @@ def get_management_summary_payload(
         "executive_intro": executive_intro,
         "trust_note_title": "Leeswijzer voor bestuur en management",
         "trust_note": trust_note,
+        "executive_compact_card": executive_compact_card,
         "boardroom_title": "Bestuurlijke handoff",
         "boardroom_intro": (
             "Deze bestuurlijke handoff helpt een sponsor, MT of directie snel zien waar behoudsdruk nu oploopt, "
-            "waarom dat bestuurlijk telt, welk besluit eerst hoort en wat de eerste vervolgrichting is."
+            "waarom dat bestuurlijk telt en wat vooral eerst geverifieerd moet worden."
         ),
         "boardroom_cards": [
             {
@@ -202,24 +213,19 @@ def get_management_summary_payload(
                 "body": continuity_body,
             },
             {
-                "title": "Eerste besluit",
+                "title": "Wat vraagt verificatie",
+                "value": management_context_label("verification"),
+                "body": verification_body,
+            },
+            {
+                "title": "Waar zit de meeste druk",
                 "value": top_factor_labels[0] if top_factor_labels else "Nog geen topfactor",
-                "body": first_decision,
-            },
-            {
-                "title": "Eerste eigenaar",
-                "value": first_owner,
-                "body": "Beleg meteen wie verificatie en eerste opvolging trekt, zodat het groepssignaal niet tussen HR en management blijft hangen.",
-            },
-            {
-                "title": "Eerste stap",
-                "value": "Binnen 30-90 dagen",
-                "body": next_step,
+                "body": boardroom_relevance,
             },
             {
                 "title": "Waarom telt dit nu",
                 "value": "Bestuurlijke relevantie",
-                "body": boardroom_relevance,
+                "body": continuity_body,
             },
         ],
         "boardroom_watchout_title": "Wat je hier niet uit moet concluderen",
@@ -236,6 +242,11 @@ def get_management_summary_payload(
                 "body": verification_body,
             },
             {
+                "title": "Wat verdient verificatie",
+                "value": management_context_label("verification"),
+                "body": first_decision,
+            },
+            {
                 "title": "Eerste besluit",
                 "value": top_factor_labels[0] if top_factor_labels else "Nog geen topfactor",
                 "body": first_decision,
@@ -243,7 +254,7 @@ def get_management_summary_payload(
             {
                 "title": "Eerste eigenaar",
                 "value": first_owner,
-                "body": "Beleg meteen wie verificatie en eerste opvolging trekt, zodat RetentieScan niet blijft hangen in alleen signalering.",
+                "body": "Beleg direct wie verificatie en eerste opvolging trekt, zodat RetentieScan niet blijft hangen in alleen signalering.",
             },
             {
                 "title": "Eerste managementspoor",
@@ -261,16 +272,12 @@ def get_management_summary_payload(
                 "body": verification_body,
             },
             {
-                "title": "Eerste besluit",
+                "title": "Waar het nu schuurt",
                 "body": first_decision,
             },
             {
-                "title": "Eerste eigenaar",
-                "body": first_owner,
-            },
-            {
-                "title": "Eerste logische stap",
-                "body": next_step,
+                "title": "Wat verificatie vraagt",
+                "body": verification_body,
             },
         ],
     }
@@ -279,21 +286,21 @@ def get_management_summary_payload(
 def get_methodology_payload() -> dict[str, Any]:
     return {
         "intro_text": (
-            "Dit rapport is opgebouwd uit verkorte vraagblokken die inhoudelijk zijn geinspireerd door bestaande wetenschappelijke literatuur. "
-            "Het gaat nadrukkelijk niet om volledige schaalafnames, een brede MTO of een diagnostisch instrument. "
-            "De uitkomsten zijn bedoeld voor prioritering en gesprek op groepsniveau, niet voor een individueel oordeel of harde voorspelling."
+            "Dit rapport vertaalt RetentieScan naar een bestuurlijk leesbaar behoudsbeeld op groepsniveau. "
+            "De methodiek is compact en nadrukkelijk geen brede MTO of diagnostisch instrument; de uitkomst is bedoeld voor prioritering, verificatie en actie. "
+            "De labels hieronder zijn managementtaal bovenop ongewijzigde interne scorebanden."
         ),
         "method_text": (
             "In de analyse wordt per response een retentiesignaal op een schaal van 1 tot 10 berekend. "
             "Een hogere score betekent een sterker samenvattend groepssignaal dat behoud aandacht vraagt. "
-            "De score is indicatief en bedoeld als gespreksinput, niet als causale voorspelling, benchmark of objectief oordeel. "
-            "Voor RetentieScan is dit in v1 een gelijkgewogen samenvatting van SDT-werkbeleving en zes beinvloedbare werkfactoren. "
+            "Gebruik de score als samenvatting van het groepsbeeld, niet als causale voorspelling, benchmark of objectief oordeel. "
+            "Voor RetentieScan is dit in v1 een gelijkgewogen samenvatting van SDT-werkbeleving en zes beïnvloedbare werkfactoren. "
             "Bevlogenheid, vertrekintentie en stay-intent worden daarnaast apart gerapporteerd als aanvullende signalen rond behoud."
         ),
         "weight_rows": [
             ["Factor", "Bijdrage", "Hoe te lezen"],
             ["SDT Werkbeleving", "1.0 x", "Verklarende kernlaag voor autonomie, competentie en verbondenheid"],
-            ["Leiderschap", "1.0 x", "Coachend leiderschap en autonomie-ondersteuning als beinvloedbare werkfactor"],
+            ["Leiderschap", "1.0 x", "Coachend leiderschap en autonomie-ondersteuning als beïnvloedbare werkfactor"],
             ["Psychologische veiligheid & cultuurmatch", "1.0 x", "Pragmatisch signaal voor veiligheid, samenwerking en cultuurfit, geen volledige cultuurdiagnose"],
             ["Groeiperspectief", "1.0 x", "Ervaren ontwikkelruimte en perspectief binnen de organisatie"],
             ["Beloning & voorwaarden", "1.0 x", "Ervaren passendheid, uitlegbaarheid en bruikbaarheid van beloning en voorwaarden"],
@@ -302,9 +309,9 @@ def get_methodology_payload() -> dict[str, Any]:
         ],
         "band_rows": [
             ["Band", "Score", "Betekenis voor de organisatie"],
-            ["Laag aandachtssignaal", "< 4.5", "Overwegend stabiel beeld. Er zijn relatief weinig directe signalen dat behoud nu breed onder druk staat."],
-            ["Verhoogd aandachtssignaal", "4.5-7.0", "Gemengd beeld. Er zijn meerdere aandachtspunten die verificatie en prioritering vragen."],
-            ["Sterk aandachtssignaal", ">= 7.0", "Een relatief scherp groepssignaal dat behoud aandacht vraagt. Dit is geen individuele voorspelling of causaliteitsclaim."],
+            [MANAGEMENT_BAND_LABELS["LAAG"], "< 4.5", "Het behoudsbeeld oogt voorlopig stabiel. Er zijn relatief weinig directe signalen dat behoud nu breed onder druk staat."],
+            [MANAGEMENT_BAND_LABELS["MIDDEN"], "4.5-7.0", "Er zijn zichtbare aandachtspunten die verificatie en prioritering vragen."],
+            [MANAGEMENT_BAND_LABELS["HOOG"], ">= 7.0", "Het groepssignaal vraagt directe managementaandacht, zonder dat dit een individuele voorspelling of causaliteitsclaim wordt."],
         ],
         "trust_rows": [
             ["Wat dit product wel is", TRUST_CONTRACT["what_it_is"]],
@@ -370,35 +377,28 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
     return {
         "section_title": "Vervolgstappen",
         "intro_text": (
-            "Gebruik RetentieScan eerst om scherp te prioriteren en te verifieren. Pas daarna schaal je acties op of trek je bredere conclusies over behoud."
+            "Gebruik RetentieScan eerst om scherp te prioriteren en te verifiëren. Pas daarna schaal je acties op of trek je bredere conclusies over behoud."
         ),
         "session_title": "Eerste managementsessie na oplevering",
         "session_intro": (
-            "Gebruik deze route om de eerste managementsessie compact te houden: kies eerst het verificatiespoor, "
-            "beleg een eigenaar, bepaal de eerste interventie en leg direct het review- of vervolgmeetmoment vast."
+            "Gebruik deze route om de eerste managementsessie compact en besluitgericht te houden: kies eerst het verificatiespoor "
+            "en maak daarna expliciet wie trekt, wat de eerste stap is en wanneer je terugkijkt."
         ),
+        "first_decision": first_decision,
+        "first_owner": first_owner,
+        "first_action": first_action,
+        "review_moment": review_moment,
         "session_cards": [
             {
                 "title": "Prioriteit nu",
-                "body": f"{focus_text} vormen nu het eerste behoudsspoor om te verifieren en te prioriteren.",
-            },
-            {
-                "title": "Eerste gesprek",
-                "body": (
-                    f"Voer eerst een verificatiegesprek over hoe {focus_text.lower()} terugkomen in teamcontext, "
-                    "aanvullende signalen en open verbetersignalen."
-                ),
-            },
-            {
-                "title": "Wie moet aan tafel",
-                "body": "HR, betrokken leidinggevende en het MT-lid of de sponsor die het eerste behoudsspoor moet wegen.",
+                "body": f"{focus_text} vormen nu het eerste behoudsspoor om te verifiëren en te prioriteren.",
             },
             {
                 "title": "Eerste eigenaar",
                 "body": first_owner,
             },
             {
-                "title": "Eerste actie",
+                "title": "Eerste stap",
                 "body": first_action,
             },
             {
@@ -564,7 +564,7 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
                     "Maak in teamoverleggen ruimte om werkdruk, planning en herstel expliciet te bespreken.",
                     "Volg 1-2 teams extra nauw in de komende 30-90 dagen.",
                 ],
-                "caution": "Een gemengd signaal kan snel verslechteren als het genegeerd wordt.",
+                "caution": "Een aandachtspunt kan snel opschuiven richting direct aandachtspunt als het genegeerd wordt.",
             },
         },
         "role_clarity": {

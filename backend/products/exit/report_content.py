@@ -3,6 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 from backend.products.exit.definition import SCAN_DEFINITION
+from backend.products.shared.management_language import (
+    MANAGEMENT_BAND_LABELS,
+    management_context_label,
+)
 
 
 TRUST_CONTRACT = SCAN_DEFINITION["trust_contract"]
@@ -80,8 +84,8 @@ def get_management_summary_payload(
         )
     elif strong_work_signal_pct is not None:
         profile_body = (
-            f"{top_reason_text.capitalize()} is zichtbaar, maar het werkgerelateerde beeld blijft gemengd. "
-            f"Gebruik vooral {top_factor_text} om te toetsen waar het vertrekverhaal bestuurlijk het meest beinvloedbaar lijkt."
+            f"{top_reason_text.capitalize()} is zichtbaar, maar het werkgerelateerde beeld vraagt nog nadere toetsing. "
+            f"Gebruik vooral {top_factor_text} om te toetsen waar het vertrekverhaal bestuurlijk het meest beïnvloedbaar lijkt."
         )
     else:
         profile_body = (
@@ -102,13 +106,8 @@ def get_management_summary_payload(
     else:
         management_question = (
             f"Welk deel van {top_reason_text} valt nu het duidelijkst samen met {top_factor_text} "
-            "en dus met beinvloedbare werkfrictie?"
+            "en dus met beïnvloedbare werkfrictie?"
         )
-
-    next_step = (
-        f"Gebruik {top_factor_text} als eerste managementspoor, beleg {first_owner.lower()} als eigenaar "
-        "en koppel die verificatie daarna direct aan een concrete 30-90 dagenactie."
-    )
 
     if signal_visibility_average is None:
         visibility_value = "Nog in opbouw"
@@ -137,7 +136,7 @@ def get_management_summary_payload(
     )
     if strong_work_signal_pct is not None and strong_work_signal_pct >= 50:
         executive_intro += (
-            " De antwoorden wijzen daarbij relatief breed op beinvloedbare werkfrictie, wat het rapport vooral bruikbaar maakt "
+            " De antwoorden wijzen daarbij relatief breed op beïnvloedbare werkfrictie, wat het rapport vooral bruikbaar maakt "
             "voor prioritering, eigenaarschap en een gericht managementgesprek."
         )
     else:
@@ -155,7 +154,7 @@ def get_management_summary_payload(
 
     if strong_work_signal_pct is not None and strong_work_signal_pct >= 50:
         boardroom_relevance = (
-            f"Een relatief groot deel van de exitbatch wijst op beinvloedbare werkfrictie rond {top_factor_text}. "
+            f"Een relatief groot deel van de exitbatch wijst op beïnvloedbare werkfrictie rond {top_factor_text}. "
             "Daardoor is dit niet alleen HR-nazorg, maar een bestuurlijk prioriteitsspoor voor leiding, inrichting en opvolging."
         )
     else:
@@ -187,19 +186,19 @@ def get_management_summary_payload(
             "body": boardroom_relevance,
         },
         {
+            "title": "Waar zit de meeste druk",
+            "value": top_factor_labels[0] if top_factor_labels else "Nog geen topfactor",
+            "body": f"{top_factor_text.capitalize()} kleuren nu het vertrekbeeld het sterkst en verdienen daarom de meeste managementaandacht.",
+        },
+        {
+            "title": "Wat vraagt verificatie",
+            "value": management_context_label("verification"),
+            "body": management_question,
+        },
+        {
             "title": "Eerste besluit",
             "value": top_factor_labels[0] if top_factor_labels else "Nog geen topfactor",
             "body": first_decision,
-        },
-        {
-            "title": "Eerste eigenaar",
-            "value": first_owner,
-            "body": "Beleg meteen wie dit spoor trekt, zodat vertrekduiding niet stilvalt tussen HR-signaal en managementbesluit.",
-        },
-        {
-            "title": "Eerste stap",
-            "value": "Binnen 30-90 dagen",
-            "body": next_step,
         },
     ]
     if exposure_value:
@@ -214,6 +213,14 @@ def get_management_summary_payload(
         "ExitScan helpt sneller wegen waar management moet toetsen en kiezen, niet om achteraf absolute zekerheid te claimen."
     )
 
+    executive_compact_card = None
+    if signal_visibility_average is not None:
+        executive_compact_card = {
+            "title": "Eerdere signalering",
+            "value": visibility_value,
+            "body": visibility_body,
+        }
+
     return {
         "section_title": "Managementsamenvatting",
         "distribution_title": "Verdeling van het vertrekbeeld",
@@ -222,10 +229,11 @@ def get_management_summary_payload(
         "executive_intro": executive_intro,
         "trust_note_title": "Leeswijzer voor bestuur en management",
         "trust_note": trust_note,
+        "executive_compact_card": executive_compact_card,
         "boardroom_title": "Bestuurlijke handoff",
         "boardroom_intro": (
             "Deze bestuurlijke handoff helpt een sponsor, MT of directie snel zien wat nu speelt, waarom het telt, "
-            "welk besluit eerst hoort en waar de eerste vervolgrichting ligt."
+            "waar de meeste druk zit en wat vooral eerst geverifieerd moet worden."
         ),
         "boardroom_cards": boardroom_cards,
         "boardroom_watchout_title": "Wat je hier niet uit moet concluderen",
@@ -240,8 +248,13 @@ def get_management_summary_payload(
                 "title": "Scherpste werkfactoren",
                 "value": top_factor_value,
                 "body": (
-                    f"Gebruik {top_factor_text} als eerste verificatiespoor om te bepalen welk deel van het vertrekverhaal bestuurlijk het meest beinvloedbaar is."
+                    f"Gebruik {top_factor_text} als eerste verificatiespoor om te bepalen welk deel van het vertrekverhaal bestuurlijk het meest beïnvloedbaar is."
                 ),
+            },
+            {
+                "title": "Wat vraagt verificatie",
+                "value": management_context_label("verification"),
+                "body": management_question,
             },
             {
                 "title": "Eerste besluit",
@@ -269,16 +282,19 @@ def get_management_summary_payload(
                 "body": management_question,
             },
             {
-                "title": "Eerste besluit",
-                "body": first_decision,
+                "title": "Waar zit de meeste druk",
+                "body": f"{top_factor_text.capitalize()} kleuren nu het vertrekbeeld het sterkst en verdienen daarom de meeste managementaandacht.",
             },
             {
-                "title": "Eerste eigenaar",
-                "body": first_owner,
+                "title": "Wat vraagt verificatie",
+                "body": management_question,
             },
             {
                 "title": "Eerste logische stap",
-                "body": next_step,
+                "body": (
+                    f"Vertaal {top_factor_text.lower()} binnen 30 dagen naar één gerichte verbeteractie met duidelijke eigenaar "
+                    "en zichtbare opvolging."
+                ),
             },
         ],
     }
@@ -287,21 +303,21 @@ def get_management_summary_payload(
 def get_methodology_payload() -> dict[str, Any]:
     return {
         "intro_text": (
-            "Dit rapport gebruikt verkorte vraagblokken die inhoudelijk zijn geinspireerd door bestaande wetenschappelijke literatuur. "
-            "Het gaat nadrukkelijk niet om volledige schaalafnames of een diagnostisch instrument. "
-            "De uitkomsten zijn bedoeld voor vertrekduiding, prioritering en managementgesprek, niet voor een individueel oordeel of harde voorspelling."
+            "Dit rapport vertaalt exitdata naar vertrekduiding die bestuurlijk leesbaar is. "
+            "De methodiek is compact en nadrukkelijk geen volledig diagnostisch instrument; de uitkomst is bedoeld voor prioritering, gesprek en opvolging. "
+            "De labels hieronder zijn managementtaal bovenop ongewijzigde interne scorebanden."
         ),
         "method_text": (
             "Elke respondent krijgt een frictiescore op een schaal van 1 tot 10. "
             "Een hogere score betekent meer signalen van ervaren werkfrictie rondom vertrek. "
-            "De score is indicatief en bedoeld als gespreksinput, niet als causale voorspelling, benchmark of objectief oordeel. "
+            "Gebruik de score als samenvatting van het vertrekbeeld, niet als causale voorspelling, benchmark of objectief oordeel. "
             "De score is een gewogen gemiddelde van zeven factoren:"
         ),
         "weight_rows": [
             ["Factor", "Gewicht", "Richting in literatuur"],
             ["Leiderschap", "2.5 x", "Sterk gekoppeld aan vrijwillig verloop in de literatuur en vaak direct relevant in vertrekduiding."],
             ["SDT-werkbeleving", "2.0 x", "Breed signaal voor autonomie, competentie en verbondenheid in de werksituatie."],
-            ["Psychologische veiligheid & cultuurmatch", "1.5 x", "Veiligheid, fit en cultuur beinvloeden of signalen bespreekbaar worden en of mensen willen blijven."],
+            ["Psychologische veiligheid & cultuurmatch", "1.5 x", "Veiligheid, fit en cultuur beïnvloeden of signalen bespreekbaar worden en of mensen willen blijven."],
             ["Groeiperspectief", "1.5 x", "Ontwikkelruimte en perspectief keren vaak terug in vrijwillig vertrek."],
             ["Beloning & voorwaarden", "1.0 x", "Beloning werkt vaak als drempel- of fairnessfactor, niet altijd als enige verklaring."],
             ["Werkbelasting", "1.0 x", "Werkdruk werkt vaak als versterkende contextfactor."],
@@ -309,9 +325,9 @@ def get_methodology_payload() -> dict[str, Any]:
         ],
         "band_rows": [
             ["Band", "Score", "Betekenis voor de organisatie"],
-            ["LAAG", "< 4.5", "Overwegend positief beeld. Er zijn relatief weinig signalen van terugkerende werkfrictie rondom vertrek."],
-            ["MIDDEN", "4.5-7.0", "Gemengd beeld. Er zijn meerdere aandachtspunten, maar de uitkomst vraagt vooral nadere verificatie."],
-            ["HOOG", ">= 7.0", "Sterk signaal van ervaren werkfrictie. Dit vraagt om nadere analyse, niet automatisch om een harde conclusie."],
+            [MANAGEMENT_BAND_LABELS["LAAG"], "< 4.5", "Het vertrekbeeld oogt voorlopig stabiel. Er zijn relatief weinig terugkerende signalen van werkfrictie rondom vertrek."],
+            [MANAGEMENT_BAND_LABELS["MIDDEN"], "4.5-7.0", "Er zijn zichtbare aandachtspunten die vooral nadere verificatie en prioritering vragen."],
+            [MANAGEMENT_BAND_LABELS["HOOG"], ">= 7.0", "De ervaren werkfrictie vraagt directe managementaandacht, zonder automatisch een harde conclusie te bewijzen."],
         ],
         "trust_rows": [
             ["Wat dit product wel is", TRUST_CONTRACT["what_it_is"]],
@@ -376,31 +392,24 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         ),
         "session_title": "Eerste managementsessie na oplevering",
         "session_intro": (
-            "Gebruik deze route om de eerste managementsessie compact te houden: kies eerst het prioriteitsspoor, "
-            "beleg een eigenaar, bepaal de eerste actie en leg direct het reviewmoment vast."
+            "Gebruik deze route om de eerste managementsessie compact en besluitgericht te houden: kies eerst het prioriteitsspoor "
+            "en maak daarna expliciet wie trekt, wat de eerste stap is en wanneer je terugkijkt."
         ),
+        "first_decision": first_decision,
+        "first_owner": first_owner,
+        "first_action": first_action,
+        "review_moment": review_moment,
         "session_cards": [
             {
                 "title": "Prioriteit nu",
                 "body": f"{focus_text} vormen nu het eerste vertrekspoor om bestuurlijk te wegen.",
             },
             {
-                "title": "Eerste gesprek",
-                "body": (
-                    f"Voer eerst een managementgesprek over hoe {focus_text.lower()} terugkomen in vertrekduiding, "
-                    "teamcontext en eerdere signalering."
-                ),
-            },
-            {
-                "title": "Wie moet aan tafel",
-                "body": "HR, betrokken leidinggevende en sponsor of MT-lid dat het eerste managementspoor moet wegen.",
-            },
-            {
                 "title": "Eerste eigenaar",
                 "body": first_owner,
             },
             {
-                "title": "Eerste actie",
+                "title": "Eerste stap",
                 "body": first_action,
             },
             {
