@@ -3,7 +3,7 @@ import { getProductModule } from '@/lib/products/shared/registry'
 import type { ScanType } from '@/lib/types'
 import { FACTOR_LABELS } from '@/lib/types'
 
-const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity']
+const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity'] as const
 
 interface Props {
   factorAverages: Record<string, number>
@@ -33,59 +33,75 @@ export function ActionPlaybookList({ factorAverages, scanType }: Props) {
 
   return (
     <div className="space-y-4">
-      {items.map((item) => (
-        <div key={item.factor} className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      {items.map((item, index) => (
+        <details
+          key={item.factor}
+          open={index === 0}
+          className="group rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)]"
+        >
+          <summary className="flex cursor-pointer list-none flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                {FACTOR_LABELS[item.factor]} · {item.band === 'HOOG' ? 'urgent playbook' : 'aandacht playbook'}
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                {FACTOR_LABELS[item.factor]} - {item.band === 'HOOG' ? 'urgent playbook' : 'aandacht playbook'}
               </p>
-              <h3 className="mt-2 text-base font-semibold text-slate-950">{item.playbook?.title}</h3>
+              <h3 className="mt-2 text-base font-semibold text-[color:var(--ink)]">{item.playbook?.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">
+                Open voor besluit, eigenaar, validatie, eerste acties en reviewmoment.
+              </p>
             </div>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
-              Prioriteit {item.signalValue.toFixed(1)}/10
-            </span>
-          </div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-[color:var(--bg)] px-3 py-1 text-xs font-semibold text-[color:var(--text)]">
+                Prioriteit {item.signalValue.toFixed(1)}/10
+              </span>
+              <span className="rounded-full border border-[color:var(--border)] bg-white px-3 py-1 text-xs font-semibold text-[color:var(--text)]">
+                <span className="group-open:hidden">Open</span>
+                <span className="hidden group-open:inline">Verberg</span>
+                {' '}route
+              </span>
+            </div>
+          </summary>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <PlaybookColumn title="Eerste besluit" tone="blue">
-              <p className="text-sm leading-6 text-slate-700">{item.playbook?.decision}</p>
-            </PlaybookColumn>
-            <PlaybookColumn title="Eerste eigenaar" tone="slate">
-              <p className="text-sm leading-6 text-slate-700">{item.playbook?.owner}</p>
-            </PlaybookColumn>
-          </div>
+          <div className="mt-4 border-t border-[color:var(--border)]/80 pt-4">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <PlaybookColumn title="Eerste besluit" tone="blue">
+                <p className="text-sm leading-6 text-[color:var(--text)]">{item.playbook?.decision}</p>
+              </PlaybookColumn>
+              <PlaybookColumn title="Eerste eigenaar" tone="slate">
+                <p className="text-sm leading-6 text-[color:var(--text)]">{item.playbook?.owner}</p>
+              </PlaybookColumn>
+            </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <PlaybookColumn title="Eerst valideren" tone="blue">
-              <p className="text-sm leading-6 text-slate-700">{item.playbook?.validate}</p>
-            </PlaybookColumn>
-            <PlaybookColumn title="Logische acties" tone="emerald">
-              <ul className="space-y-2">
-                {item.playbook?.actions.map((action) => (
-                  <li key={action} className="flex gap-2 text-sm leading-6 text-slate-700">
-                    <span className="text-slate-400">&bull;</span>
-                    <span>{action}</span>
-                  </li>
-                ))}
-              </ul>
-            </PlaybookColumn>
-            <PlaybookColumn title="Niet overhaasten" tone="amber">
-              <p className="text-sm leading-6 text-slate-700">{item.playbook?.caution}</p>
-            </PlaybookColumn>
-          </div>
+            <div className="mt-4 grid gap-4 lg:grid-cols-3">
+              <PlaybookColumn title="Eerst valideren" tone="blue">
+                <p className="text-sm leading-6 text-[color:var(--text)]">{item.playbook?.validate}</p>
+              </PlaybookColumn>
+              <PlaybookColumn title="Logische acties" tone="emerald">
+                <ul className="space-y-2">
+                  {item.playbook?.actions.map((action) => (
+                    <li key={action} className="flex gap-2 text-sm leading-6 text-[color:var(--text)]">
+                      <span className="text-[color:var(--muted)]">&bull;</span>
+                      <span>{action}</span>
+                    </li>
+                  ))}
+                </ul>
+              </PlaybookColumn>
+              <PlaybookColumn title="Niet overhaasten" tone="amber">
+                <p className="text-sm leading-6 text-[color:var(--text)]">{item.playbook?.caution}</p>
+              </PlaybookColumn>
+            </div>
 
-          <div className="mt-4">
-            <PlaybookColumn title="Reviewmoment" tone="slate">
-              <p className="text-sm leading-6 text-slate-700">
-                {item.playbook?.review ??
-                  (scanType === 'exit'
-                    ? 'Plan binnen 60-90 dagen een review op dit spoor: wat is gekozen, wat is uitgevoerd en wat keert terug in de volgende exitbatch?'
-                    : 'Plan binnen 45-90 dagen een review of vervolgmeting: wat is geverifieerd, welke eerste interventie loopt en wat verschuift er in het retentiesignaal?')}
-              </p>
-            </PlaybookColumn>
+            <div className="mt-4">
+              <PlaybookColumn title="Reviewmoment" tone="slate">
+                <p className="text-sm leading-6 text-[color:var(--text)]">
+                  {item.playbook?.review ??
+                    (scanType === 'exit'
+                      ? 'Plan binnen 60-90 dagen een review op dit spoor: wat is gekozen, wat is uitgevoerd en wat keert terug in de volgende exitbatch?'
+                      : 'Plan binnen 45-90 dagen een review of vervolgmeting: wat is geverifieerd, welke eerste interventie loopt en wat verschuift er in het retentiesignaal?')}
+                </p>
+              </PlaybookColumn>
+            </div>
           </div>
-        </div>
+        </details>
       ))}
     </div>
   )
@@ -102,20 +118,20 @@ function PlaybookColumn({
 }) {
   const classes =
     tone === 'slate'
-      ? 'border-slate-200 bg-slate-50'
+      ? 'border-[color:var(--border)] bg-[color:var(--bg)]'
       : tone === 'emerald'
-        ? 'border-emerald-100 bg-emerald-50'
+        ? 'border-[#d2e6e0] bg-[#eef7f4]'
         : tone === 'amber'
-          ? 'border-amber-100 bg-amber-50'
-          : 'border-blue-100 bg-blue-50'
+          ? 'border-[#eadfbe] bg-[#faf6ea]'
+          : 'border-[#d6e4e8] bg-[#f3f8f8]'
   const labelClass =
     tone === 'slate'
-      ? 'text-slate-600'
+      ? 'text-[color:var(--text)]'
       : tone === 'emerald'
-        ? 'text-emerald-700'
+        ? 'text-[#3C8D8A]'
         : tone === 'amber'
-          ? 'text-amber-700'
-          : 'text-blue-700'
+          ? 'text-[#8C6B1F]'
+          : 'text-[#234B57]'
 
   return (
     <div className={`rounded-2xl border p-4 ${classes}`}>

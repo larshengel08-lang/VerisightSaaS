@@ -1,6 +1,6 @@
 ﻿// Verisight — gedeelde TypeScript types
 
-export type ScanType = 'exit' | 'retention'
+export type ScanType = 'exit' | 'retention' | 'pulse'
 export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
 export type CampaignAddOn = 'segment_deep_dive'
 export type DeliveryMode = 'baseline' | 'live'

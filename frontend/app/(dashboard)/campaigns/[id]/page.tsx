@@ -426,47 +426,47 @@ export default async function CampaignPage({ params }: Props) {
           }
         : {
             summaryTone: 'blue' as const,
-            summarySignalLabel: 'Primair signaal',
-            summaryContextLabel: 'Managementread',
+            summarySignalLabel: 'Pulsesignaal',
+            summaryContextLabel: 'Reviewlaag · bounded repeat motion',
             summaryContextTone: 'blue' as const,
             summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
             summaryLeadDescription:
-              'Gebruik deze eerste laag om het primaire managementsignaal, de eerste keuze en het logische vervolggesprek snel scherp te krijgen.',
-            summaryCardEyebrow: 'Productsignaal',
-            promotedSummaryCards: 0,
-            driverTitle: 'Analyse en driververdieping',
+              'Gebruik deze eerste laag om het primaire managementsignaal, het eerste werkspoor, de eerste eigenaar en het logische hercheckmoment snel scherp te krijgen.',
+            summaryCardEyebrow: 'Pulse handoff',
+            promotedSummaryCards: 2,
+            driverTitle: 'Pulse snapshot en reviewdelta',
             driverDescription:
-              'Gebruik deze laag om het managementbeeld gecontroleerd te verdiepen, zonder de executive hoofdlijn kwijt te raken.',
+              'Gebruik deze laag om het actuele Pulse-beeld gecontroleerd te verdiepen zonder de managementhoofdlijn kwijt te raken.',
             driverIntro:
-              'Gebruik de tabs hieronder om tussen signaalverdeling, factoren en aanvullende lagen te wisselen zonder de hoofdlijn van het managementbeeld kwijt te raken.',
-            driverAsideLabel: hasEnoughData ? 'Live analyse' : 'Wacht op meer data',
+              'Gebruik de tabs hieronder om tussen snapshot, factoren, aanvullende lagen en reviewdelta te wisselen zonder de hoofdlijn van de managementread kwijt te raken.',
+            driverAsideLabel: hasEnoughData ? 'Pulse read live' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
             signalTabLabel: 'Signaalverdeling',
             signalTabTitle: 'Signaalverdeling',
-            signalTabDescription: 'Laat zien hoe breed en hoe scherp de signalen zich over de groep verdelen.',
+            signalTabDescription: 'Laat zien hoe breed en hoe scherp de signalen zich over de groep verdelen op dit meetmoment.',
             factorTabLabel: 'Factoren',
             factorTabTitle: 'Organisatiefactoren',
             factorTabDescription:
-              'De factoren hieronder helpen bepalen waar managementgesprekken het meeste opleveren.',
+              'De factoren hieronder helpen bepalen waar managementgesprekken en kleine correcties nu het meeste opleveren.',
             supplementalTabLabel: 'SDT-basis',
             supplementalTitle: 'SDT basisbehoeften',
             supplementalDescription:
-              'Deze laag laat zien hoe de fundamentele werkbeleving onder de signalen zich ontwikkelt.',
-            actionTitle: 'Prioriteiten, hypotheses en eerste acties',
+              'Deze laag laat zien hoe de fundamentele werkbeleving onder de actuele Pulse-signalen mee beweegt.',
+            actionTitle: 'Prioriteiten, playbooks en eerste acties',
             focusQuestionTitle: 'Prioritaire focusvragen',
             focusQuestionDescription:
-              'Start met de factoren die het scherpst afwijken en gebruik de vragen direct als brug naar gesprek, eigenaar, eerste actie en reviewmoment.',
-            playbookTitle: 'Action playbooks',
+              'Start met de factoren die het scherpst afwijken en gebruik de vragen direct als brug naar gesprek, eigenaar, eerste correctie en bounded reviewmoment.',
+            playbookTitle: 'Pulse playbooks en eerstvolgende correctie',
             playbookDescription:
-              'Deze playbooks helpen deze dashboardread om niet bij signalering te blijven hangen, maar te landen in keuze, actie en een logisch reviewmoment.',
-            routeTitle: 'Van eerste managementread naar vervolgroute',
+              'Deze playbooks helpen Pulse om niet bij signalering te blijven hangen, maar te landen in keuze, actie, eigenaar en een logisch bounded hercheckmoment.',
+            routeTitle: 'Van Pulse read naar bounded repeat motion',
             routeDescription:
-              'Deze laag brengt adoptie, eerste managementgebruik en het logische reviewmoment samen zonder de kernflow bovenin te verstoren.',
-            routeBadgeLabel: 'Managementroute',
+              'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische volgende meetmoment samen zonder Pulse te verwarren met een brede diagnose- of rapportroute.',
+            routeBadgeLabel: 'Pulse route',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
-              'Gebruik het eerste reviewmoment om bewust te kiezen: blijf je op dezelfde route, verdiep je deze scan of wordt een tweede product logisch op basis van de waarde die al zichtbaar is?',
+              'Gebruik het eerste reviewmoment om bewust te kiezen: doe je nog een bounded Pulse, verdiep je eerst de vraag verder of vraagt het thema nu een andere productvorm?',
           }
   const summaryItems: Array<{
     label: string
@@ -754,7 +754,7 @@ export default async function CampaignPage({ params }: Props) {
         actions={
           stats.scan_type === 'pulse' ? (
             <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
-              Pulse: snapshot + reviewloop
+              Pulse: management handoff live
             </div>
           ) : (
             <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
@@ -946,7 +946,7 @@ export default async function CampaignPage({ params }: Props) {
               </div>
             </div>
 
-            {stats.scan_type === 'retention' || stats.scan_type === 'exit' ? (
+            {stats.scan_type === 'retention' || stats.scan_type === 'exit' || stats.scan_type === 'pulse' ? (
               <>
                 <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
                   <h3 className="text-sm font-semibold text-slate-950">{productExperience.playbookTitle}</h3>

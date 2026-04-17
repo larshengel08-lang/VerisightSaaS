@@ -10,18 +10,19 @@ export function SegmentPlaybookList({ segments }: Props) {
 
   return (
     <div className="space-y-4">
-      {segments.map((segment) => (
-        <div
+      {segments.map((segment, index) => (
+        <details
           key={`${segment.segmentType}-${segment.segmentLabel}-${segment.factorKey}`}
-          className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm"
+          open={index === 0}
+          className="group rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)]"
         >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <summary className="flex cursor-pointer list-none flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                {segment.segmentType === 'department' ? 'Afdeling' : 'Functieniveau'} · {segment.segmentLabel}
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                {segment.segmentType === 'department' ? 'Afdeling' : 'Functieniveau'} - {segment.segmentLabel}
               </p>
-              <h3 className="mt-2 text-base font-semibold text-slate-950">{segment.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-700">
+              <h3 className="mt-2 text-base font-semibold text-[color:var(--ink)]">{segment.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">
                 Binnen deze groep geeft <span className="font-semibold">{segment.factorLabel}</span> het scherpste signaal.
                 De gemiddelde signalering ligt op {segment.avgSignal.toFixed(1)}/10 en wijkt{' '}
                 {segment.deltaVsOrg > 0
@@ -30,41 +31,50 @@ export function SegmentPlaybookList({ segments }: Props) {
                 af dan het organisatieniveau.
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Segment</p>
-              <p className="mt-1 font-semibold text-slate-950">n = {segment.n}</p>
-              <p className="mt-1">Topfactor: {segment.factorLabel}</p>
+            <div className="flex items-start gap-2">
+              <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-3 text-sm text-[color:var(--text)]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">Segment</p>
+                <p className="mt-1 font-semibold text-[color:var(--ink)]">n = {segment.n}</p>
+                <p className="mt-1">Topfactor: {segment.factorLabel}</p>
+              </div>
+              <span className="rounded-full border border-[color:var(--border)] bg-white px-3 py-1 text-xs font-semibold text-[color:var(--text)]">
+                <span className="group-open:hidden">Open</span>
+                <span className="hidden group-open:inline">Verberg</span>
+                {' '}playbook
+              </span>
+            </div>
+          </summary>
+
+          <div className="mt-4 border-t border-[color:var(--border)]/80 pt-4">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Column title="Eerste besluit" tone="blue">
+                <p className="text-sm leading-6 text-[color:var(--text)]">{segment.decision}</p>
+              </Column>
+              <Column title="Eerste eigenaar" tone="slate">
+                <p className="text-sm leading-6 text-[color:var(--text)]">{segment.owner}</p>
+              </Column>
+            </div>
+
+            <div className="mt-4 grid gap-4 lg:grid-cols-3">
+              <Column title="Eerst valideren" tone="blue">
+                <p className="text-sm leading-6 text-[color:var(--text)]">{segment.validate}</p>
+              </Column>
+              <Column title="Logische acties" tone="emerald">
+                <ul className="space-y-2">
+                  {segment.actions.map((action) => (
+                    <li key={action} className="flex gap-2 text-sm leading-6 text-[color:var(--text)]">
+                      <span className="text-[color:var(--muted)]">&bull;</span>
+                      <span>{action}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Column>
+              <Column title="Niet overhaasten" tone="amber">
+                <p className="text-sm leading-6 text-[color:var(--text)]">{segment.caution}</p>
+              </Column>
             </div>
           </div>
-
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <Column title="Eerste besluit" tone="blue">
-              <p className="text-sm leading-6 text-slate-700">{segment.decision}</p>
-            </Column>
-            <Column title="Eerste eigenaar" tone="slate">
-              <p className="text-sm leading-6 text-slate-700">{segment.owner}</p>
-            </Column>
-          </div>
-
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <Column title="Eerst valideren" tone="blue">
-              <p className="text-sm leading-6 text-slate-700">{segment.validate}</p>
-            </Column>
-            <Column title="Logische acties" tone="emerald">
-              <ul className="space-y-2">
-                {segment.actions.map((action) => (
-                  <li key={action} className="flex gap-2 text-sm leading-6 text-slate-700">
-                    <span className="text-slate-400">•</span>
-                    <span>{action}</span>
-                  </li>
-                ))}
-              </ul>
-            </Column>
-            <Column title="Niet overhaasten" tone="amber">
-              <p className="text-sm leading-6 text-slate-700">{segment.caution}</p>
-            </Column>
-          </div>
-        </div>
+        </details>
       ))}
     </div>
   )
@@ -81,20 +91,20 @@ function Column({
 }) {
   const classes =
     tone === 'slate'
-      ? 'border-slate-200 bg-slate-50'
+      ? 'border-[color:var(--border)] bg-[color:var(--bg)]'
       : tone === 'emerald'
-      ? 'border-emerald-100 bg-emerald-50'
-      : tone === 'amber'
-        ? 'border-amber-100 bg-amber-50'
-        : 'border-blue-100 bg-blue-50'
+        ? 'border-[#d2e6e0] bg-[#eef7f4]'
+        : tone === 'amber'
+          ? 'border-[#eadfbe] bg-[#faf6ea]'
+          : 'border-[#d6e4e8] bg-[#f3f8f8]'
   const labelClass =
     tone === 'slate'
-      ? 'text-slate-600'
+      ? 'text-[color:var(--text)]'
       : tone === 'emerald'
-      ? 'text-emerald-700'
-      : tone === 'amber'
-        ? 'text-amber-700'
-        : 'text-blue-700'
+        ? 'text-[#3C8D8A]'
+        : tone === 'amber'
+          ? 'text-[#8C6B1F]'
+          : 'text-[#234B57]'
 
   return (
     <div className={`rounded-2xl border p-4 ${classes}`}>

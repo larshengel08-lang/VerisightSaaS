@@ -185,6 +185,26 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
     ] as const
   }
 
+  if (scanType === 'pulse') {
+    return [
+      {
+        title: 'Blijf op dezelfde route',
+        fit: 'Standaard vervolg',
+        body: 'Een volgende Pulse-cycle wordt pas logisch zodra deze eerste Pulse al gebruikt is voor een expliciete review, eigenaar, kleine correctie en afgesproken hercheck.',
+      },
+      {
+        title: 'Verdiep bewust',
+        fit: 'Alleen bij scherpere lokalisatievraag',
+        body: 'Ga pas naar meer verfijning of extra verificatie wanneer dezelfde signalen echt om lokalisatie, bredere diagnose of scherper bewijs vragen.',
+      },
+      {
+        title: 'Breid uit naar RetentieScan of diepere diagnose',
+        fit: 'Tweede product bij nieuwe managementvraag',
+        body: 'Kies pas een ander product wanneer dezelfde thema\'s niet meer alleen een reviewvraag zijn, maar een bredere behouds- of diagnosevraag worden die Pulse niet eerlijk kan dragen.',
+      },
+    ] as const
+  }
+
   return [
     {
       title: 'Blijf op dezelfde route',
@@ -213,6 +233,14 @@ export function getFirstManagementReadSteps(scanType: ScanType) {
     ] as const
   }
 
+  if (scanType === 'pulse') {
+    return [
+      'Open eerst het beslisoverzicht en lees Pulse als compacte managementread van dit meetmoment, niet als brede trendclaim.',
+      'Gebruik een indicatief beeld vanaf 5 responses om een eerste reviewrichting te kiezen, maar wacht voor stevigere patroonduiding bij voorkeur tot 10 responses of meer.',
+      'Plan daarna de eerste managementreview rond de vraag welk spoor nu bijsturing vraagt, wie eerste eigenaar wordt, welke kleine correctie volgt en wanneer de volgende bounded check plaatsvindt.',
+    ] as const
+  }
+
   return [
     'Open eerst het beslisoverzicht en lees het vertrekbeeld als managementsamenvatting van terugkerende werkfrictie, niet als losse exitfeedback.',
     'Gebruik een indicatief beeld vanaf 5 responses om richting te houden, maar wacht voor stevige patroonduiding bij voorkeur tot 10 responses of meer.',
@@ -221,7 +249,11 @@ export function getFirstManagementReadSteps(scanType: ScanType) {
 }
 
 export function getAdoptionSuccessDefinition(scanType: ScanType) {
-  return scanType === 'retention'
-    ? 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over behoud, verificatie, eerste interventie en reviewmoment te voeren.'
-    : 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over vertrekduiding, prioriteiten, eerste actie en reviewmoment te voeren.'
+  if (scanType === 'retention') {
+    return 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over behoud, verificatie, eerste interventie en reviewmoment te voeren.'
+  }
+  if (scanType === 'pulse') {
+    return 'Adoptie is pas geslaagd wanneer de klant Pulse gebruikt om een eerste reviewvraag, eigenaar, kleine correctie en volgend bounded checkmoment expliciet te maken.'
+  }
+  return 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over vertrekduiding, prioriteiten, eerste actie en reviewmoment te voeren.'
 }

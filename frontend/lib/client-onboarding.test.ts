@@ -63,10 +63,13 @@ describe('client onboarding defaults', () => {
   it('keeps scan-specific first-read guidance and adoption success definitions aligned', () => {
     expect(getFirstManagementReadSteps('exit')[0]?.toLowerCase()).toContain('beslisoverzicht')
     expect(getFirstManagementReadSteps('retention')[2]?.toLowerCase()).toContain('behoud')
+    expect(getFirstManagementReadSteps('pulse')[0]?.toLowerCase()).toContain('managementread')
+    expect(getFirstManagementReadSteps('pulse')[2]?.toLowerCase()).toContain('bounded')
     expect(getFirstManagementReadSteps('exit')[2]?.toLowerCase()).toContain('reviewmoment')
     expect(getFirstManagementReadSteps('retention')[2]?.toLowerCase()).toContain('eerste eigenaar')
     expect(getAdoptionSuccessDefinition('exit').toLowerCase()).toContain('dashboard en rapport')
     expect(getAdoptionSuccessDefinition('retention').toLowerCase()).toContain('behoud')
+    expect(getAdoptionSuccessDefinition('pulse').toLowerCase()).toContain('bounded checkmoment')
     expect(getAdoptionSuccessDefinition('exit').toLowerCase()).toContain('reviewmoment')
     expect(getAdoptionSuccessDefinition('retention').toLowerCase()).toContain('eerste managementsessie')
   })
@@ -74,6 +77,7 @@ describe('client onboarding defaults', () => {
   it('keeps the canonical lifecycle and expansion routes explicit per product', () => {
     const exitDecisions = getLifecycleDecisionCards('exit')
     const retentionDecisions = getLifecycleDecisionCards('retention')
+    const pulseDecisions = getLifecycleDecisionCards('pulse')
 
     expect(CANONICAL_CUSTOMER_LIFECYCLE.map((phase) => phase.key)).toEqual([
       'first_route',
@@ -84,5 +88,8 @@ describe('client onboarding defaults', () => {
     expect(exitDecisions[2]?.body.toLowerCase()).toContain('retentiescan baseline')
     expect(retentionDecisions[0]?.body.toLowerCase()).toContain('retentiescan ritme')
     expect(retentionDecisions[2]?.body.toLowerCase()).toContain('exitscan')
+    expect(pulseDecisions[0]?.body.toLowerCase()).toContain('kleine correctie')
+    expect(pulseDecisions[2]?.title.toLowerCase()).toContain('retentiescan')
+    expect(pulseDecisions[2]?.body.toLowerCase()).toContain('pulse niet eerlijk kan dragen')
   })
 })

@@ -1,8 +1,9 @@
+import type { ReactNode } from 'react'
 import { getProductModule } from '@/lib/products/shared/registry'
 import type { SegmentPlaybookEntry, SignalTrendCard } from '@/lib/products/shared/types'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { EXIT_REASON_LABELS, FACTOR_LABELS } from '@/lib/types'
-import type { CampaignStats, Respondent, SurveyResponse } from '@/lib/types'
+import type { CampaignStats, Respondent, ScanType, SurveyResponse } from '@/lib/types'
 import { DashboardPanel } from '@/components/dashboard/dashboard-primitives'
 
 const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity']
@@ -16,6 +17,32 @@ export type RetentionSignalAverages = {
   turnoverIntention: number | null
   stayIntent: number | null
 }
+
+export type PulseSignalAverages = {
+  pulseSignal: number | null
+  stayIntent: number | null
+  factorAverages: Record<string, number>
+}
+
+export type PulseComparisonState =
+  | { status: 'no_previous' }
+  | {
+      status: 'insufficient_data'
+      current: PulseSignalAverages
+      previous: PulseSignalAverages
+      currentResponsesLength: number
+      previousResponsesLength: number
+    }
+  | {
+      status: 'ready'
+      current: PulseSignalAverages
+      previous: PulseSignalAverages
+      signalDelta: number | null
+      stayIntentDelta: number | null
+      direction: 'improved' | 'worsened' | 'stable'
+      trendCards: SignalTrendCard[]
+      sharedFactorCount: number
+    }
 
 export type RetentionTheme = {
   key: string
@@ -48,7 +75,7 @@ export function buildHeroDescription({
   averageRiskScore,
   scanDefinition,
 }: {
-  scanType: 'exit' | 'retention'
+  scanType: ScanType
   isActive: boolean
   completionRate: number
   pendingCount: number
@@ -63,10 +90,14 @@ export function buildHeroDescription({
   }
 
   if (scanType === 'retention') {
-      return `Deze RetentieScan laat zien waar behoud onder druk staat op groepsniveau. Gebruik het beslisoverzicht eerst om te bepalen waar verificatie nodig is, en ga daarna pas de verdieping in. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '–'}/10 als samenvattend groepssignaal.`
+    return `Deze RetentieScan laat zien waar behoud onder druk staat op groepsniveau. Gebruik het beslisoverzicht eerst om te bepalen waar verificatie nodig is, en ga daarna pas de verdieping in. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10 als samenvattend groepssignaal.`
   }
 
-  return 'Deze ExitScan helpt het vertrekverhaal terugbrengen tot de factoren die het meest beïnvloedbaar lijken. Start bovenaan met het beslisoverzicht en gebruik daarna de verdieping om teams, factoren en vervolgacties scherper te maken.'
+  if (scanType === 'pulse') {
+    return `Deze Pulse laat een compacte managementread zien van werkbeleving en geselecteerde werkfactoren. Lees de uitkomst als bounded reviewlaag voor dit meetmoment, met alleen een beperkte vergelijking naar de vorige vergelijkbare Pulse. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+  }
+
+  return 'Deze ExitScan helpt het vertrekverhaal terugbrengen tot de factoren die het meest beinvloedbaar lijken. Start bovenaan met het beslisoverzicht en gebruik daarna de verdieping om teams, factoren en vervolgacties scherper te maken.'
 }
 
 export function getTopFactorLabel(factorAverages: Record<string, number>) {
@@ -102,7 +133,7 @@ export function buildDecisionPanels({
     {
       eyebrow: 'Primair signaal',
       title: scanDefinition.signalLabel,
-      value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : '–',
+      value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : '-',
       body: averageRiskScore !== null
         ? `Gebruik dit als samenvattend managementsignaal. Lees de score altijd samen met ${topFactorLabel ? topFactorLabel.toLowerCase() : 'de topfactoren'} en de responskwaliteit.`
         : 'Nog geen score zichtbaar zolang er te weinig responses zijn om veilig te tonen.',
@@ -127,7 +158,7 @@ export function buildDecisionPanels({
       {
         eyebrow: 'Aanvullend signaal',
         title: 'Bevlogenheid',
-        value: retentionSupplemental.engagement !== null ? `${retentionSupplemental.engagement.toFixed(1)}/10` : '–',
+        value: retentionSupplemental.engagement !== null ? `${retentionSupplemental.engagement.toFixed(1)}/10` : '-',
         body: topFactorLabel
           ? `Gebruik bevlogenheid samen met ${topFactorLabel.toLowerCase()} en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.`
           : 'Gebruik bevlogenheid samen met stay-intent en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.',
@@ -136,23 +167,39 @@ export function buildDecisionPanels({
     ]
   }
 
+  if (stats.scan_type === 'pulse') {
+    return [
+      ...sharedPanels,
+      {
+        eyebrow: 'Richting nu',
+        title: 'Check-in richting',
+        value: retentionSupplemental.stayIntent !== null ? `${retentionSupplemental.stayIntent.toFixed(1)}/10` : '-',
+        body: topFactorLabel
+          ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste reviewspoor en lees de richtingsvraag als extra indicatie of het beeld nu stabiliseert of juist extra aandacht vraagt.`
+          : 'Gebruik de richtingsvraag als extra indicatie of deze Pulse vooral stabiliteit of bijsturing laat zien.',
+        tone: retentionSupplemental.stayIntent !== null && retentionSupplemental.stayIntent < 5.5 ? 'amber' : 'emerald',
+      },
+    ]
+  }
+
   return [
     ...sharedPanels,
     {
-      eyebrow: 'Beïnvloedbaarheid',
+      eyebrow: 'Beinvloedbaarheid',
       title: 'Sterk werksignaal',
-      value: strongWorkSignalRate !== null ? `${strongWorkSignalRate}%` : '–',
+      value: strongWorkSignalRate !== null ? `${strongWorkSignalRate}%` : '-',
       body: topFactorLabel
-        ? `${topFactorLabel} is nu de eerste factor om te valideren. Het werksignaal helpt bepalen of het vertrekverhaal vooral binnen beïnvloedbare werkcontexten ligt.`
-        : 'Gebruik dit om te bepalen in hoeverre vertrek vooral samenhangt met beïnvloedbare werkfactoren.',
+        ? `${topFactorLabel} is nu de eerste factor om te valideren. Het werksignaal helpt bepalen of het vertrekverhaal vooral binnen beinvloedbare werkcontexten ligt.`
+        : 'Gebruik dit om te bepalen in hoeverre vertrek vooral samenhangt met beinvloedbare werkfactoren.',
       tone: strongWorkSignalRate !== null && strongWorkSignalRate >= 50 ? 'amber' : 'blue',
     },
   ]
 }
 
-export function buildNextStepTitle(scanType: 'exit' | 'retention', hasEnoughData: boolean, hasMinDisplay: boolean) {
+export function buildNextStepTitle(scanType: ScanType, hasEnoughData: boolean, hasMinDisplay: boolean) {
   if (!hasMinDisplay) return 'Eerst respons opbouwen'
   if (!hasEnoughData) return 'Voorzichtig verdiepen'
+  if (scanType === 'pulse') return 'Reviewen en bijsturen'
   return scanType === 'retention' ? 'Valideren en prioriteren' : 'Duiden en verbeteren'
 }
 
@@ -163,7 +210,7 @@ export function buildNextStepBody({
   pendingCount,
   topFactor,
 }: {
-  scanType: 'exit' | 'retention'
+  scanType: ScanType
   hasEnoughData: boolean
   hasMinDisplay: boolean
   pendingCount: number
@@ -187,6 +234,12 @@ export function buildNextStepBody({
       : 'Start met de laagst scorende werkfactor en valideer die in de eerstvolgende managementronde.'
   }
 
+  if (scanType === 'pulse') {
+    return topFactor
+      ? `Gebruik ${topFactor.toLowerCase()} als eerste reviewspoor, kies een kleine correctie en leg direct vast wanneer je de volgende managementcheck of bounded Pulse-hercheck doet.`
+      : 'Gebruik de compact gemeten werkfactoren om te kiezen welk spoor nu de eerste review of bijsturing vraagt.'
+  }
+
   return topFactor
     ? `Gebruik ${topFactor.toLowerCase()} en het werksignaal om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
     : 'Gebruik het werksignaal en de topfactoren om het eerstvolgende verbetergesprek te richten.'
@@ -199,7 +252,7 @@ export function getDisclosureDefaults({
   respondentsLength,
   canManageCampaign,
 }: {
-  scanType: 'exit' | 'retention'
+  scanType: ScanType
   hasEnoughData: boolean
   hasMinDisplay: boolean
   respondentsLength: number
@@ -209,7 +262,7 @@ export function getDisclosureDefaults({
     analysisOpen: false,
     focusOpen: hasEnoughData,
     respondentsOpen: respondentsLength === 0 || (canManageCampaign && !hasMinDisplay),
-    methodologyOpen: !hasEnoughData || scanType === 'exit',
+    methodologyOpen: !hasEnoughData || scanType === 'exit' || scanType === 'pulse',
   }
 }
 
@@ -222,7 +275,7 @@ export function buildInsightWarnings({
   responsesLength: number
   hasMinDisplay: boolean
   hasEnoughData: boolean
-  scanType: 'exit' | 'retention'
+  scanType: ScanType
 }) {
   const items: InsightNotice[] = []
 
@@ -242,11 +295,18 @@ export function buildInsightWarnings({
 
   if (hasEnoughData) {
     items.push({
-      title: scanType === 'retention' ? 'Lees de signalen als groepsinput' : 'Lees dit als managementinput',
+      title:
+        scanType === 'retention'
+          ? 'Lees de signalen als groepsinput'
+          : scanType === 'pulse'
+            ? 'Lees Pulse als snapshot'
+            : 'Lees dit als managementinput',
       body:
         scanType === 'retention'
           ? 'RetentieScan blijft een groeps- en segmentinstrument. Gebruik signalen voor prioritering en verificatie, niet als individuele voorspelling.'
-          : 'ExitScan bundelt vertrekervaringen tot managementpatronen. Gebruik deze uitkomsten om gesprekken te richten, niet om één score als sluitend bewijs te behandelen.',
+          : scanType === 'pulse'
+            ? 'Pulse blijft een compacte groepsread. Gebruik de uitkomst voor review, bijsturing en een bounded hercheck op dit meetmoment, niet als breed trendbewijs of individuele score.'
+            : 'ExitScan bundelt vertrekervaringen tot managementpatronen. Gebruik deze uitkomsten om gesprekken te richten, niet om een score als sluitend bewijs te behandelen.',
       tone: 'blue',
     })
   }
@@ -282,7 +342,7 @@ export function MethodologyCard({
   signalLabel,
   embedded = false,
 }: {
-  scanType: 'exit' | 'retention'
+  scanType: ScanType
   hasSegmentDeepDive: boolean
   signalLabel: string
   embedded?: boolean
@@ -370,8 +430,8 @@ export function RetentionTrendSection({
       <DashboardPanel
         eyebrow="Trend sinds vorige meting"
         title={isImproving ? 'Verbeterd' : isWorsening ? 'Verslechterd' : 'Stabiel'}
-        value={signalDelta === null ? '–' : `${signalDelta > 0 ? '+' : ''}${signalDelta.toFixed(1)}`}
-        body={`Vergeleken met ${previousCampaignName} van ${formattedDate} veranderde het gemiddelde retentiesignaal van ${previous.retentionSignal?.toFixed(1) ?? '–'}/10 naar ${current.retentionSignal?.toFixed(1) ?? '–'}/10.`}
+        value={signalDelta === null ? '-' : `${signalDelta > 0 ? '+' : ''}${signalDelta.toFixed(1)}`}
+        body={`Vergeleken met ${previousCampaignName} van ${formattedDate} veranderde het gemiddelde retentiesignaal van ${previous.retentionSignal?.toFixed(1) ?? '-'} /10 naar ${current.retentionSignal?.toFixed(1) ?? '-'} /10.`}
         tone={tone}
       />
 
@@ -380,12 +440,103 @@ export function RetentionTrendSection({
           {trendCards.map((card) => (
             <DashboardPanel
               key={card.key}
-              eyebrow={`${card.title} · vorige ${card.previousValue.toFixed(1)}/10`}
+              eyebrow={`${card.title} | vorige ${card.previousValue.toFixed(1)}/10`}
               title={`${card.currentValue.toFixed(1)}/10`}
               body={`${card.body} Delta ${card.delta > 0 ? '+' : ''}${card.delta.toFixed(1)}.`}
               tone={card.tone}
             />
           ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+export function PulseTrendSection({
+  comparison,
+  previousDate,
+  previousCampaignName,
+}: {
+  comparison: PulseComparisonState
+  previousDate: string
+  previousCampaignName: string
+}) {
+  if (comparison.status === 'no_previous') return null
+
+  const formattedDate = new Intl.DateTimeFormat('nl-NL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(previousDate))
+
+  if (comparison.status === 'insufficient_data') {
+    return (
+      <div className="space-y-4">
+        <DashboardPanel
+          eyebrow="Sinds vorige Pulse"
+          title="Vergelijking nog niet veilig"
+          value={`${comparison.currentResponsesLength}/${comparison.previousResponsesLength}`}
+          body={`Er is wel een vorige Pulse-campaign (${previousCampaignName} van ${formattedDate}), maar een veilige deltalezing vraagt minimaal ${MIN_N_PATTERNS} responses in beide cycli. Lees de huidige Pulse daarom nog als snapshot met reviewcontext, niet als hard trendbeeld.`}
+          tone="amber"
+        />
+      </div>
+    )
+  }
+
+  const signalDeltaText =
+    comparison.signalDelta === null
+      ? '-'
+      : `${comparison.signalDelta > 0 ? '+' : ''}${comparison.signalDelta.toFixed(1)}`
+  const tone =
+    comparison.direction === 'improved'
+      ? 'emerald'
+      : comparison.direction === 'worsened'
+        ? 'amber'
+        : 'blue'
+
+  return (
+    <div className="space-y-4">
+      <DashboardPanel
+        eyebrow="Sinds vorige Pulse"
+        title={
+          comparison.direction === 'improved'
+            ? 'Verbeterd'
+            : comparison.direction === 'worsened'
+              ? 'Verslechterd'
+              : 'Stabiel'
+        }
+        value={signalDeltaText}
+        body={`Vergeleken met ${previousCampaignName} van ${formattedDate} verschoof het gemiddelde pulssignaal van ${comparison.previous.pulseSignal?.toFixed(1) ?? '-'} /10 naar ${comparison.current.pulseSignal?.toFixed(1) ?? '-'} /10. Gebruik dit als reviewrichting voor deze cycle, niet als bewijs dat een actieplan definitief werkt.`}
+        tone={tone}
+      />
+
+      {comparison.trendCards.length > 0 ? (
+        <div className="grid gap-4 lg:grid-cols-3">
+          {comparison.trendCards.map((card) => (
+            <DashboardPanel
+              key={card.key}
+              eyebrow={`${card.title} | vorige ${card.previousValue.toFixed(1)}/10`}
+              title={`${card.currentValue.toFixed(1)}/10`}
+              body={`${card.body} Delta ${card.delta > 0 ? '+' : ''}${card.delta.toFixed(1)}.`}
+              tone={card.tone}
+            />
+          ))}
+        </div>
+      ) : null}
+
+      {comparison.sharedFactorCount === 0 ? (
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          <p className="font-semibold">Factorvergelijking nu nog begrensd</p>
+          <p className="mt-1 leading-6">
+            Deze twee Pulse-cycli delen geen volledig vergelijkbare actieve werkfactoren. Lees daarom vooral het totale pulssignaal en de richtingsvraag, en gebruik factoruitleg per cycle afzonderlijk.
+          </p>
+        </div>
+      ) : comparison.sharedFactorCount === 1 ? (
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          <p className="font-semibold">Beperkte factoroverlap</p>
+          <p className="mt-1 leading-6">
+            Er is maar één volledig gedeelde werkfactor tussen beide Pulse-cycli. Lees de factorvergelijking daarom voorzichtig en gebruik hem vooral als reviewhaak.
+          </p>
         </div>
       ) : null}
     </div>
@@ -413,15 +564,19 @@ export function computeFactorAverages(responses: SurveyResponse[]) {
   }
 
   const average = (values: number[]) =>
-    values.length ? Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 100) / 100 : 5.5
+    Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 100) / 100
 
   return {
-    orgAverages: Object.fromEntries(ORG_FACTORS.map((factor) => [factor, average(orgTotals[factor] ?? [])])),
-    sdtAverages: {
-      autonomy: average(sdtTotals.autonomy ?? []),
-      competence: average(sdtTotals.competence ?? []),
-      relatedness: average(sdtTotals.relatedness ?? []),
-    },
+    orgAverages: Object.fromEntries(
+      ORG_FACTORS
+        .filter((factor) => (orgTotals[factor] ?? []).length > 0)
+        .map((factor) => [factor, average(orgTotals[factor] ?? [])]),
+    ),
+    sdtAverages: Object.fromEntries(
+      (['autonomy', 'competence', 'relatedness'] as const)
+        .filter((dimension) => (sdtTotals[dimension] ?? []).length > 0)
+        .map((dimension) => [dimension, average(sdtTotals[dimension] ?? [])]),
+    ) as { autonomy?: number; competence?: number; relatedness?: number },
   }
 }
 
@@ -506,6 +661,133 @@ export function computeRetentionSignalAverages(responses: SurveyResponse[]): Ret
   return {
     retentionSignal: computeAverageRiskScore(responses),
     ...computeRetentionSupplementalAverages(responses),
+  }
+}
+
+export function computePulseSignalAverages(responses: SurveyResponse[]): PulseSignalAverages {
+  return {
+    pulseSignal: computeAverageRiskScore(responses),
+    stayIntent: computeRetentionSupplementalAverages(responses).stayIntent,
+    factorAverages: computeFactorAverages(responses).orgAverages,
+  }
+}
+
+function getRiskDeltaDirection(delta: number | null): 'improved' | 'worsened' | 'stable' {
+  if (delta === null || Math.abs(delta) < 0.1) return 'stable'
+  return delta < 0 ? 'improved' : 'worsened'
+}
+
+function getPositiveDeltaDirection(delta: number | null): 'improved' | 'worsened' | 'stable' {
+  if (delta === null || Math.abs(delta) < 0.1) return 'stable'
+  return delta > 0 ? 'improved' : 'worsened'
+}
+
+export function buildPulseTrendCards(args: {
+  current: PulseSignalAverages
+  previous: PulseSignalAverages
+}): { cards: SignalTrendCard[]; sharedFactorCount: number } {
+  const cards: SignalTrendCard[] = []
+
+  if (args.current.stayIntent !== null && args.previous.stayIntent !== null) {
+    const delta = Number((args.current.stayIntent - args.previous.stayIntent).toFixed(1))
+    const direction = getPositiveDeltaDirection(delta)
+    cards.push({
+      key: 'pulse_stay_intent',
+      title: 'Trend richtingsvraag',
+      currentValue: args.current.stayIntent,
+      previousValue: args.previous.stayIntent,
+      delta,
+      direction,
+      tone: direction === 'improved' ? 'emerald' : direction === 'worsened' ? 'amber' : 'blue',
+      body:
+        direction === 'improved'
+          ? 'De richtingsvraag is gunstiger dan in de vorige Pulse. Toets vooral welke kleine correctie je wilt vasthouden.'
+          : direction === 'worsened'
+            ? 'De richtingsvraag is teruggevallen. Dit is een signaal om sneller te toetsen of de gekozen opvolging nog voldoende werkt.'
+            : 'De richtingsvraag beweegt beperkt. Gebruik dit om te toetsen of stabiliteit echt gewenst is of dat actie nog onvoldoende zichtbaar is.',
+    })
+  }
+
+  const sharedFactors = Object.keys(args.current.factorAverages).filter(
+    (factor) => typeof args.previous.factorAverages[factor] === 'number',
+  )
+
+  const factorCards = sharedFactors
+    .map((factor) => {
+      const currentAverage = args.current.factorAverages[factor]
+      const previousAverage = args.previous.factorAverages[factor]
+      const currentValue = Number((11 - currentAverage).toFixed(1))
+      const previousValue = Number((11 - previousAverage).toFixed(1))
+      const delta = Number((currentValue - previousValue).toFixed(1))
+      const direction = getRiskDeltaDirection(delta)
+
+      return {
+        key: `pulse_factor_${factor}`,
+        title: `Verschuiving ${FACTOR_LABELS[factor] ?? factor}`,
+        currentValue,
+        previousValue,
+        delta,
+        direction,
+        tone: direction === 'improved' ? 'emerald' : direction === 'worsened' ? 'amber' : 'blue',
+        body:
+          direction === 'improved'
+            ? `${FACTOR_LABELS[factor] ?? factor} vraagt minder aandacht dan in de vorige Pulse. Kijk vooral wat je hier wilt behouden.`
+            : direction === 'worsened'
+              ? `${FACTOR_LABELS[factor] ?? factor} vraagt nu meer aandacht dan in de vorige Pulse. Toets snel wat in dit werkspoor verschuift.`
+              : `${FACTOR_LABELS[factor] ?? factor} beweegt beperkt ten opzichte van de vorige Pulse. Gebruik dit als check of het beeld bewust stabiel blijft.`,
+      } satisfies SignalTrendCard
+    })
+    .sort((left, right) => Math.abs(right.delta) - Math.abs(left.delta))
+    .slice(0, 2)
+
+  return {
+    cards: [...cards, ...factorCards],
+    sharedFactorCount: sharedFactors.length,
+  }
+}
+
+export function buildPulseComparisonState(args: {
+  current: PulseSignalAverages
+  previous: PulseSignalAverages | null
+  currentResponsesLength: number
+  previousResponsesLength: number
+}): PulseComparisonState {
+  if (!args.previous) {
+    return { status: 'no_previous' }
+  }
+
+  if (args.currentResponsesLength < MIN_N_PATTERNS || args.previousResponsesLength < MIN_N_PATTERNS) {
+    return {
+      status: 'insufficient_data',
+      current: args.current,
+      previous: args.previous,
+      currentResponsesLength: args.currentResponsesLength,
+      previousResponsesLength: args.previousResponsesLength,
+    }
+  }
+
+  const signalDelta =
+    args.current.pulseSignal !== null && args.previous.pulseSignal !== null
+      ? Number((args.current.pulseSignal - args.previous.pulseSignal).toFixed(1))
+      : null
+  const stayIntentDelta =
+    args.current.stayIntent !== null && args.previous.stayIntent !== null
+      ? Number((args.current.stayIntent - args.previous.stayIntent).toFixed(1))
+      : null
+  const { cards, sharedFactorCount } = buildPulseTrendCards({
+    current: args.current,
+    previous: args.previous,
+  })
+
+  return {
+    status: 'ready',
+    current: args.current,
+    previous: args.previous,
+    signalDelta,
+    stayIntentDelta,
+    direction: getRiskDeltaDirection(signalDelta),
+    trendCards: cards,
+    sharedFactorCount,
   }
 }
 
@@ -690,7 +972,7 @@ export function clusterRetentionOpenSignals(responses: SurveyResponse[]): Retent
 }
 
 export function buildSafeTableResponses(
-  scanType: 'exit' | 'retention',
+  scanType: ScanType,
   responses: (SurveyResponse & { respondents: Respondent })[],
 ) {
   if (scanType === 'exit') return responses
@@ -712,6 +994,253 @@ export function computeAverageRiskScore(responses: SurveyResponse[]) {
   const values = responses.map((response) => response.risk_score).filter((value): value is number => typeof value === 'number')
   if (!values.length) return null
   return values.reduce((sum, value) => sum + value, 0) / values.length
+}
+
+export function RecommendationList({
+  factorAverages,
+  scanType,
+}: {
+  factorAverages: Record<string, number>
+  scanType: ScanType
+}) {
+  const focusQuestions = getProductModule(scanType).getFocusQuestions()
+  const items = ORG_FACTORS
+    .filter((factor) => factor in factorAverages)
+    .map((factor) => {
+      const score = factorAverages[factor]
+      const signalValue = 11 - score
+      const band = signalValue >= 7 ? 'HOOG' : signalValue >= 4.5 ? 'MIDDEN' : 'LAAG'
+      const questions = focusQuestions[factor]?.[band] ?? []
+
+      return {
+        factor,
+        signalValue,
+        band,
+        questions,
+      }
+    })
+    .filter((item) => item.questions.length > 0)
+    .sort((a, b) => b.signalValue - a.signalValue)
+    .slice(0, 3)
+
+  if (items.length === 0) return null
+
+  return (
+    <div className="space-y-4">
+      {items.map((item) => (
+        <div key={item.factor} className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                {FACTOR_LABELS[item.factor]} · {item.band === 'HOOG' ? 'scherp reviewsignaal' : 'gerichte reviewvraag'}
+              </p>
+              <h3 className="mt-2 text-base font-semibold text-slate-950">
+                Wat moet management nu eerst uitvragen op {FACTOR_LABELS[item.factor].toLowerCase()}?
+              </h3>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+              Signaal {item.signalValue.toFixed(1)}/10
+            </span>
+          </div>
+
+          <ul className="mt-4 space-y-3">
+            {item.questions.map((question) => (
+              <li key={question} className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                <span className="mt-1 text-slate-400">&bull;</span>
+                <span className="text-sm leading-6 text-slate-700">{question}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function ActionPlaybookList({
+  factorAverages,
+  scanType,
+}: {
+  factorAverages: Record<string, number>
+  scanType: ScanType
+}) {
+  const playbooks = getProductModule(scanType).getActionPlaybooks()
+  const items = ORG_FACTORS
+    .filter((factor) => factor in factorAverages)
+    .map((factor) => {
+      const score = factorAverages[factor]
+      const signalValue = 11 - score
+      const band = signalValue >= 7 ? 'HOOG' : signalValue >= 4.5 ? 'MIDDEN' : 'LAAG'
+      return {
+        factor,
+        signalValue,
+        band,
+        playbook: playbooks[factor]?.[band] ?? null,
+      }
+    })
+    .filter((item) => item.playbook)
+    .sort((a, b) => b.signalValue - a.signalValue)
+    .slice(0, 2)
+
+  if (items.length === 0) return null
+
+  return (
+    <div className="space-y-4">
+      {items.map((item) => (
+        <div key={item.factor} className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                {FACTOR_LABELS[item.factor]} · {item.band === 'HOOG' ? 'urgent playbook' : 'aandacht playbook'}
+              </p>
+              <h3 className="mt-2 text-base font-semibold text-slate-950">{item.playbook?.title}</h3>
+            </div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+              Prioriteit {item.signalValue.toFixed(1)}/10
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <CardColumn title="Eerste besluit" tone="blue">
+              <p className="text-sm leading-6 text-slate-700">{item.playbook?.decision}</p>
+            </CardColumn>
+            <CardColumn title="Eerste eigenaar" tone="slate">
+              <p className="text-sm leading-6 text-slate-700">{item.playbook?.owner}</p>
+            </CardColumn>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            <CardColumn title="Eerst valideren" tone="blue">
+              <p className="text-sm leading-6 text-slate-700">{item.playbook?.validate}</p>
+            </CardColumn>
+            <CardColumn title="Logische acties" tone="emerald">
+              <ul className="space-y-2">
+                {item.playbook?.actions.map((action) => (
+                  <li key={action} className="flex gap-2 text-sm leading-6 text-slate-700">
+                    <span className="text-slate-400">&bull;</span>
+                    <span>{action}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardColumn>
+            <CardColumn title="Niet overhaasten" tone="amber">
+              <p className="text-sm leading-6 text-slate-700">{item.playbook?.caution}</p>
+            </CardColumn>
+          </div>
+
+          <div className="mt-4">
+            <CardColumn title="Reviewmoment" tone="slate">
+              <p className="text-sm leading-6 text-slate-700">
+                {item.playbook?.review ??
+                  (scanType === 'exit'
+                    ? 'Plan binnen 60-90 dagen een review op dit spoor: wat is gekozen, wat is uitgevoerd en wat keert terug in de volgende exitbatch?'
+                    : 'Plan binnen 45-90 dagen een review of vervolgmeting: wat is geverifieerd, welke eerste interventie loopt en wat verschuift er in het retentiesignaal?')}
+              </p>
+            </CardColumn>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function SegmentPlaybookList({ segments }: { segments: SegmentPlaybookEntry[] }) {
+  if (segments.length === 0) return null
+
+  return (
+    <div className="space-y-4">
+      {segments.map((segment) => (
+        <div
+          key={`${segment.segmentType}-${segment.segmentLabel}-${segment.factorKey}`}
+          className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm"
+        >
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                {segment.segmentType === 'department' ? 'Afdeling' : 'Functieniveau'} · {segment.segmentLabel}
+              </p>
+              <h3 className="mt-2 text-base font-semibold text-slate-950">{segment.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                Binnen deze groep geeft <span className="font-semibold">{segment.factorLabel}</span> het scherpste signaal.
+                De gemiddelde signalering ligt op {segment.avgSignal.toFixed(1)}/10 en wijkt{' '}
+                {segment.deltaVsOrg > 0
+                  ? `${segment.deltaVsOrg.toFixed(1)} punt hoger`
+                  : `${Math.abs(segment.deltaVsOrg).toFixed(1)} punt lager`}{' '}
+                af dan het organisatieniveau.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Segment</p>
+              <p className="mt-1 font-semibold text-slate-950">n = {segment.n}</p>
+              <p className="mt-1">Topfactor: {segment.factorLabel}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <CardColumn title="Eerste besluit" tone="blue">
+              <p className="text-sm leading-6 text-slate-700">{segment.decision}</p>
+            </CardColumn>
+            <CardColumn title="Eerste eigenaar" tone="slate">
+              <p className="text-sm leading-6 text-slate-700">{segment.owner}</p>
+            </CardColumn>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            <CardColumn title="Eerst valideren" tone="blue">
+              <p className="text-sm leading-6 text-slate-700">{segment.validate}</p>
+            </CardColumn>
+            <CardColumn title="Logische acties" tone="emerald">
+              <ul className="space-y-2">
+                {segment.actions.map((action) => (
+                  <li key={action} className="flex gap-2 text-sm leading-6 text-slate-700">
+                    <span className="text-slate-400">&bull;</span>
+                    <span>{action}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardColumn>
+            <CardColumn title="Niet overhaasten" tone="amber">
+              <p className="text-sm leading-6 text-slate-700">{segment.caution}</p>
+            </CardColumn>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function CardColumn({
+  title,
+  tone,
+  children,
+}: {
+  title: string
+  tone: 'slate' | 'blue' | 'emerald' | 'amber'
+  children: ReactNode
+}) {
+  const classes =
+    tone === 'slate'
+      ? 'border-slate-200 bg-slate-50'
+      : tone === 'emerald'
+        ? 'border-emerald-100 bg-emerald-50'
+        : tone === 'amber'
+          ? 'border-amber-100 bg-amber-50'
+          : 'border-blue-100 bg-blue-50'
+  const labelClass =
+    tone === 'slate'
+      ? 'text-slate-600'
+      : tone === 'emerald'
+        ? 'text-emerald-700'
+        : tone === 'amber'
+          ? 'text-amber-700'
+          : 'text-blue-700'
+
+  return (
+    <div className={`rounded-2xl border p-4 ${classes}`}>
+      <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${labelClass}`}>{title}</p>
+      <div className="mt-2">{children}</div>
+    </div>
+  )
 }
 
 export function CampaignHealthIndicator({
@@ -756,7 +1285,7 @@ export function CampaignHealthIndicator({
         {checks.map((check) => (
           <div key={check.label} className="rounded-2xl border border-white/80 bg-white/80 px-4 py-3">
             <div className="flex items-center gap-2">
-              <span className={check.ok ? 'text-emerald-600' : check.warn ? 'text-amber-600' : 'text-red-600'}>{check.ok ? '✓' : check.warn ? '!' : '✕'}</span>
+              <span className={check.ok ? 'text-emerald-600' : check.warn ? 'text-amber-600' : 'text-red-600'}>{check.ok ? 'OK' : check.warn ? '!' : 'X'}</span>
               <p className="text-sm font-semibold text-slate-900">{check.label}</p>
             </div>
             {check.detail ? <p className="mt-2 text-sm leading-6 text-slate-600">{check.detail}</p> : null}
