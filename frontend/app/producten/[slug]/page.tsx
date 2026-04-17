@@ -312,7 +312,7 @@ function ExitScanPage() {
             </a>
 
             {/* 7 — Segment Deep Dive add-on */}
-            <div className="mt-8 rounded-lg border border-[rgba(247,245,241,0.12)] bg-[rgba(247,245,241,0.06)] p-5">
+            <div id="segment-deep-dive" className="mt-8 rounded-lg border border-[rgba(247,245,241,0.12)] bg-[rgba(247,245,241,0.06)] p-5">
               <span className="text-[0.6rem] font-medium uppercase tracking-[0.12em] text-[#9CA3AF]">Add-on</span>
               <h3 className="mt-1 text-base font-medium text-[#F7F5F1]">Segment Deep Dive</h3>
               <p className="mt-1 text-sm text-[rgba(247,245,241,0.65)]">Verdieping op een specifieke afdeling, functiegroep of locatie. Beschikbaar als er voldoende respondenten en metadata voor zijn.</p>
