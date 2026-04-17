@@ -1,6 +1,6 @@
 ﻿// Verisight — gedeelde TypeScript types
 
-export type ScanType = 'exit' | 'retention' | 'pulse'
+export type ScanType = 'exit' | 'retention' | 'pulse' | 'team' | 'onboarding' | 'leadership'
 export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
 export type CampaignAddOn = 'segment_deep_dive'
 export type DeliveryMode = 'baseline' | 'live'
@@ -10,6 +10,14 @@ export type DeliveryMode = 'baseline' | 'live'
 // viewer = HR-klant (alleen lezen: dashboard + PDF)
 export type MemberRole = 'owner' | 'member' | 'viewer'
 export type Preventability = 'STERK_WERKSIGNAAL' | 'GEMENGD_WERKSIGNAAL' | 'BEPERKT_WERKSIGNAAL'
+export const SCAN_TYPE_LABELS: Record<ScanType, string> = {
+  exit: 'ExitScan',
+  retention: 'RetentieScan',
+  pulse: 'Pulse',
+  team: 'TeamScan',
+  onboarding: 'Onboarding 30-60-90',
+  leadership: 'Leadership Scan',
+}
 
 // Current tenant boundary and v1 customer account boundary.
 // A separate billing account abstraction does not exist in runtime yet.
