@@ -18,9 +18,13 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from backend.database import SessionLocal, init_db
+from backend.database import Base, DATABASE_URL, SessionLocal, init_db
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
 from backend.report import generate_campaign_report
 from backend.scoring import (
@@ -38,10 +42,12 @@ from backend.scoring import (
 
 RANDOM_SEED = 2026
 random.seed(RANDOM_SEED)
+_IS_SQLITE = DATABASE_URL.startswith("sqlite")
 
 DEMO_ORG_NAME = "TechBouw B.V."
 DEMO_ORG_SLUG = "techbouw-demo"
 DEMO_ORG_EMAIL = "demo@techbouw.nl"
+DEMO_DB_DIR = Path(__file__).parent / "data"
 DOCS_EXAMPLES_DIR = Path("docs/examples")
 PUBLIC_EXAMPLES_DIR = Path("frontend/public/examples")
 
@@ -350,6 +356,32 @@ def _write_pdf_outputs(pdf_bytes: bytes, config: dict[str, str | int]) -> list[P
     return output_paths
 
 
+def _build_demo_session_factory(
+    scan_type: str,
+    keep_data: bool,
+) -> tuple[sessionmaker, str | None, Path | None, Engine | None]:
+    if _IS_SQLITE:
+        init_db()
+        return SessionLocal, None, None, None
+
+    DEMO_DB_DIR.mkdir(parents=True, exist_ok=True)
+    if keep_data:
+        demo_db_path = DEMO_DB_DIR / f"voorbeeldrapport-generator-{scan_type}.db"
+    else:
+        demo_db_path = DEMO_DB_DIR / f"voorbeeldrapport-generator-{scan_type}-{uuid.uuid4().hex}.db"
+
+    demo_database_url = f"sqlite:///{demo_db_path}"
+    demo_engine = create_engine(
+        demo_database_url,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+        echo=False,
+    )
+    Base.metadata.create_all(bind=demo_engine)
+    demo_session_factory = sessionmaker(autocommit=False, autoflush=False, bind=demo_engine)
+    return demo_session_factory, demo_database_url, demo_db_path, demo_engine
+
+
 def _purge_campaign(db, campaign: Campaign) -> None:
     respondents = list(campaign.respondents)
     for respondent in respondents:
@@ -508,8 +540,15 @@ def main() -> None:
     args = _parse_args()
     config = RETENTION_CONFIG if args.scan_type == "retention" else EXIT_CONFIG
 
-    init_db()
-    db = SessionLocal()
+    session_factory, isolated_database_url, isolated_db_path, isolated_engine = _build_demo_session_factory(
+        str(config["scan_type"]),
+        args.keep_data,
+    )
+    db = session_factory()
+
+    if isolated_database_url is not None:
+        print(f"Gebruik geisoleerde demo-database: {isolated_database_url}")
+        print("")
 
     org, created_org = _get_or_create_demo_org(db)
     existing_demo_campaigns = (
@@ -649,6 +688,10 @@ def main() -> None:
         db.delete(org)
     db.commit()
     db.close()
+    if isolated_engine is not None:
+        isolated_engine.dispose()
+    if isolated_db_path is not None and isolated_db_path.exists():
+        isolated_db_path.unlink()
     print("Tijdelijke demo-data verwijderd uit de database.")
 
 
