@@ -1,6 +1,6 @@
 # Outbound Operating Playbook
 
-Last updated: 2026-04-16
+Last updated: 2026-04-17
 Status: active
 
 ## Purpose
@@ -22,7 +22,7 @@ Doel:
 - stuur de eerste 20 tot 30 mails semi-handmatig
 - gebruik plain-text mails zonder zware opmaak
 - personaliseer altijd de eerste zin van mail 1
-- houd per lead precies één volgende actie en één datum aan
+- houd per lead precies een volgende actie en een datum aan
 
 ## Current ICP default
 
@@ -30,7 +30,7 @@ De outbound-default voor deze fase is:
 
 - organisaties met ongeveer 200 tot 1.000 medewerkers
 - HR-manager, HR-directeur of People Lead als primair startcontact
-- herkenbare uitstroomfrictie, geen pure tooloriëntatie
+- herkenbare uitstroomfrictie, geen pure toolorientatie
 
 ## Weekly rhythm
 
@@ -83,6 +83,12 @@ Gebruik minimale veldhygiene:
 - deadline volgende actie
 - korte notitie met alleen relevante context
 
+Werklaagregel:
+
+- [Verisight_CRM.xlsx](C:/Users/larsh/Desktop/Business/Docs_External/Verisight_Docs/05_Operations_En_CRM/Verisight_CRM.xlsx) is de enige live leadpipeline
+- [Verisight_Prospectlijst_2026-04-10.xlsx](C:/Users/larsh/Desktop/Business/Docs_External/Verisight_Docs/05_Operations_En_CRM/Verisight_Prospectlijst_2026-04-10.xlsx) blijft seed-list en geen actieve dealpipeline
+- `CEO_WEEKLY_SCORECARD.xlsx` tab `Deals` is alleen de wekelijkse mirror van wat al in CRM staat
+
 ## When not to mail
 
 - geen duidelijke ICP-fit
@@ -98,3 +104,4 @@ Deze outboundlaag werkt pas goed als:
 - replies, calls en bezwaren systematisch worden vastgelegd
 - outreach niet als los experiment naast de rest blijft hangen
 - salesinzichten terugvloeien naar pricing, proof en ICP-keuzes
+- de live pipeline niet afwijkt van de weekmirror in de scorecard

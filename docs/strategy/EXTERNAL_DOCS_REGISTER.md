@@ -1,6 +1,6 @@
 # External Docs Register
 
-Last updated: 2026-04-16
+Last updated: 2026-04-17
 Status: active
 
 ## Purpose
@@ -20,7 +20,7 @@ Belangrijke regel:
 
 ## Source-of-truth rule
 
-De leidende volgorde blijft:
+De leidende strategische volgorde blijft:
 
 1. [PROMPT_CHECKLIST.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/prompts/PROMPT_CHECKLIST.xlsx)
 2. [ROADMAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP.md)
@@ -28,6 +28,12 @@ De leidende volgorde blijft:
 4. [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
 5. [STRATEGY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/STRATEGY.md)
 6. [Docs_External](C:/Users/larsh/Desktop/Business/Docs_External) als referentie- en assetlaag
+
+Voor het huidige fix-programma geldt daarnaast:
+
+- [SCALABILITY_FIX_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/SCALABILITY_FIX_PROGRAM_PLAN.md) is de actieve fix-tranche
+- [SOURCE_OF_TRUTH_CHARTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SOURCE_OF_TRUTH_CHARTER.md) bepaalt de operationele updatevolgorde
+- externe operational workbooks mogen primair zijn waar dat expliciet is vastgelegd in het charter
 
 ## Register by external domain
 
@@ -91,7 +97,7 @@ Repo target:
 - website and pricing copy
 
 Sync rule:
-- commerciële formats mogen extern blijven
+- commerciele formats mogen extern blijven
 - canonieke route, bezwaren en kerncopy moeten in de repo landen
 
 ### 04_Research_En_Audits
@@ -123,6 +129,7 @@ Representative files:
 - [Verisight_CRM.xlsx](C:/Users/larsh/Desktop/Business/Docs_External/Verisight_Docs/05_Operations_En_CRM/Verisight_CRM.xlsx)
 - [Verisight_Onboarding_Procesflow_2026-04-10.docx](C:/Users/larsh/Desktop/Business/Docs_External/Verisight_Docs/05_Operations_En_CRM/Verisight_Onboarding_Procesflow_2026-04-10.docx)
 - [Verisight_Klantaanlevering_Spec_2026-04-10.docx](C:/Users/larsh/Desktop/Business/Docs_External/Verisight_Docs/05_Operations_En_CRM/Verisight_Klantaanlevering_Spec_2026-04-10.docx)
+- [Verisight_Prospectlijst_2026-04-10.xlsx](C:/Users/larsh/Desktop/Business/Docs_External/Verisight_Docs/05_Operations_En_CRM/Verisight_Prospectlijst_2026-04-10.xlsx)
 
 Repo target:
 - [CLIENT_ONBOARDING_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_ONBOARDING_PLAYBOOK.md)
@@ -132,6 +139,9 @@ Repo target:
 Sync rule:
 - geen gevoelige klantdata of CRM-export in de repo
 - wel structurele proceslogica, acceptance criteria en handoffregels naar repo-playbooks vertalen
+- `Verisight_CRM.xlsx` mag live leadpipeline zijn, maar alleen voor leads en deals
+- prospectlijst blijft seed-list en geen tweede live pipeline
+- onboardingprocesflow blijft referentie; actieve deliverystatus leeft in de app-surfaces
 
 ### 99_Archief
 

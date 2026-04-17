@@ -15,7 +15,7 @@ Leidende regel:
 
 Geen van deze waves is bedoeld om Verisight nu al als volwaardige self-serve SaaS te organiseren.
 
-## Wave 1 — Stabilize
+## Wave 1 - Stabilize
 
 Periode:
 
@@ -33,6 +33,10 @@ Scope:
 - deliveryboard of equivalent overzicht invoeren
 - echte maxima invullen in de capacity map
 - source-of-truth charter vastleggen
+- hybride werklaag hard maken:
+  - CRM primair voor leads
+  - app primair voor delivery
+  - scorecard als weekmirror
 
 Expliciet niet doen:
 
@@ -43,7 +47,7 @@ Expliciet niet doen:
 
 Proceswijzigingen:
 
-- alle actieve leads krijgen één volgende actie en één deadline in de primaire pipeline
+- alle actieve leads krijgen een volgende actie en een deadline in de primaire pipeline
 - alle actieve klanttrajecten krijgen checkpointstatus voor intake, import, activation, report delivery en first management use
 - wekelijkse CEO review wordt hard ritme
 - maandreview wordt aan het eind van wave 1 echt ingevuld
@@ -51,13 +55,14 @@ Proceswijzigingen:
 Tooling/data-wijzigingen:
 
 - gebruik [CEO_WEEKLY_SCORECARD.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_WEEKLY_SCORECARD.xlsx) als leidend weekinstrument
-- gebruik één live pipelinebron voor leads
-- voeg een operationeel trajectoverzicht toe in workbook- of boardvorm
-- leg minimaal cycle time en defect count vast
+- gebruik [Verisight_CRM.xlsx](C:/Users/larsh/Desktop/Business/Docs_External/Verisight_Docs/05_Operations_En_CRM/Verisight_CRM.xlsx) als enige live pipelinebron voor leads
+- gebruik `/beheer` en `/campaigns/[id]` als primaire deliveryboard
+- houd `Deals` en `Clients` in de scorecard alleen als weekmirror
 
 Docs/source-of-truth-wijzigingen:
 
 - maak een korte `source-of-truth charter` met updatevolgorde voor repo, workbook, CRM en external docs
+- maak [SCALABILITY_FIX_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/SCALABILITY_FIX_PROGRAM_PLAN.md) de actieve tranchebron voor dit programma
 - update [FOUNDER_CAPACITY_MAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/FOUNDER_CAPACITY_MAP.md) met echte maxima
 - update [DECISION_LOG.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/DECISION_LOG.md) na de eerste maandreview
 
@@ -68,6 +73,7 @@ Acceptance criteria:
 - er is een actuele lijst van actieve klanttrajecten met checkpointstatus
 - capacity map bevat ingevulde maxima
 - source-of-truth charter is expliciet en gedeeld
+- de weekreview gebruikt geen concurrerende tweede live waarheid voor leads of delivery
 
 Owner:
 
@@ -77,7 +83,7 @@ Reviewmoment:
 
 - dag 30
 
-## Wave 2 — Systemize
+## Wave 2 - Systemize
 
 Periode:
 
@@ -106,7 +112,7 @@ Proceswijzigingen:
 - definieer welk werk door founder moet gebeuren en wat door een operator kan
 - voeg proof capture checkpoints toe aan proposal, livegang en first management use
 - voer wekelijks een korte delivery risk review uit naast de scorecard
-- test één gedelegeerde salesrun en één gedelegeerde deliveryrun
+- test een gedelegeerde salesrun en een gedelegeerde deliveryrun
 
 Tooling/data-wijzigingen:
 
@@ -118,6 +124,7 @@ Tooling/data-wijzigingen:
   - trajecten met risico
   - delivery defects
 - werk workbook of bord bij zodat delegated use mogelijk is
+- gebruik `SCALABILITY_REVIEW_WORKBOOK.xlsx` als gate-evidence laag, niet als dagelijkse operatie
 
 Docs/source-of-truth-wijzigingen:
 
@@ -127,7 +134,7 @@ Docs/source-of-truth-wijzigingen:
 
 Acceptance criteria:
 
-- één niet-founder heeft een sales- of deliveryslice succesvol uitgevoerd
+- een niet-founder heeft een sales- of deliveryslice succesvol uitgevoerd
 - rolling metrics zijn beschikbaar voor 30 dagen
 - proof capture gebeurt niet meer alleen achteraf
 - terugkerende delivery defects zijn zichtbaar in een log
@@ -140,7 +147,7 @@ Reviewmoment:
 
 - dag 60
 
-## Wave 3 — Scale Readiness
+## Wave 3 - Scale Readiness
 
 Periode:
 

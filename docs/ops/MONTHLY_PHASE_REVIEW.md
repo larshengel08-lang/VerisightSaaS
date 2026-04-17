@@ -1,6 +1,6 @@
 # Monthly Phase Review
 
-Last updated: 2026-04-16
+Last updated: 2026-04-17
 Status: active
 
 ## Review header
@@ -8,6 +8,8 @@ Status: active
 - Maand:
 - Dominante groeifase:
 - Reviewer:
+- Huidige wave:
+- Wave-gate advies:
 
 ## 1. Phase reality check
 
@@ -61,3 +63,11 @@ Status: active
 - Roadmapwijziging nodig:
 - Decision-log update nodig:
 - Capaciteitsmap update nodig:
+
+## 8. Wave gate evidence
+
+- Is de live pipeline actueel en volledig:
+- Is de deliverylaag actueel en volledig:
+- Is het weekritme aantoonbaar uitgevoerd:
+- Zijn de capacity guardrails gebruikt:
+- Mag de volgende wave starten:

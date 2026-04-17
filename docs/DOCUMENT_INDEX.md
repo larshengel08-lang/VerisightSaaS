@@ -3,6 +3,7 @@
 Dit bestand is de snelle ingang tot de documentstructuur van Verisight.
 
 Gebruik deze indeling:
+- `repo-root` voor uitzonderlijke repo-brede commandfiles
 - `docs/active` voor actieve source-of-truth plannen
 - `docs/reference` voor inhoudelijke en technische referentiedocumenten
 - `docs/strategy` voor koers, roadmap en strategie
@@ -18,8 +19,20 @@ Source-of-truth volgorde:
 4. `docs/strategy/STRATEGY.md`
 5. `Docs_External` als gesynchroniseerde referentie- en assetlaag
 
-## Active
+Voor de huidige fix-tranche:
 
+1. `SCALABILITY_FIX_PROGRAM_PLAN.md`
+2. `docs/ops/SOURCE_OF_TRUTH_CHARTER.md`
+3. live CRM- of app-systeem per informatietype
+4. `docs/ops/CEO_WEEKLY_SCORECARD.xlsx` als reviewmirror
+5. `docs/ops/MONTHLY_PHASE_REVIEW.md` als gate review
+
+## Root
+
+- [SCALABILITY_FIX_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/SCALABILITY_FIX_PROGRAM_PLAN.md)
+
+## Active
+- [OPS_AND_DELIVERY_SYSTEM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/OPS_AND_DELIVERY_SYSTEM_PLAN.md)
 - [EXITSCAN_PRODUCT_SHARPENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_PRODUCT_SHARPENING_PLAN.md)
 - [RETENTIESCAN_PRODUCT_SHARPENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTIESCAN_PRODUCT_SHARPENING_PLAN.md)
 - [RETENTIESCAN_LIVE_TEST_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTIESCAN_LIVE_TEST_PLAN.md)
@@ -67,6 +80,7 @@ Source-of-truth volgorde:
 - [SCALABILITY_GAP_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_GAP_MATRIX.md)
 - [SCALABILITY_IMPROVEMENT_WAVES.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_IMPROVEMENT_WAVES.md)
 - [SCALABILITY_REVIEW_WORKBOOK.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_REVIEW_WORKBOOK.xlsx)
+- [SOURCE_OF_TRUTH_CHARTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SOURCE_OF_TRUTH_CHARTER.md)
 - [SUPABASE_LIVE_HARDENING_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/SUPABASE_LIVE_HARDENING_CHECKLIST.md)
 - [RETENTION_V11_VALIDATION_WORKFLOW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/RETENTION_V11_VALIDATION_WORKFLOW.md)
 
@@ -96,8 +110,8 @@ Source-of-truth volgorde:
 
 ## Praktische regels
 
-- Per traject is er bij voorkeur precies één actief source-of-truth planbestand.
+- Per traject is er bij voorkeur precies een actief source-of-truth planbestand.
 - Review- en live-testdocumenten verhuizen na afronding naar `docs/archive`.
-- Nieuwe planbestanden horen bij voorkeur in `docs/active` zodra ze echt leidend zijn.
+- Nieuwe planbestanden horen bij voorkeur in `docs/active`, behalve een repo-breed commandfile zoals `SCALABILITY_FIX_PROGRAM_PLAN.md`.
 - Gebruik het prompt-systeem in `docs/prompts` voor nieuwe analyse-, plan- en uitvoeringstrajecten.
 - Gebruik externe documenten als referentie, assetbron of archief, niet als concurrerende roadmap.

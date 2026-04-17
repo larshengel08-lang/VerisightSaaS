@@ -1,6 +1,6 @@
 # Ops Delivery Failure Matrix
 
-Last updated: 2026-04-15
+Last updated: 2026-04-17
 Status: active
 
 ## Purpose
@@ -140,6 +140,12 @@ Controleer minimaal:
 - pending checkpoints voor `report_delivery`
 - campaigns zonder bevestigde `first_management_use`
 - follow-up die nog niet op `follow_up_decided` of `learning_closed` staat
+
+Neem dit minimaal op in de weekreview:
+
+- trek de samenvatting uit `/beheer` en `/campaigns/[id]`
+- zet alleen de weekmirror in `CEO_WEEKLY_SCORECARD.xlsx`
+- gebruik de maandreview voor terugkerende defects of recoverypatronen
 
 ## Source of truth
 

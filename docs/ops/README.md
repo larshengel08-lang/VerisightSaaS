@@ -4,17 +4,19 @@ Korte wegwijzer voor de operationele en bestuurlijke documenten in deze map.
 
 ## Waar begin je?
 
-Voor de huidige bedrijfssturing gebruik je deze volgorde:
+Voor het huidige fix-programma gebruik je deze volgorde:
 
-1. [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
-   - hoofdrichting voor de komende 6-12 maanden
-2. [CEO_FIRST_30_DAYS.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_FIRST_30_DAYS.md)
-   - directe uitvoerlaag voor de eerstvolgende 30 dagen
-3. [CEO_WEEKLY_SCORECARD.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_WEEKLY_SCORECARD.xlsx)
-   - wekelijkse invulbare stuurkaart
-4. [MONTHLY_PHASE_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/MONTHLY_PHASE_REVIEW.md)
-   - maandelijkse reality check
-5. [QUARTERLY_RESET_MEMO.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/QUARTERLY_RESET_MEMO.md)
+1. [SCALABILITY_FIX_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/SCALABILITY_FIX_PROGRAM_PLAN.md)
+   - actieve source of truth voor het 90-dagen fix-programma
+2. [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
+   - governancekader en command window
+3. [SOURCE_OF_TRUTH_CHARTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SOURCE_OF_TRUTH_CHARTER.md)
+   - legt per werklaag vast wat primair is en wat alleen mirror is
+4. [CEO_WEEKLY_SCORECARD.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_WEEKLY_SCORECARD.xlsx)
+   - wekelijkse invulbare stuurkaart en reviewlaag
+5. [MONTHLY_PHASE_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/MONTHLY_PHASE_REVIEW.md)
+   - maandelijkse wave-gate en reality check
+6. [QUARTERLY_RESET_MEMO.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/QUARTERLY_RESET_MEMO.md)
    - kwartaalreset en grote keuzes
 
 ## Welke documenten gebruik je waarvoor?
@@ -37,6 +39,8 @@ Voor de huidige bedrijfssturing gebruik je deze volgorde:
   - 30/60/90-dagen verbetervoorstel na de review
 - [SCALABILITY_REVIEW_WORKBOOK.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_REVIEW_WORKBOOK.xlsx)
   - invulbaar en scanbaar werkboek voor review, scoring en evidenceregistratie
+- [SOURCE_OF_TRUTH_CHARTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SOURCE_OF_TRUTH_CHARTER.md)
+  - harde updatevolgorde voor CRM, app-surfaces, scorecard en evidence-workbooks
 
 ### Delivery en onboarding
 
@@ -64,7 +68,7 @@ Voor de huidige bedrijfssturing gebruik je deze volgorde:
 ### Repo, livegang en veiligheid
 
 - [LIVE_RELEASE_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/LIVE_RELEASE_CHECKLIST.md)
-  - wat “echt live” betekent
+  - wat "echt live" betekent
 - [CHECKLIST_AUDIT_TRACKER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CHECKLIST_AUDIT_TRACKER.md)
   - auditlaag op de oude promptchecklist
 - [BACKUP_AND_RECOVERY_BASELINE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/BACKUP_AND_RECOVERY_BASELINE.md)
@@ -93,3 +97,5 @@ Praktische noot:
 
 - gebruik voor de wekelijkse scorecard voortaan de Excel-werkmap
 - gebruik de `.md`-variant alleen als referentiestructuur, niet als primair invulvlak
+- gebruik `Verisight_CRM.xlsx` als primaire live leadpipeline
+- gebruik `/beheer` en `/campaigns/[id]` als primaire deliverylaag

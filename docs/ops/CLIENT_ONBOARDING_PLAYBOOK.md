@@ -1,6 +1,6 @@
 # Client Onboarding Playbook
 
-Last updated: 2026-04-15
+Last updated: 2026-04-17
 Status: active
 
 ## Purpose
@@ -16,6 +16,7 @@ Belangrijke defaults:
 - Adoptie is pas geslaagd wanneer de klant de output echt gebruikt voor het eerste managementgesprek.
 - Vroege learnings worden voortaan vastgelegd in `/beheer/klantlearnings`.
 - Een campaign meet standaard live vanaf campagnestart; een retrospectieve baseline of 12-maandsbeeld moet expliciet zo worden ingericht.
+- Voor actieve klanttrajecten is de app-deliverylaag leidend; workbooks zijn alleen samenvatting of governance-mirror.
 
 ## Canonieke route
 
@@ -172,6 +173,15 @@ De klant hoeft in V1 niet zelf:
 - importstructuren of validatieregels te begrijpen
 
 Deze managed route blijft bewust de standaard totdat self-service economisch en operationeel logisch is.
+
+## Fix-program operating rule
+
+Voor wave 1 van het schaalbaarheids-fix-programma geldt:
+
+- elke actieve campaign heeft in de app een actuele lifecycle stage
+- elke actieve campaign heeft een expliciete owner, next step en exception-status
+- deliveryrisk wordt wekelijks beoordeeld naast de CEO-scorecard
+- `Clients` in `CEO_WEEKLY_SCORECARD.xlsx` is alleen de weekmirror van de app-laag
 
 ## First-value drempels
 
