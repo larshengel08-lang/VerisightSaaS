@@ -25,7 +25,7 @@ export function SolutionsDropdown() {
         type="button"
         onClick={() => setOpen((value) => !value)}
         onMouseEnter={() => setOpen(true)}
-        className="flex items-center gap-1 text-sm font-medium text-slate-600 transition-colors hover:text-slate-950"
+        className="flex items-center gap-1 text-sm font-medium text-[#4A5563] transition-colors hover:text-[#132033]"
         aria-expanded={open}
         aria-haspopup="true"
       >
@@ -43,66 +43,66 @@ export function SolutionsDropdown() {
       {open ? (
         <div
           onMouseLeave={() => setOpen(false)}
-          className="absolute left-1/2 top-full z-50 mt-3 w-[21rem] -translate-x-1/2 rounded-2xl border border-slate-200 bg-white shadow-lg ring-1 ring-black/5"
+          className="absolute left-1/2 top-full z-50 mt-3 w-[21rem] -translate-x-1/2 rounded-2xl border border-[#E5E0D6] bg-white shadow-lg ring-1 ring-black/5"
         >
-          <div className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-sm border-l border-t border-slate-200 bg-white" />
+          <div className="absolute -top-1.5 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-sm border-l border-t border-[#E5E0D6] bg-white" />
 
           <div className="p-2">
             <div className="px-3 pb-2 pt-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Kernproducten</p>
+              <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#9CA3AF]">Kernproducten</p>
             </div>
             {CORE_MARKETING_PRODUCTS.map((product) => (
               <Link
                 key={product.href}
                 href={product.href}
                 onClick={() => setOpen(false)}
-                className="group flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-slate-50"
+                className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#F7F5F1]"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-900 transition-colors group-hover:text-blue-600">
+                    <span className="text-sm font-medium text-[#132033] transition-colors group-hover:text-[#3C8D8A]">
                       {product.label}
                     </span>
-                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                    <span className="inline-flex items-center rounded-full bg-[#DCEFEA] px-2 py-0.5 text-[10px] font-medium text-[#3C8D8A]">
                       Kern
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs leading-snug text-slate-500">{product.description}</p>
+                  <p className="mt-0.5 text-xs leading-snug text-[#4A5563]">{product.description}</p>
                 </div>
               </Link>
             ))}
 
             <div className="px-3 pb-2 pt-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Portfolioroute</p>
+              <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#9CA3AF]">Portfolioroute</p>
             </div>
             {PORTFOLIO_ROUTE_MARKETING_PRODUCTS.map((product) => (
               <Link
                 key={product.href}
                 href={product.href}
                 onClick={() => setOpen(false)}
-                className="group flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-slate-50"
+                className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#F7F5F1]"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-900 transition-colors group-hover:text-blue-600">
+                    <span className="text-sm font-medium text-[#132033] transition-colors group-hover:text-[#3C8D8A]">
                       {product.label}
                     </span>
-                    <span className="inline-flex items-center rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700">
+                    <span className="inline-flex items-center rounded-full bg-[#E5E0D6] px-2 py-0.5 text-[10px] font-medium text-[#4A5563]">
                       Route
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs leading-snug text-slate-500">{product.description}</p>
+                  <p className="mt-0.5 text-xs leading-snug text-[#4A5563]">{product.description}</p>
                 </div>
               </Link>
             ))}
 
-            <div className="mx-2 mt-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
+            <div className="mx-2 mt-2 rounded-lg border border-[#E5E0D6] bg-[#F7F5F1] px-3 py-3">
               <Link
                 href="/producten"
                 onClick={() => setOpen(false)}
-                className="text-sm font-semibold text-slate-900 transition-colors hover:text-blue-600"
+                className="text-sm font-medium text-[#132033] transition-colors hover:text-[#3C8D8A]"
               >
-                Bekijk de kernproducten en portfolioroute -&gt;
+                Bekijk alle producten →
               </Link>
             </div>
           </div>
