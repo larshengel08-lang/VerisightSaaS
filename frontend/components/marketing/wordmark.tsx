@@ -5,6 +5,7 @@ interface WordmarkProps {
   href?: string
   size?: 'sm' | 'md'
   showTagline?: boolean
+  light?: boolean
   className?: string
 }
 
@@ -12,6 +13,7 @@ export function Wordmark({
   href = '/',
   size = 'md',
   showTagline = true,
+  light = false,
   className = '',
 }: WordmarkProps) {
   const imageSize =
@@ -27,6 +29,7 @@ export function Wordmark({
         width={imageSize.width}
         height={imageSize.height}
         className={size === 'sm' ? 'h-auto w-[220px] sm:w-[240px]' : 'h-auto w-[250px] sm:w-[290px]'}
+        style={light ? { filter: 'brightness(0) invert(1)' } : undefined}
         priority
       />
     </Link>
