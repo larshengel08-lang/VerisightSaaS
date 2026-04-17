@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     description:
       'Vaste tarieven per scanvorm. ExitScan vanaf EUR 2.950, RetentieScan vanaf EUR 3.450. Geen licenties, heldere scope per traject.',
     url: 'https://www.verisight.nl/tarieven',
-    images: ['/opengraph-image'],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Verisight tarieven voor ExitScan en RetentieScan' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -163,7 +163,7 @@ export default function TarievenPage() {
                 </p>
                 <p className="mt-3 text-3xl font-light text-[#132033]">EUR 3.450</p>
                 <p className="mt-3 flex-1 text-sm leading-relaxed text-[#4A5563]">
-                  Gerichte baseline om retentierisico's in kaart te brengen. Met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.
+                  Gerichte baseline om retentierisico&#39;s in kaart te brengen. Met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.
                 </p>
                 <ul className="mt-5 space-y-2">
                   {[
