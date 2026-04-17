@@ -44,7 +44,7 @@ export function ExpandablePreview({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group relative block w-full overflow-hidden rounded-2xl border border-slate-200 bg-white text-left transition hover:border-blue-300 hover:shadow-md"
+          className="group relative block w-full overflow-hidden rounded-2xl border border-[#E5E0D6] bg-white text-left transition hover:border-[#3C8D8A] hover:shadow-md"
         >
           {badge && (
             <span className="absolute left-4 top-4 z-10 rounded-full bg-slate-950/85 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white">
@@ -60,7 +60,7 @@ export function ExpandablePreview({
           />
           <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3">
             <p className="text-sm font-medium text-slate-700">Klik om te vergroten</p>
-            <span className="text-sm font-semibold text-blue-700">Open preview</span>
+            <span className="text-sm font-semibold text-[#3C8D8A]">Open preview</span>
           </div>
         </button>
       </div>

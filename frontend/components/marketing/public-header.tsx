@@ -25,7 +25,7 @@ export function PublicHeader({
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[#E5E0D6] bg-white">
+    <header className="sticky top-0 z-50 border-b border-[#E5E0D6] bg-[rgba(255,255,255,0.92)] backdrop-blur-md">
       <div className="marketing-shell py-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -40,10 +40,10 @@ export function PublicHeader({
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-md px-3 py-2 text-sm transition-colors ${
+                className={`rounded-full px-3 py-2 text-sm transition-colors ${
                   pathname === link.href
-                    ? 'font-medium text-[#132033]'
-                    : 'text-[#4A5563] hover:text-[#132033]'
+                    ? 'bg-[#F7F5F1] font-medium text-[#132033]'
+                    : 'text-[#4A5563] hover:bg-[#F7F5F1] hover:text-[#132033]'
                 }`}
               >
                 {link.label}
@@ -61,7 +61,7 @@ export function PublicHeader({
             </Link>
             <Link
               href={ctaHref}
-              className="inline-flex rounded-md bg-[#3C8D8A] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#2d6e6b]"
+              className="inline-flex rounded-full bg-[#3C8D8A] px-5 py-2.5 text-sm font-medium text-white shadow-[0_14px_30px_rgba(60,141,138,0.16)] transition-colors hover:bg-[#2d6e6b]"
             >
               {ctaLabel}
             </Link>

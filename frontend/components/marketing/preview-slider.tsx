@@ -137,11 +137,11 @@ function HypothesisCanvas({ variant }: { variant: ReportPreviewVariant }) {
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
         {copy.hypotheses.map(({ title, body, question }) => (
-          <div key={title} className="rounded-[1.5rem] border border-blue-200 bg-blue-50 p-5">
+          <div key={title} className="rounded-[1.5rem] border border-[#DCEFEA] bg-[#F4FAF8] p-5">
             <p className="text-sm font-bold text-slate-950">{title}</p>
             <p className="mt-3 text-sm leading-6 text-slate-700">{body}</p>
             <div className="mt-4 rounded-[1.15rem] border border-white/80 bg-white/90 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Te toetsen vraag</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#3C8D8A]">Te toetsen vraag</p>
               <p className="mt-2 text-sm leading-6 text-slate-800">{question}</p>
             </div>
           </div>
@@ -165,7 +165,7 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
     <div className="marketing-preview-shell">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-700">{copy.label}</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3C8D8A]">{copy.label}</p>
           <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">{copy.intro}</p>
         </div>
         <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
@@ -181,8 +181,8 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
             onClick={() => setCurrent(index)}
             className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
               index === current
-                ? 'bg-blue-700 text-white'
-                : 'border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-700'
+                ? 'bg-[#234B57] text-white'
+                : 'border border-[#E5E0D6] bg-white text-slate-600 hover:border-[#3C8D8A] hover:text-[#234B57]'
             }`}
           >
             {label}
@@ -208,8 +208,8 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
             </div>
           </div>
 
-          <div className="rounded-[1.6rem] border border-blue-200 bg-blue-50 p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Belangrijke nuance</p>
+          <div className="rounded-[1.6rem] border border-[#DCEFEA] bg-[#F4FAF8] p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3C8D8A]">Belangrijke nuance</p>
             <p className="mt-3 text-sm leading-7 text-slate-700">{copy.nuance}</p>
           </div>
 

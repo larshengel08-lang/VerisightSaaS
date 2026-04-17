@@ -177,8 +177,8 @@ export function ContactForm({
 
   const labelClass = isLight ? 'text-slate-700' : 'text-slate-200'
   const inputClass = isLight
-    ? 'border-slate-200 bg-slate-50 text-slate-950 placeholder:text-slate-400 focus:border-blue-400 focus:ring-blue-400/25'
-    : 'border-white/10 bg-slate-950/40 text-white placeholder:text-slate-400 focus:border-blue-300 focus:ring-blue-400/30'
+    ? 'border-slate-200 bg-slate-50 text-slate-950 placeholder:text-slate-400 focus:border-[#3C8D8A] focus:ring-[#3C8D8A]/25'
+    : 'border-white/10 bg-slate-950/40 text-white placeholder:text-slate-400 focus:border-[#DCEFEA] focus:ring-[#3C8D8A]/30'
   const helperClass = isLight ? 'text-slate-500' : 'text-slate-300'
   const successClass = isLight
     ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
@@ -190,13 +190,13 @@ export function ContactForm({
     ? 'border-amber-200 bg-amber-50 text-amber-900'
     : 'border-amber-400/30 bg-amber-400/10 text-amber-100'
   const buttonClass = isLight
-    ? 'bg-blue-600 hover:bg-blue-700'
-    : 'bg-blue-700 hover:bg-blue-800'
+    ? 'bg-[#3C8D8A] hover:bg-[#2d6e6b]'
+    : 'bg-[#3C8D8A] hover:bg-[#2d6e6b]'
 
   return (
     <form onSubmit={handleSubmit} className={shellClass}>
-      <div className={`mb-5 rounded-2xl border px-4 py-4 text-sm leading-7 ${isLight ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'}`}>
-        Gebruik dit formulier voor ExitScan, RetentieScan of de combinatieroute. We helpen eerst bepalen welk
+      <div className={`mb-5 rounded-2xl border px-4 py-4 text-sm leading-7 ${isLight ? 'border-[#E5E0D6] bg-[#F7F5F1] text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'}`}>
+        Gebruik dit formulier voor ExitScan, RetentieScan, TeamScan of de combinatieroute. We helpen eerst bepalen welk
         kernproduct en welke eerste productroute logisch zijn, en pas daarna hoe intake, uitvoering, livegang en
         eerste waarde eruit moeten zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden
         en gericht op te volgen.
@@ -206,7 +206,7 @@ export function ContactForm({
         {contactTrustSignals.map((signal) => (
           <span
             key={signal}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${isLight ? 'border border-slate-200 bg-white text-slate-600' : 'border border-white/10 bg-white/5 text-slate-200'}`}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${isLight ? 'border border-[#E5E0D6] bg-white text-slate-600' : 'border border-white/10 bg-white/5 text-slate-200'}`}
           >
             {signal}
           </span>

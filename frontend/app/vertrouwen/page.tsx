@@ -1,9 +1,16 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
+import {
+  MarketingHeroIntro,
+  MarketingHeroStage,
+  MarketingHeroSupport,
+} from '@/components/marketing/marketing-hero'
 import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
+import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
+import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingSection } from '@/components/marketing/marketing-section'
-import { PublicFooter } from '@/components/marketing/public-footer'
-import { PublicHeader } from '@/components/marketing/public-header'
+import { SectionHeading } from '@/components/marketing/section-heading'
 import {
   trustHubAnswerCards,
   trustItems,
@@ -18,12 +25,12 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Vertrouwen',
   description:
-    'Methodiek, privacy en rapportlezing van Verisight. Geen individuele signalen naar management — groepsinzichten met heldere claimsgrenzen.',
+    'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan en bounded vervolgroutes.',
   alternates: { canonical: '/vertrouwen' },
   openGraph: {
     title: 'Vertrouwen | Verisight',
     description:
-      'Methodiek, privacy en rapportlezing van Verisight. Geen individuele signalen naar management — groepsinzichten met heldere claimsgrenzen.',
+      'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan en bounded vervolgroutes.',
     url: 'https://www.verisight.nl/vertrouwen',
     images: ['/opengraph-image'],
   },
@@ -31,7 +38,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vertrouwen | Verisight',
     description:
-      'Methodiek, privacy en rapportlezing van Verisight. Geen individuele signalen naar management — groepsinzichten met heldere claimsgrenzen.',
+      'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan en bounded vervolgroutes.',
     images: ['/opengraph-image'],
   },
 }
@@ -50,212 +57,157 @@ export default function VertrouwenPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
-      <div className="min-h-screen bg-white">
-        <PublicHeader />
-        <main>
-
-          {/* Hero */}
-          <section className="bg-[#F7F5F1] border-b border-[#E5E0D6]">
-            <div className="marketing-shell py-14">
-              <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">
-                Vertrouwen
-              </p>
-              <h1 className="mt-3 max-w-[28ch] font-display text-[clamp(1.6rem,3.5vw,2.2rem)] font-light leading-[1.15] tracking-[-0.02em] text-[#132033]">
-                Methodiek en vertrouwelijkheid
-              </h1>
-              <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-[#4A5563]">
-                Hoe Verisight methodiek, privacy, rapportgrenzen en formele basis publiek organiseert — zodat u dat kunt toetsen voordat een traject start.
-              </p>
-            </div>
-          </section>
-
-          {/* Vijf signalen */}
-          <MarketingSection tone="tint">
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {trustSignalHighlights.map((item) => (
-                <div key={item.title} className="rounded-xl border border-[#E5E0D6] bg-white p-6">
-                  <p className="text-sm font-medium text-[#132033]">{item.title}</p>
-                  <p className="mt-3 text-sm leading-relaxed text-[#4A5563]">{item.body}</p>
+      <MarketingPageShell
+        theme="support"
+        pageType="support"
+        ctaHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'trust_primary_cta' })}
+        ctaLabel="Plan een kennismaking"
+        heroIntro={
+          <MarketingHeroIntro>
+            <p className="marketing-hero-eyebrow text-[#3C8D8A]">Vertrouwen</p>
+            <h1 className="marketing-hero-title marketing-hero-title-page font-display text-[#132033]">
+              Methodiek, privacy en rapportgrenzen in gewone managementtaal.
+            </h1>
+            <p className="marketing-hero-copy text-[#4A5563]">
+              Verisight laat publiek zien hoe methodiek, privacy, rapportlezing en formele basis zijn ingericht,
+              zodat u dit kunt toetsen voordat een traject start.
+            </p>
+          </MarketingHeroIntro>
+        }
+        heroStage={
+          <MarketingHeroStage className="h-full">
+            <div className="space-y-4">
+              <span className="marketing-stage-tag border border-white/12 bg-white/6 text-[#DCEFEA]">Heldere grenzen</span>
+              {trustItems.slice(0, 4).map((item) => (
+                <div key={item} className="rounded-[1.2rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200">
+                  {item}
                 </div>
               ))}
             </div>
-          </MarketingSection>
-
-          {/* Wat u kunt verifieren + trustItems */}
-          <MarketingSection tone="surface">
-            <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
-              <div>
-                <h2 className="text-xl font-medium text-[#132033]">Wat u publiek kunt verifieren</h2>
-                <div className="mt-6 space-y-4">
-                  {trustVerificationCards.map((card) => (
-                    <div key={card.title} className="rounded-lg border border-[#E5E0D6] bg-white p-5">
-                      <p className="text-sm font-medium text-[#132033]">{card.title}</p>
-                      <p className="mt-2 text-sm leading-relaxed text-[#4A5563]">{card.body}</p>
-                    </div>
-                  ))}
-                </div>
+          </MarketingHeroStage>
+        }
+        heroSupport={
+          <MarketingHeroSupport>
+            {trustQuickLinks.slice(0, 2).map((link) => (
+              <Link key={link.href} href={link.href} className="marketing-link-card transition-colors hover:border-[#3C8D8A]">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#9CA3AF]">Publieke basis</p>
+                <p className="mt-2 text-base font-semibold text-[#132033]">{link.label}</p>
+                <p className="mt-2 text-sm leading-6 text-[#4A5563]">{link.body}</p>
+              </Link>
+            ))}
+          </MarketingHeroSupport>
+        }
+      >
+        <MarketingSection tone="surface">
+          <SectionHeading
+            eyebrow="Waar vertrouwen vandaan komt"
+            title="De trustlaag moet hetzelfde vertellen als het product werkelijk levert."
+            description="Deze pagina maakt expliciet wat Verisight wel en niet claimt, hoe privacy is ingebouwd en hoe management de output moet lezen."
+          />
+          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {trustSignalHighlights.map((item) => (
+              <div key={item.title} className="marketing-feature-card">
+                <p className="text-base font-semibold text-[#132033]">{item.title}</p>
+                <p className="mt-3 text-sm leading-7 text-[#4A5563]">{item.body}</p>
               </div>
+            ))}
+          </div>
+        </MarketingSection>
 
-              <div className="rounded-xl bg-[#132033] p-7">
-                <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">
-                  Methodiek en vertrouwen
-                </p>
-                <h2 className="mt-3 text-xl font-medium text-[#F7F5F1]">
-                  Bruikbare inzichten, heldere grenzen
-                </h2>
-                <p className="mt-3 text-sm leading-relaxed text-[rgba(247,245,241,0.65)]">
-                  Verisight werkt met geaggregeerde uitkomsten en benoemt bewust wat wel en niet geconcludeerd kan worden.
-                </p>
-                <ul className="mt-6 space-y-3">
-                  {trustItems.map((item) => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm text-[rgba(247,245,241,0.8)]">
-                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#3C8D8A]" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-8 space-y-2">
-                  {trustQuickLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className="block rounded-lg border border-[rgba(247,245,241,0.1)] bg-[rgba(247,245,241,0.05)] px-4 py-4 text-sm transition-colors hover:bg-[rgba(247,245,241,0.1)]"
-                    >
-                      <span className="font-medium text-[#F7F5F1]">{link.label}</span>
-                      <span className="mt-1 block text-[rgba(247,245,241,0.55)]">{link.body}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </MarketingSection>
-
-          {/* Privacy en due diligence Q&A */}
-          <MarketingSection tone="tint">
-            <h2 className="text-xl font-medium text-[#132033]">Privacy en due diligence</h2>
-            <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-[#4A5563]">
-              Snelle antwoorden op voorspelbare vragen — zodat u dit kunt toetsen voordat er een gesprek plaatsvindt.
-            </p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {trustHubAnswerCards.map((card) => (
-                <div key={card.title} className="rounded-lg border border-[#E5E0D6] bg-white p-5">
-                  <p className="text-sm font-medium text-[#132033]">{card.title}</p>
-                  <p className="mt-3 text-sm leading-relaxed text-[#4A5563]">{card.body}</p>
-                </div>
-              ))}
-            </div>
-          </MarketingSection>
-
-          {/* Hoe u de output leest */}
-          <MarketingSection tone="surface">
-            <h2 className="text-xl font-medium text-[#132033]">Hoe u de output leest</h2>
-            <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-[#4A5563]">
-              Wat Verisight wel en niet probeert te zijn — zodat management de output leest als gespreksinput, niet als diagnose.
-            </p>
-            <div className="mt-8 overflow-hidden rounded-xl border border-[#E5E0D6]">
-              {/* Desktop header */}
-              <div className="hidden grid-cols-3 border-b border-[#E5E0D6] bg-[#F7F5F1] md:grid">
-                {['Thema', 'Wat u wel ziet', 'Wat u er niet van moet maken'].map((col) => (
-                  <div key={col} className="px-5 py-3 text-xs font-medium uppercase tracking-[0.12em] text-[#9CA3AF]">
-                    {col}
+        <MarketingSection tone="plain">
+          <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="marketing-feature-card">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#3C8D8A]">Wat u publiek kunt verifieren</p>
+              <div className="mt-4 space-y-3">
+                {trustVerificationCards.map((card) => (
+                  <div key={card.title} className="rounded-[1.15rem] border border-[#E5E0D6] bg-white px-4 py-4">
+                    <p className="text-base font-semibold text-[#132033]">{card.title}</p>
+                    <p className="mt-2 text-sm leading-7 text-[#4A5563]">{card.body}</p>
                   </div>
                 ))}
               </div>
-              {trustReadingRows.map((row) => (
-                <div key={row[0]} className="border-b border-[#E5E0D6] last:border-b-0">
-                  {/* Mobile */}
-                  <div className="space-y-3 p-5 md:hidden">
-                    {row.map((cell, index) => (
-                      <div key={`${row[0]}-${index}`}>
-                        <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#9CA3AF]">
-                          {['Thema', 'Wat u wel ziet', 'Wat u er niet van moet maken'][index]}
-                        </p>
-                        <p className={`mt-1 text-sm leading-relaxed ${index === 1 ? 'font-medium text-[#132033]' : 'text-[#4A5563]'}`}>
-                          {cell}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Desktop */}
-                  <div className="hidden grid-cols-3 md:grid">
-                    {row.map((cell, index) => (
-                      <div
-                        key={`${row[0]}-${index}`}
-                        className={`px-5 py-5 text-sm leading-relaxed ${index === 1 ? 'font-medium text-[#132033]' : 'text-[#4A5563]'}`}
-                      >
-                        {cell}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
             </div>
-          </MarketingSection>
-
-          {/* Publieke supportlaag */}
-          <MarketingSection tone="tint">
-            <h2 className="text-xl font-medium text-[#132033]">Publieke documentatie</h2>
-            <p className="mt-2 max-w-[52ch] text-sm leading-relaxed text-[#4A5563]">
-              De formele en publieke basis staat op meerdere plekken — gebundeld in een buyer-facing volgorde.
-            </p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              {trustSupportCards.map((card) => (
-                <Link
-                  key={card.href}
-                  href={card.href}
-                  className="rounded-xl border border-[#E5E0D6] bg-white p-6 transition-colors hover:border-[#3C8D8A]"
-                >
-                  <p className="text-sm font-medium text-[#132033]">{card.title}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-[#4A5563]">{card.body}</p>
-                  <p className="mt-3 text-xs font-medium text-[#3C8D8A]">Bekijken →</p>
-                </Link>
-              ))}
-            </div>
-          </MarketingSection>
-
-          {/* Closing CTA */}
-          <MarketingSection tone="surface">
-            <div className="text-center">
-              <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">
-                Volgende stap
-              </p>
-              <h2 className="mt-3 max-w-[32ch] mx-auto font-display text-[clamp(1.4rem,3vw,2rem)] font-light leading-[1.2] tracking-[-0.02em] text-[#132033]">
-                Klaar om te toetsen welke route voor uw organisatie logisch is?
+            <div className="marketing-route-card-dark bg-[linear-gradient(180deg,#1b2e45_0%,#132033_100%)]">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#DCEFEA]">Methodiek en vertrouwen</p>
+              <h2 className="mt-4 text-[clamp(1.8rem,3vw,2.8rem)] font-light leading-[1.08] tracking-[-0.03em] text-[#F7F5F1]">
+                Bruikbare inzichten, zonder schijnzekerheid.
               </h2>
-              <p className="mt-4 max-w-[48ch] mx-auto text-sm leading-relaxed text-[#4A5563]">
-                Gebruik deze pagina als publieke basis. In een kort gesprek vertalen we dat naar ExitScan, RetentieScan of een combinatie — inclusief aanpak, timing en prijs.
+              <p className="mt-4 text-sm leading-7 text-[rgba(247,245,241,0.72)]">
+                Verisight werkt met geaggregeerde uitkomsten en benoemt bewust wat wel en niet geconcludeerd kan
+                worden.
               </p>
-              <div className="mt-6 flex flex-wrap justify-center gap-4">
-                <Link
-                  href={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'trust_closing_cta' })}
-                  className="inline-flex rounded-md bg-[#3C8D8A] px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2d6e6b]"
-                >
-                  Plan een kennismaking
-                </Link>
-                <Link
-                  href="/producten"
-                  className="inline-flex rounded-md border border-[#E5E0D6] bg-white px-6 py-3 text-sm font-medium text-[#4A5563] transition-colors hover:border-[#3C8D8A] hover:text-[#132033]"
-                >
-                  Bekijk de producten
-                </Link>
+              <div className="mt-6 space-y-3">
+                {trustItems.map((item) => (
+                  <div key={item} className="rounded-[1.15rem] border border-white/10 bg-white/5 px-4 py-3 text-sm leading-7 text-[rgba(247,245,241,0.82)]">
+                    {item}
+                  </div>
+                ))}
               </div>
             </div>
-          </MarketingSection>
+          </div>
+        </MarketingSection>
 
-          {/* Contact form */}
-          <MarketingSection tone="tint">
-            <MarketingInlineContactPanel
-              eyebrow="Plan kennismaking"
-              title="Vertel kort welke managementvraag nu speelt."
-              body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy en prijs."
-              defaultRouteInterest="exitscan"
-              defaultCtaSource="trust_form"
+        <MarketingSection tone="tint">
+          <SectionHeading
+            eyebrow="Hoe u de output leest"
+            title="Gebruik Verisight als gespreksinput, niet als diagnose."
+            description="De publieke reading guide moet dezelfde interpretatiegrenzen laten zien als rapport en dashboard."
+          />
+          <div className="mt-10">
+            <MarketingComparisonTable
+              columns={['Thema', 'Wat u wel ziet', 'Wat u er niet van moet maken']}
+              rows={trustReadingRows}
             />
-          </MarketingSection>
+          </div>
+        </MarketingSection>
 
-        </main>
-        <PublicFooter />
-      </div>
+        <MarketingSection tone="surface">
+          <SectionHeading
+            eyebrow="Privacy en due diligence"
+            title="Snelle antwoorden op voorspelbare vragen."
+            description="Zo kan een buyer de basis toetsen voordat er een gesprek plaatsvindt."
+          />
+          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {trustHubAnswerCards.map((card) => (
+              <div key={card.title} className="marketing-feature-card">
+                <p className="text-base font-semibold text-[#132033]">{card.title}</p>
+                <p className="mt-3 text-sm leading-7 text-[#4A5563]">{card.body}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {trustSupportCards.map((card) => (
+              <Link key={card.href} href={card.href} className="marketing-feature-card transition-colors hover:border-[#3C8D8A]">
+                <p className="text-base font-semibold text-[#132033]">{card.title}</p>
+                <p className="mt-3 text-sm leading-7 text-[#4A5563]">{card.body}</p>
+                <p className="mt-4 text-sm font-semibold text-[#3C8D8A]">Bekijken</p>
+              </Link>
+            ))}
+          </div>
+        </MarketingSection>
+
+        <MarketingSection tone="plain">
+          <MarketingCalloutBand
+            eyebrow="Volgende stap"
+            title="Klaar om te toetsen welke route voor uw organisatie logisch is?"
+            body="Gebruik deze pagina als publieke basis. In een kort gesprek vertalen we dat naar ExitScan, RetentieScan of een kleinere vervolgronde, inclusief aanpak, timing en prijs."
+            primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'trust_closing_cta' })}
+            primaryLabel="Plan een kennismaking"
+            secondaryHref="/producten"
+            secondaryLabel="Bekijk de producten"
+          />
+        </MarketingSection>
+
+        <MarketingSection tone="surface">
+          <MarketingInlineContactPanel
+            eyebrow="Plan kennismaking"
+            title="Vertel kort welke managementvraag nu speelt."
+            body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy en prijs."
+            defaultRouteInterest="exitscan"
+            defaultCtaSource="trust_form"
+          />
+        </MarketingSection>
+      </MarketingPageShell>
     </>
   )
 }

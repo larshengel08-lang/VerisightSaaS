@@ -13,16 +13,16 @@ interface SampleShowcaseCardProps {
 const toneClasses = {
   light: {
     card: 'border-slate-200 bg-white',
-    eyebrow: 'text-blue-600',
+    eyebrow: 'text-[#3C8D8A]',
     title: 'text-slate-950',
     body: 'text-slate-600',
     note: 'border-slate-200 bg-slate-50 text-slate-700',
     button:
-      'border-slate-300 bg-slate-50 text-slate-700 hover:border-slate-400 hover:bg-white hover:text-slate-950',
+      'border-[#E5E0D6] bg-[#F7F5F1] text-[#4A5563] hover:border-[#3C8D8A] hover:bg-white hover:text-[#132033]',
   },
   dark: {
     card: 'border-white/10 bg-white/5',
-    eyebrow: 'text-blue-300',
+    eyebrow: 'text-[#DCEFEA]',
     title: 'text-white',
     body: 'text-slate-300',
     note: 'border-white/10 bg-white/10 text-slate-200',

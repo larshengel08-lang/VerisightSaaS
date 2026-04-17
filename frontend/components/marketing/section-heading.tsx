@@ -16,15 +16,15 @@ export function SectionHeading({
   const wrapper = align === 'center' ? 'mx-auto max-w-4xl text-center' : 'max-w-[56rem] text-left'
   const eyebrowColor = light ? 'text-[#DCEFEA]' : 'text-[#3C8D8A]'
   const titleColor = light ? 'text-[#F7F5F1]' : 'text-[#132033]'
-  const descriptionColor = light ? 'text-[rgba(247,245,241,0.65)]' : 'text-[#4A5563]'
+  const descriptionColor = light ? 'text-[rgba(247,245,241,0.72)]' : 'text-[#4A5563]'
 
   return (
     <div className={wrapper}>
-      <p className={`text-[0.6rem] font-medium uppercase tracking-[0.14em] ${eyebrowColor}`}>
+      <p className={`text-[0.68rem] font-semibold uppercase tracking-[0.22em] ${eyebrowColor}`}>
         {eyebrow}
       </p>
       <h2
-        className={`mt-3 max-w-[18ch] font-display text-[clamp(1.6rem,3.5vw,2.2rem)] leading-[1.15] ${
+        className={`mt-4 max-w-[18ch] font-display text-[clamp(1.8rem,3.8vw,2.65rem)] font-light leading-[1.05] tracking-[-0.03em] ${
           align === 'center' ? 'mx-auto' : ''
         } ${titleColor}`}
       >
@@ -32,7 +32,7 @@ export function SectionHeading({
       </h2>
       {description ? (
         <p
-          className={`mt-4 max-w-[52ch] text-base leading-relaxed ${
+          className={`mt-5 max-w-[58ch] text-[1.02rem] leading-8 ${
             align === 'center' ? 'mx-auto' : ''
           } ${descriptionColor}`}
         >

@@ -18,15 +18,15 @@ interface MarketingPageShellProps {
 
 const themeMap: Record<MarketingPageTheme, string> = {
   neutral:
-    'bg-[radial-gradient(circle_at_top_left,#dbeafe_0%,transparent_22%),radial-gradient(circle_at_bottom_right,#dcfce7_0%,transparent_24%),linear-gradient(180deg,#f9fbff_0%,#eef5ff_38%,#ffffff_100%)]',
+    'bg-[radial-gradient(circle_at_top_left,rgba(220,239,234,0.85)_0%,transparent_24%),radial-gradient(circle_at_bottom_right,rgba(27,46,69,0.08)_0%,transparent_28%),linear-gradient(180deg,#f7f5f1_0%,#f7f5f1_38%,#ffffff_100%)]',
   exit:
-    'bg-[radial-gradient(circle_at_top_left,#dbeafe_0%,transparent_22%),radial-gradient(circle_at_bottom_right,#e2e8f0_0%,transparent_26%),linear-gradient(180deg,#f8fbff_0%,#eff6ff_42%,#ffffff_100%)]',
+    'bg-[radial-gradient(circle_at_top_left,rgba(60,141,138,0.14)_0%,transparent_24%),radial-gradient(circle_at_bottom_right,rgba(27,46,69,0.08)_0%,transparent_26%),linear-gradient(180deg,#f7f5f1_0%,#f4f7f6_42%,#ffffff_100%)]',
   retention:
-    'bg-[radial-gradient(circle_at_top_left,#d1fae5_0%,transparent_22%),radial-gradient(circle_at_bottom_right,#dbeafe_0%,transparent_24%),linear-gradient(180deg,#f6fefb_0%,#ecfdf5_42%,#ffffff_100%)]',
+    'bg-[radial-gradient(circle_at_top_left,rgba(220,239,234,0.95)_0%,transparent_24%),radial-gradient(circle_at_bottom_right,rgba(35,75,87,0.08)_0%,transparent_26%),linear-gradient(180deg,#f7f5f1_0%,#f2f8f6_42%,#ffffff_100%)]',
   combination:
-    'bg-[radial-gradient(circle_at_top_left,#dbeafe_0%,transparent_22%),radial-gradient(circle_at_bottom_right,#dcfce7_0%,transparent_24%),linear-gradient(180deg,#f8fbff_0%,#f0fdf4_42%,#ffffff_100%)]',
+    'bg-[radial-gradient(circle_at_top_left,rgba(220,239,234,0.9)_0%,transparent_24%),radial-gradient(circle_at_bottom_right,rgba(27,46,69,0.08)_0%,transparent_26%),linear-gradient(180deg,#f7f5f1_0%,#f4f7f6_42%,#ffffff_100%)]',
   support:
-    'bg-[radial-gradient(circle_at_top_left,#e2e8f0_0%,transparent_24%),linear-gradient(180deg,#f8fafc_0%,#f1f5f9_44%,#ffffff_100%)]',
+    'bg-[radial-gradient(circle_at_top_left,rgba(220,239,234,0.45)_0%,transparent_24%),radial-gradient(circle_at_bottom_right,rgba(27,46,69,0.05)_0%,transparent_26%),linear-gradient(180deg,#f7f5f1_0%,#f6f5f2_44%,#ffffff_100%)]',
 }
 
 export function MarketingPageShell({
@@ -43,11 +43,11 @@ export function MarketingPageShell({
   const showSupport = Boolean(heroSupport)
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
       <PublicHeader ctaHref={ctaHref} ctaLabel={ctaLabel} />
       <main>
         <section
-          className={`marketing-hero-shell marketing-hero-shell-${pageType} overflow-hidden border-b border-slate-200 ${themeMap[theme]}`}
+          className={`marketing-hero-shell marketing-hero-shell-${pageType} overflow-hidden border-b border-[var(--border)] ${themeMap[theme]}`}
         >
           <div className={`marketing-shell marketing-hero-grid marketing-hero-grid-${pageType}`}>
             <div className="marketing-hero-region-intro">{heroIntro}</div>

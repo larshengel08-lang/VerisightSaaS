@@ -9,7 +9,7 @@ export function TrustStrip({ items, tone = 'light' }: TrustStripProps) {
       ? 'border-white/10 bg-white/5 text-slate-200'
       : 'border-slate-200 bg-white text-slate-700 shadow-sm'
 
-  const dot = tone === 'dark' ? 'bg-blue-300' : 'bg-blue-600'
+  const dot = tone === 'dark' ? 'bg-[#DCEFEA]' : 'bg-[#3C8D8A]'
   const label = tone === 'dark' ? 'text-white/90' : 'text-slate-800'
 
   return (
