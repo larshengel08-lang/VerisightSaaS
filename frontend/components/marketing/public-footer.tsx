@@ -20,8 +20,8 @@ export function PublicFooter() {
 
         {/* Kolom 1 — merk */}
         <div>
-          <Wordmark size="sm" light />
-          <p className="mt-4 max-w-sm text-sm leading-7 text-[rgba(247,245,241,0.6)]">
+          <Wordmark size="sm" showTagline={false} light />
+          <p className="mt-4 max-w-sm text-sm leading-7 text-[rgba(247,245,241,0.65)]">
             Verisight helpt HR en management scherp zien welke vertrek- en retentiesignalen
             aandacht vragen — zodat prioriteiten duidelijk worden.
           </p>
