@@ -534,8 +534,17 @@ async def db_general_error_handler(request: Request, exc: SQLAlchemyError):
 async def health() -> JSONResponse:
     db_ok = check_db_connection()
     return JSONResponse(
+        status_code=200,
+        content={"status": "ok" if db_ok else "degraded", "checks": {"database": db_ok}},
+    )
+
+
+@app.get("/api/ready")
+async def ready() -> JSONResponse:
+    db_ok = check_db_connection()
+    return JSONResponse(
         status_code=200 if db_ok else 503,
-        content={"status": "ok" if db_ok else "degraded"},
+        content={"status": "ok" if db_ok else "degraded", "checks": {"database": db_ok}},
     )
 
 

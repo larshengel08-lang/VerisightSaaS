@@ -1,22 +1,32 @@
 from __future__ import annotations
 
+import logging
 import os
 
 from fastapi import HTTPException
+
+logger = logging.getLogger(__name__)
 
 
 def validate_runtime_config(*, is_production: bool) -> None:
     if not is_production:
         return
 
-    missing = [
-        name for name in ("DATABASE_URL", "FRONTEND_URL", "BACKEND_URL", "RESEND_API_KEY")
-        if not os.getenv(name)
-    ]
-    if missing:
+    required = [name for name in ("DATABASE_URL",) if not os.getenv(name)]
+    if required:
         raise RuntimeError(
             "Productieconfig onvolledig. Ontbrekende environment variables: "
-            + ", ".join(missing)
+            + ", ".join(required)
+        )
+
+    optional_missing = [
+        name for name in ("FRONTEND_URL", "BACKEND_URL", "RESEND_API_KEY")
+        if not os.getenv(name)
+    ]
+    if optional_missing:
+        logger.warning(
+            "Productieconfig mist optionele environment variables: %s",
+            ", ".join(optional_missing),
         )
 
 
