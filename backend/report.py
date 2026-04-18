@@ -1,16 +1,24 @@
 ﻿"""
 Verisight — PDF-rapportgenerator
 ========================================
-Genereert een professioneel 7-pagina rapport per campaign.
+Genereert productspecifieke managementrapporten per campaign.
 
-Pagina-indeling
----------------
-  1. Voorblad        — campagne, organisatie, datum, KPI-snapshot
-  2. Management Summary — sleutelbevindingen, signaalverdeling
-  3. SDT Basisbehoeften — autonomie, competentie, verbondenheid
-  4. Organisatiefactoren — scoretabel, signaalwaarden, focusvragen
-  5. Patronen & vertrekreden (exit) / bevlogenheid (retention)
-  6. Werkhypothesen & vervolgstappen
+Belangrijke boundary
+--------------------
+Voor `ExitScan` geldt een vaste, expliciet vastgezette hoofdstructuur:
+  1. Cover
+  2. Respons
+  3. Bestuurlijke handoff
+  4. Frictiescore & verdeling van het vertrekbeeld
+  5. Signalen in samenhang
+  6. Drivers & prioriteitenbeeld
+  7. SDT Basisbehoeften
+  8. Organisatiefactoren
+  9. Eerste route & actie
+ 10. Methodiek / leeswijzer
+ 11. Appendix — Technische verantwoording
+
+De gedeelde report grammar mag deze ExitScan-opbouw niet reduceren of herordenen.
 
 Gebruik
 -------

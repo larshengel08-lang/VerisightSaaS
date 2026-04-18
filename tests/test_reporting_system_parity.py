@@ -65,6 +65,7 @@ def test_report_hypotheses_include_owner_and_actionability():
         avg_engagement=5.2,
         avg_turnover_intention=6.0,
         avg_stay_intent=4.7,
+        factor_avgs={"workload": 4.9, "leadership": 5.3},
     )
 
     assert exit_hypotheses[0]["owner"]
@@ -84,6 +85,7 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
 
     assert "managementsamenvatting" in preview_copy
     assert "bestuurlijke handoff" in preview_copy
+    assert "cover en een expliciete responslaag" in preview_copy
     assert "eerste managementsessie" in preview_copy
     assert "eerste managementvraag" in preview_copy
     assert "eerste logische stap" in preview_copy
@@ -94,6 +96,8 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
     assert "wat je hier niet uit moet concluderen" in exit_report_content
     assert "wat je hier niet uit moet concluderen" in retention_report_content
     assert "bestuurlijke handoff" in report
+    assert "11. appendix — technische verantwoording" in report
+    assert "7-pagina rapport" not in report
     assert "session_title" in report
     assert "eerste managementsessie na oplevering" in exit_report_content
     assert "eerste managementsessie na oplevering" in retention_report_content

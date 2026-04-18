@@ -138,7 +138,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
   exit: {
     label: 'ExitScan-voorbeeld',
     intro:
-      'ExitScan opent met een managementsamenvatting die het vertrekbeeld terugbrengt tot hoofdreden, bestuurlijke relevantie, eerste managementvraag, eerste managementsessie en compacte handoff voor sponsor of directie. Dit is meestal de logischste eerste demo voor nieuwe buyers.',
+      'ExitScan begint met een rustige cover en een expliciete responslaag. Daarna volgt de bestuurlijke handoff die het vertrekbeeld terugbrengt tot hoofdreden, bestuurlijke relevantie, eerste managementvraag, eerste managementsessie en compacte handoff voor sponsor of directie. Dit is meestal de logischste eerste demo voor nieuwe buyers.',
     kpis: [
       ['Reacties', '14 van 18', '78% respons'],
       ['Gemiddelde frictiescore', '5,8 op 10', 'Vergt nadere duiding'],
@@ -187,7 +187,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       },
     ],
     proofNotes: [
-      ['Managementsamenvatting', 'Vertrekbeeld nu, bestuurlijke relevantie, eerste managementsessie en eerste logische stap in een leeslaag'],
+      ['Cover + respons', 'Eerst context en responskwaliteit, daarna pas bestuurlijke duiding, eerste managementsessie en eerste logische stap'],
       ['Bestuurlijke handoff', 'Compacte sponsor-read met wat nu speelt, waarom dat telt en wat je niet moet overclaimen'],
       ['Werkhypothesen', 'Topfactoren worden vertaald naar te toetsen vragen voordat de eerste route wordt gekozen'],
       ['Methodische nuance', 'Signalen en hypothesen, geen absolute waarheid of diagnose'],
@@ -204,7 +204,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     demoLabel: 'Illustratief voorbeeld',
     demoBody:
-      'Fictieve voorbeelddata. De trustopbouw, managementtaal en rapportvolgorde zijn gelijk aan de huidige ExitScan-presentatie waarmee Lars normaal de eerste route uitlegt.',
+      'Fictieve voorbeelddata. De trustopbouw, managementtaal en rapportvolgorde volgen de huidige ExitScan-presentatie: cover, respons, bestuurlijke handoff, verdiepende factorlagen en daarna pas actie en methodiek.',
     supportVisualTitle: 'Segment deep dive preview',
     supportVisualAlt: 'Voorbeeld van een ExitScan segment deep dive',
     sampleReportTitle: 'Volledig buyer-facing voorbeeldrapport',
