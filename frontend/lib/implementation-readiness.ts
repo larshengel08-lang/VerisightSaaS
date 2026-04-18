@@ -24,7 +24,7 @@ export function getDeliveryModeDescription(mode: DeliveryMode | null | undefined
           : scanType === 'leadership'
             ? 'Gebruik dit pas nadat Leadership Scan in een latere wave ook echt als bounded vervolgroute is geopend. In deze wave blijft Leadership Scan baseline-only.'
             : scanType === 'mto'
-              ? 'Gebruik dit pas nadat MTO in een latere wave ook echt als vervolg- of ritmeroute is geopend. In deze wave blijft MTO baseline-only.'
+              ? 'Gebruik dit pas nadat MTO in een latere wave ook echt als vervolg- of ritmeroute en publieke activatie is geopend. In deze wave blijft MTO assisted, intern en baseline-only.'
               : 'Gebruik dit pas nadat ExitScan Baseline, volumelogica en eigenaar voor opvolging scherp zijn. Live blijft een bewuste vervolgroute.'
   }
 
@@ -37,7 +37,7 @@ export function getDeliveryModeDescription(mode: DeliveryMode | null | undefined
         : scanType === 'leadership'
           ? 'Dit is de standaard eerste route voor Leadership Scan in deze wave. Gebruik baseline om eerst een geaggregeerde managementread zonder named leaders of 360-logica op te bouwen.'
           : scanType === 'mto'
-            ? 'Dit is de standaard eerste route voor MTO in deze wave. Gebruik baseline om eerst een brede, organisatiebrede hoofdmeting op groepsniveau leesbaar te maken.'
+            ? 'Dit is de standaard eerste route voor MTO in deze wave. Gebruik baseline om eerst een assisted, brede organisatiebrede hoofdmeting op groepsniveau leesbaar te maken voordat publieke activatie logisch wordt.'
             : 'Dit is de standaard eerste route voor ExitScan. Gebruik baseline om vertrek eerst bestuurlijk leesbaar te maken voordat doorlopende opvolging logisch wordt.'
 }
 

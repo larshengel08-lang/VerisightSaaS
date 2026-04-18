@@ -26,6 +26,7 @@ import {
   type DeliveryLifecycleStage,
   type DeliveryExceptionStatus,
 } from '@/lib/ops-delivery'
+import { buildMtoAssistedReadinessSummary } from '@/lib/mto-assisted-readiness'
 import type { ContactRequestRecord } from '@/lib/pilot-learning'
 
 interface Props {
@@ -257,6 +258,15 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
                 qualifiedRoute: draft.qualified_route,
                 qualificationReviewedBy: draft.qualification_reviewed_by,
               })
+              const mtoReadiness = buildMtoAssistedReadinessSummary({
+                qualificationStatus: draft.qualification_status,
+                qualifiedRoute: draft.qualified_route,
+                qualificationReviewedBy: draft.qualification_reviewed_by,
+                opsOwner: draft.ops_owner,
+                opsNextStep: draft.ops_next_step,
+                opsHandoffNote: draft.ops_handoff_note,
+                linkedDeliveryCount: linkedCampaigns.length,
+              })
               const commerceVisibility = buildBoundedCommerceVisibilitySummary({
                 routeInterest: row.route_interest,
                 agreementStatus: draft.commercial_agreement_status,
@@ -405,6 +415,21 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
                         </div>
                         <p className="mt-2 text-xs leading-5">{commerceVisibility.deliveryHint}</p>
                       </div>
+                      {mtoReadiness.applicable ? (
+                        <div className={`rounded-2xl border px-3 py-3 ${getQualificationVisibilityClassName(mtoReadiness.tone)}`}>
+                          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em]">
+                            MTO assisted readiness
+                          </p>
+                          <p className="mt-2 text-sm font-semibold">{mtoReadiness.headline}</p>
+                          <p className="mt-1 text-xs leading-5">{mtoReadiness.detail}</p>
+                          <p className="mt-2 text-xs font-medium leading-5">{mtoReadiness.releaseLabel}</p>
+                          <ul className="mt-2 space-y-1 text-xs leading-5">
+                            {mtoReadiness.checklistItems.map((item) => (
+                              <li key={item}>{item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
                       <select
                         value={draft.ops_stage}
                         onChange={(event) => updateDraft(row.id, 'ops_stage', event.target.value as LeadDraft['ops_stage'])}

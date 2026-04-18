@@ -23,6 +23,7 @@ import {
   type DeliveryExceptionStatus,
   type DeliveryManualState,
 } from '@/lib/ops-delivery'
+import { buildMtoAssistedReadinessSummary } from '@/lib/mto-assisted-readiness'
 import type { ContactRequestRecord } from '@/lib/pilot-learning'
 import type { DeliveryMode, ScanType } from '@/lib/types'
 
@@ -194,6 +195,17 @@ export function PreflightChecklist({
   const [checkpointBusyId, setCheckpointBusyId] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const mtoReadiness = buildMtoAssistedReadinessSummary({
+    qualificationStatus: linkedLead?.qualification_status,
+    qualifiedRoute: linkedLead?.qualified_route,
+    qualificationReviewedBy: linkedLead?.qualification_reviewed_by,
+    opsOwner: record?.operator_owner,
+    opsNextStep: record?.next_step,
+    opsHandoffNote: record?.customer_handoff_note ?? linkedLead?.ops_handoff_note,
+    linkedDeliveryCount: record ? 1 : 0,
+    linkedLearningDossierCount,
+    learningCloseoutEvidenceCount,
+  })
 
   const opsWarnings = buildOpsWarnings({
     record,
@@ -528,6 +540,24 @@ export function PreflightChecklist({
                 </p>
               )}
             </div>
+            {mtoReadiness.applicable ? (
+              <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-950">MTO assisted readiness</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">{mtoReadiness.headline}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{mtoReadiness.detail}</p>
+                <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  {mtoReadiness.releaseLabel}
+                </p>
+                <ul className="mt-3 space-y-2">
+                  {mtoReadiness.checklistItems.map((item) => (
+                    <li key={item} className="flex gap-2 text-sm leading-6 text-slate-700">
+                      <span className="text-amber-500">!</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-semibold text-slate-950">Ops-warnings</p>
