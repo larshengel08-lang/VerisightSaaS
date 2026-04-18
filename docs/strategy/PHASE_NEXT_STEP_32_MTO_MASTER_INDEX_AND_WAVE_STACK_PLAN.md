@@ -190,6 +190,7 @@ Scope out:
 - expliciete action logging
 - buyer-facing activatie
 - vervanging van bestaande scans
+- parallelle `Customer Feedback` / `NPS` opening of gecombineerde cross-domain read
 
 Dependencies:
 
@@ -404,6 +405,7 @@ Het volgende werk blijft expliciet geblokkeerd terwijl de eerste MTO-stack loopt
 - generieke survey builder
 - generieke workflow / ticketing / task engine
 - brede entitlement-, billing- of identityverbreding voor MTO
+- parallelle `Customer Feedback` / `NPS` productopening of gedeelde dual-domain capabilitylaag
 
 Beslissing:
 
@@ -589,6 +591,7 @@ Iemand wil bestaande live scans direct vervangen zodra wave 2 dashboarddiepte he
 - MTO opent eerst als interne, geisoleerde productlijn
 - MTO foundation, dashboarddiepte, report/action, operator hardening en integratiegate worden bewust gescheiden
 - publieke activatie en live suite replacement blijven buiten deze eerste stack
+- `Customer Feedback` / `NPS` blijft buiten deze eerste stack en mag pas later met een eigen gate op dezelfde operating rails landen
 
 ## Product Acceptance
 

@@ -169,6 +169,7 @@ Voor latere waves kan daar productspecifiek bijkomen:
 - `management_action_log`
 - `action_status_overview`
 - `follow_up_trace`
+- een latere, aparte `customer_feedback_summary` of `nps_follow_up` capability mag alleen als eigen latere track op dezelfde runtimepatronen meeliften
 
 Beslissing:
 
@@ -196,6 +197,7 @@ Contractrichting voor later:
 Beslissing:
 
 - action logging hoort expliciet bij de MTO-wave stack
+- dezelfde bounded contractvorm mag later precedent zijn voor `Customer Feedback` / `NPS`, maar de eerste uitwerking blijft MTO-specifiek
 - het hoort niet als eerste systeemvereiste in de foundation wave
 
 ### 7. MTO Dashboard and Report Boundary
@@ -223,6 +225,7 @@ Deze stap opent expliciet nog niet:
 - generieke task/workflow engine
 - buyer-facing MTO-activatie
 - suitebrede vervanging van bestaande scans
+- een parallelle `Customer Feedback` / `NPS` implementatie of cross-domain dual-read
 
 Beslissing:
 
@@ -335,6 +338,7 @@ Een stakeholder wil MTO-wave 1 al laten afhangen van een nieuw people- of org-ch
 - MTO-v1 moet brede org-read kunnen leveren zonder lokale metadata als bestaansvoorwaarde
 - `department` en `role_level` blijven verrijking, geen harde fundering
 - action logging hoort later bij MTO, maar niet in de foundation wave
+- `Customer Feedback` / `NPS` blijft voorlopig een latere aangrenzende route die hoogstens hetzelfde campaign/respondent/response patroon hergebruikt
 - de volgende stap ontwerpt alleen master index en wave stack, geen build
 
 ## Product Acceptance
