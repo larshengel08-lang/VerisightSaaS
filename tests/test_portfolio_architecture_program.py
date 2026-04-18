@@ -22,6 +22,18 @@ def test_active_portfolio_plan_tracks_outputs_and_prompt_closure():
     assert "prompt_checklist.xlsx" in active_plan
 
 
+def test_mto_governance_wave_tracks_buyer_facing_but_not_default_state():
+    governance_wave = _read("docs/active/wave_04_mto_portfolio_hierarchy_and_default_route_governance.md")
+    governance_contract = _read("frontend/lib/mto-portfolio-governance.ts")
+
+    assert "buyer-facing" in governance_wave
+    assert "default-routeverschuiving expliciet blokkeren" in governance_wave
+    assert "buyer_facing_gated" in governance_contract
+    assert "not_default" in governance_contract
+    assert "replace_exitscan_default" in governance_contract
+    assert "replace_retentiescan_default" in governance_contract
+
+
 def test_portfolio_contract_tracks_current_core_first_suite_model():
     marketing_products = _read("frontend/lib/marketing-products.ts")
     frontend_types = _read("frontend/lib/types.ts")
