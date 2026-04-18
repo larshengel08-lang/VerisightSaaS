@@ -72,6 +72,20 @@ export type InsightNotice = {
   tone: 'blue' | 'amber' | 'red'
 }
 
+export type DriverDrilldownFactor = {
+  factorKey: string
+  factorLabel: string
+  score: number
+  signalValue: number
+}
+
+export type DriverDrilldownModel = {
+  availableFactors: DriverDrilldownFactor[]
+  highlightedFactors: DriverDrilldownFactor[]
+  selectedFactorKey: string | null
+  selectedFactor: DriverDrilldownFactor | null
+}
+
 export function buildHeroDescription({
   scanType,
   isActive,
@@ -124,6 +138,31 @@ export function getTopFactorLabel(factorAverages: Record<string, number>) {
     .sort((left, right) => right.signalValue - left.signalValue)[0]
 
   return topFactor ? (FACTOR_LABELS[topFactor.factor] ?? topFactor.factor) : null
+}
+
+export function buildDriverDrilldownModel(args: {
+  factorAverages: Record<string, number>
+  selectedFactorKey: string | null
+}): DriverDrilldownModel {
+  const availableFactors = Object.entries(args.factorAverages)
+    .map(([factorKey, score]) => ({
+      factorKey,
+      factorLabel: FACTOR_LABELS[factorKey] ?? factorKey,
+      score,
+      signalValue: Number((11 - score).toFixed(1)),
+    }))
+    .sort((left, right) => right.signalValue - left.signalValue)
+
+  const fallbackFactor = availableFactors[0] ?? null
+  const selectedFactor =
+    availableFactors.find((factor) => factor.factorKey === args.selectedFactorKey) ?? fallbackFactor
+
+  return {
+    availableFactors,
+    highlightedFactors: availableFactors.slice(0, 2),
+    selectedFactorKey: selectedFactor?.factorKey ?? null,
+    selectedFactor,
+  }
 }
 
 export function buildDecisionPanels({

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 type Tone = 'slate' | 'blue' | 'emerald' | 'amber'
@@ -45,6 +46,47 @@ export function DashboardHero({
         </div>
         {aside ? (
           <div className="rounded-3xl border border-white/80 bg-white/90 p-5 shadow-[0_16px_40px_rgba(19,32,51,0.06)]">
+            {aside}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  )
+}
+
+export function DashboardContextHeader({
+  eyebrow,
+  title,
+  description,
+  meta,
+  actions,
+  aside,
+}: {
+  eyebrow: string
+  title: string
+  description?: string
+  meta?: ReactNode
+  actions?: ReactNode
+  aside?: ReactNode
+}) {
+  return (
+    <section className="rounded-[30px] border border-[color:var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,248,250,0.92))] p-5 shadow-[0_12px_32px_rgba(19,32,51,0.05)] sm:p-6">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr),minmax(280px,0.65fr)]">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[color:var(--muted)]">
+            {eyebrow}
+          </p>
+          <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-[color:var(--ink)] sm:text-[2rem]">
+            {title}
+          </h1>
+          {description ? (
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--text)]">{description}</p>
+          ) : null}
+          {meta ? <div className="mt-4 flex flex-wrap gap-2">{meta}</div> : null}
+          {actions ? <div className="mt-4 flex flex-wrap items-center gap-3">{actions}</div> : null}
+        </div>
+        {aside ? (
+          <div className="rounded-[24px] border border-white/80 bg-white/88 p-4 shadow-[0_10px_24px_rgba(19,32,51,0.04)] sm:p-5">
             {aside}
           </div>
         ) : null}
@@ -226,6 +268,32 @@ export function DashboardSummaryBar({
         </div>
       </nav>
     </div>
+  )
+}
+
+export function DashboardPrimaryNav({
+  items,
+}: {
+  items: Array<{ href: string; label: string; active?: boolean }>
+}) {
+  return (
+    <nav className="sticky top-[4.35rem] z-20 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)]/95 px-3 py-3 shadow-[0_14px_36px_rgba(19,32,51,0.08)] backdrop-blur">
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+              item.active
+                ? 'border border-[color:var(--ink)] bg-[color:var(--ink)] text-[color:var(--bg)]'
+                : 'border border-[color:var(--border)] bg-white text-[color:var(--text)] hover:border-[color:var(--teal)] hover:text-[color:var(--ink)]'
+            }`}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </div>
+    </nav>
   )
 }
 

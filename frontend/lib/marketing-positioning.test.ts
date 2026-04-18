@@ -113,9 +113,9 @@ describe('ExitScan positioning copy', () => {
 
   it('keeps Pulse framed as a bounded review route instead of a diagnostic layer', () => {
     const pulseProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'pulse')
-    const pulseOutput = pulseProduct?.serviceOutput.toLowerCase()
 
     expect(pulseProduct).toBeTruthy()
+    const pulseOutput = pulseProduct?.serviceOutput?.toLowerCase() ?? ''
     expect(pulseOutput).toContain('begrensde vergelijkingsduiding')
     expect(pulseOutput).not.toContain('delta-uitleg')
   })
