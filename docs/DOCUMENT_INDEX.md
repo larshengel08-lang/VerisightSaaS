@@ -33,8 +33,20 @@ Voor de huidige fix-tranche:
 
 ## Active
 - [OPS_AND_DELIVERY_SYSTEM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/OPS_AND_DELIVERY_SYSTEM_PLAN.md)
+- [COMMERCIAL_AND_ONBOARDING_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_AND_ONBOARDING_SIGNOFF.md)
+- [COMMERCIAL_LANGUAGE_PARITY_RECHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_LANGUAGE_PARITY_RECHECK.md)
 - [EXITSCAN_PRODUCT_SHARPENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_PRODUCT_SHARPENING_PLAN.md)
+- [EXITSCAN_IMPLEMENTATION_PARITY_CHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_IMPLEMENTATION_PARITY_CHECK.md)
+- [LANGUAGE_DRIFT_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/LANGUAGE_DRIFT_MATRIX.md)
 - [LANGUAGE_PARITY_INVENTORY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/LANGUAGE_PARITY_INVENTORY.md)
+- [LANGUAGE_PARITY_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/LANGUAGE_PARITY_SIGNOFF.md)
+- [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md)
+- [PRODUCT_TRUTH_HARDENING_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_TRUTH_HARDENING_PROGRAM_PLAN.md)
+- [REPORT_GENERATOR_RUNTIME_BOUNDARY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_GENERATOR_RUNTIME_BOUNDARY.md)
+- [REPORT_TRUTH_BASELINE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_TRUTH_BASELINE.md)
+- [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md)
+- [COMMERCIAL_ARCHITECTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_ARCHITECTURE_CANON.md)
+- [RETENTION_REPORT_GRAMMAR_PARITY_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTION_REPORT_GRAMMAR_PARITY_REVIEW.md)
 - [RETENTIESCAN_PRODUCT_SHARPENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTIESCAN_PRODUCT_SHARPENING_PLAN.md)
 - [RETENTIESCAN_LIVE_TEST_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTIESCAN_LIVE_TEST_PLAN.md)
 
@@ -77,6 +89,7 @@ Voor de huidige fix-tranche:
 - [CEO_FIRST_30_DAYS.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_FIRST_30_DAYS.md)
 - [OUTBOUND_OPERATING_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/OUTBOUND_OPERATING_PLAYBOOK.md)
 - [CLIENT_INPUT_SPEC.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_INPUT_SPEC.md)
+- [CLIENT_ONBOARDING_FLOW_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_ONBOARDING_FLOW_SYSTEM.md)
 - [SCALABILITY_REVIEW_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_REVIEW_2026.md)
 - [SCALABILITY_GAP_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_GAP_MATRIX.md)
 - [SCALABILITY_IMPROVEMENT_WAVES.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_IMPROVEMENT_WAVES.md)

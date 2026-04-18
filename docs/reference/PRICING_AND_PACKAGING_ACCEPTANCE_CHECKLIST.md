@@ -10,11 +10,11 @@ Laatste update: 2026-04-15
 - [ ] RetentieScan Baseline voelt zichtbaar als een eigen product en niet als lichtere ExitScan-variant.
 - [ ] Combinatie voelt als portfolioroute en niet als bundel of all-in pakket.
 
-## Package-hiërarchie
+## Package-hierarchie
 
 - [ ] Publieke prijsankers tonen alleen eerste trajecten als primaire prijskaarten.
-- [ ] ExitScan Live wordt publiek gelezen als quote-only vervolgroute.
-- [ ] RetentieScan ritme wordt publiek gelezen als vaste vervolgvorm na baseline.
+- [ ] ExitScan ritmeroute wordt publiek gelezen als quote-only vervolgroute.
+- [ ] RetentieScan ritmeroute wordt publiek gelezen als vaste vervolgvorm na baseline.
 - [ ] Compacte retentie vervolgmeting voelt niet als parallel hoofdpackage.
 - [ ] Segment deep dive voelt als bewuste add-on en niet als standaard inbegrepen laag.
 
@@ -28,7 +28,7 @@ Laatste update: 2026-04-15
 ## Sales parity
 
 - [ ] Decision tree, comparison matrix, proposal spines en one-pagers gebruiken dezelfde packagewoorden als de site.
-- [ ] `RetentieScan ritme` en `Compacte retentie vervolgmeting` zijn hiërarchisch consistent in salesdocs.
+- [ ] `RetentieScan ritmeroute` en `Compacte retentie vervolgmeting` zijn hierarchisch consistent in salesdocs.
 - [ ] Combinatie wordt nergens als korting, bundel of feature-upgrade verkocht.
 
 ## Governance

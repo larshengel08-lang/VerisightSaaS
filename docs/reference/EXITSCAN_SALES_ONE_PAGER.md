@@ -10,7 +10,7 @@ Verisight ExitScan is de primaire route voor organisaties die vertrek niet lange
 
 ## Wat management krijgt
 
-- managementsamenvatting
+- bestuurlijke read
 - bestuurlijke handoff
 - vertrekduiding
 - signalen van werkfrictie
@@ -39,7 +39,7 @@ ExitScan maakt meerdere reacties vergelijkbaar, zodat management sneller ziet we
 
 - standaard eerste route: ExitScan Baseline
 - prijsanker: EUR 2.950
-- logische vervolgstap: ExitScan Live of segment deep dive wanneer volume, metadata en vervolgdiscipline dat dragen
+- logische vervolgstap: ExitScan ritmeroute of segment deep dive wanneer volume, metadata en vervolgdiscipline dat dragen
 
 ## Trust in gewone taal
 
