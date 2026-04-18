@@ -90,7 +90,7 @@ describe('ExitScan positioning copy', () => {
   it('keeps ExitScan framed as the default first route in commercial conversations', () => {
     const freePilotFaq = pricingFaqs.find(([question]) => question === 'Waarom starten jullie niet met een gratis pilot?')
     const exitBaselineCard = pricingCards.find((card) => card.eyebrow === 'ExitScan Baseline')
-    const exitLiveRoute = pricingFollowOnRoutes.find((route) => route.title === 'ExitScan Live')
+    const exitLiveRoute = pricingFollowOnRoutes.find((route) => route.title === 'ExitScan ritmeroute')
     const combinationRoute = pricingChoiceGuide.find(([title]) => title === 'Combinatie op aanvraag')
     const exitLifecycle = pricingLifecycleLadder.find((route) => route.route === 'ExitScan')
 
@@ -138,9 +138,9 @@ describe('RetentieScan positioning copy', () => {
     const predictorFaq = faqs.find(([question]) => question === 'Is RetentieScan een gevalideerde vertrekvoorspeller?')
     const pricingFaq = pricingFaqs.find(([question]) => question === 'Waarom is RetentieScan niet goedkoper dan ExitScan?')
     const rhythmFaq = pricingFaqs.find(
-      ([question]) => question === 'Hoe verhouden RetentieScan ritme en compacte vervolgmeting zich tot elkaar?',
+      ([question]) => question === 'Hoe verhouden RetentieScan ritmeroute en compacte vervolgmeting zich tot elkaar?',
     )
-    const retentionRhythm = pricingFollowOnRoutes.find((route) => route.title === 'RetentieScan ritme')
+    const retentionRhythm = pricingFollowOnRoutes.find((route) => route.title === 'RetentieScan ritmeroute')
     const compactFollowUp = pricingAddOns.find(([title]) => title === 'Compacte retentie vervolgmeting')
 
     expect(mtoFaq?.[1].toLowerCase()).toContain('smaller en scherper')

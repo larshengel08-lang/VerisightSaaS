@@ -180,7 +180,7 @@ function ExitScanPage() {
               Breng vertrekduiding scherp in beeld
             </h1>
             <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-[#4A5563]">
-              Voor terugkijkende vertrekduiding op groepsniveau, begeleid als retrospectieve exitscan of live exitroute.
+              Voor terugkijkende vertrekduiding op groepsniveau, eerst als baseline en daarna eventueel als ritmeroute.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <a
@@ -199,26 +199,26 @@ function ExitScanPage() {
           </div>
         </section>
 
-        {/* 2 — Retrospectief vs. live */}
+        {/* 2 — Baseline vs. ritmeroute */}
         <MarketingSection tone="tint">
           <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Varianten</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Retrospectief of live?</h2>
+          <h2 className="mt-3 text-xl font-medium text-[#132033]">Baseline of ritmeroute?</h2>
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
             {[
               {
-                label: 'Retrospectief',
+                label: 'Baseline',
                 points: [
-                  'Analyse van vertrek in de afgelopen 12 maanden',
-                  'Geschikt als er al vertrek heeft plaatsgevonden',
+                  'Analyse van recent vertrek, bijvoorbeeld over de afgelopen 12 maanden',
+                  'Geschikt als er al voldoende vertrekinput beschikbaar is',
                   'Geen actieve respondenten nodig — ex-medewerkers',
                 ],
               },
               {
-                label: 'Live',
+                label: 'Ritmeroute',
                 points: [
-                  'Real-time inzicht bij lopend verloop',
-                  'Geschikt als u patroonvorming vroeg wilt signaleren',
-                  'Respondenten vullen in op het moment van vertrek',
+                  'Doorlopende vervolgroute nadat baseline, proces en eigenaar al staan',
+                  'Geschikt als u actuele uitstroomsignalen wilt blijven volgen',
+                  'Respondenten vullen in rond het moment van vertrek',
                 ],
               },
             ].map(({ label, points }) => (
@@ -437,7 +437,7 @@ function RetentionScanPage() {
           </div>
         </MarketingSection>
 
-        {/* 5 — Live vs. momentopname */}
+        {/* 5 — Ritmeroute vs. compacte hercheck */}
         <MarketingSection tone="surface">
           <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Varianten</p>
           <h2 className="mt-3 text-xl font-medium text-[#132033]">Baseline of ritmeroute?</h2>
@@ -584,7 +584,7 @@ function PulsePage() {
       heroSupport={
         <MarketingHeroSupport>
           <div className="marketing-support-note text-sm leading-7 text-slate-600">
-            RetentieScan ritme blijft de bredere herhaalvorm na baseline. Pulse is smaller en wordt pas logisch als de
+            RetentieScan ritmeroute blijft de bredere herhaalvorm na baseline. Pulse is smaller en wordt pas logisch als de
             vraag vooral om een compacte reviewlaag vraagt.
           </div>
           <div className="marketing-link-grid">
@@ -650,7 +650,7 @@ function PulsePage() {
       <MarketingSection tone="plain">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <MarketingComparisonTable
-            columns={['Thema', 'Pulse', 'RetentieScan ritme']}
+            columns={['Thema', 'Pulse', 'RetentieScan ritmeroute']}
             rows={[
               [
                 'Startpunt',
@@ -712,7 +712,7 @@ function PulsePage() {
         <MarketingCalloutBand
           eyebrow="Portfoliohelderheid"
           title="Twijfel je tussen Pulse en een bredere vervolgronde?"
-          body="We helpen je kiezen tussen een compacte Pulse-hercheck, RetentieScan ritme of een andere vervolgroute. Zo blijft de volgende stap scherp in plaats van breder dan nodig."
+          body="We helpen je kiezen tussen een compacte Pulse-hercheck, RetentieScan ritmeroute of een andere vervolgroute. Zo blijft de volgende stap scherp in plaats van breder dan nodig."
           primaryHref={buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'product_pulse_callout' })}
           primaryLabel="Plan kennismaking"
           secondaryHref="/tarieven"

@@ -35,9 +35,9 @@ export const metadata: Metadata = {
 
 const corePricing = [
   {
-    label: 'ExitScan retrospectief',
+    label: 'ExitScan baseline',
     price: 'EUR 2.950',
-    body: 'De standaard eerste instap voor een betrouwbaar organisatiebeeld en een professioneel managementrapport over uitstroom.',
+    body: 'De standaard eerste instap voor terugkijkende vertrekduiding en een professioneel managementrapport over uitstroom.',
     bullets: [
       'Inrichting exit-campagne en respondentflow',
       'Dashboard en managementrapport',
@@ -47,7 +47,7 @@ const corePricing = [
     href: '/producten/exitscan',
   },
   {
-    label: 'RetentieScan momentopname',
+    label: 'RetentieScan baseline',
     price: 'EUR 3.450',
     body: 'Gerichte baseline om behoudsdruk eerder zichtbaar te maken, met extra nadruk op privacy en groepsduiding.',
     bullets: [
@@ -61,8 +61,8 @@ const corePricing = [
 ] as const
 
 const comparisonRows = [
-  ['ExitScan live', 'Op aanvraag', 'Logisch vervolg na eerste retrospectieve analyse wanneer proces en eigenaarschap al staan.'],
-  ['RetentieScan live', 'Op aanvraag', 'Doorlopende route wanneer vroegsignalering structureel onderdeel van de managementcyclus wordt.'],
+  ['ExitScan ritmeroute', 'Op aanvraag', 'Logisch vervolg na eerste baseline wanneer proces, volume en eigenaarschap al staan.'],
+  ['RetentieScan ritmeroute', 'Op aanvraag', 'Doorlopende vervolgvorm wanneer vroegsignalering structureel onderdeel van de managementcyclus wordt.'],
   ['Segment Deep Dive', 'EUR 950', 'Extra segmentanalyse als metadata en minimale respondentengroep dat dragen.'],
   ['Pulse', 'Op aanvraag', 'Compacte reviewlaag na een eerste kernroute of baseline, geen nieuwe eerste instap.'],
   ['TeamScan', 'Op aanvraag', 'Bounded lokale verdieping nadat een breder signaal al zichtbaar is.'],

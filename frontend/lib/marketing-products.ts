@@ -34,7 +34,7 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     serviceType: 'Vertrekduiding en managementrapportage',
     serviceAudience: 'HR-teams en directies die uitstroom achteraf willen duiden',
     serviceOutput:
-      'Managementsamenvatting, bestuurlijke handoff, eerste managementsessie, vertrekduiding, signalen van werkfrictie, prioritaire werkfactoren en interpretatiekaders',
+      'Cover, responslaag, bestuurlijke handoff, eerste managementsessie, vertrekduiding, signalen van werkfrictie, prioritaire werkfactoren en interpretatiekaders',
     status: 'core_live',
     portfolioRole: 'core_product',
     href: '/producten/exitscan',
@@ -51,7 +51,7 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     serviceType: 'Vroegsignalering op behoud met retentiesignaal',
     serviceAudience: 'HR-teams en directies die behoud eerder zichtbaar willen maken',
     serviceOutput:
-      'Managementsamenvatting, bestuurlijke handoff, eerste managementsessie, retentiesignaal, stay-intent, vertrekintentie, bevlogenheid, topfactoren en groepsgerichte leeswijzers voor verificatie, opvolging en reviewmoment',
+      'Cover, compacte bestuurlijke read, retentiesignaal, stay-intent, vertrekintentie, bevlogenheid, topfactoren en groepsgerichte leeswijzers voor verificatie, opvolging en reviewmoment',
     status: 'core_live',
     portfolioRole: 'core_product',
     href: '/producten/retentiescan',

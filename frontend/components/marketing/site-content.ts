@@ -142,7 +142,7 @@ export const comparisonCards = [
   {
     title: 'Output die u intern kunt gebruiken',
     description:
-      'Dashboard, managementsamenvatting en factoranalyse zijn direct deelbaar met HR, MT en directie.',
+      'Dashboard, bestuurlijke read en factoranalyse zijn direct deelbaar met HR, MT en directie.',
     outcome: 'Geen losse datadump — een leesbaar rapport dat intern doorverteld kan worden.',
   },
   {
@@ -218,7 +218,7 @@ export const trustVerificationCards = [
   },
   {
     title: 'Wat management wel ziet',
-    body: 'Geaggregeerde managementsamenvatting, bestuurlijke handoff, topfactoren, hypotheses, prioriteiten en opvolgsporen in een vaste executive leeslijn.',
+    body: 'Geaggregeerde bestuurlijke read, bestuurlijke handoff, topfactoren, hypotheses, prioriteiten en opvolgsporen in een vaste executive leeslijn.',
   },
   {
     title: 'Wat we bewust niet claimen',
@@ -241,7 +241,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Hoe lees je de output?',
-    body: 'Verisight gebruikt signalen, hypotheses en managementsamenvattingen als gespreksinput. De output ondersteunt verificatie en prioritering, niet causaliteitsclaims of harde diagnoses.',
+    body: 'Verisight gebruikt signalen, hypotheses en bestuurlijke reads als gespreksinput. De output ondersteunt verificatie en prioritering, niet causaliteitsclaims of harde diagnoses.',
   },
   {
     title: 'Welke juridische basis is publiek beschikbaar?',
@@ -265,7 +265,7 @@ export const trustReadingRows = [
   ],
   [
     'Wat management ziet',
-    'Dashboard, managementsamenvatting, bestuurlijke handoff, topfactoren, hypotheses en vervolgstappen',
+    'Dashboard, bestuurlijke read, bestuurlijke handoff, topfactoren, hypotheses en vervolgstappen',
     'Niet elke ruwe response, geen persoonsprofielen en geen verborgen black-box score',
   ],
   [
@@ -412,7 +412,7 @@ export const approachRoutes = [
   {
     eyebrow: 'ExitScan Baseline',
     title: 'De standaard eerste instap voor vertrekduiding',
-    body: 'Retrospectief traject op ex-medewerkers van bijvoorbeeld de afgelopen 12 maanden. Dit is meestal de logische eerste commerciële instap wanneer organisaties wel exitinput hebben, maar nog geen bestuurbaar patroonbeeld.',
+    body: 'Baseline op recente vertrekkers, bijvoorbeeld over de afgelopen 12 maanden. Dit is meestal de logische eerste commerciële instap wanneer organisaties wel exitinput hebben, maar nog geen bestuurbaar patroonbeeld.',
     bullets: [
       'Eenmalige aanlevering van respondentbestand',
       'Bij voorkeur inclusief afdeling, functieniveau en exitmaand',
@@ -423,7 +423,7 @@ export const approachRoutes = [
     bodyClass: 'text-slate-700',
   },
   {
-    eyebrow: 'ExitScan Live',
+    eyebrow: 'ExitScan ritmeroute',
     title: 'Voor organisaties die uitstroom doorlopend willen volgen',
     body: 'Doorlopende ExitScan voor nieuwe vertrekkers. Past vooral als quote-only vervolg op een eerste baseline of wanneer uitstroom al structureel en met voldoende volume wordt gevolgd.',
     bullets: [
@@ -449,7 +449,7 @@ export const approachRoutes = [
     bodyClass: 'text-slate-700',
   },
   {
-    eyebrow: 'RetentieScan ritme',
+    eyebrow: 'RetentieScan ritmeroute',
     title: 'De vaste vervolgvorm na een baseline',
     body: 'Herhaalmeting per kwartaal of halfjaar om te zien of het retentiesignaal, stay-intent, bevlogenheid en prioritaire werkfactoren verbeteren. Dit is de buyer-facing vervolgvorm nadat de eerste baseline en opvolging staan.',
     bullets: [
@@ -478,7 +478,7 @@ export const customerLifecycleStages = [
   },
   {
     title: '4. Zelfde route herhalen of verdiepen',
-    body: 'Pas na die eerste waarde wordt een vervolgvorm logisch: ExitScan Live als begeleide vervolgroute, RetentieScan ritme als vaste herhaalvorm of segment deep dive als bewuste verdieping.',
+    body: 'Pas na die eerste waarde wordt een vervolgvorm logisch: ExitScan ritmeroute als begeleide vervolgroute, RetentieScan ritmeroute als vaste herhaalvorm of segment deep dive als bewuste verdieping.',
   },
   {
     title: '5. Uitbreiden naar tweede product',
@@ -490,13 +490,13 @@ export const pricingLifecycleLadder = [
   {
     route: 'ExitScan',
     firstSale: 'ExitScan Baseline als standaard eerste koop',
-    nextStep: 'ExitScan Live alleen als quote-only vervolgroute bij voldoende volume, proces en eigenaar.',
+    nextStep: 'ExitScan ritmeroute alleen als quote-only vervolgroute bij voldoende volume, proces en eigenaar.',
     expansion: 'RetentieScan Baseline wordt logisch zodra dezelfde thema\'s eerder in de actieve populatie moeten worden gesignaleerd.',
   },
   {
     route: 'RetentieScan',
     firstSale: 'RetentieScan Baseline alleen wanneer de actieve behoudsvraag nu het echte startpunt is.',
-    nextStep: 'RetentieScan ritme blijft de vaste buyer-facing vervolgvorm na baseline en eerste opvolging.',
+    nextStep: 'RetentieScan ritmeroute blijft de vaste buyer-facing vervolgvorm na baseline en eerste opvolging.',
     expansion: 'ExitScan Baseline wordt pas logisch als retrospectieve vertrekduiding alsnog nodig blijkt.',
   },
 ] as const
@@ -547,7 +547,7 @@ export const pricingCards = [
 
 export const pricingFollowOnRoutes = [
   {
-    title: 'ExitScan Live',
+    title: 'ExitScan ritmeroute',
     price: 'op aanvraag',
     fit: 'Quote-only vervolg na baseline',
     description:
@@ -559,7 +559,7 @@ export const pricingFollowOnRoutes = [
     ],
   },
   {
-    title: 'RetentieScan ritme',
+    title: 'RetentieScan ritmeroute',
     price: 'vanaf EUR 4.950',
     fit: 'Vaste vervolgvorm na baseline',
     description:
@@ -586,9 +586,9 @@ export const retentionPackages = [
     bullets: ['Alles uit Baseline', 'Segmentanalyse op afdeling en functieniveau', 'Bewuste verdieping, geen standaard inbegrepen laag'],
   },
   {
-    title: 'RetentieScan ritme',
+    title: 'RetentieScan ritmeroute',
     fit: 'Voor structurele opvolging',
-    body: 'Voor organisaties die retentie niet als momentopname maar als terugkerend stuurthema willen benaderen nadat baseline en eerste opvolging staan.',
+    body: 'Voor organisaties die retentie als terugkerend stuurthema willen benaderen nadat baseline en eerste opvolging staan.',
     bullets: ['Herhaalmeting en trendduiding', 'Betere opvolging van acties', 'Buyer-facing vervolgvorm na de eerste baseline'],
   },
 ] as const
@@ -617,7 +617,7 @@ export const pricingAddOns = [
   [
     'Compacte retentie vervolgmeting',
     'vanaf EUR 1.250',
-    'Compacte vervolgcomponent binnen RetentieScan ritme, bijvoorbeeld per kwartaal of halfjaar, om voortgang te volgen zonder daarvan een parallel hoofdpackage te maken.',
+    'Compacte vervolgcomponent binnen RetentieScan ritmeroute, bijvoorbeeld per kwartaal of halfjaar, om voortgang te volgen zonder daarvan een parallel hoofdpackage te maken.',
   ],
   [
     'Combinatieroute',
@@ -640,12 +640,12 @@ export const pricingFaqs = [
     'Nee. Het product is smaller en scherper: het richt zich op vroegsignalering op behoud via retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
-    'Wanneer wordt ExitScan Live logisch?',
-    'Meestal pas na een ExitScan Baseline of wanneer uitstroom al structureel met voldoende volume wordt gevolgd. Daarom houden we ExitScan Live bewust als vervolgroute op aanvraag.',
+    'Wanneer wordt ExitScan ritmeroute logisch?',
+    'Meestal pas na een ExitScan Baseline of wanneer uitstroom al structureel met voldoende volume wordt gevolgd. Daarom houden we ExitScan ritmeroute bewust als vervolgroute op aanvraag.',
   ],
   [
-    'Hoe verhouden RetentieScan ritme en compacte vervolgmeting zich tot elkaar?',
-    'RetentieScan ritme is de vaste buyer-facing vervolgvorm na baseline. Een compacte retentie vervolgmeting is daarbinnen een lichtere vervolgcomponent, geen parallel eerste pakket.',
+    'Hoe verhouden RetentieScan ritmeroute en compacte vervolgmeting zich tot elkaar?',
+    'RetentieScan ritmeroute is de vaste buyer-facing vervolgvorm na baseline. Een compacte retentie vervolgmeting is daarbinnen een lichtere vervolgcomponent, geen parallel eerste pakket.',
   ],
   [
     'Wanneer kies je voor de combinatieroute?',
@@ -698,7 +698,7 @@ export const faqs = [
 
 export const marketingPagePurposes = {
   home: 'Product choice + premium proof + conversion',
-  producten: 'Buyer-oriented overview of the two live routes and the combination path',
+  producten: 'Buyer-oriented overview of the two core routes and the combination path',
   aanpak: 'Process clarity and buying confidence',
   tarieven: 'Commercial packaging and price framing',
 } as const

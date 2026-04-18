@@ -118,13 +118,13 @@ export const PRODUCT_ROUTE_VARIANTS = [
     title: 'ExitScan Baseline',
     fit: 'Primaire eerste route',
     body:
-      'Start meestal met een retrospectieve batch op ex-medewerkers. Geschikt om vertrek eerst bestuurlijk leesbaar te maken voordat live opvolging logisch wordt.',
+      'Start meestal met een baseline op ex-medewerkers. Geschikt om vertrek eerst bestuurlijk leesbaar te maken voordat een ritmeroute logisch wordt.',
   },
   {
-    title: 'ExitScan Live',
+    title: 'ExitScan ritmeroute',
     fit: 'Vervolgroute na baseline',
     body:
-      'Past pas zodra proces, volume en eigenaarschap staan. Geen concurrerend eerste pakket, maar een begeleide vervolgroute op actuele uitstroom.',
+      'Past pas zodra proces, volume en eigenaarschap staan. Geen concurrerend eerste pakket, maar een begeleide ritmeroute op actuele uitstroom.',
   },
   {
     title: 'RetentieScan Baseline',
@@ -133,7 +133,7 @@ export const PRODUCT_ROUTE_VARIANTS = [
       'Eerste retentieroute voor actieve medewerkers. Gericht op vroegsignalering, groepsduiding en een privacy-first managementbeeld.',
   },
   {
-    title: 'RetentieScan ritme',
+    title: 'RetentieScan ritmeroute',
     fit: 'Vervolgroute na baseline',
     body:
       'Herhaalmeting per kwartaal of halfjaar nadat baseline en eerste opvolging staan. Gericht op trendduiding en betere managementopvolging.',
@@ -170,7 +170,7 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
       {
         title: 'Blijf op dezelfde route',
         fit: 'Standaard vervolg',
-        body: 'RetentieScan ritme is de logische vervolgvorm zodra baseline, eerste managementroute en een reviewmoment al staan.',
+        body: 'RetentieScan ritmeroute is de logische vervolgvorm zodra baseline, eerste managementroute en een reviewmoment al staan.',
       },
       {
         title: 'Verdiep bewust',
@@ -269,7 +269,7 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
     {
       title: 'Blijf op dezelfde route',
       fit: 'Quote-only vervolg',
-      body: 'ExitScan Live wordt pas logisch wanneer proces, volume en eigenaarschap al staan en een begeleide vervolgroute op actuele uitstroom echt meerwaarde geeft.',
+      body: 'ExitScan ritmeroute wordt pas logisch wanneer proces, volume en eigenaarschap al staan en een begeleide vervolgroute op actuele uitstroom echt meerwaarde geeft.',
     },
     {
       title: 'Verdiep bewust',
@@ -326,7 +326,7 @@ export function getFirstManagementReadSteps(scanType: ScanType) {
   }
 
   return [
-    'Open eerst het beslisoverzicht en lees het vertrekbeeld als managementsamenvatting van terugkerende werkfrictie, niet als losse exitfeedback.',
+    'Open eerst het beslisoverzicht en lees het vertrekbeeld als bestuurlijke read van terugkerende werkfrictie, niet als losse exitfeedback.',
     'Gebruik een indicatief beeld vanaf 5 responses om richting te houden, maar wacht voor stevige patroonduiding bij voorkeur tot 10 responses of meer.',
     'Plan daarna de eerste managementsessie rond de vraag welk vertrekpatroon terugkeert, welke eerste verbeterroute logisch is en wanneer het reviewmoment volgt.',
   ] as const
@@ -334,7 +334,7 @@ export function getFirstManagementReadSteps(scanType: ScanType) {
 
 export function getAdoptionSuccessDefinition(scanType: ScanType) {
   if (scanType === 'retention') {
-    return 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over behoud, verificatie, eerste eigenaar, routekeuze en reviewmoment te voeren.'
+    return 'Adoptie is pas geslaagd wanneer de klant niet alleen operationeel draait, maar het dashboard en rapport gebruikt om een eerste managementsessie over behoud, verificatie, eerste eigenaar, routekeuze en reviewmoment te voeren.'
   }
   if (scanType === 'pulse') {
     return 'Adoptie is pas geslaagd wanneer de klant Pulse gebruikt om een eerste reviewvraag, kleine correctie en volgend bounded checkmoment expliciet te maken.'
@@ -348,5 +348,5 @@ export function getAdoptionSuccessDefinition(scanType: ScanType) {
   if (scanType === 'leadership') {
     return 'Adoptie is pas geslaagd wanneer de klant Leadership Scan gebruikt om een eerste managementread, eerste eigenaar, begrensde verificatie of correctie en logisch reviewmoment expliciet te maken.'
   }
-  return 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over vertrekduiding, prioriteiten, routekeuze en reviewmoment te voeren.'
+  return 'Adoptie is pas geslaagd wanneer de klant niet alleen operationeel draait, maar het dashboard en rapport gebruikt om een eerste managementsessie over vertrekduiding, prioriteiten, routekeuze en reviewmoment te voeren.'
 }

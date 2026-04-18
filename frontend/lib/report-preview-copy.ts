@@ -109,7 +109,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       },
     ],
     proofNotes: [
-      ['Managementsamenvatting', 'Dashboard en rapport openen met dezelfde bestuurlijke leesvolgorde'],
+      ['Bestuurlijke read', 'Dashboard en rapport openen met dezelfde bestuurlijke leesvolgorde'],
       ['Productspecifieke duiding', 'ExitScan en RetentieScan krijgen een eigen managementverhaal binnen een platform'],
       ['Routekeuze eerst', 'ExitScan is meestal de eerste demo; RetentieScan volgt wanneer de actieve behoudsvraag echt centraal staat'],
       ['Core proof blijft leidend', 'Publieke deliverable-proof blijft bewust bij ExitScan en RetentieScan; bounded follow-on routes worden publiek vooral via productpagina en trustlaag gekaderd.'],
@@ -120,7 +120,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       'Deze preview gebruikt fictieve data, maar volgt dezelfde managementstructuur, leesvolgorde en trustnotities als de huidige buyer-facing output.',
     trustPoints: [
       ['Intended use', 'Gebruik deze laag om te kiezen welke managementroute past: vertrekduiding, vroegsignalering of beide.'],
-      ['Wat management ziet', 'Managementsamenvatting, topfactoren, focusvragen en de gekozen vervolgrichting in een executive lijn.'],
+      ['Wat management ziet', 'Bestuurlijke read, topfactoren, focusvragen en de gekozen vervolgrichting in een executive lijn.'],
       ['Privacygrens', 'Groepsinzichten met minimale n-grenzen en geen individuele signalen naar management.'],
       ['Bewijsstatus', 'Methodisch onderbouwde managementoutput, geen diagnose of individuele voorspeller.'],
     ],

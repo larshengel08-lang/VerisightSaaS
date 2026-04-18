@@ -54,9 +54,9 @@ describe('client onboarding defaults', () => {
   it('keeps ExitScan first and follow-on variants explicit', () => {
     expect(PRODUCT_ROUTE_VARIANTS.map((route) => route.title)).toEqual([
       'ExitScan Baseline',
-      'ExitScan Live',
+      'ExitScan ritmeroute',
       'RetentieScan Baseline',
-      'RetentieScan ritme',
+      'RetentieScan ritmeroute',
     ])
   })
 
@@ -97,9 +97,9 @@ describe('client onboarding defaults', () => {
       'first_value',
       'repeat_or_expand',
     ])
-    expect(exitDecisions[0]?.body.toLowerCase()).toContain('exitscan live')
+    expect(exitDecisions[0]?.body.toLowerCase()).toContain('exitscan ritmeroute')
     expect(exitDecisions[2]?.body.toLowerCase()).toContain('retentiescan baseline')
-    expect(retentionDecisions[0]?.body.toLowerCase()).toContain('retentiescan ritme')
+    expect(retentionDecisions[0]?.body.toLowerCase()).toContain('retentiescan ritmeroute')
     expect(retentionDecisions[2]?.body.toLowerCase()).toContain('exitscan')
     expect(pulseDecisions[0]?.body.toLowerCase()).toContain('kleine correctie')
     expect(pulseDecisions[2]?.title.toLowerCase()).toContain('retentiescan')

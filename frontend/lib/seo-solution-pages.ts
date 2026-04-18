@@ -75,7 +75,7 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
     deliverableBody:
       'De route combineert dashboard, managementrapport en bestuurlijke handoff in één professionele leeslijn die direct bruikbaar is voor HR, sponsor, MT en directie.',
     deliverables: [
-      'Managementsamenvatting met vertrekbeeld en bestuurlijke relevantie',
+      'Bestuurlijke read met vertrekbeeld en bestuurlijke relevantie',
       'Topfactoren en signalen van werkfrictie in een compacte managementstructuur',
       'Bestuurlijke handoff met eerste managementvraag en logische vervolgstap',
       'Publiek toetsbare claims-, privacy- en interpretatiegrenzen',
@@ -87,7 +87,7 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
     ],
     proofTitle: 'Laat eerst de deliverable zien, daarna pas de uitleg.',
     proofBody:
-      'De voorbeeldoutput op de ExitScan-productpagina laat zien hoe managementsamenvatting, topfactoren en bestuurlijke handoff werkelijk samenkomen.',
+      'De voorbeeldoutput op de ExitScan-productpagina laat zien hoe bestuurlijke read, topfactoren en bestuurlijke handoff werkelijk samenkomen.',
     contactTitle: 'Plan een kennismaking over verloopanalyse',
     contactBody:
       'Beschrijf kort waar jullie verloopvraag nu vastloopt. Dan toetsen we of ExitScan Baseline de juiste eerste stap is en welke databasis nodig is om snel naar een geloofwaardige eerste managementread te komen.',
