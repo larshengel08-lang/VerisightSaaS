@@ -770,6 +770,7 @@ def test_campaign_stats_returns_expected_counts_and_distribution(client, db_sess
     assert body["risk_band_distribution"]["MIDDEN"] == 1
     assert body["risk_band_distribution"]["LAAG"] == 0
     assert body["completion_rate_pct"] == 66.7
+    assert body["avg_signal_score"] == body["avg_risk_score"] == 6.0
 
 
 def test_campaign_stats_returns_zero_values_for_empty_campaign(client, db_session: Session):
@@ -786,6 +787,7 @@ def test_campaign_stats_returns_zero_values_for_empty_campaign(client, db_sessio
     assert body["total_invited"] == 0
     assert body["total_completed"] == 0
     assert body["avg_risk_score"] is None
+    assert body["avg_signal_score"] is None
     assert body["completion_rate_pct"] == 0.0
     assert body["risk_band_distribution"] == {"HOOG": 0, "MIDDEN": 0, "LAAG": 0}
 

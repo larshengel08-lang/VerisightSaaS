@@ -10,7 +10,7 @@ Method And Survey Evidence Flow - Signoff
 
 ## Korte samenvatting
 
-De methodfase is nu voldoende gehard om door te schuiven naar verdere parity- en productline-hardening. De survey-naar-signaal-keten is expliciet, de grootste methodrisico's zijn benoemd en de buyer-facing claimgrens is per productlijn strakker vastgelegd.
+De methodfase is nu voldoende gehard om formeel te sluiten voor deze hardeningtranche. De survey-naar-signaal-keten is expliciet, de grootste methodrisico's zijn benoemd en de buyer-facing claimgrens is per productlijn strakker vastgelegd, met een non-breaking aliaslaag boven generieke technische velden.
 
 ## Wat is geaudit
 
@@ -25,22 +25,24 @@ De methodfase is nu voldoende gehard om door te schuiven naar verdere parity- en
 - Hoofdmetrics zijn methodisch plausibel en proportioneel voor groepsgerichte managementduiding.
 - De hoogste risico's zitten niet in de kernsignalering, maar in nevenafleidingen, semantische dubbelzinnigheid en te vroege verbreding van bounded modellen.
 - RetentieScan follow-up, trend- en calibration-taal moest scherper beschrijvend worden en is nu ook zo vastgelegd.
+- Gedeelde technische veldnamen zijn nu op response- en view-modelniveau voorzien van non-breaking aliases, zodat methodtaal minder snel terugvalt op generieke raw velden.
 
 ## Belangrijkste inconsistenties of risico's
 
-- Degrade-besluiten rond ExitScan-nevenmetrics moeten in latere parity- of producthardeningstappen nog concreet worden doorvertaald.
 - Compacte lijnen blijven kwetsbaar zolang hun bounded surveybasis niet in alle lagen even zichtbaar is.
-- Gedeelde technische veldnamen kunnen zonder aliaslaag opnieuw methoddrift introduceren.
+- Een echte schema- of database-rename blijft bewust uitgesteld om contractbreuk en migratierisico te voorkomen.
 
 ## Beslissingen / canonvoorstellen
 
 - De method gate is `pass with explicit bounded risks`.
 - ExitScan en RetentieScan mogen door naar verdere parity- en producthardening zonder hun hoofdmetric of vaste reportarchitectuur te heropenen.
 - Follow-on lijnen mogen alleen door als bounded triagemodellen met expliciete compactheid en suppressiegrenzen.
+- Response- en view-model aliases gelden nu als minimale verplichte semantische beschermlaag boven gedeelde raw velden.
 
 ## Concrete wijzigingen
 
 - Bestand ververst: [METHOD_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/METHOD_SIGNOFF.md)
+- Closeout bevestigd in [METRICS_METHOD_CLOSEOUT_GATE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/METRICS_METHOD_CLOSEOUT_GATE.md)
 
 ## Buyer-facing method claimladder
 
@@ -58,12 +60,14 @@ De methodfase is nu voldoende gehard om door te schuiven naar verdere parity- en
 - Surveybasis, afleidingsketen en methodrisico's zijn expliciet repo-gebaseerd vastgelegd.
 - De signoff verandert geen pricing, productstatus of commerciele shell.
 - De vaste ExitScan-report-architectuur blijft onaangetast.
+- De semantische aliaslaag boven `risk_score` en `stay_intent_score` is nu technisch aanwezig zonder contractbreuk.
 
 ## Assumptions / defaults
 
 - `Pass with explicit bounded risks` betekent dat vervolgwerk mag starten, maar dat bounded claims en suppressieregels actief bewaakt moeten blijven.
 - Buyer-facing claimgrenzen volgen product truth en methodbasis; marketing convenience mag die niet verruimen.
+- Een latere schema/db-rename is geen voorwaarde meer voor methodsignoff in deze tranche.
 
 ## Next gate
 
-Field semantics and code alias hardening.
+Method closeout afgerond voor deze tranche; eventuele vervolgstap is alleen nog diepere schema/db-semantic cleanup met expliciete migratiegates.

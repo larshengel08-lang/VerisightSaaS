@@ -10,7 +10,7 @@ Metric And Measurement Review Flow - Signoff
 
 ## Korte samenvatting
 
-De metricflow is nu voldoende gehard om als vaste metriccanon te dienen voor parity-, method- en producthardening. De hoofdmetrics per product zijn bevestigd, aanvullende signalen zijn duidelijk begrensd en de kwetsbaarste ExitScan-nevenmetrics zijn inhoudelijk gedegradeerd naar een niet-leidende laag.
+De metricflow is nu voldoende gehard om als vaste metriccanon te dienen voor parity-, method- en producthardening. De hoofdmetrics per product zijn bevestigd, aanvullende signalen zijn duidelijk begrensd en de kwetsbaarste ExitScan-nevenmetrics zijn inhoudelijk gedegradeerd naar een niet-leidende laag, met een non-breaking aliaslaag boven generieke technische scorevelden.
 
 ## Wat is geaudit
 
@@ -26,15 +26,17 @@ De metricflow is nu voldoende gehard om als vaste metriccanon te dienen voor par
 - ExitScan en RetentieScan hebben een expliciete en proportionele hierarchie tussen hoofdmetric en aanvullende signalen.
 - De bounded productlijnen zijn metricmatig juist sterker door hun smalle opbouw, mits hun ondersteunende richtingvragen niet als extra hoofdmetric worden gelezen.
 - Technische veldnamen blijven gedeeld, maar de metricbetekenis is productspecifiek.
+- Response- en view-model aliases maken die productspecifieke metricbetekenis nu ook explicieter zichtbaar buiten de raw storagevelden.
 
 ## Belangrijkste inconsistenties of risico's
 
 - Degrade-besluiten zijn nog niet overal technisch of buyer-facing afgedwongen; latere parity- en codefixes moeten die canon nog volgen.
-- Zonder semantische aliaslaag kunnen generieke velden zoals `risk_score` of `stay_intent_score` opnieuw tot overlezing leiden.
+- Een echte schema- of database-rename van gedeelde velden blijft uitgesteld tot een aparte migratiegated stap.
 
 ## Beslissingen / canonvoorstellen
 
 - De metric gate is `pass with targeted semantics follow-up`.
+- De targeted semantics follow-up is voor response- en view-modellen nu afgerond; alleen diepere schema/db-aliassing blijft optioneel vervolgwerk.
 - `Frictiescore`, `Retentiesignaal`, `Teamsignaal`, `Onboardingsignaal`, `Pulsesignaal` en `Leadershipsignaal` zijn bevestigd als producthoofdcijfers.
 - `preventability_result` en `replacement_cost_eur` tellen niet als primaire managementmetrics.
 - RetentieScan trend-, repeat- en calibration-lagen tellen niet als extra metriclaag.
@@ -42,6 +44,7 @@ De metricflow is nu voldoende gehard om als vaste metriccanon te dienen voor par
 ## Concrete wijzigingen
 
 - Bestand ververst: [METRIC_HARDENING_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/METRIC_HARDENING_SIGNOFF.md)
+- Closeout bevestigd in [METRICS_METHOD_CLOSEOUT_GATE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/METRICS_METHOD_CLOSEOUT_GATE.md)
 
 ## Buyer-facing metricgrenzen
 
@@ -59,12 +62,14 @@ De metricflow is nu voldoende gehard om als vaste metriccanon te dienen voor par
 - De signoff rust op repo-gebaseerde definitions, scoring en dashboardlogica.
 - Er is geen wijziging aangebracht aan de vastgezette ExitScan-report-architectuur.
 - Er is geen productstatus-, pricing- of commerciele promotiebeslissing hardgezet.
+- `avg_signal_score`, `signal_score` en `direction_signal_score` bestaan nu als non-breaking aliaslaag boven de gedeelde raw velden.
 
 ## Assumptions / defaults
 
 - De metriccanon geldt vanaf nu als default voor parity-, method- en producthardingstappen.
 - Buyer-facing metricgebruik volgt de productspecifieke labeltaal, niet de generieke backendveldnaam.
+- Een latere raw-field rename is geen voorwaarde meer voor metric closeout in deze tranche.
 
 ## Next gate
 
-Field semantics and code alias hardening.
+Metric closeout afgerond voor deze tranche; eventuele vervolgstap is alleen nog diepere schema/db-semantic cleanup met expliciete migratiegates.

@@ -10,7 +10,7 @@ Field Semantics And Code Alias Hardening
 
 ## Korte samenvatting
 
-Deze hardeningstap maakt expliciet waar gedeelde technische veldnamen meerdere productbetekenissen dragen. De belangrijkste uitkomst is dat documentalias nu al verplicht is, terwijl echte code-aliasing alleen veilig moet gebeuren waar runtime, API- en datamigratiegrenzen dat toelaten.
+Deze hardeningstap maakt expliciet waar gedeelde technische veldnamen meerdere productbetekenissen dragen. De belangrijkste uitkomst is dat documentalias verplicht blijft, terwijl non-breaking response- en view-model aliases nu zijn toegevoegd zonder runtime-, API- of datamigratiebreuk.
 
 ## Wat is geaudit
 
@@ -47,7 +47,7 @@ Deze hardeningstap maakt expliciet waar gedeelde technische veldnamen meerdere p
   - Team -> lokale richting
   - Onboarding -> checkpoint-richting
   - Leadership -> managementrichting
-- Niet alle semantische drift vraagt codewijziging; op meerdere plekken is documentalias en view-model alias eerst de veiligste stap.
+- Niet alle semantische drift vraagt codewijziging; de veiligste eerste codewinst zit in response- en view-model aliases bovenop de bestaande raw velden.
 
 ## Belangrijkste inconsistenties of risico's
 
@@ -58,7 +58,7 @@ Deze hardeningstap maakt expliciet waar gedeelde technische veldnamen meerdere p
 ## Beslissingen / canonvoorstellen
 
 - `risk_score` blijft voorlopig technisch bestaan, maar telt alleen als storage/runtime-naam en nooit als productlabel.
-- `stay_intent_score` blijft voorlopig technisch bestaan, maar moet documentair en in view-models expliciet als productspecifiek construct worden vertaald.
+- `stay_intent_score` blijft voorlopig technisch bestaan, maar moet documentair en in response/view-models expliciet als productspecifiek construct worden vertaald.
 - Echte code-aliasing wordt opgesplitst in drie niveaus:
   - niveau 1: doc alias en comments
   - niveau 2: response/view-model alias
@@ -67,6 +67,12 @@ Deze hardeningstap maakt expliciet waar gedeelde technische veldnamen meerdere p
 ## Concrete wijzigingen
 
 - Nieuw bestand aangemaakt: [FIELD_SEMANTICS_HARDENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/FIELD_SEMANTICS_HARDENING_PLAN.md)
+- Aliaslaag toegevoegd in [backend/schemas.py](/C:/Users/larsh/Desktop/Business/Verisight/backend/schemas.py) en [backend/main.py](/C:/Users/larsh/Desktop/Business/Verisight/backend/main.py):
+  - `signal_score`
+  - `direction_signal_score`
+  - `avg_signal_score`
+- Frontend helperlaag toegevoegd in [frontend/lib/types.ts](/C:/Users/larsh/Desktop/Business/Verisight/frontend/lib/types.ts)
+- Validatietests toegevoegd in [tests/test_field_semantics_aliases.py](/C:/Users/larsh/Desktop/Business/Verisight/tests/test_field_semantics_aliases.py) en [frontend/lib/types.test.ts](/C:/Users/larsh/Desktop/Business/Verisight/frontend/lib/types.test.ts)
 
 ## Aliasmatrix
 
@@ -85,20 +91,20 @@ Deze hardeningstap maakt expliciet waar gedeelde technische veldnamen meerdere p
 
 1. Behoud database- en API-contracten voorlopig intact.
 2. Maak semantiek expliciet in ORM-, schema- en actieve canoncomments.
-3. Voeg waar nodig view-model aliases toe in report/dashboard exportlagen.
+3. Voeg waar nodig response- en view-model aliases toe in report/dashboard exportlagen.
 4. Overweeg pas daarna schema- of database-aliassen als er echte winst is zonder contractbreuk.
 
 ## Validatie
 
-- Het plan verandert geen runtimegedrag.
+- De aliaslaag houdt raw contracten intact en verandert geen productscoring of ExitScan-architectuur.
 - Het plan opent de ExitScan-architectuur niet.
 - Er is geen pricing-, portfolio- of productstatusbesluit in hardcoded.
 
 ## Assumptions / defaults
 
 - Zolang dezelfde payload door meerdere lagen loopt, is documentalias de minimale truth boundary.
-- Echte code-aliasing is alleen wenselijk als ze runtime, tests en datamigraties niet onnodig fragiel maakt.
+- Echte schema- of database-aliasing is alleen wenselijk als ze runtime, tests en datamigraties niet onnodig fragiel maakt.
 
 ## Next gate
 
-RetentieScan technical parity hardening.
+Final metrics/method closeout gate.

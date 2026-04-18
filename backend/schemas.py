@@ -345,11 +345,26 @@ class SurveyResponseRead(OrmBase):
     # Shared response field name; management layers must translate this to the
     # product-specific signaallabel.
     risk_score: Optional[float]
+    # Shared direction/stay field; product meaning varies by scan_type and
+    # must not be read as a universal construct across products.
+    stay_intent_score: Optional[int] = None
+    # Non-breaking view-model alias for product-specific signal reading.
+    signal_score: Optional[float] = None
+    # Non-breaking view-model alias for product-specific direction reading.
+    direction_signal_score: Optional[int] = None
     risk_band: Optional[str]
     preventability: Optional[str]
     sdt_scores: dict[str, Any]
     org_scores: dict[str, Any]
     submitted_at: datetime
+
+    @model_validator(mode="after")
+    def populate_signal_aliases(self) -> "SurveyResponseRead":
+        if self.signal_score is None:
+            self.signal_score = self.risk_score
+        if self.direction_signal_score is None:
+            self.direction_signal_score = self.stay_intent_score
+        return self
 
 
 # ---------------------------------------------------------------------------
@@ -364,8 +379,16 @@ class CampaignStats(BaseModel):
     total_completed: int
     completion_rate_pct: float
     avg_risk_score: Optional[float]
+    # Non-breaking view-model alias for product-specific average signal reading.
+    avg_signal_score: Optional[float] = None
     risk_band_distribution: dict[str, int]   # {"HOOG": 3, "MIDDEN": 5, "LAAG": 8}
     pattern_report: Optional[dict[str, Any]]
+
+    @model_validator(mode="after")
+    def populate_signal_alias(self) -> "CampaignStats":
+        if self.avg_signal_score is None:
+            self.avg_signal_score = self.avg_risk_score
+        return self
 
 
 # ---------------------------------------------------------------------------

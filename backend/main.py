@@ -1578,6 +1578,7 @@ async def campaign_stats(
         "total_completed":          n_completed,
         "completion_rate_pct":      round(n_completed / total * 100, 1) if total > 0 else 0.0,
         "avg_risk_score":           avg_risk,
+        "avg_signal_score":         avg_risk,
         "band_high":                band_dist["HOOG"],
         "band_medium":              band_dist["MIDDEN"],
         "band_low":                 band_dist["LAAG"],
