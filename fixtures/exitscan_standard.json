@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "3.0",
+  "product": "ES",
+  "reportType": "exit",
+  "main": {
+    "P1": {
+      "client_name": "TechBouw B.V.",
+      "product_label": "ExitScan",
+      "period_label": "Q1 2026",
+      "context_note": "Illustratief voorbeeld",
+      "invited_n": 51,
+      "completed_n": 35,
+      "response_rate": 68.6,
+      "friction_score": 5.8,
+      "executive_theme": "Vertrek concentreert zich rond groei en leiderschap",
+      "top_factors": ["Groeiperspectief", "Leiderschap"],
+      "first_decision": "Beslis eerst of het dominante spoor nu vooral perspectief of leiding vraagt."
+    },
+    "P2": {
+      "response_rate": 68.6,
+      "handoff_signal": "Vertrekredenen en werkfrictie wijzen dezelfde kant op.",
+      "handoff_why": "Het patroon raakt teamcontinuiteit en managementkeuzes.",
+      "handoff_action": "Kies nu een verificatieroute en leg review direct vast.",
+      "handoff_nonclaim": "Lees dit niet als bewijs van een vertrekoorzaak of als garantie op effect.",
+      "exposure_eur": 182000
+    },
+    "P3": {
+      "handoff_signal": "Groeiperspectief en leiderschap kleuren nu de bestuurlijke handoff het sterkst.",
+      "factors": [
+        { "name": "Leiderschap", "score": 4.3, "signal": 6.7, "band": "aandacht_nodig" },
+        { "name": "Groeiperspectief", "score": 4.1, "signal": 6.9, "band": "aandacht_nodig" },
+        { "name": "Werkbelasting", "score": 5.4, "signal": 5.7, "band": "aandacht_nodig" },
+        { "name": "Beloning & voorwaarden", "score": 6.2, "signal": 4.7, "band": "aandacht_nodig" },
+        { "name": "Psychologische veiligheid", "score": 6.8, "signal": 4.2, "band": "voorlopig_stabiel" },
+        { "name": "Rolhelderheid", "score": 7.1, "signal": 3.8, "band": "voorlopig_stabiel" }
+      ],
+      "featured_factors": [
+        {
+          "name": "Groeiperspectief",
+          "score": 4.1,
+          "signal": 6.9,
+          "band": "aandacht_nodig",
+          "definition": "Beperkt perspectief kleurt zowel hoofdreden als meespelende context."
+        },
+        {
+          "name": "Leiderschap",
+          "score": 4.3,
+          "signal": 6.7,
+          "band": "aandacht_nodig",
+          "definition": "Leidinggevend gedrag werkt mee in de bestuurlijke duiding van vertrek."
+        }
+      ],
+      "chart_caption": "Lagere score + hoger signaal = bestuurlijk scherper prioriteitsspoor."
+    },
+    "P4": {
+      "exit_reasons": [
+        { "label": "Gebrek aan groei", "n": 11 },
+        { "label": "Leiderschap / management", "n": 9 },
+        { "label": "Werkdruk", "n": 6 }
+      ],
+      "cofactors": [
+        { "label": "Rolhelderheid", "n": 7 },
+        { "label": "Psychologische veiligheid", "n": 6 }
+      ],
+      "signal_score": 5.8,
+      "bands": {
+        "voorlopig_stabiel": 9,
+        "aandacht_nodig": 26,
+        "direct_aandachtspunt": 0
+      },
+      "quotes": [
+        "Ik zag voor mezelf geen volgende stap meer binnen het team.",
+        "Feedback en richting kwamen te laat of bleven te vaag."
+      ],
+      "prior_signals": [
+        { "period": "Najaar 2025", "top_factor": "Groeiperspectief", "score": 5.7 }
+      ]
+    },
+    "P5": {
+      "exit_reasons": [
+        { "label": "Gebrek aan groei", "n": 11 },
+        { "label": "Leiderschap / management", "n": 9 },
+        { "label": "Werkdruk", "n": 6 }
+      ],
+      "priority_now": "Kies eerst het perspectief- en leiderschapsspoor.",
+      "priority_factors": ["Groeiperspectief", "Leiderschap"],
+      "first_owner": "HR business partner met betrokken leidinggevende",
+      "first_step": "Plan binnen 2 weken een sessie met het team.",
+      "review_window": "60-90 dagen",
+      "action_cards": [
+        {
+          "hypothesis": "Groeiperspectief",
+          "question": "Is vooral het gebrek aan zicht op de volgende stap bestuurlijk doorslaggevend?",
+          "rationale": "Perspectief komt terug in hoofdreden en werkfactoren."
+        },
+        {
+          "hypothesis": "Leiderschap",
+          "question": "Spelen richting, feedback en escalatie op teamniveau hetzelfde patroon?",
+          "rationale": "Leiderschap kleurt meerdere exitverhalen."
+        }
+      ],
+      "steps": [
+        { "action": "Kies het eerste managementspoor", "requirement": "Maak expliciet welk besluit nu eerst telt." },
+        { "action": "Beleg een eigenaar", "requirement": "Voorkom dat vertrekduiding zonder vervolg blijft." },
+        { "action": "Toets de hypothesen gericht", "requirement": "Gebruik alleen vervolgvragen die logisch uit het patroon volgen." },
+        { "action": "Vertaal dit naar beperkte acties", "requirement": "Kies maximaal drie gerichte acties." },
+        { "action": "Plan een review", "requirement": "Kijk terug op keuze, uitvoering en herhaling van signalen." }
+      ]
+    },
+    "P6": {
+      "factors": [
+        { "name": "Leiderschap", "score": 4.3, "signal": 6.7, "band": "aandacht_nodig" },
+        { "name": "Groeiperspectief", "score": 4.1, "signal": 6.9, "band": "aandacht_nodig" }
+      ],
+      "score_explanation": "Elke response draagt bij aan een frictiescore op 1-10.",
+      "product_is": "ExitScan is bestuurlijke vertrekduiding op groepsniveau.",
+      "product_not_for": "Niet bedoeld als diagnose, individuele beoordeling of bewezen ROI-model.",
+      "contact_email": "hallo@verisight.nl"
+    },
+    "P7": {
+      "dimensions": [
+        { "name": "Autonomie", "score": 4.6 },
+        { "name": "Competentie", "score": 5.1 },
+        { "name": "Verbondenheid", "score": 4.8 }
+      ]
+    },
+    "P8": {
+      "factors": [
+        { "name": "Leiderschap", "score": 4.3, "signal": 6.7, "band": "aandacht_nodig" },
+        { "name": "Groeiperspectief", "score": 4.1, "signal": 6.9, "band": "aandacht_nodig" }
+      ]
+    },
+    "P9": {
+      "first_owner": "HR business partner met betrokken leidinggevende",
+      "first_step": "Plan binnen 2 weken een sessie met het team."
+    },
+    "P10": {
+      "product_is": "ExitScan is bestuurlijke vertrekduiding op groepsniveau.",
+      "product_not_for": "Niet bedoeld als diagnose, individuele beoordeling of bewezen ROI-model."
+    }
+  },
+  "appendices": {
+    "A1": {
+      "segments": {
+        "department": [
+          { "label": "Operations", "n": 8, "scores": { "growth": 4.0, "leadership": 4.4 } },
+          { "label": "Sales", "n": 6, "scores": { "growth": 4.6, "leadership": 4.9 } }
+        ],
+        "tenure": [
+          { "label": "0-2 jaar", "n": 10, "scores": { "growth": 4.1, "leadership": 4.5 } },
+          { "label": "2+ jaar", "n": 7, "scores": { "growth": 4.8, "leadership": 4.9 } }
+        ],
+        "level": [
+          { "label": "Specialist", "n": 11, "scores": { "growth": 4.2, "leadership": 4.6 } },
+          { "label": "Manager", "n": 6, "scores": { "growth": 4.9, "leadership": 5.1 } }
+        ]
+      }
+    },
+    "B1": {
+      "factor_weights": [
+        { "name": "Leiderschap", "weight": 2.5, "literature_note": "Sterk gekoppeld aan vrijwillig verloop." },
+        { "name": "SDT-werkbeleving", "weight": 2.0, "literature_note": "Kernlaag voor autonomie, competentie en verbondenheid." },
+        { "name": "Groeiperspectief", "weight": 1.5, "literature_note": "Ontwikkelruimte keert vaak terug in vrijwillig vertrek." }
+      ],
+      "sdt_explanation": "SDT blijft de verklarende basislaag voor autonomie, competentie en verbondenheid binnen de werksituatie.",
+      "band_definitions": [
+        { "band": "voorlopig_stabiel", "threshold": "< 4.5", "meaning": "Niet leidend, wel blijven monitoren." },
+        { "band": "aandacht_nodig", "threshold": "4.5-7.0", "meaning": "Vraagt eerst verificatie." },
+        { "band": "direct_aandachtspunt", "threshold": ">= 7.0", "meaning": "Nu bestuurlijk eerst wegen." }
+      ]
+    }
+  }
+}

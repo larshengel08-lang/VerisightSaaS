@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "3.0",
+  "product": "ES",
+  "reportType": "exit",
+  "main": {
+    "P1": {
+      "client_name": "TechBouw B.V.",
+      "product_label": "ExitScan",
+      "period_label": "Q1 2026",
+      "invited_n": 21,
+      "completed_n": 12,
+      "response_rate": 57.1,
+      "friction_score": 5.4,
+      "executive_theme": "Het vertrekbeeld is smal en vraagt compacte duiding.",
+      "top_factors": ["Leiderschap", "Groeiperspectief"],
+      "first_decision": "Gebruik dit als eerste managementweging zonder extra claims."
+    },
+    "P2": {
+      "response_rate": 57.1,
+      "handoff_signal": "Er is een vertrekbeeld zichtbaar, zonder exposurelaag.",
+      "handoff_why": "Het patroon vraagt vooral focus en bestuurlijke weging.",
+      "handoff_action": "Kies een eerste route en houd de handoff compact.",
+      "handoff_nonclaim": "Lees dit niet als bewijs van een oorzaak of garantie op effect.",
+      "exposure_eur": null
+    },
+    "P3": {
+      "handoff_signal": "Leiderschap en groeiperspectief geven nog steeds het eerste bestuurlijke spoor.",
+      "factors": [
+        { "name": "Leiderschap", "score": 4.5, "signal": 5.7, "band": "aandacht_nodig" },
+        { "name": "Groeiperspectief", "score": 4.6, "signal": 5.6, "band": "aandacht_nodig" }
+      ],
+      "featured_factors": [
+        { "name": "Leiderschap", "score": 4.5, "signal": 5.7, "band": "aandacht_nodig", "definition": "Leiding blijft de scherpste verklarende factor." },
+        { "name": "Groeiperspectief", "score": 4.6, "signal": 5.6, "band": "aandacht_nodig", "definition": "Perspectief werkt mee maar zonder brede bewijslaag." }
+      ],
+      "chart_caption": "Factoren blijven zichtbaar; ontbrekende subblokken verdwijnen."
+    },
+    "P4": {
+      "exit_reasons": [{ "label": "Leiderschap / management", "n": 4 }],
+      "cofactors": [],
+      "signal_score": 5.4,
+      "bands": {
+        "voorlopig_stabiel": 3,
+        "aandacht_nodig": 9,
+        "direct_aandachtspunt": 0
+      },
+      "quotes": [],
+      "prior_signals": []
+    },
+    "P5": {
+      "exit_reasons": [{ "label": "Leiderschap / management", "n": 4 }],
+      "priority_now": "Kies een eerste managementroute en houd de actie smal.",
+      "priority_factors": ["Leiderschap"],
+      "first_owner": "HR business partner",
+      "first_step": "Maak snel expliciet welk spoor eerst telt.",
+      "review_window": "60-90 dagen",
+      "action_cards": [
+        {
+          "hypothesis": "Leiderschap",
+          "question": "Welke managementinteractie vraagt als eerste verificatie?",
+          "rationale": "Gebruik de smalle exitbatch om gericht te toetsen."
+        }
+      ],
+      "steps": [
+        { "action": "Kies een route", "requirement": "Voorkom verbreding." },
+        { "action": "Beleg een eigenaar", "requirement": "Maak opvolging zichtbaar." },
+        { "action": "Toets gericht", "requirement": "Gebruik alleen logische vervolgvragen." },
+        { "action": "Neem beperkte acties", "requirement": "Houd de eerste actie klein." },
+        { "action": "Review", "requirement": "Herijk bij de volgende batch." }
+      ]
+    },
+    "P6": {
+      "factors": [
+        { "name": "Leiderschap", "score": 4.5, "signal": 5.7, "band": "aandacht_nodig" },
+        { "name": "Groeiperspectief", "score": 4.6, "signal": 5.6, "band": "aandacht_nodig" }
+      ],
+      "score_explanation": "Gebruik de score als managementsamenvatting, niet als diagnose.",
+      "product_is": "ExitScan is bestuurlijke vertrekduiding op groepsniveau.",
+      "product_not_for": "Niet bedoeld als diagnose of individuele predictor.",
+      "contact_email": "hallo@verisight.nl"
+    },
+    "P7": {
+      "dimensions": [
+        { "name": "Autonomie", "score": 4.9 },
+        { "name": "Competentie", "score": 5.1 },
+        { "name": "Verbondenheid", "score": 5.0 }
+      ]
+    },
+    "P8": {
+      "factors": [
+        { "name": "Leiderschap", "score": 4.5, "signal": 5.7, "band": "aandacht_nodig" }
+      ]
+    },
+    "P9": {
+      "first_owner": "HR business partner",
+      "first_step": "Maak snel expliciet welk spoor eerst telt."
+    },
+    "P10": {
+      "product_is": "ExitScan is bestuurlijke vertrekduiding op groepsniveau.",
+      "product_not_for": "Niet bedoeld als diagnose of individuele predictor."
+    }
+  },
+  "appendices": {
+    "B1": {
+      "factor_weights": [
+        { "name": "Leiderschap", "weight": 2.5, "literature_note": "Sterk gekoppeld aan vrijwillig verloop." }
+      ],
+      "sdt_explanation": "SDT blijft de verklarende basislaag voor autonomie, competentie en verbondenheid.",
+      "band_definitions": [
+        { "band": "voorlopig_stabiel", "threshold": "< 4.5", "meaning": "Niet leidend." },
+        { "band": "aandacht_nodig", "threshold": "4.5-7.0", "meaning": "Vraagt verificatie." },
+        { "band": "direct_aandachtspunt", "threshold": ">= 7.0", "meaning": "Nu eerst wegen." }
+      ]
+    }
+  }
+}
