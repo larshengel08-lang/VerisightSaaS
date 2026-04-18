@@ -10,6 +10,7 @@ interface Props {
 
 const UNSUPPORTED_REPORT_MESSAGES: Record<string, string> = {
   pulse: 'Pulse ondersteunt in deze fase nog geen formeel PDF-rapport. Gebruik voorlopig de dashboardread als managementoutput.',
+  mto: 'MTO ondersteunt in deze fase nog geen formeel PDF-rapport. Gebruik voorlopig de brede dashboardread als managementoutput.',
 }
 
 export function PdfDownloadButton({ campaignId, campaignName, scanType }: Props) {

@@ -7,6 +7,7 @@ from types import ModuleType
 _PRODUCT_MODULES: dict[str, str] = {
     "exit": "backend.products.exit",
     "leadership": "backend.products.leadership",
+    "mto": "backend.products.mto",
     "onboarding": "backend.products.onboarding",
     "retention": "backend.products.retention",
     "pulse": "backend.products.pulse",

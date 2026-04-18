@@ -170,12 +170,13 @@ ORG_SECTIONS = [
 
 
 def build_org_sections(scan_type: str) -> list[dict[str, Any]]:
+    resolved_scan_type = "retention" if scan_type == "mto" else scan_type
     sections: list[dict[str, Any]] = []
     for section in ORG_SECTIONS:
         items = [
-            (item_id, item_text[scan_type])
+            (item_id, item_text[resolved_scan_type])
             for item_id, item_text in section["items"]
-            if scan_type in item_text
+            if resolved_scan_type in item_text
         ]
         if not items:
             continue

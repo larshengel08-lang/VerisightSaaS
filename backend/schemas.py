@@ -46,7 +46,7 @@ class OrganizationRead(OrmBase):
 
 class CampaignCreate(BaseModel):
     name: str = Field(..., min_length=2, max_length=255)
-    scan_type: str = Field(..., pattern=r"^(exit|retention|pulse|team|onboarding|leadership)$")
+    scan_type: str = Field(..., pattern=r"^(exit|retention|pulse|team|onboarding|leadership|mto)$")
     delivery_mode: str = Field(default="baseline", pattern=r"^(baseline|live)$")
     enabled_modules: Optional[list[str]] = None
 
@@ -70,16 +70,14 @@ class CampaignCreate(BaseModel):
 
     @model_validator(mode="after")
     def validate_delivery_mode_for_scan(self) -> "CampaignCreate":
-        if self.scan_type in {"pulse", "team", "onboarding", "leadership"} and self.delivery_mode == "live":
-            product_name = (
-                "Pulse"
-                if self.scan_type == "pulse"
-                else "TeamScan"
-                if self.scan_type == "team"
-                else "Onboarding 30-60-90"
-                if self.scan_type == "onboarding"
-                else "Leadership Scan"
-            )
+        if self.scan_type in {"pulse", "team", "onboarding", "leadership", "mto"} and self.delivery_mode == "live":
+            product_name = {
+                "pulse": "Pulse",
+                "team": "TeamScan",
+                "onboarding": "Onboarding 30-60-90",
+                "leadership": "Leadership Scan",
+                "mto": "MTO",
+            }[self.scan_type]
             raise ValueError(f"{product_name} ondersteunt in deze wave alleen baseline campaigns.")
         return self
 

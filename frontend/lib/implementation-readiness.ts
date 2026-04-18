@@ -21,7 +21,11 @@ export function getDeliveryModeDescription(mode: DeliveryMode | null | undefined
         ? 'Gebruik dit pas nadat TeamScan in een latere wave ook echt als herhaal- of vervolgroute is geopend. In deze wave blijft TeamScan baseline-only.'
         : scanType === 'onboarding'
           ? 'Gebruik dit pas nadat onboarding in een latere wave ook echt als vervolg- of multi-checkpointroute is geopend. In deze wave blijft onboarding baseline-only.'
-      : 'Gebruik dit pas nadat ExitScan Baseline, volumelogica en eigenaar voor opvolging scherp zijn. Live blijft een bewuste vervolgroute.'
+          : scanType === 'leadership'
+            ? 'Gebruik dit pas nadat Leadership Scan in een latere wave ook echt als bounded vervolgroute is geopend. In deze wave blijft Leadership Scan baseline-only.'
+            : scanType === 'mto'
+              ? 'Gebruik dit pas nadat MTO in een latere wave ook echt als vervolg- of ritmeroute is geopend. In deze wave blijft MTO baseline-only.'
+              : 'Gebruik dit pas nadat ExitScan Baseline, volumelogica en eigenaar voor opvolging scherp zijn. Live blijft een bewuste vervolgroute.'
   }
 
   return scanType === 'retention'
@@ -30,7 +34,11 @@ export function getDeliveryModeDescription(mode: DeliveryMode | null | undefined
       ? 'Dit is de standaard eerste route voor TeamScan. Gebruik baseline om eerst een veilige department-first lokale read op te bouwen voordat verdere lokalisatie logisch wordt.'
       : scanType === 'onboarding'
         ? 'Dit is de standaard eerste route voor onboarding in deze wave. Gebruik baseline om eerst een enkel checkpoint per campaign op groepsniveau leesbaar te maken.'
-    : 'Dit is de standaard eerste route voor ExitScan. Gebruik baseline om vertrek eerst bestuurlijk leesbaar te maken voordat doorlopende opvolging logisch wordt.'
+        : scanType === 'leadership'
+          ? 'Dit is de standaard eerste route voor Leadership Scan in deze wave. Gebruik baseline om eerst een geaggregeerde managementread zonder named leaders of 360-logica op te bouwen.'
+          : scanType === 'mto'
+            ? 'Dit is de standaard eerste route voor MTO in deze wave. Gebruik baseline om eerst een brede, organisatiebrede hoofdmeting op groepsniveau leesbaar te maken.'
+            : 'Dit is de standaard eerste route voor ExitScan. Gebruik baseline om vertrek eerst bestuurlijk leesbaar te maken voordat doorlopende opvolging logisch wordt.'
 }
 
 export function getInviteDefaultForDeliveryMode(mode: DeliveryMode | null | undefined) {

@@ -54,7 +54,7 @@ create table if not exists public.campaigns (
   id              uuid primary key default gen_random_uuid(),
   organization_id uuid references public.organizations(id) on delete cascade not null,
   name            text not null,
-  scan_type       text not null check (scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership')),
+  scan_type       text not null check (scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'mto')),
   delivery_mode   text check (delivery_mode in ('baseline', 'live')),
   is_active       boolean default true,
   enabled_modules jsonb,

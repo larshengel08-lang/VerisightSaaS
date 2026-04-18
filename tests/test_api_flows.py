@@ -208,6 +208,22 @@ def _leadership_payload(token: str):
     }
 
 
+def _mto_payload(token: str):
+    return {
+        "token": token,
+        "tenure_years": None,
+        "exit_reason_category": None,
+        "stay_intent_score": 4,
+        "signal_visibility_score": None,
+        "sdt_raw": {f"B{i}": 4 for i in range(1, 13)},
+        "org_raw": {f"{factor}_{idx}": 4 for factor in ORG_FACTOR_KEYS for idx in range(1, 4)},
+        "pull_factors_raw": {},
+        "open_text": "Meer prioriteitsrust, duidelijkheid en steun in de uitvoering zou nu het meeste verschil maken.",
+        "uwes_raw": {},
+        "turnover_intention_raw": {},
+    }
+
+
 def test_create_campaign_defaults_to_baseline_delivery_mode(client, db_session: Session):
     org = _create_org(db_session, api_key="campaign-default-key")
 
@@ -352,6 +368,34 @@ def test_create_leadership_campaign_rejects_live_delivery_mode(client, db_sessio
 
     assert response.status_code == 422
     assert "Leadership Scan" in response.text
+
+
+def test_create_mto_campaign_defaults_to_baseline_delivery_mode(client, db_session: Session):
+    _create_org(db_session, api_key="mto-default-key")
+
+    response = client.post(
+        "/api/campaigns",
+        headers={"x-api-key": "mto-default-key"},
+        json={"name": "MTO Najaar", "scan_type": "mto"},
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["scan_type"] == "mto"
+    assert body["delivery_mode"] == "baseline"
+
+
+def test_create_mto_campaign_rejects_live_delivery_mode(client, db_session: Session):
+    _create_org(db_session, api_key="mto-live-key")
+
+    response = client.post(
+        "/api/campaigns",
+        headers={"x-api-key": "mto-live-key"},
+        json={"name": "MTO Live", "scan_type": "mto", "delivery_mode": "live"},
+    )
+
+    assert response.status_code == 422
+    assert "MTO" in response.text
 
 
 def test_create_organization_creates_secret_when_missing(client, db_session: Session):
@@ -629,6 +673,40 @@ def test_leadership_report_route_returns_pdf(client, db_session: Session):
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/pdf"
     assert response.content.startswith(b"%PDF")
+
+
+def test_mto_survey_submit_persists_broad_org_read_summary(client, db_session: Session):
+    org = _create_org(db_session, api_key="mto-submit-key")
+    campaign = _create_campaign(db_session, org, name="MTO Foundation", scan_type="mto")
+    respondent = _create_respondent(db_session, campaign, email="mto@example.com", department="Operations")
+
+    response = client.post("/survey/submit", json=_mto_payload(respondent.token))
+
+    assert response.status_code == 200
+    stored = db_session.query(SurveyResponse).filter(SurveyResponse.respondent_id == respondent.id).one()
+
+    assert stored.preventability is None
+    assert stored.uwes_score is None
+    assert stored.turnover_intention_score is None
+    assert set(stored.sdt_raw.keys()) == {f"B{i}" for i in range(1, 13)}
+    assert set(stored.org_scores.keys()) == set(ORG_FACTOR_KEYS)
+    assert stored.full_result["mto_summary"]["snapshot_type"] == "broad_org_read_cycle"
+    assert stored.full_result["mto_summary"]["report_layer_open"] is False
+    assert stored.full_result["mto_summary"]["action_log_open"] is False
+    assert len(stored.full_result["theme_priorities"]) == 3
+
+
+def test_mto_report_route_is_not_yet_supported(client, db_session: Session):
+    org = _create_org(db_session, api_key="mto-report-key")
+    campaign = _create_campaign(db_session, org, name="MTO Report", scan_type="mto")
+
+    response = client.get(
+        f"/api/campaigns/{campaign.id}/report",
+        headers={"x-api-key": "mto-report-key"},
+    )
+
+    assert response.status_code == 422
+    assert "MTO" in response.json()["detail"]
 
 
 def test_respondent_import_creates_rows_without_sending_invites(client, db_session: Session):

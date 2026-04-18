@@ -354,6 +354,8 @@ export default async function CampaignPage({ params }: Props) {
             ? 'Checkpoint duiding en eerste vervolgstap'
             : stats.scan_type === 'leadership'
               ? 'Managementcontext en eerste verificatie'
+              : stats.scan_type === 'mto'
+                ? 'Organisatiebrede duiding en eerste prioriteit'
         : 'Vertrekduiding en managementgesprek'
   const handoffDescription =
     stats.scan_type === 'retention'
@@ -363,9 +365,11 @@ export default async function CampaignPage({ params }: Props) {
         : stats.scan_type === 'team'
           ? 'Deze laag vertaalt TeamScan naar een bestuurlijk leesbare lokale read: welke afdelingen vallen op, wat moet je eerst toetsen en welke lokale context vraagt nu als eerste aandacht.'
           : stats.scan_type === 'onboarding'
-            ? 'Deze laag vertaalt onboarding naar een bestuurlijk leesbaar checkpointbeeld: wat valt nu op in vroege integratie, wat moet je eerst toetsen en welke beperkte correctie hoort hier direct achteraan.'
-            : stats.scan_type === 'leadership'
-              ? 'Deze laag vertaalt Leadership Scan naar een bestuurlijk leesbare managementread: welke context valt op, wat moet je eerst toetsen en welke begrensde managementstap hoort hier direct achteraan.'
+          ? 'Deze laag vertaalt onboarding naar een bestuurlijk leesbaar checkpointbeeld: wat valt nu op in vroege integratie, wat moet je eerst toetsen en welke beperkte correctie hoort hier direct achteraan.'
+          : stats.scan_type === 'leadership'
+            ? 'Deze laag vertaalt Leadership Scan naar een bestuurlijk leesbare managementread: welke context valt op, wat moet je eerst toetsen en welke begrensde managementstap hoort hier direct achteraan.'
+            : stats.scan_type === 'mto'
+              ? 'Deze laag vertaalt MTO naar een bestuurlijk leesbare hoofdmeting: welke organisatiethema\'s vallen op, wat moet je eerst duiden en welke begrensde managementroute hoort daar nu direct achteraan.'
         : 'Deze laag brengt ExitScan terug tot een bestuurlijk leesbaar vertrekbeeld: wat keert terug, wat lijkt beinvloedbaar en waar moet management eerst doorvragen.'
   const readinessLabel = hasEnoughData
     ? 'Beslisniveau bereikt'
@@ -381,6 +385,8 @@ export default async function CampaignPage({ params }: Props) {
           ? 'Checkpoint -> corrigeren -> opnieuw toetsen'
           : stats.scan_type === 'leadership'
             ? 'Duiden -> verifieren -> begrenzen'
+            : stats.scan_type === 'mto'
+              ? 'Hoofdmeting -> prioriteren -> begrenzen'
       : stats.scan_type === 'retention'
         ? 'Signaleren -> valideren -> handelen'
         : 'Terugblik -> duiden -> verbeteren'
@@ -388,11 +394,13 @@ export default async function CampaignPage({ params }: Props) {
     stats.scan_type === 'pulse'
       ? 'Snapshotcontext'
       : stats.scan_type === 'team'
-        ? 'Lokale context'
-        : stats.scan_type === 'onboarding'
-          ? 'Checkpointcontext'
-          : stats.scan_type === 'leadership'
-            ? 'Managementcontext'
+      ? 'Lokale context'
+      : stats.scan_type === 'onboarding'
+        ? 'Checkpointcontext'
+        : stats.scan_type === 'leadership'
+          ? 'Managementcontext'
+          : stats.scan_type === 'mto'
+            ? 'Hoofdmetingcontext'
       : stats.scan_type === 'retention'
         ? 'Privacy-first'
         : 'Rapportcontext'
@@ -581,6 +589,52 @@ export default async function CampaignPage({ params }: Props) {
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een begrensde managementroute logisch, vraagt de vraag toch bredere diagnose of hoort Leadership Scan juist niet verder op te schalen binnen deze context?',
           }
+      : stats.scan_type === 'mto'
+        ? {
+            summaryTone: 'blue' as const,
+            summarySignalLabel: 'MTO-signaal',
+            summaryContextLabel: 'Hoofdmeting · group-level only',
+            summaryContextTone: 'blue' as const,
+            summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
+            summaryLeadDescription:
+              'Lees MTO eerst als brede organisatiebrede hoofdmeting: welke organisatiethema\'s vallen op, welke factor kleurt dat beeld en welke begrensde managementroute hoort hier logisch als eerste bij.',
+            summaryCardEyebrow: 'Hoofdmetingspoor',
+            promotedSummaryCards: 2,
+            driverTitle: 'MTO-signaal en organisatiecontext',
+            driverDescription:
+              'Gebruik deze laag om het actuele MTO-beeld gecontroleerd te verdiepen zonder MTO nu al te verwarren met een rapportlaag, action log of publieke suitevervanging.',
+            driverIntro:
+              'Start bij de brede hoofdmeting en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke organisatiethema\'s nu eerst bestuurlijke aandacht vragen.',
+            driverAsideLabel: hasEnoughData ? 'MTO-read live' : 'Wacht op meer data',
+            driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
+            driverTabOrder: ['signalen', 'factoren', 'aanvullend'],
+            signalTabLabel: 'Hoofdmetingbeeld',
+            signalTabTitle: 'MTO-signaal op groepsniveau',
+            signalTabDescription:
+              'Laat zien hoe breed en hoe scherp het huidige MTO-signaal zich over de groep verdeelt zonder dit al te lezen als rapport- of opvolglaag.',
+            factorTabLabel: 'Organisatiedrivers',
+            factorTabTitle: 'Werkfactoren achter brede frictie',
+            factorTabDescription:
+              'Gebruik de scherpste werkfactoren als eerste managementspoor om te bepalen waar de brede hoofdmeting nu eerst meer duiding of borging vraagt.',
+            supplementalTabLabel: 'SDT-basis',
+            supplementalTitle: 'Werkbeleving en SDT-basis',
+            supplementalDescription:
+              'Deze laag laat zien hoe autonomie, competentie en verbondenheid onder het huidige MTO-signaal liggen en welke organisatiecontext daardoor meer spanning laat zien.',
+            actionTitle: 'Waar MTO eerst op richt',
+            focusQuestionTitle: 'Prioritaire organisatieroutevragen',
+            focusQuestionDescription:
+              'Start met de factoren die het MTO-beeld het scherpst kleuren en gebruik de vragen om te bepalen wat eerst bestuurlijk getoetst moet worden voordat een bredere route wordt gekozen.',
+            playbookTitle: 'Eerste MTO-playbooks en begrensde route',
+            playbookDescription:
+              'Deze playbooks vormen de eerste uitvoerlaag onder de gekozen MTO-route. Ze helpen van brede duiding naar een begrensde eerste stap te gaan zonder rapport- of action-logscope te openen.',
+            routeTitle: 'Van MTO-read naar eerste managementroute',
+            routeDescription:
+              'Deze laag brengt eerste managementgebruik, de gekozen organisatieprioriteit en het logische reviewmoment samen terwijl MTO in deze wave nog intern, assisted en bounded blijft.',
+            routeBadgeLabel: 'MTO-route',
+            afterSessionTitle: 'Na de eerste managementsessie',
+            afterSessionDescription:
+              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft dezelfde brede hoofdroute logisch, vraagt een thema juist lokalisatie of extra verdieping, of moet MTO eerst bounded blijven zonder extra suite-openingen.',
+          }
       : stats.scan_type === 'exit'
         ? {
             summaryTone: 'blue' as const,
@@ -697,19 +751,47 @@ export default async function CampaignPage({ params }: Props) {
     { id: 'samenvatting', label: 'Samenvatting' },
     {
       id: 'handoff',
-      label: stats.scan_type === 'retention' ? 'Behoudsread' : stats.scan_type === 'team' ? 'Lokale read' : 'Handoff',
+      label:
+        stats.scan_type === 'retention'
+          ? 'Behoudsread'
+          : stats.scan_type === 'team'
+            ? 'Lokale read'
+            : stats.scan_type === 'mto'
+              ? 'MTO-read'
+              : 'Handoff',
     },
     {
       id: 'drivers',
-      label: stats.scan_type === 'retention' ? 'Signalen' : stats.scan_type === 'team' ? 'Lokaal' : 'Drivers',
+      label:
+        stats.scan_type === 'retention'
+          ? 'Signalen'
+          : stats.scan_type === 'team'
+            ? 'Lokaal'
+            : stats.scan_type === 'mto'
+              ? 'Hoofdmeting'
+              : 'Drivers',
     },
     {
       id: 'acties',
-      label: stats.scan_type === 'retention' ? 'Behoudsacties' : stats.scan_type === 'team' ? 'Lokale acties' : 'Acties',
+      label:
+        stats.scan_type === 'retention'
+          ? 'Behoudsacties'
+          : stats.scan_type === 'team'
+            ? 'Lokale acties'
+            : stats.scan_type === 'mto'
+              ? 'MTO-acties'
+              : 'Acties',
     },
     {
       id: 'route',
-      label: stats.scan_type === 'retention' ? 'Behoudsroute' : stats.scan_type === 'team' ? 'Lokale route' : 'Route',
+      label:
+        stats.scan_type === 'retention'
+          ? 'Behoudsroute'
+          : stats.scan_type === 'team'
+            ? 'Lokale route'
+            : stats.scan_type === 'mto'
+              ? 'MTO-route'
+              : 'Route',
     },
     { id: 'methodiek', label: 'Methodiek' },
     { id: 'operatie', label: 'Operatie' },
@@ -969,7 +1051,7 @@ export default async function CampaignPage({ params }: Props) {
             </>
           }
           actions={
-            stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
+            stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' || stats.scan_type === 'mto' ? (
               <>
                 {!profile?.is_verisight_admin ? <OnboardingAdvancer fromStep={1} /> : null}
                 <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
@@ -979,7 +1061,9 @@ export default async function CampaignPage({ params }: Props) {
                       ? 'TeamScan: lokale read live'
                       : stats.scan_type === 'onboarding'
                         ? 'Onboarding: checkpoint read live'
-                        : 'Leadership Scan: management read live'}
+                        : stats.scan_type === 'leadership'
+                          ? 'Leadership Scan: management read live'
+                          : 'MTO: hoofdmeting read live'}
                 </div>
               </>
             ) : (
@@ -1049,7 +1133,7 @@ export default async function CampaignPage({ params }: Props) {
         items={summaryItems}
         anchors={sectionAnchors}
         actions={
-          stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
+          stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' || stats.scan_type === 'mto' ? (
             <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
               {stats.scan_type === 'pulse'
                 ? 'Pulse: management handoff live'
@@ -1057,7 +1141,9 @@ export default async function CampaignPage({ params }: Props) {
                   ? 'TeamScan: lokale read live'
                   : stats.scan_type === 'onboarding'
                     ? 'Onboarding: checkpoint read live'
-                    : 'Leadership Scan: management read live'}
+                    : stats.scan_type === 'leadership'
+                      ? 'Leadership Scan: management read live'
+                      : 'MTO: hoofdmeting read live'}
             </div>
           ) : (
             <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
@@ -1350,7 +1436,7 @@ export default async function CampaignPage({ params }: Props) {
                   factorAverages={factorData.orgAverages}
                   scanType={stats.scan_type}
                   bandOverride={
-                    stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
+                    stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' || stats.scan_type === 'mto'
                       ? dashboardViewModel.managementBandOverride
                       : undefined
                   }
@@ -1358,7 +1444,7 @@ export default async function CampaignPage({ params }: Props) {
               </div>
             </div>
 
-            {stats.scan_type === 'retention' || stats.scan_type === 'exit' || stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
+            {stats.scan_type === 'retention' || stats.scan_type === 'exit' || stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' || stats.scan_type === 'mto' ? (
               <>
                 <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
                   <h3 className="text-sm font-semibold text-slate-950">{productExperience.playbookTitle}</h3>
@@ -1373,7 +1459,7 @@ export default async function CampaignPage({ params }: Props) {
                       factorAverages={factorData.orgAverages}
                       scanType={stats.scan_type}
                       bandOverride={
-                        stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
+                        stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' || stats.scan_type === 'mto'
                           ? dashboardViewModel.managementBandOverride
                           : undefined
                       }
@@ -1471,6 +1557,28 @@ export default async function CampaignPage({ params }: Props) {
                   eyebrow="Als de onderbouwing te smal blijft"
                   title="Open geen named leaders of 360"
                   body="Maak Leadership Scan niet groter dan deze wave draagt zolang groepsniveau, suppressie en de huidige data nog geen eerlijke basis geven voor named leader of 360-output."
+                  tone="emerald"
+                />
+              </div>
+            ) : null}
+            {stats.scan_type === 'mto' ? (
+              <div className="mt-4 grid gap-4 lg:grid-cols-3">
+                <DashboardPanel
+                  eyebrow="Als de hoofdmeting bevestigt"
+                  title="Blijf eerst op dezelfde brede route"
+                  body="Open pas een volgende MTO-cyclus als prioriteiten, eerste eigenaar en reviewmoment uit deze hoofdmeting al expliciet zijn gemaakt."
+                  tone="blue"
+                />
+                <DashboardPanel
+                  eyebrow="Als een thema scherper wordt"
+                  title="Verdiep bewust en bounded"
+                  body="Koppel pas door naar rijkere duiding, lokalisatie of aanvullende productvormen wanneer dezelfde thema's dat echt nodig maken en MTO eerst intern groen is."
+                  tone="amber"
+                />
+                <DashboardPanel
+                  eyebrow="Als de neiging ontstaat om te verbreden"
+                  title="Open nog geen rapport of action log"
+                  body="Houd MTO in deze wave bij een bounded managementroute. Rapportlaag, action logging en bredere suitekoppeling horen pas in latere waves thuis."
                   tone="emerald"
                 />
               </div>

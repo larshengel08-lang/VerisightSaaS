@@ -110,6 +110,10 @@ export function buildHeroDescription({
     return `Deze Leadership Scan laat een begrensde managementcontext-read zien op groepsniveau. Gebruik de uitkomst om te bepalen welke leiderschaps- of prioriteringscontext nu eerst duiding vraagt, zonder dit te lezen als named leader view, 360-output of performance-oordeel. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
   }
 
+  if (scanType === 'mto') {
+    return `Deze MTO laat een brede organisatiebrede hoofdmeting zien op groepsniveau. Gebruik de uitkomst om te bepalen welke organisatiethema's nu eerst bestuurlijke duiding vragen, zonder dit al te lezen als rapportlaag, action log of publieke hoofdroute. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+  }
+
   return 'Deze ExitScan helpt het vertrekverhaal terugbrengen tot de factoren die het meest beinvloedbaar lijken. Start bovenaan met het beslisoverzicht en gebruik daarna de verdieping om teams, factoren en vervolgacties scherper te maken.'
 }
 
@@ -240,6 +244,21 @@ export function buildDecisionPanels({
     ]
   }
 
+  if (stats.scan_type === 'mto') {
+    return [
+      ...sharedPanels,
+      {
+        eyebrow: 'Organisatierichting',
+        title: 'Hoofdmeting nu',
+        value: retentionSupplemental.stayIntent !== null ? `${retentionSupplemental.stayIntent.toFixed(1)}/10` : '-',
+        body: topFactorLabel
+          ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste organisatiebrede prioriteit en lees de richtingsvraag alleen als extra indicatie of de brede managementread nu steunend of juist frictievol voelt.`
+          : 'Gebruik de richtingsvraag als extra indicatie of deze brede hoofdmeting nu vooral stabiliteit of juist organisatiebrede frictie laat zien.',
+        tone: retentionSupplemental.stayIntent !== null && retentionSupplemental.stayIntent < 5.5 ? 'amber' : 'emerald',
+      },
+    ]
+  }
+
   return [
     ...sharedPanels,
     {
@@ -261,6 +280,7 @@ export function buildNextStepTitle(scanType: ScanType, hasEnoughData: boolean, h
   if (scanType === 'team') return 'Lokaal verifieren'
   if (scanType === 'onboarding') return 'Checkpoint duiden'
   if (scanType === 'leadership') return 'Managementcontext duiden'
+  if (scanType === 'mto') return 'Organisatieroute bepalen'
   return scanType === 'retention' ? 'Valideren en prioriteren' : 'Duiden en verbeteren'
 }
 
@@ -319,6 +339,12 @@ export function buildNextStepBody({
       : 'Gebruik de compact gemeten werkfactoren om te kiezen welke managementcontext nu als eerste duiding verdient.'
   }
 
+  if (scanType === 'mto') {
+    return topFactor
+      ? `Gebruik ${topFactor.toLowerCase()} als eerste organisatiebrede prioriteit en bepaal welke begrensde managementroute of eerste borgstap nu het meest logisch is, zonder al rapport- of action-logscope te openen.`
+      : 'Gebruik de breed gemeten werkfactoren om te kiezen welk organisatiespoor nu als eerste bestuurlijke duiding verdient.'
+  }
+
   return topFactor
     ? `Gebruik ${topFactor.toLowerCase()} en het werksignaal om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
     : 'Gebruik het werksignaal en de topfactoren om het eerstvolgende verbetergesprek te richten.'
@@ -346,7 +372,8 @@ export function getDisclosureDefaults({
       scanType === 'exit' ||
       scanType === 'pulse' ||
       scanType === 'onboarding' ||
-      scanType === 'leadership',
+      scanType === 'leadership' ||
+      scanType === 'mto',
   }
 }
 
@@ -390,6 +417,8 @@ export function buildInsightWarnings({
                 ? 'Lees onboarding als checkpoint-read'
                 : scanType === 'leadership'
                   ? 'Lees Leadership Scan als managementcontext-read'
+                  : scanType === 'mto'
+                    ? 'Lees MTO als brede hoofdmeting'
             : 'Lees dit als managementinput',
       body:
         scanType === 'retention'
@@ -402,6 +431,8 @@ export function buildInsightWarnings({
                 ? 'Onboarding blijft een checkpoint-read op groepsniveau. Gebruik de uitkomst om vroege integratie en frictie te duiden, niet als performance-oordeel, retentievoorspelling of volledige 30-60-90-journey.'
                 : scanType === 'leadership'
                   ? 'Leadership Scan blijft een geaggregeerde managementread op groepsniveau. Gebruik de uitkomst om managementcontext te duiden, niet om individuele leidinggevenden te beoordelen of named leaders te rangschikken.'
+                  : scanType === 'mto'
+                    ? 'MTO blijft in deze wave een brede hoofdmeting op groepsniveau. Gebruik de uitkomst om organisatiebrede prioriteiten te bepalen, niet als rapportlaag, action log of individuele beoordeling.'
             : 'ExitScan bundelt vertrekervaringen tot managementpatronen. Gebruik deze uitkomsten om gesprekken te richten, niet om een score als sluitend bewijs te behandelen.',
       tone: 'blue',
     })

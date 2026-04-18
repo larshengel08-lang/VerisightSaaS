@@ -265,6 +265,26 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
     ] as const
   }
 
+  if (scanType === 'mto') {
+    return [
+      {
+        title: 'Blijf op dezelfde route',
+        fit: 'Hoofdmeting eerst laten landen',
+        body: 'Nog een MTO-cyclus wordt pas logisch zodra deze eerste hoofdmeting al gebruikt is voor expliciete prioritering, een eerste eigenaar, een begrensde managementroute en een reviewmoment.',
+      },
+      {
+        title: 'Verdiep bewust',
+        fit: 'Alleen bij scherpere organisatielaag',
+        body: 'Verdiep pas verder wanneer dezelfde signalen echt om rijkere managementduiding, meer dashboarddiepte of een formele rapportlaag vragen die MTO in deze wave nog niet openzet.',
+      },
+      {
+        title: 'Koppel later aan de suite',
+        fit: 'Tweede stap pas na groene hoofdmeting',
+        body: 'Kies pas een ander product of bredere suitekoppeling wanneer MTO als hoofdmeting eerst intern groen is en dezelfde thema\'s daarna om lokalisatie, opvolging of aanvullende routes vragen.',
+      },
+    ] as const
+  }
+
   return [
     {
       title: 'Blijf op dezelfde route',
@@ -325,6 +345,14 @@ export function getFirstManagementReadSteps(scanType: ScanType) {
     ] as const
   }
 
+  if (scanType === 'mto') {
+    return [
+      'Open eerst het beslisoverzicht en lees MTO als brede organisatiebrede hoofdmeting, niet als individuele beoordeling, rapportlaag of action log.',
+      'Gebruik een indicatief beeld vanaf 5 responses om een eerste brede organisatierichting te zien, maar wacht voor stevigere managementduiding bij voorkeur tot 10 responses of meer.',
+      'Plan daarna de eerste managementreview rond de vraag welke organisatiethema\'s nu eerst prioriteit vragen, wie de eerste eigenaar is, welke begrensde managementroute volgt en wanneer een volgende brede review logisch is.',
+    ] as const
+  }
+
   return [
     'Open eerst het beslisoverzicht en lees het vertrekbeeld als managementsamenvatting van terugkerende werkfrictie, niet als losse exitfeedback.',
     'Gebruik een indicatief beeld vanaf 5 responses om richting te houden, maar wacht voor stevige patroonduiding bij voorkeur tot 10 responses of meer.',
@@ -347,6 +375,9 @@ export function getAdoptionSuccessDefinition(scanType: ScanType) {
   }
   if (scanType === 'leadership') {
     return 'Adoptie is pas geslaagd wanneer de klant Leadership Scan gebruikt om een eerste managementread, eerste eigenaar, begrensde verificatie of correctie en logisch reviewmoment expliciet te maken.'
+  }
+  if (scanType === 'mto') {
+    return 'Adoptie is pas geslaagd wanneer de klant MTO gebruikt om een eerste brede hoofdmeting te lezen, expliciete organisatieprioriteiten te kiezen, een eerste eigenaar te benoemen en een begrensde managementroute zonder rapport- of action-logscope vast te zetten.'
   }
   return 'Adoptie is pas geslaagd wanneer de klant niet alleen live is, maar het dashboard en rapport gebruikt om een eerste managementsessie over vertrekduiding, prioriteiten, routekeuze en reviewmoment te voeren.'
 }

@@ -36,14 +36,14 @@ def test_portfolio_contract_tracks_current_core_first_suite_model():
     assert "portfoliorole: 'portfolio_route'" in marketing_products
     assert "portfoliorole: 'follow_on_route'" in marketing_products
     assert "portfoliorole: 'future_reserved_route'" in marketing_products
-    assert "export type scantype = 'exit' | 'retention' | 'pulse' | 'team' | 'onboarding' | 'leadership'" in frontend_types
+    assert "export type scantype = 'exit' | 'retention' | 'pulse' | 'team' | 'onboarding' | 'leadership' | 'mto'" in frontend_types
     assert "route_interest: literal[" in backend_schemas
     assert '"teamscan"' in backend_schemas
     assert '"onboarding"' in backend_schemas
     assert '"leadership"' in backend_schemas
     assert '"combinatie"' in backend_schemas
     assert '"nog-onzeker"' in backend_schemas
-    assert "check (scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership'))" in schema
+    assert "check (scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'mto'))" in schema
 
 
 def test_public_surfaces_keep_core_first_hierarchy_with_live_follow_on_routes():

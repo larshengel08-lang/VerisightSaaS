@@ -43,7 +43,9 @@ export function NewCampaignForm({ orgs }: Props) {
             ? 'TeamScan Operations Q2 2026'
             : scanType === 'onboarding'
               ? 'Onboarding checkpoint Mei 2026'
-              : 'Leadership Scan Juni 2026'
+              : scanType === 'leadership'
+                ? 'Leadership Scan Juni 2026'
+                : 'MTO Hoofdmeting Najaar 2026'
 
   function toggleModule(module: string) {
     setModules((prev) => (prev.includes(module) ? prev.filter((entry) => entry !== module) : [...prev, module]))
@@ -73,6 +75,12 @@ export function NewCampaignForm({ orgs }: Props) {
     if (nextScanType === 'leadership') {
       setDeliveryMode('baseline')
       setModules(LEADERSHIP_DEFAULT_MODULES)
+      return
+    }
+
+    if (nextScanType === 'mto') {
+      setDeliveryMode('baseline')
+      setModules([])
       return
     }
 
@@ -143,12 +151,12 @@ export function NewCampaignForm({ orgs }: Props) {
       <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
         <p className="text-sm font-semibold text-slate-900">2. Kies product en verdiepniveau</p>
         <p className="mt-1 text-sm text-slate-600">
-          Hier bepaal je of de campagne als ExitScan, RetentieScan, Pulse, TeamScan, Onboarding 30-60-90 of Leadership Scan wordt opgezet en of je de standaarddiepte gebruikt of een bewuste subset.
+          Hier bepaal je of de campagne als ExitScan, RetentieScan, Pulse, TeamScan, Onboarding 30-60-90, Leadership Scan of MTO wordt opgezet en of je de standaarddiepte gebruikt of een bewuste subset.
         </p>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
-        {(['exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership'] as const).map((option) => (
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-7">
+        {(['exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'mto'] as const).map((option) => (
           <button
             key={option}
             type="button"
@@ -168,7 +176,9 @@ export function NewCampaignForm({ orgs }: Props) {
                       ? 'TeamScan'
                       : option === 'onboarding'
                         ? 'Onboarding 30-60-90'
-                        : 'Leadership Scan'}
+                        : option === 'leadership'
+                          ? 'Leadership Scan'
+                          : 'MTO'}
             </p>
             <p className={`mt-1 text-sm ${scanType === option ? 'text-blue-100' : 'text-slate-500'}`}>
               {option === 'exit'
@@ -181,7 +191,9 @@ export function NewCampaignForm({ orgs }: Props) {
                       ? 'Lokaliseren waar een al zichtbaar signaal lokaal het scherpst speelt.'
                       : option === 'onboarding'
                         ? 'Vroege lifecycle-check voor nieuwe medewerkers op een enkel checkpoint.'
-                        : 'Geaggregeerde managementread over leidingcontext, prioritering en werkbaarheid.'}
+                        : option === 'leadership'
+                          ? 'Geaggregeerde managementread over leidingcontext, prioritering en werkbaarheid.'
+                          : 'Brede organisatiebrede hoofdmeting met rijkere managementread en expliciete wave-1 begrenzing.'}
             </p>
           </button>
         ))}
@@ -197,11 +209,13 @@ export function NewCampaignForm({ orgs }: Props) {
                 ? 'Je kiest nu bewust voor een ritme- of live-route voor RetentieScan. Gebruik dit alleen als baseline, eerste opvolging en meetritme al scherp zijn.'
                 : scanType === 'pulse'
                   ? 'Pulse live of ritme is nog niet opengezet in deze wave. Gebruik Pulse nu alleen als eerste compacte baseline-snapshot.'
-                : scanType === 'team'
+                  : scanType === 'team'
                     ? 'TeamScan live of ritme is nog niet opengezet in deze wave. Gebruik TeamScan nu alleen als eerste veilige department-first baseline-read.'
                     : scanType === 'onboarding'
                       ? 'Onboarding live of ritme is nog niet opengezet in deze wave. Gebruik onboarding nu alleen als eerste checkpoint-read voor een enkele instroomfase.'
-                      : 'Leadership Scan live of ritme is nog niet opengezet in deze wave. Gebruik Leadership Scan nu alleen als eerste geaggregeerde managementcontext-read.'
+                      : scanType === 'leadership'
+                        ? 'Leadership Scan live of ritme is nog niet opengezet in deze wave. Gebruik Leadership Scan nu alleen als eerste geaggregeerde managementcontext-read.'
+                        : 'MTO live of ritme is nog niet opengezet in deze wave. Gebruik MTO nu alleen als eerste brede hoofdmeting op groepsniveau.'
             : scanType === 'exit'
               ? 'ExitScan wordt meestal eerst als baseline opgezet. Live opvolging wordt pas logisch nadat de nulmeting, het volume en het eigenaarschap scherp staan.'
               : scanType === 'retention'
@@ -212,10 +226,12 @@ export function NewCampaignForm({ orgs }: Props) {
                     ? 'TeamScan start in deze wave altijd als baseline. Eerst bewijzen we de veilige lokale read op afdelingsniveau; ranking of bredere lokalisatie volgt pas later.'
                     : scanType === 'onboarding'
                       ? 'Onboarding start in deze wave altijd als baseline. Eerst bewijzen we een enkel checkpoint per campaign; journey- of 30-60-90-automation volgt pas later.'
-                      : 'Leadership Scan start in deze wave altijd als baseline. Eerst bewijzen we een geaggregeerde managementread zonder named leaders, hierarchy of 360-logica.'}
+                      : scanType === 'leadership'
+                        ? 'Leadership Scan start in deze wave altijd als baseline. Eerst bewijzen we een geaggregeerde managementread zonder named leaders, hierarchy of 360-logica.'
+                        : 'MTO start in deze wave altijd als baseline. Eerst bewijzen we een brede hoofdmeting zonder rapportlaag, action log of buyer-facing activatie.'}
         </p>
         <p className="mt-2 text-xs text-slate-500">
-          Deze setup blijft assisted: Verisight beheert campaign, importcontrole en activatie; de klant levert input en gebruikt daarna dashboard en rapport.
+          Deze setup blijft assisted: Verisight beheert campaign, importcontrole en activatie; de klant levert input en gebruikt daarna dashboard en, waar opengezet, rapport.
         </p>
       </div>
 
@@ -226,7 +242,7 @@ export function NewCampaignForm({ orgs }: Props) {
         </p>
       </div>
 
-      <div className={`grid gap-2 ${scanType === 'pulse' || scanType === 'team' || scanType === 'onboarding' || scanType === 'leadership' ? 'sm:grid-cols-1' : 'sm:grid-cols-2'}`}>
+      <div className={`grid gap-2 ${scanType === 'pulse' || scanType === 'team' || scanType === 'onboarding' || scanType === 'leadership' || scanType === 'mto' ? 'sm:grid-cols-1' : 'sm:grid-cols-2'}`}>
         {([
           {
             value: 'baseline',
@@ -238,7 +254,7 @@ export function NewCampaignForm({ orgs }: Props) {
             value: 'live',
             title: 'Live / vervolgroute',
             body: 'Bewuste vervolgroute voor doorlopend of ritmisch gebruik nadat baseline en eigenaarschap staan.',
-            disabled: scanType === 'pulse' || scanType === 'team' || scanType === 'onboarding' || scanType === 'leadership',
+            disabled: scanType === 'pulse' || scanType === 'team' || scanType === 'onboarding' || scanType === 'leadership' || scanType === 'mto',
           },
         ] as const).map((option) => (
           <button
@@ -254,7 +270,15 @@ export function NewCampaignForm({ orgs }: Props) {
             <p className={`mt-1 text-sm ${deliveryMode === option.value ? 'text-blue-100' : 'text-slate-500'}`}>
               {option.disabled
                 ? `Niet beschikbaar in ${
-                    scanType === 'team' ? 'TeamScan' : scanType === 'onboarding' ? 'Onboarding' : 'Pulse'
+                    scanType === 'team'
+                      ? 'TeamScan'
+                      : scanType === 'onboarding'
+                        ? 'Onboarding'
+                        : scanType === 'leadership'
+                          ? 'Leadership Scan'
+                          : scanType === 'mto'
+                            ? 'MTO'
+                            : 'Pulse'
                   } wave 1.`
                 : option.body}
             </p>
@@ -267,6 +291,15 @@ export function NewCampaignForm({ orgs }: Props) {
           <p className="font-semibold">Leadership Scan wave 1-boundary</p>
           <p className="mt-1 text-blue-900">
             Leadership Scan blijft in deze wave bewust begrensd: alleen een geaggregeerde managementread op groepsniveau, zonder named leaders, hierarchylogica of 360-output.
+          </p>
+        </div>
+      ) : null}
+
+      {scanType === 'mto' ? (
+        <div className="rounded-[22px] border border-blue-100 bg-blue-50 p-4 text-sm text-blue-950">
+          <p className="font-semibold">MTO wave 1-boundary</p>
+          <p className="mt-1 text-blue-900">
+            MTO blijft in deze wave bewust een brede hoofdmeting op groepsniveau: volledige survey, geen rapportlaag, geen action log en nog geen buyer-facing hoofdroute.
           </p>
         </div>
       ) : null}
@@ -346,6 +379,7 @@ export function NewCampaignForm({ orgs }: Props) {
                 type="checkbox"
                 checked={modules.includes(factor)}
                 onChange={() => toggleModule(factor)}
+                disabled={scanType === 'mto'}
                 className="rounded"
               />
               {FACTOR_LABELS[factor]}
@@ -353,7 +387,9 @@ export function NewCampaignForm({ orgs }: Props) {
           ))}
         </div>
         <p className="mt-2 text-xs leading-5 text-slate-500">
-          {scanType === 'pulse'
+          {scanType === 'mto'
+            ? 'MTO draait in wave 1 altijd als volledige hoofdmeting. Werkfactor-subsets of add-ons blijven hier bewust dicht om survey, scoring en managementread begrensd en vergelijkbaar te houden.'
+            : scanType === 'pulse'
             ? 'Pulse start standaard met leiderschap, groeiperspectief en werkbelasting. Pas dit alleen aan als je bewust een andere compacte focus wilt meten.'
             : scanType === 'team'
               ? 'TeamScan start standaard met leiderschap, cultuur, werkbelasting en rolhelderheid. Pas dit alleen aan als je bewust een andere lokale focus wilt toetsen.'
@@ -361,11 +397,11 @@ export function NewCampaignForm({ orgs }: Props) {
                 ? 'Onboarding start standaard met leiderschap, rolhelderheid, cultuur en groeiperspectief. Pas dit alleen aan als je bewust een andere checkpointfocus wilt toetsen.'
                 : scanType === 'leadership'
                   ? 'Leadership Scan start standaard met leiderschap, rolhelderheid, cultuur en groeiperspectief. Pas dit alleen aan als je bewust een andere managementcontext-focus wilt toetsen.'
-            : `Laat dit leeg als je de volledige ${scanType === 'exit' ? 'ExitScan' : 'RetentieScan'} wilt draaien.`}
+                  : `Laat dit leeg als je de volledige ${scanType === 'exit' ? 'ExitScan' : 'RetentieScan'} wilt draaien.`}
         </p>
       </div>
 
-      {scanType !== 'pulse' && scanType !== 'team' && scanType !== 'onboarding' && scanType !== 'leadership' ? (
+      {scanType !== 'pulse' && scanType !== 'team' && scanType !== 'onboarding' && scanType !== 'leadership' && scanType !== 'mto' ? (
         <div className="rounded-[22px] border border-blue-100 bg-blue-50 p-4">
           <p className="text-sm font-semibold text-slate-900">Rapport-add-ons</p>
           <div className="mt-3 space-y-3">

@@ -1,3 +1,4 @@
+{% if scan_type == "retention" or scan_type == "mto" %}
 {% if scan_type == "retention" %}
 <!-- UWES-3 -->
 <p style="font-weight:600;font-size:14px;margin-bottom:16px;color:var(--text);">Bevlogenheid</p>
@@ -18,7 +19,9 @@
   </div>
 </div>
 {% endfor %}
+{% endif %}
 
+{% if scan_type == "retention" %}
 <!-- Turnover intention -->
 <p style="font-weight:600;font-size:14px;margin:24px 0 16px;color:var(--text);">Vertrekintentie</p>
 {% for item_id, item_text in scan.turnover_items %}
@@ -37,6 +40,7 @@
   </div>
 </div>
 {% endfor %}
+{% endif %}
 
 <p style="font-weight:600;font-size:14px;margin:24px 0 8px;color:var(--text);">Stay-intent</p>
 <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">{{ scan.stay_intro }}</p>

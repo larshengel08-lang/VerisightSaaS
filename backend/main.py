@@ -1604,10 +1604,12 @@ async def download_report(
     ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
-    if campaign.scan_type in {"pulse"}:
+    if campaign.scan_type in {"pulse", "mto"}:
         product_name = (
             "Pulse"
             if campaign.scan_type == "pulse"
+            else "MTO"
+            if campaign.scan_type == "mto"
             else "TeamScan"
             if campaign.scan_type == "team"
             else "Leadership Scan"
@@ -1644,10 +1646,12 @@ async def download_report_internal(
     campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
-    if campaign.scan_type in {"pulse"}:
+    if campaign.scan_type in {"pulse", "mto"}:
         product_name = (
             "Pulse"
             if campaign.scan_type == "pulse"
+            else "MTO"
+            if campaign.scan_type == "mto"
             else "TeamScan"
             if campaign.scan_type == "team"
             else "Leadership Scan"
