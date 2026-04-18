@@ -216,7 +216,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
   retention: {
     label: 'RetentieScan-voorbeeld',
     intro:
-      'RetentieScan begint met een cover. Daarna volgt een gecombineerde bestuurlijke read waarin respons, bestuurlijke handoff, eerste verificatiespoor en eerste managementsessie samenkomen in een compacte sponsorlaag. In demo\'s komt deze route meestal na ExitScan, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.',
+      'RetentieScan begint met een cover waarin executive context en kernmetrics al zichtbaar worden. Daarna volgt de bestuurlijke handoff met respons, eerste verificatiespoor en bestuurlijke weging. Vervolgens lopen signaalbeeld, eerste actie en eerste managementsessie in een verification-first lijn door. In demo\'s komt deze route meestal na ExitScan, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.',
     kpis: [
       ['Reacties', '63 van 92', '68% respons'],
       ['Gemiddeld retentiesignaal', '5,6 op 10', MANAGEMENT_BAND_LABELS.MIDDEN],
@@ -265,7 +265,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       },
     ],
     proofNotes: [
-      ['Cover + bestuurlijke read', 'Na de cover volgen respons, bestuurlijke weging en de scherpste verificatiesporen in een compacte executive laag'],
+      ['Cover + bestuurlijke read', 'De cover toont executive context en kernmetrics; daarna volgen respons, bestuurlijke handoff en de scherpste verificatiesporen in een aparte executive laag'],
       ['Bestuurlijke handoff', 'Compacte sponsor-read met wat nu speelt, waarom dat telt en expliciete watchout tegen overinterpretatie'],
       ['Signaalmix', 'Retentiesignaal, stay-intent en vertrekintentie in een bestuurssamenvatting'],
       ['Actielogica', 'Topfactoren en vervolgstappen voor 30-90 dagen, zonder individuele voorspelling'],

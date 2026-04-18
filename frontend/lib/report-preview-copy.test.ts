@@ -34,6 +34,7 @@ describe('REPORT_PREVIEW_COPY', () => {
     const retentionCopy = REPORT_PREVIEW_COPY.retention
 
     expect(retentionCopy.intro).toContain('eerste verificatiespoor')
+    expect(retentionCopy.intro).toContain('kernmetrics')
     expect(retentionCopy.dashboardRows).toHaveLength(4)
     expect(retentionCopy.factorCards).toHaveLength(6)
     expect(retentionCopy.boardroomTitle).toContain('Bestuurlijke handoff')
@@ -45,6 +46,9 @@ describe('REPORT_PREVIEW_COPY', () => {
     expect(retentionCopy.intro).toContain('cover')
     expect(retentionCopy.intro).toContain('respons')
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Cover + bestuurlijke read')
+    expect(retentionCopy.proofNotes.find(([title]) => title === 'Cover + bestuurlijke read')?.[1]).toContain(
+      'aparte executive laag',
+    )
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Bestuurlijke handoff')
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Actielogica')
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Bewijsstatus')

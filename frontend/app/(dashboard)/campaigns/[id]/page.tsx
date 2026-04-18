@@ -345,7 +345,7 @@ export default async function CampaignPage({ params }: Props) {
       : null
   const handoffTitle =
     stats.scan_type === 'retention'
-      ? 'Bestuurlijke handoff en prioritering'
+      ? 'Bestuurlijke handoff'
       : stats.scan_type === 'pulse'
         ? 'Pulse duiding en eerste vervolgactie'
         : stats.scan_type === 'team'
@@ -357,7 +357,7 @@ export default async function CampaignPage({ params }: Props) {
         : 'Vertrekduiding en managementgesprek'
   const handoffDescription =
     stats.scan_type === 'retention'
-      ? 'Deze laag vertaalt RetentieScan naar een duidelijke lijn: wat is het beeld, wat moet je eerst toetsen en welke acties verdienen nu bestuurlijke aandacht.'
+      ? 'Deze laag volgt dezelfde lijn als het rapport: waar staat behoud onder druk, waarom telt dat bestuurlijk en wat moet eerst geverifieerd worden.'
       : stats.scan_type === 'pulse'
         ? 'Deze laag vertaalt Pulse naar een bestuurlijk leesbare momentopname: wat vraagt nu aandacht, wat moet je als eerste bijsturen en welke review hoort hier direct achteraan.'
         : stats.scan_type === 'team'
@@ -405,7 +405,7 @@ export default async function CampaignPage({ params }: Props) {
           summaryContextTone: 'emerald' as const,
           summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
           summaryLeadDescription:
-            'Lees RetentieScan eerst als groepssignaal: waar staat behoud onder druk, wat vraagt eerst verificatie en welk spoor moet daarna in Wat nu als eerste route worden gekozen.',
+            'Lees RetentieScan eerst als groepssignaal: waar staat behoud onder druk, wat vraagt eerst verificatie en welk managementspoor moet daarna in Wat nu als eerste route worden gekozen.',
           summaryCardEyebrow: 'Behoudsspoor',
           promotedSummaryCards: 2,
           driverTitle: 'Signaalbeeld en behoudsdruk',
@@ -697,7 +697,7 @@ export default async function CampaignPage({ params }: Props) {
     { id: 'samenvatting', label: 'Samenvatting' },
     {
       id: 'handoff',
-      label: stats.scan_type === 'retention' ? 'Behoudsread' : stats.scan_type === 'team' ? 'Lokale read' : 'Handoff',
+      label: stats.scan_type === 'retention' ? 'Handoff' : stats.scan_type === 'team' ? 'Lokale read' : 'Handoff',
     },
     {
       id: 'drivers',

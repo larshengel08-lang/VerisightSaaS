@@ -49,6 +49,7 @@ Voor de huidige fix-tranche:
 - [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md)
 - [COMMERCIAL_ARCHITECTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_ARCHITECTURE_CANON.md)
 - [RETENTION_REPORT_GRAMMAR_PARITY_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTION_REPORT_GRAMMAR_PARITY_REVIEW.md)
+- [RETENTION_DASHBOARD_REPORT_PARITY_CHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTION_DASHBOARD_REPORT_PARITY_CHECK.md)
 - [RETENTIESCAN_PRODUCT_SHARPENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTIESCAN_PRODUCT_SHARPENING_PLAN.md)
 - [RETENTIESCAN_LIVE_TEST_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTIESCAN_LIVE_TEST_PLAN.md)
 
