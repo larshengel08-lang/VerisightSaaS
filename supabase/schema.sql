@@ -93,6 +93,15 @@ end $$;
 
 do $$ begin
   alter table public.contact_requests
+    drop constraint if exists contact_requests_route_interest_check;
+  alter table public.contact_requests
+    add constraint contact_requests_route_interest_check
+    check (route_interest in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'mto', 'combinatie', 'nog-onzeker'));
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  alter table public.contact_requests
     drop constraint if exists contact_requests_qualified_route_check;
   alter table public.contact_requests
     add constraint contact_requests_qualified_route_check
@@ -239,7 +248,7 @@ create table if not exists public.contact_requests (
   work_email        text not null,
   organization      text not null,
   employee_count    text not null,
-  route_interest    text not null default 'exitscan',
+  route_interest    text not null default 'exitscan' check (route_interest in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'mto', 'combinatie', 'nog-onzeker')),
   cta_source        text not null default 'website_contact_form',
   desired_timing    text not null default 'orienterend',
   current_question  text not null,

@@ -57,6 +57,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.6,
     },
     {
+      url: 'https://www.verisight.nl/producten/mto',
+      lastModified: new Date('2026-04-18'),
+      changeFrequency: 'monthly',
+      priority: 0.58,
+    },
+    {
       url: 'https://www.verisight.nl/aanpak',
       lastModified: new Date('2026-04-12'),
       changeFrequency: 'monthly',

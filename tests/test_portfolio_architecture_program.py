@@ -69,6 +69,7 @@ def test_public_surfaces_keep_core_first_hierarchy_with_live_follow_on_routes():
     assert "kernproducten" in dropdown
     assert "portfolioroute" in dropdown
     assert "niet als derde kernproduct" in combination_memo
+    assert "https://www.verisight.nl/producten/mto" in sitemap
     assert "https://www.verisight.nl/producten/pulse" in sitemap
     assert "https://www.verisight.nl/producten/teamscan" in sitemap
     assert "https://www.verisight.nl/producten/onboarding-30-60-90" in sitemap

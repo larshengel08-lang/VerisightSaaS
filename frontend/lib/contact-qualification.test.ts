@@ -71,6 +71,19 @@ describe('contact qualification visibility summary', () => {
     expect(summary.routeReviewLabel).toContain('Nog niet zeker')
   })
 
+  it('treats public mto interest as a gated assisted route instead of a new default first path', () => {
+    const summary = buildContactQualificationVisibilitySummary({
+      routeInterest: 'mto',
+      desiredTiming: 'dit-kwartaal',
+      currentQuestion: 'We willen een bredere hoofdmeting op organisatieniveau verkennen.',
+    })
+
+    expect(summary.tone).toBe('amber')
+    expect(summary.headline).toContain('MTO')
+    expect(summary.detail).toContain('assisted')
+    expect(summary.nextAction).toContain('scope')
+  })
+
   it('forces nog-onzeker back into an active route decision', () => {
     const summary = buildContactQualificationVisibilitySummary({
       routeInterest: 'nog-onzeker',

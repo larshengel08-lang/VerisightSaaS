@@ -36,6 +36,12 @@ export const CONTACT_ROUTE_OPTIONS = [
     firstStepLabel: 'een bounded Leadership Scan follow-on route na een bestaand signaal',
   },
   {
+    value: 'mto',
+    label: 'MTO',
+    description: 'We willen een bredere hoofdmeting verkennen als assisted route op aanvraag.',
+    firstStepLabel: 'een begrensde MTO-intake op aanvraag',
+  },
+  {
     value: 'nog-onzeker',
     label: 'Nog niet zeker',
     description: 'We willen eerst de juiste route bepalen.',
@@ -86,6 +92,7 @@ export type ContactQualificationStatus =
   | 'core_default'
   | 'retention_primary'
   | 'combination_candidate'
+  | 'mto_gated_review'
   | 'bounded_follow_on_review'
   | 'follow_on_reframe'
   | 'uncertain_core_review'
@@ -216,6 +223,9 @@ export function inferRouteInterestFromSource(source: string | null | undefined):
   if (normalizedSource.includes('leadership')) {
     return 'leadership'
   }
+  if (normalizedSource.includes('mto')) {
+    return 'mto'
+  }
   if (normalizedSource.includes('onzeker')) {
     return 'nog-onzeker'
   }
@@ -299,6 +309,17 @@ export function getContactQualificationGuidance({
       headline: `${getContactRouteLabel(followOnCandidateRoute)} openen we niet als vlakke eerste intake-route.`,
       detail: `Zonder expliciet bestaand signaal of eerdere baseline vernauwen we deze aanvraag eerst richting ${getContactRouteLabel(recommendedCoreRoute)}. Daarna bepalen we pas of ${getContactRouteLabel(followOnCandidateRoute)} echt logisch is als bounded vervolgroute.`,
       operatorSummary: `${getContactRouteLabel(followOnCandidateRoute)} is nog te vroeg als eerste route; vernauw de intake eerst richting ${getContactRouteLabel(recommendedCoreRoute)} en leg daarna pas een eventuele follow-on vast.`,
+    }
+  }
+
+  if (normalizedRoute === 'mto') {
+    return {
+      status: 'mto_gated_review',
+      recommendedCoreRoute,
+      followOnCandidateRoute: null,
+      headline: 'MTO openen we alleen als begrensde assisted hoofdmeting.',
+      detail: 'MTO is buyer-facing op aanvraag beschikbaar, maar blijft assisted, niet-default en expliciet begrensd op scope, privacy, proof en eerste managementread.',
+      operatorSummary: 'Behandel MTO als gated route: bevestig scope, hoofdvraag, prooflaag en assisted intake voordat de route echt opent.',
     }
   }
 

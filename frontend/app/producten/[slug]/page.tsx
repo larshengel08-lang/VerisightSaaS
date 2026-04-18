@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Props) {
   const description = product.description
   const url = `https://www.verisight.nl${product.href}`
   const imageAlt =
-    product.status === 'live'
+    product.status === 'live' || slug === 'mto'
       ? product.ogAlt ?? `${product.label} productpagina van Verisight`
       : `${product.label} als gereserveerde future route bij Verisight`
   const imageUrl = `${product.href}/opengraph-image`
@@ -94,7 +94,8 @@ export default async function ProductDetailPage({ params }: Props) {
       {slug === 'onboarding-30-60-90' ? <OnboardingPage /> : null}
       {slug === 'leadership-scan' ? <LeadershipScanPage /> : null}
       {slug === 'combinatie' ? <CombinatiePage /> : null}
-      {!['retentiescan', 'exitscan', 'pulse', 'teamscan', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
+      {slug === 'mto' ? <MtoPage /> : null}
+      {!['retentiescan', 'exitscan', 'pulse', 'teamscan', 'onboarding-30-60-90', 'leadership-scan', 'combinatie', 'mto'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
     </>
   )
 }
@@ -1415,6 +1416,135 @@ function CombinatiePage() {
           primaryLabel="Plan kennismaking"
           secondaryHref="/producten"
           secondaryLabel="Bekijk producten"
+        />
+      </MarketingSection>
+    </MarketingPageShell>
+  )
+}
+
+function MtoPage() {
+  return (
+    <MarketingPageShell
+      theme="support"
+      pageType="product"
+      ctaHref={buildContactHref({ routeInterest: 'mto', ctaSource: 'product_mto_hero' })}
+      heroIntro={
+        <MarketingHeroIntro>
+          <p className="marketing-hero-eyebrow text-slate-700">MTO op aanvraag</p>
+          <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
+            Een brede hoofdmeting, bewust begrensd en assisted geopend.
+          </h1>
+          <p className="marketing-hero-copy text-slate-600">
+            MTO opent in deze wave buyer-facing als route op aanvraag voor organisaties die een bredere, organisatiebrede
+            hoofdmeting willen verkennen. De route blijft assisted, sample-first en verandert nog niet welke
+            Verisight-route standaard voorop staat.
+          </p>
+          <div className="marketing-hero-actions">
+            <div className="marketing-hero-cta-row">
+              <a
+                href={buildContactHref({ routeInterest: 'mto', ctaSource: 'product_mto_hero' })}
+                className="inline-flex items-center justify-center rounded-full bg-[#3C8D8A] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(60,141,138,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#2d6e6b]"
+              >
+                Plan MTO-kennismaking
+              </a>
+              <Link
+                href="/vertrouwen"
+                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
+              >
+                Lees trust en privacy
+              </Link>
+            </div>
+          </div>
+        </MarketingHeroIntro>
+      }
+      heroStage={
+        <MarketingHeroStage>
+          <div className="space-y-5">
+            <span className="marketing-stage-tag bg-white/10 text-slate-200">Gated activation</span>
+            <h2 className="marketing-stage-title font-display text-white">
+              MTO is publiek zichtbaar, maar nog niet de nieuwe default-route.
+            </h2>
+            <p className="marketing-stage-copy text-slate-300">
+              Gebruik deze route wanneer de vraag echt om een bredere hoofdmeting op organisatieniveau draait en niet
+              wanneer een compactere ExitScan- of RetentieScan-route al genoeg scherpte geeft.
+            </p>
+          </div>
+        </MarketingHeroStage>
+      }
+      heroSupport={
+        <MarketingHeroSupport>
+          <div className="marketing-support-note text-sm leading-7 text-slate-600">
+            Buyer-facing blijft MTO sample-first: eerst deliverable-proof en trustproof, daarna pas bredere
+            besluitvorming over vervolg, ritme of portfolioverhouding.
+          </div>
+          <div className="marketing-support-note text-sm leading-7 text-slate-600">
+            Deze route vervangt ExitScan of RetentieScan nog niet en opent ook geen hoofdmodelmigratie.
+          </div>
+        </MarketingHeroSupport>
+      }
+    >
+      <MarketingSection tone="surface">
+        <MarketingProofStrip
+          items={[
+            {
+              title: 'Brede hoofdmeting',
+              body: 'Gebruik MTO wanneer er een organisatiebrede vraag ligt over werkbeleving, prioriteiten en eerste managementrichting.',
+            },
+            {
+              title: 'Assisted en begrensd',
+              body: 'De route blijft expliciet begeleid: scope, privacy, deliverable-proof en eerste managementread worden vooraf samen afgebakend.',
+            },
+            {
+              title: 'Geen nieuwe default',
+              body: 'Deze wave opent MTO publiek, maar laat de bestaande core-first productkeuze nog ongemoeid.',
+            },
+          ]}
+        />
+      </MarketingSection>
+
+      <MarketingSection tone="plain">
+        <div className="grid gap-6 lg:grid-cols-3">
+          {[
+            {
+              title: 'Wanneer MTO logisch is',
+              body: 'Wanneer de hoofdvraag breder is dan vertrek of vroeg behoud alleen, en er een expliciete behoefte ligt aan een brede organisatiebrede read met eerste managementduiding.',
+            },
+            {
+              title: 'Wat u nu krijgt',
+              body: 'Een assisted traject met survey, dashboardread, eerste managementstructuur en action-logroute, maar nog zonder automatische ritme- of defaultpositie in de suite.',
+            },
+            {
+              title: 'Wat het nadrukkelijk niet is',
+              body: 'Geen open surveyplatform, geen instant default-route voor elke vraag en geen brede platformmigratie van de rest van Verisight.',
+            },
+          ].map((card) => (
+            <div key={card.title} className="marketing-panel p-7">
+              <h2 className="text-xl font-semibold text-slate-950">{card.title}</h2>
+              <p className="mt-4 text-sm leading-7 text-slate-600">{card.body}</p>
+            </div>
+          ))}
+        </div>
+      </MarketingSection>
+
+      <MarketingSection tone="tint">
+        <MarketingCalloutBand
+          eyebrow="Proof en trust"
+          title="MTO opent sample-first en privacy-first."
+          body="In de eerste buyer-facing wave gebruiken we MTO alleen met deliverable-proof, trustproof en assisted intake. Publieke caseclaims, defaultrouteverschuiving en brede portfoliomigratie blijven nog dicht."
+          primaryHref="/vertrouwen"
+          primaryLabel="Bekijk trust en privacy"
+          secondaryHref="/producten"
+          secondaryLabel="Terug naar producten"
+        />
+      </MarketingSection>
+
+      <MarketingSection tone="plain">
+        <MarketingInlineContactPanel
+          eyebrow="Kennismaking"
+          title="Toets of MTO nu echt de juiste brede route is."
+          body="Beschrijf kort waarom jullie vraag breder is dan vertrekduiding of vroeg behoud alleen. Dan toetsen we of MTO als assisted hoofdmeting logisch is, welke scope past en hoe de eerste managementread begrensd blijft."
+          defaultRouteInterest="mto"
+          defaultCtaSource="product_mto_form"
         />
       </MarketingSection>
     </MarketingPageShell>

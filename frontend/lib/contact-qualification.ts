@@ -87,6 +87,15 @@ export function buildContactQualificationVisibilitySummary({
         routeReviewLabel: `Geselecteerd: ${selectedRouteLabel}`,
         nextAction: 'Toets expliciet of zowel vertrekduiding als vroeg behoudssignaal direct nodig zijn; zo niet, vernauw eerst naar een enkele kernroute.',
       }
+    case 'mto_gated_review':
+      return {
+        tone: 'amber',
+        headline: 'MTO blijft een begrensde assisted route op aanvraag.',
+        detail: `${guidance.detail} Gewenste timing: ${timingLabel}.`,
+        recommendationLabel: 'Buyer-facing status: gated activation',
+        routeReviewLabel: `Geselecteerd: ${selectedRouteLabel}`,
+        nextAction: 'Bevestig eerst scope, privacygrenzen, deliverable-proof en assisted intake voordat MTO echt naar uitvoering of publieke activatie doorstroomt.',
+      }
     case 'bounded_follow_on_review':
       return {
         tone: 'amber',

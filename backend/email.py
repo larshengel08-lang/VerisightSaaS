@@ -36,6 +36,7 @@ _CONTACT_ROUTE_LABELS = {
     "teamscan": "TeamScan",
     "onboarding": "Onboarding 30-60-90",
     "leadership": "Leadership Scan",
+    "mto": "MTO",
     "combinatie": "Combinatie",
     "nog-onzeker": "Nog niet zeker",
 }

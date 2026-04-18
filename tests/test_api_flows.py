@@ -1489,6 +1489,39 @@ def test_contact_request_update_allows_internal_mto_route_confirmation_without_p
     assert stored.qualification_reviewed_at is not None
 
 
+def test_contact_request_create_accepts_public_mto_interest_as_gated_route(
+    client,
+    db_session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setattr(
+        "backend.main.send_contact_request_result",
+        lambda **kwargs: EmailSendResult(ok=True),
+    )
+
+    response = client.post(
+        "/api/contact-request",
+        json={
+            "name": "Lars",
+            "work_email": "lars@verisight.nl",
+            "organization": "Verisight",
+            "employee_count": "200-500",
+            "route_interest": "mto",
+            "cta_source": "product_mto_form",
+            "desired_timing": "dit-kwartaal",
+            "current_question": "We willen verkennen of een bredere hoofdmeting nu passend is.",
+            "website": "",
+        },
+        headers={"x-forwarded-for": "203.0.113.32"},
+    )
+
+    assert response.status_code == 200
+    lead_id = response.json()["lead_id"]
+    stored = db_session.query(ContactRequest).filter(ContactRequest.id == lead_id).one()
+    assert stored.route_interest == "mto"
+    assert stored.qualification_status == "not_reviewed"
+
+
 def test_contact_request_update_tracks_internal_confirmation_and_readiness_review(
     client,
     db_session: Session,

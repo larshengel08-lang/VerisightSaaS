@@ -219,10 +219,10 @@ export function ContactForm({
           isLight ? 'border-[#E5E0D6] bg-[#F7F5F1] text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'
         }`}
       >
-        Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de
-        logische eerste stap is. TeamScan, Onboarding 30-60-90 en Leadership Scan blijven bounded follow-on routes die
-        pas logisch worden nadat een eerste signaal, baseline of managementread al staat. De informatie uit dit
-        formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.
+        Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan, de combinatieroute of een
+        begrensde MTO-route-op-aanvraag nu logisch is. TeamScan, Onboarding 30-60-90 en Leadership Scan blijven
+        bounded follow-on routes die pas logisch worden nadat een eerste signaal, baseline of managementread al staat.
+        De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">

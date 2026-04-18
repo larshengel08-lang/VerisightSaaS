@@ -207,6 +207,18 @@ export default function ProductenPage() {
 
         <MarketingSection tone="surface">
           <MarketingCalloutBand
+            eyebrow="Gated route"
+            title="MTO is nu beperkt buyer-facing beschikbaar op aanvraag."
+            body="MTO opent in deze wave als begrensde route voor organisaties die een bredere hoofdmeting assisted willen verkennen. De route is publiek zichtbaar, maar verandert nog niets aan de core-first portfoliohiërarchie of default productkeuze."
+            primaryHref="/producten/mto"
+            primaryLabel="Bekijk MTO"
+            secondaryHref={buildContactHref({ routeInterest: 'mto', ctaSource: 'products_mto_gated_cta' })}
+            secondaryLabel="Plan MTO-kennismaking"
+          />
+        </MarketingSection>
+
+        <MarketingSection tone="surface">
+          <MarketingCalloutBand
             eyebrow="Route-inschatting"
             title="Twijfelt u tussen ExitScan, RetentieScan of een vervolgronde?"
             body="In een eerste gesprek bepalen we welke route nu echt logisch is, hoe de productvorm eruitziet en welke vervolgstap bewust kleiner moet blijven."

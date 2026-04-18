@@ -159,9 +159,9 @@ export const RESERVED_MARKETING_PRODUCTS: MarketingProduct[] = [
     slug: 'mto',
     label: 'Medewerkerstevredenheidsonderzoek',
     shortLabel: 'MTO',
-    tagline: 'Brede tevredenheidsmeting voor je team',
+    tagline: 'Brede hoofdmeting op aanvraag',
     description:
-      'Bewust nog niet actieve route voor organisaties die later een bredere tevredenheidsmeting willen toetsen zonder de huidige kernportfolio te verbreden.',
+      'Buyer-facing gated route op aanvraag voor organisaties die een bredere, organisatiebrede hoofdmeting assisted willen openen zonder de huidige kernportfolio direct te verschuiven.',
     status: 'reserved_future',
     portfolioRole: 'future_reserved_route',
     href: '/producten/mto',

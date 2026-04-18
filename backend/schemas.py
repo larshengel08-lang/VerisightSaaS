@@ -174,6 +174,7 @@ class ContactRequestCreate(BaseModel):
         "teamscan",
         "onboarding",
         "leadership",
+        "mto",
         "combinatie",
         "nog-onzeker",
     ] = "exitscan"
