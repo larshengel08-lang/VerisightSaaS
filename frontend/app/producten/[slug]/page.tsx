@@ -22,6 +22,7 @@ import {
   ALL_MARKETING_PRODUCTS,
   type MarketingProduct,
   getMarketingProductBySlug,
+  isActiveMarketingProduct,
   isCoreMarketingProduct,
 } from '@/lib/marketing-products'
 import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
@@ -43,7 +44,7 @@ export async function generateMetadata({ params }: Props) {
   const description = product.description
   const url = `https://www.verisight.nl${product.href}`
   const imageAlt =
-    product.status === 'live'
+    isActiveMarketingProduct(product)
       ? product.ogAlt ?? `${product.label} productpagina van Verisight`
       : `${product.label} als gereserveerde future route bij Verisight`
   const imageUrl = `${product.href}/opengraph-image`

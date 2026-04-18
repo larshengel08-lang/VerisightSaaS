@@ -413,7 +413,7 @@ export default async function CampaignPage({ params }: Props) {
             'Start bij retentiesignaal, trend en aanvullende signalen. Gebruik factoren en segmenten daarna om te bepalen waarom dit beeld ontstaat en waar behoud eerst nadere toetsing vraagt.',
           driverIntro:
             'Begin met het groepssignaal en open pas daarna factoren, trend en aanvullende lagen. Zo blijft RetentieScan een verification-first managementinstrument in plaats van een losse analysetabel.',
-          driverAsideLabel: hasEnoughData ? 'Behoudsdrivers live' : 'Wacht op meer data',
+          driverAsideLabel: hasEnoughData ? 'Behoudsdrivers beschikbaar' : 'Wacht op meer data',
           driverAsideTone: hasEnoughData ? ('emerald' as const) : ('amber' as const),
           driverTabOrder: ['signalen', 'trend', 'factoren', 'aanvullend'],
           signalTabLabel: 'Retentiesignaal',
@@ -438,7 +438,7 @@ export default async function CampaignPage({ params }: Props) {
           routeTitle: 'Van retentiesignaal naar managementroute',
           routeDescription:
             'Deze laag bundelt de gekozen route, eerste eigenaar, eerste stap en het logische reviewmoment zonder de executive hoofdlijn te verstoren.',
-          routeBadgeLabel: 'Behoudsroute',
+          routeBadgeLabel: 'Kernroute',
           afterSessionTitle: 'Na de eerste managementsessie',
           afterSessionDescription:
             'Gebruik het eerste reviewmoment om bewust te kiezen: blijf je op hetzelfde behoudsspoor, is segmentverdieping logisch of vraagt de volgende stap vooral een gerichte interventie en vervolgmeting?',
@@ -459,7 +459,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele teamsignaal gecontroleerd te verdiepen zonder TeamScan te verwarren met segment deep dive of manager ranking.',
             driverIntro:
               'Start bij de lokale read en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke afdelingen eerst verificatie vragen.',
-            driverAsideLabel: hasEnoughData ? 'Lokale read live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Lokale read beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['lokaal', 'factoren', 'signalen', 'aanvullend'],
             signalTabLabel: 'Signaalverdeling',
@@ -484,7 +484,7 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van TeamScan naar lokale managementroute',
             routeDescription:
               'Deze laag bundelt de gekozen lokale route, eerste eigenaar, eerste stap en de bewuste begrenzing van TeamScan zonder de executive hoofdlijn te verstoren.',
-            routeBadgeLabel: 'Lokale route',
+            routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een lokale vervolgstap logisch, is bredere diagnose weer nodig of vraagt dit signaal juist minder lokalisatie dan gedacht?',
@@ -505,7 +505,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele checkpointbeeld gecontroleerd te verdiepen zonder onboarding te verwarren met client onboarding of een volledige 30-60-90-journey.',
             driverIntro:
               'Start bij de checkpointread en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke vroege factor nu eerst aandacht vraagt.',
-            driverAsideLabel: hasEnoughData ? 'Checkpoint read live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Checkpointread beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
             signalTabLabel: 'Checkpointbeeld',
@@ -530,7 +530,7 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van onboardingread naar managementroute',
             routeDescription:
               'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische vervolgmoment samen zonder onboarding te verwarren met een brede lifecycle-suite.',
-            routeBadgeLabel: 'Checkpointroute',
+            routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een later checkpoint logisch, vraagt deze instroomfrictie eerst extra verificatie of hoort de vraag thuis in een andere productvorm?',
@@ -551,7 +551,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele leadershipbeeld gecontroleerd te verdiepen zonder Leadership Scan te verwarren met TeamScan, segment deep dive of een named leader view.',
             driverIntro:
               'Start bij de managementread en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke context eerst duiding verdient.',
-            driverAsideLabel: hasEnoughData ? 'Managementread live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Managementread beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
             signalTabLabel: 'Managementbeeld',
@@ -576,7 +576,7 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van Leadership Scan naar managementroute',
             routeDescription:
               'Deze laag brengt eerste managementgebruik, de gekozen verificatie of correctie en het logische reviewmoment samen zonder Leadership Scan te verwarren met een hierarchy- of 360-suite.',
-            routeBadgeLabel: 'Managementroute',
+            routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een begrensde managementroute logisch, vraagt de vraag toch bredere diagnose of hoort Leadership Scan juist niet verder op te schalen binnen deze context?',
@@ -597,7 +597,7 @@ export default async function CampaignPage({ params }: Props) {
               'Start bij de scherpste werkfactoren en gebruik daarna pas signaalverdeling en aanvullende lagen om het vertrekbeeld verder te onderbouwen.',
             driverIntro:
               'Begin met de factoren die het vertrekverhaal het meest kleuren. Gebruik signaalverdeling en SDT daarna om het managementgesprek scherper en concreter te maken.',
-            driverAsideLabel: hasEnoughData ? 'Vertrekdrivers live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Vertrekdrivers beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['factoren', 'signalen', 'aanvullend', 'trend'],
             signalTabLabel: 'Vertrekbeeld',
@@ -622,7 +622,7 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van vertrekduiding naar managementroute',
             routeDescription:
               'Deze laag bundelt de gekozen managementroute, eerste eigenaar, eerste stap en het logische reviewmoment zonder de kernflow bovenin te verstoren.',
-            routeBadgeLabel: 'Vertrekroute',
+            routeBadgeLabel: 'Kernroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: blijf je op hetzelfde vertrekspoor, vraagt deze scan verdere verdieping of wordt een tweede product logisch op basis van de eerste managementwaarde?',
@@ -642,7 +642,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele Pulse-beeld gecontroleerd te verdiepen zonder de managementhoofdlijn kwijt te raken.',
             driverIntro:
               'Gebruik de tabs hieronder om tussen snapshot, factoren, aanvullende lagen en reviewdelta te wisselen zonder de hoofdlijn van de managementread kwijt te raken.',
-            driverAsideLabel: hasEnoughData ? 'Pulse read live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Pulse read beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
             signalTabLabel: 'Signaalverdeling',
@@ -666,7 +666,7 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van Pulse read naar bounded repeat motion',
             routeDescription:
               'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische volgende meetmoment samen zonder Pulse te verwarren met een brede diagnose- of rapportroute.',
-            routeBadgeLabel: 'Pulse route',
+            routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: doe je nog een bounded Pulse, verdiep je eerst de vraag verder of vraagt het thema nu een andere productvorm?',
@@ -709,7 +709,15 @@ export default async function CampaignPage({ params }: Props) {
     },
     {
       id: 'route',
-      label: stats.scan_type === 'retention' ? 'Behoudsroute' : stats.scan_type === 'team' ? 'Lokale route' : 'Route',
+      label:
+        stats.scan_type === 'retention' || stats.scan_type === 'exit'
+          ? 'Kernroute'
+          : stats.scan_type === 'team' ||
+              stats.scan_type === 'pulse' ||
+              stats.scan_type === 'onboarding' ||
+              stats.scan_type === 'leadership'
+            ? 'Vervolgroute'
+            : 'Route',
     },
     { id: 'methodiek', label: 'Methodiek' },
     { id: 'operatie', label: 'Operatie' },

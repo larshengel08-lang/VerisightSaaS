@@ -74,6 +74,11 @@ De volgende termen zijn canoniek als gedeelde rapportgrammar:
 
 Deze grammar stuurt rapport, dashboardhints, onboardingflow en report-to-action-logica. De grammar verplicht geen identieke inhoudsstructuur per productlijn.
 
+Boundaryregel:
+
+- voor `ExitScan` geldt daarnaast een vaste P1-P9 rapportarchitectuur
+- shared grammar mag die vaste ExitScan-opbouw niet reduceren, samenvoegen of herordenen
+
 ### Cross-layer managementtaal
 
 De volgende termen zijn canoniek over rapport, dashboard en onboarding:

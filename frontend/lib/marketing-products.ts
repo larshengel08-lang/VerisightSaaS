@@ -1,4 +1,4 @@
-export type MarketingProductStatus = 'live' | 'reserved_future'
+export type MarketingProductStatus = 'core_live' | 'portfolio_live' | 'bounded_live' | 'reserved_future'
 export type MarketingProductPortfolioRole =
   | 'core_product'
   | 'portfolio_route'
@@ -35,7 +35,7 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     serviceAudience: 'HR-teams en directies die uitstroom achteraf willen duiden',
     serviceOutput:
       'Managementsamenvatting, bestuurlijke handoff, eerste managementsessie, vertrekduiding, signalen van werkfrictie, prioritaire werkfactoren en interpretatiekaders',
-    status: 'live',
+    status: 'core_live',
     portfolioRole: 'core_product',
     href: '/producten/exitscan',
   },
@@ -52,7 +52,7 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     serviceAudience: 'HR-teams en directies die behoud eerder zichtbaar willen maken',
     serviceOutput:
       'Managementsamenvatting, bestuurlijke handoff, eerste managementsessie, retentiesignaal, stay-intent, vertrekintentie, bevlogenheid, topfactoren en groepsgerichte leeswijzers voor verificatie, opvolging en reviewmoment',
-    status: 'live',
+    status: 'core_live',
     portfolioRole: 'core_product',
     href: '/producten/retentiescan',
   },
@@ -71,7 +71,7 @@ export const PORTFOLIO_ROUTE_MARKETING_PRODUCTS: MarketingProduct[] = [
     serviceType: 'Portfolioroute voor vertrekduiding en vroegsignalering',
     serviceAudience: 'HR-teams en directies met zowel uitstroom- als behoudsvragen',
     serviceOutput: 'Twee gerichte routes in een gedeelde managementstructuur',
-    status: 'live',
+    status: 'portfolio_live',
     portfolioRole: 'portfolio_route',
     href: '/producten/combinatie',
   },
@@ -91,7 +91,7 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     serviceAudience: 'HR-teams en directies die na een eerste scan gericht willen blijven volgen',
     serviceOutput:
       'Compacte managementreview, ritmesignaal, delta-uitleg, bounded vervolgactie en expliciete reviewgrens',
-    status: 'live',
+    status: 'bounded_live',
     portfolioRole: 'follow_on_route',
     href: '/producten/pulse',
   },
@@ -108,7 +108,7 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     serviceAudience: 'HR-teams en directies die na een breder signaal lokale verificatie willen starten',
     serviceOutput:
       'Lokale prioriteitsread, bounded managementhandoff en suppressie-aware lokale duiding',
-    status: 'live',
+    status: 'bounded_live',
     portfolioRole: 'follow_on_route',
     href: '/producten/teamscan',
   },
@@ -125,7 +125,7 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     serviceAudience: 'HR-teams en directies die een vroege onboardingcheck buyer-facing willen openen',
     serviceOutput:
       'Checkpointsignaal, owner, eerste actie en bounded managementhandoff zonder brede journey-claims',
-    status: 'live',
+    status: 'bounded_live',
     portfolioRole: 'follow_on_route',
     href: '/producten/onboarding-30-60-90',
   },
@@ -142,7 +142,7 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     serviceAudience: 'HR-teams en directies die managementcontext bounded willen duiden',
     serviceOutput:
       'Geaggregeerde leadershipread, managementhandoff en bounded first action zonder named leader readouts',
-    status: 'live',
+    status: 'bounded_live',
     portfolioRole: 'follow_on_route',
     href: '/producten/leadership-scan',
   },
@@ -184,6 +184,10 @@ export const ALL_MARKETING_PRODUCTS = [...LIVE_MARKETING_PRODUCTS, ...RESERVED_M
 
 export function getMarketingProductBySlug(slug: string) {
   return ALL_MARKETING_PRODUCTS.find((product) => product.slug === slug) ?? null
+}
+
+export function isActiveMarketingProduct(product: MarketingProduct) {
+  return product.status !== 'reserved_future'
 }
 
 export function isCoreMarketingProduct(product: MarketingProduct) {

@@ -117,7 +117,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     trustTitle: 'Hoe je deze voorbeeldoutput leest',
     trustIntro:
-      'Deze preview gebruikt fictieve data, maar volgt dezelfde managementstructuur, leesvolgorde en trustnotities als de live buyer-facing output.',
+      'Deze preview gebruikt fictieve data, maar volgt dezelfde managementstructuur, leesvolgorde en trustnotities als de huidige buyer-facing output.',
     trustPoints: [
       ['Intended use', 'Gebruik deze laag om te kiezen welke managementroute past: vertrekduiding, vroegsignalering of beide.'],
       ['Wat management ziet', 'Managementsamenvatting, topfactoren, focusvragen en de gekozen vervolgrichting in een executive lijn.'],
@@ -204,7 +204,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     demoLabel: 'Illustratief voorbeeld',
     demoBody:
-      'Fictieve voorbeelddata. De trustopbouw, managementtaal en rapportvolgorde zijn gelijk aan de live ExitScan-presentatie waarmee Lars normaal de eerste route uitlegt.',
+      'Fictieve voorbeelddata. De trustopbouw, managementtaal en rapportvolgorde zijn gelijk aan de huidige ExitScan-presentatie waarmee Lars normaal de eerste route uitlegt.',
     supportVisualTitle: 'Segment deep dive preview',
     supportVisualAlt: 'Voorbeeld van een ExitScan segment deep dive',
     sampleReportTitle: 'Volledig buyer-facing voorbeeldrapport',
@@ -273,7 +273,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     trustTitle: 'Trust & interpretatie',
     trustIntro:
-      'De preview maakt dezelfde grens zichtbaar als live output: groeps- en segmentduiding voor verificatie en prioritering, zonder individuele predictor of performance-instrument te worden.',
+      'De preview maakt dezelfde grens zichtbaar als de huidige output: groeps- en segmentduiding voor verificatie en prioritering, zonder individuele predictor of performance-instrument te worden.',
     trustPoints: [
       ['Intended use', 'Vroegsignalering op behoud op groeps- en segmentniveau voor managementgesprek, verificatie en opvolging.'],
       ['Wat management ziet', 'Retentiesignaal, stay-intent, vertrekintentie, bevlogenheid en topfactoren in een bestuurslaag.'],
@@ -282,7 +282,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     demoLabel: 'Illustratief voorbeeld',
     demoBody:
-      'Fictieve voorbeelddata. De live RetentieScan-output gebruikt dezelfde managementstructuur, trustnotes en productspecifieke leeswijzers als in een specifieke behoudsdemo.',
+      'Fictieve voorbeelddata. De huidige RetentieScan-output gebruikt dezelfde managementstructuur, trustnotes en productspecifieke leeswijzers als in een specifieke behoudsdemo.',
     supportVisualTitle: 'Segment deep dive preview',
     supportVisualAlt: 'Voorbeeld van een RetentieScan segment deep dive',
     sampleReportTitle: 'Volledig buyer-facing voorbeeldrapport',
