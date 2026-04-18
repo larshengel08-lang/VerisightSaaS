@@ -203,6 +203,8 @@ class SurveyResponse(Base):
     tenure_years: Mapped[float | None] = mapped_column(Float, nullable=True)
     exit_reason_category: Mapped[str | None] = mapped_column(String(50), nullable=True)   # push/pull/situational key
     exit_reason_code: Mapped[str | None] = mapped_column(String(10), nullable=True)       # e.g. "P1", "PL2"
+    # Shared technical storage field. Product meaning varies by scan type:
+    # retention = real stay-intent, exit = exit-context item, pulse = bounded direction signal.
     stay_intent_score: Mapped[int | None] = mapped_column(Integer, nullable=True)         # 1-5
 
     # ------------------------------------------------------------------
@@ -245,6 +247,8 @@ class SurveyResponse(Base):
     # ------------------------------------------------------------------
     # Computed aggregates
     # ------------------------------------------------------------------
+    # Shared technical storage field. Buyer-facing label must remain product-specific
+    # such as Frictiescore, Retentiesignaal or Teamsignaal.
     risk_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     risk_band: Mapped[str | None] = mapped_column(String(10), nullable=True)          # HOOG/MIDDEN/LAAG
     preventability: Mapped[str | None] = mapped_column(String(20), nullable=True)     # exit only

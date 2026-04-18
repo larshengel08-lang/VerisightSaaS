@@ -37,6 +37,7 @@ Voor de huidige fix-tranche:
 - [COMMERCIAL_LANGUAGE_PARITY_RECHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_LANGUAGE_PARITY_RECHECK.md)
 - [EXITSCAN_PRODUCT_SHARPENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_PRODUCT_SHARPENING_PLAN.md)
 - [EXITSCAN_IMPLEMENTATION_PARITY_CHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_IMPLEMENTATION_PARITY_CHECK.md)
+- [FIELD_SEMANTICS_HARDENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/FIELD_SEMANTICS_HARDENING_PLAN.md)
 - [HISTORICAL_DOC_BOUNDARY_SWEEP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/HISTORICAL_DOC_BOUNDARY_SWEEP.md)
 - [LANGUAGE_DRIFT_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/LANGUAGE_DRIFT_MATRIX.md)
 - [LANGUAGE_PARITY_INVENTORY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/LANGUAGE_PARITY_INVENTORY.md)
