@@ -76,7 +76,7 @@ Deze grammar stuurt rapport, dashboardhints, onboardingflow en report-to-action-
 
 Boundaryregel:
 
-- voor `ExitScan` geldt daarnaast een vaste P1-P9 rapportarchitectuur
+- voor `ExitScan` geldt daarnaast een vaste `P1-P10 + Appendix` rapportarchitectuur
 - shared grammar mag die vaste ExitScan-opbouw niet reduceren, samenvoegen of herordenen
 
 ### Cross-layer managementtaal

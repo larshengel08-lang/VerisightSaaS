@@ -2,7 +2,7 @@
 
 Last updated: 2026-04-18
 Status: active
-Source of truth: dit document is leidend voor de canonieke rapportstructuur van Verisight.
+Source of truth: voor `ExitScan` is dit document de expliciete en leidende rapportstructuur-canon; voor andere productlijnen beschrijft het document alleen de gedeelde report grammar.
 
 ## 1. Purpose
 
@@ -13,8 +13,8 @@ Dit document legt twee dingen vast:
 
 Belangrijke boundary:
 
-- de ExitScan-report-architectuur is elders inhoudelijk vastgezet en geldt hier als immutable source of truth
-- redesign, parity of shared grammar mogen die architectuur niet heropenen
+- de ExitScan-report-architectuur geldt in deze repo nu expliciet als source of truth
+- redesign, parity, preview of shared grammar mogen die architectuur niet heropenen
 - RetentieScan en latere productlijnen mogen op de gedeelde grammar landen, maar niet door ExitScan terug te duwen naar een kortere generieke structuur
 
 Primair gebruikte referenties:
@@ -24,7 +24,7 @@ Primair gebruikte referenties:
 2. [verisight_spec_v3.html](C:/Users/larsh/Downloads/verisight_spec_v3.html)
    - target-architectuurinput voor RetentieScan en de bredere gedeelde grammar
 
-## 2. ExitScan Architecture Freeze
+## 2. ExitScan Source Of Truth
 
 ### ExitScan vaste paginavolgorde
 
@@ -39,12 +39,15 @@ Voor `ExitScan` geldt de volgende vaste hoofdrapportstructuur:
 7. `P7 - SDT Basisbehoeften`
 8. `P8 - Organisatiefactoren`
 9. `P9 - Eerste route & actie`
+10. `P10 - Methodiek / leeswijzer`
+11. `Appendix - Technische verantwoording`
 
 Canonregel:
 
 - deze volgorde is vast voor ExitScan
-- shared grammar mag deze pagina's niet samenvoegen of reduceren naar een generieke 6-paginavariant
-- aanvullende appendix- of deep-dive-lagen mogen bestaan, maar nooit ten koste van deze hoofdflow
+- shared grammar mag deze pagina's niet samenvoegen, reduceren of herordenen naar een generieke variant
+- `P10` en de `Appendix` zijn verplichte onderdelen van de ExitScan-architectuur, niet optionele restlagen
+- aanvullende deep-dive-lagen mogen bestaan, maar nooit ten koste van deze hoofdflow
 
 ## 3. ExitScan Page Rules
 
@@ -236,13 +239,53 @@ Required content:
 
 Purpose:
 
-- land the report in a first management route instead of a loose closeout block
+- move from interpretation to management action
+- keep ownership and next steps in one clear place
 
 Implementation notes:
 
-- keep the route compact, owner-bound and toetsbaar
-- stay inside the current report-to-action contract
-- do not expand this into a diffuse consulting appendix
+- this is the only page where owner / first route / next action should appear
+- keep actionability strong, but not repetitive
+- do not duplicate handoff logic here unnecessarily
+
+### P10 - Methodiek / leeswijzer
+
+Required content:
+
+- concise explanation of how to read the report
+- what the product is
+- what it is not
+- privacy thresholds
+- reporting thresholds
+- short credibility-oriented explanation
+
+Purpose:
+
+- restore confidence and guardrails without making the report too heavy
+
+Implementation notes:
+
+- keep this compact
+- 2-3 extra sentences are allowed versus the current version
+- make it feel less bare and more trustworthy
+- technical depth still belongs in the appendix
+
+### Appendix - Technische verantwoording
+
+Required content:
+
+- clear methodological structure
+- explicit sub-blocks:
+  - `A. Onderliggende psychologische laag (SDT)`
+  - `B. Item- en factorbasis`
+  - `C. Samengestelde werkfactorsignaal-logica`
+
+For each sub-block:
+
+- title
+- `Hoe lees je dit?`
+- short explanation
+- then relevant technical support content
 
 ## 4. Shared Report Grammar For Other Products
 
@@ -264,6 +307,7 @@ Belangrijke regel:
 
 - deze gedeelde grammar beschrijft inhoudelijke leeslogica
 - zij is niet bevoegd om ExitScan terug te brengen tot zes pagina's
+- voor ExitScan zijn `P1-P10 + Appendix` leidend, ook wanneer de gedeelde grammar compacter klinkt
 
 ## 5. Product-Specific Reading Rules
 
@@ -311,7 +355,7 @@ Verplichte taalprincipes:
 ## 7. Implementation Defaults
 
 - nieuwe rapportvarianten moeten eerst op de gedeelde grammar worden gemapt
-- ExitScan blijft daarvan uitgezonderd waar de vaste P1-P9 architectuur specifieker is
+- ExitScan blijft daarvan uitgezonderd waar de vaste `P1-P10 + Appendix` architectuur specifieker is
 - rapportdesign mag de architectuur of grammar versterken, maar niet herschrijven
 - dashboard en preview moeten dezelfde hoofdroute kunnen spiegelen zonder de ExitScan-volgorde te vervormen
 
@@ -319,7 +363,7 @@ Verplichte taalprincipes:
 
 Deze canon werkt pas echt als:
 
-- ExitScan expliciet als vaste P1-P9 architectuur is beschermd
+- ExitScan expliciet als vaste `P1-P10 + Appendix` architectuur is beschermd
 - RetentieScan en latere productlijnen de gedeelde grammar kunnen volgen zonder ExitScan terug te brengen tot generieke structuur
 - onboarding, dashboard en preview dezelfde hoofdroute herkennen:
   - wat speelt nu
