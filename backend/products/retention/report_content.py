@@ -597,5 +597,5 @@ def get_action_playbooks_payload() -> dict[str, dict[str, dict[str, Any]]]:
 def get_action_playbook_calibration_note() -> str:
     return (
         "Deze playbooks zijn v1-richtlijnen op basis van werkfactoren en signaalpatronen. "
-        "We ijken ze na de eerste pilotronde op echte RetentieScan-data, zodat prioriteiten en vervolgacties beter aansluiten op wat in de praktijk het meeste effect heeft."
+        "We ijken ze na de eerste pilotronde op echte RetentieScan-data, zodat prioriteiten en vervolgacties beter aansluiten op wat in de praktijk het meest werkbaar en scherp blijkt."
     )

@@ -10,7 +10,7 @@ Method And Survey Evidence Flow - Question to signal map
 
 ## Korte samenvatting
 
-Deze mapping maakt expliciet welke surveyvragen welke signalen voeden, welke signalen de hoofdmetric bouwen en welke outputs alleen context of verificatie zijn. De belangrijkste uitkomst is dat de suite methodisch vooral bestaat uit compacte, verklaarbare afleidingsketens, maar dat ExitScan en RetentieScan enkele semantische overbelasting en rule-based syntheses bevatten die duidelijk begrensd moeten blijven.
+Deze mapping maakt expliciet welke surveyvragen welke signalen voeden, welke signalen de hoofdmetric bouwen en welke outputs alleen context of verificatie zijn. De belangrijkste uitkomst is dat de suite methodisch vooral bestaat uit compacte, verklaarbare afleidingsketens, maar dat ExitScan, RetentieScan en de compacte parity-routes enkele technische veldfamilies delen die productmatig expliciet begrensd moeten blijven.
 
 ## Wat is geaudit
 
@@ -38,21 +38,24 @@ Deze mapping maakt expliciet welke surveyvragen welke signalen voeden, welke sig
 - RetentieScan heeft de rijkste extra signaallaag: bevlogenheid, vertrekintentie en stay-intent zijn aanvullende signalen bovenop het retentiesignaal.
 - ExitScan gebruikt naast de hoofdmetric meerdere contextvragen die methodisch nuttig zijn, maar niet allemaal dezelfde constructhelderheid hebben.
 - De compacte follow-on lijnen zijn methodisch beperkt maar ook relatief transparant: weinig items, weinig afleidingsstappen, duidelijke bounded triage.
+- De compacte follow-on lijnen hergebruiken technisch een `stay_item`-familie voor richtingvragen, maar dat maakt hun construct nog niet gelijk aan RetentieScan stay-intent.
 
 ## Belangrijkste inconsistenties of risico's
 
-- `stay_intent_score` is semantisch overbelast: in RetentieScan betekent het echte stay-intent, terwijl het in ExitScan wordt hergebruikt in de exitcontext.
+- `stay_intent_score` en verwante `stay_item`-routes zijn semantisch overbelast: in RetentieScan betekent dit echte stay-intent, terwijl ExitScan, Pulse en andere compacte lijnen hetzelfde technische spoor anders inzetten.
 - `risk_score` is technisch generiek en vraagt daarom altijd productspecifieke vertaling in rapport en dashboard.
 - ExitScan `preventability_result` en `replacement_cost_eur` worden niet rechtstreeks door dezelfde surveybasis gedragen als de hoofdmetric.
+- RetentieScan trend- en repeatkaarten zijn vervolgoutput op eerder gemeten hoofd- en hulpsignalen, geen nieuw surveyconstruct.
 
 ## Beslissingen / canonvoorstellen
 
 - Survey-naar-signaal-ketens worden per product expliciet begrensd als hoofdmetric, aanvullende signalen, context of interne methodlaag.
 - Open tekst telt in alle productlijnen als kwalitatieve verificatielaag en niet als numerieke metricbasis.
+- Gedeelde technische storage voor richtingvragen wordt productmatig steeds opnieuw vertaald; betekenis volgt de productdefinitie, niet de veldnaam.
 
 ## Concrete wijzigingen
 
-- Nieuw bestand aangemaakt: [QUESTION_TO_SIGNAL_MAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/QUESTION_TO_SIGNAL_MAP.md)
+- Bestand ververst: [QUESTION_TO_SIGNAL_MAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/QUESTION_TO_SIGNAL_MAP.md)
 
 ## Mapping
 
@@ -79,6 +82,7 @@ Deze mapping maakt expliciet welke surveyvragen welke signalen voeden, welke sig
 | `ti_1-2` | `turnover_intention_score` | aanvullende signaallaag `vertrekintentie` |
 | `stay_intent` item | `stay_intent_score` | aanvullende signaallaag `stay-intent` |
 | hoofdmetric + aanvullingen | `signal_profile` ruleset | bestuurlijke synthese, geen apart surveyconstruct |
+| eerdere vergelijkbare meting | `retention_trend_rows` / trendkaarten | beschrijvende vervolguitleg, geen nieuwe metric |
 | open tekst | geanonimiseerde groepsinput | verificatielaag en opvolginput |
 
 ### TeamScan
@@ -87,7 +91,7 @@ Deze mapping maakt expliciet welke surveyvragen welke signalen voeden, welke sig
 | --- | --- | --- |
 | `B1`, `B5`, `B9` | compacte `sdt_scores` -> `sdt_risk` | onderdeel van `Teamsignaal` |
 | actieve org-items per campaign | `org_scores` voor actieve factoren | onderdeel van `Teamsignaal` en lokale topfactor |
-| lokale richtingsvraag (`stay_item`) | `local_direction_score` | ondersteunend signaal voor bounded handoff |
+| lokale richtingsvraag (`stay_item`) | `local_direction_score` | ondersteunend signaal voor bounded handoff; geen RetentieScan stay-intent |
 | metadata `department` | veilige groepsread / delta vs org | lokale contextlaag, geen zelfstandige metric |
 | open tekst | geanonimiseerde groepsinput | lokale verificatie |
 
@@ -97,7 +101,7 @@ Deze mapping maakt expliciet welke surveyvragen welke signalen voeden, welke sig
 | --- | --- | --- |
 | `B1`, `B5`, `B9` | compacte `sdt_scores` -> `sdt_risk` | onderdeel van `Onboardingsignaal` |
 | actieve vroege org-items | `org_scores` voor actieve factoren | onderdeel van `Onboardingsignaal` en checkpointduiding |
-| checkpoint-richtingsvraag (`stay_item`) | `checkpoint_direction_score` | ondersteunend signaal voor eerste handoff |
+| checkpoint-richtingsvraag (`stay_item`) | `checkpoint_direction_score` | ondersteunend signaal voor eerste handoff; geen RetentieScan stay-intent |
 | open tekst | geanonimiseerde groepsinput | checkpointverificatie |
 
 ### Pulse
@@ -106,7 +110,7 @@ Deze mapping maakt expliciet welke surveyvragen welke signalen voeden, welke sig
 | --- | --- | --- |
 | `B1`, `B5`, `B9` | compacte `sdt_scores` -> `sdt_risk` | onderdeel van `Pulsesignaal` |
 | actieve pulsefactor-items | `org_scores` voor actieve factoren | onderdeel van `Pulsesignaal` en reviewtopfactor |
-| richtingsvraag (`stay_item`) | `stay_intent_score` | ondersteunend reviewsignaal |
+| richtingsvraag (`stay_item`) | technisch `stay_intent_score` | bounded reviewsignaal; niet lezen als RetentieScan stay-intent |
 | open tekst | geanonimiseerde groepsinput | review- en opvolginput |
 
 ### Leadership Scan
@@ -115,7 +119,7 @@ Deze mapping maakt expliciet welke surveyvragen welke signalen voeden, welke sig
 | --- | --- | --- |
 | `B1`, `B5`, `B9` | compacte `sdt_scores` -> `sdt_risk` | onderdeel van `Leadershipsignaal` |
 | actieve leadership-/werkfactor-items | `org_scores` voor actieve factoren | onderdeel van `Leadershipsignaal` en managementcontext |
-| managementrichtingsvraag (`stay_item`) | `leadership_direction_score` | ondersteunend signaal voor eerste duiding |
+| managementrichtingsvraag (`stay_item`) | `leadership_direction_score` | ondersteunend signaal voor eerste duiding; geen RetentieScan stay-intent |
 | open tekst | geanonimiseerde groepsinput | verificatie en managementfollow-up |
 
 ## Validatie
@@ -127,7 +131,8 @@ Deze mapping maakt expliciet welke surveyvragen welke signalen voeden, welke sig
 
 - Compacte follow-on lijnen blijven methodisch bounded triagemodellen totdat latere waves meer surveybasis of longitudinale bewijsvoering toevoegen.
 - ExitScan `stay_intent_score` wordt in dit document behandeld als semantisch afwijkend exitcontext-item en niet als retentiestay-intent.
+- Beschrijvende trendlagen en repeatkaarten tellen als vervolgoutput op bestaande signalen en niet als zelfstandig surveyconstruct.
 
 ## Next gate
 
-Method evidence review en risk matrix opstellen.
+Method evidence review en risk matrix verversen.

@@ -30,6 +30,7 @@ De methodevidence is sterk genoeg voor gecontroleerde producthardening, maar nie
 - ExitScan blijft methodisch kwetsbaarder dan RetentieScan door retrospectieve bias, expert-judgment gewichten en extra afleidingen buiten de kernscore.
 - RetentieScan aanvullende signalen zijn logisch, maar hun bestuurlijke synthese (`signal_profile`) blijft een ruleset en geen bewezen latent model.
 - TeamScan, Onboarding, Pulse en Leadership zijn methodisch verdedigbaar als bounded triage-instrumenten, juist omdat ze klein en expliciet begrensd zijn.
+- RetentieScan herhaalmeting, trendkaarten en playbook-ijking zijn alleen methodisch verdedigbaar als beschrijvende vervolglaag en niet als effect- of interventiebewijs.
 
 ## Belangrijkste inconsistenties of risico's
 
@@ -37,23 +38,25 @@ De methodevidence is sterk genoeg voor gecontroleerde producthardening, maar nie
 - ExitScan `replacement_cost_eur` is geen surveygebaseerde productwaarheid maar een business helper op metadata.
 - Dezelfde veldnaam `stay_intent_score` staat voor verschillende constructen in verschillende producten.
 - Drempels als `4.5`, `5.5` en `7.0` zijn bruikbare leesgrenzen, maar geen externe validatiegrenzen of significantietesten.
+- Effectachtige taal rond RetentieScan follow-up, trends of calibration kan de evidence-basis harder laten lijken dan die nu is.
 
 ## Beslissingen / canonvoorstellen
 
 - Hoofdmetrics blijven methodisch verdedigbaar als indicatieve managementsamenvattingen.
 - Rule-based syntheses en afgeleide business helpers moeten expliciet als begrensde hulplagen worden gelabeld.
 - Semantische dubbelzinnigheid in gedeelde veldnamen moet in docs en later in code-aliasing worden opgelost.
+- Longitudinale of playbooktaal blijft beschrijvend totdat echte follow-upuitkomsten een hardere claim dragen.
 
 ## Concrete wijzigingen
 
-- Nieuw bestand aangemaakt: [METHOD_EVIDENCE_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/METHOD_EVIDENCE_REVIEW.md)
+- Bestand ververst: [METHOD_EVIDENCE_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/METHOD_EVIDENCE_REVIEW.md)
 
 ## Evidence review per product
 
 | Product | Evidence oordeel | Proportionele claims | Niet proportioneel zonder extra begrenzing |
 | --- | --- | --- | --- |
 | ExitScan | Plausibel, intern consistent, maar retrospectief en expert-judgment heavy | groepsgerichte vertrekduiding, prioritering, werkfactorlezing, eerdere signalering als context | vermijdbaarheid als harde uitkomst, replacement cost als productbewijs, causaliteit |
-| RetentieScan | Plausibel, intern consistent, v1-werkmodel | vroegsignalering op behoud, verificatiehulp, samen lezen van hoofdmetric en aanvullingen | predictorclaim, persoonsgericht risico, harde trend- of causaliteitsclaim |
+| RetentieScan | Plausibel, intern consistent, v1-werkmodel | vroegsignalering op behoud, verificatiehulp, samen lezen van hoofdmetric en aanvullingen, beschrijvende repeat/trendlaag | predictorclaim, persoonsgericht risico, harde trend-, effect- of causaliteitsclaim |
 | TeamScan | Plausibel als bounded lokalisatie | localisatie, eerste verificatie, department-first managementread | brede teamdiagnose, manager ranking, oorzaakbewijs |
 | Onboarding 30-60-90 | Plausibel als single-checkpoint read | vroege checkpointduiding, eerste handoff, beperkte correctiestap | journey-engine, retentievoorspeller, cohortmodel |
 | Pulse | Plausibel als bounded reviewsnapshot | momentopname, review, kleine koerscorrectie, beperkte vergelijking | zelfstandige trendmachine, effectbewijs |
@@ -70,4 +73,4 @@ De methodevidence is sterk genoeg voor gecontroleerde producthardening, maar nie
 
 ## Next gate
 
-Method risk matrix en fixplan uitwerken.
+Method risk matrix en statusherijking uitwerken.
