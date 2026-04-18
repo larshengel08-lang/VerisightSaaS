@@ -64,6 +64,7 @@ export interface DashboardViewModel {
   topSummaryCards: DashboardStatCard[]
   managementBlocks: DashboardListBlock[]
   profileCards: DashboardStatCard[]
+  interpretationState?: string
   primaryQuestion: DashboardDecisionCard
   nextStep: DashboardDecisionCard
   focusSectionIntro: string
