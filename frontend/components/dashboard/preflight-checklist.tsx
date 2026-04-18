@@ -14,6 +14,8 @@ import {
   DELIVERY_MANUAL_STATE_OPTIONS,
   getDeliveryAutoStateLabel,
   getDeliveryExceptionLabel,
+  getDeliveryGovernanceOutputLaneReadyLabel,
+  getDeliveryGovernanceOutputLaneTitle,
   getDeliveryLifecycleLabel,
   getDeliveryManualStateLabel,
   type CampaignDeliveryCheckpoint,
@@ -570,9 +572,9 @@ export function PreflightChecklist({
                   blockers={governance.firstValueBlockers}
                 />
                 <GovernanceLane
-                  title={scanType === 'exit' || scanType === 'retention' ? 'Report en management use' : 'Output en management use'}
+                  title={getDeliveryGovernanceOutputLaneTitle(scanType)}
                   ready={governance.managementUseReady}
-                  readyLabel="Management use bevestigd"
+                  readyLabel={getDeliveryGovernanceOutputLaneReadyLabel(scanType)}
                   blockers={[...governance.reportDeliveryBlockers, ...governance.managementUseBlockers]}
                 />
                 <GovernanceLane

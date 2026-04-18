@@ -194,6 +194,66 @@ export function getDeliveryCheckpointTitle(key: DeliveryCheckpointKey) {
   return DELIVERY_CHECKPOINT_DEFINITIONS.find((definition) => definition.key === key)?.title ?? key
 }
 
+function getFirstValueThresholdSummary(scanType: ScanType) {
+  if (scanType === 'retention') {
+    return 'RetentieScan zit nog onder de veilige first-value drempel van 5 responses.'
+  }
+
+  if (scanType === 'mto') {
+    return 'MTO zit nog onder de veilige brede hoofdmeting-drempel van 5 responses.'
+  }
+
+  return 'ExitScan zit nog onder de veilige first-value drempel van 5 responses.'
+}
+
+function getReportDeliveryWarningSummary(scanType: ScanType) {
+  if (scanType === 'mto') {
+    return 'MTO-read kan nu operationeel worden gecontroleerd, maar expliciete action-log vrijgave blijft handmatig.'
+  }
+
+  return 'Rapport kan nu operationeel worden gecontroleerd, maar expliciete opleverbevestiging blijft handmatig.'
+}
+
+function getReportDeliveryNotReadySummary(scanType: ScanType) {
+  if (scanType === 'mto') {
+    return 'Wacht met MTO-read en action-log vrijgave tot er minimaal 5 bruikbare responses zijn.'
+  }
+
+  return 'Wacht met rapportdelivery tot er minimaal 5 bruikbare responses zijn.'
+}
+
+export function getDeliveryReportDeliveryPendingMessage(scanType: ScanType) {
+  if (scanType === 'exit' || scanType === 'retention') {
+    return 'Rapportdelivery is nog niet expliciet bevestigd.'
+  }
+
+  if (scanType === 'mto') {
+    return 'MTO-read en action-logroute zijn nog niet expliciet bevestigd.'
+  }
+
+  return 'Management-output delivery is nog niet expliciet bevestigd.'
+}
+
+export function getDeliveryGovernanceOutputLaneTitle(scanType: ScanType) {
+  if (scanType === 'exit' || scanType === 'retention') {
+    return 'Report en management use'
+  }
+
+  if (scanType === 'mto') {
+    return 'MTO-read en action log'
+  }
+
+  return 'Output en management use'
+}
+
+export function getDeliveryGovernanceOutputLaneReadyLabel(scanType: ScanType) {
+  if (scanType === 'mto') {
+    return 'MTO-use bevestigd'
+  }
+
+  return 'Management use bevestigd'
+}
+
 export function getDeliveryAutoStateLabel(value: DeliveryAutoState) {
   switch (value) {
     case 'ready':
@@ -299,10 +359,7 @@ export function buildDeliveryAutoSignals({
               }
             : {
                 autoState: 'not_ready',
-                summary:
-                  scanType === 'retention'
-                    ? 'RetentieScan zit nog onder de veilige first-value drempel van 5 responses.'
-                    : 'ExitScan zit nog onder de veilige first-value drempel van 5 responses.',
+                summary: getFirstValueThresholdSummary(scanType),
               },
     report_delivery:
       incompleteScores > 0
@@ -313,11 +370,11 @@ export function buildDeliveryAutoSignals({
         : hasMinDisplay
           ? {
               autoState: 'warning',
-              summary: 'Rapport kan nu operationeel worden gecontroleerd, maar expliciete opleverbevestiging blijft handmatig.',
+              summary: getReportDeliveryWarningSummary(scanType),
             }
           : {
               autoState: 'not_ready',
-              summary: 'Wacht met rapportdelivery tot er minimaal 5 bruikbare responses zijn.',
+              summary: getReportDeliveryNotReadySummary(scanType),
             },
     first_management_use:
       activeClientAccessCount > 0
@@ -415,10 +472,7 @@ export function buildDeliveryGovernanceSnapshot(args: {
   const reportDeliveryBlockers = collectCheckpointBlockers({
     checkpoint: checkpointMap.report_delivery,
     autoSignal: args.autoSignals.report_delivery,
-    pendingMessage:
-      args.scanType === 'exit' || args.scanType === 'retention'
-        ? 'Rapportdelivery is nog niet expliciet bevestigd.'
-        : 'Management-output delivery is nog niet expliciet bevestigd.',
+    pendingMessage: getDeliveryReportDeliveryPendingMessage(args.scanType),
   })
   const managementUseBlockers = collectCheckpointBlockers({
     checkpoint: checkpointMap.first_management_use,

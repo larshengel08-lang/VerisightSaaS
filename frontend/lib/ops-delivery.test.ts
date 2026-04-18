@@ -3,6 +3,8 @@ import {
   buildDeliveryAutoSignals,
   buildDeliveryGovernanceSnapshot,
   buildDeliveryOpsSummary,
+  getDeliveryGovernanceOutputLaneReadyLabel,
+  getDeliveryGovernanceOutputLaneTitle,
   validateDeliveryCheckpointUpdate,
   validateDeliveryLifecycleTransition,
   type CampaignDeliveryCheckpoint,
@@ -227,5 +229,53 @@ describe('delivery ops governance helpers', () => {
     expect(transition.allowed).toBe(false)
     expect(transition.blockers.join(' ')).toContain('Follow-up')
     expect(transition.blockers.join(' ')).toContain('Learning closure')
+  })
+
+  it('uses explicit mto delivery and governance language for main-measurement operations', () => {
+    const autoSignals = buildDeliveryAutoSignals({
+      scanType: 'mto',
+      linkedLeadPresent: true,
+      totalInvited: 18,
+      totalCompleted: 3,
+      invitesNotSent: 0,
+      incompleteScores: 0,
+      hasMinDisplay: false,
+      hasEnoughData: false,
+      activeClientAccessCount: 1,
+      pendingClientInviteCount: 0,
+    })
+
+    const snapshot = buildDeliveryGovernanceSnapshot({
+      scanType: 'mto',
+      record: createRecord({ lifecycle_stage: 'first_value_reached' }),
+      checkpoints: [
+        createCheckpoint('implementation_intake'),
+        createCheckpoint('import_qa'),
+        createCheckpoint('invite_readiness'),
+        createCheckpoint('client_activation'),
+        createCheckpoint('first_value', {
+          manual_state: 'pending',
+          auto_state: autoSignals.first_value.autoState,
+          last_auto_summary: autoSignals.first_value.summary,
+        }),
+        createCheckpoint('report_delivery', {
+          manual_state: 'pending',
+          auto_state: autoSignals.report_delivery.autoState,
+          last_auto_summary: autoSignals.report_delivery.summary,
+        }),
+        createCheckpoint('first_management_use', {
+          manual_state: 'pending',
+          auto_state: autoSignals.first_management_use.autoState,
+          last_auto_summary: autoSignals.first_management_use.summary,
+        }),
+      ],
+      autoSignals,
+    })
+
+    expect(autoSignals.first_value.summary).toContain('MTO zit nog onder de veilige brede hoofdmeting-drempel')
+    expect(autoSignals.report_delivery.summary).toContain('MTO-read en action-log vrijgave')
+    expect(snapshot.reportDeliveryBlockers.join(' ')).toContain('MTO-read en action-logroute')
+    expect(getDeliveryGovernanceOutputLaneTitle('mto')).toBe('MTO-read en action log')
+    expect(getDeliveryGovernanceOutputLaneReadyLabel('mto')).toBe('MTO-use bevestigd')
   })
 })
