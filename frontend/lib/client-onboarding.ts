@@ -195,12 +195,12 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
       {
         title: 'Verdiep bewust',
         fit: 'Alleen bij scherpere lokalisatievraag',
-        body: 'Ga pas naar meer verfijning of extra verificatie wanneer dezelfde signalen echt om lokalisatie, bredere diagnose of scherper bewijs vragen.',
+        body: 'Ga pas naar meer verfijning of extra verificatie wanneer dezelfde signalen echt om lokalisatie, bredere duiding of scherper bewijs vragen.',
       },
       {
-        title: 'Breid uit naar RetentieScan of diepere diagnose',
+        title: 'Breid uit naar RetentieScan of bredere duiding',
         fit: 'Tweede product bij nieuwe managementvraag',
-        body: 'Kies pas een ander product wanneer dezelfde thema\'s niet meer alleen een reviewvraag zijn, maar een bredere behouds- of diagnosevraag worden die Pulse niet eerlijk kan dragen.',
+        body: 'Kies pas een ander product wanneer dezelfde thema\'s niet meer alleen een reviewvraag zijn, maar een bredere behouds- of duidingsvraag worden die Pulse niet eerlijk kan dragen.',
       },
     ] as const
   }
@@ -218,9 +218,9 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
         body: 'Verdiep pas verder wanneer dezelfde signalen echt om scherpere lokale handoff, extra boundary-support of zwaardere managementduiding vragen die TeamScan nu nog niet eerlijk ondersteunt.',
       },
       {
-        title: 'Ga terug naar bredere diagnose of review',
+        title: 'Ga terug naar bredere duiding of review',
         fit: 'Andere productvorm bij andere vraag',
-        body: 'Kies pas een ander product wanneer de vraag niet meer lokaal is, maar weer een bredere behouds-, diagnose- of reviewvraag wordt die TeamScan niet eerlijk kan dragen na de eerste lokale managementhuddle.',
+        body: 'Kies pas een ander product wanneer de vraag niet meer lokaal is, maar weer een bredere behouds-, duidings- of reviewvraag wordt die TeamScan niet eerlijk kan dragen na de eerste lokale managementbespreking.',
       },
     ] as const
   }
@@ -258,9 +258,9 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
         body: 'Verdiep pas verder wanneer dezelfde signalen echt om scherpere managementduiding vragen die nog steeds group-level en bounded kunnen blijven zonder named leaders of 360-logica te openen.',
       },
       {
-        title: 'Ga terug naar bredere diagnose',
+        title: 'Ga terug naar bredere duiding',
         fit: 'Andere productvorm bij andere vraag',
-        body: 'Kies pas een ander product wanneer de vraag niet meer primair gaat over geaggregeerde managementcontext, maar om bredere diagnose, lokale lokalisatie in TeamScan of een andere suitevraag die Leadership Scan niet eerlijk kan dragen.',
+        body: 'Kies pas een ander product wanneer de vraag niet meer primair gaat over geaggregeerde managementcontext, maar om bredere duiding, lokale lokalisatie in TeamScan of een andere suitevraag die Leadership Scan niet eerlijk kan dragen.',
       },
     ] as const
   }

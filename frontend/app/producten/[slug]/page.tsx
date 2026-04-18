@@ -534,7 +534,7 @@ function PulsePage() {
             Houd na een eerste scan kort en gericht zicht op wat nu verschuift.
           </h1>
           <p className="marketing-hero-copy text-slate-600">
-            Pulse is een compacte vervolgroute na een eerste baseline, managementread of eerste actie. Je gebruikt het product voor een
+            Pulse is een compacte vervolgroute na een eerste baseline, bestuurlijke read of eerste actie. Je gebruikt het product voor een
             korte managementreview: wat laat de huidige snapshot zien, welk werkspoor vraagt nu bespreking en wanneer
             is een volgende check logisch.
           </p>
@@ -561,7 +561,7 @@ function PulsePage() {
           <div className="space-y-5">
             <span className="marketing-stage-tag bg-amber-400/15 text-amber-100">Vervolgroute</span>
             <h2 className="marketing-stage-title font-display text-white">
-              Pulse is geen nieuwe eerste koop, maar een compacte hercheck na een eerdere managementread.
+              Pulse is geen nieuwe eerste koop, maar een compacte hercheck na een eerdere bestuurlijke read.
             </h2>
             <p className="marketing-stage-copy text-slate-300">
               De route blijft bewust smal: actuele groepssnapshot, begrensde vergelijking met de vorige vergelijkbare
@@ -584,7 +584,7 @@ function PulsePage() {
       heroSupport={
         <MarketingHeroSupport>
           <div className="marketing-support-note text-sm leading-7 text-slate-600">
-            RetentieScan ritmeroute blijft de bredere herhaalvorm na baseline. Pulse is smaller en wordt pas logisch als de
+            RetentieScan ritmeroute blijft de bredere herhaalvorm na baseline. Pulse is kleiner en wordt pas logisch als de
             vraag vooral om een compacte reviewlaag vraagt.
           </div>
           <div className="marketing-link-grid">
@@ -766,7 +766,7 @@ function TeamScanPage() {
               TeamScan helpt bepalen waar eerst lokaal gesprek of verificatie nodig is, niet wie gelijk heeft.
             </h2>
             <p className="marketing-stage-copy text-slate-300">
-              De buyer-facing belofte blijft bewust smal: department-first lokale read, bounded prioritering, eerste
+              De route blijft bewust smal: department-first lokale read, bounded prioritering, eerste
               eigenaar en een begrensde eerste actie zonder manager ranking of brede teamscorekaart.
             </p>
             <div className="marketing-stage-list">

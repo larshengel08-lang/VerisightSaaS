@@ -110,6 +110,15 @@ describe('ExitScan positioning copy', () => {
     expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('reviewmoment'))).toBe(true)
     expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('upsell'))).toBe(true)
   })
+
+  it('keeps Pulse framed as a bounded review route instead of a diagnostic layer', () => {
+    const pulseProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'pulse')
+    const pulseOutput = pulseProduct?.serviceOutput.toLowerCase()
+
+    expect(pulseProduct).toBeTruthy()
+    expect(pulseOutput).toContain('begrensde vergelijkingsduiding')
+    expect(pulseOutput).not.toContain('delta-uitleg')
+  })
 })
 
 describe('RetentieScan positioning copy', () => {

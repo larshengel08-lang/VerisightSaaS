@@ -90,7 +90,7 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     serviceType: 'Compacte reviewmeting na eerste baseline of managementread',
     serviceAudience: 'HR-teams en directies die na een eerste scan gericht willen blijven volgen',
     serviceOutput:
-      'Compacte managementreview, ritmesignaal, delta-uitleg, bounded vervolgactie en expliciete reviewgrens',
+      'Compacte managementreview, ritmesignaal, begrensde vergelijkingsduiding, bounded vervolgactie en expliciete reviewgrens',
     status: 'bounded_live',
     portfolioRole: 'follow_on_route',
     href: '/producten/pulse',

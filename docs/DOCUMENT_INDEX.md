@@ -41,6 +41,7 @@ Voor de huidige fix-tranche:
 - [LANGUAGE_DRIFT_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/LANGUAGE_DRIFT_MATRIX.md)
 - [LANGUAGE_PARITY_INVENTORY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/LANGUAGE_PARITY_INVENTORY.md)
 - [LANGUAGE_PARITY_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/LANGUAGE_PARITY_SIGNOFF.md)
+- [NON_CORE_PRODUCT_PARITY_SWEEP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/NON_CORE_PRODUCT_PARITY_SWEEP.md)
 - [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md)
 - [PRODUCT_TRUTH_HARDENING_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_TRUTH_HARDENING_PROGRAM_PLAN.md)
 - [REPORT_GENERATOR_RUNTIME_BOUNDARY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_GENERATOR_RUNTIME_BOUNDARY.md)
