@@ -91,6 +91,15 @@ do $$ begin
 exception when others then null;
 end $$;
 
+do $$ begin
+  alter table public.contact_requests
+    drop constraint if exists contact_requests_qualified_route_check;
+  alter table public.contact_requests
+    add constraint contact_requests_qualified_route_check
+    check (qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie', 'mto'));
+exception when duplicate_object then null;
+end $$;
+
 -- Voeg delivery_mode toe aan bestaande campaigns indien nog niet aanwezig
 do $$ begin
   if not exists (
@@ -102,6 +111,15 @@ do $$ begin
       add constraint campaigns_delivery_mode_check
       check (delivery_mode in ('baseline', 'live'));
   end if;
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  alter table public.pilot_learning_dossiers
+    drop constraint if exists pilot_learning_dossiers_route_interest_check;
+  alter table public.pilot_learning_dossiers
+    add constraint pilot_learning_dossiers_route_interest_check
+    check (route_interest in ('exitscan', 'retentiescan', 'combinatie', 'nog-onzeker', 'mto'));
 exception when duplicate_object then null;
 end $$;
 
@@ -234,7 +252,7 @@ create table if not exists public.contact_requests (
   ops_next_step     text,
   ops_handoff_note  text,
   qualification_status text not null default 'not_reviewed' check (qualification_status in ('not_reviewed', 'needs_route_review', 'route_confirmed')),
-  qualified_route   text check (qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie')),
+  qualified_route   text check (qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie', 'mto')),
   qualification_note text,
   qualification_reviewed_by text,
   qualification_reviewed_at timestamptz,
@@ -327,7 +345,7 @@ do $$ begin
     alter table public.contact_requests add column qualified_route text;
     alter table public.contact_requests
       add constraint contact_requests_qualified_route_check
-      check (qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie'));
+      check (qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie', 'mto'));
   end if;
   if not exists (
     select 1 from information_schema.columns
@@ -441,7 +459,7 @@ create table if not exists public.pilot_learning_dossiers (
   campaign_id             uuid references public.campaigns(id) on delete cascade,
   contact_request_id      uuid references public.contact_requests(id) on delete set null,
   title                   text not null,
-  route_interest          text not null default 'exitscan' check (route_interest in ('exitscan', 'retentiescan', 'combinatie', 'nog-onzeker')),
+  route_interest          text not null default 'exitscan' check (route_interest in ('exitscan', 'retentiescan', 'combinatie', 'nog-onzeker', 'mto')),
   scan_type               text check (scan_type is null or scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'mto')),
   delivery_mode           text check (delivery_mode in ('baseline', 'live')),
   triage_status           text not null default 'nieuw' check (triage_status in ('nieuw', 'bevestigd', 'geparkeerd', 'uitgevoerd', 'verworpen')),

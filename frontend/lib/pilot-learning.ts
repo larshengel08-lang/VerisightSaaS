@@ -7,6 +7,7 @@ import {
   getContactDesiredTimingLabel,
   getContactRouteLabel,
   type ContactDesiredTiming,
+  type InternalContactRouteInterest,
   type ContactRouteInterest,
 } from '@/lib/contact-funnel'
 import type {
@@ -50,7 +51,7 @@ export interface ContactRequestRecord {
   ops_next_step: string | null
   ops_handoff_note: string | null
   qualification_status: string
-  qualified_route: ContactRouteInterest | null
+  qualified_route: InternalContactRouteInterest | null
   qualification_note: string | null
   qualification_reviewed_by: string | null
   qualification_reviewed_at: string | null
@@ -72,7 +73,7 @@ export interface PilotLearningDossier {
   campaign_id: string | null
   contact_request_id: string | null
   title: string
-  route_interest: ContactRouteInterest
+  route_interest: InternalContactRouteInterest
   scan_type: ScanType | null
   delivery_mode: DeliveryMode | null
   triage_status: LearningTriageStatus
@@ -186,11 +187,12 @@ export const LEARNING_STRENGTH_OPTIONS: Array<{ value: LearningStrength; label: 
   { value: 'direct_uitvoerbare_verbetering', label: 'Direct uitvoerbare verbetering' },
 ]
 
-export const LEARNING_ROUTE_OPTIONS: Array<{ value: ContactRouteInterest; label: string }> = [
+export const LEARNING_ROUTE_OPTIONS: Array<{ value: InternalContactRouteInterest; label: string }> = [
   { value: 'exitscan', label: 'ExitScan' },
   { value: 'retentiescan', label: 'RetentieScan' },
   { value: 'combinatie', label: 'Combinatie' },
   { value: 'nog-onzeker', label: 'Nog niet zeker' },
+  { value: 'mto', label: 'MTO' },
 ]
 
 export const CASE_EVIDENCE_CLOSURE_OPTIONS: Array<{ value: CaseEvidenceClosureStatus; label: string }> = [
@@ -262,7 +264,7 @@ export function getLearningStrengthLabel(value: LearningStrength) {
 }
 
 export function getSuggestedLearningDossierTitle(args: {
-  routeInterest: ContactRouteInterest
+  routeInterest: InternalContactRouteInterest
   campaignName?: string | null
   organizationName?: string | null
 }) {

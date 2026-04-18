@@ -285,6 +285,7 @@ QUALIFICATION_CONFIRMABLE_ROUTE_INTERESTS = {
     "teamscan",
     "onboarding",
     "leadership",
+    "mto",
 }
 
 

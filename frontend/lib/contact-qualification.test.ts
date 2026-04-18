@@ -55,6 +55,22 @@ describe('contact qualification visibility summary', () => {
     expect(summary.nextAction.toLowerCase()).toContain('handoff')
   })
 
+  it('shows mto as an internal confirmed route without opening it as a public first-route default', () => {
+    const summary = buildContactQualificationVisibilitySummary({
+      routeInterest: 'nog-onzeker',
+      desiredTiming: 'dit-kwartaal',
+      currentQuestion: 'We willen later bepalen of een brede hoofdmeting als MTO intern de juiste route is.',
+      qualificationStatus: 'route_confirmed',
+      qualifiedRoute: 'mto',
+      qualificationReviewedBy: 'Verisight Intake',
+    })
+
+    expect(summary.tone).toBe('emerald')
+    expect(summary.headline).toContain('MTO')
+    expect(summary.recommendationLabel).toContain('MTO')
+    expect(summary.routeReviewLabel).toContain('Nog niet zeker')
+  })
+
   it('forces nog-onzeker back into an active route decision', () => {
     const summary = buildContactQualificationVisibilitySummary({
       routeInterest: 'nog-onzeker',

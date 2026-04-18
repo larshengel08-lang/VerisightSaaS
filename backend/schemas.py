@@ -250,6 +250,7 @@ class ContactRequestUpdate(BaseModel):
         "onboarding",
         "leadership",
         "combinatie",
+        "mto",
     ] | None = None
     qualification_note: str | None = Field(default=None, max_length=2000)
     qualification_reviewed_by: str | None = Field(default=None, max_length=120)

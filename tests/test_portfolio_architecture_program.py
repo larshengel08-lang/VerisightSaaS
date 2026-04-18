@@ -41,10 +41,13 @@ def test_portfolio_contract_tracks_current_core_first_suite_model():
     assert '"teamscan"' in backend_schemas
     assert '"onboarding"' in backend_schemas
     assert '"leadership"' in backend_schemas
+    assert '"mto"' in backend_schemas
     assert '"combinatie"' in backend_schemas
     assert '"nog-onzeker"' in backend_schemas
     assert "check (scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'mto'))" in schema
     assert "scan_type               text check (scan_type is null or scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'mto'))" in schema
+    assert "qualified_route   text check (qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie', 'mto'))" in schema
+    assert "route_interest          text not null default 'exitscan' check (route_interest in ('exitscan', 'retentiescan', 'combinatie', 'nog-onzeker', 'mto'))" in schema
 
 
 def test_public_surfaces_keep_core_first_hierarchy_with_live_follow_on_routes():

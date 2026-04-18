@@ -3,6 +3,7 @@ import {
   getContactQualificationGuidance,
   getContactRouteLabel,
   type ContactDesiredTiming,
+  type InternalContactRouteInterest,
   type ContactRouteInterest,
 } from '@/lib/contact-funnel'
 
@@ -13,7 +14,7 @@ type ContactQualificationVisibilityInput = {
   desiredTiming: ContactDesiredTiming | null
   currentQuestion: string
   qualificationStatus?: string | null
-  qualifiedRoute?: ContactRouteInterest | null
+  qualifiedRoute?: InternalContactRouteInterest | null
   qualificationReviewedBy?: string | null
 }
 

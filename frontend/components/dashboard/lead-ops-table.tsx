@@ -17,6 +17,7 @@ import {
 import {
   getContactDesiredTimingLabel,
   getContactRouteLabel,
+  type InternalContactRouteInterest,
   type ContactRouteInterest,
 } from '@/lib/contact-funnel'
 import {
@@ -94,13 +95,14 @@ const QUALIFICATION_STATUS_OPTIONS: Array<{ value: ContactRequestRecord['qualifi
   { value: 'route_confirmed', label: 'Route bevestigd' },
 ]
 
-const QUALIFIED_ROUTE_OPTIONS: Array<{ value: ContactRouteInterest; label: string }> = [
+const QUALIFIED_ROUTE_OPTIONS: Array<{ value: InternalContactRouteInterest; label: string }> = [
   { value: 'exitscan', label: 'ExitScan' },
   { value: 'retentiescan', label: 'RetentieScan' },
   { value: 'combinatie', label: 'Combinatie' },
   { value: 'teamscan', label: 'TeamScan' },
   { value: 'onboarding', label: 'Onboarding 30-60-90' },
   { value: 'leadership', label: 'Leadership Scan' },
+  { value: 'mto', label: 'MTO' },
 ]
 
 function formatAmsterdamDate(value: string | null) {

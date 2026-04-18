@@ -14,6 +14,7 @@ describe('bounded commerce helpers', () => {
     expect(supportsBoundedCommerceRoute('combinatie')).toBe(false)
     expect(supportsBoundedCommerceRoute('teamscan')).toBe(false)
     expect(supportsBoundedCommerceRoute('leadership')).toBe(false)
+    expect(supportsBoundedCommerceRoute('mto')).toBe(false)
   })
 
   it('keeps agreement, pricing and readiness labels buyer-safe and operator-readable', () => {

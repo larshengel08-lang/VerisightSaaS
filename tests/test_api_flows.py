@@ -1436,6 +1436,59 @@ def test_contact_request_update_tracks_confirmed_qualification_route_and_review(
     assert stored.qualification_reviewed_at is not None
 
 
+def test_contact_request_update_allows_internal_mto_route_confirmation_without_public_mto_intake(
+    client,
+    db_session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setattr(
+        "backend.main.send_contact_request_result",
+        lambda **kwargs: EmailSendResult(ok=True),
+    )
+
+    create_response = client.post(
+        "/api/contact-request",
+        json={
+            "name": "Lars",
+            "work_email": "lars@verisight.nl",
+            "organization": "Verisight",
+            "employee_count": "200-500",
+            "route_interest": "nog-onzeker",
+            "cta_source": "website_contact_form",
+            "desired_timing": "dit-kwartaal",
+            "current_question": "We willen eerst intern bepalen of een bredere hoofdmeting logischer is.",
+            "website": "",
+        },
+        headers={"x-forwarded-for": "203.0.113.31"},
+    )
+
+    lead_id = create_response.json()["lead_id"]
+    update_response = client.patch(
+        f"/api/contact-requests/{lead_id}",
+        json={
+            "qualification_status": "route_confirmed",
+            "qualified_route": "mto",
+            "qualification_reviewed_by": "Verisight Intake",
+            "qualification_note": "MTO intern bevestigd als zwaardere hoofdmeting na assisted intake.",
+        },
+    )
+
+    assert update_response.status_code == 200
+    body = update_response.json()
+    assert body["route_interest"] == "nog-onzeker"
+    assert body["qualification_status"] == "route_confirmed"
+    assert body["qualified_route"] == "mto"
+    assert body["qualification_reviewed_by"] == "Verisight Intake"
+    assert body["qualification_reviewed_at"] is not None
+
+    stored = db_session.query(ContactRequest).filter(ContactRequest.id == lead_id).one()
+    assert stored.route_interest == "nog-onzeker"
+    assert stored.qualification_status == "route_confirmed"
+    assert stored.qualified_route == "mto"
+    assert stored.qualification_note == "MTO intern bevestigd als zwaardere hoofdmeting na assisted intake."
+    assert stored.qualification_reviewed_at is not None
+
+
 def test_contact_request_update_tracks_internal_confirmation_and_readiness_review(
     client,
     db_session: Session,

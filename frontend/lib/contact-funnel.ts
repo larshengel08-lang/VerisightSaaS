@@ -43,6 +43,15 @@ export const CONTACT_ROUTE_OPTIONS = [
   },
 ] as const
 
+const INTERNAL_ONLY_CONTACT_ROUTE_OPTIONS = [
+  {
+    value: 'mto',
+    label: 'MTO',
+    description: 'Interne assisted route voor een zwaardere, organisatiebrede hoofdmeting.',
+    firstStepLabel: 'een interne MTO hoofdmeting-intake',
+  },
+] as const
+
 export const CONTACT_DESIRED_TIMING_OPTIONS = [
   {
     value: 'zo-snel-mogelijk',
@@ -67,6 +76,9 @@ export const CONTACT_DESIRED_TIMING_OPTIONS = [
 ] as const
 
 export type ContactRouteInterest = (typeof CONTACT_ROUTE_OPTIONS)[number]['value']
+export type InternalContactRouteInterest =
+  | ContactRouteInterest
+  | (typeof INTERNAL_ONLY_CONTACT_ROUTE_OPTIONS)[number]['value']
 export type ContactDesiredTiming = (typeof CONTACT_DESIRED_TIMING_OPTIONS)[number]['value']
 export type CoreContactRouteInterest = Extract<ContactRouteInterest, 'exitscan' | 'retentiescan' | 'combinatie'>
 export type FollowOnContactRouteInterest = Extract<ContactRouteInterest, 'teamscan' | 'onboarding' | 'leadership'>
@@ -100,6 +112,9 @@ export type ContactQualificationGuidance = {
 }
 
 const routeOptionMap = new Map(CONTACT_ROUTE_OPTIONS.map((option) => [option.value, option]))
+const internalRouteOptionMap = new Map(
+  [...CONTACT_ROUTE_OPTIONS, ...INTERNAL_ONLY_CONTACT_ROUTE_OPTIONS].map((option) => [option.value, option]),
+)
 const timingOptionMap = new Map(CONTACT_DESIRED_TIMING_OPTIONS.map((option) => [option.value, option]))
 const followOnRoutes = new Set<FollowOnContactRouteInterest>(['teamscan', 'onboarding', 'leadership'])
 
@@ -153,12 +168,25 @@ export function isContactRouteInterest(value: string | null | undefined): value 
   return !!value && routeOptionMap.has(value as ContactRouteInterest)
 }
 
+export function isInternalContactRouteInterest(
+  value: string | null | undefined,
+): value is InternalContactRouteInterest {
+  return !!value && internalRouteOptionMap.has(value as InternalContactRouteInterest)
+}
+
 export function isContactDesiredTiming(value: string | null | undefined): value is ContactDesiredTiming {
   return !!value && timingOptionMap.has(value as ContactDesiredTiming)
 }
 
 export function normalizeContactRouteInterest(value: string | null | undefined): ContactRouteInterest {
   if (isContactRouteInterest(value)) {
+    return value
+  }
+  return 'exitscan'
+}
+
+export function normalizeInternalContactRouteInterest(value: string | null | undefined): InternalContactRouteInterest {
+  if (isInternalContactRouteInterest(value)) {
     return value
   }
   return 'exitscan'
@@ -195,7 +223,7 @@ export function inferRouteInterestFromSource(source: string | null | undefined):
 }
 
 export function getContactRouteLabel(value: string | null | undefined) {
-  return routeOptionMap.get(normalizeContactRouteInterest(value))?.label ?? 'ExitScan'
+  return internalRouteOptionMap.get(normalizeInternalContactRouteInterest(value))?.label ?? 'ExitScan'
 }
 
 export function getContactDesiredTimingLabel(value: string | null | undefined) {
@@ -203,7 +231,7 @@ export function getContactDesiredTimingLabel(value: string | null | undefined) {
 }
 
 export function getContactFirstStepLabel(value: string | null | undefined) {
-  return routeOptionMap.get(normalizeContactRouteInterest(value))?.firstStepLabel ?? 'ExitScan Baseline'
+  return internalRouteOptionMap.get(normalizeInternalContactRouteInterest(value))?.firstStepLabel ?? 'ExitScan Baseline'
 }
 
 export function normalizeContactCtaSource(value: string | null | undefined) {
