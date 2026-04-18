@@ -5017,6 +5017,26 @@ def _build_exit_embedded_story(
     return story
 
 
+def _build_non_exit_runtime_story(**kwargs: Any) -> list:
+    """Active runtime path for non-ExitScan reports.
+
+    ExitScan has its own frozen embedded story builder. Retention and future
+    non-exit routes currently still flow through the shared rebrand builder
+    below until that implementation is split out more cleanly.
+    """
+
+    return _build_rebrand_story(**kwargs)
+
+
+# --------------------------------------------------------------------------- #
+# Shared non-exit runtime builder                                             #
+# --------------------------------------------------------------------------- #
+# Important boundary:
+# - this builder is not the source of truth for ExitScan
+# - ExitScan must stay on `_build_exit_embedded_story`
+# - retention currently uses this path as runtime implementation, while its
+#   report grammar is still being hardened against the shared canon
+# --------------------------------------------------------------------------- #
 def _build_rebrand_story(
     *,
     camp: Campaign,
@@ -5660,7 +5680,7 @@ def generate_campaign_report(
             cover_distribution_note=cover_distribution_note,
         )
     else:
-        story = _build_rebrand_story(
+        story = _build_non_exit_runtime_story(
             camp=camp,
             org=org,
             scan_lbl=scan_lbl,
@@ -5713,6 +5733,14 @@ def generate_campaign_report(
         )
     doc.build(story)
     return buf.getvalue()
+
+    # Legacy unreachable block below
+    # -----------------------------------------------------------------------
+    # The remaining code below this return is historical pre-runtime-cleanup
+    # implementation. It is intentionally unreachable and must not be used as
+    # source of truth for ExitScan architecture or current report sequencing.
+    # Runtime behavior is fully determined above by `_build_exit_embedded_story`
+    # and `_build_non_exit_runtime_story`.
 
     # ==================================================================== #
     # PAGINA 1 — VOORBLAD                                                  #
