@@ -1,4 +1,4 @@
-# REPORT_GENERATOR_RUNTIME_BOUNDARY.md
+﻿# REPORT_GENERATOR_RUNTIME_BOUNDARY.md
 
 Last updated: 2026-04-18
 Status: active
@@ -10,7 +10,7 @@ Report Generator Runtime Boundary
 
 ## Korte samenvatting
 
-De actieve rapportgenerator heeft nu een expliciete runtimegrens: `ExitScan` loopt via een eigen embedded story builder, terwijl niet-ExitScan routes voorlopig via een gedeeld runtimepad lopen. Oude code onder de eerste `return buf.getvalue()` in `generate_campaign_report` is historisch en niet bepalend voor runtime of canon.
+De actieve rapportgenerator heeft nu een expliciete runtimegrens: `ExitScan` loopt via een eigen embedded story builder, `RetentieScan` via een benoemd runtime-ingangspunt binnen de gedeelde grammarlaag, en andere niet-Exit-routes vallen voorlopig terug op een gedeeld non-exit runtimepad. De grote historische codeblok onder de eerste `return buf.getvalue()` in `generate_campaign_report` is verwijderd en telt niet meer mee als onderhoudsrisico of pseudo-source-of-truth.
 
 ## Wat is geaudit
 
@@ -21,37 +21,43 @@ De actieve rapportgenerator heeft nu een expliciete runtimegrens: `ExitScan` loo
 ## Belangrijkste bevindingen
 
 - `generate_campaign_report` kiest voor `ExitScan` expliciet `_build_exit_embedded_story`.
-- Niet-ExitScan routes gebruiken momenteel een gedeeld runtimepad dat nu expliciet `_build_non_exit_runtime_story` heet.
-- In [report.py](/C:/Users/larsh/Desktop/Business/Verisight/backend/report.py) staat nog een grote historische codeblok onder de eerste `return buf.getvalue()`. Die code is unreachable en bepaalt de runtime niet.
+- Niet-Exit-routes gebruiken `_build_non_exit_runtime_story` als actief runtime-ingangspunt.
+- `RetentieScan` enters through `_build_retention_runtime_story` binnen die gedeelde grammarlaag.
+- De gedeelde builder heet nu eerlijker `_build_shared_non_exit_runtime_story`.
+- De oude unreachable code onder de eerste `return buf.getvalue()` is verwijderd.
 
-## Belangrijkste inconsistenties of risico’s
+## Belangrijkste inconsistenties of risico's
 
-- De aanwezigheid van unreachable historische code in dezelfde module blijft een onderhoudsrisico.
-- Zonder expliciete boundary is het te makkelijk om oude comments, paginatitels of structuurlogica foutief als actuele truthlaag te lezen.
-- RetentieScan gebruikt nog een gedeelde buildernaam en runtimepad dat niet dezelfde expliciete hard-freeze heeft als ExitScan.
+- `RetentieScan` heeft nu wel een expliciet runtime-ingangspunt, maar nog geen ExitScan-achtige hard-frozen architectuur.
+- Andere niet-Exit-routes delen voorlopig nog dezelfde grammarbuilder en vragen later productspecifieke hardening.
+- Oudere plan- of referentiedocs buiten de canonlaag kunnen nog naar `_build_rebrand_story` verwijzen.
 
 ## Beslissingen / canonvoorstellen
 
 - Voor `ExitScan` geldt: alleen `_build_exit_embedded_story` telt als runtime-structuurdrager.
-- Voor niet-ExitScan routes geldt: `_build_non_exit_runtime_story` is het actieve runtime-ingangspunt totdat een latere split-cleanup volgt.
-- Historische code onder de eerste `return buf.getvalue()` in `generate_campaign_report` geldt niet als canon, niet als reviewbasis en niet als argument om ExitScan-architectuur te heropenen.
+- Voor `RetentieScan` geldt: `_build_retention_runtime_story` is het expliciete runtime-ingangspunt binnen de gedeelde grammarlaag.
+- Voor andere niet-Exit-routes geldt: `_build_non_exit_runtime_story` blijft het actieve runtime-ingangspunt totdat productspecifieke splitsing nodig is.
+- Historische code onder de eerste `return buf.getvalue()` in `generate_campaign_report` is verwijderd en kan niet langer foutief als reviewbasis of pseudo-canon worden gelezen.
 
 ## Concrete wijzigingen
 
-- [report.py](/C:/Users/larsh/Desktop/Business/Verisight/backend/report.py) voorzien van expliciete runtime-boundary comments.
-- Nieuwe runtime-wrapper toegevoegd: `_build_non_exit_runtime_story`.
-- Dit boundary-document toegevoegd om de actieve versus historische generatorpaden vast te leggen.
+- [report.py](/C:/Users/larsh/Desktop/Business/Verisight/backend/report.py) voorzien van expliciete runtime-boundary comments en benoemde runtime-ingangspunten voor `ExitScan`, `RetentieScan` en gedeelde non-exit-routes.
+- Nieuwe expliciete retention-wrapper toegevoegd: `_build_retention_runtime_story`.
+- De gedeelde non-exit builder hernoemd naar `_build_shared_non_exit_runtime_story`.
+- De grote historische unreachable codeblok onder de eerste `return buf.getvalue()` verwijderd.
+- Dit boundary-document geactualiseerd op de nieuwe runtimegrens.
 
 ## Validatie
 
 - De runtimekeuze in `generate_campaign_report` is nu tekstueel en technisch explicieter leesbaar.
-- Bestaande smoke/paritytests voor reportgeneratie blijven de actieve route verifiëren.
+- Tekstuele paritytests kunnen nu expliciet controleren op `ExitScan`-, `RetentieScan`- en gedeelde non-exit runtimepaden.
+- Bestaande smoke/paritytests voor reportgeneratie blijven de actieve route verifiëren zonder nog op dode code in dezelfde functie te leunen.
 
 ## Assumptions / defaults
 
-- Deze stap verwijdert nog geen historische code.
-- Een latere cleanup mag pas grote dode blokken verwijderen als alle relevante tests en text-based expectations daarop zijn voorbereid.
+- Deze stap verandert geen runtimevolgorde of rapportarchitectuur van `ExitScan` of `RetentieScan`; hij maakt alleen de codepaden explicieter en schoner.
+- Verdere productspecifieke splitsing voor andere niet-Exit-routes blijft later werk en valt buiten deze cleanup.
 
 ## Next gate
 
-De beste volgende stap is `remaining buyer-facing parity sweep`, gevolgd door `dashboard status and parity cleanup follow-up`, zodat de zichtbare lagen geen oudere reportlezing of diagnose-taal meer doorgeven.
+De beste volgende stap is `cross-layer terminology sweep`, gevolgd door `pricing and commercial language recheck`, zodat docs, previewcopy, productpagina's en commerciële shells dezelfde canonieke termen blijven dragen.
