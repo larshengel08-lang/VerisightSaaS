@@ -178,12 +178,6 @@ Beslissing:
 - `Leadership Scan` blijft bounded managementcontextroute
 - `MTO` blijft organisatiebreed en mag daar niet inhoudelijk mee samenvallen
 
-#### MTO versus Customer Feedback / NPS
-
-- `Customer Feedback` blijft een aparte, nog gesloten future route
-- `MTO` blijft in deze track employee- en organisatiebreed gericht
-- eventuele NPS- of klantfeedbacklogica mag later wel hetzelfde operating model hergebruiken, maar opent nu niet parallel aan MTO
-
 Beslissing:
 
 - MTO staat niet bovenop bestaande scans als losse capability
@@ -213,7 +207,6 @@ MTO mag bewust hergebruiken:
 - bestaande dashboard-shell
 - bestaande report-to-action contractlaag
 - bestaande delivery/checkpoint- en learning-spines als precedent
-- dezelfde source-of-truth, wave- en contractdiscipline die later ook voor `Customer Feedback` / `NPS` bruikbaar blijft
 
 MTO mag niet meteen openen:
 
@@ -222,7 +215,6 @@ MTO mag niet meteen openen:
 - generieke workflow engine
 - publieke route- of pricingactivatie
 - vervanging van live ExitScan / RetentieScan
-- een parallelle `Customer Feedback` / `NPS` buildtrack binnen dezelfde eerste MTO-openingsreeks
 
 Beslissing:
 
@@ -235,7 +227,6 @@ Beslissing:
 - `MTO` is expliciet zwaarder en breder dan de huidige beperkte scans
 - `MTO` is vastgezet als toekomstige hoofdmeting, maar nog niet live hoofdroute
 - de relatie met `ExitScan`, `RetentieScan`, `Pulse`, `TeamScan` en `Leadership Scan` is expliciet gescheiden
-- de relatie met de gesloten route `Customer Feedback` is expliciet gescheiden: zelfde operating model later mogelijk, maar geen parallelle opening nu
 - internal-first en isolatie van het huidige proces zijn nu harde randvoorwaarden
 
 ## Belangrijke Interfaces/Contracts
@@ -329,7 +320,6 @@ Een stakeholder wil MTO in dezelfde branch en lopende PR-stroom bouwen.
 - MTO blijft eerst intern / assisted
 - de bestaande live suite blijft voorlopig operationeel leidend
 - MTO moet later koppelbaar blijven aan de bestaande suite
-- `Customer Feedback` / `NPS` blijft voorlopig een aangrenzende latere capability en geen onderdeel van de eerste MTO-openingsreeks
 - de volgende stap werkt de system- en datagrenzen uit, maar opent nog geen build
 
 ## Product Acceptance
