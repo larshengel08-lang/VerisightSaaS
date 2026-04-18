@@ -54,9 +54,9 @@ describe('client onboarding defaults', () => {
   it('keeps ExitScan first and follow-on variants explicit', () => {
     expect(PRODUCT_ROUTE_VARIANTS.map((route) => route.title)).toEqual([
       'ExitScan Baseline',
-      'ExitScan Live',
+      'ExitScan ritmeroute',
       'RetentieScan Baseline',
-      'RetentieScan ritme',
+      'RetentieScan ritmeroute',
     ])
   })
 
@@ -97,22 +97,29 @@ describe('client onboarding defaults', () => {
       'first_value',
       'repeat_or_expand',
     ])
-    expect(exitDecisions[0]?.body.toLowerCase()).toContain('exitscan live')
+    expect(exitDecisions[0]?.body.toLowerCase()).toContain('exitscan ritmeroute')
     expect(exitDecisions[2]?.body.toLowerCase()).toContain('retentiescan baseline')
-    expect(retentionDecisions[0]?.body.toLowerCase()).toContain('retentiescan ritme')
+    expect(retentionDecisions[0]?.body.toLowerCase()).toContain('retentiescan ritmeroute')
     expect(retentionDecisions[2]?.body.toLowerCase()).toContain('exitscan')
     expect(pulseDecisions[0]?.body.toLowerCase()).toContain('kleine correctie')
     expect(pulseDecisions[2]?.title.toLowerCase()).toContain('retentiescan')
     expect(pulseDecisions[2]?.body.toLowerCase()).toContain('pulse niet eerlijk kan dragen')
+    expect(pulseDecisions[1]?.body.toLowerCase()).toContain('bredere duiding')
+    expect(pulseDecisions[2]?.title.toLowerCase()).not.toContain('diagnose')
+    expect(pulseDecisions[2]?.body.toLowerCase()).not.toContain('diagnose')
     const teamDecisions = getLifecycleDecisionCards('team')
     const onboardingDecisions = getLifecycleDecisionCards('onboarding')
     const leadershipDecisions = getLifecycleDecisionCards('leadership')
     expect(teamDecisions[0]?.body.toLowerCase()).toContain('begrensde actie')
-    expect(teamDecisions[2]?.body.toLowerCase()).toContain('managementhuddle')
+    expect(teamDecisions[2]?.body.toLowerCase()).toContain('managementbespreking')
+    expect(teamDecisions[2]?.title.toLowerCase()).toContain('bredere duiding')
+    expect(teamDecisions[2]?.body.toLowerCase()).not.toContain('diagnose')
     expect(onboardingDecisions[0]?.body.toLowerCase()).toContain('onboardingcheckpoint')
     expect(onboardingDecisions[2]?.body.toLowerCase()).toContain('retentiescan')
     expect(leadershipDecisions[0]?.body.toLowerCase()).toContain('eerste managementread')
     expect(leadershipDecisions[1]?.body.toLowerCase()).toContain('named leaders')
     expect(leadershipDecisions[2]?.body.toLowerCase()).toContain('teamscan')
+    expect(leadershipDecisions[2]?.title.toLowerCase()).toContain('bredere duiding')
+    expect(leadershipDecisions[2]?.body.toLowerCase()).not.toContain('diagnose')
   })
 })

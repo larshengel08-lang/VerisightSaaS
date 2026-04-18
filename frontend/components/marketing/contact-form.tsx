@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { contactTrustSignals } from '@/components/marketing/site-content'
 import {
   CONTACT_DESIRED_TIMING_OPTIONS,
   CONTACT_ROUTE_OPTIONS,
+  getContactQualificationGuidance,
   getContactDesiredTimingLabel,
   getContactFirstStepLabel,
   getContactRouteLabel,
@@ -40,6 +41,8 @@ interface SuccessState {
   routeLabel: string
   firstStepLabel: string
   desiredTimingLabel: string
+  guidanceHeadline: string
+  guidanceDetail: string
 }
 
 const initialState: FormState = {
@@ -68,6 +71,15 @@ export function ContactForm({
   const [successState, setSuccessState] = useState<SuccessState | null>(null)
   const [warningMessage, setWarningMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const qualificationGuidance = useMemo(
+    () =>
+      getContactQualificationGuidance({
+        routeInterest: form.routeInterest,
+        desiredTiming: form.desiredTiming,
+        currentQuestion: form.currentQuestion,
+      }),
+    [form.currentQuestion, form.desiredTiming, form.routeInterest],
+  )
 
   const isLight = surface === 'light'
 
@@ -147,11 +159,18 @@ export function ContactForm({
       const routeLabel = getContactRouteLabel(form.routeInterest)
       const firstStepLabel = getContactFirstStepLabel(form.routeInterest)
       const desiredTimingLabel = getContactDesiredTimingLabel(form.desiredTiming)
+      const guidance = getContactQualificationGuidance({
+        routeInterest: form.routeInterest,
+        desiredTiming: form.desiredTiming,
+        currentQuestion: form.currentQuestion,
+      })
       setSuccessState({
         leadId: payload.lead_id ?? null,
         routeLabel,
         firstStepLabel,
         desiredTimingLabel,
+        guidanceHeadline: guidance.headline,
+        guidanceDetail: guidance.detail,
       })
       if (payload.notification_sent === false) {
         const reference = payload.lead_id ? ` Referentie: ${payload.lead_id}.` : ''
@@ -200,10 +219,10 @@ export function ContactForm({
           isLight ? 'border-[#E5E0D6] bg-[#F7F5F1] text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'
         }`}
       >
-        Gebruik dit formulier voor ExitScan, RetentieScan, TeamScan, Onboarding 30-60-90, Leadership Scan of de
-        combinatieroute. We helpen eerst bepalen welk kernproduct en welke eerste productroute logisch zijn, en pas
-        daarna hoe intake, uitvoering, livegang en eerste waarde eruit moeten zien. De informatie uit dit formulier
-        gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.
+        Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de
+        logische eerste stap is. TeamScan, Onboarding 30-60-90 en Leadership Scan blijven bounded follow-on routes die
+        pas logisch worden nadat een eerste signaal, baseline of managementread al staat. De informatie uit dit
+        formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
@@ -215,6 +234,16 @@ export function ContactForm({
             {signal}
           </span>
         ))}
+      </div>
+
+      <div
+        className={`mb-6 rounded-[1.5rem] border px-5 py-5 text-sm leading-7 ${
+          isLight ? 'border-[#D8E7E1] bg-[#EEF7F3] text-slate-700' : 'border-[#3C8D8A]/40 bg-[#3C8D8A]/12 text-slate-100'
+        }`}
+      >
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-80">Routevernauwing</p>
+        <p className="mt-2 font-semibold">{qualificationGuidance.headline}</p>
+        <p className="mt-2">{qualificationGuidance.detail}</p>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
@@ -364,7 +393,10 @@ export function ContactForm({
               <span className="font-semibold">{successState.desiredTimingLabel}</span>) en welke intake of
               databasis nodig is om vlot naar uitvoering en eerste waarde te gaan.
             </p>
-            <p>Een vervolgvorm of combinatieroute wordt pas concreet zodra de eerste route en eerste managementwaarde helder zijn.</p>
+            <p>
+              Intake-richting: <span className="font-semibold">{successState.guidanceHeadline}</span> {successState.guidanceDetail}
+            </p>
+            <p>Een vervolgroute of combinatieroute wordt pas concreet zodra de eerste route en eerste managementwaarde helder zijn.</p>
             <p>In deze stap krijg je nog geen live inrichting of definitieve offerte zonder intake.</p>
             {successState.leadId ? <p className="text-xs opacity-80">Referentie: {successState.leadId}.</p> : null}
           </div>

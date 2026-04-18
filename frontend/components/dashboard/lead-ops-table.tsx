@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
+import { buildContactQualificationVisibilitySummary } from '@/lib/contact-qualification'
 import {
   buildBoundedCommerceVisibilitySummary,
   getCommerceAgreementStatusLabel,
@@ -16,6 +17,7 @@ import {
 import {
   getContactDesiredTimingLabel,
   getContactRouteLabel,
+  type ContactRouteInterest,
 } from '@/lib/contact-funnel'
 import {
   getDeliveryLifecycleLabel,
@@ -57,6 +59,10 @@ type LeadDraft = Pick<
   | 'ops_owner'
   | 'ops_next_step'
   | 'ops_handoff_note'
+  | 'qualification_status'
+  | 'qualified_route'
+  | 'qualification_note'
+  | 'qualification_reviewed_by'
   | 'commercial_agreement_status'
   | 'commercial_pricing_mode'
   | 'commercial_start_readiness_status'
@@ -80,6 +86,21 @@ const COMMERCE_START_OPTIONS: Array<{ value: CommerceStartReadinessStatus; label
   { value: 'not_ready', label: 'Nog niet startklaar' },
   { value: 'ready', label: 'Startklaar' },
   { value: 'blocked', label: 'Start geblokkeerd' },
+]
+
+const QUALIFICATION_STATUS_OPTIONS: Array<{ value: ContactRequestRecord['qualification_status']; label: string }> = [
+  { value: 'not_reviewed', label: 'Nog niet gereviewd' },
+  { value: 'needs_route_review', label: 'Route review nodig' },
+  { value: 'route_confirmed', label: 'Route bevestigd' },
+]
+
+const QUALIFIED_ROUTE_OPTIONS: Array<{ value: ContactRouteInterest; label: string }> = [
+  { value: 'exitscan', label: 'ExitScan' },
+  { value: 'retentiescan', label: 'RetentieScan' },
+  { value: 'combinatie', label: 'Combinatie' },
+  { value: 'teamscan', label: 'TeamScan' },
+  { value: 'onboarding', label: 'Onboarding 30-60-90' },
+  { value: 'leadership', label: 'Leadership Scan' },
 ]
 
 function formatAmsterdamDate(value: string | null) {
@@ -107,6 +128,10 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
           ops_owner: row.ops_owner,
           ops_next_step: row.ops_next_step,
           ops_handoff_note: row.ops_handoff_note,
+          qualification_status: row.qualification_status,
+          qualified_route: row.qualified_route,
+          qualification_note: row.qualification_note,
+          qualification_reviewed_by: row.qualification_reviewed_by,
           commercial_agreement_status: row.commercial_agreement_status,
           commercial_pricing_mode: row.commercial_pricing_mode,
           commercial_start_readiness_status: row.commercial_start_readiness_status,
@@ -153,6 +178,10 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
       ops_owner: draft.ops_owner,
       ops_next_step: draft.ops_next_step,
       ops_handoff_note: draft.ops_handoff_note,
+      qualification_status: draft.qualification_status,
+      qualified_route: draft.qualified_route,
+      qualification_note: draft.qualification_note,
+      qualification_reviewed_by: draft.qualification_reviewed_by,
       ...(supportsCommerce
         ? {
             commercial_agreement_status: draft.commercial_agreement_status,
@@ -218,6 +247,14 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
               const draft = drafts[row.id]
               const linkedCampaigns = linkedCampaignsByLead[row.id] ?? []
               const supportsCommerce = supportsBoundedCommerceRoute(row.route_interest)
+              const qualificationVisibility = buildContactQualificationVisibilitySummary({
+                routeInterest: row.route_interest,
+                desiredTiming: row.desired_timing,
+                currentQuestion: row.current_question,
+                qualificationStatus: draft.qualification_status,
+                qualifiedRoute: draft.qualified_route,
+                qualificationReviewedBy: draft.qualification_reviewed_by,
+              })
               const commerceVisibility = buildBoundedCommerceVisibilitySummary({
                 routeInterest: row.route_interest,
                 agreementStatus: draft.commercial_agreement_status,
@@ -264,6 +301,87 @@ export function LeadOpsTable({ rows, linkedCampaignsByLead }: Props) {
                   </td>
                   <td className="px-4 py-4">
                     <div className="space-y-2">
+                      <div
+                        className={`rounded-2xl border px-3 py-3 ${getQualificationVisibilityClassName(
+                          qualificationVisibility.tone,
+                        )}`}
+                      >
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em]">
+                          Qualification summary
+                        </p>
+                        <p className="mt-2 text-sm font-semibold">{qualificationVisibility.headline}</p>
+                        <p className="mt-1 text-xs leading-5">{qualificationVisibility.detail}</p>
+                        <div className="mt-2 space-y-1 text-xs leading-5">
+                          <p>{qualificationVisibility.recommendationLabel}</p>
+                          <p>{qualificationVisibility.routeReviewLabel}</p>
+                          <p>
+                            Qualificationstatus:{' '}
+                            {QUALIFICATION_STATUS_OPTIONS.find((option) => option.value === draft.qualification_status)?.label ??
+                              'Nog niet gereviewd'}
+                          </p>
+                        </div>
+                        <div className="mt-2 rounded-xl bg-white/70 px-2.5 py-2 text-xs leading-5">
+                          <p className="font-semibold">Volgende qualificationstap</p>
+                          <p className="mt-1">{qualificationVisibility.nextAction}</p>
+                        </div>
+                        <div className="mt-3 space-y-2">
+                          <select
+                            value={draft.qualification_status}
+                            onChange={(event) =>
+                              updateDraft(
+                                row.id,
+                                'qualification_status',
+                                event.target.value as LeadDraft['qualification_status'],
+                              )
+                            }
+                            className={selectClass}
+                          >
+                            {QUALIFICATION_STATUS_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <select
+                            value={draft.qualified_route ?? ''}
+                            onChange={(event) =>
+                              updateDraft(
+                                row.id,
+                                'qualified_route',
+                                (event.target.value || null) as LeadDraft['qualified_route'],
+                              )
+                            }
+                            className={selectClass}
+                          >
+                            <option value="">Nog niet bevestigd</option>
+                            {QUALIFIED_ROUTE_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="text"
+                            value={draft.qualification_reviewed_by ?? ''}
+                            onChange={(event) => updateDraft(row.id, 'qualification_reviewed_by', event.target.value)}
+                            placeholder="Qualification gereviewd door"
+                            className={inputClass}
+                          />
+                          <textarea
+                            value={draft.qualification_note ?? ''}
+                            onChange={(event) => updateDraft(row.id, 'qualification_note', event.target.value)}
+                            placeholder="Korte notitie over waarom deze route nu bevestigd of teruggezet is"
+                            rows={3}
+                            className={`${inputClass} min-h-20 resize-y`}
+                          />
+                          <div className="space-y-1 text-xs leading-5">
+                            <p>
+                              Laatste qualification-review:{' '}
+                              {formatAmsterdamDate(row.qualification_reviewed_at)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                       <div className={`rounded-2xl border px-3 py-3 ${getCommerceVisibilityClassName(commerceVisibility.tone)}`}>
                         <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em]">
                           Commerce summary
@@ -524,5 +642,19 @@ function getCommerceHintClassName(tone: 'slate' | 'amber' | 'emerald' | 'red') {
     case 'slate':
     default:
       return 'bg-slate-100 text-slate-700'
+  }
+}
+
+function getQualificationVisibilityClassName(tone: 'slate' | 'blue' | 'amber' | 'emerald') {
+  switch (tone) {
+    case 'emerald':
+      return 'border-emerald-200 bg-emerald-50 text-emerald-950'
+    case 'amber':
+      return 'border-amber-200 bg-amber-50 text-amber-950'
+    case 'blue':
+      return 'border-blue-200 bg-blue-50 text-blue-950'
+    case 'slate':
+    default:
+      return 'border-slate-200 bg-slate-50 text-slate-900'
   }
 }

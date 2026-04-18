@@ -36,6 +36,7 @@
 
 ## Proof en documenten
 
+- Publieke deliverable-proof blijft bewust core-first op ExitScan en RetentieScan; bounded follow-on routes worden publiek vooral via productpagina en trustlaag gekaderd.
 - [ExitScan voorbeeldrapport](https://www.verisight.nl/examples/voorbeeldrapport_verisight.pdf)
 - [RetentieScan voorbeeldrapport](https://www.verisight.nl/examples/voorbeeldrapport_retentiescan.pdf)
 - [Privacybeleid](https://www.verisight.nl/privacy)

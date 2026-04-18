@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   CORE_MARKETING_PRODUCTS,
+  FOLLOW_ON_MARKETING_PRODUCTS,
   LIVE_MARKETING_PRODUCTS,
   PORTFOLIO_ROUTE_MARKETING_PRODUCTS,
   RESERVED_MARKETING_PRODUCTS,
@@ -24,8 +25,10 @@ import {
 } from '@/components/marketing/site-content'
 
 describe('Portfolio architecture marketing model', () => {
-  it('keeps two core products, one portfolio route and reserved future routes separate', () => {
+  it('keeps a core-first seven-route suite with visible bounded follow-on routes', () => {
     const combination = PORTFOLIO_ROUTE_MARKETING_PRODUCTS[0]
+    const followOnSlugs = FOLLOW_ON_MARKETING_PRODUCTS.map((product) => product.slug)
+    const reservedSlugs = RESERVED_MARKETING_PRODUCTS.map((product) => product.slug)
 
     expect(CORE_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual(['exitscan', 'retentiescan'])
     expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS).toHaveLength(1)
@@ -33,8 +36,14 @@ describe('Portfolio architecture marketing model', () => {
     expect(combination.portfolioRole).toBe('portfolio_route')
     expect(combination.description.toLowerCase()).toContain('portfolioroute')
     expect(combination.description.toLowerCase()).toContain('derde kernproduct')
-    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(3)
-    expect(RESERVED_MARKETING_PRODUCTS.length).toBeGreaterThan(0)
+    expect(followOnSlugs).toEqual(['pulse', 'teamscan', 'onboarding-30-60-90', 'leadership-scan'])
+    expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.status === 'bounded_live')).toBe(true)
+    expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'follow_on_route')).toBe(true)
+    expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => !product.description.toLowerCase().includes('live bounded'))).toBe(true)
+    expect(CORE_MARKETING_PRODUCTS.every((product) => product.status === 'core_live')).toBe(true)
+    expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS.every((product) => product.status === 'portfolio_live')).toBe(true)
+    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(7)
+    expect(reservedSlugs).toEqual(['mto', 'customer-feedback'])
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.status === 'reserved_future')).toBe(true)
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'future_reserved_route')).toBe(
       true,
@@ -65,6 +74,7 @@ describe('ExitScan positioning copy', () => {
 
     expect(exitRow?.[2].toLowerCase()).toContain('vertrekbeeld')
     expect(exitRow?.[2].toLowerCase()).toContain('werkfactoren')
+    expect(exitRow?.[1].toLowerCase()).toContain('vertrekduiding')
     expect(differenceFaq?.[1].toLowerCase()).toContain('vertrek achteraf duiden')
     expect(differenceFaq?.[1].toLowerCase()).toContain('eerder zien waar behoud op groepsniveau onder druk staat')
   })
@@ -80,7 +90,7 @@ describe('ExitScan positioning copy', () => {
   it('keeps ExitScan framed as the default first route in commercial conversations', () => {
     const freePilotFaq = pricingFaqs.find(([question]) => question === 'Waarom starten jullie niet met een gratis pilot?')
     const exitBaselineCard = pricingCards.find((card) => card.eyebrow === 'ExitScan Baseline')
-    const exitLiveRoute = pricingFollowOnRoutes.find((route) => route.title === 'ExitScan Live')
+    const exitLiveRoute = pricingFollowOnRoutes.find((route) => route.title === 'ExitScan ritmeroute')
     const combinationRoute = pricingChoiceGuide.find(([title]) => title === 'Combinatie op aanvraag')
     const exitLifecycle = pricingLifecycleLadder.find((route) => route.route === 'ExitScan')
 
@@ -99,6 +109,15 @@ describe('ExitScan positioning copy', () => {
     expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('eerste eigenaar'))).toBe(true)
     expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('reviewmoment'))).toBe(true)
     expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('upsell'))).toBe(true)
+  })
+
+  it('keeps Pulse framed as a bounded review route instead of a diagnostic layer', () => {
+    const pulseProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'pulse')
+    const pulseOutput = pulseProduct?.serviceOutput.toLowerCase()
+
+    expect(pulseProduct).toBeTruthy()
+    expect(pulseOutput).toContain('begrensde vergelijkingsduiding')
+    expect(pulseOutput).not.toContain('delta-uitleg')
   })
 })
 
@@ -128,9 +147,9 @@ describe('RetentieScan positioning copy', () => {
     const predictorFaq = faqs.find(([question]) => question === 'Is RetentieScan een gevalideerde vertrekvoorspeller?')
     const pricingFaq = pricingFaqs.find(([question]) => question === 'Waarom is RetentieScan niet goedkoper dan ExitScan?')
     const rhythmFaq = pricingFaqs.find(
-      ([question]) => question === 'Hoe verhouden RetentieScan ritme en compacte vervolgmeting zich tot elkaar?',
+      ([question]) => question === 'Hoe verhouden RetentieScan ritmeroute en compacte vervolgmeting zich tot elkaar?',
     )
-    const retentionRhythm = pricingFollowOnRoutes.find((route) => route.title === 'RetentieScan ritme')
+    const retentionRhythm = pricingFollowOnRoutes.find((route) => route.title === 'RetentieScan ritmeroute')
     const compactFollowUp = pricingAddOns.find(([title]) => title === 'Compacte retentie vervolgmeting')
 
     expect(mtoFaq?.[1].toLowerCase()).toContain('smaller en scherper')

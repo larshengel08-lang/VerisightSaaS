@@ -11,7 +11,7 @@ Verisight RetentieScan is de complementaire route voor organisaties die eerder z
 
 ## Wat management krijgt
 
-- managementsamenvatting
+- bestuurlijke read
 - bestuurlijke handoff
 - retentiesignaal
 - stay-intent
@@ -41,7 +41,7 @@ Het vraagt een eigen managementverhaal, strengere privacyguardrails en een expli
 
 - standaard eerste route: RetentieScan Baseline
 - prijsanker: EUR 3.450
-- logische vervolgstap: RetentieScan ritme vanaf EUR 4.950 of combinatie wanneer vertrekduiding daarnaast ook urgent wordt
+- logische vervolgstap: RetentieScan ritmeroute vanaf EUR 4.950 of combinatie wanneer vertrekduiding daarnaast ook urgent wordt
 
 ## Trust in gewone taal
 

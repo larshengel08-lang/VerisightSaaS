@@ -56,16 +56,25 @@ describe('buildOnboardingDashboardViewModel', () => {
     expect(model.primaryQuestion.title).toBe('Eerste borgvraag')
     expect(model.nextStep.title).toBe('Beleg borging nu')
     expect(model.followThroughTitle).toBe('Van checkpoint naar eerste managementhuddle')
+    expect(model.managementBlocks.map((block) => block.title)).toEqual([
+      'Hoe lees je dit checkpoint nu?',
+      'Welk besluit hoort nu eerst?',
+      'Wie trekt dit en waar ligt de grens?',
+      'Wanneer blijft dit onboarding en wanneer niet?',
+    ])
     expect(model.followThroughCards.map((card) => card.title)).toEqual([
       'Prioriteit nu',
       'Eerste gesprek',
       'Eerste eigenaar',
       'Eerste actie',
       'Reviewgrens',
-      'Wanneer geen nieuw checkpoint',
+    'Wanneer terug naar bredere duiding',
     ])
     expect(model.followThroughCards[3]?.body.toLowerCase()).toContain('borgactie')
     expect(model.managementBandOverride).toBe('LAAG')
+    expect(model.profileCards[0]?.body.toLowerCase()).toContain('single-checkpoint lifecycle triage')
+    expect(model.profileCards[1]?.value).toBe('Owner -> actie -> review')
+    expect(model.profileCards[1]?.body.toLowerCase()).toContain('bounded handoff')
   })
 
   it('keeps a mixed checkpoint indicative before pattern strength is reached', () => {
@@ -94,6 +103,9 @@ describe('buildOnboardingDashboardViewModel', () => {
     expect(model.nextStep.title).toBe('Beleg eerste checkpointactie')
     expect(model.followThroughCards[4]?.body.toLowerCase()).toContain('volgend checkpoint')
     expect(model.managementBandOverride).toBe('MIDDEN')
+    expect(model.profileCards[0]?.body.toLowerCase()).toContain('client onboarding-route')
+    expect(model.profileCards[1]?.body.toLowerCase()).toContain('checkpointread')
+expect(model.managementBlocks[3]?.items[1]?.toLowerCase()).toContain('bredere duiding')
   })
 
   it('treats a sharp early signal as a bounded checkpoint, not as a predictor', () => {
@@ -126,5 +138,8 @@ describe('buildOnboardingDashboardViewModel', () => {
     expect(model.nextStep.title).toBe('Beleg correctie en review')
     expect(model.followThroughCards[4]?.title).toBe('Reviewgrens')
     expect(model.managementBandOverride).toBe('HOOG')
+    expect(model.profileCards[0]?.body.toLowerCase()).toContain('client onboarding-route')
+    expect(model.profileCards[1]?.body.toLowerCase()).toContain('bounded handoff')
+expect(model.followThroughCards[5]?.body.toLowerCase()).toContain('bredere duiding')
   })
 })

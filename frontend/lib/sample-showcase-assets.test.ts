@@ -27,9 +27,15 @@ describe('sample showcase asset registry', () => {
   it('separates buyer-facing active assets from legacy archive assets', () => {
     const buyerFacingAssets = getBuyerFacingShowcaseAssets()
     const legacyAssets = SAMPLE_SHOWCASE_ASSETS.filter((asset) => asset.status === 'legacy archive')
+    const buyerFacingPdfs = buyerFacingAssets.filter((asset) => asset.kind === 'pdf')
 
     expect(buyerFacingAssets.length).toBeGreaterThan(legacyAssets.length)
     expect(buyerFacingAssets.every((asset) => asset.evidenceTier === 'deliverable_proof')).toBe(true)
+    expect(buyerFacingPdfs).toHaveLength(2)
+    expect(buyerFacingPdfs.map((asset) => asset.product)).toEqual(['exit', 'retention'])
+    expect(SAMPLE_SHOWCASE_ASSETS.find((asset) => asset.id === 'portfolio-preview')?.buyerUse.toLowerCase()).toContain(
+      'kernroute-sample-rapporten',
+    )
     expect(legacyAssets.map((asset) => asset.docsPath)).toContain('docs/examples/voorbeeldrapport_exitscan_35_fictief.pdf')
     expect(legacyAssets.map((asset) => asset.docsPath)).toContain('docs/examples/voorbeeldrapport_retentiescan_35_fictief.pdf')
   })

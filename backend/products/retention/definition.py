@@ -45,7 +45,7 @@ SCAN_DEFINITION: dict[str, Any] = {
     "contact_subject": "Kennismakingsaanvraag RetentieScan",
     "dashboard_signal_help": "Retentiesignaal 1-10: een gelijkgewogen v1-samenvatting van SDT-werkbeleving en beinvloedbare werkfactoren. Hogere score = sterker samenvattend groepssignaal dat behoud aandacht vraagt.",
     "report_repeat_title": "Herhaal de RetentieScan - bijvoorbeeld per kwartaal of halfjaar",
-    "report_repeat_body": "Deze meting geeft een momentopname van het retentiesignaal en de aanvullende signalen rond behoud. Door periodiek te meten zie je of werkbeleving, stay-intent, vertrekintentie en prioriteiten daadwerkelijk verbeteren.",
+    "report_repeat_body": "Deze meting geeft een momentopname van het retentiesignaal en de aanvullende signalen rond behoud. Door periodiek te meten zie je hoe werkbeleving, stay-intent, vertrekintentie en prioriteiten verschuiven en waar management bevestiging of bijstelling nodig heeft.",
     "sdt_items": [
         ("B1", "In mijn werk heb ik het gevoel dat ik zelf keuzes kan maken over hoe ik mijn taken uitvoer."),
         ("B2", "Ik heb de vrijheid om mijn werkzaamheden op mijn eigen manier aan te pakken."),

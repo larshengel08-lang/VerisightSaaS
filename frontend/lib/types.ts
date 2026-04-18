@@ -55,6 +55,7 @@ export interface CampaignStats {
   total_completed: number
   completion_rate_pct: number
   avg_risk_score: number | null
+  avg_signal_score?: number | null
   band_high: number
   band_medium: number
   band_low: number
@@ -78,12 +79,14 @@ export interface SurveyResponse {
   id: string
   respondent_id: string
   risk_score: number | null
+  signal_score?: number | null
   risk_band: RiskBand | null
   preventability: Preventability | null
   exit_reason_code: string | null
   sdt_scores: Record<string, number>
   org_scores: Record<string, number>
   stay_intent_score?: number | null
+  direction_signal_score?: number | null
   uwes_score?: number | null
   turnover_intention_score?: number | null
   open_text_raw?: string | null
@@ -153,6 +156,24 @@ export const REPORT_ADD_ON_LABELS: Record<CampaignAddOn, string> = {
 export const REPORT_ADD_ON_DESCRIPTIONS: Record<CampaignAddOn, string> = {
   segment_deep_dive:
     'Extra segmentanalyse in het rapport, met scherpere uitsplitsing naar afdeling, functieniveau en diensttijd. Werkt het best als department en role_level zijn aangeleverd.',
+}
+
+export function getCampaignAverageSignalScore(
+  stats: Pick<CampaignStats, 'avg_signal_score' | 'avg_risk_score'>,
+): number | null {
+  return stats.avg_signal_score ?? stats.avg_risk_score ?? null
+}
+
+export function getResponseSignalScore(
+  response: Pick<SurveyResponse, 'signal_score' | 'risk_score'>,
+): number | null {
+  return response.signal_score ?? response.risk_score ?? null
+}
+
+export function getResponseDirectionSignalScore(
+  response: Pick<SurveyResponse, 'direction_signal_score' | 'stay_intent_score'>,
+): number | null {
+  return response.direction_signal_score ?? response.stay_intent_score ?? null
 }
 
 export function hasCampaignAddOn(

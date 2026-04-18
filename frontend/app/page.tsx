@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 }
 
 const heroSignals = [
-  ['Kernproducten', '2 scans', 'ExitScan en RetentieScan blijven de eerste route'],
+  ['Kernproducten', '2 scans', 'ExitScan en RetentieScan blijven de twee eerste routes'],
   ['Managementoutput', '1 leeslijn', 'Dashboard, rapport en bestuurlijke handoff sluiten op elkaar aan'],
   ['Eerste waarde', 'Binnen weken', 'Van intake naar eerste managementread in een begeleide productvorm'],
 ] as const
@@ -94,11 +94,11 @@ export default function LandingPage() {
           <MarketingHeroIntro>
             <p className="marketing-hero-eyebrow text-[#3C8D8A]">Exit- en retentie-analyse</p>
             <h1 className="marketing-hero-title marketing-hero-title-home font-display text-[#132033]">
-              Krijg scherper zicht op vertrek, behoud en de eerste logische managementroute.
+              Krijg scherper zicht op vertrekduiding, behoudsdruk en de eerste logische managementroute.
             </h1>
             <p className="marketing-hero-copy text-[#4A5563]">
               Verisight helpt HR en management scherp zien welke patronen spelen, waar gerichte actie logisch wordt en
-              welke eerste productroute nu het meeste bestuurlijke rendement geeft.
+              welke eerste productroute de managementvraag nu het best opent.
             </p>
             <div className="marketing-hero-cta-row marketing-hero-actions">
               <Link
@@ -223,8 +223,9 @@ export default function LandingPage() {
             <div className="mt-8 rounded-[1.75rem] border border-[rgba(247,245,241,0.12)] bg-[rgba(247,245,241,0.06)] p-6 md:p-7">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#DCEFEA]">Vervolgroutes blijven bounded</p>
               <p className="mt-3 max-w-[64ch] text-sm leading-7 text-[rgba(247,245,241,0.72)]">
-                Pulse, TeamScan en onboarding blijven bewust kleinere vervolgroutes. Zo blijft de eerste koop scherp,
-                de eerste managementread duidelijk en de volgende stap kleiner dan een nieuwe brede meting.
+                Pulse, TeamScan, onboarding en Leadership Scan blijven bewust kleinere vervolgroutes. Zo blijft de
+                eerste koop scherp, de eerste managementread duidelijk en de volgende stap kleiner dan een nieuwe brede
+                meting.
               </p>
             </div>
           </MarketingSection>
