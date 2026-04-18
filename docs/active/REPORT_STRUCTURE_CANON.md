@@ -333,6 +333,13 @@ RetentieScan-taal moet voelen als:
 - groepssignalen in samenhang
 - geen individuele predictor of selectie-instrument
 
+Huidige runtime-opmerking:
+
+- de huidige RetentieScan-runtime gebruikt een `Executive cover`
+- daarna volgt een gecombineerde bestuurslaag waarin `Respons` en `Bestuurlijke handoff` samen zichtbaar worden
+- daarna volgen `Drivers & prioriteitenbeeld`, `Kernsignalen in samenhang`, `Eerste route & managementactie`, `Compacte methodiek / leeswijzer` en optioneel `Segmentanalyse`, gevolgd door `Technische verantwoording`
+- dit is de huidige runtime grammar, maar nog geen immutable architectuur op ExitScan-niveau
+
 ## 6. Language Rules For Duiding
 
 Verplichte taalprincipes:

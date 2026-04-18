@@ -216,7 +216,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
   retention: {
     label: 'RetentieScan-voorbeeld',
     intro:
-      'RetentieScan opent met een managementsamenvatting die het groepsbeeld terugbrengt tot signaalprofiel, bestuurlijke weging, eerste verificatiespoor, eerste managementsessie en compacte handoff voor sponsor of directie. In demo\'s komt deze route meestal na ExitScan, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.',
+      'RetentieScan begint met een cover. Daarna volgt een gecombineerde bestuurlijke read waarin respons, bestuurlijke handoff, eerste verificatiespoor en eerste managementsessie samenkomen in een compacte sponsorlaag. In demo\'s komt deze route meestal na ExitScan, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.',
     kpis: [
       ['Reacties', '63 van 92', '68% respons'],
       ['Gemiddeld retentiesignaal', '5,6 op 10', MANAGEMENT_BAND_LABELS.MIDDEN],
@@ -265,7 +265,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       },
     ],
     proofNotes: [
-      ['Managementsamenvatting', 'Groepsbeeld nu, bestuurlijke weging en de scherpste verificatiesporen in een executive laag'],
+      ['Cover + bestuurlijke read', 'Na de cover volgen respons, bestuurlijke weging en de scherpste verificatiesporen in een compacte executive laag'],
       ['Bestuurlijke handoff', 'Compacte sponsor-read met wat nu speelt, waarom dat telt en expliciete watchout tegen overinterpretatie'],
       ['Signaalmix', 'Retentiesignaal, stay-intent en vertrekintentie in een bestuurssamenvatting'],
       ['Actielogica', 'Topfactoren en vervolgstappen voor 30-90 dagen, zonder individuele voorspelling'],
@@ -282,7 +282,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     ],
     demoLabel: 'Illustratief voorbeeld',
     demoBody:
-      'Fictieve voorbeelddata. De huidige RetentieScan-output gebruikt dezelfde managementstructuur, trustnotes en productspecifieke leeswijzers als in een specifieke behoudsdemo.',
+      'Fictieve voorbeelddata. De huidige RetentieScan-output gebruikt een cover, daarna een compacte bestuurslaag met respons en handoff, gevolgd door productspecifieke leeswijzers voor behoudsduiding.',
     supportVisualTitle: 'Segment deep dive preview',
     supportVisualAlt: 'Voorbeeld van een RetentieScan segment deep dive',
     sampleReportTitle: 'Volledig buyer-facing voorbeeldrapport',

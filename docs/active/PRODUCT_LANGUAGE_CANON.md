@@ -170,6 +170,11 @@ Canonregel:
 
 `retentiesignaal` is de hoofdmetric in taal. `stay-intent`, `vertrekintentie` en `bevlogenheid` zijn aanvullende signalen en mogen niet naar voren schuiven als alternatieve hoofdmetric zonder expliciete metriccanon.
 
+Parityregel:
+
+- buyer-facing mirrors mogen RetentieScan niet presenteren alsof `managementsamenvatting` een losse openingspagina is
+- in de huidige runtime volgt na de cover een compactere bestuurslaag waarin respons, bestuurlijke handoff en eerste verificatiesporen samenkomen
+
 ### Follow-on route canon
 
 Portfolio- en verbredingstaal moet de huidige grenzen bewaken:

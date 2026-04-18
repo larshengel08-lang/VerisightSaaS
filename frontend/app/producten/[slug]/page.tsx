@@ -419,8 +419,9 @@ function RetentionScanPage() {
           <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Uitkomsten</p>
           <h2 className="mt-3 text-xl font-medium text-[#132033]">Wat u ermee kunt doen</h2>
           <p className="mt-4 max-w-[64ch] text-sm leading-relaxed text-[#4A5563]">
-            Ook hier volgt de route dezelfde managementopbouw: managementsamenvatting, bestuurlijke handoff, eerste
-            managementsessie, eerste verificatiespoor en daarna de eerste logische stap rond retentiesignaal en opvolging.
+            Ook hier blijft de managementopbouw compact: eerst cover, daarna een gecombineerde bestuurlijke read met
+            respons, handoff, eerste managementsessie en eerste verificatiespoor, en pas daarna de eerste logische stap
+            rond retentiesignaal en opvolging.
           </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             {[
