@@ -487,7 +487,7 @@ export default async function CampaignPage({ params }: Props) {
             routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
-              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een lokale vervolgstap logisch, is bredere diagnose weer nodig of vraagt dit signaal juist minder lokalisatie dan gedacht?',
+              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een lokale vervolgstap logisch, is bredere duiding weer nodig of vraagt dit signaal juist minder lokalisatie dan gedacht?',
           }
       : stats.scan_type === 'onboarding'
         ? {
@@ -579,7 +579,7 @@ export default async function CampaignPage({ params }: Props) {
             routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
-              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een begrensde managementroute logisch, vraagt de vraag toch bredere diagnose of hoort Leadership Scan juist niet verder op te schalen binnen deze context?',
+              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een begrensde managementroute logisch, vraagt de vraag toch bredere duiding of hoort Leadership Scan juist niet verder op te schalen binnen deze context?',
           }
       : stats.scan_type === 'exit'
         ? {
@@ -665,7 +665,7 @@ export default async function CampaignPage({ params }: Props) {
               'Deze playbooks vormen de uitvoerlaag onder de gekozen bounded route. Ze helpen van verificatie naar correctie en een logisch hercheckmoment te gaan.',
             routeTitle: 'Van Pulse read naar bounded repeat motion',
             routeDescription:
-              'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische volgende meetmoment samen zonder Pulse te verwarren met een brede diagnose- of rapportroute.',
+              'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische volgende meetmoment samen zonder Pulse te verwarren met een bredere kernroute of hoofdrapport.',
             routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
@@ -1206,7 +1206,7 @@ export default async function CampaignPage({ params }: Props) {
                 <DashboardPanel
                   eyebrow="Reviewgrens"
                   title={primaryTeamPlaybook?.review ?? 'Lokale hercheck eerst'}
-                  body="Gebruik het reviewmoment om bewust te kiezen: nog een lokale vervolgstap, terug naar bredere diagnose of juist stoppen met verder lokaliseren."
+                  body="Gebruik het reviewmoment om bewust te kiezen: nog een lokale vervolgstap, terug naar bredere duiding of juist stoppen met verder lokaliseren."
                   tone="amber"
                 />
               </div>
@@ -1449,8 +1449,8 @@ export default async function CampaignPage({ params }: Props) {
                 />
                 <DashboardPanel
                   eyebrow="Als de vraag breder wordt"
-                  title="Ga terug naar bredere diagnose"
-                  body="Schakel niet door naar extra lokalisatie als de echte vraag weer organisatieniveau, behoudsbeeld of bredere diagnose vraagt."
+                  title="Ga terug naar bredere duiding"
+                  body="Schakel niet door naar extra lokalisatie als de echte vraag weer organisatieniveau, behoudsbeeld of bredere duiding vraagt."
                   tone="amber"
                 />
                 <DashboardPanel
@@ -1471,8 +1471,8 @@ export default async function CampaignPage({ params }: Props) {
                 />
                 <DashboardPanel
                   eyebrow="Als de vraag breder wordt"
-                  title="Ga terug naar bredere diagnose"
-                  body="Schakel niet door naar extra Leadership-verbreding als de echte vraag weer lokale lokalisatie, bredere diagnose of een ander productspoor vraagt."
+                  title="Ga terug naar bredere duiding"
+                  body="Schakel niet door naar extra Leadership-verbreding als de echte vraag weer lokale lokalisatie, bredere duiding of een ander productspoor vraagt."
                   tone="amber"
                 />
                 <DashboardPanel

@@ -49,7 +49,7 @@ const corePricing = [
   {
     label: 'RetentieScan momentopname',
     price: 'EUR 3.450',
-    body: 'Gerichte baseline om retentierisico\'s in kaart te brengen, met extra nadruk op privacy en groepsduiding.',
+    body: 'Gerichte baseline om behoudsdruk eerder zichtbaar te maken, met extra nadruk op privacy en groepsduiding.',
     bullets: [
       'Retentiesignaal, stay-intent en vertrekintentie',
       'Dashboard en managementrapport',
@@ -64,7 +64,7 @@ const comparisonRows = [
   ['ExitScan live', 'Op aanvraag', 'Logisch vervolg na eerste retrospectieve analyse wanneer proces en eigenaarschap al staan.'],
   ['RetentieScan live', 'Op aanvraag', 'Doorlopende route wanneer vroegsignalering structureel onderdeel van de managementcyclus wordt.'],
   ['Segment Deep Dive', 'EUR 950', 'Extra segmentanalyse als metadata en minimale respondentengroep dat dragen.'],
-  ['Pulse', 'Op aanvraag', 'Compacte reviewlaag na diagnose of baseline, geen nieuwe eerste instap.'],
+  ['Pulse', 'Op aanvraag', 'Compacte reviewlaag na een eerste kernroute of baseline, geen nieuwe eerste instap.'],
   ['TeamScan', 'Op aanvraag', 'Bounded lokale verdieping nadat een breder signaal al zichtbaar is.'],
   ['Onboarding 30-60-90', 'Op aanvraag', 'Gerichte lifecycle-check wanneer vroege landing van nieuwe medewerkers centraal staat.'],
   ['Leadership Scan', 'Op aanvraag', 'Begrensde managementread nadat een bestaand people-signaal eerst duiding of verificatie vraagt.'],
@@ -157,7 +157,7 @@ export default function TarievenPage() {
         <MarketingSection tone="plain">
           <SectionHeading
             eyebrow="Vervolg en add-ons"
-            title="Kleinere routes na de eerste diagnose."
+            title="Kleinere routes na de eerste kernroute."
             description="De vervolglaag blijft bewust bounded. Zo blijven vervolgprijzen logisch in verhouding tot de eerste managementvraag en niet gelijkgeschakeld aan de kerninstap."
           />
           <div className="mt-10">

@@ -2,16 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { REPORT_PREVIEW_COPY } from '@/lib/report-preview-copy'
 
 describe('REPORT_PREVIEW_COPY', () => {
-  it('keeps exit preview aligned with the management-summary framing', () => {
+  it('keeps exit preview aligned with the fixed opening flow before the management-summary layer', () => {
     const exitCopy = REPORT_PREVIEW_COPY.exit
 
-    expect(exitCopy.intro).toContain('managementsamenvatting')
+    expect(exitCopy.intro).toContain('rustige cover')
+    expect(exitCopy.intro).toContain('expliciete responslaag')
     expect(exitCopy.dashboardRows).toHaveLength(4)
     expect(exitCopy.factorCards).toHaveLength(6)
     expect(exitCopy.boardroomTitle).toContain('Bestuurlijke handoff')
     expect(exitCopy.boardroomPoints.map(([title]) => title)).toContain('Wat speelt nu')
     expect(exitCopy.boardroomPoints.map(([title]) => title)).toContain('Wat niet concluderen')
-    expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Managementsamenvatting')
+    expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Cover + respons')
     expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Bestuurlijke handoff')
     expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Werkhypothesen')
     expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Bewijsstatus')
@@ -19,7 +20,7 @@ describe('REPORT_PREVIEW_COPY', () => {
     expect(exitCopy.nuance).toContain('geen geforceerde ROI-claim')
     expect(exitCopy.hypothesisLead).toContain('eerste eigenaar')
     expect(exitCopy.intro).toContain('eerste managementsessie')
-    expect(exitCopy.proofNotes.find(([title]) => title === 'Managementsamenvatting')?.[1]).toContain(
+    expect(exitCopy.proofNotes.find(([title]) => title === 'Cover + respons')?.[1]).toContain(
       'eerste managementsessie',
     )
     expect(exitCopy.trustTitle).toContain('Trust')

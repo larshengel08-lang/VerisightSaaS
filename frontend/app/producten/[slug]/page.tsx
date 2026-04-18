@@ -278,7 +278,7 @@ function ExitScanPage() {
           <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Uitkomsten</p>
           <h2 className="mt-3 text-xl font-medium text-[#132033]">Wat u ermee kunt doen</h2>
           <p className="mt-4 max-w-[64ch] text-sm leading-relaxed text-[#4A5563]">
-            De leesrichting blijft compact en bestuurlijk: eerst de managementsamenvatting, daarna de bestuurlijke handoff,
+            De leesrichting blijft compact en bestuurlijk: eerst cover en respons, daarna de bestuurlijke handoff,
             vervolgens de eerste managementvraag, het eerste verificatiespoor en pas daarna de eerste logische stap.
           </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
