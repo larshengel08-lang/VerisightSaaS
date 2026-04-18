@@ -3,6 +3,12 @@
 Intern referentiedocument voor website, dashboard, rapport, survey, pricing, sales en preview-copy.
 Laatste update: 2026-04-15
 
+Historical boundary note:
+
+- dit document was een eerdere terminologiecanon, maar is niet meer de hoogste actieve taalbron
+- voor actuele producttaal, buyer-facing parity en reportgrammarrandvoorwaarden winnen nu [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md) en [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md)
+- lees oudere outputtermen in dit document dus altijd ondergeschikt aan de huidige hardeningcanon
+
 ## Doel
 
 Dit document legt de canonieke producttaal van Verisight vast.

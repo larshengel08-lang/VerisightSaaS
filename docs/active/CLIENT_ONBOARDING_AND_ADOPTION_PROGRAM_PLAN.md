@@ -4,6 +4,13 @@ Status: uitgevoerd in repo
 Last updated: 2026-04-15
 Source of truth: dit bestand is leidend voor deze tranche.
 
+Historical boundary note:
+
+- dit plan blijft leidend voor onboarding- en adoptionhardening binnen zijn tranche
+- routewoorden als `ExitScan Live` en `RetentieScan ritme` zijn hier historische pre-normalisatie labels
+- lees ze in de huidige hardeningcontext als `ExitScan ritmeroute` en `RetentieScan ritmeroute`
+- voor actuele onboardingtaal en flowvolgorde winnen [CLIENT_ONBOARDING_FLOW_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_ONBOARDING_FLOW_SYSTEM.md), [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md) en [COMMERCIAL_LANGUAGE_PARITY_RECHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_LANGUAGE_PARITY_RECHECK.md)
+
 ## 1. Summary
 
 Dit traject maakt van de assisted klantstart van Verisight één expliciete onboarding- en adoptionlaag van akkoord naar eerste bruikbare managementwaarde.
