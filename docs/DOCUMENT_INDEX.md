@@ -34,6 +34,7 @@ Voor de huidige fix-tranche:
 ## Active
 - [OPS_AND_DELIVERY_SYSTEM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/OPS_AND_DELIVERY_SYSTEM_PLAN.md)
 - [EXITSCAN_PRODUCT_SHARPENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_PRODUCT_SHARPENING_PLAN.md)
+- [LANGUAGE_PARITY_INVENTORY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/LANGUAGE_PARITY_INVENTORY.md)
 - [RETENTIESCAN_PRODUCT_SHARPENING_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTIESCAN_PRODUCT_SHARPENING_PLAN.md)
 - [RETENTIESCAN_LIVE_TEST_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTIESCAN_LIVE_TEST_PLAN.md)
 
