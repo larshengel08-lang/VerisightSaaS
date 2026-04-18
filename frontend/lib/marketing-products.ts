@@ -26,7 +26,7 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     slug: 'exitscan',
     label: 'ExitScan',
     shortLabel: 'ExitScan',
-    tagline: 'Breng vertrekpatronen scherp in beeld',
+    tagline: 'Breng vertrekduiding scherp in beeld',
     description:
       'Vertrekduiding en verloopanalyse op basis van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie voor HR, MT en directie, met compacte bestuurlijke handoff en expliciete leeswijzers over claims, privacy en interpretatie.',
     seoTitle: 'ExitScan | Verloopanalyse en vertrekduiding voor HR-teams',
@@ -82,12 +82,12 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     slug: 'pulse',
     label: 'Pulse',
     shortLabel: 'Pulse',
-    tagline: 'Compacte reviewmetingen na diagnose of baseline',
+    tagline: 'Compacte reviewmetingen na eerste baseline of managementread',
     description:
-      'Live bounded follow-on route voor kortere, frequente reviewmetingen nadat een eerste diagnose of baseline al staat. Bedoeld voor ritme, effectcheck en managementreview, niet als derde brede instap.',
-    seoTitle: 'Pulse | Compacte reviewmetingen na diagnose of baseline',
+      'Bounded vervolgroute voor kortere reviewmetingen nadat een eerste baseline, managementread of eerste actie al staat. Bedoeld voor ritme, effectcheck en managementreview, niet als derde brede instap.',
+    seoTitle: 'Pulse | Compacte reviewmetingen na eerste baseline of managementread',
     ogAlt: 'Pulse productpagina van Verisight',
-    serviceType: 'Compacte reviewmeting na diagnose of baseline',
+    serviceType: 'Compacte reviewmeting na eerste baseline of managementread',
     serviceAudience: 'HR-teams en directies die na een eerste scan gericht willen blijven volgen',
     serviceOutput:
       'Compacte managementreview, ritmesignaal, delta-uitleg, bounded vervolgactie en expliciete reviewgrens',
@@ -101,13 +101,13 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     shortLabel: 'TeamScan',
     tagline: 'Lokale verificatie na een breder signaal',
     description:
-      'Live bounded follow-on route voor department-first lokalisatie nadat een breder signaal al zichtbaar is. Bedoeld voor lokale verificatie en prioriteit, niet voor manager ranking of brede teamsoftware.',
+      'Bounded vervolgroute voor department-first lokalisatie nadat een breder signaal al zichtbaar is. Bedoeld voor lokale verificatie en prioriteit, niet voor manager ranking of brede teamsoftware.',
     seoTitle: 'TeamScan | Lokale verificatie na een breder signaal',
     ogAlt: 'TeamScan productpagina van Verisight',
     serviceType: 'Lokale verificatie en bounded teamprioritering',
     serviceAudience: 'HR-teams en directies die na een breder signaal lokale verificatie willen starten',
     serviceOutput:
-      'Lokale prioriteitsread, bounded managementhandoff, formele reportoutput en suppressie-aware lokale duiding',
+      'Lokale prioriteitsread, bounded managementhandoff en suppressie-aware lokale duiding',
     status: 'live',
     portfolioRole: 'follow_on_route',
     href: '/producten/teamscan',
@@ -118,13 +118,13 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     shortLabel: 'Onboarding 30-60-90',
     tagline: 'Vroege lifecycle-check voor nieuwe medewerkers',
     description:
-      'Live bounded follow-on route voor een assisted single-checkpoint onboardingread. Bedoeld om vroege landing en eerste frictie zichtbaar te maken, niet als journey-engine of brede lifecycle-suite.',
+      'Bounded vervolgroute voor een assisted single-checkpoint onboardingread. Bedoeld om vroege landing en eerste frictie zichtbaar te maken, niet als journey-engine of brede lifecycle-suite.',
     seoTitle: 'Onboarding 30-60-90 | Vroege lifecycle-check voor nieuwe medewerkers',
     ogAlt: 'Onboarding 30-60-90 productpagina van Verisight',
     serviceType: 'Assisted single-checkpoint onboardingread',
     serviceAudience: 'HR-teams en directies die een vroege onboardingcheck buyer-facing willen openen',
     serviceOutput:
-      'Checkpointsignaal, owner, eerste actie, managementhandoff en bounded formele output zonder brede journey-claims',
+      'Checkpointsignaal, owner, eerste actie en bounded managementhandoff zonder brede journey-claims',
     status: 'live',
     portfolioRole: 'follow_on_route',
     href: '/producten/onboarding-30-60-90',
@@ -135,13 +135,13 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     shortLabel: 'Leadership Scan',
     tagline: 'Begrensde managementread na een bestaand signaal',
     description:
-      'Live bounded follow-on route voor een group-level leadershipread nadat een bestaand people-signaal al zichtbaar is. Bedoeld voor managementcontext en eerste verificatie, niet voor named leaders, 360 of performanceframing.',
+      'Bounded vervolgroute voor een group-level leadershipread nadat een bestaand people-signaal al zichtbaar is. Bedoeld voor managementcontext en eerste verificatie, niet voor named leaders, 360 of performanceframing.',
     seoTitle: 'Leadership Scan | Begrensde managementread na een bestaand signaal',
     ogAlt: 'Leadership Scan productpagina van Verisight',
     serviceType: 'Group-level leadershipread na een bestaand signaal',
     serviceAudience: 'HR-teams en directies die managementcontext bounded willen duiden',
     serviceOutput:
-      'Geaggregeerde leadershipread, managementhandoff, bounded first action en formele output zonder named leader readouts',
+      'Geaggregeerde leadershipread, managementhandoff en bounded first action zonder named leader readouts',
     status: 'live',
     portfolioRole: 'follow_on_route',
     href: '/producten/leadership-scan',

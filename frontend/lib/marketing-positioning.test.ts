@@ -25,7 +25,7 @@ import {
 } from '@/components/marketing/site-content'
 
 describe('Portfolio architecture marketing model', () => {
-  it('keeps a core-first seven-route suite with live bounded follow-on routes', () => {
+  it('keeps a core-first seven-route suite with visible bounded follow-on routes', () => {
     const combination = PORTFOLIO_ROUTE_MARKETING_PRODUCTS[0]
     const followOnSlugs = FOLLOW_ON_MARKETING_PRODUCTS.map((product) => product.slug)
     const reservedSlugs = RESERVED_MARKETING_PRODUCTS.map((product) => product.slug)
@@ -39,6 +39,7 @@ describe('Portfolio architecture marketing model', () => {
     expect(followOnSlugs).toEqual(['pulse', 'teamscan', 'onboarding-30-60-90', 'leadership-scan'])
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.status === 'live')).toBe(true)
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'follow_on_route')).toBe(true)
+    expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => !product.description.toLowerCase().includes('live bounded'))).toBe(true)
     expect(LIVE_MARKETING_PRODUCTS).toHaveLength(7)
     expect(reservedSlugs).toEqual(['mto', 'customer-feedback'])
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.status === 'reserved_future')).toBe(true)
@@ -71,6 +72,7 @@ describe('ExitScan positioning copy', () => {
 
     expect(exitRow?.[2].toLowerCase()).toContain('vertrekbeeld')
     expect(exitRow?.[2].toLowerCase()).toContain('werkfactoren')
+    expect(exitRow?.[1].toLowerCase()).toContain('vertrekduiding')
     expect(differenceFaq?.[1].toLowerCase()).toContain('vertrek achteraf duiden')
     expect(differenceFaq?.[1].toLowerCase()).toContain('eerder zien waar behoud op groepsniveau onder druk staat')
   })

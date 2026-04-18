@@ -40,19 +40,19 @@ export const marketingLegalLinks = [
 export const homepageProductRoutes = [
   {
     name: 'ExitScan',
-    title: 'Begrijp waarom medewerkers vertrekken',
-    body: 'Breng vertrekpatronen in beeld. Beschikbaar als retrospectieve analyse of live scan.',
+    title: 'Breng vertrekduiding scherp in beeld',
+    body: 'Terugkijkende vertrekduiding op groepsniveau, met bestuurlijke handoff en een heldere eerste managementroute.',
     href: '/producten/exitscan',
     accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
-    chip: 'Primaire route',
+    chip: 'Kernroute',
   },
   {
     name: 'RetentieScan',
     title: 'Zie waar behoud onder druk staat',
-    body: 'Vroegtijdig inzicht in retentiesignalen. Beschikbaar als live meting of momentopname.',
+    body: 'Vroegsignalering op behoud op groeps- en segmentniveau, met retentiesignaal en een eerste verificatiespoor.',
     href: '/producten/retentiescan',
     accent: 'border-[#DCEFEA] bg-[#F7F5F1]',
-    chip: 'Complementair',
+    chip: 'Kernroute',
   },
   {
     name: 'Combinatie',
@@ -313,7 +313,7 @@ export const statCards = [
   {
     value: '2 kernproducten',
     label: 'heldere kernportfolio',
-    detail: 'ExitScan als primaire wedge en RetentieScan als gerichte complementaire route.',
+    detail: 'ExitScan en RetentieScan als twee kernroutes binnen een duidelijke first-buy logica.',
   },
   {
     value: '1 leeslijn',
