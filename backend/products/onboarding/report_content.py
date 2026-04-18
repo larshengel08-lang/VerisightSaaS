@@ -115,7 +115,7 @@ def get_management_summary_payload(
     )
 
     return {
-        "section_title": "Managementsamenvatting",
+        "section_title": "Checkpoint-handoff",
         "distribution_title": "Verdeling van het checkpointsignaal",
         "findings_title": "Scherpste checkpointlezing",
         "executive_title": "Vroege lifecycle-duiding voor HR en leiding",

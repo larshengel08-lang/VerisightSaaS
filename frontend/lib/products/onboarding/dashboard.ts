@@ -178,7 +178,7 @@ function getPlaybookSupport(args: {
         playbook?.review ??
         'Gebruik een later checkpoint alleen als bounded bevestiging dat deze stabiele landing overeind blijft; maak er geen automatische journeystap van.',
       escalationBoundaryBody:
-        'Schaal niet automatisch op naar bredere diagnose of extra productvorm zolang de vraag nog vooral gaat over het behouden van een stabiele startervaring.',
+        'Schaal niet automatisch op naar bredere duiding of extra productvorm zolang de vraag nog vooral gaat over het behouden van een stabiele startervaring.',
       conversationBody:
         playbook?.validate ??
         `Gebruik een korte managementhuddle om te bevestigen wat in ${args.topFactorLabel.toLowerCase()} nu al goed werkt en bewust behouden moet blijven.`,
@@ -188,7 +188,7 @@ function getPlaybookSupport(args: {
       operatorBody:
         `Leg vast wie de borgactie werkelijk uitvoert, welke signalen op het volgende checkpoint gelijk moeten blijven en wanneer HR weer actief meeleest.`,
       broaderDiagnosisBody:
-        'Schaal niet op naar bredere diagnose zolang de vraag nog vooral gaat over het behouden van een stabiele startervaring binnen dit checkpoint.',
+        'Schaal niet op naar bredere duiding zolang de vraag nog vooral gaat over het behouden van een stabiele startervaring binnen dit checkpoint.',
     }
   }
 
@@ -218,7 +218,7 @@ function getPlaybookSupport(args: {
       operatorBody:
         `Leg vast wie de corrigerende stap trekt, welke zichtbare verandering voor nieuwe medewerkers merkbaar moet zijn en wanneer HR opnieuw reviewt.`,
       broaderDiagnosisBody:
-        'Ga pas terug naar bredere diagnose als de vraag groter blijkt dan dit checkpoint of als de eerste correctie te weinig grip geeft.',
+        'Ga pas terug naar bredere duiding als de vraag groter blijkt dan dit checkpoint of als de eerste correctie te weinig grip geeft.',
     }
   }
 
@@ -237,7 +237,7 @@ function getPlaybookSupport(args: {
       playbook?.review ??
       'Gebruik een volgend checkpoint alleen als bounded vervolg nadat de eerste correctie of verificatie expliciet is belegd.',
     escalationBoundaryBody:
-      'Maak deze checkpointread niet automatisch groter dan nodig; als de vraag eerst bredere diagnose vraagt, zeg dat expliciet in plaats van onboarding te overrekken.',
+      'Maak deze checkpointread niet automatisch groter dan nodig; als de vraag eerst bredere duiding vraagt, zeg dat expliciet in plaats van onboarding te overrekken.',
     conversationBody:
       playbook?.validate ??
       `Gebruik een korte managementhuddle om te toetsen wat ${args.topFactorLabel.toLowerCase()} in deze fase nu precies vraagt.`,
@@ -247,7 +247,7 @@ function getPlaybookSupport(args: {
     operatorBody:
       `Leg vast wie het eerstvolgende gesprek voorbereidt, welke kleine correctie of verificatie nu echt eigenaarschap krijgt en hoe je voorkomt dat dit checkpoint open blijft hangen.`,
     broaderDiagnosisBody:
-      'Schakel terug naar bredere diagnose als de vraag niet meer past binnen een enkele onboardingcorrectie of als een later checkpoint eerst geen extra duidelijkheid gaat geven.',
+      'Schakel terug naar bredere duiding als de vraag niet meer past binnen een enkele onboardingcorrectie of als een later checkpoint eerst geen extra duidelijkheid gaat geven.',
   }
 }
 
@@ -664,7 +664,7 @@ export function buildOnboardingDashboardViewModel(args: {
         tone: 'emerald',
       },
       {
-        title: 'Wanneer terug naar bredere diagnose',
+        title: 'Wanneer terug naar bredere duiding',
         body: interpretation.broaderDiagnosisBody,
         tone: 'amber',
       },

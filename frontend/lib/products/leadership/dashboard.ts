@@ -231,7 +231,7 @@ function buildLeadershipInterpretation(args: {
       operatorBody:
         'Leg vast wie de borgroute trekt, welke managementroutine bewust behouden blijft en wanneer HR of MT opnieuw reviewt.',
       broaderDiagnosisBody:
-        'Schaal niet op naar bredere diagnose zolang de vraag nog vooral gaat over het behouden van een stabiele managementcontext op groepsniveau.',
+        'Schaal niet op naar bredere duiding zolang de vraag nog vooral gaat over het behouden van een stabiele managementcontext op groepsniveau.',
       decisionItems: [
         playbook?.decision ??
           `Beslis wat in ${args.topFactorLabel.toLowerCase()} nu expliciet behouden moet blijven.`,
@@ -298,7 +298,7 @@ function buildLeadershipInterpretation(args: {
       operatorBody:
         'Leg vast wie de eerste correctie trekt, welke zichtbare verandering binnen 30 dagen merkbaar moet zijn en wanneer de bounded review terugkomt.',
       broaderDiagnosisBody:
-        'Ga pas terug naar bredere diagnose als de vraag groter blijkt dan deze geaggregeerde managementcontext of als de eerste correctie te weinig grip geeft.',
+        'Ga pas terug naar bredere duiding als de vraag groter blijkt dan deze geaggregeerde managementcontext of als de eerste correctie te weinig grip geeft.',
       decisionItems: [
         playbook?.decision ??
           `Beslis of ${args.topFactorLabel.toLowerCase()} nu eerst een kleine correctie of een gerichte verificatie vraagt.`,
@@ -342,7 +342,7 @@ function buildLeadershipInterpretation(args: {
       'Gebruik de vragen en playbooks hieronder om van dit gemengde leadershipbeeld naar een begrensde managementhuddle en eerste verificatie of correctie te gaan.',
     followThroughTitle: 'Van Leadership Scan naar managementhuddle',
     followThroughIntro:
-      'De waarde van Leadership Scan zit hier in snelle en begrensde opvolging: eerst duiden, dan verifieren of corrigeren, en daarna expliciet kiezen of bredere diagnose logischer is.',
+      'De waarde van Leadership Scan zit hier in snelle en begrensde opvolging: eerst duiden, dan verifieren of corrigeren, en daarna expliciet kiezen of bredere duiding logischer is.',
     priorityBody: `${args.topFactorLabel} is nu het eerste managementspoor voor deze campaign.`,
     firstConversationBody:
       playbook?.validate ??
@@ -360,11 +360,11 @@ function buildLeadershipInterpretation(args: {
       playbook?.review ??
       'Gebruik een volgende review alleen als bounded vervolg nadat de eerste verificatie of correctie expliciet is belegd.',
     escalationBoundaryBody:
-      'Maak deze managementread niet groter dan nodig; als de echte vraag lokalere of bredere diagnose vraagt, zeg dat expliciet in plaats van Leadership Scan te overrekken.',
+      'Maak deze managementread niet groter dan nodig; als de echte vraag lokalere of bredere duiding vraagt, zeg dat expliciet in plaats van Leadership Scan te overrekken.',
     operatorBody:
       'Leg vast wie het eerste gesprek voorbereidt, welke kleine verificatie of correctie nu echt eigenaarschap krijgt en hoe je voorkomt dat de managementread open blijft hangen.',
     broaderDiagnosisBody:
-      'Schakel terug naar bredere diagnose als de echte vraag niet meer past binnen een geaggregeerde managementcontext of als een volgende bounded review eerst geen extra duidelijkheid geeft.',
+      'Schakel terug naar bredere duiding als de echte vraag niet meer past binnen een geaggregeerde managementcontext of als een volgende bounded review eerst geen extra duidelijkheid geeft.',
     decisionItems: [
       playbook?.decision ??
         `Beslis of ${args.topFactorLabel.toLowerCase()} nu een kleine correctie vraagt of eerst gerichte verificatie in gesprekken.`,
@@ -619,7 +619,7 @@ export function buildLeadershipDashboardViewModel(args: {
         tone: 'emerald',
       },
       {
-        title: 'Wanneer terug naar bredere diagnose',
+        title: 'Wanneer terug naar bredere duiding',
         body: interpretation.broaderDiagnosisBody,
         tone: 'amber',
       },

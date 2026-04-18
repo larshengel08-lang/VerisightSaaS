@@ -268,7 +268,7 @@ export function buildPulseDashboardViewModel(args: {
       },
       {
         title: 'Wanneer geen nieuwe Pulse',
-        body: 'Ga niet automatisch door naar nog een Pulse als de vraag eerst bredere diagnose, extra verificatie of lokalisatie vraagt.',
+        body: 'Ga niet automatisch door naar nog een Pulse als de vraag eerst bredere duiding, extra verificatie of lokalisatie vraagt.',
         tone: 'amber',
       },
     ],

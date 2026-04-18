@@ -188,7 +188,7 @@ def get_management_summary_payload(
         }
 
     return {
-        "section_title": "Managementsamenvatting",
+        "section_title": "Bestuurlijke handoff",
         "distribution_title": "Verdeling van het retentiesignaal",
         "findings_title": "Scherpste managementlezing",
         "executive_title": "Vroegsignalering op behoud voor HR, MT en directie",

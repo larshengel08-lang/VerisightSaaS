@@ -68,7 +68,7 @@ describe('buildOnboardingDashboardViewModel', () => {
       'Eerste eigenaar',
       'Eerste actie',
       'Reviewgrens',
-      'Wanneer terug naar bredere diagnose',
+    'Wanneer terug naar bredere duiding',
     ])
     expect(model.followThroughCards[3]?.body.toLowerCase()).toContain('borgactie')
     expect(model.managementBandOverride).toBe('LAAG')
@@ -105,7 +105,7 @@ describe('buildOnboardingDashboardViewModel', () => {
     expect(model.managementBandOverride).toBe('MIDDEN')
     expect(model.profileCards[0]?.body.toLowerCase()).toContain('client onboarding-route')
     expect(model.profileCards[1]?.body.toLowerCase()).toContain('checkpointread')
-    expect(model.managementBlocks[3]?.items[1]?.toLowerCase()).toContain('bredere diagnose')
+expect(model.managementBlocks[3]?.items[1]?.toLowerCase()).toContain('bredere duiding')
   })
 
   it('treats a sharp early signal as a bounded checkpoint, not as a predictor', () => {
@@ -140,6 +140,6 @@ describe('buildOnboardingDashboardViewModel', () => {
     expect(model.managementBandOverride).toBe('HOOG')
     expect(model.profileCards[0]?.body.toLowerCase()).toContain('client onboarding-route')
     expect(model.profileCards[1]?.body.toLowerCase()).toContain('bounded handoff')
-    expect(model.followThroughCards[5]?.body.toLowerCase()).toContain('bredere diagnose')
+expect(model.followThroughCards[5]?.body.toLowerCase()).toContain('bredere duiding')
   })
 })

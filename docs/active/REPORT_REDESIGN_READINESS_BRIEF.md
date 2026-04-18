@@ -26,7 +26,8 @@ Dit brief geeft de rapport-redesignthread een harde inhoudelijke boundary. De re
 
 - De inhoudelijke rapportarchitectuur staat al scherp genoeg; de grootste resterende ruimte zit in visuele versterking en leesritme.
 - ExitScan blijft de sterkste embedded baseline voor managementtoon en mag inhoudelijk niet door een redesignthread worden heropend.
-- De gedeelde report grammar werkt als vaste leeslijn over producten, zonder identieke inhoud per product te eisen.
+- Voor ExitScan geldt nu expliciet de vaste `P1-P10 + Appendix` architectuur; shared grammar mag die niet reduceren, samenvoegen of herordenen.
+- De gedeelde report grammar werkt als vaste leeslijn over andere producten, zonder identieke inhoud per product te eisen.
 - Trust- en methodieklagen horen zichtbaar maar compact te blijven.
 
 ## Belangrijkste inconsistenties of risico's
@@ -38,9 +39,10 @@ Dit brief geeft de rapport-redesignthread een harde inhoudelijke boundary. De re
 ## Beslissingen / canonvoorstellen
 
 - De vaste ExitScan-report-architectuur is out of scope voor redesign en mag niet worden gewijzigd, heropend of opnieuw geordend.
-- De gedeelde hoofdgrammar blijft: `Executive cover` -> `Bestuurlijke handoff` -> `Drivers & prioriteitenbeeld` -> `Kernsignalen in samenhang` -> `Eerste route & managementactie` -> `Compacte methodiek / leeswijzer`.
+- De gedeelde hoofdgrammar blijft voor niet-Exit-routes: `Executive cover` -> `Bestuurlijke handoff` -> `Drivers & prioriteitenbeeld` -> `Kernsignalen in samenhang` -> `Eerste route & managementactie` -> `Compacte methodiek / leeswijzer`.
 - Redesign mag productspecifieke accenten versterken, maar niet de metrichierarchie of de report-to-action volgorde herschrijven.
 - Methodische nuance moet compact zichtbaar zijn op executive niveau en verdiepend blijven in latere of appendixlagen.
+- RetentieScan blijft shared-grammar aligned en hoeft dus visueel niet naar een ExitScan-achtige vaste paginering te worden getrokken.
 
 ## Concrete wijzigingen
 
@@ -55,8 +57,8 @@ Dit brief geeft de rapport-redesignthread een harde inhoudelijke boundary. De re
   - productspecifieke accentkleuren en calloutvormen
   - leesbaarheid van kaarten, tabellen en trust-notes
 - Mag niet veranderen:
-  - vaste ExitScan-report-architectuur
-  - shared report grammar
+  - vaste ExitScan-report-architectuur (`P1-P10 + Appendix`)
+  - shared report grammar voor niet-Exit-routes
   - hoofdmetric per product
   - report-to-action contractlaag
   - methodische begrenzing en trust disclaimers
@@ -77,6 +79,7 @@ Dit brief geeft de rapport-redesignthread een harde inhoudelijke boundary. De re
 
 - Redesign werkt op bestaande contentcontracten en niet op nieuwe rapportbetekenissen.
 - Productspecifieke verschillen tussen ExitScan en RetentieScan moeten visueel voelbaarder worden, niet inhoudelijk platter.
+- Non-core reportroutes blijven bounded en mogen niet via redesign alsnog als volwaardige tweede core-architectuur aanvoelen.
 
 ## Next gate
 

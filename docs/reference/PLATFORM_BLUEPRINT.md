@@ -4,6 +4,7 @@
 
 > **v1-implementatie:** Zie `docs/reference/ARCHITECTURE.md` voor wat er nu staat en `docs/strategy/ROADMAP.md` voor de fasering.
 > Dit document beschrijft het einddoel. Niet alles hierin is gebouwd of gepland voor de komende fase.
+> **canon boundary:** Gebruik dit document niet als actieve source of truth voor huidige producttaal, maturitylabels of buyer-facing routewoorden. Daarvoor winnen de actuele hardeningdocs in `docs/active`.
 
 ---
 

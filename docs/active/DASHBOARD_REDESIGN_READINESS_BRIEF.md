@@ -27,6 +27,7 @@ Dit brief geeft de dashboard-redesignthread een duidelijke inhoudelijke rail. De
 - Dashboard en rapport delen nu genoeg taal- en actielogica om een vaste UX-rail te vormen.
 - De belangrijkste inhoudelijke bescherming voor redesign zit in de hoofdmetric per product, de signaallaag eronder en de bounded status van meerdere follow-on routes.
 - Follow-on producten kunnen visueel aantrekkelijk worden gepresenteerd, maar mogen niet via UI-status of CTA-framing naar hogere maturity worden opgetild.
+- Bounded routes schakelen in hun follow-through terug naar `bredere duiding`, niet naar zwaardere diagnoseframing.
 
 ## Belangrijkste inconsistenties of risico's
 
@@ -40,6 +41,10 @@ Dit brief geeft de dashboard-redesignthread een duidelijke inhoudelijke rail. De
 - De leesvolgorde blijft: hoofdmetric -> signaallaag -> contextlaag -> eerste managementroute.
 - `core_proven`, `parity_build`, `bounded_support_route` en `portfolio_route` blijven interne working labels en mogen niet als publieke UI-status worden genormaliseerd zonder aparte gate.
 - Het dashboard moet dezelfde report-to-action volgorde blijven sturen als rapport en onboarding.
+- Productspecifieke executive labels blijven intact:
+  - TeamScan: `Lokale handoff`
+  - Onboarding 30-60-90: `Checkpoint-handoff`
+  - Leadership Scan: `Management-handoff`
 
 ## Concrete wijzigingen
 
@@ -64,6 +69,7 @@ Dit brief geeft de dashboard-redesignthread een duidelijke inhoudelijke rail. De
   - eerste eigenaar
   - eerste stap
   - reviewmoment
+  - bounded fallback naar bredere duiding waar de route dat vraagt
 
 ## Validatie
 
@@ -75,6 +81,7 @@ Dit brief geeft de dashboard-redesignthread een duidelijke inhoudelijke rail. De
 
 - Dashboardredesign werkt op bestaande productdefinities en niet op nieuwe productpositionering.
 - De sterkste paritylat ligt nog steeds bij ExitScan en RetentieScan; follow-on routes blijven visueel begrensd totdat parity verder is gehard.
+- Statusbadges of CTA-labels mogen non-core routes niet optillen boven hun huidige bounded productrealiteit.
 
 ## Next gate
 

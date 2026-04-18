@@ -26,6 +26,7 @@ Dit brief voedt de homepage-, aanpak- en tarieven-threads met vaste inhoudelijke
 - De kern van de commerciele shell is nu scherp genoeg: twee first-buy routes, gevolgd door begrensde vervolg- en verdiepingsroutes.
 - Productverbreding mag zichtbaar worden als routearchitectuur, maar nog niet als brede suite van gelijkwaardige proposities.
 - De sterkste copywinst zit in first-buy clarity, first-value duidelijkheid en bounded vervolglogica.
+- Deliverable-proof blijft core-first: ExitScan en RetentieScan dragen de sterkste buyer-facing voorbeeldoutput; non-core routes blijven vooral via trustlaag en bounded productuitleg ondersteund.
 
 ## Belangrijkste inconsistenties of risico's
 
@@ -39,6 +40,7 @@ Dit brief voedt de homepage-, aanpak- en tarieven-threads met vaste inhoudelijke
 - `TeamScan`, `Onboarding 30-60-90`, `Pulse` en `Leadership Scan` worden alleen uitgelegd als vervolg, bounded support of lokale verificatie.
 - `Combinatie` blijft een portfolio-route boven meerdere managementvragen, geen zelfstandige hoofdpropositie.
 - Geen prijs- of pakketbesluiten in redesign-readiness; alleen inhoudelijke rails voor latere uitwerking.
+- Follow-on routes mogen commercieel niet klinken alsof ze dezelfde maturity of bewijslaag dragen als de twee kernroutes.
 
 ## Concrete wijzigingen
 
@@ -59,6 +61,7 @@ Dit brief voedt de homepage-, aanpak- en tarieven-threads met vaste inhoudelijke
   - first-buy clarity
   - bounded vervolglogica
   - geen impliciete suite-bundel of maturitypromotie
+  - core-first deliverable-proof
 - Mag niet doen:
   - pricing of bundelstructuur beslissen
   - parity-build routes als hoofdproducten framen
@@ -74,6 +77,7 @@ Dit brief voedt de homepage-, aanpak- en tarieven-threads met vaste inhoudelijke
 
 - De redesignthreads ontvangen deze rails als handoff en niet als nieuwe strategieopdracht.
 - Buyer-facing copy kan later nog per pagina worden aangescherpt, zolang de routearchitectuur uit dit brief intact blijft.
+- Productstatuslabels uit het hardeningprogramma blijven intern en mogen niet als buyer-facing maturitytaal terugkeren.
 
 ## Next gate
 

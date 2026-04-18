@@ -112,7 +112,7 @@ def get_management_summary_payload(
     )
 
     return {
-        "section_title": "Managementsamenvatting",
+        "section_title": "Management-handoff",
         "distribution_title": "Verdeling van het leadershipsignaal",
         "findings_title": "Scherpste managementlezing",
         "executive_title": "Managementcontext-duiding voor HR en MT",

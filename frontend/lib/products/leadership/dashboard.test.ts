@@ -64,7 +64,7 @@ describe('buildLeadershipDashboardViewModel', () => {
     expect(model.managementBlocks[3]?.items[0]).toContain('named leaders')
     expect(model.profileCards[0]?.body.toLowerCase()).toContain('management-context triage')
     expect(model.profileCards[1]?.value).toBe('Owner -> actie -> review')
-    expect(model.followThroughCards[5]?.title).toBe('Wanneer terug naar bredere diagnose')
+expect(model.followThroughCards[5]?.title).toBe('Wanneer terug naar bredere duiding')
   })
 
   it('builds an attention management read with a middle band override for a mixed signal', () => {
@@ -93,8 +93,8 @@ describe('buildLeadershipDashboardViewModel', () => {
     expect(model.topSummaryCards[6]?.value).toBe('Geen TeamScan-claim')
     expect(model.primaryQuestion.title).toBe('Eerste managementvraag')
     expect(model.nextStep.title).toBe('Beleg eerste verificatie')
-    expect(model.followThroughCards[5]?.title).toBe('Wanneer terug naar bredere diagnose')
-    expect(model.followThroughCards[5]?.body.toLowerCase()).toContain('bredere diagnose')
+expect(model.followThroughCards[5]?.title).toBe('Wanneer terug naar bredere duiding')
+expect(model.followThroughCards[5]?.body.toLowerCase()).toContain('bredere duiding')
     expect(model.managementBlocks[2]?.items[3]?.toLowerCase()).toContain('review')
     expect(model.profileCards[0]?.body.toLowerCase()).toContain('named leader')
   })
@@ -127,7 +127,7 @@ describe('buildLeadershipDashboardViewModel', () => {
     expect(model.followThroughCards[3]?.body.toLowerCase()).toContain('management')
     expect(model.managementBlocks[2]?.items[2]?.toLowerCase()).toContain('zichtbare verandering')
     expect(model.managementBlocks[3]?.items[0]).toContain('360')
-    expect(model.managementBlocks[3]?.items[1]).toContain('bredere diagnose')
+expect(model.managementBlocks[3]?.items[1]).toContain('bredere duiding')
     expect(model.profileCards[0]?.body.toLowerCase()).toContain('360')
     expect(model.topSummaryCards[6]?.body.toLowerCase()).toContain('performance')
   })

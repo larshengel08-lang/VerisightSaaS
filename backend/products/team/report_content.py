@@ -127,7 +127,7 @@ def get_management_summary_payload(
         local_state_body = (
             "Er is nog geen veilige afdelingsvergelijking zichtbaar. Lees TeamScan nu vooral als bounded lokale contextlaag "
             "en verbeter eerst respons of department-metadata voordat je afdelingen tegen elkaar afzet. "
-            "Schakel hier terug naar bredere diagnose in plaats van lokale volgorde te suggereren."
+            "Schakel hier terug naar bredere duiding in plaats van lokale volgorde te suggereren."
         )
     elif safe_groups == 1:
         local_state_value = "1 veilige afdeling zichtbaar"
@@ -153,7 +153,7 @@ def get_management_summary_payload(
 
     trust_note = (
         "Lees TeamScan als veilige department-first lokalisatielaag. Het rapport helpt kiezen waar een eerste lokale check nodig is, "
-        "wie die trekt en wanneer je weer terugschakelt naar bredere diagnose. Dit is geen managerbeoordeling, geen named-leader output, "
+            "wie die trekt en wanneer je weer terugschakelt naar bredere duiding. Dit is geen managerbeoordeling, geen named-leader output, "
         "geen hierarchy-model en geen bewijs dat een lokale oorzaak vaststaat. Kleine groepen blijven onderdrukt."
     )
 
@@ -163,7 +163,7 @@ def get_management_summary_payload(
     )
 
     return {
-        "section_title": "Managementsamenvatting",
+        "section_title": "Lokale handoff",
         "distribution_title": "Verdeling van het teamsignaal",
         "findings_title": "Scherpste lokale managementlezing",
         "executive_title": "Lokale duiding voor HR en afdelingsleiding",
@@ -333,7 +333,7 @@ def get_signal_page_cards_payload(
     )
     coverage_body = (
         "Er zijn nog geen afdelingen met voldoende responses voor veilige lokale vergelijking. "
-        "Schakel terug naar bredere diagnose totdat lokale leesbaarheid eerlijk gedragen wordt."
+            "Schakel terug naar bredere duiding totdat lokale leesbaarheid eerlijk gedragen wordt."
         if safe_groups == 0
         else f"{safe_groups} van {total_groups} afdelingen zijn veilig leesbaar in deze TeamScan; kleinere groepen blijven bewust onderdrukt."
     )
@@ -446,7 +446,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
     return {
         "section_title": "Vervolgstappen",
         "intro_text": (
-            "Gebruik TeamScan om snel te kiezen waar eerst een afdelingscheck nodig is, wie die trekt en wanneer je weer terugschakelt naar bredere diagnose."
+            "Gebruik TeamScan om snel te kiezen waar eerst een afdelingscheck nodig is, wie die trekt en wanneer je weer terugschakelt naar bredere duiding."
         ),
         "session_title": "Eerste lokale managementsessie na oplevering",
         "session_intro": (

@@ -126,7 +126,7 @@ describe('buildTeamLocalReadState', () => {
     expect(state.status).toBe('needs_metadata')
     expect(state.safeGroupCount).toBe(0)
     expect(state.summaryBody).toContain('te weinig responses bevatten een bruikbare afdeling')
-    expect(state.caution.toLowerCase()).toContain('bredere diagnose')
+expect(state.caution.toLowerCase()).toContain('bredere duiding')
   })
 
   it('keeps small groups suppressed until a safe local read exists', () => {
@@ -144,7 +144,7 @@ describe('buildTeamLocalReadState', () => {
     expect(state.status).toBe('needs_safe_groups')
     expect(state.suppressedGroupCount).toBe(2)
     expect(state.caution.toLowerCase()).toContain('onderdrukt')
-    expect(state.caution.toLowerCase()).toContain('bredere diagnose')
+expect(state.caution.toLowerCase()).toContain('bredere duiding')
   })
 
   it('surfaces suppressed groups even when a safe local read is available', () => {
@@ -165,7 +165,7 @@ describe('buildTeamLocalReadState', () => {
     expect(state.status).toBe('ready')
     expect(state.suppressedGroupCount).toBe(1)
     expect(state.summaryBody.toLowerCase()).toContain('onderdrukt')
-    expect(state.caution.toLowerCase()).toContain('bredere diagnose')
+expect(state.caution.toLowerCase()).toContain('bredere duiding')
   })
 })
 
@@ -234,6 +234,6 @@ describe('buildTeamPriorityReadState', () => {
 
     expect(priority.status).toBe('not_available')
     expect(priority.groups).toHaveLength(0)
-    expect(priority.caution.toLowerCase()).toContain('bredere diagnose')
+expect(priority.caution.toLowerCase()).toContain('bredere duiding')
   })
 })
