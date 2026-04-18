@@ -33,7 +33,7 @@ import {
   buildSafeTableResponses,
   CampaignHealthIndicator,
   clusterRetentionOpenSignals,
-  computeAverageRiskScore,
+  computeAverageSignalScore,
   computePulseSignalAverages,
   computeAverageSignalVisibility,
   computeFactorAverages,
@@ -189,7 +189,7 @@ export default async function CampaignPage({ params }: Props) {
   const respondents = (allRespondents ?? []) as Respondent[]
 
   const factorData = computeFactorAverages(responses)
-  const averageRiskScore = computeAverageRiskScore(responses)
+  const averageRiskScore = computeAverageSignalScore(responses)
   const strongWorkSignalRate = stats.scan_type === 'exit' ? computeStrongWorkSignalRate(responses) : null
   const topExitReasonLabel = stats.scan_type === 'exit' ? getTopExitReasonLabel(responses) : null
   const topContributingReasonLabel =

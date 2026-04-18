@@ -4,6 +4,18 @@
 
 Dit document legt de vaste claimgrens voor RetentieScan v1.1 vast. Gebruik dit als referentie voor product, dashboard, rapport, validatie-output en buyer-facing copy.
 
+Boundary note:
+
+- `risk_score`, `avg_risk_score` en `stay_intent_score` zijn in dit document raw/storage-termen wanneer ze in code- of validatiecontext voorkomen.
+- Producttaal blijft leidend:
+  - `retentiesignaal`
+  - `gem. retentiesignaal`
+  - `stay-intent` als aanvullende signaallaag
+- Vanaf 2026-04-18 geldt daarnaast een non-breaking aliaslaag in response/view-models:
+  - `signal_score`
+  - `avg_signal_score`
+  - `direction_signal_score`
+
 Leidende uitgangspunten:
 
 - ExitScan blijft het primaire product voor terugkijkende vertrekduiding.

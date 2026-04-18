@@ -477,9 +477,11 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
         "n":                    n,
         "sufficient_data":      True,
         "avg_risk_score":       avg_risk,
+        "avg_signal_score":     avg_risk,
         "avg_engagement_score": avg_engagement,
         "avg_turnover_intention_score": avg_turnover_intention,
         "avg_stay_intent_score": avg_stay_intent,
+        "avg_direction_signal_score": avg_stay_intent,
         "factor_averages":      factor_averages,
         "top_risk_factors":     top_risks,
         "preventability_counts": preventability_counts,
@@ -496,4 +498,5 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
             for code, cnt in top_contributing_reasons
         ],
         "department_avg_risk":  dept_avg,
+        "department_avg_signal": dept_avg,
     }

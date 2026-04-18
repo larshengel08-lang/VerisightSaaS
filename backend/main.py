@@ -1557,6 +1557,7 @@ async def campaign_stats(
             "org_scores": respondent.response.org_scores,
             "sdt_scores": respondent.response.sdt_scores,
             "risk_score": respondent.response.risk_score,
+            "signal_score": respondent.response.risk_score,
             "preventability": respondent.response.preventability,
             "exit_reason_code": respondent.response.exit_reason_code,
             "contributing_reason_codes": list((respondent.response.pull_factors_raw or {}).keys()),

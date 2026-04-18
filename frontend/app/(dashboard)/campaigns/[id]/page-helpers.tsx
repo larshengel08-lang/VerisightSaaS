@@ -3,7 +3,12 @@ import { getProductModule } from '@/lib/products/shared/registry'
 import type { SegmentPlaybookEntry, SignalTrendCard } from '@/lib/products/shared/types'
 import { buildFactorPresentation, getManagementBandLabel } from '@/lib/management-language'
 import { getScanDefinition } from '@/lib/scan-definitions'
-import { EXIT_REASON_LABELS, FACTOR_LABELS } from '@/lib/types'
+import {
+  EXIT_REASON_LABELS,
+  FACTOR_LABELS,
+  getResponseDirectionSignalScore,
+  getResponseSignalScore,
+} from '@/lib/types'
 import type { CampaignStats, Respondent, ScanType, SurveyResponse } from '@/lib/types'
 import { DashboardPanel } from '@/components/dashboard/dashboard-primitives'
 
@@ -739,7 +744,7 @@ export function computeRetentionSupplementalAverages(responses: SurveyResponse[]
     .map((response) => response.turnover_intention_score)
     .filter((value): value is number => typeof value === 'number')
   const stayIntent = responses
-    .map((response) => response.stay_intent_score)
+    .map((response) => getResponseDirectionSignalScore(response))
     .filter((value): value is number => typeof value === 'number')
     .map((value) => ((value - 1) / 4) * 9 + 1)
 
@@ -755,14 +760,14 @@ export function computeRetentionSupplementalAverages(responses: SurveyResponse[]
 
 export function computeRetentionSignalAverages(responses: SurveyResponse[]): RetentionSignalAverages {
   return {
-    retentionSignal: computeAverageRiskScore(responses),
+    retentionSignal: computeAverageSignalScore(responses),
     ...computeRetentionSupplementalAverages(responses),
   }
 }
 
 export function computePulseSignalAverages(responses: SurveyResponse[]): PulseSignalAverages {
   return {
-    pulseSignal: computeAverageRiskScore(responses),
+    pulseSignal: computeAverageSignalScore(responses),
     stayIntent: computeRetentionSupplementalAverages(responses).stayIntent,
     factorAverages: computeFactorAverages(responses).orgAverages,
   }
@@ -992,7 +997,7 @@ export function buildRetentionSegmentPlaybooks(args: {
       const topFactor = sortedFactors[0]
       if (!topFactor) return null
 
-      const avgSignal = computeAverageRiskScore(group.responses)
+      const avgSignal = computeAverageSignalScore(group.responses)
       if (avgSignal === null) return null
 
       const band = topFactor.signalValue >= 7 ? 'HOOG' : topFactor.signalValue >= 4.5 ? 'MIDDEN' : 'LAAG'
@@ -1079,18 +1084,23 @@ export function buildRiskHistogram(responses: SurveyResponse[]) {
   const bins = ['1-2', '2-3', '3-4', '4-5', '5-6', '6-7', '7-8', '8-9', '9-10']
   const counts = Object.fromEntries(bins.map((bin) => [bin, 0])) as Record<string, number>
   for (const response of responses) {
-    if (typeof response.risk_score !== 'number') continue
-    const lower = Math.max(1, Math.min(9, Math.floor(response.risk_score)))
+    const signalScore = getResponseSignalScore(response)
+    if (typeof signalScore !== 'number') continue
+    const lower = Math.max(1, Math.min(9, Math.floor(signalScore)))
     counts[`${lower}-${lower + 1}`] += 1
   }
   return bins.map((range) => ({ range, count: counts[range] }))
 }
 
 export function computeAverageRiskScore(responses: SurveyResponse[]) {
-  const values = responses.map((response) => response.risk_score).filter((value): value is number => typeof value === 'number')
+  const values = responses
+    .map((response) => getResponseSignalScore(response))
+    .filter((value): value is number => typeof value === 'number')
   if (!values.length) return null
   return values.reduce((sum, value) => sum + value, 0) / values.length
 }
+
+export const computeAverageSignalScore = computeAverageRiskScore
 
 export function RecommendationList({
   factorAverages,
