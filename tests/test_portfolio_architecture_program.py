@@ -34,6 +34,15 @@ def test_mto_governance_wave_tracks_buyer_facing_but_not_default_state():
     assert "replace_retentiescan_default" in governance_contract
 
 
+def test_mto_closeout_wave_keeps_mainline_transition_blocked_until_new_track():
+    closeout_wave = _read("docs/active/wave_05_mto_mainline_transition_gate_closeout.md")
+    governance_contract = _read("frontend/lib/mto-portfolio-governance.ts")
+
+    assert "mainline transition" in closeout_wave
+    assert "aparte volgende track" in closeout_wave
+    assert "not_open" in governance_contract
+
+
 def test_portfolio_contract_tracks_current_core_first_suite_model():
     marketing_products = _read("frontend/lib/marketing-products.ts")
     frontend_types = _read("frontend/lib/types.ts")
