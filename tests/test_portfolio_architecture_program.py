@@ -44,6 +44,7 @@ def test_portfolio_contract_tracks_current_core_first_suite_model():
     assert '"combinatie"' in backend_schemas
     assert '"nog-onzeker"' in backend_schemas
     assert "check (scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'mto'))" in schema
+    assert "scan_type               text check (scan_type is null or scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'mto'))" in schema
 
 
 def test_public_surfaces_keep_core_first_hierarchy_with_live_follow_on_routes():

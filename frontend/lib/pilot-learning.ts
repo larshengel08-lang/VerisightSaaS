@@ -357,8 +357,12 @@ export function buildLearningObjectiveSignals({
     if (campaignStats) {
       items.push(
         campaignStats.total_completed >= 10
-          ? 'Campaign heeft genoeg responses voor een stevige eerste managementread.'
-          : 'Campaign zit nog in een vroege read-fase; check extra scherp hoe voorzichtig de output is gelezen.',
+          ? dossier.scan_type === 'mto'
+            ? 'MTO heeft genoeg responses voor een stevige brede hoofdmeting.'
+            : 'Campaign heeft genoeg responses voor een stevige eerste managementread.'
+          : dossier.scan_type === 'mto'
+            ? 'MTO zit nog in een vroege hoofdmeting-fase; check extra scherp hoe voorzichtig de brede read is gelezen.'
+            : 'Campaign zit nog in een vroege read-fase; check extra scherp hoe voorzichtig de output is gelezen.',
       )
     }
     items.push(
@@ -395,6 +399,9 @@ export function buildLearningObjectiveSignals({
     }
     if (dossier.next_route && dossier.management_action_outcome) {
       items.push('De vervolgrichting is gekoppeld aan eerdere managementwaarde in plaats van een losse upsell.')
+    }
+    if (dossier.scan_type === 'mto' && dossier.management_action_outcome) {
+      items.push('De MTO action-logroute is expliciet gekoppeld aan hoofdmeting, eerste actie en reviewmoment.')
     }
   }
 

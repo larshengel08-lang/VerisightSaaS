@@ -442,7 +442,7 @@ create table if not exists public.pilot_learning_dossiers (
   contact_request_id      uuid references public.contact_requests(id) on delete set null,
   title                   text not null,
   route_interest          text not null default 'exitscan' check (route_interest in ('exitscan', 'retentiescan', 'combinatie', 'nog-onzeker')),
-  scan_type               text check (scan_type is null or scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership')),
+  scan_type               text check (scan_type is null or scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'mto')),
   delivery_mode           text check (delivery_mode in ('baseline', 'live')),
   triage_status           text not null default 'nieuw' check (triage_status in ('nieuw', 'bevestigd', 'geparkeerd', 'uitgevoerd', 'verworpen')),
   lead_contact_name       text,

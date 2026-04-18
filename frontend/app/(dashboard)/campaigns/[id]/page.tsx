@@ -1730,7 +1730,11 @@ export default async function CampaignPage({ params }: Props) {
               <DashboardDisclosure
                 defaultOpen={false}
                 title="Pilot- en early-customer-learning"
-                description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementread en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
+                description={
+                  stats.scan_type === 'mto'
+                    ? 'Gebruik de learning-workbench als bounded MTO report-to-action en action-log route: leg eerste managementwaarde, eerste actie, reviewmoment en vervolgrichting expliciet vast.'
+                    : 'Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementread en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign.'
+                }
                 badge={
                   <DashboardChip
                     label={
@@ -1747,11 +1751,23 @@ export default async function CampaignPage({ params }: Props) {
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr),minmax(320px,0.9fr)]">
                   <DashboardPanel
                     eyebrow="Waarom nu"
-                    title={learningDossiers.length > 0 ? 'Campaign is al opgenomen in de learninglus' : 'Koppel deze campaign aan een learningdossier'}
+                    title={
+                      learningDossiers.length > 0
+                        ? stats.scan_type === 'mto'
+                          ? 'MTO zit al in de report-to-actionlus'
+                          : 'Campaign is al opgenomen in de learninglus'
+                        : stats.scan_type === 'mto'
+                          ? 'Koppel deze MTO aan een action-logdossier'
+                          : 'Koppel deze campaign aan een learningdossier'
+                    }
                     body={
                       learningDossiers.length > 0
-                        ? 'Gebruik gekoppelde dossiers om implementationfrictie, launchsignalen, managementgebruik en gekozen vervolgroutes expliciet terug te laten landen in product, report, onboarding, sales en operations.'
-                        : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de learning-workbench. Zo blijven echte deliverylessen en vervolgkeuzes niet hangen in losse handover-notes.'
+                        ? stats.scan_type === 'mto'
+                          ? 'Gebruik gekoppelde dossiers om eerste managementwaarde, eerste actie, reviewmoment en gekozen vervolgrichting expliciet terug te laten landen als bounded MTO report-to-action spoor.'
+                          : 'Gebruik gekoppelde dossiers om implementationfrictie, launchsignalen, managementgebruik en gekozen vervolgroutes expliciet terug te laten landen in product, report, onboarding, sales en operations.'
+                        : stats.scan_type === 'mto'
+                          ? 'Zodra deze MTO eerste managementwaarde geeft, koppel je hem aan een dossier in de learning-workbench. Zo blijven eerste actie, owner en reviewmoment niet hangen in losse handover-notes.'
+                          : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de learning-workbench. Zo blijven echte deliverylessen en vervolgkeuzes niet hangen in losse handover-notes.'
                     }
                     tone={learningDossiers.length > 0 ? 'blue' : 'amber'}
                   />
@@ -1795,7 +1811,7 @@ export default async function CampaignPage({ params }: Props) {
                       href={`/beheer/klantlearnings?campaign=${id}`}
                       className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
                     >
-                      Open learning-workbench
+                      {stats.scan_type === 'mto' ? 'Open MTO action log' : 'Open learning-workbench'}
                     </Link>
                   </div>
                 </div>

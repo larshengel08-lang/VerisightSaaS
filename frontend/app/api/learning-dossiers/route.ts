@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import type { ScanType } from '@/lib/types'
 import {
   CASE_APPROVAL_STATUS_OPTIONS,
   CASE_EVIDENCE_CLOSURE_OPTIONS,
@@ -122,7 +123,7 @@ export async function POST(request: Request) {
   }
 
   let derivedOrganizationId = body.organization_id ?? null
-  let derivedScanType: 'exit' | 'retention' | null = null
+  let derivedScanType: ScanType | null = null
   let derivedDeliveryMode: 'baseline' | 'live' | null = null
 
   if (body.campaign_id) {

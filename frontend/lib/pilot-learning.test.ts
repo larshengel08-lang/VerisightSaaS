@@ -169,4 +169,44 @@ describe('pilot learning defaults', () => {
     expect(signals.join(' ')).toContain('eerste managementactie of reviewuitkomst')
     expect(signals.join(' ')).toContain('in plaats van een losse upsell')
   })
+
+  it('frames first management use for mto as a broad main measurement with explicit action logging', () => {
+    const signals = buildLearningObjectiveSignals({
+      checkpointKey: 'first_management_use',
+      dossier: {
+        route_interest: 'combinatie',
+        delivery_mode: 'baseline',
+        scan_type: 'mto',
+        expected_first_value: 'Eerste brede hoofdmeting en prioritering',
+        first_management_value: 'MT ziet voor het eerst welke organisatiethema\'s prioriteit vragen.',
+        first_action_taken: 'Eerste brede managementhuddle gepland.',
+        review_moment: 'Review over 60 dagen.',
+        next_route: null,
+        stop_reason: null,
+        management_action_outcome: 'Eerste eigenaar, actie en reviewmoment vastgelegd.',
+        adoption_outcome: null,
+        trust_friction: null,
+      },
+      campaignStats: {
+        campaign_id: 'cmp-mto-1',
+        campaign_name: 'MTO Najaar',
+        scan_type: 'mto',
+        organization_id: 'org-1',
+        is_active: true,
+        created_at: '2026-04-18T10:00:00Z',
+        total_invited: 40,
+        total_completed: 18,
+        completion_rate_pct: 45,
+        avg_risk_score: 6.8,
+        band_high: 8,
+        band_medium: 6,
+        band_low: 4,
+      },
+      activeClientAccessCount: 1,
+    })
+
+    expect(signals.join(' ')).toContain('MTO heeft genoeg responses voor een stevige brede hoofdmeting.')
+    expect(signals.join(' ')).toContain('managementactie-uitkomst')
+    expect(signals.join(' ')).toContain('eerste managementwaarde')
+  })
 })

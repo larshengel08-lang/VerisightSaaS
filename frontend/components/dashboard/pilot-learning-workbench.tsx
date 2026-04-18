@@ -197,6 +197,12 @@ function emptyCreateForm(): CreateFormState {
   }
 }
 
+function getRouteInterestForCampaignScanType(scanType: Campaign['scan_type'], current: PilotLearningDossier['route_interest']) {
+  if (scanType === 'exit') return 'exitscan'
+  if (scanType === 'retention') return 'retentiescan'
+  return current
+}
+
 function formatAmsterdamDate(value: string) {
   try {
     return new Intl.DateTimeFormat('nl-NL', {
@@ -333,9 +339,9 @@ export function PilotLearningWorkbench({
       ...current,
       organization_id: campaign.organization_id,
       campaign_id: campaign.id,
-      route_interest: campaign.scan_type === 'exit' ? 'exitscan' : 'retentiescan',
+      route_interest: getRouteInterestForCampaignScanType(campaign.scan_type, current.route_interest),
       title: getSuggestedLearningDossierTitle({
-        routeInterest: campaign.scan_type === 'exit' ? 'exitscan' : 'retentiescan',
+        routeInterest: getRouteInterestForCampaignScanType(campaign.scan_type, current.route_interest),
         campaignName: campaign.name,
         organizationName: orgById[campaign.organization_id]?.name,
       }),
