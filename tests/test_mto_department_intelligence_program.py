@@ -102,16 +102,20 @@ def test_action_center_maturity_phase_keeps_suite_capability_gated():
     wave_two = _read("docs/active/wave_02_action_center_guided_creation_and_dossiers.md")
     wave_three = _read("docs/active/wave_03_action_center_permission_envelope.md")
     wave_four = _read("docs/active/wave_04_action_center_loader_and_adapter_seams.md")
+    wave_five = _read("docs/active/wave_05_action_center_polish_and_closeout.md")
 
     assert "mto blijft de eerste actieve drager" in plan
     assert "suitekoppeling blijft expliciet in scope als capability" in plan
     assert "live koppeling naar exitscan, retentiescan of andere routes blijft gated" in plan
+    assert "plan status: completed" in plan
     assert "wave_01_action_center_cockpit_reframe.md" in stack
     assert "wave_04_action_center_loader_and_adapter_seams.md" in stack
+    assert "plan status: completed" in stack
     assert "wave status: completed_green" in wave_one
     assert "wave status: completed_green" in wave_two
     assert "wave status: completed_green" in wave_three
-    assert "build permission: allowed" in wave_four
+    assert "wave status: completed_green" in wave_four
+    assert "wave status: completed_green" in wave_five
 
 
 def test_action_center_loader_boundary_moves_mto_queries_out_of_campaign_page():

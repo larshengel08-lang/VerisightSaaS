@@ -204,6 +204,7 @@ describe('buildMtoActionCenterViewModel', () => {
 
     expect(model.followThroughSignals.quietActions).toBe(1)
     expect(model.followThroughSignals.reviewDueNow).toBe(1)
+    expect(model.reviewQueue[0].stateLabel).toBe('Review nu')
   })
 
   it('summarizes action health per theme for the cockpit', () => {

@@ -48,6 +48,7 @@ export interface MtoActionCenterViewModel {
     departmentLabel: string
     title: string
     tone: 'blue' | 'amber' | 'slate'
+    stateLabel: string
   }>
 }
 
@@ -177,6 +178,12 @@ export function buildMtoActionCenterViewModel(args: {
           : action.review_date! < todayIsoDate
             ? ('amber' as const)
             : ('blue' as const),
+      stateLabel:
+        action.status === 'closed'
+          ? 'Afgesloten'
+          : action.review_date! < todayIsoDate
+            ? 'Review nu'
+            : 'Review gepland',
     }))
 
   return {

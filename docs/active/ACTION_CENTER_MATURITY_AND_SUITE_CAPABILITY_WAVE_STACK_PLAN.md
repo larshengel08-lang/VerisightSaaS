@@ -2,11 +2,11 @@
 
 ## Status
 
-- Plan status: active
+- Plan status: completed
 - Active source of truth: dit document
-- Build permission: wave_01_open
+- Build permission: closed_after_wave_05
 - Dependency: `ACTION_CENTER_MATURITY_AND_SUITE_CAPABILITY_PLAN.md` moet leidend blijven
-- Next allowed step after green completion of current wave: closeout_of_current_phase
+- Next allowed step after green completion of current wave: expliciete gated suite action center adapter-track
 
 ## Allowed Wave Stack
 
@@ -26,8 +26,8 @@
 
 ## Current Wave
 
-- Current active wave: `WAVE_05_ACTION_CENTER_POLISH_AND_CLOSEOUT.md`
-- Last completed wave: `WAVE_04_ACTION_CENTER_LOADER_AND_ADAPTER_SEAMS.md`
+- Current active wave: none
+- Last completed wave: `WAVE_05_ACTION_CENTER_POLISH_AND_CLOSEOUT.md`
 
 ## Closeout Gate
 
@@ -37,3 +37,11 @@
 - permission envelope scherp genoeg is voor bounded managergebruik
 - loader boundary expliciet is geisoleerd
 - adapter seams duidelijk genoeg zijn voor een latere gated suite-track
+
+## Closeout
+
+- `WAVE_01_ACTION_CENTER_COCKPIT_REFRAME.md` groen
+- `WAVE_02_ACTION_CENTER_GUIDED_CREATION_AND_DOSSIERS.md` groen
+- `WAVE_03_ACTION_CENTER_PERMISSION_ENVELOPE.md` groen
+- `WAVE_04_ACTION_CENTER_LOADER_AND_ADAPTER_SEAMS.md` groen
+- `WAVE_05_ACTION_CENTER_POLISH_AND_CLOSEOUT.md` groen

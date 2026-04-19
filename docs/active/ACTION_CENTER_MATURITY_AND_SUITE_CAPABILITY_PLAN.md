@@ -2,11 +2,11 @@
 
 ## Status
 
-- Plan status: active
+- Plan status: completed
 - Active source of truth: dit document
-- Build permission: wave_01_open
+- Build permission: closed_after_wave_05
 - Dependency: `docs/superpowers/specs/2026-04-19-action-center-design.md` en `docs/superpowers/specs/2026-04-19-action-center-improvement-review.md` blijven leidend
-- Next allowed step: `WAVE_01_ACTION_CENTER_COCKPIT_REFRAME.md`
+- Next allowed step: expliciete gated suite action center adapter-track
 
 ## Summary
 
@@ -63,3 +63,10 @@ Na deze fase moet het Action Center:
 - architectonisch beter los staan van de campaign page
 - inhoudelijk beter dossiergedreven zijn
 - rechten en adapterseams helder genoeg hebben voor een latere gated suitekoppeling
+
+## Completion Notes
+
+- De cockpit leest nu sterker als afdelingsgerichte managementworkspace.
+- Guided creation en dossierflow zijn aanwezig zonder rigide workflow te worden.
+- De permission envelope begrenst viewer-managers op hun eigen afdeling, terwijl HR en campaignmanagers centraal zicht houden.
+- De Action Center-loader en adapter seams zijn geisoleerd, zodat latere suitekoppeling mogelijk blijft zonder nu live te gaan.

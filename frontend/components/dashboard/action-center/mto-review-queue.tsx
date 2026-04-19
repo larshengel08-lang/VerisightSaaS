@@ -79,7 +79,7 @@ export function MtoReviewQueue({ reviewQueue, reviews = [] }: Props) {
                 <p className="mt-2 text-sm leading-6 text-slate-600">{reviewCount} review(s) gelogd voor deze actie.</p>
               </div>
               <span className={`rounded-full px-3 py-1 text-xs font-semibold ${toneClass(item.tone)}`}>
-                {item.tone === 'amber' ? 'Review nu' : item.tone === 'blue' ? 'Review gepland' : 'Afgesloten'}
+                {item.stateLabel}
               </span>
             </div>
             <div className="mt-4 grid gap-4 xl:grid-cols-3">
@@ -87,7 +87,7 @@ export function MtoReviewQueue({ reviewQueue, reviews = [] }: Props) {
                 value={draft.summary}
                 onChange={(event) => updateDraft(item.actionId, 'summary', event.target.value)}
                 rows={3}
-                placeholder="Leg vast wat is gedaan, wat is waargenomen en wat de volgende stap is."
+                placeholder="Leg kort vast wat is gedaan, wat is waargenomen en wat de volgende stap wordt."
                 className={`${inputClass} xl:col-span-2`}
               />
               <div className="space-y-3">

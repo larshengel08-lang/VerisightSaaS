@@ -244,7 +244,7 @@ export function MtoActionList({
                 </select>
               </label>
               <label className="space-y-1 text-sm text-slate-700">
-                <span className="font-medium text-slate-900">Expected outcome</span>
+                <span className="font-medium text-slate-900">Verwachte uitkomst</span>
                 <textarea
                   value={draft.expected_outcome}
                   onChange={(event) => updateDraft(action.id, 'expected_outcome', event.target.value)}
