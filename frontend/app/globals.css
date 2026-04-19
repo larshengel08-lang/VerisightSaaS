@@ -937,7 +937,10 @@ details > summary::-webkit-details-marker {
       grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
     }
 
-    .marketing-hero-grid-home,
+    .marketing-hero-grid-home {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    }
+
     .marketing-hero-grid-product {
       grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
     }
@@ -971,12 +974,12 @@ details > summary::-webkit-details-marker {
     }
 
     .marketing-hero-grid-home .marketing-hero-region-intro {
-      max-width: 35rem;
+      max-width: 42rem;
       padding-top: 1rem;
     }
 
     .marketing-hero-grid-home .marketing-hero-region-stage {
-      align-self: center;
+      align-self: start;
     }
 
     .marketing-hero-grid-home .marketing-hero-copy {

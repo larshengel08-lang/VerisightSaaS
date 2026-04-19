@@ -40,27 +40,27 @@ export const marketingLegalLinks = [
 export const homepageProductRoutes = [
   {
     name: 'ExitScan',
-    title: 'Breng vertrekduiding scherp in beeld',
-    body: 'Terugkijkende vertrekduiding op groepsniveau, met bestuurlijke handoff en een heldere eerste managementroute.',
+    title: 'Waarom zijn mensen vertrokken?',
+    body: 'Breng vertrekpatronen in beeld en begrijp welke werkfactoren het meest meespelen. Met een rapport dat u intern kunt bespreken.',
     href: '/producten/exitscan',
     accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
-    chip: 'Kernroute',
+    chip: 'Meest gekozen',
   },
   {
     name: 'RetentieScan',
-    title: 'Zie waar behoud onder druk staat',
-    body: 'Vroegsignalering op behoud op groeps- en segmentniveau, met retentiesignaal en een eerste verificatiespoor.',
+    title: 'Waar staat behoud nu onder druk?',
+    body: 'Zie waar behoud bij actieve medewerkers onder druk staat, voordat mensen weggaan. Op groepsniveau, zonder individuele signalen naar management.',
     href: '/producten/retentiescan',
     accent: 'border-[#DCEFEA] bg-[#F7F5F1]',
-    chip: 'Kernroute',
+    chip: 'Preventief',
   },
   {
     name: 'Combinatie',
-    title: 'Verbind vertrek- en retentieanalyse',
-    body: 'Voor organisaties die beide managementvragen hebben en bewust willen combineren nadat de eerste helder staat.',
+    title: 'Beide vragen in één aanpak',
+    body: 'Als zowel vertrek als behoud spelen en u ze bewust wilt combineren nadat de eerste route helder staat.',
     href: '/producten/combinatie',
     accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
-    chip: 'Portfolioroute',
+    chip: 'Op aanvraag',
   },
 ] as const
 
