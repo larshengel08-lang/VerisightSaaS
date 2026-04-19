@@ -24,7 +24,7 @@ De eerste schermlaag toont altijd eerst:
 
 ## Recommendation logic
 
-De homepage kiest altijd één aanbevolen campaign.
+De homepage kiest altijd een aanbevolen campaign.
 
 Prioriteit:
 
@@ -55,7 +55,7 @@ Campaigns worden in vier deterministische groepen gezet:
 - `Archief`
   Oudere gesloten campaigns die beschikbaar blijven zonder te concurreren met de huidige campaignkeuze.
 
-Deze grouping maakt direct zichtbaar welke campaigns nú aandacht vragen en welke vooral naslag zijn.
+Deze grouping maakt direct zichtbaar welke campaigns nu aandacht vragen en welke vooral naslag zijn.
 
 ## Dashboard versus PDF
 
@@ -70,7 +70,7 @@ Dashboard wordt ook expliciet verborgen of gedowngraded wanneer een campaign nog
 
 ## Wat bewust lager is gezet
 
-De volgende zaken zijn expres lager in de hiërarchie geplaatst:
+De volgende zaken zijn expres lager in de hierarchie geplaatst:
 
 - route-uitleg
 - rapportgebruik-uitleg
@@ -78,3 +78,13 @@ De volgende zaken zijn expres lager in de hiërarchie geplaatst:
 - beheer- en operationele taken
 
 Deze content blijft beschikbaar via secundaire blocks en disclosures, maar concurreert niet meer met de hoofdvraag: welke campaign open je nu?
+
+## Visuele hierarchie
+
+De polishlaag maakt deze visuele regels expliciet:
+
+- de recommendation block blijft de duidelijk dominante eerste beslissing
+- campaign cards zijn bewust compacter en tonen alleen de kern voor kiezen, niet alle uitleg
+- `Gesloten / rapport beschikbaar` blijft actiegericht leesbaar
+- `Archief` blijft zichtbaar, maar voelt bewust lager in urgentie en visueel rustiger
+- dashboard versus PDF blijft expliciet, maar in compactere copy en lichtere keuzehulpen

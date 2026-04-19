@@ -204,9 +204,9 @@ function buildRecommendation(
     primaryAction,
     secondaryAction,
     dashboardChoiceDescription:
-      'Dashboard = interactieve lezing, prioritering en vervolgkeuzes zodra je wilt duiden of bijsturen.',
+      'Dashboard = lezen, prioriteren en direct bepalen wat nu aandacht vraagt.',
     pdfChoiceDescription:
-      'PDF = delen, bespreken en meenemen als boardroom-ready samenvatting of follow-updocument.',
+      'PDF = delen, bespreken en meenemen als compacte managementsamenvatting.',
   }
 }
 
@@ -249,11 +249,11 @@ function buildDashboardAction(
 
     return {
       kind: 'dashboard',
-      label: 'Dashboard volgt',
-      description: 'Het dashboard wordt relevant zodra deze campagne live staat en respons begint binnen te komen.',
+      label: 'Wacht op livegang',
+      description: 'Nog niet leesbaar. Eerst livegang en eerste respons, daarna pas dashboardkeuze.',
       available: false,
       href: null,
-      reason: 'Dashboard volgt zodra de campaign live staat en de eerste responses binnenkomen.',
+      reason: 'Nog niet leesbaar: wacht op livegang en eerste respons voordat dashboard of PDF zinvol worden.',
     }
   }
 

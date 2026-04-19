@@ -167,7 +167,22 @@ describe('dashboard and pdf availability', () => {
     expect(pulseCard?.secondaryAction?.available).toBe(false)
     expect(pulseCard?.secondaryAction?.reason).toContain('nog geen formeel PDF-rapport')
     expect(setupCard?.primaryAction.available).toBe(false)
-    expect(setupCard?.primaryAction.reason).toContain('Dashboard volgt')
+    expect(setupCard?.primaryAction.label).toBe('Wacht op livegang')
+    expect(setupCard?.primaryAction.reason).toContain('Nog niet leesbaar')
+  })
+
+  it('keeps the dashboard-versus-pdf choice explicit but compact in the recommendation model', () => {
+    const model = buildDashboardHomeModel({
+      campaigns: [buildCampaign({ campaign_id: 'ready-1' })],
+      isAdmin: false,
+    })
+
+    expect(model.recommendation?.dashboardChoiceDescription).toBe(
+      'Dashboard = lezen, prioriteren en direct bepalen wat nu aandacht vraagt.',
+    )
+    expect(model.recommendation?.pdfChoiceDescription).toBe(
+      'PDF = delen, bespreken en meenemen als compacte managementsamenvatting.',
+    )
   })
 })
 

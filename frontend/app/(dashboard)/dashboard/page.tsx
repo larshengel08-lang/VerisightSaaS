@@ -88,14 +88,14 @@ export default async function DashboardHomePage() {
         title={isAdmin ? 'Kies eerst welke campaign nu aandacht vraagt' : 'Open eerst de campaign die nu het meest telt'}
         description={
           isAdmin
-            ? 'Gebruik deze homepage eerst om de juiste campaign of setupstap te kiezen. Pas daarna ga je naar beheer, dashboard of rapport.'
-            : 'Deze homepage helpt je binnen enkele seconden kiezen welke campaign je nu opent, waarom dat telt en of dashboard of PDF de juiste volgende stap is.'
+            ? 'Kies eerst de juiste campaign of setupstap. Beheer, dashboard en rapport volgen daarna.'
+            : 'Kies hier eerst welke campaign nu open moet en of dashboard of PDF de juiste volgende stap is.'
         }
         meta={
           <>
             <DashboardChip label="Decision-first" tone="blue" />
-            <DashboardChip label="Portfolio-overzicht tweede laag" tone="slate" />
-            {isAdmin ? <DashboardChip label="Support en beheer lager in de hiërarchie" tone="slate" /> : null}
+            <DashboardChip label="Portfolio tweede laag" tone="slate" />
+            {isAdmin ? <DashboardChip label="Support lager in de hierarchie" tone="slate" /> : null}
           </>
         }
         actions={
@@ -152,7 +152,31 @@ export default async function DashboardHomePage() {
             </div>
           }
           aside={
-            <div className="space-y-4">
+            <div className="space-y-3">
+              <div className="grid gap-2 sm:grid-cols-2">
+                <CompactMetric
+                  label="Periode"
+                  value={new Intl.DateTimeFormat('nl-NL', { month: 'short', year: 'numeric' }).format(
+                    new Date(recommendation.campaign.created_at),
+                  )}
+                />
+                <CompactMetric
+                  label="Respons"
+                  value={`${recommendation.campaign.completion_rate_pct ?? 0}%`}
+                />
+                <CompactMetric
+                  label="Status"
+                  value={recommendation.campaign.is_active ? 'Nu lezen' : 'Rapportklaar'}
+                />
+                <CompactMetric
+                  label={getScanDefinition(recommendation.campaign.scan_type).signalLabel}
+                  value={
+                    recommendation.campaign.avg_risk_score !== null
+                      ? `${recommendation.campaign.avg_risk_score.toFixed(1)}/10`
+                      : '-'
+                  }
+                />
+              </div>
               <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Waarom nu</p>
                 <p className="mt-2 text-sm leading-6 text-slate-700">
@@ -179,7 +203,7 @@ export default async function DashboardHomePage() {
       <DashboardSection
         eyebrow="Campaigngroepen"
         title="Kies per campaign wat nu de logische volgende stap is"
-        description="Campagnes staan niet meer in één vlakke lijst, maar in een volgorde die eerst keuze en pas daarna portfolio-overzicht ondersteunt."
+        description="Eerst keuze, daarna pas portfolio-overzicht. Zo blijft direct zichtbaar wat nu open moet, wat nog opbouwt en wat vooral naslag is."
         aside={<DashboardChip label="Launcher view" tone="blue" />}
       >
         <div className="space-y-4">
@@ -244,7 +268,7 @@ export default async function DashboardHomePage() {
                 <UtilityCard
                   eyebrow="Handoff"
                   title="Contactaanvragen"
-                  body="Lead- en handofftaken blijven lager in de hiërarchie zodat de campaignkeuze bovenaan scherp blijft."
+                  body="Lead- en handofftaken blijven lager in de hierarchie zodat de campaignkeuze bovenaan scherp blijft."
                   href="/beheer/contact-aanvragen"
                   cta="Open leadlijst"
                 />
@@ -292,19 +316,53 @@ export default async function DashboardHomePage() {
 }
 
 function CampaignGroupDisclosure({ group }: { group: HomeGroupModel }) {
+  const groupAccent =
+    group.bucket === 'open_now'
+      ? 'Open eerst'
+      : group.bucket === 'building'
+        ? 'Volg actief'
+        : group.bucket === 'closed'
+          ? 'Nog steeds actiegericht'
+          : 'Lagere prioriteit'
+
   return (
     <DashboardDisclosure
       title={group.title}
       description={group.description}
       defaultOpen={group.defaultOpen}
       badge={
-        <DashboardChip
-          label={`${group.campaigns.length} campaign${group.campaigns.length === 1 ? '' : 's'}`}
-          tone={group.bucket === 'open_now' ? 'blue' : group.bucket === 'closed' ? 'emerald' : 'slate'}
-        />
+        <div className="flex items-center gap-2">
+          <DashboardChip
+            label={groupAccent}
+            tone={group.bucket === 'open_now' ? 'blue' : group.bucket === 'closed' ? 'emerald' : 'slate'}
+          />
+          <DashboardChip
+            label={`${group.campaigns.length} campaign${group.campaigns.length === 1 ? '' : 's'}`}
+            tone="slate"
+          />
+        </div>
       }
     >
       <div className="space-y-3">
+        <div
+          className={`rounded-[18px] border px-4 py-3 text-sm leading-6 ${
+            group.bucket === 'open_now'
+              ? 'border-[#d6e4e8] bg-[#f3f8f8] text-[#234B57]'
+              : group.bucket === 'closed'
+                ? 'border-[#d2e6e0] bg-[#eef7f4] text-[#245853]'
+                : group.bucket === 'archive'
+                  ? 'border-[color:var(--border)] bg-[color:var(--bg)] text-[color:var(--text)]'
+                  : 'border-[#eadfbe] bg-[#faf6ea] text-[#6f5820]'
+          }`}
+        >
+          {group.bucket === 'open_now'
+            ? 'Start hier wanneer je nu een managementbesluit of eerste vervolgroute moet kiezen.'
+            : group.bucket === 'building'
+              ? 'Houd hier vooral voortgang en leesdiscipline scherp; nog niet elk beeld is al besluitklaar.'
+              : group.bucket === 'closed'
+                ? 'Gebruik deze groep voor rapportbespreking, terugblik en het kiezen van vervolg of follow-up.'
+                : 'Laat archiefcampagnes bewust onderaan staan tenzij je echt een oudere campaign terug moet halen.'}
+        </div>
         {group.campaigns.map((campaign) => (
           <CampaignLauncherCard key={campaign.campaign.campaign_id} campaign={campaign} />
         ))}
@@ -315,10 +373,18 @@ function CampaignGroupDisclosure({ group }: { group: HomeGroupModel }) {
 
 function CampaignLauncherCard({ campaign }: { campaign: HomeCampaignCardModel }) {
   const scanDefinition = getScanDefinition(campaign.campaign.scan_type)
+  const cardTone =
+    campaign.bucket === 'open_now'
+      ? 'border-[#d6e4e8] bg-[linear-gradient(180deg,rgba(243,248,248,0.68),rgba(255,255,255,0.98))]'
+      : campaign.bucket === 'closed'
+        ? 'border-[#d2e6e0] bg-[linear-gradient(180deg,rgba(238,247,244,0.74),rgba(255,255,255,0.98))]'
+        : campaign.bucket === 'archive'
+          ? 'border-[color:var(--border)] bg-[linear-gradient(180deg,rgba(248,249,250,0.94),rgba(255,255,255,0.98))]'
+          : 'border-[#eadfbe] bg-[linear-gradient(180deg,rgba(250,246,234,0.76),rgba(255,255,255,0.98))]'
 
   return (
-    <article className="rounded-[24px] border border-[color:var(--border)] bg-white px-4 py-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)] sm:px-5">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+    <article className={`rounded-[24px] border px-4 py-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)] sm:px-5 ${cardTone}`}>
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <DashboardChip
@@ -328,32 +394,41 @@ function CampaignLauncherCard({ campaign }: { campaign: HomeCampaignCardModel })
             <DashboardChip label={campaign.statusLabel} tone={campaign.statusTone} />
             <DashboardChip label={campaign.periodLabel} tone="slate" />
           </div>
-          <h2 className="mt-3 text-lg font-semibold text-[color:var(--ink)]">{campaign.title}</h2>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-semibold text-[color:var(--ink)]">{campaign.title}</h2>
+            <span
+              className={`rounded-full px-3 py-1 text-[11px] font-semibold ${
+                campaign.primaryAction.available
+                  ? campaign.primaryAction.kind === 'pdf'
+                    ? 'bg-[#eef7f4] text-[#245853]'
+                    : 'bg-[#f3f8f8] text-[#234B57]'
+                  : 'bg-[color:var(--bg)] text-[color:var(--muted)]'
+              }`}
+            >
+              {campaign.primaryAction.kind === 'pdf'
+                ? 'PDF eerst'
+                : campaign.primaryAction.kind === 'setup'
+                  ? 'Setup eerst'
+                  : campaign.primaryAction.available
+                    ? 'Dashboard eerst'
+                    : 'Nog niet openen'}
+            </span>
+          </div>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[color:var(--text)]">{campaign.managementSummary}</p>
-          <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{campaign.actionSummary}</p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[420px] xl:grid-cols-4">
+        <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[360px] xl:grid-cols-4">
           {campaign.metrics.map((metric) => (
-            <DashboardKeyValue key={metric.label} label={metric.label} value={metric.value} />
+            <CompactMetric key={metric.label} label={metric.label} value={metric.value} />
           ))}
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 border-t border-[color:var(--border)]/80 pt-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="grid gap-3 md:grid-cols-2">
-          <ActionChoiceCard
-            title="Dashboard"
-            description={campaign.primaryAction.kind === 'dashboard' ? campaign.primaryAction.description : 'Gebruik het dashboard als interactieve leeslaag voor duiding en prioritering.'}
-            tone="blue"
-          />
-          <ActionChoiceCard
-            title="PDF"
-            description={campaign.secondaryAction?.kind === 'pdf' ? campaign.secondaryAction.description : 'Gebruik de PDF alleen wanneer de campaign rapportklaar is of gedeeld moet worden.'}
-            tone="emerald"
-          />
+      <div className="mt-3 flex flex-col gap-3 border-t border-[color:var(--border)]/80 pt-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0 pr-2">
+          <p className="text-sm leading-6 text-[color:var(--text)]">{campaign.actionSummary}</p>
         </div>
-        <div className="flex flex-wrap items-start gap-3">
+        <div className="flex flex-wrap items-start gap-2">
           <PrimaryLauncherAction campaign={campaign.campaign} action={campaign.primaryAction} compact />
           {campaign.secondaryAction ? (
             <SecondaryLauncherAction campaign={campaign.campaign} action={campaign.secondaryAction} compact />
@@ -400,7 +475,7 @@ function LauncherAction({
   primary: boolean
 }) {
   const wrapperClassName = compact
-    ? 'flex max-w-[260px] flex-col items-start gap-1'
+    ? 'flex max-w-[250px] flex-col items-start gap-1'
     : 'flex max-w-[280px] flex-col items-start gap-1'
 
   if (action.kind === 'pdf' && action.available) {
@@ -411,7 +486,7 @@ function LauncherAction({
           campaignName={campaign.campaign_name}
           scanType={campaign.scan_type}
         />
-        <p className="text-xs leading-5 text-[color:var(--muted)]">{action.description}</p>
+        <p className="text-[11px] leading-5 text-[color:var(--muted)]">{action.description}</p>
       </div>
     )
   }
@@ -429,7 +504,7 @@ function LauncherAction({
         >
           {action.label}
         </Link>
-        <p className="text-xs leading-5 text-[color:var(--muted)]">{action.description}</p>
+        <p className="text-[11px] leading-5 text-[color:var(--muted)]">{action.description}</p>
       </div>
     )
   }
@@ -439,7 +514,7 @@ function LauncherAction({
       <span className="inline-flex rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-2 text-sm font-semibold text-[color:var(--muted)]">
         {action.label}
       </span>
-      <p className="text-xs leading-5 text-[color:var(--muted)]">{action.reason ?? action.description}</p>
+      <p className="text-[11px] leading-5 text-[color:var(--muted)]">{action.reason ?? action.description}</p>
     </div>
   )
 }
@@ -455,18 +530,27 @@ function ActionChoiceCard({
 }) {
   return (
     <div
-      className={`rounded-[20px] border px-4 py-3 ${
-        tone === 'blue' ? 'border-[#d6e4e8] bg-[#f3f8f8]' : 'border-[#d2e6e0] bg-[#eef7f4]'
+      className={`rounded-[18px] border px-4 py-3 ${
+        tone === 'emerald' ? 'border-[#d2e6e0] bg-[#eef7f4]' : 'border-[#d6e4e8] bg-[#f3f8f8]'
       }`}
     >
       <p
-        className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${
-          tone === 'blue' ? 'text-[#234B57]' : 'text-[#3C8D8A]'
+        className={`text-[10px] font-semibold uppercase tracking-[0.18em] ${
+          tone === 'emerald' ? 'text-[#245853]' : 'text-[#234B57]'
         }`}
       >
         {title}
       </p>
-      <p className="mt-2 text-sm leading-6 text-slate-700">{description}</p>
+      <p className="mt-1 text-sm leading-6 text-[color:var(--ink)]">{description}</p>
+    </div>
+  )
+}
+
+function CompactMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[18px] border border-[color:var(--border)]/90 bg-white/90 px-3 py-2">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-[color:var(--ink)]">{value}</p>
     </div>
   )
 }
