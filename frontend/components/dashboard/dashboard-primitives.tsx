@@ -149,7 +149,7 @@ export function DashboardDisclosure({
       open={defaultOpen}
       className="group scroll-mt-36 rounded-[24px] border border-[color:var(--border)] bg-white shadow-[0_14px_36px_rgba(19,32,51,0.05)]"
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-[color:var(--bg)]/60 sm:px-6">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-[24px] px-5 py-4 transition-colors hover:bg-[color:var(--bg)]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--teal-light)] sm:px-6">
         <div>
           <p className="text-base font-semibold text-[color:var(--ink)]">{title}</p>
           {description ? <p className="mt-1 text-sm leading-6 text-[color:var(--text)]">{description}</p> : null}
@@ -262,7 +262,7 @@ export function DashboardSummaryBar({
             <a
               key={anchor.id}
               href={`#${anchor.id}`}
-              className="rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-3 py-2 text-xs font-semibold text-[color:var(--text)] transition-colors hover:border-[color:var(--teal)] hover:text-[color:var(--ink)]"
+              className="rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-3 py-2 text-xs font-semibold text-[color:var(--text)] transition-colors hover:border-[color:var(--teal)] hover:text-[color:var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--teal-light)]"
             >
               {anchor.label}
             </a>

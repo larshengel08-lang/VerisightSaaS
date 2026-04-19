@@ -51,7 +51,7 @@ export default async function DashboardHomePage() {
     return (
       <div className="space-y-6">
         <DashboardContextHeader
-          eyebrow="Campaign launcher"
+          eyebrow="Campagnelauncher"
           title={isAdmin ? 'Nog geen campaigns om te kiezen' : 'Je eerste campaign wordt voorbereid'}
           description={
             isAdmin
@@ -84,7 +84,7 @@ export default async function DashboardHomePage() {
   return (
     <div className="space-y-6">
       <DashboardContextHeader
-        eyebrow="Campaign launcher"
+        eyebrow="Campagnelauncher"
         title={isAdmin ? 'Kies eerst welke campaign nu aandacht vraagt' : 'Open eerst de campaign die nu het meest telt'}
         description={
           isAdmin
@@ -93,7 +93,7 @@ export default async function DashboardHomePage() {
         }
         meta={
           <>
-            <DashboardChip label="Decision-first" tone="blue" />
+            <DashboardChip label="Keuze eerst" tone="blue" />
             <DashboardChip label="Portfolio tweede laag" tone="slate" />
             {isAdmin ? <DashboardChip label="Support lager in de hierarchie" tone="slate" /> : null}
           </>
@@ -102,7 +102,7 @@ export default async function DashboardHomePage() {
           isAdmin ? (
             <Link
               href="/beheer"
-              className="inline-flex rounded-full border border-[color:var(--ink)] bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-slate-900"
+              className="inline-flex rounded-full border border-[color:var(--ink)] bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--teal-light)]"
             >
               Open beheer
             </Link>
@@ -204,7 +204,7 @@ export default async function DashboardHomePage() {
         eyebrow="Campaigngroepen"
         title="Kies per campaign wat nu de logische volgende stap is"
         description="Eerst keuze, daarna pas portfolio-overzicht. Zo blijft direct zichtbaar wat nu open moet, wat nog opbouwt en wat vooral naslag is."
-        aside={<DashboardChip label="Launcher view" tone="blue" />}
+        aside={<DashboardChip label="Launcherlaag" tone="blue" />}
       >
         <div className="space-y-4">
           {home.groups.map((group) => (
@@ -228,7 +228,7 @@ export default async function DashboardHomePage() {
             title="Wanneer open je dashboard en wanneer PDF?"
             description="Compact leeskader voor de keuze tussen interactieve route en deelbaar rapport."
             defaultOpen={false}
-            badge={<DashboardChip label="Choice aid" tone="slate" />}
+            badge={<DashboardChip label="Keuzehulp" tone="slate" />}
           >
             <div className="grid gap-4 lg:grid-cols-2">
               <DashboardPanel
@@ -254,7 +254,7 @@ export default async function DashboardHomePage() {
                 : 'Setup, reminders en deliverycontrole blijven bij Verisight en concurreren dus niet met je campaignkeuze.'
             }
             defaultOpen={false}
-            badge={<DashboardChip label={isAdmin ? 'Ops-tools' : 'Supportlaag'} tone="slate" />}
+            badge={<DashboardChip label={isAdmin ? 'Beheerlaag' : 'Supportlaag'} tone="slate" />}
           >
             {isAdmin ? (
               <div className="grid gap-4 lg:grid-cols-3">
@@ -298,7 +298,7 @@ export default async function DashboardHomePage() {
                   title="Leeskader"
                   description="Alleen openklappen als je de managementleeslaag opnieuw nodig hebt."
                   defaultOpen={false}
-                  badge={<DashboardChip label="Secondary" tone="slate" />}
+                  badge={<DashboardChip label="Secundair" tone="slate" />}
                 >
                   <ManagementReadGuide
                     scanType={recommendation?.campaign.scan_type ?? 'exit'}
@@ -496,7 +496,7 @@ function LauncherAction({
       <div className={wrapperClassName}>
         <Link
           href={action.href}
-          className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--teal-light)] ${
             primary
               ? 'border border-[color:var(--ink)] bg-[color:var(--ink)] text-[color:var(--bg)] hover:bg-slate-900'
               : 'border border-[#d6e4e8] bg-[#f3f8f8] text-[#234B57] hover:border-[#bfd3d8] hover:bg-[#e9f2f3]'
@@ -591,7 +591,7 @@ function UtilityCard({
       <p className="mt-3 text-sm leading-6 text-[color:var(--text)]">{body}</p>
       <Link
         href={href}
-        className="mt-4 inline-flex rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition-colors hover:border-[#d6e4e8] hover:text-[#234B57]"
+        className="mt-4 inline-flex rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition-colors hover:border-[#d6e4e8] hover:text-[#234B57] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--teal-light)]"
       >
         {cta}
       </Link>
@@ -630,7 +630,7 @@ function AdminEmptyState() {
       <div className="mt-5">
         <Link
           href="/beheer"
-          className="inline-flex rounded-full bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-slate-900"
+          className="inline-flex rounded-full bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--teal-light)]"
         >
           Naar setup
         </Link>

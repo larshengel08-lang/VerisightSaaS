@@ -36,3 +36,8 @@ Dit dashboard volgt de goedgekeurde report grammar, maar is geen letterlijke rep
 
 - De dashboardoverview comprimeert meerdere reportlagen in één scrollflow, maar behoudt hun interpretieve functie.
 - De evidence- en actie-lagen zijn interactief uitgesplitst om management reading, verdieping en operatie beter te scheiden dan in het statische rapport.
+
+## Final Consistency Pass
+
+- Focus states zijn aangescherpt op launcher-CTA's, primaire navigatie en disclosures zodat keyboardgebruik rustiger en duidelijker blijft.
+- Kleine labelverschillen tussen launcher, overview, action en evidence zijn teruggebracht naar compactere en consistenter Nederlandse route- en statustaal.

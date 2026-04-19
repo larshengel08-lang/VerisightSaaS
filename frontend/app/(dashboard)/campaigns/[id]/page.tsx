@@ -1030,8 +1030,8 @@ export default async function CampaignPage({ params, searchParams }: Props) {
         aside={
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
             <DashboardKeyValue label="Respons" value={`${stats.completion_rate_pct ?? 0}%`} />
-            <DashboardKeyValue label="Invited" value={`${stats.total_invited}`} />
-            <DashboardKeyValue label="Completed" value={`${stats.total_completed}`} />
+            <DashboardKeyValue label="Uitgenodigd" value={`${stats.total_invited}`} />
+            <DashboardKeyValue label="Ingevuld" value={`${stats.total_completed}`} />
             <DashboardKeyValue
               label={scanDefinition.signalLabel}
               value={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : '-'}
@@ -1048,7 +1048,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
           {visibility.showResponseInterpretation ? (
             <DashboardSection
               id="response"
-              eyebrow="Response interpretation"
+              eyebrow="Responsinterpretatie"
               title="Respons, leesdiscipline en betrouwbaarheid"
               description="Snelle leeslaag voor de vraag of deze wave nu al bestuurlijk gelezen kan worden of nog vooral voorzichtigheid vraagt."
               aside={<DashboardChip label={responseRead.badge} tone={responseRead.badgeTone} />}
@@ -1088,10 +1088,10 @@ export default async function CampaignPage({ params, searchParams }: Props) {
                   </div>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <OverviewQuickMetric label="Invited" value={`${stats.total_invited}`} />
-                  <OverviewQuickMetric label="Completed" value={`${stats.total_completed}`} />
+                  <OverviewQuickMetric label="Uitgenodigd" value={`${stats.total_invited}`} />
+                  <OverviewQuickMetric label="Ingevuld" value={`${stats.total_completed}`} />
                   <OverviewQuickMetric label="Respons" value={`${stats.completion_rate_pct ?? 0}%`} />
-                  <OverviewQuickMetric label="Pending" value={`${pendingCount}`} />
+                  <OverviewQuickMetric label="Open" value={`${pendingCount}`} />
                 </div>
               </div>
             </DashboardSection>
@@ -1112,7 +1112,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
               actions={
                 <Link
                   href={buildDashboardViewHref('action', driverDrilldown.selectedFactorKey)}
-                  className="inline-flex rounded-full border border-[color:var(--ink)] bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-slate-900"
+                  className="inline-flex rounded-full border border-[color:var(--ink)] bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--teal-light)]"
                 >
                   Naar eerste route
                 </Link>
@@ -1120,7 +1120,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
               aside={
                 <div className="grid gap-3">
                   <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Boardroom handoff</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Bestuurlijke handoff</p>
                     <p className="mt-2 text-sm leading-6 text-slate-700">
                       Start hier: wat speelt nu, waarom telt dat en welke eerste route hoort daarbij.
                     </p>
@@ -1145,7 +1145,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
           {visibility.showScoreInterpretation ? (
             <DashboardSection
               id="score"
-              eyebrow="Score interpretation"
+              eyebrow="Score-interpretatie"
               title={scoreInterpretationTitle}
               description={scoreInterpretationGuide.intro}
               aside={<DashboardChip label={scanDefinition.signalLabel} tone="slate" />}
@@ -1416,7 +1416,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
                   SDT en organisatiefactoren blijven hier bewust smaller en rustiger gepositioneerd. Ze ondersteunen de managementlezing, maar vervangen de kernverdieping niet.
                 </p>
               </div>
-              <DashboardChip label="Secondary evidence" tone="slate" />
+              <DashboardChip label="Secundaire onderbouwing" tone="slate" />
             </div>
 
             <div className="mt-4 space-y-3">
@@ -1492,12 +1492,6 @@ export default async function CampaignPage({ params, searchParams }: Props) {
         <div className="space-y-5">
           <DashboardSection id="route" eyebrow="Actie" title={productExperience.routeTitle} description="Deze view zet de gekozen route direct om in uitvoering: eerst eigenaarschap en volgorde, daarna pas extra guidance." aside={<DashboardChip label={productExperience.routeBadgeLabel} tone="blue" />}>
             <div className="space-y-5">
-              {false ? <div className="rounded-[22px] border border-[#d2e6e0] bg-[#eef7f4] px-4 py-4 sm:px-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#245853]">Uitvoeren, niet opnieuw samenvatten</p>
-                <DashboardPanel eyebrow="Owner" title={selectedDriverPlaybook?.owner ?? 'HR + lijnmanagement'} body="Beleg de eerste stap expliciet bij één trekker en één reviewverantwoordelijke." tone="emerald" />
-                <DashboardPanel eyebrow="Nu doen" title={selectedDriverPlaybook?.actions[0] ?? highlightedActionRows[0]?.title ?? 'Kies een eerste gerichte verificatie'} body={highlightedActionRows[0]?.question ?? selectedDriverPlaybook?.validate ?? dashboardViewModel.primaryQuestion.body} tone="blue" />
-                <DashboardPanel eyebrow="Review" title={selectedDriverPlaybook?.review ?? dashboardViewModel.followThroughCards[0]?.title ?? 'Plan een eerste review'} body={dashboardViewModel.followThroughCards[0]?.body ?? 'Leg direct vast wanneer deze eerste route opnieuw gelezen en eventueel begrensd bijgesteld wordt.'} tone="amber" />
-              </div> : null}
               <div className="rounded-[22px] border border-[#d2e6e0] bg-[#eef7f4] px-4 py-4 sm:px-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#245853]">Uitvoeren, niet opnieuw samenvatten</p>
                 <p className="mt-2 text-sm leading-6 text-slate-700">
@@ -1512,15 +1506,12 @@ export default async function CampaignPage({ params, searchParams }: Props) {
                   <OverviewCueCard eyebrow="Review moment" title={actionExecutionCore.review.title} body={actionExecutionCore.review.body} tone={actionExecutionCore.review.tone} />
                 </div>
               </div>
-              <DashboardDisclosure defaultOpen={false} title="Vervolg en borging" description={actionExecutionCore.supportPrompt} badge={<DashboardChip label="Secondary" tone="slate" />}>
+              <DashboardDisclosure defaultOpen={false} title="Vervolg en borging" description={actionExecutionCore.supportPrompt} badge={<DashboardChip label="Secundair" tone="slate" />}>
                 <div className="space-y-4">
                   {dashboardViewModel.followThroughCards.length > 0 ? <DashboardTimeline title={dashboardViewModel.followThroughTitle} description={dashboardViewModel.followThroughIntro} items={dashboardViewModel.followThroughCards} /> : null}
                   <ManagementReadGuide scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} />
                 </div>
               </DashboardDisclosure>
-              {false ? <DashboardDisclosure defaultOpen={false} title="Leeskader" description="Alleen openklappen als je het managementread-kader opnieuw nodig hebt." badge={<DashboardChip label="Secondary" tone="slate" />}>
-                <ManagementReadGuide scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} />
-              </DashboardDisclosure> : null}
             </div>
           </DashboardSection>
 
@@ -1528,7 +1519,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
             {visibility.showActionPlaybooks ? (
               <div className="space-y-5">
                 <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4 sm:px-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Supporting layer</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ondersteunende laag</p>
                   <p className="mt-2 text-sm leading-6 text-slate-700">
                     Deze onderdelen helpen alleen als je de gekozen route verder wilt toetsen of vertalen. Ze horen niet boven de kernroute te concurreren.
                   </p>
@@ -1539,7 +1530,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
                 <DashboardDisclosure defaultOpen={false} title="Uitvoerplaybooks" description="Pas openklappen zodra route en eigenaar gekozen zijn." badge={<DashboardChip label="Uitvoering" tone="slate" />}>
                   <ActionPlaybookList factorAverages={factorData.orgAverages} scanType={stats.scan_type} bandOverride={stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? dashboardViewModel.managementBandOverride : undefined} />
                 </DashboardDisclosure>
-                {visibility.showSegmentAnalysis ? <DashboardDisclosure defaultOpen={false} title="Segment-specifieke routeverdieping" description="Niet centraal, wel beschikbaar wanneer segmentveiligheid en parity dit toelaten." badge={<DashboardChip label="Conditional" tone="slate" />}>{retentionSegmentPlaybooks.length > 0 ? <SegmentPlaybookList segments={retentionSegmentPlaybooks} /> : <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">Segmenten halen nu nog niet tegelijk n, afwijking en publicatiegrens.</div>}</DashboardDisclosure> : null}
+                {visibility.showSegmentAnalysis ? <DashboardDisclosure defaultOpen={false} title="Segment-specifieke routeverdieping" description="Niet centraal, wel beschikbaar wanneer segmentveiligheid en parity dit toelaten." badge={<DashboardChip label="Conditioneel" tone="slate" />}>{retentionSegmentPlaybooks.length > 0 ? <SegmentPlaybookList segments={retentionSegmentPlaybooks} /> : <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">Segmenten halen nu nog niet tegelijk n, afwijking en publicatiegrens.</div>}</DashboardDisclosure> : null}
               </div>
             ) : <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">Actieplaybooks komen pas vrij zodra deze wave genoeg onderbouwing heeft voor een betekenisvollere eerste route.</div>}
           </DashboardSection>
@@ -1554,7 +1545,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
             <DashboardSection id="campaign-view" eyebrow="Campagne" title="Campaign operations en implementatie" description="Deze view houdt delivery, respondenten en adminwerk apart van de managementleeslaag." aside={<DashboardChip label="Operations second" tone="slate" />}>
               <div className="space-y-4">
                 {visibility.showArchivedNotice ? <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">Deze periode is gearchiveerd. Rapportage en dashboard blijven beschikbaar, maar de campaignflow is niet meer actief.</div> : null}
-                {visibility.showCampaignControls ? <DashboardDisclosure defaultOpen={!hasEnoughData} title="Campagnestatus en launchcontrole" description="Readiness, lifecycle en delivery horen hier, niet in het primaire managementoverzicht." badge={<DashboardChip label={readinessState.launchReady ? 'Launch-ready' : 'Aandacht nodig'} tone={readinessState.launchReady ? 'emerald' : 'amber'} />}><div className="space-y-4"><CampaignActions campaignId={id} isActive={stats.is_active} pendingCount={pendingCount} canManageCampaign={canManageCampaign} /><CampaignHealthIndicator totalInvited={stats.total_invited} totalCompleted={stats.total_completed} invitesNotSent={invitesNotSent} incompleteScores={incompleteScores} hasEnoughData={hasEnoughData} hasMinDisplay={hasMinDisplay} />{stats.is_active ? <PreflightChecklist campaignId={id} scanType={stats.scan_type} deliveryMode={campaignMeta?.delivery_mode ?? null} totalInvited={stats.total_invited} totalCompleted={stats.total_completed} invitesNotSent={invitesNotSent} incompleteScores={incompleteScores} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} activeClientAccessCount={activeClientAccessCount ?? 0} pendingClientInviteCount={pendingClientInviteCount ?? 0} record={deliveryRecord} checkpoints={deliveryCheckpoints} leadOptions={deliveryLeadOptions} leadLoadError={deliveryLeadError} linkedLearningDossierCount={learningDossiers.length} learningCloseoutEvidenceCount={learningCloseoutEvidenceCount} editable={isVerisightAdmin} /> : null}</div></DashboardDisclosure> : null}
+                {visibility.showCampaignControls ? <DashboardDisclosure defaultOpen={!hasEnoughData} title="Campagnestatus en launchcontrole" description="Readiness, lifecycle en delivery horen hier, niet in het primaire managementoverzicht." badge={<DashboardChip label={readinessState.launchReady ? 'Klaar voor livegang' : 'Aandacht nodig'} tone={readinessState.launchReady ? 'emerald' : 'amber'} />}><div className="space-y-4"><CampaignActions campaignId={id} isActive={stats.is_active} pendingCount={pendingCount} canManageCampaign={canManageCampaign} /><CampaignHealthIndicator totalInvited={stats.total_invited} totalCompleted={stats.total_completed} invitesNotSent={invitesNotSent} incompleteScores={incompleteScores} hasEnoughData={hasEnoughData} hasMinDisplay={hasMinDisplay} />{stats.is_active ? <PreflightChecklist campaignId={id} scanType={stats.scan_type} deliveryMode={campaignMeta?.delivery_mode ?? null} totalInvited={stats.total_invited} totalCompleted={stats.total_completed} invitesNotSent={invitesNotSent} incompleteScores={incompleteScores} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} activeClientAccessCount={activeClientAccessCount ?? 0} pendingClientInviteCount={pendingClientInviteCount ?? 0} record={deliveryRecord} checkpoints={deliveryCheckpoints} leadOptions={deliveryLeadOptions} leadLoadError={deliveryLeadError} linkedLearningDossierCount={learningDossiers.length} learningCloseoutEvidenceCount={learningCloseoutEvidenceCount} editable={isVerisightAdmin} /> : null}</div></DashboardDisclosure> : null}
                 <DashboardDisclosure defaultOpen={disclosureDefaults.respondentsOpen} title="Respondenten en uitnodigingen" description="Operationele detailweergave voor import, responsmonitoring en uitnodigingsbeheer." badge={<DashboardChip label={`${respondents.length} respondenten`} tone="slate" />}>{visibility.showRespondentTable ? <RespondentTable respondents={respondents} responses={safeTableResponses} scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} canManageCampaign={canManageCampaign} /> : <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center"><p className="text-base font-semibold text-slate-900">Nog geen respondenten toegevoegd</p><p className="mt-2 text-sm leading-6 text-slate-600">Voeg eerst respondenten toe via de setupflow. Daarna komen uitnodigingen, responsmonitoring en deze tabel automatisch beschikbaar.</p></div>}</DashboardDisclosure>
               </div>
             </DashboardSection>
