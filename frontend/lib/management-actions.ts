@@ -35,10 +35,14 @@ export interface ManagementActionRecord {
   source_factor_key: string | null
   source_factor_label: string | null
   source_signal_value: number | null
+  source_question_key: string | null
+  source_question_label: string | null
   title: string
   decision_context: string | null
   expected_outcome: string | null
   measured_outcome: string | null
+  blocker_note: string | null
+  last_review_outcome: 'continue' | 'close' | 'reopen' | 'follow_up_needed' | null
   status: ManagementActionStatus
   owner_label: string | null
   owner_email: string | null
@@ -57,6 +61,16 @@ export interface ManagementActionUpdateRecord {
   status_snapshot: ManagementActionStatus | null
   created_by: string | null
   created_by_email: string | null
+  created_at: string
+}
+
+export interface ManagementActionReviewRecord {
+  id: string
+  action_id: string
+  summary: string
+  outcome: 'continue' | 'close' | 'reopen' | 'follow_up_needed'
+  next_review_date: string | null
+  created_by: string | null
   created_at: string
 }
 
@@ -125,6 +139,7 @@ export function buildManagementActionSeedFromDepartmentRead(args: {
     owner: string
   }
   ownerDefault?: ManagementActionDepartmentOwnerDefault | null
+  question?: { key: string; label: string } | null
 }): Omit<
   ManagementActionRecord,
   'id' | 'measured_outcome' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'
@@ -143,9 +158,13 @@ export function buildManagementActionSeedFromDepartmentRead(args: {
     source_factor_key: args.departmentRead.factorKey,
     source_factor_label: args.departmentRead.factorLabel,
     source_signal_value: args.departmentRead.avgSignal,
+    source_question_key: args.question?.key ?? null,
+    source_question_label: args.question?.label ?? null,
     title: `${args.departmentRead.segmentLabel}: ${args.departmentRead.factorLabel} vraagt een eerste bounded managementroute`,
     decision_context: `${args.departmentRead.decision} ${args.departmentRead.handoffBody}`.trim(),
     expected_outcome: 'Heldere prioriteit, expliciete eigenaar en eerste reviewmoment.',
+    blocker_note: null,
+    last_review_outcome: null,
     status: ownerEmail ? 'assigned' : 'open',
     owner_label: ownerLabel,
     owner_email: ownerEmail,

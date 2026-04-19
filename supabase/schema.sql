@@ -646,10 +646,14 @@ create table if not exists public.management_actions (
   source_factor_key   text,
   source_factor_label text,
   source_signal_value numeric,
+  source_question_key text,
+  source_question_label text,
   title               text not null,
   decision_context    text,
   expected_outcome    text,
   measured_outcome    text,
+  blocker_note        text,
+  last_review_outcome text check (last_review_outcome is null or last_review_outcome in ('continue', 'close', 'reopen', 'follow_up_needed')),
   status              text not null default 'open' check (status in ('open', 'assigned', 'in_progress', 'in_review', 'closed', 'follow_up_needed')),
   owner_label         text,
   owner_email         text,
@@ -668,6 +672,16 @@ create table if not exists public.management_action_updates (
   status_snapshot  text check (status_snapshot is null or status_snapshot in ('open', 'assigned', 'in_progress', 'in_review', 'closed', 'follow_up_needed')),
   created_by       uuid references auth.users(id) on delete set null,
   created_by_email text,
+  created_at       timestamptz default now()
+);
+
+create table if not exists public.management_action_reviews (
+  id               uuid primary key default gen_random_uuid(),
+  action_id        uuid references public.management_actions(id) on delete cascade not null,
+  summary          text not null,
+  outcome          text not null check (outcome in ('continue', 'close', 'reopen', 'follow_up_needed')),
+  next_review_date date,
+  created_by       uuid references auth.users(id) on delete set null,
   created_at       timestamptz default now()
 );
 
@@ -695,6 +709,7 @@ create index if not exists idx_management_actions_campaign on public.management_
 create index if not exists idx_management_actions_status on public.management_actions(status);
 create index if not exists idx_management_actions_owner_email on public.management_actions(owner_email);
 create index if not exists idx_management_action_updates_action on public.management_action_updates(action_id);
+create index if not exists idx_management_action_reviews_action on public.management_action_reviews(action_id);
 create index if not exists idx_delivery_records_org on public.campaign_delivery_records(organization_id);
 create index if not exists idx_delivery_records_contact_request on public.campaign_delivery_records(contact_request_id);
 create index if not exists idx_delivery_records_lifecycle on public.campaign_delivery_records(lifecycle_stage);
@@ -719,6 +734,7 @@ alter table public.pilot_learning_checkpoints enable row level security;
 alter table public.management_action_department_owners enable row level security;
 alter table public.management_actions enable row level security;
 alter table public.management_action_updates enable row level security;
+alter table public.management_action_reviews enable row level security;
 
 -- ── Hulpfuncties ─────────────────────────────────────────────────────────────
 
@@ -1106,6 +1122,32 @@ create policy "management_action_viewers_can_select_updates"
 
 create policy "management_action_editors_can_insert_updates"
   on public.management_action_updates for insert
+  with check (
+    exists (
+      select 1
+      from public.management_actions a
+      where a.id = action_id
+        and public.can_edit_management_action(a.organization_id, a.owner_email)
+    )
+  );
+
+-- Management action reviews
+drop policy if exists "management_action_viewers_can_select_reviews" on public.management_action_reviews;
+drop policy if exists "management_action_editors_can_insert_reviews" on public.management_action_reviews;
+
+create policy "management_action_viewers_can_select_reviews"
+  on public.management_action_reviews for select
+  using (
+    exists (
+      select 1
+      from public.management_actions a
+      where a.id = action_id
+        and public.can_view_management_action(a.organization_id, a.owner_email)
+    )
+  );
+
+create policy "management_action_editors_can_insert_reviews"
+  on public.management_action_reviews for insert
   with check (
     exists (
       select 1

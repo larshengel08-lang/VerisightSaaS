@@ -22,10 +22,14 @@ const baseAction: ManagementActionRecord = {
   source_factor_key: 'workload',
   source_factor_label: 'Werkbelasting',
   source_signal_value: 7.6,
+  source_question_key: null,
+  source_question_label: null,
   title: 'Operations: werkbelasting vraagt een eerste brede prioriteitsroute',
   decision_context: 'Gebruik Operations als eerste bounded afdelingstraject.',
   expected_outcome: 'Heldere prioriteit en eerste managementstap.',
   measured_outcome: null,
+  blocker_note: null,
+  last_review_outcome: null,
   status: 'assigned',
   owner_label: 'Operations manager',
   owner_email: 'manager@verisight.test',
@@ -116,5 +120,34 @@ describe('management action contracts', () => {
     expect(summary.reviewCount).toBe(1)
     expect(summary.followUpCount).toBe(1)
     expect(summary.overdueReviewCount).toBe(1)
+  })
+
+  it('tracks theme, optional question, blockers, and next review summary', () => {
+    const seeded = buildManagementActionSeedFromDepartmentRead({
+      organizationId: 'org-1',
+      campaignId: 'camp-1',
+      departmentRead: {
+        segmentLabel: 'Operations',
+        factorKey: 'workload',
+        factorLabel: 'Werkbelasting',
+        avgSignal: 7.2,
+        decision: 'Open eerst een bounded werkdruksprint.',
+        handoffBody: 'Gebruik dit alleen binnen MTO.',
+        owner: 'Manager Operations',
+      },
+      ownerDefault: {
+        owner_label: 'Manager Operations',
+        owner_email: 'ops@example.com',
+      },
+      question: {
+        key: 'workload.q1',
+        label: 'Welke brede managementvraag over werkbelasting moet nu eerst expliciet worden beantwoord?',
+      },
+    })
+
+    expect(seeded.source_factor_key).toBe('workload')
+    expect(seeded.source_question_key).toBe('workload.q1')
+    expect(seeded.source_question_label).toContain('werkbelasting')
+    expect(seeded.blocker_note).toBeNull()
   })
 })

@@ -18,9 +18,13 @@ type CreateManagementActionBody = {
   source_factor_key?: string | null
   source_factor_label?: string | null
   source_signal_value?: number | null
+  source_question_key?: string | null
+  source_question_label?: string | null
   title?: string
   decision_context?: string | null
   expected_outcome?: string | null
+  blocker_note?: string | null
+  last_review_outcome?: 'continue' | 'close' | 'reopen' | 'follow_up_needed' | null
   status?: ManagementActionStatus
   owner_label?: string | null
   owner_email?: string | null
@@ -36,6 +40,7 @@ const READ_STAGES: ManagementActionSourceReadStage[] = [
   'shared_contract_seed',
 ]
 const STATUSES: ManagementActionStatus[] = ['open', 'assigned', 'in_progress', 'in_review', 'closed', 'follow_up_needed']
+const REVIEW_OUTCOMES = ['continue', 'close', 'reopen', 'follow_up_needed'] as const
 
 function cleanOptionalText(value: string | null | undefined) {
   if (typeof value !== 'string') return value ?? null
@@ -77,6 +82,9 @@ export async function POST(request: Request) {
   if (!body.status || !STATUSES.includes(body.status)) {
     return NextResponse.json({ detail: 'Ongeldige status.' }, { status: 400 })
   }
+  if (body.last_review_outcome && !REVIEW_OUTCOMES.includes(body.last_review_outcome)) {
+    return NextResponse.json({ detail: 'Ongeldige last_review_outcome.' }, { status: 400 })
+  }
 
   const { error } = await auth.supabase.from('management_actions').insert({
     organization_id: body.organization_id,
@@ -89,9 +97,13 @@ export async function POST(request: Request) {
     source_factor_key: cleanOptionalText(body.source_factor_key),
     source_factor_label: cleanOptionalText(body.source_factor_label),
     source_signal_value: typeof body.source_signal_value === 'number' ? body.source_signal_value : null,
+    source_question_key: cleanOptionalText(body.source_question_key),
+    source_question_label: cleanOptionalText(body.source_question_label),
     title: body.title.trim(),
     decision_context: cleanOptionalText(body.decision_context),
     expected_outcome: cleanOptionalText(body.expected_outcome),
+    blocker_note: cleanOptionalText(body.blocker_note),
+    last_review_outcome: body.last_review_outcome ?? null,
     status: body.status,
     owner_label: cleanOptionalText(body.owner_label),
     owner_email: cleanOptionalText(body.owner_email),

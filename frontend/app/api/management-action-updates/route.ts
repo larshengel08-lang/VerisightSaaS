@@ -6,6 +6,7 @@ type CreateManagementActionUpdateBody = {
   action_id?: string
   note?: string
   status_snapshot?: ManagementActionStatus | null
+  blocker_note?: string | null
 }
 
 const STATUSES: ManagementActionStatus[] = ['open', 'assigned', 'in_progress', 'in_review', 'closed', 'follow_up_needed']
