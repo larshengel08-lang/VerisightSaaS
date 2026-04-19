@@ -27,6 +27,7 @@ import {
   buildActionExecutionCore,
   buildDriverDrilldownModel,
   buildDecisionPanels,
+  buildEvidenceReadingFlow,
   buildHeroDescription,
   buildInsightWarnings,
   buildPulseComparisonState,
@@ -964,6 +965,10 @@ export default async function CampaignPage({ params, searchParams }: Props) {
     highlightedActionQuestion: highlightedActionRows[0]?.question ?? null,
     followThroughCard: dashboardViewModel.followThroughCards[0] ?? null,
   })
+  const evidenceReadingFlow = buildEvidenceReadingFlow({
+    showDriverDrilldown: visibility.showDriverDrilldown,
+    showSegmentAnalysis: visibility.showSegmentAnalysis,
+  })
   const redesignView = (
     <div className="space-y-6 pb-8">
       <Link
@@ -1362,48 +1367,125 @@ export default async function CampaignPage({ params, searchParams }: Props) {
 
       {currentView === 'evidence' ? (
         <div className="space-y-5">
-          <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4 sm:px-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Onderbouwing als tweede laag</p>
-            <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-700">
-              Deze view is bewust compacter opgebouwd: eerst de centrale verdieping, daarna pas aparte disclosures voor SDT, factoren, segmenten en methodiek. Zo blijft bewijs ondersteunend in plaats van alles tegelijk open te gooien.
-            </p>
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr),280px]">
+            <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 shadow-[0_10px_28px_rgba(19,32,51,0.05)] sm:px-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{evidenceReadingFlow.intro.title}</p>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">{evidenceReadingFlow.intro.body}</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">{evidenceReadingFlow.supportPrompt}</p>
+            </div>
+            <div className="rounded-[24px] border border-[color:var(--border)] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(19,32,51,0.04)] sm:px-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Leesvolgorde</p>
+              <div className="mt-3 space-y-2">
+                {evidenceReadingFlow.intro.sequence.map((step) => (
+                  <div key={step} className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+                    {step}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <DashboardDisclosure
             defaultOpen={visibility.showDriverDrilldown}
-            title="Kernverdieping"
+            title={evidenceReadingFlow.primaryEntry.title}
             description="Drivers, signalen en product-specifieke tabs blijven samen in één compacte evidence-ingang."
-            badge={<DashboardChip label="Primary evidence" tone="slate" />}
+            badge={<DashboardChip label={evidenceReadingFlow.primaryEntry.badge} tone="blue" />}
           >
             {visibility.showDriverDrilldown ? (
-              <DashboardTabs tabs={driverTabs} />
+              <div className="space-y-4">
+                <div className="rounded-[20px] border border-[#dbe8e3] bg-[#f6faf8] px-4 py-3 text-sm leading-6 text-slate-700">
+                  {evidenceReadingFlow.supportPrompt}
+                </div>
+                <div className="max-w-5xl">
+                  <DashboardTabs tabs={driverTabs} />
+                </div>
+              </div>
             ) : (
               <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-                De volledige onderbouwing komt vrij vanaf {MIN_N_PATTERNS} responses.
+                {evidenceReadingFlow.primaryEntry.emptyState}
               </div>
             )}
           </DashboardDisclosure>
 
-          <div className="grid gap-4 xl:grid-cols-2">
-            <DashboardDisclosure defaultOpen={disclosureDefaults.methodologyOpen} title="SDT basislaag" description="Autonomie, competentie en verbondenheid blijven zichtbaar als verklarende onderlaag." badge={<DashboardChip label="SDT" tone="slate" />}>
-              <div className="grid gap-4 sm:grid-cols-3">{(['autonomy', 'competence', 'relatedness'] as const).map((dimension) => <SdtGauge key={dimension} label={FACTOR_LABELS[dimension]} score={factorData.sdtAverages[dimension] ?? 5.5} />)}</div>
-            </DashboardDisclosure>
+          <div className="rounded-[24px] border border-[color:var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,248,250,0.88))] px-4 py-4 shadow-[0_12px_30px_rgba(19,32,51,0.05)] sm:px-5">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[color:var(--border)]/80 pb-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Verdiep verder als nodig</p>
+                <h3 className="mt-1 text-base font-semibold text-[color:var(--ink)]">Verklarende lagen onder de kernverdieping</h3>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">
+                  SDT en organisatiefactoren blijven hier bewust smaller en rustiger gepositioneerd. Ze ondersteunen de managementlezing, maar vervangen de kernverdieping niet.
+                </p>
+              </div>
+              <DashboardChip label="Secondary evidence" tone="slate" />
+            </div>
 
-            <DashboardDisclosure defaultOpen={false} title="Organisatiefactoren" description="Volledige factorlezing voor managementduiding, nadat de topdrivers al zijn gelezen." badge={<DashboardChip label="Factoren" tone="slate" />}>
-              <FactorTable factorAverages={factorData.orgAverages} scanType={stats.scan_type} />
-            </DashboardDisclosure>
+            <div className="mt-4 space-y-3">
+              <DashboardDisclosure
+                defaultOpen={false}
+                title={evidenceReadingFlow.sections.sdt.title}
+                description={evidenceReadingFlow.sections.sdt.description}
+                badge={<DashboardChip label={evidenceReadingFlow.sections.sdt.badge} tone="slate" />}
+              >
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {(['autonomy', 'competence', 'relatedness'] as const).map((dimension) => (
+                    <SdtGauge key={dimension} label={FACTOR_LABELS[dimension]} score={factorData.sdtAverages[dimension] ?? 5.5} />
+                  ))}
+                </div>
+              </DashboardDisclosure>
+
+              <DashboardDisclosure
+                defaultOpen={false}
+                title={evidenceReadingFlow.sections.factors.title}
+                description={evidenceReadingFlow.sections.factors.description}
+                badge={<DashboardChip label={evidenceReadingFlow.sections.factors.badge} tone="slate" />}
+              >
+                <FactorTable factorAverages={factorData.orgAverages} scanType={stats.scan_type} />
+              </DashboardDisclosure>
+            </div>
           </div>
 
-          <DashboardDisclosure defaultOpen={false} title="Conditionele segmentanalyse" description="Alleen zichtbaar wanneer thresholds en add-on parity dit veilig toelaten." badge={<DashboardChip label={visibility.showSegmentAnalysis ? 'Beschikbaar' : 'Verborgen'} tone={visibility.showSegmentAnalysis ? 'emerald' : 'amber'} />}>
-            {visibility.showSegmentAnalysis ? (retentionSegmentPlaybooks.length > 0 ? <SegmentPlaybookList segments={retentionSegmentPlaybooks} /> : <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">Er zijn nog geen segmenten met voldoende n en voldoende afwijking om apart vrij te geven.</div>) : <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">Segmentanalyse blijft hier bewust verborgen totdat deep dive, thresholds en privacycondities tegelijk zijn gehaald.</div>}
-          </DashboardDisclosure>
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr),minmax(300px,0.85fr)]">
+            <DashboardDisclosure
+              defaultOpen={false}
+              title={evidenceReadingFlow.sections.segments.title}
+              description={evidenceReadingFlow.sections.segments.description}
+              badge={<DashboardChip label={evidenceReadingFlow.sections.segments.badge} tone={evidenceReadingFlow.sections.segments.tone} />}
+            >
+              {visibility.showSegmentAnalysis ? (
+                retentionSegmentPlaybooks.length > 0 ? (
+                  <SegmentPlaybookList segments={retentionSegmentPlaybooks} />
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
+                    Er zijn nog geen segmenten met voldoende n en voldoende afwijking om apart vrij te geven.
+                  </div>
+                )
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
+                  Segmentanalyse blijft hier bewust verborgen totdat deep dive, thresholds en privacycondities tegelijk zijn gehaald.
+                </div>
+              )}
+            </DashboardDisclosure>
 
-          <DashboardDisclosure defaultOpen={false} title="Methodologie, privacy en technische verantwoording" description="Leeswijzer, drempels en accountability buiten de hoofdflow maar wel direct bereikbaar." badge={<DashboardChip label="Secondary trust layer" tone="slate" />}>
-            <div className="space-y-4">
-              <MethodologyCard scanType={stats.scan_type} hasSegmentDeepDive={hasSegmentDeepDive} signalLabel={scanDefinition.signalLabel} embedded />
-              <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
-            </div>
-          </DashboardDisclosure>
+            <DashboardDisclosure
+              defaultOpen={false}
+              title={evidenceReadingFlow.sections.methodology.title}
+              description={evidenceReadingFlow.sections.methodology.description}
+              badge={<DashboardChip label={evidenceReadingFlow.sections.methodology.badge} tone="slate" />}
+            >
+              <div className="space-y-4">
+                <MethodologyCard scanType={stats.scan_type} hasSegmentDeepDive={hasSegmentDeepDive} signalLabel={scanDefinition.signalLabel} embedded />
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="max-w-xl">
+                    <p className="text-sm font-semibold text-slate-900">Volledig rapport en accountability direct bereikbaar</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Gebruik dit alleen wanneer delen, bespreking of volledige technische verantwoording nodig wordt.
+                    </p>
+                  </div>
+                  <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
+                </div>
+              </div>
+            </DashboardDisclosure>
+          </div>
         </div>
       ) : null}
       {currentView === 'action' ? (

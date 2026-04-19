@@ -120,6 +120,44 @@ export type ActionExecutionCore = {
   supportPrompt: string
 }
 
+export type EvidenceReadingFlow = {
+  intro: {
+    title: string
+    body: string
+    sequence: string[]
+  }
+  primaryEntry: {
+    title: string
+    description: string
+    badge: string
+    emptyState: string
+  }
+  sections: {
+    sdt: {
+      title: string
+      description: string
+      badge: string
+    }
+    factors: {
+      title: string
+      description: string
+      badge: string
+    }
+    segments: {
+      title: string
+      description: string
+      badge: string
+      tone: 'emerald' | 'amber'
+    }
+    methodology: {
+      title: string
+      description: string
+      badge: string
+    }
+  }
+  supportPrompt: string
+}
+
 export type DriverDrilldownFactor = {
   factorKey: string
   factorLabel: string
@@ -625,6 +663,56 @@ export function buildScoreInterpretationGuide(scanType: ScanType): ScoreInterpre
           },
         ],
       }
+  }
+}
+
+export function buildEvidenceReadingFlow(args: {
+  showDriverDrilldown: boolean
+  showSegmentAnalysis: boolean
+}): EvidenceReadingFlow {
+  return {
+    intro: {
+      title: 'Onderbouwing als tweede leeslaag',
+      body: 'Open hier pas verder nadat handoff, scorelaag en eerste route bestuurlijk zijn geland. De volgorde blijft bewust smal: eerst de kernverdieping, daarna pas verklarende lagen en trustdetails.',
+      sequence: [
+        '1. Kernverdieping',
+        '2. SDT en factoren',
+        '3. Segmenten',
+        '4. Methodiek en accountability',
+      ],
+    },
+    primaryEntry: {
+      title: 'Kernverdieping',
+      description: 'Drivers, signalen en product-specifieke tabs blijven samen in een duidelijke eerste evidence-ingang. Zo voelt verdieping als een gerichte volgende stap, niet als een tweede dashboard.',
+      badge: 'Start hier',
+      emptyState: `De volledige onderbouwing komt vrij vanaf ${MIN_N_PATTERNS} responses.`,
+    },
+    sections: {
+      sdt: {
+        title: 'SDT basislaag',
+        description: 'Autonomie, competentie en verbondenheid blijven zichtbaar als verklarende onderlaag, niet als nieuw hoofdscherm.',
+        badge: 'SDT',
+      },
+      factors: {
+        title: 'Organisatiefactoren',
+        description: 'Volledige factorlezing voor managementduiding, nadat de topdrivers al zijn gelezen.',
+        badge: 'Factoren',
+      },
+      segments: {
+        title: 'Conditionele segmentanalyse',
+        description: args.showSegmentAnalysis
+          ? 'Alleen zichtbaar waar thresholds, deep dive en parity dit veilig toelaten.'
+          : 'Blijft bewust op de achtergrond totdat thresholds, deep dive en privacycondities tegelijk zijn gehaald.',
+        badge: args.showSegmentAnalysis ? 'Beschikbaar' : 'Verborgen tot thresholds',
+        tone: args.showSegmentAnalysis ? 'emerald' : 'amber',
+      },
+      methodology: {
+        title: 'Methodologie, privacy en technische verantwoording',
+        description: 'Leeswijzer, drempels en accountability blijven direct bereikbaar, maar bewust secundair aan de evidence-lezing.',
+        badge: 'Secondary trust layer',
+      },
+    },
+    supportPrompt: 'Klap deze verdiepingslagen alleen open als de kernlezing al staat en extra verificatie of accountability nodig wordt.',
   }
 }
 

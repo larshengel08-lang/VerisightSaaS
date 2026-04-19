@@ -6,6 +6,7 @@ Dit dashboard volgt de goedgekeurde report grammar, maar is geen letterlijke rep
 
 - `Overzicht` is de primaire managementlaag.
 - `Onderbouwing` houdt SDT, organisatiefactoren, segmenten en methodische diepte uit de eerste leesflow.
+- `Onderbouwing` opent eerst met één duidelijke kerningang; verklarende lagen en trust/accountability volgen pas daarna als secundaire disclosures.
 - `Actie` trekt route, eigenaarschap en playbooks los van de score- en syntheselezing.
 - `Campagne` houdt operations, readiness en respondentbeheer bewust secundair.
 

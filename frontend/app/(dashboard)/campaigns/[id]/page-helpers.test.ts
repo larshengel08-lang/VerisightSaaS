@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import {
   buildActionExecutionCore,
   buildDriverDrilldownModel,
+  buildEvidenceReadingFlow,
   buildResponseReadState,
   buildScoreInterpretationGuide,
   computeAverageRiskScore,
   computeRetentionSupplementalAverages,
+  MIN_N_PATTERNS,
 } from './page-helpers'
 
 describe('dashboard page helpers field semantics', () => {
@@ -167,5 +169,34 @@ describe('action execution core', () => {
     expect(model.firstStep.body).toContain('onduidelijkheid')
     expect(model.review.title).toBe('Review binnen 3 weken')
     expect(model.supportPrompt).toContain('Alleen openklappen')
+  })
+})
+
+describe('evidence reading flow', () => {
+  it('keeps one clear evidence entry before any secondary layers', () => {
+    const model = buildEvidenceReadingFlow({
+      showDriverDrilldown: true,
+      showSegmentAnalysis: true,
+    })
+
+    expect(model.primaryEntry.badge).toBe('Start hier')
+    expect(model.intro.sequence).toEqual([
+      '1. Kernverdieping',
+      '2. SDT en factoren',
+      '3. Segmenten',
+      '4. Methodiek en accountability',
+    ])
+    expect(model.sections.methodology.badge).toBe('Secondary trust layer')
+  })
+
+  it('keeps unavailable evidence and segment states explicit without making them primary', () => {
+    const model = buildEvidenceReadingFlow({
+      showDriverDrilldown: false,
+      showSegmentAnalysis: false,
+    })
+
+    expect(model.primaryEntry.emptyState).toContain(`${MIN_N_PATTERNS}`)
+    expect(model.sections.segments.badge).toBe('Verborgen tot thresholds')
+    expect(model.supportPrompt).toContain('alleen open')
   })
 })
