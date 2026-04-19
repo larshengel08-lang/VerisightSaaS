@@ -53,6 +53,10 @@ import {
   SdtGauge,
 } from './page-helpers'
 import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/implementation-readiness'
+import {
+  buildCustomerExpansionResult,
+  countEligibleDepartmentGroups,
+} from '@/lib/customer-expansion-suggester'
 import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import { buildTeamLocalReadState, buildTeamPriorityReadState } from '@/lib/products/team'
@@ -63,6 +67,66 @@ import type { CampaignStats, Respondent, SurveyResponse } from '@/lib/types'
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+function getExpansionChipLabel(readiness: 'not_ready' | 'ready' | 'already_decided') {
+  switch (readiness) {
+    case 'already_decided':
+      return 'Follow-up vastgelegd'
+    case 'ready':
+      return 'Beslissuggestie actief'
+    case 'not_ready':
+    default:
+      return 'Nog niet klaar'
+  }
+}
+
+function getExpansionChipTone(readiness: 'not_ready' | 'ready' | 'already_decided') {
+  switch (readiness) {
+    case 'already_decided':
+      return 'emerald' as const
+    case 'ready':
+      return 'blue' as const
+    case 'not_ready':
+    default:
+      return 'amber' as const
+  }
+}
+
+function getExpansionPanelTone(status: 'aanbevolen' | 'te_overwegen' | 'nu_niet') {
+  switch (status) {
+    case 'aanbevolen':
+      return 'blue' as const
+    case 'te_overwegen':
+      return 'emerald' as const
+    case 'nu_niet':
+    default:
+      return 'amber' as const
+  }
+}
+
+function getExpansionStatusLabel(status: 'aanbevolen' | 'te_overwegen' | 'nu_niet') {
+  switch (status) {
+    case 'aanbevolen':
+      return 'Aanbevolen'
+    case 'te_overwegen':
+      return 'Te overwegen'
+    case 'nu_niet':
+    default:
+      return 'Nu niet'
+  }
+}
+
+function getExpansionConfidenceLabel(confidence: 'hoog' | 'middel' | 'laag') {
+  switch (confidence) {
+    case 'hoog':
+      return 'Hoge confidence'
+    case 'middel':
+      return 'Middel confidence'
+    case 'laag':
+    default:
+      return 'Lage confidence'
+  }
 }
 
 export default async function CampaignPage({ params }: Props) {
@@ -301,7 +365,7 @@ export default async function CampaignPage({ params }: Props) {
     profile?.is_verisight_admin === true
       ? await supabase
           .from('pilot_learning_dossiers')
-          .select('id, title, triage_status, updated_at, review_moment, next_route, stop_reason, management_action_outcome, adoption_outcome')
+          .select('id, title, triage_status, updated_at, review_moment, first_action_taken, next_route, stop_reason, management_action_outcome, adoption_outcome')
           .eq('campaign_id', id)
           .order('updated_at', { ascending: false })
           .limit(3)
@@ -312,6 +376,7 @@ export default async function CampaignPage({ params }: Props) {
     triage_status: string
     updated_at: string
     review_moment: string | null
+    first_action_taken: string | null
     next_route: string | null
     stop_reason: string | null
     management_action_outcome: string | null
@@ -323,10 +388,36 @@ export default async function CampaignPage({ params }: Props) {
         dossier.next_route ||
         dossier.stop_reason ||
         dossier.management_action_outcome ||
-        dossier.adoption_outcome,
+      dossier.adoption_outcome,
     ),
   ).length
+  const latestLearningDossier = learningDossiers[0] ?? null
   const lifecycleDecisionCards = getLifecycleDecisionCards(stats.scan_type)
+  const expansionResult = buildCustomerExpansionResult({
+    scanType: stats.scan_type,
+    deliveryMode: campaignMeta?.delivery_mode ?? null,
+    responsesLength: responses.length,
+    hasMinDisplay,
+    hasEnoughData,
+    firstManagementUseConfirmed: Boolean(
+      deliveryRecord?.first_management_use_confirmed_at ||
+        deliveryRecord?.lifecycle_stage === 'first_management_use' ||
+        deliveryRecord?.lifecycle_stage === 'follow_up_decided' ||
+        deliveryRecord?.lifecycle_stage === 'learning_closed',
+    ),
+    followUpAlreadyDecided: Boolean(
+      deliveryRecord?.follow_up_decided_at ||
+        deliveryRecord?.lifecycle_stage === 'follow_up_decided' ||
+        deliveryRecord?.lifecycle_stage === 'learning_closed' ||
+        latestLearningDossier?.next_route,
+    ),
+    reviewMoment: latestLearningDossier?.review_moment ?? null,
+    firstActionTaken: latestLearningDossier?.first_action_taken ?? null,
+    managementActionOutcome: latestLearningDossier?.management_action_outcome ?? null,
+    nextRouteRecorded: latestLearningDossier?.next_route ?? null,
+    hasSegmentDeepDive,
+    eligibleDepartmentGroupCount: countEligibleDepartmentGroups(responses),
+  })
   const primaryTeamPriority =
     stats.scan_type === 'team' && teamPriorityRead?.status === 'ready'
       ? teamPriorityRead.groups.find((group) => group.isPrimary) ?? null
@@ -1431,6 +1522,47 @@ export default async function CampaignPage({ params }: Props) {
             <p className="mt-1 text-sm leading-6 text-slate-700">
               {productExperience.afterSessionDescription}
             </p>
+            <div className="mt-4 rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Customer expansion suggester
+                  </p>
+                  <h4 className="mt-2 text-base font-semibold text-slate-950">{expansionResult.title}</h4>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">{expansionResult.summary}</p>
+                </div>
+                <DashboardChip
+                  label={getExpansionChipLabel(expansionResult.readiness)}
+                  tone={getExpansionChipTone(expansionResult.readiness)}
+                />
+              </div>
+
+              {expansionResult.blockers.length > 0 ? (
+                <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Blokkers</p>
+                  <ul className="mt-2 space-y-2 text-sm leading-6 text-slate-700">
+                    {expansionResult.blockers.map((blocker) => (
+                      <li key={blocker} className="flex gap-2">
+                        <span className="text-amber-600">&bull;</span>
+                        <span>{blocker}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {expansionResult.suggestions.map((suggestion) => (
+                  <DashboardPanel
+                    key={suggestion.routeKey}
+                    eyebrow={`${getExpansionStatusLabel(suggestion.status)} · ${getExpansionConfidenceLabel(suggestion.confidence)}`}
+                    title={suggestion.label}
+                    body={`${suggestion.rationale} ${suggestion.guardrail}`}
+                    tone={getExpansionPanelTone(suggestion.status)}
+                  />
+                ))}
+              </div>
+            </div>
             {stats.scan_type === 'team' ? (
               <div className="mt-4 grid gap-4 lg:grid-cols-3">
                 <DashboardPanel

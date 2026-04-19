@@ -8,6 +8,7 @@ import {
   DashboardDisclosure,
   DashboardPanel,
 } from '@/components/dashboard/dashboard-primitives'
+import { buildCustomerExpansionResult } from '@/lib/customer-expansion-suggester'
 import {
   getContactDesiredTimingLabel,
   getContactRouteLabel,
@@ -38,7 +39,7 @@ import {
   type PilotLearningCheckpoint,
   type PilotLearningDossier,
 } from '@/lib/pilot-learning'
-import type { Campaign, CampaignStats, Organization } from '@/lib/types'
+import { hasCampaignAddOn, type Campaign, type CampaignStats, type Organization } from '@/lib/types'
 
 type DossierDraft = Pick<
   PilotLearningDossier,
@@ -238,6 +239,30 @@ function getToneForStatus(status: LearningTriageStatus) {
     case 'nieuw':
     default:
       return 'blue' as const
+  }
+}
+
+function getExpansionTone(status: 'aanbevolen' | 'te_overwegen' | 'nu_niet') {
+  switch (status) {
+    case 'aanbevolen':
+      return 'blue' as const
+    case 'te_overwegen':
+      return 'emerald' as const
+    case 'nu_niet':
+    default:
+      return 'amber' as const
+  }
+}
+
+function getExpansionStatusLabel(status: 'aanbevolen' | 'te_overwegen' | 'nu_niet') {
+  switch (status) {
+    case 'aanbevolen':
+      return 'Aanbevolen'
+    case 'te_overwegen':
+      return 'Te overwegen'
+    case 'nu_niet':
+    default:
+      return 'Nu niet'
   }
 }
 
@@ -561,14 +586,36 @@ export function PilotLearningWorkbench({
         </div>
       ) : (
         <div className="space-y-4">
-          {dossiers.map((dossier, index) => {
-            const draft = dossierDrafts[dossier.id]
-            const linkedCampaign = dossier.campaign_id ? campaignById[dossier.campaign_id] : null
-            const linkedOrg = dossier.organization_id ? orgById[dossier.organization_id] : null
-            const linkedLead = dossier.contact_request_id ? leadById[dossier.contact_request_id] : null
-            const dossierCheckpoints = (checkpointsByDossier[dossier.id] ?? []).slice().sort((a, b) => getCheckpointOrder(a.checkpoint_key) - getCheckpointOrder(b.checkpoint_key))
+      {dossiers.map((dossier, index) => {
+        const draft = dossierDrafts[dossier.id]
+        const linkedCampaign = dossier.campaign_id ? campaignById[dossier.campaign_id] : null
+        const linkedOrg = dossier.organization_id ? orgById[dossier.organization_id] : null
+        const linkedLead = dossier.contact_request_id ? leadById[dossier.contact_request_id] : null
+        const dossierCheckpoints = (checkpointsByDossier[dossier.id] ?? []).slice().sort((a, b) => getCheckpointOrder(a.checkpoint_key) - getCheckpointOrder(b.checkpoint_key))
+        const linkedCampaignStats = linkedCampaign ? campaignStatsById[linkedCampaign.id] ?? null : null
+        const firstManagementCheckpoint = dossierCheckpoints.find((checkpoint) => checkpoint.checkpoint_key === 'first_management_use')
+        const expansionResult = linkedCampaign
+          ? buildCustomerExpansionResult({
+              scanType: linkedCampaign.scan_type,
+              deliveryMode: linkedCampaign.delivery_mode ?? null,
+              responsesLength: linkedCampaignStats?.total_completed ?? 0,
+              hasMinDisplay: (linkedCampaignStats?.total_completed ?? 0) >= 5,
+              hasEnoughData: (linkedCampaignStats?.total_completed ?? 0) >= 10,
+              firstManagementUseConfirmed:
+                firstManagementCheckpoint?.status === 'bevestigd' ||
+                firstManagementCheckpoint?.status === 'uitgevoerd' ||
+                Boolean(draft.first_management_value || draft.first_action_taken || draft.management_action_outcome),
+              followUpAlreadyDecided: Boolean(draft.next_route?.trim()),
+              reviewMoment: draft.review_moment,
+              firstActionTaken: draft.first_action_taken,
+              managementActionOutcome: draft.management_action_outcome,
+              nextRouteRecorded: draft.next_route,
+              hasSegmentDeepDive: hasCampaignAddOn(linkedCampaign, 'segment_deep_dive'),
+              eligibleDepartmentGroupCount: 0,
+            })
+          : null
 
-            return (
+        return (
               <DashboardDisclosure
                 key={dossier.id}
                 title={dossier.title}
@@ -648,6 +695,66 @@ export function PilotLearningWorkbench({
                     <TextAreaField label="Vervolgroute" value={draft.next_route ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'next_route', value)} />
                     <TextAreaField label="Stopreden" value={draft.stop_reason ?? ''} onChange={(value) => updateDossierDraft(dossier.id, 'stop_reason', value)} />
                   </div>
+
+                  {expansionResult ? (
+                    <div className="rounded-[22px] border border-emerald-100 bg-emerald-50/50 p-5">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-950">Customer expansion suggester</p>
+                          <p className="mt-1 text-sm leading-6 text-slate-600">{expansionResult.summary}</p>
+                        </div>
+                        <DashboardChip
+                          label={
+                            expansionResult.readiness === 'already_decided'
+                              ? 'Follow-up vastgelegd'
+                              : expansionResult.readiness === 'ready'
+                                ? 'Suggestie actief'
+                                : 'Nog niet klaar'
+                          }
+                          tone={
+                            expansionResult.readiness === 'already_decided'
+                              ? 'emerald'
+                              : expansionResult.readiness === 'ready'
+                                ? 'blue'
+                                : 'amber'
+                          }
+                        />
+                      </div>
+
+                      {expansionResult.blockers.length > 0 ? (
+                        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-slate-700">
+                          {expansionResult.blockers.join(' ')}
+                        </div>
+                      ) : null}
+
+                      <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                        {expansionResult.suggestions.map((suggestion) => (
+                          <div key={suggestion.routeKey} className="rounded-2xl border border-white/80 bg-white px-4 py-4">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-semibold text-slate-950">{suggestion.label}</p>
+                                <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
+                                  {getExpansionStatusLabel(suggestion.status)}
+                                </p>
+                              </div>
+                              <DashboardChip label={suggestion.confidence} tone={getExpansionTone(suggestion.status)} />
+                            </div>
+                            <p className="mt-3 text-sm leading-6 text-slate-700">{suggestion.rationale}</p>
+                            <p className="mt-2 text-sm leading-6 text-slate-600">{suggestion.guardrail}</p>
+                            {suggestion.status !== 'nu_niet' ? (
+                              <button
+                                type="button"
+                                onClick={() => updateDossierDraft(dossier.id, 'next_route', suggestion.applyLabel)}
+                                className="mt-4 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-900 transition hover:border-emerald-300 hover:bg-emerald-200"
+                              >
+                                Neem over als next route
+                              </button>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div className="rounded-[22px] border border-blue-100 bg-blue-50/60 p-5">
                     <div className="flex flex-wrap items-start justify-between gap-3">
