@@ -34,12 +34,14 @@ def test_mto_department_intelligence_active_docs_define_safe_phase_sequence():
 
 def test_mto_department_intelligence_stays_mto_specific_and_updates_only_mto_surfaces():
     page = _read("frontend/app/(dashboard)/campaigns/[id]/page.tsx")
+    loader = _read("frontend/lib/action-center/mto-cockpit-loader.ts")
     frontend_definition = _read("frontend/lib/products/mto/definition.ts")
     backend_definition = _read("backend/products/mto/definition.py")
 
     assert "veilige afdelingsread" in page
     assert "suitebrede action engine" in page
-    assert "buildmtodepartmentreadmodel" in page
+    assert "loadmtoactioncentercampaigndata" in page
+    assert "buildmtodepartmentreadmodel" in loader
     assert "bounded department intelligence" in frontend_definition
     assert "veilige afdelingsread" in backend_definition
 
@@ -58,12 +60,14 @@ def test_shared_action_contracts_open_new_tables_without_touching_existing_scan_
 
 def test_closed_improvement_loop_stays_bounded_to_mto():
     page = _read("frontend/app/(dashboard)/campaigns/[id]/page.tsx")
+    loader = _read("frontend/lib/action-center/mto-cockpit-loader.ts")
     wave_three = _read("docs/active/wave_03_mto_closed_improvement_loop.md")
     gate_doc = _read("docs/active/wave_04_future_suite_integration_gate.md")
 
     assert "mtomanagercockpit" in page
     assert "scan_type === 'mto'" in page
-    assert "management_actions" in page
+    assert "loadmtoactioncentercampaigndata" in page
+    assert "management_actions" in loader
     assert "bounded action center" in page
 
     assert "wave status: completed_green" in wave_three
@@ -97,6 +101,7 @@ def test_action_center_maturity_phase_keeps_suite_capability_gated():
     wave_one = _read("docs/active/wave_01_action_center_cockpit_reframe.md")
     wave_two = _read("docs/active/wave_02_action_center_guided_creation_and_dossiers.md")
     wave_three = _read("docs/active/wave_03_action_center_permission_envelope.md")
+    wave_four = _read("docs/active/wave_04_action_center_loader_and_adapter_seams.md")
 
     assert "mto blijft de eerste actieve drager" in plan
     assert "suitekoppeling blijft expliciet in scope als capability" in plan
@@ -105,4 +110,18 @@ def test_action_center_maturity_phase_keeps_suite_capability_gated():
     assert "wave_04_action_center_loader_and_adapter_seams.md" in stack
     assert "wave status: completed_green" in wave_one
     assert "wave status: completed_green" in wave_two
-    assert "build permission: allowed" in wave_three
+    assert "wave status: completed_green" in wave_three
+    assert "build permission: allowed" in wave_four
+
+
+def test_action_center_loader_boundary_moves_mto_queries_out_of_campaign_page():
+    page = _read("frontend/app/(dashboard)/campaigns/[id]/page.tsx")
+    loader = _read("frontend/lib/action-center/mto-cockpit-loader.ts")
+
+    assert "loadmtoactioncentercampaigndata" in page
+    assert "from('management_actions')" not in page
+    assert "from('management_action_updates')" not in page
+    assert "from('management_action_reviews')" not in page
+    assert "from('management_action_department_owners')" not in page
+    assert "management_action_reviews" in loader
+    assert "management_action_department_owners" in loader

@@ -2,9 +2,9 @@
 
 ## Status
 
-- Wave status: blocked_until_wave_04_green
+- Wave status: active
 - Active source of truth after opening: dit document
-- Build permission: blocked
+- Build permission: allowed
 - Dependency: `WAVE_04_ACTION_CENTER_LOADER_AND_ADAPTER_SEAMS.md` moet groen zijn
 - Next allowed step after green completion: expliciete gated suite action center adapter-track
 

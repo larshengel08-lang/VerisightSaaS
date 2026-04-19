@@ -22,6 +22,7 @@ import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
 import { MtoManagerCockpit } from '@/components/dashboard/action-center/mto-manager-cockpit'
 import { MtoDepartmentReadList } from '@/components/dashboard/mto-department-read-list'
+import { loadMtoActionCenterCampaignData } from '@/lib/action-center/mto-cockpit-loader'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import {
   ActionPlaybookList,
@@ -64,7 +65,6 @@ import type {
 import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import { buildTeamLocalReadState, buildTeamPriorityReadState } from '@/lib/products/team'
-import { buildMtoDepartmentReadModel } from '@/lib/products/mto/department-intelligence'
 import { getProductModule } from '@/lib/products/shared/registry'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { FACTOR_LABELS, hasCampaignAddOn, type MemberRole } from '@/lib/types'
@@ -296,53 +296,23 @@ export default async function CampaignPage({ params }: Props) {
           playbooks: productModule.getActionPlaybooks(),
         })
       : []
-  const mtoDepartmentReadModel =
-    stats.scan_type === 'mto' && hasEnoughData
-      ? buildMtoDepartmentReadModel({
+  const mtoActionCenterData =
+    stats.scan_type === 'mto'
+      ? await loadMtoActionCenterCampaignData({
+          campaignId: id,
+          organizationId: stats.organization_id,
+          canManageCampaign,
+          hasEnoughData,
           responses,
-          orgAverageSignal: averageRiskScore,
+          orgAverageSignal: averageRiskScore ?? 0,
         })
       : null
-  const { data: managementActionsRaw } =
-    stats.scan_type === 'mto'
-      ? await supabase
-          .from('management_actions')
-          .select('*')
-          .eq('organization_id', stats.organization_id)
-          .eq('campaign_id', id)
-          .order('created_at', { ascending: false })
-      : { data: [] }
-  const managementActions = (managementActionsRaw ?? []) as ManagementActionRecord[]
-  const actionIds = managementActions.map((action) => action.id)
-  const { data: managementActionUpdatesRaw } =
-    stats.scan_type === 'mto' && actionIds.length > 0
-      ? await supabase
-          .from('management_action_updates')
-          .select('*')
-          .in('action_id', actionIds)
-          .order('created_at', { ascending: false })
-      : { data: [] }
-  const managementActionUpdates = (managementActionUpdatesRaw ?? []) as ManagementActionUpdateRecord[]
-  const { data: managementActionReviewsRaw } =
-    stats.scan_type === 'mto' && actionIds.length > 0
-      ? await supabase
-          .from('management_action_reviews')
-          .select('*')
-          .in('action_id', actionIds)
-          .order('created_at', { ascending: false })
-      : { data: [] }
-  const managementActionReviews = (managementActionReviewsRaw ?? []) as ManagementActionReviewRecord[]
-  const { data: managementActionOwnerDefaultsRaw } =
-    stats.scan_type === 'mto' && canManageCampaign
-      ? await supabase
-          .from('management_action_department_owners')
-          .select('*')
-          .eq('organization_id', stats.organization_id)
-          .order('department', { ascending: true })
-      : { data: [] }
-  const managementActionOwnerDefaults = (
-    managementActionOwnerDefaultsRaw ?? []
-  ) as ManagementActionDepartmentOwnerDefault[]
+  const mtoDepartmentReadModel = mtoActionCenterData?.departmentReadModel ?? null
+  const managementActions = mtoActionCenterData?.managementActions ?? ([] as ManagementActionRecord[])
+  const managementActionUpdates = mtoActionCenterData?.managementActionUpdates ?? ([] as ManagementActionUpdateRecord[])
+  const managementActionReviews = mtoActionCenterData?.managementActionReviews ?? ([] as ManagementActionReviewRecord[])
+  const managementActionOwnerDefaults =
+    mtoActionCenterData?.managementActionOwnerDefaults ?? ([] as ManagementActionDepartmentOwnerDefault[])
   const retentionThemes = stats.scan_type === 'retention' ? clusterRetentionOpenSignals(responses) : []
   const playbookCalibrationNote =
     stats.scan_type === 'retention'
