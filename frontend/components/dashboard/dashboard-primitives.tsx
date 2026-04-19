@@ -35,17 +35,19 @@ export function DashboardHero({
   tone?: Tone
 }) {
   return (
-    <section className={`overflow-visible rounded-[30px] border p-6 shadow-[0_18px_48px_rgba(19,32,51,0.08)] ${TONE_STYLES[tone]}`}>
+    <section className={`overflow-visible rounded-[34px] border p-6 shadow-[0_24px_56px_rgba(19,32,51,0.10)] sm:p-7 ${TONE_STYLES[tone]}`}>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr),minmax(320px,0.9fr)]">
         <div>
           <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${TONE_ACCENTS[tone]}`}>{eyebrow}</p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-[color:var(--ink)]">{title}</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--text)]">{description}</p>
+          <h1 className="mt-3 max-w-4xl text-3xl font-bold tracking-tight text-[color:var(--ink)] text-balance sm:text-[2.35rem]">
+            {title}
+          </h1>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--text)] text-pretty">{description}</p>
           {meta ? <div className="mt-5 flex flex-wrap gap-2">{meta}</div> : null}
           {actions ? <div className="mt-5 flex flex-wrap items-center gap-3">{actions}</div> : null}
         </div>
         {aside ? (
-          <div className="rounded-3xl border border-white/80 bg-white/90 p-5 shadow-[0_16px_40px_rgba(19,32,51,0.06)]">
+          <div className="rounded-3xl border border-white/80 bg-white/92 p-5 shadow-[0_18px_44px_rgba(19,32,51,0.08)]">
             {aside}
           </div>
         ) : null}
@@ -147,7 +149,7 @@ export function DashboardDisclosure({
       open={defaultOpen}
       className="group scroll-mt-36 rounded-[24px] border border-[color:var(--border)] bg-white shadow-[0_14px_36px_rgba(19,32,51,0.05)]"
     >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 sm:px-6">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-[color:var(--bg)]/60 sm:px-6">
         <div>
           <p className="text-base font-semibold text-[color:var(--ink)]">{title}</p>
           {description ? <p className="mt-1 text-sm leading-6 text-[color:var(--text)]">{description}</p> : null}
@@ -277,20 +279,20 @@ export function DashboardPrimaryNav({
   items: Array<{ href: string; label: string; active?: boolean }>
 }) {
   return (
-    <nav className="sticky top-[4.35rem] z-20 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)]/95 px-3 py-3 shadow-[0_14px_36px_rgba(19,32,51,0.08)] backdrop-blur">
-      <div className="flex flex-wrap gap-2">
-        {items.map((item) => (
-          <Link
-            key={item.label}
-            href={item.href}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-              item.active
-                ? 'border border-[color:var(--ink)] bg-[color:var(--ink)] text-[color:var(--bg)]'
+      <nav className="sticky top-[4.35rem] z-20 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)]/95 px-3 py-3 shadow-[0_14px_36px_rgba(19,32,51,0.08)] backdrop-blur">
+        <div className="flex flex-wrap gap-2">
+          {items.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--teal-light)] ${
+                item.active
+                ? 'border border-[color:var(--ink)] bg-[color:var(--ink)] text-[color:var(--bg)] shadow-[0_10px_24px_rgba(19,32,51,0.14)]'
                 : 'border border-[color:var(--border)] bg-white text-[color:var(--text)] hover:border-[color:var(--teal)] hover:text-[color:var(--ink)]'
-            }`}
-          >
-            {item.label}
-          </Link>
+              }`}
+            >
+              {item.label}
+            </Link>
         ))}
       </div>
     </nav>
