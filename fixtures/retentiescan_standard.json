@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "3.0",
+  "product": "RS",
+  "reportType": "retention",
+  "main": {
+    "P1": {
+      "client_name": "TechBouw B.V.",
+      "product_label": "RetentieScan",
+      "period_label": "Voorjaar 2026",
+      "context_note": "Illustratief voorbeeld",
+      "invited_n": 58,
+      "completed_n": 39,
+      "response_rate": 67.2,
+      "retention_signal": 5.6,
+      "executive_theme": "Behoud staat vooral onder druk door groei en werkbelasting.",
+      "top_factors": ["Groeiperspectief", "Werkbelasting"],
+      "first_decision": "Beslis eerst waar behoud nu vooral verificatie en opvolging vraagt."
+    },
+    "P2": {
+      "handoff_signal": "Retentiesignaal en signalen wijzen dezelfde kant op.",
+      "handoff_why": "Het patroon raakt teamcontinuiteit en leiding.",
+      "handoff_action": "Kies nu een verificatiespoor en leg review vast.",
+      "handoff_nonclaim": "Lees dit niet als voorspelling van vertrek of diagnose van teamcultuur."
+    },
+    "P3": {
+      "factors": [
+        { "name": "Groeiperspectief", "score": 4.8, "signal": 6.2, "band": "aandacht_nodig" },
+        { "name": "Werkbelasting", "score": 5.0, "signal": 5.9, "band": "aandacht_nodig" },
+        { "name": "Leiderschap", "score": 5.8, "signal": 5.1, "band": "aandacht_nodig" },
+        { "name": "Psychologische veiligheid", "score": 6.4, "signal": 4.6, "band": "aandacht_nodig" },
+        { "name": "Beloning & voorwaarden", "score": 7.0, "signal": 4.0, "band": "voorlopig_stabiel" },
+        { "name": "Rolhelderheid", "score": 7.1, "signal": 3.8, "band": "voorlopig_stabiel" }
+      ],
+      "featured_factors": [
+        {
+          "name": "Groeiperspectief",
+          "score": 4.8,
+          "signal": 6.2,
+          "band": "aandacht_nodig",
+          "definition": "Groei en perspectief kleuren het behoudsbeeld het sterkst."
+        },
+        {
+          "name": "Werkbelasting",
+          "score": 5.0,
+          "signal": 5.9,
+          "band": "aandacht_nodig",
+          "definition": "Werkdruk en herstelruimte maken behoud bestuurlijk urgent."
+        }
+      ],
+      "chart_caption": "Lagere beleving en hogere signaalwaarde maken een factor bestuurlijk scherper."
+    },
+    "P4": {
+      "exit_intent_groups": [
+        { "label": "Actief vertrekdenken", "pct": 28.0 },
+        { "label": "Twijfel zichtbaar", "pct": 34.0 },
+        { "label": "Overwegend stabiel", "pct": 38.0 }
+      ],
+      "engagement_dist": {
+        "hoog": 24,
+        "midden": 49,
+        "laag": 27
+      },
+      "signal_score": 5.6,
+      "bands": {
+        "voorlopig_stabiel": 14,
+        "aandacht_nodig": 22,
+        "direct_aandachtspunt": 3
+      },
+      "quotes": [
+        "Meer duidelijkheid over groeipaden zou mij helpen hier langer te blijven.",
+        "De werkdruk is op piekmomenten te hoog om goed herstel te houden."
+      ],
+      "prior_signals": [
+        { "period": "Najaar 2025", "top_factor": "Werkbelasting", "score": 5.1 }
+      ]
+    },
+    "P5": {
+      "priority_now": "Start met het groeiperspectief- en werkbelastingsspoor.",
+      "priority_factors": ["Groeiperspectief", "Werkbelasting"],
+      "first_owner": "HR lead met betrokken leidinggevende",
+      "first_step": "Plan binnen 2 weken een gesprek met teams.",
+      "review_window": "45-90 dagen",
+      "action_cards": [
+        {
+          "hypothesis": "Groeiperspectief",
+          "question": "Is onduidelijk perspectief de eerste reden dat mensen hun behoud hier relativeren?",
+          "rationale": "Groei komt terug in scores, signalen en open antwoorden."
+        },
+        {
+          "hypothesis": "Werkbelasting",
+          "question": "Waar stapelen planning, bezetting en herstelruimte zich het sterkst op?",
+          "rationale": "Werkbelasting verklaart waarom behoudsdruk nu niet alleen een gevoel is."
+        }
+      ],
+      "steps": [
+        { "action": "Kies een verificatiespoor", "requirement": "Maak expliciet welk besluit eerst telt." },
+        { "action": "Beleg een eigenaar", "requirement": "Zonder eigenaar blijft RetentieScan observatie zonder vervolg." },
+        { "action": "Toets het groepsbeeld", "requirement": "Gebruik alleen vragen die logisch uit het patroon volgen." },
+        { "action": "Koppel dit aan eerste acties", "requirement": "Beperk de eerste interventies tot wat nu echt logisch is." },
+        { "action": "Plan review of vervolgmeting", "requirement": "Kijk terug op verificatie, interventie en verschuiving in signalen." }
+      ]
+    },
+    "P6": {
+      "score_explanation": "Het retentiesignaal leest het groepsbeeld op 1-10.",
+      "product_is": "RetentieScan is vroegsignalering op behoud voor groepen en segmenten.",
+      "product_not_for": "Niet bedoeld als brede MTO, individuele predictor of performance-instrument.",
+      "contact_email": "hallo@verisight.nl"
+    }
+  },
+  "appendices": {
+    "A1": {
+      "segments": {
+        "department": [
+          { "label": "Operations", "n": 9, "scores": { "growth": 4.9, "workload": 4.8 } },
+          { "label": "Customer Success", "n": 7, "scores": { "growth": 5.2, "workload": 5.0 } }
+        ],
+        "tenure": [
+          { "label": "0-2 jaar", "n": 12, "scores": { "growth": 4.8, "workload": 4.7 } },
+          { "label": "2+ jaar", "n": 8, "scores": { "growth": 5.4, "workload": 5.2 } }
+        ],
+        "level": [
+          { "label": "Specialist", "n": 13, "scores": { "growth": 4.9, "workload": 4.9 } },
+          { "label": "Manager", "n": 6, "scores": { "growth": 5.6, "workload": 5.1 } }
+        ]
+      }
+    },
+    "B1": {
+      "factor_weights": [
+        { "name": "SDT Werkbeleving", "weight": 1.0, "literature_note": "Verklarende basislaag voor autonomie, competentie en verbondenheid." },
+        { "name": "Groeiperspectief", "weight": 1.0, "literature_note": "Ontwikkelruimte en perspectief binnen de organisatie." },
+        { "name": "Werkbelasting", "weight": 1.0, "literature_note": "Acceptabele werkdruk en herstelmogelijkheden." }
+      ],
+      "sdt_explanation": "SDT blijft de verklarende basislaag voor autonomie, competentie en verbondenheid naast aanvullende behoudssignalen.",
+      "band_definitions": [
+        { "band": "voorlopig_stabiel", "threshold": "< 4.5", "meaning": "Niet leidend, wel blijven monitoren." },
+        { "band": "aandacht_nodig", "threshold": "4.5-7.0", "meaning": "Vraagt eerst verificatie." },
+        { "band": "direct_aandachtspunt", "threshold": ">= 7.0", "meaning": "Nu bestuurlijk eerst wegen." }
+      ]
+    }
+  }
+}

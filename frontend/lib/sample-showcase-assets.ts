@@ -68,11 +68,12 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     intendedUse:
       'Teaserlaag op home en producten-overzicht om routekeuze te versnellen voordat een buyer een volledig voorbeeldrapport opent.',
     evidenceTier: 'deliverable_proof',
-    buyerUse: 'Gebruik als teaser naar de sample-rapporten, niet als rijkere of hardere prooflaag.',
+    buyerUse:
+      'Gebruik als teaser naar de kernroute-sample-rapporten; bounded follow-on routes krijgen hiermee geen impliciete eigen sample-pdf status.',
     claimBoundary:
-      'Illustratieve preview, geen volwaardig rapport en geen rijkere output dan de echte voorbeeldrapporten.',
+      'Illustratieve preview, geen volwaardig rapport en geen rijkere output dan de echte voorbeeldrapporten van ExitScan en RetentieScan.',
     trustFrame:
-      'Gebruikt fictieve data maar volgt dezelfde managementstructuur, trustnotes en routekeuze-logica als de actieve sample-rapporten.',
+      'Gebruikt fictieve data maar volgt dezelfde managementstructuur, trustnotes en routekeuze-logica als de actieve core sample-rapporten.',
   },
   {
     id: 'exit-preview',
@@ -87,7 +88,7 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     claimBoundary:
       'Preview op basis van dezelfde managementtaal en voorbeeldstructuur als het actieve ExitScan-sample-pdf.',
     trustFrame:
-      'Benadrukt managementsamenvatting, bestuurlijke handoff, eerste besluit en claimsgrens zonder vertrouwelijke klantframing.',
+      'Benadrukt bestuurlijke read, bestuurlijke handoff, eerste besluit en claimsgrens zonder vertrouwelijke klantframing.',
   },
   {
     id: 'retention-preview',
@@ -119,7 +120,7 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
     claimBoundary:
       'Visuele teaser voor segmentverdieping; niet verkopen als standaard deliverable voor elke buyer of elke dataset.',
     trustFrame:
-      'Blijft ondersteunend aan de hoofdlijn van managementsamenvatting en voorbeeldrapport, niet de primaire prooflaag.',
+      'Blijft ondersteunend aan de hoofdlijn van bestuurlijke read en voorbeeldrapport, niet de primaire prooflaag.',
   },
   {
     id: 'exit-legacy-sample',

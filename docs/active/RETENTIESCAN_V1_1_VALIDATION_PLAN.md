@@ -4,6 +4,18 @@
 
 Dit plan maakt van **RetentieScan v1.1** een expliciet **validatietraject**, niet nog een algemene product- of copyronde.
 
+Boundary note:
+
+- Waar dit plan `risk_score`, `avg_risk_score` of `stay_intent_score` noemt, gaat het om raw/storage- of scripttermen en niet om canonieke productlabels.
+- Gebruik in interpretatie- of buyer-facing lagen altijd:
+  - `retentiesignaal`
+  - `gem. retentiesignaal`
+  - `stay-intent`
+- Vanaf 2026-04-18 bestaat hiervoor ook een non-breaking aliaslaag in response/view-models:
+  - `signal_score`
+  - `avg_signal_score`
+  - `direction_signal_score`
+
 Uitgangspunt op basis van de huidige repo:
 
 - ExitScan blijft het primaire product voor terugkijkende vertrekduiding.

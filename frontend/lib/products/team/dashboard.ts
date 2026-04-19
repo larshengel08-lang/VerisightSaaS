@@ -149,7 +149,7 @@ export function buildTeamLocalReadState(
       summaryBody:
         'TeamScan toont lokale context pas zodra er genoeg groepsresponses zijn om afdelingsuitsplitsing veilig te lezen.',
       caution:
-        'Gebruik TeamScan nu nog niet om afdelingen te vergelijken. Bouw eerst genoeg responses op voor een veilige lokale read.',
+        'Gebruik TeamScan nu nog niet om afdelingen te vergelijken. Bouw eerst genoeg responses op voor een veilige lokale read en schakel intussen terug naar bredere duiding of organisatieniveau.',
     }
   }
 
@@ -165,7 +165,7 @@ export function buildTeamLocalReadState(
       summaryBody:
         'Er zijn wel genoeg responses voor een algemene TeamScan-read, maar te weinig responses bevatten een bruikbare afdeling om lokale context veilig te tonen.',
       caution:
-        'Laat TeamScan hier bewust op organisatieniveau staan en verbeter eerst department-metadata voordat je lokale uitsplitsing probeert te lezen.',
+        'Laat TeamScan hier bewust op organisatieniveau staan, verbeter eerst department-metadata en schakel terug naar bredere duiding totdat lokale uitsplitsing eerlijk leesbaar is.',
     }
   }
 
@@ -226,9 +226,14 @@ export function buildTeamLocalReadState(
       summaryBody:
         'Afdelingsmetadata is aanwezig, maar nog geen enkele afdeling haalt de minimale groepsgrootte voor veilige lokale weergave.',
       caution:
-        'Lees TeamScan nu alleen als organisatieniveau. Lokale vergelijking blijft onderdrukt totdat afdelingen voldoende responses hebben.',
+        `Lees TeamScan nu alleen als organisatieniveau. ${suppressedGroupCount} afdeling(en) blijven bewust onderdrukt totdat ze voldoende responses hebben, dus schakel terug naar bredere duiding in plaats van lokale volgorde te suggereren.`,
     }
   }
+
+  const suppressedSummary =
+    suppressedGroupCount > 0
+      ? ` ${suppressedGroupCount} kleinere afdeling(en) blijven bewust onderdrukt en vragen nu geen aparte lokale conclusie.`
+      : ''
 
   return {
     status: 'ready',
@@ -239,9 +244,9 @@ export function buildTeamLocalReadState(
     groups: safeGroups,
     summaryTitle: 'Veilige lokale read beschikbaar',
     summaryBody:
-      'De afdelingsuitsplitsing hieronder laat zien waar het huidige teamsignaal lokaal het scherpst speelt. Lees dit als verificatiehulp, niet als bewijs dat de oorzaak vaststaat.',
+      `De afdelingsuitsplitsing hieronder laat zien waar het huidige teamsignaal lokaal het scherpst speelt. Lees dit als verificatiehulp, niet als bewijs dat de oorzaak vaststaat.${suppressedSummary}`,
     caution:
-      'Gebruik deze lokale read om het eerste afdelingsgesprek te richten. Kleine of ontbrekende groepen blijven bewust buiten beeld.',
+      'Gebruik deze lokale read om het eerste afdelingsgesprek te richten. Kleine of ontbrekende groepen blijven bewust buiten beeld; zodra lokale leesbaarheid te dun wordt, schakel je terug naar bredere duiding in plaats van naar schijnprecisie.',
   }
 }
 
@@ -307,7 +312,7 @@ export function buildTeamPriorityReadState(localRead: TeamLocalReadState): TeamP
       summaryBody:
         'TeamScan toont pas een bounded eerste verificatieprioriteit zodra er veilige afdelingen zichtbaar zijn en de lokale verschillen scherp genoeg uit elkaar lopen om management echt richting te geven.',
       caution:
-        'Gebruik de huidige TeamScan-uitkomst nu alleen als lokale contextlaag. Harde volgorde blijft bewust uit totdat metadata, groepsgrootte en verschilsterkte dat eerlijk dragen.',
+        'Gebruik de huidige TeamScan-uitkomst nu alleen als lokale contextlaag. Harde volgorde blijft bewust uit totdat metadata, groepsgrootte en verschilsterkte dat eerlijk dragen; schakel anders terug naar bredere duiding.',
       groups: [],
     }
   }
@@ -513,7 +518,7 @@ export function buildTeamDashboardViewModel(args: {
       {
         title: 'Eerste beslisroute',
         value: 'Eerst verifieren, dan begrenzen',
-        body: 'TeamScan helpt management kiezen waar een eerste bounded check nodig is, wie die trekt en wanneer je weer terugschakelt naar bredere diagnose.',
+        body: 'TeamScan helpt management kiezen waar een eerste bounded check nodig is, wie die trekt en wanneer je weer terugschakelt naar bredere duiding.',
         tone: 'blue',
       },
       {
@@ -531,7 +536,7 @@ export function buildTeamDashboardViewModel(args: {
       {
         title: 'Reviewgrens',
         value: reviewWindow,
-        body: `Leg na de eerste lokale check expliciet vast of TeamScan nog een extra lokale review verdient, of dat de vraag terug moet naar bredere diagnose. ${localDirectionText}`,
+        body: `Leg na de eerste lokale check expliciet vast of TeamScan nog een extra lokale review verdient, of dat de vraag terug moet naar bredere duiding. ${localDirectionText}`,
         tone: typeof args.stayIntent === 'number' && args.stayIntent < 5.5 ? 'amber' : 'blue',
       },
       {
@@ -620,7 +625,7 @@ export function buildTeamDashboardViewModel(args: {
       'Gebruik de vragen en playbooks hieronder om van TeamScan naar een begrensde lokale verificatieroute, eigenaar en uitvoerlaag te gaan.',
     followThroughTitle: 'Van TeamScan naar lokale verificatie',
     followThroughIntro:
-      'De waarde van TeamScan zit in een snelle en begrensde lokale follow-up: eerst lokaliseren, dan verifieren, daarna expliciet kiezen of een lokale vervolgstap genoeg is of dat bredere diagnose terug nodig is.',
+      'De waarde van TeamScan zit in een snelle en begrensde lokale follow-up: eerst lokaliseren, dan verifieren, daarna expliciet kiezen of een lokale vervolgstap genoeg is of dat bredere duiding terug nodig is.',
     followThroughCards: [
       {
         title: 'Prioriteit nu',
@@ -649,7 +654,7 @@ export function buildTeamDashboardViewModel(args: {
       },
       {
         title: 'Escalatiegrens',
-        body: 'Kies daarna bewust: nog een lokale check, terug naar bredere diagnose, of stoppen met verder lokaliseren zolang de onderbouwing te smal blijft.',
+        body: 'Kies daarna bewust: nog een lokale check, terug naar bredere duiding, of stoppen met verder lokaliseren zolang de onderbouwing te smal blijft.',
         tone: 'amber',
       },
     ],

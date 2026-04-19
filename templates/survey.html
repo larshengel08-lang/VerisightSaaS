@@ -415,11 +415,12 @@
     {% include "survey/shared-org.html" %}
 
     {% set step_d = 4 if scan_type == "exit" else 3 %}
-    <div class="step" data-step="{{ step_d }}" data-label="{% if scan_type == "retention" %}Behoudssignalen{% else %}Afsluiting{% endif %}">
+    <div class="step" data-step="{{ step_d }}" data-label="{% if scan_type == "retention" %}Behoudssignalen{% elif scan_type == "pulse" %}Pulse check-in{% else %}Afsluiting{% endif %}">
       <div class="card">
-        <div class="card-title">Stap {{ step_d }} — {% if scan_type == "retention" %}Behoudssignalen{% else %}Afsluiting{% endif %}</div>
+        <div class="card-title">Stap {{ step_d }} — {% if scan_type == "retention" %}Behoudssignalen{% elif scan_type == "pulse" %}Pulse check-in{% else %}Afsluiting{% endif %}</div>
 
         {% include "survey/retention-signals.html" %}
+        {% include "survey/pulse-signals.html" %}
         {% include "survey/shared-open-text.html" %}
       </div>
 

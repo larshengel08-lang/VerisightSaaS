@@ -65,6 +65,7 @@ def test_report_hypotheses_include_owner_and_actionability():
         avg_engagement=5.2,
         avg_turnover_intention=6.0,
         avg_stay_intent=4.7,
+        factor_avgs={"workload": 4.9, "leadership": 5.3},
     )
 
     assert exit_hypotheses[0]["owner"]
@@ -84,6 +85,7 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
 
     assert "managementsamenvatting" in preview_copy
     assert "bestuurlijke handoff" in preview_copy
+    assert "cover en een expliciete responslaag" in preview_copy
     assert "eerste managementsessie" in preview_copy
     assert "eerste managementvraag" in preview_copy
     assert "eerste logische stap" in preview_copy
@@ -94,6 +96,8 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
     assert "wat je hier niet uit moet concluderen" in exit_report_content
     assert "wat je hier niet uit moet concluderen" in retention_report_content
     assert "bestuurlijke handoff" in report
+    assert "11. appendix — technische verantwoording" in report
+    assert "7-pagina rapport" not in report
     assert "session_title" in report
     assert "eerste managementsessie na oplevering" in exit_report_content
     assert "eerste managementsessie na oplevering" in retention_report_content
@@ -118,3 +122,19 @@ def test_preview_copy_and_report_layers_stay_aligned_on_management_language():
     assert "minimale n-grenzen" in retention_report_content
     assert "publieke trustlaag" in trust_page
     assert "dpa beschikbaar" in trust_page
+
+
+def test_report_runtime_paths_stay_explicit_and_legacy_dead_block_is_removed():
+    report = _read("backend/report.py")
+    runtime_boundary = _read("docs/active/report_generator_runtime_boundary.md")
+
+    assert "def _build_exit_embedded_story" in report
+    assert "def _build_non_exit_runtime_story" in report
+    assert "def _build_retention_runtime_story" in report
+    assert "def _build_shared_non_exit_runtime_story" in report
+    assert "_build_rebrand_story" not in report
+    assert "legacy unreachable block below" not in report
+    assert "pagina 1 — voorblad" not in report
+    assert "_build_retention_runtime_story" in runtime_boundary
+    assert "historische codeblok" in runtime_boundary
+    assert "is verwijderd" in runtime_boundary

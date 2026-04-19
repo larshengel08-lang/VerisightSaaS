@@ -39,7 +39,7 @@ Status 2026-04-15:
   - `vitest` op positioning-, preview- en dashboardparitytests
   - `pytest` op reporting parity, retention copy parity en scoring/report terminology checks
   - `eslint` op de frontend
-  - `next build --turbopack` op de frontend
+- `next build` op de frontend
   - terminologiedrift-check via repo-brede grep op oude live termvormen
 
 ## 2. Milestones

@@ -7,9 +7,9 @@ export const pulseScanDefinition: ScanDefinition = {
   signalLabelLower: 'pulsesignaal',
   summaryLabel: 'Momentopname nu',
   methodologyText:
-    'Pulse is de korte reviewlaag bovenop eerdere diagnose, baseline of eerdere Pulse. Het product bundelt een compacte SDT-check-in, geselecteerde werkfactoren en een actuele richtingsvraag tot een managementread die helpt bepalen waar nu review, correctie en een eerstvolgende hercheck nodig zijn. Vergelijking blijft bewust begrensd tot de vorige vergelijkbare Pulse met voldoende data.',
+    'Pulse is de korte reviewlaag bovenop eerdere duiding, baseline of eerdere Pulse. Het product bundelt een compacte SDT-check-in, geselecteerde werkfactoren en een actuele richtingsvraag tot een managementread die helpt bepalen waar nu review, correctie en een eerstvolgende hercheck nodig zijn. Vergelijking blijft bewust begrensd tot de vorige vergelijkbare Pulse met voldoende data.',
   whatItIsText:
-    'Een korte monitoring-scan op groepsniveau die laat zien hoe werkbeleving en gekozen prioriteitsfactoren er nu voor staan, plus wat dat bestuurlijk als eerste vraagt.',
+    'Een korte reviewscan op groepsniveau die laat zien hoe werkbeleving en gekozen prioriteitsfactoren er nu voor staan, plus wat dat bestuurlijk als eerste vraagt.',
   whatItIsNotText:
     'Geen brede MTO, geen vervanging van RetentieScan, geen individuele voorspeller, geen brede trendmachine en geen hard effectbewijs op zichzelf.',
   howToReadText:

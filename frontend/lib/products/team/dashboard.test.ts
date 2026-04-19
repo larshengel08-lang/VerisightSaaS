@@ -126,6 +126,46 @@ describe('buildTeamLocalReadState', () => {
     expect(state.status).toBe('needs_metadata')
     expect(state.safeGroupCount).toBe(0)
     expect(state.summaryBody).toContain('te weinig responses bevatten een bruikbare afdeling')
+expect(state.caution.toLowerCase()).toContain('bredere duiding')
+  })
+
+  it('keeps small groups suppressed until a safe local read exists', () => {
+    const responses: TeamTestResponse[] = [
+      ...Array.from({ length: 4 }, (_, index) =>
+        makeResponse('Operations', 5.8 + index * 0.1, { leadership: 4.1 }),
+      ),
+      ...Array.from({ length: 2 }, (_, index) =>
+        makeResponse('People', 5.2 + index * 0.1, { culture: 4.4 }),
+      ),
+    ]
+
+    const state = buildTeamLocalReadState(responses)
+
+    expect(state.status).toBe('needs_safe_groups')
+    expect(state.suppressedGroupCount).toBe(2)
+    expect(state.caution.toLowerCase()).toContain('onderdrukt')
+expect(state.caution.toLowerCase()).toContain('bredere duiding')
+  })
+
+  it('surfaces suppressed groups even when a safe local read is available', () => {
+    const responses: TeamTestResponse[] = [
+      ...Array.from({ length: 5 }, (_, index) =>
+        makeResponse('Operations', 7.0 + index * 0.1, { workload: 3.0, leadership: 4.0 }),
+      ),
+      ...Array.from({ length: 5 }, (_, index) =>
+        makeResponse('People', 5.1 + index * 0.1, { culture: 4.4, role_clarity: 4.8 }),
+      ),
+      ...Array.from({ length: 3 }, (_, index) =>
+        makeResponse('Support', 4.9 + index * 0.1, { leadership: 4.9, culture: 5.0 }),
+      ),
+    ]
+
+    const state = buildTeamLocalReadState(responses)
+
+    expect(state.status).toBe('ready')
+    expect(state.suppressedGroupCount).toBe(1)
+    expect(state.summaryBody.toLowerCase()).toContain('onderdrukt')
+expect(state.caution.toLowerCase()).toContain('bredere duiding')
   })
 })
 
@@ -194,5 +234,6 @@ describe('buildTeamPriorityReadState', () => {
 
     expect(priority.status).toBe('not_available')
     expect(priority.groups).toHaveLength(0)
+expect(priority.caution.toLowerCase()).toContain('bredere duiding')
   })
 })

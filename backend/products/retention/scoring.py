@@ -99,6 +99,12 @@ def compute_retention_supplemental_scores(
 
 
 def validate_submission(payload: Any) -> None:
+    expected_sdt = {f"B{i}" for i in range(1, 13)}
+    if set(payload.sdt_raw.keys()) != expected_sdt:
+        raise HTTPException(status_code=422, detail="RetentieScan vereist alle 12 werkbelevingsitems.")
+    expected_org = {f"{factor}_{index}" for factor in ORG_FACTOR_KEYS for index in range(1, 4)}
+    if set(payload.org_raw.keys()) != expected_org:
+        raise HTTPException(status_code=422, detail="RetentieScan vereist alle standaard werkfactoritems.")
     if len(payload.uwes_raw) != 3:
         raise HTTPException(status_code=422, detail="RetentieScan vereist 3 bevlogenheidsitems.")
     if len(payload.turnover_intention_raw) != 2:

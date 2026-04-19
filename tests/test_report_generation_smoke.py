@@ -116,6 +116,11 @@ def _extract_pdf_text(pdf_bytes: bytes, max_pages: int = 20) -> str:
     return ' '.join(' '.join(text_parts).split())
 
 
+def _extract_pdf_pages(pdf_bytes: bytes) -> list[str]:
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+    return [' '.join((page.extract_text() or '').split()) for page in reader.pages]
+
+
 def test_generate_exit_report_smoke(db_session: Session):
     org = Organization(name="Voorbeeldzorg", slug="voorbeeldzorg", contact_email="hr@voorbeeldzorg.nl")
     db_session.add(org)
@@ -152,13 +157,35 @@ def test_generate_exit_report_smoke(db_session: Session):
 
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 8000
-    pdf_text = _extract_pdf_text(pdf_bytes)
-    assert 'Bestuurlijke handoff' in pdf_text
-    assert 'Wat je hier niet uit moet concluderen' in pdf_text
-    assert 'Indicatieve exposure' in pdf_text
-    assert 'Eerste managementsessie na oplevering' in pdf_text
-    assert 'Reviewmoment' in pdf_text
-    assert 'Vertrouwelijk' in pdf_text
+    pages = _extract_pdf_pages(pdf_bytes)
+    assert len(pages) == 11
+    assert 'Door Verisight' in pages[0]
+    assert 'Segment deep dive' in pages[0]
+    assert 'Niet opgenomen' in pages[0]
+    assert 'Wat speelt nu' not in pages[0]
+    assert 'Respons' in pages[1]
+    assert 'Uitgenodigd' in pages[1]
+    assert 'Ingevuld' in pages[1]
+    assert 'Respons in context' in pages[1]
+    assert 'Bestuurlijke handoff' in pages[2]
+    assert 'Wat je hieruit moet concluderen' in pages[2]
+    assert 'Frictiescore' in pages[3]
+    assert 'Verdeling van het vertrekbeeld' in pages[3]
+    assert 'Hoe lees je dit?' in pages[3]
+    assert 'Signalen in samenhang' in pages[4]
+    assert 'Eerdere signalering' in pages[4]
+    assert 'Drivers & prioriteitenbeeld' in pages[5]
+    assert 'Hoe lees je dit?' in pages[5]
+    assert 'SDT Basisbehoeften' in pages[6]
+    assert 'Autonomie' in pages[6]
+    assert 'Organisatiefactoren' in pages[7]
+    assert 'Belevingsscore' in pages[7]
+    assert 'Eerste route & actie' in pages[8]
+    assert 'Review' in pages[8]
+    assert 'Methodiek / leeswijzer' in pages[9]
+    assert 'Technische verantwoording' in pages[10]
+    assert 'Onderliggende psychologische laag (SDT)' in pages[10]
+    assert 'Vertrouwelijk' in ' '.join(pages)
 
 
 def test_generate_exit_report_smoke_with_indicative_batch(db_session: Session):
@@ -197,8 +224,13 @@ def test_generate_exit_report_smoke_with_indicative_batch(db_session: Session):
 
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 5000
-    pdf_text = _extract_pdf_text(pdf_bytes)
-    assert 'Bestuurlijke handoff' not in pdf_text
+    pages = _extract_pdf_pages(pdf_bytes)
+    assert len(pages) == 11
+    assert 'Segment deep dive' in pages[0]
+    assert 'Respons' in pages[1]
+    assert 'Bestuurlijke handoff' in pages[2]
+    assert 'Technische verantwoording' in pages[-1]
+    assert 'Segmentanalyse' not in ' '.join(pages)
 
 
 def test_generate_retention_report_smoke_with_trend_and_segment_deep_dive(db_session: Session):
@@ -262,11 +294,32 @@ def test_generate_retention_report_smoke_with_trend_and_segment_deep_dive(db_ses
 
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 9000
-    pdf_text = _extract_pdf_text(pdf_bytes)
-    assert 'Bestuurlijke handoff' in pdf_text
-    assert 'Wat je hier niet uit moet concluderen' in pdf_text
-    assert 'Eerste managementsessie na oplevering' in pdf_text
-    assert 'Reviewmoment' in pdf_text
+    pages = _extract_pdf_pages(pdf_bytes)
+    assert len(pages) == 8
+    assert 'Door Verisight' in pages[0]
+    assert 'Segment deep dive' in pages[0]
+    assert 'Opgenomen' in pages[0]
+    assert 'Wat speelt nu' not in pages[0]
+    assert 'Bestuurlijke handoff' in pages[1]
+    assert 'Uitgenodigd' in pages[1]
+    assert 'Ingevuld' in pages[1]
+    assert 'Respons' in pages[1]
+    assert 'Respons in context' in pages[1]
+    assert 'Drivers & prioriteitenbeeld' in pages[2]
+    assert 'Wat speelt nu' in pages[2]
+    assert 'Scherpste factor' in pages[2]
+    assert 'Eerste besluit' in pages[2]
+    assert 'Hoe lees je dit?' in pages[2]
+    assert 'Kernsignalen in samenhang' in pages[3]
+    assert 'Eerdere signalering' in pages[3]
+    assert 'Hoe lees je dit?' in pages[3]
+    assert 'Eerste route & managementactie' in pages[4]
+    assert 'Compacte methodiek / leeswijzer' in pages[5]
+    assert 'Hoe lees je dit?' in pages[5]
+    assert 'Segmentanalyse' in pages[6]
+    assert 'Technische verantwoording' in pages[7]
+    assert 'Onderliggende psychologische laag (SDT)' in pages[7]
+    assert 'Review' in pages[4]
 
 
 def test_generate_exit_report_sample_output_mode_uses_buyer_facing_cover_note(db_session: Session):
@@ -307,3 +360,47 @@ def test_generate_exit_report_sample_output_mode_uses_buyer_facing_cover_note(db
     assert 'Illustratief voorbeeld' in pdf_text
     assert 'fictieve data' in pdf_text.lower()
     assert 'Vertrouwelijk' not in pdf_text
+
+
+def test_generate_retention_report_omits_segment_appendix_when_any_group_is_below_threshold(db_session: Session):
+    org = Organization(name="Low N BV", slug="low-n-bv", contact_email="people@lown.nl")
+    db_session.add(org)
+    db_session.flush()
+
+    campaign = _build_campaign(
+        db_session,
+        organization=org,
+        name="Retentie Low N 2026",
+        scan_type="retention",
+        created_at=datetime.now(timezone.utc),
+        enabled_modules=["segment_deep_dive"],
+    )
+
+    for idx in range(10):
+        _add_response(
+            db_session,
+            campaign=campaign,
+            idx=idx,
+            department="Product" if idx < 6 else "People",
+            role_level="manager" if idx < 5 else "specialist",
+            exit_reason_code=None,
+            risk_score=5.9 + (idx % 3) * 0.2,
+            risk_band="MIDDEN",
+            preventability=None,
+            stay_intent_score=2,
+            uwes_score=5.2,
+            turnover_intention_score=5.8,
+            open_text_raw="Werkdruk en groeiperspectief vragen snelle verificatie.",
+        )
+
+    db_session.commit()
+
+    pdf_bytes = generate_campaign_report(campaign.id, db_session)
+
+    pages = _extract_pdf_pages(pdf_bytes)
+    assert len(pages) == 7
+    assert 'Segmentanalyse' not in ' '.join(pages[:-1])
+    assert 'Eerdere signalering' not in pages[3]
+    assert 'eerdere signalering' not in pages[3].lower()
+    assert 'Technische verantwoording' in pages[-1]
+    assert 'Segmentanalyse niet beschikbaar' in pages[-1]

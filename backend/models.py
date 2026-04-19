@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import (
     Boolean,
+    CHAR,
     DateTime,
     Float,
     ForeignKey,
@@ -26,7 +27,9 @@ from sqlalchemy import (
     Text,
     JSON,
 )
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.types import TypeDecorator
 
 from backend.database import Base
 
@@ -39,6 +42,31 @@ def _uuid() -> str:
     return str(uuid.uuid4())
 
 
+class GUID(TypeDecorator):
+    """Dialect-aware UUID type that stays string-based in Python."""
+
+    impl = CHAR
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            return dialect.type_descriptor(PG_UUID(as_uuid=True))
+        return dialect.type_descriptor(CHAR(36))
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        parsed = value if isinstance(value, uuid.UUID) else uuid.UUID(str(value))
+        if dialect.name == "postgresql":
+            return parsed
+        return str(parsed)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return str(value)
+
+
 # ---------------------------------------------------------------------------
 # Organization (tenant)
 # ---------------------------------------------------------------------------
@@ -46,7 +74,7 @@ def _uuid() -> str:
 class Organization(Base):
     __tablename__ = "organizations"
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=_uuid)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     contact_email: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -75,11 +103,11 @@ class Organization(Base):
 class Campaign(Base):
     __tablename__ = "campaigns"
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    organization_id: Mapped[str] = mapped_column(String(36), ForeignKey("organizations.id"), nullable=False)
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=_uuid)
+    organization_id: Mapped[str] = mapped_column(GUID(), ForeignKey("organizations.id"), nullable=False)
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    scan_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "exit" | "retention"
+    scan_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "exit" | "retention" | "pulse" | "team" | "onboarding" | "leadership"
     delivery_mode: Mapped[str | None] = mapped_column(String(20), nullable=True)  # "baseline" | "live" — null behandeld als baseline
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
@@ -113,8 +141,8 @@ class Campaign(Base):
 class OrganizationSecret(Base):
     __tablename__ = "organization_secrets"
 
-    org_id: Mapped[str] = mapped_column(String(36), ForeignKey("organizations.id"), primary_key=True)
-    api_key: Mapped[str] = mapped_column(String(64), unique=True, default=_uuid)
+    org_id: Mapped[str] = mapped_column(GUID(), ForeignKey("organizations.id"), primary_key=True)
+    api_key: Mapped[str] = mapped_column(String(120), unique=True, default=_uuid)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
     organization: Mapped["Organization"] = relationship(back_populates="secret")
@@ -130,11 +158,11 @@ class OrganizationSecret(Base):
 class Respondent(Base):
     __tablename__ = "respondents"
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    campaign_id: Mapped[str] = mapped_column(String(36), ForeignKey("campaigns.id"), nullable=False)
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=_uuid)
+    campaign_id: Mapped[str] = mapped_column(GUID(), ForeignKey("campaigns.id"), nullable=False)
 
     # UUID token embedded in survey URL — no PII in token itself
-    token: Mapped[str] = mapped_column(String(36), unique=True, default=_uuid, index=True)
+    token: Mapped[str] = mapped_column(GUID(), unique=True, default=_uuid, index=True)
 
     # Minimal metadata for segmentation (operator-supplied, optional)
     department: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -166,8 +194,8 @@ class Respondent(Base):
 class SurveyResponse(Base):
     __tablename__ = "survey_responses"
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
-    respondent_id: Mapped[str] = mapped_column(String(36), ForeignKey("respondents.id"), unique=True, nullable=False)
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=_uuid)
+    respondent_id: Mapped[str] = mapped_column(GUID(), ForeignKey("respondents.id"), unique=True, nullable=False)
 
     # ------------------------------------------------------------------
     # Module A — Exit context (exit surveys only)
@@ -175,6 +203,8 @@ class SurveyResponse(Base):
     tenure_years: Mapped[float | None] = mapped_column(Float, nullable=True)
     exit_reason_category: Mapped[str | None] = mapped_column(String(50), nullable=True)   # push/pull/situational key
     exit_reason_code: Mapped[str | None] = mapped_column(String(10), nullable=True)       # e.g. "P1", "PL2"
+    # Shared technical storage field. Product meaning varies by scan type:
+    # retention = real stay-intent, exit = exit-context item, pulse = bounded direction signal.
     stay_intent_score: Mapped[int | None] = mapped_column(Integer, nullable=True)         # 1-5
 
     # ------------------------------------------------------------------
@@ -217,6 +247,8 @@ class SurveyResponse(Base):
     # ------------------------------------------------------------------
     # Computed aggregates
     # ------------------------------------------------------------------
+    # Shared technical storage field. Buyer-facing label must remain product-specific
+    # such as Frictiescore, Retentiesignaal or Teamsignaal.
     risk_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     risk_band: Mapped[str | None] = mapped_column(String(10), nullable=True)          # HOOG/MIDDEN/LAAG
     preventability: Mapped[str | None] = mapped_column(String(20), nullable=True)     # exit only
@@ -243,7 +275,7 @@ class SurveyResponse(Base):
 class ContactRequest(Base):
     __tablename__ = "contact_requests"
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=_uuid)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     work_email: Mapped[str] = mapped_column(String(255), nullable=False)
     organization: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -260,6 +292,19 @@ class ContactRequest(Base):
     ops_owner: Mapped[str | None] = mapped_column(String(120), nullable=True)
     ops_next_step: Mapped[str | None] = mapped_column(Text, nullable=True)
     ops_handoff_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    qualification_status: Mapped[str] = mapped_column(String(24), nullable=False, default="not_reviewed")
+    qualified_route: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    qualification_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    qualification_reviewed_by: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    qualification_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    commercial_agreement_status: Mapped[str] = mapped_column(String(24), nullable=False, default="not_started")
+    commercial_pricing_mode: Mapped[str | None] = mapped_column(String(24), nullable=True)
+    commercial_start_readiness_status: Mapped[str] = mapped_column(String(24), nullable=False, default="not_ready")
+    commercial_start_blocker: Mapped[str | None] = mapped_column(Text, nullable=True)
+    commercial_agreement_confirmed_by: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    commercial_agreement_confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    commercial_readiness_reviewed_by: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    commercial_readiness_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_contacted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
     learning_dossiers: Mapped[list["PilotLearningDossier"]] = relationship(
@@ -280,20 +325,20 @@ class ContactRequest(Base):
 class CampaignDeliveryRecord(Base):
     __tablename__ = "campaign_delivery_records"
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=_uuid)
     organization_id: Mapped[str] = mapped_column(
-        String(36),
+        GUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=False,
     )
     campaign_id: Mapped[str] = mapped_column(
-        String(36),
+        GUID(),
         ForeignKey("campaigns.id", ondelete="CASCADE"),
         nullable=False,
         unique=True,
     )
     contact_request_id: Mapped[str | None] = mapped_column(
-        String(36),
+        GUID(),
         ForeignKey("contact_requests.id", ondelete="SET NULL"),
         nullable=True,
     )
@@ -324,9 +369,9 @@ class CampaignDeliveryRecord(Base):
 class CampaignDeliveryCheckpoint(Base):
     __tablename__ = "campaign_delivery_checkpoints"
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=_uuid)
     delivery_record_id: Mapped[str] = mapped_column(
-        String(36),
+        GUID(),
         ForeignKey("campaign_delivery_records.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -352,19 +397,19 @@ class CampaignDeliveryCheckpoint(Base):
 class PilotLearningDossier(Base):
     __tablename__ = "pilot_learning_dossiers"
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=_uuid)
     organization_id: Mapped[str | None] = mapped_column(
-        String(36),
+        GUID(),
         ForeignKey("organizations.id", ondelete="CASCADE"),
         nullable=True,
     )
     campaign_id: Mapped[str | None] = mapped_column(
-        String(36),
+        GUID(),
         ForeignKey("campaigns.id", ondelete="CASCADE"),
         nullable=True,
     )
     contact_request_id: Mapped[str | None] = mapped_column(
-        String(36),
+        GUID(),
         ForeignKey("contact_requests.id", ondelete="SET NULL"),
         nullable=True,
     )
@@ -403,8 +448,8 @@ class PilotLearningDossier(Base):
     supporting_artifacts: Mapped[str | None] = mapped_column(Text, nullable=True)
     case_public_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_by: Mapped[str | None] = mapped_column(String(36), nullable=True)
-    updated_by: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    created_by: Mapped[str | None] = mapped_column(GUID(), nullable=True)
+    updated_by: Mapped[str | None] = mapped_column(GUID(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
@@ -423,9 +468,9 @@ class PilotLearningDossier(Base):
 class PilotLearningCheckpoint(Base):
     __tablename__ = "pilot_learning_checkpoints"
 
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=_uuid)
     dossier_id: Mapped[str] = mapped_column(
-        String(36),
+        GUID(),
         ForeignKey("pilot_learning_dossiers.id", ondelete="CASCADE"),
         nullable=False,
     )

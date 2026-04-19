@@ -564,6 +564,9 @@ class TestDetectPatterns:
         assert result["avg_engagement_score"] == pytest.approx(5.5)
         assert result["avg_turnover_intention_score"] == pytest.approx(5.45)
         assert result["avg_stay_intent_score"] == pytest.approx(5.5)
+        assert result["avg_signal_score"] == result["avg_risk_score"] == pytest.approx(5.3)
+        assert result["avg_direction_signal_score"] == result["avg_stay_intent_score"] == pytest.approx(5.5)
+        assert result["department_avg_signal"] == result["department_avg_risk"] == {"People": pytest.approx(5.3)}
         assert result["top_exit_reasons"] == []
         assert result["strong_work_signal_pct"] is None
 

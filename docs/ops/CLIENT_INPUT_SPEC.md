@@ -58,7 +58,7 @@ De huidige productlogica ondersteunt deze velden:
 
 - ExitScan Baseline:
   - `exit_month` sterk aanbevolen en in praktijk de standaard voor retrospectieve batches
-- ExitScan Live:
+- ExitScan ritmeroute:
   - `exit_month` mag mee als referentie, maar is minder cruciaal
 - RetentieScan:
   - `annual_salary_eur` optioneel
@@ -98,8 +98,8 @@ Als een klant andere termen gebruikt:
 
 Maak vooraf altijd expliciet:
 
-- of de scan live vanaf start loopt
-- of bewust retrospectief als baseline wordt opgezet
+- of de scan als ritmeroute vanaf start loopt
+- of bewust als baseline wordt opgezet
 
 Belangrijke default:
 

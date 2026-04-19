@@ -184,7 +184,7 @@ def compute_preventability(
     if primary_reason in UNPREVENTABLE:
         return {
             "preventability": "BEPERKT_WERKSIGNAAL",
-            "preventability_label": "Beperkt signaal van beïnvloedbare werkfactoren",
+            "preventability_label": "Voorlopig stabiel",
             "reasoning": "De hoofdreden voor vertrek ligt volgens de respondent vooral buiten de directe invloedssfeer van de organisatie.",
             "signal_score": 0.5,
         }
@@ -223,7 +223,7 @@ def compute_preventability(
     if signal_score >= 5.0:
         return {
             "preventability": "STERK_WERKSIGNAAL",
-            "preventability_label": "Sterk signaal van beïnvloedbare werkfactoren",
+            "preventability_label": "Direct aandachtspunt",
             "reasoning": "Deze combinatie van antwoorden wijst relatief sterk op beïnvloedbare werkfactoren rondom het vertrek: "
             + "; ".join(reasoning_parts) + ".",
             "signal_score": round(signal_score, 2),
@@ -231,13 +231,13 @@ def compute_preventability(
     if signal_score >= 3.0:
         return {
             "preventability": "GEMENGD_WERKSIGNAAL",
-            "preventability_label": "Gemengd signaal van beïnvloedbare werkfactoren",
-            "reasoning": "De antwoorden geven een gemengd beeld: er zijn aanwijzingen voor beïnvloedbare werkfactoren, maar ook voor andere verklaringen of beperkte stelligheid.",
+            "preventability_label": "Aandacht nodig",
+            "reasoning": "De antwoorden laten een aandachtspunt zien: er zijn aanwijzingen voor beïnvloedbare werkfactoren, maar ook voor andere verklaringen of beperkte stelligheid.",
             "signal_score": round(signal_score, 2),
         }
     return {
         "preventability": "BEPERKT_WERKSIGNAAL",
-        "preventability_label": "Beperkt signaal van beïnvloedbare werkfactoren",
+        "preventability_label": "Voorlopig stabiel",
         "reasoning": "De antwoorden geven weinig harde aanwijzingen dat beïnvloedbare werkfactoren de dominante verklaring voor het vertrek waren.",
         "signal_score": round(signal_score, 2),
     }
@@ -477,9 +477,11 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
         "n":                    n,
         "sufficient_data":      True,
         "avg_risk_score":       avg_risk,
+        "avg_signal_score":     avg_risk,
         "avg_engagement_score": avg_engagement,
         "avg_turnover_intention_score": avg_turnover_intention,
         "avg_stay_intent_score": avg_stay_intent,
+        "avg_direction_signal_score": avg_stay_intent,
         "factor_averages":      factor_averages,
         "top_risk_factors":     top_risks,
         "preventability_counts": preventability_counts,
@@ -496,4 +498,5 @@ def detect_patterns(responses: list[dict[str, Any]]) -> dict[str, Any]:
             for code, cnt in top_contributing_reasons
         ],
         "department_avg_risk":  dept_avg,
+        "department_avg_signal": dept_avg,
     }

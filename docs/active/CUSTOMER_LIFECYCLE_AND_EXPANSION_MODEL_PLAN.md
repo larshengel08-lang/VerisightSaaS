@@ -48,8 +48,8 @@ Dependency: none
 - [x] De huidige lifecycle vastgelegd van routekeuze naar eerste sale, onboarding, eerste managementread, opvolging, herhaalgebruik en expansion.
 - [x] Expliciet gemaakt welke lifecycle-signalen al bestonden in marketing, contact, onboarding, implementation readiness, dashboard, report-to-action en pilot learning.
 - [x] De bestaande canonieke vervolgroutes bevestigd:
-  - `ExitScan Baseline -> ExitScan Live`
-  - `RetentieScan Baseline -> RetentieScan ritme`
+  - `ExitScan Baseline -> ExitScan ritmeroute`
+  - `RetentieScan Baseline -> RetentieScan ritmeroute`
   - `segment_deep_dive`
   - `ExitScan -> RetentieScan`
   - `RetentieScan -> ExitScan`
@@ -75,12 +75,12 @@ Dependency: Milestone 0
 - [x] Per product de vaste lifecycleladder gedefinieerd in marketing- en onboardingcontent.
 - [x] ExitScan expliciet vastgezet als primaire first-sale ladder:
   - standaard: `ExitScan Baseline`
-  - vervolg: `ExitScan Live` alleen bij volume, proces en eigenaar
+  - vervolg: `ExitScan ritmeroute` alleen bij volume, proces en eigenaar
   - expansion: `RetentieScan Baseline` zodra de vraag verschuift van vertrekduiding naar behoudsvroegsignalering
   - verdieping: `segment_deep_dive` alleen bij sterke metadata- en segmentvraag
 - [x] RetentieScan expliciet vastgezet als complementaire ladder:
   - eerste koop alleen bij expliciete actieve-populatievraag
-  - standaard vervolg: `RetentieScan ritme`
+  - standaard vervolg: `RetentieScan ritmeroute`
   - compacte vervolgmeting blijft binnen die ritmelaag
   - expansion naar ExitScan alleen wanneer retrospectieve vertrekduiding alsnog nodig blijkt
 - [x] Combinatie vastgezet als portfolioroute, niet als automatische upsell.
@@ -149,7 +149,7 @@ Dependency: Milestone 3
 - [x] Regressiebescherming toegevoegd voor lifecycle- en expansionpariteit over marketing, pricing, contact, onboarding en dashboard.
 - [x] Acceptance-scenario's afgedekt in tests voor ExitScan-first, RetentieScan-first, ExitScan naar Live, ExitScan naar RetentieScan, RetentieScan naar ritme en geen forced upsell.
 - [x] Governance vastgelegd: eerst lifecycle source of truth, daarna public surfaces, internal surfaces en tests.
-- [x] Bescherming toegevoegd tegen false-lifecycle moves zoals combinatie als default upsell of ExitScan Live als standaard eerste package.
+- [x] Bescherming toegevoegd tegen false-lifecycle moves zoals combinatie als default upsell of ExitScan ritmeroute als standaard eerste package.
 - [x] Prompt-systeem administratief afgesloten:
   - dit planbestand is source of truth
   - `PROMPT_CHECKLIST.xlsx` is bijgewerkt
@@ -174,8 +174,8 @@ Dependency: Milestone 3
 
 ### Buyer-facing marketing, pricing and contact
 - [x] Public copy verduidelijkt eerst de eerste koop en pas daarna repeat en expansion.
-- [x] `ExitScan Live` blijft quote-only vervolg.
-- [x] `RetentieScan ritme` blijft de vaste buyer-facing repeatvorm.
+- [x] `ExitScan ritmeroute` blijft quote-only vervolg.
+- [x] `RetentieScan ritmeroute` blijft de vaste buyer-facing repeatvorm.
 - [x] Combinatie blijft op aanvraag en pas logisch zodra beide vragen bestaan.
 - [x] Contactflow blijft route-aware en lifecycle-aware, zonder checkout- of planframing.
 
@@ -186,8 +186,8 @@ Dependency: Milestone 3
 
 ### Dashboard, report and follow-through
 - [x] Dashboard en rapport vormen explicieter de brug van eerste inzicht naar review- en vervolgkeuze.
-- [x] ExitScan follow-through vertaalt nu door naar repeat of expansion, niet alleen eerste actie.
-- [x] RetentieScan follow-through vertaalt nu door naar ritme of tweede product waar relevant.
+- [x] ExitScan follow-through vertaalt nu door naar ritmeroute of expansion, niet alleen eerste actie.
+- [x] RetentieScan follow-through vertaalt nu door naar ritmeroute of tweede product waar relevant.
 - [x] Geen action-tracking platform toegevoegd; wel duidelijke lifecyclebesluiten en capture.
 
 ### Internal learning and governance

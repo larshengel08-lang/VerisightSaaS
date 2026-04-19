@@ -54,6 +54,10 @@ from sqlalchemy.orm import Session, selectinload
 from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
 from backend.email import send_contact_request_result, send_hr_notification, send_survey_invite
 from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
+from backend.products.leadership.definition import DEFAULT_LEADERSHIP_MODULES
+from backend.products.onboarding.definition import DEFAULT_ONBOARDING_MODULES
+from backend.products.pulse.definition import DEFAULT_PULSE_MODULES
+from backend.products.team.definition import DEFAULT_TEAM_MODULES
 from backend.products.shared.registry import get_product_module
 from backend.runtime import require_backend_admin_token, validate_runtime_config
 from backend.scan_definitions import get_scan_definition
@@ -107,7 +111,7 @@ _IS_PRODUCTION = os.getenv("ENVIRONMENT", "development").lower() == "production"
 logger = logging.getLogger(__name__)
 
 
-def _resolve_survey_modules(enabled_modules: list[str] | None) -> list[str]:
+def _resolve_survey_modules(scan_type: str, enabled_modules: list[str] | None) -> list[str]:
     """Return only factor modules for the survey itself.
 
     Campaign-level add-ons, such as segment verdieping in the report, should
@@ -115,10 +119,28 @@ def _resolve_survey_modules(enabled_modules: list[str] | None) -> list[str]:
     subset is configured, the full default factor set remains active.
     """
     if not enabled_modules:
+        if scan_type == "leadership":
+            return list(DEFAULT_LEADERSHIP_MODULES)
+        if scan_type == "onboarding":
+            return list(DEFAULT_ONBOARDING_MODULES)
+        if scan_type == "pulse":
+            return list(DEFAULT_PULSE_MODULES)
+        if scan_type == "team":
+            return list(DEFAULT_TEAM_MODULES)
         return ORG_FACTOR_KEYS
 
     factor_modules = [module for module in enabled_modules if module in ORG_FACTOR_KEYS]
-    return factor_modules or ORG_FACTOR_KEYS
+    if factor_modules:
+        return factor_modules
+    if scan_type == "leadership":
+        return list(DEFAULT_LEADERSHIP_MODULES)
+    if scan_type == "onboarding":
+        return list(DEFAULT_ONBOARDING_MODULES)
+    if scan_type == "pulse":
+        return list(DEFAULT_PULSE_MODULES)
+    if scan_type == "team":
+        return list(DEFAULT_TEAM_MODULES)
+    return ORG_FACTOR_KEYS
 
 
 def _send_hr_notification_safe(
@@ -255,6 +277,16 @@ ROLE_LEVEL_ALIASES = {
     "mt": "c_level",
 }
 
+BOUNDED_COMMERCE_CORE_ROUTE_INTERESTS = {"exitscan", "retentiescan"}
+QUALIFICATION_CONFIRMABLE_ROUTE_INTERESTS = {
+    "exitscan",
+    "retentiescan",
+    "combinatie",
+    "teamscan",
+    "onboarding",
+    "leadership",
+}
+
 
 def _get_client_ip(request: Request) -> str:
     forwarded_for = request.headers.get("x-forwarded-for")
@@ -283,6 +315,21 @@ def _cleanup_contact_rate_limits() -> None:
     expired = [ip for ip, bucket in _contact_request_buckets.items() if now > float(bucket["reset_at"])]
     for ip in expired:
         _contact_request_buckets.pop(ip, None)
+
+
+def _supports_bounded_commerce_route(route_interest: str | None) -> bool:
+    return route_interest in BOUNDED_COMMERCE_CORE_ROUTE_INTERESTS
+
+
+def _supports_confirmable_qualified_route(route_interest: str | None) -> bool:
+    return route_interest in QUALIFICATION_CONFIRMABLE_ROUTE_INTERESTS
+
+
+def _normalize_optional_text(value: str | None) -> str | None:
+    if value is None:
+        return None
+    cleaned = value.strip()
+    return cleaned or None
 
 
 def _normalize_import_header(value: Any) -> str | None:
@@ -665,6 +712,197 @@ async def update_contact_request(
         lead.ops_next_step = body.ops_next_step.strip() or None
     if body.ops_handoff_note is not None:
         lead.ops_handoff_note = body.ops_handoff_note.strip() or None
+
+    qualification_update_requested = any(
+        value is not None
+        for value in (
+            body.qualification_status,
+            body.qualified_route,
+            body.qualification_note,
+            body.qualification_reviewed_by,
+        )
+    )
+
+    qualification_status = body.qualification_status or lead.qualification_status
+    qualified_route = (
+        _normalize_optional_text(body.qualified_route)
+        if body.qualified_route is not None
+        else lead.qualified_route
+    )
+    qualification_note = (
+        _normalize_optional_text(body.qualification_note)
+        if body.qualification_note is not None
+        else lead.qualification_note
+    )
+    qualification_reviewed_by = (
+        _normalize_optional_text(body.qualification_reviewed_by)
+        if body.qualification_reviewed_by is not None
+        else lead.qualification_reviewed_by
+    )
+    qualification_reviewed_at = lead.qualification_reviewed_at
+    now = datetime.now(timezone.utc)
+
+    if qualification_update_requested:
+        if qualification_status == "not_reviewed":
+            qualified_route = None
+            qualification_note = None
+            qualification_reviewed_by = None
+            qualification_reviewed_at = None
+        elif qualification_status == "needs_route_review":
+            qualified_route = None
+            if body.qualification_reviewed_by is not None:
+                qualification_reviewed_at = now if qualification_reviewed_by else None
+            elif qualification_reviewed_by and qualification_reviewed_at is None:
+                qualification_reviewed_at = now
+        else:
+            if not qualified_route or not _supports_confirmable_qualified_route(qualified_route):
+                raise HTTPException(
+                    status_code=422,
+                    detail="Een bevestigde qualification vereist een expliciete gekwalificeerde route.",
+                )
+            if not qualification_reviewed_by:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Een bevestigde qualification vereist een expliciete reviewer.",
+                )
+            if body.qualification_reviewed_by is not None:
+                qualification_reviewed_at = now if qualification_reviewed_by else None
+            elif qualification_reviewed_by and qualification_reviewed_at is None:
+                qualification_reviewed_at = now
+
+        lead.qualification_status = qualification_status
+        lead.qualified_route = qualified_route
+        lead.qualification_note = qualification_note
+        lead.qualification_reviewed_by = qualification_reviewed_by
+        lead.qualification_reviewed_at = qualification_reviewed_at
+
+    commerce_update_requested = any(
+        value is not None
+        for value in (
+            body.commercial_agreement_status,
+            body.commercial_pricing_mode,
+            body.commercial_start_readiness_status,
+            body.commercial_start_blocker,
+            body.commercial_agreement_confirmed_by,
+            body.commercial_readiness_reviewed_by,
+        )
+    )
+
+    if commerce_update_requested and not _supports_bounded_commerce_route(lead.route_interest):
+        raise HTTPException(
+            status_code=422,
+            detail="Bounded billing/check-out foundation ondersteunt in deze wave alleen ExitScan en RetentieScan.",
+        )
+
+    if commerce_update_requested:
+        agreement_status = body.commercial_agreement_status or lead.commercial_agreement_status
+        pricing_mode = (
+            _normalize_optional_text(body.commercial_pricing_mode)
+            if body.commercial_pricing_mode is not None
+            else lead.commercial_pricing_mode
+        )
+        start_readiness_status = (
+            body.commercial_start_readiness_status or lead.commercial_start_readiness_status
+        )
+        start_blocker = (
+            _normalize_optional_text(body.commercial_start_blocker)
+            if body.commercial_start_blocker is not None
+            else lead.commercial_start_blocker
+        )
+        agreement_confirmed_by = (
+            _normalize_optional_text(body.commercial_agreement_confirmed_by)
+            if body.commercial_agreement_confirmed_by is not None
+            else lead.commercial_agreement_confirmed_by
+        )
+        readiness_reviewed_by = (
+            _normalize_optional_text(body.commercial_readiness_reviewed_by)
+            if body.commercial_readiness_reviewed_by is not None
+            else lead.commercial_readiness_reviewed_by
+        )
+        agreement_confirmed_at = lead.commercial_agreement_confirmed_at
+        readiness_reviewed_at = lead.commercial_readiness_reviewed_at
+        if agreement_status == "not_started":
+            pricing_mode = None
+            start_readiness_status = "not_ready"
+            start_blocker = None
+            agreement_confirmed_by = None
+            agreement_confirmed_at = None
+            readiness_reviewed_by = None
+            readiness_reviewed_at = None
+        elif agreement_status == "confirmed":
+            if pricing_mode is None:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Bevestigd commercieel akkoord vereist een prijsmodus: public_anchor of custom_quote.",
+                )
+            if start_readiness_status == "blocked" and not start_blocker:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Een geblokkeerde start readiness vereist een expliciete blocker.",
+                )
+            if start_readiness_status == "ready" and not agreement_confirmed_by:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Start readiness kan pas op ready staan nadat intern akkoord expliciet is bevestigd.",
+                )
+            if start_readiness_status in {"ready", "blocked"} and not readiness_reviewed_by:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Delivery-start governance vereist een expliciete readiness review voor ready of blocked.",
+                )
+        else:
+            if start_readiness_status == "ready":
+                raise HTTPException(
+                    status_code=422,
+                    detail="Start readiness kan alleen op ready staan nadat commercieel akkoord bevestigd is.",
+                )
+            if start_readiness_status == "blocked" and not start_blocker:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Een geblokkeerde start readiness vereist een expliciete blocker.",
+                )
+            if start_readiness_status == "blocked" and not readiness_reviewed_by:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Delivery-start governance vereist een expliciete readiness review voor ready of blocked.",
+                )
+            agreement_confirmed_by = None
+            agreement_confirmed_at = None
+
+        if start_readiness_status != "blocked":
+            start_blocker = None
+        if start_readiness_status == "not_ready":
+            readiness_reviewed_by = None
+            readiness_reviewed_at = None
+
+        if agreement_status == "confirmed":
+            if body.commercial_agreement_confirmed_by is not None:
+                agreement_confirmed_at = now if agreement_confirmed_by else None
+            elif agreement_confirmed_by and agreement_confirmed_at is None:
+                agreement_confirmed_at = now
+
+        if start_readiness_status in {"ready", "blocked"}:
+            if body.commercial_readiness_reviewed_by is not None:
+                readiness_reviewed_at = now if readiness_reviewed_by else None
+            elif readiness_reviewed_by and readiness_reviewed_at is None:
+                readiness_reviewed_at = now
+
+        lead.commercial_agreement_status = agreement_status
+        lead.commercial_pricing_mode = pricing_mode
+        lead.commercial_start_readiness_status = start_readiness_status
+        lead.commercial_start_blocker = start_blocker
+        lead.commercial_agreement_confirmed_by = agreement_confirmed_by
+        lead.commercial_agreement_confirmed_at = agreement_confirmed_at
+        lead.commercial_readiness_reviewed_by = readiness_reviewed_by
+        lead.commercial_readiness_reviewed_at = readiness_reviewed_at
+
+    if lead.ops_stage == "implementation_intake_ready":
+        if lead.qualification_status != "route_confirmed" or not lead.qualified_route or not lead.qualification_reviewed_by:
+            raise HTTPException(
+                status_code=422,
+                detail="Implementation intake ready vereist eerst een bevestigde qualificationroute en expliciete qualification review.",
+            )
+
     if body.last_contacted_at is not None:
         lead.last_contacted_at = body.last_contacted_at
 
@@ -739,7 +977,7 @@ async def serve_survey(
             tone="info",
         )
 
-    enabled_modules = _resolve_survey_modules(campaign.enabled_modules)
+    enabled_modules = _resolve_survey_modules(campaign.scan_type, campaign.enabled_modules)
     scan_definition = get_scan_definition(campaign.scan_type)
 
     return templates.TemplateResponse(
@@ -902,6 +1140,33 @@ async def create_organization(
     if existing:
         raise HTTPException(status_code=409, detail=f"Slug '{body.slug}' al in gebruik.")
 
+    bind = db.get_bind()
+    is_sqlite_session = bind is not None and bind.dialect.name == "sqlite"
+
+    if not is_sqlite_session:
+        admin_profile_id = db.execute(
+            text(
+                """
+                select id
+                from public.profiles
+                where is_verisight_admin = true
+                order by created_at asc
+                limit 1
+                """
+            )
+        ).scalar()
+        if not admin_profile_id:
+            raise HTTPException(
+                status_code=503,
+                detail="Geen Verisight admin-profiel beschikbaar om een organisatie aan te maken.",
+            )
+
+        # Supabase-triggers gebruiken auth.uid() om org ownership te registreren.
+        db.execute(
+            text("select set_config('request.jwt.claim.sub', :user_id, true)"),
+            {"user_id": str(admin_profile_id)},
+        )
+
     org = Organization(
         name=body.name,
         slug=body.slug,
@@ -909,7 +1174,17 @@ async def create_organization(
     )
     db.add(org)
     db.flush()
-    db.add(OrganizationSecret(org_id=org.id))
+
+    # In Postgres/Supabase kan een DB-trigger het organization secret al aanmaken.
+    # Alleen lokaal aanvullen als er na de org-insert nog geen secret bestaat.
+    existing_secret = (
+        db.query(OrganizationSecret)
+        .filter(OrganizationSecret.org_id == org.id)
+        .first()
+    )
+    if not existing_secret:
+        db.add(OrganizationSecret(org_id=org.id))
+
     db.commit()
     db.refresh(org)
     return org
@@ -1282,6 +1557,7 @@ async def campaign_stats(
             "org_scores": respondent.response.org_scores,
             "sdt_scores": respondent.response.sdt_scores,
             "risk_score": respondent.response.risk_score,
+            "signal_score": respondent.response.risk_score,
             "preventability": respondent.response.preventability,
             "exit_reason_code": respondent.response.exit_reason_code,
             "contributing_reason_codes": list((respondent.response.pull_factors_raw or {}).keys()),
@@ -1303,6 +1579,7 @@ async def campaign_stats(
         "total_completed":          n_completed,
         "completion_rate_pct":      round(n_completed / total * 100, 1) if total > 0 else 0.0,
         "avg_risk_score":           avg_risk,
+        "avg_signal_score":         avg_risk,
         "band_high":                band_dist["HOOG"],
         "band_medium":              band_dist["MIDDEN"],
         "band_low":                 band_dist["LAAG"],
@@ -1329,6 +1606,15 @@ async def download_report(
     ).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    if campaign.scan_type in {"pulse"}:
+        product_name = (
+            "Pulse"
+            if campaign.scan_type == "pulse"
+            else "TeamScan"
+            if campaign.scan_type == "team"
+            else "Leadership Scan"
+        )
+        raise HTTPException(status_code=422, detail=f"{product_name} ondersteunt in deze wave nog geen PDF-rapport.")
 
     try:
         from backend.report import generate_campaign_report
@@ -1360,6 +1646,15 @@ async def download_report_internal(
     campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
     if not campaign:
         raise HTTPException(status_code=404, detail="Campaign niet gevonden.")
+    if campaign.scan_type in {"pulse"}:
+        product_name = (
+            "Pulse"
+            if campaign.scan_type == "pulse"
+            else "TeamScan"
+            if campaign.scan_type == "team"
+            else "Leadership Scan"
+        )
+        raise HTTPException(status_code=422, detail=f"{product_name} ondersteunt in deze wave nog geen PDF-rapport.")
 
     try:
         from backend.report import generate_campaign_report

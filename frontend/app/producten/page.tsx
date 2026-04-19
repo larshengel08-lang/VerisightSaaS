@@ -55,6 +55,12 @@ const followOnRoutes = [
     body: 'Gerichte assisted checkpointread voor vroege landing van nieuwe medewerkers wanneer die vraag echt centraal staat.',
     href: '/producten/onboarding-30-60-90',
   },
+  {
+    title: 'Leadership Scan',
+    label: 'Managementcontext',
+    body: 'Begrensde group-level managementread wanneer een bestaand people-signaal eerst duiding of verificatie in de leidingcontext vraagt.',
+    href: '/producten/leadership-scan',
+  },
 ] as const
 
 export default function ProductenPage() {
@@ -183,9 +189,9 @@ export default function ProductenPage() {
           <SectionHeading
             eyebrow="Bewuste vervolgroutes"
             title="Kleiner vervolg na de eerste managementread."
-            description="Pulse, TeamScan en onboarding zijn geen extra wedge-producten naast ExitScan en RetentieScan. Ze bestaan om het vervolg kleiner, gerichter en bestuurlijk logisch te houden."
+            description="Pulse, TeamScan, onboarding en Leadership Scan zijn geen extra wedge-producten naast ExitScan en RetentieScan. Ze bestaan om het vervolg kleiner, gerichter en bestuurlijk logisch te houden."
           />
-          <div className="mt-10 grid gap-5 lg:grid-cols-3">
+          <div className="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
             {followOnRoutes.map((route) => (
               <div key={route.title} className="marketing-feature-card">
                 <span className="marketing-chip">{route.label}</span>

@@ -2,16 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { REPORT_PREVIEW_COPY } from '@/lib/report-preview-copy'
 
 describe('REPORT_PREVIEW_COPY', () => {
-  it('keeps exit preview aligned with the management-summary framing', () => {
+  it('keeps exit preview aligned with the fixed opening flow before the management-summary layer', () => {
     const exitCopy = REPORT_PREVIEW_COPY.exit
 
-    expect(exitCopy.intro).toContain('managementsamenvatting')
+    expect(exitCopy.intro).toContain('rustige cover')
+    expect(exitCopy.intro).toContain('expliciete responslaag')
     expect(exitCopy.dashboardRows).toHaveLength(4)
     expect(exitCopy.factorCards).toHaveLength(6)
     expect(exitCopy.boardroomTitle).toContain('Bestuurlijke handoff')
     expect(exitCopy.boardroomPoints.map(([title]) => title)).toContain('Wat speelt nu')
     expect(exitCopy.boardroomPoints.map(([title]) => title)).toContain('Wat niet concluderen')
-    expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Managementsamenvatting')
+    expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Cover + respons')
     expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Bestuurlijke handoff')
     expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Werkhypothesen')
     expect(exitCopy.proofNotes.map(([title]) => title)).toContain('Bewijsstatus')
@@ -19,7 +20,7 @@ describe('REPORT_PREVIEW_COPY', () => {
     expect(exitCopy.nuance).toContain('geen geforceerde ROI-claim')
     expect(exitCopy.hypothesisLead).toContain('eerste eigenaar')
     expect(exitCopy.intro).toContain('eerste managementsessie')
-    expect(exitCopy.proofNotes.find(([title]) => title === 'Managementsamenvatting')?.[1]).toContain(
+    expect(exitCopy.proofNotes.find(([title]) => title === 'Cover + respons')?.[1]).toContain(
       'eerste managementsessie',
     )
     expect(exitCopy.trustTitle).toContain('Trust')
@@ -33,6 +34,7 @@ describe('REPORT_PREVIEW_COPY', () => {
     const retentionCopy = REPORT_PREVIEW_COPY.retention
 
     expect(retentionCopy.intro).toContain('eerste verificatiespoor')
+    expect(retentionCopy.intro).toContain('kernmetrics')
     expect(retentionCopy.dashboardRows).toHaveLength(4)
     expect(retentionCopy.factorCards).toHaveLength(6)
     expect(retentionCopy.boardroomTitle).toContain('Bestuurlijke handoff')
@@ -41,7 +43,12 @@ describe('REPORT_PREVIEW_COPY', () => {
     expect(retentionCopy.nuance).toContain('v1-werkmodel')
     expect(retentionCopy.intro).toContain('eerste managementsessie')
     expect(retentionCopy.hypothesisLead).toContain('reviewmoment')
-    expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Managementsamenvatting')
+    expect(retentionCopy.intro).toContain('cover')
+    expect(retentionCopy.intro).toContain('respons')
+    expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Cover + bestuurlijke read')
+    expect(retentionCopy.proofNotes.find(([title]) => title === 'Cover + bestuurlijke read')?.[1]).toContain(
+      'aparte executive laag',
+    )
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Bestuurlijke handoff')
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Actielogica')
     expect(retentionCopy.proofNotes.map(([title]) => title)).toContain('Bewijsstatus')
@@ -58,7 +65,12 @@ describe('REPORT_PREVIEW_COPY', () => {
 
     expect(portfolioCopy.intro).toContain('boardroom-structuur')
     expect(portfolioCopy.boardroomPoints.map(([title]) => title)).toContain('Wat speelt nu')
-    expect(portfolioCopy.proofNotes.map(([title]) => title)).toContain('Managementsamenvatting')
+    expect(portfolioCopy.proofNotes.map(([title]) => title)).toContain('Core proof blijft leidend')
+    expect(
+      portfolioCopy.proofNotes.find(([title]) => title === 'Core proof blijft leidend')?.[1].toLowerCase(),
+    ).toContain('exitscan en retentiescan')
+    expect(portfolioCopy.proofNotes.map(([title]) => title)).toContain('Bestuurlijke read')
+    expect(portfolioCopy.sampleReportBody?.toLowerCase()).toContain('core-first')
     expect(portfolioCopy.sampleReportHref).toBe('/producten')
   })
 })

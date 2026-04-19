@@ -3,6 +3,12 @@
 Intern referentiedocument voor productized voorstellen.
 Laatste update: 2026-04-15
 
+Historical boundary note:
+
+- deze proposal spines blijven bruikbaar als structuurreferentie, maar bevatten op sommige plekken nog oudere routewoorden
+- lees `ExitScan Live` en `RetentieScan ritme` in de huidige hardeningcontext als pre-normalisatie labels voor `ritmeroute`
+- wanneer voorsteltaal botst met de huidige canon, winnen [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md) en [COMMERCIAL_LANGUAGE_PARITY_RECHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_LANGUAGE_PARITY_RECHECK.md)
+
 ## Vaste voorstelvolgorde
 
 Elk voorstel volgt deze volgorde:

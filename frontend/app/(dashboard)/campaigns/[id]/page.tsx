@@ -33,7 +33,7 @@ import {
   buildSafeTableResponses,
   CampaignHealthIndicator,
   clusterRetentionOpenSignals,
-  computeAverageRiskScore,
+  computeAverageSignalScore,
   computePulseSignalAverages,
   computeAverageSignalVisibility,
   computeFactorAverages,
@@ -189,7 +189,7 @@ export default async function CampaignPage({ params }: Props) {
   const respondents = (allRespondents ?? []) as Respondent[]
 
   const factorData = computeFactorAverages(responses)
-  const averageRiskScore = computeAverageRiskScore(responses)
+  const averageRiskScore = computeAverageSignalScore(responses)
   const strongWorkSignalRate = stats.scan_type === 'exit' ? computeStrongWorkSignalRate(responses) : null
   const topExitReasonLabel = stats.scan_type === 'exit' ? getTopExitReasonLabel(responses) : null
   const topContributingReasonLabel =
@@ -301,7 +301,7 @@ export default async function CampaignPage({ params }: Props) {
     profile?.is_verisight_admin === true
       ? await supabase
           .from('pilot_learning_dossiers')
-          .select('id, title, triage_status, updated_at')
+          .select('id, title, triage_status, updated_at, review_moment, next_route, stop_reason, management_action_outcome, adoption_outcome')
           .eq('campaign_id', id)
           .order('updated_at', { ascending: false })
           .limit(3)
@@ -311,7 +311,21 @@ export default async function CampaignPage({ params }: Props) {
     title: string
     triage_status: string
     updated_at: string
+    review_moment: string | null
+    next_route: string | null
+    stop_reason: string | null
+    management_action_outcome: string | null
+    adoption_outcome: string | null
   }>
+  const learningCloseoutEvidenceCount = learningDossiers.filter((dossier) =>
+    Boolean(
+      dossier.review_moment ||
+        dossier.next_route ||
+        dossier.stop_reason ||
+        dossier.management_action_outcome ||
+        dossier.adoption_outcome,
+    ),
+  ).length
   const lifecycleDecisionCards = getLifecycleDecisionCards(stats.scan_type)
   const primaryTeamPriority =
     stats.scan_type === 'team' && teamPriorityRead?.status === 'ready'
@@ -331,7 +345,7 @@ export default async function CampaignPage({ params }: Props) {
       : null
   const handoffTitle =
     stats.scan_type === 'retention'
-      ? 'Bestuurlijke handoff en prioritering'
+      ? 'Bestuurlijke handoff'
       : stats.scan_type === 'pulse'
         ? 'Pulse duiding en eerste vervolgactie'
         : stats.scan_type === 'team'
@@ -343,7 +357,7 @@ export default async function CampaignPage({ params }: Props) {
         : 'Vertrekduiding en managementgesprek'
   const handoffDescription =
     stats.scan_type === 'retention'
-      ? 'Deze laag vertaalt RetentieScan naar een duidelijke lijn: wat is het beeld, wat moet je eerst toetsen en welke acties verdienen nu bestuurlijke aandacht.'
+      ? 'Deze laag volgt dezelfde lijn als het rapport: waar staat behoud onder druk, waarom telt dat bestuurlijk en wat moet eerst geverifieerd worden.'
       : stats.scan_type === 'pulse'
         ? 'Deze laag vertaalt Pulse naar een bestuurlijk leesbare momentopname: wat vraagt nu aandacht, wat moet je als eerste bijsturen en welke review hoort hier direct achteraan.'
         : stats.scan_type === 'team'
@@ -391,7 +405,7 @@ export default async function CampaignPage({ params }: Props) {
           summaryContextTone: 'emerald' as const,
           summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
           summaryLeadDescription:
-            'Lees RetentieScan eerst als groepssignaal: waar staat behoud onder druk, wat vraagt eerst verificatie en welk spoor moet daarna in Wat nu als eerste route worden gekozen.',
+            'Lees RetentieScan eerst als groepssignaal: waar staat behoud onder druk, wat vraagt eerst verificatie en welk managementspoor moet daarna in Wat nu als eerste route worden gekozen.',
           summaryCardEyebrow: 'Behoudsspoor',
           promotedSummaryCards: 2,
           driverTitle: 'Signaalbeeld en behoudsdruk',
@@ -399,7 +413,7 @@ export default async function CampaignPage({ params }: Props) {
             'Start bij retentiesignaal, trend en aanvullende signalen. Gebruik factoren en segmenten daarna om te bepalen waarom dit beeld ontstaat en waar behoud eerst nadere toetsing vraagt.',
           driverIntro:
             'Begin met het groepssignaal en open pas daarna factoren, trend en aanvullende lagen. Zo blijft RetentieScan een verification-first managementinstrument in plaats van een losse analysetabel.',
-          driverAsideLabel: hasEnoughData ? 'Behoudsdrivers live' : 'Wacht op meer data',
+          driverAsideLabel: hasEnoughData ? 'Behoudsdrivers beschikbaar' : 'Wacht op meer data',
           driverAsideTone: hasEnoughData ? ('emerald' as const) : ('amber' as const),
           driverTabOrder: ['signalen', 'trend', 'factoren', 'aanvullend'],
           signalTabLabel: 'Retentiesignaal',
@@ -424,7 +438,7 @@ export default async function CampaignPage({ params }: Props) {
           routeTitle: 'Van retentiesignaal naar managementroute',
           routeDescription:
             'Deze laag bundelt de gekozen route, eerste eigenaar, eerste stap en het logische reviewmoment zonder de executive hoofdlijn te verstoren.',
-          routeBadgeLabel: 'Behoudsroute',
+          routeBadgeLabel: 'Kernroute',
           afterSessionTitle: 'Na de eerste managementsessie',
           afterSessionDescription:
             'Gebruik het eerste reviewmoment om bewust te kiezen: blijf je op hetzelfde behoudsspoor, is segmentverdieping logisch of vraagt de volgende stap vooral een gerichte interventie en vervolgmeting?',
@@ -445,7 +459,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele teamsignaal gecontroleerd te verdiepen zonder TeamScan te verwarren met segment deep dive of manager ranking.',
             driverIntro:
               'Start bij de lokale read en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke afdelingen eerst verificatie vragen.',
-            driverAsideLabel: hasEnoughData ? 'Lokale read live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Lokale read beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['lokaal', 'factoren', 'signalen', 'aanvullend'],
             signalTabLabel: 'Signaalverdeling',
@@ -470,10 +484,10 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van TeamScan naar lokale managementroute',
             routeDescription:
               'Deze laag bundelt de gekozen lokale route, eerste eigenaar, eerste stap en de bewuste begrenzing van TeamScan zonder de executive hoofdlijn te verstoren.',
-            routeBadgeLabel: 'Lokale route',
+            routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
-              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een lokale vervolgstap logisch, is bredere diagnose weer nodig of vraagt dit signaal juist minder lokalisatie dan gedacht?',
+              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een lokale vervolgstap logisch, is bredere duiding weer nodig of vraagt dit signaal juist minder lokalisatie dan gedacht?',
           }
       : stats.scan_type === 'onboarding'
         ? {
@@ -491,7 +505,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele checkpointbeeld gecontroleerd te verdiepen zonder onboarding te verwarren met client onboarding of een volledige 30-60-90-journey.',
             driverIntro:
               'Start bij de checkpointread en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke vroege factor nu eerst aandacht vraagt.',
-            driverAsideLabel: hasEnoughData ? 'Checkpoint read live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Checkpointread beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
             signalTabLabel: 'Checkpointbeeld',
@@ -516,7 +530,7 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van onboardingread naar managementroute',
             routeDescription:
               'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische vervolgmoment samen zonder onboarding te verwarren met een brede lifecycle-suite.',
-            routeBadgeLabel: 'Checkpointroute',
+            routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een later checkpoint logisch, vraagt deze instroomfrictie eerst extra verificatie of hoort de vraag thuis in een andere productvorm?',
@@ -537,7 +551,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele leadershipbeeld gecontroleerd te verdiepen zonder Leadership Scan te verwarren met TeamScan, segment deep dive of een named leader view.',
             driverIntro:
               'Start bij de managementread en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke context eerst duiding verdient.',
-            driverAsideLabel: hasEnoughData ? 'Managementread live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Managementread beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
             signalTabLabel: 'Managementbeeld',
@@ -562,10 +576,10 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van Leadership Scan naar managementroute',
             routeDescription:
               'Deze laag brengt eerste managementgebruik, de gekozen verificatie of correctie en het logische reviewmoment samen zonder Leadership Scan te verwarren met een hierarchy- of 360-suite.',
-            routeBadgeLabel: 'Managementroute',
+            routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
-              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een begrensde managementroute logisch, vraagt de vraag toch bredere diagnose of hoort Leadership Scan juist niet verder op te schalen binnen deze context?',
+              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een begrensde managementroute logisch, vraagt de vraag toch bredere duiding of hoort Leadership Scan juist niet verder op te schalen binnen deze context?',
           }
       : stats.scan_type === 'exit'
         ? {
@@ -583,7 +597,7 @@ export default async function CampaignPage({ params }: Props) {
               'Start bij de scherpste werkfactoren en gebruik daarna pas signaalverdeling en aanvullende lagen om het vertrekbeeld verder te onderbouwen.',
             driverIntro:
               'Begin met de factoren die het vertrekverhaal het meest kleuren. Gebruik signaalverdeling en SDT daarna om het managementgesprek scherper en concreter te maken.',
-            driverAsideLabel: hasEnoughData ? 'Vertrekdrivers live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Vertrekdrivers beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['factoren', 'signalen', 'aanvullend', 'trend'],
             signalTabLabel: 'Vertrekbeeld',
@@ -608,7 +622,7 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van vertrekduiding naar managementroute',
             routeDescription:
               'Deze laag bundelt de gekozen managementroute, eerste eigenaar, eerste stap en het logische reviewmoment zonder de kernflow bovenin te verstoren.',
-            routeBadgeLabel: 'Vertrekroute',
+            routeBadgeLabel: 'Kernroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: blijf je op hetzelfde vertrekspoor, vraagt deze scan verdere verdieping of wordt een tweede product logisch op basis van de eerste managementwaarde?',
@@ -628,7 +642,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele Pulse-beeld gecontroleerd te verdiepen zonder de managementhoofdlijn kwijt te raken.',
             driverIntro:
               'Gebruik de tabs hieronder om tussen snapshot, factoren, aanvullende lagen en reviewdelta te wisselen zonder de hoofdlijn van de managementread kwijt te raken.',
-            driverAsideLabel: hasEnoughData ? 'Pulse read live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Pulse read beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
             signalTabLabel: 'Signaalverdeling',
@@ -651,8 +665,8 @@ export default async function CampaignPage({ params }: Props) {
               'Deze playbooks vormen de uitvoerlaag onder de gekozen bounded route. Ze helpen van verificatie naar correctie en een logisch hercheckmoment te gaan.',
             routeTitle: 'Van Pulse read naar bounded repeat motion',
             routeDescription:
-              'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische volgende meetmoment samen zonder Pulse te verwarren met een brede diagnose- of rapportroute.',
-            routeBadgeLabel: 'Pulse route',
+              'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische volgende meetmoment samen zonder Pulse te verwarren met een bredere kernroute of hoofdrapport.',
+            routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: doe je nog een bounded Pulse, verdiep je eerst de vraag verder of vraagt het thema nu een andere productvorm?',
@@ -683,7 +697,7 @@ export default async function CampaignPage({ params }: Props) {
     { id: 'samenvatting', label: 'Samenvatting' },
     {
       id: 'handoff',
-      label: stats.scan_type === 'retention' ? 'Behoudsread' : stats.scan_type === 'team' ? 'Lokale read' : 'Handoff',
+      label: stats.scan_type === 'retention' ? 'Handoff' : stats.scan_type === 'team' ? 'Lokale read' : 'Handoff',
     },
     {
       id: 'drivers',
@@ -695,7 +709,15 @@ export default async function CampaignPage({ params }: Props) {
     },
     {
       id: 'route',
-      label: stats.scan_type === 'retention' ? 'Behoudsroute' : stats.scan_type === 'team' ? 'Lokale route' : 'Route',
+      label:
+        stats.scan_type === 'retention' || stats.scan_type === 'exit'
+          ? 'Kernroute'
+          : stats.scan_type === 'team' ||
+              stats.scan_type === 'pulse' ||
+              stats.scan_type === 'onboarding' ||
+              stats.scan_type === 'leadership'
+            ? 'Vervolgroute'
+            : 'Route',
     },
     { id: 'methodiek', label: 'Methodiek' },
     { id: 'operatie', label: 'Operatie' },
@@ -975,7 +997,7 @@ export default async function CampaignPage({ params }: Props) {
                   {!profile?.is_verisight_admin ? (
                     <OnboardingBalloon step={2} label="Download hier je rapport" align="left" />
                   ) : null}
-                  <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
+                  <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
                 </div>
               </>
             )
@@ -1046,7 +1068,7 @@ export default async function CampaignPage({ params }: Props) {
                     : 'Leadership Scan: management read live'}
             </div>
           ) : (
-            <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
+            <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
           )
         }
       />
@@ -1184,7 +1206,7 @@ export default async function CampaignPage({ params }: Props) {
                 <DashboardPanel
                   eyebrow="Reviewgrens"
                   title={primaryTeamPlaybook?.review ?? 'Lokale hercheck eerst'}
-                  body="Gebruik het reviewmoment om bewust te kiezen: nog een lokale vervolgstap, terug naar bredere diagnose of juist stoppen met verder lokaliseren."
+                  body="Gebruik het reviewmoment om bewust te kiezen: nog een lokale vervolgstap, terug naar bredere duiding of juist stoppen met verder lokaliseren."
                   tone="amber"
                 />
               </div>
@@ -1427,8 +1449,8 @@ export default async function CampaignPage({ params }: Props) {
                 />
                 <DashboardPanel
                   eyebrow="Als de vraag breder wordt"
-                  title="Ga terug naar bredere diagnose"
-                  body="Schakel niet door naar extra lokalisatie als de echte vraag weer organisatieniveau, behoudsbeeld of bredere diagnose vraagt."
+                  title="Ga terug naar bredere duiding"
+                  body="Schakel niet door naar extra lokalisatie als de echte vraag weer organisatieniveau, behoudsbeeld of bredere duiding vraagt."
                   tone="amber"
                 />
                 <DashboardPanel
@@ -1449,8 +1471,8 @@ export default async function CampaignPage({ params }: Props) {
                 />
                 <DashboardPanel
                   eyebrow="Als de vraag breder wordt"
-                  title="Ga terug naar bredere diagnose"
-                  body="Schakel niet door naar extra Leadership-verbreding als de echte vraag weer lokale lokalisatie, bredere diagnose of een ander productspoor vraagt."
+                  title="Ga terug naar bredere duiding"
+                  body="Schakel niet door naar extra Leadership-verbreding als de echte vraag weer lokale lokalisatie, bredere duiding of een ander productspoor vraagt."
                   tone="amber"
                 />
                 <DashboardPanel
@@ -1559,6 +1581,8 @@ export default async function CampaignPage({ params }: Props) {
                       checkpoints={deliveryCheckpoints}
                       leadOptions={deliveryLeadOptions}
                       leadLoadError={deliveryLeadError}
+                      linkedLearningDossierCount={learningDossiers.length}
+                      learningCloseoutEvidenceCount={learningCloseoutEvidenceCount}
                       editable={isVerisightAdmin}
                     />
                   ) : (
@@ -1609,8 +1633,14 @@ export default async function CampaignPage({ params }: Props) {
                 description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementread en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
                 badge={
                   <DashboardChip
-                    label={learningDossiers.length > 0 ? `${learningDossiers.length} gekoppeld` : 'Nog geen dossier'}
-                    tone={learningDossiers.length > 0 ? 'blue' : 'amber'}
+                    label={
+                      learningDossiers.length === 0
+                        ? 'Nog geen dossier'
+                        : learningCloseoutEvidenceCount > 0
+                          ? `${learningCloseoutEvidenceCount} closeout-signaal`
+                          : `${learningDossiers.length} gekoppeld, closeout open`
+                    }
+                    tone={learningDossiers.length > 0 && learningCloseoutEvidenceCount > 0 ? 'blue' : 'amber'}
                   />
                 }
               >
@@ -1624,6 +1654,24 @@ export default async function CampaignPage({ params }: Props) {
                         : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de learning-workbench. Zo blijven echte deliverylessen en vervolgkeuzes niet hangen in losse handover-notes.'
                     }
                     tone={learningDossiers.length > 0 ? 'blue' : 'amber'}
+                  />
+                  <DashboardPanel
+                    eyebrow="Closeoutdiscipline"
+                    title={
+                      learningCloseoutEvidenceCount > 0
+                        ? 'Learning kan naar formele closeout toewerken'
+                        : learningDossiers.length > 0
+                          ? 'Learning bestaat, maar closeout-evidence mist nog'
+                          : 'Nog geen learning-closeout mogelijk'
+                    }
+                    body={
+                      learningCloseoutEvidenceCount > 0
+                        ? 'Er is al minstens één expliciete review-, vervolg- of stopuitkomst vastgelegd. Daarmee kan delivery later eerlijker naar follow-up of learning closeout bewegen.'
+                        : learningDossiers.length > 0
+                          ? 'Er zijn al gekoppelde dossiers, maar nog geen expliciete review-, vervolg- of stopuitkomst. Houd delivery dus bewust open tot die follow-through echt is vastgelegd.'
+                          : 'Zonder gekoppeld learningdossier hoort delivery-closeout nog niet als afgerond te voelen.'
+                    }
+                    tone={learningCloseoutEvidenceCount > 0 ? 'emerald' : 'amber'}
                   />
                   <div className="rounded-[22px] border border-slate-200 bg-slate-50/70 p-4">
                     <p className="text-sm font-semibold text-slate-950">Gekoppelde dossiers</p>
