@@ -2,9 +2,9 @@
 
 ## Status
 
-- Wave status: active
+- Wave status: completed_green
 - Active source of truth after opening: dit document
-- Build permission: allowed
+- Build permission: closed
 - Dependency: `ACTION_CENTER_MATURITY_AND_SUITE_CAPABILITY_PLAN.md` moet groen blijven
 - Next allowed step after green completion: `WAVE_02_ACTION_CENTER_GUIDED_CREATION_AND_DOSSIERS.md`
 
@@ -25,3 +25,9 @@ Maak van de huidige gestapelde MTO-cockpit een duidelijkere afdelingsgerichte fo
 - nog geen dossierdetail
 - nog geen nieuwe permissionslaag
 - nog geen live suite adapter
+
+## Completion Notes
+
+- De cockpit leest nu sterker als afdelingsgerichte follow-through workspace.
+- Themakaarten worden geprioriteerd op urgentie en follow-through druk in plaats van bronvolgorde.
+- Action health is zichtbaar op themaniveau, terwijl de MTO-only boundary behouden blijft.

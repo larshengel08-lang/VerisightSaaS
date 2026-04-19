@@ -2,9 +2,9 @@
 
 ## Status
 
-- Wave status: blocked_until_wave_01_green
+- Wave status: active
 - Active source of truth after opening: dit document
-- Build permission: blocked
+- Build permission: allowed
 - Dependency: `WAVE_01_ACTION_CENTER_COCKPIT_REFRAME.md` moet groen zijn
 - Next allowed step after green completion: `WAVE_03_ACTION_CENTER_PERMISSION_ENVELOPE.md`
 

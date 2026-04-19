@@ -89,3 +89,16 @@ def test_action_center_stays_mto_only_in_dashboard_page():
     assert "mtomanagercockpit" in page
     assert "stats.scan_type === 'mto'" in page
     assert "bounded action center" in page
+
+
+def test_action_center_maturity_phase_keeps_suite_capability_gated():
+    plan = _read("docs/active/action_center_maturity_and_suite_capability_plan.md")
+    stack = _read("docs/active/action_center_maturity_and_suite_capability_wave_stack_plan.md")
+    wave_one = _read("docs/active/wave_01_action_center_cockpit_reframe.md")
+
+    assert "mto blijft de eerste actieve drager" in plan
+    assert "suitekoppeling blijft expliciet in scope als capability" in plan
+    assert "live koppeling naar exitscan, retentiescan of andere routes blijft gated" in plan
+    assert "wave_01_action_center_cockpit_reframe.md" in stack
+    assert "wave_04_action_center_loader_and_adapter_seams.md" in stack
+    assert "build permission: allowed" in wave_one
