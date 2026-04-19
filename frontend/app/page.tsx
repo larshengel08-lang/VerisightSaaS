@@ -18,30 +18,30 @@ import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
 export const metadata: Metadata = {
   title: 'Verisight',
   description:
-    'Verisight helpt HR, directie en MT sneller zien waar vertrek, behoud of onboarding om actie vraagt, met een scan, dashboard en rapport.',
+    'Verisight helpt HR, directie en MT snel zien waar vertrek of behoud begint te knellen, met een dashboard, samenvatting en rapport.',
   alternates: {
     canonical: '/',
   },
 }
 
 const heroProofSignals = [
-  'Dashboard met samenvatting',
+  'Helder groepsbeeld',
   'Rapport met prioriteiten',
-  'Binnen weken in beeld',
+  'Snel klaar voor gesprek',
 ] as const
 
 const painCards = [
   {
-    title: 'Signalen komen versnipperd binnen',
-    body: 'Losse exit-, team- en behoudssignalen geven nog geen duidelijk beeld.',
+    title: 'U hoort veel, maar ziet nog geen patroon',
+    body: 'Losse signalen uit teams, exitgesprekken en behoud geven samen nog geen duidelijke richting.',
   },
   {
-    title: 'Behoudsdruk wordt vaak te laat scherp',
-    body: 'Zonder vroeg groepsbeeld wordt vaak pas laat duidelijk waar behoud schuift.',
+    title: 'Vaak is het te laat voor het echt scherp wordt',
+    body: 'Zonder vroeg groepsbeeld wordt pas laat duidelijk waar vertrek of behoud begint te schuiven.',
   },
   {
-    title: 'U wilt richting, geen losse uitkomsten',
-    body: 'Er is behoefte aan prioriteiten, niet aan losse survey-output.',
+    title: 'Een los overzicht helpt het gesprek niet verder',
+    body: 'U wilt weten wat opvalt, wat eerst besproken moet worden en welke stap logisch volgt.',
   },
 ] as const
 
@@ -49,17 +49,17 @@ const coreRoutes = [
   {
     name: 'ExitScan',
     badge: 'Kernroute',
-    title: 'Logisch als u beter wilt begrijpen waarom mensen vertrekken.',
-    opens: 'Laat zien welke patronen terugkomen en welke oorzaken als eerste besproken moeten worden.',
-    timing: 'Geeft snel houvast voor een gesprek over uitstroom en vervolgstappen.',
+    title: 'Kies deze scan als u wilt begrijpen waarom mensen vertrekken.',
+    opens: 'U ziet welke patronen terugkomen, wat opvalt en welke onderwerpen eerst besproken moeten worden.',
+    timing: 'U krijgt sneller duidelijk waar u moet doorvragen en welke stap daarna logisch is.',
     href: '/producten/exitscan',
   },
   {
     name: 'RetentieScan',
     badge: 'Kernroute',
-    title: 'Logisch als u eerder wilt zien waar behoud onder druk staat.',
-    opens: 'Laat zien waar teams of groepen nu extra aandacht en toetsing vragen.',
-    timing: 'Geeft snel houvast voor een gesprek over risico, prioriteiten en vervolgstappen.',
+    title: 'Kies deze scan als u eerder wilt zien waar behoud onder druk staat.',
+    opens: 'U ziet waar in groepen of teams nu extra aandacht nodig is en welke signalen het zwaarst wegen.',
+    timing: 'U krijgt sneller houvast voor een gesprek over risico, prioriteiten en een eerste vervolgstap.',
     href: '/producten/retentiescan',
   },
 ] as const
@@ -68,14 +68,14 @@ const expansionRoutes = [
   {
     name: 'TeamScan',
     badge: 'Aanvullende route',
-    opens: 'Voor een gerichte check in een team of onderdeel.',
-    timing: 'Past als u na een breder signaal lokaal verder wilt kijken.',
+    opens: 'Voor een extra check in een team of onderdeel.',
+    timing: 'Past als u na een eerste scan lokaal verder wilt kijken.',
     href: '/producten/teamscan',
   },
   {
     name: 'Onboarding 30-60-90',
     badge: 'Aanvullende route',
-    opens: 'Voor een vroege check op de start van nieuwe medewerkers.',
+    opens: 'Voor een vroege check in de eerste maanden van nieuwe medewerkers.',
     timing: 'Past als u onboarding sneller wilt aanscherpen.',
     href: '/producten/onboarding-30-60-90',
   },
@@ -84,32 +84,32 @@ const expansionRoutes = [
 const supportRoutes = [
   {
     name: 'Pulse',
-    body: 'Korte vervolgmeting na een eerste beeld.',
+    body: 'Korte vervolgmeting na de eerste scan.',
     href: '/producten/pulse',
   },
   {
     name: 'Leadership Scan',
-    body: 'Extra duiding wanneer leiderschap nadrukkelijk meespeelt.',
+    body: 'Extra duiding als leiderschap nadrukkelijk meespeelt.',
     href: '/producten/leadership-scan',
   },
 ] as const
 
 const outcomeCards = [
   {
-    title: 'Dashboard met samenvatting',
-    body: 'Een helder eerste beeld van wat nu speelt.',
+    title: 'Dashboard',
+    body: 'In een oogopslag zien wat nu speelt.',
   },
   {
-    title: 'Rapport met prioriteiten en verificatievragen',
-    body: 'Een rapport dat helpt kiezen wat eerst besproken moet worden.',
+    title: 'Samenvatting',
+    body: 'Kort overzicht van wat opvalt en waarom dat telt.',
   },
   {
-    title: 'Punten voor het eerste gesprek',
-    body: 'Concreet overzicht van wat speelt, wat opvalt en welke vragen openstaan.',
+    title: 'Prioriteiten',
+    body: 'Duidelijk wat eerst besproken en getoetst moet worden.',
   },
   {
-    title: 'Voorstel voor vervolgstap',
-    body: 'Duidelijk voorstel voor wat logisch volgt na het eerste gesprek.',
+    title: 'Vervolgstap',
+    body: 'Een logische eerste stap na het gesprek.',
   },
 ] as const
 
@@ -117,29 +117,29 @@ const processSteps = [
   {
     step: '1',
     title: 'Routekeuze',
-    body: 'We bepalen eerst welke vraag nu het meest telt.',
+    body: 'We bepalen samen welke scan nu het best past.',
   },
   {
     step: '2',
     title: 'Intake en setup',
-    body: 'Doelgroep, timing en privacygrenzen worden strak gezet.',
+    body: 'We zetten doelgroep, planning en randvoorwaarden scherp.',
   },
   {
     step: '3',
-    title: 'Eerste output',
-    body: 'U krijgt een dashboard, samenvatting en rapport.',
+    title: 'Eerste uitkomst',
+    body: 'U krijgt snel een dashboard, samenvatting en rapport.',
   },
   {
     step: '4',
     title: 'Bespreking',
-    body: 'We bespreken wat opvalt en wat logisch volgt.',
+    body: 'We bespreken wat opvalt en wat u als eerste kunt doen.',
   },
 ] as const
 
 const trustPoints = [
-  'Geaggregeerde rapportage',
-  'Minimale n-grenzen',
-  'AVG-conform met primaire opslag in een EU-regio',
+  'Alleen groepsinzichten',
+  'Minimale groepsgroottes',
+  'AVG-conform met opslag in de EU',
   'Methodisch onderbouwde vraagblokken',
   'Geen individuele voorspeller of diagnose',
 ] as const
@@ -153,7 +153,7 @@ export default function LandingPage() {
     '@type': 'WebPage',
     name: 'Verisight',
     description:
-      'Verisight helpt HR, directie en MT sneller zien waar vertrek, behoud of onboarding om actie vraagt, met een scan, dashboard en rapport.',
+      'Verisight helpt HR, directie en MT snel zien waar vertrek of behoud begint te knellen, met een dashboard, samenvatting en rapport.',
     url: 'https://www.verisight.nl/',
     inLanguage: 'nl-NL',
     mainEntity: {
@@ -188,10 +188,10 @@ export default function LandingPage() {
               Voor HR, directie en MT in organisaties met 200-1.000 medewerkers
             </p>
             <h1 className="marketing-hero-title marketing-hero-title-home font-display text-[#132033]">
-              Maak binnen weken duidelijk waar vertrek of behoud om actie vraagt.
+              Zie binnen weken waar vertrek of behoud echt begint te knellen.
             </h1>
             <p className="marketing-hero-copy text-[#4A5563]">
-              Verisight helpt HR en directie om signalen over uitstroom, behoud en onboarding snel te bundelen in een dashboard, samenvatting en rapport.
+              Verisight maakt van losse signalen een duidelijk groepsbeeld met dashboard, samenvatting en rapport. Zo weet u sneller wat eerst besproken moet worden.
             </p>
             <div className="marketing-hero-cta-row marketing-hero-actions sm:flex-row sm:items-center">
               <Link
@@ -226,53 +226,46 @@ export default function LandingPage() {
               <div className="relative z-10 space-y-4 sm:space-y-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="marketing-stage-tag border border-white/12 bg-white/8 text-[#DCEFEA]">
-                    Begeleide productvorm
+                    Binnen weken bruikbaar
                   </span>
-                  <span className="marketing-chip-dark">Snel een helder eerste beeld</span>
+                  <span className="marketing-chip-dark">Voor uw eerste gesprek</span>
                 </div>
 
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(17rem,0.92fr)]">
+                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.02fr)_minmax(18rem,0.98fr)]">
                   <div className="rounded-[1.5rem] border border-white/10 bg-white/6 p-4 backdrop-blur-sm sm:rounded-[1.7rem] sm:p-5">
                     <div className="mb-4 flex items-center gap-2">
                       <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
                       <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
                       <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
                       <span className="ml-3 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-300">
-                        Dashboard preview
+                        Dashboard
                       </span>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       {[
-                        ['Vertrekbeeld', '5,8/10', 'Vergt bestuurlijke duiding'],
-                        ['Behoudsdruk', '5,6/10', 'Vraagt eerste verificatie'],
-                        ['Doorlooptijd', 'Binnen weken', 'Van start naar eerste beeld'],
+                        ['Vertrekbeeld', '5,8/10', 'Patroon vraagt gesprek'],
+                        ['Behoudsdruk', '5,6/10', 'Vroeg signaal zichtbaar'],
                       ].map(([label, value, detail]) => (
                         <div key={label} className="rounded-[1rem] border border-white/10 bg-white/5 p-3 sm:rounded-[1.2rem] sm:p-4">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300 sm:text-[11px] sm:text-slate-200">{label}</p>
-                          <p className="mt-2 text-sm font-semibold text-white sm:mt-3 sm:text-xl">{value}</p>
+                          <p className="mt-2 text-lg font-semibold text-white sm:mt-3 sm:text-xl">{value}</p>
                           <p className="mt-1 text-[10px] leading-4 text-slate-300 sm:text-[11px] sm:leading-5 sm:text-slate-200">{detail}</p>
                         </div>
                       ))}
                     </div>
                     <div className="mt-4 rounded-[1.2rem] border border-white/10 bg-white/5 p-3.5 sm:rounded-[1.4rem] sm:p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300 sm:text-[11px] sm:text-slate-200">Belangrijkste punten</p>
-                        <span className="rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200">
-                          Samenvatting
-                        </span>
-                      </div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300 sm:text-[11px] sm:text-slate-200">Wat valt op</p>
                       <div className="mt-4 space-y-3">
                         {[
-                          ['Leiderschap', '63%', 'Bestuurlijke read'],
-                          ['Groei', '61%', 'Prioriteit'],
-                          ['Werkbelasting', '56%', 'Verificatie'],
-                        ].map(([label, width, band]) => (
-                          <div key={label} className="grid grid-cols-[minmax(0,5.5rem)_1fr_auto] items-center gap-2.5 sm:grid-cols-[minmax(0,7rem)_1fr_auto] sm:gap-3">
+                          ['Leiderschap', '63%'],
+                          ['Groei', '61%'],
+                          ['Werkbelasting', '56%'],
+                        ].map(([label, width]) => (
+                          <div key={label} className="grid grid-cols-[minmax(0,5.8rem)_1fr] items-center gap-2.5 sm:grid-cols-[minmax(0,7rem)_1fr] sm:gap-3">
                             <span className="text-xs text-slate-200 sm:text-sm">{label}</span>
                             <div className="h-2 overflow-hidden rounded-full bg-white/10">
                               <div className="h-full rounded-full bg-[#3C8D8A]" style={{ width }} />
                             </div>
-                            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-300 sm:text-slate-200">{band}</span>
                           </div>
                         ))}
                       </div>
@@ -280,24 +273,18 @@ export default function LandingPage() {
                   </div>
 
                   <div className="rounded-[1.45rem] border border-[#DCEFEA]/20 bg-[#F7F5F1] p-4 text-[#132033] shadow-[0_18px_50px_rgba(15,23,42,0.26)] sm:rounded-[1.6rem] sm:p-5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#3C8D8A]">Bestuurlijke handoff</p>
-                    <p className="mt-3 text-xl font-semibold">Van signaal naar eerste gesprek</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#3C8D8A]">Samenvatting</p>
+                    <p className="mt-3 text-xl font-semibold">Van losse signalen naar een duidelijk gesprek</p>
                     <div className="mt-4 space-y-3">
                       {[
-                        'Wat speelt nu',
-                        'Waarom telt dit bestuurlijk',
-                        'Welke vraag eerst getoetst moet worden',
+                        'Wat speelt nu het meest',
+                        'Wat eerst besproken moet worden',
+                        'Welke stap daarna logisch is',
                       ].map((item) => (
                         <div key={item} className="rounded-[1rem] border border-[#E5E0D6] bg-white px-3 py-3 text-sm leading-6 text-[#4A5563]">
                           {item}
                         </div>
                       ))}
-                    </div>
-                    <div className="mt-5 rounded-[1rem] border border-[#E5E0D6] bg-white px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#3C8D8A]">Wat u krijgt</p>
-                      <p className="mt-1 text-sm leading-6 text-[#4A5563]">
-                        Geen losse uitkomsten, maar een helder beeld dat direct bruikbaar is in een eerste gesprek.
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -312,8 +299,7 @@ export default function LandingPage() {
               <div className="grid gap-3 md:grid-cols-3">
                 {painCards.map((card) => (
                   <div key={card.title} className="rounded-[1.2rem] border border-[#EDE7DC] bg-[#FCFBF9] px-4 py-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9CA3AF]">Herkenbaar probleem</p>
-                    <p className="mt-2 text-sm font-semibold text-[#132033]">{card.title}</p>
+                    <p className="text-sm font-semibold text-[#132033]">{card.title}</p>
                     <p className="mt-2 text-sm leading-6 text-[#4A5563]">{card.body}</p>
                   </div>
                 ))}
@@ -326,17 +312,16 @@ export default function LandingPage() {
               <div className="grid gap-6 xl:grid-cols-[0.86fr_1.14fr] xl:items-end">
                 <SectionHeading
                   eyebrow="Voorbeeldoutput"
-                  title="Zie eerst de output die het gesprek moet openen."
-                  description="Hier ziet u wat u binnen weken krijgt: dashboard, samenvatting, prioriteiten en een logische vervolgstap."
+                  title="Zie eerst wat u straks op tafel krijgt."
+                  description="Geen losse uitkomsten, maar een duidelijk overzicht van wat speelt, wat opvalt en wat eerst besproken moet worden."
                 />
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  {outcomeCards.map((card, index) => (
+                  {outcomeCards.map((card) => (
                     <div
                       key={card.title}
                       className="rounded-[1.4rem] border border-[#DCEFEA] bg-white px-4 py-4 shadow-[0_16px_34px_rgba(15,23,42,0.05)]"
                     >
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#3C8D8A]">Proof {index + 1}</p>
-                      <p className="mt-2 text-sm font-semibold text-[#132033]">{card.title}</p>
+                      <p className="text-sm font-semibold text-[#132033]">{card.title}</p>
                       <p className="mt-2 text-sm leading-6 text-[#4A5563]">{card.body}</p>
                     </div>
                   ))}
@@ -352,17 +337,17 @@ export default function LandingPage() {
               <div className="grid gap-5 xl:grid-cols-2">
                 {exitSampleAsset ? (
                   <SampleShowcaseCard
-                    eyebrow="ExitScan voorbeeld"
-                    title="Voorbeeldrapport ExitScan"
-                    body="Voor organisaties die beter willen begrijpen waarom mensen vertrekken."
+                    eyebrow="ExitScan voorbeeldrapport"
+                    title="Voor als vertrek de vraag is"
+                    body="Laat zien welke patronen terugkomen, wat opvalt en wat eerst besproken moet worden."
                     asset={exitSampleAsset}
                   />
                 ) : null}
                 {retentionSampleAsset ? (
                   <SampleShowcaseCard
-                    eyebrow="RetentieScan voorbeeld"
-                    title="Voorbeeldrapport RetentieScan"
-                    body="Voor organisaties die eerder willen zien waar behoud onder druk staat."
+                    eyebrow="RetentieScan voorbeeldrapport"
+                    title="Voor als behoud de vraag is"
+                    body="Laat zien waar behoud onder druk staat en welke punten als eerste aandacht vragen."
                     asset={retentionSampleAsset}
                   />
                 ) : null}
@@ -388,8 +373,8 @@ export default function LandingPage() {
           <MarketingSection tone="plain" className="pb-10 pt-10 sm:pb-12 sm:pt-12">
             <SectionHeading
               eyebrow="Routekeuze"
-              title="Kies daarna de route die nu het meest logisch is."
-              description="De keuze is eenvoudig: wilt u vooral vertrek beter begrijpen of behoud eerder in beeld krijgen?"
+              title="Kies daarna de scan die nu past."
+              description="Meestal begint het met een simpele keuze: wilt u vertrek beter begrijpen of behoud eerder in beeld krijgen?"
             />
 
             <div className="mt-8 grid gap-4 xl:grid-cols-2">
@@ -431,9 +416,9 @@ export default function LandingPage() {
             <div className="mt-6 rounded-[1.55rem] border border-[#E5E0D6] bg-[#F7F5F1] px-5 py-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className="max-w-3xl">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#9CA3AF]">Support en portfolio</p>
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#9CA3AF]">Kleinere vervolgroutes</p>
                   <p className="mt-2 text-sm leading-7 text-[#4A5563]">
-                    {supportRoutes[0].name} en {supportRoutes[1].name} zijn kleinere vervolgroutes. Combinatie past wanneer vertrek en behoud tegelijk spelen.
+                    {supportRoutes[0].name} en {supportRoutes[1].name} volgen meestal pas na de eerste scan. Combinatie past wanneer vertrek en behoud tegelijk spelen.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-3">
@@ -462,8 +447,8 @@ export default function LandingPage() {
               <div>
                 <SectionHeading
                   eyebrow="Aanpak"
-                  title="Kort, voorspelbaar en gericht op eerste waarde."
-                  description="Eerst kiezen we de juiste scan. Daarna volgt de start, de eerste uitkomst en het gesprek erover."
+                  title="Snel gestart, duidelijk in stappen."
+                  description="Eerst kiezen we de juiste scan. Daarna volgt de start, de eerste uitkomst en het gesprek daarover."
                 />
               </div>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -489,10 +474,10 @@ export default function LandingPage() {
                 <div className="max-w-3xl">
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#3C8D8A]">Trust en begrenzing</p>
                   <h2 className="mt-3 font-display text-[clamp(1.8rem,3.8vw,2.7rem)] font-light leading-[1.06] tracking-[-0.03em] text-[#132033]">
-                    Zorgvuldig met data, helder over uitkomsten.
+                    Duidelijk over privacy en grenzen.
                   </h2>
                   <p className="mt-3 max-w-[42rem] text-sm leading-7 text-[#4A5563]">
-                    U ziet alleen groepsinzichten. We werken met minimale groepsgroottes en trekken geen conclusies op individueel niveau.
+                    U ziet alleen groepsinzichten. We werken met minimale groepsgroottes en doen geen uitspraken over individuen.
                   </p>
                 </div>
                 <Link href="/vertrouwen" className="inline-flex items-center text-sm font-semibold text-[#3C8D8A] hover:text-[#132033]">
@@ -515,16 +500,16 @@ export default function LandingPage() {
                 <div className="space-y-5">
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#DCEFEA]">Korte kennismaking</p>
                   <h2 className="font-display text-[clamp(2rem,4.4vw,3.5rem)] font-light leading-[1.02] tracking-[-0.03em] text-white">
-                    Plan een eerste gesprek en ontvang snel een route-inschatting.
+                    Plan een eerste gesprek.
                   </h2>
                   <p className="max-w-[34rem] text-[1rem] leading-8 text-[rgba(247,245,241,0.78)]">
-                    We reageren meestal binnen 1 werkdag met de meest logische eerste route en welke output daarbij past.
+                    Ontdek snel welke scan past en wat u als eerste kunt verwachten.
                   </p>
                   <div className="space-y-3">
                     {[
-                      'Snelle eerste inschatting op basis van uw vraag',
-                      'Duidelijke eerste stap in plaats van een open intake',
-                      'Desgewenst direct gekoppeld aan voorbeeldoutput',
+                      'Snel duidelijk welke scan past',
+                      'Heldere eerste stap zonder lang voortraject',
+                      'Direct te koppelen aan voorbeeldoutput',
                     ].map((item) => (
                       <div key={item} className="flex items-start gap-3 rounded-[1.15rem] border border-white/10 bg-white/6 px-4 py-3.5 text-sm leading-7 text-[rgba(247,245,241,0.82)]">
                         <span className="mt-2 h-2.5 w-2.5 rounded-full bg-[#3C8D8A]" />

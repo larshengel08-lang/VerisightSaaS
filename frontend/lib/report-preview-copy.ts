@@ -59,31 +59,31 @@ const retentionSampleAsset = getPrimarySampleShowcaseAsset('retention')
 
 export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy> = {
   portfolio: {
-    label: 'Portfolio-overzicht',
+    label: 'Voorbeeldoutput',
     intro:
-      'Deze voorbeeldoutput laat zien wat u krijgt: een duidelijk beeld van wat speelt, wat opvalt en welke stap daarna logisch is.',
+      'Hier ziet u wat u krijgt: een dashboard, een korte samenvatting, duidelijke prioriteiten en een logische vervolgstap.',
     kpis: [
-      ['Actieve scans', '2 scans actief', 'ExitScan en RetentieScan'],
-      ['Totaalbeeld', '5,4 op 10', 'Vraagt om een helder gesprek'],
-      ['Belangrijkste aandachtspunt', 'Groei', 'Hier is het meeste te winnen'],
-      ['Eerste keuze', 'Vertrek of behoud?', 'Kies de scan die nu past'],
+      ['Actieve scans', '2 scans', 'ExitScan en RetentieScan'],
+      ['Totaalbeeld', '5,4 op 10', 'Vraagt om een gesprek'],
+      ['Wat valt op', 'Groei', 'Hier ligt nu de meeste druk'],
+      ['Eerste keuze', 'Vertrek of behoud?', 'Kies wat nu past'],
     ],
     boardroomTitle: 'Korte samenvatting',
     boardroomIntro:
-      'Dashboard, rapport en samenvatting vertellen hetzelfde verhaal: wat speelt nu, wat valt op en wat moet eerst worden besproken.',
+      'Dashboard, samenvatting en rapport vertellen hetzelfde verhaal: wat speelt nu, wat valt op en wat eerst besproken moet worden.',
     boardroomPoints: [
-      ['Wat speelt nu', 'Per scan ziet u in één oogopslag wat het hoofdbeeld is.'],
-      ['Wat valt op', 'De samenvatting maakt meteen zichtbaar waar het gesprek over moet gaan.'],
-      ['Wat volgt logisch', 'U ziet ook welke stap daarna het meest voor de hand ligt.'],
+      ['Wat speelt nu', 'Per scan ziet u in een oogopslag wat het hoofdbeeld is.'],
+      ['Wat valt op', 'De samenvatting laat meteen zien waar het gesprek over moet gaan.'],
+      ['Wat volgt', 'U ziet ook welke stap daarna het meest voor de hand ligt.'],
     ],
     focusTitle: 'Welke scan past nu het best?',
     dashboardRows: [
       { label: 'ExitScan', value: 'Vertrekduiding', band: 'Eerste route', width: '64%', tone: 'red' },
       { label: 'RetentieScan', value: 'Behoud eerst signaleren', band: 'Specifieke route', width: '52%', tone: 'amber' },
-      { label: 'Combinatie', value: 'Bewuste portfolioroute', band: 'Pas daarna', width: '45%', tone: 'emerald' },
+      { label: 'Combinatie', value: 'Portfolioroute', band: 'Pas daarna', width: '45%', tone: 'emerald' },
     ],
     nuance:
-      'De uitkomst helpt kiezen waar gesprek, toetsing of actie het meeste oplevert. Er worden geen conclusies op individueel niveau getrokken.',
+      'De uitkomst helpt kiezen waar gesprek, toetsing of actie het meeste oplevert. Er worden geen conclusies over individuen getrokken.',
     factorLead:
       'Per onderwerp ziet u eerst hoe het wordt ervaren en daarna waar de grootste aandachtspunten zitten.',
     factorCards: [
@@ -95,7 +95,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       { label: 'Rolhelderheid', scoreDisplay: '7,1/10', signalDisplay: '3,9/10', showSignal: true, band: MANAGEMENT_CONTEXT_LABELS.stabilizing, tone: 'emerald' },
     ],
     hypothesisLead:
-      'De uitkomst leidt niet tot één harde conclusie, maar tot een duidelijk gesprek met vragen die eerst getoetst moeten worden.',
+      'De uitkomst leidt niet tot een harde conclusie, maar tot een duidelijk gesprek met vragen die eerst getoetst moeten worden.',
     hypotheses: [
       {
         title: 'Kies eerst de juiste vraag',
@@ -112,9 +112,9 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       ['Samenvatting', 'Dashboard en rapport openen met hetzelfde hoofdbeeld'],
       ['Per scan toegespitst', 'ExitScan en RetentieScan laten elk een eigen vraag en uitkomst zien'],
       ['Eerst kiezen, dan verdiepen', 'Vaak begint het met ExitScan of RetentieScan en volgt daarna pas een vervolgstap'],
-      ['Begeleide aanpak', 'Geen losse export, maar een scan met uitleg en opvolging'],
+      ['Gesprek klaar', 'De uitkomst helpt om snel een goed eerste gesprek te voeren'],
     ],
-    trustTitle: 'Hoe je deze voorbeeldoutput leest',
+    trustTitle: 'Begrenzing',
     trustIntro:
       'Deze preview gebruikt fictieve data, maar volgt dezelfde opbouw en grenzen als de echte output.',
     trustPoints: [
@@ -126,9 +126,9 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     demoLabel: 'Illustratief',
     demoBody:
       'Fictieve data. Opbouw, leesvolgorde en grenzen volgen dezelfde lijn als de echte Verisight-output.',
-    supportVisualTitle: 'Segment deep dive preview',
-    supportVisualAlt: 'Voorbeeld van een Verisight segment deep dive',
-    sampleReportTitle: 'Waar je het volledige voorbeeld ziet',
+    supportVisualTitle: 'Verdieping per groep',
+    supportVisualAlt: 'Voorbeeld van een Verisight verdieping per groep',
+    sampleReportTitle: 'Waar u het volledige voorbeeld ziet',
     sampleReportBody:
       'Gebruik deze preview om te zien wat u krijgt. De volledige voorbeeldrapporten vindt u daarna bij ExitScan en RetentieScan.',
     sampleReportHref: '/producten',
@@ -206,7 +206,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       'Fictieve voorbeelddata. De trustopbouw, managementtaal en rapportvolgorde zijn gelijk aan de live ExitScan-presentatie waarmee Lars normaal de eerste route uitlegt.',
     supportVisualTitle: 'Segment deep dive preview',
     supportVisualAlt: 'Voorbeeld van een ExitScan segment deep dive',
-    sampleReportTitle: 'Volledig buyer-facing voorbeeldrapport',
+    sampleReportTitle: 'Volledig voorbeeldrapport',
     sampleReportBody:
       'Open hier het actuele ExitScan-voorbeeldrapport met fictieve data, zonder vertrouwelijke klantframing en in dezelfde managementstructuur als de echte output.',
     sampleReportHref: exitSampleAsset?.publicHref,
@@ -215,7 +215,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
   retention: {
     label: 'RetentieScan-voorbeeld',
     intro:
-      'RetentieScan opent met een managementsamenvatting die het groepsbeeld terugbrengt tot signaalprofiel, bestuurlijke weging, eerste verificatiespoor, eerste managementsessie en compacte handoff voor sponsor of directie. In demo\'s komt deze route meestal na ExitScan, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.',
+      "RetentieScan opent met een managementsamenvatting die het groepsbeeld terugbrengt tot signaalprofiel, bestuurlijke weging, eerste verificatiespoor, eerste managementsessie en compacte handoff voor sponsor of directie. In demo's komt deze route meestal na ExitScan, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.",
     kpis: [
       ['Reacties', '63 van 92', '68% respons'],
       ['Gemiddeld retentiesignaal', '5,6 op 10', MANAGEMENT_BAND_LABELS.MIDDEN],
@@ -228,7 +228,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     boardroomPoints: [
       ['Wat speelt nu', 'Het groepsbeeld laat zien waar behoudsdruk oploopt en welke werkfactoren dat het scherpst kleuren.'],
       ['Waarom telt dit nu', 'Zichtbare vertrekintentie of stille behoudsdruk raken teamcontinuiteit, leiding en uitvoerbaarheid.'],
-      ['Wat niet concluderen', 'Dit blijft een verification-first groepssignaal en geen individuele predictor, performance-score of bewezen risicomodel.'],
+      ['Wat niet concluderen', 'Dit blijft een groepssignaal en geen individuele voorspeller, performance-score of bewezen risicomodel.'],
     ],
     focusTitle: 'Waar vraagt behoud nu de meeste aandacht?',
     dashboardRows: [
@@ -240,7 +240,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     nuance:
       'RetentieScan is bedoeld voor groeps- en segmentduiding. De output is nadrukkelijk geen individuele voorspeller of performance-instrument, maar een v1-werkmodel voor verificatie en prioritering.',
     factorLead:
-      'De factoranalyse laat eerst zien hoe medewerkers de thema’s ervaren, en vertaalt dat daarna naar een managementstatus. Signaalsterkte blijft alleen verdiepende logica.',
+      "De factoranalyse laat eerst zien hoe medewerkers de thema's ervaren, en vertaalt dat daarna naar een managementstatus. Signaalsterkte blijft alleen verdiepende logica.",
     factorCards: [
       { label: 'Groei', scoreDisplay: '4,8/10', signalDisplay: '5,9/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
       { label: 'Werkbelasting', scoreDisplay: '5,0/10', signalDisplay: '5,6/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
@@ -284,9 +284,9 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       'Fictieve voorbeelddata. De live RetentieScan-output gebruikt dezelfde managementstructuur, trustnotes en productspecifieke leeswijzers als in een specifieke behoudsdemo.',
     supportVisualTitle: 'Segment deep dive preview',
     supportVisualAlt: 'Voorbeeld van een RetentieScan segment deep dive',
-    sampleReportTitle: 'Volledig buyer-facing voorbeeldrapport',
+    sampleReportTitle: 'Volledig voorbeeldrapport',
     sampleReportBody:
-      'Open hier het actuele RetentieScan-voorbeeldrapport met fictieve data, verification-first lezing en dezelfde trustgrenzen als de echte output.',
+      'Open hier het actuele RetentieScan-voorbeeldrapport met fictieve data en dezelfde trustgrenzen als de echte output.',
     sampleReportHref: retentionSampleAsset?.publicHref,
     sampleReportLabel: 'Open RetentieScan-voorbeeldrapport',
   },

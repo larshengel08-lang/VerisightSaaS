@@ -209,7 +209,7 @@ export function ContactForm({
         }`}
       >
         {isCompact
-          ? 'Laat uw vraag achter. We koppelen meestal snel terug met de meest logische eerste route en welke output daarbij past.'
+          ? 'Laat kort weten wat er speelt. We koppelen meestal snel terug met welke scan nu het best past.'
           : 'Gebruik dit formulier om snel te bepalen of ExitScan, RetentieScan of Combinatie nu het best past. TeamScan, Onboarding 30-60-90 en Leadership Scan zijn kleinere vervolgroutes die meestal pas later logisch worden. We gebruiken deze informatie alleen om jullie vraag goed op te volgen.'}
       </div>
 
@@ -295,7 +295,7 @@ export function ContactForm({
 
         <div>
           <label htmlFor="routeInterest" className={`mb-2 block text-sm font-medium ${labelClass}`}>
-            {isCompact ? 'Waar wilt u nu zicht op?' : 'Welke route lijkt nu het meest logisch?'}
+            {isCompact ? 'Waar wilt u nu duidelijkheid over?' : 'Welke route lijkt nu het meest logisch?'}
           </label>
           <select
             id="routeInterest"
@@ -347,7 +347,7 @@ export function ContactForm({
           className={`block min-w-0 w-full rounded-2xl border px-4 ${isCompact ? 'py-2.5 sm:py-3' : 'py-3'} text-sm outline-none transition focus:ring-2 ${inputClass}`}
           placeholder={
             isCompact
-              ? 'Optioneel: licht kort toe wat nu bestuurlijke aandacht vraagt.'
+              ? 'Optioneel: licht kort toe wat er nu speelt.'
               : 'Bijvoorbeeld: we doen al exitgesprekken, maar missen een duidelijk totaalbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven.'
           }
         />
@@ -375,12 +375,10 @@ export function ContactForm({
               <span className="font-semibold">{successState.firstStepLabel}</span> nu logisch is.
             </p>
             <p>
-              In het gesprek toetsen we jullie vraag, gewenste timing (
-              <span className="font-semibold">{successState.desiredTimingLabel}</span>) en welke intake of
-              databasis nodig is om vlot naar uitvoering en eerste waarde te gaan.
+              In het gesprek kijken we naar jullie vraag, gewenste timing (
+              <span className="font-semibold">{successState.desiredTimingLabel}</span>) en wat de meest logische eerste stap is.
             </p>
-            <p>Een vervolgroute of combinatieroute wordt pas concreet zodra de eerste stap en eerste uitkomst helder zijn.</p>
-            <p>In deze stap krijg je nog geen live inrichting of definitieve offerte zonder intake.</p>
+            <p>We laten daarbij ook zien welke scan past en wat u als eerste kunt verwachten.</p>
             {successState.leadId ? <p className="text-xs opacity-80">Referentie: {successState.leadId}.</p> : null}
           </div>
         </div>
@@ -407,7 +405,7 @@ export function ContactForm({
       <p className={`mt-4 text-[11px] leading-6 sm:text-xs ${helperClass}`}>
         Bekijk ook{' '}
         <Link href="/vertrouwen" className="underline">
-          Trust & privacy
+          vertrouwen en privacy
         </Link>
         , het{' '}
         <Link href="/privacy" className="underline">
@@ -417,7 +415,7 @@ export function ContactForm({
         <Link href="/dpa" className="underline">
           verwerkersovereenkomst
         </Link>{' '}
-        voor de publieke basis.
+        voor hoe we met gegevens omgaan.
       </p>
     </form>
   )

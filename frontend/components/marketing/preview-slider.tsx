@@ -12,7 +12,7 @@ interface PreviewSliderProps {
   variant?: ReportPreviewVariant
 }
 
-const TABS = ['Dashboard', 'Bestuurlijke handoff', 'Prioriteiten', 'Methodiek & begrenzing'] as const
+const TABS = ['Dashboard', 'Samenvatting', 'Prioriteiten', 'Begrenzing'] as const
 const COPY = REPORT_PREVIEW_COPY
 
 const toneStyles = {
@@ -105,9 +105,9 @@ function BoardroomCanvas({ variant }: { variant: ReportPreviewVariant }) {
         ))}
       </div>
       <div className="rounded-[1.6rem] border border-slate-200 bg-slate-50 px-5 py-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Wat dit laat zien</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Waar dit bij helpt</p>
         <p className="mt-2 text-sm leading-7 text-slate-700">
-          Hier wordt zichtbaar hoe dashboard, rapport en gesprek samenkomen in een rustige executive lijn.
+          U ziet hier hoe overzicht, samenvatting en gesprek logisch op elkaar aansluiten.
         </p>
       </div>
     </div>
@@ -227,19 +227,19 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
     () => [
       {
         title: 'Dashboard',
-        body: 'Een helder overzicht met kerncijfers, opvallende punten en het eerste beeld van de situatie.',
+        body: 'Een snel overzicht van het hoofdbeeld, de belangrijkste cijfers en wat direct opvalt.',
       },
       {
-        title: 'Bestuurlijke handoff',
-        body: 'Een korte samenvatting die helpt om de uitkomst snel met elkaar te bespreken.',
+        title: 'Samenvatting',
+        body: 'Een korte samenvatting van wat nu speelt, wat opvalt en wat eerst besproken moet worden.',
       },
       {
         title: 'Prioriteiten',
-        body: 'Belangrijkste aandachtspunten die helpen kiezen wat eerst besproken en getoetst moet worden.',
+        body: 'De punten die helpen kiezen wat eerst besproken en getoetst moet worden.',
       },
       {
-        title: 'Methodiek & begrenzing',
-        body: 'De trustlaag die laat zien wat de output ondersteunt en bewust niet pretendeert.',
+        title: 'Begrenzing',
+        body: 'Helder wat deze uitkomst wel laat zien en waar de grenzen liggen.',
       },
     ],
     [],
