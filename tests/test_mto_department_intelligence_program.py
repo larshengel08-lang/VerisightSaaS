@@ -70,3 +70,14 @@ def test_closed_improvement_loop_stays_bounded_to_mto():
     assert "closed improvement loop hangt alleen achter `scan_type = mto`" in wave_three
     assert "gate blijft in deze fase bewust dicht" in gate_doc
     assert "geen live koppeling van andere producten in deze track" in gate_doc
+
+
+def test_action_center_docs_open_new_mto_only_track():
+    plan = _read("docs/active/action_center_manager_cockpit_plan.md")
+    stack = _read("docs/active/action_center_manager_cockpit_wave_stack_plan.md")
+
+    assert "mto blijft de eerste en enige actieve drager" in plan
+    assert "geen wijziging aan exitscan, retentiescan of andere scanmethodiek" in plan
+    assert "wave_01_action_center_contract_hardening.md" in stack
+    assert "wave_02_action_center_mto_cockpit.md" in stack
+    assert "wave_03_action_center_review_discipline.md" in stack
