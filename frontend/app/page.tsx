@@ -18,29 +18,29 @@ import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
 export const metadata: Metadata = {
   title: 'Verisight',
   description:
-    'Verisight helpt HR, directie en MT sneller zien waar vertrek, behoud of onboarding bestuurlijke aandacht vraagt, met begeleide scans, dashboard en managementrapport.',
+    'Verisight helpt HR, directie en MT sneller zien waar vertrek, behoud of onboarding om actie vraagt, met een scan, dashboard en rapport.',
   alternates: {
     canonical: '/',
   },
 }
 
 const heroProofSignals = [
-  'Dashboard + rapport',
-  'Bestuurlijke handoff',
-  'Eerste read binnen weken',
+  'Dashboard met samenvatting',
+  'Rapport met prioriteiten',
+  'Binnen weken in beeld',
 ] as const
 
 const painCards = [
   {
     title: 'Signalen komen versnipperd binnen',
-    body: 'Losse exit-, team- en behoudssignalen geven nog geen bestuurlijke lijn.',
+    body: 'Losse exit-, team- en behoudssignalen geven nog geen duidelijk beeld.',
   },
   {
     title: 'Behoudsdruk wordt vaak te laat scherp',
-    body: 'Zonder vroeg groepsbeeld reageert management te vaak op incidenten.',
+    body: 'Zonder vroeg groepsbeeld wordt vaak pas laat duidelijk waar behoud schuift.',
   },
   {
-    title: 'Management wil richting, geen survey-output',
+    title: 'U wilt richting, geen losse uitkomsten',
     body: 'Er is behoefte aan prioriteiten, niet aan losse survey-output.',
   },
 ] as const
@@ -49,17 +49,17 @@ const coreRoutes = [
   {
     name: 'ExitScan',
     badge: 'Kernroute',
-    title: 'Voor vertrekduiding wanneer terugkerende uitstroomvragen bestuurlijke aandacht vragen.',
-    opens: 'Maakt zichtbaar welk vertrekbeeld terugkeert en welke werkfactoren eerst getoetst moeten worden.',
-    timing: 'Logisch wanneer uitstroom snel naar een eerste managementgesprek vertaald moet worden.',
+    title: 'Logisch als u beter wilt begrijpen waarom mensen vertrekken.',
+    opens: 'Laat zien welke patronen terugkomen en welke oorzaken als eerste besproken moeten worden.',
+    timing: 'Geeft snel houvast voor een gesprek over uitstroom en vervolgstappen.',
     href: '/producten/exitscan',
   },
   {
     name: 'RetentieScan',
     badge: 'Kernroute',
-    title: 'Voor vroegsignalering wanneer behoud onder druk lijkt te staan.',
-    opens: 'Maakt zichtbaar waar actieve populaties nu een eerste verificatiespoor of interventie vragen.',
-    timing: 'Logisch wanneer behoud eerder bestuurlijk scherp moet worden.',
+    title: 'Logisch als u eerder wilt zien waar behoud onder druk staat.',
+    opens: 'Laat zien waar teams of groepen nu extra aandacht en toetsing vragen.',
+    timing: 'Geeft snel houvast voor een gesprek over risico, prioriteiten en vervolgstappen.',
     href: '/producten/retentiescan',
   },
 ] as const
@@ -68,15 +68,15 @@ const expansionRoutes = [
   {
     name: 'TeamScan',
     badge: 'Aanvullende route',
-    opens: 'Voor lokale verificatie nadat een breder people-signaal eerst zichtbaar is.',
-    timing: 'Gericht vervolg wanneer een team of onderdeel nader bekeken moet worden.',
+    opens: 'Voor een gerichte check in een team of onderdeel.',
+    timing: 'Past als u na een breder signaal lokaal verder wilt kijken.',
     href: '/producten/teamscan',
   },
   {
     name: 'Onboarding 30-60-90',
     badge: 'Aanvullende route',
-    opens: 'Voor vroege lifecycle-checks rond landing, frictie en onboardingkwaliteit.',
-    timing: 'Gericht vervolg wanneer nieuwe medewerkers bestuurlijk aandacht vragen.',
+    opens: 'Voor een vroege check op de start van nieuwe medewerkers.',
+    timing: 'Past als u onboarding sneller wilt aanscherpen.',
     href: '/producten/onboarding-30-60-90',
   },
 ] as const
@@ -84,32 +84,32 @@ const expansionRoutes = [
 const supportRoutes = [
   {
     name: 'Pulse',
-    body: 'Compacte reviewroute na een eerste baseline of managementread.',
+    body: 'Korte vervolgmeting na een eerste beeld.',
     href: '/producten/pulse',
   },
   {
     name: 'Leadership Scan',
-    body: 'Begrensde managementcontext na een bestaand people-signaal.',
+    body: 'Extra duiding wanneer leiderschap nadrukkelijk meespeelt.',
     href: '/producten/leadership-scan',
   },
 ] as const
 
 const outcomeCards = [
   {
-    title: 'Dashboard voor eerste managementread',
-    body: 'Rustige kernmetrics en focuspunten die het eerste bestuurlijke beeld openen.',
+    title: 'Dashboard met samenvatting',
+    body: 'Een helder eerste beeld van wat nu speelt.',
   },
   {
     title: 'Rapport met prioriteiten en verificatievragen',
-    body: 'Leesbare rapportlaag die helpt prioriteren en vragen te toetsen.',
+    body: 'Een rapport dat helpt kiezen wat eerst besproken moet worden.',
   },
   {
-    title: 'Bestuurlijke handoff en eerste route',
-    body: 'Heldere handoff: wat speelt nu, waarom telt dit en wat eerst besproken moet worden.',
+    title: 'Punten voor het eerste gesprek',
+    body: 'Concreet overzicht van wat speelt, wat opvalt en welke vragen openstaan.',
   },
   {
-    title: 'Eerste managementgesprek en vervolgadvies',
-    body: 'Eerste gesprek over prioriteiten, eigenaarschap en logische vervolgrichting.',
+    title: 'Voorstel voor vervolgstap',
+    body: 'Duidelijk voorstel voor wat logisch volgt na het eerste gesprek.',
   },
 ] as const
 
@@ -127,12 +127,12 @@ const processSteps = [
   {
     step: '3',
     title: 'Eerste output',
-    body: 'Dashboard, rapport en handoff landen in een heldere managementlijn.',
+    body: 'U krijgt een dashboard, samenvatting en rapport.',
   },
   {
     step: '4',
-    title: 'Managementbespreking',
-    body: 'We vertalen de output naar prioriteiten en een logische vervolgstap.',
+    title: 'Bespreking',
+    body: 'We bespreken wat opvalt en wat logisch volgt.',
   },
 ] as const
 
@@ -153,7 +153,7 @@ export default function LandingPage() {
     '@type': 'WebPage',
     name: 'Verisight',
     description:
-      'Verisight helpt HR, directie en MT sneller zien waar vertrek, behoud of onboarding bestuurlijke aandacht vraagt, met begeleide scans, dashboard en managementrapport.',
+      'Verisight helpt HR, directie en MT sneller zien waar vertrek, behoud of onboarding om actie vraagt, met een scan, dashboard en rapport.',
     url: 'https://www.verisight.nl/',
     inLanguage: 'nl-NL',
     mainEntity: {
@@ -188,11 +188,10 @@ export default function LandingPage() {
               Voor HR, directie en MT in organisaties met 200-1.000 medewerkers
             </p>
             <h1 className="marketing-hero-title marketing-hero-title-home font-display text-[#132033]">
-              Zie sneller waar vertrek of behoud nu managementaandacht vraagt.
+              Maak binnen weken duidelijk waar vertrek of behoud om actie vraagt.
             </h1>
             <p className="marketing-hero-copy text-[#4A5563]">
-              Begeleide scans, dashboard en managementrapport maken snel zichtbaar welke eerste managementroute logisch
-              is.
+              Verisight helpt HR en directie om signalen over uitstroom, behoud en onboarding snel te bundelen in een dashboard, samenvatting en rapport.
             </p>
             <div className="marketing-hero-cta-row marketing-hero-actions sm:flex-row sm:items-center">
               <Link
@@ -229,7 +228,7 @@ export default function LandingPage() {
                   <span className="marketing-stage-tag border border-white/12 bg-white/8 text-[#DCEFEA]">
                     Begeleide productvorm
                   </span>
-                  <span className="marketing-chip-dark">Sneller naar eerste managementread</span>
+                  <span className="marketing-chip-dark">Snel een helder eerste beeld</span>
                 </div>
 
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(17rem,0.92fr)]">
@@ -246,7 +245,7 @@ export default function LandingPage() {
                       {[
                         ['Vertrekbeeld', '5,8/10', 'Vergt bestuurlijke duiding'],
                         ['Behoudsdruk', '5,6/10', 'Vraagt eerste verificatie'],
-                        ['Eerste read', 'Binnen weken', 'Van intake naar bestuur'],
+                        ['Doorlooptijd', 'Binnen weken', 'Van start naar eerste beeld'],
                       ].map(([label, value, detail]) => (
                         <div key={label} className="rounded-[1rem] border border-white/10 bg-white/5 p-3 sm:rounded-[1.2rem] sm:p-4">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300 sm:text-[11px] sm:text-slate-200">{label}</p>
@@ -257,9 +256,9 @@ export default function LandingPage() {
                     </div>
                     <div className="mt-4 rounded-[1.2rem] border border-white/10 bg-white/5 p-3.5 sm:rounded-[1.4rem] sm:p-4">
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300 sm:text-[11px] sm:text-slate-200">Managementprioriteiten</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300 sm:text-[11px] sm:text-slate-200">Belangrijkste punten</p>
                         <span className="rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200">
-                          Eerste read
+                          Samenvatting
                         </span>
                       </div>
                       <div className="mt-4 space-y-3">
@@ -295,9 +294,9 @@ export default function LandingPage() {
                       ))}
                     </div>
                     <div className="mt-5 rounded-[1rem] border border-[#E5E0D6] bg-white px-4 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#3C8D8A]">Waarom dit werkt</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#3C8D8A]">Wat u krijgt</p>
                       <p className="mt-1 text-sm leading-6 text-[#4A5563]">
-                        Geen losse survey-output, maar een rustige managementread die direct naar een eerste gesprek leidt.
+                        Geen losse uitkomsten, maar een helder beeld dat direct bruikbaar is in een eerste gesprek.
                       </p>
                     </div>
                   </div>
@@ -328,7 +327,7 @@ export default function LandingPage() {
                 <SectionHeading
                   eyebrow="Voorbeeldoutput"
                   title="Zie eerst de output die het gesprek moet openen."
-                  description="De sterkste verkooplaag van Verisight is het bewijs van dashboard, handoff en rapport in dezelfde rustige managementlijn."
+                  description="Hier ziet u wat u binnen weken krijgt: dashboard, samenvatting, prioriteiten en een logische vervolgstap."
                 />
                 <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                   {outcomeCards.map((card, index) => (
@@ -354,16 +353,16 @@ export default function LandingPage() {
                 {exitSampleAsset ? (
                   <SampleShowcaseCard
                     eyebrow="ExitScan voorbeeld"
-                    title="Volledig buyer-facing ExitScan-rapport"
-                    body="Gebruik dit voorbeeld als deliverable-proof wanneer de vraag primair over vertrekduiding gaat."
+                    title="Voorbeeldrapport ExitScan"
+                    body="Voor organisaties die beter willen begrijpen waarom mensen vertrekken."
                     asset={exitSampleAsset}
                   />
                 ) : null}
                 {retentionSampleAsset ? (
                   <SampleShowcaseCard
                     eyebrow="RetentieScan voorbeeld"
-                    title="Volledig buyer-facing RetentieScan-rapport"
-                    body="Gebruik dit voorbeeld wanneer vroegsignalering op behoud in de actieve populatie centraal staat."
+                    title="Voorbeeldrapport RetentieScan"
+                    body="Voor organisaties die eerder willen zien waar behoud onder druk staat."
                     asset={retentionSampleAsset}
                   />
                 ) : null}
@@ -390,7 +389,7 @@ export default function LandingPage() {
             <SectionHeading
               eyebrow="Routekeuze"
               title="Kies daarna de route die nu het meest logisch is."
-              description="De productlaag helpt kiezen. Het zwaarste bewijs staat hierboven al in de output."
+              description="De keuze is eenvoudig: wilt u vooral vertrek beter begrijpen of behoud eerder in beeld krijgen?"
             />
 
             <div className="mt-8 grid gap-4 xl:grid-cols-2">
@@ -404,8 +403,8 @@ export default function LandingPage() {
                     <p className="text-lg font-semibold text-[#132033]">{route.name}</p>
                   </div>
                   <p className="mt-4 text-sm font-semibold leading-7 text-[#132033]">{route.title}</p>
-                  <p className="mt-3 text-sm leading-7 text-[#4A5563]">{route.opens}</p>
-                  <p className="mt-2 text-sm leading-6 text-[#6B7280]">{route.timing}</p>
+                  <p className="mt-3 text-sm leading-7 text-[#4A5563]"><span className="font-semibold text-[#132033]">Wat wordt zichtbaar:</span> {route.opens}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#6B7280]"><span className="font-semibold text-[#132033]">Wat levert het op:</span> {route.timing}</p>
                   <Link href={route.href} className="mt-5 inline-flex text-sm font-semibold text-[#3C8D8A] hover:text-[#132033]">
                     Meer over {route.name}
                   </Link>
@@ -434,7 +433,7 @@ export default function LandingPage() {
                 <div className="max-w-3xl">
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#9CA3AF]">Support en portfolio</p>
                   <p className="mt-2 text-sm leading-7 text-[#4A5563]">
-                    {supportRoutes[0].name} en {supportRoutes[1].name} blijven begrensde vervolgroutes. Combinatie blijft een portfolioroute wanneer vertrekduiding en vroegsignalering tegelijk bestuurlijk relevant zijn.
+                    {supportRoutes[0].name} en {supportRoutes[1].name} zijn kleinere vervolgroutes. Combinatie past wanneer vertrek en behoud tegelijk spelen.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-3">
@@ -464,7 +463,7 @@ export default function LandingPage() {
                 <SectionHeading
                   eyebrow="Aanpak"
                   title="Kort, voorspelbaar en gericht op eerste waarde."
-                  description="Eerst routekeuze, dan intake, output en managementbespreking. Geen zwaar projectverhaal."
+                  description="Eerst kiezen we de juiste scan. Daarna volgt de start, de eerste uitkomst en het gesprek erover."
                 />
               </div>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -490,10 +489,10 @@ export default function LandingPage() {
                 <div className="max-w-3xl">
                   <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#3C8D8A]">Trust en begrenzing</p>
                   <h2 className="mt-3 font-display text-[clamp(1.8rem,3.8vw,2.7rem)] font-light leading-[1.06] tracking-[-0.03em] text-[#132033]">
-                    Methodisch helder. Privacy-first. Zonder overclaim.
+                    Zorgvuldig met data, helder over uitkomsten.
                   </h2>
                   <p className="mt-3 max-w-[42rem] text-sm leading-7 text-[#4A5563]">
-                    Verisight blijft expliciet over wat de output ondersteunt en wat niet. Dat maakt vertrouwen onderdeel van de productkwaliteit.
+                    U ziet alleen groepsinzichten. We werken met minimale groepsgroottes en trekken geen conclusies op individueel niveau.
                   </p>
                 </div>
                 <Link href="/vertrouwen" className="inline-flex items-center text-sm font-semibold text-[#3C8D8A] hover:text-[#132033]">
@@ -523,7 +522,7 @@ export default function LandingPage() {
                   </p>
                   <div className="space-y-3">
                     {[
-                      'Snelle route-inschatting op basis van uw managementvraag',
+                      'Snelle eerste inschatting op basis van uw vraag',
                       'Duidelijke eerste stap in plaats van een open intake',
                       'Desgewenst direct gekoppeld aan voorbeeldoutput',
                     ].map((item) => (

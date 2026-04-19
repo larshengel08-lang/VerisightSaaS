@@ -133,7 +133,7 @@ export function ContactForm({
           desired_timing: form.desiredTiming,
           current_question:
             form.currentQuestion.trim() ||
-            `We willen de juiste eerste managementroute bepalen voor ${getContactRouteLabel(form.routeInterest)}.`,
+            `We willen bepalen welke scan het best past voor ${getContactRouteLabel(form.routeInterest)}.`,
           website: form.website,
         }),
       })
@@ -210,7 +210,7 @@ export function ContactForm({
       >
         {isCompact
           ? 'Laat uw vraag achter. We koppelen meestal snel terug met de meest logische eerste route en welke output daarbij past.'
-          : 'Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de logische eerste stap is. TeamScan, Onboarding 30-60-90 en Leadership Scan blijven bounded follow-on routes die pas logisch worden nadat een eerste signaal, baseline of managementread al staat. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.'}
+          : 'Gebruik dit formulier om snel te bepalen of ExitScan, RetentieScan of Combinatie nu het best past. TeamScan, Onboarding 30-60-90 en Leadership Scan zijn kleinere vervolgroutes die meestal pas later logisch worden. We gebruiken deze informatie alleen om jullie vraag goed op te volgen.'}
       </div>
 
       {!isCompact ? (
@@ -348,7 +348,7 @@ export function ContactForm({
           placeholder={
             isCompact
               ? 'Optioneel: licht kort toe wat nu bestuurlijke aandacht vraagt.'
-              : 'Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar managementbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven.'
+              : 'Bijvoorbeeld: we doen al exitgesprekken, maar missen een duidelijk totaalbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven.'
           }
         />
       </div>
@@ -375,11 +375,11 @@ export function ContactForm({
               <span className="font-semibold">{successState.firstStepLabel}</span> nu logisch is.
             </p>
             <p>
-              In het gesprek toetsen we jullie managementvraag, gewenste timing (
+              In het gesprek toetsen we jullie vraag, gewenste timing (
               <span className="font-semibold">{successState.desiredTimingLabel}</span>) en welke intake of
               databasis nodig is om vlot naar uitvoering en eerste waarde te gaan.
             </p>
-            <p>Een vervolgroute of combinatieroute wordt pas concreet zodra de eerste route en eerste managementwaarde helder zijn.</p>
+            <p>Een vervolgroute of combinatieroute wordt pas concreet zodra de eerste stap en eerste uitkomst helder zijn.</p>
             <p>In deze stap krijg je nog geen live inrichting of definitieve offerte zonder intake.</p>
             {successState.leadId ? <p className="text-xs opacity-80">Referentie: {successState.leadId}.</p> : null}
           </div>
@@ -417,7 +417,7 @@ export function ContactForm({
         <Link href="/dpa" className="underline">
           verwerkersovereenkomst
         </Link>{' '}
-        voor de publieke buyer-facing basis.
+        voor de publieke basis.
       </p>
     </form>
   )

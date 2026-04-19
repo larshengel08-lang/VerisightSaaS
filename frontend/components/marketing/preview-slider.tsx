@@ -59,7 +59,7 @@ function DashboardCanvas({ variant }: { variant: ReportPreviewVariant }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-400 sm:text-xs">{copy.focusTitle}</p>
           <span className="rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200 sm:px-3 sm:text-[11px]">
-            Dashboard-read
+            Samenvatting
           </span>
         </div>
         <div className="mt-4 space-y-2.5 sm:space-y-3">
@@ -149,7 +149,7 @@ function PrioritiesCanvas({ variant }: { variant: ReportPreviewVariant }) {
   return (
     <div className="space-y-4">
       <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Uit het managementrapport - Prioriteitenbeeld</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Uit het rapport - prioriteiten</p>
         <p className="mt-2 text-sm leading-7 text-slate-700">{copy.factorLead}</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -227,15 +227,15 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
     () => [
       {
         title: 'Dashboard',
-        body: 'Een snelle managementread met kernmetrics, focuspunten en het eerste signaal dat bestuurlijke aandacht vraagt.',
+        body: 'Een helder overzicht met kerncijfers, opvallende punten en het eerste beeld van de situatie.',
       },
       {
         title: 'Bestuurlijke handoff',
-        body: 'De compacte executive laag die helpt om de uitkomst intern te bespreken zonder te overclaimen.',
+        body: 'Een korte samenvatting die helpt om de uitkomst snel met elkaar te bespreken.',
       },
       {
         title: 'Prioriteiten',
-        body: 'Topfactoren en aandachtspunten die richting geven aan verificatie, prioritering en eerste managementactie.',
+        body: 'Belangrijkste aandachtspunten die helpen kiezen wat eerst besproken en getoetst moet worden.',
       },
       {
         title: 'Methodiek & begrenzing',
