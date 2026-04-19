@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildDriverDrilldownModel,
+  buildResponseReadState,
+  buildScoreInterpretationGuide,
   computeAverageRiskScore,
   computeRetentionSupplementalAverages,
 } from './page-helpers'
@@ -102,5 +104,34 @@ describe('driver drilldown model', () => {
 
     expect(model.selectedFactorKey).toBe('growth')
     expect(model.selectedFactor?.factorKey).toBe('growth')
+  })
+})
+
+describe('overview reading aids', () => {
+  it('gives the overview a short response-read cue and next step once data is strong enough', () => {
+    const state = buildResponseReadState({
+      totalInvited: 40,
+      totalCompleted: 18,
+      completionRate: 45,
+      pendingCount: 22,
+      hasMinDisplay: true,
+      hasEnoughData: true,
+      isActive: true,
+    })
+
+    expect(state.quickLabel).toBe('Nu lezen')
+    expect(state.caution).toContain('nuance')
+    expect(state.nextStep).toContain('handoff')
+  })
+
+  it('keeps score interpretation as a three-step reading aid without forcing Exit language onto RetentieScan', () => {
+    const exitGuide = buildScoreInterpretationGuide('exit')
+    const retentionGuide = buildScoreInterpretationGuide('retention')
+
+    expect(exitGuide.steps).toHaveLength(3)
+    expect(exitGuide.steps[0]?.title).toContain('Frictiescore')
+    expect(exitGuide.steps[1]?.title).toContain('Verdeling')
+    expect(retentionGuide.steps[0]?.title).toContain('Retentiesignaal')
+    expect(retentionGuide.steps[0]?.title).not.toContain('Frictiescore')
   })
 })

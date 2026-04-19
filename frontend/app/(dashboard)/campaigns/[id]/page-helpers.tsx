@@ -72,6 +72,24 @@ export type InsightNotice = {
   tone: 'blue' | 'amber' | 'red'
 }
 
+export type ResponseReadState = {
+  title: string
+  body: string
+  badge: string
+  badgeTone: 'slate' | 'blue' | 'emerald' | 'amber'
+  quickLabel: string
+  caution: string
+  nextStep: string
+}
+
+export type ScoreInterpretationGuide = {
+  intro: string
+  steps: Array<{
+    title: string
+    body: string
+  }>
+}
+
 export type DriverDrilldownFactor = {
   factorKey: string
   factorLabel: string
@@ -452,6 +470,132 @@ export function buildInsightWarnings({
   }
 
   return items
+}
+
+export function buildResponseReadState(args: {
+  totalInvited: number
+  totalCompleted: number
+  completionRate: number
+  pendingCount: number
+  hasMinDisplay: boolean
+  hasEnoughData: boolean
+  isActive: boolean
+}): ResponseReadState {
+  if (args.totalInvited === 0) {
+    return {
+      title: 'Nog geen responsbasis',
+      body: 'Er zijn nog geen uitnodigingen verstuurd of zichtbaar. Gebruik deze laag pas als eerste responses binnenkomen.',
+      badge: 'Nog leeg',
+      badgeTone: 'amber',
+      quickLabel: 'Wacht nog',
+      caution: 'Er is nog geen leesbasis om managementduiding op te openen.',
+      nextStep: 'Zet eerst livegang en eerste responsstroom aan.',
+    }
+  }
+
+  if (args.hasEnoughData) {
+    return {
+      title: 'Respons sterk genoeg voor managementlezing',
+      body:
+        args.pendingCount > 0
+          ? `Met ${args.totalCompleted} van ${args.totalInvited} responses ligt er een stevig patroonbeeld. Er staan nog ${args.pendingCount} responses open, maar de hoofdlijn is nu leesbaar.`
+          : `Met ${args.totalCompleted} van ${args.totalInvited} responses ligt er een stevig patroonbeeld. De wave kan nu als volwaardige managementread worden gelezen.`,
+      badge: 'Stevige respons',
+      badgeTone: 'emerald',
+      quickLabel: 'Nu lezen',
+      caution:
+        args.pendingCount > 0
+          ? 'Openstaande responses kunnen nog nuance toevoegen, niet de hoofdlijn vervangen.'
+          : 'De responsbasis is nu stevig genoeg om synthese en drivers serieus te lezen.',
+      nextStep: 'Lees nu via handoff, scorelaag en daarna pas synthese en drivers.',
+    }
+  }
+
+  if (args.hasMinDisplay) {
+    return {
+      title: 'Indicatief beeld, nog geen volle patroonlaag',
+      body: args.isActive
+        ? 'Er is al genoeg respons om richting te lezen, maar nog niet genoeg om de diepere driverlaag en bredere routes volledig vrij te geven.'
+        : 'De wave is gesloten, maar blijft qua onderbouwing indicatief. Lees de uitkomst als eerste richting en houd diepe duiding beperkt.',
+      badge: 'Indicatief',
+      badgeTone: 'amber',
+      quickLabel: 'Lees voorzichtig',
+      caution: 'Gebruik dit vooral als eerste richting en niet als volledig patroonbeeld.',
+      nextStep: 'Houd de focus bovenin: handoff en score eerst, diepere drivers later.',
+    }
+  }
+
+  return {
+    title: 'Nog in opbouw',
+    body: `Met ${args.totalCompleted} van ${args.totalInvited} responses is dit nog te smal voor patroonanalyse. Gebruik voorlopig alleen de contextlaag en laat de wave eerst verder vullen.`,
+    badge: 'In opbouw',
+    badgeTone: 'amber',
+    quickLabel: 'Nog te vroeg',
+    caution: 'De huidige basis is nog te smal voor een betrouwbare patroonread.',
+    nextStep: 'Bouw eerst respons op voordat je score, synthese of drivers zwaar laat meewegen.',
+  }
+}
+
+export function buildScoreInterpretationGuide(scanType: ScanType): ScoreInterpretationGuide {
+  switch (scanType) {
+    case 'exit':
+      return {
+        intro:
+          'Lees deze laag als interpretatiehulp: eerst de frictiescoreband, daarna de verdeling van het vertrekbeeld en pas daarna de bestuurlijke synthese.',
+        steps: [
+          {
+            title: 'Lees eerst de Frictiescore',
+            body: 'De score geeft de hoofdrichting van het vertrekbeeld op groepsniveau.',
+          },
+          {
+            title: 'Lees daarna de Verdeling',
+            body: 'Kijk hoe breed en hoe scherp het vertrekbeeld in de groep terugkomt voordat je gaat verklaren.',
+          },
+          {
+            title: 'Ga dan pas naar synthese en drivers',
+            body: 'Gebruik factoren en managementsynthese pas nadat de scorelaag bestuurlijk is geland.',
+          },
+        ],
+      }
+    case 'retention':
+      return {
+        intro:
+          'Lees deze laag eerst als groepssignaal: waar staat behoud onder druk, hoe breed komt dat terug en welke verdieping hoort daar pas daarna achteraan.',
+        steps: [
+          {
+            title: 'Lees eerst het Retentiesignaal',
+            body: 'Het signaal geeft de hoofdrichting van behoudsdruk op groepsniveau.',
+          },
+          {
+            title: 'Lees daarna de Signaalverdeling',
+            body: 'Kijk hoe breed het beeld terugkomt voordat je factoren of segmenten zwaarder laat wegen.',
+          },
+          {
+            title: 'Ga dan pas naar synthese en drivers',
+            body: 'Open daarna pas factoren, open signalen en actie om de eerste route te kiezen.',
+          },
+        ],
+      }
+    default:
+      return {
+        intro:
+          'Lees deze laag eerst als interpretatiehulp: score of signaal geeft richting, verdeling geeft context en daarna pas volgt verdieping.',
+        steps: [
+          {
+            title: 'Lees eerst het hoofdsignaal',
+            body: 'Gebruik de score of signaalwaarde als eerste leesrichting op groepsniveau.',
+          },
+          {
+            title: 'Lees daarna de verdeling',
+            body: 'Kijk hoe breed het beeld terugkomt voordat je verklarende lagen opent.',
+          },
+          {
+            title: 'Ga dan pas naar synthese en drivers',
+            body: 'Gebruik de verdieping daarna pas om het eerste managementspoor te kiezen.',
+          },
+        ],
+      }
+  }
 }
 
 export function SdtGauge({ label, score }: { label: string; score: number }) {

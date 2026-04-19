@@ -29,10 +29,12 @@ import {
   buildHeroDescription,
   buildInsightWarnings,
   buildPulseComparisonState,
+  buildResponseReadState,
   buildRetentionSegmentPlaybooks,
   buildRetentionTrendCards,
   buildRiskHistogram,
   buildSafeTableResponses,
+  buildScoreInterpretationGuide,
   CampaignHealthIndicator,
   clusterRetentionOpenSignals,
   computeAverageSignalScore,
@@ -944,6 +946,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
       )
     : []
   const scoreInterpretationTitle = getScoreInterpretationTitle(stats.scan_type)
+  const scoreInterpretationGuide = buildScoreInterpretationGuide(stats.scan_type)
   const decisionPanels = buildDecisionPanels({
     stats,
     averageRiskScore,
@@ -1035,34 +1038,48 @@ export default async function CampaignPage({ params, searchParams }: Props) {
               id="response"
               eyebrow="Response interpretation"
               title="Respons, leesdiscipline en betrouwbaarheid"
-              description="Deze laag helpt management begrijpen hoe stevig de huidige wave gelezen kan worden en waar voorzichtigheid nog nodig blijft."
+              description="Snelle leeslaag voor de vraag of deze wave nu al bestuurlijk gelezen kan worden of nog vooral voorzichtigheid vraagt."
               aside={<DashboardChip label={responseRead.badge} tone={responseRead.badgeTone} />}
             >
               <div className="space-y-4">
                 <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4 sm:px-5">
-                  <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr),300px] lg:items-center">
+                  <div className="grid gap-4 lg:grid-cols-[160px,minmax(0,1fr),minmax(280px,0.95fr)] lg:items-center">
+                    <div className="flex justify-center lg:justify-start">
+                      <ResponseReadinessMeter completionRate={stats.completion_rate_pct ?? 0} tone={responseRead.badgeTone} />
+                    </div>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Lees deze respons zo</p>
                       <p className="mt-2 text-sm leading-6 text-slate-700">
-                        Gebruik respons niet als neutrale metadata, maar als leesdiscipline: bepaalt deze wave al een stevig patroonbeeld, of vooral de mate van voorzichtigheid bij de eerste managementread?
+                        Gebruik respons niet als neutrale metadata, maar als eerste leesdiscipline: bepaalt deze wave al een stevig patroonbeeld, of vooral de mate van voorzichtigheid bij de eerste managementread?
                       </p>
                     </div>
-                    <div className="rounded-2xl border border-white/80 bg-white px-4 py-4">
-                      <div className="flex items-center gap-4">
-                        <ResponseReadinessMeter completionRate={stats.completion_rate_pct ?? 0} tone={responseRead.badgeTone} />
-                        <div>
-                          <p className="text-sm font-semibold text-[color:var(--ink)]">{responseRead.title}</p>
-                          <p className="mt-1 text-sm leading-6 text-[color:var(--text)]">{responseRead.body}</p>
-                        </div>
-                      </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <OverviewCueCard
+                        eyebrow="Leesstatus"
+                        title={responseRead.quickLabel}
+                        body={responseRead.title}
+                        tone={responseRead.badgeTone}
+                      />
+                      <OverviewCueCard
+                        eyebrow="Voorzichtigheid"
+                        title="Wat dit nu betekent"
+                        body={responseRead.caution}
+                        tone="slate"
+                      />
+                      <OverviewCueCard
+                        eyebrow="Volgende stap"
+                        title="Waar kijk je daarna"
+                        body={responseRead.nextStep}
+                        tone="blue"
+                      />
                     </div>
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <DashboardKeyValue label="Invited" value={`${stats.total_invited}`} />
-                  <DashboardKeyValue label="Completed" value={`${stats.total_completed}`} />
-                  <DashboardKeyValue label="Respons" value={`${stats.completion_rate_pct ?? 0}%`} />
-                  <DashboardKeyValue label="Pending" value={`${pendingCount}`} />
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <OverviewQuickMetric label="Invited" value={`${stats.total_invited}`} />
+                  <OverviewQuickMetric label="Completed" value={`${stats.total_completed}`} />
+                  <OverviewQuickMetric label="Respons" value={`${stats.completion_rate_pct ?? 0}%`} />
+                  <OverviewQuickMetric label="Pending" value={`${pendingCount}`} />
                 </div>
               </div>
             </DashboardSection>
@@ -1093,20 +1110,16 @@ export default async function CampaignPage({ params, searchParams }: Props) {
                   <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Boardroom handoff</p>
                     <p className="mt-2 text-sm leading-6 text-slate-700">
-                      Gebruik deze hero als de eerste bestuurlijke anchor: wat speelt nu, waarom telt dat en welke eerste route hoort daarbij.
+                      Start hier: wat speelt nu, waarom telt dat en welke eerste route hoort daarbij.
                     </p>
                   </div>
-                  {decisionPanels.slice(0, 2).map((panel) => (
-                    <DashboardPanel
-                      key={panel.title}
-                      eyebrow={panel.eyebrow}
-                      title={panel.title}
-                      value={panel.value}
-                      body={panel.body}
-                      tone={panel.tone}
-                    />
-                  ))}
-                  <DashboardPanel
+                  <OverviewCueCard
+                    eyebrow="Waarom telt dit"
+                    title={decisionPanels[0]?.title ?? scanDefinition.signalLabel}
+                    body={decisionPanels[0]?.body ?? dashboardViewModel.primaryQuestion.body}
+                    tone={decisionPanels[0]?.tone ?? 'blue'}
+                  />
+                  <OverviewCueCard
                     eyebrow="Wat eerst doen"
                     title={selectedDriverPlaybook?.title ?? dashboardViewModel.nextStep.title}
                     body={selectedDriverPlaybook?.decision ?? dashboardViewModel.nextStep.body}
@@ -1122,38 +1135,46 @@ export default async function CampaignPage({ params, searchParams }: Props) {
               id="score"
               eyebrow="Score interpretation"
               title={scoreInterpretationTitle}
-              description={buildScoreInterpretationDescription(stats.scan_type)}
+              description={scoreInterpretationGuide.intro}
               aside={<DashboardChip label={scanDefinition.signalLabel} tone="slate" />}
             >
               <div className="space-y-4">
                 <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4 sm:px-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Lees deze score zo</p>
-                  <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-700">
-                    Deze laag is een interpretatiehulp, geen KPI-strip. Lees de band en verdeling eerst, en gebruik pas daarna synthese en drivers om te bepalen waarom dit beeld bestuurlijk relevant wordt.
-                  </p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Hoe lees je dit nu</p>
+                  <div className="mt-3 grid gap-3 lg:grid-cols-3">
+                    {scoreInterpretationGuide.steps.map((step) => (
+                      <OverviewCueCard
+                        key={step.title}
+                        eyebrow="Leesvolgorde"
+                        title={step.title}
+                        body={step.body}
+                        tone="slate"
+                      />
+                    ))}
+                  </div>
                 </div>
                 <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr),minmax(300px,0.8fr)]">
-                <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                  <RiskCharts
-                    distribution={riskDistribution}
-                    histogramBins={riskHistogram}
-                    averageScore={averageRiskScore}
-                    scanType={stats.scan_type}
-                  />
-                </div>
-                <div className="grid gap-4">
-                  {decisionPanels.map((panel) => (
-                    <DashboardPanel
-                      key={`${panel.eyebrow}-${panel.title}`}
-                      eyebrow={panel.eyebrow}
-                      title={panel.title}
-                      value={panel.value}
-                      body={panel.body}
-                      tone={panel.tone}
+                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                    <RiskCharts
+                      distribution={riskDistribution}
+                      histogramBins={riskHistogram}
+                      averageScore={averageRiskScore}
+                      scanType={stats.scan_type}
                     />
-                  ))}
+                  </div>
+                  <div className="grid gap-4">
+                    {decisionPanels.map((panel) => (
+                      <DashboardPanel
+                        key={`${panel.eyebrow}-${panel.title}`}
+                        eyebrow={panel.eyebrow}
+                        title={panel.title}
+                        value={panel.value}
+                        body={panel.body}
+                        tone={panel.tone}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
               </div>
             </DashboardSection>
           ) : null}
@@ -1454,7 +1475,7 @@ function buildDashboardViewHref(
   return `?${params.toString()}`
 }
 
-function buildResponseReadState(args: {
+function _legacyBuildResponseReadState(args: {
   totalInvited: number
   totalCompleted: number
   completionRate: number
@@ -1495,7 +1516,7 @@ function buildResponseReadState(args: {
   }
 }
 
-function buildScoreInterpretationDescription(scanType: CampaignStats['scan_type']) {
+function _legacyBuildScoreInterpretationDescription(scanType: CampaignStats['scan_type']) {
   switch (scanType) {
     case 'exit':
       return 'Lees de frictiescore samen met de verdeling van het vertrekbeeld. De score geeft richting, de banding en spreiding laten zien hoe breed dat beeld in de groep terugkomt.'
@@ -1538,6 +1559,52 @@ function ResponseReadinessMeter({
       style={{ background: `conic-gradient(${accent} 0deg ${endAngle}deg, #e9eef2 ${endAngle}deg 360deg)` }}
     >
       <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white">{Math.round(completionRate)}%</span>
+    </div>
+  )
+}
+
+function OverviewCueCard({
+  eyebrow,
+  title,
+  body,
+  tone,
+}: {
+  eyebrow: string
+  title: string
+  body: string
+  tone: 'slate' | 'blue' | 'emerald' | 'amber'
+}) {
+  const toneClasses =
+    tone === 'emerald'
+      ? 'border-[#d2e6e0] bg-[#eef7f4]'
+      : tone === 'blue'
+        ? 'border-[#d6e4e8] bg-[#f3f8f8]'
+        : tone === 'amber'
+          ? 'border-[#eadfbe] bg-[#faf6ea]'
+          : 'border-white/80 bg-white/90'
+  const eyebrowClasses =
+    tone === 'emerald'
+      ? 'text-[#245853]'
+      : tone === 'blue'
+        ? 'text-[#234B57]'
+        : tone === 'amber'
+          ? 'text-[#8C6B1F]'
+          : 'text-slate-500'
+
+  return (
+    <div className={`rounded-[20px] border px-4 py-3 ${toneClasses}`}>
+      <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${eyebrowClasses}`}>{eyebrow}</p>
+      <p className="mt-2 text-sm font-semibold text-[color:var(--ink)]">{title}</p>
+      <p className="mt-1 text-sm leading-6 text-[color:var(--text)]">{body}</p>
+    </div>
+  )
+}
+
+function OverviewQuickMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[18px] border border-[color:var(--border)] bg-white px-4 py-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-[color:var(--ink)]">{value}</p>
     </div>
   )
 }
