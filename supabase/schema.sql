@@ -22,7 +22,7 @@ create table if not exists public.organizations (
 
 create table if not exists public.organization_secrets (
   org_id      uuid primary key references public.organizations(id) on delete cascade,
-  api_key     uuid unique default gen_random_uuid(),
+  api_key     text unique default gen_random_uuid()::text,
   created_at  timestamptz default now()
 );
 
@@ -54,7 +54,7 @@ create table if not exists public.campaigns (
   id              uuid primary key default gen_random_uuid(),
   organization_id uuid references public.organizations(id) on delete cascade not null,
   name            text not null,
-  scan_type       text not null check (scan_type in ('exit', 'retention')),
+  scan_type       text not null check (scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership')),
   delivery_mode   text check (delivery_mode in ('baseline', 'live')),
   is_active       boolean default true,
   enabled_modules jsonb,
@@ -233,6 +233,19 @@ create table if not exists public.contact_requests (
   ops_owner         text,
   ops_next_step     text,
   ops_handoff_note  text,
+  qualification_status text not null default 'not_reviewed' check (qualification_status in ('not_reviewed', 'needs_route_review', 'route_confirmed')),
+  qualified_route   text check (qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie')),
+  qualification_note text,
+  qualification_reviewed_by text,
+  qualification_reviewed_at timestamptz,
+  commercial_agreement_status text not null default 'not_started' check (commercial_agreement_status in ('not_started', 'confirmed', 'blocked')),
+  commercial_pricing_mode text check (commercial_pricing_mode is null or commercial_pricing_mode in ('public_anchor', 'custom_quote')),
+  commercial_start_readiness_status text not null default 'not_ready' check (commercial_start_readiness_status in ('not_ready', 'ready', 'blocked')),
+  commercial_start_blocker text,
+  commercial_agreement_confirmed_by text,
+  commercial_agreement_confirmed_at timestamptz,
+  commercial_readiness_reviewed_by text,
+  commercial_readiness_reviewed_at timestamptz,
   last_contacted_at timestamptz,
   created_at        timestamptz default now()
 );
@@ -300,9 +313,93 @@ do $$ begin
   end if;
   if not exists (
     select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'qualification_status'
+  ) then
+    alter table public.contact_requests add column qualification_status text not null default 'not_reviewed';
+    alter table public.contact_requests
+      add constraint contact_requests_qualification_status_check
+      check (qualification_status in ('not_reviewed', 'needs_route_review', 'route_confirmed'));
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'qualified_route'
+  ) then
+    alter table public.contact_requests add column qualified_route text;
+    alter table public.contact_requests
+      add constraint contact_requests_qualified_route_check
+      check (qualified_route is null or qualified_route in ('exitscan', 'retentiescan', 'teamscan', 'onboarding', 'leadership', 'combinatie'));
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'qualification_note'
+  ) then
+    alter table public.contact_requests add column qualification_note text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'qualification_reviewed_by'
+  ) then
+    alter table public.contact_requests add column qualification_reviewed_by text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'qualification_reviewed_at'
+  ) then
+    alter table public.contact_requests add column qualification_reviewed_at timestamptz;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
     where table_name = 'contact_requests' and column_name = 'last_contacted_at'
   ) then
     alter table public.contact_requests add column last_contacted_at timestamptz;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'commercial_agreement_status'
+  ) then
+    alter table public.contact_requests add column commercial_agreement_status text not null default 'not_started';
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'commercial_pricing_mode'
+  ) then
+    alter table public.contact_requests add column commercial_pricing_mode text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'commercial_start_readiness_status'
+  ) then
+    alter table public.contact_requests add column commercial_start_readiness_status text not null default 'not_ready';
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'commercial_start_blocker'
+  ) then
+    alter table public.contact_requests add column commercial_start_blocker text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'commercial_agreement_confirmed_by'
+  ) then
+    alter table public.contact_requests add column commercial_agreement_confirmed_by text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'commercial_agreement_confirmed_at'
+  ) then
+    alter table public.contact_requests add column commercial_agreement_confirmed_at timestamptz;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'commercial_readiness_reviewed_by'
+  ) then
+    alter table public.contact_requests add column commercial_readiness_reviewed_by text;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'contact_requests' and column_name = 'commercial_readiness_reviewed_at'
+  ) then
+    alter table public.contact_requests add column commercial_readiness_reviewed_at timestamptz;
   end if;
 end $$;
 
@@ -345,7 +442,7 @@ create table if not exists public.pilot_learning_dossiers (
   contact_request_id      uuid references public.contact_requests(id) on delete set null,
   title                   text not null,
   route_interest          text not null default 'exitscan' check (route_interest in ('exitscan', 'retentiescan', 'combinatie', 'nog-onzeker')),
-  scan_type               text check (scan_type in ('exit', 'retention')),
+  scan_type               text check (scan_type is null or scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership')),
   delivery_mode           text check (delivery_mode in ('baseline', 'live')),
   triage_status           text not null default 'nieuw' check (triage_status in ('nieuw', 'bevestigd', 'geparkeerd', 'uitgevoerd', 'verworpen')),
   lead_contact_name       text,
@@ -584,7 +681,7 @@ as $$
 $$;
 
 create or replace function public.get_org_api_key_for_current_user(target_org_id uuid)
-returns uuid
+returns text
 language plpgsql
 security definer
 set search_path = public

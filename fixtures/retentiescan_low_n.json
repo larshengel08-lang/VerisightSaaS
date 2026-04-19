@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "3.0",
+  "product": "RS",
+  "reportType": "retention",
+  "main": {
+    "P1": {
+      "client_name": "TechBouw B.V.",
+      "product_label": "RetentieScan",
+      "period_label": "Kleine batch",
+      "invited_n": 14,
+      "completed_n": 7,
+      "response_rate": 50.0,
+      "retention_signal": 5.1,
+      "executive_theme": "Het groepsbeeld is klein maar bruikbaar als eerste verificatielaag.",
+      "top_factors": ["Werkbelasting", "Groeiperspectief"],
+      "first_decision": "Gebruik deze batch om één eerste behoudsspoor te kiezen."
+    },
+    "P2": {
+      "handoff_signal": "Er is een vroegsignaal zichtbaar, maar nog geen breed patroon.",
+      "handoff_why": "Ook een kleine batch kan teamcontinuïteit bestuurlijk relevant maken.",
+      "handoff_action": "Kies eerst verificatie en voorkom overinterpretatie.",
+      "handoff_nonclaim": "Lees dit niet als voorspelling van individueel vertrek en ook niet als diagnose van teamcultuur."
+    },
+    "P3": {
+      "factors": [
+        { "name": "Werkbelasting", "score": 5.0, "signal": 5.5, "band": "aandacht_nodig" },
+        { "name": "Groeiperspectief", "score": 5.1, "signal": 5.3, "band": "aandacht_nodig" }
+      ],
+      "featured_factors": [
+        { "name": "Werkbelasting", "score": 5.0, "signal": 5.5, "band": "aandacht_nodig", "definition": "Werkdruk vraagt eerst verificatie." },
+        { "name": "Groeiperspectief", "score": 5.1, "signal": 5.3, "band": "aandacht_nodig", "definition": "Perspectief blijft een vroegsignaal." }
+      ],
+      "chart_caption": "Kleine batch: lees dit als richtinggevend groepssignaal."
+    },
+    "P4": {
+      "exit_intent_groups": [{ "label": "Twijfel zichtbaar", "pct": 43.0 }],
+      "engagement_dist": { "hoog": 22, "midden": 51, "laag": 27 },
+      "signal_score": 5.1,
+      "bands": {
+        "voorlopig_stabiel": 3,
+        "aandacht_nodig": 4,
+        "direct_aandachtspunt": 0
+      },
+      "quotes": [],
+      "prior_signals": []
+    },
+    "P5": {
+      "priority_now": "Gebruik de kleine batch om één eerste verificatiespoor te kiezen.",
+      "priority_factors": ["Werkbelasting"],
+      "first_owner": "HR lead",
+      "first_step": "Plan een verificatiegesprek met het betrokken team.",
+      "review_window": "45–90 dagen",
+      "action_cards": [
+        {
+          "hypothesis": "Werkbelasting",
+          "question": "Herkennen teams dit als terugkerend signaal in planning of herstelruimte?",
+          "rationale": "Bij lage n is verificatie belangrijker dan verbreding."
+        }
+      ],
+      "steps": [
+        { "action": "Kies één verificatiespoor", "requirement": "Houd het compact." },
+        { "action": "Beleg een eigenaar", "requirement": "Zorg voor opvolging." },
+        { "action": "Toets met aanvullende signalen", "requirement": "Gebruik geen harde conclusies." },
+        { "action": "Plan review", "requirement": "Herijk bij een volgende meting." },
+        { "action": "Documenteer het spoor", "requirement": "Houd besluitvorming zichtbaar." }
+      ]
+    },
+    "P6": {
+      "score_explanation": "Gebruik het retentiesignaal als managementsamenvatting, niet als predictor.",
+      "product_is": "RetentieScan is vroegsignalering op behoud voor groepen en segmenten.",
+      "product_not_for": "Niet bedoeld als brede MTO of individuele predictor.",
+      "contact_email": "hallo@verisight.nl"
+    }
+  },
+  "appendices": {
+    "A1": {
+      "segments": {
+        "department": [
+          { "label": "Operations", "n": 4, "scores": { "workload": 4.9 } }
+        ]
+      }
+    },
+    "B1": {
+      "factor_weights": [
+        { "name": "SDT Werkbeleving", "weight": 1.0, "literature_note": "Verklarende basislaag." }
+      ],
+      "sdt_explanation": "SDT blijft de verklarende basislaag naast aanvullende behoudssignalen.",
+      "band_definitions": [
+        { "band": "voorlopig_stabiel", "threshold": "< 4.5", "meaning": "Niet leidend." },
+        { "band": "aandacht_nodig", "threshold": "4.5–7.0", "meaning": "Vraagt verificatie." },
+        { "band": "direct_aandachtspunt", "threshold": ">= 7.0", "meaning": "Nu eerst wegen." }
+      ]
+    }
+  }
+}

@@ -4,6 +4,13 @@ Status: uitgevoerd in repo
 Last updated: 2026-04-15
 Source of truth: dit bestand is leidend voor deze tranche.
 
+Historical boundary note:
+
+- dit plan blijft leidend voor account- en billing-readiness binnen zijn eigen tranche
+- buyer-facing routewoorden in dit document kunnen pre-normalisatie labels bevatten zoals `ExitScan Live` en `RetentieScan ritme`
+- lees die labels in de huidige hardeningcontext als `ExitScan ritmeroute` en `RetentieScan ritmeroute`
+- bij conflict met de actuele taal- of reportcanon winnen [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md) en [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md)
+
 ## 1. Summary
 
 Dit traject maakt van de huidige combinatie van tenantlogica, access control, pricingcopy, assisted onboarding en handmatige facturatie een expliciet account- en billingmodel voor Verisight, zonder nu al Stripe, subscriptions of self-service billing te bouwen.

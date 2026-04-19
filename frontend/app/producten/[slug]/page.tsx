@@ -22,6 +22,7 @@ import {
   ALL_MARKETING_PRODUCTS,
   type MarketingProduct,
   getMarketingProductBySlug,
+  isActiveMarketingProduct,
   isCoreMarketingProduct,
 } from '@/lib/marketing-products'
 import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
@@ -43,7 +44,7 @@ export async function generateMetadata({ params }: Props) {
   const description = product.description
   const url = `https://www.verisight.nl${product.href}`
   const imageAlt =
-    product.status === 'live'
+    isActiveMarketingProduct(product)
       ? product.ogAlt ?? `${product.label} productpagina van Verisight`
       : `${product.label} als gereserveerde future route bij Verisight`
   const imageUrl = `${product.href}/opengraph-image`
@@ -92,8 +93,9 @@ export default async function ProductDetailPage({ params }: Props) {
       {slug === 'pulse' ? <PulsePage /> : null}
       {slug === 'teamscan' ? <TeamScanPage /> : null}
       {slug === 'onboarding-30-60-90' ? <OnboardingPage /> : null}
+      {slug === 'leadership-scan' ? <LeadershipScanPage /> : null}
       {slug === 'combinatie' ? <CombinatiePage /> : null}
-      {!['retentiescan', 'exitscan', 'pulse', 'teamscan', 'onboarding-30-60-90', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
+      {!['retentiescan', 'exitscan', 'pulse', 'teamscan', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
     </>
   )
 }
@@ -175,10 +177,10 @@ function ExitScanPage() {
           <div className="marketing-shell py-14">
             <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">ExitScan</p>
             <h1 className="mt-3 max-w-[22ch] font-display text-[clamp(1.6rem,3.5vw,2.2rem)] font-light leading-[1.15] tracking-[-0.02em] text-[#132033]">
-              Begrijp waarom medewerkers vertrekken
+              Breng vertrekduiding scherp in beeld
             </h1>
             <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-[#4A5563]">
-              Beschikbaar als retrospectieve analyse of live scan.
+              Voor terugkijkende vertrekduiding op groepsniveau, eerst als baseline en daarna eventueel als ritmeroute.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <a
@@ -197,26 +199,26 @@ function ExitScanPage() {
           </div>
         </section>
 
-        {/* 2 — Retrospectief vs. live */}
+        {/* 2 — Baseline vs. ritmeroute */}
         <MarketingSection tone="tint">
           <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Varianten</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Retrospectief of live?</h2>
+          <h2 className="mt-3 text-xl font-medium text-[#132033]">Baseline of ritmeroute?</h2>
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
             {[
               {
-                label: 'Retrospectief',
+                label: 'Baseline',
                 points: [
-                  'Analyse van vertrek in de afgelopen 12 maanden',
-                  'Geschikt als er al vertrek heeft plaatsgevonden',
+                  'Analyse van recent vertrek, bijvoorbeeld over de afgelopen 12 maanden',
+                  'Geschikt als er al voldoende vertrekinput beschikbaar is',
                   'Geen actieve respondenten nodig — ex-medewerkers',
                 ],
               },
               {
-                label: 'Live',
+                label: 'Ritmeroute',
                 points: [
-                  'Real-time inzicht bij lopend verloop',
-                  'Geschikt als u patroonvorming vroeg wilt signaleren',
-                  'Respondenten vullen in op het moment van vertrek',
+                  'Doorlopende vervolgroute nadat baseline, proces en eigenaar al staan',
+                  'Geschikt als u actuele uitstroomsignalen wilt blijven volgen',
+                  'Respondenten vullen in rond het moment van vertrek',
                 ],
               },
             ].map(({ label, points }) => (
@@ -276,7 +278,7 @@ function ExitScanPage() {
           <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Uitkomsten</p>
           <h2 className="mt-3 text-xl font-medium text-[#132033]">Wat u ermee kunt doen</h2>
           <p className="mt-4 max-w-[64ch] text-sm leading-relaxed text-[#4A5563]">
-            De leesrichting blijft compact en bestuurlijk: eerst de managementsamenvatting, daarna de bestuurlijke handoff,
+            De leesrichting blijft compact en bestuurlijk: eerst cover en respons, daarna de bestuurlijke handoff,
             vervolgens de eerste managementvraag, het eerste verificatiespoor en pas daarna de eerste logische stap.
           </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
@@ -355,10 +357,10 @@ function RetentionScanPage() {
           <div className="marketing-shell py-14">
             <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">RetentieScan</p>
             <h1 className="mt-3 max-w-[22ch] font-display text-[clamp(1.6rem,3.5vw,2.2rem)] font-light leading-[1.15] tracking-[-0.02em] text-[#132033]">
-              Zie waar behoud en werkfrictie onder druk staan
+              Zie eerder waar behoud onder druk staat
             </h1>
             <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-[#4A5563]">
-              Beschikbaar als live meting of gerichte momentopname.
+              Voor vroegsignalering op behoud op groeps- en segmentniveau, als baseline of ritmeroute.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <a
@@ -385,7 +387,7 @@ function RetentionScanPage() {
             {[
               'Vroeg signaleren voordat sprake is van verloop',
               'Na een verandertraject of reorganisatie',
-              'Bij behoefte aan MT-rapportage over retentierisico\'s',
+              'Bij behoefte aan MT-rapportage over behoudsdruk en retentiesignalen',
             ].map((item) => (
               <div key={item} className="rounded-lg border border-[#E5E0D6] bg-[#F7F5F1] p-5">
                 <p className="text-sm leading-relaxed text-[#132033]">{item}</p>
@@ -417,8 +419,9 @@ function RetentionScanPage() {
           <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Uitkomsten</p>
           <h2 className="mt-3 text-xl font-medium text-[#132033]">Wat u ermee kunt doen</h2>
           <p className="mt-4 max-w-[64ch] text-sm leading-relaxed text-[#4A5563]">
-            Ook hier volgt de route dezelfde managementopbouw: managementsamenvatting, bestuurlijke handoff, eerste
-            managementsessie, eerste verificatiespoor en daarna de eerste logische stap rond retentiesignaal en opvolging.
+            Ook hier blijft de managementopbouw compact: eerst cover, daarna een gecombineerde bestuurlijke read met
+            respons, handoff, eerste managementsessie en eerste verificatiespoor, en pas daarna de eerste logische stap
+            rond retentiesignaal en opvolging.
           </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             {[
@@ -434,26 +437,26 @@ function RetentionScanPage() {
           </div>
         </MarketingSection>
 
-        {/* 5 — Live vs. momentopname */}
+        {/* 5 — Ritmeroute vs. compacte hercheck */}
         <MarketingSection tone="surface">
           <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Varianten</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Live meting of momentopname?</h2>
+          <h2 className="mt-3 text-xl font-medium text-[#132033]">Baseline of ritmeroute?</h2>
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
             {[
               {
-                label: 'Live meting',
+                label: 'Baseline',
                 points: [
-                  'Actuele signalen bij actieve medewerkers',
-                  'Geschikt voor doorlopend inzicht in retentierisico\'s',
-                  'Sterk als u trends wilt volgen over tijd',
+                  'Gerichte eerste read voor actieve medewerkers',
+                  'Geschikt om behoudsdruk en retentiesignalen eerst scherp te krijgen',
+                  'Sterk als startpunt voor verificatie en prioritering',
                 ],
               },
               {
-                label: 'Momentopname',
+                label: 'Ritmeroute',
                 points: [
-                  'Gerichte baseline voor een specifiek moment',
-                  'Geschikt als startpunt voor gerichte opvolging',
-                  'Sneller op te zetten, helder afgebakend',
+                  'Herhaalvorm nadat baseline en eerste opvolging al staan',
+                  'Geschikt om verschuiving in retentiesignaal en topfactoren te volgen',
+                  'Bewust kleiner dan opnieuw een brede eerste scan',
                 ],
               },
             ].map(({ label, points }) => (
@@ -531,7 +534,7 @@ function PulsePage() {
             Houd na een eerste scan kort en gericht zicht op wat nu verschuift.
           </h1>
           <p className="marketing-hero-copy text-slate-600">
-            Pulse is een compacte vervolgroute na diagnose, baseline of eerste actie. Je gebruikt het product voor een
+            Pulse is een compacte vervolgroute na een eerste baseline, bestuurlijke read of eerste actie. Je gebruikt het product voor een
             korte managementreview: wat laat de huidige snapshot zien, welk werkspoor vraagt nu bespreking en wanneer
             is een volgende check logisch.
           </p>
@@ -558,7 +561,7 @@ function PulsePage() {
           <div className="space-y-5">
             <span className="marketing-stage-tag bg-amber-400/15 text-amber-100">Vervolgroute</span>
             <h2 className="marketing-stage-title font-display text-white">
-              Pulse is geen nieuwe eerste koop, maar een compacte hercheck na een eerdere managementread.
+              Pulse is geen nieuwe eerste koop, maar een compacte hercheck na een eerdere bestuurlijke read.
             </h2>
             <p className="marketing-stage-copy text-slate-300">
               De route blijft bewust smal: actuele groepssnapshot, begrensde vergelijking met de vorige vergelijkbare
@@ -566,7 +569,7 @@ function PulsePage() {
             </p>
             <div className="marketing-stage-list">
               {[
-                'Start na een eerste diagnose, baseline of eerste actie.',
+                'Start na een eerste baseline, managementread of eerste actie.',
                 'Lees wat nu verschuift zonder direct opnieuw een brede meting te openen.',
                 'Gebruik Pulse voor review en hercheck, niet als brede trendmachine.',
               ].map((item) => (
@@ -581,7 +584,7 @@ function PulsePage() {
       heroSupport={
         <MarketingHeroSupport>
           <div className="marketing-support-note text-sm leading-7 text-slate-600">
-            RetentieScan ritme blijft de bredere herhaalvorm na baseline. Pulse is smaller en wordt pas logisch als de
+            RetentieScan ritmeroute blijft de bredere herhaalvorm na baseline. Pulse is kleiner en wordt pas logisch als de
             vraag vooral om een compacte reviewlaag vraagt.
           </div>
           <div className="marketing-link-grid">
@@ -633,7 +636,7 @@ function PulsePage() {
             },
             {
               title: 'Bij een smalle reviewvraag',
-              body: 'Pulse past wanneer de vraag vooral gaat over review, bijsturing en het volgende checkmoment, niet over een nieuwe brede diagnose.',
+              body: 'Pulse past wanneer de vraag vooral gaat over review, bijsturing en het volgende checkmoment, niet over een nieuwe brede eerste scan.',
             },
           ].map((card) => (
             <div key={card.title} className="marketing-panel p-7">
@@ -647,11 +650,11 @@ function PulsePage() {
       <MarketingSection tone="plain">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <MarketingComparisonTable
-            columns={['Thema', 'Pulse', 'RetentieScan ritme']}
+            columns={['Thema', 'Pulse', 'RetentieScan ritmeroute']}
             rows={[
               [
                 'Startpunt',
-                'Na diagnose, baseline of eerste actie wanneer een compacte hercheck logisch is.',
+                'Na een eerste baseline, managementread of eerste actie wanneer een compacte hercheck logisch is.',
                 'Na RetentieScan Baseline als bredere herhaalvorm op behoud.',
               ],
               [
@@ -676,7 +679,7 @@ function PulsePage() {
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">Wat Pulse wel belooft</p>
             <h2 className="mt-4 font-display text-4xl text-white">Een bounded managementread, geen brede trendclaim.</h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
-              Pulse verkoopt geen nieuwe diagnose. Het product helpt vooral om na een eerste managementread sneller te
+              Pulse verkoopt geen nieuwe brede eerste scan. Het product helpt vooral om na een eerste managementread sneller te
               zien waar review, beperkte correctie of een volgende check nu het meest logisch is.
             </p>
             <ul className="mt-6 space-y-3 text-sm leading-7 text-slate-300">
@@ -699,7 +702,7 @@ function PulsePage() {
         <MarketingInlineContactPanel
           eyebrow="Kennismaking"
           title="Toets of Pulse als vervolgroute nu echt logisch is."
-          body="Beschrijf kort welke eerste diagnose, baseline of actie al loopt en wat je nu vooral wilt herchecken. Dan bepalen we of Pulse past of dat een bredere vervolgroute logischer is."
+          body="Beschrijf kort welke eerste baseline, managementread of actie al loopt en wat je nu vooral wilt herchecken. Dan bepalen we of Pulse past of dat een bredere vervolgroute logischer is."
           defaultRouteInterest="nog-onzeker"
           defaultCtaSource="product_pulse_form"
         />
@@ -709,7 +712,7 @@ function PulsePage() {
         <MarketingCalloutBand
           eyebrow="Portfoliohelderheid"
           title="Twijfel je tussen Pulse en een bredere vervolgronde?"
-          body="We helpen je kiezen tussen een compacte Pulse-hercheck, RetentieScan ritme of een andere vervolgroute. Zo blijft de volgende stap scherp in plaats van breder dan nodig."
+          body="We helpen je kiezen tussen een compacte Pulse-hercheck, RetentieScan ritmeroute of een andere vervolgroute. Zo blijft de volgende stap scherp in plaats van breder dan nodig."
           primaryHref={buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'product_pulse_callout' })}
           primaryLabel="Plan kennismaking"
           secondaryHref="/tarieven"
@@ -733,7 +736,7 @@ function TeamScanPage() {
             Lokaliseer waar een bestaand signaal eerst verificatie vraagt.
           </h1>
           <p className="marketing-hero-copy text-slate-600">
-            TeamScan is geen nieuwe eerste diagnose, maar een bounded lokalisatieroute nadat een breder organisatie- of
+            TeamScan is geen nieuwe eerste hoofdroute, maar een bounded lokalisatieroute nadat een breder organisatie- of
             groepssignaal al zichtbaar is. De route helpt bepalen welke afdeling eerst een lokaal gesprek, verificatie
             of begrensde eerste actie vraagt.
           </p>
@@ -763,7 +766,7 @@ function TeamScanPage() {
               TeamScan helpt bepalen waar eerst lokaal gesprek of verificatie nodig is, niet wie gelijk heeft.
             </h2>
             <p className="marketing-stage-copy text-slate-300">
-              De buyer-facing belofte blijft bewust smal: department-first lokale read, bounded prioritering, eerste
+              De route blijft bewust smal: department-first lokale read, bounded prioritering, eerste
               eigenaar en een begrensde eerste actie zonder manager ranking of brede teamscorekaart.
             </p>
             <div className="marketing-stage-list">
@@ -808,7 +811,7 @@ function TeamScanPage() {
           items={[
             {
               title: 'Bestaand signaal eerst',
-              body: 'TeamScan start pas nadat een breder organisatie- of groepssignaal al zichtbaar is in diagnose, baseline of vervolgmeting.',
+              body: 'TeamScan start pas nadat een breder organisatie- of groepssignaal al zichtbaar is in een eerste baseline, managementread of vervolgmeting.',
             },
             {
               title: 'Lokale prioriteit',
@@ -826,7 +829,7 @@ function TeamScanPage() {
         <div className="grid gap-6 lg:grid-cols-3">
           {[
             {
-              title: 'Na een eerste baseline of diagnose',
+              title: 'Na een eerste baseline of managementread',
               body: 'TeamScan wordt logisch zodra management niet opnieuw breed wil meten, maar wel scherper wil weten waar het beeld lokaal het eerst onderzocht moet worden.',
             },
             {
@@ -880,7 +883,7 @@ function TeamScanPage() {
               Een veilige lokale handoff, geen oordeel over teams of managers.
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
-              TeamScan verkoopt geen brede teamdiagnose. Het product helpt vooral om na een eerste managementread sneller
+              TeamScan verkoopt geen brede teamscan als nieuwe hoofdroute. Het product helpt vooral om na een eerste managementread sneller
               te zien waar lokale verificatie, eigenaarschap en een begrensde eerste actie het meest logisch zijn.
             </p>
             <ul className="mt-6 space-y-3 text-sm leading-7 text-slate-300">
@@ -913,7 +916,7 @@ function TeamScanPage() {
         <MarketingCalloutBand
           eyebrow="Lokalisatiegrens"
           title="Twijfel je tussen TeamScan en een andere vervolgronde?"
-          body="We helpen je kiezen tussen TeamScan, Segment Deep Dive of terug naar bredere diagnose. Zo blijft de vervolgstap lokaal scherp in plaats van diffuser dan nodig."
+          body="We helpen je kiezen tussen TeamScan, Segment Deep Dive of terug naar een bredere kernroute. Zo blijft de vervolgstap lokaal scherp in plaats van diffuser dan nodig."
           primaryHref={buildContactHref({ routeInterest: 'teamscan', ctaSource: 'product_team_callout' })}
           primaryLabel="Plan kennismaking"
           secondaryHref="/tarieven"
@@ -1125,6 +1128,103 @@ function OnboardingPage() {
           primaryLabel="Plan kennismaking"
           secondaryHref="/tarieven"
           secondaryLabel="Bekijk tarieven"
+        />
+      </MarketingSection>
+    </MarketingPageShell>
+  )
+}
+
+function LeadershipScanPage() {
+  return (
+    <MarketingPageShell
+      theme="support"
+      pageType="product"
+      ctaHref={buildContactHref({ routeInterest: 'leadership', ctaSource: 'product_leadership_hero' })}
+      heroIntro={
+        <MarketingHeroIntro>
+          <p className="marketing-hero-eyebrow text-slate-700">Leadership Scan</p>
+          <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
+            Begrensde managementread na een bestaand people-signaal.
+          </h1>
+          <p className="marketing-hero-copy text-slate-600">
+            Leadership Scan helpt bepalen welke managementcontext nu als eerste duiding of verificatie vraagt, zonder
+            named leaders, 360-logica of performanceframing te openen.
+          </p>
+        </MarketingHeroIntro>
+      }
+      heroStage={
+        <MarketingHeroStage>
+          <div className="space-y-5">
+            <span className="marketing-stage-tag bg-white/10 text-slate-200">Bounded follow-on route</span>
+            <h2 className="marketing-stage-title font-display text-white">
+              Gebruik Leadership Scan pas nadat een breder signaal al zichtbaar is.
+            </h2>
+            <p className="marketing-stage-copy text-slate-300">
+              De waarde zit in een groepsniveau-managementread: welke context vraagt eerst gesprek, verificatie of
+              een kleine correctie, zonder named leaders of hierarchy-output.
+            </p>
+          </div>
+        </MarketingHeroStage>
+      }
+      heroSupport={
+        <MarketingHeroSupport>
+          <div className="marketing-support-note text-sm leading-7 text-slate-600">
+            Deze route blijft group-level only: geen 360-tool, geen performance-instrument en geen oordeel over
+            individuele leidinggevenden.
+          </div>
+        </MarketingHeroSupport>
+      }
+    >
+      <MarketingSection tone="surface">
+        <MarketingProofStrip
+          items={[
+            {
+              title: 'Managementcontext eerst',
+              body: 'De route helpt bepalen waar leidingcontext als eerste bounded verificatie vraagt na een bestaand people-signaal.',
+            },
+            {
+              title: 'Groepsniveau blijft leidend',
+              body: 'Output blijft geaggregeerd, suppressie-aware en zonder named leader readouts.',
+            },
+            {
+              title: 'Kleine vervolgstap',
+              body: 'De eerste uitkomst is een eigenaar, een eerste managementcheck en een reviewgrens, niet een brede leadership-suite.',
+            },
+          ]}
+        />
+      </MarketingSection>
+
+      <MarketingSection tone="plain">
+        <div className="grid gap-6 lg:grid-cols-3">
+          {[
+            {
+              title: 'Wanneer deze route logisch wordt',
+              body: 'Na een bestaand signaal uit ExitScan, RetentieScan, TeamScan of onboarding, wanneer de vraag verschuift naar managementcontext en eerste verificatie.',
+            },
+            {
+              title: 'Wat je nu krijgt',
+              body: 'Een bounded managementread met groepssignaal, eerste eigenaar, eerste verificatievraag en duidelijke reviewgrens.',
+            },
+            {
+              title: 'Wat het nadrukkelijk niet is',
+              body: 'Geen named leader report, geen hierarchy-model, geen 360-beoordeling en geen performance-instrument.',
+            },
+          ].map((card) => (
+            <div key={card.title} className="marketing-panel p-7">
+              <h2 className="text-xl font-semibold text-slate-950">{card.title}</h2>
+              <p className="mt-4 text-sm leading-7 text-slate-600">{card.body}</p>
+            </div>
+          ))}
+        </div>
+      </MarketingSection>
+
+      <MarketingSection tone="plain">
+        <MarketingInlineContactPanel
+          eyebrow="Kennismaking"
+          title="Toets of Leadership Scan nu de logische vervolgronde is."
+          body="Beschrijf kort welk bestaand signaal nu speelt en waarom de vraag verschuift naar managementcontext. Dan bepalen we of Leadership Scan echt de juiste bounded follow-on route is."
+          defaultRouteInterest="leadership"
+          defaultCtaSource="product_leadership_form"
         />
       </MarketingSection>
     </MarketingPageShell>

@@ -40,6 +40,8 @@ interface Props {
   checkpoints: CampaignDeliveryCheckpoint[]
   leadOptions: ContactRequestRecord[]
   leadLoadError?: string | null
+  linkedLearningDossierCount?: number
+  learningCloseoutEvidenceCount?: number
   editable?: boolean
 }
 
@@ -85,6 +87,7 @@ function buildOpsWarnings(args: {
   activeClientAccessCount: number
   totalCompleted: number
   hasEnoughData: boolean
+  governanceBlockers: string[]
 }) {
   const items: string[] = []
 
@@ -93,9 +96,10 @@ function buildOpsWarnings(args: {
   if (args.pendingClientInviteCount > 0 && args.activeClientAccessCount === 0) items.push(`${args.pendingClientInviteCount} klantinvite(s) wachten nog op activatie.`)
   if (args.incompleteScores > 0) items.push(`${args.incompleteScores} opgeslagen responses hebben nog incomplete scoredata.`)
   if (args.totalCompleted >= 5 && !args.hasEnoughData) items.push('De campaign heeft een indicatief first-value beeld, maar nog geen stevig patroonniveau.')
-  if (args.record?.exception_status && args.record.exception_status !== 'none') items.push(`Exception open: ${getDeliveryExceptionLabel(args.record.exception_status)}.`)
+  if (args.record?.exception_status && args.record.exception_status !== 'none') items.push(`Open exception: ${getDeliveryExceptionLabel(args.record.exception_status)}.`)
+  items.push(...args.governanceBlockers)
 
-  return items
+  return Array.from(new Set(items))
 }
 
 export function PreflightChecklist({
@@ -114,6 +118,8 @@ export function PreflightChecklist({
   checkpoints,
   leadOptions,
   leadLoadError = null,
+  linkedLearningDossierCount = 0,
+  learningCloseoutEvidenceCount = 0,
   editable = false,
 }: Props) {
   const router = useRouter()
@@ -148,12 +154,15 @@ export function PreflightChecklist({
   const summary = useMemo(
     () =>
       buildDeliveryOpsSummary({
+        scanType,
         record,
         checkpoints,
         autoSignals,
+        hasLearningCloseoutEvidence: learningCloseoutEvidenceCount > 0,
       }),
-    [autoSignals, checkpoints, record],
+    [autoSignals, checkpoints, learningCloseoutEvidenceCount, record, scanType],
   )
+  const governance = summary.governance
   const linkedLead = useMemo(
     () => leadOptions.find((lead) => lead.id === record?.contact_request_id) ?? null,
     [leadOptions, record?.contact_request_id],
@@ -193,6 +202,7 @@ export function PreflightChecklist({
     activeClientAccessCount,
     totalCompleted,
     hasEnoughData,
+    governanceBlockers: governance.globalBlockers,
   })
 
   function updateRecordDraft<K extends keyof RecordDraft>(key: K, value: RecordDraft[K]) {
@@ -327,10 +337,10 @@ export function PreflightChecklist({
           </div>
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-600">
-              Exception: {getDeliveryExceptionLabel(record?.exception_status)}
+              Exceptionstatus: {getDeliveryExceptionLabel(record?.exception_status)}
             </span>
             <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-600">
-              First management use: {formatAmsterdamDate(record?.first_management_use_confirmed_at)}
+              Eerste managementgebruik: {formatAmsterdamDate(record?.first_management_use_confirmed_at)}
             </span>
           </div>
         </div>
@@ -448,7 +458,7 @@ export function PreflightChecklist({
               </label>
 
               <label className="space-y-1 text-sm text-slate-700">
-                <span className="font-medium text-slate-900">Klant-handoff note</span>
+                <span className="font-medium text-slate-900">Klant-handoffnotitie</span>
                 {editable ? (
                   <textarea
                     value={recordDraft.customer_handoff_note}
@@ -458,7 +468,7 @@ export function PreflightChecklist({
                     className={`${inputClass} min-h-32 resize-y`}
                   />
                 ) : (
-                  <ReadOnlyBlock value={record?.customer_handoff_note ?? 'Nog geen klant-handoff note opgeslagen.'} />
+                  <ReadOnlyBlock value={record?.customer_handoff_note ?? 'Nog geen klant-handoffnotitie opgeslagen.'} />
                 )}
               </label>
             </div>
@@ -535,6 +545,55 @@ export function PreflightChecklist({
               )}
             </div>
 
+            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-950">Governance per fase</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Deze lanes laten zien welke expliciete blockers nog tussen launch, activation, first value, output en closeout staan.
+              </p>
+              <div className="mt-4 space-y-3">
+                <GovernanceLane
+                  title="Launch"
+                  ready={governance.launchReady}
+                  readyLabel="Launch-ready"
+                  blockers={[...governance.intakeBlockers, ...governance.importBlockers, ...governance.inviteBlockers]}
+                />
+                <GovernanceLane
+                  title="Activatie"
+                  ready={governance.activationReady}
+                  readyLabel="Activatie bevestigd"
+                  blockers={governance.activationBlockers}
+                />
+                <GovernanceLane
+                  title="First value"
+                  ready={governance.firstValueReady}
+                  readyLabel="First value bevestigd"
+                  blockers={governance.firstValueBlockers}
+                />
+                <GovernanceLane
+                  title={scanType === 'exit' || scanType === 'retention' ? 'Report en management use' : 'Output en management use'}
+                  ready={governance.managementUseReady}
+                  readyLabel="Management use bevestigd"
+                  blockers={[...governance.reportDeliveryBlockers, ...governance.managementUseBlockers]}
+                />
+                <GovernanceLane
+                  title="Follow-up en learning"
+                  ready={governance.learningCloseoutReady}
+                  readyLabel={
+                    linkedLearningDossierCount > 0 ? 'Closeout evidence klaar' : 'Closeout nog open'
+                  }
+                  blockers={[
+                    ...governance.followUpBlockers,
+                    ...governance.learningCloseoutBlockers,
+                    ...(linkedLearningDossierCount === 0
+                      ? ['Nog geen learningdossier gekoppeld aan deze campaign.']
+                      : learningCloseoutEvidenceCount === 0
+                        ? ['Learningdossier bestaat, maar mist nog expliciete review-, vervolg- of stopuitkomst.']
+                        : []),
+                  ]}
+                />
+              </div>
+            </div>
+
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
               <p className="font-semibold text-slate-950">Belangrijke gates</p>
               <p className="mt-2">Launch readiness is pas rond als intake, import-QA en klantactivatie expliciet bevestigd zijn.</p>
@@ -550,7 +609,7 @@ export function PreflightChecklist({
           <div>
             <p className="text-sm font-semibold text-slate-900">Persistente delivery checkpoints</p>
             <p className="mt-1 text-sm text-slate-500">
-              Auto-signalen en handmatige confirmations leven hier samen, zodat launch, activatie en first management use overdraagbaar blijven.
+              Auto-signalen en handmatige bevestigingen leven hier samen, zodat launch, activatie en eerste managementgebruik overdraagbaar blijven.
             </p>
           </div>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
@@ -730,6 +789,47 @@ function OpsSummaryCard({
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{title}</p>
       <p className="mt-3 text-base font-semibold text-slate-950">{value}</p>
       <p className="mt-2 text-sm leading-6 text-slate-700">{body}</p>
+    </div>
+  )
+}
+
+function GovernanceLane({
+  title,
+  ready,
+  readyLabel,
+  blockers,
+}: {
+  title: string
+  ready: boolean
+  readyLabel: string
+  blockers: string[]
+}) {
+  const uniqueBlockers = Array.from(new Set(blockers.filter((blocker) => blocker.trim().length > 0)))
+
+  return (
+    <div className="rounded-2xl border border-white bg-white px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold text-slate-900">{title}</p>
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+            ready ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-800'
+          }`}
+        >
+          {ready ? readyLabel : `${uniqueBlockers.length} blocker${uniqueBlockers.length === 1 ? '' : 's'}`}
+        </span>
+      </div>
+      {uniqueBlockers.length === 0 ? (
+        <p className="mt-2 text-sm leading-6 text-slate-600">Geen open blockers binnen deze fase.</p>
+      ) : (
+        <ul className="mt-2 space-y-2">
+          {uniqueBlockers.map((blocker) => (
+            <li key={blocker} className="flex gap-2 text-sm leading-6 text-slate-700">
+              <span className="text-amber-500">!</span>
+              <span>{blocker}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

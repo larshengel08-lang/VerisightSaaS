@@ -1,39 +1,45 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignActions } from './campaign-actions'
 import { PdfDownloadButton } from './pdf-download-button'
 import {
   DashboardChip,
+  DashboardContextHeader,
   DashboardDisclosure,
   DashboardHero,
   DashboardKeyValue,
   DashboardPanel,
+  DashboardPrimaryNav,
   DashboardSection,
-  DashboardSummaryBar,
   DashboardTimeline,
 } from '@/components/dashboard/dashboard-primitives'
 import { DashboardTabs } from '@/components/dashboard/dashboard-tabs'
 import { FactorTable } from '@/components/dashboard/factor-table'
 import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
-import { OnboardingAdvancer, OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
+import { OnboardingAdvancer } from '@/components/dashboard/onboarding-balloon'
 import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import {
   ActionPlaybookList,
+  buildActionExecutionCore,
+  buildDriverDrilldownModel,
   buildDecisionPanels,
+  buildEvidenceReadingFlow,
   buildHeroDescription,
   buildInsightWarnings,
   buildPulseComparisonState,
+  buildResponseReadState,
   buildRetentionSegmentPlaybooks,
   buildRetentionTrendCards,
   buildRiskHistogram,
   buildSafeTableResponses,
+  buildScoreInterpretationGuide,
   CampaignHealthIndicator,
   clusterRetentionOpenSignals,
-  computeAverageRiskScore,
+  computeAverageSignalScore,
   computePulseSignalAverages,
   computeAverageSignalVisibility,
   computeFactorAverages,
@@ -52,8 +58,19 @@ import {
   SegmentPlaybookList,
   SdtGauge,
 } from './page-helpers'
-import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/implementation-readiness'
+import {
+  buildDashboardArchitecture,
+  buildDashboardVisibilityState,
+  getScoreInterpretationTitle,
+} from './dashboard-architecture'
+import { buildCampaignReadinessState } from '@/lib/implementation-readiness'
 import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
+import {
+  buildFactorPresentation,
+  getManagementBandBadgeClasses,
+  getManagementBandLabel,
+  getRiskBandFromScore,
+} from '@/lib/management-language'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import { buildTeamLocalReadState, buildTeamPriorityReadState } from '@/lib/products/team'
 import { getProductModule } from '@/lib/products/shared/registry'
@@ -63,10 +80,12 @@ import type { CampaignStats, Respondent, SurveyResponse } from '@/lib/types'
 
 interface Props {
   params: Promise<{ id: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default async function CampaignPage({ params }: Props) {
+export default async function CampaignPage({ params, searchParams }: Props) {
   const { id } = await params
+  const resolvedSearchParams = (await searchParams) ?? {}
   const supabase = await createClient()
   const {
     data: { user },
@@ -95,6 +114,7 @@ export default async function CampaignPage({ params }: Props) {
     { data: profile },
     { data: membership },
     { data: campaignMeta },
+    { data: organization },
     { count: activeClientAccessCount },
     { count: pendingClientInviteCount },
   ] = await Promise.all([
@@ -110,6 +130,7 @@ export default async function CampaignPage({ params }: Props) {
           .maybeSingle()
       : Promise.resolve({ data: null }),
     supabase.from('campaigns').select('enabled_modules, delivery_mode').eq('id', id).maybeSingle(),
+    supabase.from('organizations').select('name').eq('id', stats.organization_id).maybeSingle(),
     supabase
       .from('org_members')
       .select('id', { count: 'exact', head: true })
@@ -189,7 +210,7 @@ export default async function CampaignPage({ params }: Props) {
   const respondents = (allRespondents ?? []) as Respondent[]
 
   const factorData = computeFactorAverages(responses)
-  const averageRiskScore = computeAverageRiskScore(responses)
+  const averageRiskScore = computeAverageSignalScore(responses)
   const strongWorkSignalRate = stats.scan_type === 'exit' ? computeStrongWorkSignalRate(responses) : null
   const topExitReasonLabel = stats.scan_type === 'exit' ? getTopExitReasonLabel(responses) : null
   const topContributingReasonLabel =
@@ -235,8 +256,6 @@ export default async function CampaignPage({ params }: Props) {
   const hasMinDisplay = responses.length >= MIN_N_DISPLAY
   const scanDefinition = getScanDefinition(stats.scan_type)
   const productModule = getProductModule(stats.scan_type)
-  const teamPriorityBand = (signalValue: number) =>
-    signalValue >= 7 ? 'HOOG' : signalValue >= 4.5 ? 'MIDDEN' : 'LAAG'
   const pendingCount = stats.total_invited - stats.total_completed
   const dashboardViewModel = productModule.buildDashboardViewModel({
     signalLabelLower: scanDefinition.signalLabelLower,
@@ -286,10 +305,6 @@ export default async function CampaignPage({ params }: Props) {
         })
       : []
   const retentionThemes = stats.scan_type === 'retention' ? clusterRetentionOpenSignals(responses) : []
-  const playbookCalibrationNote =
-    stats.scan_type === 'retention'
-      ? productModule.getActionPlaybookCalibrationNote?.() ?? null
-      : null
   const disclosureDefaults = getDisclosureDefaults({
     scanType: stats.scan_type,
     hasEnoughData,
@@ -301,7 +316,7 @@ export default async function CampaignPage({ params }: Props) {
     profile?.is_verisight_admin === true
       ? await supabase
           .from('pilot_learning_dossiers')
-          .select('id, title, triage_status, updated_at')
+          .select('id, title, triage_status, updated_at, review_moment, next_route, stop_reason, management_action_outcome, adoption_outcome')
           .eq('campaign_id', id)
           .order('updated_at', { ascending: false })
           .limit(3)
@@ -311,27 +326,25 @@ export default async function CampaignPage({ params }: Props) {
     title: string
     triage_status: string
     updated_at: string
+    review_moment: string | null
+    next_route: string | null
+    stop_reason: string | null
+    management_action_outcome: string | null
+    adoption_outcome: string | null
   }>
+  const learningCloseoutEvidenceCount = learningDossiers.filter((dossier) =>
+    Boolean(
+      dossier.review_moment ||
+        dossier.next_route ||
+        dossier.stop_reason ||
+        dossier.management_action_outcome ||
+        dossier.adoption_outcome,
+    ),
+  ).length
   const lifecycleDecisionCards = getLifecycleDecisionCards(stats.scan_type)
-  const primaryTeamPriority =
-    stats.scan_type === 'team' && teamPriorityRead?.status === 'ready'
-      ? teamPriorityRead.groups.find((group) => group.isPrimary) ?? null
-      : null
-  const primaryTeamQuestions =
-    stats.scan_type === 'team' && primaryTeamPriority
-      ? productModule.getFocusQuestions()[primaryTeamPriority.topFactorKey]?.[
-          teamPriorityBand(primaryTeamPriority.topFactorSignalValue)
-        ] ?? []
-      : []
-  const primaryTeamPlaybook =
-    stats.scan_type === 'team' && primaryTeamPriority
-      ? productModule.getActionPlaybooks()[primaryTeamPriority.topFactorKey]?.[
-          teamPriorityBand(primaryTeamPriority.topFactorSignalValue)
-        ] ?? null
-      : null
   const handoffTitle =
     stats.scan_type === 'retention'
-      ? 'Bestuurlijke handoff en prioritering'
+      ? 'Bestuurlijke handoff'
       : stats.scan_type === 'pulse'
         ? 'Pulse duiding en eerste vervolgactie'
         : stats.scan_type === 'team'
@@ -343,7 +356,7 @@ export default async function CampaignPage({ params }: Props) {
         : 'Vertrekduiding en managementgesprek'
   const handoffDescription =
     stats.scan_type === 'retention'
-      ? 'Deze laag vertaalt RetentieScan naar een duidelijke lijn: wat is het beeld, wat moet je eerst toetsen en welke acties verdienen nu bestuurlijke aandacht.'
+      ? 'Deze laag volgt dezelfde lijn als het rapport: waar staat behoud onder druk, waarom telt dat bestuurlijk en wat moet eerst geverifieerd worden.'
       : stats.scan_type === 'pulse'
         ? 'Deze laag vertaalt Pulse naar een bestuurlijk leesbare momentopname: wat vraagt nu aandacht, wat moet je als eerste bijsturen en welke review hoort hier direct achteraan.'
         : stats.scan_type === 'team'
@@ -391,7 +404,7 @@ export default async function CampaignPage({ params }: Props) {
           summaryContextTone: 'emerald' as const,
           summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
           summaryLeadDescription:
-            'Lees RetentieScan eerst als groepssignaal: waar staat behoud onder druk, wat vraagt eerst verificatie en welk spoor moet daarna in Wat nu als eerste route worden gekozen.',
+            'Lees RetentieScan eerst als groepssignaal: waar staat behoud onder druk, wat vraagt eerst verificatie en welk managementspoor moet daarna in Wat nu als eerste route worden gekozen.',
           summaryCardEyebrow: 'Behoudsspoor',
           promotedSummaryCards: 2,
           driverTitle: 'Signaalbeeld en behoudsdruk',
@@ -399,7 +412,7 @@ export default async function CampaignPage({ params }: Props) {
             'Start bij retentiesignaal, trend en aanvullende signalen. Gebruik factoren en segmenten daarna om te bepalen waarom dit beeld ontstaat en waar behoud eerst nadere toetsing vraagt.',
           driverIntro:
             'Begin met het groepssignaal en open pas daarna factoren, trend en aanvullende lagen. Zo blijft RetentieScan een verification-first managementinstrument in plaats van een losse analysetabel.',
-          driverAsideLabel: hasEnoughData ? 'Behoudsdrivers live' : 'Wacht op meer data',
+          driverAsideLabel: hasEnoughData ? 'Behoudsdrivers beschikbaar' : 'Wacht op meer data',
           driverAsideTone: hasEnoughData ? ('emerald' as const) : ('amber' as const),
           driverTabOrder: ['signalen', 'trend', 'factoren', 'aanvullend'],
           signalTabLabel: 'Retentiesignaal',
@@ -424,7 +437,7 @@ export default async function CampaignPage({ params }: Props) {
           routeTitle: 'Van retentiesignaal naar managementroute',
           routeDescription:
             'Deze laag bundelt de gekozen route, eerste eigenaar, eerste stap en het logische reviewmoment zonder de executive hoofdlijn te verstoren.',
-          routeBadgeLabel: 'Behoudsroute',
+          routeBadgeLabel: 'Kernroute',
           afterSessionTitle: 'Na de eerste managementsessie',
           afterSessionDescription:
             'Gebruik het eerste reviewmoment om bewust te kiezen: blijf je op hetzelfde behoudsspoor, is segmentverdieping logisch of vraagt de volgende stap vooral een gerichte interventie en vervolgmeting?',
@@ -445,7 +458,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele teamsignaal gecontroleerd te verdiepen zonder TeamScan te verwarren met segment deep dive of manager ranking.',
             driverIntro:
               'Start bij de lokale read en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke afdelingen eerst verificatie vragen.',
-            driverAsideLabel: hasEnoughData ? 'Lokale read live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Lokale read beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['lokaal', 'factoren', 'signalen', 'aanvullend'],
             signalTabLabel: 'Signaalverdeling',
@@ -470,10 +483,10 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van TeamScan naar lokale managementroute',
             routeDescription:
               'Deze laag bundelt de gekozen lokale route, eerste eigenaar, eerste stap en de bewuste begrenzing van TeamScan zonder de executive hoofdlijn te verstoren.',
-            routeBadgeLabel: 'Lokale route',
+            routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
-              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een lokale vervolgstap logisch, is bredere diagnose weer nodig of vraagt dit signaal juist minder lokalisatie dan gedacht?',
+              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een lokale vervolgstap logisch, is bredere duiding weer nodig of vraagt dit signaal juist minder lokalisatie dan gedacht?',
           }
       : stats.scan_type === 'onboarding'
         ? {
@@ -491,7 +504,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele checkpointbeeld gecontroleerd te verdiepen zonder onboarding te verwarren met client onboarding of een volledige 30-60-90-journey.',
             driverIntro:
               'Start bij de checkpointread en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke vroege factor nu eerst aandacht vraagt.',
-            driverAsideLabel: hasEnoughData ? 'Checkpoint read live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Checkpointread beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
             signalTabLabel: 'Checkpointbeeld',
@@ -516,7 +529,7 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van onboardingread naar managementroute',
             routeDescription:
               'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische vervolgmoment samen zonder onboarding te verwarren met een brede lifecycle-suite.',
-            routeBadgeLabel: 'Checkpointroute',
+            routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een later checkpoint logisch, vraagt deze instroomfrictie eerst extra verificatie of hoort de vraag thuis in een andere productvorm?',
@@ -537,7 +550,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele leadershipbeeld gecontroleerd te verdiepen zonder Leadership Scan te verwarren met TeamScan, segment deep dive of een named leader view.',
             driverIntro:
               'Start bij de managementread en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke context eerst duiding verdient.',
-            driverAsideLabel: hasEnoughData ? 'Managementread live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Managementread beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
             signalTabLabel: 'Managementbeeld',
@@ -562,10 +575,10 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van Leadership Scan naar managementroute',
             routeDescription:
               'Deze laag brengt eerste managementgebruik, de gekozen verificatie of correctie en het logische reviewmoment samen zonder Leadership Scan te verwarren met een hierarchy- of 360-suite.',
-            routeBadgeLabel: 'Managementroute',
+            routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
-              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een begrensde managementroute logisch, vraagt de vraag toch bredere diagnose of hoort Leadership Scan juist niet verder op te schalen binnen deze context?',
+              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een begrensde managementroute logisch, vraagt de vraag toch bredere duiding of hoort Leadership Scan juist niet verder op te schalen binnen deze context?',
           }
       : stats.scan_type === 'exit'
         ? {
@@ -583,7 +596,7 @@ export default async function CampaignPage({ params }: Props) {
               'Start bij de scherpste werkfactoren en gebruik daarna pas signaalverdeling en aanvullende lagen om het vertrekbeeld verder te onderbouwen.',
             driverIntro:
               'Begin met de factoren die het vertrekverhaal het meest kleuren. Gebruik signaalverdeling en SDT daarna om het managementgesprek scherper en concreter te maken.',
-            driverAsideLabel: hasEnoughData ? 'Vertrekdrivers live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Vertrekdrivers beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['factoren', 'signalen', 'aanvullend', 'trend'],
             signalTabLabel: 'Vertrekbeeld',
@@ -608,7 +621,7 @@ export default async function CampaignPage({ params }: Props) {
             routeTitle: 'Van vertrekduiding naar managementroute',
             routeDescription:
               'Deze laag bundelt de gekozen managementroute, eerste eigenaar, eerste stap en het logische reviewmoment zonder de kernflow bovenin te verstoren.',
-            routeBadgeLabel: 'Vertrekroute',
+            routeBadgeLabel: 'Kernroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: blijf je op hetzelfde vertrekspoor, vraagt deze scan verdere verdieping of wordt een tweede product logisch op basis van de eerste managementwaarde?',
@@ -628,7 +641,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele Pulse-beeld gecontroleerd te verdiepen zonder de managementhoofdlijn kwijt te raken.',
             driverIntro:
               'Gebruik de tabs hieronder om tussen snapshot, factoren, aanvullende lagen en reviewdelta te wisselen zonder de hoofdlijn van de managementread kwijt te raken.',
-            driverAsideLabel: hasEnoughData ? 'Pulse read live' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Pulse read beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
             signalTabLabel: 'Signaalverdeling',
@@ -651,64 +664,91 @@ export default async function CampaignPage({ params }: Props) {
               'Deze playbooks vormen de uitvoerlaag onder de gekozen bounded route. Ze helpen van verificatie naar correctie en een logisch hercheckmoment te gaan.',
             routeTitle: 'Van Pulse read naar bounded repeat motion',
             routeDescription:
-              'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische volgende meetmoment samen zonder Pulse te verwarren met een brede diagnose- of rapportroute.',
-            routeBadgeLabel: 'Pulse route',
+              'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische volgende meetmoment samen zonder Pulse te verwarren met een bredere kernroute of hoofdrapport.',
+            routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: doe je nog een bounded Pulse, verdiep je eerst de vraag verder of vraagt het thema nu een andere productvorm?',
           }
-  const summaryItems: Array<{
-    label: string
-    value: string
-    tone?: 'slate' | 'blue' | 'emerald' | 'amber'
-  }> = [
-    {
-      label: 'Scan',
-      value: scanDefinition.productName,
-      tone: stats.scan_type === 'retention' ? 'emerald' : 'blue',
-    },
-    {
-      label: productExperience.summarySignalLabel,
-      value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : 'Nog geen veilig beeld',
-      tone: averageRiskScore !== null ? (stats.scan_type === 'retention' ? 'emerald' : 'blue') : 'amber',
-    },
-    {
-      label: 'Responsstatus',
-      value: `${stats.total_completed}/${stats.total_invited || 0} ingevuld`,
-      tone: hasEnoughData ? 'emerald' : 'amber',
-    },
-    { label: 'Readiness', value: readinessLabel, tone: hasEnoughData ? 'blue' : 'amber' },
-  ]
-  const sectionAnchors = [
-    { id: 'samenvatting', label: 'Samenvatting' },
-    {
-      id: 'handoff',
-      label: stats.scan_type === 'retention' ? 'Behoudsread' : stats.scan_type === 'team' ? 'Lokale read' : 'Handoff',
-    },
-    {
-      id: 'drivers',
-      label: stats.scan_type === 'retention' ? 'Signalen' : stats.scan_type === 'team' ? 'Lokaal' : 'Drivers',
-    },
-    {
-      id: 'acties',
-      label: stats.scan_type === 'retention' ? 'Behoudsacties' : stats.scan_type === 'team' ? 'Lokale acties' : 'Acties',
-    },
-    {
-      id: 'route',
-      label: stats.scan_type === 'retention' ? 'Behoudsroute' : stats.scan_type === 'team' ? 'Lokale route' : 'Route',
-    },
-    { id: 'methodiek', label: 'Methodiek' },
-    { id: 'operatie', label: 'Operatie' },
-  ]
-  const utilitySectionVisible = canManageCampaign || respondents.length > 0 || isVerisightAdmin
-  const promotedSummaryCards =
-    productExperience.promotedSummaryCards > 0
-      ? dashboardViewModel.topSummaryCards.slice(0, productExperience.promotedSummaryCards)
+  const architecture = buildDashboardArchitecture({
+    scanType: stats.scan_type,
+    canManageCampaign,
+    hasSegmentDeepDive,
+  })
+  const visibility = buildDashboardVisibilityState({
+    scanType: stats.scan_type,
+    hasMinDisplay,
+    hasEnoughData,
+    hasSegmentDeepDive,
+    canManageCampaign,
+    respondentsCount: respondents.length,
+    isArchivedPeriod: !stats.is_active,
+  })
+  const requestedView = getSingleSearchParam(resolvedSearchParams.view)
+  const currentView = isDashboardView(requestedView) ? requestedView : 'overview'
+  const selectedDriverKey = getSingleSearchParam(resolvedSearchParams.driver)
+  const driverDrilldown = buildDriverDrilldownModel({
+    factorAverages: factorData.orgAverages,
+    selectedFactorKey: selectedDriverKey,
+  })
+  const selectedDriverBand =
+    typeof driverDrilldown.selectedFactor?.signalValue === 'number'
+      ? getRiskBandFromScore(driverDrilldown.selectedFactor.signalValue)
+      : null
+  const selectedDriverPresentation =
+    driverDrilldown.selectedFactor && selectedDriverBand
+      ? buildFactorPresentation({
+          score: driverDrilldown.selectedFactor.score,
+          signalScore: driverDrilldown.selectedFactor.signalValue,
+        })
+      : null
+  const selectedDriverQuestions =
+    driverDrilldown.selectedFactor && selectedDriverBand
+      ? productModule.getFocusQuestions()[driverDrilldown.selectedFactor.factorKey]?.[selectedDriverBand] ?? []
       : []
-  const handoffSummaryCards =
-    productExperience.promotedSummaryCards > 0
-      ? dashboardViewModel.topSummaryCards.slice(productExperience.promotedSummaryCards)
-      : dashboardViewModel.topSummaryCards
+  const selectedDriverPlaybook =
+    driverDrilldown.selectedFactor && selectedDriverBand
+      ? productModule.getActionPlaybooks()[driverDrilldown.selectedFactor.factorKey]?.[selectedDriverBand] ?? null
+      : null
+  const primaryNavItems = architecture.primaryViews.map((view) => ({
+    href: buildDashboardViewHref(view.id, currentView === 'overview' ? driverDrilldown.selectedFactorKey : null),
+    label: view.label,
+    active: currentView === view.id,
+  }))
+  const responseRead = buildResponseReadState({
+    totalInvited: stats.total_invited,
+    totalCompleted: stats.total_completed,
+    completionRate: stats.completion_rate_pct ?? 0,
+    pendingCount,
+    hasMinDisplay,
+    hasEnoughData,
+    isActive: stats.is_active,
+  })
+  const highlightedActionRows = driverDrilldown.highlightedFactors
+    .map((factor) => {
+      const band = getRiskBandFromScore(factor.signalValue)
+      const playbook = productModule.getActionPlaybooks()[factor.factorKey]?.[band] ?? null
+      const focusQuestion = productModule.getFocusQuestions()[factor.factorKey]?.[band]?.[0] ?? null
+      return playbook
+        ? {
+            factorLabel: factor.factorLabel,
+            title: playbook.title,
+            body: playbook.actions[0] ?? playbook.decision,
+            question: focusQuestion,
+          }
+        : null
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null)
+    .slice(0, 3)
+  const synthesisVoiceCards =
+    stats.scan_type === 'retention'
+      ? retentionThemes.map((theme) => ({
+          title: theme.title,
+          body: theme.implication,
+          quote: theme.sample,
+          count: theme.count,
+        }))
+      : []
   const availableDriverTabs = hasEnoughData
     ? [
         ...(
@@ -907,108 +947,38 @@ export default async function CampaignPage({ params }: Props) {
         availableDriverTabs.filter((tab) => tab.id === tabId),
       )
     : []
-
-  return (
-    <div className="space-y-6">
+  const scoreInterpretationTitle = getScoreInterpretationTitle(stats.scan_type)
+  const scoreInterpretationGuide = buildScoreInterpretationGuide(stats.scan_type)
+  const decisionPanels = buildDecisionPanels({
+    stats,
+    averageRiskScore,
+    scanDefinition,
+    strongWorkSignalRate,
+    retentionSupplemental,
+    factorAverages: factorData.orgAverages,
+    hasEnoughData,
+    hasMinDisplay,
+  })
+  const actionExecutionCore = buildActionExecutionCore({
+    selectedPlaybook: selectedDriverPlaybook ?? null,
+    nextStep: dashboardViewModel.nextStep,
+    highlightedActionQuestion: highlightedActionRows[0]?.question ?? null,
+    followThroughCard: dashboardViewModel.followThroughCards[0] ?? null,
+  })
+  const evidenceReadingFlow = buildEvidenceReadingFlow({
+    showDriverDrilldown: visibility.showDriverDrilldown,
+    showSegmentAnalysis: visibility.showSegmentAnalysis,
+  })
+  const redesignView = (
+    <div className="space-y-6 pb-8">
       <Link
         href="/dashboard"
         className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
       >
-        ← Terug naar campaignoverzicht
+        Terug naar campaignoverzicht
       </Link>
 
-      <div id="samenvatting" className="scroll-mt-36 space-y-4">
-        <DashboardHero
-          eyebrow={scanDefinition.productName}
-          title={stats.campaign_name}
-          description={buildHeroDescription({
-            scanType: stats.scan_type,
-            isActive: stats.is_active,
-            completionRate: stats.completion_rate_pct ?? 0,
-            pendingCount,
-            hasEnoughData,
-            averageRiskScore,
-            scanDefinition,
-          })}
-          tone={stats.scan_type === 'retention' ? 'emerald' : 'blue'}
-          meta={
-            <>
-              <DashboardChip
-                label={stats.is_active ? 'Actief' : 'Gesloten'}
-                tone={stats.is_active ? 'emerald' : 'slate'}
-              />
-              <DashboardChip label={`${stats.completion_rate_pct ?? 0}% respons`} tone="slate" />
-              <DashboardChip
-                label={
-                  hasEnoughData
-                    ? 'Beslisniveau bereikt'
-                    : hasMinDisplay
-                      ? 'Indicatief beeld'
-                      : 'Nog onvoldoende responses'
-                }
-                tone={hasEnoughData ? 'blue' : 'amber'}
-              />
-              <DashboardChip
-                label={getDeliveryModeLabel(campaignMeta?.delivery_mode ?? null, stats.scan_type)}
-                tone="slate"
-              />
-            </>
-          }
-          actions={
-            stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
-              <>
-                {!profile?.is_verisight_admin ? <OnboardingAdvancer fromStep={1} /> : null}
-                <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
-                  {stats.scan_type === 'pulse'
-                    ? 'Pulse: management handoff live'
-                    : stats.scan_type === 'team'
-                      ? 'TeamScan: lokale read live'
-                      : stats.scan_type === 'onboarding'
-                        ? 'Onboarding: checkpoint read live'
-                        : 'Leadership Scan: management read live'}
-                </div>
-              </>
-            ) : (
-              <>
-                {!profile?.is_verisight_admin ? <OnboardingAdvancer fromStep={1} /> : null}
-                <div className="relative">
-                  {!profile?.is_verisight_admin ? (
-                    <OnboardingBalloon step={2} label="Download hier je rapport" align="left" />
-                  ) : null}
-                  <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
-                </div>
-              </>
-            )
-          }
-          aside={
-            <div className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <DashboardKeyValue label="Respons" value={`${stats.completion_rate_pct ?? 0}%`} />
-                <DashboardKeyValue label="Uitnodigingen" value={`${stats.total_invited}`} />
-                <DashboardKeyValue label="Ingevuld" value={`${stats.total_completed}`} />
-                <DashboardKeyValue
-                  label={`Gem. ${scanDefinition.signalLabelLower}`}
-                  value={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : '-'}
-                  accent={averageRiskScore !== null ? 'text-blue-700' : undefined}
-                  helpText={scanDefinition.signalHelp}
-                />
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Campagnestatus</p>
-                <p className="mt-2 text-sm leading-6 text-slate-700">
-                  {`${stats.total_completed}/${stats.total_invited || 0} ingevuld`}.{' '}
-                  {pendingCount > 0
-                    ? `${pendingCount} respondent(en) zijn nog niet afgerond.`
-                    : 'Alle uitgenodigde respondenten hebben afgerond.'}
-                </p>
-                <p className="mt-2 text-xs leading-5 text-slate-500">
-                  Route: {getDeliveryModeLabel(campaignMeta?.delivery_mode ?? null, stats.scan_type)}.
-                </p>
-              </div>
-            </div>
-          }
-        />
-
+      <div className="space-y-4">
         {buildInsightWarnings({
           responsesLength: responses.length,
           hasMinDisplay,
@@ -1031,630 +1001,742 @@ export default async function CampaignPage({ params }: Props) {
         ))}
       </div>
 
-      <DashboardSummaryBar
-        items={summaryItems}
-        anchors={sectionAnchors}
+      <DashboardContextHeader
+        eyebrow={`${scanDefinition.productName} · ${scanDefinition.signalLabel}`}
+        title={stats.campaign_name}
+        description={buildHeroDescription({
+          scanType: stats.scan_type,
+          isActive: stats.is_active,
+          completionRate: stats.completion_rate_pct ?? 0,
+          pendingCount,
+          hasEnoughData,
+          averageRiskScore,
+          scanDefinition,
+        })}
+        meta={
+          <>
+            <DashboardChip label={stats.is_active ? 'Actief' : 'Archief'} tone={stats.is_active ? 'emerald' : 'slate'} />
+            <DashboardChip label={`${organization?.name ?? 'Organisatie'} · ${formatCampaignPeriod(stats.created_at)}`} tone="slate" />
+            <DashboardChip label={readinessLabel} tone={hasEnoughData ? 'blue' : 'amber'} />
+            {hasSegmentDeepDive ? <DashboardChip label="Segment deep dive" tone="emerald" /> : null}
+          </>
+        }
         actions={
-          stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
-            <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
-              {stats.scan_type === 'pulse'
-                ? 'Pulse: management handoff live'
-                : stats.scan_type === 'team'
-                  ? 'TeamScan: lokale read live'
-                  : stats.scan_type === 'onboarding'
-                    ? 'Onboarding: checkpoint read live'
-                    : 'Leadership Scan: management read live'}
-            </div>
-          ) : (
-            <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} />
-          )
+          <>
+            <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
+            {!profile?.is_verisight_admin ? <OnboardingAdvancer fromStep={1} /> : null}
+          </>
+        }
+        aside={
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <DashboardKeyValue label="Respons" value={`${stats.completion_rate_pct ?? 0}%`} />
+            <DashboardKeyValue label="Uitgenodigd" value={`${stats.total_invited}`} />
+            <DashboardKeyValue label="Ingevuld" value={`${stats.total_completed}`} />
+            <DashboardKeyValue
+              label={scanDefinition.signalLabel}
+              value={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : '-'}
+              helpText={scanDefinition.signalHelp}
+            />
+          </div>
         }
       />
 
-      {promotedSummaryCards.length > 0 ? (
-        <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4 shadow-[0_12px_30px_rgba(19,32,51,0.05)] sm:p-5">
-          <div className="flex flex-col gap-3 border-b border-[color:var(--border)]/80 pb-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                {productExperience.summaryLeadTitle}
-              </p>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-[color:var(--text)]">
-                {productExperience.summaryLeadDescription}
-              </p>
-            </div>
-            <DashboardChip
-              label={productExperience.summaryContextLabel}
-              tone={productExperience.summaryContextTone}
+      <DashboardPrimaryNav items={primaryNavItems} />
+
+      {currentView === 'overview' ? (
+        <div className="space-y-6">
+          {visibility.showResponseInterpretation ? (
+            <DashboardSection
+              id="response"
+              eyebrow="Responsinterpretatie"
+              title="Respons, leesdiscipline en betrouwbaarheid"
+              description="Snelle leeslaag voor de vraag of deze wave nu al bestuurlijk gelezen kan worden of nog vooral voorzichtigheid vraagt."
+              aside={<DashboardChip label={responseRead.badge} tone={responseRead.badgeTone} />}
+            >
+              <div className="space-y-4">
+                <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4 sm:px-5">
+                  <div className="grid gap-4 lg:grid-cols-[160px,minmax(0,1fr),minmax(280px,0.95fr)] lg:items-center">
+                    <div className="flex justify-center lg:justify-start">
+                      <ResponseReadinessMeter completionRate={stats.completion_rate_pct ?? 0} tone={responseRead.badgeTone} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Lees deze respons zo</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-700">
+                        Gebruik respons niet als neutrale metadata, maar als eerste leesdiscipline: bepaalt deze wave al een stevig patroonbeeld, of vooral de mate van voorzichtigheid bij de eerste managementread?
+                      </p>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <OverviewCueCard
+                        eyebrow="Leesstatus"
+                        title={responseRead.quickLabel}
+                        body={responseRead.title}
+                        tone={responseRead.badgeTone}
+                      />
+                      <OverviewCueCard
+                        eyebrow="Voorzichtigheid"
+                        title="Wat dit nu betekent"
+                        body={responseRead.caution}
+                        tone="slate"
+                      />
+                      <OverviewCueCard
+                        eyebrow="Volgende stap"
+                        title="Waar kijk je daarna"
+                        body={responseRead.nextStep}
+                        tone="blue"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <OverviewQuickMetric label="Uitgenodigd" value={`${stats.total_invited}`} />
+                  <OverviewQuickMetric label="Ingevuld" value={`${stats.total_completed}`} />
+                  <OverviewQuickMetric label="Respons" value={`${stats.completion_rate_pct ?? 0}%`} />
+                  <OverviewQuickMetric label="Open" value={`${pendingCount}`} />
+                </div>
+              </div>
+            </DashboardSection>
+          ) : null}
+
+          <div id="handoff" className="scroll-mt-36">
+            <DashboardHero
+              eyebrow={handoffTitle}
+              title={dashboardViewModel.primaryQuestion.title}
+              description={`${handoffDescription} ${dashboardViewModel.primaryQuestion.body}`}
+              tone={stats.scan_type === 'retention' ? 'emerald' : 'blue'}
+              meta={
+                <>
+                  <DashboardChip label={focusBadgeLabel} tone="blue" />
+                  <DashboardChip label={productExperience.summaryContextLabel} tone={productExperience.summaryContextTone} />
+                </>
+              }
+              actions={
+                <Link
+                  href={buildDashboardViewHref('action', driverDrilldown.selectedFactorKey)}
+                  className="inline-flex rounded-full border border-[color:var(--ink)] bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--teal-light)]"
+                >
+                  Naar eerste route
+                </Link>
+              }
+              aside={
+                <div className="grid gap-3">
+                  <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Bestuurlijke handoff</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-700">
+                      Start hier: wat speelt nu, waarom telt dat en welke eerste route hoort daarbij.
+                    </p>
+                  </div>
+                  <OverviewCueCard
+                    eyebrow="Waarom telt dit"
+                    title={decisionPanels[0]?.title ?? scanDefinition.signalLabel}
+                    body={decisionPanels[0]?.body ?? dashboardViewModel.primaryQuestion.body}
+                    tone={decisionPanels[0]?.tone ?? 'blue'}
+                  />
+                  <OverviewCueCard
+                    eyebrow="Wat eerst doen"
+                    title={selectedDriverPlaybook?.title ?? dashboardViewModel.nextStep.title}
+                    body={selectedDriverPlaybook?.decision ?? dashboardViewModel.nextStep.body}
+                    tone={selectedDriverPlaybook ? 'emerald' : dashboardViewModel.nextStep.tone}
+                  />
+                </div>
+              }
             />
           </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            {promotedSummaryCards.map((card) => (
-              <DashboardPanel
-                key={`${card.title}-${card.value ?? 'summary'}`}
-                eyebrow={productExperience.summaryCardEyebrow}
-                title={card.title}
-                value={card.value}
-                body={card.body}
-                tone={card.tone}
-              />
-            ))}
+
+          {visibility.showScoreInterpretation ? (
+            <DashboardSection
+              id="score"
+              eyebrow="Score-interpretatie"
+              title={scoreInterpretationTitle}
+              description={scoreInterpretationGuide.intro}
+              aside={<DashboardChip label={scanDefinition.signalLabel} tone="slate" />}
+            >
+              <div className="space-y-4">
+                <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4 sm:px-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Hoe lees je dit nu</p>
+                  <div className="mt-3 grid gap-3 lg:grid-cols-3">
+                    {scoreInterpretationGuide.steps.map((step) => (
+                      <OverviewCueCard
+                        key={step.title}
+                        eyebrow="Leesvolgorde"
+                        title={step.title}
+                        body={step.body}
+                        tone="slate"
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr),minmax(300px,0.8fr)]">
+                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                    <RiskCharts
+                      distribution={riskDistribution}
+                      histogramBins={riskHistogram}
+                      averageScore={averageRiskScore}
+                      scanType={stats.scan_type}
+                    />
+                  </div>
+                  <div className="grid gap-4">
+                    {decisionPanels.map((panel) => (
+                      <DashboardPanel
+                        key={`${panel.eyebrow}-${panel.title}`}
+                        eyebrow={panel.eyebrow}
+                        title={panel.title}
+                        value={panel.value}
+                        body={panel.body}
+                        tone={panel.tone}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </DashboardSection>
+          ) : null}
+          <DashboardSection
+            id="synthesis"
+            eyebrow="Signalen in samenhang"
+            title="Managementsynthese van hoofdredenen en meespelende factoren"
+            description={productExperience.summaryLeadDescription}
+            aside={<DashboardChip label={productExperience.summaryLeadTitle} tone="slate" />}
+          >
+            <div className="space-y-5">
+              {dashboardViewModel.managementBlocks.length > 0 ? (
+                <div className="grid gap-4 lg:grid-cols-3">
+                  {dashboardViewModel.managementBlocks.map((block) => (
+                    <div key={block.title} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{block.title}</p>
+                      {block.intro ? <p className="mt-3 text-sm leading-6 text-slate-700">{block.intro}</p> : null}
+                      <ul className="mt-3 space-y-2">
+                        {block.items.map((item) => (
+                          <li key={item} className="flex gap-2 text-sm leading-6 text-slate-700">
+                            <span className="text-slate-400">-</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {synthesisVoiceCards.length > 0 ? (
+                <div className="grid gap-4 lg:grid-cols-3">
+                  {synthesisVoiceCards.slice(0, 3).map((voice) => (
+                    <div key={voice.title} className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-slate-950">{voice.title}</p>
+                        <DashboardChip label={`${voice.count} signalen`} tone="slate" />
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-slate-700">{voice.body}</p>
+                      <p className="mt-3 text-sm italic leading-6 text-slate-600">&quot;{voice.quote}&quot;</p>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </DashboardSection>
+
+          <DashboardSection
+            id="drivers"
+            eyebrow="Drivers en prioriteiten"
+            title="Topdrivers eerst, daarna pas volle factorlezing"
+            description={productExperience.driverDescription}
+            aside={<DashboardChip label={productExperience.driverAsideLabel} tone={productExperience.driverAsideTone} />}
+          >
+            {visibility.showDriverDrilldown ? (
+              <div className="grid gap-5 xl:grid-cols-[320px,minmax(0,1fr)]">
+                <div className="space-y-3">
+                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Topdrivers eerst</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-700">
+                      Open hier alleen de zwaarste twee drivers. Daarmee blijft de prioriteitenlezing scherp en voelt deze drilldown als keuze, niet als een mechanische factorlijst.
+                    </p>
+                  </div>
+                  {driverDrilldown.highlightedFactors.map((factor, index) => {
+                    const band = getRiskBandFromScore(factor.signalValue)
+                    const isActive = factor.factorKey === driverDrilldown.selectedFactorKey
+                    return (
+                      <Link
+                        key={factor.factorKey}
+                        href={buildDashboardViewHref('overview', factor.factorKey)}
+                        className={`block rounded-[22px] border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--teal-light)] ${
+                          isActive
+                            ? 'border-[color:var(--ink)] bg-[color:var(--ink)] text-white'
+                            : 'border-[color:var(--border)] bg-[color:var(--bg)] hover:border-[color:var(--teal)]'
+                        }`}
+                      >
+                        <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${isActive ? 'text-white/80' : 'text-[color:var(--muted)]'}`}>
+                          Top {index + 1}
+                        </p>
+                        <p className="mt-2 text-base font-semibold">{factor.factorLabel}</p>
+                        <p className={`mt-2 text-sm ${isActive ? 'text-white/85' : 'text-[color:var(--text)]'}`}>
+                          Signaal {factor.signalValue.toFixed(1)}/10 · {getManagementBandLabel(band)}
+                        </p>
+                      </Link>
+                    )
+                  })}
+                </div>
+                <div className="space-y-4">
+                  <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--bg)] p-5">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-lg font-semibold text-[color:var(--ink)]">{driverDrilldown.selectedFactor?.factorLabel ?? 'Nog geen driver zichtbaar'}</h3>
+                      {selectedDriverBand ? (
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getManagementBandBadgeClasses(selectedDriverBand)}`}>
+                          {getManagementBandLabel(selectedDriverBand)}
+                        </span>
+                      ) : null}
+                    </div>
+                    {selectedDriverPresentation ? (
+                      <p className="mt-3 text-sm leading-6 text-[color:var(--text)]">
+                        Werkbelevingsscore {selectedDriverPresentation.scoreDisplay}. Managementlabel:{' '}
+                        {selectedDriverPresentation.managementLabel}. Signaal:{' '}
+                        {selectedDriverPresentation.signalDisplay}.
+                      </p>
+                    ) : null}
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <DashboardPanel
+                        eyebrow="Factorlezing"
+                        title={selectedDriverPresentation?.managementLabel ?? 'Factorbeeld volgt bij meer data'}
+                        value={driverDrilldown.selectedFactor ? `${driverDrilldown.selectedFactor.signalValue.toFixed(1)}/10` : undefined}
+                        body={`Werkbelevingsscore ${selectedDriverPresentation?.scoreDisplay ?? '-'}. ${productExperience.focusQuestionDescription}`}
+                        tone="blue"
+                      />
+                      <DashboardPanel
+                        eyebrow="Eerste prioriteit"
+                        title={selectedDriverPlaybook?.title ?? dashboardViewModel.nextStep.title}
+                        body={selectedDriverPlaybook?.decision ?? dashboardViewModel.nextStep.body}
+                        tone="emerald"
+                      />
+                    </div>
+                  </div>
+                  {selectedDriverQuestions.length > 0 ? (
+                    <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                      <h3 className="text-sm font-semibold text-slate-950">Prioritaire verificatievragen</h3>
+                      <div className="mt-3 grid gap-3">
+                        {selectedDriverQuestions.slice(0, 3).map((question) => (
+                          <div key={question} className="rounded-2xl border border-white/80 bg-white px-4 py-3 text-sm leading-6 text-slate-700">
+                            {question}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
+                Verdiepende driverlezing wordt zichtbaar vanaf {MIN_N_PATTERNS} ingevulde responses. Tot die tijd blijft dit dashboard bewust op hoofdsignaal, responsread en eerste managementroute.
+              </div>
+            )}
+          </DashboardSection>
+
+          <DashboardSection
+            id="action"
+            eyebrow="Eerste route en actie"
+            title="Van interpretatie naar eigenaar, eerste stap en review"
+            description="Deze laag vertaalt de managementread naar een compacte eerste route zonder in campaign-operatie of methodiek te vervallen."
+            aside={<DashboardChip label={focusBadgeLabel} tone="emerald" />}
+            tone="emerald"
+          >
+            <div className="space-y-4">
+              <div className="rounded-[22px] border border-[#d2e6e0] bg-[#eef7f4] px-4 py-4 sm:px-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#3C8D8A]">Operationele vertaalslag</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  Deze view hoort minder te duiden en meer te laten uitvoeren: gekozen route, eerste eigenaar, eerste stap en reviewmoment komen hier samen in een compacte actielaag.
+                </p>
+              </div>
+              <div className="grid gap-4 lg:grid-cols-4">
+                <DashboardPanel eyebrow="Eerste route" title={selectedDriverPlaybook?.title ?? dashboardViewModel.nextStep.title} body={selectedDriverPlaybook?.decision ?? dashboardViewModel.nextStep.body} tone="blue" />
+                <DashboardPanel eyebrow="Owner" title={selectedDriverPlaybook?.owner ?? 'HR + lijnmanagement'} body="Maak expliciet wie de eerste managementcheck trekt en wie de review terugbrengt in de vervolgronde." tone="emerald" />
+                <DashboardPanel eyebrow="First step" title={selectedDriverPlaybook?.actions[0] ?? highlightedActionRows[0]?.title ?? 'Kies een eerste gerichte verificatie'} body={highlightedActionRows[0]?.question ?? selectedDriverPlaybook?.validate ?? dashboardViewModel.primaryQuestion.body} tone="blue" />
+                <DashboardPanel eyebrow="Review moment" title={selectedDriverPlaybook?.review ?? dashboardViewModel.followThroughCards[0]?.title ?? 'Plan een eerste review'} body={dashboardViewModel.followThroughCards[0]?.body ?? 'Leg direct vast wanneer deze eerste route opnieuw gelezen en eventueel begrensd bijgesteld wordt.'} tone="amber" />
+              </div>
+            </div>
+          </DashboardSection>
+
+          <div id="methodology" className="scroll-mt-36">
+            <DashboardDisclosure
+              defaultOpen={false}
+              title="Compacte methodiek en leeswijzer"
+              description="Zichtbaar als trustlaag, maar bewust secundair in de managementflow."
+              badge={<DashboardChip label={methodologyBadgeLabel} tone="slate" />}
+            >
+              <MethodologyCard scanType={stats.scan_type} hasSegmentDeepDive={hasSegmentDeepDive} signalLabel={scanDefinition.signalLabel} embedded />
+            </DashboardDisclosure>
           </div>
         </div>
       ) : null}
 
-      <DashboardSection
-        id="handoff"
-        eyebrow="Bestuurlijke handoff"
-        title={handoffTitle}
-        description={handoffDescription}
-        aside={<DashboardChip label={readinessLabel} tone={hasEnoughData ? 'blue' : 'amber'} />}
-        tone="blue"
-      >
-        <div className="space-y-4">
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr),minmax(320px,0.7fr)]">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {buildDecisionPanels({
-                stats,
-                averageRiskScore,
-                scanDefinition,
-                strongWorkSignalRate,
-                retentionSupplemental,
-                factorAverages: factorData.orgAverages,
-                hasEnoughData,
-                hasMinDisplay,
-              }).map((panel) => (
-                <DashboardPanel
-                  key={panel.title}
-                  eyebrow={panel.eyebrow}
-                  title={panel.title}
-                  value={panel.value}
-                  body={panel.body}
-                  tone={panel.tone}
-                />
-              ))}
-              {handoffSummaryCards.map((card) => (
-                <DashboardPanel
-                  key={`${card.title}-${card.value ?? 'card'}`}
-                  eyebrow={productExperience.summaryCardEyebrow}
-                  title={card.title}
-                  value={card.value}
-                  body={card.body}
-                  tone={card.tone}
-                />
-              ))}
-            </div>
-
-            <div className="grid gap-4">
-              <DashboardPanel
-                eyebrow="Eerste managementvraag"
-                title={dashboardViewModel.primaryQuestion.title}
-                body={dashboardViewModel.primaryQuestion.body}
-                tone={dashboardViewModel.primaryQuestion.tone}
-              />
-              <DashboardPanel
-                eyebrow="Logische vervolgstap"
-                title={dashboardViewModel.nextStep.title}
-                body={dashboardViewModel.nextStep.body}
-                tone={dashboardViewModel.nextStep.tone}
-              />
-            </div>
-          </div>
-
-          {stats.scan_type === 'team' && hasEnoughData ? (
-            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-              <div className="flex flex-wrap items-center gap-3">
-                <h3 className="text-sm font-semibold text-slate-950">Lokale managementhandoff</h3>
-                <DashboardChip
-                  label={primaryTeamPriority ? `Eerst: ${primaryTeamPriority.label}` : 'Bounded handoff'}
-                  tone={primaryTeamPriority ? 'amber' : 'blue'}
-                />
-              </div>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                {primaryTeamPriority && primaryTeamPlaybook
-                ? `Gebruik deze TeamScan nu als compacte handoff: ${primaryTeamPriority.label} vraagt eerst verificatie op ${primaryTeamPriority.topFactorLabel.toLowerCase()}, daarna kies je bewust wie de eerste lokale stap trekt en hoe begrensd de review blijft.`
-                  : 'TeamScan geeft al wel lokale richting, maar houdt de handoff hier bewust bounded zolang er nog geen eerlijke eerste prioriteit kan worden vrijgegeven.'}
-              </p>
-              <div className="mt-4 grid gap-4 lg:grid-cols-4">
-                <DashboardPanel
-                  eyebrow="Afdeling"
-                  title={primaryTeamPriority?.label ?? 'Nog niet vrijgegeven'}
-                  value={primaryTeamPriority?.priorityTitle}
-                  body={
-                    primaryTeamPriority
-                      ? `${primaryTeamPriority.topFactorLabel} is hier nu het scherpste lokale spoor.`
-                      : 'Gebruik meerdere zichtbare afdelingen voorlopig als gespreksinput zonder geforceerde top-1.'
-                  }
-                  tone={primaryTeamPriority ? 'amber' : 'blue'}
-                />
-                <DashboardPanel
-                  eyebrow="Eerste eigenaar"
-                  title={primaryTeamPlaybook?.owner ?? 'HR + afdelingsleider'}
-                  body="Maak expliciet wie de eerste lokale managementhuddle trekt en wie de vervolgstap terugbrengt in de review."
-                  tone="emerald"
-                />
-                <DashboardPanel
-                  eyebrow="Begrensde eerste actie"
-                  title={primaryTeamPlaybook?.actions[0] ?? 'Kies eerst een kleine lokale check'}
-                  body={
-                    primaryTeamPlaybook?.decision ??
-                    'TeamScan blijft hier gericht op een kleine lokale verificatie of correctie, niet op een brede interventie.'
-                  }
-                  tone="blue"
-                />
-                <DashboardPanel
-                  eyebrow="Reviewgrens"
-                  title={primaryTeamPlaybook?.review ?? 'Lokale hercheck eerst'}
-                  body="Gebruik het reviewmoment om bewust te kiezen: nog een lokale vervolgstap, terug naar bredere diagnose of juist stoppen met verder lokaliseren."
-                  tone="amber"
-                />
-              </div>
-            </div>
-          ) : null}
-
-          {dashboardViewModel.profileCards.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {dashboardViewModel.profileCards.map((card) => (
-                <DashboardPanel
-                  key={`${card.title}-${card.value ?? 'profile'}`}
-                  eyebrow={card.title}
-                  title={card.value || card.title}
-                  body={card.body}
-                  tone={card.tone}
-                />
-              ))}
-            </div>
-          ) : null}
-
-          {dashboardViewModel.managementBlocks.length > 0 ? (
-            <div className="grid gap-4 lg:grid-cols-3">
-              {dashboardViewModel.managementBlocks.map((block) => (
-                <div
-                  key={block.title}
-                  className={`rounded-[22px] border p-4 ${
-                    block.tone === 'emerald'
-                      ? 'border-[#d2e6e0] bg-[#eef7f4]'
-                      : block.tone === 'amber'
-                        ? 'border-[#eadfbe] bg-[#faf6ea]'
-                        : 'border-[#d6e4e8] bg-[#f3f8f8]'
-                  }`}
-                >
-                  <p
-                    className={`text-xs font-semibold uppercase tracking-[0.2em] ${
-                      block.tone === 'emerald'
-                        ? 'text-[#3C8D8A]'
-                        : block.tone === 'amber'
-                          ? 'text-[#8C6B1F]'
-                          : 'text-[#234B57]'
-                    }`}
-                  >
-                    {block.title}
-                  </p>
-                  {block.intro ? <p className="mt-3 text-sm leading-6 text-slate-700">{block.intro}</p> : null}
-                  <ul className="mt-3 space-y-2">
-                    {block.items.map((item) => (
-                      <li key={item} className="flex gap-2 text-sm leading-6 text-slate-700">
-                        <span className="text-slate-400">-</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </DashboardSection>
-
-      <DashboardSection
-        id="drivers"
-        eyebrow="Wat drijft dit beeld?"
-        title={productExperience.driverTitle}
-        description={productExperience.driverDescription}
-        aside={<DashboardChip label={productExperience.driverAsideLabel} tone={productExperience.driverAsideTone} />}
-      >
-        {hasEnoughData ? (
-          <div className="space-y-5">
-            <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-4 text-sm leading-6 text-[color:var(--text)]">
-              {productExperience.driverIntro}
-            </div>
-            <DashboardTabs tabs={driverTabs} />
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-            Verdiepende analyse wordt zichtbaar vanaf {MIN_N_PATTERNS} ingevulde responses. Tot die tijd blijft het dashboard bewust compact en voorzichtig.
-          </div>
-        )}
-      </DashboardSection>
-
-      <DashboardSection
-        id="acties"
-        eyebrow="Waar eerst op handelen"
-        title={productExperience.actionTitle}
-        description={dashboardViewModel.focusSectionIntro}
-        aside={<DashboardChip label={focusBadgeLabel} tone="emerald" />}
-        tone="emerald"
-      >
-        {hasEnoughData ? (
-          <div className="space-y-5">
-            {stats.scan_type === 'team' && teamPriorityRead ? (
-              <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                <h3 className="text-sm font-semibold text-slate-950">
-                  {teamPriorityRead.status === 'ready'
-                    ? 'Eerste lokale verificatie en handoff'
-                    : 'Lokale prioriteit blijft bounded'}
-                </h3>
-                <p className="mt-1 text-sm leading-6 text-slate-600">{teamPriorityRead.summaryBody}</p>
-                {primaryTeamPriority && primaryTeamPlaybook ? (
-                  <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
-                    <DashboardPanel
-                      eyebrow="Afdeling eerst"
-                      title={primaryTeamPriority.label}
-                      value={primaryTeamPriority.priorityTitle}
-                      body={`${primaryTeamPriority.topFactorLabel} is hier nu het scherpste lokale spoor. Gebruik deze afdeling als eerste bounded managementcheck, niet als definitieve eindconclusie.`}
-                      tone="amber"
-                    />
-                    <DashboardPanel
-                      eyebrow="Eerste eigenaar"
-                      title={primaryTeamPlaybook.owner}
-                      body="Deze combinatie trekt de eerste lokale check en bewaakt tegelijk dat TeamScan bounded blijft."
-                      tone="blue"
-                    />
-                    <DashboardPanel
-                      eyebrow="Eerste bounded check"
-                      title={primaryTeamPlaybook.validate}
-                      body={
-                        primaryTeamQuestions[0] ??
-                        'Gebruik het eerstvolgende afdelingsgesprek om dit lokale spoor expliciet te verifieren.'
-                      }
-                      tone="emerald"
-                    />
-                    <DashboardPanel
-                      eyebrow="Reviewgrens"
-                      title={primaryTeamPlaybook.actions[0] ?? primaryTeamPlaybook.title}
-                      body={
-                        primaryTeamPlaybook.review ??
-                        'Leg direct vast wanneer deze lokale check opnieuw wordt gelezen en of TeamScan daarna nog een tweede bounded stap nodig heeft.'
-                      }
-                      tone="blue"
-                    />
-                  </div>
-                ) : (
-                  <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
-                    TeamScan toont hier bewust nog geen harde eerste volgorde. Gebruik de lokale read om meerdere afdelingen te bespreken, een eigenaar te benoemen en pas na de eerste bounded check te bepalen of een hardere volgorde nodig is.
-                  </div>
-                )}
-              </div>
-            ) : null}
-
-            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-              <h3 className="text-sm font-semibold text-slate-950">{productExperience.focusQuestionTitle}</h3>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                {productExperience.focusQuestionDescription}
-              </p>
-              <div className="mt-4">
-                <RecommendationList
-                  factorAverages={factorData.orgAverages}
-                  scanType={stats.scan_type}
-                  bandOverride={
-                    stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
-                      ? dashboardViewModel.managementBandOverride
-                      : undefined
-                  }
-                />
-              </div>
-            </div>
-
-            {stats.scan_type === 'retention' || stats.scan_type === 'exit' || stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
-              <>
-                <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                  <h3 className="text-sm font-semibold text-slate-950">{productExperience.playbookTitle}</h3>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">
-                    {productExperience.playbookDescription}
-                  </p>
-                  {stats.scan_type === 'retention' && playbookCalibrationNote ? (
-                    <p className="mt-2 text-xs leading-6 text-slate-500">{playbookCalibrationNote}</p>
-                  ) : null}
-                  <div className="mt-4">
-                    <ActionPlaybookList
-                      factorAverages={factorData.orgAverages}
-                      scanType={stats.scan_type}
-                      bandOverride={
-                        stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
-                          ? dashboardViewModel.managementBandOverride
-                          : undefined
-                      }
-                    />
-                  </div>
-                </div>
-
-                {stats.scan_type === 'retention' && hasSegmentDeepDive ? (
-                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                    <h3 className="text-sm font-semibold text-slate-950">Segment-specifieke playbooks</h3>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Alleen zichtbaar als segmentvergelijking voldoende respons en metadata heeft.
-                    </p>
-                    <div className="mt-4">
-                      {retentionSegmentPlaybooks.length > 0 ? (
-                        <SegmentPlaybookList segments={retentionSegmentPlaybooks} />
-                      ) : (
-                        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
-                          Nog geen segmenten met voldoende n en voldoende afwijking om apart te tonen.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : null}
-              </>
-            ) : null}
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-            Focusvragen en route-uitvoer worden betekenisvoller zodra het dashboard minstens {MIN_N_PATTERNS} responses heeft.
-          </div>
-        )}
-      </DashboardSection>
-
-      <DashboardSection
-        id="route"
-        eyebrow="30–90 dagenroute"
-        title={productExperience.routeTitle}
-        description={productExperience.routeDescription}
-        aside={<DashboardChip label={productExperience.routeBadgeLabel} tone="blue" />}
-      >
+      {currentView === 'evidence' ? (
         <div className="space-y-5">
-          <ManagementReadGuide scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} />
-
-          {dashboardViewModel.followThroughCards.length > 0 ? (
-            <DashboardTimeline
-              title={dashboardViewModel.followThroughTitle}
-              description={dashboardViewModel.followThroughIntro}
-              items={dashboardViewModel.followThroughCards}
-            />
-          ) : null}
-
-          <div className="rounded-[22px] border border-[#d6e4e8] bg-[#f3f8f8] p-4 sm:p-5">
-            <h3 className="text-sm font-semibold text-slate-950">{productExperience.afterSessionTitle}</h3>
-            <p className="mt-1 text-sm leading-6 text-slate-700">
-              {productExperience.afterSessionDescription}
-            </p>
-            {stats.scan_type === 'team' ? (
-              <div className="mt-4 grid gap-4 lg:grid-cols-3">
-                <DashboardPanel
-                  eyebrow="Als de lokale check bevestigt"
-                  title="Blijf bounded op dezelfde route"
-                  body="Doe alleen een volgende lokale check als route, lokale actie en reviewmoment uit deze TeamScan al expliciet zijn gemaakt."
-                  tone="blue"
-                />
-                <DashboardPanel
-                  eyebrow="Als de vraag breder wordt"
-                  title="Ga terug naar bredere diagnose"
-                  body="Schakel niet door naar extra lokalisatie als de echte vraag weer organisatieniveau, behoudsbeeld of bredere diagnose vraagt."
-                  tone="amber"
-                />
-                <DashboardPanel
-                  eyebrow="Als de onderbouwing te smal blijft"
-                  title="Stop met verder lokaliseren"
-                  body="Open geen extra TeamScan-verbreding zolang metadata, groepsgrootte of lokale bevestiging daar nog geen eerlijke basis voor geven."
-                  tone="emerald"
-                />
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr),280px]">
+            <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 shadow-[0_10px_28px_rgba(19,32,51,0.05)] sm:px-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{evidenceReadingFlow.intro.title}</p>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">{evidenceReadingFlow.intro.body}</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">{evidenceReadingFlow.supportPrompt}</p>
+            </div>
+            <div className="rounded-[24px] border border-[color:var(--border)] bg-white px-4 py-4 shadow-[0_10px_28px_rgba(19,32,51,0.04)] sm:px-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Leesvolgorde</p>
+              <div className="mt-3 space-y-2">
+                {evidenceReadingFlow.intro.sequence.map((step) => (
+                  <div key={step} className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+                    {step}
+                  </div>
+                ))}
               </div>
-            ) : null}
-            {stats.scan_type === 'leadership' ? (
-              <div className="mt-4 grid gap-4 lg:grid-cols-3">
-                <DashboardPanel
-                  eyebrow="Als de managementcheck bevestigt"
-                  title="Blijf bounded op dezelfde route"
-                  body="Doe alleen een volgende Leadership-check als eigenaar, kleine verificatie of correctie en reviewmoment uit deze managementread al expliciet zijn gemaakt."
-                  tone="blue"
-                />
-                <DashboardPanel
-                  eyebrow="Als de vraag breder wordt"
-                  title="Ga terug naar bredere diagnose"
-                  body="Schakel niet door naar extra Leadership-verbreding als de echte vraag weer lokale lokalisatie, bredere diagnose of een ander productspoor vraagt."
-                  tone="amber"
-                />
-                <DashboardPanel
-                  eyebrow="Als de onderbouwing te smal blijft"
-                  title="Open geen named leaders of 360"
-                  body="Maak Leadership Scan niet groter dan deze wave draagt zolang groepsniveau, suppressie en de huidige data nog geen eerlijke basis geven voor named leader of 360-output."
-                  tone="emerald"
-                />
-              </div>
-            ) : null}
-            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {lifecycleDecisionCards.map((card) => (
-                <DashboardPanel
-                  key={card.title}
-                  eyebrow={card.fit}
-                  title={card.title}
-                  body={card.body}
-                  tone="blue"
-                />
-              ))}
             </div>
           </div>
-        </div>
-      </DashboardSection>
 
-      <div id="methodiek" className="scroll-mt-36">
-        <DashboardDisclosure
-          defaultOpen={disclosureDefaults.methodologyOpen}
-          title="Methodiek, privacy en leeswijzer"
-          description="Gebruik dit als contextlaag voor interpretatie, privacy en betrouwbaarheid."
-          badge={<DashboardChip label={methodologyBadgeLabel} tone="slate" />}
-        >
-          <MethodologyCard
-            scanType={stats.scan_type}
-            hasSegmentDeepDive={hasSegmentDeepDive}
-            signalLabel={scanDefinition.signalLabel}
-            embedded
-          />
-        </DashboardDisclosure>
-      </div>
+          <DashboardDisclosure
+            defaultOpen={visibility.showDriverDrilldown}
+            title={evidenceReadingFlow.primaryEntry.title}
+            description="Drivers, signalen en product-specifieke tabs blijven samen in één compacte evidence-ingang."
+            badge={<DashboardChip label={evidenceReadingFlow.primaryEntry.badge} tone="blue" />}
+          >
+            {visibility.showDriverDrilldown ? (
+              <div className="space-y-4">
+                <div className="rounded-[20px] border border-[#dbe8e3] bg-[#f6faf8] px-4 py-3 text-sm leading-6 text-slate-700">
+                  {evidenceReadingFlow.supportPrompt}
+                </div>
+                <div className="max-w-5xl">
+                  <DashboardTabs tabs={driverTabs} />
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
+                {evidenceReadingFlow.primaryEntry.emptyState}
+              </div>
+            )}
+          </DashboardDisclosure>
 
-      {utilitySectionVisible ? (
-        <DashboardSection
-          id="operatie"
-          eyebrow="Utilitylaag"
-          title="Operatie, respondenten en delivery"
-          description="Alles onder deze lijn ondersteunt uitvoering en beheer. De managementhoofdlijn blijft hierboven compact en bestuurlijk."
-          aside={<DashboardChip label="Admin en operations" tone="slate" />}
-        >
-          <div className="space-y-4">
-            {canManageCampaign ? (
+          <div className="rounded-[24px] border border-[color:var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,248,250,0.88))] px-4 py-4 shadow-[0_12px_30px_rgba(19,32,51,0.05)] sm:px-5">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[color:var(--border)]/80 pb-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Verdiep verder als nodig</p>
+                <h3 className="mt-1 text-base font-semibold text-[color:var(--ink)]">Verklarende lagen onder de kernverdieping</h3>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">
+                  SDT en organisatiefactoren blijven hier bewust smaller en rustiger gepositioneerd. Ze ondersteunen de managementlezing, maar vervangen de kernverdieping niet.
+                </p>
+              </div>
+              <DashboardChip label="Secundaire onderbouwing" tone="slate" />
+            </div>
+
+            <div className="mt-4 space-y-3">
               <DashboardDisclosure
-                defaultOpen={!hasEnoughData}
-                title="Campagnestatus en launchcontrole"
-                description="Gebruik deze laag voor lifecycle, readiness, handoff en foutopvang nadat het managementbeeld helder is."
-                badge={<DashboardChip label={readinessState.launchReady ? 'Launch-ready' : 'Aandacht nodig'} tone={readinessState.launchReady ? 'emerald' : 'amber'} />}
+                defaultOpen={false}
+                title={evidenceReadingFlow.sections.sdt.title}
+                description={evidenceReadingFlow.sections.sdt.description}
+                badge={<DashboardChip label={evidenceReadingFlow.sections.sdt.badge} tone="slate" />}
               >
-                <div className="space-y-4">
-                  <CampaignActions
-                    campaignId={id}
-                    isActive={stats.is_active}
-                    pendingCount={pendingCount}
-                    canManageCampaign={canManageCampaign}
-                  />
-                  <CampaignHealthIndicator
-                    totalInvited={stats.total_invited}
-                    totalCompleted={stats.total_completed}
-                    invitesNotSent={invitesNotSent}
-                    incompleteScores={incompleteScores}
-                    hasEnoughData={hasEnoughData}
-                    hasMinDisplay={hasMinDisplay}
-                  />
-                  <div
-                    className={`rounded-[22px] border px-4 py-4 ${
-                      readinessState.launchReady
-                        ? 'border-emerald-200 bg-emerald-50'
-                        : 'border-amber-200 bg-amber-50'
-                    }`}
-                  >
-                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Implementation readiness</p>
-                        <p className="mt-1 text-base font-semibold text-slate-950">{readinessState.headline}</p>
-                      </div>
-                      <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600">
-                        {readinessState.launchReady ? 'Launch-ready' : 'Nog niet launch-ready'}
-                      </span>
-                    </div>
-                    <p className="mt-3 text-sm leading-6 text-slate-700">{readinessState.detail}</p>
-                    <p className="mt-3 text-sm font-medium leading-6 text-slate-800">Volgende stap: {readinessState.nextStep}</p>
-                  </div>
-                  {stats.is_active ? (
-                    <PreflightChecklist
-                      campaignId={id}
-                      scanType={stats.scan_type}
-                      deliveryMode={campaignMeta?.delivery_mode ?? null}
-                      totalInvited={stats.total_invited}
-                      totalCompleted={stats.total_completed}
-                      invitesNotSent={invitesNotSent}
-                      incompleteScores={incompleteScores}
-                      hasMinDisplay={hasMinDisplay}
-                      hasEnoughData={hasEnoughData}
-                      activeClientAccessCount={activeClientAccessCount ?? 0}
-                      pendingClientInviteCount={pendingClientInviteCount ?? 0}
-                      record={deliveryRecord}
-                      checkpoints={deliveryCheckpoints}
-                      leadOptions={deliveryLeadOptions}
-                      leadLoadError={deliveryLeadError}
-                      editable={isVerisightAdmin}
-                    />
-                  ) : (
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">
-                      Deze campagne is gesloten. Rapportage en dashboard blijven beschikbaar, maar respondenten kunnen niet meer invullen.
-                    </div>
-                  )}
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {(['autonomy', 'competence', 'relatedness'] as const).map((dimension) => (
+                    <SdtGauge key={dimension} label={FACTOR_LABELS[dimension]} score={factorData.sdtAverages[dimension] ?? 5.5} />
+                  ))}
                 </div>
               </DashboardDisclosure>
-            ) : null}
 
+              <DashboardDisclosure
+                defaultOpen={false}
+                title={evidenceReadingFlow.sections.factors.title}
+                description={evidenceReadingFlow.sections.factors.description}
+                badge={<DashboardChip label={evidenceReadingFlow.sections.factors.badge} tone="slate" />}
+              >
+                <FactorTable factorAverages={factorData.orgAverages} scanType={stats.scan_type} />
+              </DashboardDisclosure>
+            </div>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr),minmax(300px,0.85fr)]">
             <DashboardDisclosure
-              defaultOpen={disclosureDefaults.respondentsOpen}
-              title="Respondenten en uitnodigingen"
-              description="Operationele detailweergave voor import, responsmonitoring en uitnodigingsbeheer."
-              badge={<DashboardChip label={`${respondents.length} respondenten`} tone="slate" />}
+              defaultOpen={false}
+              title={evidenceReadingFlow.sections.segments.title}
+              description={evidenceReadingFlow.sections.segments.description}
+              badge={<DashboardChip label={evidenceReadingFlow.sections.segments.badge} tone={evidenceReadingFlow.sections.segments.tone} />}
             >
-              {respondents.length === 0 ? (
-                <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
-                  <p className="text-base font-semibold text-slate-900">Nog geen respondenten toegevoegd</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Voeg eerst respondenten toe via de setupflow. Daarna komen uitnodigingen, responsmonitoring en deze tabel automatisch beschikbaar.
-                  </p>
-                  {canManageCampaign ? (
-                    <Link
-                      href="/beheer"
-                      className="mt-4 inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-                    >
-                      Naar setup
-                    </Link>
-                  ) : null}
-                </div>
+              {visibility.showSegmentAnalysis ? (
+                retentionSegmentPlaybooks.length > 0 ? (
+                  <SegmentPlaybookList segments={retentionSegmentPlaybooks} />
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
+                    Er zijn nog geen segmenten met voldoende n en voldoende afwijking om apart vrij te geven.
+                  </div>
+                )
               ) : (
-                <RespondentTable
-                  respondents={respondents}
-                  responses={safeTableResponses}
-                  scanType={stats.scan_type}
-                  hasMinDisplay={hasMinDisplay}
-                  canManageCampaign={canManageCampaign}
-                />
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
+                  Segmentanalyse blijft hier bewust verborgen totdat deep dive, thresholds en privacycondities tegelijk zijn gehaald.
+                </div>
               )}
             </DashboardDisclosure>
 
-            {profile?.is_verisight_admin ? (
-              <DashboardDisclosure
-                defaultOpen={false}
-                title="Pilot- en early-customer-learning"
-                description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementread en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
-                badge={
-                  <DashboardChip
-                    label={learningDossiers.length > 0 ? `${learningDossiers.length} gekoppeld` : 'Nog geen dossier'}
-                    tone={learningDossiers.length > 0 ? 'blue' : 'amber'}
-                  />
-                }
-              >
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr),minmax(320px,0.9fr)]">
-                  <DashboardPanel
-                    eyebrow="Waarom nu"
-                    title={learningDossiers.length > 0 ? 'Campaign is al opgenomen in de learninglus' : 'Koppel deze campaign aan een learningdossier'}
-                    body={
-                      learningDossiers.length > 0
-                        ? 'Gebruik gekoppelde dossiers om implementationfrictie, launchsignalen, managementgebruik en gekozen vervolgroutes expliciet terug te laten landen in product, report, onboarding, sales en operations.'
-                        : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de learning-workbench. Zo blijven echte deliverylessen en vervolgkeuzes niet hangen in losse handover-notes.'
-                    }
-                    tone={learningDossiers.length > 0 ? 'blue' : 'amber'}
-                  />
-                  <div className="rounded-[22px] border border-slate-200 bg-slate-50/70 p-4">
-                    <p className="text-sm font-semibold text-slate-950">Gekoppelde dossiers</p>
-                    {learningDossiers.length === 0 ? (
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Er is nog geen dossier gekoppeld aan deze campaign.
-                      </p>
-                    ) : (
-                      <div className="mt-3 space-y-3">
-                        {learningDossiers.map((dossier) => (
-                          <div key={dossier.id} className="rounded-2xl border border-white/80 bg-white px-4 py-3">
-                            <p className="text-sm font-semibold text-slate-950">{dossier.title}</p>
-                            <p className="mt-1 text-xs text-slate-500">
-                              Status: {dossier.triage_status}. Laatst bijgewerkt: {new Intl.DateTimeFormat('nl-NL', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Europe/Amsterdam' }).format(new Date(dossier.updated_at))}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <Link
-                      href={`/beheer/klantlearnings?campaign=${id}`}
-                      className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
-                    >
-                      Open learning-workbench
-                    </Link>
+            <DashboardDisclosure
+              defaultOpen={false}
+              title={evidenceReadingFlow.sections.methodology.title}
+              description={evidenceReadingFlow.sections.methodology.description}
+              badge={<DashboardChip label={evidenceReadingFlow.sections.methodology.badge} tone="slate" />}
+            >
+              <div className="space-y-4">
+                <MethodologyCard scanType={stats.scan_type} hasSegmentDeepDive={hasSegmentDeepDive} signalLabel={scanDefinition.signalLabel} embedded />
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="max-w-xl">
+                    <p className="text-sm font-semibold text-slate-900">Volledig rapport en accountability direct bereikbaar</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Gebruik dit alleen wanneer delen, bespreking of volledige technische verantwoording nodig wordt.
+                    </p>
                   </div>
+                  <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
+                </div>
+              </div>
+            </DashboardDisclosure>
+          </div>
+        </div>
+      ) : null}
+      {currentView === 'action' ? (
+        <div className="space-y-5">
+          <DashboardSection id="route" eyebrow="Actie" title={productExperience.routeTitle} description="Deze view zet de gekozen route direct om in uitvoering: eerst eigenaarschap en volgorde, daarna pas extra guidance." aside={<DashboardChip label={productExperience.routeBadgeLabel} tone="blue" />}>
+            <div className="space-y-5">
+              <div className="rounded-[22px] border border-[#d2e6e0] bg-[#eef7f4] px-4 py-4 sm:px-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#245853]">Uitvoeren, niet opnieuw samenvatten</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  Kies hier eerst route, eigenaar, eerste stap en reviewmoment. Verificatievragen en playbooks blijven hieronder bewust secundair.
+                </p>
+              </div>
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr),minmax(320px,0.85fr)]">
+                <ActionCoreRouteCard title={actionExecutionCore.route.title} body={actionExecutionCore.route.body} tone={actionExecutionCore.route.tone} />
+                <div className="grid gap-3">
+                  <OverviewCueCard eyebrow="Owner" title={actionExecutionCore.owner.title} body={actionExecutionCore.owner.body} tone={actionExecutionCore.owner.tone} />
+                  <OverviewCueCard eyebrow="First step" title={actionExecutionCore.firstStep.title} body={actionExecutionCore.firstStep.body} tone={actionExecutionCore.firstStep.tone} />
+                  <OverviewCueCard eyebrow="Review moment" title={actionExecutionCore.review.title} body={actionExecutionCore.review.body} tone={actionExecutionCore.review.tone} />
+                </div>
+              </div>
+              <DashboardDisclosure defaultOpen={false} title="Vervolg en borging" description={actionExecutionCore.supportPrompt} badge={<DashboardChip label="Secundair" tone="slate" />}>
+                <div className="space-y-4">
+                  {dashboardViewModel.followThroughCards.length > 0 ? <DashboardTimeline title={dashboardViewModel.followThroughTitle} description={dashboardViewModel.followThroughIntro} items={dashboardViewModel.followThroughCards} /> : null}
+                  <ManagementReadGuide scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} />
                 </div>
               </DashboardDisclosure>
-            ) : null}
+            </div>
+          </DashboardSection>
+
+          <DashboardSection id="playbooks" eyebrow="Verificatie en playbooks" title={productExperience.playbookTitle} description="Open deze laag pas nadat de kernroute gekozen is. Gebruik hem als ondersteuning, niet als tweede overzicht." aside={<DashboardChip label={visibility.showActionPlaybooks ? 'On demand' : 'Wacht op meer data'} tone={visibility.showActionPlaybooks ? 'emerald' : 'amber'} />} tone="emerald">
+            {visibility.showActionPlaybooks ? (
+              <div className="space-y-5">
+                <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4 sm:px-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ondersteunende laag</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">
+                    Deze onderdelen helpen alleen als je de gekozen route verder wilt toetsen of vertalen. Ze horen niet boven de kernroute te concurreren.
+                  </p>
+                </div>
+                <DashboardDisclosure defaultOpen={false} title="Verificatievragen" description="Gebruik dit als eerste operationele check, niet als tweede synthese." badge={<DashboardChip label="Vraaggestuurd" tone="slate" />}>
+                  <RecommendationList factorAverages={factorData.orgAverages} scanType={stats.scan_type} bandOverride={stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? dashboardViewModel.managementBandOverride : undefined} />
+                </DashboardDisclosure>
+                <DashboardDisclosure defaultOpen={false} title="Uitvoerplaybooks" description="Pas openklappen zodra route en eigenaar gekozen zijn." badge={<DashboardChip label="Uitvoering" tone="slate" />}>
+                  <ActionPlaybookList factorAverages={factorData.orgAverages} scanType={stats.scan_type} bandOverride={stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? dashboardViewModel.managementBandOverride : undefined} />
+                </DashboardDisclosure>
+                {visibility.showSegmentAnalysis ? <DashboardDisclosure defaultOpen={false} title="Segment-specifieke routeverdieping" description="Niet centraal, wel beschikbaar wanneer segmentveiligheid en parity dit toelaten." badge={<DashboardChip label="Conditioneel" tone="slate" />}>{retentionSegmentPlaybooks.length > 0 ? <SegmentPlaybookList segments={retentionSegmentPlaybooks} /> : <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">Segmenten halen nu nog niet tegelijk n, afwijking en publicatiegrens.</div>}</DashboardDisclosure> : null}
+              </div>
+            ) : <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">Actieplaybooks komen pas vrij zodra deze wave genoeg onderbouwing heeft voor een betekenisvollere eerste route.</div>}
+          </DashboardSection>
+
+          {(stats.scan_type === 'team' || stats.scan_type === 'leadership') ? <DashboardSection id="bounded-fallback" eyebrow="Bounded fallback" title="Terug naar bredere duiding wanneer deze bounded route te smal wordt" description="Non-core routes blijven bewust begrensd. Als de vraag breder wordt, gaat de interface terug naar bredere duiding in plaats van deze route groter te maken." aside={<DashboardChip label="Canon boundary" tone="amber" />}><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{lifecycleDecisionCards.map((card) => <DashboardPanel key={card.title} eyebrow={card.fit} title={card.title} body={card.body} tone="blue" />)}</div></DashboardSection> : null}
+        </div>
+      ) : null}
+
+      {currentView === 'campaign' ? (
+        visibility.showCampaignView ? (
+          <div className="space-y-6">
+            <DashboardSection id="campaign-view" eyebrow="Campagne" title="Campaign operations en implementatie" description="Deze view houdt delivery, respondenten en adminwerk apart van de managementleeslaag." aside={<DashboardChip label="Operations second" tone="slate" />}>
+              <div className="space-y-4">
+                {visibility.showArchivedNotice ? <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">Deze periode is gearchiveerd. Rapportage en dashboard blijven beschikbaar, maar de campaignflow is niet meer actief.</div> : null}
+                {visibility.showCampaignControls ? <DashboardDisclosure defaultOpen={!hasEnoughData} title="Campagnestatus en launchcontrole" description="Readiness, lifecycle en delivery horen hier, niet in het primaire managementoverzicht." badge={<DashboardChip label={readinessState.launchReady ? 'Klaar voor livegang' : 'Aandacht nodig'} tone={readinessState.launchReady ? 'emerald' : 'amber'} />}><div className="space-y-4"><CampaignActions campaignId={id} isActive={stats.is_active} pendingCount={pendingCount} canManageCampaign={canManageCampaign} /><CampaignHealthIndicator totalInvited={stats.total_invited} totalCompleted={stats.total_completed} invitesNotSent={invitesNotSent} incompleteScores={incompleteScores} hasEnoughData={hasEnoughData} hasMinDisplay={hasMinDisplay} />{stats.is_active ? <PreflightChecklist campaignId={id} scanType={stats.scan_type} deliveryMode={campaignMeta?.delivery_mode ?? null} totalInvited={stats.total_invited} totalCompleted={stats.total_completed} invitesNotSent={invitesNotSent} incompleteScores={incompleteScores} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} activeClientAccessCount={activeClientAccessCount ?? 0} pendingClientInviteCount={pendingClientInviteCount ?? 0} record={deliveryRecord} checkpoints={deliveryCheckpoints} leadOptions={deliveryLeadOptions} leadLoadError={deliveryLeadError} linkedLearningDossierCount={learningDossiers.length} learningCloseoutEvidenceCount={learningCloseoutEvidenceCount} editable={isVerisightAdmin} /> : null}</div></DashboardDisclosure> : null}
+                <DashboardDisclosure defaultOpen={disclosureDefaults.respondentsOpen} title="Respondenten en uitnodigingen" description="Operationele detailweergave voor import, responsmonitoring en uitnodigingsbeheer." badge={<DashboardChip label={`${respondents.length} respondenten`} tone="slate" />}>{visibility.showRespondentTable ? <RespondentTable respondents={respondents} responses={safeTableResponses} scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} canManageCampaign={canManageCampaign} /> : <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center"><p className="text-base font-semibold text-slate-900">Nog geen respondenten toegevoegd</p><p className="mt-2 text-sm leading-6 text-slate-600">Voeg eerst respondenten toe via de setupflow. Daarna komen uitnodigingen, responsmonitoring en deze tabel automatisch beschikbaar.</p></div>}</DashboardDisclosure>
+              </div>
+            </DashboardSection>
           </div>
-        </DashboardSection>
-      ) : null}    </div>
+        ) : <DashboardSection id="campaign-empty" eyebrow="Campagne" title="Campaign-operatie is nu niet beschikbaar" description="Er zijn nog geen operationele gegevens om te tonen. De managementread blijft wel beschikbaar in Overzicht." aside={<DashboardChip label="Deterministisch verborgen" tone="amber" />}><div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">Deze campaign heeft nog geen operationele detailstaat die veilig of zinvol getoond kan worden.</div></DashboardSection>
+      ) : null}
+    </div>
+  )
+
+  return redesignView
+}
+
+function getSingleSearchParam(value: string | string[] | undefined) {
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) return value[0] ?? null
+  return null
+}
+
+function isDashboardView(value: string | null): value is 'overview' | 'evidence' | 'action' | 'campaign' {
+  return value === 'overview' || value === 'evidence' || value === 'action' || value === 'campaign'
+}
+
+function buildDashboardViewHref(
+  view: 'overview' | 'evidence' | 'action' | 'campaign',
+  selectedDriverKey: string | null,
+) {
+  const params = new URLSearchParams()
+  params.set('view', view)
+  if (selectedDriverKey && view !== 'campaign') {
+    params.set('driver', selectedDriverKey)
+  }
+  return `?${params.toString()}`
+}
+
+function _legacyBuildResponseReadState(args: {
+  totalInvited: number
+  totalCompleted: number
+  completionRate: number
+  pendingCount: number
+  hasMinDisplay: boolean
+  hasEnoughData: boolean
+  isActive: boolean
+}) {
+  if (args.totalInvited === 0) {
+    return {
+      title: 'Nog geen responsbasis',
+      body: 'Er zijn nog geen uitnodigingen verstuurd of zichtbaar. Gebruik deze laag pas als eerste responses binnenkomen.',
+      badge: 'Nog leeg',
+      badgeTone: 'amber' as const,
+    }
+  }
+  if (args.hasEnoughData) {
+    return {
+      title: 'Respons sterk genoeg voor managementlezing',
+      body: args.pendingCount > 0 ? `Met ${args.totalCompleted} van ${args.totalInvited} responses ligt er een stevig patroonbeeld. Er staan nog ${args.pendingCount} responses open, maar de hoofdlijn is nu leesbaar.` : `Met ${args.totalCompleted} van ${args.totalInvited} responses ligt er een stevig patroonbeeld. De wave kan nu als volwaardige managementread worden gelezen.`,
+      badge: 'Stevige respons',
+      badgeTone: 'emerald' as const,
+    }
+  }
+  if (args.hasMinDisplay) {
+    return {
+      title: 'Indicatief beeld, nog geen volle patroonlaag',
+      body: args.isActive ? 'Er is al genoeg respons om richting te lezen, maar nog niet genoeg om de diepere driverlaag en bredere routes volledig vrij te geven.' : 'De wave is gesloten, maar blijft qua onderbouwing indicatief. Lees de uitkomst als eerste richting en houd diepe duiding beperkt.',
+      badge: 'Indicatief',
+      badgeTone: 'amber' as const,
+    }
+  }
+  return {
+    title: 'Nog in opbouw',
+    body: `Met ${args.totalCompleted} van ${args.totalInvited} responses is dit nog te smal voor patroonanalyse. Gebruik voorlopig alleen de contextlaag en laat de wave eerst verder vullen.`,
+    badge: 'In opbouw',
+    badgeTone: 'amber' as const,
+  }
+}
+
+function _legacyBuildScoreInterpretationDescription(scanType: CampaignStats['scan_type']) {
+  switch (scanType) {
+    case 'exit':
+      return 'Lees de frictiescore samen met de verdeling van het vertrekbeeld. De score geeft richting, de banding en spreiding laten zien hoe breed dat beeld in de groep terugkomt.'
+    case 'retention':
+      return 'Lees het retentiesignaal als groepssignaal. De verdeling laat zien hoe breed behoudsdruk zichtbaar is en helpt voorkomen dat één metric het hele verhaal overneemt.'
+    case 'pulse':
+      return 'Gebruik deze laag als bounded reviewhulp voor dit meetmoment. De score helpt lezen waar de snapshot nu staat, niet om er een brede trendcockpit van te maken.'
+    case 'team':
+      return 'Gebruik deze laag eerst op groepsniveau. Pas daarna bepaal je of lokale context veilig genoeg zichtbaar mag worden.'
+    case 'onboarding':
+      return 'Lees dit als checkpointverdeling: hoe breed valt dit vroege integratiebeeld nu over de groep, zonder er direct een brede lifecycleclaim aan te hangen.'
+    case 'leadership':
+      return 'Lees dit als managementcontextverdeling op groepsniveau. De score ondersteunt interpretatie, maar opent geen named leader- of performancelezing.'
+    default:
+      return 'Deze laag helpt de hoofdscore en verdeling correct te lezen voordat de synthese en acties worden geopend.'
+  }
+}
+
+function formatCampaignPeriod(value: string) {
+  return new Intl.DateTimeFormat('nl-NL', {
+    dateStyle: 'medium',
+    timeZone: 'Europe/Amsterdam',
+  }).format(new Date(value))
+}
+
+function ResponseReadinessMeter({
+  completionRate,
+  tone,
+}: {
+  completionRate: number
+  tone: 'slate' | 'blue' | 'emerald' | 'amber'
+}) {
+  const accent = tone === 'emerald' ? '#3C8D8A' : tone === 'blue' ? '#234B57' : tone === 'amber' ? '#8C6B1F' : '#5B6878'
+  const boundedRate = Math.max(0, Math.min(100, completionRate))
+  const endAngle = (boundedRate / 100) * 360
+  return (
+    <div
+      aria-hidden="true"
+      className="flex h-20 w-20 items-center justify-center rounded-full border border-[color:var(--border)] bg-white text-sm font-semibold text-[color:var(--ink)]"
+      style={{ background: `conic-gradient(${accent} 0deg ${endAngle}deg, #e9eef2 ${endAngle}deg 360deg)` }}
+    >
+      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white">{Math.round(completionRate)}%</span>
+    </div>
+  )
+}
+
+function OverviewCueCard({
+  eyebrow,
+  title,
+  body,
+  tone,
+}: {
+  eyebrow: string
+  title: string
+  body: string
+  tone: 'slate' | 'blue' | 'emerald' | 'amber'
+}) {
+  const toneClasses =
+    tone === 'emerald'
+      ? 'border-[#d2e6e0] bg-[#eef7f4]'
+      : tone === 'blue'
+        ? 'border-[#d6e4e8] bg-[#f3f8f8]'
+        : tone === 'amber'
+          ? 'border-[#eadfbe] bg-[#faf6ea]'
+          : 'border-white/80 bg-white/90'
+  const eyebrowClasses =
+    tone === 'emerald'
+      ? 'text-[#245853]'
+      : tone === 'blue'
+        ? 'text-[#234B57]'
+        : tone === 'amber'
+          ? 'text-[#8C6B1F]'
+          : 'text-slate-500'
+
+  return (
+    <div className={`rounded-[20px] border px-4 py-3 ${toneClasses}`}>
+      <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${eyebrowClasses}`}>{eyebrow}</p>
+      <p className="mt-2 text-sm font-semibold text-[color:var(--ink)]">{title}</p>
+      <p className="mt-1 text-sm leading-6 text-[color:var(--text)]">{body}</p>
+    </div>
+  )
+}
+
+function OverviewQuickMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[18px] border border-[color:var(--border)] bg-white px-4 py-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-[color:var(--ink)]">{value}</p>
+    </div>
+  )
+}
+
+function ActionCoreRouteCard({
+  title,
+  body,
+  tone,
+}: {
+  title: string
+  body: string
+  tone: 'blue' | 'emerald' | 'amber'
+}) {
+  const toneClasses =
+    tone === 'emerald'
+      ? 'border-[#d2e6e0] bg-[#eef7f4]'
+      : tone === 'amber'
+        ? 'border-[#eadfbe] bg-[#faf6ea]'
+        : 'border-[#d6e4e8] bg-[#f3f8f8]'
+  const eyebrowClass =
+    tone === 'emerald' ? 'text-[#245853]' : tone === 'amber' ? 'text-[#8C6B1F]' : 'text-[#234B57]'
+
+  return (
+    <div className={`rounded-[24px] border px-5 py-5 ${toneClasses}`}>
+      <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${eyebrowClass}`}>Gekozen route</p>
+      <p className="mt-3 text-xl font-semibold text-[color:var(--ink)]">{title}</p>
+      <p className="mt-3 max-w-2xl text-sm leading-7 text-[color:var(--text)]">{body}</p>
+    </div>
   )
 }

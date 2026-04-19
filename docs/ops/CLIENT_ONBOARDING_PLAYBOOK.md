@@ -38,8 +38,8 @@ Verplichte intake-inputs:
 - gewenste timing
 - scanmodus
 - scanperiode expliciet vastgelegd:
-  - live vanaf start
-  - of bewust retrospectief opgezet
+  - ritmeroute vanaf start
+  - of bewust als baseline opgezet
 - doelgroep
 - benodigde metadata
 - contactpersoon
@@ -137,7 +137,7 @@ Gebruik daarvoor `docs/ops/PILOT_LEARNING_PLAYBOOK.md` en `docs/ops/PILOT_LEARNI
 - Logisch startpunt voor vertrekduiding en nulmeting
 - `exit_month` hoort hier praktisch bij de standaard metadata
 
-### ExitScan Live
+### ExitScan ritmeroute
 
 - Vervolgroute na baseline
 - Alleen logisch zodra proces, volume en eigenaarschap staan
@@ -150,7 +150,7 @@ Gebruik daarvoor `docs/ops/PILOT_LEARNING_PLAYBOOK.md` en `docs/ops/PILOT_LEARNI
 - Gericht op actieve medewerkers en groepsduiding
 - Privacy-first, geen individuele signalen naar management
 
-### RetentieScan ritme
+### RetentieScan ritmeroute
 
 - Vervolgroute na baseline
 - Gericht op trendduiding, herhaalmeting en opvolging

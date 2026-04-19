@@ -3,6 +3,12 @@
 Intern referentiedocument voor founder-led gesprekken, demo's, voorstellen en follow-up.
 Laatste update: 2026-04-15
 
+Historical boundary note:
+
+- dit document blijft bruikbaar als salesreferentie, maar sommige routewoorden zijn ouder dan de huidige hardeningcanon
+- lees `ExitScan Live` als historische labelvariant van `ExitScan ritmeroute`
+- lees oudere executive termen altijd ondergeschikt aan [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md) en [COMMERCIAL_LANGUAGE_PARITY_RECHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_LANGUAGE_PARITY_RECHECK.md)
+
 ## Doel
 
 Dit document legt de canonieke founder-led saleslijn van Verisight vast.

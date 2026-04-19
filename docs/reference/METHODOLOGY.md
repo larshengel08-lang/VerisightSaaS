@@ -141,6 +141,7 @@ RetentieScan combineert:
 - het retentiesignaal is een gelijkgewogen samenvatting van SDT en zes werkfactoren
 - bevlogenheid, stay-intent en vertrekintentie blijven aanvullende signalen
 - signal profiles, trends, playbooks en segmentverschillen blijven verificatiehulp en geen bewijs van causaliteit
+- herhaalmetingen en playbook-ijking zijn beschrijvend en bedoeld voor trend- en werkbaarheidsduiding, niet als effectmeting of interventiebewijs
 
 ### Validatiestatus nu
 

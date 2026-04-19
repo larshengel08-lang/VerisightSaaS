@@ -4,6 +4,13 @@ Status: uitgevoerd in repo
 Last updated: 2026-04-15
 Source of truth: dit bestand is leidend voor deze tranche.
 
+Historical boundary note:
+
+- dit plan blijft leidend voor portfolio-architectuur binnen zijn tranche, maar niet voor de huidige buyer-facing routewoorden
+- termen als `Live` en `ritme` zijn in dit document oudere pre-normalisatie labels voor vervolg- en ritmeroutes
+- lees ze in de huidige hardeningcontext als `ritmeroute`
+- bij conflict met de actuele taal- of commerciële canon winnen [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md) en [COMMERCIAL_ARCHITECTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_ARCHITECTURE_CANON.md)
+
 ## 1. Summary
 
 Deze tranche maakt de portfolio-architectuur van Verisight repo-breed explicieter en semantisch strakker. De runtime bleef al beperkt tot twee echte producttypes (`exit` en `retention`), maar de marketinglaag liet `Combinatie` en meerdere toekomstige proposities nog te snel voelen als extra producten in plaats van als route- of reserveringslaag.

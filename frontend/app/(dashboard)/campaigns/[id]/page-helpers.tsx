@@ -1,9 +1,20 @@
 import type { ReactNode } from 'react'
 import { getProductModule } from '@/lib/products/shared/registry'
-import type { SegmentPlaybookEntry, SignalTrendCard } from '@/lib/products/shared/types'
+import type {
+  ActionPlaybook,
+  DashboardDecisionCard,
+  DashboardFollowThroughCard,
+  SegmentPlaybookEntry,
+  SignalTrendCard,
+} from '@/lib/products/shared/types'
 import { buildFactorPresentation, getManagementBandLabel } from '@/lib/management-language'
 import { getScanDefinition } from '@/lib/scan-definitions'
-import { EXIT_REASON_LABELS, FACTOR_LABELS } from '@/lib/types'
+import {
+  EXIT_REASON_LABELS,
+  FACTOR_LABELS,
+  getResponseDirectionSignalScore,
+  getResponseSignalScore,
+} from '@/lib/types'
 import type { CampaignStats, Respondent, ScanType, SurveyResponse } from '@/lib/types'
 import { DashboardPanel } from '@/components/dashboard/dashboard-primitives'
 
@@ -67,6 +78,100 @@ export type InsightNotice = {
   tone: 'blue' | 'amber' | 'red'
 }
 
+export type ResponseReadState = {
+  title: string
+  body: string
+  badge: string
+  badgeTone: 'slate' | 'blue' | 'emerald' | 'amber'
+  quickLabel: string
+  caution: string
+  nextStep: string
+}
+
+export type ScoreInterpretationGuide = {
+  intro: string
+  steps: Array<{
+    title: string
+    body: string
+  }>
+}
+
+export type ActionExecutionCore = {
+  route: {
+    title: string
+    body: string
+    tone: 'blue' | 'emerald' | 'amber'
+  }
+  owner: {
+    title: string
+    body: string
+    tone: 'blue' | 'emerald' | 'amber'
+  }
+  firstStep: {
+    title: string
+    body: string
+    tone: 'blue' | 'emerald' | 'amber'
+  }
+  review: {
+    title: string
+    body: string
+    tone: 'blue' | 'emerald' | 'amber'
+  }
+  supportPrompt: string
+}
+
+export type EvidenceReadingFlow = {
+  intro: {
+    title: string
+    body: string
+    sequence: string[]
+  }
+  primaryEntry: {
+    title: string
+    description: string
+    badge: string
+    emptyState: string
+  }
+  sections: {
+    sdt: {
+      title: string
+      description: string
+      badge: string
+    }
+    factors: {
+      title: string
+      description: string
+      badge: string
+    }
+    segments: {
+      title: string
+      description: string
+      badge: string
+      tone: 'emerald' | 'amber'
+    }
+    methodology: {
+      title: string
+      description: string
+      badge: string
+    }
+  }
+  supportPrompt: string
+}
+
+export type DriverDrilldownFactor = {
+  factorKey: string
+  factorLabel: string
+  score: number
+  signalValue: number
+}
+
+export type DriverDrilldownModel = {
+  availableFactors: DriverDrilldownFactor[]
+  highlightedFactors: DriverDrilldownFactor[]
+  selectedFactorKey: string | null
+  selectedFactor: DriverDrilldownFactor | null
+}
+
 export function buildHeroDescription({
   scanType,
   isActive,
@@ -119,6 +224,31 @@ export function getTopFactorLabel(factorAverages: Record<string, number>) {
     .sort((left, right) => right.signalValue - left.signalValue)[0]
 
   return topFactor ? (FACTOR_LABELS[topFactor.factor] ?? topFactor.factor) : null
+}
+
+export function buildDriverDrilldownModel(args: {
+  factorAverages: Record<string, number>
+  selectedFactorKey: string | null
+}): DriverDrilldownModel {
+  const availableFactors = Object.entries(args.factorAverages)
+    .map(([factorKey, score]) => ({
+      factorKey,
+      factorLabel: FACTOR_LABELS[factorKey] ?? factorKey,
+      score,
+      signalValue: Number((11 - score).toFixed(1)),
+    }))
+    .sort((left, right) => right.signalValue - left.signalValue)
+
+  const fallbackFactor = availableFactors[0] ?? null
+  const selectedFactor =
+    availableFactors.find((factor) => factor.factorKey === args.selectedFactorKey) ?? fallbackFactor
+
+  return {
+    availableFactors,
+    highlightedFactors: availableFactors.slice(0, 2),
+    selectedFactorKey: selectedFactor?.factorKey ?? null,
+    selectedFactor,
+  }
 }
 
 export function buildDecisionPanels({
@@ -408,6 +538,215 @@ export function buildInsightWarnings({
   }
 
   return items
+}
+
+export function buildResponseReadState(args: {
+  totalInvited: number
+  totalCompleted: number
+  completionRate: number
+  pendingCount: number
+  hasMinDisplay: boolean
+  hasEnoughData: boolean
+  isActive: boolean
+}): ResponseReadState {
+  if (args.totalInvited === 0) {
+    return {
+      title: 'Nog geen responsbasis',
+      body: 'Er zijn nog geen uitnodigingen verstuurd of zichtbaar. Gebruik deze laag pas als eerste responses binnenkomen.',
+      badge: 'Nog leeg',
+      badgeTone: 'amber',
+      quickLabel: 'Wacht nog',
+      caution: 'Er is nog geen leesbasis om managementduiding op te openen.',
+      nextStep: 'Zet eerst livegang en eerste responsstroom aan.',
+    }
+  }
+
+  if (args.hasEnoughData) {
+    return {
+      title: 'Respons sterk genoeg voor managementlezing',
+      body:
+        args.pendingCount > 0
+          ? `Met ${args.totalCompleted} van ${args.totalInvited} responses ligt er een stevig patroonbeeld. Er staan nog ${args.pendingCount} responses open, maar de hoofdlijn is nu leesbaar.`
+          : `Met ${args.totalCompleted} van ${args.totalInvited} responses ligt er een stevig patroonbeeld. De wave kan nu als volwaardige managementread worden gelezen.`,
+      badge: 'Stevige respons',
+      badgeTone: 'emerald',
+      quickLabel: 'Nu lezen',
+      caution:
+        args.pendingCount > 0
+          ? 'Openstaande responses kunnen nog nuance toevoegen, niet de hoofdlijn vervangen.'
+          : 'De responsbasis is nu stevig genoeg om synthese en drivers serieus te lezen.',
+      nextStep: 'Lees nu via handoff, scorelaag en daarna pas synthese en drivers.',
+    }
+  }
+
+  if (args.hasMinDisplay) {
+    return {
+      title: 'Indicatief beeld, nog geen volle patroonlaag',
+      body: args.isActive
+        ? 'Er is al genoeg respons om richting te lezen, maar nog niet genoeg om de diepere driverlaag en bredere routes volledig vrij te geven.'
+        : 'De wave is gesloten, maar blijft qua onderbouwing indicatief. Lees de uitkomst als eerste richting en houd diepe duiding beperkt.',
+      badge: 'Indicatief',
+      badgeTone: 'amber',
+      quickLabel: 'Lees voorzichtig',
+      caution: 'Gebruik dit vooral als eerste richting en niet als volledig patroonbeeld.',
+      nextStep: 'Houd de focus bovenin: handoff en score eerst, diepere drivers later.',
+    }
+  }
+
+  return {
+    title: 'Nog in opbouw',
+    body: `Met ${args.totalCompleted} van ${args.totalInvited} responses is dit nog te smal voor patroonanalyse. Gebruik voorlopig alleen de contextlaag en laat de wave eerst verder vullen.`,
+    badge: 'In opbouw',
+    badgeTone: 'amber',
+    quickLabel: 'Nog te vroeg',
+    caution: 'De huidige basis is nog te smal voor een betrouwbare patroonread.',
+    nextStep: 'Bouw eerst respons op voordat je score, synthese of drivers zwaar laat meewegen.',
+  }
+}
+
+export function buildScoreInterpretationGuide(scanType: ScanType): ScoreInterpretationGuide {
+  switch (scanType) {
+    case 'exit':
+      return {
+        intro:
+          'Lees deze laag als interpretatiehulp: eerst de frictiescoreband, daarna de verdeling van het vertrekbeeld en pas daarna de bestuurlijke synthese.',
+        steps: [
+          {
+            title: 'Lees eerst de Frictiescore',
+            body: 'De score geeft de hoofdrichting van het vertrekbeeld op groepsniveau.',
+          },
+          {
+            title: 'Lees daarna de Verdeling',
+            body: 'Kijk hoe breed en hoe scherp het vertrekbeeld in de groep terugkomt voordat je gaat verklaren.',
+          },
+          {
+            title: 'Ga dan pas naar synthese en drivers',
+            body: 'Gebruik factoren en managementsynthese pas nadat de scorelaag bestuurlijk is geland.',
+          },
+        ],
+      }
+    case 'retention':
+      return {
+        intro:
+          'Lees deze laag eerst als groepssignaal: waar staat behoud onder druk, hoe breed komt dat terug en welke verdieping hoort daar pas daarna achteraan.',
+        steps: [
+          {
+            title: 'Lees eerst het Retentiesignaal',
+            body: 'Het signaal geeft de hoofdrichting van behoudsdruk op groepsniveau.',
+          },
+          {
+            title: 'Lees daarna de Signaalverdeling',
+            body: 'Kijk hoe breed het beeld terugkomt voordat je factoren of segmenten zwaarder laat wegen.',
+          },
+          {
+            title: 'Ga dan pas naar synthese en drivers',
+            body: 'Open daarna pas factoren, open signalen en actie om de eerste route te kiezen.',
+          },
+        ],
+      }
+    default:
+      return {
+        intro:
+          'Lees deze laag eerst als interpretatiehulp: score of signaal geeft richting, verdeling geeft context en daarna pas volgt verdieping.',
+        steps: [
+          {
+            title: 'Lees eerst het hoofdsignaal',
+            body: 'Gebruik de score of signaalwaarde als eerste leesrichting op groepsniveau.',
+          },
+          {
+            title: 'Lees daarna de verdeling',
+            body: 'Kijk hoe breed het beeld terugkomt voordat je verklarende lagen opent.',
+          },
+          {
+            title: 'Ga dan pas naar synthese en drivers',
+            body: 'Gebruik de verdieping daarna pas om het eerste managementspoor te kiezen.',
+          },
+        ],
+      }
+  }
+}
+
+export function buildEvidenceReadingFlow(args: {
+  showDriverDrilldown: boolean
+  showSegmentAnalysis: boolean
+}): EvidenceReadingFlow {
+  return {
+    intro: {
+      title: 'Onderbouwing als tweede leeslaag',
+      body: 'Open hier pas verder nadat handoff, scorelaag en eerste route bestuurlijk zijn geland. De volgorde blijft bewust smal: eerst de kernverdieping, daarna pas verklarende lagen en trustdetails.',
+      sequence: [
+        '1. Kernverdieping',
+        '2. SDT en factoren',
+        '3. Segmenten',
+        '4. Methodiek en accountability',
+      ],
+    },
+    primaryEntry: {
+      title: 'Kernverdieping',
+      description: 'Drivers, signalen en product-specifieke tabs blijven samen in een duidelijke eerste evidence-ingang. Zo voelt verdieping als een gerichte volgende stap, niet als een tweede dashboard.',
+      badge: 'Start hier',
+      emptyState: `De volledige onderbouwing komt vrij vanaf ${MIN_N_PATTERNS} responses.`,
+    },
+    sections: {
+      sdt: {
+        title: 'SDT basislaag',
+        description: 'Autonomie, competentie en verbondenheid blijven zichtbaar als verklarende onderlaag, niet als nieuw hoofdscherm.',
+        badge: 'SDT',
+      },
+      factors: {
+        title: 'Organisatiefactoren',
+        description: 'Volledige factorlezing voor managementduiding, nadat de topdrivers al zijn gelezen.',
+        badge: 'Factoren',
+      },
+      segments: {
+        title: 'Conditionele segmentanalyse',
+        description: args.showSegmentAnalysis
+          ? 'Alleen zichtbaar waar thresholds, deep dive en parity dit veilig toelaten.'
+          : 'Blijft bewust op de achtergrond totdat thresholds, deep dive en privacycondities tegelijk zijn gehaald.',
+        badge: args.showSegmentAnalysis ? 'Beschikbaar' : 'Verborgen tot thresholds',
+        tone: args.showSegmentAnalysis ? 'emerald' : 'amber',
+      },
+      methodology: {
+        title: 'Methodologie, privacy en technische verantwoording',
+        description: 'Leeswijzer, drempels en accountability blijven direct bereikbaar, maar bewust secundair aan de evidence-lezing.',
+        badge: 'Secondary trust layer',
+      },
+    },
+    supportPrompt: 'Klap deze verdiepingslagen alleen open als de kernlezing al staat en extra verificatie of accountability nodig wordt.',
+  }
+}
+
+export function buildActionExecutionCore(args: {
+  selectedPlaybook: ActionPlaybook | null
+  nextStep: DashboardDecisionCard
+  highlightedActionQuestion: string | null
+  followThroughCard: DashboardFollowThroughCard | null
+}): ActionExecutionCore {
+  return {
+    route: {
+      title: args.selectedPlaybook?.title ?? args.nextStep.title,
+      body: args.selectedPlaybook?.decision ?? args.nextStep.body,
+      tone: args.selectedPlaybook ? 'emerald' : args.nextStep.tone,
+    },
+    owner: {
+      title: args.selectedPlaybook?.owner ?? 'HR + lijnmanagement',
+      body: 'Beleg de eerste stap expliciet bij een trekker en leg vast wie de review terugbrengt.',
+      tone: 'blue',
+    },
+    firstStep: {
+      title: args.selectedPlaybook?.actions[0] ?? 'Kies een eerste gerichte verificatie',
+      body: args.highlightedActionQuestion ?? args.selectedPlaybook?.validate ?? args.nextStep.body,
+      tone: 'blue',
+    },
+    review: {
+      title: args.selectedPlaybook?.review ?? args.followThroughCard?.title ?? 'Plan een eerste review',
+      body:
+        args.followThroughCard?.body ??
+        'Leg direct vast wanneer deze eerste route opnieuw gelezen en eventueel begrensd bijgesteld wordt.',
+      tone: args.followThroughCard?.tone ?? 'amber',
+    },
+    supportPrompt: 'Alleen openklappen als de kernroute al gekozen is en extra verificatie of borging nodig wordt.',
+  }
 }
 
 export function SdtGauge({ label, score }: { label: string; score: number }) {
@@ -739,7 +1078,7 @@ export function computeRetentionSupplementalAverages(responses: SurveyResponse[]
     .map((response) => response.turnover_intention_score)
     .filter((value): value is number => typeof value === 'number')
   const stayIntent = responses
-    .map((response) => response.stay_intent_score)
+    .map((response) => getResponseDirectionSignalScore(response))
     .filter((value): value is number => typeof value === 'number')
     .map((value) => ((value - 1) / 4) * 9 + 1)
 
@@ -755,14 +1094,14 @@ export function computeRetentionSupplementalAverages(responses: SurveyResponse[]
 
 export function computeRetentionSignalAverages(responses: SurveyResponse[]): RetentionSignalAverages {
   return {
-    retentionSignal: computeAverageRiskScore(responses),
+    retentionSignal: computeAverageSignalScore(responses),
     ...computeRetentionSupplementalAverages(responses),
   }
 }
 
 export function computePulseSignalAverages(responses: SurveyResponse[]): PulseSignalAverages {
   return {
-    pulseSignal: computeAverageRiskScore(responses),
+    pulseSignal: computeAverageSignalScore(responses),
     stayIntent: computeRetentionSupplementalAverages(responses).stayIntent,
     factorAverages: computeFactorAverages(responses).orgAverages,
   }
@@ -992,7 +1331,7 @@ export function buildRetentionSegmentPlaybooks(args: {
       const topFactor = sortedFactors[0]
       if (!topFactor) return null
 
-      const avgSignal = computeAverageRiskScore(group.responses)
+      const avgSignal = computeAverageSignalScore(group.responses)
       if (avgSignal === null) return null
 
       const band = topFactor.signalValue >= 7 ? 'HOOG' : topFactor.signalValue >= 4.5 ? 'MIDDEN' : 'LAAG'
@@ -1079,18 +1418,23 @@ export function buildRiskHistogram(responses: SurveyResponse[]) {
   const bins = ['1-2', '2-3', '3-4', '4-5', '5-6', '6-7', '7-8', '8-9', '9-10']
   const counts = Object.fromEntries(bins.map((bin) => [bin, 0])) as Record<string, number>
   for (const response of responses) {
-    if (typeof response.risk_score !== 'number') continue
-    const lower = Math.max(1, Math.min(9, Math.floor(response.risk_score)))
+    const signalScore = getResponseSignalScore(response)
+    if (typeof signalScore !== 'number') continue
+    const lower = Math.max(1, Math.min(9, Math.floor(signalScore)))
     counts[`${lower}-${lower + 1}`] += 1
   }
   return bins.map((range) => ({ range, count: counts[range] }))
 }
 
 export function computeAverageRiskScore(responses: SurveyResponse[]) {
-  const values = responses.map((response) => response.risk_score).filter((value): value is number => typeof value === 'number')
+  const values = responses
+    .map((response) => getResponseSignalScore(response))
+    .filter((value): value is number => typeof value === 'number')
   if (!values.length) return null
   return values.reduce((sum, value) => sum + value, 0) / values.length
 }
+
+export const computeAverageSignalScore = computeAverageRiskScore
 
 export function RecommendationList({
   factorAverages,

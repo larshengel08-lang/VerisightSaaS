@@ -46,10 +46,33 @@ Voor het huidige fix-programma gebruik je deze volgorde:
 
 - [CLIENT_ONBOARDING_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_ONBOARDING_PLAYBOOK.md)
   - canonieke route van akkoord naar eerste managementwaarde
+- [CLIENT_ONBOARDING_FLOW_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_ONBOARDING_FLOW_SYSTEM.md)
+  - praktisch flow-based naslagwerk voor routekeuze, intake, first value en report-to-action
 - [ONBOARDING_ACCEPTANCE_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/ONBOARDING_ACCEPTANCE_CHECKLIST.md)
   - acceptancecheck voor onboarding
 - [OPS_DELIVERY_FAILURE_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/OPS_DELIVERY_FAILURE_MATRIX.md)
   - recovery- en uitzonderingslogica
+
+### Product truth en rapportcanon
+
+- [PRODUCT_TRUTH_HARDENING_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_TRUTH_HARDENING_PROGRAM_PLAN.md)
+  - overkoepelend fase- en waveprogramma voor reporting, methodiek, commerciele structuur en hardening
+- [LANGUAGE_PARITY_INVENTORY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/LANGUAGE_PARITY_INVENTORY.md)
+  - inventaris van embedded truth, shared grammar en buyer-facing mirror drift
+- [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md)
+  - canonieke producttaal en parityregels voor rapport, dashboard, onboarding en buyer-facing copy
+- [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md)
+  - gedeelde rapportgrammar, met ExitScan expliciet vastgezet op de vaste `P1-P10 + Appendix` architectuur
+- [REPORT_GENERATOR_RUNTIME_BOUNDARY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_GENERATOR_RUNTIME_BOUNDARY.md)
+  - expliciete runtimegrenzen tussen ExitScan, RetentieScan en shared non-exit report paths
+- [EXITSCAN_IMPLEMENTATION_PARITY_CHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_IMPLEMENTATION_PARITY_CHECK.md)
+  - implementatiecheck van preview, reportgenerator en runtimepad tegen de vastgezette ExitScan-architectuur
+- [RETENTION_REPORT_GRAMMAR_PARITY_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTION_REPORT_GRAMMAR_PARITY_REVIEW.md)
+  - parityreview van de RetentieScan runtime-opbouw tegen de gedeelde report grammar
+- [COMMERCIAL_LANGUAGE_PARITY_RECHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_LANGUAGE_PARITY_RECHECK.md)
+  - laatste buyer-facing normalisatie op baseline-, ritmeroute- en bestuurlijke-read taal
+- [COMMERCIAL_ARCHITECTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_ARCHITECTURE_CANON.md)
+  - dual-core commerciele structuur en routehierarchie
 
 ### Revenue engine
 

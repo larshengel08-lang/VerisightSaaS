@@ -8,10 +8,10 @@ De uitgevoerde richting in deze tranche:
 
 - één canonieke pricing- en packagingarchitectuur vastgelegd rond eerste trajecten, vervolgvormen, add-ons en een portfolioroute
 - ExitScan Baseline expliciet gehouden als primaire publieke eerste route
-- ExitScan Live expliciet gehouden als quote-only vervolgroute na baseline of bestaand exitvolume
+- ExitScan ritmeroute expliciet gehouden als quote-only vervolgroute na baseline of bestaand exitvolume
 - RetentieScan Baseline expliciet gehouden als eigen eerste route voor actieve-populatie vroegsignalering
-- RetentieScan ritme expliciet gehouden als buyer-facing vervolgvorm na baseline
-- `Retentie vervolgmeting` genormaliseerd tot compacte vervolgcomponent binnen de RetentieScan-ritmelaag
+- RetentieScan ritmeroute expliciet gehouden als buyer-facing vervolgvorm na baseline
+- `Retentie vervolgmeting` genormaliseerd tot compacte vervolgcomponent binnen de RetentieScan-ritmeroute
 - `segment_deep_dive` expliciet gehouden als enige repo-brede add-on
 - publieke pricing, salesdocs, proposalspines, buyer-assets en paritytests op dezelfde packageboom gezet
 
@@ -20,7 +20,7 @@ Belangrijkste repo-observaties waarop deze uitvoering is gebaseerd:
 - de prijsankers stonden al publiek en in salesdocs vast, maar de pricing-truth was verspreid
 - de commerciële packageboom was verder ontwikkeld dan de technische productconfiguratie
 - `segment_deep_dive` was al de enige echte repo-brede add-on
-- `delivery_mode` bestond backendmatig, maar droeg `ExitScan Live` nog niet als volwaardige publieke productmodus
+- `delivery_mode` bestond backendmatig, maar droeg `ExitScan ritmeroute` nog niet als volwaardige publieke productmodus
 - RetentieScan had commercieel meer package-varianten dan ExitScan, waardoor package-uitleg sneller diffuus kon worden
 - strategie, trust en roadmap maakten expliciet dat pricing assisted/productized moest blijven en niet mocht doorschieten naar plans, seats, subscriptions of Stripe-logica
 
@@ -61,7 +61,7 @@ Dependency: none
 - [x] Expliciet onderscheid gemaakt tussen publieke prijsankers, quote-only vervolgvormen, echte add-ons en portfolioroutes.
 - [x] Vastgelegd welke package-elementen technisch echt ondersteund zijn: `segment_deep_dive`, `delivery_mode` en RetentieScan trend-/ritme-output.
 - [x] Vastgelegd waar pricing inhoudelijk rust op echte output en waar pricing vooral een commerciële constructie was.
-- [x] De belangrijkste verwarringspunten gedocumenteerd: ExitScan Baseline versus ExitScan Live, RetentieScan ritme versus compacte vervolgmeting, combinatie als route versus pakket en add-on versus productvorm.
+- [x] De belangrijkste verwarringspunten gedocumenteerd: ExitScan Baseline versus ExitScan ritmeroute, RetentieScan ritmeroute versus compacte vervolgmeting, combinatie als route versus pakket en add-on versus productvorm.
 
 #### Definition of done
 - [x] Er lag één controleerbaar startbeeld van de huidige pricing- en packaginglaag.
@@ -79,8 +79,8 @@ Dependency: Milestone 0
 - [x] Uitgevoerd op 2026-04-15: een decision-complete pricing- en packagingarchitectuur vastgelegd.
 
 #### Tasks
-- [x] De vaste packagehiërarchie vastgelegd: ExitScan Baseline, ExitScan Live, RetentieScan Baseline, RetentieScan ritme, Segment deep dive en combinatie als portfolioroute.
-- [x] Beslist dat `Retentie vervolgmeting` niet als parallelle hoofdpackage blijft bestaan, maar als compacte vervolgcomponent binnen de RetentieScan-ritmelaag.
+- [x] De vaste packagehiërarchie vastgelegd: ExitScan Baseline, ExitScan ritmeroute, RetentieScan Baseline, RetentieScan ritmeroute, Segment deep dive en combinatie als portfolioroute.
+- [x] Beslist dat `Retentie vervolgmeting` niet als parallelle hoofdpackage blijft bestaan, maar als compacte vervolgcomponent binnen de RetentieScan-ritmeroute.
 - [x] Vastgelegd dat Baseline en vervolgvormen asymmetrisch mogen zijn per product.
 - [x] Vastgelegd welke prijsankers publiek blijven en welke bewust quote-only zijn.
 - [x] Vaste buyer-facing package-termen vastgelegd: product, eerste traject, vervolgvorm, add-on en portfolioroute.
@@ -104,8 +104,8 @@ Dependency: Milestone 1
 #### Tasks
 - [x] De publieke pricinglaag herschikt naar primaire prijsankers, vervolgvormen, add-ons, combinatie op aanvraag, keuzehulp en FAQ.
 - [x] ExitScan op de tarieflaag zichtbaarder als default eerste route gehouden.
-- [x] Expliciet gemaakt dat ExitScan Live vooral logisch is na baseline of bestaand volume en daarom quote-only blijft.
-- [x] Expliciet gemaakt dat RetentieScan ritme een vervolgvorm is en geen parallel eerste pakket.
+- [x] Expliciet gemaakt dat ExitScan ritmeroute vooral logisch is na baseline of bestaand volume en daarom quote-only blijft.
+- [x] Expliciet gemaakt dat RetentieScan ritmeroute een vervolgvorm is en geen parallel eerste pakket.
 - [x] `Retentie vervolgmeting` herpositioneerd als compacte vervolgcomponent binnen de ritmelaag.
 - [x] `Segment deep dive` scherp gehouden als bewuste verdieping en niet als standaard inbegrepen laag.
 - [x] Combinatie-taal strikt route-gedreven gehouden: op aanvraag, geen bundel en geen kortingstaal.
@@ -129,8 +129,8 @@ Dependency: Milestone 2
 #### Tasks
 - [x] De sales decision tree, comparison matrix, proposal spines, one-pagers en objection matrix bijgewerkt op dezelfde package-architectuur.
 - [x] Gezamenlijke packagewoorden doorgetrokken over site en sales.
-- [x] `ExitScan Live` expliciet gehouden als vervolg na baseline of bestaand exitvolume, niet als concurrerende eerste offer.
-- [x] `RetentieScan ritme` en compacte retentie vervolgmeting hiërarchisch consistent gemaakt.
+- [x] `ExitScan ritmeroute` expliciet gehouden als vervolg na baseline of bestaand exitvolume, niet als concurrerende eerste offer.
+- [x] `RetentieScan ritmeroute` en compacte retentie vervolgmeting hiërarchisch consistent gemaakt.
 - [x] Combinatie-assets en proposals vrijgehouden van bundel- of discountlogica.
 - [x] De vaste regel intact gehouden: geen gratis pilot als standaard, wel een betaald eerste traject.
 - [x] Pricinguitleg direct bruikbaar gemaakt voor discovery, demo en voorstelovergang.
@@ -152,7 +152,7 @@ Dependency: Milestone 3
 
 #### Tasks
 - [x] Per package-vorm getoetst of de commerciële belofte echt door product en output wordt gedragen.
-- [x] Expliciet vastgelegd hoe `ExitScan Live` verkocht mag worden zolang `delivery_mode` nog geen volwaardige publieke productmodus is: guided vervolgroute, quote-only, niet self-serve.
+- [x] Expliciet vastgelegd hoe `ExitScan ritmeroute` verkocht mag worden zolang `delivery_mode` nog geen volwaardige publieke productmodus is: guided vervolgroute, quote-only, niet self-serve.
 - [x] Expliciet vastgelegd dat `segment_deep_dive` de enige repo-breed echte add-on is en dat andere commerciële vervolgvormen geen technisch add-on-contract hoeven te zijn.
 - [x] Pricing gekoppeld gehouden aan echte voorbeeldoutput en report-structuur.
 - [x] Vastgelegd welke packageclaims niet mogen: always-on live monitoring alsof dit al product-led standaard is, benchmark- of ROI-claims zonder basis en SaaS-planframing.
@@ -203,12 +203,12 @@ Dependency: Milestone 4
 
 ### Sales, proposal and buyer assets
 - [x] Packagevolgorde en pricingwoorden geharmoniseerd over decision tree, proposals en one-pagers.
-- [x] `RetentieScan ritme` en compacte retentie vervolgmeting genormaliseerd tot één begrijpelijke vervolgarchitectuur.
+- [x] `RetentieScan ritmeroute` en compacte retentie vervolgmeting genormaliseerd tot één begrijpelijke vervolgarchitectuur.
 - [x] Combinatie op aanvraag en route-gedreven gehouden.
 
 ### Product reality and internal contracts
 - [x] Packageclaims verankerd in echte report-, preview- en campaignrealiteit.
-- [x] `ExitScan Live` gepositioneerd als guided vervolgroute in plaats van volwaardige publieke productmodus.
+- [x] `ExitScan ritmeroute` gepositioneerd als guided vervolgroute in plaats van volwaardige publieke productmodus.
 - [x] Alleen echte add-ons technisch en copymatig als add-on laten voelen.
 
 ### QA and governance
@@ -220,15 +220,15 @@ Dependency: Milestone 4
 
 - [x] Commerciële packageverwarring is verkleind, maar blijft een risico zodra publieke en interne termen weer uit elkaar gaan lopen.
 - [x] RetentieScan heeft nog steeds een rijkere vervolglijn dan ExitScan; dit wordt nu beter gekaderd, maar moet commercieel bewaakt blijven.
-- [x] `ExitScan Live` blijft afhankelijk van begeleide delivery en voldoende volume; de quote-only framing verkleint hier het risico op overselling.
+- [x] `ExitScan ritmeroute` blijft afhankelijk van begeleide delivery en voldoende volume; de quote-only framing verkleint hier het risico op overselling.
 - [x] Alleen `segment_deep_dive` is repo-breed een echte add-on; dit blijft expliciet bewaakt in copy en tests.
 - [x] Premature SaaS-logica is in deze tranche bewust buiten scope gehouden.
 - [x] Trust-erosie door te harde packageclaims is verkleind via alignment met preview, trustdocs en paritytests.
 
 ## 5. Open Questions
 
-- [ ] Willen we `Compacte retentie vervolgmeting` later publiek blijven tonen als aparte vervolgcomponent, of alleen nog als sales-/proposalterm binnen `RetentieScan ritme`?
-- [ ] Willen we `ExitScan Live` later publiek prominenter maken zodra `delivery_mode` ook frontend- en admin-breed verder is uitgewerkt?
+- [ ] Willen we `Compacte retentie vervolgmeting` later publiek blijven tonen als aparte vervolgcomponent, of alleen nog als sales-/proposalterm binnen `RetentieScan ritmeroute`?
+- [ ] Willen we `ExitScan ritmeroute` later publiek prominenter maken zodra `delivery_mode` ook frontend- en admin-breed verder is uitgewerkt?
 - [ ] Willen we later een compactere executive pricing-view naast de huidige tariefpagina?
 - [ ] Willen we combinatie later semi-gestandaardiseerd tonen als portfolio-opbouw, of structureel `op aanvraag` houden?
 - [ ] Willen we toekomstige productfamilies pas pricingmatig zichtbaar maken zodra hun packagecontract net zo scherp is als voor ExitScan en RetentieScan?
@@ -256,9 +256,9 @@ Dependency: Milestone 4
 - [x] `docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md` is de source of truth voor dit traject.
 - [x] ExitScan Baseline blijft de primaire publieke eerste route en `EUR 2.950` het standaard eerste prijsanker.
 - [x] RetentieScan Baseline blijft een specifieke complementaire eerste route op `EUR 3.450`, niet een goedkopere of lichtere afgeleide van ExitScan.
-- [x] ExitScan Live blijft een secundaire vervolgroute op aanvraag, niet een concurrerende publieke eerste package.
-- [x] RetentieScan ritme blijft de buyer-facing vervolgvorm na baseline, met `vanaf EUR 4.950` als anker.
-- [x] `Compacte retentie vervolgmeting` blijft een compact vervolg binnen de RetentieScan-ritmelaag en niet een parallelle hoofdpackage.
+- [x] ExitScan ritmeroute blijft een secundaire vervolgroute op aanvraag, niet een concurrerende publieke eerste package.
+- [x] RetentieScan ritmeroute blijft de buyer-facing vervolgvorm na baseline, met `vanaf EUR 4.950` als anker.
+- [x] `Compacte retentie vervolgmeting` blijft een compact vervolg binnen de RetentieScan-ritmeroute en niet een parallelle hoofdpackage.
 - [x] `Segment deep dive` blijft de enige expliciete add-on die repo-breed technisch en commercieel herkenbaar is.
 - [x] Combinatie blijft een portfolioroute op aanvraag, geen bundel, korting of standaard upsell.
 - [x] Pricing blijft assisted/productized en boardroom-geschikt, zonder premature SaaS-billinglogica.

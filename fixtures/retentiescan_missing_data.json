@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "3.0",
+  "product": "RS",
+  "reportType": "retention",
+  "main": {
+    "P1": {
+      "client_name": "TechBouw B.V.",
+      "product_label": "RetentieScan",
+      "period_label": "Voorjaar 2026",
+      "invited_n": 23,
+      "completed_n": 14,
+      "response_rate": 60.9,
+      "retention_signal": 5.0,
+      "executive_theme": "Het behoudsbeeld is smal en vraagt compacte toetsing.",
+      "top_factors": ["Werkbelasting", "Groeiperspectief"],
+      "first_decision": "Gebruik dit vooral om een verificatiespoor te kiezen."
+    },
+    "P2": {
+      "handoff_signal": "Er is een behoudssignaal zichtbaar, zonder extra lagen.",
+      "handoff_why": "Het patroon vraagt compacte bestuurlijke weging.",
+      "handoff_action": "Kies een verificatiespoor en houd de handoff strak.",
+      "handoff_nonclaim": "Lees dit niet als voorspelling van vertrek of diagnose van teamcultuur."
+    },
+    "P3": {
+      "factors": [
+        { "name": "Werkbelasting", "score": 5.1, "signal": 5.5, "band": "aandacht_nodig" },
+        { "name": "Groeiperspectief", "score": 5.2, "signal": 5.4, "band": "aandacht_nodig" }
+      ],
+      "featured_factors": [
+        { "name": "Werkbelasting", "score": 5.1, "signal": 5.5, "band": "aandacht_nodig", "definition": "Werkdruk vraagt vooral verificatie." },
+        { "name": "Groeiperspectief", "score": 5.2, "signal": 5.4, "band": "aandacht_nodig", "definition": "Perspectief blijft een eerste managementvraag." }
+      ],
+      "chart_caption": "Ontbrekende verdiepingsblokken verdwijnen uit het beeld."
+    },
+    "P4": {
+      "exit_intent_groups": [{ "label": "Twijfel zichtbaar", "pct": 31.0 }],
+      "engagement_dist": { "hoog": 28, "midden": 46, "laag": 26 },
+      "signal_score": 5.0,
+      "bands": {
+        "voorlopig_stabiel": 6,
+        "aandacht_nodig": 8,
+        "direct_aandachtspunt": 0
+      },
+      "quotes": [],
+      "prior_signals": []
+    },
+    "P5": {
+      "priority_now": "Kies een eerste behoudsroute en houd de actie compact.",
+      "priority_factors": ["Werkbelasting"],
+      "first_owner": "HR lead",
+      "first_step": "Maak snel expliciet welk spoor eerst telt.",
+      "review_window": "45-90 dagen",
+      "action_cards": [
+        {
+          "hypothesis": "Werkbelasting",
+          "question": "Waar stapelen planning en herstelruimte zich nu het sterkst op?",
+          "rationale": "Gebruik de smalle batch om gericht te toetsen."
+        }
+      ],
+      "steps": [
+        { "action": "Kies een spoor", "requirement": "Voorkom verbreding." },
+        { "action": "Beleg een eigenaar", "requirement": "Maak opvolging zichtbaar." },
+        { "action": "Toets gericht", "requirement": "Gebruik alleen logische vervolgvragen." },
+        { "action": "Neem beperkte acties", "requirement": "Houd de eerste interventie klein." },
+        { "action": "Review", "requirement": "Herijk bij volgende meting." }
+      ]
+    },
+    "P6": {
+      "score_explanation": "Gebruik het retentiesignaal als managementsamenvatting.",
+      "product_is": "RetentieScan is vroegsignalering op behoud voor groepen en segmenten.",
+      "product_not_for": "Niet bedoeld als brede MTO of individuele predictor.",
+      "contact_email": "hallo@verisight.nl"
+    }
+  },
+  "appendices": {
+    "B1": {
+      "factor_weights": [
+        { "name": "SDT Werkbeleving", "weight": 1.0, "literature_note": "Verklarende basislaag." }
+      ],
+      "sdt_explanation": "SDT blijft de verklarende basislaag naast aanvullende behoudssignalen.",
+      "band_definitions": [
+        { "band": "voorlopig_stabiel", "threshold": "< 4.5", "meaning": "Niet leidend." },
+        { "band": "aandacht_nodig", "threshold": "4.5-7.0", "meaning": "Vraagt verificatie." },
+        { "band": "direct_aandachtspunt", "threshold": ">= 7.0", "meaning": "Nu eerst wegen." }
+      ]
+    }
+  }
+}

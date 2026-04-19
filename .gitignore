@@ -41,6 +41,7 @@ Thumbs.db
 # Logs
 *.log
 .codex-artifacts/
+.worktrees/
 
 # Node (frontend heeft eigen .gitignore)
 frontend/node_modules/

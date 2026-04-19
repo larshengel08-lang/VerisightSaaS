@@ -65,9 +65,9 @@ Standaardaanpak:
 | Route | Kies wanneer | Eerste asset | Prijsanker | Vermijd wanneer |
 |---|---|---|---|---|
 | ExitScan Baseline | De buyer wil vertrekduiding op ex-medewerkers en heeft nog geen vergelijkbaar managementbeeld | ExitScan one-pager + ExitScan preview of voorbeeldrapport | EUR 2.950 | De vraag in feite breed MTO-achtig of puur actief-populatiegedreven is |
-| ExitScan Live | De buyer volgt uitstroom al structureel en heeft genoeg volume voor doorlopende signalering | ExitScan one-pager + proposal spine voor Live | Op aanvraag, meestal pas na baseline of bestaand volume | Er nog geen baseline, geen proces of te weinig volume is |
+| ExitScan ritmeroute | De buyer volgt uitstroom al structureel en heeft genoeg volume voor doorlopende signalering | ExitScan one-pager + proposal spine voor ritmeroute | Op aanvraag, meestal pas na baseline of bestaand volume | Er nog geen baseline, geen proces of te weinig volume is |
 | RetentieScan Baseline | De buyer wil vroegsignalering op behoud op groepsniveau in actieve teams | RetentieScan one-pager + RetentieScan preview of voorbeeldrapport | EUR 3.450 | De buyer een brede MTO, individuele predictor of performance-instrument verwacht |
-| RetentieScan ritme (Retention Loop) | Er al een eerste retentie-baseline ligt en de buyer ritme of herhaalmeting wil | RetentieScan one-pager + proposal spine voor ritme | Vanaf EUR 4.950 | Er nog geen baseline of opvolgdiscipline is |
+| RetentieScan ritmeroute | Er al een eerste retentie-baseline ligt en de buyer ritme of herhaalmeting wil | RetentieScan one-pager + proposal spine voor ritmeroute | Vanaf EUR 4.950 | Er nog geen baseline of opvolgdiscipline is |
 | Combinatie | Beide managementvragen echt bestaan en de tweede route bewust wordt toegevoegd | Portfolio memo + comparison matrix | Op aanvraag | Het als standaard bundel of feature-upgrade zou voelen |
 
 ## Stap 3 - Wanneer verkoop je nog niet?
