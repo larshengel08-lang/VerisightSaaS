@@ -34,4 +34,36 @@ describe('buildMtoActionCenterViewModel', () => {
     expect(model.themeCards[0].factorKey).toBe('workload')
     expect(model.themeCards[0].questionOptions[0].key).toBe('workload.q1')
   })
+
+  it('surfaces empty action states per theme so the UI can prompt creation', () => {
+    const model = buildMtoActionCenterViewModel({
+      departmentReads: [
+        {
+          segmentType: 'department',
+          segmentLabel: 'People Ops',
+          factorKey: 'leadership',
+          factorLabel: 'Leiderschap',
+          n: 10,
+          avgSignal: 6.7,
+          deltaVsOrg: 0.8,
+          signalValue: 6.2,
+          title: 'Leiderschap vraagt aandacht',
+          decision: 'Start een bounded leiderschapsreview.',
+          validate: 'Check ritme en voorbeeldgedrag.',
+          owner: 'Manager People Ops',
+          actions: ['Open leiderschapsdialoog'],
+          caution: 'Niet verbreden buiten MTO.',
+          review: 'Review binnen 21 dagen.',
+          handoffBody: 'Bounded MTO-traject.',
+          stayIntentAverage: 6.1,
+        },
+      ],
+      actions: [],
+      updates: [],
+      reviews: [],
+    })
+
+    expect(model.themeCards[0].actions).toHaveLength(0)
+    expect(model.themeCards[0].questionOptions.length).toBeGreaterThan(0)
+  })
 })
