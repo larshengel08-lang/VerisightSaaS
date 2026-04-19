@@ -12,36 +12,38 @@ SCAN_DEFINITION: dict[str, Any] = {
     "signal_short_label": "mto-signaal",
     "trust_contract": {
         "what_it_is": (
-            "Een bredere organisatiebrede hoofdmeting op groepsniveau die werkbeleving, werkfactoren en "
-            "managementrichting bundelt tot een eerste brede organisatieread."
+            "Een bredere organisatiebrede hoofdmeting die werkbeleving, werkfactoren en "
+            "managementrichting bundelt tot een brede organisatieread, plus een veilige afdelingsread "
+            "boven de suppressiedrempel."
         ),
         "what_it_is_not": (
-            "Geen individueel tevredenheidsoordeel, geen reportlaag, geen action-logroute en geen publieke "
-            "hoofdlancering in deze wave."
+            "Geen individueel tevredenheidsoordeel, geen reportlaag, geen volledige shared action engine en "
+            "geen publieke hoofdlancering in deze wave."
         ),
         "how_to_read": (
-            "Lees MTO als eerste brede hoofdmeting: welke thema's vallen nu het meest op, welke brede "
-            "managementvraag hoort daarbij en welke eerste begrensde organisatiestap moet daarna volgen."
+            "Lees MTO als eerste brede hoofdmeting: welke themas vallen nu het meest op, welke brede "
+            "managementvraag hoort daarbij en welke veilige afdelingen daarna als eerste bounded route "
+            "verdere duiding vragen."
         ),
         "privacy_boundary": (
-            "Management ziet alleen geaggregeerde groepsinformatie. Kleine groepen blijven onderdrukt en "
-            "lokale metadata verrijkt hoogstens later de read, maar opent geen individuele output."
+            "Management ziet alleen geaggregeerde groepsinformatie. Afdelingen openen alleen boven de "
+            "veilige suppressiedrempel; kleine groepen blijven onderdrukt en openen geen individuele output."
         ),
         "evidence_status": (
-            "MTO is in deze eerste wave een interne foundation read binnen de bestaande campaign-keten. "
-            "De uitkomst helpt een eerste brede organisatieread openen, maar is nog geen formeel rapport, "
-            "geen action-loglaag en geen buyer-facing hoofdroute."
+            "MTO is in deze fase een interne hoofdmeting met bounded department intelligence binnen de "
+            "bestaande campaign-keten. De uitkomst helpt een brede read en veilige afdelingshandoffs openen, "
+            "maar is nog geen formeel rapport, geen volledige action engine en geen buyer-facing hoofdroute."
         ),
     },
     "survey_intro": (
-        "Deze MTO is een eerste brede hoofdmeting van werkbeleving, werkfactoren en managementrichting op "
-        "groepsniveau. De uitkomst wordt alleen geaggregeerd gelezen en helpt bepalen welke brede "
-        "organisatiethema's nu als eerste prioriteit vragen. Invullen kost circa 6 minuten."
+        "Deze MTO is een brede hoofdmeting van werkbeleving, werkfactoren en managementrichting op "
+        "groepsniveau. De uitkomst wordt geaggregeerd gelezen en kan daarna veilig per afdeling verdiepen "
+        "boven de suppressiedrempel. Invullen kost circa 6 minuten."
     ),
     "survey_privacy_note": (
-        "Je antwoorden worden vertrouwelijk verwerkt en alleen op groepsniveau gebruikt. Deze eerste MTO-wave "
-        "is bedoeld voor een brede organisatieread en niet voor individuele beoordeling. Als je tussentijds "
-        "stopt, bewaart deze browser tijdelijk een concept op dit apparaat totdat je verzendt of het wist."
+        "Je antwoorden worden vertrouwelijk verwerkt en alleen geaggregeerd gebruikt. Afdelingsuitkomsten "
+        "openen alleen boven de veilige suppressiedrempel. Deze MTO-wave is bedoeld voor een brede "
+        "organisatieread en bounded department intelligence, niet voor individuele beoordeling."
     ),
     "sdt_intro": (
         "De volgende stellingen geven een brede momentopname van hoe werkbaar, steunend en verbonden je werk "
@@ -49,12 +51,12 @@ SCAN_DEFINITION: dict[str, Any] = {
         "(1 = helemaal niet mee eens, 5 = helemaal mee eens)."
     ),
     "org_intro": (
-        "De volgende vragen gaan over de werkfactoren die in deze eerste MTO-wave actief zijn. "
+        "De volgende vragen gaan over de werkfactoren die in deze MTO-wave actief zijn. "
         "Geef per thema aan hoe dit nu voelt in jouw werkcontext."
     ),
     "stay_section_title": "Brede richting nu",
     "stay_intro": (
-        "Deze vraag helpt de eerste brede organisatieread te richten: beweegt de huidige manier van werken "
+        "Deze vraag helpt de brede organisatieread te richten: beweegt de huidige manier van werken "
         "in een richting die de komende periode werkbaar en gezond blijft voelen?"
     ),
     "stay_item": (
@@ -64,12 +66,12 @@ SCAN_DEFINITION: dict[str, Any] = {
     "open_text_label": "Welke ene verandering in werk, samenwerking of aansturing zou nu het meeste verschil maken?",
     "open_text_placeholder": "Welke ene verandering zou nu het meeste verschil maken?",
     "open_text_help": (
-        "Je antwoord wordt geanonimiseerd opgeslagen en alleen als groepssignaal gebruikt om de eerste "
-        "brede organisatieread te richten."
+        "Je antwoord wordt geanonimiseerd opgeslagen en alleen als groepssignaal gebruikt om de brede "
+        "organisatieread en veilige afdelingsduiding te richten."
     ),
     "invite_intro": (
-        "Je bent uitgenodigd voor een eerste brede MTO over werkbeleving, werkfactoren en managementrichting. "
-        "Deze meting helpt de organisatie bepalen welke brede thema's nu eerst prioriteit verdienen."
+        "Je bent uitgenodigd voor een brede MTO over werkbeleving, werkfactoren en managementrichting. "
+        "Deze meting helpt de organisatie bepalen welke brede themas en welke afdelingen nu eerst prioriteit verdienen."
     ),
     "invite_duration": "5-7 minuten",
     "contact_subject": "Kennismakingsaanvraag MTO",
@@ -79,8 +81,8 @@ SCAN_DEFINITION: dict[str, Any] = {
     ),
     "report_repeat_title": "Eerst een brede hoofdread, nog geen rapportlaag",
     "report_repeat_body": (
-        "Deze eerste MTO-wave levert alleen een actuele brede organisatieread op. Formele rapportage, "
-        "action logging en verdere operatorrouting horen pas in latere waves."
+        "Deze MTO-wave levert alleen een actuele brede organisatieread plus bounded afdelingsduiding op. "
+        "Formele rapportage, volledige action logging en verdere operatorrouting horen pas in latere waves."
     ),
     "sdt_items": [
         ("B1", "In mijn werk heb ik het gevoel dat ik zelf keuzes kan maken over hoe ik mijn taken uitvoer."),

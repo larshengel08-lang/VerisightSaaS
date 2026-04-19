@@ -621,6 +621,56 @@ create table if not exists public.pilot_learning_checkpoints (
   unique (dossier_id, checkpoint_key)
 );
 
+create table if not exists public.management_action_department_owners (
+  id              uuid primary key default gen_random_uuid(),
+  organization_id uuid references public.organizations(id) on delete cascade not null,
+  department      text not null,
+  owner_label     text,
+  owner_email     text,
+  created_by      uuid references auth.users(id) on delete set null,
+  updated_by      uuid references auth.users(id) on delete set null,
+  created_at      timestamptz default now(),
+  updated_at      timestamptz default now(),
+  unique (organization_id, department)
+);
+
+create table if not exists public.management_actions (
+  id                  uuid primary key default gen_random_uuid(),
+  organization_id     uuid references public.organizations(id) on delete cascade not null,
+  campaign_id         uuid references public.campaigns(id) on delete cascade,
+  source_product      text not null check (source_product in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership', 'mto')),
+  source_scope_type   text not null check (source_scope_type in ('organization', 'department')),
+  source_scope_key    text,
+  source_scope_label  text,
+  source_read_stage   text not null check (source_read_stage in ('mto_department_intelligence', 'mto_closed_improvement_loop', 'shared_contract_seed')),
+  source_factor_key   text,
+  source_factor_label text,
+  source_signal_value numeric,
+  title               text not null,
+  decision_context    text,
+  expected_outcome    text,
+  measured_outcome    text,
+  status              text not null default 'open' check (status in ('open', 'assigned', 'in_progress', 'in_review', 'closed', 'follow_up_needed')),
+  owner_label         text,
+  owner_email         text,
+  due_date            date,
+  review_date         date,
+  created_by          uuid references auth.users(id) on delete set null,
+  updated_by          uuid references auth.users(id) on delete set null,
+  created_at          timestamptz default now(),
+  updated_at          timestamptz default now()
+);
+
+create table if not exists public.management_action_updates (
+  id               uuid primary key default gen_random_uuid(),
+  action_id        uuid references public.management_actions(id) on delete cascade not null,
+  note             text not null,
+  status_snapshot  text check (status_snapshot is null or status_snapshot in ('open', 'assigned', 'in_progress', 'in_review', 'closed', 'follow_up_needed')),
+  created_by       uuid references auth.users(id) on delete set null,
+  created_by_email text,
+  created_at       timestamptz default now()
+);
+
 -- ============================================================
 -- INDEXES
 -- ============================================================
@@ -639,6 +689,12 @@ create index if not exists idx_learning_dossiers_org on public.pilot_learning_do
 create index if not exists idx_learning_dossiers_campaign on public.pilot_learning_dossiers(campaign_id);
 create index if not exists idx_learning_dossiers_contact_request on public.pilot_learning_dossiers(contact_request_id);
 create index if not exists idx_learning_checkpoints_dossier on public.pilot_learning_checkpoints(dossier_id);
+create index if not exists idx_management_action_department_owners_org on public.management_action_department_owners(organization_id);
+create index if not exists idx_management_actions_org on public.management_actions(organization_id);
+create index if not exists idx_management_actions_campaign on public.management_actions(campaign_id);
+create index if not exists idx_management_actions_status on public.management_actions(status);
+create index if not exists idx_management_actions_owner_email on public.management_actions(owner_email);
+create index if not exists idx_management_action_updates_action on public.management_action_updates(action_id);
 create index if not exists idx_delivery_records_org on public.campaign_delivery_records(organization_id);
 create index if not exists idx_delivery_records_contact_request on public.campaign_delivery_records(contact_request_id);
 create index if not exists idx_delivery_records_lifecycle on public.campaign_delivery_records(lifecycle_stage);
@@ -660,6 +716,9 @@ alter table public.campaign_delivery_records enable row level security;
 alter table public.campaign_delivery_checkpoints enable row level security;
 alter table public.pilot_learning_dossiers enable row level security;
 alter table public.pilot_learning_checkpoints enable row level security;
+alter table public.management_action_department_owners enable row level security;
+alter table public.management_actions enable row level security;
+alter table public.management_action_updates enable row level security;
 
 -- ── Hulpfuncties ─────────────────────────────────────────────────────────────
 
@@ -692,6 +751,33 @@ as $$
       and org_members.user_id = auth.uid()
       and org_members.role in ('owner', 'member')
   );
+$$;
+
+create or replace function public.is_management_action_assignee(owner_email text)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select lower(coalesce(owner_email, '')) = lower(coalesce(auth.jwt() ->> 'email', ''));
+$$;
+
+create or replace function public.can_view_management_action(target_org_id uuid, assigned_owner_email text)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select public.is_org_manager(target_org_id) or public.is_management_action_assignee(assigned_owner_email);
+$$;
+
+create or replace function public.can_edit_management_action(target_org_id uuid, assigned_owner_email text)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select public.is_org_manager(target_org_id) or public.is_management_action_assignee(assigned_owner_email);
 $$;
 
 create or replace function public.is_verisight_admin_user()
@@ -964,6 +1050,68 @@ create policy "org_managers_can_update_delivery_checkpoints"
       from public.campaign_delivery_records d
       where d.id = delivery_record_id
         and public.is_org_manager(d.organization_id)
+    )
+  );
+
+-- Management action department owners
+drop policy if exists "org_managers_can_select_management_action_department_owners" on public.management_action_department_owners;
+drop policy if exists "org_managers_can_insert_management_action_department_owners" on public.management_action_department_owners;
+drop policy if exists "org_managers_can_update_management_action_department_owners" on public.management_action_department_owners;
+
+create policy "org_managers_can_select_management_action_department_owners"
+  on public.management_action_department_owners for select
+  using (public.is_org_manager(organization_id));
+
+create policy "org_managers_can_insert_management_action_department_owners"
+  on public.management_action_department_owners for insert
+  with check (public.is_org_manager(organization_id));
+
+create policy "org_managers_can_update_management_action_department_owners"
+  on public.management_action_department_owners for update
+  using (public.is_org_manager(organization_id))
+  with check (public.is_org_manager(organization_id));
+
+-- Management actions
+drop policy if exists "management_action_viewers_can_select_actions" on public.management_actions;
+drop policy if exists "management_action_managers_can_insert_actions" on public.management_actions;
+drop policy if exists "management_action_editors_can_update_actions" on public.management_actions;
+
+create policy "management_action_viewers_can_select_actions"
+  on public.management_actions for select
+  using (public.can_view_management_action(organization_id, owner_email));
+
+create policy "management_action_managers_can_insert_actions"
+  on public.management_actions for insert
+  with check (public.is_org_manager(organization_id));
+
+create policy "management_action_editors_can_update_actions"
+  on public.management_actions for update
+  using (public.can_edit_management_action(organization_id, owner_email))
+  with check (public.can_edit_management_action(organization_id, owner_email));
+
+-- Management action updates
+drop policy if exists "management_action_viewers_can_select_updates" on public.management_action_updates;
+drop policy if exists "management_action_editors_can_insert_updates" on public.management_action_updates;
+
+create policy "management_action_viewers_can_select_updates"
+  on public.management_action_updates for select
+  using (
+    exists (
+      select 1
+      from public.management_actions a
+      where a.id = action_id
+        and public.can_view_management_action(a.organization_id, a.owner_email)
+    )
+  );
+
+create policy "management_action_editors_can_insert_updates"
+  on public.management_action_updates for insert
+  with check (
+    exists (
+      select 1
+      from public.management_actions a
+      where a.id = action_id
+        and public.can_edit_management_action(a.organization_id, a.owner_email)
     )
   );
 

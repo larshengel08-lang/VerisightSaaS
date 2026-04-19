@@ -20,6 +20,8 @@ import { OnboardingAdvancer, OnboardingBalloon } from '@/components/dashboard/on
 import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
+import { MtoActionTracker } from '@/components/dashboard/mto-action-tracker'
+import { MtoDepartmentReadList } from '@/components/dashboard/mto-department-read-list'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import {
   ActionPlaybookList,
@@ -53,12 +55,18 @@ import {
   SdtGauge,
 } from './page-helpers'
 import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/implementation-readiness'
+import type {
+  ManagementActionDepartmentOwnerDefault,
+  ManagementActionRecord,
+  ManagementActionUpdateRecord,
+} from '@/lib/management-actions'
 import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import { buildTeamLocalReadState, buildTeamPriorityReadState } from '@/lib/products/team'
+import { buildMtoDepartmentReadModel } from '@/lib/products/mto/department-intelligence'
 import { getProductModule } from '@/lib/products/shared/registry'
 import { getScanDefinition } from '@/lib/scan-definitions'
-import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
+import { FACTOR_LABELS, hasCampaignAddOn, type MemberRole } from '@/lib/types'
 import type { CampaignStats, Respondent, SurveyResponse } from '@/lib/types'
 
 interface Props {
@@ -127,6 +135,8 @@ export default async function CampaignPage({ params }: Props) {
     membership?.role === 'owner' ||
     membership?.role === 'member'
   const isVerisightAdmin = profile?.is_verisight_admin === true
+  const currentViewerRole: MemberRole | null = isVerisightAdmin ? 'owner' : membership?.role ?? null
+  const currentUserEmail = user?.email ?? null
   const hasSegmentDeepDive = hasCampaignAddOn(campaignMeta, 'segment_deep_dive')
   const { data: deliveryRecordRaw } = await supabase
     .from('campaign_delivery_records')
@@ -285,6 +295,44 @@ export default async function CampaignPage({ params }: Props) {
           playbooks: productModule.getActionPlaybooks(),
         })
       : []
+  const mtoDepartmentReadModel =
+    stats.scan_type === 'mto' && hasEnoughData
+      ? buildMtoDepartmentReadModel({
+          responses,
+          orgAverageSignal: averageRiskScore,
+        })
+      : null
+  const { data: managementActionsRaw } =
+    stats.scan_type === 'mto'
+      ? await supabase
+          .from('management_actions')
+          .select('*')
+          .eq('organization_id', stats.organization_id)
+          .eq('campaign_id', id)
+          .order('created_at', { ascending: false })
+      : { data: [] }
+  const managementActions = (managementActionsRaw ?? []) as ManagementActionRecord[]
+  const actionIds = managementActions.map((action) => action.id)
+  const { data: managementActionUpdatesRaw } =
+    stats.scan_type === 'mto' && actionIds.length > 0
+      ? await supabase
+          .from('management_action_updates')
+          .select('*')
+          .in('action_id', actionIds)
+          .order('created_at', { ascending: false })
+      : { data: [] }
+  const managementActionUpdates = (managementActionUpdatesRaw ?? []) as ManagementActionUpdateRecord[]
+  const { data: managementActionOwnerDefaultsRaw } =
+    stats.scan_type === 'mto' && canManageCampaign
+      ? await supabase
+          .from('management_action_department_owners')
+          .select('*')
+          .eq('organization_id', stats.organization_id)
+          .order('department', { ascending: true })
+      : { data: [] }
+  const managementActionOwnerDefaults = (
+    managementActionOwnerDefaultsRaw ?? []
+  ) as ManagementActionDepartmentOwnerDefault[]
   const retentionThemes = stats.scan_type === 'retention' ? clusterRetentionOpenSignals(responses) : []
   const playbookCalibrationNote =
     stats.scan_type === 'retention'
@@ -1481,6 +1529,87 @@ export default async function CampaignPage({ params }: Props) {
                           Nog geen segmenten met voldoende n en voldoende afwijking om apart te tonen.
                         </div>
                       )}
+                    </div>
+                  </div>
+                ) : null}
+
+                {stats.scan_type === 'mto' ? (
+                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+                    <h3 className="text-sm font-semibold text-slate-950">Veilige afdelingsread</h3>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Gebruik MTO nu ook per afdeling, maar alleen boven de suppressiedrempel en nog steeds bounded binnen
+                      deze worktree-track. Deze laag opent nog geen generieke segment explorer of suitebrede action engine.
+                    </p>
+                    <div className="mt-4 grid gap-4 lg:grid-cols-3">
+                      <DashboardPanel
+                        eyebrow="Zichtbare afdelingen"
+                        title={
+                          mtoDepartmentReadModel && mtoDepartmentReadModel.visibleDepartments.length > 0
+                            ? `${mtoDepartmentReadModel.visibleDepartments.length} afdeling${mtoDepartmentReadModel.visibleDepartments.length === 1 ? '' : 'en'}`
+                            : 'Nog geen veilige afdelingsread'
+                        }
+                        body={mtoDepartmentReadModel?.visibilityNote ?? 'Afdelingsread opent pas zodra genoeg department-gebonden responses aanwezig zijn.'}
+                        tone={mtoDepartmentReadModel && mtoDepartmentReadModel.visibleDepartments.length > 0 ? 'blue' : 'amber'}
+                      />
+                      <DashboardPanel
+                        eyebrow="Onderdrukt"
+                        title={
+                          mtoDepartmentReadModel
+                            ? `${mtoDepartmentReadModel.suppressedDepartments} afdeling${mtoDepartmentReadModel.suppressedDepartments === 1 ? '' : 'en'}`
+                            : 'Nog niet beoordeeld'
+                        }
+                        body="Afdelingen onder de veilige ondergrens blijven alleen in het organisatiebeeld meetellen en openen geen losse read of handoff."
+                        tone="amber"
+                      />
+                      <DashboardPanel
+                        eyebrow="Eerste afdelingsspoor"
+                        title={mtoDepartmentReadModel?.topPriorityDepartmentLabel ?? 'Nog geen prioriteit open'}
+                        body="Gebruik dit als eerste bounded afdelingsroute binnen MTO en leg de eigenaar, eerste stap en reviewgrens pas daarna expliciet vast."
+                        tone={mtoDepartmentReadModel?.topPriorityDepartmentLabel ? 'emerald' : 'blue'}
+                      />
+                    </div>
+                    <div className="mt-4">
+                      {mtoDepartmentReadModel && mtoDepartmentReadModel.visibleDepartments.length > 0 ? (
+                        <MtoDepartmentReadList items={mtoDepartmentReadModel.visibleDepartments} />
+                      ) : (
+                        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
+                          Nog geen afdelingen met voldoende responses om veilig als aparte MTO-read te openen.
+                        </div>
+                      )}
+                    </div>
+                    <div className="mt-6 rounded-[22px] border border-[#d6e4e8] bg-[#f7fbfb] p-4 sm:p-5">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#567684]">
+                            MTO closed improvement loop
+                          </p>
+                          <h3 className="mt-2 text-base font-semibold text-slate-950">
+                            Bounded action log voor HR en afdelingeigenaars
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-slate-700">
+                            Deze actielaag blijft in deze wave MTO-first: acties ontstaan uit de veilige
+                            afdelingsread en blijven herleidbaar naar afdeling, factor en hoofdmetingcontext,
+                            zonder bestaande ExitScan- of RetentieScan-routes te wijzigen.
+                          </p>
+                        </div>
+                        <DashboardChip
+                          label={managementActions.length > 0 ? `${managementActions.length} acties` : 'Nog geen acties'}
+                          tone={managementActions.length > 0 ? 'blue' : 'slate'}
+                        />
+                      </div>
+                      <div className="mt-4">
+                        <MtoActionTracker
+                          organizationId={stats.organization_id}
+                          campaignId={id}
+                          currentViewerRole={currentViewerRole}
+                          currentUserEmail={currentUserEmail}
+                          canManageCampaign={canManageCampaign}
+                          departmentReads={mtoDepartmentReadModel?.visibleDepartments ?? []}
+                          actions={managementActions}
+                          updates={managementActionUpdates}
+                          ownerDefaults={managementActionOwnerDefaults}
+                        />
+                      </div>
                     </div>
                   </div>
                 ) : null}
