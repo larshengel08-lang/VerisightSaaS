@@ -1,26 +1,25 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
+import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
 import {
   DashboardChip,
+  DashboardContextHeader,
+  DashboardDisclosure,
+  DashboardHero,
+  DashboardKeyValue,
   DashboardPanel,
   DashboardSection,
-  InfoTooltip,
 } from '@/components/dashboard/dashboard-primitives'
 import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
-import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { CampaignStats } from '@/lib/types'
-
-type CampaignGroup = {
-  key: string
-  title: string
-  description: string
-  campaigns: CampaignStats[]
-}
-
-type CampaignBucket = 'ready' | 'building' | 'setup' | 'closed'
+import {
+  buildDashboardHomeModel,
+  type HomeActionModel,
+  type HomeCampaignCardModel,
+  type HomeGroupModel,
+} from './home-launcher'
 
 export default async function DashboardHomePage() {
   const supabase = await createClient()
@@ -43,274 +42,449 @@ export default async function DashboardHomePage() {
     .order('created_at', { ascending: false })
 
   const campaigns = (stats ?? []) as CampaignStats[]
-  const groups = groupCampaigns(campaigns)
-  const activeCampaigns = campaigns.filter((campaign) => campaign.is_active)
-  const primaryGuideCampaign = activeCampaigns[0] ?? campaigns[0] ?? null
-  const avgResponse =
-    campaigns.length > 0
-      ? Math.round(campaigns.reduce((sum, campaign) => sum + (campaign.completion_rate_pct ?? 0), 0) / campaigns.length)
-      : 0
-  const campaignsWithSignal = campaigns.filter((campaign) => campaign.avg_risk_score !== null)
-  const avgSignal =
-    campaignsWithSignal.length > 0
-      ? (
-          campaignsWithSignal.reduce((sum, campaign) => sum + (campaign.avg_risk_score ?? 0), 0) /
-          campaignsWithSignal.length
-        ).toFixed(1)
-      : null
-  const readyCount = campaigns.filter((campaign) => getCampaignBucket(campaign) === 'ready').length
-  const buildingCount = campaigns.filter((campaign) => getCampaignBucket(campaign) === 'building').length
-  const setupCount = campaigns.filter((campaign) => getCampaignBucket(campaign) === 'setup').length
-  const closedCount = campaigns.filter((campaign) => getCampaignBucket(campaign) === 'closed').length
+  const home = buildDashboardHomeModel({
+    campaigns,
+    isAdmin,
+  })
+
+  if (home.emptyState === 'no_campaigns') {
+    return (
+      <div className="space-y-6">
+        <DashboardContextHeader
+          eyebrow="Campaign launcher"
+          title={isAdmin ? 'Nog geen campaigns om te kiezen' : 'Je eerste campaign wordt voorbereid'}
+          description={
+            isAdmin
+              ? 'Deze homepage wordt pas een decision-first launcher zodra er campaigns zijn om tussen te kiezen.'
+              : 'Zodra de eerste campaign live staat, zie je hier direct welke route je nu moet openen en of dashboard of PDF de juiste volgende stap is.'
+          }
+          meta={
+            <>
+              <DashboardChip label={isAdmin ? 'Launcher wacht op setup' : 'Launcher wacht op livegang'} tone="slate" />
+              <DashboardChip label="Support blijft secundair" tone="slate" />
+            </>
+          }
+          aside={
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <DashboardKeyValue label="Nu openen" value="0" />
+              <DashboardKeyValue label="Nog in opbouw" value="0" />
+              <DashboardKeyValue label="Rapport beschikbaar" value="0" />
+              <DashboardKeyValue label="Archief" value="0" />
+            </div>
+          }
+        />
+
+        {isAdmin ? <AdminEmptyState /> : <ViewerEmptyState />}
+      </div>
+    )
+  }
+
+  const recommendation = home.recommendation
 
   return (
     <div className="space-y-6">
-      <DashboardSection
-        eyebrow="Cockpit"
-        title="Campaign cockpit"
+      <DashboardContextHeader
+        eyebrow="Campaign launcher"
+        title={isAdmin ? 'Kies eerst welke campaign nu aandacht vraagt' : 'Open eerst de campaign die nu het meest telt'}
         description={
           isAdmin
-            ? 'Zie direct welke campagnes klaar zijn voor managementduiding, welke nog operationele aandacht vragen en waar de eerstvolgende deliveryactie ligt.'
-            : 'Zie direct welke campagnes klaar zijn voor managementread, welke nog in opbouw zijn en waar rapport of dashboard nu de logische eerste stap is.'
+            ? 'Gebruik deze homepage eerst om de juiste campaign of setupstap te kiezen. Pas daarna ga je naar beheer, dashboard of rapport.'
+            : 'Deze homepage helpt je binnen enkele seconden kiezen welke campaign je nu opent, waarom dat telt en of dashboard of PDF de juiste volgende stap is.'
+        }
+        meta={
+          <>
+            <DashboardChip label="Decision-first" tone="blue" />
+            <DashboardChip label="Portfolio-overzicht tweede laag" tone="slate" />
+            {isAdmin ? <DashboardChip label="Support en beheer lager in de hiërarchie" tone="slate" /> : null}
+          </>
+        }
+        actions={
+          isAdmin ? (
+            <Link
+              href="/beheer"
+              className="inline-flex rounded-full border border-[color:var(--ink)] bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-slate-900"
+            >
+              Open beheer
+            </Link>
+          ) : null
         }
         aside={
-          isAdmin ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <DashboardChip label="Operations cockpit" tone="blue" />
-              <Link
-                href="/beheer"
-                className="inline-flex rounded-full bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-[#1B2E45]"
-              >
-                Nieuwe campaign
-              </Link>
-            </div>
-          ) : (
-            <DashboardChip label="Klantdashboard" tone="emerald" />
-          )
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <DashboardKeyValue label="Nu openen" value={`${home.counts.open_now}`} />
+            <DashboardKeyValue label="Nog in opbouw" value={`${home.counts.building}`} />
+            <DashboardKeyValue label="Rapport beschikbaar" value={`${home.counts.closed}`} />
+            <DashboardKeyValue label="Archief" value={`${home.counts.archive}`} />
+          </div>
         }
+      />
+
+      {recommendation ? (
+        <DashboardHero
+          eyebrow="Aanbevolen volgende stap"
+          title={`${recommendation.title}: ${recommendation.campaign.campaign_name}`}
+          description={recommendation.reason}
+          tone={recommendation.primaryAction.kind === 'pdf' ? 'emerald' : 'blue'}
+          meta={
+            <>
+              <DashboardChip
+                label={getScanDefinition(recommendation.campaign.scan_type).productName}
+                tone={recommendation.campaign.scan_type === 'retention' ? 'emerald' : 'blue'}
+              />
+              <DashboardChip
+                label={recommendation.campaign.is_active ? 'Actieve campaign' : 'Gesloten campaign'}
+                tone={recommendation.campaign.is_active ? 'blue' : 'slate'}
+              />
+              <DashboardChip label={home.groups.find((group) => group.campaigns.some((campaign) => campaign.campaign.campaign_id === recommendation.campaign.campaign_id))?.title ?? 'Campaigngroep'} tone="slate" />
+            </>
+          }
+          actions={
+            <div className="flex flex-wrap items-center gap-3">
+              <PrimaryLauncherAction
+                campaign={recommendation.campaign}
+                action={recommendation.primaryAction}
+              />
+              {recommendation.secondaryAction ? (
+                <SecondaryLauncherAction
+                  campaign={recommendation.campaign}
+                  action={recommendation.secondaryAction}
+                />
+              ) : null}
+            </div>
+          }
+          aside={
+            <div className="space-y-4">
+              <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Waarom nu</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  {getRecommendationWhyNow(recommendation.campaign)}
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <ActionChoiceCard
+                  title="Dashboard"
+                  description={recommendation.dashboardChoiceDescription}
+                  tone="blue"
+                />
+                <ActionChoiceCard
+                  title="PDF"
+                  description={recommendation.pdfChoiceDescription}
+                  tone="emerald"
+                />
+              </div>
+            </div>
+          }
+        />
+      ) : null}
+
+      <DashboardSection
+        eyebrow="Campaigngroepen"
+        title="Kies per campaign wat nu de logische volgende stap is"
+        description="Campagnes staan niet meer in één vlakke lijst, maar in een volgorde die eerst keuze en pas daarna portfolio-overzicht ondersteunt."
+        aside={<DashboardChip label="Launcher view" tone="blue" />}
       >
-        <div className="grid gap-4 lg:grid-cols-4">
-          <DashboardPanel
-            eyebrow="Management-ready"
-            title={`${readyCount}`}
-            body="Campagnes met genoeg respons om actief te sturen op duiding, prioritering en rapportage."
-            tone="blue"
-          />
-          <DashboardPanel
-            eyebrow="Nog in opbouw"
-            title={`${buildingCount}`}
-            body="Campagnes waar de response al loopt, maar waar het patroonbeeld nog eerst steviger moet worden."
-            tone={buildingCount > 0 ? 'amber' : 'slate'}
-          />
-          <DashboardPanel
-            eyebrow="Setup of launch"
-            title={`${setupCount}`}
-            body="Campagnes waar eerst nog respondentimport, uitnodiging of launchcontrole nodig is."
-            tone={setupCount > 0 ? 'amber' : 'slate'}
-          />
-          <DashboardPanel
-            eyebrow="Portfolio"
-            title={avgSignal ? `${avgSignal}/10` : closedCount > 0 ? `${closedCount}` : 'Nog leeg'}
-            body={
-              avgSignal
-                ? `Gemiddeld groepssignaal over campagnes met leesbare output. Gemiddelde respons: ${avgResponse}%.`
-                : campaigns.length === 0
-                  ? 'Maak eerst een organisatie en campaign aan. Daarna verschijnt hier automatisch de cockpit.'
-                  : `Gesloten of nog niet leesbare campagnes in portfolio: ${closedCount}. Gemiddelde respons: ${avgResponse}%.`
-            }
-            tone={avgSignal ? 'emerald' : 'slate'}
-          />
+        <div className="space-y-4">
+          {home.groups.map((group) => (
+            <CampaignGroupDisclosure key={group.bucket} group={group} />
+          ))}
         </div>
       </DashboardSection>
 
-      {!isAdmin ? (
-        <DashboardSection
-          eyebrow="Eerste route"
-          title="Van eerste login naar eerste managementread"
-          description="Deze laag maakt expliciet hoe je dashboard en rapport als eerste managementinstrument gebruikt, zonder setupverantwoordelijkheid of self-service verwachtingen."
-          aside={<DashboardChip label="Assisted onboarding" tone="blue" />}
-        >
-          <ManagementReadGuide
-            scanType={primaryGuideCampaign?.scan_type ?? 'exit'}
-            hasMinDisplay={(primaryGuideCampaign?.total_completed ?? 0) >= 5}
-            hasEnoughData={(primaryGuideCampaign?.total_completed ?? 0) >= 10}
-          />
-        </DashboardSection>
-      ) : null}
-
-      {campaigns.length === 0 ? (
-        isAdmin ? <AdminEmptyState /> : <ViewerEmptyState />
-      ) : (
-        <div className="space-y-5">
-          {groups.map((group) =>
-            group.campaigns.length > 0 ? (
-              <DashboardSection
-                key={group.key}
-                eyebrow="Campagnestatus"
-                title={group.title}
-                description={group.description}
-                aside={
-                  <DashboardChip
-                    label={`${group.campaigns.length} campagne${group.campaigns.length === 1 ? '' : 's'}`}
-                    tone={group.key === 'ready' ? 'blue' : group.key === 'closed' ? 'slate' : 'amber'}
-                  />
-                }
-                tone={group.key === 'ready' ? 'blue' : group.key === 'closed' ? 'slate' : 'amber'}
-              >
-                <div className="space-y-3">
-                  {group.campaigns.map((campaign, index) => (
-                    <CampaignRow
-                      key={campaign.campaign_id}
-                      campaign={campaign}
-                      showOnboarding={!isAdmin && group.key === 'ready' && index === 0}
-                      isAdmin={isAdmin}
-                    />
-                  ))}
-                </div>
-              </DashboardSection>
-            ) : null,
-          )}
-        </div>
-      )}
-
       <DashboardSection
-        eyebrow="Utilitylaag"
-        title={isAdmin ? 'Operations en support' : 'Ondersteuning en rapportgebruik'}
+        eyebrow="Support en routehulp"
+        title={isAdmin ? 'Beheer, routehulp en support blijven bewust secundair' : 'Dashboard versus PDF en support blijven bewust secundair'}
         description={
           isAdmin
-            ? 'Snelle routes voor setup, handoff en deliverybeheer. Deze laag ondersteunt de cockpit zonder de managementprioriteit erboven te verstoren.'
-            : 'Gebruik deze laag voor ondersteuning, rapporttoegang en afstemming met Verisight. De primaire managementleesroute blijft hierboven.'
+            ? 'Gebruik deze laag pas nadat de juiste campaignkeuze is gemaakt. Support, setup en admin mogen de launcher erboven niet verdringen.'
+            : 'Gebruik deze laag alleen wanneer je extra hulp nodig hebt bij rapportgebruik, leesvolgorde of afstemming met Verisight.'
         }
-        aside={<DashboardChip label={isAdmin ? 'Ops-tools' : 'Supportlaag'} tone="slate" />}
+        aside={<DashboardChip label="Tertiaire laag" tone="slate" />}
       >
-        <div className="grid gap-4 lg:grid-cols-3">
-          {isAdmin ? (
-            <>
-              <UtilityCard
-                eyebrow="Setup"
-                title="Beheer en campaignconfiguratie"
-                body="Ga naar beheer voor nieuwe campagnes, respondentimport, klanttoegang en campaignsetup."
-                href="/beheer"
-                cta="Open beheer"
-              />
-              <UtilityCard
-                eyebrow="Handoff"
-                title="Contactaanvragen en leadcontext"
-                body="Gebruik de leadlijst voor sales-to-delivery handoff, contactcontext en follow-up."
-                href="/beheer/contact-aanvragen"
-                cta="Open leadlijst"
-              />
-              <UtilityCard
-                eyebrow="Learning"
-                title="Klantlearnings en workbench"
-                body="Leg buyer-signalen, implementationlessen en vervolgkeuzes vast zodra een campagne leerwaarde oplevert."
-                href="/beheer/klantlearnings"
-                cta="Open learning-workbench"
-              />
-            </>
-          ) : (
-            <>
+        <div className="space-y-4">
+          <DashboardDisclosure
+            title="Wanneer open je dashboard en wanneer PDF?"
+            description="Compact leeskader voor de keuze tussen interactieve route en deelbaar rapport."
+            defaultOpen={false}
+            badge={<DashboardChip label="Choice aid" tone="slate" />}
+          >
+            <div className="grid gap-4 lg:grid-cols-2">
               <DashboardPanel
-                eyebrow="Rapportgebruik"
-                title="Dashboard eerst, rapport als verdieping"
-                body="Open eerst het dashboard voor de hoofdlijn. Gebruik daarna het rapport als boardroom-waardige samenvatting en vervolgdocument."
+                eyebrow="Dashboard eerst"
+                title="Interactief lezen en prioriteren"
+                body="Open eerst het dashboard als je wilt duiden, prioriteren, vergelijken of de eerste vervolgroute wilt bepalen."
                 tone="blue"
               />
               <DashboardPanel
-                eyebrow="Support"
-                title="Verisight beheert setup en reminders"
-                body="Respondentimport, uitnodigingen en deliverycontrole blijven bewust in beheer. Jij gebruikt vooral de output voor managementduiding."
-                tone="slate"
-              />
-              <DashboardPanel
-                eyebrow="Volgende stap"
-                title={primaryGuideCampaign ? 'Open je meest relevante campaign' : 'Wachten op livegang'}
-                body={
-                  primaryGuideCampaign
-                    ? 'Gebruik de cockpit hierboven om direct naar de campaign te gaan die nu het meeste managementwaarde oplevert.'
-                    : 'Zodra de eerste campagne live staat, verschijnen hier automatisch dashboard- en rapportacties.'
-                }
+                eyebrow="PDF daarna"
+                title="Delen, bespreken en meenemen"
+                body="Gebruik de PDF als boardroom-ready samenvatting, deelstuk of follow-updocument zodra de campaign rapportklaar is."
                 tone="emerald"
               />
-            </>
-          )}
+            </div>
+          </DashboardDisclosure>
+
+          <DashboardDisclosure
+            title={isAdmin ? 'Beheer en operations' : 'Rapportgebruik en supportverwachting'}
+            description={
+              isAdmin
+                ? 'Admin- en supporttaken leven hier, niet in de primaire campaignkeuze.'
+                : 'Setup, reminders en deliverycontrole blijven bij Verisight en concurreren dus niet met je campaignkeuze.'
+            }
+            defaultOpen={false}
+            badge={<DashboardChip label={isAdmin ? 'Ops-tools' : 'Supportlaag'} tone="slate" />}
+          >
+            {isAdmin ? (
+              <div className="grid gap-4 lg:grid-cols-3">
+                <UtilityCard
+                  eyebrow="Setup"
+                  title="Campaignconfiguratie"
+                  body="Gebruik beheer voor respondentimport, launchcontrole en customer access zonder de launcher te verstoren."
+                  href="/beheer"
+                  cta="Open beheer"
+                />
+                <UtilityCard
+                  eyebrow="Handoff"
+                  title="Contactaanvragen"
+                  body="Lead- en handofftaken blijven lager in de hiërarchie zodat de campaignkeuze bovenaan scherp blijft."
+                  href="/beheer/contact-aanvragen"
+                  cta="Open leadlijst"
+                />
+                <UtilityCard
+                  eyebrow="Learning"
+                  title="Klantlearnings"
+                  body="Gebruik de learning-workbench pas na de campaignkeuze om lessen en vervolgacties vast te leggen."
+                  href="/beheer/klantlearnings"
+                  cta="Open learning-workbench"
+                />
+              </div>
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-3">
+                <DashboardPanel
+                  eyebrow="Support"
+                  title="Verisight beheert setup en reminders"
+                  body="Respondentimport, uitnodigingen en deliverycontrole blijven bewust buiten jouw primaire homepage-keuze."
+                  tone="slate"
+                />
+                <DashboardPanel
+                  eyebrow="Rapportgebruik"
+                  title="Gebruik PDF als deelbaar tweede document"
+                  body="De homepage maakt de keuze duidelijk, maar het rapport blijft bewust een ondersteunende stap naast het dashboard."
+                  tone="blue"
+                />
+                <DashboardDisclosure
+                  title="Leeskader"
+                  description="Alleen openklappen als je de managementleeslaag opnieuw nodig hebt."
+                  defaultOpen={false}
+                  badge={<DashboardChip label="Secondary" tone="slate" />}
+                >
+                  <ManagementReadGuide
+                    scanType={recommendation?.campaign.scan_type ?? 'exit'}
+                    hasMinDisplay={(recommendation?.campaign.total_completed ?? 0) >= 5}
+                    hasEnoughData={(recommendation?.campaign.total_completed ?? 0) >= 10}
+                  />
+                </DashboardDisclosure>
+              </div>
+            )}
+          </DashboardDisclosure>
         </div>
       </DashboardSection>
     </div>
   )
 }
 
-function CampaignRow({
-  campaign,
-  showOnboarding,
-  isAdmin,
-}: {
-  campaign: CampaignStats
-  showOnboarding: boolean
-  isAdmin: boolean
-}) {
-  const scanDefinition = getScanDefinition(campaign.scan_type)
-  const nextAction = getNextAction(campaign)
-  const readiness = getCampaignReadiness(campaign)
+function CampaignGroupDisclosure({ group }: { group: HomeGroupModel }) {
+  return (
+    <DashboardDisclosure
+      title={group.title}
+      description={group.description}
+      defaultOpen={group.defaultOpen}
+      badge={
+        <DashboardChip
+          label={`${group.campaigns.length} campaign${group.campaigns.length === 1 ? '' : 's'}`}
+          tone={group.bucket === 'open_now' ? 'blue' : group.bucket === 'closed' ? 'emerald' : 'slate'}
+        />
+      }
+    >
+      <div className="space-y-3">
+        {group.campaigns.map((campaign) => (
+          <CampaignLauncherCard key={campaign.campaign.campaign_id} campaign={campaign} />
+        ))}
+      </div>
+    </DashboardDisclosure>
+  )
+}
+
+function CampaignLauncherCard({ campaign }: { campaign: HomeCampaignCardModel }) {
+  const scanDefinition = getScanDefinition(campaign.campaign.scan_type)
 
   return (
-    <div className="rounded-[24px] border border-[color:var(--border)] bg-white px-4 py-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)]">
+    <article className="rounded-[24px] border border-[color:var(--border)] bg-white px-4 py-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)] sm:px-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <DashboardChip label={scanDefinition.productName} tone={campaign.scan_type === 'retention' ? 'emerald' : 'blue'} />
-            <DashboardChip label={campaign.is_active ? 'Actief' : 'Gesloten'} tone={campaign.is_active ? 'emerald' : 'slate'} />
-            <DashboardChip label={readiness.label} tone={readiness.tone} />
+            <DashboardChip
+              label={scanDefinition.productName}
+              tone={campaign.campaign.scan_type === 'retention' ? 'emerald' : 'blue'}
+            />
+            <DashboardChip label={campaign.statusLabel} tone={campaign.statusTone} />
+            <DashboardChip label={campaign.periodLabel} tone="slate" />
           </div>
-          <h2 className="mt-3 text-lg font-semibold text-[color:var(--ink)]">{campaign.campaign_name}</h2>
-          <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">{readiness.body}</p>
-          <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">{nextAction.body}</p>
+          <h2 className="mt-3 text-lg font-semibold text-[color:var(--ink)]">{campaign.title}</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[color:var(--text)]">{campaign.managementSummary}</p>
+          <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{campaign.actionSummary}</p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[420px] xl:grid-cols-4">
-          <StatCell label="Respons" value={`${campaign.completion_rate_pct ?? 0}%`} />
-          <StatCell label="Ingevuld" value={`${campaign.total_completed}`} />
-          <StatCell label="Uitgenodigd" value={`${campaign.total_invited}`} />
-          <StatCell
-            label={`Gem. ${scanDefinition.signalLabelLower}`}
-            value={campaign.avg_risk_score !== null ? `${campaign.avg_risk_score.toFixed(1)}/10` : '-'}
-          />
+          {campaign.metrics.map((metric) => (
+            <DashboardKeyValue key={metric.label} label={metric.label} value={metric.value} />
+          ))}
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 border-t border-[color:var(--border)]/80 pt-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="rounded-full bg-[color:var(--bg)] px-3 py-1 font-medium text-[color:var(--text)]">
-            {nextAction.label}
-          </span>
-          <span className="text-[color:var(--muted)]">•</span>
-          <span className="text-[color:var(--text)]">
-            Uitnodigingen {campaign.total_invited} • Banden hoog/midden/laag: {campaign.band_high}/{campaign.band_medium}/{campaign.band_low}
-          </span>
+      <div className="mt-4 flex flex-col gap-3 border-t border-[color:var(--border)]/80 pt-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="grid gap-3 md:grid-cols-2">
+          <ActionChoiceCard
+            title="Dashboard"
+            description={campaign.primaryAction.kind === 'dashboard' ? campaign.primaryAction.description : 'Gebruik het dashboard als interactieve leeslaag voor duiding en prioritering.'}
+            tone="blue"
+          />
+          <ActionChoiceCard
+            title="PDF"
+            description={campaign.secondaryAction?.kind === 'pdf' ? campaign.secondaryAction.description : 'Gebruik de PDF alleen wanneer de campaign rapportklaar is of gedeeld moet worden.'}
+            tone="emerald"
+          />
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {isAdmin && getCampaignBucket(campaign) === 'setup' ? (
-            <Link
-              href="/beheer"
-              className="inline-flex rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition-colors hover:border-[#d6e4e8] hover:text-[#234B57]"
-            >
-              Naar setup
-            </Link>
+        <div className="flex flex-wrap items-start gap-3">
+          <PrimaryLauncherAction campaign={campaign.campaign} action={campaign.primaryAction} compact />
+          {campaign.secondaryAction ? (
+            <SecondaryLauncherAction campaign={campaign.campaign} action={campaign.secondaryAction} compact />
           ) : null}
-          <div className="relative">
-            {showOnboarding ? <OnboardingBalloon step={1} label="Open je campagne" align="left" /> : null}
-            <Link
-              href={`/campaigns/${campaign.campaign_id}`}
-              className="inline-flex rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3]"
-            >
-              Open dashboard
-            </Link>
-          </div>
-          <PdfDownloadButton campaignId={campaign.campaign_id} campaignName={campaign.campaign_name} />
         </div>
       </div>
+    </article>
+  )
+}
+
+function PrimaryLauncherAction({
+  campaign,
+  action,
+  compact = false,
+}: {
+  campaign: CampaignStats
+  action: HomeActionModel
+  compact?: boolean
+}) {
+  return <LauncherAction campaign={campaign} action={action} compact={compact} primary />
+}
+
+function SecondaryLauncherAction({
+  campaign,
+  action,
+  compact = false,
+}: {
+  campaign: CampaignStats
+  action: HomeActionModel
+  compact?: boolean
+}) {
+  return <LauncherAction campaign={campaign} action={action} compact={compact} primary={false} />
+}
+
+function LauncherAction({
+  campaign,
+  action,
+  compact,
+  primary,
+}: {
+  campaign: CampaignStats
+  action: HomeActionModel
+  compact: boolean
+  primary: boolean
+}) {
+  const wrapperClassName = compact
+    ? 'flex max-w-[260px] flex-col items-start gap-1'
+    : 'flex max-w-[280px] flex-col items-start gap-1'
+
+  if (action.kind === 'pdf' && action.available) {
+    return (
+      <div className={wrapperClassName}>
+        <PdfDownloadButton
+          campaignId={campaign.campaign_id}
+          campaignName={campaign.campaign_name}
+          scanType={campaign.scan_type}
+        />
+        <p className="text-xs leading-5 text-[color:var(--muted)]">{action.description}</p>
+      </div>
+    )
+  }
+
+  if (action.available && action.href) {
+    return (
+      <div className={wrapperClassName}>
+        <Link
+          href={action.href}
+          className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+            primary
+              ? 'border border-[color:var(--ink)] bg-[color:var(--ink)] text-[color:var(--bg)] hover:bg-slate-900'
+              : 'border border-[#d6e4e8] bg-[#f3f8f8] text-[#234B57] hover:border-[#bfd3d8] hover:bg-[#e9f2f3]'
+          }`}
+        >
+          {action.label}
+        </Link>
+        <p className="text-xs leading-5 text-[color:var(--muted)]">{action.description}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className={wrapperClassName}>
+      <span className="inline-flex rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-2 text-sm font-semibold text-[color:var(--muted)]">
+        {action.label}
+      </span>
+      <p className="text-xs leading-5 text-[color:var(--muted)]">{action.reason ?? action.description}</p>
     </div>
   )
+}
+
+function ActionChoiceCard({
+  title,
+  description,
+  tone,
+}: {
+  title: string
+  description: string
+  tone: 'blue' | 'emerald'
+}) {
+  return (
+    <div
+      className={`rounded-[20px] border px-4 py-3 ${
+        tone === 'blue' ? 'border-[#d6e4e8] bg-[#f3f8f8]' : 'border-[#d2e6e0] bg-[#eef7f4]'
+      }`}
+    >
+      <p
+        className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${
+          tone === 'blue' ? 'text-[#234B57]' : 'text-[#3C8D8A]'
+        }`}
+      >
+        {title}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-slate-700">{description}</p>
+    </div>
+  )
+}
+
+function getRecommendationWhyNow(campaign: CampaignStats) {
+  if (!campaign.is_active) {
+    return 'Deze campaign is gesloten en daardoor vooral sterk als deelbaar rapport, terugblik en vervolggesprek.'
+  }
+
+  if (campaign.total_invited === 0) {
+    return 'De eerstvolgende waarde zit nu in setup en livegang, niet in inhoudelijke lezing.'
+  }
+
+  if (campaign.total_completed < 10) {
+    return 'Deze campaign bouwt op, maar heeft nog geen volledig patroonbeeld. Het dashboard is hier vooral een voortgangsread.'
+  }
+
+  return 'Deze campaign heeft genoeg respons om direct als managementinstrument te gebruiken voor prioritering en vervolg.'
 }
 
 function UtilityCard({
@@ -341,140 +515,13 @@ function UtilityCard({
   )
 }
 
-function StatCell({ label, value }: { label: string; value: string }) {
-  const helpText =
-    label.startsWith('Gem.')
-      ? 'Dit is het gemiddelde groepssignaal op een schaal van 1-10. Beweeg met je muis over het informatie-icoon om te zien hoe je deze score moet lezen.'
-      : label === 'Respons'
-        ? 'Het percentage uitgenodigde respondenten dat de survey volledig heeft ingevuld.'
-        : label === 'Ingevuld'
-          ? 'Het aantal respondenten dat de survey volledig heeft afgerond.'
-          : label === 'Uitgenodigd'
-            ? 'Het totale aantal respondenten dat aan deze campaign is gekoppeld.'
-            : null
-
-  return (
-    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-3">
-      <div className="flex items-center gap-1.5">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
-        {helpText ? <InfoTooltip text={helpText} /> : null}
-      </div>
-      <p className="mt-2 text-lg font-semibold text-[color:var(--ink)]">{value}</p>
-    </div>
-  )
-}
-
-function getNextAction(campaign: CampaignStats) {
-  if (!campaign.is_active) {
-    return {
-      label: 'Rapport beschikbaar',
-      body: 'Deze campagne is gesloten. Gebruik dashboard en rapport nu vooral voor terugblik, bestuurlijke follow-up en het voorbereiden van het vervolggesprek.',
-    }
-  }
-
-  if (campaign.total_invited === 0) {
-    return {
-      label: 'Respondenten toevoegen',
-      body: 'De campaign bestaat al, maar zonder respondenten blijft de cockpit leeg. Dit is nu de eerstvolgende operationele stap.',
-    }
-  }
-
-  if ((campaign.completion_rate_pct ?? 0) < 20) {
-    return {
-      label: 'Respons opbouwen',
-      body: 'De response is nog laag. Focus nu op uitnodigingen, reminders en genoeg basis voor een veilige eerste lezing.',
-    }
-  }
-
-  if (campaign.total_completed < 10) {
-    return {
-      label: 'Nog indicatief',
-      body: 'Er zijn al responses binnen, maar nog niet genoeg voor een stevig patroonbeeld. Gebruik de output nu vooral om richting vast te houden.',
-    }
-  }
-
-  return {
-    label: 'Klaar voor verdieping',
-    body: 'De campaign heeft genoeg respons om actief te sturen op managementduiding, prioritering en rapportage.',
-  }
-}
-
-function getCampaignBucket(campaign: CampaignStats): CampaignBucket {
-  if (!campaign.is_active) return 'closed'
-  if (campaign.total_invited === 0) return 'setup'
-  if (campaign.total_completed < 10) return 'building'
-  return 'ready'
-}
-
-function getCampaignReadiness(campaign: CampaignStats) {
-  const bucket = getCampaignBucket(campaign)
-
-  if (bucket === 'closed') {
-    return {
-      label: 'Gesloten campaign',
-      body: 'De primaire waarde zit nu in rapportage, managementfollow-up en het expliciet vastleggen van de vervolgrichting.',
-      tone: 'slate' as const,
-    }
-  }
-
-  if (bucket === 'setup') {
-    return {
-      label: 'Nog niet live',
-      body: 'Deze campaign vraagt eerst setup, respondentimport of launchcontrole voordat de cockpit richting managementwaarde kan bewegen.',
-      tone: 'amber' as const,
-    }
-  }
-
-  if (bucket === 'building') {
-    return {
-      label: 'Respons bouwt nog op',
-      body: 'De campaign leeft al, maar het patroonbeeld is nog in ontwikkeling. Houd de route scherp zonder al te zwaar te concluderen.',
-      tone: 'amber' as const,
-    }
-  }
-
-  return {
-    label: 'Klaar voor managementread',
-    body: 'De campaign heeft genoeg basis om dashboard en rapport echt als managementinstrument te gebruiken.',
-    tone: 'blue' as const,
-  }
-}
-
-function groupCampaigns(campaigns: CampaignStats[]): CampaignGroup[] {
-  return [
-    {
-      key: 'ready',
-      title: 'Klaar voor managementread',
-      description: 'Campagnes met genoeg respons om dashboard en rapport actief te gebruiken voor duiding, prioritering en follow-up.',
-      campaigns: campaigns.filter((campaign) => getCampaignBucket(campaign) === 'ready'),
-    },
-    {
-      key: 'building',
-      title: 'Nog in opbouw',
-      description: 'Campagnes waar al responses binnenkomen, maar waar het patroonbeeld nog eerst steviger moet worden.',
-      campaigns: campaigns.filter((campaign) => getCampaignBucket(campaign) === 'building'),
-    },
-    {
-      key: 'setup',
-      title: 'Setup of launch nodig',
-      description: 'Campagnes die nog eerst respondentimport, uitnodiging of launchcontrole nodig hebben voordat managementwaarde zichtbaar wordt.',
-      campaigns: campaigns.filter((campaign) => getCampaignBucket(campaign) === 'setup'),
-    },
-    {
-      key: 'closed',
-      title: 'Afgerond en gesloten',
-      description: 'Gesloten campagnes die nu vooral waarde leveren voor rapportage, terugblik en vervolgbesluiten.',
-      campaigns: campaigns.filter((campaign) => getCampaignBucket(campaign) === 'closed'),
-    },
-  ]
-}
-
 function AdminEmptyState() {
   return (
     <DashboardSection
       eyebrow="Setup"
-      title="Nog geen campagnes beschikbaar"
-      description="De cockpit wordt vanzelf gevuld zodra je een organisatie, campaign en respondentbestand hebt toegevoegd."
+      title="Nog geen campaigns om te lanceren"
+      description="Voeg eerst organisatie, campaign en respondentbestand toe. Daarna verandert deze homepage vanzelf in een decision-first launcher."
+      aside={<DashboardChip label="Setup eerst" tone="amber" />}
     >
       <div className="grid gap-4 md:grid-cols-3">
         <DashboardPanel
@@ -486,20 +533,20 @@ function AdminEmptyState() {
         <DashboardPanel
           eyebrow="Stap 2"
           title="Campaign"
-          body="Kies ExitScan of RetentieScan en zet de campaign op met de juiste metadata."
+          body="Kies de juiste scan en zet de campaign klaar met de benodigde metadata."
           tone="blue"
         />
         <DashboardPanel
           eyebrow="Stap 3"
           title="Respondenten"
-          body="Importeer respondenten en stuur uitnodigingen, zodat de cockpit vanzelf in monitoring overgaat."
+          body="Importeer respondenten zodat deze homepage daarna echte keuze in plaats van uitleg kan tonen."
           tone="emerald"
         />
       </div>
       <div className="mt-5">
         <Link
           href="/beheer"
-          className="inline-flex rounded-full bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-[#1B2E45]"
+          className="inline-flex rounded-full bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-slate-900"
         >
           Naar setup
         </Link>
@@ -512,25 +559,29 @@ function ViewerEmptyState() {
   return (
     <DashboardSection
       eyebrow="Wachten op livegang"
-      title="Jouw dashboard wordt voorbereid"
-      description="Verisight zet de campaign op, controleert de import en activeert daarna automatisch dit overzicht."
+      title="Er is nog geen campaign om te openen"
+      description="Verisight zet eerst de campaign op. Zodra er iets te kiezen valt, wordt deze homepage automatisch een launcher met een duidelijke aanbevolen volgende stap."
+      aside={<DashboardChip label="Nog geen keuze nodig" tone="slate" />}
     >
-      <div className="space-y-4">
-        <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-5 text-sm leading-6 text-[color:var(--text)]">
-          Zodra de eerste responses binnenkomen, verschijnen hier automatisch je campagnes, status en rapportacties.
-        </div>
-        <div className="grid gap-3 md:grid-cols-3">
-          {[
-            'Verisight beheert organisatie, campaign en respondentimport.',
-            'Jij krijgt daarna toegang tot het juiste dashboard en rapport.',
-            'De eerste managementwaarde zit in lezen, duiden en prioriteren, niet in technische setup.',
-          ].map((item, index) => (
-            <div key={item} className="rounded-2xl border border-[color:var(--border)] bg-white px-4 py-4 text-sm leading-6 text-[color:var(--text)]">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">Stap {index + 1}</p>
-              <p className="mt-2">{item}</p>
-            </div>
-          ))}
-        </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <DashboardPanel
+          eyebrow="Nu nog niet"
+          title="Geen cockpitgedrag"
+          body="Deze homepage blijft bewust rustig totdat er een echte campaignkeuze is om te maken."
+          tone="slate"
+        />
+        <DashboardPanel
+          eyebrow="Daarna"
+          title="Dashboard of PDF wordt vanzelf duidelijk"
+          body="Zodra de eerste campaign live staat, zie je direct welke route je opent en welk document eventueel al mee kan."
+          tone="blue"
+        />
+        <DashboardPanel
+          eyebrow="Support"
+          title="Verisight beheert de setup"
+          body="Respondentimport, uitnodigingen en livegang blijven bewust buiten jouw primaire startscherm."
+          tone="emerald"
+        />
       </div>
     </DashboardSection>
   )
