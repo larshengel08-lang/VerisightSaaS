@@ -1,6 +1,14 @@
 'use client'
 
-import { buildManagementActionSummary, type ManagementActionDepartmentOwnerDefault, type ManagementActionRecord, type ManagementActionReviewRecord, type ManagementActionUpdateRecord } from '@/lib/management-actions'
+import {
+  buildManagementActionAccessEnvelope,
+  buildManagementActionSummary,
+  canViewManagementAction,
+  type ManagementActionDepartmentOwnerDefault,
+  type ManagementActionRecord,
+  type ManagementActionReviewRecord,
+  type ManagementActionUpdateRecord,
+} from '@/lib/management-actions'
 import { buildMtoActionCenterViewModel } from '@/lib/action-center/mto-cockpit'
 import type { MtoDepartmentReadItem } from '@/lib/products/mto/department-intelligence'
 import type { MemberRole } from '@/lib/types'
@@ -24,13 +32,39 @@ export interface MtoManagerCockpitProps {
 
 export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
   const reviews = props.reviews ?? []
-  const model = buildMtoActionCenterViewModel({
-    departmentReads: props.departmentReads,
-    actions: props.actions,
-    updates: props.updates,
-    reviews,
+  const accessEnvelope = buildManagementActionAccessEnvelope({
+    orgRole: props.currentViewerRole,
+    userEmail: props.currentUserEmail,
+    ownerDefaults: props.ownerDefaults,
   })
-  const summary = buildManagementActionSummary(props.actions)
+  const visibleOwnerDefaults = accessEnvelope.canSeeAll
+    ? props.ownerDefaults
+    : props.ownerDefaults.filter((entry) => entry.department && accessEnvelope.departmentLabels.includes(entry.department))
+  const visibleDepartmentReads = accessEnvelope.canSeeAll
+    ? props.departmentReads
+    : props.departmentReads.filter((read) => accessEnvelope.departmentLabels.includes(read.segmentLabel))
+  const visibleActions = props.actions.filter((action) =>
+    canViewManagementAction({
+      orgRole: props.currentViewerRole,
+      userEmail: props.currentUserEmail,
+      ownerDefaults: props.ownerDefaults,
+      action,
+    }),
+  )
+  const visibleActionIds = new Set(visibleActions.map((action) => action.id))
+  const visibleUpdates = props.updates.filter((update) => visibleActionIds.has(update.action_id))
+  const visibleReviews = reviews.filter((review) => visibleActionIds.has(review.action_id))
+  const canManageActionCenter =
+    props.canManageCampaign ||
+    accessEnvelope.departmentLabels.length > 0 ||
+    visibleActions.some((action) => action.owner_email?.toLowerCase() === props.currentUserEmail?.toLowerCase())
+  const model = buildMtoActionCenterViewModel({
+    departmentReads: visibleDepartmentReads,
+    actions: visibleActions,
+    updates: visibleUpdates,
+    reviews: visibleReviews,
+  })
+  const summary = buildManagementActionSummary(visibleActions)
 
   return (
     <div className="space-y-6">
@@ -60,21 +94,22 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
             themeCards={model.themeCards}
             organizationId={props.organizationId}
             campaignId={props.campaignId}
-            ownerDefaults={props.ownerDefaults}
-            canManageCampaign={props.canManageCampaign}
+            ownerDefaults={visibleOwnerDefaults}
+            canManageCampaign={canManageActionCenter}
           />
         </div>
       </div>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr),minmax(320px,0.85fr)]">
         <MtoActionList
-          actions={props.actions}
-          updates={props.updates}
-          reviews={reviews}
+          actions={visibleActions}
+          updates={visibleUpdates}
+          reviews={visibleReviews}
+          ownerDefaults={visibleOwnerDefaults}
           currentViewerRole={props.currentViewerRole}
           currentUserEmail={props.currentUserEmail}
-          canManageCampaign={props.canManageCampaign}
+          canManageCampaign={canManageActionCenter}
         />
-        <MtoReviewQueue reviewQueue={model.reviewQueue} reviews={reviews} />
+        <MtoReviewQueue reviewQueue={model.reviewQueue} reviews={visibleReviews} />
       </div>
     </div>
   )

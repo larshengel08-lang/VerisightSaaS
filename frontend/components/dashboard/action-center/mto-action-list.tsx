@@ -3,10 +3,12 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
+  buildManagementActionAccessEnvelope,
   buildManagementActionTraceabilitySummary,
   canEditManagementAction,
   getManagementActionStatusLabel,
   MANAGEMENT_ACTION_STATUS_OPTIONS,
+  type ManagementActionDepartmentOwnerDefault,
   type ManagementActionRecord,
   type ManagementActionReviewRecord,
   type ManagementActionUpdateRecord,
@@ -17,6 +19,7 @@ interface Props {
   actions: ManagementActionRecord[]
   updates: ManagementActionUpdateRecord[]
   reviews?: ManagementActionReviewRecord[]
+  ownerDefaults?: ManagementActionDepartmentOwnerDefault[]
   currentViewerRole?: MemberRole | null
   currentUserEmail?: string | null
   canManageCampaign?: boolean
@@ -38,6 +41,7 @@ export function MtoActionList({
   actions,
   updates,
   reviews = [],
+  ownerDefaults = [],
   currentViewerRole = null,
   currentUserEmail = null,
   canManageCampaign = false,
@@ -84,6 +88,12 @@ export function MtoActionList({
     }
     return grouped
   }, [reviews])
+
+  const accessEnvelope = buildManagementActionAccessEnvelope({
+    orgRole: currentViewerRole,
+    userEmail: currentUserEmail,
+    ownerDefaults,
+  })
 
   function updateDraft(actionId: string, key: keyof ActionDraft, value: string) {
     setActionDrafts((current) => ({
@@ -155,6 +165,7 @@ export function MtoActionList({
         const editable = canEditManagementAction({
           orgRole: currentViewerRole,
           userEmail: currentUserEmail,
+          ownerDefaults,
           action,
         })
         const actionUpdates = updatesByAction[action.id] ?? []
@@ -222,7 +233,7 @@ export function MtoActionList({
                 <select
                   value={draft.status}
                   onChange={(event) => updateDraft(action.id, 'status', event.target.value)}
-                  disabled={!editable}
+                  disabled={!editable || (!canManageCampaign && !accessEnvelope.departmentLabels.includes(action.source_scope_label ?? ''))}
                   className={inputClass}
                 >
                   {MANAGEMENT_ACTION_STATUS_OPTIONS.map((option) => (

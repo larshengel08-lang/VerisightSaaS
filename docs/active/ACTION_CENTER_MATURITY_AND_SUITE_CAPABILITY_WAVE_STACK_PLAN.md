@@ -6,7 +6,7 @@
 - Active source of truth: dit document
 - Build permission: wave_01_open
 - Dependency: `ACTION_CENTER_MATURITY_AND_SUITE_CAPABILITY_PLAN.md` moet leidend blijven
-- Next allowed step after green completion of current wave: `WAVE_04_ACTION_CENTER_LOADER_AND_ADAPTER_SEAMS.md`
+- Next allowed step after green completion of current wave: `WAVE_05_ACTION_CENTER_POLISH_AND_CLOSEOUT.md`
 
 ## Allowed Wave Stack
 
@@ -26,8 +26,8 @@
 
 ## Current Wave
 
-- Current active wave: `WAVE_03_ACTION_CENTER_PERMISSION_ENVELOPE.md`
-- Last completed wave: `WAVE_02_ACTION_CENTER_GUIDED_CREATION_AND_DOSSIERS.md`
+- Current active wave: `WAVE_04_ACTION_CENTER_LOADER_AND_ADAPTER_SEAMS.md`
+- Last completed wave: `WAVE_03_ACTION_CENTER_PERMISSION_ENVELOPE.md`
 
 ## Closeout Gate
 

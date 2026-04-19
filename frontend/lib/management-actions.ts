@@ -89,6 +89,12 @@ export interface ManagementActionCreationDraft {
   expected_outcome: string
 }
 
+export interface ManagementActionAccessEnvelope {
+  canSeeAll: boolean
+  departmentLabels: string[]
+  normalizedEmail: string | null
+}
+
 export const MANAGEMENT_ACTION_STATUS_OPTIONS: Array<{ value: ManagementActionStatus; label: string }> = [
   { value: 'open', label: 'Open' },
   { value: 'assigned', label: 'Toegewezen' },
@@ -132,20 +138,67 @@ export function validateManagementActionCreationDraft(draft: ManagementActionCre
   return errors
 }
 
+export function buildManagementActionAccessEnvelope(args: {
+  orgRole: MemberRole | null | undefined
+  userEmail: string | null | undefined
+  ownerDefaults?: Array<Pick<ManagementActionDepartmentOwnerDefault, 'department' | 'owner_email' | 'owner_label'>> | null
+}): ManagementActionAccessEnvelope {
+  const normalizedEmail = normalizeEmail(args.userEmail)
+
+  if (args.orgRole === 'owner' || args.orgRole === 'member') {
+    return {
+      canSeeAll: true,
+      departmentLabels: [],
+      normalizedEmail,
+    }
+  }
+
+  if (args.orgRole !== 'viewer' || !normalizedEmail) {
+    return {
+      canSeeAll: false,
+      departmentLabels: [],
+      normalizedEmail,
+    }
+  }
+
+  const departmentLabels = Array.from(
+    new Set(
+      (args.ownerDefaults ?? [])
+        .filter((entry) => normalizeEmail(entry.owner_email) === normalizedEmail && entry.department)
+        .map((entry) => entry.department as string),
+    ),
+  )
+
+  return {
+    canSeeAll: false,
+    departmentLabels,
+    normalizedEmail,
+  }
+}
+
 export function canViewManagementAction(args: {
   orgRole: MemberRole | null | undefined
   userEmail: string | null | undefined
-  action: Pick<ManagementActionRecord, 'owner_email'>
+  ownerDefaults?: Array<Pick<ManagementActionDepartmentOwnerDefault, 'department' | 'owner_email' | 'owner_label'>> | null
+  action: Pick<ManagementActionRecord, 'owner_email' | 'source_scope_label'>
 }) {
-  if (args.orgRole === 'owner' || args.orgRole === 'member') return true
-  if (args.orgRole !== 'viewer') return false
-  return normalizeEmail(args.userEmail) === normalizeEmail(args.action.owner_email)
+  const envelope = buildManagementActionAccessEnvelope({
+    orgRole: args.orgRole,
+    userEmail: args.userEmail,
+    ownerDefaults: args.ownerDefaults ?? [],
+  })
+
+  if (envelope.canSeeAll) return true
+  if (!envelope.normalizedEmail) return false
+  if (envelope.normalizedEmail === normalizeEmail(args.action.owner_email)) return true
+  return args.action.source_scope_label ? envelope.departmentLabels.includes(args.action.source_scope_label) : false
 }
 
 export function canEditManagementAction(args: {
   orgRole: MemberRole | null | undefined
   userEmail: string | null | undefined
-  action: Pick<ManagementActionRecord, 'owner_email'>
+  ownerDefaults?: Array<Pick<ManagementActionDepartmentOwnerDefault, 'department' | 'owner_email' | 'owner_label'>> | null
+  action: Pick<ManagementActionRecord, 'owner_email' | 'source_scope_label'>
 }) {
   return canViewManagementAction(args)
 }

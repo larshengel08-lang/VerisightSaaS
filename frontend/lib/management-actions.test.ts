@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildManagementActionAccessEnvelope,
   buildManagementActionSummary,
   buildManagementActionSeedFromDepartmentRead,
   buildManagementActionTraceabilitySummary,
@@ -196,5 +197,49 @@ describe('management action contracts', () => {
     expect(seeded.owner_email).toBe('ops@example.com')
     expect(seeded.review_date).toBe('2026-05-17')
     expect(seeded.expected_outcome).toContain('voorspelbaarder')
+  })
+
+  it('builds a department-bounded access envelope for viewer managers', () => {
+    const envelope = buildManagementActionAccessEnvelope({
+      orgRole: 'viewer',
+      userEmail: 'ops@example.com',
+      ownerDefaults: [
+        { department: 'Operations', owner_label: 'Ops manager', owner_email: 'ops@example.com' },
+        { department: 'People Ops', owner_label: 'People manager', owner_email: 'people@example.com' },
+      ],
+    })
+
+    expect(envelope.canSeeAll).toBe(false)
+    expect(envelope.departmentLabels).toEqual(['Operations'])
+  })
+
+  it('lets viewer managers access actions for their mapped department even if action ownership differs', () => {
+    expect(
+      canViewManagementAction({
+        orgRole: 'viewer',
+        userEmail: 'ops@example.com',
+        ownerDefaults: [
+          { department: 'Operations', owner_label: 'Ops manager', owner_email: 'ops@example.com' },
+        ],
+        action: {
+          owner_email: 'hr@verisight.test',
+          source_scope_label: 'Operations',
+        },
+      }),
+    ).toBe(true)
+
+    expect(
+      canViewManagementAction({
+        orgRole: 'viewer',
+        userEmail: 'ops@example.com',
+        ownerDefaults: [
+          { department: 'Operations', owner_label: 'Ops manager', owner_email: 'ops@example.com' },
+        ],
+        action: {
+          owner_email: 'people@verisight.test',
+          source_scope_label: 'People Ops',
+        },
+      }),
+    ).toBe(false)
   })
 })
