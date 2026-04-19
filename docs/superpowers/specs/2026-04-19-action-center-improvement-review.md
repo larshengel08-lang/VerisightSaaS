@@ -4,6 +4,7 @@ Date: 2026-04-19
 Scope: `Action Center / MTO-cockpit` only
 Review type: Product/UX + code/architecture
 Primary goal: prioritized improvement backlog with emphasis on improvement opportunities
+Boundary note: suite coupling stays in scope as a required future capability, but not as an immediate live rollout for existing scans
 
 ## Top Findings
 
@@ -66,6 +67,23 @@ Primary goal: prioritized improvement backlog with emphasis on improvement oppor
 - Recommended direction:
   - Extract an MTO Action Center server-side loader or dedicated dashboard sub-boundary.
   - Keep the page responsible for composition, but move MTO-specific orchestration into a narrower module.
+
+### P1. Future suite coupling is still protected, but not yet explicit enough as a first-class architectural goal.
+- Evidence:
+  - `frontend/lib/management-actions.ts:26-55`
+  - `frontend/lib/management-actions.ts:129-173`
+  - `frontend/lib/action-center/mto-cockpit.ts:47-99`
+- Why it matters:
+  - The current track correctly stays MTO-first and avoids premature coupling.
+  - But the next design steps should not accidentally harden the UI and orchestration so deeply around MTO that later `ExitScan` and `RetentieScan` adapters become awkward.
+  - Suite capability should remain in scope now as an architectural constraint, even if live coupling is not the next implementation step.
+- Recommended direction:
+  - Keep product-native insight layers, but make shared follow-through seams explicit:
+    - source traceability contract
+    - adapter boundary per product
+    - reusable action dossier primitives
+    - shared action-access policy shape
+  - Avoid building MTO-only assumptions into future action detail and cockpit infrastructure where a neutral contract would work.
 
 ## Prioritized Improvement Backlog
 
@@ -131,9 +149,24 @@ Primary goal: prioritized improvement backlog with emphasis on improvement oppor
   - Create a dedicated loader/builder for MTO Action Center campaign data and pass a single prepared model into the cockpit.
 - Now or later: Next build phase
 
+#### 6. Make suite-coupling capability an explicit non-breaking architecture track inside the next phase.
+- Domain: Suite readiness without premature coupling
+- Problem:
+  - The review protected against premature rollout, but should also protect for later adapter-based adoption by other scan types.
+- Impact:
+  - Without this, the Action Center can become polished for MTO while still becoming harder to connect safely to `retention` and `exit` later.
+- Recommended change:
+  - In the next phase, explicitly define:
+    - product adapter interface
+    - shared action dossier primitives
+    - neutral traceability payload shape
+    - shared permission envelope with product-specific enforcement
+  - Keep implementation live only for MTO unless a later gate opens more.
+- Now or later: Next build phase
+
 ### P2
 
-#### 6. Prioritize and sort theme cards instead of preserving raw source order.
+#### 7. Prioritize and sort theme cards instead of preserving raw source order.
 - Domain: Cockpit clarity
 - Evidence:
   - `frontend/lib/action-center/mto-cockpit.ts:59-99`
@@ -145,7 +178,7 @@ Primary goal: prioritized improvement backlog with emphasis on improvement oppor
   - Sort by urgency signal, action pressure and pending review state before rendering.
 - Now or later: Soon after P1 cockpit restructuring
 
-#### 7. Make theme cards show action health, not only action count.
+#### 8. Make theme cards show action health, not only action count.
 - Domain: Product/UX
 - Evidence:
   - `frontend/components/dashboard/action-center/mto-theme-panel.tsx:37-46`
@@ -162,7 +195,7 @@ Primary goal: prioritized improvement backlog with emphasis on improvement oppor
     - follow-up needed
 - Now or later: Soon after P1 cockpit restructuring
 
-#### 8. Elevate review urgency beyond three simple tones.
+#### 9. Elevate review urgency beyond three simple tones.
 - Domain: Action lifecycle and review discipline
 - Evidence:
   - `frontend/lib/action-center/mto-cockpit.ts:72-84`
@@ -179,7 +212,7 @@ Primary goal: prioritized improvement backlog with emphasis on improvement oppor
     - closed
 - Now or later: After dossier-backed action detail lands
 
-#### 9. Separate mutation logic from presentational components.
+#### 10. Separate mutation logic from presentational components.
 - Domain: Code and component architecture
 - Evidence:
   - `frontend/components/dashboard/action-center/mto-action-composer.tsx:28-58`
@@ -193,7 +226,7 @@ Primary goal: prioritized improvement backlog with emphasis on improvement oppor
   - Introduce a small Action Center client service/hooks layer so the UI can become easier to refactor.
 - Now or later: After P1 structural product fixes
 
-#### 10. Sharpen the visual hierarchy toward a calmer executive feel.
+#### 11. Sharpen the visual hierarchy toward a calmer executive feel.
 - Domain: Visual maturity and information hierarchy
 - Problem:
   - The current design is neat, but many panels share similar border/card treatment and equal visual weight.
@@ -210,7 +243,7 @@ Primary goal: prioritized improvement backlog with emphasis on improvement oppor
 
 ### P3
 
-#### 11. Add lightweight outcome patterns for stronger management language.
+#### 12. Add lightweight outcome patterns for stronger management language.
 - Domain: Manager UX and usability
 - Problem:
   - Expected and measured outcome fields are free text only.
@@ -223,7 +256,7 @@ Primary goal: prioritized improvement backlog with emphasis on improvement oppor
   - Keep them optional and non-template-heavy.
 - Now or later: Later polish
 
-#### 12. Add manager-facing copy refinements and terminology pass.
+#### 13. Add manager-facing copy refinements and terminology pass.
 - Domain: Product/UX
 - Problem:
   - Some language is still implementation-oriented rather than management-native.
@@ -236,6 +269,7 @@ Primary goal: prioritized improvement backlog with emphasis on improvement oppor
 ## Do Not Overbuild
 
 - Do not turn this into a generic cross-product action center yet.
+- Do keep neutral adapter seams visible so later suite coupling stays easy.
 - Do not add a generic segment explorer in this phase.
 - Do not force rigid workflow templates or "project management" behavior.
 - Do not bury the cockpit under advanced analytics before the manager flow is excellent.
@@ -249,8 +283,9 @@ Primary goal: prioritized improvement backlog with emphasis on improvement oppor
 4. Tighten department-aware permissions.
 5. Extract MTO Action Center orchestration into its own loader boundary.
 6. Refine sorting, urgency modelling and visual hierarchy.
-7. Only after that consider broader suite-facing adapter work.
+7. In parallel, keep adapter seams explicit so later suite coupling remains straightforward.
+8. Only after that consider broader live suite-facing adapter work.
 
 ## Review Summary
 
-The current Action Center is a credible bounded internal product, but it still feels closer to a capable action-log plus cockpit shell than to a truly mature management operating surface. The biggest opportunity is not more features; it is stronger orchestration, better action quality at creation, a unified improvement dossier model and stricter department-scoped access. If those four areas improve, the product becomes meaningfully sharper, calmer and more executive-ready without breaking its MTO-first boundaries.
+The current Action Center is a credible bounded internal product, but it still feels closer to a capable action-log plus cockpit shell than to a truly mature management operating surface. The biggest opportunity is not more features; it is stronger orchestration, better action quality at creation, a unified improvement dossier model, stricter department-scoped access and more explicit suite-capable seams. If those areas improve together, the product becomes meaningfully sharper, calmer and more executive-ready without breaking its MTO-first boundaries or closing off later coupling to other scans.
