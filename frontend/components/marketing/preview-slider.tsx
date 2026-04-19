@@ -105,9 +105,9 @@ function BoardroomCanvas({ variant }: { variant: ReportPreviewVariant }) {
         ))}
       </div>
       <div className="rounded-[1.6rem] border border-slate-200 bg-slate-50 px-5 py-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Waarom dit commercieel werkt</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Wat dit laat zien</p>
         <p className="mt-2 text-sm leading-7 text-slate-700">
-          De buyer ziet hier niet alleen data, maar vooral hoe dashboard, rapport en gesprek samenkomen in één rustige executive lijn.
+          Hier wordt zichtbaar hoe dashboard, rapport en gesprek samenkomen in een rustige executive lijn.
         </p>
       </div>
     </div>
@@ -239,7 +239,7 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
       },
       {
         title: 'Methodiek & begrenzing',
-        body: 'De trustlaag die laat zien wat de output wel ondersteunt en bewust niet pretendeert.',
+        body: 'De trustlaag die laat zien wat de output ondersteunt en bewust niet pretendeert.',
       },
     ],
     [],

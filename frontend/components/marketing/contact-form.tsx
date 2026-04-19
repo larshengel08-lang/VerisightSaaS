@@ -209,7 +209,7 @@ export function ContactForm({
         }`}
       >
         {isCompact
-          ? 'Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke output of intake daarbij logisch wordt.'
+          ? 'Laat uw vraag achter. We koppelen meestal snel terug met de meest logische eerste route en welke output daarbij past.'
           : 'Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de logische eerste stap is. TeamScan, Onboarding 30-60-90 en Leadership Scan blijven bounded follow-on routes die pas logisch worden nadat een eerste signaal, baseline of managementread al staat. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.'}
       </div>
 
@@ -295,7 +295,7 @@ export function ContactForm({
 
         <div>
           <label htmlFor="routeInterest" className={`mb-2 block text-sm font-medium ${labelClass}`}>
-            {isCompact ? 'Primaire managementvraag' : 'Welke route lijkt nu het meest logisch?'}
+            {isCompact ? 'Waar wilt u nu zicht op?' : 'Welke route lijkt nu het meest logisch?'}
           </label>
           <select
             id="routeInterest"
@@ -400,7 +400,7 @@ export function ContactForm({
           disabled={loading}
           className={`inline-flex w-full items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 sm:ml-auto sm:min-w-[14rem] sm:w-auto ${buttonClass}`}
         >
-          {loading ? 'Verstuur bericht...' : isCompact ? 'Plan kennismaking' : 'Verstuur bericht'}
+          {loading ? 'Verstuur bericht...' : isCompact ? 'Plan eerste gesprek' : 'Verstuur bericht'}
         </button>
       </div>
 
