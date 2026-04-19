@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "set \"NEXT_DIST_DIR=.next-dev\" && next dev",
+    "build": "set \"NEXT_DIST_DIR=.next-preview\" && next build",
+    "start": "set \"NEXT_DIST_DIR=.next-preview\" && next start",
     "lint": "eslint",
     "test": "vitest run",
     "test:e2e": "playwright test",
