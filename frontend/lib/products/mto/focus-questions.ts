@@ -2,6 +2,11 @@ import { FACTOR_LABELS } from '@/lib/types'
 
 type Band = 'HOOG' | 'MIDDEN' | 'LAAG'
 
+export interface FocusQuestionOption {
+  key: string
+  label: string
+}
+
 function buildBandQuestions(factorLabel: string, band: Band) {
   if (band === 'HOOG') {
     return [
@@ -23,6 +28,13 @@ function buildBandQuestions(factorLabel: string, band: Band) {
   ]
 }
 
+function buildBandQuestionOptions(factorKey: string, factorLabel: string, band: Band): FocusQuestionOption[] {
+  return buildBandQuestions(factorLabel, band).map((label, index) => ({
+    key: `${factorKey}.q${index + 1}`,
+    label,
+  }))
+}
+
 export const MTO_FOCUS_QUESTIONS = Object.fromEntries(
   Object.entries(FACTOR_LABELS).map(([factorKey, factorLabel]) => [
     factorKey,
@@ -33,3 +45,14 @@ export const MTO_FOCUS_QUESTIONS = Object.fromEntries(
     },
   ]),
 ) as Record<string, Record<Band, string[]>>
+
+export const MTO_FOCUS_QUESTION_OPTIONS = Object.fromEntries(
+  Object.entries(FACTOR_LABELS).map(([factorKey, factorLabel]) => [
+    factorKey,
+    {
+      HOOG: buildBandQuestionOptions(factorKey, factorLabel, 'HOOG'),
+      MIDDEN: buildBandQuestionOptions(factorKey, factorLabel, 'MIDDEN'),
+      LAAG: buildBandQuestionOptions(factorKey, factorLabel, 'LAAG'),
+    },
+  ]),
+) as Record<string, Record<Band, FocusQuestionOption[]>>
