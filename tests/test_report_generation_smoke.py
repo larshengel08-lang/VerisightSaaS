@@ -181,6 +181,10 @@ def test_generate_exit_report_smoke(db_session: Session):
     assert 'Organisatiefactoren' in pages[7]
     assert 'Belevingsscore' in pages[7]
     assert 'Eerste route & actie' in pages[8]
+    assert any('Van inzicht naar eerste opvolging' in page for page in pages)
+    assert any('30 dagen' in page for page in pages)
+    assert any('60 dagen' in page for page in pages)
+    assert any('90 dagen' in page for page in pages)
     assert 'Review' in pages[8]
     assert 'Methodiek / leeswijzer' in pages[9]
     assert 'Technische verantwoording' in pages[10]
@@ -225,6 +229,9 @@ def test_generate_exit_report_smoke_with_indicative_batch(db_session: Session):
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 5000
     pages = _extract_pdf_pages(pdf_bytes)
+    assert any('Van inzicht naar eerste opvolging' in page for page in pages)
+    assert any('30 dagen' in page for page in pages)
+    assert any('90 dagen' in page for page in pages)
     assert len(pages) == 11
     assert 'Segment deep dive' in pages[0]
     assert 'Respons' in pages[1]

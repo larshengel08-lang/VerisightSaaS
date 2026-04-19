@@ -62,6 +62,7 @@ from reportlab.lib.utils import ImageReader
 
 from sqlalchemy.orm import Session, joinedload, selectinload
 
+from backend.insight_to_action import build_report_insight_to_action
 from backend.models import Campaign, Organization, Respondent, SurveyResponse
 from backend.products.shared.management_language import (
     build_factor_presentation,
@@ -1067,6 +1068,54 @@ def _append_numbered_action_rows(
     ]))
     story.append(action_table)
     story.append(Spacer(1, 0.14 * cm))
+
+
+def _append_insight_to_action_block(
+    story: list,
+    *,
+    insight_to_action: dict[str, Any],
+    content_width: float,
+    theme: dict[str, colors.Color],
+) -> None:
+    if not insight_to_action:
+        return
+
+    priorities_text = " ".join(
+        f"<b>{item['title']}:</b> {item['body']}"
+        for item in insight_to_action.get("management_priorities", [])
+    )
+    story.append(Paragraph(insight_to_action["title"], STYLES["sub_title"]))
+    questions = insight_to_action.get("verification_questions", [])
+    actions_text = "<br/>".join(
+        f"<b>{index}.</b> {item['body']}"
+        for index, item in enumerate(insight_to_action.get("possible_first_actions", []), start=1)
+    )
+    _append_emphasis_note(
+        story,
+        title=insight_to_action["title"],
+        body=priorities_text,
+        content_width=content_width,
+        theme=theme,
+    )
+    if questions:
+        question_body = "<br/>".join(
+            f"<b>{index}.</b> {question}"
+            for index, question in enumerate(questions, start=1)
+        )
+        _append_emphasis_note(
+            story,
+            title="5 verificatievragen",
+            body=question_body,
+            content_width=content_width,
+            theme=theme,
+        )
+    _append_emphasis_note(
+        story,
+        title="3 mogelijke eerste acties",
+        body=actions_text,
+        content_width=content_width,
+        theme=theme,
+    )
 
 
 def _append_quote_cards(
@@ -2298,16 +2347,37 @@ def _build_boardroom_story(
             content_width=content_width,
             theme=report_theme,
         )
-    _append_numbered_action_rows(
-        story,
-        steps=list(next_steps_payload["steps"]) + [{
-            "number": "5",
-            "title": scan_meta["report_repeat_title"],
-            "body": scan_meta["report_repeat_body"],
-        }],
-        content_width=content_width,
-        theme=report_theme,
-    )
+    if next_steps_payload.get("insight_to_action"):
+        _append_insight_to_action_block(
+            story,
+            insight_to_action=next_steps_payload["insight_to_action"],
+            content_width=content_width,
+            theme=report_theme,
+        )
+        _append_numbered_action_rows(
+            story,
+            steps=[
+                {
+                    "number": item["window"].split(" ")[0],
+                    "title": item["title"],
+                    "body": item["body"],
+                }
+                for item in next_steps_payload["insight_to_action"].get("follow_up_30_60_90", [])
+            ],
+            content_width=content_width,
+            theme=report_theme,
+        )
+    else:
+        _append_numbered_action_rows(
+            story,
+            steps=list(next_steps_payload["steps"]) + [{
+                "number": "5",
+                "title": scan_meta["report_repeat_title"],
+                "body": scan_meta["report_repeat_body"],
+            }],
+            content_width=content_width,
+            theme=report_theme,
+        )
 
     if is_retention and retention_playbooks:
         story.append(Spacer(1, 0.15 * cm))
@@ -3864,7 +3934,7 @@ def _append_rebrand_actions(
         col_widths=[left_width, right_width],
     ))
     story.append(Spacer(1, 0.12 * cm))
-    if hypotheses:
+    if hypotheses and not next_steps_payload.get("insight_to_action"):
         story.append(Paragraph("Actiekaarten", STYLES["sub_title"]))
         action_cards = []
         for item in hypotheses[:2]:
@@ -3886,11 +3956,26 @@ def _append_rebrand_actions(
             columns=min(2, len(action_cards)),
         )
         story.append(Spacer(1, 0.10 * cm))
-    roadmap_steps = list(next_steps_payload["steps"]) + [{
-        "number": "5",
-        "title": scan_meta["report_repeat_title"],
-        "body": scan_meta["report_repeat_body"],
-    }]
+    if next_steps_payload.get("insight_to_action"):
+        _append_insight_to_action_block(
+            story,
+            insight_to_action=next_steps_payload["insight_to_action"],
+            content_width=content_width,
+            theme=report_theme,
+        )
+        roadmap_steps = [
+            {
+                "title": f"{item['window']} - {item['title']}",
+                "body": item["body"],
+            }
+            for item in next_steps_payload["insight_to_action"].get("follow_up_30_60_90", [])
+        ]
+    else:
+        roadmap_steps = list(next_steps_payload["steps"]) + [{
+            "number": "5",
+            "title": scan_meta["report_repeat_title"],
+            "body": scan_meta["report_repeat_body"],
+        }]
     story.append(_build_data_table_flowable(
         rows=[["Stap", "Duiding"]] + [
             [f"{index}. {step['title']}", step["body"]]
@@ -5543,6 +5628,13 @@ def generate_campaign_report(
         )
         if has_pattern and hasattr(product_module, "get_hypothesis_rows")
         else []
+    )
+    next_steps_payload["insight_to_action"] = build_report_insight_to_action(
+        scan_type=camp.scan_type,
+        top_focus_labels=top_factor_labels,
+        next_steps_payload=next_steps_payload,
+        action_hypotheses=action_hypotheses,
+        has_pattern=has_pattern,
     )
 
     cover_metric_cards = [

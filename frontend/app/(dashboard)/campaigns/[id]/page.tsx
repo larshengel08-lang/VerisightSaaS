@@ -13,6 +13,7 @@ import {
   DashboardSummaryBar,
   DashboardTimeline,
 } from '@/components/dashboard/dashboard-primitives'
+import { InsightToActionPanel } from '@/components/dashboard/insight-to-action-panel'
 import { DashboardTabs } from '@/components/dashboard/dashboard-tabs'
 import { FactorTable } from '@/components/dashboard/factor-table'
 import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
@@ -56,6 +57,7 @@ import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/impleme
 import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import { buildTeamLocalReadState, buildTeamPriorityReadState } from '@/lib/products/team'
+import { buildDashboardInsightToAction } from '@/lib/products/shared/insight-to-action'
 import { getProductModule } from '@/lib/products/shared/registry'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
@@ -289,6 +291,18 @@ export default async function CampaignPage({ params }: Props) {
   const playbookCalibrationNote =
     stats.scan_type === 'retention'
       ? productModule.getActionPlaybookCalibrationNote?.() ?? null
+      : null
+  const insightToAction =
+    stats.scan_type === 'exit' || stats.scan_type === 'retention'
+      ? buildDashboardInsightToAction({
+          scanType: stats.scan_type,
+          factorAverages: factorData.orgAverages,
+          hasEnoughData,
+          followThroughCards: dashboardViewModel.followThroughCards,
+          nextStep: dashboardViewModel.nextStep,
+          focusQuestions: productModule.getFocusQuestions(),
+          actionPlaybooks: productModule.getActionPlaybooks(),
+        })
       : null
   const disclosureDefaults = getDisclosureDefaults({
     scanType: stats.scan_type,
@@ -1433,6 +1447,8 @@ export default async function CampaignPage({ params }: Props) {
               items={dashboardViewModel.followThroughCards}
             />
           ) : null}
+
+          {insightToAction ? <InsightToActionPanel block={insightToAction} /> : null}
 
           <div className="rounded-[22px] border border-[#d6e4e8] bg-[#f3f8f8] p-4 sm:p-5">
             <h3 className="text-sm font-semibold text-slate-950">{productExperience.afterSessionTitle}</h3>
