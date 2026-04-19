@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 import path from "path";
 
+const configuredDistDir = process.env.NEXT_DIST_DIR?.trim()
+const distDir =
+  process.env.VERCEL === '1' || process.env.CI === 'true'
+    ? undefined
+    : configuredDistDir && configuredDistDir !== '.next'
+      ? configuredDistDir
+      : undefined
+
 const securityHeaders = [
   {
     key: 'X-Content-Type-Options',
@@ -41,6 +49,7 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  ...(distDir ? { distDir } : {}),
   turbopack: {
     // Silences the "multiple lockfiles" workspace root warning
     root: path.resolve(__dirname),
