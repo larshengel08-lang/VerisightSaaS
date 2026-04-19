@@ -69,6 +69,7 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
         <MtoActionList
           actions={props.actions}
           updates={props.updates}
+          reviews={reviews}
           currentViewerRole={props.currentViewerRole}
           currentUserEmail={props.currentUserEmail}
           canManageCampaign={props.canManageCampaign}

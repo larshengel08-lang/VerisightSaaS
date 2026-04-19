@@ -2,9 +2,9 @@
 
 ## Status
 
-- Wave status: blocked_until_wave_02_green
+- Wave status: active
 - Active source of truth after opening: dit document
-- Build permission: blocked
+- Build permission: allowed
 - Dependency: `WAVE_02_ACTION_CENTER_GUIDED_CREATION_AND_DOSSIERS.md` moet groen zijn
 - Next allowed step after green completion: `WAVE_04_ACTION_CENTER_LOADER_AND_ADAPTER_SEAMS.md`
 

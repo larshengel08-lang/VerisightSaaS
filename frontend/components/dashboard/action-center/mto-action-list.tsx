@@ -8,6 +8,7 @@ import {
   getManagementActionStatusLabel,
   MANAGEMENT_ACTION_STATUS_OPTIONS,
   type ManagementActionRecord,
+  type ManagementActionReviewRecord,
   type ManagementActionUpdateRecord,
 } from '@/lib/management-actions'
 import type { MemberRole } from '@/lib/types'
@@ -15,6 +16,7 @@ import type { MemberRole } from '@/lib/types'
 interface Props {
   actions: ManagementActionRecord[]
   updates: ManagementActionUpdateRecord[]
+  reviews?: ManagementActionReviewRecord[]
   currentViewerRole?: MemberRole | null
   currentUserEmail?: string | null
   canManageCampaign?: boolean
@@ -35,6 +37,7 @@ type ActionDraft = {
 export function MtoActionList({
   actions,
   updates,
+  reviews = [],
   currentViewerRole = null,
   currentUserEmail = null,
   canManageCampaign = false,
@@ -72,6 +75,15 @@ export function MtoActionList({
     }
     return grouped
   }, [updates])
+
+  const reviewsByAction = useMemo(() => {
+    const grouped: Record<string, ManagementActionReviewRecord[]> = {}
+    for (const review of reviews) {
+      grouped[review.action_id] ??= []
+      grouped[review.action_id].push(review)
+    }
+    return grouped
+  }, [reviews])
 
   function updateDraft(actionId: string, key: keyof ActionDraft, value: string) {
     setActionDrafts((current) => ({
@@ -146,6 +158,8 @@ export function MtoActionList({
           action,
         })
         const actionUpdates = updatesByAction[action.id] ?? []
+        const actionReviews = reviewsByAction[action.id] ?? []
+        const latestReview = actionReviews[0] ?? null
 
         return (
           <div key={action.id} className="rounded-[22px] border border-slate-200 bg-white p-4">
@@ -155,6 +169,9 @@ export function MtoActionList({
                   {buildManagementActionTraceabilitySummary(action)}
                 </p>
                 <h3 className="mt-2 text-base font-semibold text-slate-950">{action.title}</h3>
+                {action.decision_context ? (
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{action.decision_context}</p>
+                ) : null}
               </div>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                 {getManagementActionStatusLabel(action.status)}
@@ -166,6 +183,28 @@ export function MtoActionList({
                 Blokkade: {draft.blocker_note}
               </div>
             ) : null}
+
+            <div className="mt-4 grid gap-3 lg:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Dossierstart</p>
+                <p className="mt-2 text-sm font-semibold text-slate-950">{draft.owner_label || 'Nog geen eigenaar'}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">
+                  {draft.review_date ? `Eerste review: ${draft.review_date}` : 'Nog geen reviewmoment vastgelegd.'}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Verwachte uitkomst</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  {draft.expected_outcome || 'Nog geen verwachte uitkomst vastgelegd.'}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Laatste review</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  {latestReview ? latestReview.summary : 'Nog geen review gelogd in dit verbeterdossier.'}
+                </p>
+              </div>
+            </div>
 
             <div className="mt-4 grid gap-4 xl:grid-cols-2">
               <label className="space-y-1 text-sm text-slate-700">
@@ -229,20 +268,42 @@ export function MtoActionList({
             ) : null}
 
             <div className="mt-4 rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-semibold text-slate-950">Updatehistorie</p>
-              <div className="mt-3 space-y-3">
-                {actionUpdates.length === 0 ? (
-                  <p className="text-sm leading-6 text-slate-600">Nog geen updates gelogd.</p>
-                ) : (
-                  actionUpdates.map((update) => (
-                    <div key={update.id} className="rounded-2xl border border-white bg-white px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                        {update.created_at.slice(0, 16).replace('T', ' ')}
-                      </p>
-                      <p className="mt-2 text-sm leading-6 text-slate-700">{update.note}</p>
-                    </div>
-                  ))
-                )}
+              <p className="text-sm font-semibold text-slate-950">Dossierverloop</p>
+              <div className="mt-3 grid gap-4 xl:grid-cols-2">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Reviewhistorie</p>
+                  <div className="mt-3 space-y-3">
+                    {actionReviews.length === 0 ? (
+                      <p className="text-sm leading-6 text-slate-600">Nog geen reviews gelogd.</p>
+                    ) : (
+                      actionReviews.map((review) => (
+                        <div key={review.id} className="rounded-2xl border border-white bg-white px-4 py-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                            {review.created_at.slice(0, 16).replace('T', ' ')}
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-slate-700">{review.summary}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Updatehistorie</p>
+                  <div className="mt-3 space-y-3">
+                    {actionUpdates.length === 0 ? (
+                      <p className="text-sm leading-6 text-slate-600">Nog geen updates gelogd.</p>
+                    ) : (
+                      actionUpdates.map((update) => (
+                        <div key={update.id} className="rounded-2xl border border-white bg-white px-4 py-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                            {update.created_at.slice(0, 16).replace('T', ' ')}
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-slate-700">{update.note}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
               {editable ? (
                 <div className="mt-4 space-y-3">

@@ -7,6 +7,7 @@ import {
   canViewManagementAction,
   getManagementActionStatusLabel,
   MANAGEMENT_ACTION_STATUS_OPTIONS,
+  validateManagementActionCreationDraft,
   type ManagementActionRecord,
 } from '@/lib/management-actions'
 
@@ -56,7 +57,7 @@ describe('management action contracts', () => {
   })
 
   it('builds a traceability summary from product, department and factor', () => {
-    expect(buildManagementActionTraceabilitySummary(baseAction)).toBe('MTO · Operations · Werkbelasting')
+    expect(buildManagementActionTraceabilitySummary(baseAction)).toBe('MTO / Operations / Werkbelasting')
   })
 
   it('lets HR see everything while viewers stay limited to their own assigned action', () => {
@@ -149,5 +150,51 @@ describe('management action contracts', () => {
     expect(seeded.source_question_key).toBe('workload.q1')
     expect(seeded.source_question_label).toContain('werkbelasting')
     expect(seeded.blocker_note).toBeNull()
+  })
+
+  it('requires owner, review date, and expected outcome for guided action creation', () => {
+    const errors = validateManagementActionCreationDraft({
+      owner_label: '',
+      review_date: '',
+      expected_outcome: ' ',
+    })
+
+    expect(errors.owner_label).toContain('eigenaar')
+    expect(errors.review_date).toContain('reviewmoment')
+    expect(errors.expected_outcome).toContain('verwachte uitkomst')
+  })
+
+  it('applies guided creation fields without losing MTO traceability', () => {
+    const seeded = buildManagementActionSeedFromDepartmentRead({
+      organizationId: 'org-1',
+      campaignId: 'camp-1',
+      departmentRead: {
+        segmentLabel: 'Operations',
+        factorKey: 'workload',
+        factorLabel: 'Werkbelasting',
+        avgSignal: 7.2,
+        decision: 'Open eerst een bounded werkdruksprint.',
+        handoffBody: 'Gebruik dit alleen binnen MTO.',
+        owner: 'Manager Operations',
+      },
+      question: {
+        key: 'workload.q1',
+        label: 'Welke brede managementvraag over werkbelasting moet nu eerst expliciet worden beantwoord?',
+      },
+      guidedFields: {
+        title: 'Operations: herstel werkritme in de piekweken',
+        owner_label: 'Manager Operations',
+        owner_email: 'ops@example.com',
+        review_date: '2026-05-17',
+        expected_outcome: 'Binnen een maand een voorspelbaarder teamritme.',
+      },
+    })
+
+    expect(seeded.source_scope_label).toBe('Operations')
+    expect(seeded.source_question_key).toBe('workload.q1')
+    expect(seeded.title).toContain('herstel werkritme')
+    expect(seeded.owner_email).toBe('ops@example.com')
+    expect(seeded.review_date).toBe('2026-05-17')
+    expect(seeded.expected_outcome).toContain('voorspelbaarder')
   })
 })

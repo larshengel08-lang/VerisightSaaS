@@ -81,6 +81,14 @@ export interface ManagementActionSummary {
   overdueReviewCount: number
 }
 
+export interface ManagementActionCreationDraft {
+  title?: string
+  owner_label: string
+  owner_email?: string
+  review_date: string
+  expected_outcome: string
+}
+
 export const MANAGEMENT_ACTION_STATUS_OPTIONS: Array<{ value: ManagementActionStatus; label: string }> = [
   { value: 'open', label: 'Open' },
   { value: 'assigned', label: 'Toegewezen' },
@@ -105,7 +113,23 @@ export function buildManagementActionTraceabilitySummary(action: Pick<
   const productLabel = action.source_product.toUpperCase()
   const scopeLabel = action.source_scope_label ?? 'Onbekende scope'
   const factorLabel = action.source_factor_label ?? 'Onbekende factor'
-  return `${productLabel} · ${scopeLabel} · ${factorLabel}`
+  return `${productLabel} / ${scopeLabel} / ${factorLabel}`
+}
+
+export function validateManagementActionCreationDraft(draft: ManagementActionCreationDraft) {
+  const errors: Partial<Record<'owner_label' | 'review_date' | 'expected_outcome', string>> = {}
+
+  if (!draft.owner_label.trim()) {
+    errors.owner_label = 'Kies eerst een eigenaar voor deze actie.'
+  }
+  if (!draft.review_date.trim()) {
+    errors.review_date = 'Leg meteen een eerste reviewmoment vast.'
+  }
+  if (!draft.expected_outcome.trim()) {
+    errors.expected_outcome = 'Maak expliciet wat de verwachte uitkomst is.'
+  }
+
+  return errors
 }
 
 export function canViewManagementAction(args: {
@@ -140,12 +164,23 @@ export function buildManagementActionSeedFromDepartmentRead(args: {
   }
   ownerDefault?: ManagementActionDepartmentOwnerDefault | null
   question?: { key: string; label: string } | null
+  guidedFields?: Partial<ManagementActionCreationDraft> | null
 }): Omit<
   ManagementActionRecord,
   'id' | 'measured_outcome' | 'created_by' | 'updated_by' | 'created_at' | 'updated_at'
 > {
-  const ownerLabel = args.ownerDefault?.owner_label?.trim() || args.departmentRead.owner
-  const ownerEmail = args.ownerDefault?.owner_email?.trim() || null
+  const ownerLabel =
+    args.guidedFields?.owner_label?.trim() ||
+    args.ownerDefault?.owner_label?.trim() ||
+    args.departmentRead.owner
+  const ownerEmail = args.guidedFields?.owner_email?.trim() || args.ownerDefault?.owner_email?.trim() || null
+  const title =
+    args.guidedFields?.title?.trim() ||
+    `${args.departmentRead.segmentLabel}: ${args.departmentRead.factorLabel} vraagt een eerste bounded managementroute`
+  const expectedOutcome =
+    args.guidedFields?.expected_outcome?.trim() ||
+    'Heldere prioriteit, expliciete eigenaar en eerste reviewmoment.'
+  const reviewDate = args.guidedFields?.review_date?.trim() || null
 
   return {
     organization_id: args.organizationId,
@@ -160,16 +195,16 @@ export function buildManagementActionSeedFromDepartmentRead(args: {
     source_signal_value: args.departmentRead.avgSignal,
     source_question_key: args.question?.key ?? null,
     source_question_label: args.question?.label ?? null,
-    title: `${args.departmentRead.segmentLabel}: ${args.departmentRead.factorLabel} vraagt een eerste bounded managementroute`,
+    title,
     decision_context: `${args.departmentRead.decision} ${args.departmentRead.handoffBody}`.trim(),
-    expected_outcome: 'Heldere prioriteit, expliciete eigenaar en eerste reviewmoment.',
+    expected_outcome: expectedOutcome,
     blocker_note: null,
     last_review_outcome: null,
     status: ownerEmail ? 'assigned' : 'open',
     owner_label: ownerLabel,
     owner_email: ownerEmail,
     due_date: null,
-    review_date: null,
+    review_date: reviewDate,
   }
 }
 
