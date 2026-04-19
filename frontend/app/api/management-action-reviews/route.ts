@@ -41,5 +41,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: error.message }, { status: 400 })
   }
 
+  const reviewUpdatePayload: Record<string, unknown> = {
+    last_review_outcome: body.outcome,
+    updated_by: user.id,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (body.next_review_date !== undefined) {
+    reviewUpdatePayload.review_date = body.next_review_date ?? null
+  }
+  if (body.outcome === 'close') {
+    reviewUpdatePayload.status = 'closed'
+  }
+  if (body.outcome === 'follow_up_needed') {
+    reviewUpdatePayload.status = 'follow_up_needed'
+  }
+  if (body.outcome === 'reopen') {
+    reviewUpdatePayload.status = 'open'
+  }
+
+  await supabase.from('management_actions').update(reviewUpdatePayload).eq('id', body.action_id)
+
   return NextResponse.json({ review: data, message: 'Review opgeslagen.' })
 }

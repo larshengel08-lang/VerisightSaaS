@@ -61,10 +61,10 @@ def test_closed_improvement_loop_stays_bounded_to_mto():
     wave_three = _read("docs/active/wave_03_mto_closed_improvement_loop.md")
     gate_doc = _read("docs/active/wave_04_future_suite_integration_gate.md")
 
-    assert "mtoactiontracker" in page
+    assert "mtomanagercockpit" in page
     assert "scan_type === 'mto'" in page
     assert "management_actions" in page
-    assert "bounded action log voor hr en afdelingeigenaars" in page
+    assert "bounded action center" in page
 
     assert "wave status: completed_green" in wave_three
     assert "closed improvement loop hangt alleen achter `scan_type = mto`" in wave_three

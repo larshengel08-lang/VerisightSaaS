@@ -2,11 +2,11 @@
 
 ## Status
 
-- Plan status: active
+- Plan status: completed
 - Active source of truth: dit document
-- Build permission: wave_01_open
+- Build permission: closed_after_wave_03
 - Dependency: `ACTION_CENTER_MANAGER_COCKPIT_PLAN.md` moet groen blijven
-- Next allowed step after green completion of current wave: `WAVE_02_ACTION_CENTER_MTO_COCKPIT.md`
+- Next allowed step after green completion of current wave: expliciete suite adapter-track
 
 ## Allowed Wave Stack
 
@@ -23,4 +23,11 @@
 
 ## Current Wave
 
-- Current active wave: `WAVE_01_ACTION_CENTER_CONTRACT_HARDENING.md`
+- Current active wave: none
+- Last completed wave: `WAVE_03_ACTION_CENTER_REVIEW_DISCIPLINE.md`
+
+## Closeout
+
+- `WAVE_01_ACTION_CENTER_CONTRACT_HARDENING.md` groen
+- `WAVE_02_ACTION_CENTER_MTO_COCKPIT.md` groen
+- `WAVE_03_ACTION_CENTER_REVIEW_DISCIPLINE.md` groen

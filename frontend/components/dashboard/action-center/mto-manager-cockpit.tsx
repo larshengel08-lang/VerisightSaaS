@@ -41,6 +41,11 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
         <MiniStat label="Vervolg nodig" value={`${summary.followUpCount}`} />
         <MiniStat label="Over tijd" value={`${summary.overdueReviewCount}`} />
       </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <MiniStat label="Stille acties" value={`${model.followThroughSignals.quietActions}`} />
+        <MiniStat label="Review nu" value={`${model.followThroughSignals.reviewDueNow}`} />
+        <MiniStat label="Recent gereviewd" value={`${model.followThroughSignals.recentlyReviewed}`} />
+      </div>
       <MtoThemePanel
         themeCards={model.themeCards}
         organizationId={props.organizationId}

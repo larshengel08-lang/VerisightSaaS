@@ -24,6 +24,11 @@ export interface MtoActionCenterViewModel {
     reviewCount: number
     topThemes: MtoActionCenterThemeCard[]
   }
+  followThroughSignals: {
+    quietActions: number
+    reviewDueNow: number
+    recentlyReviewed: number
+  }
   themeCards: MtoActionCenterThemeCard[]
   reviewQueue: Array<{
     actionId: string
@@ -47,6 +52,9 @@ export function buildMtoActionCenterViewModel(args: {
   todayIsoDate?: string
 }): MtoActionCenterViewModel {
   const todayIsoDate = args.todayIsoDate ?? new Date().toISOString().slice(0, 10)
+  const quietCutoffIso = new Date(new Date(`${todayIsoDate}T00:00:00.000Z`).getTime() - 14 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10)
 
   const themeCards = args.departmentReads.map((read) => ({
     departmentRead: read,
@@ -80,6 +88,11 @@ export function buildMtoActionCenterViewModel(args: {
       actionCount: args.actions.length,
       reviewCount: reviewQueue.length,
       topThemes: themeCards.slice(0, 3),
+    },
+    followThroughSignals: {
+      quietActions: args.actions.filter((action) => action.updated_at.slice(0, 10) < quietCutoffIso && action.status !== 'closed').length,
+      reviewDueNow: reviewQueue.filter((item) => item.tone === 'amber').length,
+      recentlyReviewed: args.reviews.length,
     },
     themeCards,
     reviewQueue,

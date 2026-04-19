@@ -2,9 +2,9 @@
 
 ## Status
 
-- Wave status: blocked_until_wave_02_green
+- Wave status: completed_green
 - Active source of truth after opening: dit document
-- Build permission: blocked
+- Build permission: closed
 - Dependency: `WAVE_02_ACTION_CENTER_MTO_COCKPIT.md` moet groen zijn
 - Next allowed step after green completion: expliciete suite adapter track
 
@@ -16,3 +16,9 @@ Harden de volwassen managementcyclus:
 - stille acties signaleren
 - blockerdiscipline expliciet maken
 - actie-uitkomsten en vervolgstappen scherper vastleggen
+
+## Completion Notes
+
+- Reviewdruk en stille acties zijn nu expliciet zichtbaar in de cockpit.
+- Reviews loggen direct een formele uitkomst terug op de actie.
+- De track blijft MTO-only; suite adapters blijven geblokkeerd.

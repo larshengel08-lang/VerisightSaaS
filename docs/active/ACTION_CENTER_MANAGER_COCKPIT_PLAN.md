@@ -2,11 +2,11 @@
 
 ## Status
 
-- Plan status: active
+- Plan status: completed
 - Active source of truth: dit document
-- Build permission: wave_01_open
+- Build permission: closed_after_wave_03
 - Dependency: `docs/superpowers/specs/2026-04-19-action-center-design.md` moet leidend blijven
-- Next allowed step: `WAVE_01_ACTION_CENTER_CONTRACT_HARDENING.md`
+- Next allowed step: expliciete nieuwe adapter-track of suite action center-track
 
 ## Summary
 
@@ -34,3 +34,9 @@ Open een afdeling-gestuurde managercockpit waarin leidinggevenden:
 - bestaande scoring buiten MTO blijft onaangetast
 - bestaande dashboardcontracten buiten MTO blijven onaangetast
 - suitekoppeling blijft geblokkeerd tot een latere aparte adapter-track
+
+## Completion Notes
+
+- De MTO managercockpit staat nu live binnen de aparte worktree-track.
+- Thema-first actiecreatie, blockers en reviewdiscipline zijn aanwezig.
+- De Action Center-track is expliciet niet doorgetrokken naar ExitScan, RetentieScan of andere routes.
