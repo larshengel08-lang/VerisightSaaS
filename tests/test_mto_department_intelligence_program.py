@@ -81,3 +81,11 @@ def test_action_center_docs_open_new_mto_only_track():
     assert "wave_01_action_center_contract_hardening.md" in stack
     assert "wave_02_action_center_mto_cockpit.md" in stack
     assert "wave_03_action_center_review_discipline.md" in stack
+
+
+def test_action_center_stays_mto_only_in_dashboard_page():
+    page = _read("frontend/app/(dashboard)/campaigns/[id]/page.tsx")
+
+    assert "mtomanagercockpit" in page
+    assert "stats.scan_type === 'mto'" in page
+    assert "bounded action center" in page

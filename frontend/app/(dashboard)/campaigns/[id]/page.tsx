@@ -20,7 +20,7 @@ import { OnboardingAdvancer, OnboardingBalloon } from '@/components/dashboard/on
 import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
-import { MtoActionTracker } from '@/components/dashboard/mto-action-tracker'
+import { MtoManagerCockpit } from '@/components/dashboard/action-center/mto-manager-cockpit'
 import { MtoDepartmentReadList } from '@/components/dashboard/mto-department-read-list'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import {
@@ -58,6 +58,7 @@ import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/impleme
 import type {
   ManagementActionDepartmentOwnerDefault,
   ManagementActionRecord,
+  ManagementActionReviewRecord,
   ManagementActionUpdateRecord,
 } from '@/lib/management-actions'
 import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
@@ -322,6 +323,15 @@ export default async function CampaignPage({ params }: Props) {
           .order('created_at', { ascending: false })
       : { data: [] }
   const managementActionUpdates = (managementActionUpdatesRaw ?? []) as ManagementActionUpdateRecord[]
+  const { data: managementActionReviewsRaw } =
+    stats.scan_type === 'mto' && actionIds.length > 0
+      ? await supabase
+          .from('management_action_reviews')
+          .select('*')
+          .in('action_id', actionIds)
+          .order('created_at', { ascending: false })
+      : { data: [] }
+  const managementActionReviews = (managementActionReviewsRaw ?? []) as ManagementActionReviewRecord[]
   const { data: managementActionOwnerDefaultsRaw } =
     stats.scan_type === 'mto' && canManageCampaign
       ? await supabase
@@ -1581,10 +1591,10 @@ export default async function CampaignPage({ params }: Props) {
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#567684]">
-                            MTO closed improvement loop
+                            Bounded Action Center
                           </p>
                           <h3 className="mt-2 text-base font-semibold text-slate-950">
-                            Bounded action log voor HR en afdelingeigenaars
+                            Afdelingscockpit voor acties, reviews en opvolging
                           </h3>
                           <p className="mt-2 text-sm leading-6 text-slate-700">
                             Deze actielaag blijft in deze wave MTO-first: acties ontstaan uit de veilige
@@ -1598,7 +1608,7 @@ export default async function CampaignPage({ params }: Props) {
                         />
                       </div>
                       <div className="mt-4">
-                        <MtoActionTracker
+                        <MtoManagerCockpit
                           organizationId={stats.organization_id}
                           campaignId={id}
                           currentViewerRole={currentViewerRole}
@@ -1607,6 +1617,7 @@ export default async function CampaignPage({ params }: Props) {
                           departmentReads={mtoDepartmentReadModel?.visibleDepartments ?? []}
                           actions={managementActions}
                           updates={managementActionUpdates}
+                          reviews={managementActionReviews}
                           ownerDefaults={managementActionOwnerDefaults}
                         />
                       </div>
