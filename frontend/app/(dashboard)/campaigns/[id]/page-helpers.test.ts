@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildActionExecutionCore,
   buildDriverDrilldownModel,
   buildResponseReadState,
   buildScoreInterpretationGuide,
@@ -133,5 +134,38 @@ describe('overview reading aids', () => {
     expect(exitGuide.steps[1]?.title).toContain('Verdeling')
     expect(retentionGuide.steps[0]?.title).toContain('Retentiesignaal')
     expect(retentionGuide.steps[0]?.title).not.toContain('Frictiescore')
+  })
+})
+
+describe('action execution core', () => {
+  it('keeps route, owner, first step and review as the dominant action layer', () => {
+    const model = buildActionExecutionCore({
+      selectedPlaybook: {
+        title: 'Start met rolhelderheid',
+        decision: 'Maak rolhelderheid het eerste managementspoor.',
+        validate: 'Toets eerst waar onduidelijkheid het sterkst wordt beleefd.',
+        owner: 'HR business partner',
+        actions: ['Plan een eerste verificatiegesprek'],
+        caution: 'Voorkom dat dit meteen een breed veranderprogramma wordt.',
+        review: 'Review binnen 3 weken',
+      },
+      nextStep: {
+        title: 'Valideren en prioriteren',
+        body: 'Gebruik de eerste managementronde om te toetsen wat nu echt eerst aandacht vraagt.',
+        tone: 'blue',
+      },
+      highlightedActionQuestion: 'Waar belemmert onduidelijkheid nu het dagelijks werk het meest?',
+      followThroughCard: {
+        title: 'Eerste review',
+        body: 'Check of de gekozen route nog klopt of begrensd moet worden.',
+        tone: 'amber',
+      },
+    })
+
+    expect(model.route.title).toBe('Start met rolhelderheid')
+    expect(model.owner.title).toBe('HR business partner')
+    expect(model.firstStep.body).toContain('onduidelijkheid')
+    expect(model.review.title).toBe('Review binnen 3 weken')
+    expect(model.supportPrompt).toContain('Alleen openklappen')
   })
 })

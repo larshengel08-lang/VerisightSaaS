@@ -1,6 +1,12 @@
 import type { ReactNode } from 'react'
 import { getProductModule } from '@/lib/products/shared/registry'
-import type { SegmentPlaybookEntry, SignalTrendCard } from '@/lib/products/shared/types'
+import type {
+  ActionPlaybook,
+  DashboardDecisionCard,
+  DashboardFollowThroughCard,
+  SegmentPlaybookEntry,
+  SignalTrendCard,
+} from '@/lib/products/shared/types'
 import { buildFactorPresentation, getManagementBandLabel } from '@/lib/management-language'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import {
@@ -88,6 +94,30 @@ export type ScoreInterpretationGuide = {
     title: string
     body: string
   }>
+}
+
+export type ActionExecutionCore = {
+  route: {
+    title: string
+    body: string
+    tone: 'blue' | 'emerald' | 'amber'
+  }
+  owner: {
+    title: string
+    body: string
+    tone: 'blue' | 'emerald' | 'amber'
+  }
+  firstStep: {
+    title: string
+    body: string
+    tone: 'blue' | 'emerald' | 'amber'
+  }
+  review: {
+    title: string
+    body: string
+    tone: 'blue' | 'emerald' | 'amber'
+  }
+  supportPrompt: string
 }
 
 export type DriverDrilldownFactor = {
@@ -595,6 +625,39 @@ export function buildScoreInterpretationGuide(scanType: ScanType): ScoreInterpre
           },
         ],
       }
+  }
+}
+
+export function buildActionExecutionCore(args: {
+  selectedPlaybook: ActionPlaybook | null
+  nextStep: DashboardDecisionCard
+  highlightedActionQuestion: string | null
+  followThroughCard: DashboardFollowThroughCard | null
+}): ActionExecutionCore {
+  return {
+    route: {
+      title: args.selectedPlaybook?.title ?? args.nextStep.title,
+      body: args.selectedPlaybook?.decision ?? args.nextStep.body,
+      tone: args.selectedPlaybook ? 'emerald' : args.nextStep.tone,
+    },
+    owner: {
+      title: args.selectedPlaybook?.owner ?? 'HR + lijnmanagement',
+      body: 'Beleg de eerste stap expliciet bij een trekker en leg vast wie de review terugbrengt.',
+      tone: 'blue',
+    },
+    firstStep: {
+      title: args.selectedPlaybook?.actions[0] ?? 'Kies een eerste gerichte verificatie',
+      body: args.highlightedActionQuestion ?? args.selectedPlaybook?.validate ?? args.nextStep.body,
+      tone: 'blue',
+    },
+    review: {
+      title: args.selectedPlaybook?.review ?? args.followThroughCard?.title ?? 'Plan een eerste review',
+      body:
+        args.followThroughCard?.body ??
+        'Leg direct vast wanneer deze eerste route opnieuw gelezen en eventueel begrensd bijgesteld wordt.',
+      tone: args.followThroughCard?.tone ?? 'amber',
+    },
+    supportPrompt: 'Alleen openklappen als de kernroute al gekozen is en extra verificatie of borging nodig wordt.',
   }
 }
 

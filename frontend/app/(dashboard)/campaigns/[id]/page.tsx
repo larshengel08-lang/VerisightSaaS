@@ -24,6 +24,7 @@ import { RiskCharts } from '@/components/dashboard/risk-charts'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import {
   ActionPlaybookList,
+  buildActionExecutionCore,
   buildDriverDrilldownModel,
   buildDecisionPanels,
   buildHeroDescription,
@@ -957,6 +958,12 @@ export default async function CampaignPage({ params, searchParams }: Props) {
     hasEnoughData,
     hasMinDisplay,
   })
+  const actionExecutionCore = buildActionExecutionCore({
+    selectedPlaybook: selectedDriverPlaybook ?? null,
+    nextStep: dashboardViewModel.nextStep,
+    highlightedActionQuestion: highlightedActionRows[0]?.question ?? null,
+    followThroughCard: dashboardViewModel.followThroughCards[0] ?? null,
+  })
   const redesignView = (
     <div className="space-y-6 pb-8">
       <Link
@@ -1401,25 +1408,50 @@ export default async function CampaignPage({ params, searchParams }: Props) {
       ) : null}
       {currentView === 'action' ? (
         <div className="space-y-5">
-          <DashboardSection id="route" eyebrow="Actie" title={productExperience.routeTitle} description="Deze view zet de gekozen route om in uitvoering: minder duiding, meer eigenaarschap, volgorde en reviewdiscipline." aside={<DashboardChip label={productExperience.routeBadgeLabel} tone="blue" />}>
+          <DashboardSection id="route" eyebrow="Actie" title={productExperience.routeTitle} description="Deze view zet de gekozen route direct om in uitvoering: eerst eigenaarschap en volgorde, daarna pas extra guidance." aside={<DashboardChip label={productExperience.routeBadgeLabel} tone="blue" />}>
             <div className="space-y-5">
-              <div className="grid gap-4 lg:grid-cols-4">
-                <DashboardPanel eyebrow="Route" title={selectedDriverPlaybook?.title ?? dashboardViewModel.nextStep.title} body={selectedDriverPlaybook?.decision ?? dashboardViewModel.nextStep.body} tone="blue" />
+              {false ? <div className="rounded-[22px] border border-[#d2e6e0] bg-[#eef7f4] px-4 py-4 sm:px-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#245853]">Uitvoeren, niet opnieuw samenvatten</p>
                 <DashboardPanel eyebrow="Owner" title={selectedDriverPlaybook?.owner ?? 'HR + lijnmanagement'} body="Beleg de eerste stap expliciet bij één trekker en één reviewverantwoordelijke." tone="emerald" />
                 <DashboardPanel eyebrow="Nu doen" title={selectedDriverPlaybook?.actions[0] ?? highlightedActionRows[0]?.title ?? 'Kies een eerste gerichte verificatie'} body={highlightedActionRows[0]?.question ?? selectedDriverPlaybook?.validate ?? dashboardViewModel.primaryQuestion.body} tone="blue" />
                 <DashboardPanel eyebrow="Review" title={selectedDriverPlaybook?.review ?? dashboardViewModel.followThroughCards[0]?.title ?? 'Plan een eerste review'} body={dashboardViewModel.followThroughCards[0]?.body ?? 'Leg direct vast wanneer deze eerste route opnieuw gelezen en eventueel begrensd bijgesteld wordt.'} tone="amber" />
+              </div> : null}
+              <div className="rounded-[22px] border border-[#d2e6e0] bg-[#eef7f4] px-4 py-4 sm:px-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#245853]">Uitvoeren, niet opnieuw samenvatten</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  Kies hier eerst route, eigenaar, eerste stap en reviewmoment. Verificatievragen en playbooks blijven hieronder bewust secundair.
+                </p>
               </div>
-              {dashboardViewModel.followThroughCards.length > 0 ? <DashboardTimeline title={dashboardViewModel.followThroughTitle} description={dashboardViewModel.followThroughIntro} items={dashboardViewModel.followThroughCards} /> : null}
-              <DashboardDisclosure defaultOpen={false} title="Leeskader" description="Alleen openklappen als je het managementread-kader opnieuw nodig hebt." badge={<DashboardChip label="Secondary" tone="slate" />}>
-                <ManagementReadGuide scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} />
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr),minmax(320px,0.85fr)]">
+                <ActionCoreRouteCard title={actionExecutionCore.route.title} body={actionExecutionCore.route.body} tone={actionExecutionCore.route.tone} />
+                <div className="grid gap-3">
+                  <OverviewCueCard eyebrow="Owner" title={actionExecutionCore.owner.title} body={actionExecutionCore.owner.body} tone={actionExecutionCore.owner.tone} />
+                  <OverviewCueCard eyebrow="First step" title={actionExecutionCore.firstStep.title} body={actionExecutionCore.firstStep.body} tone={actionExecutionCore.firstStep.tone} />
+                  <OverviewCueCard eyebrow="Review moment" title={actionExecutionCore.review.title} body={actionExecutionCore.review.body} tone={actionExecutionCore.review.tone} />
+                </div>
+              </div>
+              <DashboardDisclosure defaultOpen={false} title="Vervolg en borging" description={actionExecutionCore.supportPrompt} badge={<DashboardChip label="Secondary" tone="slate" />}>
+                <div className="space-y-4">
+                  {dashboardViewModel.followThroughCards.length > 0 ? <DashboardTimeline title={dashboardViewModel.followThroughTitle} description={dashboardViewModel.followThroughIntro} items={dashboardViewModel.followThroughCards} /> : null}
+                  <ManagementReadGuide scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} />
+                </div>
               </DashboardDisclosure>
+              {false ? <DashboardDisclosure defaultOpen={false} title="Leeskader" description="Alleen openklappen als je het managementread-kader opnieuw nodig hebt." badge={<DashboardChip label="Secondary" tone="slate" />}>
+                <ManagementReadGuide scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} />
+              </DashboardDisclosure> : null}
             </div>
           </DashboardSection>
 
-          <DashboardSection id="playbooks" eyebrow="Verificatie en playbooks" title={productExperience.playbookTitle} description={productExperience.playbookDescription} aside={<DashboardChip label={visibility.showActionPlaybooks ? 'Actief' : 'Wacht op meer data'} tone={visibility.showActionPlaybooks ? 'emerald' : 'amber'} />} tone="emerald">
+          <DashboardSection id="playbooks" eyebrow="Verificatie en playbooks" title={productExperience.playbookTitle} description="Open deze laag pas nadat de kernroute gekozen is. Gebruik hem als ondersteuning, niet als tweede overzicht." aside={<DashboardChip label={visibility.showActionPlaybooks ? 'On demand' : 'Wacht op meer data'} tone={visibility.showActionPlaybooks ? 'emerald' : 'amber'} />} tone="emerald">
             {visibility.showActionPlaybooks ? (
               <div className="space-y-5">
-                <DashboardDisclosure defaultOpen title="Verificatievragen" description="Gebruik dit als eerste operationele check, niet als tweede synthese." badge={<DashboardChip label="Vraaggestuurd" tone="slate" />}>
+                <div className="rounded-[22px] border border-slate-200 bg-slate-50 px-4 py-4 sm:px-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Supporting layer</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">
+                    Deze onderdelen helpen alleen als je de gekozen route verder wilt toetsen of vertalen. Ze horen niet boven de kernroute te concurreren.
+                  </p>
+                </div>
+                <DashboardDisclosure defaultOpen={false} title="Verificatievragen" description="Gebruik dit als eerste operationele check, niet als tweede synthese." badge={<DashboardChip label="Vraaggestuurd" tone="slate" />}>
                   <RecommendationList factorAverages={factorData.orgAverages} scanType={stats.scan_type} bandOverride={stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? dashboardViewModel.managementBandOverride : undefined} />
                 </DashboardDisclosure>
                 <DashboardDisclosure defaultOpen={false} title="Uitvoerplaybooks" description="Pas openklappen zodra route en eigenaar gekozen zijn." badge={<DashboardChip label="Uitvoering" tone="slate" />}>
@@ -1605,6 +1637,33 @@ function OverviewQuickMetric({ label, value }: { label: string; value: string })
     <div className="rounded-[18px] border border-[color:var(--border)] bg-white px-4 py-3">
       <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
       <p className="mt-1 text-sm font-semibold text-[color:var(--ink)]">{value}</p>
+    </div>
+  )
+}
+
+function ActionCoreRouteCard({
+  title,
+  body,
+  tone,
+}: {
+  title: string
+  body: string
+  tone: 'blue' | 'emerald' | 'amber'
+}) {
+  const toneClasses =
+    tone === 'emerald'
+      ? 'border-[#d2e6e0] bg-[#eef7f4]'
+      : tone === 'amber'
+        ? 'border-[#eadfbe] bg-[#faf6ea]'
+        : 'border-[#d6e4e8] bg-[#f3f8f8]'
+  const eyebrowClass =
+    tone === 'emerald' ? 'text-[#245853]' : tone === 'amber' ? 'text-[#8C6B1F]' : 'text-[#234B57]'
+
+  return (
+    <div className={`rounded-[24px] border px-5 py-5 ${toneClasses}`}>
+      <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${eyebrowClass}`}>Gekozen route</p>
+      <p className="mt-3 text-xl font-semibold text-[color:var(--ink)]">{title}</p>
+      <p className="mt-3 max-w-2xl text-sm leading-7 text-[color:var(--text)]">{body}</p>
     </div>
   )
 }
