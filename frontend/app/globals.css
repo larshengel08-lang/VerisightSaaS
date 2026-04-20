@@ -225,7 +225,7 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-hero-title-home {
-    max-width: min(10.5ch, 100%);
+    max-width: 100%;
     font-size: clamp(2.35rem, 6.4vw, 4.45rem);
     line-height: 0.97;
   }
@@ -900,44 +900,6 @@ details > summary::-webkit-details-marker {
   }
 }
 
-@media (max-width: 767px) {
-  :root {
-    --marketing-section-space: clamp(3.5rem, 10vw, 4.4rem);
-    --marketing-hero-space: clamp(2.75rem, 9vw, 3.8rem);
-  }
-
-  @layer components {
-    .marketing-hero-title {
-      max-width: min(12ch, 100%);
-      font-size: clamp(2rem, 12vw, 3.05rem);
-      line-height: 0.96;
-    }
-
-    .marketing-hero-title-home {
-      max-width: min(11.8ch, 100%);
-      font-size: clamp(2.1rem, 11.7vw, 3.35rem);
-      line-height: 0.95;
-    }
-
-    .marketing-hero-copy {
-      font-size: 0.96rem;
-      line-height: 1.72;
-    }
-
-    .marketing-hero-support-block {
-      gap: 0.9rem;
-    }
-
-    .marketing-support-note {
-      padding: 0.95rem 1rem;
-    }
-
-    .marketing-preview-shell {
-      gap: 0.9rem;
-    }
-  }
-}
-
 @media (min-width: 640px) {
   @layer components {
     .marketing-hero-cta-row {
@@ -954,10 +916,6 @@ details > summary::-webkit-details-marker {
 
 @media (min-width: 768px) {
   @layer components {
-    .marketing-hero-title-home {
-      max-width: min(13.4ch, 100%);
-    }
-
     .marketing-hero-support-block {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 1rem;
@@ -979,7 +937,10 @@ details > summary::-webkit-details-marker {
       grid-template-columns: minmax(0, 0.98fr) minmax(0, 1.02fr);
     }
 
-    .marketing-hero-grid-home,
+    .marketing-hero-grid-home {
+      grid-template-columns: 1fr;
+    }
+
     .marketing-hero-grid-product {
       grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
     }
@@ -1013,17 +974,12 @@ details > summary::-webkit-details-marker {
     }
 
     .marketing-hero-grid-home .marketing-hero-region-intro {
-      max-width: 38rem;
-      padding-top: 0.75rem;
-    }
-
-    .marketing-hero-grid-home .marketing-hero-region-stage {
-      align-self: center;
+      max-width: none;
     }
 
     .marketing-hero-grid-home .marketing-hero-copy {
-      max-width: 35rem;
-      font-size: 1.02rem;
+      max-width: 44rem;
+      font-size: 1.05rem;
       line-height: 1.85;
     }
 
