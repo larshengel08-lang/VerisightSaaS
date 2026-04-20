@@ -129,3 +129,16 @@ def test_action_center_loader_boundary_moves_mto_queries_out_of_campaign_page():
     assert "from('management_action_department_owners')" not in page
     assert "management_action_reviews" in loader
     assert "management_action_department_owners" in loader
+
+
+def test_action_center_redesign_docs_open_mto_only_visual_track():
+    plan = _read("docs/active/action_center_cockpit_redesign_plan.md")
+    stack = _read("docs/active/action_center_cockpit_redesign_wave_stack_plan.md")
+
+    assert "mto blijft de enige actieve drager" in plan
+    assert "suite-capable contracts blijven intact" in plan
+    assert "geen wijziging aan exitscan, retentiescan of andere scanmethodiek" in plan
+    assert "wave_01_action_center_overview_reframe.md" in stack
+    assert "wave_02_action_center_theme_and_navigation.md" in stack
+    assert "wave_03_action_center_dossier_and_review_relocation.md" in stack
+    assert "wave_04_action_center_visual_polish_and_closeout.md" in stack
