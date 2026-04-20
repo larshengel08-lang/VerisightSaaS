@@ -23,6 +23,7 @@ export interface MtoManagerCockpitProps {
   currentViewerRole: MemberRole | null
   currentUserEmail: string | null
   canManageCampaign: boolean
+  readOnly?: boolean
   departmentReads: MtoDepartmentReadItem[]
   actions: ManagementActionRecord[]
   updates: ManagementActionUpdateRecord[]
@@ -55,9 +56,10 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
   const visibleUpdates = props.updates.filter((update) => visibleActionIds.has(update.action_id))
   const visibleReviews = reviews.filter((review) => visibleActionIds.has(review.action_id))
   const canManageActionCenter =
-    props.canManageCampaign ||
-    accessEnvelope.departmentLabels.length > 0 ||
-    visibleActions.some((action) => action.owner_email?.toLowerCase() === props.currentUserEmail?.toLowerCase())
+    !props.readOnly &&
+    (props.canManageCampaign ||
+      accessEnvelope.departmentLabels.length > 0 ||
+      visibleActions.some((action) => action.owner_email?.toLowerCase() === props.currentUserEmail?.toLowerCase()))
   const model = buildMtoActionCenterViewModel({
     departmentReads: visibleDepartmentReads,
     actions: visibleActions,
@@ -68,15 +70,7 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr),minmax(320px,0.8fr)]">
-        <MtoDepartmentOverview overview={model.departmentOverview} />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-          <MiniStat label="Open sporen" value={`${summary.openCount}`} tone="blue" />
-          <MiniStat label="In review" value={`${summary.reviewCount}`} tone="amber" />
-          <MiniStat label="Vervolg nodig" value={`${summary.followUpCount}`} tone="amber" />
-          <MiniStat label="Over tijd" value={`${summary.overdueReviewCount}`} tone="amber" />
-        </div>
-      </div>
+      <MtoDepartmentOverview suite={model.departmentSuite} />
       <div className="rounded-[24px] border border-slate-200 bg-white p-4 sm:p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -85,7 +79,7 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <MiniStat label="Stille acties" value={`${model.followThroughSignals.quietActions}`} compact />
-            <MiniStat label="Review nu" value={`${model.followThroughSignals.reviewDueNow}`} compact tone="amber" />
+            <MiniStat label="Review nu" value={`${summary.overdueReviewCount}`} compact tone="amber" />
             <MiniStat label="Recent gereviewd" value={`${model.followThroughSignals.recentlyReviewed}`} compact />
           </div>
         </div>
@@ -108,6 +102,7 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
           currentViewerRole={props.currentViewerRole}
           currentUserEmail={props.currentUserEmail}
           canManageCampaign={canManageActionCenter}
+          readOnly={props.readOnly}
         />
         <MtoReviewQueue reviewQueue={model.reviewQueue} reviews={visibleReviews} />
       </div>

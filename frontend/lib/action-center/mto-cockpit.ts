@@ -30,6 +30,15 @@ export interface MtoActionCenterThemeCard {
 }
 
 export interface MtoActionCenterViewModel {
+  departmentSuite: {
+    headline: string
+    summary: string
+    stats: Array<{
+      label: string
+      value: string
+      tone: 'slate' | 'blue' | 'amber'
+    }>
+  }
   departmentOverview: {
     actionCount: number
     reviewCount: number
@@ -37,6 +46,14 @@ export interface MtoActionCenterViewModel {
     primaryTheme: MtoActionCenterThemeCard | null
     topThemes: MtoActionCenterThemeCard[]
   }
+  priorityThemes: MtoActionCenterThemeCard[]
+  followThroughNavigation: Array<{
+    key: 'dossiers' | 'reviews' | 'follow_up' | 'all_themes'
+    label: string
+    value: string
+    tone: 'slate' | 'blue' | 'amber'
+  }>
+  allThemesCount: number
   followThroughSignals: {
     quietActions: number
     reviewDueNow: number
@@ -125,6 +142,39 @@ function calculateThemePriorityScore(args: {
   )
 }
 
+function buildDepartmentSuite(args: {
+  primaryTheme: MtoActionCenterThemeCard | null
+  actionCount: number
+  reviewDueNow: number
+  followUpCount: number
+  quietActions: number
+}) {
+  const headline = args.primaryTheme
+    ? `${args.primaryTheme.departmentLabel} vraagt nu gerichte managementopvolging`
+    : 'Afdelingssuite opent zodra er veilig themabeeld beschikbaar is'
+
+  const summary = args.primaryTheme
+    ? `${args.primaryTheme.factorLabel} staat bovenaan. Gebruik dit overzicht om door te gaan naar thema, dossier of review.`
+    : 'Zodra veilige MTO-afdelingsdata beschikbaar is, opent hier de managementsamenvatting voor de afdeling.'
+
+  const stats: Array<{
+    label: string
+    value: string
+    tone: 'slate' | 'blue' | 'amber'
+  }> = [
+    { label: 'Open dossiers', value: `${args.actionCount}`, tone: args.actionCount > 0 ? 'blue' : 'slate' },
+    { label: 'Review nu', value: `${args.reviewDueNow}`, tone: args.reviewDueNow > 0 ? 'amber' : 'slate' },
+    { label: 'Vervolg nodig', value: `${args.followUpCount}`, tone: args.followUpCount > 0 ? 'amber' : 'slate' },
+    { label: 'Stille dossiers', value: `${args.quietActions}`, tone: args.quietActions > 0 ? 'amber' : 'slate' },
+  ]
+
+  return {
+    headline,
+    summary,
+    stats,
+  }
+}
+
 export function buildMtoActionCenterViewModel(args: {
   departmentReads: MtoDepartmentReadItem[]
   actions: ManagementActionRecord[]
@@ -140,9 +190,7 @@ export function buildMtoActionCenterViewModel(args: {
   const themeCards = args.departmentReads
     .map((read) => {
       const actions = args.actions.filter(
-        (action) =>
-          action.source_scope_label === read.segmentLabel &&
-          action.source_factor_key === read.factorKey,
+        (action) => action.source_scope_label === read.segmentLabel && action.source_factor_key === read.factorKey,
       )
       const actionHealth = buildThemeActionHealth({
         actions,
@@ -186,19 +234,65 @@ export function buildMtoActionCenterViewModel(args: {
             : 'Review gepland',
     }))
 
+  const followThroughSignals = {
+    quietActions: args.actions.filter((action) => action.updated_at.slice(0, 10) < quietCutoffIso && action.status !== 'closed').length,
+    reviewDueNow: reviewQueue.filter((item) => item.tone === 'amber').length,
+    recentlyReviewed: args.reviews.length,
+  }
+
+  const departmentOverview = {
+    actionCount: args.actions.length,
+    reviewCount: reviewQueue.length,
+    urgentThemeCount: themeCards.filter((card) => card.actionHealth.status === 'attention_now').length,
+    primaryTheme: themeCards[0] ?? null,
+    topThemes: themeCards.slice(0, 3),
+  }
+
+  const priorityThemes =
+    themeCards.filter((card) => card.actionHealth.status === 'attention_now').length > 0
+      ? themeCards.filter((card) => card.actionHealth.status === 'attention_now')
+      : themeCards.slice(0, 3)
+
+  const followUpCount = args.actions.filter((action) => action.status === 'follow_up_needed').length
+
   return {
-    departmentOverview: {
-      actionCount: args.actions.length,
-      reviewCount: reviewQueue.length,
-      urgentThemeCount: themeCards.filter((card) => card.actionHealth.status === 'attention_now').length,
-      primaryTheme: themeCards[0] ?? null,
-      topThemes: themeCards.slice(0, 3),
-    },
-    followThroughSignals: {
-      quietActions: args.actions.filter((action) => action.updated_at.slice(0, 10) < quietCutoffIso && action.status !== 'closed').length,
-      reviewDueNow: reviewQueue.filter((item) => item.tone === 'amber').length,
-      recentlyReviewed: args.reviews.length,
-    },
+    departmentSuite: buildDepartmentSuite({
+      primaryTheme: departmentOverview.primaryTheme,
+      actionCount: departmentOverview.actionCount,
+      reviewDueNow: followThroughSignals.reviewDueNow,
+      followUpCount,
+      quietActions: followThroughSignals.quietActions,
+    }),
+    departmentOverview,
+    priorityThemes,
+    followThroughNavigation: [
+      {
+        key: 'dossiers',
+        label: 'Open dossiers',
+        value: `${args.actions.length}`,
+        tone: args.actions.length > 0 ? 'blue' : 'slate',
+      },
+      {
+        key: 'reviews',
+        label: 'Reviews nu',
+        value: `${followThroughSignals.reviewDueNow}`,
+        tone: followThroughSignals.reviewDueNow > 0 ? 'amber' : 'slate',
+      },
+      {
+        key: 'follow_up',
+        label: 'Vervolg nodig',
+        value: `${followUpCount}`,
+        tone: followUpCount > 0 ? 'amber' : 'slate',
+      },
+      {
+        key: 'all_themes',
+        label: "Alle thema's",
+        value: `${themeCards.length}`,
+        tone: 'slate',
+      },
+    ],
+    allThemesCount: themeCards.length,
+    followThroughSignals,
     themeCards,
     reviewQueue,
   }

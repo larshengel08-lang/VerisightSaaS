@@ -1,43 +1,32 @@
-import { DashboardPanel } from '@/components/dashboard/dashboard-primitives'
 import type { MtoActionCenterViewModel } from '@/lib/action-center/mto-cockpit'
 
 interface Props {
-  overview: MtoActionCenterViewModel['departmentOverview']
+  suite: MtoActionCenterViewModel['departmentSuite']
 }
 
-export function MtoDepartmentOverview({ overview }: Props) {
+export function MtoDepartmentOverview({ suite }: Props) {
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
-      <DashboardPanel
-        eyebrow="Afdelingsfocus"
-        title={overview.primaryTheme?.factorLabel ?? 'Nog geen thema open'}
-        body={
-          overview.primaryTheme
-            ? `${overview.primaryTheme.departmentLabel} vraagt nu als eerste managementaandacht in deze cockpit.`
-            : 'Er is nog geen veilig themabeeld beschikbaar om deze cockpit verder te openen.'
-        }
-        tone={overview.primaryTheme ? overview.primaryTheme.actionHealth.tone : 'slate'}
-      />
-      <DashboardPanel
-        eyebrow="Actiegezondheid"
-        title={`${overview.actionCount} actief`}
-        body={
-          overview.urgentThemeCount > 0
-            ? `${overview.urgentThemeCount} thema(s) vragen nu follow-through aandacht of reviewdruk.`
-            : 'De zichtbare acties ogen nu beheerst, zonder directe extra follow-through druk.'
-        }
-        tone={overview.urgentThemeCount > 0 ? 'amber' : overview.actionCount > 0 ? 'blue' : 'slate'}
-      />
-      <DashboardPanel
-        eyebrow="Reviewdruk"
-        title={`${overview.reviewCount} reviewmoment(en)`}
-        body={
-          overview.topThemes.length > 0
-            ? `De cockpit prioriteert nu ${overview.topThemes.length} thema's expliciet als managementleesroute.`
-            : 'Er is nog geen veilig themabeeld beschikbaar om reviewdruk verder te openen.'
-        }
-        tone={overview.reviewCount > 0 ? 'amber' : overview.topThemes.length > 0 ? 'emerald' : 'slate'}
-      />
-    </div>
+    <section className="rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Afdelingssuite</p>
+      <h2 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-slate-950">{suite.headline}</h2>
+      <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">{suite.summary}</p>
+      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {suite.stats.map((stat) => {
+          const toneClass =
+            stat.tone === 'amber'
+              ? 'border-amber-200 bg-amber-50'
+              : stat.tone === 'blue'
+                ? 'border-blue-200 bg-blue-50'
+                : 'border-slate-200 bg-slate-50'
+
+          return (
+            <div key={stat.label} className={`rounded-2xl border px-4 py-3 ${toneClass}`}>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{stat.label}</p>
+              <p className="mt-2 text-lg font-semibold text-slate-950">{stat.value}</p>
+            </div>
+          )
+        })}
+      </div>
+    </section>
   )
 }
