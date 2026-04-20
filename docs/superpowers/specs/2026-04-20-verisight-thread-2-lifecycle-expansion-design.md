@@ -1,146 +1,170 @@
 # Thread 2: Lifecycle En Expansion Discipline Op Portfolioniveau
 
 ## Korte samenvatting
-Deze thread werkt uit hoe Verisight portfolio-breed van eerste managementwaarde naar gecontroleerde vervolgbeweging gaat zonder te vervallen in suite-logica, opportunistische upsell of premature SaaS-taal. Het doel is niet om nieuwe productmechaniek te ontwerpen, maar om scherp vast te leggen wanneer een klant in lifecycle-termen doorgaat, stopt, verdiept, verbreedt of bewust nog niet beweegt.
+Deze thread bepaalt hoe Verisight portfolio-breed van eerste managementwaarde naar een expliciete vervolguitkomst gaat, zonder te vervallen in suite-logica, opportunistische upsell of premature SaaS-taal. De kern is dat elk traject na management-use in een bestuurlijk heldere lifecycle-state moet landen: stoppen, herhalen, verdiepen, verbreden of escaleren.
 
-De kern is: een eerste route levert managementwaarde op, daarna volgt een expliciete lifecycle-beslissing. Pas als die beslissing bestuurlijk helder is, kan expansion binnen het portfolio terecht worden geopend. Lifecycle discipline is dus de bestuurlijke laag die recurring motion geloofwaardig maakt en productvervuiling voorkomt.
+Het doel is niet om nieuwe mechaniek te ontwerpen, maar om vast te leggen hoe vervolgkeuzes worden beoordeeld, wie daarover beslist, wanneer review verplicht is en hoe expansion zuiver blijft. Lifecycle-discipline is daarmee de bestuurlijke laag die recurring motion geloofwaardig maakt.
 
-## Waarom deze thread nu komt
-Thread 1 heeft bepaald hoe first-buy, first-value, management-use en guided recurring motion commercieel worden geopend. De volgende stap is daarom niet account-, billing- of entitlementlogica, maar lifecycle-discipline: hoe vervolgkeuzes op portfolioniveau worden beoordeeld, begrensd en bestuurd.
+## Waarom thread 2 nu volgt op thread 1
+Thread 1 heeft uitgewerkt hoe first-buy, first-value, readout en guided recurring motion commercieel worden geopend. De volgende stap is daarom lifecycle-discipline: hoe die vervolgbeweging over tijd en over portfolio-routes heen wordt bestuurd.
 
-Deze thread komt nu omdat Verisight anders twee risico's loopt:
+Zonder thread 2 ontstaan twee risico's:
 - vervolgbewegingen ontstaan wel commercieel, maar niet bestuurlijk consistent
-- expansion wordt zichtbaar, maar zonder harde regels voor wanneer een tweede route terecht is
+- expansion wordt zichtbaar, maar zonder harde regels voor wanneer een tweede route passend is
 
-Thread 2 moet daarom bepalen:
-- welke lifecycle-states commercieel en operationeel relevant zijn
-- welke vervolgbeslissingen per traject genomen moeten worden
-- wanneer herhaling, verdieping, verbreding of stopzetting juist is
-- hoe expansion binnen het portfolio zuiver blijft
-- welke discipline nodig is om recurring en expansion niet ad hoc te laten verlopen
+Thread 2 volgt dus logisch op thread 1, omdat recurring pas bestuurlijk geloofwaardig wordt als ook lifecycle-uitkomsten, reviewmomenten en escalation rules expliciet zijn.
 
-## Relatie van deze thread tot thread 1
-Thread 1 heeft de route van first-buy naar guided recurring motion uitgewerkt. Thread 2 bouwt daarop voort door te bepalen hoe die vervolgbeweging bestuurlijk wordt bestuurd over tijd en over portfolio-routes heen.
+## Relatie van deze thread tot de bredere SaaS-route
+Thread 2 is onderdeel van de bredere SaaS-route, maar werkt nog geen account-, entitlement-, billing- of self-service-mechanieken uit. Deze thread bepaalt eerst de lifecycle- en expansiondiscipline die later pas thread 3 zinvol maakt.
 
-Thread 1 ging over het openen van de eerste koop en het legitimeren van een vervolgrichting. Thread 2 gaat over het vasthouden, toetsen en begrenzen van die vervolgrichting. Deze thread werkt daarom:
-- wel lifecycle-beslissingen uit
-- wel expansiondiscipline uit
-- niet account-, entitlement-, billing- of self-service-logica uit
-
-Lifecycle wordt hier dus gedefinieerd als commerciële en operationele besluitlaag, niet als systeemarchitectuur.
+Lifecycle-discipline is daarmee geen afgeleide formaliteit, maar een precondition: zonder heldere lifecycle-states, reviewmomenten, eigenaarschap en expansiongrenzen ontstaat later alleen schijnbare SaaS-readiness op een bestuurlijk onzuivere basis.
 
 ## Huidige lifecycle-werkelijkheid
-De huidige lifecycle-werkelijkheid van Verisight is nog vooral begeleid, handmatig en relationeel gestuurd. Er is wel route- en vervolglogica, maar die moet nog harder worden vertaald naar portfolio-brede discipline.
+De huidige lifecycle-werkelijkheid van Verisight is begeleid, handmatig en relationeel gestuurd. Er is al route- en vervolglogica, maar die moet nog harder worden vertaald naar portfolio-brede discipline.
 
 Vandaag geldt:
 - klanten starten in een primaire route, niet in een portfolio-abonnement
 - vervolgroutes ontstaan via managementduiding, niet via planstructuren
-- review en vervolgkeuze zijn nog sterk afhankelijk van expliciete menselijke beoordeling
+- review en vervolgkeuze hangen nog sterk af van expliciete menselijke beoordeling
 - expansion is mogelijk, maar moet strakker worden begrensd om productvervuiling te voorkomen
-- stoppen is ook een geldige lifecycle-uitkomst en moet bestuurlijk zichtbaar blijven
+- stoppen is een geldige uitkomst en moet bestuurlijk zichtbaar blijven
 
 De kernwerkelijkheid is dus: lifecycle bestaat al als praktijk, maar nog niet scherp genoeg als bestuurlijke discipline.
 
-## Portfolio-brede lifecycle-logica
-Op portfolioniveau moet elke klant na first management-use in een expliciete lifecycle-richting worden geplaatst. Die richting moet niet worden afgeleid uit enthousiasme of verkoopkans, maar uit de combinatie van managementvraag, gerealiseerde waarde en volgende bestuurlijke noodzaak.
+## Lifecycle stages binnen het portfolio
+Na first management-use moet elk traject in een expliciete lifecycle-state worden geplaatst. Dit zijn bestuurlijke states, geen softwarestates.
 
-De lifecycle-richtingen zijn:
-- `Stoppen`: de eerste route heeft voldoende waarde geleverd, maar opent nu geen terechte vervolgstap
-- `Herhalen`: dezelfde managementvraag keert terug in dezelfde route op een later moment
-- `Verdiepen`: binnen dezelfde route is nadere duiding of bounded follow-up nodig
+De lifecycle-states zijn:
+- `Stoppen`: de eerste route heeft voldoende waarde geleverd, maar opent nu geen passende vervolgstap
+- `Herhalen`: dezelfde managementvraag keert later terug binnen dezelfde route
+- `Verdiepen`: binnen dezelfde route is een begrensde vervolgbeweging nodig
 - `Verbreden`: een tweede route wordt geopend omdat een tweede expliciete managementvraag zichtbaar is
-- `Escaleren naar portfoliobesluit`: er is spanning tussen meerdere mogelijke vervolgroutes en expliciet bestuurlijk besluit is nodig
+- `Escaleren naar portfoliobesluit`: er is spanning tussen meerdere vervolgrichtingen en expliciet besluit is nodig
 
-Deze logica moet voor alle peer products bruikbaar zijn, zonder ze plat te slaan tot één generieke journey. De route blijft productspecifiek; de lifecycle-discipline wordt portfolio-breed.
+Niet elk traject hoeft naar herhalen of verbreden te gaan. Een zuivere lifecycle-discipline moet juist zichtbaar maken wanneer stoppen de beste uitkomst is.
 
-## Lifecycle-beslissingen per route
-Per traject moeten na readout en management-use minimaal drie bestuurlijke vragen worden beantwoord:
-- is de eerste managementvraag voldoende bediend
-- is de volgende stap herhaling, verdieping, verbreding of stop
-- wie besluit dit en op basis van welke expliciete signalen
+## Overgang van stage naar stage
+Een traject verschuift pas van "nog geen lifecycle-beslissing" naar een expliciete state nadat first management-use heeft plaatsgevonden en de vervolgvraag bestuurlijk is beoordeeld.
 
-De lifecycle-beslissing moet daarom altijd zichtbaar maken:
-- welke route nu actief was
-- welke waarde aantoonbaar is gerealiseerd
-- welke vervolgvraag wel of niet is ontstaan
-- waarom een vervolgroute wel of niet wordt geopend
+De minimale voorwaarden voor overgang zijn:
+- first-value is bereikt
+- management-use heeft plaatsgevonden
+- de primaire managementvraag is opnieuw bevestigd of begrensd
+- een expliciete vervolgrichting is besproken
 
-Een lifecycle-beslissing is onvolledig wanneer:
-- alleen “klant was positief” wordt vastgelegd
-- geen onderscheid wordt gemaakt tussen herhalen en verbreden
-- een tweede route wordt geopend zonder expliciete tweede managementvraag
-- geen bewuste stopbeslissing mogelijk is
+Overgangslogica:
+- naar `Herhalen` als dezelfde managementvraag later opnieuw relevant is en de eerste route al bruikbare managementwaarde heeft geleverd
+- naar `Verdiepen` als dezelfde managementvraag nog niet afdoende is bediend, maar verbreding nog te vroeg is
+- naar `Verbreden` als een tweede expliciete managementvraag zichtbaar wordt die niet binnen de eerste route thuishoort
+- naar `Stoppen` als de eerste route haar werk heeft gedaan en nu geen passende vervolgstap opent
+- naar `Escaleren` als er meer dan een plausibele vervolgrichting is of als de routekeuze portfolio-impact heeft
 
-## Herhalen, verdiepen of verbreden
-Deze drie vervolgbewegingen moeten strak van elkaar worden onderscheiden.
+Bestuurlijke regel: zonder expliciete lifecycle-beslissing blijft een traject niet impliciet "in vervolgstand" hangen.
 
-`Herhalen` is juist wanneer:
+## Reviewmomenten en beslismomenten
+Na management-use moet minimaal een expliciet reviewmoment volgen waarin de lifecycle-uitkomst wordt vastgesteld. Zonder dat reviewmoment mag vervolg niet stilzwijgend ontstaan.
+
+Bestuurlijke regels:
+- na management-use is review verplicht als vervolg commercieel in beeld komt
+- een tweede route mag niet worden geopend zonder expliciete review
+- een support route mag niet worden gestart zonder expliciete review op noodzaak en begrenzing
+- een portfoliobesluit moet expliciet worden geëscaleerd als meerdere routes tegelijk plausibel lijken of als `Combinatie` in beeld komt
+
+Om te voorkomen dat vervolg impliciet "erdoor glijdt", moet elk traject na review eindigen in een van vijf uitkomsten:
+- stoppen
+- herhalen
+- verdiepen
+- verbreden
+- escaleren
+
+## Vervolg binnen dezelfde route
+Vervolg binnen dezelfde route moet scherp onderscheiden worden in herhalen en verdiepen.
+
+`Herhalen` is passend wanneer:
 - dezelfde managementvraag later opnieuw relevant is
-- de route al eerder bruikbare managementwaarde heeft geleverd
-- er voldoende reden is om opnieuw binnen dezelfde route te meten of duiden
+- de eerdere route al bruikbare managementwaarde heeft geleverd
+- herhaling bestuurlijk meer waarde toevoegt dan verbreding
 
-`Verdiepen` is juist wanneer:
-- de eerste route wel richting gaf, maar nog een bounded vervolgactie nodig is
-- extra duiding binnen dezelfde managementvraag meer oplevert dan directe verbreding
-- een support route zoals `Pulse` of `Leadership Scan` functioneel helpt, zonder productgrenzen te vervagen
+`Verdiepen` is passend wanneer:
+- de eerste route wel richting gaf, maar nog een begrensde vervolgbeweging vraagt
+- de vervolgvraag nog binnen dezelfde managementroute valt
+- extra duiding meer oplevert dan directe uitbreiding naar een tweede route
 
-`Verbreden` is juist wanneer:
-- een tweede expliciete managementvraag zichtbaar wordt
-- die vraag niet netjes binnen de eerste route opgelost hoort te worden
-- een tweede peer product werkelijk een andere managementfunctie vervult
+Wat vervolg binnen dezelfde route niet is:
+- een verkapt abonnement
+- een automatische default na elke readout
+- een manier om twijfel te maskeren over de echte volgende managementvraag
 
-Wat dit expliciet niet is:
-- dezelfde vraag in meerdere producten opnieuw verkopen
-- support routes gebruiken als verkapte extra omzetlaag
-- vervolgbewegingen openen zonder expliciete lifecycle-beslissing
+## Support routes binnen de lifecycle
+Support routes hebben binnen de lifecycle een begrensde rol. Zij zijn geen zelfstandige expansiemotor en mogen geen verkapte peer product-route worden.
 
-## Expansion discipline binnen het portfolio
-Expansion op portfolioniveau is alleen juist als zij de kwaliteit van managementduiding verhoogt zonder de portfolio-architectuur te vervuilen. Expansion is dus geen breedte om de breedte, maar een tweede route die bestuurlijk gerechtvaardigd is.
+`Pulse` is passend wanneer:
+- een bestaande route een kortcyclische herbevestiging of gerichte peiling vraagt
+- de managementvraag binnen dezelfde hoofdroute blijft
+- de vervolgbeweging begrensd en functioneel is
 
-Expansion is terecht wanneer:
+`Leadership Scan` is passend wanneer:
+- een bestaande route duidelijk een leiderschapsvraag blootlegt
+- die vraag niet breed portfolio-matig, maar gericht en begrensd moet worden onderzocht
+- de support route de hoofdroute ondersteunt, niet vervangt
+
+Bestuurlijke regel:
+- support routes functioneren alleen als begrensde vervolg- of verdiepingsbeweging
+- support routes mogen niet worden verkocht alsof zij peer products zijn
+- support routes mogen niet dienen als escape om alsnog extra omzet te maken zonder heldere tweede managementvraag
+
+## Expansion naar tweede route
+Expansion op portfolioniveau is alleen passend als zij de kwaliteit van managementduiding verhoogt zonder de portfolio-architectuur te vervuilen. Expansion is dus geen breedte om de breedte, maar een tweede route die bestuurlijk gerechtvaardigd is.
+
+Expansion is passend wanneer:
 - de eerste route aantoonbare managementwaarde heeft geleverd
 - een tweede expliciete managementvraag is ontstaan
 - de tweede route een andere beslislaag opent dan de eerste
 - de buyer begrijpt waarom dit geen herhaling is, maar een nieuwe route
 
-Expansion is niet terecht wanneer:
+Expansion is niet passend wanneer:
 - dezelfde vraag kunstmatig over meerdere routes wordt uitgesmeerd
 - een tweede route wordt geopend om de deal te vergroten in plaats van de managementvraag te bedienen
-- `Pulse` of `Leadership Scan` als verkapte upsell-escape worden gebruikt
-- een vervolgroute wordt gepresenteerd als logische standaard in plaats van als expliciete keuze
+- support routes als verkapte upsell-escape worden gebruikt
+- een vervolgroute wordt gepresenteerd als standaard in plaats van als expliciete keuze
 
-Bestuurlijke hoofdregel: niet elke tweede route is goede expansion; alleen een tweede managementvraag rechtvaardigt een tweede route.
+Bestuurlijke hoofdregel: niet elke tweede route is goede expansion; alleen een tweede expliciete managementvraag rechtvaardigt een tweede route.
 
-## Relatie tussen peer products, support routes en Combinatie
-De lifecycle-discipline moet de portfolio-rollen zuiver houden:
-- peer products openen primaire of secundaire managementroutes
-- support routes ondersteunen een bestaande route of verdiepen een begrensde vraag
-- `Combinatie` is een portfoliobesluit, geen product
+## Wanneer Combinatie lifecyclematig wel en niet logisch is
+`Combinatie` is lifecyclematig passend wanneer twee verschillende managementvragen aantoonbaar tegelijk bestaan en de eerste route al voldoende richting heeft gegeven om de tweede bewust te activeren.
 
-Dat betekent:
-- een peer product mag eerste koop of tweede route zijn, mits de managementvraag dat draagt
-- een support route mag een bounded vervolg zijn, maar niet de rol van peer product overnemen
-- `Combinatie` mag alleen ontstaan wanneer twee routes samen bestuurlijk nodig zijn, niet wanneer de eerste route nog onvoldoende scherp gekozen is
+`Combinatie` is wel passend wanneer:
+- er twee onderscheiden managementvragen zijn
+- de eerste route al waarde heeft geleverd of aantoonbaar onvoldoende alleenstaand is
+- de buyer begrijpt waarom twee routes samen nodig zijn
+- de volgorde tussen routes bestuurlijk helder blijft
 
-Deze scheiding is nodig om te voorkomen dat lifecycle-discipline onbedoeld suite-framing wordt.
+`Combinatie` is niet passend wanneer:
+- zij wordt gebruikt als bredere pitch om onzekerheid te compenseren
+- zij functioneert als impliciete bundel of kortingstaal
+- de buyer nog geen eerste route heeft gekozen
+- een route op zichzelf al voldoende scherp is
 
-## Wanneer een klant lifecycle-klaar is voor vervolg
-Een klant is lifecycle-klaar voor vervolg wanneer de eerste route niet alleen is opgeleverd, maar bestuurlijk is verwerkt. Dat betekent minimaal:
-- first-value is bereikt
-- management-use heeft plaatsgevonden
-- de volgende vraag is expliciet
-- de vervolgvorm past aantoonbaar bij die vraag
+Bestuurlijke regel: `Combinatie` is een portfoliobesluit, geen gemakscategorie.
 
-Een klant is nog niet lifecycle-klaar wanneer:
-- readout nog niet tot management-use heeft geleid
-- er nog geen duidelijke eigenaar of vervolgvraag is
-- de vervolgrichting vooral door Verisight wordt gesuggereerd en nog niet door de klantcontext wordt gedragen
-- de enige reden voor vervolg is dat “meer meten misschien nuttig is”
+## Ownermodel en besluitverantwoordelijkheid
+Lifecycle en expansion worden alleen bestuurbaar als duidelijk is wie welke uitkomst vastlegt en wie welke vervolgstap mag openen.
 
-Lifecycle-ready betekent dus: klaar voor een expliciete vervolgbeslissing, niet automatisch klaar voor vervolgverkoop.
+Het ownermodel is:
+- `commercial owner`: bewaakt routezuiverheid, legt de lifecycle-uitkomst commercieel vast en mag vervolg binnen dezelfde route voorstellen
+- `delivery owner`: bevestigt of first-value en management-use werkelijk zijn bereikt en of een vervolg operationeel gedragen kan worden
+- `management sponsor`: bevestigt of de vervolgvraag bestuurlijk echt bestaat en of er intern draagvlak is voor vervolg
+- `portfolio decision owner`: beoordeelt en keurt verbreding naar een tweede peer product-route of `Combinatie` goed wanneer portfoliokeuze expliciet nodig is
+
+Bestuurlijke regels:
+- lifecycle-uitkomst wordt vastgelegd door commercial owner en delivery owner samen
+- vervolg binnen dezelfde route mag niet worden geopend zonder bevestiging dat first-value en management-use zijn bereikt
+- support-route vervolg mag alleen worden voorgesteld als bounded vervolg op een bestaande hoofdroute
+- een tweede peer product-route vraagt expliciete escalatie of goedkeuring door de portfolio decision owner
+- een portfoliobesluit vraagt expliciet founder-, MT- of sponsor-level besluit wanneer meerdere routes tegelijk plausibel zijn of wanneer `Combinatie` in beeld komt
 
 ## Benodigde operating discipline
-Lifecycle en expansion worden alleen bestuurbaar als per traject vaste beslismomenten en vaste vastlegging bestaan.
+Lifecycle en expansion worden alleen bestuurbaar als per traject vaste reviewmomenten, vaste uitkomsten en vaste vastlegging bestaan.
 
 Minimaal nodig zijn:
 - expliciete lifecycle-status na first management-use
@@ -162,17 +186,17 @@ Deze thread moet worden gestuurd op metrics die lifecycle-discipline en expansio
 Belangrijke signalen voor lifecycle-discipline:
 - percentage trajecten met expliciete lifecycle-uitkomst na management-use
 - percentage trajecten met reviewmoment binnen 30-90 dagen
-- percentage trajecten waarin stop, herhaal, verdiep of verbreed expliciet is vastgelegd
+- percentage trajecten waarin stoppen, herhalen, verdiepen, verbreden of escaleren expliciet is vastgelegd
 - aantal open vervolgvoorstellen zonder besluit ouder dan 30 dagen
 
-Belangrijke signalen voor herhalen en verdiepen:
+Belangrijke signalen voor vervolg binnen dezelfde route:
 - repeat purchase ratio binnen dezelfde route
 - percentage bounded follow-ups dat voortkomt uit expliciete management-use
 - percentage vervolgbewegingen binnen dezelfde route dat achteraf passend blijkt
 - aandeel support-route gebruik dat gekoppeld is aan een bestaande hoofdroute
 
 Belangrijke signalen voor expansionkwaliteit:
-- percentage klanten met terechte tweede route
+- percentage klanten met passende tweede route
 - aandeel tweede routes dat een expliciete tweede managementvraag documenteert
 - conversie van lifecycle-review naar tweede route
 - aantal expansionvoorstellen dat wordt afgewezen wegens onvoldoende vraagonderscheid
@@ -183,12 +207,12 @@ Belangrijke signalen voor portfoliodiscipline:
 - aantal gevallen waarin dezelfde managementvraag over meerdere routes is uitgesmeerd
 - percentage vervolgdeals dat zonder herpositionering portfolio-zuiver blijft
 
-## Commerciële stopregels
+## Lifecycle- en expansion-stopregels
 - Stop elke vervolgroute zonder expliciete lifecycle-beslissing.
 - Stop elke expansion zonder tweede expliciete managementvraag.
 - Stop elk gebruik van support routes als omzet-escape of productsubstituut.
 - Stop elk portfoliobesluit dat feitelijk suite-framing oplevert.
-- Stop elke verbreding wanneer verdieping of stop bestuurlijk zuiverder is.
+- Stop elke verbreding wanneer verdieping of stoppen bestuurlijk zuiverder is.
 - Stop elke `Combinatie`-opening die route-onzekerheid maskeert.
 - Stop elke lifecycle-framing die doet alsof vervolg standaard is.
 
@@ -213,16 +237,23 @@ Belangrijke signalen voor portfoliodiscipline:
 - Welke gevallen vragen expliciet escalatie naar portfoliobesluit?
 
 ## Aanbevolen volgorde van besluiten
-1. Leg de portfolio-brede lifecycle-uitkomsten vast: stoppen, herhalen, verdiepen, verbreden, escaleren.
-2. Leg vast wanneer een traject lifecycle-klaar is voor vervolg.
-3. Scheid scherp tussen herhalen, verdiepen en verbreden.
+1. Leg de portfolio-brede lifecycle-states vast: stoppen, herhalen, verdiepen, verbreden, escaleren.
+2. Leg vast wanneer een traject van "nog geen lifecycle-beslissing" naar een expliciete state gaat.
+3. Scheid scherp tussen vervolg binnen dezelfde route, support-route vervolg en verbreding naar tweede route.
 4. Begrens de rol van support routes binnen lifecycle en expansion.
-5. Leg vast wanneer een tweede route een terechte portfolio-expansie is.
+5. Leg vast wanneer een tweede route een passende portfolio-expansie is.
 6. Begrens expliciet wanneer `Combinatie` een geldig portfoliobesluit is.
-7. Kies de minimale operating discipline voor lifecycle-review en vervolgregistratie.
-8. Kies de kernmetrics die lifecycle-kwaliteit en expansiondiscipline bestuurlijk zichtbaar maken.
+7. Kies het ownermodel voor lifecycle-review, support-route vervolg en portfoliobesluit.
+8. Kies de minimale operating discipline en kernmetrics die lifecycle-kwaliteit bestuurlijk zichtbaar maken.
 
 ## Next step na deze thread
-Na deze thread volgt pas de bestuurlijke uitwerking van `begrensde account-, entitlement- en billing-readiness`.
+Na deze thread volgt pas `begrensde account-, entitlement- en billing-readiness`.
 
-Er hoort geen technische thread tussen thread 2 en die volgende bestuurlijke thread te komen.
+Thread 3 is pas zinvol wanneer minimaal het volgende stabiel is:
+- lifecycle-states zijn vastgelegd
+- reviewmomenten bestuurlijk bestaan
+- vervolg en expansion zijn scherp onderscheiden
+- support routes zijn begrensd
+- ownership van lifecycle-beslissingen is expliciet
+
+Er hoort geen technische thread tussen thread 2 en thread 3 te komen.
