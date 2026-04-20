@@ -97,7 +97,7 @@ Only themes that currently require attention should appear here.
 Each priority theme tile should communicate:
 
 - theme label
-- short “why this matters now” summary
+- short "why this matters now" summary
 - action health status
 - next important follow-through signal
 - one clear navigation CTA
@@ -129,8 +129,8 @@ All themes should remain available, but not all on the main screen.
 
 The cockpit should provide a quieter entry point such as:
 
-- “all themes”
-- “see all department themes”
+- "all themes"
+- "see all department themes"
 - a compact lower-priority theme index
 
 This preserves full thematic visibility without overloading the overview surface.
@@ -199,8 +199,8 @@ Only after this overview should editable sections appear.
 
 This is a major maturity shift:
 
-- less “form surface”
-- more “management record”
+- less "form surface"
+- more "management record"
 
 Updates, blockers, reviews, and effect checks should still be present, but visually grouped around the action narrative rather than around input controls.
 
