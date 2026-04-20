@@ -64,6 +64,16 @@ export const homepageProductRoutes = [
   },
 ] as const
 
+export const homepageCoreProductRoutes = homepageProductRoutes.filter((route) => route.name !== 'Combinatie')
+
+export const homepagePortfolioRoute = {
+  name: 'Combinatie',
+  label: 'Portfolioroute op aanvraag',
+  title: 'Beide vragen bewust in dezelfde managementlijn',
+  body: 'Voor organisaties die vertrekduiding en behoudsignalering bewust willen verbinden, nadat de eerste route helder staat.',
+  href: '/producten/combinatie',
+} as const
+
 export const homepageComparisonRows = [
   [
     'Je wilt begrijpen waarom mensen zijn gegaan',
