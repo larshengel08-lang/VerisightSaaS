@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react'
 import {
   buildManagementActionAccessEnvelope,
-  buildManagementActionSummary,
   canViewManagementAction,
   type ManagementActionDepartmentOwnerDefault,
   type ManagementActionRecord,
@@ -19,6 +18,7 @@ import { MtoFollowThroughNav } from './mto-follow-through-nav'
 import { MtoThemeDetailPanel } from './mto-theme-detail-panel'
 import { MtoActionList } from './mto-action-list'
 import { MtoReviewQueue } from './mto-review-queue'
+import { MtoDossierPanel } from './mto-dossier-panel'
 
 export interface MtoManagerCockpitProps {
   organizationId: string
@@ -36,6 +36,7 @@ export interface MtoManagerCockpitProps {
 
 export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
   const [selectedThemeKey, setSelectedThemeKey] = useState<string | null>(null)
+  const [selectedActionId, setSelectedActionId] = useState<string | null>(null)
   const [activeSectionKey, setActiveSectionKey] = useState<string | null>(null)
   const reviews = props.reviews ?? []
   const accessEnvelope = buildManagementActionAccessEnvelope({
@@ -71,7 +72,6 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
     updates: visibleUpdates,
     reviews: visibleReviews,
   })
-  const summary = buildManagementActionSummary(visibleActions)
   const selectedTheme = useMemo(
     () =>
       selectedThemeKey
@@ -83,6 +83,25 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
     selectedTheme
       ? visibleOwnerDefaults.find((entry) => entry.department === selectedTheme.departmentLabel) ?? null
       : null
+  const selectedAction = useMemo(
+    () => (selectedActionId ? visibleActions.find((action) => action.id === selectedActionId) ?? null : null),
+    [selectedActionId, visibleActions],
+  )
+  const selectedActionUpdates = useMemo(
+    () => (selectedAction ? visibleUpdates.filter((update) => update.action_id === selectedAction.id) : []),
+    [selectedAction, visibleUpdates],
+  )
+  const selectedActionReviews = useMemo(
+    () => (selectedAction ? visibleReviews.filter((review) => review.action_id === selectedAction.id) : []),
+    [selectedAction, visibleReviews],
+  )
+
+  function openSection(key: string) {
+    setActiveSectionKey(key)
+    if (key !== 'dossiers' && key !== 'reviews') {
+      setSelectedActionId(null)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -91,7 +110,7 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
       <MtoFollowThroughNav
         items={model.followThroughNavigation}
         activeKey={activeSectionKey}
-        onOpenSection={setActiveSectionKey}
+        onOpenSection={openSection}
       />
       {selectedTheme ? (
         <MtoThemeDetailPanel
@@ -103,6 +122,19 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
           onClose={() => setSelectedThemeKey(null)}
         />
       ) : null}
+      {selectedAction ? (
+        <MtoDossierPanel
+          action={selectedAction}
+          updates={selectedActionUpdates}
+          reviews={selectedActionReviews}
+          ownerDefaults={visibleOwnerDefaults}
+          currentViewerRole={props.currentViewerRole}
+          currentUserEmail={props.currentUserEmail}
+          canManageCampaign={canManageActionCenter}
+          readOnly={props.readOnly}
+          onClose={() => setSelectedActionId(null)}
+        />
+      ) : null}
       <div className="rounded-[24px] border border-slate-200 bg-white p-4 sm:p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -111,7 +143,7 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <MiniStat label="Stille acties" value={`${model.followThroughSignals.quietActions}`} compact />
-            <MiniStat label="Review nu" value={`${summary.overdueReviewCount}`} compact tone="amber" />
+            <MiniStat label="Review nu" value={`${model.followThroughSignals.reviewDueNow}`} compact tone="amber" />
             <MiniStat label="Recent gereviewd" value={`${model.followThroughSignals.recentlyReviewed}`} compact />
           </div>
         </div>
@@ -126,13 +158,19 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
           actions={visibleActions}
           updates={visibleUpdates}
           reviews={visibleReviews}
-          ownerDefaults={visibleOwnerDefaults}
-          currentViewerRole={props.currentViewerRole}
-          currentUserEmail={props.currentUserEmail}
-          canManageCampaign={canManageActionCenter}
-          readOnly={props.readOnly}
+          onOpenDossier={(actionId) => {
+            setActiveSectionKey('dossiers')
+            setSelectedActionId(actionId)
+          }}
         />
-        <MtoReviewQueue reviewQueue={model.reviewQueue} reviews={visibleReviews} />
+        <MtoReviewQueue
+          reviewQueue={model.reviewQueue}
+          reviews={visibleReviews}
+          onOpenDossier={(actionId) => {
+            setActiveSectionKey('reviews')
+            setSelectedActionId(actionId)
+          }}
+        />
       </div>
     </div>
   )

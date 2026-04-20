@@ -1,8 +1,16 @@
 import { createElement } from 'react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { buildMtoActionCenterViewModel } from '@/lib/action-center/mto-cockpit'
 import { MtoPriorityThemeGrid } from '@/components/dashboard/action-center/mto-priority-theme-grid'
+import { MtoActionList } from '@/components/dashboard/action-center/mto-action-list'
+import { MtoReviewQueue } from '@/components/dashboard/action-center/mto-review-queue'
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    refresh: () => {},
+  }),
+}))
 
 describe('buildMtoActionCenterViewModel', () => {
   it('builds a department-suite overview with one primary summary and limited headline stats', () => {
@@ -439,5 +447,66 @@ describe('buildMtoActionCenterViewModel', () => {
     expect(markup).toContain('Werkbelasting')
     expect(markup).toContain('Open thema')
     expect(markup).not.toContain('Nieuwe actie')
+  })
+
+  it('renders actions as dossier summaries and removes direct review logging from the overview surface', () => {
+    const listMarkup = renderToStaticMarkup(
+      createElement(MtoActionList, {
+        actions: [
+          {
+            id: 'a-1',
+            organization_id: 'org-1',
+            campaign_id: 'camp-1',
+            source_product: 'mto',
+            source_scope_type: 'department',
+            source_scope_key: 'department:operations',
+            source_scope_label: 'Operations',
+            source_read_stage: 'mto_closed_improvement_loop',
+            source_factor_key: 'workload',
+            source_factor_label: 'Werkbelasting',
+            source_signal_value: 7.1,
+            source_question_key: null,
+            source_question_label: null,
+            title: 'Herijk prioriteiten',
+            decision_context: 'Bounded sprint.',
+            expected_outcome: 'Rustiger weekstart.',
+            measured_outcome: null,
+            blocker_note: null,
+            last_review_outcome: null,
+            status: 'in_review',
+            owner_label: 'Ops manager',
+            owner_email: 'ops@example.com',
+            due_date: '2026-05-01',
+            review_date: '2026-04-24',
+            created_by: null,
+            updated_by: null,
+            created_at: '2026-04-01T10:00:00Z',
+            updated_at: '2026-04-10T10:00:00Z',
+          },
+        ],
+        updates: [],
+        reviews: [],
+        onOpenDossier: () => {},
+      }),
+    )
+
+    const reviewMarkup = renderToStaticMarkup(
+      createElement(MtoReviewQueue, {
+        reviewQueue: [
+          {
+            actionId: 'a-1',
+            departmentLabel: 'Operations',
+            title: 'Herijk prioriteiten',
+            tone: 'amber',
+            stateLabel: 'Review nu',
+          },
+        ],
+        reviews: [],
+        onOpenDossier: () => {},
+      }),
+    )
+
+    expect(listMarkup).toContain('Open dossier')
+    expect(reviewMarkup).not.toContain('Log review')
   })
 })
