@@ -138,7 +138,7 @@ describe('dashboard home recommendation logic', () => {
     expect(model.recommendation?.campaign.campaign_id).toBe('closed-current')
     expect(model.recommendation?.primaryAction.kind).toBe('pdf')
     expect(model.recommendation?.secondaryAction?.kind).toBe('dashboard')
-    expect(model.recommendation?.reason).toContain('rapportklaar')
+    expect(model.recommendation?.reason).toContain('rapportklare campagne')
   })
 })
 
@@ -178,10 +178,10 @@ describe('dashboard and pdf availability', () => {
     })
 
     expect(model.recommendation?.dashboardChoiceDescription).toBe(
-      'Dashboard = lezen, prioriteren en direct bepalen wat nu aandacht vraagt.',
+      'Dashboard = interactief lezen, prioriteren en bepalen wat nu eerst aandacht vraagt.',
     )
     expect(model.recommendation?.pdfChoiceDescription).toBe(
-      'PDF = delen, bespreken en meenemen als compacte managementsamenvatting.',
+      'Rapport (PDF) = delen, bespreken en meenemen als bestuurlijke samenvatting.',
     )
   })
 })

@@ -68,7 +68,7 @@ const GROUP_METADATA: Record<
 > = {
   open_now: {
     title: 'Nu openen',
-    description: 'Campagnes die nu het meest klaar zijn voor interactieve lezing, prioritering en follow-up.',
+    description: 'Campagnes die nu het meest klaar zijn voor interactieve lezing, prioritering en eerste vervolg.',
     defaultOpen: true,
   },
   building: {
@@ -78,7 +78,7 @@ const GROUP_METADATA: Record<
   },
   closed: {
     title: 'Gesloten / rapport beschikbaar',
-    description: 'Recent gesloten campagnes die nu vooral dienen voor rapportgebruik, follow-up en vervolgbesluit.',
+    description: 'Recent gesloten campagnes die nu vooral dienen voor rapportgebruik, vervolg en vervolgbesluit.',
     defaultOpen: true,
   },
   archive: {
@@ -204,9 +204,9 @@ function buildRecommendation(
     primaryAction,
     secondaryAction,
     dashboardChoiceDescription:
-      'Dashboard = lezen, prioriteren en direct bepalen wat nu aandacht vraagt.',
+      'Dashboard = interactief lezen, prioriteren en bepalen wat nu eerst aandacht vraagt.',
     pdfChoiceDescription:
-      'PDF = delen, bespreken en meenemen als compacte managementsamenvatting.',
+      'Rapport (PDF) = delen, bespreken en meenemen als bestuurlijke samenvatting.',
   }
 }
 
@@ -258,14 +258,14 @@ function buildDashboardAction(
   }
 
   return {
-    kind: 'dashboard',
-    label: bucket === 'archive' ? 'Open archiefdashboard' : 'Open dashboard',
-    description:
-      bucket === 'closed' || bucket === 'archive'
-        ? 'Gebruik het dashboard voor interactieve terugblik, follow-up en het terughalen van prioriteiten.'
-        : 'Gebruik het dashboard voor interactieve lezing, prioritering en vervolgstappen.',
-    available: true,
-    href: `/campaigns/${campaign.campaign_id}`,
+      kind: 'dashboard',
+      label: bucket === 'archive' ? 'Open archiefdashboard' : 'Open dashboard',
+      description:
+        bucket === 'closed' || bucket === 'archive'
+          ? 'Gebruik het dashboard voor interactieve terugblik, vervolg en het terughalen van prioriteiten.'
+          : 'Gebruik het dashboard voor interactieve lezing, prioritering en eerste vervolg.',
+      available: true,
+      href: `/campaigns/${campaign.campaign_id}`,
   }
 }
 
@@ -286,22 +286,22 @@ function buildPdfAction(campaign: CampaignStats, bucket: DashboardHomeBucket): H
     return {
       kind: 'pdf',
       label: 'PDF volgt later',
-      description: 'Het rapport wordt pas zinvol zodra de campaign voldoende respons heeft voor een leesbare managementsamenvatting.',
+      description: 'Het rapport wordt pas zinvol zodra de campagne voldoende respons heeft voor een leesbare managementsamenvatting.',
       available: false,
       href: null,
-      reason: 'Rapport volgt zodra de campaign voldoende respons heeft voor een leesbare managementsamenvatting.',
+      reason: 'Rapport volgt zodra de campagne voldoende respons heeft voor een leesbare managementsamenvatting.',
     }
   }
 
   return {
-    kind: 'pdf',
-    label: 'Bekijk PDF',
-    description:
-      bucket === 'closed' || bucket === 'archive'
-        ? 'Gebruik het rapport voor delen, bespreking en boardroom-ready follow-up.'
-        : 'Gebruik het rapport voor delen, bespreking en een boardroom-ready samenvatting naast het dashboard.',
-    available: true,
-    href: null,
+      kind: 'pdf',
+      label: 'Bekijk PDF',
+      description:
+        bucket === 'closed' || bucket === 'archive'
+          ? 'Gebruik het rapport voor delen, bespreking en bestuurlijk vervolg.'
+          : 'Gebruik het rapport voor delen, bespreking en een bestuurlijke samenvatting naast het dashboard.',
+      available: true,
+      href: null,
   }
 }
 
@@ -334,7 +334,7 @@ function getManagementSummary(bucket: DashboardHomeBucket, campaign: CampaignSta
   }
 
   if (bucket === 'closed') {
-    return `${productName} is gesloten en blijft nu vooral relevant voor rapportgebruik, follow-up en bestuurlijke terugkoppeling.`
+    return `${productName} is gesloten en blijft nu vooral relevant voor rapportgebruik, vervolg en bestuurlijke terugkoppeling.`
   }
 
   return `${productName} blijft beschikbaar als archieflaag voor terugblik, vergelijking en het ophalen van eerdere managementkeuzes.`
@@ -351,17 +351,17 @@ function getActionSummary(
 
   if (bucket === 'building') {
     return primaryAction.available
-      ? 'Gebruik vooral het dashboard om te zien hoe deze campaign opbouwt; rapport blijft nog bewust secundair.'
+      ? 'Gebruik vooral het dashboard om te zien hoe deze campagne opbouwt; rapport blijft nog bewust secundair.'
       : primaryAction.reason ?? primaryAction.description
   }
 
   if (bucket === 'closed') {
     return secondaryAction?.available
       ? 'Gebruik rapport en dashboard als duo: rapport voor bespreking, dashboard voor interactieve terugblik.'
-      : 'Deze gesloten campaign levert nu vooral waarde als follow-updocument en terugblik.'
+      : 'Deze gesloten campagne levert nu vooral waarde als vervolgdossier en terugblik.'
   }
 
-  return 'Archiefcampagnes blijven beschikbaar zonder te concurreren met de huidige eerstvolgende campaignkeuze.'
+  return 'Archiefcampagnes blijven beschikbaar zonder te concurreren met de huidige eerstvolgende campagnekeuze.'
 }
 
 function buildRecommendationTitle(card: HomeCampaignCardModel, isAdmin: boolean) {
@@ -371,17 +371,17 @@ function buildRecommendationTitle(card: HomeCampaignCardModel, isAdmin: boolean)
   }
   if (card.bucket === 'building') return 'Aanbevolen campagne om nu te volgen'
   if (card.bucket === 'closed') return 'Aanbevolen campagne om nu terug te lezen'
-  return 'Aanbevolen campaign uit het archief'
+  return 'Aanbevolen campagne uit archief'
 }
 
 function buildRecommendationReason(card: HomeCampaignCardModel, isAdmin: boolean) {
   if (card.bucket === 'open_now') {
-    return `${card.campaign.campaign_name} heeft nu het stevigste leesniveau in je actieve portfolio en is daardoor de beste eerste managementroute om nu te openen.`
+    return `${card.campaign.campaign_name} heeft nu het stevigste leesniveau in je actieve portefeuille en is daardoor de beste eerste managementroute om nu te openen.`
   }
 
   if (card.bucket === 'building' && card.campaign.total_invited === 0) {
     return isAdmin
-      ? `${card.campaign.campaign_name} staat het dichtst bij livegang. Rond eerst setup en launch af voordat de rest van de portfolio gaat concurreren om aandacht.`
+      ? `${card.campaign.campaign_name} staat het dichtst bij livegang. Rond eerst setup en livegang af voordat de rest van de portefeuille gaat concurreren om aandacht.`
       : `${card.campaign.campaign_name} is nog niet live genoeg om te lezen. Wacht op activatie en eerste respons voordat dashboard of rapport de juiste volgende stap worden.`
   }
 
@@ -390,10 +390,10 @@ function buildRecommendationReason(card: HomeCampaignCardModel, isAdmin: boolean
   }
 
   if (card.bucket === 'closed') {
-    return `${card.campaign.campaign_name} is nu de meest recente rapportklare campaign en dus de meest rapportklaar leesbare follow-up voor delen, bespreken en teruglezen.`
+    return `${card.campaign.campaign_name} is nu de meest recente rapportklare campagne en dus de meest logische route voor delen, bespreken en teruglezen.`
   }
 
-  return `${card.campaign.campaign_name} blijft het meest relevante archiefpunt als je een oudere campaign opnieuw wilt raadplegen.`
+  return `${card.campaign.campaign_name} blijft het meest relevante archiefpunt als je een oudere campagne opnieuw wilt raadplegen.`
 }
 
 function formatCampaignPeriod(value: string) {

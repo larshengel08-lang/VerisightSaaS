@@ -51,16 +51,16 @@ export default async function DashboardHomePage() {
     return (
       <div className="space-y-6">
         <DashboardContextHeader
-          eyebrow="Campagnelauncher"
-          title={isAdmin ? 'Nog geen campaigns om te kiezen' : 'Je eerste campaign wordt voorbereid'}
+          eyebrow="Campagneoverzicht"
+          title={isAdmin ? 'Nog geen campagnes om te kiezen' : 'Je eerste campagne wordt voorbereid'}
           description={
             isAdmin
-              ? 'Deze homepage wordt pas een decision-first launcher zodra er campaigns zijn om tussen te kiezen.'
-              : 'Zodra de eerste campaign live staat, zie je hier direct welke route je nu moet openen en of dashboard of PDF de juiste volgende stap is.'
+              ? 'Deze homepage wordt pas een rustige campagnelaag zodra er campagnes zijn om tussen te kiezen.'
+              : 'Zodra de eerste campagne live staat, zie je hier direct welke route je nu moet openen en of dashboard of rapport de juiste volgende stap is.'
           }
           meta={
             <>
-              <DashboardChip label={isAdmin ? 'Launcher wacht op setup' : 'Launcher wacht op livegang'} tone="slate" />
+              <DashboardChip label={isAdmin ? 'Wacht op setup' : 'Wacht op livegang'} tone="slate" />
               <DashboardChip label="Support blijft secundair" tone="slate" />
             </>
           }
@@ -84,17 +84,17 @@ export default async function DashboardHomePage() {
   return (
     <div className="space-y-6">
       <DashboardContextHeader
-        eyebrow="Campagnelauncher"
-        title={isAdmin ? 'Kies eerst welke campaign nu aandacht vraagt' : 'Open eerst de campaign die nu het meest telt'}
+        eyebrow="Campagneoverzicht"
+        title={isAdmin ? 'Kies eerst welke campagne nu aandacht vraagt' : 'Open eerst de campagne die nu het meest telt'}
         description={
           isAdmin
-            ? 'Kies eerst de juiste campaign of setupstap. Beheer, dashboard en rapport volgen daarna.'
-            : 'Kies hier eerst welke campaign nu open moet en of dashboard of PDF de juiste volgende stap is.'
+            ? 'Kies eerst de juiste campagne of setupstap. Beheer, dashboard en rapport volgen daarna.'
+            : 'Kies hier eerst welke campagne nu open moet en of dashboard of rapport de juiste volgende stap is.'
         }
         meta={
           <>
-            <DashboardChip label="Keuze eerst" tone="blue" />
-            <DashboardChip label="Portfolio tweede laag" tone="slate" />
+            <DashboardChip label="Eerst campagnekeuze" tone="blue" />
+            <DashboardChip label="Portefeuille als context" tone="slate" />
             {isAdmin ? <DashboardChip label="Support lager in de hierarchie" tone="slate" /> : null}
           </>
         }
@@ -131,10 +131,10 @@ export default async function DashboardHomePage() {
                 tone={recommendation.campaign.scan_type === 'retention' ? 'emerald' : 'blue'}
               />
               <DashboardChip
-                label={recommendation.campaign.is_active ? 'Actieve campaign' : 'Gesloten campaign'}
+                label={recommendation.campaign.is_active ? 'Actieve campagne' : 'Gesloten campagne'}
                 tone={recommendation.campaign.is_active ? 'blue' : 'slate'}
               />
-              <DashboardChip label={home.groups.find((group) => group.campaigns.some((campaign) => campaign.campaign.campaign_id === recommendation.campaign.campaign_id))?.title ?? 'Campaigngroep'} tone="slate" />
+              <DashboardChip label={home.groups.find((group) => group.campaigns.some((campaign) => campaign.campaign.campaign_id === recommendation.campaign.campaign_id))?.title ?? 'Campagnegroep'} tone="slate" />
             </>
           }
           actions={
@@ -190,7 +190,7 @@ export default async function DashboardHomePage() {
                   tone="blue"
                 />
                 <ActionChoiceCard
-                  title="PDF"
+                  title="Rapport (PDF)"
                   description={recommendation.pdfChoiceDescription}
                   tone="emerald"
                 />
@@ -201,10 +201,10 @@ export default async function DashboardHomePage() {
       ) : null}
 
       <DashboardSection
-        eyebrow="Campaigngroepen"
-        title="Kies per campaign wat nu de logische volgende stap is"
-        description="Eerst keuze, daarna pas portfolio-overzicht. Zo blijft direct zichtbaar wat nu open moet, wat nog opbouwt en wat vooral naslag is."
-        aside={<DashboardChip label="Launcherlaag" tone="blue" />}
+        eyebrow="Campagnegroepen"
+        title="Kies per campagne wat nu de logische volgende stap is"
+        description="Eerst keuze, daarna pas portefeuille-overzicht. Zo blijft direct zichtbaar wat nu open moet, wat nog opbouwt en wat vooral naslag is."
+        aside={<DashboardChip label="Keuzelaag" tone="blue" />}
       >
         <div className="space-y-4">
           {home.groups.map((group) => (
@@ -214,21 +214,21 @@ export default async function DashboardHomePage() {
       </DashboardSection>
 
       <DashboardSection
-        eyebrow="Support en routehulp"
-        title={isAdmin ? 'Beheer, routehulp en support blijven bewust secundair' : 'Dashboard versus PDF en support blijven bewust secundair'}
+        eyebrow="Support en leeshulp"
+        title={isAdmin ? 'Beheer, leeshulp en support blijven bewust secundair' : 'Dashboard, rapport en support blijven bewust secundair'}
         description={
           isAdmin
-            ? 'Gebruik deze laag pas nadat de juiste campaignkeuze is gemaakt. Support, setup en admin mogen de launcher erboven niet verdringen.'
+            ? 'Gebruik deze laag pas nadat de juiste campagnekeuze is gemaakt. Support, setup en admin mogen de keuzelaag erboven niet verdringen.'
             : 'Gebruik deze laag alleen wanneer je extra hulp nodig hebt bij rapportgebruik, leesvolgorde of afstemming met Verisight.'
         }
         aside={<DashboardChip label="Tertiaire laag" tone="slate" />}
       >
         <div className="space-y-4">
           <DashboardDisclosure
-            title="Wanneer open je dashboard en wanneer PDF?"
+            title="Wanneer open je het dashboard en wanneer het rapport?"
             description="Compact leeskader voor de keuze tussen interactieve route en deelbaar rapport."
             defaultOpen={false}
-            badge={<DashboardChip label="Keuzehulp" tone="slate" />}
+            badge={<DashboardChip label="Leeshulp" tone="slate" />}
           >
             <div className="grid gap-4 lg:grid-cols-2">
               <DashboardPanel
@@ -238,9 +238,9 @@ export default async function DashboardHomePage() {
                 tone="blue"
               />
               <DashboardPanel
-                eyebrow="PDF daarna"
+                eyebrow="Rapport daarna"
                 title="Delen, bespreken en meenemen"
-                body="Gebruik de PDF als boardroom-ready samenvatting, deelstuk of follow-updocument zodra de campaign rapportklaar is."
+                body="Gebruik het rapport als bestuurlijke samenvatting, deelstuk of vervolgdossier zodra de campagne rapportklaar is."
                 tone="emerald"
               />
             </div>
@@ -250,8 +250,8 @@ export default async function DashboardHomePage() {
             title={isAdmin ? 'Beheer en operations' : 'Rapportgebruik en supportverwachting'}
             description={
               isAdmin
-                ? 'Admin- en supporttaken leven hier, niet in de primaire campaignkeuze.'
-                : 'Setup, reminders en deliverycontrole blijven bij Verisight en concurreren dus niet met je campaignkeuze.'
+                ? 'Admin- en supporttaken leven hier, niet in de primaire campagnekeuze.'
+                : 'Setup, reminders en deliverycontrole blijven bij Verisight en concurreren dus niet met je campagnekeuze.'
             }
             defaultOpen={false}
             badge={<DashboardChip label={isAdmin ? 'Beheerlaag' : 'Supportlaag'} tone="slate" />}
@@ -260,22 +260,22 @@ export default async function DashboardHomePage() {
               <div className="grid gap-4 lg:grid-cols-3">
                 <UtilityCard
                   eyebrow="Setup"
-                  title="Campaignconfiguratie"
-                  body="Gebruik beheer voor respondentimport, launchcontrole en customer access zonder de launcher te verstoren."
+                  title="Campagneconfiguratie"
+                  body="Gebruik beheer voor respondentimport, launchcontrole en klanttoegang zonder de keuzelaag te verstoren."
                   href="/beheer"
                   cta="Open beheer"
                 />
                 <UtilityCard
                   eyebrow="Handoff"
                   title="Contactaanvragen"
-                  body="Lead- en handofftaken blijven lager in de hierarchie zodat de campaignkeuze bovenaan scherp blijft."
+                  body="Lead- en handofftaken blijven lager in de hierarchie zodat de campagnekeuze bovenaan scherp blijft."
                   href="/beheer/contact-aanvragen"
                   cta="Open leadlijst"
                 />
                 <UtilityCard
                   eyebrow="Learning"
                   title="Klantlearnings"
-                  body="Gebruik de learning-workbench pas na de campaignkeuze om lessen en vervolgacties vast te leggen."
+                  body="Gebruik de learning-workbench pas na de campagnekeuze om lessen en vervolgacties vast te leggen."
                   href="/beheer/klantlearnings"
                   cta="Open learning-workbench"
                 />
@@ -290,7 +290,7 @@ export default async function DashboardHomePage() {
                 />
                 <DashboardPanel
                   eyebrow="Rapportgebruik"
-                  title="Gebruik PDF als deelbaar tweede document"
+                  title="Gebruik rapport als deelbaar tweede document"
                   body="De homepage maakt de keuze duidelijk, maar het rapport blijft bewust een ondersteunende stap naast het dashboard."
                   tone="blue"
                 />
@@ -337,7 +337,7 @@ function CampaignGroupDisclosure({ group }: { group: HomeGroupModel }) {
             tone={group.bucket === 'open_now' ? 'blue' : group.bucket === 'closed' ? 'emerald' : 'slate'}
           />
           <DashboardChip
-            label={`${group.campaigns.length} campaign${group.campaigns.length === 1 ? '' : 's'}`}
+            label={`${group.campaigns.length} ${group.campaigns.length === 1 ? 'campagne' : 'campagnes'}`}
             tone="slate"
           />
         </div>
@@ -360,8 +360,8 @@ function CampaignGroupDisclosure({ group }: { group: HomeGroupModel }) {
             : group.bucket === 'building'
               ? 'Houd hier vooral voortgang en leesdiscipline scherp; nog niet elk beeld is al besluitklaar.'
               : group.bucket === 'closed'
-                ? 'Gebruik deze groep voor rapportbespreking, terugblik en het kiezen van vervolg of follow-up.'
-                : 'Laat archiefcampagnes bewust onderaan staan tenzij je echt een oudere campaign terug moet halen.'}
+                ? 'Gebruik deze groep voor rapportbespreking, terugblik en het kiezen van vervolg.'
+                : 'Laat archiefcampagnes bewust onderaan staan tenzij je echt een oudere campagne terug moet halen.'}
         </div>
         {group.campaigns.map((campaign) => (
           <CampaignLauncherCard key={campaign.campaign.campaign_id} campaign={campaign} />
@@ -406,7 +406,7 @@ function CampaignLauncherCard({ campaign }: { campaign: HomeCampaignCardModel })
               }`}
             >
               {campaign.primaryAction.kind === 'pdf'
-                ? 'PDF eerst'
+                ? 'Rapport eerst'
                 : campaign.primaryAction.kind === 'setup'
                   ? 'Setup eerst'
                   : campaign.primaryAction.available
@@ -557,7 +557,7 @@ function CompactMetric({ label, value }: { label: string; value: string }) {
 
 function getRecommendationWhyNow(campaign: CampaignStats) {
   if (!campaign.is_active) {
-    return 'Deze campaign is gesloten en daardoor vooral sterk als deelbaar rapport, terugblik en vervolggesprek.'
+    return 'Deze campagne is gesloten en daardoor vooral sterk als deelbaar rapport, terugblik en vervolggesprek.'
   }
 
   if (campaign.total_invited === 0) {
@@ -565,10 +565,10 @@ function getRecommendationWhyNow(campaign: CampaignStats) {
   }
 
   if (campaign.total_completed < 10) {
-    return 'Deze campaign bouwt op, maar heeft nog geen volledig patroonbeeld. Het dashboard is hier vooral een voortgangsread.'
+    return 'Deze campagne bouwt op, maar heeft nog geen volledig patroonbeeld. Het dashboard is hier vooral een voortgangsread.'
   }
 
-  return 'Deze campaign heeft genoeg respons om direct als managementinstrument te gebruiken voor prioritering en vervolg.'
+  return 'Deze campagne heeft genoeg respons om direct als managementinstrument te gebruiken voor prioritering en vervolg.'
 }
 
 function UtilityCard({
@@ -603,8 +603,8 @@ function AdminEmptyState() {
   return (
     <DashboardSection
       eyebrow="Setup"
-      title="Nog geen campaigns om te lanceren"
-      description="Voeg eerst organisatie, campaign en respondentbestand toe. Daarna verandert deze homepage vanzelf in een decision-first launcher."
+      title="Nog geen campagnes om te lanceren"
+      description="Voeg eerst organisatie, campagne en respondentbestand toe. Daarna verandert deze homepage vanzelf in een rustige keuzeomgeving."
       aside={<DashboardChip label="Setup eerst" tone="amber" />}
     >
       <div className="grid gap-4 md:grid-cols-3">
@@ -616,8 +616,8 @@ function AdminEmptyState() {
         />
         <DashboardPanel
           eyebrow="Stap 2"
-          title="Campaign"
-          body="Kies de juiste scan en zet de campaign klaar met de benodigde metadata."
+          title="Campagne"
+          body="Kies de juiste scan en zet de campagne klaar met de benodigde metadata."
           tone="blue"
         />
         <DashboardPanel
@@ -643,21 +643,21 @@ function ViewerEmptyState() {
   return (
     <DashboardSection
       eyebrow="Wachten op livegang"
-      title="Er is nog geen campaign om te openen"
-      description="Verisight zet eerst de campaign op. Zodra er iets te kiezen valt, wordt deze homepage automatisch een launcher met een duidelijke aanbevolen volgende stap."
+      title="Er is nog geen campagne om te openen"
+      description="Verisight zet eerst de campagne op. Zodra er iets te kiezen valt, wordt deze homepage automatisch een keuzeoverzicht met een duidelijke aanbevolen volgende stap."
       aside={<DashboardChip label="Nog geen keuze nodig" tone="slate" />}
     >
       <div className="grid gap-4 md:grid-cols-3">
         <DashboardPanel
           eyebrow="Nu nog niet"
           title="Geen cockpitgedrag"
-          body="Deze homepage blijft bewust rustig totdat er een echte campaignkeuze is om te maken."
+          body="Deze homepage blijft bewust rustig totdat er een echte campagnekeuze is om te maken."
           tone="slate"
         />
         <DashboardPanel
           eyebrow="Daarna"
           title="Dashboard of PDF wordt vanzelf duidelijk"
-          body="Zodra de eerste campaign live staat, zie je direct welke route je opent en welk document eventueel al mee kan."
+          body="Zodra de eerste campagne live staat, zie je direct welke route je opent en welk rapport eventueel al mee kan."
           tone="blue"
         />
         <DashboardPanel
