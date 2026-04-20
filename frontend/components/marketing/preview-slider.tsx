@@ -12,7 +12,7 @@ interface PreviewSliderProps {
   variant?: ReportPreviewVariant
 }
 
-const SLIDES = ['Dashboardbeeld', 'Factorbeeld', 'Bestuurlijke duiding'] as const
+const SLIDES = ['Dashboard', 'Samenvatting', 'Wat valt op'] as const
 const COPY = REPORT_PREVIEW_COPY
 
 const toneStyles = {

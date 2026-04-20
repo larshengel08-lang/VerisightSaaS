@@ -9,6 +9,7 @@ interface MarketingInlineContactPanelProps {
   defaultRouteInterest: ContactRouteInterest
   defaultCtaSource: string
   id?: string
+  badge?: string | null
 }
 
 export function MarketingInlineContactPanel({
@@ -18,6 +19,7 @@ export function MarketingInlineContactPanel({
   defaultRouteInterest,
   defaultCtaSource,
   id = 'kennismaking',
+  badge = 'Vrijblijvend gesprek',
 }: MarketingInlineContactPanelProps) {
   return (
     <div
@@ -31,9 +33,11 @@ export function MarketingInlineContactPanel({
             {title}
           </h2>
         </div>
-        <div className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-          Eerste route-inschatting
-        </div>
+        {badge != null && (
+          <div className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+            {badge}
+          </div>
+        )}
       </div>
       <p className="text-[1.02rem] leading-8 text-[var(--text)]">{body}</p>
       <div className="mt-8">

@@ -225,7 +225,7 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-hero-title-home {
-    max-width: min(10.5ch, 100%);
+    max-width: 100%;
     font-size: clamp(2.35rem, 6.4vw, 4.45rem);
     line-height: 0.97;
   }
@@ -938,7 +938,7 @@ details > summary::-webkit-details-marker {
     }
 
     .marketing-hero-grid-home {
-      grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+      grid-template-columns: 1fr;
     }
 
     .marketing-hero-grid-product {
@@ -974,17 +974,12 @@ details > summary::-webkit-details-marker {
     }
 
     .marketing-hero-grid-home .marketing-hero-region-intro {
-      max-width: 42rem;
-      padding-top: 1rem;
-    }
-
-    .marketing-hero-grid-home .marketing-hero-region-stage {
-      align-self: start;
+      max-width: none;
     }
 
     .marketing-hero-grid-home .marketing-hero-copy {
-      max-width: 33rem;
-      font-size: 1.02rem;
+      max-width: 44rem;
+      font-size: 1.05rem;
       line-height: 1.85;
     }
 
