@@ -14,9 +14,10 @@ interface Props {
   organizationId: string
   campaignId: string
   ownerDefault?: ManagementActionDepartmentOwnerDefault | null
+  mode?: 'inline' | 'detail'
 }
 
-export function MtoActionComposer({ card, organizationId, campaignId, ownerDefault }: Props) {
+export function MtoActionComposer({ card, organizationId, campaignId, ownerDefault, mode = 'inline' }: Props) {
   const router = useRouter()
   const [selectedQuestionKey, setSelectedQuestionKey] = useState(card.questionOptions[0]?.key ?? '')
   const [title, setTitle] = useState(`${card.departmentLabel}: ${card.factorLabel}`)
@@ -83,12 +84,13 @@ export function MtoActionComposer({ card, organizationId, campaignId, ownerDefau
   }
 
   return (
-    <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+    <div className={`space-y-3 rounded-2xl border border-slate-200 p-4 ${mode === 'detail' ? 'bg-white shadow-[0_10px_30px_rgba(15,23,42,0.04)]' : 'bg-white'}`}>
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Nieuwe actie</p>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Open hier de eerste managementcommitment voor dit thema. Houd het bounded, maar leg wel direct eigenaar,
-          reviewmoment en beoogde uitkomst vast.
+          {mode === 'detail'
+            ? 'Open vanuit deze themadetail de eerste managementcommitment. Houd het bounded, maar leg wel direct eigenaar, reviewmoment en beoogde uitkomst vast.'
+            : 'Open hier de eerste managementcommitment voor dit thema. Houd het bounded, maar leg wel direct eigenaar, reviewmoment en beoogde uitkomst vast.'}
         </p>
       </div>
       <label className="space-y-1 text-sm text-slate-700">

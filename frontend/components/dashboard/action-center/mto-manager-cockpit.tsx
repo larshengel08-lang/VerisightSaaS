@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo, useState } from 'react'
 import {
   buildManagementActionAccessEnvelope,
   buildManagementActionSummary,
@@ -13,7 +14,9 @@ import { buildMtoActionCenterViewModel } from '@/lib/action-center/mto-cockpit'
 import type { MtoDepartmentReadItem } from '@/lib/products/mto/department-intelligence'
 import type { MemberRole } from '@/lib/types'
 import { MtoDepartmentOverview } from './mto-department-overview'
-import { MtoThemePanel } from './mto-theme-panel'
+import { MtoPriorityThemeGrid } from './mto-priority-theme-grid'
+import { MtoFollowThroughNav } from './mto-follow-through-nav'
+import { MtoThemeDetailPanel } from './mto-theme-detail-panel'
 import { MtoActionList } from './mto-action-list'
 import { MtoReviewQueue } from './mto-review-queue'
 
@@ -32,6 +35,8 @@ export interface MtoManagerCockpitProps {
 }
 
 export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
+  const [selectedThemeKey, setSelectedThemeKey] = useState<string | null>(null)
+  const [activeSectionKey, setActiveSectionKey] = useState<string | null>(null)
   const reviews = props.reviews ?? []
   const accessEnvelope = buildManagementActionAccessEnvelope({
     orgRole: props.currentViewerRole,
@@ -67,10 +72,37 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
     reviews: visibleReviews,
   })
   const summary = buildManagementActionSummary(visibleActions)
+  const selectedTheme = useMemo(
+    () =>
+      selectedThemeKey
+        ? model.themeCards.find((theme) => `${theme.departmentLabel}:${theme.factorKey}` === selectedThemeKey) ?? null
+        : null,
+    [model.themeCards, selectedThemeKey],
+  )
+  const selectedOwnerDefault =
+    selectedTheme
+      ? visibleOwnerDefaults.find((entry) => entry.department === selectedTheme.departmentLabel) ?? null
+      : null
 
   return (
     <div className="space-y-6">
       <MtoDepartmentOverview suite={model.departmentSuite} />
+      <MtoPriorityThemeGrid themes={model.priorityThemes} onOpenTheme={setSelectedThemeKey} />
+      <MtoFollowThroughNav
+        items={model.followThroughNavigation}
+        activeKey={activeSectionKey}
+        onOpenSection={setActiveSectionKey}
+      />
+      {selectedTheme ? (
+        <MtoThemeDetailPanel
+          theme={selectedTheme}
+          organizationId={props.organizationId}
+          campaignId={props.campaignId}
+          ownerDefault={selectedOwnerDefault}
+          canManageCampaign={canManageActionCenter}
+          onClose={() => setSelectedThemeKey(null)}
+        />
+      ) : null}
       <div className="rounded-[24px] border border-slate-200 bg-white p-4 sm:p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -84,13 +116,9 @@ export function MtoManagerCockpit(props: MtoManagerCockpitProps) {
           </div>
         </div>
         <div className="mt-5">
-          <MtoThemePanel
-            themeCards={model.themeCards}
-            organizationId={props.organizationId}
-            campaignId={props.campaignId}
-            ownerDefaults={visibleOwnerDefaults}
-            canManageCampaign={canManageActionCenter}
-          />
+          <p className="text-sm leading-7 text-slate-600">
+            Gebruik deze cockpit om van afdelingsbeeld naar thema, dossier of review door te gaan. De detailstappen openen gericht onder de overzichtslaag.
+          </p>
         </div>
       </div>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr),minmax(320px,0.85fr)]">

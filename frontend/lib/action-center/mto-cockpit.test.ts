@@ -1,5 +1,8 @@
+import { createElement } from 'react'
 import { describe, expect, it } from 'vitest'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { buildMtoActionCenterViewModel } from '@/lib/action-center/mto-cockpit'
+import { MtoPriorityThemeGrid } from '@/components/dashboard/action-center/mto-priority-theme-grid'
 
 describe('buildMtoActionCenterViewModel', () => {
   it('builds a department-suite overview with one primary summary and limited headline stats', () => {
@@ -385,5 +388,56 @@ describe('buildMtoActionCenterViewModel', () => {
     expect(model.themeCards[0].actionHealth.blockedCount).toBe(1)
     expect(model.themeCards[0].actionHealth.reviewDueCount).toBe(1)
     expect(model.themeCards[0].actionHealth.status).toBe('attention_now')
+  })
+
+  it('shows summary-first priority themes and does not render inline creation forms on the overview surface', () => {
+    const markup = renderToStaticMarkup(
+      createElement(MtoPriorityThemeGrid, {
+        themes: [
+          {
+            departmentRead: {
+              segmentType: 'department',
+              segmentLabel: 'Operations',
+              factorKey: 'workload',
+              factorLabel: 'Werkbelasting',
+              n: 12,
+              avgSignal: 7.2,
+              deltaVsOrg: 1.1,
+              signalValue: 6.8,
+              title: 'Werkbelasting vraagt aandacht',
+              decision: 'Open een bounded werkdruksprint.',
+              validate: 'Check teamritme.',
+              owner: 'Manager Operations',
+              actions: ['Herplan piekbelasting'],
+              caution: 'Maak het niet suitebreed.',
+              review: 'Review binnen 30 dagen.',
+              handoffBody: 'Bounded MTO-traject.',
+              stayIntentAverage: 5.9,
+            },
+            departmentLabel: 'Operations',
+            factorKey: 'workload',
+            factorLabel: 'Werkbelasting',
+            questionOptions: [],
+            actions: [],
+            priorityScore: 680,
+            actionHealth: {
+              totalCount: 0,
+              blockedCount: 0,
+              reviewDueCount: 0,
+              quietCount: 0,
+              followUpCount: 0,
+              status: 'no_action',
+              label: 'Nog geen actie gekoppeld',
+              tone: 'slate',
+            },
+          },
+        ],
+        onOpenTheme: () => {},
+      }),
+    )
+
+    expect(markup).toContain('Werkbelasting')
+    expect(markup).toContain('Open thema')
+    expect(markup).not.toContain('Nieuwe actie')
   })
 })
