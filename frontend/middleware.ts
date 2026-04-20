@@ -4,6 +4,7 @@ import {
   isPublicApiRoutePath,
   isPublicRoutePath,
 } from '@/lib/public-route-access'
+import { resolveMiddlewareAuthMode } from '@/lib/middleware-auth'
 
 // Eenvoudige in-memory rate limiter voor auth-routes
 // (per deployment instance - voldoende voor MVP, vervang door Redis bij schalen)
@@ -37,6 +38,15 @@ function cleanupRateLimit() {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const hasSupabaseEnv = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  const authMode = resolveMiddlewareAuthMode({
+    pathname,
+    hasSupabaseEnv,
+  })
+
+  if (authMode === 'public_without_auth') {
+    return NextResponse.next({ request })
+  }
 
   // Rate limiting op auth-routes
   const isAuthRoute = pathname === '/login' || pathname === '/signup' || pathname.startsWith('/auth')

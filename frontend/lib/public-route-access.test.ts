@@ -16,6 +16,7 @@ describe('public route access', () => {
   it('keeps the examples area and contact endpoint public', () => {
     expect(isPublicRoutePath('/examples')).toBe(true)
     expect(isPublicRoutePath('/examples/voorbeeldrapport_verisight.pdf')).toBe(true)
+    expect(isPublicRoutePath('/action-center-preview')).toBe(true)
     expect(isPublicRoutePath('/oplossingen/verloop-analyse')).toBe(true)
     expect(isPublicApiRoutePath('/api/contact')).toBe(true)
     expect(isPublicApiRoutePath('/api/contact/submit')).toBe(true)
