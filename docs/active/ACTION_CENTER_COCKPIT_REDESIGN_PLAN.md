@@ -1,9 +1,9 @@
 # ACTION_CENTER_COCKPIT_REDESIGN_PLAN.md
 
 ## Status
-- Plan status: active
-- Build permission: wave_01_open
-- Next allowed step: `WAVE_01_ACTION_CENTER_OVERVIEW_REFRAME.md`
+- Plan status: completed
+- Build permission: closed_green
+- Next allowed step: explicit new track or suite adapter-gate
 
 ## Summary
 - MTO blijft de enige actieve drager

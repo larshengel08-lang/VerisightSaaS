@@ -1,5 +1,9 @@
 # ACTION_CENTER_COCKPIT_REDESIGN_WAVE_STACK_PLAN.md
 
+## Status
+- Plan status: completed
+- Build permission: closed_green
+
 ## Allowed Wave Stack
 1. `WAVE_01_ACTION_CENTER_OVERVIEW_REFRAME.md`
 2. `WAVE_02_ACTION_CENTER_THEME_AND_NAVIGATION.md`

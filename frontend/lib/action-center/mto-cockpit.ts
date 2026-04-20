@@ -223,13 +223,13 @@ export function buildMtoActionCenterViewModel(args: {
       tone:
         action.status === 'closed'
           ? ('slate' as const)
-          : action.review_date! < todayIsoDate
+          : action.review_date! <= todayIsoDate
             ? ('amber' as const)
             : ('blue' as const),
       stateLabel:
         action.status === 'closed'
           ? 'Afgesloten'
-          : action.review_date! < todayIsoDate
+          : action.review_date! <= todayIsoDate
             ? 'Review nu'
             : 'Review gepland',
     }))

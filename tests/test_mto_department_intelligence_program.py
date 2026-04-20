@@ -142,3 +142,16 @@ def test_action_center_redesign_docs_open_mto_only_visual_track():
     assert "wave_02_action_center_theme_and_navigation.md" in stack
     assert "wave_03_action_center_dossier_and_review_relocation.md" in stack
     assert "wave_04_action_center_visual_polish_and_closeout.md" in stack
+
+
+def test_action_center_redesign_closeout_marks_navigation_led_cockpit_green():
+    plan = _read("docs/active/action_center_cockpit_redesign_plan.md")
+    stack = _read("docs/active/action_center_cockpit_redesign_wave_stack_plan.md")
+    wave_four = _read("docs/active/wave_04_action_center_visual_polish_and_closeout.md")
+
+    assert "plan status: completed" in plan
+    assert "main screen is now overview-first and navigation-led" in wave_four
+    assert "inline create/edit removed from overview surface" in wave_four
+    assert "mto-only activation preserved" in wave_four
+    assert "suite-capable seams preserved" in wave_four
+    assert "plan status: completed" in stack

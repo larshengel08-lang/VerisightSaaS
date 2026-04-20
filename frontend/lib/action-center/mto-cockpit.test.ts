@@ -509,4 +509,69 @@ describe('buildMtoActionCenterViewModel', () => {
     expect(listMarkup).toContain('Open dossier')
     expect(reviewMarkup).not.toContain('Log review')
   })
+
+  it('uses calm neutral surfaces with targeted amber accents when review pressure is due today', () => {
+    const model = buildMtoActionCenterViewModel({
+      departmentReads: [
+        {
+          segmentType: 'department',
+          segmentLabel: 'Operations',
+          factorKey: 'workload',
+          factorLabel: 'Werkbelasting',
+          n: 12,
+          avgSignal: 7.2,
+          deltaVsOrg: 1.1,
+          signalValue: 6.8,
+          title: 'Werkbelasting vraagt aandacht',
+          decision: 'Open een bounded werkdruksprint.',
+          validate: 'Check teamritme.',
+          owner: 'Manager Operations',
+          actions: ['Herplan piekbelasting'],
+          caution: 'Maak het niet suitebreed.',
+          review: 'Review binnen 30 dagen.',
+          handoffBody: 'Bounded MTO-traject.',
+          stayIntentAverage: 5.9,
+        },
+      ],
+      actions: [
+        {
+          id: 'a-1',
+          organization_id: 'org-1',
+          campaign_id: 'camp-1',
+          source_product: 'mto',
+          source_scope_type: 'department',
+          source_scope_key: 'department:operations',
+          source_scope_label: 'Operations',
+          source_read_stage: 'mto_closed_improvement_loop',
+          source_factor_key: 'workload',
+          source_factor_label: 'Werkbelasting',
+          source_signal_value: 7.1,
+          source_question_key: null,
+          source_question_label: null,
+          title: 'Herijk prioriteiten',
+          decision_context: 'Bounded sprint.',
+          expected_outcome: 'Rustiger weekstart.',
+          measured_outcome: null,
+          blocker_note: null,
+          last_review_outcome: null,
+          status: 'in_review',
+          owner_label: 'Ops manager',
+          owner_email: 'ops@example.com',
+          due_date: '2026-05-01',
+          review_date: '2026-04-20',
+          created_by: null,
+          updated_by: null,
+          created_at: '2026-04-01T10:00:00Z',
+          updated_at: '2026-04-10T10:00:00Z',
+        },
+      ],
+      updates: [],
+      reviews: [],
+      todayIsoDate: '2026-04-20',
+    })
+
+    expect(model.departmentSuite.stats.find((item) => item.label === 'Review nu')?.tone).toBe('amber')
+    expect(model.followThroughNavigation.find((item) => item.key === 'all_themes')?.tone).toBe('slate')
+    expect(model.followThroughNavigation.find((item) => item.key === 'reviews')?.tone).toBe('amber')
+  })
 })
