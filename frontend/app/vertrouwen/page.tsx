@@ -16,7 +16,6 @@ import {
   trustItems,
   trustQuickLinks,
   trustReadingRows,
-  trustSignalHighlights,
   trustSupportCards,
   trustVerificationCards,
 } from '@/components/marketing/site-content'
@@ -25,12 +24,12 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Vertrouwen',
   description:
-    'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan, Pulse, TeamScan, onboarding en Leadership Scan.',
+    'Methodiek, privacy en rapportlezing van Verisight. Publieke due-diligence laag met heldere claimsgrenzen voor de buyer-facing kernroutes.',
   alternates: { canonical: '/vertrouwen' },
   openGraph: {
     title: 'Vertrouwen | Verisight',
     description:
-      'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan, Pulse, TeamScan, onboarding en Leadership Scan.',
+      'Methodiek, privacy en rapportlezing van Verisight. Publieke due-diligence laag met heldere claimsgrenzen voor de buyer-facing kernroutes.',
     url: 'https://www.verisight.nl/vertrouwen',
     images: ['/opengraph-image'],
   },
@@ -38,12 +37,23 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vertrouwen | Verisight',
     description:
-      'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan, Pulse, TeamScan, onboarding en Leadership Scan.',
+      'Methodiek, privacy en rapportlezing van Verisight. Publieke due-diligence laag met heldere claimsgrenzen voor de buyer-facing kernroutes.',
     images: ['/opengraph-image'],
   },
 }
 
 export default function VertrouwenPage() {
+  const privacyAnswerCards = trustHubAnswerCards.filter((card) =>
+    ['Waar draait de data?', 'Wat ziet management precies?', 'Hoe voorkom je schijnprecisie?'].includes(card.title),
+  )
+  const supportAnswerCards = trustHubAnswerCards.filter((card) =>
+    [
+      'Welke juridische basis is publiek beschikbaar?',
+      'Wat voor productvorm koop je?',
+      'Heeft elke route een publiek voorbeeldrapport?',
+    ].includes(card.title),
+  )
+
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -69,18 +79,23 @@ export default function VertrouwenPage() {
               Methodiek, privacy en rapportgrenzen in gewone managementtaal.
             </h1>
             <p className="marketing-hero-copy text-[var(--text)]">
-              Verisight laat publiek zien hoe methodiek, privacy, rapportlezing en formele basis zijn ingericht.
-              Deze publieke trustlaag maakt toetsbaar wat de output wel en niet belooft, zodat u dit kunt verifiëren
-              voordat een traject start.
+              Verisight laat publiek zien hoe methodiek, privacy, rapportlezing en formele basis zijn ingericht nadat
+              de routevraag al helder is. Deze trustlaag helpt een buyer toetsen wat de output wel en niet belooft,
+              zonder van vertrouwen een nieuwe route- of prijspagina te maken.
             </p>
           </MarketingHeroIntro>
         }
         heroStage={
           <MarketingHeroStage className="h-full">
             <div className="space-y-4">
-              <span className="marketing-stage-tag border border-white/12 bg-white/6 text-[#DCEFEA]">Heldere grenzen</span>
+              <span className="marketing-stage-tag border border-white/12 bg-white/6 text-[#DCEFEA]">
+                Due diligence na productfit
+              </span>
               {trustItems.slice(0, 4).map((item) => (
-                <div key={item} className="rounded-[1.2rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200">
+                <div
+                  key={item}
+                  className="rounded-[1.2rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-slate-200"
+                >
                   {item}
                 </div>
               ))}
@@ -89,9 +104,15 @@ export default function VertrouwenPage() {
         }
         heroSupport={
           <MarketingHeroSupport>
-            {trustQuickLinks.slice(0, 2).map((link) => (
-              <Link key={link.href} href={link.href} className="marketing-link-card transition-colors hover:border-[#3C8D8A]">
-                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Publieke basis</p>
+            {trustQuickLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="marketing-link-card transition-colors hover:border-[#3C8D8A]"
+              >
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                  Publieke basis
+                </p>
                 <p className="mt-2 text-base font-semibold text-[var(--ink)]">{link.label}</p>
                 <p className="mt-2 text-sm leading-6 text-[var(--text)]">{link.body}</p>
               </Link>
@@ -101,12 +122,12 @@ export default function VertrouwenPage() {
       >
         <MarketingSection tone="surface">
           <SectionHeading
-            eyebrow="Waar vertrouwen vandaan komt"
-            title="De trustlaag moet hetzelfde vertellen als het product werkelijk levert."
-            description="Deze pagina maakt expliciet wat Verisight wel en niet claimt, hoe privacy is ingebouwd en hoe management de output moet lezen."
+            eyebrow="Wat deze pagina wel en niet doet"
+            title="Deze pagina bevestigt grenzen, geen nieuwe route of prijs."
+            description="Gebruik deze trustlaag om publiek te toetsen wat Verisight wel en niet claimt. Dit is due diligence na productfit, geen nieuwe routekeuze of prijsvergelijking."
           />
-          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {trustSignalHighlights.map((item) => (
+          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {trustVerificationCards.map((item) => (
               <div key={item.title} className="marketing-feature-card">
                 <p className="text-base font-semibold text-[var(--ink)]">{item.title}</p>
                 <p className="mt-3 text-sm leading-7 text-[var(--text)]">{item.body}</p>
@@ -118,10 +139,23 @@ export default function VertrouwenPage() {
         <MarketingSection tone="plain">
           <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
             <div className="marketing-feature-card">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--teal)]">Wat u publiek kunt verifieren</p>
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--teal)]">
+                Privacy en datamodel
+              </p>
+              <h2 className="mt-4 text-[clamp(1.8rem,3vw,2.7rem)] font-light leading-[1.08] tracking-[-0.03em] text-[var(--ink)]">
+                Privacy en zorgvuldigheid moeten publiek toetsbaar zijn voordat een traject start.
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-[var(--text)]">
+                De trustlaag maakt zichtbaar hoe Verisight met groepsinzichten, minimale n-grenzen en terughoudende
+                rapportlezing omgaat. Zo wordt privacy geen losse bijlage, maar een controleerbaar onderdeel van de
+                productvorm.
+              </p>
               <div className="mt-4 space-y-3">
-                {trustVerificationCards.map((card) => (
-                  <div key={card.title} className="rounded-[1.15rem] border border-[var(--border)] bg-[var(--surface)] px-4 py-4">
+                {privacyAnswerCards.map((card) => (
+                  <div
+                    key={card.title}
+                    className="rounded-[1.15rem] border border-[var(--border)] bg-[var(--surface)] px-4 py-4"
+                  >
                     <p className="text-base font-semibold text-[var(--ink)]">{card.title}</p>
                     <p className="mt-2 text-sm leading-7 text-[var(--text)]">{card.body}</p>
                   </div>
@@ -129,17 +163,23 @@ export default function VertrouwenPage() {
               </div>
             </div>
             <div className="marketing-route-card-dark bg-[linear-gradient(180deg,#1b2e45_0%,#132033_100%)]">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#DCEFEA]">Methodiek en vertrouwen</p>
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#DCEFEA]">
+                Zorgvuldige interpretatie
+              </p>
               <h2 className="mt-4 text-[clamp(1.8rem,3vw,2.8rem)] font-light leading-[1.08] tracking-[-0.03em] text-[#F7F5F1]">
                 Bruikbare inzichten, zonder schijnzekerheid.
               </h2>
               <p className="mt-4 text-sm leading-7 text-[rgba(247,245,241,0.72)]">
                 Verisight werkt met geaggregeerde uitkomsten en benoemt bewust wat wel en niet geconcludeerd kan
-                worden, inclusief de grens tussen Leadership Scan, TeamScan, named leaders en 360-verwachtingen.
+                worden. Deze trustlaag bevestigt de zorgvuldigheid achter de bestaande routes, zonder die routes hier
+                opnieuw open te trekken.
               </p>
               <div className="mt-6 space-y-3">
                 {trustItems.map((item) => (
-                  <div key={item} className="rounded-[1.15rem] border border-white/10 bg-white/5 px-4 py-3 text-sm leading-7 text-[rgba(247,245,241,0.82)]">
+                  <div
+                    key={item}
+                    className="rounded-[1.15rem] border border-white/10 bg-white/5 px-4 py-3 text-sm leading-7 text-[rgba(247,245,241,0.82)]"
+                  >
                     {item}
                   </div>
                 ))}
@@ -151,8 +191,8 @@ export default function VertrouwenPage() {
         <MarketingSection tone="tint">
           <SectionHeading
             eyebrow="Hoe u de output leest"
-            title="Gebruik Verisight als gespreksinput, niet als diagnose."
-            description="De publieke reading guide moet dezelfde interpretatiegrenzen laten zien als rapport en dashboard."
+            title="Lees dashboard en rapport als managementduiding, niet als diagnose."
+            description="De publieke reading guide moet dezelfde interpretatiegrenzen laten zien als rapport en dashboard, zodat management weet wat wel bruikbaar is en wat niet."
           />
           <div className="mt-10">
             <MarketingComparisonTable
@@ -164,12 +204,12 @@ export default function VertrouwenPage() {
 
         <MarketingSection tone="surface">
           <SectionHeading
-            eyebrow="Privacy en due diligence"
-            title="Snelle antwoorden op voorspelbare vragen."
-            description="Zo kan een buyer de basis toetsen voordat er een gesprek plaatsvindt, inclusief privacybasis, DPA beschikbaar en due-diligencevragen."
+            eyebrow="Formele basis en support"
+            title="De formele basis moet de trustlaag kunnen dragen."
+            description="Privacybeleid, DPA, voorwaarden en productvorm moeten publiek beschikbaar zijn om due diligence te ondersteunen, zonder dat deze pagina zelf een nieuwe commerciele ingang wordt."
           />
           <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {trustHubAnswerCards.map((card) => (
+            {supportAnswerCards.map((card) => (
               <div key={card.title} className="marketing-feature-card">
                 <p className="text-base font-semibold text-[var(--ink)]">{card.title}</p>
                 <p className="mt-3 text-sm leading-7 text-[var(--text)]">{card.body}</p>
@@ -178,7 +218,11 @@ export default function VertrouwenPage() {
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {trustSupportCards.map((card) => (
-              <Link key={card.href} href={card.href} className="marketing-feature-card transition-colors hover:border-[#3C8D8A]">
+              <Link
+                key={card.href}
+                href={card.href}
+                className="marketing-feature-card transition-colors hover:border-[#3C8D8A]"
+              >
                 <p className="text-base font-semibold text-[var(--ink)]">{card.title}</p>
                 <p className="mt-3 text-sm leading-7 text-[var(--text)]">{card.body}</p>
                 <p className="mt-4 text-sm font-semibold text-[var(--teal)]">Bekijken</p>
@@ -189,21 +233,21 @@ export default function VertrouwenPage() {
 
         <MarketingSection tone="plain">
           <MarketingCalloutBand
-          eyebrow="Volgende stap"
-          title="Klaar om te toetsen welke route voor uw organisatie logisch is?"
-          body="Gebruik deze pagina als publieke basis. In een kort gesprek vertalen we dat naar ExitScan, RetentieScan of een kleinere vervolgronde zoals Pulse, TeamScan, onboarding of Leadership Scan, inclusief aanpak, timing en prijs."
-          primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'trust_closing_cta' })}
+            eyebrow="Volgende stap"
+            title="Wilt u de trustbasis toetsen naast uw gekozen route?"
+            body="Gebruik deze pagina als publieke basis voor methodiek, privacy en rapportlezing. In een kort gesprek toetsen we daarna of de al gekozen route klopt met uw managementvraag, timing en due-diligence eisen."
+            primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'trust_closing_cta' })}
             primaryLabel="Plan een kennismaking"
-            secondaryHref="/producten"
-            secondaryLabel="Bekijk de producten"
+            secondaryHref="/privacy"
+            secondaryLabel="Bekijk privacybeleid"
           />
         </MarketingSection>
 
         <MarketingSection tone="surface">
           <MarketingInlineContactPanel
             eyebrow="Plan kennismaking"
-            title="Vertel kort welke managementvraag nu speelt."
-            body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy en prijs."
+            title="Vertel kort welke due-diligencevraag nu speelt."
+            body="In circa 20 minuten krijgt u helderheid over methodiek, privacy, rapportlezing en de fit tussen uw managementvraag en de al gekozen route."
             defaultRouteInterest="exitscan"
             defaultCtaSource="trust_form"
           />
