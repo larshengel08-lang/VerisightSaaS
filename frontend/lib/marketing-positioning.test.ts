@@ -25,7 +25,7 @@ import {
 } from '@/components/marketing/site-content'
 
 describe('Portfolio architecture marketing model', () => {
-  it('keeps four peer products, two bounded add-ons, and one portfolio route', () => {
+  it('keeps three active peer products, two bounded add-ons, one portfolio route, and TeamScan reserved', () => {
     const combination = PORTFOLIO_ROUTE_MARKETING_PRODUCTS[0]
     const followOnSlugs = FOLLOW_ON_MARKETING_PRODUCTS.map((product) => product.slug)
     const reservedSlugs = RESERVED_MARKETING_PRODUCTS.map((product) => product.slug)
@@ -33,7 +33,6 @@ describe('Portfolio architecture marketing model', () => {
     expect(CORE_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual([
       'exitscan',
       'retentiescan',
-      'teamscan',
       'onboarding-30-60-90',
     ])
     expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS).toHaveLength(1)
@@ -47,8 +46,8 @@ describe('Portfolio architecture marketing model', () => {
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => !product.description.toLowerCase().includes('live bounded'))).toBe(true)
     expect(CORE_MARKETING_PRODUCTS.every((product) => product.status === 'core_live')).toBe(true)
     expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS.every((product) => product.status === 'portfolio_live')).toBe(true)
-    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(7)
-    expect(reservedSlugs).toEqual(['mto', 'customer-feedback'])
+    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(6)
+    expect(reservedSlugs).toEqual(['teamscan', 'mto', 'customer-feedback'])
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.status === 'reserved_future')).toBe(true)
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'future_reserved_route')).toBe(
       true,
@@ -124,13 +123,13 @@ describe('ExitScan positioning copy', () => {
     expect(pulseOutput).not.toContain('delta-uitleg')
   })
 
-  it('keeps TeamScan and onboarding as peer products with narrower commercial framing', () => {
-    const teamScan = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'teamscan')
+  it('keeps onboarding active and TeamScan outside the active portfolio', () => {
+    const teamScan = RESERVED_MARKETING_PRODUCTS.find((product) => product.slug === 'teamscan')
     const onboarding = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'onboarding-30-60-90')
 
-    expect(teamScan?.portfolioRole).toBe('core_product')
-    expect(teamScan?.description.toLowerCase()).toContain('gerichte hoofdroute')
-    expect(teamScan?.description.toLowerCase()).toContain('smaller')
+    expect(teamScan?.portfolioRole).toBe('future_reserved_route')
+    expect(teamScan?.description.toLowerCase()).toContain('niet actieve route')
+    expect(teamScan?.description.toLowerCase()).toContain('buiten het actieve')
     expect(onboarding?.portfolioRole).toBe('core_product')
     expect(onboarding?.description.toLowerCase()).toContain('lifecycle-specifieke hoofdroute')
     expect(onboarding?.description.toLowerCase()).toContain('geen journey-suite')

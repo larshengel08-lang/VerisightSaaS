@@ -38,18 +38,30 @@ describe('contact qualification guidance', () => {
     expect(guidance.recommendedCoreRoute).toBe('combinatie')
   })
 
-  it('treats follow-on routes as bounded vervolgkeuzes when a prior signal is explicitly present', () => {
+  it('treats Leadership Scan as bounded vervolgkeuze when a prior signal is explicitly present', () => {
     const guidance = getContactQualificationGuidance({
-      routeInterest: 'teamscan',
+      routeInterest: 'leadership',
       desiredTiming: 'deze-maand',
       currentQuestion:
-        'Na een bestaand retentiesignaal willen we lokaal zien in welke teams eerst verificatie nodig is.',
+        'Na een bestaand retentiesignaal willen we bepalen welke managementcontext eerst extra verificatie vraagt.',
     })
 
     expect(guidance.status).toBe('bounded_follow_on_review')
     expect(guidance.recommendedCoreRoute).toBe('retentiescan')
-    expect(guidance.followOnCandidateRoute).toBe('teamscan')
+    expect(guidance.followOnCandidateRoute).toBe('leadership')
     expect(guidance.detail.toLowerCase()).toContain('bestaand signaal')
+  })
+
+  it('allows onboarding to become the primary recommendation for clear lifecycle questions', () => {
+    const guidance = getContactQualificationGuidance({
+      routeInterest: 'onboarding',
+      desiredTiming: 'deze-maand',
+      currentQuestion: 'We willen in de eerste 30-60-90 dagen beter zien hoe nieuwe medewerkers landen.',
+    })
+
+    expect(guidance.status).toBe('onboarding_primary')
+    expect(guidance.recommendedCoreRoute).toBe('onboarding')
+    expect(guidance.followOnCandidateRoute).toBeNull()
   })
 
   it('reframes follow-on routes back to a core route when no earlier signal is present', () => {

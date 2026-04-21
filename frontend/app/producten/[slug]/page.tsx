@@ -91,11 +91,10 @@ export default async function ProductDetailPage({ params }: Props) {
       {slug === 'retentiescan' ? <RetentionScanPage /> : null}
       {slug === 'exitscan' ? <ExitScanPage /> : null}
       {slug === 'pulse' ? <PulsePage /> : null}
-      {slug === 'teamscan' ? <TeamScanPage /> : null}
       {slug === 'onboarding-30-60-90' ? <OnboardingPage /> : null}
       {slug === 'leadership-scan' ? <LeadershipScanPage /> : null}
       {slug === 'combinatie' ? <CombinatiePage /> : null}
-      {!['retentiescan', 'exitscan', 'pulse', 'teamscan', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
+      {!['retentiescan', 'exitscan', 'pulse', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
     </>
   )
 }
@@ -726,210 +725,6 @@ function PulsePage() {
   )
 }
 
-function TeamScanPage() {
-  return (
-    <MarketingPageShell
-      theme="support"
-      pageType="product"
-      ctaHref={buildContactHref({ routeInterest: 'teamscan', ctaSource: 'product_team_hero' })}
-      heroIntro={
-        <MarketingHeroIntro>
-          <p className="marketing-hero-eyebrow text-slate-700">TeamScan</p>
-          <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
-            Open een gerichte teamvraag zonder er een brede teamscan van te maken.
-          </h1>
-          <p className="marketing-hero-copy text-slate-600">
-            TeamScan is een volwaardige route wanneer de eerste vraag team- of afdelingsgericht is. Commercieel blijft
-            het product smaller dan ExitScan of RetentieScan: het helpt bepalen welke afdeling eerst een lokaal gesprek,
-            verificatie of gerichte actie vraagt, zonder brede teamsoftware of manager ranking.
-          </p>
-          <div className="marketing-hero-actions">
-            <div className="marketing-hero-cta-row">
-              <a
-                href={buildContactHref({ routeInterest: 'teamscan', ctaSource: 'product_team_hero' })}
-                className="inline-flex items-center justify-center rounded-[0.58rem] bg-[#132033] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1b2a38]"
-              >
-                Plan kennismaking
-              </a>
-              <Link
-                href="/producten"
-                className="inline-flex items-center justify-center rounded-[0.58rem] border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950"
-              >
-                Bekijk producten
-              </Link>
-            </div>
-          </div>
-        </MarketingHeroIntro>
-      }
-      heroStage={
-        <MarketingHeroStage>
-          <div className="space-y-5">
-            <span className="marketing-stage-tag bg-[#3C8D8A]/10 text-[#DCEFEA]">Gerichte hoofdroute</span>
-            <h2 className="marketing-stage-title font-display text-white">
-              TeamScan opent een eigen route, maar blijft smaller en lokaler dan de brede hoofdproducten.
-            </h2>
-            <p className="marketing-stage-copy text-slate-300">
-              De route blijft bewust smal: lokale read, gerichte prioritering, eerste eigenaar en een begrensde eerste
-              actie zonder manager ranking of brede teamscorekaart.
-            </p>
-            <div className="marketing-stage-list">
-              {[
-                'Start pas nadat een breder signaal al zichtbaar is.',
-                'Lees veilige afdelingsuitsplitsing als verificatiehulp, niet als bewijs van teamoorzaak.',
-                'Gebruik TeamScan om de eerste lokale managementhuddle te richten.',
-              ].map((item) => (
-                <div key={item} className="marketing-stage-list-item text-sm leading-7 text-slate-200">
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        </MarketingHeroStage>
-      }
-      heroSupport={
-        <MarketingHeroSupport>
-          <div className="marketing-support-note text-sm leading-7 text-slate-600">
-            Segment Deep Dive blijft een add-on binnen bestaande scans. TeamScan is een eigen productroute met lokale
-            prioriteitslogica en expliciete managementhandoff.
-          </div>
-          <div className="marketing-link-grid">
-            <Link
-              href="/producten/retentiescan"
-              className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
-            >
-              Bekijk RetentieScan
-            </Link>
-            <Link
-              href="/vertrouwen"
-              className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
-            >
-              Bekijk trustgrenzen
-            </Link>
-          </div>
-        </MarketingHeroSupport>
-      }
-    >
-      <MarketingSection tone="surface">
-        <MarketingProofStrip
-          items={[
-            {
-              title: 'Eigen teamvraag',
-              body: 'TeamScan mag als eerste route openen zodra de vraag echt team- of afdelingsgericht is en een lokale verificatievraag centraal staat.',
-            },
-            {
-              title: 'Lokale prioriteit',
-              body: 'De route laat zien welke afdelingen eerst verificatie vragen, met suppressie-aware lokale uitsplitsing en duidelijke grenzen.',
-            },
-            {
-              title: 'Managementhandoff',
-              body: 'De output eindigt bij eerste eigenaar, begrensde eerste actie en expliciete reviewgrens voor de volgende lokale stap.',
-            },
-          ]}
-        />
-      </MarketingSection>
-
-      <MarketingSection tone="plain">
-        <div className="grid gap-6 lg:grid-cols-3">
-          {[
-            {
-              title: 'Wanneer TeamScan de eerste route mag zijn',
-              body: 'Gebruik TeamScan zodra de managementvraag al duidelijk lokaal is: welk team of welke afdeling vraagt als eerste verificatie of gerichte actie?',
-            },
-            {
-              title: 'Bij lokale verificatievraag',
-              body: 'De route is bedoeld voor lokale verificatie en prioritering, niet voor brede cultuurdiagnostiek.',
-            },
-            {
-              title: 'Niet als brede teamscan',
-              body: 'TeamScan is geen generieke cultuur- of leiderschapsscan, geen managerbeoordeling en geen vervanging van een beschrijvende Segment Deep Dive.',
-            },
-          ].map((card) => (
-            <div key={card.title} className="marketing-panel p-6 md:p-7">
-              <h2 className="text-xl font-semibold text-slate-950">{card.title}</h2>
-              <p className="mt-4 text-sm leading-7 text-slate-600">{card.body}</p>
-            </div>
-          ))}
-        </div>
-      </MarketingSection>
-
-      <MarketingSection tone="plain">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <MarketingComparisonTable
-            columns={['Thema', 'TeamScan', 'Segment Deep Dive']}
-            rows={[
-              [
-                'Startpunt',
-                'Na een bestaand signaal wanneer een lokale managementvraag openstaat.',
-                'Na ExitScan of RetentieScan als beschrijvende add-on op afdeling of functieniveau.',
-              ],
-              [
-                'Wat je leest',
-                'Veilige afdelingsuitsplitsing, bounded prioriteit, eerste eigenaar en begrensde eerste actie.',
-                'Extra segmentbeeld binnen de bestaande scanoutput, zonder eigen handoffroute.',
-              ],
-              [
-                'Waar het voor dient',
-                'Eerste lokale verificatie, managementhuddle en begrensde vervolgactie.',
-                'Beschrijvende verdieping zodra bestaande metadata en minimale n dat dragen.',
-              ],
-              [
-                'Niet bedoeld als',
-                'Brede teamscan, manager ranking of causale teambewijslijn.',
-                'Zelfstandige productroute met eigen lokalisatie- en actielogica.',
-              ],
-            ]}
-          />
-
-          <div className="marketing-panel-dark p-7 md:p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300">Wat TeamScan wel belooft</p>
-            <h2 className="mt-4 font-display text-4xl text-white">
-              Een gerichte teamroute met lokale handoff, geen brede teamsuite.
-            </h2>
-            <p className="mt-5 text-base leading-8 text-slate-300">
-              TeamScan is wel een peer product, maar niet de brede wedge. Het product helpt vooral om snel te zien waar
-              lokale verificatie, eigenaarschap en een begrensde eerste actie het meest logisch zijn.
-            </p>
-            <ul className="mt-6 space-y-3 text-sm leading-7 text-slate-300">
-              {[
-                'Geen individuele signalen of managerbeoordeling.',
-                'Geen location- of multi-boundary belofte in deze wave.',
-                'Wel een lokale route om HR, sponsor en afdelingsleider sneller op een lijn te krijgen.',
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-sky-300" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </MarketingSection>
-
-      <MarketingSection tone="plain">
-        <MarketingInlineContactPanel
-          eyebrow="Kennismaking"
-          title="Toets of TeamScan nu de juiste gerichte route is."
-          body="Beschrijf kort welke team- of afdelingsvraag nu speelt. Dan bepalen we of TeamScan als eerste route past of dat een bredere route logischer is."
-          defaultRouteInterest="teamscan"
-          defaultCtaSource="product_team_form"
-        />
-      </MarketingSection>
-
-      <MarketingSection tone="plain">
-        <MarketingCalloutBand
-          eyebrow="Routekeuze"
-          title="Twijfel je tussen TeamScan en een bredere route?"
-          body="We helpen je kiezen tussen TeamScan, Segment Deep Dive of een bredere hoofdroute. Zo blijft de eerste stap gericht in plaats van breder dan nodig."
-          primaryHref={buildContactHref({ routeInterest: 'teamscan', ctaSource: 'product_team_callout' })}
-          primaryLabel="Plan kennismaking"
-          secondaryHref="/tarieven"
-          secondaryLabel="Bekijk tarieven"
-        />
-      </MarketingSection>
-    </MarketingPageShell>
-  )
-}
-
 function OnboardingPage() {
   return (
     <MarketingPageShell
@@ -1038,7 +833,7 @@ function OnboardingPage() {
           {[
             {
               title: 'Wanneer deze route logisch wordt',
-              body: 'Gebruik onboarding wanneer management vroeg wil toetsen hoe nieuwe medewerkers nu landen en die vraag smaller is dan een bredere retentiescan of teamscan.',
+              body: 'Gebruik onboarding wanneer management vroeg wil toetsen hoe nieuwe medewerkers nu landen en die vraag smaller is dan een bredere retentie- of exitvraag.',
             },
             {
               title: 'Wat je nu krijgt',
@@ -1124,8 +919,8 @@ function OnboardingPage() {
       <MarketingSection tone="plain">
         <MarketingCalloutBand
           eyebrow="Lifecyclegrens"
-          title="Twijfel je tussen onboarding, RetentieScan of client onboarding?"
-          body="We helpen je kiezen tussen een vroege onboardingcheck, een bredere retentie- of teamroute of terug naar implementatiebegeleiding. Zo blijft de vervolgstap kleiner en eerlijker dan nodig."
+            title="Twijfel je tussen onboarding, RetentieScan of client onboarding?"
+            body="We helpen je kiezen tussen een vroege onboardingcheck, een bredere retentieroute of terug naar implementatiebegeleiding. Zo blijft de vervolgstap kleiner en eerlijker dan nodig."
           primaryHref={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_callout' })}
           primaryLabel="Plan kennismaking"
           secondaryHref="/tarieven"
@@ -1201,7 +996,7 @@ function LeadershipScanPage() {
           {[
             {
               title: 'Wanneer deze route logisch wordt',
-              body: 'Na een bestaand signaal uit ExitScan, RetentieScan, TeamScan of onboarding, wanneer de vraag verschuift naar managementcontext en eerste verificatie.',
+              body: 'Na een bestaand signaal uit ExitScan, RetentieScan of onboarding, wanneer de vraag verschuift naar managementcontext en eerste verificatie.',
             },
             {
               title: 'Wat je nu krijgt',

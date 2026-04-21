@@ -134,13 +134,6 @@ export const productOverviewComparisonRows = [
     'Complementaire hoofdroute wanneer behoud de eerste vraag is.',
   ],
   [
-    'TeamScan',
-    'Hoofdroute',
-    'Gerichte verificatie',
-    'Zien welk team of welke afdeling nu als eerste lokale aandacht vraagt.',
-    'Eigen peer product, maar commercieel smaller dan ExitScan of RetentieScan.',
-  ],
-  [
     'Onboarding 30-60-90',
     'Hoofdroute',
     'Vroege lifecycle-check',
@@ -184,13 +177,6 @@ export const productOverviewPrimaryRoutes = [
     title: 'Waar staat behoud nu onder druk?',
     body: 'Vroegsignalering op behoud wanneer de vraag draait om actieve teams, behoudsdruk en prioriteiten voordat mensen weggaan.',
     href: '/producten/retentiescan',
-  },
-  {
-    name: 'TeamScan',
-    chip: 'Gerichte hoofdroute',
-    title: 'Welk team vraagt nu als eerste verificatie?',
-    body: 'Een peer product voor lokale verificatie. Smaller dan de brede wedges, maar wel een eigen eerste route wanneer de vraag teamgericht is.',
-    href: '/producten/teamscan',
   },
   {
     name: 'Onboarding 30-60-90',
@@ -305,7 +291,7 @@ export const trustVerificationCards = [
   },
   {
     title: 'Waar sample-proof bewust stopt',
-    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Pulse, TeamScan, onboarding en Leadership Scan blijven bounded follow-on routes met formele output, maar zonder aparte publieke samplebibliotheek.',
+    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Onboarding 30-60-90 blijft een actief peer product zonder aparte samplebibliotheek. Pulse en Leadership Scan blijven bounded vervolgroutes. TeamScan blijft buiten het actieve portfolio.',
   },
   {
     title: 'Wat management wel ziet',
@@ -402,9 +388,9 @@ export const contactTrustSignals = [
 
 export const statCards = [
   {
-    value: '2 kernproducten',
-    label: 'heldere kernportfolio',
-    detail: 'ExitScan en RetentieScan als twee kernroutes binnen een duidelijke first-buy logica.',
+    value: '3 hoofdproducten',
+    label: 'actief portfolio',
+    detail: 'ExitScan, RetentieScan en Onboarding 30-60-90 blijven actief als peer producten binnen een duidelijke first-buy logica.',
   },
   {
     value: '1 leeslijn',
@@ -789,7 +775,7 @@ export const faqs = [
 
 export const marketingPagePurposes = {
   home: 'Product choice + premium proof + conversion',
-  producten: 'Buyer-oriented overview of the two core routes and the combination path',
+  producten: 'Buyer-oriented overview of the active peer products, bounded add-ons and the portfolio path',
   aanpak: 'Process clarity and buying confidence',
   tarieven: 'Commercial packaging and price framing',
 } as const

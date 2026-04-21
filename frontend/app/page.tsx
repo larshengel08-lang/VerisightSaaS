@@ -200,15 +200,14 @@ export default function LandingPage() {
       'Verisight laat zien wat er achter verloop speelt en waar behoud onder druk staat - met dashboard, samenvatting en rapport voor HR, MT en directie.',
     url: 'https://www.verisight.nl/',
     inLanguage: 'nl-NL',
-    mainEntity: {
+        mainEntity: {
       '@type': 'ItemList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'ExitScan', url: 'https://www.verisight.nl/producten/exitscan' },
         { '@type': 'ListItem', position: 2, name: 'RetentieScan', url: 'https://www.verisight.nl/producten/retentiescan' },
-        { '@type': 'ListItem', position: 3, name: 'TeamScan', url: 'https://www.verisight.nl/producten/teamscan' },
         {
           '@type': 'ListItem',
-          position: 4,
+          position: 3,
           name: 'Onboarding 30-60-90',
           url: 'https://www.verisight.nl/producten/onboarding-30-60-90',
         },
@@ -326,7 +325,7 @@ export default function LandingPage() {
             <SectionHeading
               eyebrow="Routes"
               title="Kies de eerste route die nu past."
-              description="ExitScan en RetentieScan zijn hier de meest logische start. TeamScan en Onboarding 30-60-90 blijven daarnaast zelfstandige hoofdproducten voor specifiekere eerste vragen."
+              description="ExitScan en RetentieScan zijn hier de meest logische start. Onboarding 30-60-90 blijft daarnaast een zelfstandige hoofdroute voor een lifecycle-specifieke eerste vraag."
             />
 
             <div className="mt-8 grid gap-4 lg:grid-cols-2">
@@ -348,9 +347,8 @@ export default function LandingPage() {
 
             <div className="mt-6 space-y-4 border-t border-[#E5E0D6] pt-6">
               <p className="max-w-[58rem] text-sm leading-7 text-[#4A5563]">
-                Andere eerste vragen? TeamScan is een gerichte hoofdroute voor lokale verificatie. Onboarding 30-60-90
-                is een eigen lifecycle-hoofdroute. Pulse en Leadership blijven add-ons. Combinatie blijft een
-                portfolioroute.
+                Andere eerste vragen? Onboarding 30-60-90 is een eigen lifecycle-hoofdroute. Pulse en Leadership
+                blijven add-ons. Combinatie blijft een portfolioroute.
               </p>
               <Link href="/producten" className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-[#132033] hover:underline">
                 Bekijk alle producten <span aria-hidden>{'->'}</span>

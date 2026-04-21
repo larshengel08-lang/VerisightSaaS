@@ -18,16 +18,10 @@ export const CONTACT_ROUTE_OPTIONS = [
     firstStepLabel: 'een gefaseerde combinatieroute',
   },
   {
-    value: 'teamscan',
-    label: 'TeamScan',
-    description: 'Na een breder signaal willen we lokaal bepalen waar eerst verificatie nodig is.',
-    firstStepLabel: 'een bounded TeamScan follow-on route na een bestaand signaal',
-  },
-  {
     value: 'onboarding',
     label: 'Onboarding 30-60-90',
-    description: 'Na een onboardingvraag willen we vroeg zien hoe nieuwe medewerkers in een checkpoint landen.',
-    firstStepLabel: 'een bounded onboarding follow-on route na een eerste lifecycle-vraag',
+    description: 'We willen onboarding als eigen managementvraag openen voor nieuwe medewerkers.',
+    firstStepLabel: 'Onboarding 30-60-90',
   },
   {
     value: 'leadership',
@@ -68,11 +62,12 @@ export const CONTACT_DESIRED_TIMING_OPTIONS = [
 
 export type ContactRouteInterest = (typeof CONTACT_ROUTE_OPTIONS)[number]['value']
 export type ContactDesiredTiming = (typeof CONTACT_DESIRED_TIMING_OPTIONS)[number]['value']
-export type CoreContactRouteInterest = Extract<ContactRouteInterest, 'exitscan' | 'retentiescan' | 'combinatie'>
-export type FollowOnContactRouteInterest = Extract<ContactRouteInterest, 'teamscan' | 'onboarding' | 'leadership'>
+export type CoreContactRouteInterest = Extract<ContactRouteInterest, 'exitscan' | 'retentiescan' | 'onboarding' | 'combinatie'>
+export type FollowOnContactRouteInterest = Extract<ContactRouteInterest, 'leadership'>
 export type ContactQualificationStatus =
   | 'core_default'
   | 'retention_primary'
+  | 'onboarding_primary'
   | 'combination_candidate'
   | 'bounded_follow_on_review'
   | 'follow_on_reframe'
@@ -101,7 +96,7 @@ export type ContactQualificationGuidance = {
 
 const routeOptionMap = new Map(CONTACT_ROUTE_OPTIONS.map((option) => [option.value, option]))
 const timingOptionMap = new Map(CONTACT_DESIRED_TIMING_OPTIONS.map((option) => [option.value, option]))
-const followOnRoutes = new Set<FollowOnContactRouteInterest>(['teamscan', 'onboarding', 'leadership'])
+const followOnRoutes = new Set<FollowOnContactRouteInterest>(['leadership'])
 
 const EXIT_SIGNAL_KEYWORDS = [
   'exit',
@@ -124,7 +119,6 @@ const RETENTION_SIGNAL_KEYWORDS = [
   'verloop voorkomen',
 ]
 
-const TEAM_SIGNAL_KEYWORDS = ['team', 'teams', 'afdeling', 'afdelingen', 'lokaal', 'leidingcontext']
 const ONBOARDING_SIGNAL_KEYWORDS = [
   'onboarding',
   'nieuwe medewerker',
@@ -179,14 +173,14 @@ export function inferRouteInterestFromSource(source: string | null | undefined):
   if (normalizedSource.includes('combin')) {
     return 'combinatie'
   }
-  if (normalizedSource.includes('team')) {
-    return 'teamscan'
-  }
   if (normalizedSource.includes('onboarding')) {
     return 'onboarding'
   }
   if (normalizedSource.includes('leadership')) {
     return 'leadership'
+  }
+  if (normalizedSource.includes('team')) {
+    return 'nog-onzeker'
   }
   if (normalizedSource.includes('onzeker')) {
     return 'nog-onzeker'
@@ -216,12 +210,6 @@ function includesAnyKeyword(text: string, keywords: string[]) {
 }
 
 function detectFollowOnCandidateRoute(text: string): FollowOnContactRouteInterest | null {
-  if (includesAnyKeyword(text, TEAM_SIGNAL_KEYWORDS)) {
-    return 'teamscan'
-  }
-  if (includesAnyKeyword(text, ONBOARDING_SIGNAL_KEYWORDS)) {
-    return 'onboarding'
-  }
   if (includesAnyKeyword(text, LEADERSHIP_SIGNAL_KEYWORDS)) {
     return 'leadership'
   }
@@ -250,6 +238,8 @@ export function getContactQualificationGuidance({
     recommendedCoreRoute = 'combinatie'
   } else if (hasRetentionSignal && !hasExitSignal) {
     recommendedCoreRoute = 'retentiescan'
+  } else if (includesAnyKeyword(normalizedQuestion, ONBOARDING_SIGNAL_KEYWORDS)) {
+    recommendedCoreRoute = 'onboarding'
   }
 
   if (followOnCandidateRoute && followOnEvidence) {
@@ -293,6 +283,17 @@ export function getContactQualificationGuidance({
       headline: 'RetentieScan lijkt nu de logische eerste route.',
       detail: `De vraag leest als een vroeg behouds- of stay-intent vraagstuk op groepsniveau. Daardoor mag RetentieScan in intake als eerste route worden getoetst, met ${normalizedTiming === 'zo-snel-mogelijk' ? 'hoge urgentie' : 'bounded eerste verificatie'} als uitgangspunt.`,
       operatorSummary: 'Vroege behoudsvraag zichtbaar; toets RetentieScan als primaire route en bevestig dat het niet alsnog vooral om vertrekduiding achteraf gaat.',
+    }
+  }
+
+  if (recommendedCoreRoute === 'onboarding') {
+    return {
+      status: 'onboarding_primary',
+      recommendedCoreRoute,
+      followOnCandidateRoute: null,
+      headline: 'Onboarding 30-60-90 lijkt nu de logische eerste route.',
+      detail: `De vraag leest als een lifecycle- of onboardingvraag in de eerste fase. Daardoor mag Onboarding 30-60-90 in intake als eerste route worden getoetst, met ${normalizedTiming === 'zo-snel-mogelijk' ? 'hoge urgentie' : 'een gerichte eerste checkpoint-read'} als uitgangspunt.`,
+      operatorSummary: 'Vroege lifecycle-vraag zichtbaar; toets Onboarding 30-60-90 als primaire route en bevestig dat het niet alsnog vooral om behoud of vertrekduiding gaat.',
     }
   }
 

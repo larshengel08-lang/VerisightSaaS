@@ -57,23 +57,6 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     href: '/producten/retentiescan',
   },
   {
-    slug: 'teamscan',
-    label: 'TeamScan',
-    shortLabel: 'TeamScan',
-    tagline: 'Lokale verificatie als gerichte hoofdroute',
-    description:
-      'Gerichte hoofdroute voor lokale verificatie wanneer de vraag draait om welk team of welke afdeling nu als eerste aandacht vraagt. TeamScan blijft smaller dan ExitScan of RetentieScan, maar is wel een volwaardige route met eigen managementread en eerste handoff.',
-    seoTitle: 'TeamScan | Lokale verificatie en gerichte teamprioritering',
-    ogAlt: 'TeamScan productpagina van Verisight',
-    serviceType: 'Lokale verificatie en gerichte teamprioritering',
-    serviceAudience: 'HR-teams en directies die een lokale verificatievraag als eerste route willen openen',
-    serviceOutput:
-      'Lokale prioriteitsread, team- of afdelingsbeeld, eerste managementhandoff en gerichte vervolgstap zonder manager ranking',
-    status: 'core_live',
-    portfolioRole: 'core_product',
-    href: '/producten/teamscan',
-  },
-  {
     slug: 'onboarding-30-60-90',
     label: 'Onboarding 30-60-90',
     shortLabel: 'Onboarding 30-60-90',
@@ -155,6 +138,17 @@ export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
 ]
 
 export const RESERVED_MARKETING_PRODUCTS: MarketingProduct[] = [
+  {
+    slug: 'teamscan',
+    label: 'TeamScan',
+    shortLabel: 'TeamScan',
+    tagline: 'Gerichte teamverificatie buiten het actieve portfolio',
+    description:
+      'Bewust niet actieve route voor lokale team- of afdelingsverificatie. TeamScan blijft inhoudelijk voorstelbaar, maar staat nu buiten het actieve commerciële portfolio als peer product.',
+    status: 'reserved_future',
+    portfolioRole: 'future_reserved_route',
+    href: '/producten/teamscan',
+  },
   {
     slug: 'mto',
     label: 'Medewerkerstevredenheidsonderzoek',

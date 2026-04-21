@@ -27,12 +27,6 @@ const mainRoutes = [
     body: 'Complementaire hoofdroute wanneer behoudsdruk en vroegsignalering de eerste managementvraag vormen.',
   },
   {
-    name: 'TeamScan',
-    price: 'Op aanvraag',
-    note: 'gerichte hoofdroute',
-    body: 'Een peer product met smallere scope: lokale verificatie als eerste route wanneer de vraag team- of afdelingsgericht is.',
-  },
-  {
     name: 'Onboarding 30-60-90',
     price: 'Op aanvraag',
     note: 'lifecycle-hoofdroute',
@@ -52,8 +46,8 @@ const faqItems = [
     a: 'Nee. Verisight blijft een begeleid productaanbod met vaste routes en prijsankers, niet een self-service licentie.',
   },
   {
-    q: 'Waarom staan TeamScan en Onboarding op aanvraag?',
-    a: 'Die routes zijn wel peer producten, maar hebben vaker scopes die afhangen van teamgrenzen, lifecycle-opzet of context in de organisatie.',
+    q: 'Waarom staat Onboarding 30-60-90 op aanvraag?',
+    a: 'Deze route is wel een peer product, maar heeft vaker scopekeuzes die afhangen van doelgroep, checkpoint-opzet en lifecycle-context in de organisatie.',
   },
   {
     q: 'Wanneer wordt Combinatie commercieel logisch?',
@@ -91,7 +85,7 @@ export default function TarievenPage() {
               Heldere prijsankers per productlaag.
             </h1>
             <p className="marketing-hero-copy text-[#4A5563]">
-              Vier routes kunnen zelfstandig starten. Twee routes blijven add-ons. Combinatie is een portfolioroute,
+              Drie routes kunnen zelfstandig starten. Twee routes blijven add-ons. Combinatie is een portfolioroute,
               geen standaardbundel. Zo blijft de prijslogica net zo scherp als de productlogica.
             </p>
           </MarketingHeroIntro>
@@ -100,10 +94,10 @@ export default function TarievenPage() {
         <MarketingSection tone="tint">
           <SectionHeading
             eyebrow="Hoofdproducten"
-            title="Prijsankers voor de vier routes die zelfstandig kunnen openen."
-            description="ExitScan en RetentieScan starten het vaakst. TeamScan en Onboarding blijven peer producten, maar met smallere commerciële scope."
+            title="Prijsankers voor de drie routes die zelfstandig kunnen openen."
+            description="ExitScan en RetentieScan starten het vaakst. Onboarding blijft daarnaast een peer product met een lifecycle-specifieke scope."
           />
-          <div className="mt-12 grid gap-px overflow-hidden rounded-[1.08rem] border border-[#E5E0D6] bg-[#E5E0D6] md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-12 grid gap-px overflow-hidden rounded-[1.08rem] border border-[#E5E0D6] bg-[#E5E0D6] md:grid-cols-2 xl:grid-cols-3">
             {mainRoutes.map((route) => (
               <div key={route.name} className="bg-[#FFFCF7] p-7">
                 <p className="text-[14px] font-medium text-[#132033]">{route.name}</p>

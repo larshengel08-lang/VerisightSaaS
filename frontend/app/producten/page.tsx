@@ -46,12 +46,11 @@ export default function ProductenPage() {
           <MarketingHeroIntro>
             <p className="marketing-hero-eyebrow text-[#3C8D8A]">Producten</p>
             <h1 className="marketing-hero-title marketing-hero-title-page font-display text-[#132033]">
-              Vier hoofdproducten, twee add-ons en één portfolioroute.
+              Drie hoofdproducten, twee add-ons en een portfolioroute.
             </h1>
             <p className="marketing-hero-copy text-[#4A5563]">
-              Verisight verkoopt niet één brede people-tool. U kiest de route die past bij de vraag: vertrek, behoud,
-              lokale verificatie of onboarding. Pulse en Leadership blijven add-ons. Combinatie blijft een
-              portfolioroute, geen bundel.
+              Verisight verkoopt niet een brede people-tool. U kiest de route die past bij de vraag: vertrek, behoud
+              of onboarding. Pulse en Leadership blijven add-ons. Combinatie blijft een portfolioroute, geen bundel.
             </p>
             <div className="marketing-hero-cta-row marketing-hero-actions">
               <Link
@@ -70,10 +69,10 @@ export default function ProductenPage() {
         <MarketingSection tone="tint">
           <SectionHeading
             eyebrow="Hoofdproducten"
-            title="De vier routes die zelfstandig commercieel kunnen openen."
+            title="De drie routes die zelfstandig commercieel kunnen openen."
             description="Deze producten mogen als eerste entree werken, maar blijven elk scherp begrensd in hun eigen vraag."
           />
-          <div className="mt-12 grid gap-px overflow-hidden rounded-[1.08rem] border border-[#E5E0D6] bg-[#E5E0D6] md:grid-cols-2">
+          <div className="mt-12 grid gap-px overflow-hidden rounded-[1.08rem] border border-[#E5E0D6] bg-[#E5E0D6] md:grid-cols-2 xl:grid-cols-3">
             {productOverviewPrimaryRoutes.map((route) => (
               <div key={route.name} className="flex h-full flex-col bg-[#FFFCF7] p-7 md:p-8">
                 <span className="marketing-chip self-start">{route.chip}</span>
