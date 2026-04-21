@@ -115,7 +115,7 @@ export function buildHeroDescription({
     return `Deze Leadership Scan laat een begrensde managementcontext-read zien op groepsniveau. Gebruik de uitkomst om te bepalen welke leiderschaps- of prioriteringscontext nu eerst duiding vraagt, zonder dit te lezen als named leader view, 360-output of performance-oordeel. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
   }
 
-  return 'Deze ExitScan helpt het vertrekverhaal terugbrengen tot de factoren die het meest beinvloedbaar lijken. Start bovenaan met het beslisoverzicht en gebruik daarna de verdieping om teams, factoren en vervolgacties scherper te maken.'
+  return `Deze ExitScan opent met de Frictiescore als managementsamenvatting van het vertrekbeeld. Gebruik werkfrictie daarna als verklarende laag om te bepalen waar teams, factoren en vervolgacties het meest beinvloedbaar lijken.`
 }
 
 export function getTopFactorLabel(factorAverages: Record<string, number>) {
@@ -179,7 +179,7 @@ export function buildDecisionPanels({
         value: retentionSupplemental.engagement !== null ? `${retentionSupplemental.engagement.toFixed(1)}/10` : '-',
         body: topFactorLabel
           ? `Gebruik bevlogenheid samen met ${topFactorLabel.toLowerCase()} en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.`
-          : 'Gebruik bevlogenheid samen met stay-intent en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.',
+          : 'Gebruik bevlogenheid samen met aanvullende signalen en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.',
         tone: 'emerald',
       },
     ]
@@ -325,8 +325,8 @@ export function buildNextStepBody({
   }
 
   return topFactor
-    ? `Gebruik ${topFactor.toLowerCase()} en het werksignaal om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
-    : 'Gebruik het werksignaal en de topfactoren om het eerstvolgende verbetergesprek te richten.'
+    ? `Gebruik Frictiescore als openingssignaal en ${topFactor.toLowerCase()} als eerste werkfrictiespoor om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
+    : 'Gebruik Frictiescore als openingssignaal en werkfrictie als verklarende laag om het eerstvolgende verbetergesprek te richten.'
 }
 
 export function getDisclosureDefaults({

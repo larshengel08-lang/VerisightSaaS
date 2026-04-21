@@ -366,7 +366,7 @@ export default async function CampaignPage({ params }: Props) {
             ? 'Deze laag vertaalt onboarding naar een bestuurlijk leesbaar checkpointbeeld: wat valt nu op in vroege integratie, wat moet je eerst toetsen en welke beperkte correctie hoort hier direct achteraan.'
             : stats.scan_type === 'leadership'
               ? 'Deze laag vertaalt Leadership Scan naar een bestuurlijk leesbare managementread: welke context valt op, wat moet je eerst toetsen en welke begrensde managementstap hoort hier direct achteraan.'
-        : 'Deze laag brengt ExitScan terug tot een bestuurlijk leesbaar vertrekbeeld: wat keert terug, wat lijkt beinvloedbaar en waar moet management eerst doorvragen.'
+        : 'Deze laag opent met de Frictiescore als bestuurlijk leesbare managementsamenvatting: wat keert terug, waar lijkt werkfrictie beinvloedbaar en waar moet management eerst doorvragen.'
   const readinessLabel = hasEnoughData
     ? 'Beslisniveau bereikt'
     : hasMinDisplay
@@ -584,12 +584,12 @@ export default async function CampaignPage({ params }: Props) {
       : stats.scan_type === 'exit'
         ? {
             summaryTone: 'blue' as const,
-            summarySignalLabel: 'Vertreksignaal',
-            summaryContextLabel: 'Vertrekbeeld · beinvloedbare frictie',
+            summarySignalLabel: 'Frictiescore',
+            summaryContextLabel: 'Werkfrictie · verklarende laag',
             summaryContextTone: 'blue' as const,
             summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
             summaryLeadDescription:
-              'Lees ExitScan eerst als vertrekduiding: wat keert terug, welke werkfrictie lijkt beinvloedbaar en welk managementspoor moet nu als eerste gekozen worden.',
+              'Lees ExitScan eerst via de Frictiescore: wat keert terug, waar lijkt werkfrictie beinvloedbaar en welk managementspoor moet nu als eerste gekozen worden.',
             summaryCardEyebrow: 'Vertrekspoor',
             promotedSummaryCards: 2,
             driverTitle: 'Kernsignalen en vertrekbeeld',
@@ -600,10 +600,10 @@ export default async function CampaignPage({ params }: Props) {
             driverAsideLabel: hasEnoughData ? 'Vertrekdrivers beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['factoren', 'signalen', 'aanvullend', 'trend'],
-            signalTabLabel: 'Vertrekbeeld',
-            signalTabTitle: 'Vertrekbeeld en spreiding',
+            signalTabLabel: 'Frictiescore',
+            signalTabTitle: 'Frictiescore op groepsniveau',
             signalTabDescription:
-              'Laat zien hoe breed en hoe scherp het vertrekbeeld zich over de groep verdeelt, zodat je factoren en vertrekduiding in context kunt lezen.',
+              'Laat zien hoe breed en hoe scherp de Frictiescore zich over de groep verdeelt, zodat je werkfrictie en vertrekduiding in context kunt lezen.',
             factorTabLabel: 'Vertrekdrivers',
             factorTabTitle: 'Werkfactoren achter vertrek',
             factorTabDescription:

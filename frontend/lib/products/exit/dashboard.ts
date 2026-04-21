@@ -198,14 +198,14 @@ export function buildExitDashboardViewModel(args: {
     profileCards.push({
       title: 'Vertrekprofiel',
       value: 'Breed werkgerelateerd vertrekbeeld',
-      body: `${topExitReasonLabel} komt relatief vaak terug en valt samen met een bredere werkfrictie. Dat maakt dit vooral bruikbaar als managementsignaal voor prioritering en gesprek.`,
+      body: `De Frictiescore opent hier met een breed werkgerelateerd vertrekbeeld. ${topExitReasonLabel} komt relatief vaak terug en werkfrictie helpt duiden waar management eerst moet prioriteren en doorvragen.`,
       tone: 'amber',
     })
   } else if (signalPressure) {
     profileCards.push({
       title: 'Vertrekprofiel',
       value: 'Frictie zichtbaar, vertrekbeeld nog gemengd',
-      body: `${topExitReasonLabel} komt terug, maar het patroon vraagt nog toetsing op teamniveau en in open antwoorden voordat je brede conclusies trekt.`,
+      body: `De Frictiescore laat al frictie zien. ${topExitReasonLabel} komt terug, maar werkfrictie vraagt nog toetsing op teamniveau en in open antwoorden voordat je brede conclusies trekt.`,
       tone: 'blue',
     })
   } else {
@@ -229,11 +229,11 @@ export function buildExitDashboardViewModel(args: {
       `Laag, midden en hoog laten zien hoeveel aandacht een ${args.signalLabelLower} vraagt. Ze helpen HR, sponsor en MT bepalen welk vertrekbeeld eerst verificatie nodig heeft.`,
     topSummaryCards: [
       {
-        title: 'Vertrekbeeld nu',
-        value: topExitReasonLabel,
+        title: 'Frictiescore nu',
+        value: averageSignal !== null ? `${averageSignal.toFixed(1)}/10` : '-',
         body: topContributingReasonLabel
-          ? `${topContributingReasonLabel} kleurt dit beeld mee. Lees hoofdreden en meespelende factor samen als vertrekduiding op groepsniveau.`
-          : 'Gebruik dit als eerste vertrekhaak en toets daarna pas welke werkfactoren er bestuurlijk echt onder liggen.',
+          ? `Frictiescore opent dit vertrekbeeld. ${topContributingReasonLabel} kleurt mee, terwijl werkfrictie helpt duiden welke laag er bestuurlijk onder ligt.`
+          : 'Frictiescore opent dit vertrekbeeld. Gebruik werkfrictie daarna als verklarende laag om te toetsen welke factoren er bestuurlijk onder liggen.',
         tone: hasBroadWorkSignal ? 'amber' : 'blue',
       },
       {
@@ -269,7 +269,7 @@ export function buildExitDashboardViewModel(args: {
             ? `${topExitReasonLabel} komt het vaakst terug. De scherpste werkfactoren zitten nu vooral in ${factorLabels.join(' en ')}.`
             : `${topExitReasonLabel} komt nu het vaakst terug in deze batch.`,
         items: [
-          'Lees vertrekredenen, werkfactoren en werksignaal altijd als een verhaal op groepsniveau.',
+          'Open met Frictiescore en lees werkfrictie daarna als verklarende laag in het verhaal op groepsniveau.',
           topContributingReasonLabel
             ? `${topContributingReasonLabel} is een belangrijke meespelende factor in het vertrekverhaal.`
             : 'Gebruik meespelende factoren vooral om het vertrekverhaal verder te verfijnen.',
@@ -310,8 +310,8 @@ export function buildExitDashboardViewModel(args: {
       title: 'Eerst valideren, dan verbeteren',
       body:
         typeof args.signalVisibilityAverage === 'number' && args.signalVisibilityAverage < 3
-          ? `Gebruik ${topFactorLabel.toLowerCase()} en eerdere signalering als eerste gespreksspoor, beleg ${firstOwner.toLowerCase()} als eigenaar en kies daarna direct welke 30-90 dagenactie eerst telt.`
-          : `Gebruik ${topFactorLabel.toLowerCase()} en het werksignaal om een gericht managementgesprek te voeren, ${firstOwner.toLowerCase()} als eerste eigenaar te beleggen en direct de eerste 30-90 dagenverbeteractie te kiezen.`,
+          ? `Gebruik Frictiescore als openingssignaal, toets via ${topFactorLabel.toLowerCase()} en eerdere signalering waar werkfrictie het sterkst meespeelt, beleg ${firstOwner.toLowerCase()} als eigenaar en kies daarna direct welke 30-90 dagenactie eerst telt.`
+          : `Gebruik Frictiescore als openingssignaal en ${topFactorLabel.toLowerCase()} als eerste werkfrictiespoor om een gericht managementgesprek te voeren, ${firstOwner.toLowerCase()} als eerste eigenaar te beleggen en direct de eerste 30-90 dagenverbeteractie te kiezen.`,
       tone: hasBroadWorkSignal ? 'amber' : 'emerald',
     },
     focusSectionIntro:

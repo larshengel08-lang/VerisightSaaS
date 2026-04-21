@@ -75,7 +75,7 @@ function buildProfileCards(args: {
     profiles.push({
       title: 'Groepsbeeld',
       value: 'Scherp retentiesignaal',
-      body: 'Hoge vertrekintentie en lage stay-intent vallen samen met werkfactoren of bevlogenheid die onder druk staan. Lees dit als scherp groepssignaal dat snelle verificatie en gerichte opvolging vraagt.',
+      body: 'Hoge vertrekintentie en zwakkere aanvullende signalen vallen samen met werkfactoren of bevlogenheid die onder druk staan. Lees dit als scherp groepssignaal dat snelle verificatie en gerichte opvolging vraagt.',
       tone: 'amber',
     })
   } else if (signalHigh && !turnoverHigh && stayLow) {
@@ -89,7 +89,7 @@ function buildProfileCards(args: {
     profiles.push({
       title: 'Groepsbeeld',
       value: 'Vermoeid maar nog verbonden',
-      body: 'De energie staat onder druk, maar stay-intent en vertrekintentie wijzen nog niet op acute uitstroom. Hier ligt de meeste winst vaak in herstel, werkdruk en prioriteiten.',
+      body: 'De energie staat onder druk, maar aanvullende signalen wijzen nog niet op acute uitstroom. Hier ligt de meeste winst vaak in herstel, werkdruk en prioriteiten.',
       tone: 'blue',
     })
   } else if (signalLow && !engagementLow && !turnoverHigh && !stayLow) {
