@@ -98,7 +98,6 @@ const QUALIFIED_ROUTE_OPTIONS: Array<{ value: ContactRouteInterest; label: strin
   { value: 'exitscan', label: 'ExitScan' },
   { value: 'retentiescan', label: 'RetentieScan' },
   { value: 'combinatie', label: 'Combinatie' },
-  { value: 'teamscan', label: 'TeamScan' },
   { value: 'onboarding', label: 'Onboarding 30-60-90' },
   { value: 'leadership', label: 'Leadership Scan' },
 ]

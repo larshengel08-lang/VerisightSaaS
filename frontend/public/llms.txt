@@ -2,20 +2,18 @@
 
 > Verisight helpt HR-teams bij organisaties vanaf circa 200 medewerkers om
 > eerst de juiste managementroute te kiezen: ExitScan voor vertrekduiding en
-> verloopanalyse, RetentieScan voor vroegsignalering op behoud, Pulse als
-> compacte vervolgroute na diagnose of baseline, TeamScan als bounded
-> lokalisatieroute na een breder signaal, onboarding als bounded
-> lifecycle-check voor nieuwe medewerkers, Leadership Scan als bounded
+> verloopanalyse, RetentieScan voor vroegsignalering op behoud, Onboarding
+> 30-60-90 als lifecycle-specifieke hoofdroute voor nieuwe medewerkers, Pulse als
+> compacte vervolgroute na diagnose of baseline, Leadership Scan als bounded
 > managementread na een bestaand people-signaal, of een bewuste combinatie van beide.
 
 ## Publieke routes
 
 - [Homepage](https://www.verisight.nl): routekeuze, proof en kennismaking
-- [Producten](https://www.verisight.nl/producten): overzicht van ExitScan, RetentieScan, Pulse, TeamScan, Onboarding 30-60-90, Leadership Scan en Combinatie
+- [Producten](https://www.verisight.nl/producten): overzicht van ExitScan, RetentieScan, Onboarding 30-60-90, Pulse, Leadership Scan en Combinatie
 - [ExitScan](https://www.verisight.nl/producten/exitscan): primaire route voor vertrekduiding en verloopanalyse
 - [RetentieScan](https://www.verisight.nl/producten/retentiescan): gerichte route voor medewerkersbehoud en vroegsignalering
 - [Pulse](https://www.verisight.nl/producten/pulse): compacte vervolgroute voor bounded managementreviews na diagnose of baseline
-- [TeamScan](https://www.verisight.nl/producten/teamscan): bounded lokalisatieroute voor veilige lokale verificatie na een breder signaal
 - [Onboarding 30-60-90](https://www.verisight.nl/producten/onboarding-30-60-90): bounded lifecycle-check voor assisted single-checkpoint managementreads bij nieuwe medewerkers
 - [Leadership Scan](https://www.verisight.nl/producten/leadership-scan): bounded group-level managementread zonder named leaders, manager ranking of 360-logica
 - [Tarieven](https://www.verisight.nl/tarieven): eerste trajecten, vervolgvormen en add-ons
@@ -26,11 +24,10 @@
 
 - ExitScan Baseline: EUR 2.950
 - RetentieScan Baseline: EUR 3.450
+- Onboarding 30-60-90: op aanvraag
 - ExitScan Live: op aanvraag
 - RetentieScan ritme: vanaf EUR 4.950
 - Pulse: op aanvraag
-- TeamScan: op aanvraag
-- Onboarding 30-60-90: op aanvraag
 - Leadership Scan: op aanvraag
 - Segment deep dive: EUR 950
 
