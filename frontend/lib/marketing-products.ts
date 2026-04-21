@@ -28,13 +28,13 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     shortLabel: 'ExitScan',
     tagline: 'Breng vertrekduiding scherp in beeld',
     description:
-      'Vertrekduiding en verloopanalyse op basis van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie voor HR, MT en directie, met compacte bestuurlijke handoff en expliciete leeswijzers over claims, privacy en interpretatie.',
+      'Vertrekduiding en verloopanalyse via Frictiescore, met terugkerende werkfactoren, vertrekredenen en werkfrictie als verklarende laag voor HR, MT en directie, plus compacte bestuurlijke handoff en expliciete leeswijzers over claims, privacy en interpretatie.',
     seoTitle: 'ExitScan | Verloopanalyse en vertrekduiding voor HR-teams',
     ogAlt: 'ExitScan productpagina van Verisight',
     serviceType: 'Vertrekduiding en managementrapportage',
     serviceAudience: 'HR-teams en directies die uitstroom achteraf willen duiden',
     serviceOutput:
-      'Cover, responslaag, bestuurlijke handoff, eerste managementsessie, vertrekduiding, signalen van werkfrictie, prioritaire werkfactoren en interpretatiekaders',
+      'Cover, responslaag, bestuurlijke handoff, eerste managementsessie, Frictiescore, werkfrictie als verklarende laag, prioritaire werkfactoren en interpretatiekaders',
     status: 'core_live',
     portfolioRole: 'core_product',
     href: '/producten/exitscan',
@@ -45,13 +45,13 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     shortLabel: 'RetentieScan',
     tagline: 'Zie eerder waar behoud onder druk staat',
     description:
-      'Vroegsignalering op medewerkersbehoud op groeps- en segmentniveau, met retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren in dezelfde managementlijn, inclusief compacte bestuurlijke handoff en zonder individuele voorspelling.',
+      'Vroegsignalering op medewerkersbehoud op groeps- en segmentniveau, met Retentiesignaal, aanvullende signalen zoals stay-intent en vertrekintentie, en beinvloedbare werkfactoren in dezelfde managementlijn, inclusief compacte bestuurlijke handoff en zonder individuele voorspelling.',
     seoTitle: 'RetentieScan | Medewerkersbehoud en vroegsignalering voor HR-teams',
     ogAlt: 'RetentieScan productpagina van Verisight',
-    serviceType: 'Vroegsignalering op behoud met retentiesignaal',
+    serviceType: 'Vroegsignalering op behoud met Retentiesignaal',
     serviceAudience: 'HR-teams en directies die behoud eerder zichtbaar willen maken',
     serviceOutput:
-      'Cover, compacte bestuurlijke read, retentiesignaal, stay-intent, vertrekintentie, bevlogenheid, topfactoren en groepsgerichte leeswijzers voor verificatie, opvolging en reviewmoment',
+      'Cover, compacte bestuurlijke read, Retentiesignaal, aanvullende signalen zoals stay-intent en vertrekintentie, bevlogenheid, topfactoren en groepsgerichte leeswijzers voor verificatie, opvolging en reviewmoment',
     status: 'core_live',
     portfolioRole: 'core_product',
     href: '/producten/retentiescan',

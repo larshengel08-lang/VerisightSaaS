@@ -105,7 +105,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       {
         title: 'Gebruik dezelfde taal, niet dezelfde conclusie',
         body: 'Leiderschap, groei, cultuur en werkbelasting spelen in beide scans een rol. Het verschil zit in de managementvraag en de manier waarop je de uitkomst gebruikt.',
-        question: 'Lezen we deze signalen als vertrekduiding of als vroegsignaal op behoud?',
+        question: 'Lezen we deze signalen als vertrekduiding via Frictiescore of als vroegsignalering via Retentiesignaal?',
       },
     ],
     proofNotes: [
@@ -150,7 +150,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       'ExitScan vat de top van het rapport samen in een compacte sponsor-read: wat speelt nu, waarom is dit bestuurlijk relevant en welke factoren kleuren dat beeld het sterkst.',
     boardroomPoints: [
       ['Wat speelt nu', 'Leiderschap en groeiperspectief kleuren het terugkerende vertrekbeeld.'],
-      ['Waarom telt dit nu', 'Een breed werksignaal maakt dit relevant voor managementprioritering en niet alleen voor HR-nazorg.'],
+      ['Waarom telt dit nu', 'De Frictiescore maakt dit relevant voor managementprioritering en niet alleen voor HR-nazorg.'],
       ['Wat niet concluderen', 'Dit is vertrekduiding op groepsniveau, geen bewijs van de ene oorzaak en geen garantie op lagere uitstroom.'],
     ],
     focusTitle: 'Wat moet management nu eerst bespreken?',
@@ -267,7 +267,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     proofNotes: [
       ['Cover + bestuurlijke read', 'De cover toont executive context en kernmetrics; daarna volgen respons, bestuurlijke handoff en de scherpste verificatiesporen in een aparte executive laag'],
       ['Bestuurlijke handoff', 'Compacte sponsor-read met wat nu speelt, waarom dat telt en expliciete watchout tegen overinterpretatie'],
-      ['Signaalmix', 'Retentiesignaal, stay-intent en vertrekintentie in een bestuurssamenvatting'],
+      ['Signaalmix', 'Retentiesignaal, aanvullende signalen zoals stay-intent en vertrekintentie in een bestuurssamenvatting'],
       ['Actielogica', 'Topfactoren en vervolgstappen voor 30-90 dagen, zonder individuele voorspelling'],
       ['Bewijsstatus', 'Inhoudelijk plausibel, intern consistent en testmatig beschermd; nog geen pragmatisch bewezen predictor'],
     ],
@@ -276,7 +276,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       'De preview maakt dezelfde grens zichtbaar als de huidige output: groeps- en segmentduiding voor verificatie en prioritering, zonder individuele predictor of performance-instrument te worden.',
     trustPoints: [
       ['Intended use', 'Vroegsignalering op behoud op groeps- en segmentniveau voor managementgesprek, verificatie en opvolging.'],
-      ['Wat management ziet', 'Retentiesignaal, stay-intent, vertrekintentie, bevlogenheid en topfactoren in een bestuurslaag.'],
+      ['Wat management ziet', 'Retentiesignaal, aanvullende signalen zoals stay-intent en vertrekintentie, bevlogenheid en topfactoren in een bestuurslaag.'],
       ['Privacygrens', 'Geen individuele signalen naar management, segmenten alleen bij voldoende n en open tekst alleen als groepssignaal.'],
       ['Bewijsstatus', 'V1-werkmodel: inhoudelijk plausibel, intern consistent en testmatig beschermd; geen bewezen predictor.'],
     ],

@@ -6,6 +6,7 @@ import {
   PORTFOLIO_ROUTE_MARKETING_PRODUCTS,
   RESERVED_MARKETING_PRODUCTS,
 } from '@/lib/marketing-products'
+import { SEO_SOLUTION_PAGES } from '@/lib/seo-solution-pages'
 import { exitScanDefinition } from '@/lib/products/exit/definition'
 import { retentionScanDefinition } from '@/lib/products/retention/definition'
 import {
@@ -57,7 +58,8 @@ describe('ExitScan positioning copy', () => {
 
     expect(exitProduct).toBeTruthy()
     expect(exitProduct?.description.toLowerCase()).toContain('vertrekduiding')
-    expect(exitProduct?.description.toLowerCase()).toContain('signalen van werkfrictie')
+    expect(exitProduct?.description.toLowerCase()).toContain('frictiescore')
+    expect(exitProduct?.description.toLowerCase()).toContain('werkfrictie als verklarende laag')
     expect(exitProduct?.description.toLowerCase()).not.toContain('voorspeller')
     expect(exitProduct?.description.toLowerCase()).not.toContain('diagnose')
     expect(exitScanDefinition.methodologyText.toLowerCase()).toContain('zonder oorzaken definitief vast te stellen')
@@ -72,7 +74,7 @@ describe('ExitScan positioning copy', () => {
     const exitRow = productOverviewComparisonRows.find((row) => row[0] === 'ExitScan')
     const differenceFaq = faqs.find(([question]) => question === 'Wat is het verschil tussen ExitScan en RetentieScan?')
 
-    expect(exitRow?.[2].toLowerCase()).toContain('vertrekbeeld')
+    expect(exitRow?.[2].toLowerCase()).toContain('frictiescore')
     expect(exitRow?.[2].toLowerCase()).toContain('werkfactoren')
     expect(exitRow?.[1].toLowerCase()).toContain('vertrekduiding')
     expect(differenceFaq?.[1].toLowerCase()).toContain('vertrek achteraf duiden')
@@ -127,7 +129,8 @@ describe('RetentieScan positioning copy', () => {
 
     expect(retentionProduct).toBeTruthy()
     expect(retentionProduct?.description.toLowerCase()).toContain('groeps')
-    expect(retentionProduct?.description.toLowerCase()).toContain('stay-intent')
+    expect(retentionProduct?.description.toLowerCase()).toContain('retentiesignaal')
+    expect(retentionProduct?.description.toLowerCase()).toContain('aanvullende signalen zoals stay-intent')
     expect(retentionProduct?.description.toLowerCase()).not.toContain('mto')
     expect(retentionProduct?.description.toLowerCase()).not.toContain('voorspeller')
     expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('geen brede mto')
@@ -170,5 +173,21 @@ describe('RetentieScan positioning copy', () => {
     expect(retentionLifecycle?.firstSale.toLowerCase()).toContain('actieve behoudsvraag')
     expect(retentionLifecycle?.nextStep.toLowerCase()).toContain('vaste buyer-facing vervolgvorm')
     expect(retentionLifecycle?.expansion.toLowerCase()).toContain('exitscan baseline')
+  })
+
+  it('keeps shared SEO solution pages anchored on Frictiescore and Retentiesignaal', () => {
+    const exitSolution = SEO_SOLUTION_PAGES.find((page) => page.slug === 'verloop-analyse')
+    const retentionSolution = SEO_SOLUTION_PAGES.find((page) => page.slug === 'medewerkersbehoud-analyse')
+
+    expect(exitSolution?.whyNowBody.toLowerCase()).toContain('frictiescore')
+    expect(exitSolution?.whyNowBody.toLowerCase()).toContain('werkfrictie als verklarende laag')
+    expect(exitSolution?.deliverables[0]?.toLowerCase()).toContain('frictiescore')
+    expect(exitSolution?.deliverables[1]?.toLowerCase()).toContain('werkfrictie als verklarende laag')
+    expect(exitSolution?.proofBody.toLowerCase()).toContain('frictiescore')
+
+    expect(retentionSolution?.whyNowBody.toLowerCase()).toContain('retentiesignaal')
+    expect(retentionSolution?.whyNowBody.toLowerCase()).toContain('aanvullende signalen zoals stay-intent')
+    expect(retentionSolution?.deliverables[0]?.toLowerCase()).toContain('retentiesignaal')
+    expect(retentionSolution?.deliverables[0]?.toLowerCase()).toContain('aanvullende signalen zoals stay-intent')
   })
 })

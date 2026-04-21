@@ -25,6 +25,8 @@ describe('contact qualification guidance', () => {
     expect(guidance.status).toBe('retention_primary')
     expect(guidance.recommendedCoreRoute).toBe('retentiescan')
     expect(guidance.followOnCandidateRoute).toBeNull()
+    expect(guidance.detail).toContain('Retentiesignaal')
+    expect(guidance.detail).not.toContain('stay-intent vraagstuk')
   })
 
   it('keeps combinatie bounded to genuine double questions', () => {
@@ -36,6 +38,10 @@ describe('contact qualification guidance', () => {
 
     expect(guidance.status).toBe('combination_candidate')
     expect(guidance.recommendedCoreRoute).toBe('combinatie')
+    expect(guidance.detail).toContain('Frictiescore')
+    expect(guidance.detail).toContain('Retentiesignaal')
+    expect(guidance.operatorSummary).toContain('Frictiescore')
+    expect(guidance.operatorSummary).toContain('Retentiesignaal')
   })
 
   it('treats follow-on routes as bounded vervolgkeuzes when a prior signal is explicitly present', () => {
