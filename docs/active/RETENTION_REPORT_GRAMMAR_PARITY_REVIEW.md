@@ -1,8 +1,8 @@
 # RETENTION_REPORT_GRAMMAR_PARITY_REVIEW.md
 
 Last updated: 2026-04-18
-Status: active
-Source of truth: deze review toetst de huidige RetentieScan-runtime en mirrors aan de gedeelde report grammar, zonder RetentieScan ten onrechte als vaste ExitScan-architectuur te behandelen.
+Status: active derived review
+Authoritative inputs: deze review toetst de huidige RetentieScan-runtime en mirrors aan de gedeelde report grammar, zonder RetentieScan ten onrechte als vaste ExitScan-architectuur te behandelen. De canonieke reporting truth lives in `docs/reporting/*`.
 
 ## Titel
 
@@ -14,7 +14,7 @@ RetentieScan blijkt inhoudelijk dicht op de gedeelde report grammar te zitten, m
 
 ## Wat is geaudit
 
-- [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md)
+- [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/REPORT_STRUCTURE_CANON.md)
 - [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md)
 - [report.py](/C:/Users/larsh/Desktop/Business/Verisight/backend/report.py)
 - [test_report_generation_smoke.py](/C:/Users/larsh/Desktop/Business/Verisight/tests/test_report_generation_smoke.py)
@@ -54,7 +54,7 @@ RetentieScan blijkt inhoudelijk dicht op de gedeelde report grammar te zitten, m
 
 - RetentieScan previewcopy aangepast in [report-preview-copy.ts](/C:/Users/larsh/Desktop/Business/Verisight/frontend/lib/report-preview-copy.ts)
 - RetentieScan productdetailcopy aangepast in [page.tsx](</C:/Users/larsh/Desktop/Business/Verisight/frontend/app/producten/[slug]/page.tsx>)
-- Canonnotities toegevoegd in [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md) en [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md)
+- Canonnotities toegevoegd in [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/REPORT_STRUCTURE_CANON.md) en [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md)
 - Previewtest geactualiseerd in [report-preview-copy.test.ts](/C:/Users/larsh/Desktop/Business/Verisight/frontend/lib/report-preview-copy.test.ts)
 
 ## Validatie
@@ -67,6 +67,6 @@ RetentieScan blijkt inhoudelijk dicht op de gedeelde report grammar te zitten, m
 - Deze review verandert geen RetentieScan-runtime in het rapport zelf.
 - `Managementsamenvatting` blijft als ondersteunende term bruikbaar, zolang niet wordt gesuggereerd dat dit een losse openingspagina is.
 
-## Next gate
+## Precedence rule
 
-De beste volgende stap is een gerichte `RetentieScan runtime cleanup` als we later ook de onderliggende builderstructuur scherper willen splitsen van oudere rebrandlogica.
+Deze review beschrijft een actuele paritylezing, maar is geen zelfstandige structuurcanon. Als deze review botst met `docs/reporting/REPORT_STRUCTURE_CANON.md`, `docs/reporting/REPORT_TRUTH_BASELINE.md` of `docs/reporting/REPORT_METHODOLOGY_CANON.md`, dan wint de reporting canon.
