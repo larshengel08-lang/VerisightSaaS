@@ -2,31 +2,31 @@
 
 :root {
   /* Brand tokens */
-  --ink:        #132033;
-  --navy:       #1B2E45;
+  --ink:        #101820;
+  --navy:       #0B1217;
   --petrol:     #234B57;
-  --bg:         #F7F5F1;
-  --surface:    #FFFFFF;
+  --bg:         #F5F2EA;
+  --surface:    #FFFCF7;
   --teal:       #3C8D8A;
-  --teal-light: #DCEFEA;
+  --teal-light: #D7EFE9;
   --text:       #4A5563;
-  --muted:      #9CA3AF;
-  --border:     #E5E0D6;
+  --muted:      #8B93A0;
+  --border:     #DDD7CB;
 
   /* Legacy compat */
   --background: var(--surface);
   --foreground: var(--ink);
 
   /* Layout */
-  --marketing-shell: 84rem;
-  --marketing-section-space: clamp(4rem, 6vw, 6.5rem);
-  --marketing-hero-space: clamp(3.5rem, 5.5vw, 5.75rem);
+  --marketing-shell: 86rem;
+  --marketing-section-space: clamp(4.25rem, 6vw, 6.85rem);
+  --marketing-hero-space: clamp(4rem, 5.5vw, 6.15rem);
 
   /* Shadows */
-  --marketing-shadow-soft: 0 20px 48px rgba(19, 32, 51, 0.06);
-  --marketing-shadow-strong: 0 28px 72px rgba(19, 32, 51, 0.11);
-  --dashboard-shadow-soft: 0 16px 42px rgba(19, 32, 51, 0.06);
-  --dashboard-shadow-strong: 0 18px 44px rgba(19, 32, 51, 0.1);
+  --marketing-shadow-soft: 0 8px 18px rgba(16, 24, 32, 0.025);
+  --marketing-shadow-strong: 0 12px 26px rgba(11, 18, 23, 0.05);
+  --dashboard-shadow-soft: 0 8px 18px rgba(16, 24, 32, 0.03);
+  --dashboard-shadow-strong: 0 12px 26px rgba(11, 18, 23, 0.06);
 }
 
 @theme inline {
@@ -126,8 +126,8 @@ details > summary::-webkit-details-marker {
   .marketing-panel {
     border: 1px solid var(--border);
     background: var(--surface);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1rem;
+    box-shadow: none;
+    border-radius: 1.08rem;
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -136,8 +136,8 @@ details > summary::-webkit-details-marker {
   .marketing-panel-soft {
     border: 1px solid var(--border);
     background: var(--bg);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1rem;
+    box-shadow: none;
+    border-radius: 1.08rem;
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -146,8 +146,8 @@ details > summary::-webkit-details-marker {
   .marketing-panel-dark {
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: var(--navy);
-    box-shadow: var(--marketing-shadow-strong);
-    border-radius: 1rem;
+    box-shadow: none;
+    border-radius: 1.08rem;
     color: var(--bg);
     width: 100%;
     min-width: 0;
@@ -157,10 +157,10 @@ details > summary::-webkit-details-marker {
   .marketing-stage {
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.09);
     background: var(--navy);
-    box-shadow: var(--marketing-shadow-strong);
-    border-radius: 1rem;
+    box-shadow: none;
+    border-radius: 1.08rem;
     color: var(--bg);
     width: 100%;
     min-width: 0;
@@ -172,18 +172,43 @@ details > summary::-webkit-details-marker {
     position: absolute;
     inset: 1px;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: calc(1rem - 1px);
+    border-radius: calc(1.08rem - 1px);
     pointer-events: none;
   }
 
   .marketing-hero-shell {
     padding-block: var(--marketing-hero-space);
+    position: relative;
+  }
+
+  .marketing-hero-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(16, 24, 32, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(16, 24, 32, 0.05) 1px, transparent 1px);
+    background-size: 64px 64px;
+    opacity: 0.14;
+    pointer-events: none;
+  }
+
+  .marketing-hero-shell::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 6rem;
+    background: linear-gradient(180deg, rgba(255, 252, 247, 0) 0%, rgba(255, 252, 247, 0.75) 100%);
+    pointer-events: none;
   }
 
   .marketing-hero-grid {
     display: grid;
     gap: clamp(1.5rem, 3vw, 2.75rem);
     align-items: start;
+    position: relative;
+    z-index: 1;
   }
 
   .marketing-hero-region-intro,
@@ -205,45 +230,48 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-hero-stage-surface {
-    padding: clamp(1.4rem, 2vw, 1.9rem);
+    padding: clamp(1.35rem, 2vw, 1.7rem);
   }
 
   .marketing-hero-eyebrow {
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.22em;
+    font-size: 0.84rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
   }
 
   .marketing-hero-title {
     margin: 0;
-    max-width: min(13ch, 100%);
+    max-width: min(14ch, 100%);
     text-wrap: pretty;
     overflow-wrap: break-word;
-    font-size: clamp(2.2rem, 7vw, 4.6rem);
-    line-height: 0.94;
+    font-size: clamp(2.35rem, 7vw, 5rem);
+    line-height: 0.91;
+    letter-spacing: -0.045em;
   }
 
   .marketing-hero-title-home {
     max-width: 100%;
-    font-size: clamp(2.35rem, 6.4vw, 4.45rem);
-    line-height: 0.97;
+    font-size: clamp(2.7rem, 6.15vw, 5.25rem);
+    line-height: 0.92;
+    letter-spacing: -0.05em;
   }
 
   .marketing-hero-title-page {
-    max-width: min(14ch, 100%);
-    font-size: clamp(2rem, 6vw, 4.1rem);
+    max-width: 100%;
+    font-size: clamp(2.5rem, 5.2vw, 4.1rem);
+    line-height: 1.02;
   }
 
   .marketing-hero-title-detail {
-    max-width: min(13ch, 100%);
+    max-width: min(15ch, 100%);
     font-size: clamp(2rem, 6vw, 3.85rem);
   }
 
   .marketing-hero-copy {
-    max-width: 41rem;
-    font-size: 1rem;
-    line-height: 1.9;
+    max-width: 52rem;
+    font-size: 1.05rem;
+    line-height: 1.72;
   }
 
   .marketing-hero-cta-row {
@@ -270,9 +298,9 @@ details > summary::-webkit-details-marker {
   .marketing-support-note {
     border: 1px solid var(--border);
     background: var(--surface);
-    border-radius: 1rem;
+    border-radius: 0.85rem;
     padding: 1rem 1.15rem;
-    box-shadow: var(--marketing-shadow-soft);
+    box-shadow: none;
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -286,9 +314,9 @@ details > summary::-webkit-details-marker {
   .marketing-link-card {
     border: 1px solid var(--border);
     background: var(--surface);
-    border-radius: 1rem;
+    border-radius: 0.85rem;
     padding: 0.95rem 1rem;
-    box-shadow: var(--marketing-shadow-soft);
+    box-shadow: none;
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -297,8 +325,8 @@ details > summary::-webkit-details-marker {
   .marketing-stage-tag {
     display: inline-flex;
     align-items: center;
-    border-radius: 9999px;
-    padding: 0.35rem 0.75rem;
+    border-radius: 0.6rem;
+    padding: 0.38rem 0.68rem;
     font-size: 0.7rem;
     font-weight: 600;
     letter-spacing: 0.18em;
@@ -307,16 +335,16 @@ details > summary::-webkit-details-marker {
 
   .marketing-stage-title {
     margin: 0;
-    max-width: min(15ch, 100%);
+    max-width: min(18ch, 100%);
     font-size: clamp(1.8rem, 4vw, 3.3rem);
     line-height: 0.98;
     text-wrap: pretty;
   }
 
   .marketing-stage-copy {
-    max-width: 40rem;
+    max-width: 44rem;
     font-size: 0.98rem;
-    line-height: 1.85;
+    line-height: 1.78;
   }
 
   .marketing-stage-list {
@@ -325,10 +353,10 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-stage-list-item {
-    border-radius: 1.35rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
-    padding: 0.95rem 1rem;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.9rem 0.95rem;
   }
 
   .marketing-preview-shell {
@@ -338,9 +366,9 @@ details > summary::-webkit-details-marker {
 
   .marketing-feature-card {
     border: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 245, 241, 0.98) 100%);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1.35rem;
+    background: rgba(255, 252, 247, 0.96);
+    box-shadow: none;
+    border-radius: 0.95rem;
     padding: 1.35rem;
   }
 
@@ -353,28 +381,28 @@ details > summary::-webkit-details-marker {
 
   .marketing-route-card {
     border: 1px solid var(--border);
-    background: linear-gradient(180deg, #ffffff 0%, #fbfaf8 100%);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1.5rem;
-    padding: 1.5rem;
+    background: rgba(255, 252, 247, 0.96);
+    box-shadow: none;
+    border-radius: 1rem;
+    padding: 1.35rem;
   }
 
   .marketing-route-card-dark {
     border: 1px solid rgba(255, 255, 255, 0.08);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
-    box-shadow: var(--marketing-shadow-strong);
-    border-radius: 1.5rem;
-    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: none;
+    border-radius: 1rem;
+    padding: 1.35rem;
   }
 
   .marketing-chip {
     display: inline-flex;
     align-items: center;
-    border-radius: 9999px;
+    border-radius: 0.6rem;
     border: 1px solid var(--border);
-    background: rgba(255, 255, 255, 0.7);
-    padding: 0.45rem 0.85rem;
-    font-size: 0.72rem;
+    background: rgba(255, 255, 255, 0.55);
+    padding: 0.34rem 0.6rem;
+    font-size: 0.68rem;
     font-weight: 600;
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -384,11 +412,11 @@ details > summary::-webkit-details-marker {
   .marketing-chip-dark {
     display: inline-flex;
     align-items: center;
-    border-radius: 9999px;
+    border-radius: 0.6rem;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(255, 255, 255, 0.06);
-    padding: 0.45rem 0.85rem;
-    font-size: 0.72rem;
+    padding: 0.34rem 0.6rem;
+    font-size: 0.68rem;
     font-weight: 600;
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -403,9 +431,9 @@ details > summary::-webkit-details-marker {
   .marketing-proof-frame {
     overflow: hidden;
     border: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 245, 241, 0.92) 100%);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1.75rem;
+    background: rgba(255, 252, 247, 0.98);
+    box-shadow: none;
+    border-radius: 1.08rem;
   }
 
   .marketing-divider-title {
@@ -431,8 +459,8 @@ details > summary::-webkit-details-marker {
     position: relative;
     border: 1px solid var(--border);
     background: var(--surface);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1.5rem;
+    box-shadow: none;
+    border-radius: 0.95rem;
     padding: 1.5rem;
   }
 
@@ -454,22 +482,22 @@ details > summary::-webkit-details-marker {
   .dashboard-surface {
     border: 1px solid var(--border);
     background: var(--surface);
-    box-shadow: var(--dashboard-shadow-soft);
-    border-radius: 1.5rem;
+    box-shadow: none;
+    border-radius: 1.08rem;
   }
 
   .dashboard-surface-soft {
     border: 1px solid var(--border);
     background: var(--bg);
-    box-shadow: var(--dashboard-shadow-soft);
-    border-radius: 1.5rem;
+    box-shadow: none;
+    border-radius: 1.08rem;
   }
 
   .dashboard-surface-accent {
     border: 1px solid rgba(35, 75, 87, 0.14);
     background: #f3f8f8;
-    box-shadow: var(--dashboard-shadow-soft);
-    border-radius: 1.5rem;
+    box-shadow: none;
+    border-radius: 1.08rem;
   }
 
   .dashboard-hierarchy-label {
@@ -497,12 +525,12 @@ details > summary::-webkit-details-marker {
 
   .marketing-text-title-lg {
     margin: 0;
-    max-width: min(18ch, 100%);
+    max-width: min(20ch, 100%);
     font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
-    font-size: clamp(1.8rem, 3.8vw, 2.7rem);
+    font-size: clamp(2rem, 3.8vw, 3rem);
     font-weight: 300;
-    line-height: 1.05;
-    letter-spacing: -0.03em;
+    line-height: 1;
+    letter-spacing: -0.04em;
     color: var(--ink);
     text-wrap: pretty;
   }
@@ -511,10 +539,10 @@ details > summary::-webkit-details-marker {
     margin: 0;
     max-width: min(22ch, 100%);
     font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
-    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    font-size: clamp(1.55rem, 3.2vw, 2.05rem);
     font-weight: 300;
-    line-height: 1.12;
-    letter-spacing: -0.02em;
+    line-height: 1.06;
+    letter-spacing: -0.03em;
     color: var(--ink);
     text-wrap: pretty;
   }
@@ -543,13 +571,14 @@ details > summary::-webkit-details-marker {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 9999px;
-    background: var(--teal);
-    padding: 0.8rem 1.5rem;
-    font-size: 0.9rem;
-    font-weight: 600;
+    border-radius: 0.58rem;
+    background: var(--ink);
+    min-height: 2.72rem;
+    padding: 0.72rem 1.08rem;
+    font-size: 0.845rem;
+    font-weight: 500;
     color: white;
-    box-shadow: 0 16px 40px rgba(60, 141, 138, 0.18);
+    box-shadow: none;
     transition:
       transform 180ms ease,
       background-color 180ms ease,
@@ -558,8 +587,8 @@ details > summary::-webkit-details-marker {
 
   .marketing-button-primary:hover {
     transform: translateY(-1px);
-    background: #2d6e6b;
-    box-shadow: 0 20px 44px rgba(60, 141, 138, 0.24);
+    background: #1b2a38;
+    box-shadow: none;
   }
 
   .marketing-button-primary-warm {
@@ -589,12 +618,13 @@ details > summary::-webkit-details-marker {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 9999px;
+    border-radius: 0.58rem;
     border: 1px solid var(--border);
-    background: var(--surface);
-    padding: 0.8rem 1.5rem;
-    font-size: 0.9rem;
-    font-weight: 600;
+    background: rgba(255, 252, 247, 0.92);
+    min-height: 2.68rem;
+    padding: 0.72rem 1.02rem;
+    font-size: 0.845rem;
+    font-weight: 500;
     color: var(--text);
     transition:
       border-color 180ms ease,
@@ -612,10 +642,10 @@ details > summary::-webkit-details-marker {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 9999px;
+    border-radius: 0.58rem;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(255, 255, 255, 0.06);
-    padding: 0.8rem 1.5rem;
+    padding: 0.72rem 1.08rem;
     font-size: 0.9rem;
     font-weight: 600;
     color: rgba(247, 245, 241, 0.9);
@@ -647,9 +677,9 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-nav-link {
-    border-radius: 9999px;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.9rem;
+    border-radius: 0.45rem;
+    padding: 0.35rem 0.15rem;
+    font-size: 0.875rem;
     color: var(--text);
     transition:
       background-color 180ms ease,
@@ -657,12 +687,12 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-nav-link:hover {
-    background: var(--bg);
+    background: transparent;
     color: var(--ink);
   }
 
   .marketing-nav-link-active {
-    background: var(--bg);
+    background: transparent;
     font-weight: 500;
     color: var(--ink);
   }
@@ -684,7 +714,7 @@ details > summary::-webkit-details-marker {
     width: 2.75rem;
     align-items: center;
     justify-content: center;
-    border-radius: 9999px;
+    border-radius: 0.58rem;
     border: 1px solid var(--border);
     background: var(--surface);
     color: var(--text);
@@ -697,11 +727,11 @@ details > summary::-webkit-details-marker {
 
   .marketing-mobile-menu {
     margin-top: 1rem;
-    border-radius: 1rem;
+    border-radius: 0.9rem;
     border: 1px solid var(--border);
     background: var(--surface);
     padding: 1rem;
-    box-shadow: 0 24px 60px rgba(19, 32, 51, 0.08);
+    box-shadow: 0 12px 26px rgba(16, 24, 32, 0.06);
   }
 
   .marketing-mobile-nav-link {
@@ -736,8 +766,8 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-detail-eyebrow {
-    font-size: 0.68rem;
-    font-weight: 700;
+    font-size: 0.84rem;
+    font-weight: 500;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--teal);
@@ -745,7 +775,7 @@ details > summary::-webkit-details-marker {
 
   .marketing-detail-title {
     margin-top: 0.75rem;
-    max-width: min(22ch, 100%);
+    max-width: min(26ch, 100%);
     font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
     font-size: clamp(1.8rem, 4vw, 2.6rem);
     font-weight: 300;
@@ -781,22 +811,22 @@ details > summary::-webkit-details-marker {
   .marketing-detail-panel {
     border: 1px solid var(--border);
     background: var(--surface);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1rem;
+    box-shadow: none;
+    border-radius: 0.95rem;
     padding: 1.25rem;
   }
 
   .marketing-detail-panel-soft {
     border: 1px solid var(--border);
     background: var(--bg);
-    border-radius: 1rem;
+    border-radius: 0.95rem;
     padding: 1.25rem;
   }
 
   .marketing-detail-dark-card {
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(247, 245, 241, 0.06);
-    border-radius: 1rem;
+    border-radius: 0.95rem;
     padding: 1.25rem;
   }
 
@@ -849,22 +879,22 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-footer {
-    border-top: 1px solid #20344d;
-    background: linear-gradient(180deg, var(--ink) 0%, #16263c 100%);
+    border-top: 1px solid rgba(255, 252, 247, 0.08);
+    background: var(--ink);
     color: var(--bg);
   }
 
   .marketing-footer-grid {
     display: grid;
-    gap: 2.5rem;
-    padding-block: 4rem;
+    gap: 2rem;
+    padding-block: 3.5rem;
   }
 
   .marketing-footer-title {
-    margin-bottom: 1rem;
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.18em;
+    margin-bottom: 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--teal);
   }
@@ -884,14 +914,13 @@ details > summary::-webkit-details-marker {
 
   .marketing-footer-chip {
     display: inline-flex;
-    border-radius: 9999px;
+    border-radius: 0.58rem;
     border: 1px solid rgba(247, 245, 241, 0.12);
     background: rgba(247, 245, 241, 0.05);
-    padding: 0.5rem 1rem;
+    padding: 0.56rem 0.9rem;
     font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 0.1em;
     color: rgba(247, 245, 241, 0.7);
   }
 
@@ -977,11 +1006,11 @@ details > summary::-webkit-details-marker {
       max-width: none;
     }
 
-    .marketing-hero-grid-home .marketing-hero-copy {
-      max-width: 44rem;
-      font-size: 1.05rem;
-      line-height: 1.85;
-    }
+      .marketing-hero-grid-home .marketing-hero-copy {
+        max-width: 48rem;
+        font-size: 1.02rem;
+        line-height: 1.76;
+      }
 
     .marketing-hero-support-block {
       grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
@@ -991,12 +1020,12 @@ details > summary::-webkit-details-marker {
     .marketing-hero-grid-approach .marketing-hero-title,
     .marketing-hero-grid-support .marketing-hero-title,
     .marketing-hero-grid-overview .marketing-hero-title {
-      max-width: min(15ch, 100%);
+      max-width: min(18ch, 100%);
       font-size: clamp(2rem, 4vw, 3.55rem);
     }
 
     .marketing-hero-grid-product .marketing-hero-title {
-      max-width: min(13ch, 100%);
+      max-width: min(16ch, 100%);
       font-size: clamp(2rem, 4vw, 3.75rem);
     }
 

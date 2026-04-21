@@ -6,9 +6,10 @@ export function PublicFooter() {
   const productLinks = [
     { href: '/producten/exitscan', label: 'ExitScan' },
     { href: '/producten/retentiescan', label: 'RetentieScan' },
-    { href: '/producten/pulse', label: 'Pulse' },
     { href: '/producten/teamscan', label: 'TeamScan' },
     { href: '/producten/onboarding-30-60-90', label: 'Onboarding 30-60-90' },
+    { href: '/producten/pulse', label: 'Pulse' },
+    { href: '/producten/leadership-scan', label: 'Leadership Scan' },
   ]
 
   const navLinks = [
@@ -22,15 +23,15 @@ export function PublicFooter() {
       <div className="marketing-shell marketing-footer-grid">
         <div>
           <Wordmark size="sm" showTagline={false} light />
-          <p className="marketing-footer-copy mt-4 max-w-sm text-sm leading-7">
+          <p className="marketing-footer-copy mt-4 max-w-[31rem] text-sm leading-7">
             Verisight helpt HR en management scherp zien welke vertrek- en retentiesignalen aandacht vragen, zodat
             prioriteiten duidelijk worden.
           </p>
           <p className="mt-5 text-xs uppercase tracking-[0.12em] text-[rgba(247,245,241,0.5)]">
             Voor organisaties met 200+ medewerkers
           </p>
-          <div className="marketing-footer-chip mt-6">
-            Boardroom-ready dashboards en rapporten
+          <div className="mt-6 inline-flex rounded-[0.58rem] border border-[rgba(247,245,241,0.12)] bg-[rgba(247,245,241,0.05)] px-3 py-2 text-[12px] text-[rgba(247,245,241,0.72)]">
+            Dashboard en rapport in een managementlijn
           </div>
         </div>
 

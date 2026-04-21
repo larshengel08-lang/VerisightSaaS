@@ -42,11 +42,11 @@ export function SampleShowcaseCard({
   const palette = toneClasses[tone]
 
   return (
-    <div className={`min-w-0 rounded-[1.75rem] border p-6 shadow-sm ${palette.card}`}>
-      <p className={`text-xs font-bold uppercase tracking-[0.22em] ${palette.eyebrow}`}>{eyebrow}</p>
-      <h3 className={`mt-4 text-2xl font-semibold ${palette.title}`}>{title}</h3>
+    <div className={`min-w-0 rounded-[1.08rem] border p-6 shadow-none ${palette.card}`}>
+      <p className={`text-[0.8rem] font-medium uppercase tracking-[0.18em] ${palette.eyebrow}`}>{eyebrow}</p>
+      <h3 className={`mt-3 text-[1.8rem] font-light leading-[1.04] tracking-[-0.04em] ${palette.title}`}>{title}</h3>
       <p className={`mt-4 text-sm leading-7 ${palette.body}`}>{body}</p>
-      <div className={`mt-5 rounded-2xl border px-4 py-4 text-sm leading-7 ${palette.note}`}>
+      <div className={`mt-5 rounded-[0.95rem] border px-4 py-4 text-sm leading-7 ${palette.note}`}>
         <p className="font-semibold">{asset.label}</p>
         <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] opacity-75">
           {getEvidenceTierLabel(asset.evidenceTier)} - {asset.buyerUse}
@@ -60,7 +60,7 @@ export function SampleShowcaseCard({
             href={asset.publicHref}
             target="_blank"
             rel="noreferrer"
-            className={`inline-flex rounded-full border px-5 py-2.5 text-sm font-semibold transition-colors ${palette.button}`}
+            className={`inline-flex rounded-[0.58rem] border px-5 py-2.5 text-sm font-semibold transition-colors ${palette.button}`}
           >
             {linkLabel}
           </a>

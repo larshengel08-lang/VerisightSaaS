@@ -1,12 +1,12 @@
 'use client'
 
-import Image from 'next/image'
 import { useState } from 'react'
 import {
   REPORT_PREVIEW_COPY,
   type ReportPreviewFactorCard,
   type ReportPreviewVariant,
 } from '@/lib/report-preview-copy'
+import { SegmentDeepDiveVisual } from '@/components/marketing/report-visuals'
 
 interface PreviewSliderProps {
   variant?: ReportPreviewVariant
@@ -37,7 +37,7 @@ function DashboardCanvas({ variant }: { variant: ReportPreviewVariant }) {
   const copy = COPY[variant]
 
   return (
-    <div className="rounded-[1.9rem] border border-slate-200 bg-slate-950 p-5 text-white">
+    <div className="rounded-[1.08rem] border border-slate-200 bg-slate-950 p-5 text-white">
       <div className="mb-5 flex items-center gap-2">
         <span className="h-3 w-3 rounded-full bg-red-400" />
         <span className="h-3 w-3 rounded-full bg-amber-300" />
@@ -46,14 +46,14 @@ function DashboardCanvas({ variant }: { variant: ReportPreviewVariant }) {
       </div>
       <div className="grid gap-3 sm:grid-cols-4">
         {copy.kpis.map(([label, value, detail]) => (
-          <div key={label} className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
+          <div key={label} className="rounded-[0.95rem] border border-white/10 bg-white/5 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
             <p className="mt-2 text-lg font-bold text-white">{value}</p>
             <p className="mt-1 text-xs text-slate-400">{detail}</p>
           </div>
         ))}
       </div>
-      <div className="mt-5 rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
+      <div className="mt-5 rounded-[0.95rem] border border-white/10 bg-white/5 p-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{copy.focusTitle}</p>
         <div className="mt-4 space-y-3">
           {copy.dashboardRows.map((row) => {
@@ -80,7 +80,7 @@ function FactorCard({ card }: { card: ReportPreviewFactorCard }) {
   const signalWidth = card.signalDisplay ? `${Number(card.signalDisplay.replace('/10', '').replace(',', '.')) * 10}%` : '0%'
 
   return (
-    <div className={`rounded-[1.35rem] border p-4 ${tone.surface}`}>
+    <div className={`rounded-[0.95rem] border p-4 ${tone.surface}`}>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-slate-900">{card.label}</p>
         <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${tone.badge}`}>{card.band}</span>
@@ -93,7 +93,7 @@ function FactorCard({ card }: { card: ReportPreviewFactorCard }) {
       </div>
       {card.showSignal && card.signalDisplay ? (
         <>
-          <div className="mt-3 rounded-[1rem] border border-white/70 bg-white/80 px-3 py-2">
+          <div className="mt-3 rounded-[0.8rem] border border-white/70 bg-white/80 px-3 py-2">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Verdieping</p>
             <p className="mt-1 text-sm font-semibold text-slate-900">Signaalsterkte {card.signalDisplay}</p>
           </div>
@@ -114,7 +114,7 @@ function FactorCanvas({ variant }: { variant: ReportPreviewVariant }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4">
+      <div className="rounded-[0.95rem] border border-slate-200 bg-slate-50 px-5 py-4">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
           Uit het managementrapport - Organisatiefactoren
         </p>
@@ -134,7 +134,7 @@ function HypothesisCanvas({ variant }: { variant: ReportPreviewVariant }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4">
+      <div className="rounded-[0.95rem] border border-slate-200 bg-slate-50 px-5 py-4">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
           Uit het managementrapport - Duiding en vervolgstappen
         </p>
@@ -142,10 +142,10 @@ function HypothesisCanvas({ variant }: { variant: ReportPreviewVariant }) {
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
         {copy.hypotheses.map(({ title, body, question }) => (
-          <div key={title} className="rounded-[1.5rem] border border-[#DCEFEA] bg-[#F4FAF8] p-5">
+          <div key={title} className="rounded-[0.95rem] border border-[#DCEFEA] bg-[#F4FAF8] p-5">
             <p className="text-sm font-bold text-slate-950">{title}</p>
             <p className="mt-3 text-sm leading-6 text-slate-700">{body}</p>
-            <div className="mt-4 rounded-[1.15rem] border border-white/80 bg-white/90 p-4">
+            <div className="mt-4 rounded-[0.85rem] border border-white/80 bg-white/90 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-[#3C8D8A]">Te toetsen vraag</p>
               <p className="mt-2 text-sm leading-6 text-slate-800">{question}</p>
             </div>
@@ -173,7 +173,7 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3C8D8A]">{copy.label}</p>
           <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">{copy.intro}</p>
         </div>
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <span className="rounded-[0.58rem] border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
           {copy.demoLabel}
         </span>
       </div>
@@ -184,7 +184,7 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
             key={label}
             type="button"
             onClick={() => setCurrent(index)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+            className={`rounded-[0.58rem] px-4 py-2 text-sm font-semibold transition-colors ${
               index === current
                 ? 'bg-[#234B57] text-white'
                 : 'border border-[#E5E0D6] bg-white text-slate-600 hover:border-[#3C8D8A] hover:text-[#234B57]'
@@ -201,11 +201,11 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
         </div>
 
         <div className="grid gap-4 self-start">
-          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-5">
+          <div className="rounded-[1.08rem] border border-slate-200 bg-white p-5">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Wat deze preview laat zien</p>
             <div className="mt-4 space-y-3">
               {copy.proofNotes.slice(0, 3).map(([title, body]) => (
-                <div key={title} className="rounded-[1.15rem] border border-slate-200 bg-slate-50 px-4 py-3">
+                <div key={title} className="rounded-[0.85rem] border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-sm font-semibold text-slate-950">{title}</p>
                   <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
                 </div>
@@ -213,25 +213,21 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
             </div>
           </div>
 
-          <div className="rounded-[1.6rem] border border-[#DCEFEA] bg-[#F4FAF8] p-5">
+          <div className="rounded-[1.08rem] border border-[#DCEFEA] bg-[#F4FAF8] p-5">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3C8D8A]">Belangrijke nuance</p>
             <p className="mt-3 text-sm leading-7 text-slate-700">{copy.nuance}</p>
           </div>
 
-          <div className="overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white">
+          <div className="overflow-hidden rounded-[1.08rem] border border-slate-200 bg-white">
             <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
               <div>
                 <p className="text-sm font-semibold text-slate-950">{copy.supportVisualTitle}</p>
                 <p className="mt-1 text-xs leading-5 text-slate-500">{copy.demoBody}</p>
               </div>
             </div>
-            <Image
-              src="/segment-deep-dive-preview.png"
-              alt={copy.supportVisualAlt}
-              width={1600}
-              height={960}
-              className="max-h-[26rem] w-full object-cover"
-            />
+            <div className="p-4">
+              <SegmentDeepDiveVisual />
+            </div>
           </div>
         </div>
       </div>

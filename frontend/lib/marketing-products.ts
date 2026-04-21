@@ -56,6 +56,40 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     portfolioRole: 'core_product',
     href: '/producten/retentiescan',
   },
+  {
+    slug: 'teamscan',
+    label: 'TeamScan',
+    shortLabel: 'TeamScan',
+    tagline: 'Lokale verificatie als gerichte hoofdroute',
+    description:
+      'Gerichte hoofdroute voor lokale verificatie wanneer de vraag draait om welk team of welke afdeling nu als eerste aandacht vraagt. TeamScan blijft smaller dan ExitScan of RetentieScan, maar is wel een volwaardige route met eigen managementread en eerste handoff.',
+    seoTitle: 'TeamScan | Lokale verificatie en gerichte teamprioritering',
+    ogAlt: 'TeamScan productpagina van Verisight',
+    serviceType: 'Lokale verificatie en gerichte teamprioritering',
+    serviceAudience: 'HR-teams en directies die een lokale verificatievraag als eerste route willen openen',
+    serviceOutput:
+      'Lokale prioriteitsread, team- of afdelingsbeeld, eerste managementhandoff en gerichte vervolgstap zonder manager ranking',
+    status: 'core_live',
+    portfolioRole: 'core_product',
+    href: '/producten/teamscan',
+  },
+  {
+    slug: 'onboarding-30-60-90',
+    label: 'Onboarding 30-60-90',
+    shortLabel: 'Onboarding 30-60-90',
+    tagline: 'Vroege lifecycle-check als eigen hoofdroute',
+    description:
+      'Lifecycle-specifieke hoofdroute voor organisaties die vroeg willen zien hoe nieuwe medewerkers landen in rol, leiding, team en werkcontext. Geen journey-suite, wel een volwaardige managementroute met checkpoint-read, eerste eigenaar en eerste actie.',
+    seoTitle: 'Onboarding 30-60-90 | Vroege lifecycle-check voor nieuwe medewerkers',
+    ogAlt: 'Onboarding 30-60-90 productpagina van Verisight',
+    serviceType: 'Vroege lifecycle-check en checkpoint managementread',
+    serviceAudience: 'HR-teams en directies die onboarding als eigen managementvraag willen openen',
+    serviceOutput:
+      'Checkpointsignaal, owner, eerste actie en managementhandoff voor vroege onboardingduiding',
+    status: 'core_live',
+    portfolioRole: 'core_product',
+    href: '/producten/onboarding-30-60-90',
+  },
 ]
 
 export const PORTFOLIO_ROUTE_MARKETING_PRODUCTS: MarketingProduct[] = [
@@ -94,40 +128,6 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     status: 'bounded_live',
     portfolioRole: 'follow_on_route',
     href: '/producten/pulse',
-  },
-  {
-    slug: 'teamscan',
-    label: 'TeamScan',
-    shortLabel: 'TeamScan',
-    tagline: 'Lokale verificatie na een breder signaal',
-    description:
-      'Bounded vervolgroute voor department-first lokalisatie nadat een breder signaal al zichtbaar is. Bedoeld voor lokale verificatie en prioriteit, niet voor manager ranking of brede teamsoftware.',
-    seoTitle: 'TeamScan | Lokale verificatie na een breder signaal',
-    ogAlt: 'TeamScan productpagina van Verisight',
-    serviceType: 'Lokale verificatie en bounded teamprioritering',
-    serviceAudience: 'HR-teams en directies die na een breder signaal lokale verificatie willen starten',
-    serviceOutput:
-      'Lokale prioriteitsread, bounded managementhandoff en suppressie-aware lokale duiding',
-    status: 'bounded_live',
-    portfolioRole: 'follow_on_route',
-    href: '/producten/teamscan',
-  },
-  {
-    slug: 'onboarding-30-60-90',
-    label: 'Onboarding 30-60-90',
-    shortLabel: 'Onboarding 30-60-90',
-    tagline: 'Vroege lifecycle-check voor nieuwe medewerkers',
-    description:
-      'Bounded vervolgroute voor een assisted single-checkpoint onboardingread. Bedoeld om vroege landing en eerste frictie zichtbaar te maken, niet als journey-engine of brede lifecycle-suite.',
-    seoTitle: 'Onboarding 30-60-90 | Vroege lifecycle-check voor nieuwe medewerkers',
-    ogAlt: 'Onboarding 30-60-90 productpagina van Verisight',
-    serviceType: 'Assisted single-checkpoint onboardingread',
-    serviceAudience: 'HR-teams en directies die een vroege onboardingcheck buyer-facing willen openen',
-    serviceOutput:
-      'Checkpointsignaal, owner, eerste actie en bounded managementhandoff zonder brede journey-claims',
-    status: 'bounded_live',
-    portfolioRole: 'follow_on_route',
-    href: '/producten/onboarding-30-60-90',
   },
   {
     slug: 'leadership-scan',

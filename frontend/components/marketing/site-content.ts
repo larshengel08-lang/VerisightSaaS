@@ -41,28 +41,35 @@ export const homepageProductRoutes = [
   {
     name: 'ExitScan',
     title: 'Waarom zijn mensen vertrokken?',
-    body: 'Breng vertrekpatronen in beeld en begrijp welke werkfactoren het meest meespelen. Met een rapport dat u intern kunt bespreken.',
+    body: 'Breng vertrekpatronen in beeld en zie welke werkfactoren steeds terugkomen in het rapport voor HR, MT en directie.',
     href: '/producten/exitscan',
     accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
-    chip: 'Meest gekozen',
+    chip: 'Terugkijken',
   },
   {
     name: 'RetentieScan',
     title: 'Waar staat behoud nu onder druk?',
-    body: 'Zie waar behoud bij actieve medewerkers onder druk staat, voordat mensen weggaan. Op groepsniveau, zonder individuele signalen naar management.',
+    body: 'Zie waar behoud bij actieve medewerkers onder druk staat voordat mensen weggaan, op groepsniveau en zonder individuele signalen naar management.',
     href: '/producten/retentiescan',
     accent: 'border-[#DCEFEA] bg-[#F7F5F1]',
-    chip: 'Preventief',
+    chip: 'Vooruitkijken',
   },
   {
     name: 'Combinatie',
     title: 'Beide vragen in één aanpak',
-    body: 'Als zowel vertrek als behoud spelen en u ze bewust wilt combineren nadat de eerste route helder staat.',
+    body: 'Als zowel vertrek als behoud spelen en u die bewust later wilt combineren nadat de eerste route helder staat.',
     href: '/producten/combinatie',
     accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
-    chip: 'Op aanvraag',
+    chip: 'Later combineren',
   },
 ] as const
+
+export const homepageCoreProductRoutes = homepageProductRoutes.slice(0, 2)
+
+export const homepagePortfolioRoute = {
+  ...homepageProductRoutes[2],
+  label: 'Later uitbreiden',
+} as const
 
 export const homepageComparisonRows = [
   [
@@ -114,23 +121,107 @@ export const homepageUtilityLinks = [
 export const productOverviewComparisonRows = [
   [
     'ExitScan',
+    'Hoofdroute',
     'Vertrekduiding',
-    'Welk vertrekbeeld keert terug en welke werkfactoren wegen daarin mee?',
-    'Voor terugkijkende analyse op uitstroom',
+    'Begrijpen waarom mensen vertrokken en welke werkfactoren daarin terugkeren.',
+    'Vaak de eerste entree wanneer de vraag begint bij uitstroom.',
   ],
   [
     'RetentieScan',
-    'Vroegsignalering op behoud',
-    'Waar staat behoud nu onder druk in de actieve populatie?',
-    'Voor vroegsignalering en prioritering',
+    'Hoofdroute',
+    'Behoud en vroegsignalering',
+    'Eerder zien waar behoud nu onder druk staat in de actieve populatie.',
+    'Complementaire hoofdroute wanneer behoud de eerste vraag is.',
+  ],
+  [
+    'TeamScan',
+    'Hoofdroute',
+    'Gerichte verificatie',
+    'Zien welk team of welke afdeling nu als eerste lokale aandacht vraagt.',
+    'Eigen peer product, maar commercieel smaller dan ExitScan of RetentieScan.',
+  ],
+  [
+    'Onboarding 30-60-90',
+    'Hoofdroute',
+    'Vroege lifecycle-check',
+    'Toetsen hoe nieuwe medewerkers landen in rol, leiding, team en werkcontext.',
+    'Lifecycle-specifieke hoofdroute met een eigen managementvraag.',
+  ],
+  [
+    'Pulse',
+    'Add-on',
+    'Compacte review',
+    'Kort volgen wat er nu verschuift na een eerste diagnose of actie.',
+    'Pas logisch nadat een eerste hoofdroute al liep.',
+  ],
+  [
+    'Leadership Scan',
+    'Add-on',
+    'Managementcontext',
+    'Verdiepen waar managementcontext na een bestaand signaal als eerste aandacht vraagt.',
+    'Geen hoofdproduct, wel gerichte verdieping na een bestaand signaal.',
   ],
   [
     'Combinatie',
-    'Portfolio-aanpak',
-    'Hoe verbinden we vertrekduiding en vroegsignalering in een managementlijn?',
-    'Voor organisaties met beide vraagstukken',
+    'Portfolioroute',
+    'Bewuste combinatie',
+    'ExitScan en RetentieScan naast elkaar organiseren zonder er een bundel van te maken.',
+    'Geen zelfstandig product en geen standaardpakket.',
   ],
 ] as const
+
+export const productOverviewPrimaryRoutes = [
+  {
+    name: 'ExitScan',
+    chip: 'Hoofdroute',
+    title: 'Waarom zijn mensen vertrokken?',
+    body: 'Vertrekduiding voor HR, MT en directie wanneer de eerste managementvraag begint bij uitstroom en terugkijkende analyse.',
+    href: '/producten/exitscan',
+  },
+  {
+    name: 'RetentieScan',
+    chip: 'Hoofdroute',
+    title: 'Waar staat behoud nu onder druk?',
+    body: 'Vroegsignalering op behoud wanneer de vraag draait om actieve teams, behoudsdruk en prioriteiten voordat mensen weggaan.',
+    href: '/producten/retentiescan',
+  },
+  {
+    name: 'TeamScan',
+    chip: 'Gerichte hoofdroute',
+    title: 'Welk team vraagt nu als eerste verificatie?',
+    body: 'Een peer product voor lokale verificatie. Smaller dan de brede wedges, maar wel een eigen eerste route wanneer de vraag teamgericht is.',
+    href: '/producten/teamscan',
+  },
+  {
+    name: 'Onboarding 30-60-90',
+    chip: 'Lifecycle-hoofdroute',
+    title: 'Hoe landen nieuwe medewerkers in de eerste fase?',
+    body: 'Een eigen lifecycle-route voor vroege onboardingduiding, met checkpoint-read, eerste eigenaar en eerste actie.',
+    href: '/producten/onboarding-30-60-90',
+  },
+] as const
+
+export const productOverviewAddOnRoutes = [
+  {
+    title: 'Pulse',
+    body: 'Compacte reviewroute na een eerste diagnose of actie. Geen hoofdproduct, wel een snelle hercheck.',
+    href: '/producten/pulse',
+  },
+  {
+    title: 'Leadership Scan',
+    body: 'Verdieping op managementcontext na een bestaand signaal. Add-on, geen eerste entree.',
+    href: '/producten/leadership-scan',
+  },
+] as const
+
+export const productOverviewPortfolioRoute = {
+  title: 'Combinatie',
+  eyebrow: 'Portfolioroute',
+  headline: 'Gebruik de combinatie pas wanneer twee echte managementvragen naast elkaar bestaan.',
+  body:
+    'Combinatie is geen zelfstandig product en geen standaardbundel. Het is een bewuste portfolioroute zodra zowel vertrekduiding als behoudsdruk tegelijk bestuurlijke aandacht vragen.',
+  href: '/producten/combinatie',
+} as const
 
 export const comparisonCards = [
   {

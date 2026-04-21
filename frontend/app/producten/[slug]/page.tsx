@@ -12,7 +12,7 @@ import { MarketingComparisonTable } from '@/components/marketing/marketing-compa
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingProofStrip } from '@/components/marketing/marketing-proof-strip'
 import { PreviewEvidenceRail } from '@/components/marketing/preview-evidence-rail'
-import { PreviewSlider } from '@/components/marketing/preview-slider'
+import { PortfolioOverviewVisual, SegmentDeepDiveVisual } from '@/components/marketing/report-visuals'
 import { SampleShowcaseCard } from '@/components/marketing/sample-showcase-card'
 import { MarketingSection } from '@/components/marketing/marketing-section'
 import { PublicFooter } from '@/components/marketing/public-footer'
@@ -175,17 +175,17 @@ function ExitScanPage() {
         {/* 1 — Hero */}
         <section className="bg-[#F7F5F1] border-b border-[#E5E0D6]">
           <div className="marketing-shell py-14">
-            <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">ExitScan</p>
-            <h1 className="mt-3 max-w-[22ch] font-display text-[clamp(1.6rem,3.5vw,2.2rem)] font-light leading-[1.15] tracking-[-0.02em] text-[#132033]">
+            <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#3C8D8A]">ExitScan</p>
+            <h1 className="mt-3 max-w-none font-display text-[clamp(2.1rem,4.4vw,3.55rem)] font-light leading-[1.05] tracking-[-0.04em] text-[#132033]">
               Breng vertrekduiding scherp in beeld
             </h1>
-            <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-[#4A5563]">
+            <p className="mt-4 max-w-[72ch] text-[1rem] leading-8 text-[#4A5563]">
               Voor terugkijkende vertrekduiding op groepsniveau, eerst als baseline en daarna eventueel als ritmeroute.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <a
                 href="#kennismaking"
-                className="inline-flex rounded-md bg-[#3C8D8A] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2d6e6b]"
+                className="inline-flex rounded-[0.58rem] bg-[#132033] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1b2a38]"
               >
                 Plan een kennismaking
               </a>
@@ -201,8 +201,8 @@ function ExitScanPage() {
 
         {/* 2 — Baseline vs. ritmeroute */}
         <MarketingSection tone="tint">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Varianten</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Baseline of ritmeroute?</h2>
+          <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#3C8D8A]">Varianten</p>
+          <h2 className="mt-3 max-w-none font-display text-[clamp(2rem,4vw,3.2rem)] font-light leading-[1.06] tracking-[-0.04em] text-[#132033]">Baseline of ritmeroute?</h2>
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
             {[
               {
@@ -222,7 +222,7 @@ function ExitScanPage() {
                 ],
               },
             ].map(({ label, points }) => (
-              <div key={label} className="rounded-lg border border-[#E5E0D6] bg-[#F7F5F1] p-6">
+              <div key={label} className="rounded-[1.08rem] border border-[#E5E0D6] bg-[#FFFCF7] p-6">
                 <p className="text-sm font-medium text-[#132033]">{label}</p>
                 <ul className="mt-3 space-y-2">
                   {points.map((p) => (
@@ -239,8 +239,8 @@ function ExitScanPage() {
 
         {/* 3 — Wanneer relevant */}
         <MarketingSection tone="surface">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Wanneer relevant</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">ExitScan is logisch in deze situaties</h2>
+          <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#3C8D8A]">Wanneer relevant</p>
+          <h2 className="mt-3 max-w-none font-display text-[clamp(2rem,4vw,3.2rem)] font-light leading-[1.06] tracking-[-0.04em] text-[#132033]">ExitScan is logisch in deze situaties</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {[
               'Bij structureel verloop dat u wilt begrijpen',
@@ -248,7 +248,7 @@ function ExitScanPage() {
               'Bij behoefte aan scherpere stuurinformatie voor HR en management',
               'Na een reorganisatie of fusie',
             ].map((item) => (
-              <div key={item} className="rounded-lg border border-[#E5E0D6] bg-white p-5">
+              <div key={item} className="rounded-[1.08rem] border border-[#E5E0D6] bg-[#FFFCF7] p-6">
                 <p className="text-sm leading-relaxed text-[#132033]">{item}</p>
               </div>
             ))}
@@ -257,8 +257,8 @@ function ExitScanPage() {
 
         {/* 4 — Wat zichtbaar wordt */}
         <MarketingSection tone="tint">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Wat zichtbaar wordt</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Inzichten in uw eigen taal</h2>
+          <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#3C8D8A]">Wat zichtbaar wordt</p>
+          <h2 className="mt-3 max-w-none font-display text-[clamp(2rem,4vw,3.2rem)] font-light leading-[1.06] tracking-[-0.04em] text-[#132033]">Inzichten in uw eigen taal</h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             {[
               { title: 'Waar signalen terugkomen', body: 'Terugkerende thema\'s uit vertrekgesprekken en werkfactoren in een vergelijkbaar beeld.' },
@@ -275,8 +275,8 @@ function ExitScanPage() {
 
         {/* 5 — Uitkomsten */}
         <MarketingSection tone="surface">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Uitkomsten</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Wat u ermee kunt doen</h2>
+          <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#3C8D8A]">Uitkomsten</p>
+          <h2 className="mt-3 max-w-none font-display text-[clamp(2rem,4vw,3.2rem)] font-light leading-[1.06] tracking-[-0.04em] text-[#132033]">Wat u ermee kunt doen</h2>
           <p className="mt-4 max-w-[64ch] text-sm leading-relaxed text-[#4A5563]">
             De leesrichting blijft compact en bestuurlijk: eerst cover en respons, daarna de bestuurlijke handoff,
             vervolgens de eerste managementvraag, het eerste verificatiespoor en pas daarna de eerste logische stap.
@@ -298,8 +298,8 @@ function ExitScanPage() {
         {/* 6 — Wat u ontvangt */}
         <section className="bg-[#132033]">
           <div className="marketing-shell marketing-section">
-            <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Wat u ontvangt</p>
-            <h2 className="mt-3 max-w-[24ch] text-xl font-medium text-[#F7F5F1]">Dashboard, rapport en toelichting in dezelfde leeslijn</h2>
+            <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#3C8D8A]">Wat u ontvangt</p>
+            <h2 className="mt-3 max-w-none font-display text-[clamp(2rem,4vw,3.2rem)] font-light leading-[1.06] tracking-[-0.04em] text-[#F7F5F1]">Dashboard, rapport en toelichting in dezelfde leeslijn</h2>
             <ul className="mt-6 space-y-2">
               {[
                 'Dashboard met prioriteiten en factoranalyse',
@@ -315,16 +315,19 @@ function ExitScanPage() {
             </ul>
             <a
               href="#kennismaking"
-              className="mt-8 inline-flex rounded-md bg-white px-5 py-3 text-sm font-medium text-[#132033] transition-colors hover:bg-[#F7F5F1]"
+            className="mt-8 inline-flex rounded-[0.58rem] bg-white px-5 py-3 text-sm font-medium text-[#132033] transition-colors hover:bg-[#F7F5F1]"
             >
               Plan een kennismaking
             </a>
 
             {/* 7 — Segment Deep Dive add-on */}
-            <div id="segment-deep-dive" className="mt-8 rounded-lg border border-[rgba(247,245,241,0.12)] bg-[rgba(247,245,241,0.06)] p-5">
-              <span className="text-[0.6rem] font-medium uppercase tracking-[0.12em] text-[#9CA3AF]">Add-on</span>
+            <div id="segment-deep-dive" className="mt-8 rounded-[1.08rem] border border-[rgba(247,245,241,0.12)] bg-[rgba(247,245,241,0.06)] p-5">
+              <span className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#9CA3AF]">Add-on</span>
               <h3 className="mt-1 text-base font-medium text-[#F7F5F1]">Segment Deep Dive</h3>
               <p className="mt-1 text-sm text-[rgba(247,245,241,0.65)]">Verdieping op een specifieke afdeling, functiegroep of locatie. Beschikbaar als er voldoende respondenten en metadata voor zijn.</p>
+              <div className="mt-5">
+                <SegmentDeepDiveVisual />
+              </div>
             </div>
           </div>
         </section>
@@ -355,17 +358,17 @@ function RetentionScanPage() {
         {/* 1 — Hero */}
         <section className="bg-[#F7F5F1] border-b border-[#E5E0D6]">
           <div className="marketing-shell py-14">
-            <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">RetentieScan</p>
-            <h1 className="mt-3 max-w-[22ch] font-display text-[clamp(1.6rem,3.5vw,2.2rem)] font-light leading-[1.15] tracking-[-0.02em] text-[#132033]">
+            <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#3C8D8A]">RetentieScan</p>
+            <h1 className="mt-3 max-w-none font-display text-[clamp(2.1rem,4.4vw,3.55rem)] font-light leading-[1.05] tracking-[-0.04em] text-[#132033]">
               Zie eerder waar behoud onder druk staat
             </h1>
-            <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-[#4A5563]">
+            <p className="mt-4 max-w-[72ch] text-[1rem] leading-8 text-[#4A5563]">
               Voor vroegsignalering op behoud op groeps- en segmentniveau, als baseline of ritmeroute.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <a
                 href="#kennismaking"
-                className="inline-flex rounded-md bg-[#3C8D8A] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2d6e6b]"
+                className="inline-flex rounded-[0.58rem] bg-[#132033] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#1b2a38]"
               >
                 Plan een kennismaking
               </a>
@@ -381,15 +384,15 @@ function RetentionScanPage() {
 
         {/* 2 — Wanneer relevant */}
         <MarketingSection tone="tint">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Wanneer relevant</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">RetentieScan is logisch in deze situaties</h2>
+          <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#3C8D8A]">Wanneer relevant</p>
+          <h2 className="mt-3 max-w-none font-display text-[clamp(2rem,4vw,3.2rem)] font-light leading-[1.06] tracking-[-0.04em] text-[#132033]">RetentieScan is logisch in deze situaties</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
               'Vroeg signaleren voordat sprake is van verloop',
               'Na een verandertraject of reorganisatie',
               'Bij behoefte aan MT-rapportage over behoudsdruk en retentiesignalen',
             ].map((item) => (
-              <div key={item} className="rounded-lg border border-[#E5E0D6] bg-[#F7F5F1] p-5">
+              <div key={item} className="rounded-[1.08rem] border border-[#E5E0D6] bg-[#FFFCF7] p-6">
                 <p className="text-sm leading-relaxed text-[#132033]">{item}</p>
               </div>
             ))}
@@ -398,8 +401,8 @@ function RetentionScanPage() {
 
         {/* 3 — Wat de scan meet */}
         <MarketingSection tone="surface">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Wat de scan meet</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Inzichten in uw eigen taal</h2>
+          <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#3C8D8A]">Wat de scan meet</p>
+          <h2 className="mt-3 max-w-none font-display text-[clamp(2rem,4vw,3.2rem)] font-light leading-[1.06] tracking-[-0.04em] text-[#132033]">Inzichten in uw eigen taal</h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             {[
               { title: 'Waar frictie zichtbaar wordt', body: 'Signalen over werkbelasting, leiderschap, groei en rolhelderheid op groepsniveau.' },
@@ -416,8 +419,8 @@ function RetentionScanPage() {
 
         {/* 4 — Uitkomsten */}
         <MarketingSection tone="tint">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Uitkomsten</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Wat u ermee kunt doen</h2>
+          <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#3C8D8A]">Uitkomsten</p>
+          <h2 className="mt-3 max-w-none font-display text-[clamp(2rem,4vw,3.2rem)] font-light leading-[1.06] tracking-[-0.04em] text-[#132033]">Wat u ermee kunt doen</h2>
           <p className="mt-4 max-w-[64ch] text-sm leading-relaxed text-[#4A5563]">
             Ook hier blijft de managementopbouw compact: eerst cover, daarna een gecombineerde bestuurlijke read met
             respons, handoff, eerste managementsessie en eerste verificatiespoor, en pas daarna de eerste logische stap
@@ -439,8 +442,8 @@ function RetentionScanPage() {
 
         {/* 5 — Ritmeroute vs. compacte hercheck */}
         <MarketingSection tone="surface">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Varianten</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Baseline of ritmeroute?</h2>
+          <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#3C8D8A]">Varianten</p>
+          <h2 className="mt-3 max-w-none font-display text-[clamp(2rem,4vw,3.2rem)] font-light leading-[1.06] tracking-[-0.04em] text-[#132033]">Baseline of ritmeroute?</h2>
           <div className="mt-8 grid gap-5 lg:grid-cols-2">
             {[
               {
@@ -460,7 +463,7 @@ function RetentionScanPage() {
                 ],
               },
             ].map(({ label, points }) => (
-              <div key={label} className="rounded-lg border border-[#E5E0D6] bg-[#F7F5F1] p-6">
+              <div key={label} className="rounded-[1.08rem] border border-[#E5E0D6] bg-[#FFFCF7] p-6">
                 <p className="text-sm font-medium text-[#132033]">{label}</p>
                 <ul className="mt-3 space-y-2">
                   {points.map((p) => (
@@ -478,8 +481,8 @@ function RetentionScanPage() {
         {/* 6 — Wat u ontvangt */}
         <section className="bg-[#132033]">
           <div className="marketing-shell marketing-section">
-            <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Wat u ontvangt</p>
-            <h2 className="mt-3 max-w-[24ch] text-xl font-medium text-[#F7F5F1]">Dashboard, rapport en toelichting in dezelfde leeslijn</h2>
+            <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[#3C8D8A]">Wat u ontvangt</p>
+            <h2 className="mt-3 max-w-none font-display text-[clamp(2rem,4vw,3.2rem)] font-light leading-[1.06] tracking-[-0.04em] text-[#F7F5F1]">Dashboard, rapport en toelichting in dezelfde leeslijn</h2>
             <ul className="mt-6 space-y-2">
               {[
                 'Dashboard met retentiesignaal en factoranalyse',
@@ -496,7 +499,7 @@ function RetentionScanPage() {
             </ul>
             <a
               href="#kennismaking"
-              className="mt-8 inline-flex rounded-md bg-white px-5 py-3 text-sm font-medium text-[#132033] transition-colors hover:bg-[#F7F5F1]"
+            className="mt-8 inline-flex rounded-[0.58rem] bg-white px-5 py-3 text-sm font-medium text-[#132033] transition-colors hover:bg-[#F7F5F1]"
             >
               Plan een kennismaking
             </a>
@@ -542,13 +545,13 @@ function PulsePage() {
             <div className="marketing-hero-cta-row">
               <a
                 href={buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'product_pulse_hero' })}
-                className="inline-flex items-center justify-center rounded-full bg-amber-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(217,119,6,0.22)] transition-all hover:-translate-y-0.5 hover:bg-amber-700"
+                className="inline-flex items-center justify-center rounded-[0.58rem] bg-[#132033] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1b2a38]"
               >
                 Bespreek Pulse
               </a>
               <Link
                 href="/producten"
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
+                className="inline-flex items-center justify-center rounded-[0.58rem] border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950"
               >
                 Bekijk producten
               </Link>
@@ -639,7 +642,7 @@ function PulsePage() {
               body: 'Pulse past wanneer de vraag vooral gaat over review, bijsturing en het volgende checkmoment, niet over een nieuwe brede eerste scan.',
             },
           ].map((card) => (
-            <div key={card.title} className="marketing-panel p-7">
+            <div key={card.title} className="marketing-panel p-6 md:p-7">
               <h2 className="text-xl font-semibold text-slate-950">{card.title}</h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">{card.body}</p>
             </div>
@@ -675,7 +678,7 @@ function PulsePage() {
             ]}
           />
 
-          <div className="marketing-panel-dark p-8">
+          <div className="marketing-panel-dark p-7 md:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">Wat Pulse wel belooft</p>
             <h2 className="mt-4 font-display text-4xl text-white">Een bounded managementread, geen brede trendclaim.</h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
@@ -733,24 +736,24 @@ function TeamScanPage() {
         <MarketingHeroIntro>
           <p className="marketing-hero-eyebrow text-slate-700">TeamScan</p>
           <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
-            Lokaliseer waar een bestaand signaal eerst verificatie vraagt.
+            Open een gerichte teamvraag zonder er een brede teamscan van te maken.
           </h1>
           <p className="marketing-hero-copy text-slate-600">
-            TeamScan is geen nieuwe eerste hoofdroute, maar een bounded lokalisatieroute nadat een breder organisatie- of
-            groepssignaal al zichtbaar is. De route helpt bepalen welke afdeling eerst een lokaal gesprek, verificatie
-            of begrensde eerste actie vraagt.
+            TeamScan is een volwaardige route wanneer de eerste vraag team- of afdelingsgericht is. Commercieel blijft
+            het product smaller dan ExitScan of RetentieScan: het helpt bepalen welke afdeling eerst een lokaal gesprek,
+            verificatie of gerichte actie vraagt, zonder brede teamsoftware of manager ranking.
           </p>
           <div className="marketing-hero-actions">
             <div className="marketing-hero-cta-row">
               <a
                 href={buildContactHref({ routeInterest: 'teamscan', ctaSource: 'product_team_hero' })}
-                className="inline-flex items-center justify-center rounded-full bg-[#3C8D8A] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(60,141,138,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#2d6e6b]"
+                className="inline-flex items-center justify-center rounded-[0.58rem] bg-[#132033] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1b2a38]"
               >
                 Plan kennismaking
               </a>
               <Link
                 href="/producten"
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
+                className="inline-flex items-center justify-center rounded-[0.58rem] border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950"
               >
                 Bekijk producten
               </Link>
@@ -761,13 +764,13 @@ function TeamScanPage() {
       heroStage={
         <MarketingHeroStage>
           <div className="space-y-5">
-            <span className="marketing-stage-tag bg-[#3C8D8A]/10 text-[#DCEFEA]">Lokalisatieroute</span>
+            <span className="marketing-stage-tag bg-[#3C8D8A]/10 text-[#DCEFEA]">Gerichte hoofdroute</span>
             <h2 className="marketing-stage-title font-display text-white">
-              TeamScan helpt bepalen waar eerst lokaal gesprek of verificatie nodig is, niet wie gelijk heeft.
+              TeamScan opent een eigen route, maar blijft smaller en lokaler dan de brede hoofdproducten.
             </h2>
             <p className="marketing-stage-copy text-slate-300">
-              De route blijft bewust smal: department-first lokale read, bounded prioritering, eerste
-              eigenaar en een begrensde eerste actie zonder manager ranking of brede teamscorekaart.
+              De route blijft bewust smal: lokale read, gerichte prioritering, eerste eigenaar en een begrensde eerste
+              actie zonder manager ranking of brede teamscorekaart.
             </p>
             <div className="marketing-stage-list">
               {[
@@ -786,8 +789,8 @@ function TeamScanPage() {
       heroSupport={
         <MarketingHeroSupport>
           <div className="marketing-support-note text-sm leading-7 text-slate-600">
-            Segment Deep Dive blijft een add-on binnen bestaande scans. TeamScan is een eigen vervolgroute met een
-            compacte survey, lokale prioriteitslogica en expliciete managementhandoff.
+            Segment Deep Dive blijft een add-on binnen bestaande scans. TeamScan is een eigen productroute met lokale
+            prioriteitslogica en expliciete managementhandoff.
           </div>
           <div className="marketing-link-grid">
             <Link
@@ -810,8 +813,8 @@ function TeamScanPage() {
         <MarketingProofStrip
           items={[
             {
-              title: 'Bestaand signaal eerst',
-              body: 'TeamScan start pas nadat een breder organisatie- of groepssignaal al zichtbaar is in een eerste baseline, managementread of vervolgmeting.',
+              title: 'Eigen teamvraag',
+              body: 'TeamScan mag als eerste route openen zodra de vraag echt team- of afdelingsgericht is en een lokale verificatievraag centraal staat.',
             },
             {
               title: 'Lokale prioriteit',
@@ -829,19 +832,19 @@ function TeamScanPage() {
         <div className="grid gap-6 lg:grid-cols-3">
           {[
             {
-              title: 'Na een eerste baseline of managementread',
-              body: 'TeamScan wordt logisch zodra management niet opnieuw breed wil meten, maar wel scherper wil weten waar het beeld lokaal het eerst onderzocht moet worden.',
+              title: 'Wanneer TeamScan de eerste route mag zijn',
+              body: 'Gebruik TeamScan zodra de managementvraag al duidelijk lokaal is: welk team of welke afdeling vraagt als eerste verificatie of gerichte actie?',
             },
             {
               title: 'Bij lokale verificatievraag',
-              body: 'Gebruik TeamScan wanneer de vraag vooral gaat over welke afdeling eerst een gesprek, verificatie of begrensde actie verdient.',
+              body: 'De route is bedoeld voor lokale verificatie en prioritering, niet voor brede cultuurdiagnostiek.',
             },
             {
               title: 'Niet als brede teamscan',
               body: 'TeamScan is geen generieke cultuur- of leiderschapsscan, geen managerbeoordeling en geen vervanging van een beschrijvende Segment Deep Dive.',
             },
           ].map((card) => (
-            <div key={card.title} className="marketing-panel p-7">
+            <div key={card.title} className="marketing-panel p-6 md:p-7">
               <h2 className="text-xl font-semibold text-slate-950">{card.title}</h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">{card.body}</p>
             </div>
@@ -877,14 +880,14 @@ function TeamScanPage() {
             ]}
           />
 
-          <div className="marketing-panel-dark p-8">
+          <div className="marketing-panel-dark p-7 md:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300">Wat TeamScan wel belooft</p>
             <h2 className="mt-4 font-display text-4xl text-white">
-              Een veilige lokale handoff, geen oordeel over teams of managers.
+              Een gerichte teamroute met lokale handoff, geen brede teamsuite.
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
-              TeamScan verkoopt geen brede teamscan als nieuwe hoofdroute. Het product helpt vooral om na een eerste managementread sneller
-              te zien waar lokale verificatie, eigenaarschap en een begrensde eerste actie het meest logisch zijn.
+              TeamScan is wel een peer product, maar niet de brede wedge. Het product helpt vooral om snel te zien waar
+              lokale verificatie, eigenaarschap en een begrensde eerste actie het meest logisch zijn.
             </p>
             <ul className="mt-6 space-y-3 text-sm leading-7 text-slate-300">
               {[
@@ -905,8 +908,8 @@ function TeamScanPage() {
       <MarketingSection tone="plain">
         <MarketingInlineContactPanel
           eyebrow="Kennismaking"
-          title="Toets of TeamScan als lokale vervolgronde nu echt logisch is."
-          body="Beschrijf kort welk bredere signaal al zichtbaar is en waar de lokale onzekerheid nu zit. Dan bepalen we of TeamScan past of dat een bredere route of add-on logischer blijft."
+          title="Toets of TeamScan nu de juiste gerichte route is."
+          body="Beschrijf kort welke team- of afdelingsvraag nu speelt. Dan bepalen we of TeamScan als eerste route past of dat een bredere route logischer is."
           defaultRouteInterest="teamscan"
           defaultCtaSource="product_team_form"
         />
@@ -914,9 +917,9 @@ function TeamScanPage() {
 
       <MarketingSection tone="plain">
         <MarketingCalloutBand
-          eyebrow="Lokalisatiegrens"
-          title="Twijfel je tussen TeamScan en een andere vervolgronde?"
-          body="We helpen je kiezen tussen TeamScan, Segment Deep Dive of terug naar een bredere kernroute. Zo blijft de vervolgstap lokaal scherp in plaats van diffuser dan nodig."
+          eyebrow="Routekeuze"
+          title="Twijfel je tussen TeamScan en een bredere route?"
+          body="We helpen je kiezen tussen TeamScan, Segment Deep Dive of een bredere hoofdroute. Zo blijft de eerste stap gericht in plaats van breder dan nodig."
           primaryHref={buildContactHref({ routeInterest: 'teamscan', ctaSource: 'product_team_callout' })}
           primaryLabel="Plan kennismaking"
           secondaryHref="/tarieven"
@@ -938,25 +941,24 @@ function OnboardingPage() {
         <MarketingHeroIntro>
           <p className="marketing-hero-eyebrow text-amber-700">Onboarding 30-60-90</p>
           <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
-            Toets vroeg hoe nieuwe medewerkers in een checkpoint landen.
+            Open onboarding als eigen managementvraag in de eerste fase.
           </h1>
           <p className="marketing-hero-copy text-slate-600">
-            Onboarding 30-60-90 is geen client onboarding-tool en geen brede journey-suite. Het is een bounded
-            lifecycle-route voor een assisted single-checkpoint managementread: hoe landen nieuwe medewerkers nu in rol,
-            leiding, team en werkcontext, wie trekt de eerste handoff en welke kleine borg- of correctiestap hoort daar
-            direct bij.
+            Onboarding 30-60-90 is een lifecycle-specifieke hoofdroute. Geen client onboarding-tool en geen brede
+            journey-suite, wel een eigen managementread: hoe landen nieuwe medewerkers nu in rol, leiding, team en
+            werkcontext, wie trekt de eerste handoff en welke eerste borg- of correctiestap hoort daar direct bij.
           </p>
           <div className="marketing-hero-actions">
             <div className="marketing-hero-cta-row">
               <a
                 href={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_hero' })}
-                className="inline-flex items-center justify-center rounded-full bg-amber-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(217,119,6,0.18)] transition-all hover:-translate-y-0.5 hover:bg-amber-700"
+                className="inline-flex items-center justify-center rounded-[0.58rem] bg-[#132033] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1b2a38]"
               >
                 Plan kennismaking
               </a>
               <Link
                 href="/producten"
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
+                className="inline-flex items-center justify-center rounded-[0.58rem] border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950"
               >
                 Bekijk producten
               </Link>
@@ -967,9 +969,9 @@ function OnboardingPage() {
       heroStage={
         <MarketingHeroStage>
           <div className="space-y-5">
-            <span className="marketing-stage-tag bg-amber-500/10 text-amber-100">Lifecycle-check</span>
+            <span className="marketing-stage-tag bg-amber-500/10 text-amber-100">Lifecycle-hoofdroute</span>
             <h2 className="marketing-stage-title font-display text-white">
-              Lees vroege landingssignalen zonder daarvan meteen een volledige 30-60-90 suite te maken.
+              Onboarding is een volwaardige route, maar blijft bewust smaller dan een brede lifecycle-suite.
             </h2>
             <p className="marketing-stage-copy text-slate-300">
               De buyer-facing belofte blijft bewust smal: precies een checkpoint per campaign, een assisted
@@ -1016,8 +1018,8 @@ function OnboardingPage() {
         <MarketingProofStrip
           items={[
             {
-              title: 'Vroeg checkpoint',
-              body: 'Onboarding opent alleen als de vraag echt gaat over de eerste landing van nieuwe medewerkers in deze fase, niet als brede people-suite.',
+              title: 'Eigen lifecycle-vraag',
+              body: 'Onboarding opent zodra de vraag echt gaat over vroege landing van nieuwe medewerkers, niet als bredere people-suite.',
             },
             {
               title: 'Assisted handoff',
@@ -1047,7 +1049,7 @@ function OnboardingPage() {
               body: 'Geen client onboarding-tool, geen journey-engine, geen performance-instrument en geen brede employee lifecycle-suite.',
             },
           ].map((card) => (
-            <div key={card.title} className="marketing-panel p-7">
+            <div key={card.title} className="marketing-panel p-6 md:p-7">
               <h2 className="text-xl font-semibold text-slate-950">{card.title}</h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">{card.body}</p>
             </div>
@@ -1083,7 +1085,7 @@ function OnboardingPage() {
             ]}
           />
 
-          <div className="marketing-panel-dark p-8">
+          <div className="marketing-panel-dark p-7 md:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">Wat onboarding wel belooft</p>
             <h2 className="mt-4 font-display text-4xl text-white">
               Een vroege checkpoint-read met owner en eerste actie, geen brede onboardingmachine.
@@ -1112,8 +1114,8 @@ function OnboardingPage() {
       <MarketingSection tone="plain">
         <MarketingInlineContactPanel
           eyebrow="Kennismaking"
-          title="Toets of onboarding als lifecycle-vervolgronde nu echt logisch is."
-          body="Beschrijf kort welke vraag nu speelt rond nieuwe medewerkers en of het gaat om een vroeg checkpoint, een bredere retentievraag of juist client onboarding. Dan bepalen we welke route past."
+          title="Toets of onboarding nu de juiste lifecycle-route is."
+          body="Beschrijf kort welke vraag nu speelt rond nieuwe medewerkers en of het gaat om een vroeg checkpoint, een bredere retentievraag of client onboarding. Dan bepalen we welke route past."
           defaultRouteInterest="onboarding"
           defaultCtaSource="product_onboarding_form"
         />
@@ -1155,7 +1157,7 @@ function LeadershipScanPage() {
       heroStage={
         <MarketingHeroStage>
           <div className="space-y-5">
-            <span className="marketing-stage-tag bg-white/10 text-slate-200">Bounded follow-on route</span>
+            <span className="marketing-stage-tag bg-white/10 text-slate-200">Add-on</span>
             <h2 className="marketing-stage-title font-display text-white">
               Gebruik Leadership Scan pas nadat een breder signaal al zichtbaar is.
             </h2>
@@ -1210,7 +1212,7 @@ function LeadershipScanPage() {
               body: 'Geen named leader report, geen hierarchy-model, geen 360-beoordeling en geen performance-instrument.',
             },
           ].map((card) => (
-            <div key={card.title} className="marketing-panel p-7">
+            <div key={card.title} className="marketing-panel p-6 md:p-7">
               <h2 className="text-xl font-semibold text-slate-950">{card.title}</h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">{card.body}</p>
             </div>
@@ -1252,13 +1254,13 @@ function CombinatiePage() {
             <div className="marketing-hero-cta-row">
               <a
                 href={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_hero' })}
-                className="inline-flex items-center justify-center rounded-full bg-[#3C8D8A] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(60,141,138,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#2d6e6b]"
+                className="inline-flex items-center justify-center rounded-[0.58rem] bg-[#132033] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1b2a38]"
               >
                 Plan kennismaking
               </a>
               <Link
                 href="/producten"
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
+                className="inline-flex items-center justify-center rounded-[0.58rem] border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950"
               >
                 Bekijk producten
               </Link>
@@ -1326,8 +1328,8 @@ function CombinatiePage() {
                 De combinatie gebruikt dezelfde previewstructuur, maar de echte sample-output blijft via ExitScan en
                 RetentieScan publiek verifieerbaar.
               </p>
-              <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
-                <PreviewSlider variant="portfolio" />
+              <div className="mt-6">
+                <PortfolioOverviewVisual />
               </div>
             </div>
             <PreviewEvidenceRail className="mt-6" variant="portfolio" />
@@ -1385,7 +1387,7 @@ function CombinatiePage() {
             ]}
           />
 
-          <div className="marketing-panel-dark p-8">
+          <div className="marketing-panel-dark p-7 md:p-8">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300">Hoe je het verkoopt</p>
             <h2 className="font-display mt-4 text-4xl text-white">
               Start vaak met een product, maar houd de tweede route bewust klaar.
@@ -1440,13 +1442,13 @@ function UpcomingProductPage({ slug }: { slug: string }) {
             <div className="marketing-hero-cta-row">
               <a
                 href={buildContactHref({ routeInterest: 'exitscan', ctaSource: `upcoming_${slug}_contact` })}
-                className="inline-flex items-center justify-center rounded-full bg-[#3C8D8A] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(60,141,138,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#2d6e6b]"
+                className="inline-flex items-center justify-center rounded-[0.58rem] bg-[#132033] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1b2a38]"
               >
                 Neem contact op
               </a>
               <Link
                 href="/producten"
-                className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
+                className="inline-flex items-center justify-center rounded-[0.58rem] border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-950"
               >
                 Terug naar producten
               </Link>

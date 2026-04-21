@@ -10,10 +10,10 @@ export function MarketingComparisonTable({
   className = '',
 }: MarketingComparisonTableProps) {
   return (
-    <div className={`marketing-panel overflow-hidden rounded-[1.75rem] border border-[var(--border)] ${className}`.trim()}>
+    <div className={`overflow-hidden rounded-[1.08rem] border border-[var(--border)] bg-[rgba(255,252,247,0.96)] ${className}`.trim()}>
       <div className="space-y-4 p-4 md:hidden">
         {rows.map((row) => (
-          <div key={row[0]} className="rounded-[1.35rem] border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div key={row[0]} className="rounded-[0.95rem] border border-[var(--border)] bg-[var(--surface)] p-4">
             {row.map((cell, index) => (
               <div key={`${row[0]}-${index}`} className={index === 0 ? '' : 'mt-3 border-t border-[var(--border)] pt-3'}>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{columns[index]}</p>
@@ -25,7 +25,7 @@ export function MarketingComparisonTable({
       </div>
 
       <div
-        className="hidden border-b border-[var(--border)] bg-[var(--bg)] text-sm font-semibold text-[var(--text)] md:grid"
+        className="hidden border-b border-[var(--border)] bg-[rgba(247,245,241,0.85)] text-sm font-semibold text-[var(--text)] md:grid"
         style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }}
       >
         {columns.map((column) => (
@@ -44,7 +44,7 @@ export function MarketingComparisonTable({
           {row.map((cell, index) => (
             <div
               key={`${row[0]}-${index}`}
-              className={`px-6 py-5 text-sm leading-7 ${index === 1 ? 'font-semibold text-[var(--ink)]' : 'text-[var(--text)]'}`}
+              className={`px-6 py-5 text-sm leading-7 ${index <= 1 ? 'font-semibold text-[var(--ink)]' : 'text-[var(--text)]'}`}
             >
               {cell}
             </div>

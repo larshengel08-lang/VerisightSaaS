@@ -25,18 +25,23 @@ import {
 } from '@/components/marketing/site-content'
 
 describe('Portfolio architecture marketing model', () => {
-  it('keeps a core-first seven-route suite with visible bounded follow-on routes', () => {
+  it('keeps four peer products, two bounded add-ons, and one portfolio route', () => {
     const combination = PORTFOLIO_ROUTE_MARKETING_PRODUCTS[0]
     const followOnSlugs = FOLLOW_ON_MARKETING_PRODUCTS.map((product) => product.slug)
     const reservedSlugs = RESERVED_MARKETING_PRODUCTS.map((product) => product.slug)
 
-    expect(CORE_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual(['exitscan', 'retentiescan'])
+    expect(CORE_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual([
+      'exitscan',
+      'retentiescan',
+      'teamscan',
+      'onboarding-30-60-90',
+    ])
     expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS).toHaveLength(1)
     expect(combination.slug).toBe('combinatie')
     expect(combination.portfolioRole).toBe('portfolio_route')
     expect(combination.description.toLowerCase()).toContain('portfolioroute')
     expect(combination.description.toLowerCase()).toContain('derde kernproduct')
-    expect(followOnSlugs).toEqual(['pulse', 'teamscan', 'onboarding-30-60-90', 'leadership-scan'])
+    expect(followOnSlugs).toEqual(['pulse', 'leadership-scan'])
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.status === 'bounded_live')).toBe(true)
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'follow_on_route')).toBe(true)
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => !product.description.toLowerCase().includes('live bounded'))).toBe(true)
@@ -72,9 +77,8 @@ describe('ExitScan positioning copy', () => {
     const exitRow = productOverviewComparisonRows.find((row) => row[0] === 'ExitScan')
     const differenceFaq = faqs.find(([question]) => question === 'Wat is het verschil tussen ExitScan en RetentieScan?')
 
-    expect(exitRow?.[2].toLowerCase()).toContain('vertrekbeeld')
-    expect(exitRow?.[2].toLowerCase()).toContain('werkfactoren')
-    expect(exitRow?.[1].toLowerCase()).toContain('vertrekduiding')
+    expect(exitRow?.[3].toLowerCase()).toContain('werkfactoren')
+    expect(exitRow?.[2].toLowerCase()).toContain('vertrekduiding')
     expect(differenceFaq?.[1].toLowerCase()).toContain('vertrek achteraf duiden')
     expect(differenceFaq?.[1].toLowerCase()).toContain('eerder zien waar behoud op groepsniveau onder druk staat')
   })
@@ -118,6 +122,18 @@ describe('ExitScan positioning copy', () => {
     expect(pulseProduct).toBeTruthy()
     expect(pulseOutput).toContain('begrensde vergelijkingsduiding')
     expect(pulseOutput).not.toContain('delta-uitleg')
+  })
+
+  it('keeps TeamScan and onboarding as peer products with narrower commercial framing', () => {
+    const teamScan = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'teamscan')
+    const onboarding = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'onboarding-30-60-90')
+
+    expect(teamScan?.portfolioRole).toBe('core_product')
+    expect(teamScan?.description.toLowerCase()).toContain('gerichte hoofdroute')
+    expect(teamScan?.description.toLowerCase()).toContain('smaller')
+    expect(onboarding?.portfolioRole).toBe('core_product')
+    expect(onboarding?.description.toLowerCase()).toContain('lifecycle-specifieke hoofdroute')
+    expect(onboarding?.description.toLowerCase()).toContain('geen journey-suite')
   })
 })
 

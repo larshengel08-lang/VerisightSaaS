@@ -1,67 +1,27 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
-import {
-  MarketingHeroIntro,
-  MarketingHeroStage,
-  MarketingHeroSupport,
-} from '@/components/marketing/marketing-hero'
+import { MarketingHeroIntro } from '@/components/marketing/marketing-hero'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingSection } from '@/components/marketing/marketing-section'
 import { SectionHeading } from '@/components/marketing/section-heading'
-import { homepageProductRoutes, productOverviewComparisonRows } from '@/components/marketing/site-content'
+import {
+  productOverviewAddOnRoutes,
+  productOverviewComparisonRows,
+  productOverviewPortfolioRoute,
+  productOverviewPrimaryRoutes,
+} from '@/components/marketing/site-content'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 export const metadata: Metadata = {
   title: 'Producten',
   description:
-    'Kies de route die past bij uw vraagstuk: ExitScan voor vertrekduiding, RetentieScan voor vroegsignalering op behoud en een bewuste portfolioroute voor combinatie of bounded vervolgstappen.',
+    'Kies de route die past bij uw vraag: ExitScan voor vertrekduiding, RetentieScan voor vroegsignalering op behoud en compacte vervolgroutes voor verdieping.',
   alternates: {
     canonical: '/producten',
   },
-  openGraph: {
-    title: 'Producten | Verisight',
-    description:
-      'Kies de route die past bij uw vraagstuk: ExitScan voor vertrekduiding, RetentieScan voor vroegsignalering op behoud en een bewuste portfolioroute voor combinatie of bounded vervolgstappen.',
-    url: 'https://www.verisight.nl/producten',
-    images: ['/opengraph-image'],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Producten | Verisight',
-    description:
-      'Kies de route die past bij uw vraagstuk: ExitScan voor vertrekduiding, RetentieScan voor vroegsignalering op behoud en een bewuste portfolioroute voor combinatie of bounded vervolgstappen.',
-    images: ['/opengraph-image'],
-  },
 }
-
-const followOnRoutes = [
-  {
-    title: 'Pulse',
-    label: 'Vervolgroute',
-    body: 'Compacte reviewlaag na diagnose of baseline. Bedoeld voor een volgende managementcheck, niet als derde brede instap.',
-    href: '/producten/pulse',
-  },
-  {
-    title: 'TeamScan',
-    label: 'Lokalisatie',
-    body: 'Bounded lokale verdieping nadat een breder signaal al zichtbaar is en een eerste lokale vraag openstaat.',
-    href: '/producten/teamscan',
-  },
-  {
-    title: 'Onboarding 30-60-90',
-    label: 'Lifecycle-check',
-    body: 'Gerichte assisted checkpointread voor vroege landing van nieuwe medewerkers wanneer die vraag echt centraal staat.',
-    href: '/producten/onboarding-30-60-90',
-  },
-  {
-    title: 'Leadership Scan',
-    label: 'Managementcontext',
-    body: 'Begrensde group-level managementread wanneer een bestaand people-signaal eerst duiding of verificatie in de leidingcontext vraagt.',
-    href: '/producten/leadership-scan',
-  },
-] as const
 
 export default function ProductenPage() {
   const breadcrumbSchema = {
@@ -84,87 +44,47 @@ export default function ProductenPage() {
         ctaLabel="Plan een kennismaking"
         heroIntro={
           <MarketingHeroIntro>
-            <p className="marketing-hero-eyebrow text-[#3C8D8A]">Twee kernproducten, bewuste vervolgroutes</p>
+            <p className="marketing-hero-eyebrow text-[#3C8D8A]">Producten</p>
             <h1 className="marketing-hero-title marketing-hero-title-page font-display text-[#132033]">
-              Kies de route die past bij de managementvraag die nu echt openligt.
+              Vier hoofdproducten, twee add-ons en één portfolioroute.
             </h1>
             <p className="marketing-hero-copy text-[#4A5563]">
-              ExitScan helpt vertrek achteraf begrijpen. RetentieScan helpt eerder signaleren waar behoud onder druk
-              staat. Combinatie en vervolgroutes blijven bewust kleiner en openen pas nadat de eerste richting helder is.
+              Verisight verkoopt niet één brede people-tool. U kiest de route die past bij de vraag: vertrek, behoud,
+              lokale verificatie of onboarding. Pulse en Leadership blijven add-ons. Combinatie blijft een
+              portfolioroute, geen bundel.
             </p>
             <div className="marketing-hero-cta-row marketing-hero-actions">
               <Link
                 href={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'products_hero_primary' })}
-                className="inline-flex items-center justify-center rounded-full bg-[#3C8D8A] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(60,141,138,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#2d6e6b]"
+                className="marketing-button-primary"
               >
                 Plan een kennismaking
               </Link>
-              <Link
-                href="/tarieven"
-                className="inline-flex items-center justify-center rounded-full border border-[#E5E0D6] bg-white px-6 py-3 text-sm font-semibold text-[#4A5563] transition-colors hover:border-[#3C8D8A] hover:text-[#132033]"
-              >
-                Bekijk de prijsankers
+              <Link href="/tarieven" className="marketing-button-secondary">
+                Bekijk prijzen
               </Link>
             </div>
           </MarketingHeroIntro>
         }
-        heroStage={
-          <MarketingHeroStage className="h-full">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <span className="marketing-stage-tag border border-white/12 bg-white/6 text-[#DCEFEA]">
-                  Portfolio-overzicht
-                </span>
-                <span className="marketing-chip-dark">Geen derde hoofdproduct</span>
-              </div>
-              {[
-                ['ExitScan', 'Vertrekduiding, werkfactoren en bestuurlijke handoff'],
-                ['RetentieScan', 'Vroegsignalering, groepsbeeld en managementprioriteiten'],
-                ['Combinatie', 'Twee gerichte routes in een gedeelde managementlijn'],
-              ].map(([title, body]) => (
-                <div key={title} className="rounded-[1.2rem] border border-white/10 bg-white/5 px-4 py-4">
-                  <p className="text-base font-semibold text-white">{title}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">{body}</p>
-                </div>
-              ))}
-            </div>
-          </MarketingHeroStage>
-        }
-        heroSupport={
-          <MarketingHeroSupport>
-            <div className="marketing-support-note">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#9CA3AF]">Kernregel</p>
-              <p className="mt-2 text-sm leading-7 text-[#4A5563]">
-                Buyer-facing blijft Verisight draaien om twee kernproducten en een bewust opgebouwde portfolioroute.
-              </p>
-            </div>
-            <div className="marketing-support-note">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#9CA3AF]">Waarom dit helpt</p>
-              <p className="mt-2 text-sm leading-7 text-[#4A5563]">
-                Zo blijft de eerste koop helder en het vervolg kleiner dan opnieuw een brede diagnose.
-              </p>
-            </div>
-          </MarketingHeroSupport>
-        }
       >
-        <MarketingSection tone="surface">
+        <MarketingSection tone="tint">
           <SectionHeading
-            eyebrow="Kernproducten"
-            title="Twee eerste routes voor twee verschillende managementvragen."
-            description="De kern van Verisight blijft compact. Productonderscheid komt uit de vraag die u wilt openen en uit het type managementoutput dat u daarna nodig heeft."
+            eyebrow="Hoofdproducten"
+            title="De vier routes die zelfstandig commercieel kunnen openen."
+            description="Deze producten mogen als eerste entree werken, maar blijven elk scherp begrensd in hun eigen vraag."
           />
-          <div className="mt-12 grid gap-5 lg:grid-cols-3">
-            {homepageProductRoutes.map((route) => (
-              <div key={route.name} className="marketing-route-card">
-                <span className="marketing-chip">{route.chip}</span>
-                <h2 className="mt-4 text-2xl font-semibold text-[#132033]">{route.name}</h2>
-                <p className="mt-3 text-lg leading-8 text-[#132033]">{route.title}</p>
-                <p className="mt-4 text-sm leading-7 text-[#4A5563]">{route.body}</p>
+          <div className="mt-12 grid gap-px overflow-hidden rounded-[1.08rem] border border-[#E5E0D6] bg-[#E5E0D6] md:grid-cols-2">
+            {productOverviewPrimaryRoutes.map((route) => (
+              <div key={route.name} className="flex h-full flex-col bg-[#FFFCF7] p-7 md:p-8">
+                <span className="marketing-chip self-start">{route.chip}</span>
+                <h2 className="mt-5 text-[1.16rem] font-medium text-[#132033]">{route.name}</h2>
+                <p className="mt-3 text-[1.12rem] leading-8 text-[#132033]">{route.title}</p>
+                <p className="mt-3 text-[0.95rem] leading-7 text-[#4A5563]">{route.body}</p>
                 <Link
                   href={route.href}
-                  className="mt-6 inline-flex items-center rounded-full border border-[#E5E0D6] bg-white px-5 py-2.5 text-sm font-semibold text-[#132033] transition-colors hover:border-[#3C8D8A]"
+                  className="mt-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-[#132033] hover:underline"
                 >
-                  Meer over {route.name}
+                  Meer over {route.name} <span aria-hidden>{'->'}</span>
                 </Link>
               </div>
             ))}
@@ -172,48 +92,77 @@ export default function ProductenPage() {
         </MarketingSection>
 
         <MarketingSection tone="plain">
-          <SectionHeading
-            eyebrow="Wanneer welke route logisch is"
-            title="Gebruik de portfoliologica om eerst de juiste route te kiezen."
-            description="Deze vergelijking maakt duidelijk welke managementvraag u opent, wat voor output u krijgt en wanneer een route buyer-facing logisch wordt."
-          />
-          <div className="mt-10">
-            <MarketingComparisonTable
-              columns={['Route', 'Rol', 'Managementvraag', 'Wanneer logisch']}
-              rows={productOverviewComparisonRows}
+          <div className="marketing-panel p-8 md:p-9">
+            <SectionHeading
+              eyebrow={productOverviewPortfolioRoute.eyebrow}
+              title={productOverviewPortfolioRoute.headline}
+              description={productOverviewPortfolioRoute.body}
             />
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href={productOverviewPortfolioRoute.href} className="marketing-button-secondary">
+                Bekijk Combinatie
+              </Link>
+              <Link href="/contact" className="marketing-button-secondary">
+                Bespreek mijn route
+              </Link>
+            </div>
           </div>
         </MarketingSection>
 
-        <MarketingSection tone="tint">
-          <SectionHeading
-            eyebrow="Bewuste vervolgroutes"
-            title="Kleiner vervolg na de eerste managementread."
-            description="Pulse, TeamScan, onboarding en Leadership Scan zijn geen extra wedge-producten naast ExitScan en RetentieScan. Ze bestaan om het vervolg kleiner, gerichter en bestuurlijk logisch te houden."
-          />
-          <div className="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
-            {followOnRoutes.map((route) => (
-              <div key={route.title} className="marketing-feature-card">
-                <span className="marketing-chip">{route.label}</span>
-                <h3 className="mt-4 text-xl font-semibold text-[#132033]">{route.title}</h3>
-                <p className="mt-3 text-sm leading-7 text-[#4A5563]">{route.body}</p>
-                <Link href={route.href} className="mt-5 inline-flex text-sm font-semibold text-[#3C8D8A] hover:text-[#132033]">
-                  Meer over {route.title}
-                </Link>
-              </div>
+        <MarketingSection tone="plain">
+          <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+            <SectionHeading
+              eyebrow="Add-ons"
+              title="Kleiner, gerichter en pas logisch na een eerste route."
+              description="Pulse en Leadership openen niet het portfolio. Ze verdiepen of herijken pas nadat een eerste vraag al liep."
+            />
+            <Link href="/contact" className="text-[14px] font-medium text-[#132033] hover:underline">
+              Bespreek de vervolgstap {'->'}
+            </Link>
+          </div>
+
+          <div className="mt-12 grid gap-px overflow-hidden rounded-[1.08rem] border border-[#E5E0D6] bg-[#E5E0D6] md:grid-cols-2">
+            {productOverviewAddOnRoutes.map((route) => (
+              <Link
+                key={route.title}
+                href={route.href}
+                className="group flex items-center justify-between gap-4 bg-[#FFFCF7] px-6 py-6 transition-colors hover:bg-white"
+              >
+                <div>
+                  <p className="text-[15px] font-medium text-[#132033]">{route.title}</p>
+                  <p className="mt-1 text-[13.5px] leading-relaxed text-[#4A5563]">{route.body}</p>
+                </div>
+                <span className="shrink-0 text-[14px] text-[#4A5563] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+                  {'->'}
+                </span>
+              </Link>
             ))}
           </div>
         </MarketingSection>
 
         <MarketingSection tone="surface">
+          <SectionHeading
+            eyebrow="Welke route past?"
+            title="Kort commercieel overzicht."
+            description="Zo blijft zichtbaar wat hoofdproduct, add-on en portfolioroute is."
+          />
+          <div className="mt-10">
+            <MarketingComparisonTable
+              columns={['Route', 'Rol', 'Type vraag', 'Waar helpt het bij?', 'Commerciële plek']}
+              rows={productOverviewComparisonRows}
+            />
+          </div>
+        </MarketingSection>
+
+        <MarketingSection tone="plain">
           <MarketingCalloutBand
-            eyebrow="Route-inschatting"
-            title="Twijfelt u tussen ExitScan, RetentieScan of een vervolgronde?"
-            body="In een eerste gesprek bepalen we welke route nu echt logisch is, hoe de productvorm eruitziet en welke vervolgstap bewust kleiner moet blijven."
+            eyebrow="Kennismaking"
+            title="Twijfelt u welke route nu past?"
+            body="In een eerste gesprek maken we snel duidelijk welke route nu logisch is en welke vervolgstap u beter nog even laat wachten."
             primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'products_closing_cta' })}
             primaryLabel="Plan een kennismaking"
-            secondaryHref="/vertrouwen"
-            secondaryLabel="Lees trust en privacy"
+            secondaryHref="/tarieven"
+            secondaryLabel="Bekijk prijzen"
           />
         </MarketingSection>
       </MarketingPageShell>

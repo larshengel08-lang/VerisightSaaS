@@ -1,38 +1,50 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
-import {
-  MarketingHeroIntro,
-  MarketingHeroStage,
-  MarketingHeroSupport,
-} from '@/components/marketing/marketing-hero'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
+import { MarketingHeroIntro } from '@/components/marketing/marketing-hero'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingSection } from '@/components/marketing/marketing-section'
 import { SectionHeading } from '@/components/marketing/section-heading'
-import { approachSteps, included } from '@/components/marketing/site-content'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 export const metadata: Metadata = {
   title: 'Aanpak',
   description:
-    'Van kennismaking tot bruikbaar managementinzicht in gemiddeld drie weken. Heldere stappen, vaste deliverables en een begeleide route zonder open eind.',
+    'Van intake tot eerste actie: de Verisight-aanpak in een vaste route met voorspelbare doorlooptijd.',
   alternates: { canonical: '/aanpak' },
-  openGraph: {
-    title: 'Aanpak | Verisight',
-    description:
-      'Van kennismaking tot bruikbaar managementinzicht in gemiddeld drie weken. Heldere stappen, vaste deliverables en een begeleide route zonder open eind.',
-    url: 'https://www.verisight.nl/aanpak',
-    images: ['/opengraph-image'],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Aanpak | Verisight',
-    description:
-      'Van kennismaking tot bruikbaar managementinzicht in gemiddeld drie weken. Heldere stappen, vaste deliverables en een begeleide route zonder open eind.',
-    images: ['/opengraph-image'],
-  },
 }
+
+const steps = [
+  {
+    n: '01',
+    t: 'Intake',
+    d: 'We bepalen samen de vraag, scope en doelgroep. Wat moet het rapport het management laten doen?',
+    result: 'Vraag en scope zijn scherp.',
+  },
+  {
+    n: '02',
+    t: 'Setup',
+    d: 'Verisight zet de route klaar, inclusief planning, uitnodiging en aansluiting op het HR-proces.',
+    result: 'Uitvraag staat klaar.',
+  },
+  {
+    n: '03',
+    t: 'Datacollectie',
+    d: 'Begeleide uitvraag met aandacht voor respons, anonimiteit en het juiste moment in het jaar.',
+    result: 'Respons bouwt gecontroleerd op.',
+  },
+  {
+    n: '04',
+    t: 'Analyse en rapportage',
+    d: 'We duiden patronen in managementtaal: wat speelt, waarom telt dit en wat eerst te doen.',
+    result: 'Rapport en dashboard zijn leesbaar.',
+  },
+  {
+    n: '05',
+    t: 'Eerste actie',
+    d: 'In een gesprek vertalen we prioriteiten naar concrete vervolgstappen en eigenaarschap.',
+    result: 'Er ligt een eerste agenda.',
+  },
+] as const
 
 export default function AanpakPage() {
   const breadcrumbSchema = {
@@ -57,151 +69,69 @@ export default function AanpakPage() {
           <MarketingHeroIntro>
             <p className="marketing-hero-eyebrow text-[#3C8D8A]">Aanpak</p>
             <h1 className="marketing-hero-title marketing-hero-title-page font-display text-[#132033]">
-              Van eerste contact tot bruikbaar managementinzicht zonder losse eindes.
+              Een vaste route, ondersteund door software en begeleiding.
             </h1>
             <p className="marketing-hero-copy text-[#4A5563]">
-              Verisight verkoopt geen losse surveytool en ook geen zwaar consultancytraject. U koopt een begeleide
-              route van intake en uitvoering naar rapport, bestuurlijke handoff en eerste opvolging.
+              Verisight beweegt richting een SaaS-hybride model, maar de commerciële kern blijft begeleid: een vaste
+              route, een aanspreekpunt en een voorspelbare doorlooptijd in plaats van een open traject.
             </p>
-            <div className="marketing-hero-cta-row marketing-hero-actions">
-              <Link
-                href={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_hero_primary' })}
-                className="inline-flex items-center justify-center rounded-full bg-[#3C8D8A] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(60,141,138,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#2d6e6b]"
-              >
-                Plan een kennismaking
-              </Link>
-              <Link
-                href="/tarieven"
-                className="inline-flex items-center justify-center rounded-full border border-[#E5E0D6] bg-white px-6 py-3 text-sm font-semibold text-[#4A5563] transition-colors hover:border-[#3C8D8A] hover:text-[#132033]"
-              >
-                Bekijk tarieven
-              </Link>
-            </div>
           </MarketingHeroIntro>
         }
-        heroStage={
-          <MarketingHeroStage className="h-full">
-            <div className="space-y-4">
-              <span className="marketing-stage-tag border border-white/12 bg-white/6 text-[#DCEFEA]">Begeleide productvorm</span>
-              {[
-                ['Week 1', 'Routekeuze, intake en setup'],
-                ['Week 2', 'Uitnodiging, responses en gecontroleerde opbouw'],
-                ['Week 3', 'Dashboard, rapport en eerste managementread'],
-              ].map(([title, body]) => (
-                <div key={title} className="rounded-[1.2rem] border border-white/10 bg-white/5 px-4 py-4">
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#DCEFEA]">{title}</p>
-                  <p className="mt-2 text-base font-semibold text-white">{body}</p>
-                </div>
-              ))}
-            </div>
-          </MarketingHeroStage>
-        }
-        heroSupport={
-          <MarketingHeroSupport>
-            <div className="marketing-support-note">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#9CA3AF]">Tempo met grenzen</p>
-              <p className="mt-2 text-sm leading-7 text-[#4A5563]">
-                First value is snel, maar nooit sneller dan de responsbasis toelaat.
-              </p>
-            </div>
-            <div className="marketing-support-note">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#9CA3AF]">Geen open eind</p>
-              <p className="mt-2 text-sm leading-7 text-[#4A5563]">
-                De route stopt niet bij het rapport, maar bij de eerste bestuurlijke opvolging.
-              </p>
-            </div>
-          </MarketingHeroSupport>
-        }
       >
-        <MarketingSection tone="surface">
-          <SectionHeading
-            eyebrow="Procesroute"
-            title="Hoe een traject verloopt."
-            description="Van eerste gesprek naar de eerste managementread in een ritme dat voorspelbaar genoeg is voor planning en snel genoeg voor momentum."
-          />
-          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {approachSteps.map(({ title, body }) => (
-              <div key={title} className="marketing-process-card">
-                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#3C8D8A]">
-                  {title.split('.')[0].trim()}
-                </p>
-                <h3 className="mt-4 text-lg font-semibold text-[#132033]">{title.replace(/^\d+\.\s*/, '')}</h3>
-                <p className="mt-3 text-sm leading-7 text-[#4A5563]">{body}</p>
-              </div>
-            ))}
-          </div>
-        </MarketingSection>
-
-        <MarketingSection tone="plain">
-          <div className="grid gap-8 lg:grid-cols-2">
-            <div className="marketing-feature-card">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#3C8D8A]">Wat u zelf doet</p>
-              <div className="mt-4 space-y-4">
-                {[
-                  ['Route bevestigen', 'U bevestigt scan, variant, timing, doelgroep en contactpersoon na akkoord.'],
-                  ['Respondentbestand aanleveren', 'U levert het bestand aan; Verisight controleert de import en zet uitnodigingen klaar.'],
-                  ['Dashboard en rapport ontvangen', 'U ontvangt dashboard, managementrapport en toelichting in dezelfde leeslijn.'],
-                ].map(([title, body]) => (
-                  <div key={title} className="rounded-[1.15rem] border border-[#E5E0D6] bg-white px-4 py-4">
-                    <p className="text-base font-semibold text-[#132033]">{title}</p>
-                    <p className="mt-2 text-sm leading-7 text-[#4A5563]">{body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="marketing-feature-card">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#3C8D8A]">Eerste waarde</p>
-              <div className="mt-4 space-y-3">
-                {[
-                  'Na de eerste responses is de campaign zichtbaar op gang, maar lezen we nog terughoudend.',
-                  'Vanaf ongeveer 5 responses ontstaat de eerste bruikbare detailweergave in dashboard en rapport.',
-                  'Vanaf ongeveer 10 responses ontstaat een steviger patroonbeeld voor prioritering, managementduiding en eerste besluiten.',
-                ].map((item) => (
-                  <div key={item} className="rounded-[1.15rem] border border-[#E5E0D6] bg-white px-4 py-4 text-sm leading-7 text-[#4A5563]">
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </MarketingSection>
-
         <MarketingSection tone="tint">
           <SectionHeading
-            eyebrow="Altijd inbegrepen"
-            title="Een duidelijke productvorm met vaste output."
-            description="Wat u koopt is niet alleen een vragenlijst, maar een complete managementroute met dashboard, rapport, leeswijzer en opvolgingsgesprek."
+            eyebrow="Vaste route"
+            title="Zo loopt een traject van intake tot eerste actie."
+            description="De tooling versnelt voorbereiding, uitvraag en rapportopbouw. De begeleiding blijft zichtbaar in intake, duiding en de eerste managementactie."
           />
-          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {included.map((item) => (
-              <div key={item} className="marketing-feature-card">
-                <p className="text-sm leading-7 text-[#4A5563]">{item}</p>
-              </div>
+          <ol className="mt-10 grid gap-px overflow-hidden rounded-[1.08rem] border border-[#E5E0D6] bg-[#E5E0D6]">
+            {steps.map((step) => (
+              <li
+                key={step.n}
+                className="grid gap-6 bg-[#FFFCF7] p-7 md:grid-cols-12 md:items-start"
+              >
+                <div className="md:col-span-2">
+                  <p className="text-[12px] font-medium tracking-[0.16em] text-[#3C8D8A]">STAP {step.n}</p>
+                  <p className="mt-2 text-[20px] font-medium text-[#132033]">{step.t}</p>
+                </div>
+                <p className="text-[15px] leading-relaxed text-[#4A5563] md:col-span-7">{step.d}</p>
+                <div className="md:col-span-3 md:border-l md:border-[#E5E0D6] md:pl-6">
+                  <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[#234B57]">Resultaat</p>
+                  <p className="mt-2 text-[13.5px] leading-relaxed text-[#132033]">{step.result}</p>
+                </div>
+              </li>
             ))}
-          </div>
-        </MarketingSection>
-
-        <MarketingSection tone="surface">
-          <MarketingCalloutBand
-            eyebrow="Kennismaking"
-            title="Benieuwd hoe een traject voor uw organisatie eruitziet?"
-            body="In een kort gesprek kijken we samen welke scan nu het meest logisch is, hoe de aanpak eruitziet en wat u kunt verwachten."
-            primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_closing_cta' })}
-            primaryLabel="Plan een kennismaking"
-            secondaryHref="/tarieven"
-            secondaryLabel="Bekijk tarieven"
-          />
+          </ol>
         </MarketingSection>
 
         <MarketingSection tone="plain">
-          <MarketingInlineContactPanel
-            eyebrow="Plan kennismaking"
-            title="Vertel kort welke managementvraag nu speelt."
-            body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy en prijs."
-            defaultRouteInterest="exitscan"
-            defaultCtaSource="approach_form"
-          />
+          <div className="grid gap-10 md:grid-cols-2">
+            <SectionHeading
+              eyebrow="SaaS-hybride"
+              title="Software waar het sneller kan, begeleiding waar het verschil maakt."
+              description="Zo blijft de ervaring lichter dan consultancy, maar zwaarder en bruikbaarder dan een self-service tool."
+            />
+            <div className="marketing-panel-soft p-7">
+              <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[#234B57]">Doorlooptijd</p>
+              <p className="mt-3 text-[17px] leading-relaxed text-[#132033]">
+                Een eerste scan loopt doorgaans in <strong>3 tot 4 weken</strong> van intake tot bespreking.
+                Programma&apos;s lopen langer door, maar blijven in dezelfde ritmiek.
+              </p>
+            </div>
+          </div>
+        </MarketingSection>
+
+        <MarketingSection tone="plain">
+          <div className="marketing-panel-dark p-10 text-[#F7F5F1] md:p-12">
+            <h2 className="max-w-2xl text-[28px] leading-tight md:text-[36px]">
+              Liever eerst zien hoe output eruitziet dan lang over proces praten?
+            </h2>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_report_cta' })} className="marketing-button-primary">
+                Vraag voorbeeldrapport aan
+              </Link>
+            </div>
+          </div>
         </MarketingSection>
       </MarketingPageShell>
     </>

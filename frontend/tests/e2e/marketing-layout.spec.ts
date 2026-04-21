@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test'
 const coreRoutes = [
   {
     path: '/',
-    heading: /krijg scherper zicht op vertrek, behoud en de eerste logische managementroute/i,
+    heading: /weet waarom mensen vertrekken/i,
   },
   {
     path: '/producten',
