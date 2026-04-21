@@ -59,6 +59,10 @@ export function InviteClientUserForm({ orgs }: Props) {
         De activatiemail start het account. Nieuwe gebruikers openen de link, kiezen direct een wachtwoord en gaan daarna
         verder naar het dashboard met dit e-mailadres.
       </div>
+      <div className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-3 text-xs leading-5 text-amber-900">
+        Verisight faciliteert hiermee toegang en verzending. De klant blijft verantwoordelijk voor interne communicatie,
+        reminders en voldoende respons op de campagne.
+      </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Organisatie</label>

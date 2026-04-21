@@ -198,6 +198,10 @@ export default async function BeheerPage() {
           respondentbestand aan. Verisight controleert de import, verstuurt uitnodigingen en activeert vervolgens
           het dashboard voor de klantorganisatie.
         </p>
+        <p className="mt-2 text-blue-800">
+          Verisight faciliteert setup, import-QA en verzending. De klant blijft verantwoordelijk voor juiste input,
+          interne communicatie en voldoende respons.
+        </p>
         <div className="mt-3">
           <div className="flex flex-wrap gap-2">
             <Link
@@ -573,6 +577,11 @@ export default async function BeheerPage() {
                 setup sneller, netter en beter herhaalbaar dan losse handmatige invoer. Als je Segment deep dive
                 hebt aangezet, zijn afdeling en functieniveau sterk aanbevolen.
               </p>
+              <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                De klant blijft verantwoordelijk voor de juistheid van het aangeleverde bestand en voor de interne
+                communicatie die respons moet dragen. Verisight doet QA en verzending, maar draagt ownership op
+                participatie niet over.
+              </p>
 
               {campaigns.filter(campaign => campaign.is_active).length === 0 && (
                 <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-700">
@@ -644,6 +653,10 @@ export default async function BeheerPage() {
               <p className="text-sm text-gray-500">
                 Nodig daarna een klantgebruiker uit voor het dashboard. Nieuwe gebruikers ontvangen een activatiemail;
                 bestaande accounts worden direct aan de organisatie gekoppeld.
+              </p>
+              <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Deze invite activeert dashboardtoegang, maar maakt Verisight niet eigenaar van respons. De klantowner
+                blijft verantwoordelijk voor deelname, reminders en interne opvolging.
               </p>
               {pendingInviteCount > 0 && (clientAccessCount ?? 0) === 0 ? (
                 <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-800">
