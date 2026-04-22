@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { contactTrustSignals } from '@/components/marketing/site-content'
 import {
   CONTACT_DESIRED_TIMING_OPTIONS,
   CONTACT_ROUTE_OPTIONS,
+  getContactQualificationGuidance,
   getContactDesiredTimingLabel,
   getContactFirstStepLabel,
   getContactRouteLabel,
@@ -33,7 +34,6 @@ interface ContactFormProps {
   surface?: 'dark' | 'light'
   defaultRouteInterest?: ContactRouteInterest
   defaultCtaSource?: string
-  mode?: 'full' | 'compact'
 }
 
 interface SuccessState {
@@ -41,6 +41,8 @@ interface SuccessState {
   routeLabel: string
   firstStepLabel: string
   desiredTimingLabel: string
+  guidanceHeadline: string
+  guidanceDetail: string
 }
 
 const initialState: FormState = {
@@ -58,7 +60,6 @@ export function ContactForm({
   surface = 'dark',
   defaultRouteInterest = 'exitscan',
   defaultCtaSource = 'website_contact_form',
-  mode = 'full',
 }: ContactFormProps) {
   const searchParams = useSearchParams()
   const [form, setForm] = useState<FormState>({
@@ -70,9 +71,17 @@ export function ContactForm({
   const [successState, setSuccessState] = useState<SuccessState | null>(null)
   const [warningMessage, setWarningMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const qualificationGuidance = useMemo(
+    () =>
+      getContactQualificationGuidance({
+        routeInterest: form.routeInterest,
+        desiredTiming: form.desiredTiming,
+        currentQuestion: form.currentQuestion,
+      }),
+    [form.currentQuestion, form.desiredTiming, form.routeInterest],
+  )
 
   const isLight = surface === 'light'
-  const isCompact = mode === 'compact'
 
   useEffect(() => {
     const sourceFromQuery = searchParams.get('cta_source')
@@ -110,7 +119,7 @@ export function ContactForm({
       form.workEmail.trim().length < 5 ||
       form.organization.trim().length < 2 ||
       form.employeeCount.trim().length < 2 ||
-      (!isCompact && form.currentQuestion.trim().length < 5)
+      form.currentQuestion.trim().length < 5
     ) {
       setErrorMessage('Vul naam, werk e-mail, organisatie, omvang en een korte vraag of context in.')
       setLoading(false)
@@ -131,9 +140,7 @@ export function ContactForm({
           route_interest: form.routeInterest,
           cta_source: ctaSource,
           desired_timing: form.desiredTiming,
-          current_question:
-            form.currentQuestion.trim() ||
-            `We willen de juiste eerste managementroute bepalen voor ${getContactRouteLabel(form.routeInterest)}.`,
+          current_question: form.currentQuestion,
           website: form.website,
         }),
       })
@@ -152,11 +159,18 @@ export function ContactForm({
       const routeLabel = getContactRouteLabel(form.routeInterest)
       const firstStepLabel = getContactFirstStepLabel(form.routeInterest)
       const desiredTimingLabel = getContactDesiredTimingLabel(form.desiredTiming)
+      const guidance = getContactQualificationGuidance({
+        routeInterest: form.routeInterest,
+        desiredTiming: form.desiredTiming,
+        currentQuestion: form.currentQuestion,
+      })
       setSuccessState({
         leadId: payload.lead_id ?? null,
         routeLabel,
         firstStepLabel,
         desiredTimingLabel,
+        guidanceHeadline: guidance.headline,
+        guidanceDetail: guidance.detail,
       })
       if (payload.notification_sent === false) {
         const reference = payload.lead_id ? ` Referentie: ${payload.lead_id}.` : ''
@@ -197,36 +211,42 @@ export function ContactForm({
   const buttonClass = isLight
     ? 'bg-[#3C8D8A] hover:bg-[#2d6e6b]'
     : 'bg-[#3C8D8A] hover:bg-[#2d6e6b]'
-  const panelSpacingClass = isCompact ? 'mb-5 rounded-[1.35rem] px-4 py-4 leading-6 sm:px-5 sm:py-5 sm:leading-7' : 'mb-6 rounded-[1.5rem] px-5 py-5 leading-7'
-  const fieldGridClass = isCompact ? 'grid gap-4 sm:grid-cols-2' : 'grid gap-5 sm:grid-cols-2'
-  const fieldClass = `block min-w-0 w-full rounded-2xl border px-4 ${isCompact ? 'py-2.5 sm:py-3' : 'py-3'} text-sm outline-none transition focus:ring-2 ${inputClass}`
 
   return (
     <form onSubmit={handleSubmit} className={shellClass}>
       <div
-        className={`${panelSpacingClass} border text-sm ${
+        className={`mb-6 rounded-[1.5rem] border px-5 py-5 text-sm leading-7 ${
           isLight ? 'border-[#E5E0D6] bg-[#F7F5F1] text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'
         }`}
       >
-        {isCompact
-          ? 'Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke output of intake daarbij logisch wordt.'
-          : 'Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de logische eerste stap is. TeamScan, Onboarding 30-60-90 en Leadership Scan blijven bounded follow-on routes die pas logisch worden nadat een eerste signaal, baseline of managementread al staat. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.'}
+        Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de
+        logische eerste stap is. TeamScan, Onboarding 30-60-90 en Leadership Scan blijven bounded follow-on routes die
+        pas logisch worden nadat een eerste signaal, baseline of managementread al staat. De informatie uit dit
+        formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.
       </div>
 
-      {!isCompact ? (
-        <div className="mb-6 flex flex-wrap gap-2">
-          {contactTrustSignals.map((signal) => (
-            <span
-              key={signal}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${isLight ? 'border border-[#E5E0D6] bg-white text-slate-600' : 'border border-white/10 bg-white/5 text-slate-200'}`}
-            >
-              {signal}
-            </span>
-          ))}
-        </div>
-      ) : null}
+      <div className="mb-6 flex flex-wrap gap-2">
+        {contactTrustSignals.map((signal) => (
+          <span
+            key={signal}
+            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${isLight ? 'border border-[#E5E0D6] bg-white text-slate-600' : 'border border-white/10 bg-white/5 text-slate-200'}`}
+          >
+            {signal}
+          </span>
+        ))}
+      </div>
 
-      <div className={fieldGridClass}>
+      <div
+        className={`mb-6 rounded-[1.5rem] border px-5 py-5 text-sm leading-7 ${
+          isLight ? 'border-[#D8E7E1] bg-[#EEF7F3] text-slate-700' : 'border-[#3C8D8A]/40 bg-[#3C8D8A]/12 text-slate-100'
+        }`}
+      >
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-80">Routevernauwing</p>
+        <p className="mt-2 font-semibold">{qualificationGuidance.headline}</p>
+        <p className="mt-2">{qualificationGuidance.detail}</p>
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="name" className={`mb-2 block text-sm font-medium ${labelClass}`}>
             Naam
@@ -237,7 +257,7 @@ export function ContactForm({
             required
             value={form.name}
             onChange={(event) => updateField('name', event.target.value)}
-            className={fieldClass}
+            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
             placeholder="Voor- en achternaam"
           />
         </div>
@@ -252,7 +272,7 @@ export function ContactForm({
             required
             value={form.workEmail}
             onChange={(event) => updateField('workEmail', event.target.value)}
-            className={fieldClass}
+            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
             placeholder="naam@organisatie.nl"
           />
         </div>
@@ -267,7 +287,7 @@ export function ContactForm({
             required
             value={form.organization}
             onChange={(event) => updateField('organization', event.target.value)}
-            className={fieldClass}
+            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
             placeholder="Naam organisatie"
           />
         </div>
@@ -281,7 +301,7 @@ export function ContactForm({
             required
             value={form.employeeCount}
             onChange={(event) => updateField('employeeCount', event.target.value)}
-            className={fieldClass}
+            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           >
             <option value="" disabled>
               Kies een range
@@ -295,14 +315,14 @@ export function ContactForm({
 
         <div>
           <label htmlFor="routeInterest" className={`mb-2 block text-sm font-medium ${labelClass}`}>
-            {isCompact ? 'Primaire managementvraag' : 'Welke route lijkt nu het meest logisch?'}
+            Welke route lijkt nu het meest logisch?
           </label>
           <select
             id="routeInterest"
             required
             value={form.routeInterest}
             onChange={(event) => updateField('routeInterest', normalizeContactRouteInterest(event.target.value))}
-            className={fieldClass}
+            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           >
             {CONTACT_ROUTE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -312,44 +332,38 @@ export function ContactForm({
           </select>
         </div>
 
-        {!isCompact ? (
-          <div>
-            <label htmlFor="desiredTiming" className={`mb-2 block text-sm font-medium ${labelClass}`}>
-              Wanneer wil je de eerste stap zetten?
-            </label>
-            <select
-              id="desiredTiming"
-              required
-              value={form.desiredTiming}
-              onChange={(event) => updateField('desiredTiming', normalizeContactDesiredTiming(event.target.value))}
-              className={fieldClass}
-            >
-              {CONTACT_DESIRED_TIMING_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label} - {option.description}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : null}
+        <div>
+          <label htmlFor="desiredTiming" className={`mb-2 block text-sm font-medium ${labelClass}`}>
+            Wanneer wil je de eerste stap zetten?
+          </label>
+          <select
+            id="desiredTiming"
+            required
+            value={form.desiredTiming}
+            onChange={(event) => updateField('desiredTiming', normalizeContactDesiredTiming(event.target.value))}
+            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+          >
+            {CONTACT_DESIRED_TIMING_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} - {option.description}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      <div className={isCompact ? 'mt-4' : 'mt-5'}>
+      <div className="mt-5">
         <label htmlFor="currentQuestion" className={`mb-2 block text-sm font-medium ${labelClass}`}>
-          {isCompact ? 'Korte toelichting (optioneel)' : 'Wat wil je nu vooral begrijpen van behoud of uitstroom?'}
+          Wat wil je nu vooral begrijpen van behoud of uitstroom?
         </label>
         <textarea
           id="currentQuestion"
-          required={!isCompact}
-          rows={isCompact ? 2 : 5}
+          required
+          rows={5}
           value={form.currentQuestion}
           onChange={(event) => updateField('currentQuestion', event.target.value)}
-          className={`block min-w-0 w-full rounded-2xl border px-4 ${isCompact ? 'py-2.5 sm:py-3' : 'py-3'} text-sm outline-none transition focus:ring-2 ${inputClass}`}
-          placeholder={
-            isCompact
-              ? 'Optioneel: licht kort toe wat nu bestuurlijke aandacht vraagt.'
-              : 'Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar managementbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven.'
-          }
+          className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+          placeholder="Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar managementbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven."
         />
       </div>
 
@@ -379,6 +393,9 @@ export function ContactForm({
               <span className="font-semibold">{successState.desiredTimingLabel}</span>) en welke intake of
               databasis nodig is om vlot naar uitvoering en eerste waarde te gaan.
             </p>
+            <p>
+              Intake-richting: <span className="font-semibold">{successState.guidanceHeadline}</span> {successState.guidanceDetail}
+            </p>
             <p>Een vervolgroute of combinatieroute wordt pas concreet zodra de eerste route en eerste managementwaarde helder zijn.</p>
             <p>In deze stap krijg je nog geen live inrichting of definitieve offerte zonder intake.</p>
             {successState.leadId ? <p className="text-xs opacity-80">Referentie: {successState.leadId}.</p> : null}
@@ -394,17 +411,17 @@ export function ContactForm({
         <div className={`mt-5 rounded-[1.5rem] border px-5 py-4 text-sm ${errorClass}`}>{errorMessage}</div>
       ) : null}
 
-      <div className="mt-6 flex flex-col gap-4 border-t border-[var(--border)] pt-5 sm:mt-7 sm:pt-6">
+      <div className="mt-7 flex flex-col gap-4 border-t border-[var(--border)] pt-6 sm:flex-row sm:items-center sm:justify-end">
         <button
           type="submit"
           disabled={loading}
-          className={`inline-flex w-full items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 sm:ml-auto sm:min-w-[14rem] sm:w-auto ${buttonClass}`}
+          className={`inline-flex min-w-[14rem] items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${buttonClass}`}
         >
-          {loading ? 'Verstuur bericht...' : isCompact ? 'Plan kennismaking' : 'Verstuur bericht'}
+          {loading ? 'Verstuur bericht...' : 'Verstuur bericht'}
         </button>
       </div>
 
-      <p className={`mt-4 text-[11px] leading-6 sm:text-xs ${helperClass}`}>
+      <p className={`mt-4 text-xs leading-6 ${helperClass}`}>
         Bekijk ook{' '}
         <Link href="/vertrouwen" className="underline">
           Trust & privacy

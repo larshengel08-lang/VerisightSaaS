@@ -20,7 +20,7 @@ EXIT_DECISION_BY_FACTOR = {
         "Beslis of dit vooral een teamspecifiek veiligheidsspoor is of een breder cultuurthema dat MT-aandacht en opvolging vraagt."
     ),
     "growth": (
-        "Beslis of de grootste ingreep nu moet zitten in zicht op perspectief, het gesprek daarover of feitelijke ontwikkelruimte."
+        "Kies waar het zwaartepunt eerst ligt: bij duidelijkheid over perspectief, bij het gesprek daarover of bij zichtbare ontwikkelruimte."
     ),
     "compensation": (
         "Beslis of de kern nu ligt in hoogte, ervaren fairness of uitlegbaarheid van voorwaarden en welke groep eerst opvolging vraagt."
@@ -34,9 +34,9 @@ EXIT_DECISION_BY_FACTOR = {
 }
 
 EXIT_OWNER_BY_FACTOR = {
-    "leadership": "HR business partner met betrokken leidinggevende",
+    "leadership": "HR/People-owner met betrokken leidinggevende",
     "culture": "HR lead met betrokken MT-lid",
-    "growth": "HR development-owner met betrokken leidinggevende",
+    "growth": "HR/People-owner met betrokken leidinggevende",
     "compensation": "HR lead met MT of directie",
     "workload": "Betrokken leidinggevende met HR en operations",
     "role_clarity": "Betrokken leidinggevende met HR business partner",
@@ -45,8 +45,8 @@ EXIT_OWNER_BY_FACTOR = {
 
 def _exit_review_moment_text(focus_text: str) -> str:
     return (
-        f"Plan binnen 60-90 dagen een review op {focus_text.lower()}: wat is gekozen, wat is uitgevoerd "
-        "en welke signalen keren terug in de volgende exitbatch of in managementgesprekken."
+        f"Plan binnen 60-90 dagen een review op {focus_text.lower()}: wat is gekozen, wat is uitgevoerd, "
+        "wat daaruit terugkomt en of de lijn moet worden aangescherpt of bijgesteld."
     )
 
 
@@ -75,22 +75,22 @@ def get_management_summary_payload(
         EXIT_OWNER_BY_FACTOR.get(lead_factor_key)
         if lead_factor_key
         else None
-    ) or "HR business partner met betrokken leidinggevende"
+    ) or "HR/People-owner met betrokken leidinggevende"
 
     if strong_work_signal_pct is not None and strong_work_signal_pct >= 50:
         profile_body = (
-            f"{top_reason_text.capitalize()} komt relatief vaak terug en valt samen met een breed werksignaal. "
-            f"De scherpste managementduiding zit nu vooral in {top_factor_text}."
+            f"{top_reason_text.capitalize()} komt relatief vaak terug. Tegelijk laat deze groep breed werkfrictie zien, "
+            f"vooral in {top_factor_text}."
         )
     elif strong_work_signal_pct is not None:
         profile_body = (
-            f"{top_reason_text.capitalize()} is zichtbaar, maar het werkgerelateerde beeld vraagt nog nadere toetsing. "
-            f"Gebruik vooral {top_factor_text} om te toetsen waar het vertrekverhaal bestuurlijk het meest beïnvloedbaar lijkt."
+            f"{top_reason_text.capitalize()} komt naar voren, maar vraagt nog nadere duiding. "
+            f"Gebruik vooral {top_factor_text} om te bepalen waar het patroon in het werk het duidelijkst terugkomt."
         )
     else:
         profile_body = (
             f"{top_reason_text.capitalize()} geeft het eerste vertrekhaakje. "
-            f"Gebruik {top_factor_text} om te bepalen welk deel van dit vertrekbeeld vooral managementverificatie vraagt."
+            f"Gebruik {top_factor_text} om te bepalen welk deel van dit vertrekbeeld het meest om vervolg vraagt."
         )
 
     if signal_visibility_average is not None and signal_visibility_average < 3:
@@ -100,13 +100,13 @@ def get_management_summary_payload(
         )
     elif top_contributing_reason_label:
         management_question = (
-            f"Wijst {top_reason_text} vooral op een breed werkgerelateerd vertrekbeeld, "
-            f"of laat {top_contributing_reason_label.lower()} zien waar management eerst dieper moet toetsen?"
+            f"Wat draagt dit vertrekbeeld nu het meest: {top_reason_text}, {top_contributing_reason_label.lower()} "
+            f"of de werkfrictie rond {top_factor_text}?"
         )
     else:
         management_question = (
-            f"Welk deel van {top_reason_text} valt nu het duidelijkst samen met {top_factor_text} "
-            "en dus met beïnvloedbare werkfrictie?"
+            f"Welk deel van {top_reason_text} hangt nu het duidelijkst samen met {top_factor_text} "
+            "en vraagt daarom eerst bestuurlijke aandacht?"
         )
 
     if signal_visibility_average is None:
@@ -117,7 +117,7 @@ def get_management_summary_payload(
     elif signal_visibility_average >= 4:
         visibility_value = "Signalen waren zichtbaar"
         visibility_body = (
-            "Twijfel of vertrek kwam niet volledig uit de lucht vallen. Toets vooral waar opvolging of escalatie te laat kwam."
+            "Twijfel of vertrek kwam niet volledig uit de lucht vallen. Kijk vooral waar opvolging te laat kwam."
         )
     elif signal_visibility_average >= 3:
         visibility_value = "Signalen waren deels zichtbaar"
@@ -131,8 +131,9 @@ def get_management_summary_payload(
         )
 
     executive_intro = (
-        f"ExitScan maakt het vertrekbeeld bestuurlijk leesbaar: {top_reason_text} is nu het eerste vertrekhaakje, "
-        f"terwijl {top_factor_text} laten zien waar management het meeste kan toetsen en verbeteren."
+        "ExitScan bundelt vertrekredenen, werkfactoren en werkfrictie tot één groepsbeeld. "
+        f"Zo zie je wat nu opvalt, waar het patroon in het werk het duidelijkst terugkomt en hoe {top_factor_text} "
+        "het eerste bestuurlijke gesprek richting geven."
     )
     if strong_work_signal_pct is not None and strong_work_signal_pct >= 50:
         executive_intro += (
@@ -141,26 +142,24 @@ def get_management_summary_payload(
         )
     else:
         executive_intro += (
-            " Gebruik dit rapport daarom als vertrekduiding en verificatiespoor, niet als sluitende oorzaakverklaring."
+            " Gebruik dit rapport daarom als groepsbeeld voor gesprek en weging, niet als sluitende oorzaakverklaring."
         )
 
     trust_note = (
-        "Lees ExitScan als managementsamenvatting van vertrekpatronen. Het rapport bundelt signalen, werkfactoren en hypotheses "
-        "tot een bestuurlijk gesprek, zonder causaliteit, diagnose of harde voorspellingen te claimen. "
-        "De uitkomst is indicatief, gegroepeerd en bedoeld voor prioritering en verificatie. "
-        "Detailweergave start pas vanaf 5 responses, patroonanalyse pas vanaf 10 en segmenten verschijnen alleen bij voldoende n. "
-        "ExitScan is methodisch verdedigbaar, maar niet extern gevalideerd als diagnostisch instrument."
+        "Lees ExitScan als groepsbeeld voor gesprek en weging. Het rapport bundelt vertrekredenen, werkfactoren en werkfrictie "
+        "voor bestuurlijke bespreking op groepsniveau. Detailweergave start pas vanaf 5 responses, patroonanalyse pas vanaf 10 "
+        "en segmenten verschijnen alleen bij voldoende n. Het rapport is geen individueel oordeel, diagnose of sluitend bewijs van oorzaak."
     )
 
     if strong_work_signal_pct is not None and strong_work_signal_pct >= 50:
         boardroom_relevance = (
             f"Een relatief groot deel van de exitbatch wijst op beïnvloedbare werkfrictie rond {top_factor_text}. "
-            "Daardoor is dit niet alleen HR-nazorg, maar een bestuurlijk prioriteitsspoor voor leiding, inrichting en opvolging."
+            "Daardoor vraagt dit beeld nu bestuurlijke aandacht in leiding, inrichting en opvolging."
         )
     else:
         boardroom_relevance = (
             f"Het vertrekbeeld is nog niet breed genoeg voor grote conclusies, maar wel scherp genoeg om {top_factor_text} "
-            "als bestuurlijk verificatiespoor te behandelen."
+            "als eerste bestuurlijke spoor te behandelen."
         )
 
     exposure_value = None
@@ -209,8 +208,8 @@ def get_management_summary_payload(
         })
 
     boardroom_watchout = (
-        "Lees dit niet als bewijs van de ene oorzaak van vertrek en ook niet als garantie dat een interventie het patroon oplost. "
-        "ExitScan helpt sneller wegen waar management moet toetsen en kiezen, niet om achteraf absolute zekerheid te claimen."
+        "Lees dit niet als bewijs van één oorzaak van vertrek en ook niet als garantie dat één interventie het patroon oplost. "
+        "ExitScan helpt sneller wegen waar management moet kiezen en opvolgen, niet om achteraf absolute zekerheid te claimen."
     )
 
     executive_compact_card = None
@@ -232,15 +231,15 @@ def get_management_summary_payload(
         "executive_compact_card": executive_compact_card,
         "boardroom_title": "Bestuurlijke handoff",
         "boardroom_intro": (
-            "Deze bestuurlijke handoff helpt een sponsor, MT of directie snel zien wat nu speelt, waarom het telt, "
-            "waar de meeste druk zit en wat vooral eerst geverifieerd moet worden."
+            "Deze bestuurlijke handoff maakt compact zichtbaar wat nu opvalt, waarom het telt, waar de meeste druk zit "
+            "en welk eerste besluit logisch is."
         ),
         "boardroom_cards": boardroom_cards,
         "boardroom_watchout_title": "Wat je hier niet uit moet concluderen",
         "boardroom_watchout": boardroom_watchout,
         "highlight_cards": [
             {
-                "title": "Vertrekbeeld nu",
+                "title": "Frictiescore nu",
                 "value": (top_exit_reason_label or "Nog geen duidelijke hoofdreden"),
                 "body": profile_body,
             },
@@ -248,7 +247,7 @@ def get_management_summary_payload(
                 "title": "Scherpste werkfactoren",
                 "value": top_factor_value,
                 "body": (
-                    f"Gebruik {top_factor_text} als eerste verificatiespoor om te bepalen welk deel van het vertrekverhaal bestuurlijk het meest beïnvloedbaar is."
+                    f"Gebruik {top_factor_text} om te bepalen waar het vertrekbeeld in het werk het duidelijkst om vervolg vraagt."
                 ),
             },
             {
@@ -264,7 +263,7 @@ def get_management_summary_payload(
             {
                 "title": "Eerste eigenaar",
                 "value": first_owner,
-                "body": "Beleg direct wie het eerste verificatiespoor trekt, zodat vertrekduiding niet blijft hangen in analyse of gesprek.",
+                "body": "Maak direct zichtbaar wie de eerste lijn trekt, zodat vervolg en terugkoppeling niet blijven hangen.",
             },
             {
                 "title": "Eerdere signalering",
@@ -274,7 +273,7 @@ def get_management_summary_payload(
         ],
         "cards": [
             {
-                "title": "Vertrekbeeld nu",
+                "title": "Frictiescore nu",
                 "body": profile_body,
             },
             {
@@ -303,15 +302,17 @@ def get_management_summary_payload(
 def get_methodology_payload() -> dict[str, Any]:
     return {
         "intro_text": (
-            "Dit rapport vertaalt exitdata naar vertrekduiding die bestuurlijk leesbaar is. "
-            "De methodiek is compact en nadrukkelijk geen volledig diagnostisch instrument; de uitkomst is bedoeld voor prioritering, gesprek en opvolging. "
-            "De labels hieronder zijn managementtaal bovenop ongewijzigde interne scorebanden."
+            "Deze pagina legt uit hoe je ExitScan leest en gebruikt. Ze vat kort samen wat de frictiescore betekent, "
+            "wat de uitkomst wel en niet zegt en welke grenzen gelden voor groepsniveau, detail en segmentatie."
+        ),
+        "one_liner": (
+            "Resultaten worden pas getoond vanaf voldoende responses. Patroonanalyse vraagt minimaal 10 responses. "
+            "Segmenten worden pas getoond vanaf minimaal 5 responses per groep."
         ),
         "method_text": (
-            "Elke respondent krijgt een frictiescore op een schaal van 1 tot 10. "
-            "Een hogere score betekent meer signalen van ervaren werkfrictie rondom vertrek. "
-            "Gebruik de score als samenvatting van het vertrekbeeld, niet als causale voorspelling, benchmark of objectief oordeel. "
-            "De score is een gewogen gemiddelde van zeven factoren:"
+            "De frictiescore vat samen hoeveel spanning en belemmering in werk, leiding en context in deze groep terugkomt. "
+            "Lees die score altijd samen met vertrekredenen, werkfactoren en de rest van het groepsbeeld. "
+            "ExitScan is geschikt voor bestuurlijke bespreking op groepsniveau. Het is geen individueel oordeel, geen diagnose en geen sluitend bewijs van oorzaak."
         ),
         "weight_rows": [
             ["Factor", "Gewicht", "Richting in literatuur"],
@@ -324,33 +325,34 @@ def get_methodology_payload() -> dict[str, Any]:
             ["Rolhelderheid", "1.0 x", "Onduidelijkheid in prioriteiten of verwachtingen kan vertrek versnellen."],
         ],
         "band_rows": [
-            ["Band", "Score", "Betekenis voor de organisatie"],
-            [MANAGEMENT_BAND_LABELS["LAAG"], "< 4.5", "Dit thema is nu niet leidend, maar blijft relevant om te volgen in het vertrekbeeld."],
-            [MANAGEMENT_BAND_LABELS["MIDDEN"], "4.5-7.0", "Dit thema vraagt eerst verificatie voordat management het zwaarder maakt in route of interventie."],
-            [MANAGEMENT_BAND_LABELS["HOOG"], ">= 7.0", "Dit thema moet nu bestuurlijk als eerste worden gewogen, zonder automatisch een harde conclusie te bewijzen."],
+            ["Band", "Score", "Betekenis"],
+            ["Volgen", "< 4.5", "In beeld houden, maar nu niet als eerste verdiepen."],
+            ["Eerst toetsen", "4.5–7.0", "Genoeg signaal om serieus te nemen, maar nog niet genoeg context voor een zware conclusie."],
+            ["Direct prioriteren", ">= 7.0", "Vraagt nu als eerste bestuurlijke aandacht."],
         ],
         "trust_rows": [
-            ["Wat dit product wel is", TRUST_CONTRACT["what_it_is"]],
-            ["Niet voor bedoeld", TRUST_CONTRACT["what_it_is_not"]],
-            ["Hoe je de output leest", TRUST_CONTRACT["how_to_read"]],
-            ["Privacy & rapportage", TRUST_CONTRACT["privacy_boundary"]],
-            ["Bewijsstatus nu", TRUST_CONTRACT["evidence_status"]],
+            ["Wat dit product wel is", "Een rapport dat laat zien welke vertrekpatronen in een groep terugkomen, waar werkfrictie meespeelt en welke factoren bestuurlijk aandacht vragen."],
+            ["Niet voor bedoeld", "Geen individueel oordeel. Geen voorspeller van vertrek op persoonsniveau. Geen externe benchmark. Geen bewijs op zichzelf van één oorzaak."],
+            ["Hoe je de output leest", "Lees score, vertrekredenen, werkfactoren en route altijd in samenhang."],
+            ["Privacy & rapportage", "ExitScan laat patronen op groepsniveau zien. Segmenten worden alleen getoond als dat qua groepsgrootte verantwoord is."],
+            ["Bewijsstatus nu", "Geschikt voor bestuurlijke bespreking op groepsniveau, niet voor diagnostiek of sluitende causaliteit."],
         ],
     }
 
 
 def get_signal_page_payload(*, retention_signal_profile: str | None = None) -> dict[str, Any]:
     return {
-        "title": "Vertrekbeeld, redenen & signalen van werkfrictie",
+        "title": "Signalen in samenhang",
         "intro": (
-            "Deze pagina combineert hoofdredenen, meespelende factoren, eerdere signalering en een indicatieve duiding van werkinvloed. "
-            "De uitkomsten helpen om vertrekpatronen te verkennen en managementvragen te richten, niet om één causale vertrekverklaring vast te stellen."
+            "Hier lees je het vertrekbeeld in samenhang. Eerst zie je wat mensen relatief vaak noemen. Daarna zie je waar werkfrictie in het patroon meespeelt "
+            "en welke werkfactoren daar het sterkst mee samenhangen."
         ),
-        "summary_title": "Vertrekbeeld in samenhang",
-        "signal_profile_title": "Hoe lees je dit vertrekbeeld?",
+        "summary_title": "Signalen in samenhang",
+        "signal_profile_title": "Hoe lees je dit",
         "signal_profile_text": (
-            "Lees hoofdredenen, meespelende factoren, eerdere signalering en signalen van werkfrictie als een managementverhaal. "
-            "De hoofdreden geeft het eerste vertrekhaakje; de werkfactoren en signalen van werkfrictie laten zien waar vervolgvragen bestuurlijk het meeste opleveren."
+            "Lees eerst de hoofdredenen: die laten zien wat in deze groep het vaakst terugkomt. Lees daarna waar werkfrictie in dit vertrekbeeld aanwezig is "
+            "en waar die waarschijnlijk beïnvloedbaar is. Gebruik meespelende factoren om beter te begrijpen welke werkfactoren het sterkst met dat vertrekpatroon "
+            "samenhangen. Lees citaten als illustratie van het patroon, niet als bewijs op zichzelf."
         ),
     }
 
@@ -379,22 +381,29 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         EXIT_OWNER_BY_FACTOR.get(lead_factor_key)
         if lead_factor_key
         else None
-    ) or "HR business partner met betrokken leidinggevende"
+    ) or "HR/People-owner met betrokken leidinggevende"
+    first_route = f"Leg de eerste focus bij {focus_text.lower()}."
+    priority_now = (
+        f"Hier is nu de meeste aandacht nodig, omdat dit patroon op {focus_text.lower()} het duidelijkst om vervolg vraagt."
+    )
     first_action = (
-        f"Vertaal {focus_text.lower()} binnen 30 dagen naar één gerichte verbeteractie met duidelijke eigenaar "
-        "en zichtbare opvolging."
+        f"Vertaal deze lijn binnen 30 dagen naar één gerichte vervolgactie op {focus_text.lower()}, "
+        "met duidelijke eigenaar en zichtbare opvolging."
     )
     review_moment = _exit_review_moment_text(focus_text)
     return {
-        "section_title": "Vervolgstappen",
+        "section_title": "Route",
         "intro_text": (
-            "Gebruik ExitScan niet alleen als terugblik, maar als managementinstrument om het vertrekbeeld te toetsen, te prioriteren en te vertalen naar zichtbare verbeteracties."
+            "P4 hielp bepalen wat eerst beter begrepen en getoetst moest worden. Vanaf hier gaat het niet meer om toetsen, maar om kiezen en uitvoeren."
         ),
         "session_title": "Eerste managementsessie na oplevering",
         "session_intro": (
-            "Gebruik deze route om de eerste managementsessie compact en besluitgericht te houden: kies eerst het prioriteitsspoor "
-            "en maak daarna expliciet wie trekt, wat de eerste stap is en wanneer je terugkijkt."
+            "Deze pagina helpt om die eerste managementsessie compact en besluitgericht te maken. Je kiest hier welk spoor nu voorrang krijgt, "
+            "welke eerste keuze daarbinnen nodig is en hoe je opvolging zichtbaar maakt."
         ),
+        "first_route": first_route,
+        "priority_now": priority_now,
+        "decision_now": first_decision,
         "first_decision": first_decision,
         "first_owner": first_owner,
         "first_action": first_action,
@@ -402,7 +411,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         "session_cards": [
             {
                 "title": "Prioriteit nu",
-                "body": f"{focus_text} vormen nu het eerste vertrekspoor om bestuurlijk te wegen.",
+                "body": priority_now,
             },
             {
                 "title": "Eerste eigenaar",
@@ -419,35 +428,35 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         ],
         "session_watchout_title": "Leesgrens bij de eerste managementsessie",
         "session_watchout": (
-            "Gebruik deze sessie om prioriteit, gesprek en actie te kiezen, niet om achteraf de ene oorzaak van vertrek te bewijzen."
+            "Gebruik deze sessie om richting, keuze en opvolging vast te zetten, niet om achteraf de ene oorzaak van vertrek te bewijzen."
         ),
         "steps": [
             {
                 "number": "1",
-                "title": "Kies binnen 2 weken het eerste managementspoor",
+                "title": "Kies in de eerste managementsessie het spoor met voorrang",
                 "body": (
-                    f"Deel de managementsamenvatting met MT en betrokken leidinggevenden en maak expliciet welk besluit nu eerst telt: {first_decision}"
+                    f"Maak expliciet welk spoor nu voorrang krijgt en leg meteen vast welke keuze daarbinnen als eerste telt: {first_decision}"
                 ),
             },
             {
                 "number": "2",
-                "title": "Beleg direct een eerste eigenaar",
+                "title": "Leg direct het eerste eigenaarschap vast",
                 "body": (
-                    f"Wijs {first_owner.lower()} aan als eerste eigenaar van {focus_text.lower()}. "
-                    "Zonder eigenaar blijft vertrekduiding een constatering in plaats van een verbeterroute."
+                    f"Beleg {first_owner.lower()} als eerste eigenaar van {focus_text.lower()}. "
+                    "Zonder eigenaar blijft de route een constatering in plaats van een zichtbaar vervolg."
                 ),
             },
             {
                 "number": "3",
-                "title": "Vertaal de duiding naar maximaal 3 gerichte acties",
+                "title": "Vertaal de keuze naar één gerichte vervolgactie binnen 30 dagen",
                 "body": (
-                    "Kies alleen acties die logisch voortkomen uit de getoetste hypothesen en de scherpste werkfactoren. "
-                    "Vermijd brede programma's voordat duidelijk is waar het patroon echt zit."
+                    f"Zorg voor één gerichte actie op {focus_text.lower()} met duidelijke eigenaar en zichtbare opvolging. "
+                    "Vermijd brede programma's voordat de eerste lijn echt loopt."
                 ),
             },
             {
                 "number": "4",
-                "title": "Leg een evaluatiemoment vast binnen 90 dagen",
+                "title": "Plan review en herweging binnen 60-90 dagen",
                 "body": (
                     review_moment
                 ),

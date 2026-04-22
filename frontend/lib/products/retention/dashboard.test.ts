@@ -55,6 +55,41 @@ describe('buildRetentionDashboardViewModel', () => {
     expect(model.followThroughCards[5]?.body).toContain('45-60')
   })
 
+  it('keeps the primary retention dashboard surfaces centered on retentiesignaal', () => {
+    const model = buildRetentionDashboardViewModel({
+      signalLabelLower: 'retentiesignaal',
+      averageSignal: 6.4,
+      strongWorkSignalRate: null,
+      engagement: 4.9,
+      turnoverIntention: 6.2,
+      stayIntent: 4.8,
+      hasEnoughData: true,
+      hasMinDisplay: true,
+      pendingCount: 0,
+      factorAverages: {
+        workload: 3.6,
+        leadership: 4.1,
+        growth: 5.2,
+      },
+      topExitReasonLabel: null,
+      topContributingReasonLabel: null,
+      signalVisibilityAverage: null,
+    })
+
+    expect(model.profileCards[0]?.value).toBe('Scherp retentiesignaal')
+    expect(model.profileCards[0]?.body).not.toContain('stay-intent')
+    expect(model.profileCards[0]?.body).toContain('aanvullende signalen')
+    expect(model.topSummaryCards.every((card) => !card.body.includes('stay-intent'))).toBe(true)
+    expect(
+      model.managementBlocks.every(
+        (block) =>
+          !block.intro?.includes('stay-intent') &&
+          block.items.every((item) => !item.includes('stay-intent')),
+      ),
+    ).toBe(true)
+    expect(model.nextStep.body).not.toContain('stay-intent')
+  })
+
   it('keeps retention guidance cautious before the pattern is strong enough', () => {
     const model = buildRetentionDashboardViewModel({
       signalLabelLower: 'retentiesignaal',

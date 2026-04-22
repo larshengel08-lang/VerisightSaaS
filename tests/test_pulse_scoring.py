@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 from fastapi import HTTPException
 
-from backend.products.pulse.definition import DEFAULT_PULSE_MODULES
+from backend.products.pulse.definition import DEFAULT_PULSE_MODULES, get_definition
 from backend.products.pulse.scoring import compute_pulse_risk, score_submission, validate_submission
 from backend.products.shared.sdt import compute_sdt_scores
 
@@ -55,3 +55,14 @@ def test_pulse_score_submission_builds_snapshot_summary():
     assert result["turnover_intention_score"] is None
     assert result["full_result"]["pulse_summary"]["snapshot_type"] == "current_cycle"
     assert set(result["org_scores"].keys()) == {"leadership", "growth", "workload"}
+
+
+def test_pulse_definition_uses_bounded_review_copy_without_old_wave_framing():
+    definition = get_definition()
+    trust = definition["trust_contract"]
+
+    assert "compacte reviewroute" in trust["what_it_is"].lower()
+    assert "momentopname" not in trust["how_to_read"].lower()
+    assert "eerste wave" not in trust["evidence_status"].lower()
+    assert "volgende wave" not in definition["report_repeat_body"].lower()
+    assert "snapshot" not in definition["report_repeat_body"].lower()

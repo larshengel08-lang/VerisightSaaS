@@ -86,6 +86,68 @@ def _add_response(
     db_session.add_all([respondent, response])
 
 
+def _add_pulse_response(
+    db_session: Session,
+    *,
+    campaign: Campaign,
+    idx: int,
+    department: str,
+    role_level: str,
+    risk_score: float,
+    risk_band: str,
+    stay_intent_score: int,
+) -> None:
+    respondent = Respondent(
+        campaign=campaign,
+        department=department,
+        role_level=role_level,
+        completed=True,
+        completed_at=datetime.now(timezone.utc),
+        exit_month=None,
+        annual_salary_eur=52000 + idx * 500,
+        email=f"pulse{idx}@voorbeeld.nl",
+    )
+    response = SurveyResponse(
+        respondent=respondent,
+        tenure_years=1.0 + idx * 0.1,
+        exit_reason_category=None,
+        exit_reason_code=None,
+        stay_intent_score=stay_intent_score,
+        sdt_raw={"B1": 4, "B5": 3, "B9": 4},
+        sdt_scores={
+            "autonomy": round(5.4 + (idx % 2) * 0.2, 1),
+            "competence": round(5.8 + (idx % 2) * 0.2, 1),
+            "relatedness": round(5.6 + (idx % 2) * 0.2, 1),
+            "sdt_total": round(5.6 + (idx % 2) * 0.2, 1),
+        },
+        org_raw={"leadership_1": 3, "leadership_2": 4, "leadership_3": 3, "growth_1": 2, "growth_2": 3, "growth_3": 2, "workload_1": 2, "workload_2": 3, "workload_3": 2},
+        org_scores={
+            "leadership": round(5.8 - (idx % 3) * 0.2, 1),
+            "growth": round(4.8 - (idx % 2) * 0.2, 1),
+            "workload": round(4.5 - (idx % 3) * 0.2, 1),
+        },
+        pull_factors_raw={},
+        open_text_raw="Meer rust in prioriteiten en opvolging zou nu het meeste verschil maken.",
+        uwes_raw={},
+        uwes_score=None,
+        turnover_intention_raw={},
+        turnover_intention_score=None,
+        risk_score=risk_score,
+        risk_band=risk_band,
+        preventability=None,
+        replacement_cost_eur=None,
+        full_result={
+            "active_factors": ["leadership", "growth", "workload"],
+            "pulse_summary": {
+                "snapshot_type": "current_cycle",
+                "pulse_signal_score": risk_score,
+                "pulse_signal_band": risk_band,
+            },
+        },
+    )
+    db_session.add_all([respondent, response])
+
+
 def _build_campaign(
     db_session: Session,
     *,
@@ -119,6 +181,18 @@ def _extract_pdf_text(pdf_bytes: bytes, max_pages: int = 20) -> str:
 def _extract_pdf_pages(pdf_bytes: bytes) -> list[str]:
     reader = PdfReader(io.BytesIO(pdf_bytes))
     return [' '.join((page.extract_text() or '').split()) for page in reader.pages]
+
+
+def _page_index(pages: list[str], needle: str) -> int:
+    return next(idx for idx, page in enumerate(pages) if needle in page)
+
+
+def _assert_page_has_no_visible_overflow_markers(page_text: str) -> None:
+    lowered = page_text.lower()
+    assert "…" not in page_text
+    assert "..." not in page_text
+    assert " pri oriteren" not in lowered
+    assert " huidig e" not in lowered
 
 
 def test_generate_exit_report_smoke(db_session: Session):
@@ -169,23 +243,124 @@ def test_generate_exit_report_smoke(db_session: Session):
     assert 'Respons in context' in pages[1]
     assert 'Bestuurlijke handoff' in pages[2]
     assert 'Wat je hieruit moet concluderen' in pages[2]
-    assert 'Frictiescore' in pages[3]
-    assert 'Verdeling van het vertrekbeeld' in pages[3]
-    assert 'Hoe lees je dit?' in pages[3]
-    assert 'Signalen in samenhang' in pages[4]
-    assert 'Eerdere signalering' in pages[4]
-    assert 'Drivers & prioriteitenbeeld' in pages[5]
-    assert 'Hoe lees je dit?' in pages[5]
-    assert 'SDT Basisbehoeften' in pages[6]
-    assert 'Autonomie' in pages[6]
-    assert 'Organisatiefactoren' in pages[7]
-    assert 'Belevingsscore' in pages[7]
-    assert 'Eerste route & actie' in pages[8]
-    assert 'Review' in pages[8]
-    assert 'Methodiek / leeswijzer' in pages[9]
-    assert 'Technische verantwoording' in pages[10]
-    assert 'Onderliggende psychologische laag (SDT)' in pages[10]
+    friction_page = pages[_page_index(pages, 'Verdeling van het vertrekbeeld')]
+    synthesis_page = pages[_page_index(pages, 'Signalen in samenhang')]
+    drivers_page = pages[_page_index(pages, 'Drivers & prioriteitenbeeld')]
+    action_page = pages[_page_index(pages, 'Wat besluiten en doen we als eerste')]
+    methodology_page = pages[-2]
+    appendix_page = pages[-1]
+    methodology_index = len(pages) - 2
+    assert 'Frictiescore' in friction_page
+    assert 'Hoe lees je dit?' in friction_page
+    assert 'Signalen in samenhang' in synthesis_page
+    assert 'Eerdere signalering' in ' '.join(pages)
+    assert 'Drivers & prioriteitenbeeld' in drivers_page
+    assert 'Hoe lees je dit?' in drivers_page
+    assert 'Wat besluiten en doen we als eerste' in action_page
+    assert 'Review' in action_page
+    assert 'METHODIEK' in methodology_page
+    assert 'Technische verantwoording' in appendix_page
+    assert 'Onderliggende psychologische laag (SDT)' in appendix_page
+    assert _page_index(pages, 'Bestuurlijke handoff') < _page_index(pages, 'Drivers & prioriteitenbeeld')
+    assert _page_index(pages, 'Drivers & prioriteitenbeeld') < _page_index(pages, 'Verdeling van het vertrekbeeld')
+    assert _page_index(pages, 'Verdeling van het vertrekbeeld') < _page_index(pages, 'Wat besluiten en doen we als eerste')
+    assert _page_index(pages, 'Wat besluiten en doen we als eerste') < methodology_index
     assert 'Vertrouwelijk' in ' '.join(pages)
+
+
+def test_generate_exit_report_priority_pages_are_text_safe(db_session: Session):
+    org = Organization(name="Tekstveilig BV", slug="tekstveilig-bv", contact_email="hr@tekstveilig.nl")
+    db_session.add(org)
+    db_session.flush()
+
+    campaign = _build_campaign(
+        db_session,
+        organization=org,
+        name="Exit Q1 2026",
+        scan_type="exit",
+        created_at=datetime.now(timezone.utc),
+    )
+
+    for idx in range(10):
+        _add_response(
+            db_session,
+            campaign=campaign,
+            idx=idx,
+            department="Zorg" if idx < 5 else "Support",
+            role_level="manager" if idx < 5 else "specialist",
+            exit_reason_code="P1" if idx < 6 else "P3",
+            risk_score=6.2 + (idx % 3) * 0.2,
+            risk_band="MIDDEN" if idx < 7 else "HOOG",
+            preventability="STERK_WERKSIGNAAL" if idx < 7 else "GEMENGD_WERKSIGNAAL",
+            stay_intent_score=2,
+            uwes_score=None,
+            turnover_intention_score=None,
+            signal_visibility_score=2.2 + (idx % 4) * 0.2,
+        )
+
+    db_session.commit()
+
+    pdf_bytes = generate_campaign_report(campaign.id, db_session)
+    pages = _extract_pdf_pages(pdf_bytes)
+
+    for page_number in (1, 2, 3, 4, 9, 11):
+        _assert_page_has_no_visible_overflow_markers(pages[page_number - 1])
+
+
+def test_generate_exit_report_focus_pages_follow_corrected_reading_order(db_session: Session):
+    org = Organization(name="Compositie BV", slug="compositie-bv", contact_email="hr@compositie.nl")
+    db_session.add(org)
+    db_session.flush()
+
+    campaign = _build_campaign(
+        db_session,
+        organization=org,
+        name="Exit Q1 2026",
+        scan_type="exit",
+        created_at=datetime.now(timezone.utc),
+    )
+
+    for idx in range(10):
+        _add_response(
+            db_session,
+            campaign=campaign,
+            idx=idx,
+            department="Zorg" if idx < 5 else "Support",
+            role_level="manager" if idx < 5 else "specialist",
+            exit_reason_code="P1" if idx < 6 else "P3",
+            risk_score=6.2 + (idx % 3) * 0.2,
+            risk_band="MIDDEN" if idx < 7 else "HOOG",
+            preventability="STERK_WERKSIGNAAL" if idx < 7 else "GEMENGD_WERKSIGNAAL",
+            stay_intent_score=2,
+            uwes_score=None,
+            turnover_intention_score=None,
+            signal_visibility_score=2.2 + (idx % 4) * 0.2,
+        )
+
+    db_session.commit()
+
+    pdf_bytes = generate_campaign_report(campaign.id, db_session)
+    pages = _extract_pdf_pages(pdf_bytes)
+
+    response_page = pages[1]
+    assert response_page.index("Responsverhouding") < response_page.index("Wat respons zegt")
+    assert response_page.index("Wat respons zegt") < response_page.index("Wat lage respons kan betekenen")
+    assert response_page.index("Wat lage respons kan betekenen") < response_page.index("Wat hoge respons kan betekenen")
+    assert response_page.index("Wat hoge respons kan betekenen") < response_page.index("Respons in context")
+    assert response_page.index("Respons in context") < response_page.index("Optionele context")
+
+    handoff_page = pages[2]
+    assert "Waarom dit de eerste route is" not in handoff_page
+    assert handoff_page.index("Sterkste signaal") < handoff_page.index("Waarom dit nu telt")
+    assert handoff_page.index("Waarom dit nu telt") < handoff_page.index("Wat nu eerst doen")
+    assert handoff_page.index("Wat nu eerst doen") < handoff_page.index("Wat je hieruit moet concluderen")
+    assert "Waarom dit nu telt Bestuurlijke relevantie" in handoff_page
+    assert "Wat nu eerst doen Eerste route" in handoff_page
+    assert "Wat je hieruit moet concluderen Conclusie" in handoff_page
+
+    friction_page = pages[_page_index(pages, "Verdeling van het vertrekbeeld")]
+    assert friction_page.index("Frictiescore") < friction_page.index("Verdeling van het vertrekbeeld")
+    assert friction_page.index("Verdeling van het vertrekbeeld") < friction_page.index("Band n / %")
 
 
 def test_generate_exit_report_smoke_with_indicative_batch(db_session: Session):
@@ -225,7 +400,7 @@ def test_generate_exit_report_smoke_with_indicative_batch(db_session: Session):
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 5000
     pages = _extract_pdf_pages(pdf_bytes)
-    assert len(pages) == 11
+    assert len(pages) == 9
     assert 'Segment deep dive' in pages[0]
     assert 'Respons' in pages[1]
     assert 'Bestuurlijke handoff' in pages[2]
@@ -295,31 +470,31 @@ def test_generate_retention_report_smoke_with_trend_and_segment_deep_dive(db_ses
     assert pdf_bytes.startswith(b"%PDF")
     assert len(pdf_bytes) > 9000
     pages = _extract_pdf_pages(pdf_bytes)
-    assert len(pages) == 8
+    assert len(pages) == 11
     assert 'Door Verisight' in pages[0]
-    assert 'Segment deep dive' in pages[0]
-    assert 'Opgenomen' in pages[0]
+    assert 'Segment deep dive' not in pages[0]
+    assert 'Bron' in pages[0]
     assert 'Wat speelt nu' not in pages[0]
-    assert 'Bestuurlijke handoff' in pages[1]
+    assert 'Respons' in pages[1]
     assert 'Uitgenodigd' in pages[1]
     assert 'Ingevuld' in pages[1]
-    assert 'Respons' in pages[1]
     assert 'Respons in context' in pages[1]
-    assert 'Drivers & prioriteitenbeeld' in pages[2]
-    assert 'Wat speelt nu' in pages[2]
-    assert 'Scherpste factor' in pages[2]
-    assert 'Eerste besluit' in pages[2]
-    assert 'Hoe lees je dit?' in pages[2]
-    assert 'Kernsignalen in samenhang' in pages[3]
-    assert 'Eerdere signalering' in pages[3]
-    assert 'Hoe lees je dit?' in pages[3]
-    assert 'Eerste route & managementactie' in pages[4]
-    assert 'Compacte methodiek / leeswijzer' in pages[5]
-    assert 'Hoe lees je dit?' in pages[5]
-    assert 'Segmentanalyse' in pages[6]
-    assert 'Technische verantwoording' in pages[7]
-    assert 'Onderliggende psychologische laag (SDT)' in pages[7]
-    assert 'Review' in pages[4]
+    assert 'Bestuurlijke handoff' in pages[2]
+    assert 'Wat je hieruit moet concluderen' in pages[2]
+    assert 'Retentiesignaal' in pages[3]
+    assert 'Verdeling van het' in pages[3]
+    assert 'Signalen in samenhang' in pages[4]
+    assert 'Open signalen met besliswaarde' in pages[4]
+    page_index = lambda needle: next(idx for idx, page in enumerate(pages) if needle in page)
+    assert page_index('Drivers & prioriteitenbeeld') > page_index('Signalen in samenhang')
+    assert page_index('SDT-basisbehoeften') > page_index('Drivers & prioriteitenbeeld')
+    assert page_index('Organisatiefactoren') > page_index('SDT-basisbehoeften')
+    assert page_index('Eerste route & actie') > page_index('Organisatiefactoren')
+    assert page_index('Methodiek / leeswijzer') > page_index('Eerste route & actie')
+    assert 'Review' in pages[page_index('Eerste route & actie')]
+    assert 'Technische verantwoording' in pages[10]
+    assert 'Onderliggende psychologische laag (SDT)' in pages[10]
+    assert 'Segmentanalyse' not in ' '.join(pages)
 
 
 def test_generate_exit_report_sample_output_mode_uses_buyer_facing_cover_note(db_session: Session):
@@ -398,9 +573,117 @@ def test_generate_retention_report_omits_segment_appendix_when_any_group_is_belo
     pdf_bytes = generate_campaign_report(campaign.id, db_session)
 
     pages = _extract_pdf_pages(pdf_bytes)
-    assert len(pages) == 7
+    assert len(pages) == 11
     assert 'Segmentanalyse' not in ' '.join(pages[:-1])
-    assert 'Eerdere signalering' not in pages[3]
-    assert 'eerdere signalering' not in pages[3].lower()
+    assert 'Respons' in pages[1]
+    assert 'Bestuurlijke handoff' in pages[2]
+    assert 'Organisatiefactoren' in pages[7]
+    assert 'Methodiek / leeswijzer' in pages[9]
     assert 'Technische verantwoording' in pages[-1]
-    assert 'Segmentanalyse niet beschikbaar' in pages[-1]
+    assert 'Segmentanalyse niet beschikbaar' not in ' '.join(pages)
+
+
+def test_generate_retention_report_uses_product_correct_language_and_clean_appendix_copy(db_session: Session):
+    org = Organization(name="Retentie Taal BV", slug="retentie-taal-bv", contact_email="people@retentietaal.nl")
+    db_session.add(org)
+    db_session.flush()
+
+    campaign = _build_campaign(
+        db_session,
+        organization=org,
+        name="Retentie Taalcheck 2026",
+        scan_type="retention",
+        created_at=datetime.now(timezone.utc),
+    )
+
+    for idx in range(10):
+        _add_response(
+            db_session,
+            campaign=campaign,
+            idx=idx,
+            department="Product" if idx < 5 else "People",
+            role_level="manager" if idx < 5 else "specialist",
+            exit_reason_code=None,
+            risk_score=5.9 + (idx % 3) * 0.2,
+            risk_band="MIDDEN",
+            preventability=None,
+            stay_intent_score=2,
+            uwes_score=5.2,
+            turnover_intention_score=5.8,
+            open_text_raw="Werkdruk en groeiperspectief vragen snelle verificatie en opvolging.",
+        )
+
+    db_session.commit()
+
+    pdf_bytes = generate_campaign_report(campaign.id, db_session)
+    pages = _extract_pdf_pages(pdf_bytes)
+    full_text = " ".join(pages)
+
+    assert len(pages) == 11
+    assert "Retentiesignaal / groepsduiding" in pages[3]
+    assert "retentiesignaal" in full_text.lower()
+    assert "stay-intent" in full_text.lower()
+    assert "vertrekintentie" in full_text.lower()
+    assert "bevlogenheid" in full_text.lower()
+    assert "frictiescore" not in full_text.lower()
+    assert "vertrekbeeld" not in full_text.lower()
+    assert "exitbatch" not in full_text.lower()
+    assert "Ã" not in full_text
+    assert "�" not in full_text
+    assert "verificatie of een eerste interventiestap" in pages[8].lower()
+    assert "samenkomen in het retentiesignaal" in pages[10].lower()
+    assert "samenkomen in de retentiesignaal" not in pages[10].lower()
+    assert "opgenomen in het retentiesignaal" in pages[10].lower()
+
+
+def test_generate_pulse_report_smoke_keeps_bounded_management_handoff(db_session: Session):
+    org = Organization(name="Pulse Org", slug="pulse-org", contact_email="people@pulse.nl")
+    db_session.add(org)
+    db_session.flush()
+
+    campaign = _build_campaign(
+        db_session,
+        organization=org,
+        name="Pulse April 2026",
+        scan_type="pulse",
+        created_at=datetime.now(timezone.utc),
+        enabled_modules=["leadership", "growth", "workload"],
+    )
+
+    for idx in range(10):
+        _add_pulse_response(
+            db_session,
+            campaign=campaign,
+            idx=idx,
+            department="People" if idx < 5 else "Operations",
+            role_level="manager" if idx < 4 else "specialist",
+            risk_score=6.1 + (idx % 3) * 0.2,
+            risk_band="MIDDEN" if idx < 7 else "HOOG",
+            stay_intent_score=4 if idx < 6 else 5,
+        )
+
+    db_session.commit()
+
+    pdf_bytes = generate_campaign_report(campaign.id, db_session)
+
+    assert pdf_bytes.startswith(b"%PDF")
+    pages = _extract_pdf_pages(pdf_bytes)
+    full_text = " ".join(pages)
+
+    assert len(pages) == 8
+    assert "RetentieScan" not in pages[0]
+    assert "Pulse" in pages[0]
+    assert "Compacte managementhandoff" in full_text
+    assert "Drivers & prioriteitenbeeld" in full_text
+    assert "Kernsignalen in samenhang" in full_text
+    assert "Pulsesignaal" in full_text
+    assert "Eerste route & managementactie" in full_text
+    assert "Volgende Pulse-cycle pas na expliciete review" in full_text
+    assert "Compacte methodiek / leeswijzer" in full_text
+    assert "Technische verantwoording" in full_text
+    assert "frictiescore" not in full_text.lower()
+    assert "retentiesignaal" not in full_text.lower()
+    assert "vertrekintentie" not in full_text.lower()
+    assert "bevlogenheid" not in full_text.lower()
+    assert "hoofdredenen van vertrek" not in full_text.lower()
+    assert "segmentanalyse" not in full_text.lower()

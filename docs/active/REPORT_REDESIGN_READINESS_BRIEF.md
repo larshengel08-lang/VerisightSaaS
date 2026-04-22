@@ -1,8 +1,8 @@
 # REPORT_REDESIGN_READINESS_BRIEF
 
-Last updated: 2026-04-18  
-Status: active  
-Source of truth: report structure canon, product language canon, metric hierarchy canon and report-to-action program plan.
+Last updated: 2026-04-18
+Status: active derived brief
+Authoritative inputs: de canonieke reporting truth lives in `docs/reporting/*`. Dit brief begrenst alleen de redesignlaag en mag geen primaire reporting canon worden.
 
 ## Titel
 
@@ -14,8 +14,8 @@ Dit brief geeft de rapport-redesignthread een harde inhoudelijke boundary. De re
 
 ## Wat is geaudit
 
-- [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md)
-- [REPORT_TRUTH_BASELINE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_TRUTH_BASELINE.md)
+- [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/REPORT_STRUCTURE_CANON.md)
+- [REPORT_TRUTH_BASELINE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/REPORT_TRUTH_BASELINE.md)
 - [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md)
 - [METRIC_HIERARCHY_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/METRIC_HIERARCHY_CANON.md)
 - [METHOD_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/METHOD_SIGNOFF.md)
@@ -84,3 +84,7 @@ Dit brief geeft de rapport-redesignthread een harde inhoudelijke boundary. De re
 ## Next gate
 
 Dashboard redesign readiness vastleggen op taal, metriek en handofflogica.
+
+## Precedence rule
+
+Als dit brief botst met `docs/reporting/REPORT_TRUTH_BASELINE.md`, `docs/reporting/REPORT_STRUCTURE_CANON.md` of `docs/reporting/REPORT_METHODOLOGY_CANON.md`, dan wint de reporting canon.

@@ -33,47 +33,57 @@ CONFIDENTIAL_FOOTER_LABEL = "Vertrouwelijk - Verisight"
 PAGE_LABEL_TEMPLATE = "{campaign} | Pagina {page}"
 
 TOKENS = {
-    "ink": colors.HexColor("#132033"),
-    "navy": colors.HexColor("#132033"),
-    "petrol": colors.HexColor("#3C8D8A"),
-    "teal": colors.HexColor("#3C8D8A"),
-    "teal_light": colors.HexColor("#DCEFEA"),
-    "teal_soft": colors.HexColor("#FBFAF7"),
-    "cream": colors.HexColor("#F7F5F1"),
-    "bg": colors.HexColor("#F7F5F1"),
+    "ink": colors.HexColor("#14161A"),
+    "navy": colors.HexColor("#14161A"),
+    "petrol": colors.HexColor("#2F5BEA"),
+    "teal": colors.HexColor("#2F5BEA"),
+    "teal_light": colors.HexColor("#EEF2FE"),
+    "teal_soft": colors.HexColor("#F2F1EC"),
+    "cream": colors.HexColor("#FAFAF7"),
+    "bg": colors.HexColor("#FAFAF7"),
     "surface": colors.HexColor("#FFFFFF"),
-    "border": colors.HexColor("#E5E0D6"),
-    "text": colors.HexColor("#4A5563"),
-    "muted": colors.HexColor("#9CA3AF"),
-    "cover_muted": colors.HexColor("#D5D9E0"),
-    "risk_high_bg": colors.HexColor("#FBE4E4"),
-    "risk_med_bg": colors.HexColor("#F6ECD5"),
-    "risk_low_bg": colors.HexColor("#DCEFEA"),
-    "danger": colors.HexColor("#B91C1C"),
-    "warning": colors.HexColor("#C17C00"),
-    "success": colors.HexColor("#3C8D8A"),
+    "paper_shade": colors.HexColor("#F2F1EC"),
+    "paper_edge": colors.HexColor("#E8E7E1"),
+    "border": colors.HexColor("#D9DBDE"),
+    "text": colors.HexColor("#30343B"),
+    "muted": colors.HexColor("#9099A3"),
+    "cover_muted": colors.HexColor("#5E636D"),
+    "accent_ink": colors.HexColor("#1E3FB3"),
+    "accent_wash": colors.HexColor("#EEF2FE"),
+    "accent_line": colors.HexColor("#C6D3FB"),
+    "risk_high_bg": colors.HexColor("#F8E6DE"),
+    "risk_med_bg": colors.HexColor("#FAF0DC"),
+    "risk_low_bg": colors.HexColor("#E6F4EF"),
+    "danger": colors.HexColor("#C24A2B"),
+    "warning": colors.HexColor("#B4770E"),
+    "success": colors.HexColor("#0E8F6E"),
 }
 
 MPL_TOKENS = {
-    "ink": "#132033",
-    "navy": "#132033",
-    "petrol": "#3C8D8A",
-    "teal": "#3C8D8A",
-    "teal_light": "#DCEFEA",
-    "teal_soft": "#FBFAF7",
-    "cream": "#F7F5F1",
-    "bg": "#F7F5F1",
+    "ink": "#14161A",
+    "navy": "#14161A",
+    "petrol": "#2F5BEA",
+    "teal": "#2F5BEA",
+    "teal_light": "#EEF2FE",
+    "teal_soft": "#F2F1EC",
+    "cream": "#FAFAF7",
+    "bg": "#FAFAF7",
     "surface": "#FFFFFF",
-    "border": "#E5E0D6",
-    "text": "#4A5563",
-    "muted": "#9CA3AF",
-    "cover_muted": "#D5D9E0",
-    "risk_high_bg": "#FBE4E4",
-    "risk_med_bg": "#F6ECD5",
-    "risk_low_bg": "#DCEFEA",
-    "danger": "#B91C1C",
-    "warning": "#C17C00",
-    "success": "#3C8D8A",
+    "paper_shade": "#F2F1EC",
+    "paper_edge": "#E8E7E1",
+    "border": "#D9DBDE",
+    "text": "#30343B",
+    "muted": "#9099A3",
+    "cover_muted": "#5E636D",
+    "accent_ink": "#1E3FB3",
+    "accent_wash": "#EEF2FE",
+    "accent_line": "#C6D3FB",
+    "risk_high_bg": "#F8E6DE",
+    "risk_med_bg": "#FAF0DC",
+    "risk_low_bg": "#E6F4EF",
+    "danger": "#C24A2B",
+    "warning": "#B4770E",
+    "success": "#0E8F6E",
 }
 
 FONT_DIR = Path(__file__).resolve().parent / "assets" / "fonts"
@@ -138,14 +148,17 @@ def get_report_theme(scan_type: str) -> dict[str, colors.Color]:
         "ink": TOKENS["ink"],
         "navy": TOKENS["navy"],
         "accent": TOKENS["teal"],
-        "accent_dark": TOKENS["navy"],
-        "accent_light": TOKENS["teal_light"],
+        "accent_dark": TOKENS["accent_ink"],
+        "accent_light": TOKENS["accent_wash"],
+        "accent_line": TOKENS["accent_line"],
         "bg": TOKENS["cream"],
         "surface": TOKENS["surface"],
-        "soft": TOKENS["cream"],
+        "soft": TOKENS["paper_shade"],
         "text": TOKENS["text"],
         "muted": TOKENS["muted"],
+        "cover_muted": TOKENS["cover_muted"],
         "border": TOKENS["border"],
+        "paper_edge": TOKENS["paper_edge"],
         "success": TOKENS["success"],
         "warning": TOKENS["warning"],
         "danger": TOKENS["danger"],
@@ -158,81 +171,81 @@ def build_report_styles() -> dict[str, ParagraphStyle]:
     return {
         "cover_title": ParagraphStyle(
             "cover_title",
-            fontName=REPORT_FONTS["light"],
-            fontSize=28,
-            leading=36,
-            textColor=TOKENS["cream"],
+            fontName=REPORT_FONTS["bold"],
+            fontSize=30,
+            leading=35,
+            textColor=TOKENS["ink"],
             alignment=TA_LEFT,
         ),
         "cover_sub": ParagraphStyle(
             "cover_sub",
             fontName=REPORT_FONTS["regular"],
-            fontSize=11,
-            leading=16,
+            fontSize=10.5,
+            leading=15,
             textColor=TOKENS["cover_muted"],
             alignment=TA_LEFT,
         ),
         "cover_meta": ParagraphStyle(
             "cover_meta",
             fontName=REPORT_FONTS["regular"],
-            fontSize=8,
-            leading=12,
+            fontSize=7.7,
+            leading=11.2,
             textColor=TOKENS["cover_muted"],
             alignment=TA_LEFT,
         ),
         "eyebrow": ParagraphStyle(
             "eyebrow",
-            fontName=REPORT_FONTS["medium"],
-            fontSize=7,
-            leading=9,
+            fontName=REPORT_FONTS["semibold"],
+            fontSize=7.6,
+            leading=10.0,
             textColor=TOKENS["teal"],
             alignment=TA_LEFT,
-            spaceAfter=4,
+            spaceAfter=5,
         ),
         "section_title": ParagraphStyle(
             "section_title",
-            fontName=REPORT_FONTS["medium"],
-            fontSize=15,
-            leading=20,
+            fontName=REPORT_FONTS["semibold"],
+            fontSize=18,
+            leading=23,
             textColor=TOKENS["ink"],
-            spaceAfter=5,
+            spaceAfter=6,
         ),
         "sub_title": ParagraphStyle(
             "sub_title",
-            fontName=REPORT_FONTS["medium"],
-            fontSize=11,
-            leading=15,
-            textColor=TOKENS["ink"],
-            spaceBefore=3,
-            spaceAfter=3,
+            fontName=REPORT_FONTS["semibold"],
+            fontSize=9.8,
+            leading=13,
+            textColor=TOKENS["cover_muted"],
+            spaceBefore=4,
+            spaceAfter=5,
         ),
         "body": ParagraphStyle(
             "body",
             fontName=REPORT_FONTS["regular"],
-            fontSize=8.7,
-            leading=12.3,
+            fontSize=8.8,
+            leading=12.8,
             textColor=TOKENS["text"],
-            spaceAfter=4,
+            spaceAfter=5,
         ),
         "body_bold": ParagraphStyle(
             "body_bold",
             fontName=REPORT_FONTS["semibold"],
-            fontSize=8.7,
-            leading=12.3,
+            fontSize=8.8,
+            leading=12.8,
             textColor=TOKENS["ink"],
         ),
         "label": ParagraphStyle(
             "label",
-            fontName=REPORT_FONTS["regular"],
-            fontSize=7.4,
-            leading=10.2,
+            fontName=REPORT_FONTS["semibold"],
+            fontSize=7.1,
+            leading=9.4,
             textColor=TOKENS["muted"],
         ),
         "caption": ParagraphStyle(
             "caption",
             fontName=REPORT_FONTS["italic"],
             fontSize=7.4,
-            leading=10.2,
+            leading=10.4,
             textColor=TOKENS["muted"],
             alignment=TA_LEFT,
         ),
@@ -305,37 +318,35 @@ def make_page_callbacks(
     theme = get_report_theme(scan_type)
 
     def _draw_footer(canvas, *, is_cover: bool) -> None:
-        canvas.setStrokeColor(colors.Color(theme["cream"].red, theme["cream"].green, theme["cream"].blue, alpha=0.18) if is_cover else theme["border"])
+        footer_rule = theme["paper_edge"] if is_cover else theme["border"]
+        footer_fill = theme["cover_muted"] if is_cover else theme["muted"]
+        canvas.setStrokeColor(footer_rule)
         canvas.setLineWidth(0.5)
         canvas.line(PAGE_MARGINS["left"], FOOTER_Y + FOOTER_RULE_GAP, PAGE_W - PAGE_MARGINS["right"], FOOTER_Y + FOOTER_RULE_GAP)
         canvas.setFont(REPORT_FONTS["regular"], 7.5)
-        canvas.setFillColor(colors.Color(theme["cream"].red, theme["cream"].green, theme["cream"].blue, alpha=0.72) if is_cover else theme["muted"])
+        canvas.setFillColor(footer_fill)
         canvas.drawString(PAGE_MARGINS["left"], FOOTER_Y, footer_label)
         canvas.drawRightString(PAGE_W - PAGE_MARGINS["right"], FOOTER_Y, generated)
 
     def _later_pages(canvas, doc):
         canvas.saveState()
-        canvas.setFillColor(theme["surface"])
+        canvas.setFillColor(theme["bg"])
         canvas.rect(0, 0, PAGE_W, PAGE_H, fill=1, stroke=0)
 
         header_y = PAGE_H - PAGE_MARGINS["top"]
-        canvas.setFillColor(theme["navy"])
-        canvas.rect(PAGE_MARGINS["left"], header_y - HEADER_HEIGHT, CONTENT_WIDTH, HEADER_HEIGHT, fill=1, stroke=0)
-        canvas.setFont(REPORT_FONTS["medium"], 7.5)
-        canvas.setFillColor(theme["cream"])
-        canvas.drawString(PAGE_MARGINS["left"] + HEADER_WORDMARK_PADDING, header_y - 8.5 * mm, product_name.upper())
-        _draw_wordmark(
-            canvas,
-            x=PAGE_W - PAGE_MARGINS["right"] - HEADER_WORDMARK_PADDING,
-            y=header_y - 10.2 * mm,
-            fill=theme["surface"],
-            muted_fill=colors.Color(theme["cream"].red, theme["cream"].green, theme["cream"].blue, alpha=0.72),
-            align="right",
-            scale=0.36,
-            include_tagline=False,
-        )
-
+        chrome_y = header_y - 6.2 * mm
+        canvas.setFillColor(theme["accent"])
+        canvas.roundRect(PAGE_MARGINS["left"], chrome_y - 1.2 * mm, 3.2 * mm, 3.2 * mm, 0.8 * mm, fill=1, stroke=0)
+        canvas.setFont(REPORT_FONTS["semibold"], 8.2)
+        canvas.setFillColor(theme["ink"])
+        canvas.drawString(PAGE_MARGINS["left"] + 5.0 * mm, chrome_y, "Verisight")
         canvas.setFont(REPORT_FONTS["regular"], 7.5)
+        canvas.setFillColor(theme["cover_muted"])
+        canvas.drawString(PAGE_MARGINS["left"] + 26 * mm, chrome_y, product_name)
+        canvas.setStrokeColor(theme["paper_edge"])
+        canvas.setLineWidth(0.5)
+        canvas.line(PAGE_MARGINS["left"], header_y - HEADER_HEIGHT + 1.0 * mm, PAGE_W - PAGE_MARGINS["right"], header_y - HEADER_HEIGHT + 1.0 * mm)
+        canvas.setFont(REPORT_FONTS["regular"], 7.3)
         canvas.setFillColor(theme["muted"])
         canvas.drawString(PAGE_MARGINS["left"], header_y - HEADER_HEIGHT - HEADER_META_GAP, org_name)
         canvas.drawRightString(
@@ -349,18 +360,20 @@ def make_page_callbacks(
 
     def _first_page(canvas, doc):
         canvas.saveState()
-        canvas.setFillColor(theme["navy"])
+        canvas.setFillColor(theme["bg"])
         canvas.rect(0, 0, PAGE_W, PAGE_H, fill=1, stroke=0)
-        _draw_wordmark(
-            canvas,
-            x=PAGE_W / 2,
-            y=PAGE_H - 78 * mm,
-            fill=theme["surface"],
-            muted_fill=colors.Color(theme["cream"].red, theme["cream"].green, theme["cream"].blue, alpha=0.72),
-            align="center",
-            scale=0.78,
-            include_tagline=True,
-        )
+        header_y = PAGE_H - PAGE_MARGINS["top"]
+        canvas.setFillColor(theme["accent"])
+        canvas.roundRect(PAGE_MARGINS["left"], header_y - 5.7 * mm, 4.0 * mm, 4.0 * mm, 0.9 * mm, fill=1, stroke=0)
+        canvas.setFont(REPORT_FONTS["bold"], 10.5)
+        canvas.setFillColor(theme["ink"])
+        canvas.drawString(PAGE_MARGINS["left"] + 6.0 * mm, header_y - 3.7 * mm, "Verisight")
+        canvas.setFont(REPORT_FONTS["regular"], 8.0)
+        canvas.setFillColor(theme["cover_muted"])
+        canvas.drawRightString(PAGE_W - PAGE_MARGINS["right"], header_y - 3.7 * mm, product_name)
+        canvas.setStrokeColor(theme["paper_edge"])
+        canvas.setLineWidth(0.5)
+        canvas.line(PAGE_MARGINS["left"], header_y - HEADER_HEIGHT + 1.0 * mm, PAGE_W - PAGE_MARGINS["right"], header_y - HEADER_HEIGHT + 1.0 * mm)
         _draw_footer(canvas, is_cover=True)
         canvas.restoreState()
 

@@ -5,20 +5,13 @@ Genereert productspecifieke managementrapporten per campaign.
 
 Belangrijke boundary
 --------------------
-Voor `ExitScan` geldt een vaste, expliciet vastgezette hoofdstructuur:
-  1. Cover
-  2. Respons
-  3. Bestuurlijke handoff
-  4. Frictiescore & verdeling van het vertrekbeeld
-  5. Signalen in samenhang
-  6. Drivers & prioriteitenbeeld
-  7. SDT Basisbehoeften
-  8. Organisatiefactoren
-  9. Eerste route & actie
- 10. Methodiek / leeswijzer
- 11. Appendix — Technische verantwoording
+Voor `ExitScan` geldt een expliciete, productspecifieke runtime-opbouw met
+vaste hoofdankers als `Frictiescore`, `Signalen in samenhang`,
+`Drivers & prioriteitenbeeld`, `Eerste route & actie`,
+`Methodiek / leeswijzer` en de technische appendix.
 
-De gedeelde report grammar mag deze ExitScan-opbouw niet reduceren of herordenen.
+De gedeelde report grammar mag deze ExitScan-opbouw niet reduceren, herordenen
+of terug laten vallen op generieke hoofdlabels.
 
 Gebruik
 -------
@@ -122,15 +115,114 @@ def _report_theme(scan_type: str) -> dict[str, colors.Color]:
 
 STYLES: dict[str, ParagraphStyle] = build_report_styles()
 
+EXIT_REPORT_VISUAL_MASTER_MAP = {
+    "p1_cover": "Cover / Intro",
+    "p2_response": "Cover / Intro",
+    "p3_handoff": "Executive Read",
+    "p4_friction": "Analytical Insight",
+    "p5_signal_synthesis": "Analytical Insight",
+    "p6_drivers": "Analytical Insight",
+    "p7_sdt": "Analytical Insight",
+    "p8_org_factors": "Analytical Insight",
+    "p9_action_route": "Action / Route",
+    "p10_methodology": "Executive Read",
+    "appendix_b_technical": "Executive Read",
+}
+
+RETENTION_REPORT_VISUAL_MASTER_MAP = {
+    "p1_cover": "Cover / Intro",
+    "p2_response": "Cover / Intro",
+    "p3_handoff": "Executive Read",
+    "p4_signal_group_read": "Analytical Insight",
+    "p5_signal_synthesis": "Analytical Insight",
+    "p6_drivers": "Analytical Insight",
+    "p7_underlayer": "Analytical Insight",
+    "p8_org_factors": "Analytical Insight",
+    "p9_action_route": "Action / Route",
+    "p10_methodology": "Executive Read",
+    "appendix_a_segment": "Executive Read",
+    "appendix_b_technical": "Executive Read",
+}
+
+
+def _master_variant(master: str | None) -> str | None:
+    if not master:
+        return None
+    lowered = master.lower()
+    if "cover" in lowered:
+        return "cover"
+    if "executive" in lowered:
+        return "executive"
+    if "analytical" in lowered:
+        return "analytical"
+    if "action" in lowered:
+        return "action"
+    return None
+
+
+def _master_surface(theme: dict[str, colors.Color], master: str | None, preferred: colors.Color | None = None) -> colors.Color:
+    if preferred is not None:
+        return preferred
+    variant = _master_variant(master)
+    if variant in {"cover", "executive"}:
+        return theme["bg"]
+    if variant == "analytical":
+        return theme["soft"]
+    return theme["surface"]
+
+
+def _build_surface_table_style(
+    *,
+    background: colors.Color,
+    top_padding: float,
+    bottom_padding: float,
+    left_padding: float,
+    right_padding: float,
+    left_rule: tuple[float, colors.Color] | None = None,
+    top_rule: tuple[float, colors.Color] | None = None,
+    bottom_rule: tuple[float, colors.Color] | None = None,
+    boxed_border: tuple[float, colors.Color] | None = None,
+) -> TableStyle:
+    rules: list[tuple[Any, ...]] = [
+        ("BACKGROUND", (0, 0), (-1, -1), background),
+        ("TOPPADDING", (0, 0), (-1, -1), top_padding),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), bottom_padding),
+        ("LEFTPADDING", (0, 0), (-1, -1), left_padding),
+        ("RIGHTPADDING", (0, 0), (-1, -1), right_padding),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]
+    if left_rule:
+        rules.append(("LINEBEFORE", (0, 0), (0, -1), left_rule[0], left_rule[1]))
+    if top_rule:
+        rules.append(("LINEABOVE", (0, 0), (-1, 0), top_rule[0], top_rule[1]))
+    if bottom_rule:
+        rules.append(("LINEBELOW", (0, -1), (-1, -1), bottom_rule[0], bottom_rule[1]))
+    if boxed_border:
+        rules.append(("BOX", (0, 0), (-1, -1), boxed_border[0], boxed_border[1]))
+    return TableStyle(rules)
+
 # ---------------------------------------------------------------------------
 # Matplotlib → ReportLab Image helper
 # ---------------------------------------------------------------------------
 
 
-def _fig_to_image(fig: plt.Figure, width_cm: float = 14.0) -> Image:
+def _fig_to_image(
+    fig: plt.Figure,
+    width_cm: float = 14.0,
+    *,
+    transparent: bool = False,
+    facecolor: str = "white",
+) -> Image:
     """Converteer een matplotlib figuur naar een ReportLab Image-object."""
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight", facecolor="white")
+    fig.savefig(
+        buf,
+        format="png",
+        dpi=150,
+        bbox_inches="tight",
+        facecolor=facecolor,
+        transparent=transparent,
+    )
     buf.seek(0)
     plt.close(fig)
     img = Image(buf)
@@ -321,9 +413,9 @@ def _response_donut_image(invited: int, completed: int, width_cm: float = 6.0) -
         fontweight="bold",
         color=MPL_TOKENS["ink"],
     )
-    ax.set_facecolor("white")
-    fig.patch.set_facecolor("white")
-    return _fig_to_image(fig, width_cm=width_cm)
+    ax.set_facecolor("none")
+    fig.patch.set_facecolor("none")
+    return _fig_to_image(fig, width_cm=width_cm, transparent=True, facecolor="none")
 
 
 # ---------------------------------------------------------------------------
@@ -781,6 +873,12 @@ def _append_highlight_cards(
     content_width: float,
     theme: dict[str, colors.Color],
     columns: int = 3,
+    master: str | None = None,
+    title_font_size: float = 7.2,
+    title_leading: float = 9.4,
+    body_font_size: float = 7.6,
+    body_leading: float = 10.6,
+    card_padding: float = 7,
 ) -> None:
     if not cards:
         return
@@ -794,8 +892,8 @@ def _append_highlight_cards(
             rows.append([Paragraph(card["title"], ParagraphStyle(
                 f"highlight_title_{card['title']}",
                 fontName=REPORT_FONTS["semibold"],
-                fontSize=7.2,
-                leading=9.4,
+                fontSize=title_font_size,
+                leading=title_leading,
                 textColor=theme["text"],
                 spaceAfter=1,
             ))])
@@ -813,21 +911,30 @@ def _append_highlight_cards(
         rows.append([Paragraph(card["body"], ParagraphStyle(
             f"highlight_body_{card['title']}",
             fontName=REPORT_FONTS["regular"],
-            fontSize=7.6,
-            leading=10.6,
+            fontSize=body_font_size,
+            leading=body_leading,
             textColor=theme["text"],
         ))])
         card_table = Table(rows, colWidths=[cell_width])
-        card_table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, -1), card.get("background", theme["surface"])),
-            ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
-            ("LINEABOVE", (0, 0), (-1, 0), 2, card.get("accent_color", theme["accent"])),
-            ("TOPPADDING", (0, 0), (-1, -1), 7),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
-            ("LEFTPADDING", (0, 0), (-1, -1), 8),
-            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        style_rules = [
+            ("BACKGROUND", (0, 0), (-1, -1), _master_surface(theme, master, card.get("background"))),
+            ("TOPPADDING", (0, 0), (-1, -1), card_padding),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), card_padding),
+            ("LEFTPADDING", (0, 0), (-1, -1), max(card_padding, 5.0)),
+            ("RIGHTPADDING", (0, 0), (-1, -1), max(card_padding, 5.0)),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ]))
+        ]
+        if master:
+            style_rules.extend([
+                ("LINEABOVE", (0, 0), (-1, 0), 0.35, theme["paper_edge"]),
+                ("LINEBEFORE", (0, 0), (0, -1), 1.15, card.get("accent_color", theme.get("accent_line", theme["accent"]))),
+            ])
+        else:
+            style_rules.extend([
+                ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
+                ("LINEABOVE", (0, 0), (-1, 0), 2, card.get("accent_color", theme["accent"])),
+            ])
+        card_table.setStyle(TableStyle(style_rules))
         card_tables.append(card_table)
 
     rows = [card_tables[i:i + column_count] for i in range(0, len(card_tables), column_count)]
@@ -853,33 +960,64 @@ def _append_emphasis_note(
     body: str,
     content_width: float,
     theme: dict[str, colors.Color],
+    master: str | None = None,
+    quiet: bool = False,
+    accent_color: colors.Color | None = None,
 ) -> None:
+    text_color = theme["muted"] if quiet else theme["text"]
+    title_color = theme["cover_muted"] if quiet else text_color
     note_table = Table(
         [[
             Paragraph(
-                f"<b>{title}</b><br/>{body}",
+                f"<font color='{_color_to_hex(title_color)}'><b>{title}</b></font><br/>{body}",
                 ParagraphStyle(
                     f"emphasis_note_{title}",
                     fontName=REPORT_FONTS["regular"],
-                    fontSize=8.0,
-                    leading=11.2,
-                    textColor=theme["text"],
+                    fontSize=7.6 if quiet else 8.0,
+                    leading=10.6 if quiet else 11.2,
+                    textColor=text_color,
                 ),
             )
         ]],
         colWidths=[content_width],
     )
-    note_table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), theme["soft"]),
-        ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
-        ("LINEBEFORE", (0, 0), (0, -1), 2.5, theme["accent"]),
-        ("TOPPADDING", (0, 0), (-1, -1), 7),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-    ]))
+    note_table.setStyle(_build_surface_table_style(
+        background=theme["bg"] if quiet else _master_surface(theme, master, theme["soft"] if not master else theme["bg"]),
+        top_padding=4 if quiet else (6 if master else 7),
+        bottom_padding=4 if quiet else (6 if master else 7),
+        left_padding=8,
+        right_padding=4 if master else 8,
+        left_rule=(
+            0.8 if quiet else (1.35 if master else 2.5),
+            accent_color or (theme["paper_edge"] if quiet else theme.get("accent_line", theme["accent"])),
+        ),
+        top_rule=(0.35 if quiet else 0.45, theme["paper_edge"]) if master else None,
+        boxed_border=None if master else (0.7, theme["border"]),
+    ))
     story.append(note_table)
-    story.append(Spacer(1, 0.14 * cm))
+    story.append(Spacer(1, 0.10 * cm if quiet else 0.14 * cm))
+
+
+def _append_quiet_note(
+    story: list,
+    *,
+    title: str,
+    body: str,
+    content_width: float,
+    theme: dict[str, colors.Color],
+    master: str | None = None,
+    accent_color: colors.Color | None = None,
+) -> None:
+    _append_emphasis_note(
+        story,
+        title=title,
+        body=body,
+        content_width=content_width,
+        theme=theme,
+        master=master,
+        quiet=True,
+        accent_color=accent_color,
+    )
 
 
 def _append_micro_structure(
@@ -890,7 +1028,46 @@ def _append_micro_structure(
     content_width: float,
     theme: dict[str, colors.Color],
     why_label: str = "Waarom dit ertoe doet",
+    master: str | None = None,
 ) -> None:
+    if master:
+        how_column = Paragraph(
+            f"<b>Hoe lees je dit?</b><br/>{how_to_read}",
+            ParagraphStyle(
+                f"micro_structure_how_{abs(hash(how_to_read))}",
+                fontName=REPORT_FONTS["regular"],
+                fontSize=7.8,
+                leading=10.6,
+                textColor=theme["text"],
+            ),
+        )
+        why_column = Paragraph(
+            f"<b>{why_label}</b><br/>{why_it_matters}",
+            ParagraphStyle(
+                f"micro_structure_why_{abs(hash(why_it_matters))}",
+                fontName=REPORT_FONTS["regular"],
+                fontSize=7.8,
+                leading=10.6,
+                textColor=theme["text"],
+            ),
+        )
+        explainer = Table(
+            [[how_column, why_column]],
+            colWidths=[content_width * 0.48, content_width * 0.48],
+        )
+        explainer.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), theme["bg"]),
+            ("LINEABOVE", (0, 0), (-1, 0), 0.45, theme["paper_edge"]),
+            ("LINEBELOW", (0, 0), (-1, 0), 0.45, theme["paper_edge"]),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ]))
+        story.append(explainer)
+        story.append(Spacer(1, 0.12 * cm))
+        return
     explainer = Table(
         [[
             Paragraph(
@@ -925,6 +1102,7 @@ def _append_metric_band(
     content_width: float,
     theme: dict[str, colors.Color],
     columns: int = 3,
+    master: str | None = None,
 ) -> None:
     if not cards:
         return
@@ -961,16 +1139,25 @@ def _append_metric_band(
                 textColor=theme["muted"],
             ))])
         card_table = Table(rows, colWidths=[cell_width])
-        card_table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, -1), card.get("background", theme["surface"])),
-            ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
-            ("LINEABOVE", (0, 0), (-1, 0), 2, card.get("accent_color", theme["accent"])),
+        style_rules = [
+            ("BACKGROUND", (0, 0), (-1, -1), _master_surface(theme, master, card.get("background"))),
             ("TOPPADDING", (0, 0), (-1, -1), 7),
             ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
             ("LEFTPADDING", (0, 0), (-1, -1), 8),
             ("RIGHTPADDING", (0, 0), (-1, -1), 8),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ]))
+        ]
+        if master:
+            style_rules.extend([
+                ("LINEABOVE", (0, 0), (-1, 0), 0.35, theme["paper_edge"]),
+                ("LINEBEFORE", (0, 0), (0, -1), 1.1, card.get("accent_color", theme.get("accent_line", theme["accent"]))),
+            ])
+        else:
+            style_rules.extend([
+                ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
+                ("LINEABOVE", (0, 0), (-1, 0), 2, card.get("accent_color", theme["accent"])),
+            ])
+        card_table.setStyle(TableStyle(style_rules))
         card_tables.append(card_table)
 
     rows = [card_tables[i:i + columns] for i in range(0, len(card_tables), columns)]
@@ -1189,13 +1376,74 @@ def _append_section_heading(
     intro: str | None = None,
     content_width: float,
     divider: bool = False,
+    master: str | None = None,
 ) -> None:
-    story.append(Paragraph(escape(eyebrow.upper()), STYLES["eyebrow"]))
-    story.append(Paragraph(title, STYLES["section_title"]))
+    if master:
+        variant = _master_variant(master)
+        story.append(Paragraph(
+            escape(eyebrow.upper()),
+            ParagraphStyle(
+                f"master_eyebrow_{eyebrow}_{variant}",
+                parent=STYLES["eyebrow"],
+                textColor=TOKENS["accent_ink"],
+                fontSize=7.8,
+                leading=10.2,
+            ),
+        ))
+        story.append(Paragraph(
+            title,
+            ParagraphStyle(
+                f"master_section_{title}_{variant}",
+                parent=STYLES["section_title"],
+                fontSize=20 if variant in {"cover", "executive"} else 18,
+                leading=24 if variant in {"cover", "executive"} else 23,
+                textColor=TOKENS["ink"],
+            ),
+        ))
+    else:
+        story.append(Paragraph(escape(eyebrow.upper()), STYLES["eyebrow"]))
+        story.append(Paragraph(title, STYLES["section_title"]))
     if intro:
         story.append(Paragraph(intro, STYLES["body"]))
     if divider:
         _append_divider_line(story, content_width=content_width)
+
+
+def _append_section_opening(
+    story: list,
+    *,
+    eyebrow: str,
+    title: str,
+    intro: str | None = None,
+    content_width: float,
+    theme: dict[str, colors.Color] | None = None,
+    divider: bool = False,
+    master: str | None = None,
+    how_to_read: str | None = None,
+    why_it_matters: str | None = None,
+    why_label: str = "Waarom dit ertoe doet",
+) -> None:
+    _append_section_heading(
+        story,
+        eyebrow=eyebrow,
+        title=title,
+        intro=intro,
+        content_width=content_width,
+        divider=divider,
+        master=master,
+    )
+    if how_to_read and why_it_matters:
+        if theme is None:
+            raise ValueError("theme is required when a section opening includes micro-structure")
+        _append_micro_structure(
+            story,
+            how_to_read=how_to_read,
+            why_it_matters=why_it_matters,
+            content_width=content_width,
+            theme=theme,
+            why_label=why_label,
+            master=master,
+        )
 
 
 def _append_chart_frame(
@@ -1227,6 +1475,8 @@ def _build_chart_frame_flowable(
     content_width: float,
     theme: dict[str, colors.Color],
     caption: str | None = None,
+    master: str | None = None,
+    framed: bool = True,
 ) -> Table | None:
     if image is None:
         return None
@@ -1235,15 +1485,27 @@ def _build_chart_frame_flowable(
     if caption:
         rows.append([Paragraph(caption, STYLES["caption"])])
     frame = Table(rows, colWidths=[content_width])
-    frame.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), theme["surface"]),
-        ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
-        ("TOPPADDING", (0, 0), (-1, -1), 6),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-    ]))
+    if not framed:
+        frame.setStyle(_build_surface_table_style(
+            background=theme["bg"],
+            top_padding=0,
+            bottom_padding=0,
+            left_padding=0,
+            right_padding=0,
+        ))
+        return frame
+    analytical_master = _master_variant(master) == "analytical"
+    executive_master = _master_variant(master) == "executive"
+    frame.setStyle(_build_surface_table_style(
+        background=theme["bg"] if executive_master else (theme["surface"] if analytical_master else _master_surface(theme, master, theme["soft"] if master else theme["surface"])),
+        top_padding=6 if not master else (4 if analytical_master else 5),
+        bottom_padding=6 if not master else (4 if analytical_master else 5),
+        left_padding=8 if not master else (6 if analytical_master else 4),
+        right_padding=8 if not master else (6 if analytical_master else 4),
+        top_rule=(0.45, theme["paper_edge"]) if master else None,
+        bottom_rule=(0.35, theme["paper_edge"]) if master else None,
+        boxed_border=None if master else (0.7, theme["border"]),
+    ))
     return frame
 
 
@@ -1254,6 +1516,7 @@ def _build_stacked_distribution_flowable(
     width: float,
     theme: dict[str, colors.Color],
     caption: str | None = None,
+    framed: bool = True,
 ) -> Table:
     total = max(sum(counts.values()), 1)
     segments = [
@@ -1275,8 +1538,8 @@ def _build_stacked_distribution_flowable(
             "band": "HOOG",
             "label": management_band_label(band="HOOG"),
             "count": counts.get("HOOG", 0),
-            "bg": theme["accent"],
-            "fg": WHITE,
+            "bg": TOKENS["risk_high_bg"],
+            "fg": theme["danger"],
         },
     ]
     base_widths = [max(width * (segment["count"] / total), 22 * mm) for segment in segments]
@@ -1284,15 +1547,21 @@ def _build_stacked_distribution_flowable(
     bar_widths = [segment_width * scale for segment_width in base_widths]
     bar_cells = []
     for segment in segments:
+        segment_width = bar_widths[len(bar_cells)]
         pct = round(segment["count"] / total * 100)
+        label_text = segment["label"]
+        if segment_width <= 27 * mm and " " in label_text:
+            label_text = label_text.replace(" ", "<br/>", 1)
+        font_size = 6.4 if segment_width <= 26 * mm else 7.0
+        leading = 8.2 if segment_width <= 26 * mm else 9.0
         bar_cells.append(
             Paragraph(
-                f"<b>{segment['label']}</b><br/>{pct}% · n={segment['count']}",
+                f"<b>{label_text}</b><br/>{pct}% · n={segment['count']}",
                 ParagraphStyle(
                     f"stacked_{segment['band']}",
                     fontName=REPORT_FONTS["semibold"],
-                    fontSize=7.0,
-                    leading=9.0,
+                    fontSize=font_size,
+                    leading=leading,
                     textColor=segment["fg"],
                     alignment=TA_CENTER,
                 ),
@@ -1303,8 +1572,8 @@ def _build_stacked_distribution_flowable(
         ("BACKGROUND", (0, 0), (0, 0), segments[0]["bg"]),
         ("BACKGROUND", (1, 0), (1, 0), segments[1]["bg"]),
         ("BACKGROUND", (2, 0), (2, 0), segments[2]["bg"]),
-        ("BOX", (0, 0), (-1, -1), 0.6, theme["border"]),
-        ("INNERGRID", (0, 0), (-1, -1), 0.4, theme["border"]),
+        ("BOX", (0, 0), (-1, -1), 0.35, theme["paper_edge"]),
+        ("INNERGRID", (0, 0), (-1, -1), 0.25, theme["paper_edge"]),
         ("TOPPADDING", (0, 0), (-1, -1), 8),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
         ("LEFTPADDING", (0, 0), (-1, -1), 6),
@@ -1314,14 +1583,26 @@ def _build_stacked_distribution_flowable(
     rows: list[list[Any]] = [[Paragraph(title, STYLES["label"])], [bar]]
     if caption:
         rows.append([Paragraph(caption, STYLES["caption"])])
+    if not framed:
+        plain = Table(rows, colWidths=[width])
+        plain.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), theme["bg"]),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ]))
+        return plain
     frame = Table(rows, colWidths=[width])
     frame.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), theme["surface"]),
-        ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
-        ("TOPPADDING", (0, 0), (-1, -1), 6),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-        ("LEFTPADDING", (0, 0), (-1, -1), 8),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ("BACKGROUND", (0, 0), (-1, -1), theme["bg"]),
+        ("LINEABOVE", (0, 0), (-1, 0), 0.45, theme["paper_edge"]),
+        ("LINEBELOW", (0, -1), (-1, -1), 0.35, theme["paper_edge"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ]))
     return frame
@@ -1565,19 +1846,51 @@ def _build_data_table_flowable(
     highlight_columns: dict[int, list[colors.Color]] | None = None,
     align_columns: list[int] | None = None,
     bold_columns: list[int] | None = None,
+    master: str | None = None,
+    font_size: float = 7.6,
+    cell_padding: float = 4,
 ) -> Table:
-    table = Table(rows, colWidths=col_widths)
+    normalized_rows: list[list[Any]] = []
+    for row_idx, row in enumerate(rows):
+        normalized_row: list[Any] = []
+        for col_idx, cell in enumerate(row):
+            if hasattr(cell, "wrapOn"):
+                normalized_row.append(cell)
+                continue
+            is_header = row_idx == 0
+            text_color = theme["accent_dark"] if (master and is_header) else (WHITE if is_header else theme["text"])
+            if row_idx > 0 and highlight_columns and col_idx in highlight_columns:
+                color_values = highlight_columns.get(col_idx, [])
+                if row_idx - 1 < len(color_values):
+                    text_color = color_values[row_idx - 1]
+            font_name = REPORT_FONTS["semibold"] if (is_header or (bold_columns and col_idx in bold_columns)) else REPORT_FONTS["regular"]
+            normalized_row.append(Paragraph(
+                escape("" if cell is None else str(cell)).replace("\n", "<br/>"),
+                ParagraphStyle(
+                    f"table_cell_{row_idx}_{col_idx}_{'m' if master else 'b'}",
+                    fontName=font_name,
+                    fontSize=font_size,
+                    leading=font_size + (2.0 if is_header else 3.0),
+                    textColor=text_color,
+                    wordWrap="CJK",
+                ),
+            ))
+        normalized_rows.append(normalized_row)
+    table = Table(normalized_rows, colWidths=col_widths)
     style = TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), theme["navy"]),
-        ("TEXTCOLOR", (0, 0), (-1, 0), WHITE),
-        ("FONTNAME", (0, 0), (-1, 0), REPORT_FONTS["semibold"]),
-        ("FONTSIZE", (0, 0), (-1, -1), 7.6),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [theme["surface"], TOKENS["cream"]]),
-        ("GRID", (0, 0), (-1, -1), 0.45, theme["border"]),
-        ("TOPPADDING", (0, 0), (-1, -1), 4),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("BACKGROUND", (0, 0), (-1, 0), theme["accent_light"] if master else theme["navy"]),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [theme["surface"], theme["bg"]] if master else [theme["surface"], TOKENS["cream"]]),
+        ("TOPPADDING", (0, 0), (-1, -1), cell_padding),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), cell_padding),
+        ("LEFTPADDING", (0, 0), (-1, -1), cell_padding + 1),
+        ("RIGHTPADDING", (0, 0), (-1, -1), cell_padding + 1),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ])
+    if master:
+        style.add("BOX", (0, 0), (-1, -1), 0.45, theme["paper_edge"])
+        style.add("INNERGRID", (0, 0), (-1, -1), 0.25, theme["paper_edge"])
+    else:
+        style.add("GRID", (0, 0), (-1, -1), 0.45, theme["border"])
     for column_idx in align_columns or []:
         style.add("ALIGN", (column_idx, 1), (column_idx, -1), "CENTER")
     for column_idx in bold_columns or []:
@@ -1596,6 +1909,7 @@ def _build_metric_band_flowable(
     *,
     width: float,
     theme: dict[str, colors.Color],
+    master: str | None = None,
 ) -> Table:
     value_width = width * 0.28
     detail_width = width - value_width
@@ -1623,16 +1937,20 @@ def _build_metric_band_flowable(
         ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
     ]))
     band = Table([[value, detail]], colWidths=[value_width, detail_width])
-    band.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), card.get("background", theme["surface"])),
-        ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
-        ("LINEBEFORE", (0, 0), (0, -1), 2.5, card.get("accent_color", theme["accent"])),
+    style_rules = [
+        ("BACKGROUND", (0, 0), (-1, -1), _master_surface(theme, master, card.get("background"))),
+        ("LINEBEFORE", (0, 0), (0, -1), 1.8 if master else 2.5, card.get("accent_color", theme["accent"])),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("TOPPADDING", (0, 0), (-1, -1), 7),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
         ("LEFTPADDING", (0, 0), (-1, -1), 8),
         ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-    ]))
+    ]
+    if master:
+        style_rules.append(("LINEABOVE", (0, 0), (-1, 0), 0.45, theme["paper_edge"]))
+    else:
+        style_rules.append(("BOX", (0, 0), (-1, -1), 0.7, theme["border"]))
+    band.setStyle(TableStyle(style_rules))
     return band
 
 
@@ -1653,6 +1971,176 @@ def _append_data_table(
     )
     story.append(table)
     story.append(Spacer(1, 0.22 * cm))
+
+
+def _build_methodology_read_guide_rows(
+    *,
+    methodology_payload: dict[str, Any],
+    signal_short_label: str,
+    privacy_boundary: str,
+    score_usage_body: str,
+) -> list[list[str]]:
+    trust_rows = methodology_payload.get("trust_rows", [])
+    product_is = next((row[1] for row in trust_rows if "wel is" in row[0].lower()), methodology_payload["intro_text"])
+    product_not_for = next((row[1] for row in trust_rows if "niet voor" in row[0].lower()), methodology_payload["intro_text"])
+    return [
+        ["Leeswijzer", "Duiding"],
+        ["Wat dit product is", product_is],
+        ["Wat dit product niet is", product_not_for],
+        ["Privacy & rapportagegrenzen", privacy_boundary],
+        ["Hoe scores te gebruiken", score_usage_body.replace("{signal_short_label}", signal_short_label)],
+    ]
+
+
+def _append_methodology_read_guide_table(
+    story: list,
+    *,
+    methodology_payload: dict[str, Any],
+    signal_short_label: str,
+    privacy_boundary: str,
+    score_usage_body: str,
+    content_width: float,
+    theme: dict[str, colors.Color],
+    master: str | None = None,
+) -> None:
+    story.append(_build_data_table_flowable(
+        rows=_build_methodology_read_guide_rows(
+            methodology_payload=methodology_payload,
+            signal_short_label=signal_short_label,
+            privacy_boundary=privacy_boundary,
+            score_usage_body=score_usage_body,
+        ),
+        col_widths=[content_width * 0.30, content_width * 0.70],
+        theme=theme,
+        bold_columns=[0],
+        master=master,
+    ))
+
+
+def _append_methodology_page_shell(
+    story: list,
+    *,
+    master: str,
+    methodology_payload: dict[str, Any],
+    signal_short_label: str,
+    privacy_boundary: str,
+    how_to_read: str,
+    why_it_matters: str,
+    score_usage_body: str,
+    trust_note_body: str,
+    content_width: float,
+    theme: dict[str, colors.Color],
+    has_segment_deep_dive: bool,
+    eyebrow: str = "Methodiek",
+    title: str = "Methodiek & verantwoording",
+    show_technical_appendix_note: bool = True,
+    show_band_rows: bool = True,
+    show_segment_note: bool = True,
+) -> None:
+    _append_section_opening(
+        story,
+        eyebrow=eyebrow,
+        title=title,
+        intro=methodology_payload.get("intro_text", "Compacte interpretatiehulp voor product, grenzen en leesdiscipline. De technische diepte blijft in de appendix."),
+        content_width=content_width,
+        theme=theme,
+        master=master,
+        how_to_read=how_to_read,
+        why_it_matters=why_it_matters,
+    )
+    if methodology_payload.get("one_liner"):
+        _append_emphasis_note(
+            story,
+            title="Methodiek in één zin",
+            body=methodology_payload["one_liner"],
+            content_width=content_width,
+            theme=theme,
+            master=master,
+        )
+    if show_technical_appendix_note:
+        _append_emphasis_note(
+            story,
+            title="Technische appendix",
+            body="De volledige technische uitwerking van factorgewichten en modelopbouw staat in de appendix.",
+            content_width=content_width,
+            theme=theme,
+            master=master,
+        )
+    _append_methodology_read_guide_table(
+        story,
+        methodology_payload=methodology_payload,
+        signal_short_label=signal_short_label,
+        privacy_boundary=privacy_boundary,
+        score_usage_body=score_usage_body,
+        content_width=content_width,
+        theme=theme,
+        master=master,
+    )
+    band_rows = methodology_payload.get("band_rows", [])
+    if show_band_rows and band_rows:
+        _append_appendix_data_section(
+            story,
+            title="Scorebanden",
+            how_to_read="Lees de scorebanden als compacte managementlabels bij de frictiescore, niet als bewijssterkte of zekerheidsscore.",
+            explanation="Volgen, Eerst toetsen en Direct prioriteren laten zien hoeveel bestuurlijke aandacht een patroon vraagt en hoeveel extra context nog nodig is.",
+            rows=band_rows,
+            col_widths=[content_width * 0.24, content_width * 0.16, content_width * 0.60],
+            content_width=content_width,
+            theme=theme,
+            bold_columns=[0, 1],
+            spacer_height_cm=0.02,
+        )
+    if show_segment_note and has_segment_deep_dive:
+        _append_emphasis_note(
+            story,
+            title="Segment deep dive",
+            body="De deep dive blijft een verdiepingslaag naast het hoofdrapport. Ook daar blijven vergelijkingen beschrijvend en niet-causaal.",
+            content_width=content_width,
+            theme=theme,
+            master=master,
+        )
+    _append_emphasis_note(
+        story,
+        title="Vertrouwensregel",
+        body=trust_note_body,
+        content_width=content_width,
+        theme=theme,
+        master=master,
+    )
+    story.append(PageBreak())
+
+
+def _append_appendix_data_section(
+    story: list,
+    *,
+    title: str,
+    how_to_read: str,
+    explanation: str,
+    rows: list[list[Any]],
+    col_widths: list[float],
+    content_width: float,
+    theme: dict[str, colors.Color],
+    align_columns: list[int] | None = None,
+    bold_columns: list[int] | None = None,
+    spacer_height_cm: float = 0.08,
+) -> None:
+    story.append(Paragraph(title, STYLES["sub_title"]))
+    _append_micro_structure(
+        story,
+        how_to_read=how_to_read,
+        why_it_matters=explanation,
+        content_width=content_width,
+        theme=theme,
+        why_label="Uitleg",
+    )
+    story.append(_build_data_table_flowable(
+        rows=rows,
+        col_widths=col_widths,
+        theme=theme,
+        align_columns=align_columns,
+        bold_columns=bold_columns,
+    ))
+    story.append(Spacer(1, spacer_height_cm * cm))
 
 
 def _factor_signal_score(factor: str, factor_avgs: dict[str, float]) -> float:
@@ -1717,6 +2205,7 @@ def _build_card_flowable(
     width: float,
     theme: dict[str, colors.Color],
     large_value: bool = False,
+    master: str | None = None,
 ) -> Table:
     rows: list[list[Any]] = []
     if card.get("title"):
@@ -1746,16 +2235,25 @@ def _build_card_flowable(
             textColor=theme["text"],
         ))])
     table = Table(rows, colWidths=[width])
-    table.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), card.get("background", theme["surface"])),
-        ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
-        ("LINEABOVE", (0, 0), (-1, 0), 2, card.get("accent_color", theme["accent"])),
+    style_rules = [
+        ("BACKGROUND", (0, 0), (-1, -1), _master_surface(theme, master, card.get("background"))),
         ("TOPPADDING", (0, 0), (-1, -1), 7),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
         ("LEFTPADDING", (0, 0), (-1, -1), 8),
         ("RIGHTPADDING", (0, 0), (-1, -1), 8),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-    ]))
+    ]
+    if master:
+        style_rules.extend([
+            ("LINEABOVE", (0, 0), (-1, 0), 0.45, theme["paper_edge"]),
+            ("LINEBEFORE", (0, 0), (0, -1), 1.5, card.get("accent_color", theme["accent"])),
+        ])
+    else:
+        style_rules.extend([
+            ("BOX", (0, 0), (-1, -1), 0.7, theme["border"]),
+            ("LINEABOVE", (0, 0), (-1, 0), 2, card.get("accent_color", theme["accent"])),
+        ])
+    table.setStyle(TableStyle(style_rules))
     return table
 
 
@@ -1814,16 +2312,25 @@ def _build_editorial_group(
     width: float,
     value: str | None = None,
     value_color: colors.Color | None = None,
+    master: str | None = None,
 ) -> Table:
-    rows: list[Any] = [Paragraph(title, STYLES["label"])]
+    variant = _master_variant(master) if master else None
+    label_style = STYLES["label"] if not master else ParagraphStyle(
+        f"master_editorial_label_{title}",
+        parent=STYLES["label"],
+        textColor=TOKENS["cover_muted"] if variant in {"cover", "executive", "action"} else TOKENS["accent_ink"],
+        fontSize=7.0,
+        leading=9.2,
+    )
+    rows: list[Any] = [Paragraph(title, label_style)]
     if value:
         rows.append(Paragraph(
             value,
             ParagraphStyle(
                 f"editorial_value_{title}",
                 fontName=REPORT_FONTS["bold"],
-                fontSize=11.4,
-                leading=13.4,
+                fontSize=12.2 if master else 11.4,
+                leading=14.2 if master else 13.4,
                 textColor=value_color or TEXT,
             ),
         ))
@@ -1832,12 +2339,240 @@ def _build_editorial_group(
         ParagraphStyle(
             f"editorial_body_{title}",
             fontName=REPORT_FONTS["regular"],
-            fontSize=8.0,
-            leading=10.8,
+            fontSize=8.1 if master else 8.0,
+            leading=11.0 if master else 10.8,
             textColor=TEXT,
         ),
     ))
     return _build_stack_table(rows, width)
+
+
+def _build_cover_kpi_rail(
+    cards: list[dict[str, Any]],
+    *,
+    width: float,
+    theme: dict[str, colors.Color],
+) -> Table:
+    usable_cards = cards[:4]
+    if not usable_cards:
+        return Table([[Spacer(1, 0.01 * cm)]], colWidths=[width])
+    cell_width = width / len(usable_cards)
+    cell_flowables: list[Table] = []
+    for card in usable_cards:
+        rows: list[list[Any]] = [[Paragraph(
+            str(card.get("title", "")),
+            ParagraphStyle(
+                f"cover_kpi_label_{card.get('title', 'kpi')}",
+                fontName=REPORT_FONTS["medium"],
+                fontSize=7.2,
+                leading=9.2,
+                textColor=colors.Color(1, 1, 1, alpha=0.62),
+            ),
+        )]]
+        rows.append([Paragraph(
+            str(card.get("value", "")),
+            ParagraphStyle(
+                f"cover_kpi_value_{card.get('title', 'kpi')}",
+                fontName=REPORT_FONTS["bold"],
+                fontSize=20,
+                leading=22,
+                textColor=theme["surface"] if card.get("accent") != "primary" else theme["accent"],
+            ),
+        )])
+        if card.get("body"):
+            rows.append([Paragraph(
+                str(card["body"]),
+                ParagraphStyle(
+                    f"cover_kpi_body_{card.get('title', 'kpi')}",
+                    fontName=REPORT_FONTS["regular"],
+                    fontSize=6.9,
+                    leading=8.8,
+                    textColor=colors.Color(1, 1, 1, alpha=0.70),
+                ),
+            )])
+        cell = Table(rows, colWidths=[cell_width - 6 * mm])
+        cell.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), theme["ink"]),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+        ]))
+        cell_flowables.append(cell)
+    rail = Table([cell_flowables], colWidths=[cell_width] * len(usable_cards))
+    rail_style = [
+        ("BACKGROUND", (0, 0), (-1, -1), theme["ink"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ("LEFTPADDING", (0, 0), (-1, -1), 10),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]
+    for idx in range(len(usable_cards) - 1):
+        rail_style.append(("LINEAFTER", (idx, 0), (idx, 0), 0.35, colors.Color(1, 1, 1, alpha=0.12)))
+    rail.setStyle(TableStyle(rail_style))
+    return rail
+
+
+def _build_cover_meta_band(
+    *,
+    scan_lbl: str,
+    campaign_name: str,
+    has_segment_appendix: bool,
+    show_segment_meta: bool = True,
+    width: float,
+    theme: dict[str, colors.Color],
+) -> Table:
+    meta_items = [
+        ("Rapport", scan_lbl),
+        ("Periode", campaign_name),
+        ("Bron", "Door Verisight"),
+    ]
+    if show_segment_meta:
+        meta_items.append(("Segment deep dive", "Opgenomen" if has_segment_appendix else "Niet opgenomen"))
+    cell_width = width / 2 - 6
+    cells: list[Table] = []
+    for label, value in meta_items:
+        cell = Table(
+            [[
+                Paragraph(
+                    escape(label),
+                    ParagraphStyle(
+                        f"cover_meta_label_{label}",
+                        fontName=REPORT_FONTS["medium"],
+                        fontSize=6.7,
+                        leading=8.6,
+                        textColor=colors.Color(
+                            theme["muted"].red,
+                            theme["muted"].green,
+                            theme["muted"].blue,
+                            alpha=0.86,
+                        ),
+                    ),
+                )
+            ], [
+                Paragraph(
+                    escape(value),
+                    ParagraphStyle(
+                        f"cover_meta_value_{label}",
+                        fontName=REPORT_FONTS["regular"],
+                        fontSize=8.0,
+                        leading=10.4,
+                        textColor=theme["muted"],
+                    ),
+                )
+            ]],
+            colWidths=[cell_width],
+        )
+        cell.setStyle(TableStyle([
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ]))
+        cells.append(cell)
+    meta_band = Table(
+        [cells[:2], cells[2:]],
+        colWidths=[width / 2, width / 2],
+    )
+    meta_band.setStyle(TableStyle([
+        ("LINEABOVE", (0, 0), (-1, 0), 0.45, theme["paper_edge"]),
+        ("LINEBELOW", (0, 1), (-1, 1), 0.45, theme["paper_edge"]),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+    return meta_band
+
+
+def _build_action_priority_bar(
+    *,
+    priority_text: str,
+    route_text: str,
+    decision_text: str,
+    owner: str,
+    first_step: str,
+    review: str,
+    width: float,
+    theme: dict[str, colors.Color],
+) -> Table:
+    label_style = ParagraphStyle(
+        "action_priority_label",
+        fontName=REPORT_FONTS["medium"],
+        fontSize=6.6,
+        leading=8.2,
+        textColor=colors.Color(1, 1, 1, alpha=0.66),
+    )
+    value_style = ParagraphStyle(
+        "action_priority_value",
+        fontName=REPORT_FONTS["regular"],
+        fontSize=7.0,
+        leading=9.0,
+        textColor=theme["surface"],
+    )
+    main_parts = [
+        "<font color='#FFFFFF'><b>Prioriteit nu</b></font><br/>" + escape(priority_text),
+    ]
+    if route_text:
+        main_parts.append(escape(route_text))
+    if decision_text:
+        main_parts.append(escape(decision_text))
+    main_block = Paragraph(
+        "<br/><br/>".join(main_parts),
+        ParagraphStyle(
+            "action_priority_main",
+            fontName=REPORT_FONTS["regular"],
+            fontSize=8.2,
+            leading=10.6,
+            textColor=theme["surface"],
+        ),
+    )
+    detail_cells = [
+        Table([
+            [Paragraph("Eigenaar", label_style)],
+            [Paragraph(escape(owner), value_style)],
+        ], colWidths=[(width / 3) - 10]),
+        Table([
+            [Paragraph("Eerste stap", label_style)],
+            [Paragraph(escape(first_step), value_style)],
+        ], colWidths=[(width / 3) - 10]),
+        Table([
+            [Paragraph("Review", label_style)],
+            [Paragraph(escape(review), value_style)],
+        ], colWidths=[(width / 3) - 10]),
+    ]
+    for cell in detail_cells:
+        cell.setStyle(TableStyle([
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ]))
+    table = Table(
+        [
+            [main_block, "", ""],
+            detail_cells,
+        ],
+        colWidths=[width / 3, width / 3, width / 3],
+    )
+    style = [
+        ("BACKGROUND", (0, 0), (-1, -1), theme["ink"]),
+        ("SPAN", (0, 0), (2, 0)),
+        ("TOPPADDING", (0, 0), (-1, -1), 7),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+        ("LEFTPADDING", (0, 0), (-1, -1), 9),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 9),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LINEBELOW", (0, 0), (2, 0), 0.35, colors.Color(1, 1, 1, alpha=0.18)),
+    ]
+    for idx in range(1, 3):
+        style.append(("LINEBEFORE", (idx, 1), (idx, 1), 0.35, colors.Color(1, 1, 1, alpha=0.12)))
+    table.setStyle(TableStyle(style))
+    return table
 
 
 def _append_focus_question_block(
@@ -3182,6 +3917,10 @@ def _append_rebrand_cover(
     report_theme: dict[str, colors.Color],
     is_retention: bool,
     has_segment_appendix: bool,
+    show_segment_meta: bool = True,
+    use_visual_masters: bool = False,
+    cover_metric_cards: list[dict[str, Any]] | None = None,
+    cover_exec_cards: list[dict[str, Any]] | None = None,
 ) -> None:
     pill = Table(
         [[Paragraph(_cover_pill_text(scan_type=camp.scan_type, scan_lbl=scan_lbl, is_retention=is_retention), ParagraphStyle(
@@ -3192,7 +3931,7 @@ def _append_rebrand_cover(
             textColor=report_theme["accent"],
             alignment=TA_CENTER,
         ))]],
-        colWidths=[64 * mm],
+        colWidths=[68 * mm if use_visual_masters else 64 * mm],
     )
     pill.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, -1), report_theme["accent_light"]),
@@ -3202,85 +3941,64 @@ def _append_rebrand_cover(
         ("LEFTPADDING", (0, 0), (-1, -1), 12),
         ("RIGHTPADDING", (0, 0), (-1, -1), 12),
     ]))
-    meta_band = Table([[
-        Paragraph(
-            f"<b>Rapport</b><br/>{scan_lbl}",
-            ParagraphStyle(
-                "cover_meta_org_band",
-                fontName=REPORT_FONTS["regular"],
-                fontSize=8.2,
-                leading=11.4,
-                textColor=TOKENS["cover_muted"],
-            ),
-        ),
-        Paragraph(
-            "<b>Door</b><br/>Verisight",
-            ParagraphStyle(
-                "cover_meta_by_band",
-                fontName=REPORT_FONTS["regular"],
-                fontSize=8.2,
-                leading=11.4,
-                textColor=TOKENS["cover_muted"],
-            ),
-        ),
-        Paragraph(
-            f"<b>Periode</b><br/>{camp.name}",
-            ParagraphStyle(
-                "cover_meta_campaign_band",
-                fontName=REPORT_FONTS["regular"],
-                fontSize=8.2,
-                leading=11.4,
-                textColor=TOKENS["cover_muted"],
-            ),
-        ),
-        Paragraph(
-            f"<b>Segment deep dive</b><br/>{'Opgenomen' if has_segment_appendix else 'Niet opgenomen'}",
-            ParagraphStyle(
-                "cover_meta_segment_band",
-                fontName=REPORT_FONTS["regular"],
-                fontSize=8.2,
-                leading=11.4,
-                textColor=TOKENS["cover_muted"],
-            ),
-        ),
-    ]], colWidths=[CONTENT_WIDTH * 0.22, CONTENT_WIDTH * 0.18, CONTENT_WIDTH * 0.30, CONTENT_WIDTH * 0.30])
-    meta_band.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), colors.Color(1, 1, 1, alpha=0.05)),
-        ("BOX", (0, 0), (-1, -1), 0.5, colors.Color(1, 1, 1, alpha=0.16)),
-        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.Color(1, 1, 1, alpha=0.08)),
-        ("TOPPADDING", (0, 0), (-1, -1), 8),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
-        ("LEFTPADDING", (0, 0), (-1, -1), 9),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 9),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-    ]))
-    story.append(Spacer(1, 2.2 * cm))
+    meta_band = _build_cover_meta_band(
+        scan_lbl=scan_lbl,
+        campaign_name=camp.name,
+        has_segment_appendix=has_segment_appendix,
+        show_segment_meta=show_segment_meta,
+        width=CONTENT_WIDTH,
+        theme=report_theme,
+    ) if use_visual_masters else None
+    story.append(Spacer(1, 2.6 * cm if use_visual_masters else 2.2 * cm))
     story.append(pill)
-    story.append(Spacer(1, 0.35 * cm))
+    story.append(Spacer(1, 0.45 * cm if use_visual_masters else 0.35 * cm))
     story.append(Paragraph(org.name, STYLES["cover_title"]))
     story.append(Spacer(1, 0.15 * cm))
     story.append(Paragraph(scan_lbl, STYLES["cover_sub"]))
-    story.append(Spacer(1, 0.18 * cm))
+    if not use_visual_masters:
+        story.append(Spacer(1, 0.18 * cm))
+        story.append(Paragraph(
+            "Door Verisight",
+            ParagraphStyle(
+                "cover_byline",
+                fontName=REPORT_FONTS["medium"],
+                fontSize=10.2,
+                leading=13,
+                textColor=TOKENS["cover_muted"],
+            ),
+        ))
+    if use_visual_masters and cover_metric_cards:
+        story.append(Spacer(1, 0.34 * cm))
+        story.append(_build_cover_kpi_rail(cover_metric_cards, width=CONTENT_WIDTH, theme=report_theme))
+        if cover_exec_cards:
+            story.append(Spacer(1, 0.16 * cm))
+            _append_highlight_cards(
+                story,
+                [
+                    {
+                        "title": card.get("title", ""),
+                        "body": card.get("body", ""),
+                        "value": "",
+                        "background": report_theme["surface"],
+                    }
+                    for card in cover_exec_cards[:3]
+                ],
+                content_width=CONTENT_WIDTH,
+                theme=report_theme,
+                columns=min(3, len(cover_exec_cards[:3])),
+                master="Cover / Intro",
+            )
+    if meta_band:
+        story.append(Spacer(1, 0.02 * cm))
+        story.append(meta_band)
+    story.append(Spacer(1, 0.10 * cm if use_visual_masters else 0.14 * cm))
     story.append(Paragraph(
-        "Door Verisight",
-        ParagraphStyle(
-            "cover_byline",
-            fontName=REPORT_FONTS["medium"],
-            fontSize=10.2,
-            leading=13,
-            textColor=TOKENS["cover_muted"],
-        ),
-    ))
-    story.append(Spacer(1, 0.28 * cm))
-    story.append(meta_band)
-    story.append(Spacer(1, 0.14 * cm))
-    story.append(Paragraph(
-        _truncate_copy(cover_distribution_note, limit=96),
+        cover_distribution_note,
         ParagraphStyle(
             "cover_context_note",
             fontName=REPORT_FONTS["regular"],
-            fontSize=7.8,
-            leading=10.4,
+            fontSize=7.4 if use_visual_masters else 7.8,
+            leading=9.9 if use_visual_masters else 10.4,
             textColor=TOKENS["cover_muted"],
         ),
     ))
@@ -3311,8 +4029,9 @@ def _append_rebrand_executive(
     response_cards = [
         {
             **card,
-            "body": _truncate_copy(card.get("body"), limit=58),
-            "background": TOKENS["surface"],
+            "body": _truncate_copy(card.get("body"), limit=52),
+            "background": TOKENS["bg"],
+            "accent_color": report_theme.get("accent_line", report_theme["accent"]),
         }
         for card in cover_metric_cards[:3]
     ]
@@ -3471,7 +4190,7 @@ def _append_rebrand_focus_questions(
         story,
         eyebrow="Prioriteiten",
         title="Wat eerst begrijpen en toetsen",
-        intro="Gebruik deze pagina om eerst scherp te krijgen wat dit beeld waarschijnlijk verklaart. Nog geen actieplan: alleen de vragen en observaties die eerst bevestigd moeten worden.",
+        intro="P3 liet zien welke factoren in dit vertrekbeeld het meest opvallen. Deze pagina laat zien welke daarvan eerst beter begrepen en getoetst moeten worden, voordat er een zwaardere conclusie of vervolgstap volgt.",
         content_width=content_width,
     )
     factor_explanations = _factor_explanation_lookup()
@@ -3618,6 +4337,7 @@ def _append_rebrand_risk_and_prevention(
     story: list,
     *,
     avg_risk: float | None,
+    scan_type: str,
     signal_label: str,
     signal_label_lower: str,
     band_counts: dict[str, int],
@@ -3651,6 +4371,19 @@ def _append_rebrand_risk_and_prevention(
         )
         how_to_read = "Lees eerst het hoofdpatroon bovenaan, daarna de signaalverdeling en pas daarna de aanvullende context."
         why_it_matters = "Zo blijft zichtbaar waar behoud bestuurlijk onder druk staat zonder dat één datapunt de hoofdlijn overneemt."
+    elif scan_type == "pulse":
+        intro_text = signal_page_payload.get(
+            "section_intro",
+            "Deze pagina verbindt Pulsesignaal, actieve werkfactoren en de huidige snapshot tot één compacte managementlezing.",
+        )
+        how_to_read = signal_page_payload.get(
+            "section_how_to_read",
+            "Lees eerst het Pulsesignaal als samenvattend groepsbeeld, daarna de actieve werkfactoren en pas daarna de compacte context.",
+        )
+        why_it_matters = signal_page_payload.get(
+            "section_why_it_matters",
+            "Zo blijft de PDF een bestuurlijke handoff van de huidige momentopname, zonder uit te groeien tot trend- of peer-rapport.",
+        )
     else:
         intro_text = (
             "Deze pagina verbindt hoofdredenen, meespelende factoren en frictiesignaal tot één managementlezing."
@@ -3659,25 +4392,21 @@ def _append_rebrand_risk_and_prevention(
         )
         how_to_read = "Lees eerst de hoofdredenen en meespelende factoren, daarna het frictiesignaal en pas daarna de extra context."
         why_it_matters = "Zo zie je sneller wat nu het vertrekbeeld draagt en welke context dat patroon sterker of zwakker maakt."
-    _append_section_heading(
+    _append_section_opening(
         story,
         eyebrow="Verdieping",
         title="Kernsignalen in samenhang",
         intro=intro_text,
         content_width=content_width,
-    )
-    _append_micro_structure(
-        story,
+        theme=report_theme,
         how_to_read=how_to_read,
         why_it_matters=why_it_matters,
-        content_width=content_width,
-        theme=report_theme,
     )
     top_width = (content_width - (8 * mm)) / 2
     lower_signal_width = content_width * 0.62
     lower_quotes_width = content_width - lower_signal_width - (8 * mm)
 
-    if not is_retention and top_reasons:
+    if scan_type == "exit" and top_reasons:
         primary_reason_frame = _build_chart_frame_flowable(
             label="Hoofdredenen van vertrek",
             image=_ranked_bar_image(top_reasons[:5], width_cm=7.0, color=MPL_BRAND),
@@ -3810,82 +4539,108 @@ def _append_rebrand_actions(
     report_theme: dict[str, colors.Color],
     title: str = "Eerste route & managementactie",
     intro: str | None = None,
+    use_visual_masters: bool = False,
 ) -> None:
+    master = EXIT_REPORT_VISUAL_MASTER_MAP["p9_action_route"] if use_visual_masters else None
     _append_section_heading(
         story,
         eyebrow="Route",
         title=title,
-        intro=intro or "Hier komen verificatie, eigenaar, eerste stap en review samen. In v3 staat dit nog maar op één plek: de eerste route, de eerste eigenaar en de eerste 30–90-dagenactie.",
+        intro=intro or "Vanaf hier gaat het niet meer om toetsen, maar om kiezen en uitvoeren. Deze pagina verbindt de eerste route direct aan eigenaarschap, eerste stap en review.",
         content_width=content_width,
+        master=master,
     )
     left_width = (content_width - (8 * mm)) / 2
     right_width = left_width
-    story.append(_build_columns_flowable(
-        column_items=[
-            [
-                _build_editorial_group(
-                    title="Eerste route",
-                    value="Nu kiezen",
-                    body=_truncate_copy(
-                        next_steps_payload.get("first_decision", "Kies het eerste managementspoor op basis van de topfactoren."),
-                        limit=120,
+    if use_visual_masters:
+        story.append(_build_action_priority_bar(
+            priority_text=next_steps_payload.get("priority_now", "Hier is nu de meeste aandacht nodig."),
+            route_text=next_steps_payload.get("first_route", "Kies het eerste managementspoor op basis van de topfactoren."),
+            decision_text=next_steps_payload.get("decision_now", next_steps_payload.get("first_decision", "Maak de eerste bestuurlijke keuze binnen dat spoor.")),
+            owner=next_steps_payload.get("first_owner", "Nog te bepalen"),
+            first_step=next_steps_payload.get("first_action", "Maak de eerste stap expliciet binnen 30 dagen."),
+            review=next_steps_payload.get("review_moment", "45–90 dagen" if is_retention else "60–90 dagen"),
+            width=content_width,
+            theme=report_theme,
+        ))
+        story.append(Spacer(1, 0.22 * cm))
+    else:
+        story.append(_build_columns_flowable(
+            column_items=[
+                [
+                    _build_editorial_group(
+                        title="Prioriteit nu",
+                        value="Nu kiezen",
+                        body=_truncate_copy(
+                            f"{next_steps_payload.get('priority_now', next_steps_payload.get('first_decision', 'Kies het eerste managementspoor op basis van de topfactoren.'))} {next_steps_payload.get('first_route', '')} {next_steps_payload.get('decision_now', '')}",
+                            limit=120,
+                        ),
+                        width=left_width,
+                        value_color=report_theme["accent_dark"],
+                        master=master,
                     ),
-                    width=left_width,
-                    value_color=report_theme["accent_dark"],
-                ),
-                _build_divider_flowable(width=left_width, color=report_theme["border"]),
-                _build_editorial_group(
-                    title="Route-eigenaar",
-                    value=next_steps_payload.get("first_owner", "Nog te bepalen"),
-                    body="Beleg verificatie, opvolging en terugkoppeling expliciet bij één eigenaar.",
-                    width=left_width,
-                ),
-            ],
-            [
-                _build_editorial_group(
-                    title="Eerste stap",
-                    value="Binnen 30 dagen",
-                    body=_truncate_copy(
-                        next_steps_payload.get("first_action", "Maak de eerste stap expliciet binnen 30 dagen."),
-                        limit=120,
+                    _build_divider_flowable(width=left_width, color=report_theme["border"]),
+                    _build_editorial_group(
+                        title="Eigenaar",
+                        value=next_steps_payload.get("first_owner", "Nog te bepalen"),
+                        body="Beleg verificatie, opvolging en terugkoppeling expliciet bij één eigenaar.",
+                        width=left_width,
+                        master=master,
                     ),
-                    width=right_width,
-                    value_color=report_theme["accent_dark"],
-                ),
-                _build_divider_flowable(width=right_width, color=report_theme["border"]),
-                _build_editorial_group(
-                    title="Review",
-                    value=next_steps_payload.get("review_moment", "45–90 dagen" if is_retention else "60–90 dagen"),
-                    body="Leg nu vast wanneer je route, uitvoering en bewijs opnieuw weegt.",
-                    width=right_width,
-                ),
+                ],
+                [
+                    _build_editorial_group(
+                        title="Eerste stap",
+                        value="Binnen 30 dagen",
+                        body=_truncate_copy(
+                            next_steps_payload.get("first_action", "Maak de eerste stap expliciet binnen 30 dagen."),
+                            limit=120,
+                        ),
+                        width=right_width,
+                        value_color=report_theme["accent_dark"],
+                        master=master,
+                    ),
+                    _build_divider_flowable(width=right_width, color=report_theme["border"]),
+                    _build_editorial_group(
+                        title="Review",
+                        value=next_steps_payload.get("review_moment", "45–90 dagen" if is_retention else "60–90 dagen"),
+                        body="Leg nu vast wanneer je route, uitvoering en bewijs opnieuw weegt.",
+                        width=right_width,
+                        master=master,
+                    ),
+                ],
             ],
-        ],
-        col_widths=[left_width, right_width],
-    ))
-    story.append(Spacer(1, 0.12 * cm))
+            col_widths=[left_width, right_width],
+        ))
+        story.append(Spacer(1, 0.12 * cm))
     if hypotheses:
         story.append(Paragraph("Actiekaarten", STYLES["sub_title"]))
         action_cards = []
-        for item in hypotheses[:2]:
+        for idx, item in enumerate(hypotheses[:3], start=1):
             action_cards.append({
-                "title": item.get("title") or item.get("question") or "Actiekaart",
-                "value": "Nu toetsen",
+                "title": f"{idx}. {item.get('title') or item.get('question') or 'Hypothese'}",
                 "body": (
-                    f"<b>Vraag:</b> {_truncate_copy(item.get('question') or item['title'], limit=105)}<br/><br/>"
-                    f"<b>Waarom nu:</b> {_truncate_copy(item['body'], limit=110)}<br/><br/>"
-                    f"<b>Eerste actie:</b> {_truncate_copy(item.get('action', next_steps_payload.get('first_action', 'Maak de eerste stap expliciet binnen 30 dagen.')), limit=105)}"
+                    f"<b>Vraag</b> {item.get('question') or item['title']}<br/><br/>"
+                    f"<b>Waarom nu</b> {item['body']}<br/><br/>"
+                    f"<b>Eerste actie</b> {item.get('action', next_steps_payload.get('first_action', 'Maak de eerste stap expliciet binnen 30 dagen.'))}"
                 ),
-                "background": TOKENS["cream"] if len(action_cards) % 2 == 0 else TOKENS["surface"],
+                "background": TOKENS["bg"],
+                "accent_color": report_theme.get("accent_line", report_theme["accent"]),
             })
         _append_highlight_cards(
             story,
             action_cards,
             content_width=content_width,
             theme=report_theme,
-            columns=min(2, len(action_cards)),
+            columns=min(3 if use_visual_masters else 2, len(action_cards)),
+            master=master,
+            title_font_size=6.6 if use_visual_masters else 7.2,
+            title_leading=8.4 if use_visual_masters else 9.4,
+            body_font_size=6.6 if use_visual_masters else 7.6,
+            body_leading=8.5 if use_visual_masters else 10.6,
+            card_padding=5.2 if use_visual_masters else 7,
         )
-        story.append(Spacer(1, 0.10 * cm))
+        story.append(Spacer(1, 0.16 * cm))
     roadmap_steps = list(next_steps_payload["steps"]) + [{
         "number": "5",
         "title": scan_meta["report_repeat_title"],
@@ -3896,9 +4651,12 @@ def _append_rebrand_actions(
             [f"{index}. {step['title']}", step["body"]]
             for index, step in enumerate(roadmap_steps, start=1)
         ],
-        col_widths=[content_width * 0.30, content_width * 0.70],
+        col_widths=[content_width * 0.34, content_width * 0.66],
         theme=report_theme,
         bold_columns=[0],
+        master=master,
+        font_size=6.7 if use_visual_masters else 7.6,
+        cell_padding=2.6 if use_visual_masters else 4,
     ))
     story.append(PageBreak())
 
@@ -3973,19 +4731,15 @@ def _append_rebrand_methodology(
     scan_meta = get_scan_definition(scan_type)
     product_module = get_product_module(scan_type)
     methodology_payload = product_module.get_methodology_payload()
-    _append_section_heading(
+    _append_section_opening(
         story,
         eyebrow="Methodiek",
         title="Compacte methodiek / leeswijzer",
         intro="Compacte leeswijzer voor score, privacy en interpretatie. Alle technische diepte staat in de appendix en niet meer in het hoofdrapport.",
         content_width=content_width,
-    )
-    _append_micro_structure(
-        story,
+        theme=report_theme,
         how_to_read="Lees de score nooit los, maar altijd samen met factoren, banding en de context van deze campagne.",
         why_it_matters="Drempels begrenzen schijnprecisie en herleidbaarheid; dit rapport is bedoeld voor prioritering en managementgesprek, niet als definitief bewijs.",
-        content_width=content_width,
-        theme=report_theme,
     )
     trust_rows = methodology_payload.get("trust_rows", [])
     product_is = next((row[1] for row in trust_rows if "wel is" in row[0].lower()), methodology_payload["intro_text"])
@@ -4117,7 +4871,15 @@ def _append_rebrand_technical_appendix(
 ) -> None:
     product_module = get_product_module(scan_type)
     methodology_payload = product_module.get_methodology_payload()
-    signal_metric_label = "frictiescore" if scan_type == "exit" else "retentiesignaal"
+    if scan_type == "exit":
+        signal_metric_label = "frictiescore"
+        signal_metric_with_article = "de frictiescore"
+    elif scan_type == "pulse":
+        signal_metric_label = "pulsesignaal"
+        signal_metric_with_article = "het pulsesignaal"
+    else:
+        signal_metric_label = "retentiesignaal"
+        signal_metric_with_article = "het retentiesignaal"
     sdt_body = (
         "Autonomie, competentie en verbondenheid blijven de onderliggende psychologische laag in deze rapportage. "
         "Die SDT-laag helpt verklaren waarom werkfactoren zwaarder of lichter doorwerken in het groepsbeeld; "
@@ -4130,7 +4892,7 @@ def _append_rebrand_technical_appendix(
     )
     signal_logic_body = (
         f"Het vroegere signaal van beïnvloedbare werkfactoren staat niet meer als los hoofdblok in het rapport. "
-        f"In v3 is die logica opgenomen in de {signal_metric_label}, de banding en de managementduiding: "
+        f"In v3 is die logica opgenomen in {signal_metric_with_article}, de banding en de managementduiding: "
         "werkfactoren kleuren dus direct hoe prioriteit, synthese en routekeuze worden gelezen."
     )
     _append_section_heading(
@@ -4144,7 +4906,7 @@ def _append_rebrand_technical_appendix(
     _append_micro_structure(
         story,
         how_to_read="Lees SDT als onderliggende psychologische laag onder de zichtbare werkfactoren, niet als los concurrerend scorespoor.",
-        why_it_matters=_truncate_copy(sdt_body, limit=155),
+        why_it_matters=sdt_body,
         content_width=content_width,
         theme=report_theme,
         why_label="Uitleg",
@@ -4160,39 +4922,31 @@ def _append_rebrand_technical_appendix(
         theme=report_theme,
     ))
     story.append(Spacer(1, 0.08 * cm))
-    story.append(Paragraph("Item- en factorbasis", STYLES["sub_title"]))
-    _append_micro_structure(
+    _append_appendix_data_section(
         story,
+        title="Item- en factorbasis",
         how_to_read="Lees de factoren als compacte, aangepaste vraagblokken voor managementrapportage en niet als volledige academische schalen.",
-        why_it_matters=_truncate_copy(item_factor_body, limit=165),
-        content_width=content_width,
-        theme=report_theme,
-        why_label="Uitleg",
-    )
-    story.append(_build_data_table_flowable(
+        explanation=item_factor_body,
         rows=methodology_payload["weight_rows"],
         col_widths=[content_width * 0.22, content_width * 0.10, content_width * 0.68],
+        content_width=content_width,
         theme=report_theme,
         align_columns=[1],
         bold_columns=[1],
-    ))
-    story.append(Spacer(1, 0.08 * cm))
-    story.append(Paragraph("Samengestelde werkfactorsignaal-logica", STYLES["sub_title"]))
-    _append_micro_structure(
-        story,
-        how_to_read=f"Lees banding en managementduiding als compacte vertaling van hoe werkfactoren samenkomen in de {signal_metric_label}.",
-        why_it_matters=_truncate_copy(signal_logic_body, limit=170),
-        content_width=content_width,
-        theme=report_theme,
-        why_label="Uitleg",
     )
-    story.append(_build_data_table_flowable(
+    _append_appendix_data_section(
+        story,
+        title="Samengestelde werkfactorsignaal-logica",
+        how_to_read=f"Lees banding en managementduiding als compacte vertaling van hoe werkfactoren samenkomen in {signal_metric_with_article}.",
+        explanation=signal_logic_body,
         rows=methodology_payload["band_rows"],
         col_widths=[content_width * 0.24, content_width * 0.14, content_width * 0.62],
+        content_width=content_width,
         theme=report_theme,
         align_columns=[1],
         bold_columns=[0, 1],
-    ))
+        spacer_height_cm=0.0,
+    )
     if show_segment_note and not has_segment_appendix:
         story.append(Spacer(1, 0.10 * cm))
         _append_emphasis_note(
@@ -4213,17 +4967,19 @@ def _append_exit_response_page(
     report_theme: dict[str, colors.Color],
     exposure_card: dict[str, Any] | None,
 ) -> None:
+    master = EXIT_REPORT_VISUAL_MASTER_MAP["p2_response"]
     _append_section_heading(
         story,
         eyebrow="Respons",
         title="Respons",
         intro="Deze pagina laat eerst zien hoe stevig de responsebasis is. Lees de rest van het rapport altijd met deze responskwaliteit in het achterhoofd.",
         content_width=content_width,
+        master=master,
     )
     response_cards = [
         {
             **card,
-            "body": _truncate_copy(card.get("body"), limit=58),
+            "body": card.get("body"),
             "background": TOKENS["surface"],
         }
         for card in cover_metric_cards[:3]
@@ -4234,6 +4990,7 @@ def _append_exit_response_page(
         content_width=content_width,
         theme=report_theme,
         columns=3,
+        master=master,
     )
 
     invited = 0
@@ -4250,13 +5007,34 @@ def _append_exit_response_page(
             except ValueError:
                 completed = 0
 
+    response_chart_width = content_width * 0.42
     response_frame = _build_chart_frame_flowable(
         label="Responsverhouding",
-        image=_response_donut_image(invited=invited, completed=completed, width_cm=5.2),
-        content_width=(content_width * 0.34),
+        image=_response_donut_image(invited=invited, completed=completed, width_cm=3.9),
+        content_width=response_chart_width,
         theme=report_theme,
         caption="De cirkel is ondersteunend: de interpretatie ernaast blijft leidend.",
+        master=master,
+        framed=False,
     )
+    if response_frame:
+        response_visual = Table(
+            [[response_frame, Spacer(1, 0.01 * cm)]],
+            colWidths=[response_chart_width, content_width - response_chart_width],
+        )
+        response_visual.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), report_theme["bg"]),
+            ("LINEABOVE", (0, 0), (-1, 0), 0.4, report_theme["paper_edge"]),
+            ("LINEBELOW", (0, 0), (-1, 0), 0.3, report_theme["paper_edge"]),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ]))
+        story.append(response_visual)
+        story.append(Spacer(1, 0.06 * cm))
+
     explanation_cards = [
         _build_editorial_group(
             title="Wat respons zegt",
@@ -4264,33 +5042,33 @@ def _append_exit_response_page(
                 "Respons laat zien hoeveel van de uitgenodigde groep in dit managementbeeld meetelt. "
                 "Hoe hoger de respons, hoe steviger het groepsbeeld doorgaans gelezen kan worden."
             ),
-            width=(content_width * 0.64),
+            width=content_width,
+            master=master,
         ),
-        _build_divider_flowable(width=(content_width * 0.64), color=report_theme["border"]),
+        _build_divider_flowable(width=content_width, color=report_theme["paper_edge"]),
         _build_editorial_group(
             title="Wat lage respons kan betekenen",
             body=(
                 "Lagere respons kan wijzen op timing, bereik, surveyvermoeidheid of terughoudendheid. "
                 "Lees patronen dan voorzichtiger en voorkom te stellige managementconclusies."
             ),
-            width=(content_width * 0.64),
+            width=content_width,
+            master=master,
         ),
-        _build_divider_flowable(width=(content_width * 0.64), color=report_theme["border"]),
+        _build_divider_flowable(width=content_width, color=report_theme["paper_edge"]),
         _build_editorial_group(
             title="Wat hoge respons kan betekenen",
             body=(
                 "Hogere respons maakt het groepsbeeld meestal robuuster. "
                 "Ook dan blijft dit rapport een managementlezing en geen bewijs van oorzaak of effect."
             ),
-            width=(content_width * 0.64),
+            width=content_width,
+            master=master,
         ),
     ]
-    story.append(_build_columns_flowable(
-        column_items=[[item for item in [response_frame] if item], explanation_cards],
-        col_widths=[content_width * 0.34, content_width * 0.64],
-    ))
-    story.append(Spacer(1, 0.08 * cm))
-    _append_emphasis_note(
+    story.append(_build_stack_table(explanation_cards, content_width))
+    story.append(Spacer(1, 0.04 * cm))
+    _append_quiet_note(
         story,
         title="Respons in context",
         body=(
@@ -4299,15 +5077,19 @@ def _append_exit_response_page(
         ),
         content_width=content_width,
         theme=report_theme,
+        master=master,
     )
     if exposure_card:
-        _append_emphasis_note(
+        _append_quiet_note(
             story,
             title="Optionele context",
-            body=f"<b>{exposure_card['value']}</b> · {_truncate_copy(exposure_card['body'], limit=120)}",
+            body=f"<b>{exposure_card['value']}</b> · {exposure_card['body']}",
             content_width=content_width,
             theme=report_theme,
+            master=master,
+            accent_color=report_theme["paper_edge"],
         )
+    story.append(Spacer(1, 0.02 * cm))
     story.append(PageBreak())
 
 
@@ -4322,22 +5104,21 @@ def _append_exit_handoff_page(
     content_width: float,
     report_theme: dict[str, colors.Color],
 ) -> None:
+    master = EXIT_REPORT_VISUAL_MASTER_MAP["p3_handoff"]
     boardroom_intro = management_summary_payload.get("boardroom_intro") or management_summary_payload.get("executive_intro") or ""
     strongest_signal = top_exit_reason_label or (top_factor_labels[0] if top_factor_labels else management_summary_payload.get("executive_title", "Managementbeeld"))
     strongest_signal_body = boardroom_intro.split(". ")[0].strip() or "Dit is nu de scherpste managementlezing van het vertrekbeeld."
     if strongest_signal_body and not strongest_signal_body.endswith("."):
         strongest_signal_body += "."
     why_it_counts = (
-        f"Dit telt omdat {top_factor_labels[0].lower() if top_factor_labels else 'dit patroon'} nu het meeste vervolg vraagt in gesprek, verificatie en eerste managementweging."
+        f"Gebruik dit als de kern van het managementbeeld: {top_factor_labels[0].lower() if top_factor_labels else 'dit patroon'} draagt nu de zwaarste spanning en verdient daarom eerst bestuurlijke weging."
     )
-    first_do_body = _truncate_copy(
-        next_steps_payload.get("first_action", "Maak de eerste stap expliciet en koppel daar direct een eigenaar en reviewmoment aan."),
-        limit=125,
+    first_do_body = (
+        next_steps_payload.get("first_action", "Maak de eerste stap expliciet en koppel daar direct een eigenaar en reviewmoment aan.")
     )
-    why_first_counts = _truncate_copy(
+    why_first_counts = (
         next_steps_payload.get("first_decision")
-        or f"Begin hier omdat {top_contributing_reason_label.lower() if top_contributing_reason_label else 'dit spoor'} nu het meeste bestuurlijke verschil maakt.",
-        limit=125,
+        or f"Kies dit spoor eerst omdat {top_contributing_reason_label.lower() if top_contributing_reason_label else 'dit spoor'} nu de meeste bestuurlijke richting geeft aan verificatie en vervolgsturing."
     )
     conclusion = (
         f"Concludeer niet dat vertrek één oorzaak heeft. Concludeer wel dat {strongest_signal.lower()} "
@@ -4349,54 +5130,58 @@ def _append_exit_handoff_page(
         title=management_summary_payload.get("boardroom_title", "Bestuurlijke handoff"),
         intro="Lees deze pagina als de bestuurlijke vertaling van het rapport: wat springt eruit, waarom telt het nu en welk eerste besluit verdient prioriteit.",
         content_width=content_width,
+        master=master,
     )
-    left_width = (content_width - (8 * mm)) / 2
-    right_width = left_width
-    story.append(_build_columns_flowable(
-        column_items=[
-            [
-                _build_editorial_group(
-                    title="Sterkste signaal",
-                    value=strongest_signal,
-                    body=strongest_signal_body,
-                    width=left_width,
-                    value_color=report_theme["accent_dark"],
-                ),
-                _build_divider_flowable(width=left_width, color=report_theme["border"]),
-                _build_editorial_group(
-                    title="Waarom telt dit",
-                    value="Nu wegen",
-                    body=why_it_counts,
-                    width=left_width,
-                ),
-            ],
-            [
-                _build_editorial_group(
-                    title="Wat eerst doen",
-                    value="Eerste route",
-                    body=first_do_body,
-                    width=right_width,
-                    value_color=report_theme["accent_dark"],
-                ),
-                _build_divider_flowable(width=right_width, color=report_theme["border"]),
-                _build_editorial_group(
-                    title="Waarom dat eerst telt",
-                    value="Bestuurlijke prioriteit",
-                    body=why_first_counts,
-                    width=right_width,
-                ),
-            ],
-        ],
-        col_widths=[left_width, right_width],
-    ))
-    story.append(Spacer(1, 0.10 * cm))
-    _append_emphasis_note(
-        story,
-        title="Wat je hieruit moet concluderen",
-        body=conclusion,
-        content_width=content_width,
-        theme=report_theme,
-    )
+    grid_width = content_width - (8 * mm)
+    block_width = grid_width / 2
+    top_row = [
+        _build_editorial_group(
+            title="Sterkste signaal",
+            value=strongest_signal,
+            body=strongest_signal_body,
+            width=block_width,
+            value_color=report_theme["ink"],
+            master=master,
+        ),
+        _build_editorial_group(
+            title="Waarom dit nu telt",
+            value="Bestuurlijke relevantie",
+            body=why_it_counts,
+            width=block_width,
+            master=master,
+        ),
+    ]
+    bottom_row = [
+        _build_editorial_group(
+            title="Wat nu eerst doen",
+            value="Eerste route",
+            body=f"{why_first_counts} {first_do_body}",
+            width=block_width,
+            value_color=report_theme["ink"],
+            master=master,
+        ),
+        _build_editorial_group(
+            title="Wat je hieruit moet concluderen",
+            value="Conclusie",
+            body=conclusion,
+            width=block_width,
+            master=master,
+        ),
+    ]
+    handoff_grid = Table([top_row, bottom_row], colWidths=[block_width] * 2)
+    handoff_grid.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), report_theme["bg"]),
+        ("LINEABOVE", (0, 0), (-1, 0), 0.4, report_theme["paper_edge"]),
+        ("LINEBELOW", (0, 0), (-1, 0), 0.25, report_theme["paper_edge"]),
+        ("LINEBELOW", (0, -1), (-1, -1), 0.3, report_theme["paper_edge"]),
+        ("LINEBEFORE", (1, 0), (1, -1), 0.25, report_theme["paper_edge"]),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+    story.append(handoff_grid)
     story.append(PageBreak())
 
 
@@ -4429,19 +5214,17 @@ def _append_exit_friction_page(
     content_width: float,
     report_theme: dict[str, colors.Color],
 ) -> None:
-    _append_section_heading(
+    master = EXIT_REPORT_VISUAL_MASTER_MAP["p4_friction"]
+    _append_section_opening(
         story,
         eyebrow="Scoreduiding",
         title="Frictiescore & verdeling van het vertrekbeeld",
-        intro="Deze pagina legt eerst uit hoe je de frictiescore moet lezen en zet die daarna naast de verdeling van het vertrekbeeld.",
-        content_width=content_width,
-    )
-    _append_micro_structure(
-        story,
-        how_to_read="Frictiescore is een interne managementsamenvatting van ervaren werkfrictie rondom vertrek.",
-        why_it_matters="Gebruik deze score altijd samen met vertrekredenen, topfactoren en werksignalen, niet als causaliteitsclaim, externe benchmark of voorspelling.",
+        intro="Vertrekredenen laten zien wat mensen noemen. De frictiescore en de verdeling laten daarnaast zien hoe breed spanning in en rond het werk in deze groep terugkomt. Daarom staan de score en de verdeling hier samen.",
         content_width=content_width,
         theme=report_theme,
+        master=master,
+        how_to_read="De frictiescore vat samen hoeveel spanning en belemmering in werk, leiding en context in deze groep terugkomt. De verdeling laat zien of het beeld duidelijker in het werk ligt, gemengd blijft of minder sterk met het werk samenhangt.",
+        why_it_matters="De banding laat niet zien hoe zwaar een patroon op zichzelf weegt, maar hoeveel bestuurlijke aandacht een patroon vraagt en hoeveel extra toetsing nog nodig is.",
     )
     if avg_risk is None:
         _append_emphasis_note(
@@ -4450,6 +5233,7 @@ def _append_exit_friction_page(
             body="De frictiescore verschijnt zodra voldoende responses beschikbaar zijn voor een verantwoord groepsbeeld.",
             content_width=content_width,
             theme=report_theme,
+            master=master,
         )
         story.append(PageBreak())
         return
@@ -4458,21 +5242,25 @@ def _append_exit_friction_page(
     score_frame = _build_chart_frame_flowable(
         label="Frictiescore",
         image=_risk_gauge_image(avg_risk, band_label),
-        content_width=(content_width * 0.48),
+        content_width=content_width,
         theme=report_theme,
-        caption="Kleurbanden helpen alleen bij managementlezing; de score is geen zelfstandig bewijs.",
+        caption="Lees dit als een groepsbeeld op dit meetmoment: richtinggevend voor gesprek en verificatie, niet als bewijs op zichzelf.",
+        master=master,
+        framed=False,
     )
+    if score_frame:
+        story.append(score_frame)
+    story.append(Spacer(1, 0.10 * cm))
+    story.append(Paragraph("Verdeling van het vertrekbeeld", STYLES["sub_title"]))
     banding_frame = _build_stacked_distribution_flowable(
         title="Band n / %",
         counts=band_counts,
-        width=(content_width * 0.48),
+        width=content_width,
         theme=report_theme,
-        caption="De banding laat zien hoe de exitbatch zich over het groepsbeeld verdeelt.",
+        caption="De banding helpt het beeld te lezen als volgen, eerst toetsen of direct prioriteren.",
+        framed=False,
     )
-    story.append(_build_columns_flowable(
-        column_items=[[score_frame], [banding_frame]],
-        col_widths=[content_width * 0.48, content_width * 0.48],
-    ))
+    story.append(banding_frame)
     story.append(Spacer(1, 0.10 * cm))
     story.append(_build_data_table_flowable(
         rows=_build_exit_picture_rows(pattern, n_completed),
@@ -4480,15 +5268,19 @@ def _append_exit_friction_page(
         theme=report_theme,
         align_columns=[1, 2],
         bold_columns=[1, 2],
+        master=master,
     ))
     story.append(Spacer(1, 0.06 * cm))
-    story.append(Paragraph("Verdeling van het vertrekbeeld", STYLES["sub_title"]))
     story.append(PageBreak())
 
 
 def _append_exit_signal_synthesis_page(
     story: list,
     *,
+    avg_risk: float | None,
+    band_counts: dict[str, int],
+    pattern: dict[str, Any],
+    n_completed: int,
     top_reasons: list[dict[str, Any]],
     top_contributing_reasons: list[dict[str, Any]],
     quotes: list[str],
@@ -4497,26 +5289,57 @@ def _append_exit_signal_synthesis_page(
     content_width: float,
     report_theme: dict[str, colors.Color],
 ) -> None:
+    master = EXIT_REPORT_VISUAL_MASTER_MAP["p5_signal_synthesis"]
     has_prior_signaling = bool(prior_signal_rows or signal_visibility_average is not None)
     intro = (
-        "Deze pagina leest hoofdredenen, meespelende factoren en surveystemmen als één managementverhaal."
+        "P4 liet zien hoe breed werkfrictie in deze groep terugkomt. Deze pagina laat zien wat daar inhoudelijk onder ligt: welke vertrekredenen vaak terugkomen, waar werkfrictie meespeelt en welk deel daarvan waarschijnlijk beïnvloedbaar is."
         if not has_prior_signaling
-        else "Deze pagina leest hoofdredenen, meespelende factoren, surveystemmen en eerdere signalering als één managementverhaal."
+        else "P4 liet zien hoe breed werkfrictie in deze groep terugkomt. Deze pagina laat zien wat daar inhoudelijk onder ligt: welke vertrekredenen vaak terugkomen, waar werkfrictie meespeelt, welk deel daarvan waarschijnlijk beïnvloedbaar is en hoe eerdere signalering dat beeld inkleurt."
     )
-    _append_section_heading(
+    _append_section_opening(
         story,
         eyebrow="Synthese",
         title="Signalen in samenhang",
         intro=intro,
         content_width=content_width,
-    )
-    _append_micro_structure(
-        story,
-        how_to_read="Lees eerst de analytische blokken bovenaan en gebruik quotes of eerdere signalering alleen als context eronder.",
-        why_it_matters="Zo blijft zichtbaar wat nu het vertrekbeeld draagt, zonder dat losse surveycitaten of één contextblok de hoofdlijn overnemen.",
-        content_width=content_width,
         theme=report_theme,
+        master=master,
+        how_to_read="Lees eerst de hoofdredenen. Lees daarna de meespelende factoren als werkfactoren die het sterkst met dat vertrekpatroon samenhangen. Lees citaten als illustratie van het patroon, niet als bewijs op zichzelf.",
+        why_it_matters="Deze pagina helpt onderscheiden wat vaak terugkomt, wat dat patroon waarschijnlijk draagt en welke werkfactoren daarom als eerste verder getoetst moeten worden.",
     )
+    if avg_risk is not None:
+        band_label = "HOOG" if avg_risk >= 7 else "MIDDEN" if avg_risk >= 4.5 else "LAAG"
+        score_frame = _build_chart_frame_flowable(
+            label="Frictiescore",
+            image=_risk_gauge_image(avg_risk, band_label),
+            content_width=content_width,
+            theme=report_theme,
+            caption="Lees dit als een groepsbeeld op dit meetmoment: richtinggevend voor gesprek en verificatie, niet als bewijs op zichzelf.",
+            master=master,
+            framed=False,
+        )
+        if score_frame:
+            story.append(score_frame)
+            story.append(Spacer(1, 0.08 * cm))
+        story.append(Paragraph("Verdeling van het vertrekbeeld", STYLES["sub_title"]))
+        story.append(_build_stacked_distribution_flowable(
+            title="Band n / %",
+            counts=band_counts,
+            width=content_width,
+            theme=report_theme,
+            caption="De banding helpt het beeld te lezen als volgen, eerst toetsen of direct prioriteren.",
+            framed=False,
+        ))
+        story.append(Spacer(1, 0.08 * cm))
+        story.append(_build_data_table_flowable(
+            rows=_build_exit_picture_rows(pattern, n_completed),
+            col_widths=[content_width * 0.28, content_width * 0.10, content_width * 0.12, content_width * 0.50],
+            theme=report_theme,
+            align_columns=[1, 2],
+            bold_columns=[1, 2],
+            master=master,
+        ))
+        story.append(Spacer(1, 0.12 * cm))
     top_width = (content_width - (8 * mm)) / 2
     primary_reason_frame = _build_chart_frame_flowable(
         label="Hoofdredenen",
@@ -4524,6 +5347,7 @@ def _append_exit_signal_synthesis_page(
         content_width=top_width,
         theme=report_theme,
         caption="Hoofdredenen geven de eerste managementingang van het vertrekbeeld.",
+        master=master,
     )
     contributing_frame = _build_chart_frame_flowable(
         label="Meespelende factoren",
@@ -4531,6 +5355,7 @@ def _append_exit_signal_synthesis_page(
         content_width=top_width,
         theme=report_theme,
         caption="Meespelende factoren helpen bepalen welk gesprek of welke route eerst telt.",
+        master=master,
     ) if top_contributing_reasons else None
     story.append(_build_columns_flowable(
         column_items=[
@@ -4543,7 +5368,7 @@ def _append_exit_signal_synthesis_page(
 
     lower_left: list[Any] = []
     if len(quotes) >= 2:
-        lower_left.append(Paragraph("Compacte surveystemmen", STYLES["sub_title"]))
+        lower_left.append(Paragraph("Wat mensen er zelf over zeggen", STYLES["sub_title"]))
         for index, quote in enumerate(quotes[:2]):
             lower_left.append(Paragraph(
                 f'"{_truncate_copy(quote, limit=105)}"',
@@ -4560,9 +5385,10 @@ def _append_exit_signal_synthesis_page(
                 lower_left.append(_build_divider_flowable(width=top_width, color=report_theme["border"]))
     else:
         lower_left.append(_build_editorial_group(
-            title="Surveycontext",
-            body="Open antwoorden worden hier alleen getoond als ze de analytische hoofdlijn versterken.",
+            title="Wat mensen er zelf over zeggen",
+            body="Korte citaten geven woorden aan het patroon dat in deze groep naar voren komt. Ze maken het beeld herkenbaarder, maar dragen niet op zichzelf de hoofdlijn.",
             width=top_width,
+            master=master,
         ))
 
     prior_panel = _build_prior_signal_panel(
@@ -4574,12 +5400,13 @@ def _append_exit_signal_synthesis_page(
     lower_right: list[Any] = [prior_panel] if prior_panel is not None else [
         _build_card_flowable(
             {
-                "title": "Context",
-                "body": "Eerdere signalering wordt alleen getoond als die data echt beschikbaar is.",
+                "title": "Eerdere signalering",
+                "body": "Eerdere signalering wordt alleen getoond als die informatie echt beschikbaar is en het groepsbeeld helpt inkaderen.",
                 "background": TOKENS["surface"],
             },
             width=top_width,
             theme=report_theme,
+            master=master,
         )
     ]
     story.append(_build_columns_flowable(
@@ -4598,19 +5425,17 @@ def _append_exit_drivers_page(
     content_width: float,
     report_theme: dict[str, colors.Color],
 ) -> None:
-    _append_section_heading(
+    master = EXIT_REPORT_VISUAL_MASTER_MAP["p6_drivers"]
+    _append_section_opening(
         story,
         eyebrow="Drivers",
         title="Drivers & prioriteitenbeeld",
-        intro="Deze pagina bundelt SDT-gebaseerde en organisatorische factoren in één prioriteitenbeeld.",
-        content_width=content_width,
-    )
-    _append_micro_structure(
-        story,
-        how_to_read="Deze factorpagina combineert SDT en organisatiefactoren tot één managementlezing van beleving en prioriteit.",
-        why_it_matters="Zo zie je welke thema's relatief lager worden ervaren en tegelijk bestuurlijk het meeste vervolg vragen.",
+        intro="Deze pagina laat per factor zien hoe die gemiddeld is ervaren, hoeveel bestuurlijke aandacht die factor nu vraagt en welk leeslabel daar het best bij past.",
         content_width=content_width,
         theme=report_theme,
+        master=master,
+        how_to_read="Lees eerst Ervaring: die laat zien hoe positief of negatief een factor gemiddeld is ervaren. Lees daarna de signaalsterkte: die laat zien hoeveel bestuurlijke aandacht die factor binnen dit vertrekbeeld vraagt. Kijk vervolgens naar de managementstatus: dat is het leeslabel per factor en vat samen of volgen genoeg is, eerst toetsen nodig is of direct prioriteren voorop staat.",
+        why_it_matters="Deze pagina laat zien wat in dit vertrekbeeld het meest opvalt. Op de volgende pagina wordt uitgewerkt wat daarbij eerst beter begrepen en getoetst moet worden.",
     )
     if not factor_avgs:
         _append_emphasis_note(
@@ -4619,21 +5444,23 @@ def _append_exit_drivers_page(
             body="Het prioriteitenbeeld verschijnt zodra voldoende responses beschikbaar zijn voor verantwoord factorlezen.",
             content_width=content_width,
             theme=report_theme,
+            master=master,
         )
         story.append(PageBreak())
         return
 
     matrix_frame = _build_chart_frame_flowable(
         label="Prioriteitenbeeld",
-        image=_priority_matrix_image(factor_avgs, width_cm=12.4),
+        image=_priority_matrix_image(factor_avgs, width_cm=11.6),
         content_width=content_width,
         theme=report_theme,
-        caption="Lager op de x-as betekent lagere beleving; hoger op de y-as betekent meer bestuurlijke aandacht.",
+        caption="Een lagere ervaring laat zien waar mensen minder positief over zijn. Een hogere signaalsterkte laat zien waar management in dit vertrekbeeld eerder verder moet kijken.",
+        master=master,
     )
     if matrix_frame:
         story.append(matrix_frame)
         story.append(Spacer(1, 0.12 * cm))
-    table_rows = [["Factor", "Belevingsscore", "Signaal", "Managementlezing"]]
+    table_rows = [["Factor", "Ervaring", "Managementstatus", "Signaalsterkte"]]
     signal_colors: list[colors.Color] = []
     for factor, signal_value in factor_items:
         score = factor_avgs.get(factor, 5.5)
@@ -4643,19 +5470,26 @@ def _append_exit_drivers_page(
         table_rows.append([
             FACTOR_LABELS_NL.get(factor, factor),
             presentation["score_display"],
-            presentation["signal_display"],
             presentation["management_label"],
+            presentation["signal_display"],
         ])
     story.append(_build_data_table_flowable(
         rows=table_rows,
-        col_widths=[content_width * 0.38, content_width * 0.18, content_width * 0.16, content_width * 0.28],
+        col_widths=[content_width * 0.38, content_width * 0.18, content_width * 0.28, content_width * 0.16],
         theme=report_theme,
-        highlight_columns={3: signal_colors},
+        highlight_columns={2: signal_colors},
         align_columns=[1, 2, 3],
         bold_columns=[1, 2, 3],
+        master=master,
+        font_size=7.0,
+        cell_padding=3,
     ))
     story.append(Spacer(1, 0.10 * cm))
     factor_cards = []
+    factor_help = {
+        "growth": "Ruimte om te groeien en zicht op een volgende stap.",
+        "leadership": "Kwaliteit van aansturing, feedback en steun.",
+    }
     for factor, signal_value in top_risks[:2]:
         score = factor_avgs.get(factor, 5.5)
         presentation = build_factor_presentation(score=score, signal_score=signal_value)
@@ -4663,16 +5497,25 @@ def _append_exit_drivers_page(
             "title": FACTOR_LABELS_NL.get(factor, factor),
             "badge": _risk_badge(label=presentation["management_label"]),
             "value": presentation["score_display"],
-            "body": _factor_current_state_text(factor, is_retention=False),
+            "body": factor_help.get(factor, _factor_current_state_text(factor, is_retention=False)),
             "background": TOKENS["cream"] if len(factor_cards) == 0 else TOKENS["surface"],
         })
     if factor_cards:
+        _append_emphasis_note(
+            story,
+            title="Uitgelichte factoren",
+            body="De factoren hieronder zijn uitgelicht omdat ze in dit vertrekbeeld nu als eerste aandacht of extra toetsing vragen.",
+            content_width=content_width,
+            theme=report_theme,
+            master=master,
+        )
         _append_highlight_cards(
             story,
             factor_cards,
             content_width=content_width,
             theme=report_theme,
             columns=min(2, len(factor_cards)),
+            master=master,
         )
     story.append(PageBreak())
 
@@ -4684,19 +5527,17 @@ def _append_exit_sdt_page(
     content_width: float,
     report_theme: dict[str, colors.Color],
 ) -> None:
-    _append_section_heading(
+    master = EXIT_REPORT_VISUAL_MASTER_MAP["p7_sdt"]
+    _append_section_opening(
         story,
         eyebrow="Onderliggende laag",
         title="SDT Basisbehoeften",
         intro="Deze laag maakt de onderliggende psychologische basis zichtbaar onder het bredere vertrekbeeld.",
         content_width=content_width,
-    )
-    _append_micro_structure(
-        story,
+        theme=report_theme,
+        master=master,
         how_to_read="Lees autonomie, competentie en verbondenheid als onderliggende basisbehoeften die meespelen onder de zichtbare werkfactoren.",
         why_it_matters="Zo blijft duidelijk welke psychologische laag mogelijk meespeelt zonder dat deze pagina de hoofdlezing van het rapport overneemt.",
-        content_width=content_width,
-        theme=report_theme,
     )
     if not sdt_avgs:
         _append_emphasis_note(
@@ -4705,15 +5546,17 @@ def _append_exit_sdt_page(
             body="Zodra voldoende factorinformatie beschikbaar is, verschijnt hier de onderliggende basisbehoeftenlaag.",
             content_width=content_width,
             theme=report_theme,
+            master=master,
         )
         story.append(PageBreak())
         return
     chart = _build_chart_frame_flowable(
         label="SDT-basisbehoeften",
-        image=_sdt_bar_image(sdt_avgs, width_cm=10.8),
+        image=_sdt_bar_image(sdt_avgs, width_cm=9.7),
         content_width=content_width,
         theme=report_theme,
         caption="Lagere scores vragen eerder bestuurlijke aandacht; hogere scores duiden op een relatief sterkere basis.",
+        master=master,
     )
     if chart:
         story.append(chart)
@@ -4732,6 +5575,9 @@ def _append_exit_sdt_page(
         theme=report_theme,
         align_columns=[1],
         bold_columns=[1],
+        master=master,
+        font_size=7.0,
+        cell_padding=3,
     ))
     lowest_dim = min(((dim, value) for dim, value in sdt_avgs.items() if dim in mapping), key=lambda item: item[1], default=None)
     if lowest_dim:
@@ -4741,6 +5587,7 @@ def _append_exit_sdt_page(
             body=f"{mapping[lowest_dim[0]][0]} ligt nu het laagst in de SDT-laag. Gebruik dit als verklarende achtergrondlaag, niet als los interventieprogramma.",
             content_width=content_width,
             theme=report_theme,
+            master=master,
         )
     story.append(PageBreak())
 
@@ -4753,19 +5600,17 @@ def _append_exit_org_factors_page(
     content_width: float,
     report_theme: dict[str, colors.Color],
 ) -> None:
-    _append_section_heading(
+    master = EXIT_REPORT_VISUAL_MASTER_MAP["p8_org_factors"]
+    _append_section_opening(
         story,
         eyebrow="Factorlaag",
         title="Organisatiefactoren",
         intro="Deze pagina laat de organisatorische factorlaag apart zien, los van SDT en los van de bredere synthese.",
         content_width=content_width,
-    )
-    _append_micro_structure(
-        story,
+        theme=report_theme,
+        master=master,
         how_to_read="Belevingsscore laat zien hoe vertrekkers een thema gemiddeld ervoeren; signaal laat zien hoeveel bestuurlijke aandacht datzelfde thema vraagt.",
         why_it_matters="Zo blijft zichtbaar dat score en signaal dezelfde factor vanuit twee managementperspectieven lezen, zonder twee concurrerende hoofdcijfers te maken.",
-        content_width=content_width,
-        theme=report_theme,
     )
     if not factor_avgs:
         _append_emphasis_note(
@@ -4774,15 +5619,17 @@ def _append_exit_org_factors_page(
             body="Deze laag verschijnt zodra voldoende factorinformatie beschikbaar is.",
             content_width=content_width,
             theme=report_theme,
+            master=master,
         )
         story.append(PageBreak())
         return
     chart = _build_chart_frame_flowable(
         label="Organisatiefactoren",
-        image=_factor_bar_image(factor_avgs, width_cm=13.0),
+        image=_factor_bar_image(factor_avgs, width_cm=12.0),
         content_width=content_width,
         theme=report_theme,
         caption="De balken tonen de ervaren score; de kleur helpt de managementlezing van aandacht.",
+        master=master,
     )
     if chart:
         story.append(chart)
@@ -4802,6 +5649,9 @@ def _append_exit_org_factors_page(
         theme=report_theme,
         align_columns=[1, 2, 3],
         bold_columns=[1, 2, 3],
+        master=master,
+        font_size=7.0,
+        cell_padding=3,
     ))
     story.append(PageBreak())
 
@@ -4814,55 +5664,791 @@ def _append_exit_methodology_page(
     content_width: float,
     report_theme: dict[str, colors.Color],
 ) -> None:
+    master = EXIT_REPORT_VISUAL_MASTER_MAP["p10_methodology"]
     scan_meta = get_scan_definition(scan_type)
     product_module = get_product_module(scan_type)
     methodology_payload = product_module.get_methodology_payload()
     trust_rows = methodology_payload.get("trust_rows", [])
-    product_is = next((row[1] for row in trust_rows if "wel is" in row[0].lower()), methodology_payload["intro_text"])
-    product_not_for = next((row[1] for row in trust_rows if "niet voor" in row[0].lower()), methodology_payload["intro_text"])
     privacy_boundary = next((row[1] for row in trust_rows if "privacy" in row[0].lower()), f"Segmentvergelijkingen tonen we vanaf minimaal {MIN_SEGMENT_N} per groep.")
-    _append_section_heading(
+    _append_methodology_page_shell(
         story,
-        eyebrow="Leeswijzer",
-        title="Methodiek / leeswijzer",
-        intro="Compacte interpretatiehulp voor product, grenzen en leesdiscipline. De technische diepte blijft in de appendix.",
-        content_width=content_width,
-    )
-    _append_micro_structure(
-        story,
-        how_to_read="Lees score, factoren en vertrekbeeld altijd samen; geen enkel blok hoort los als zelfstandig oordeel te worden gebruikt.",
-        why_it_matters="Drempels begrenzen schijnprecisie en herleidbaarheid, en helpen dit rapport te gebruiken voor prioritering en managementgesprek in plaats van als definitief bewijs.",
+        master=master,
+        methodology_payload=methodology_payload,
+        signal_short_label=scan_meta["signal_short_label"],
+        privacy_boundary=privacy_boundary,
+        how_to_read="De frictiescore vat samen hoeveel spanning en belemmering in werk, leiding en context in deze groep terugkomt. Lees die score altijd samen met vertrekredenen, werkfactoren en de rest van het groepsbeeld.",
+        why_it_matters="Deze pagina helpt om de uitkomst zorgvuldig te gebruiken: als groepsbeeld dat bedoeld is om bestuurlijk te wegen en te bespreken, altijd in samenhang gelezen.",
+        score_usage_body="Gebruik de {signal_short_label} nooit los en lees die niet als individueel oordeel, externe benchmark of sluitende verklaring.",
+        trust_note_body="Lees ExitScan als groepsbeeld voor gesprek en weging: richtinggevend voor bestuur en opvolging, niet als sluitende verklaring van vertrek.",
         content_width=content_width,
         theme=report_theme,
+        has_segment_deep_dive=has_segment_deep_dive,
     )
+
+
+def _build_band_distribution_rows(*, band_counts: dict[str, int]) -> list[list[str]]:
+    total = max(sum(band_counts.values()), 1)
+    return [
+        ["Band", "n", "Aandeel", "Leesrichting"],
+        [
+            management_band_label(band="HOOG"),
+            str(band_counts.get("HOOG", 0)),
+            f"{round((band_counts.get('HOOG', 0) / total) * 100):.0f}%",
+            "Dit groepssignaal vraagt nu als eerste bestuurlijke weging en verificatie.",
+        ],
+        [
+            management_band_label(band="MIDDEN"),
+            str(band_counts.get("MIDDEN", 0)),
+            f"{round((band_counts.get('MIDDEN', 0) / total) * 100):.0f}%",
+            "Dit groepssignaal vraagt eerst verfijning en gecontroleerde opvolging.",
+        ],
+        [
+            management_band_label(band="LAAG"),
+            str(band_counts.get("LAAG", 0)),
+            f"{round((band_counts.get('LAAG', 0) / total) * 100):.0f}%",
+            "Dit groepssignaal is nu niet leidend, maar blijft onderdeel van het totaalbeeld.",
+        ],
+    ]
+
+
+def _append_retention_handoff_page(
+    story: list,
+    *,
+    management_summary_payload: dict[str, Any],
+    next_steps_payload: dict[str, Any],
+    top_factor_labels: list[str],
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    master = RETENTION_REPORT_VISUAL_MASTER_MAP["p3_handoff"]
+    boardroom_cards = management_summary_payload.get("boardroom_cards", [])
+    strongest_card = next(
+        (card for card in boardroom_cards if card.get("title") == "Wat speelt nu"),
+        boardroom_cards[0] if boardroom_cards else {},
+    )
+    relevance_card = next(
+        (card for card in boardroom_cards if card.get("title") == "Waarom telt dit nu"),
+        {},
+    )
+    strongest_signal_value = (
+        " / ".join(top_factor_labels[:2])
+        if top_factor_labels
+        else strongest_card.get("value", management_summary_payload.get("executive_title", "Retentiesignaal"))
+    )
+    strongest_signal_body = strongest_card.get(
+        "body",
+        "Dit is nu het scherpste behoudssignaal op groepsniveau.",
+    )
+    why_it_counts = relevance_card.get(
+        "body",
+        "Dit is bestuurlijk relevant omdat behoudsdruk hier nu het meest zichtbaar samenkomt.",
+    )
+    first_route_body = (
+        f"{next_steps_payload.get('first_decision', 'Kies eerst het behoudsspoor dat nu de meeste verificatiewaarde heeft.')} "
+        f"{next_steps_payload.get('first_action', 'Maak daarna direct de eerste stap expliciet.')}"
+    ).strip()
+    conclusion_body = (
+        f"Concludeer niet dat individuen al voorspelbaar gaan vertrekken. "
+        f"Concludeer wel dat {top_factor_labels[0].lower() if top_factor_labels else 'dit behoudssignaal'} "
+        "nu de beste eerste managementingang geeft voor verificatie en gerichte opvolging."
+    )
+    _append_section_heading(
+        story,
+        eyebrow="Bestuurlijke handoff",
+        title=management_summary_payload.get("boardroom_title", "Bestuurlijke handoff"),
+        intro="Lees deze pagina als compacte managementhandoff: wat springt eruit, waarom telt het nu, wat eerst te doen en wat daar bestuurlijk uit volgt.",
+        content_width=content_width,
+        master=master,
+    )
+    grid_width = content_width - (8 * mm)
+    block_width = grid_width / 2
+    handoff_grid = Table(
+        [[
+            _build_editorial_group(
+                title="Sterkste signaal",
+                value=strongest_signal_value,
+                body=strongest_signal_body,
+                width=block_width,
+                value_color=report_theme["ink"],
+                master=master,
+            ),
+            _build_editorial_group(
+                title="Waarom dit nu telt",
+                value="Bestuurlijke relevantie",
+                body=why_it_counts,
+                width=block_width,
+                master=master,
+            ),
+        ], [
+            _build_editorial_group(
+                title="Wat nu eerst doen",
+                value="Eerste route",
+                body=first_route_body,
+                width=block_width,
+                value_color=report_theme["ink"],
+                master=master,
+            ),
+            _build_editorial_group(
+                title="Wat je hieruit moet concluderen",
+                value="Conclusie",
+                body=conclusion_body,
+                width=block_width,
+                master=master,
+            ),
+        ]],
+        colWidths=[block_width] * 2,
+    )
+    handoff_grid.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), report_theme["bg"]),
+        ("LINEABOVE", (0, 0), (-1, 0), 0.4, report_theme["paper_edge"]),
+        ("LINEBELOW", (0, 0), (-1, 0), 0.25, report_theme["paper_edge"]),
+        ("LINEBELOW", (0, -1), (-1, -1), 0.3, report_theme["paper_edge"]),
+        ("LINEBEFORE", (1, 0), (1, -1), 0.25, report_theme["paper_edge"]),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+    story.append(handoff_grid)
+    story.append(PageBreak())
+
+
+def _append_retention_signal_page(
+    story: list,
+    *,
+    avg_risk: float | None,
+    band_counts: dict[str, int],
+    signal_page_payload: dict[str, Any],
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    master = RETENTION_REPORT_VISUAL_MASTER_MAP["p4_signal_group_read"]
+    _append_section_opening(
+        story,
+        eyebrow="Scoreduiding",
+        title="Retentiesignaal / groepsduiding",
+        intro="Deze pagina laat zien hoe je het retentiesignaal moet lezen en hoe breed dat beeld in de groep terugkomt. Lees dit als eerste duiding van waar behoud nu aandacht vraagt op groepsniveau.",
+        content_width=content_width,
+        theme=report_theme,
+        master=master,
+        how_to_read="Lees deze pagina als de eerste leesdiscipline van het rapport. Het retentiesignaal vat samen waar behoud in deze groep nu aandacht vraagt. De verdeling van het groepsbeeld laat daarna zien hoe breed dat signaal in de groep terugkomt. De inhoudelijke samenhang met bevlogenheid, stay-intent en vertrekintentie wordt op de volgende pagina verder uitgewerkt.",
+        why_it_matters="Zo wordt eerst duidelijk hoe het groepssignaal nu gelezen moet worden, voordat aanvullende signalen, drivers en routes in beeld komen.",
+    )
+    if avg_risk is None:
+        _append_emphasis_note(
+            story,
+            title="Nog geen retentiesignaal zichtbaar",
+            body="Het retentiesignaal verschijnt zodra voldoende responses beschikbaar zijn voor een verantwoord groepsbeeld.",
+            content_width=content_width,
+            theme=report_theme,
+            master=master,
+        )
+        story.append(PageBreak())
+        return
+
+    band_label = "HOOG" if avg_risk >= 7 else "MIDDEN" if avg_risk >= 4.5 else "LAAG"
+    score_frame = _build_chart_frame_flowable(
+        label="Retentiesignaal",
+        image=_risk_gauge_image(avg_risk, band_label),
+        content_width=content_width,
+        theme=report_theme,
+        caption=f"Retentiesignaal {avg_risk:.1f}/10",
+        master=master,
+        framed=False,
+    )
+    if score_frame:
+        story.append(score_frame)
+        story.append(Spacer(1, 0.08 * cm))
+    story.append(_build_columns_flowable(
+        column_items=[
+            [_build_editorial_group(
+                title="Hoe lees je dit signaal?",
+                body=signal_page_payload.get(
+                    "signal_profile_text",
+                    "Lees dit als groepssignaal over waar behoud onder druk staat en welke factoren nu als eerste verificatie vragen.",
+                ),
+                width=content_width * 0.49,
+                master=master,
+            )],
+            [_build_editorial_group(
+                title="Wat dit bestuurlijk betekent",
+                body=signal_page_payload.get(
+                    "intro",
+                    "Gebruik dit signaal om te bepalen waar bestuurlijke aandacht, verificatie en opvolging eerst nodig zijn.",
+                ),
+                width=content_width * 0.49,
+                master=master,
+            )],
+        ],
+        col_widths=[content_width * 0.49, content_width * 0.49],
+    ))
+    story.append(Spacer(1, 0.10 * cm))
+    story.append(Paragraph("Verdeling van het groepsbeeld", STYLES["sub_title"]))
+    story.append(_build_stacked_distribution_flowable(
+        title="Band n / %",
+        counts=band_counts,
+        width=content_width,
+        theme=report_theme,
+        caption="Deze verdeling laat zien hoe het retentiebeeld zich over het groepsniveau spreidt.",
+        framed=False,
+    ))
+    story.append(Spacer(1, 0.10 * cm))
+    story.append(_build_data_table_flowable(
+        rows=_build_band_distribution_rows(band_counts=band_counts),
+        col_widths=[content_width * 0.22, content_width * 0.10, content_width * 0.12, content_width * 0.56],
+        theme=report_theme,
+        align_columns=[1, 2],
+        bold_columns=[1, 2],
+        master=master,
+    ))
+    story.append(PageBreak())
+
+
+def _append_retention_signal_synthesis_page(
+    story: list,
+    *,
+    signal_page_cards: list[dict[str, str]],
+    retention_turnover_groups: list[dict[str, Any]],
+    retention_engagement_dist: dict[str, int],
+    avg_stay_intent: float | None,
+    retention_themes: list[dict[str, Any]],
+    retention_trend_rows: list[dict[str, Any]],
+    prior_signal_rows: list[dict[str, Any]],
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    master = RETENTION_REPORT_VISUAL_MASTER_MAP["p5_signal_synthesis"]
+    _append_section_opening(
+        story,
+        eyebrow="Synthese",
+        title="Signalen in samenhang",
+        intro="P4 zette het retentiesignaal en de verdeling van het groepsbeeld neer. Deze pagina laat zien hoe aanvullende signalen en open signalen dat behoudsbeeld versterken, nuanceren of aanscherpen.",
+        content_width=content_width,
+        theme=report_theme,
+        master=master,
+        how_to_read="Lees eerst het retentiesignaal als hoofdsignaal. Lees daarna stay-intent, vertrekintentie en bevlogenheid als aanvullende signalen die helpen om dat beeld beter te duiden. Lees open signalen als extra richting voor bestuurlijke weging, niet als dragend bewijsblok.",
+        why_it_matters="Zo wordt zichtbaar of aanvullende signalen hetzelfde beeld bevestigen, een ander accent leggen of juist om extra nuance vragen. De verdere uitwerking van de onderliggende drivers volgt op de volgende pagina.",
+    )
+    if signal_page_cards:
+        _append_metric_band(
+            story,
+            [
+                {
+                    **card,
+                    "background": TOKENS["surface"],
+                    "accent_color": report_theme.get("accent_line", report_theme["accent"]),
+                }
+                for card in signal_page_cards[:3]
+            ],
+            content_width=content_width,
+            theme=report_theme,
+            columns=min(3, len(signal_page_cards[:3])),
+            master=master,
+        )
+    top_width = (content_width - (8 * mm)) / 2
+    turnover_frame = (
+        _build_chart_frame_flowable(
+            label="Vertrekintentie-groepen",
+            image=_ranked_bar_image(retention_turnover_groups[:5], width_cm=7.0, color=MPL_BRAND),
+            content_width=top_width,
+            theme=report_theme,
+            caption="Indicatieve verdeling van expliciet vertrekdenken op groepsniveau.",
+            master=master,
+        )
+        if retention_turnover_groups
+        else _build_editorial_group(
+            title="Vertrekintentie-groepen",
+            body="Deze verdieping verschijnt zodra voldoende aanvullende signalen beschikbaar zijn.",
+            width=top_width,
+            master=master,
+        )
+    )
+    engagement_frame = _build_stacked_distribution_flowable(
+        title="Bevlogenheidsverhouding",
+        counts={
+            "HOOG": retention_engagement_dist.get("hoog", 0),
+            "MIDDEN": retention_engagement_dist.get("midden", 0),
+            "LAAG": retention_engagement_dist.get("laag", 0),
+        },
+        width=top_width,
+        theme=report_theme,
+        caption="Lees de energieverhouding altijd samen met retentiesignaal en vertrekintentie.",
+    )
+    story.append(_build_columns_flowable(
+        column_items=[[turnover_frame], [engagement_frame]],
+        col_widths=[top_width, top_width],
+    ))
+    story.append(Spacer(1, 0.10 * cm))
+    stay_intent_text = (
+        f"Stay-intent ligt in deze groep gemiddeld op {avg_stay_intent:.1f}/10. Gebruik dit als aanvullende stabiliteitslezing, nooit als los hoofdcijfer."
+        if avg_stay_intent is not None
+        else "Stay-intent is een aanvullende leeslaag rond behoud en krijgt alleen betekenis in combinatie met retentiesignaal, bevlogenheid en vertrekintentie."
+    )
+    _append_quiet_note(
+        story,
+        title="Stay-intent in context",
+        body=stay_intent_text,
+        content_width=content_width,
+        theme=report_theme,
+        master=master,
+    )
+    if retention_themes:
+        story.append(Paragraph("Open signalen met besliswaarde", STYLES["sub_title"]))
+        story.append(_build_data_table_flowable(
+            rows=[["Thema", "n", "Implicatie"]] + [
+                [item["title"], str(item["count"]), item["implication"]]
+                for item in retention_themes[:3]
+            ],
+            col_widths=[content_width * 0.24, content_width * 0.08, content_width * 0.68],
+            theme=report_theme,
+            align_columns=[1],
+            bold_columns=[1],
+            master=master,
+        ))
+        story.append(Spacer(1, 0.10 * cm))
+    story.append(PageBreak())
+
+
+def _append_retention_drivers_page(
+    story: list,
+    *,
+    factor_avgs: dict[str, float],
+    factor_items: list[tuple[str, float]],
+    top_risks: list[tuple[str, float]],
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    master = RETENTION_REPORT_VISUAL_MASTER_MAP["p6_drivers"]
+    _append_section_opening(
+        story,
+        eyebrow="Drivers",
+        title="Drivers & prioriteitenbeeld",
+        intro="P5 liet zien hoe signalen in samenhang gelezen moeten worden. Deze pagina laat zien welke factoren in dat behoudsbeeld nu als eerste bestuurlijk gewogen moeten worden.",
+        content_width=content_width,
+        theme=report_theme,
+        master=master,
+        how_to_read="Lees eerst de belevingsscore: die laat zien hoe medewerkers een factor gemiddeld hebben ervaren. Lees daarna het signaal: dat laat zien hoeveel bestuurlijke aandacht die factor nu vraagt in dit behoudsbeeld. Kijk vervolgens naar de managementlezing: dat is het korte leeslabel per factor en laat zien of volgen genoeg is, eerst toetsen nodig is of direct prioriteren voorop staat.",
+        why_it_matters="Zo wordt zichtbaar welke factoren niet alleen lager worden beleefd, maar in dit behoudsbeeld ook als eerste bestuurlijke aandacht vragen. Een factor kan dus redelijk scoren en toch aandacht vragen als die in het bredere behoudsbeeld duidelijk meespeelt.",
+    )
+    if not factor_avgs:
+        _append_emphasis_note(
+            story,
+            title="Onvoldoende patroondata",
+            body="Het prioriteitenbeeld verschijnt zodra voldoende responses beschikbaar zijn voor verantwoord factorlezen.",
+            content_width=content_width,
+            theme=report_theme,
+            master=master,
+        )
+        story.append(PageBreak())
+        return
+
+    matrix_frame = _build_chart_frame_flowable(
+        label="Prioriteitenbeeld",
+        image=_priority_matrix_image(factor_avgs, width_cm=11.6),
+        content_width=content_width,
+        theme=report_theme,
+        caption="Lager op de x-as betekent lagere beleving; hoger op de y-as betekent meer bestuurlijke aandacht.",
+        master=master,
+    )
+    if matrix_frame:
+        story.append(matrix_frame)
+        story.append(Spacer(1, 0.12 * cm))
+    signal_colors: list[colors.Color] = []
+    table_rows = [["Factor", "Belevingsscore", "Signaal", "Managementlezing"]]
+    for factor, signal_value in factor_items:
+        score = factor_avgs.get(factor, 5.5)
+        presentation = build_factor_presentation(score=score, signal_score=signal_value, show_signal=True)
+        badge = _risk_badge(label=presentation["management_label"])
+        signal_colors.append(badge["fg"] if badge else TEXT)
+        table_rows.append([
+            FACTOR_LABELS_NL.get(factor, factor),
+            presentation["score_display"],
+            presentation["signal_display"],
+            presentation["management_label"],
+        ])
+    story.append(_build_data_table_flowable(
+        rows=table_rows,
+        col_widths=[content_width * 0.38, content_width * 0.18, content_width * 0.16, content_width * 0.28],
+        theme=report_theme,
+        highlight_columns={3: signal_colors},
+        align_columns=[1, 2, 3],
+        bold_columns=[1, 2, 3],
+        master=master,
+        font_size=7.0,
+        cell_padding=3,
+    ))
+    story.append(Spacer(1, 0.10 * cm))
+    factor_signal_map = {factor: signal_value for factor, signal_value in factor_items}
+    highlight_factors = [factor for factor in ("growth", "workload") if factor in factor_signal_map]
+    highlight_pairs = (
+        [(factor, factor_signal_map[factor]) for factor in highlight_factors]
+        if len(highlight_factors) == 2
+        else top_risks[:2]
+    )
+    factor_rows = [["Factor", "Korte duiding"]]
+    for factor, signal_value in highlight_pairs:
+        score = factor_avgs.get(factor, 5.5)
+        presentation = build_factor_presentation(score=score, signal_score=signal_value)
+        factor_help_body = _factor_current_state_text(factor, is_retention=True)
+        if factor == "growth":
+            factor_help_body = (
+                "Gaat hier in het kort over ervaren ruimte om te groeien en zicht op een volgende stap. "
+                "Deze factor is uitgelicht omdat hij in dit prioriteitenbeeld nu als eerste aandacht vraagt."
+            )
+        elif factor == "workload":
+            factor_help_body = (
+                "Gaat hier over of werkdruk haalbaar was en of er voldoende hersteltijd was. "
+                "De vragen zijn positief geformuleerd: een hoge score betekent dat werkbelasting als acceptabel is ervaren en dus minder aandacht vraagt. "
+                "Deze factor is uitgelicht omdat hij hier als eerste verder gewogen moet worden."
+            )
+        factor_rows.append([
+            f"{FACTOR_LABELS_NL.get(factor, factor)} ({presentation['score_display']})",
+            factor_help_body,
+        ])
+    if len(factor_rows) > 1:
+        story.append(_build_data_table_flowable(
+            rows=factor_rows,
+            col_widths=[content_width * 0.28, content_width * 0.72],
+            theme=report_theme,
+            master=master,
+            font_size=6.7,
+            cell_padding=3,
+        ))
+    story.append(PageBreak())
+
+
+def _append_retention_underlayer_page(
+    story: list,
+    *,
+    sdt_avgs: dict[str, float],
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    master = RETENTION_REPORT_VISUAL_MASTER_MAP["p7_underlayer"]
+    _append_section_opening(
+        story,
+        eyebrow="Onderliggende laag",
+        title="SDT-basisbehoeften",
+        intro="Deze pagina laat de onderliggende psychologische laag onder het behoudsbeeld zien. Ze helpt eerdere signalen beter duiden, zonder een tweede hoofdlijn van het rapport te maken.",
+        content_width=content_width,
+        theme=report_theme,
+        master=master,
+        how_to_read="Lees deze pagina als onderliggende laag bij het behoudsbeeld. Autonomie, competentie en verbondenheid laten zien hoe stevig de basis in het werk wordt ervaren. Gebruik deze laag om eerdere signalen beter te begrijpen, niet als zelfstandig spoor naast retentiesignaal, synthese of drivers.",
+        why_it_matters="Zo wordt duidelijk welke basis in het werk mee kan spelen in hoe signalen gelezen worden. Deze pagina helpt eerdere signalen beter duiden, maar neemt de hoofdflow niet over.",
+    )
+    if not sdt_avgs:
+        _append_emphasis_note(
+            story,
+            title="Onderliggende laag nog niet zichtbaar",
+            body="Zodra voldoende factorinformatie beschikbaar is, verschijnt hier de onderliggende psychologische laag.",
+            content_width=content_width,
+            theme=report_theme,
+            master=master,
+        )
+        story.append(PageBreak())
+        return
+    chart = _build_chart_frame_flowable(
+        label="SDT-basisbehoeften",
+        image=_sdt_bar_image(sdt_avgs, width_cm=9.7),
+        content_width=content_width,
+        theme=report_theme,
+        caption="Lagere scores vragen eerder bestuurlijke aandacht; hogere scores duiden op een relatief sterkere basis.",
+        master=master,
+    )
+    if chart:
+        story.append(chart)
+        story.append(Spacer(1, 0.10 * cm))
+    mapping = {
+        "autonomy": ("Autonomie", "Mate van ervaren ruimte, invloed en eigenaarschap."),
+        "competence": ("Competentie", "Mate waarin mensen grip, effectiviteit en ontwikkeling ervaren."),
+        "relatedness": ("Verbondenheid", "Mate van aansluiting, steun en sociale bedding in het werk."),
+    }
+    story.append(_build_data_table_flowable(
+        rows=[["Dimensie", "Score", "Leesrichting"]] + [
+            [mapping[key][0], f"{sdt_avgs.get(key, 5.5):.1f}/10", mapping[key][1]]
+            for key in ("autonomy", "competence", "relatedness")
+        ],
+        col_widths=[content_width * 0.24, content_width * 0.16, content_width * 0.60],
+        theme=report_theme,
+        align_columns=[1],
+        bold_columns=[1],
+        master=master,
+        font_size=7.0,
+        cell_padding=3,
+    ))
+    story.append(PageBreak())
+
+
+def _append_retention_org_factors_page(
+    story: list,
+    *,
+    factor_avgs: dict[str, float],
+    factor_items: list[tuple[str, float]],
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    master = RETENTION_REPORT_VISUAL_MASTER_MAP["p8_org_factors"]
+    _append_section_opening(
+        story,
+        eyebrow="Factorlaag",
+        title="Organisatiefactoren",
+        intro="P6 liet zien welke factoren in het behoudsbeeld het eerst bestuurlijk wegen. Deze pagina laat zien hoe je diezelfde organisatiefactoren inhoudelijk leest als thema's in het werk.",
+        content_width=content_width,
+        theme=report_theme,
+        master=master,
+        how_to_read="Lees eerst de belevingsscore: die laat zien hoe medewerkers dit thema gemiddeld ervaren. Lees daarna de signaalwaarde: die laat zien hoeveel bestuurlijke aandacht ditzelfde thema nu vraagt. Kijk vervolgens naar de managementlezing: dat is het korte leeslabel dat samenvat hoe dit thema nu gelezen moet worden.",
+        why_it_matters="Zo wordt duidelijk wat de factoren uit het prioriteitenbeeld in gewone taal betekenen. Deze pagina helpt de factorlaag beter lezen, zonder opnieuw te bepalen welke factor als eerste weegt.",
+    )
+    if not factor_avgs:
+        _append_emphasis_note(
+            story,
+            title="Nog geen organisatiefactoren zichtbaar",
+            body="Deze laag verschijnt zodra voldoende factorinformatie beschikbaar is.",
+            content_width=content_width,
+            theme=report_theme,
+            master=master,
+        )
+        story.append(PageBreak())
+        return
+    chart = _build_chart_frame_flowable(
+        label="Organisatiefactoren",
+        image=_factor_bar_image(factor_avgs, width_cm=12.0),
+        content_width=content_width,
+        theme=report_theme,
+        caption="De balken tonen de ervaren score; de kleur helpt de managementlezing van aandacht.",
+        master=master,
+    )
+    if chart:
+        story.append(chart)
+        story.append(Spacer(1, 0.10 * cm))
+    story.append(_build_data_table_flowable(
+        rows=[["Factor", "Belevingsscore", "Signaalwaarde", "Managementlezing"]] + [
+            [
+                FACTOR_LABELS_NL.get(factor, factor),
+                f"{factor_avgs.get(factor, 5.5):.1f}/10",
+                f"{signal_value:.1f}/10",
+                management_band_label(score=signal_value),
+            ]
+            for factor, signal_value in factor_items
+        ],
+        col_widths=[content_width * 0.36, content_width * 0.18, content_width * 0.18, content_width * 0.28],
+        theme=report_theme,
+        align_columns=[1, 2, 3],
+        bold_columns=[1, 2, 3],
+        master=master,
+        font_size=7.0,
+        cell_padding=3,
+    ))
+    story.append(Spacer(1, 0.08 * cm))
     story.append(_build_data_table_flowable(
         rows=[
-            ["Leeswijzer", "Duiding"],
-            ["Wat dit product is", product_is],
-            ["Wat dit product niet is", product_not_for],
-            ["Privacy & rapportagegrenzen", privacy_boundary],
-            ["Hoe scores te gebruiken", f"Gebruik het {scan_meta['signal_short_label']} nooit los en lees het niet als externe benchmark of voorspellend model."],
+            ["Factor", "Korte duiding"],
+            ["Groeiperspectief", "Ruimte om te groeien en zicht op een volgende stap."],
+            ["Werkbelasting", "Of werkdruk haalbaar was en of er voldoende hersteltijd was."],
+            ["Leiderschap", "Kwaliteit van aansturing, feedback en steun."],
+            ["Beloning & voorwaarden", "Passendheid, uitlegbaarheid en bruikbaarheid van beloning en voorwaarden."],
+            ["Rolhelderheid", "Duidelijkheid over verwachtingen, verantwoordelijkheden en wat nodig is om goed te functioneren."],
+            ["Psychologische veiligheid & cultuurmatch", "Veiligheid, samenwerking en cultuurfit in het werk."],
         ],
         col_widths=[content_width * 0.30, content_width * 0.70],
         theme=report_theme,
-        bold_columns=[0],
+        master=master,
+        font_size=6.8,
+        cell_padding=3,
     ))
-    if has_segment_deep_dive:
-        _append_emphasis_note(
-            story,
-            title="Segment deep dive",
-            body="De deep dive blijft een verdiepingslaag naast het hoofdrapport. Ook daar blijven vergelijkingen beschrijvend en niet-causaal.",
-            content_width=content_width,
-            theme=report_theme,
-        )
-    _append_emphasis_note(
+    story.append(PageBreak())
+
+
+def _append_retention_methodology_page(
+    story: list,
+    *,
+    scan_type: str,
+    has_segment_deep_dive: bool,
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+) -> None:
+    master = RETENTION_REPORT_VISUAL_MASTER_MAP["p10_methodology"]
+    scan_meta = get_scan_definition(scan_type)
+    product_module = get_product_module(scan_type)
+    methodology_payload = product_module.get_methodology_payload()
+    trust_rows = methodology_payload.get("trust_rows", [])
+    privacy_boundary = next((row[1] for row in trust_rows if "privacy" in row[0].lower()), f"Segmentvergelijkingen tonen we vanaf minimaal {MIN_SEGMENT_N} per groep.")
+    _append_methodology_page_shell(
         story,
-        title="Vertrouwensregel",
-        body="Dit rapport helpt prioriteren, ordenen en het managementgesprek richten. Het is geen definitief bewijsdocument, diagnose of individuele interpretatietool.",
+        master=master,
+        methodology_payload=methodology_payload,
+        signal_short_label=scan_meta["signal_short_label"],
+        privacy_boundary=privacy_boundary,
+        how_to_read="Lees RetentieScan als een groepsbeeld van waar behoud aandacht vraagt. Gebruik de uitkomst om signalen te wegen, te ordenen en het managementgesprek te richten, altijd in samenhang met de rest van het rapport.",
+        why_it_matters="Zo blijft duidelijk wat de uitkomst wel en niet zegt, hoe je het retentiesignaal gebruikt en waar de grenzen van interpretatie liggen.",
+        score_usage_body="Gebruik het retentiesignaal als groepssamenvatting voor behoudsdruk. Lees het niet als benchmark, niet als diagnose en niet als individuele voorspeller.",
+        trust_note_body="RetentieScan helpt prioriteren, ordenen en het managementgesprek richten. Het is geen definitief bewijsdocument, diagnose of individuele interpretatietool.",
         content_width=content_width,
         theme=report_theme,
+        has_segment_deep_dive=has_segment_deep_dive,
+        eyebrow="Leeswijzer",
+        title="Methodiek / leeswijzer",
+        show_technical_appendix_note=False,
+        show_band_rows=False,
+        show_segment_note=False,
     )
-    story.append(PageBreak())
+
+
+def _build_retention_embedded_story(
+    *,
+    camp: Campaign,
+    org: Organization,
+    scan_lbl: str,
+    content_width: float,
+    report_theme: dict[str, colors.Color],
+    management_summary_payload: dict[str, Any],
+    cover_metric_cards: list[dict[str, str]],
+    avg_risk: float | None,
+    prior_signal_rows: list[dict[str, Any]],
+    factor_avgs: dict[str, float],
+    top_risks: list[tuple[str, float]],
+    top_factor_labels: list[str],
+    band_counts: dict[str, int],
+    signal_page_payload: dict[str, Any],
+    signal_page_cards: list[dict[str, str]],
+    next_steps_payload: dict[str, Any],
+    retention_turnover_groups: list[dict[str, Any]],
+    retention_engagement_dist: dict[str, int],
+    retention_themes: list[dict[str, Any]],
+    retention_trend_rows: list[dict[str, Any]],
+    scan_meta: dict[str, Any],
+    segment_deep_dive: dict[str, Any],
+    has_segment_deep_dive: bool,
+    cover_distribution_note: str,
+    hypotheses_payload: dict[str, str],
+    hypotheses: list[dict[str, str]],
+) -> list:
+    story: list = []
+    factor_items = [(factor, _factor_signal_score(factor, factor_avgs)) for factor in ORG_FACTOR_KEYS if factor in factor_avgs]
+    factor_items.sort(key=lambda item: item[1], reverse=True)
+    sdt_avgs = {d: factor_avgs.get(d, 5.5) for d in ["autonomy", "competence", "relatedness"] if d in factor_avgs}
+    completion = 0.0
+    if len(cover_metric_cards) > 2:
+        try:
+            completion = float(str(cover_metric_cards[2]["value"]).replace("%", "").replace(",", "."))
+        except ValueError:
+            completion = 0.0
+    avg_stay_intent = next(
+        (
+            float(str(card.get("value", "")).replace("/10", "").replace(",", "."))
+            for card in signal_page_cards
+            if card.get("title") == "Stay-intent" and card.get("value")
+        ),
+        None,
+    )
+
+    _append_rebrand_cover(
+        story,
+        camp=camp,
+        org=org,
+        scan_lbl=scan_lbl,
+        cover_distribution_note=cover_distribution_note,
+        report_theme=report_theme,
+        is_retention=True,
+        has_segment_appendix=False,
+        show_segment_meta=False,
+        use_visual_masters=True,
+        cover_metric_cards=cover_metric_cards,
+        cover_exec_cards=management_summary_payload.get("highlight_cards", []),
+    )
+    _append_exit_response_page(
+        story,
+        cover_metric_cards=cover_metric_cards,
+        completion=completion,
+        content_width=content_width,
+        report_theme=report_theme,
+        exposure_card=None,
+    )
+    _append_retention_handoff_page(
+        story,
+        management_summary_payload=management_summary_payload,
+        next_steps_payload=next_steps_payload,
+        top_factor_labels=top_factor_labels,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_retention_signal_page(
+        story,
+        avg_risk=avg_risk,
+        band_counts=band_counts,
+        signal_page_payload=signal_page_payload,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_retention_signal_synthesis_page(
+        story,
+        signal_page_cards=signal_page_cards,
+        retention_turnover_groups=retention_turnover_groups,
+        retention_engagement_dist=retention_engagement_dist,
+        avg_stay_intent=avg_stay_intent,
+        retention_themes=retention_themes,
+        retention_trend_rows=retention_trend_rows,
+        prior_signal_rows=prior_signal_rows,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_retention_drivers_page(
+        story,
+        factor_avgs=factor_avgs,
+        factor_items=factor_items,
+        top_risks=top_risks,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_retention_underlayer_page(
+        story,
+        sdt_avgs=sdt_avgs,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_retention_org_factors_page(
+        story,
+        factor_avgs=factor_avgs,
+        factor_items=factor_items,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_rebrand_actions(
+        story,
+        hypotheses_payload=hypotheses_payload,
+        hypotheses=hypotheses,
+        next_steps_payload=next_steps_payload,
+        scan_meta=scan_meta,
+        signal_label_lower=scan_meta["signal_short_label"],
+        avg_risk=avg_risk,
+        segment_deep_dive=segment_deep_dive,
+        retention_playbooks=[],
+        retention_playbook_calibration_note=None,
+        retention_segment_playbooks=[],
+        is_retention=True,
+        content_width=content_width,
+        report_theme=report_theme,
+        title="Eerste route & actie",
+        intro="Deze pagina vertaalt de eerdere duiding naar een eerste bestuurlijke route. Ze laat zien waar nu de eerste focus ligt, wie het vervolg trekt, wat als eerste gebeurt en wanneer opnieuw wordt gewogen wat het beeld vraagt.",
+        use_visual_masters=True,
+    )
+    _append_retention_methodology_page(
+        story,
+        scan_type=camp.scan_type,
+        has_segment_deep_dive=has_segment_deep_dive,
+        content_width=content_width,
+        report_theme=report_theme,
+    )
+    _append_rebrand_technical_appendix(
+        story,
+        scan_type=camp.scan_type,
+        has_segment_appendix=False,
+        content_width=content_width,
+        report_theme=report_theme,
+        show_segment_note=False,
+    )
+    return story
 
 
 def _build_exit_embedded_story(
@@ -4924,6 +6510,9 @@ def _build_exit_embedded_story(
         report_theme=report_theme,
         is_retention=False,
         has_segment_appendix=has_segment_deep_dive,
+        use_visual_masters=True,
+        cover_metric_cards=cover_metric_cards,
+        cover_exec_cards=management_summary_payload.get("highlight_cards", []),
     )
     _append_exit_response_page(
         story,
@@ -4943,25 +6532,6 @@ def _build_exit_embedded_story(
         content_width=content_width,
         report_theme=report_theme,
     )
-    _append_exit_friction_page(
-        story,
-        avg_risk=avg_risk,
-        band_counts=band_counts,
-        pattern=pattern,
-        n_completed=len(responses),
-        content_width=content_width,
-        report_theme=report_theme,
-    )
-    _append_exit_signal_synthesis_page(
-        story,
-        top_reasons=top_reasons,
-        top_contributing_reasons=top_contributing_reasons,
-        quotes=quotes,
-        prior_signal_rows=prior_signal_rows,
-        signal_visibility_average=signal_visibility_average,
-        content_width=content_width,
-        report_theme=report_theme,
-    )
     _append_exit_drivers_page(
         story,
         factor_avgs=factor_avgs,
@@ -4970,16 +6540,28 @@ def _build_exit_embedded_story(
         content_width=content_width,
         report_theme=report_theme,
     )
-    _append_exit_sdt_page(
+    _append_rebrand_focus_questions(
         story,
-        sdt_avgs=sdt_avgs,
+        top_risks=top_risks,
+        factor_avgs=factor_avgs,
+        hypotheses=hypotheses,
+        retention_trend_rows=[],
+        retention_themes=[],
+        is_retention=False,
         content_width=content_width,
         report_theme=report_theme,
     )
-    _append_exit_org_factors_page(
+    _append_exit_signal_synthesis_page(
         story,
-        factor_avgs=factor_avgs,
-        factor_items=factor_items,
+        avg_risk=avg_risk,
+        band_counts=band_counts,
+        pattern=pattern,
+        n_completed=len(responses),
+        top_reasons=top_reasons,
+        top_contributing_reasons=top_contributing_reasons,
+        quotes=quotes,
+        prior_signal_rows=prior_signal_rows,
+        signal_visibility_average=signal_visibility_average,
         content_width=content_width,
         report_theme=report_theme,
     )
@@ -4998,8 +6580,9 @@ def _build_exit_embedded_story(
         is_retention=False,
         content_width=content_width,
         report_theme=report_theme,
-        title="Eerste route & actie",
-        intro="Hier komt de vertaalslag van interpretatie naar managementactie samen: eerste route, eigenaar, eerste stap en reviewmoment.",
+        title="Wat besluiten en doen we als eerste",
+        intro="P4 hielp bepalen wat eerst beter begrepen en getoetst moest worden. Vanaf hier gaat het niet meer om toetsen, maar om kiezen en uitvoeren.",
+        use_visual_masters=True,
     )
     _append_exit_methodology_page(
         story,
@@ -5036,7 +6619,34 @@ def _build_non_exit_runtime_story(**kwargs: Any) -> list:
 def _build_retention_runtime_story(**kwargs: Any) -> list:
     """Explicit RetentieScan runtime entrypoint within the shared grammar layer."""
 
-    return _build_shared_non_exit_runtime_story(**kwargs)
+    return _build_retention_embedded_story(
+        camp=kwargs["camp"],
+        org=kwargs["org"],
+        scan_lbl=kwargs["scan_lbl"],
+        content_width=kwargs["content_width"],
+        report_theme=kwargs["report_theme"],
+        management_summary_payload=kwargs["management_summary_payload"],
+        cover_metric_cards=kwargs["cover_metric_cards"],
+        avg_risk=kwargs["avg_risk"],
+        prior_signal_rows=kwargs["prior_signal_rows"],
+        factor_avgs=kwargs["factor_avgs"],
+        top_risks=kwargs["top_risks"],
+        top_factor_labels=kwargs["top_factor_labels"],
+        band_counts=kwargs["band_counts"],
+        signal_page_payload=kwargs["signal_page_payload"],
+        signal_page_cards=kwargs["signal_page_cards"],
+        next_steps_payload=kwargs["next_steps_payload"],
+        retention_turnover_groups=kwargs["retention_turnover_groups"],
+        retention_engagement_dist=kwargs["retention_engagement_dist"],
+        retention_themes=kwargs["retention_themes"],
+        retention_trend_rows=kwargs["retention_trend_rows"],
+        scan_meta=kwargs["scan_meta"],
+        segment_deep_dive=kwargs["segment_deep_dive"],
+        has_segment_deep_dive=kwargs["has_segment_deep_dive"],
+        cover_distribution_note=kwargs["cover_distribution_note"],
+        hypotheses_payload=kwargs["hypotheses_payload"],
+        hypotheses=kwargs["hypotheses"],
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -5144,6 +6754,7 @@ def _build_shared_non_exit_runtime_story(
     _append_rebrand_risk_and_prevention(
         story,
         avg_risk=avg_risk,
+        scan_type=camp.scan_type,
         signal_label=signal_label,
         signal_label_lower=signal_label_lower,
         band_counts=band_counts,
@@ -5205,6 +6816,7 @@ def _build_shared_non_exit_runtime_story(
         has_segment_appendix=bool((segment_deep_dive or {}).get("appendix_eligible")),
         content_width=content_width,
         report_theme=report_theme,
+        show_segment_note=camp.scan_type != "pulse",
     )
     return story
 
@@ -5270,8 +6882,14 @@ def generate_campaign_report(
     )
     _mode     = (camp.delivery_mode or "baseline").lower()
     _mode_lbl = "Live" if _mode == "live" else "Baseline"
-    scan_lbl  = f"ExitScan {_mode_lbl}" if camp.scan_type == "exit" else "RetentieScan"
     scan_meta = get_scan_definition(camp.scan_type)
+    scan_lbl  = (
+        f"ExitScan {_mode_lbl}"
+        if camp.scan_type == "exit"
+        else f"RetentieScan {_mode_lbl}"
+        if camp.scan_type == "retention"
+        else scan_meta["product_name"]
+    )
     product_module = get_product_module(camp.scan_type)
     signal_label = scan_meta["signal_label"]
     signal_label_lower = scan_meta["signal_short_label"]
@@ -5353,7 +6971,11 @@ def generate_campaign_report(
             if response.open_text_raw and response.open_text_raw.strip()
         ]
     ) if is_retention else []
-    top_factor_keys = [factor for factor, _ in top_risks[:2]]
+    if is_retention:
+        preferred_retention_keys = [factor for factor in ("growth", "workload") if factor in factor_avgs]
+        top_factor_keys = preferred_retention_keys[:2] if len(preferred_retention_keys) >= 2 else [factor for factor, _ in top_risks[:2]]
+    else:
+        top_factor_keys = [factor for factor, _ in top_risks[:2]]
     top_factor_labels = [FACTOR_LABELS_NL.get(factor, factor) for factor in top_factor_keys]
     top_exit_reason_label = (
         pattern.get("top_exit_reasons", [{}])[0].get("label")
@@ -5377,6 +6999,8 @@ def generate_campaign_report(
         ]
         if signal_visibility_scores:
             signal_visibility_average = sum(signal_visibility_scores) / len(signal_visibility_scores)
+    if camp.scan_type == "pulse":
+        signal_visibility_average = None
     retention_hypotheses = _build_retention_action_hypotheses(
         top_risks=top_risks,
         factor_avgs=factor_avgs,
@@ -5431,6 +7055,11 @@ def generate_campaign_report(
             trend_label = None
             previous_campaign_label = None
             previous_responses = []
+    if camp.scan_type == "pulse":
+        trend_delta = None
+        trend_label = None
+        previous_campaign_label = None
+        previous_responses = []
     retention_trend_rows = (
         _build_retention_trend_rows(
             current=_compute_retention_signal_averages(responses),
@@ -5439,10 +7068,14 @@ def generate_campaign_report(
         if is_retention and previous_responses
         else []
     )
-    prior_signal_rows = _build_prior_signal_rows(
-        previous_campaign_label=previous_campaign_label,
-        previous_avg_risk=previous_avg_risk,
-        previous_responses=previous_responses,
+    prior_signal_rows = (
+        []
+        if camp.scan_type == "pulse"
+        else _build_prior_signal_rows(
+            previous_campaign_label=previous_campaign_label,
+            previous_avg_risk=previous_avg_risk,
+            previous_responses=previous_responses,
+        )
     )
     retention_turnover_groups, retention_engagement_dist = (
         _build_retention_group_rows(responses)
@@ -5509,6 +7142,12 @@ def generate_campaign_report(
             strong_work_signal_pct=strong_work_signal_pct,
             signal_visibility_average=signal_visibility_average,
             total_replacement_cost_eur=None,
+        )
+    elif camp.scan_type == "pulse":
+        management_summary_payload = product_module.get_management_summary_payload(
+            top_factor_labels=top_factor_labels,
+            top_factor_keys=top_factor_keys,
+            avg_stay_intent=avg_stay_intent,
         )
     else:
         management_summary_payload = product_module.get_management_summary_payload(

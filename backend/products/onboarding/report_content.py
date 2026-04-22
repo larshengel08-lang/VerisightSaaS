@@ -8,7 +8,7 @@ from backend.products.onboarding.definition import SCAN_DEFINITION
 
 TRUST_CONTRACT = SCAN_DEFINITION["trust_contract"]
 CHECKPOINT_THRESHOLD_NOTE = (
-    "Vanaf 5 responses lees je onboarding als eerste indicatieve checkpointread; "
+    "Vanaf 5 responses lees je onboarding als eerste indicatieve managementread; "
     "vanaf 10 responses mogen patroonlaag en grafieken voluit meewegen."
 )
 
@@ -105,7 +105,7 @@ def get_management_summary_payload(
         "Lees onboarding als bounded single-checkpoint lifecycle-read op groepsniveau. "
         "Het rapport helpt bepalen hoe nieuwe medewerkers nu landen, wie de eerste handoff trekt en welke kleine borg- of correctiestap logisch is. "
         f"{CHECKPOINT_THRESHOLD_NOTE} "
-        "Dit is geen client onboarding-route, geen journey-engine, geen performance-instrument en geen retentievoorspeller."
+        "Dit is geen client onboarding-route, geen journey-engine, geen performance-instrument en geen later uitkomstmodel."
     )
 
     executive_intro = (
@@ -115,31 +115,31 @@ def get_management_summary_payload(
     )
 
     return {
-        "section_title": "Checkpoint-handoff",
+        "section_title": "Managementsamenvatting",
         "distribution_title": "Verdeling van het checkpointsignaal",
         "findings_title": "Scherpste checkpointlezing",
-        "executive_title": "Vroege lifecycle-duiding voor HR en leiding",
+        "executive_title": "Vroege landingsduiding voor HR, MT en directie",
         "executive_intro": executive_intro,
         "trust_note_title": "Leeswijzer voor management",
         "trust_note": trust_note,
-        "boardroom_title": "Checkpoint-handoff",
+        "boardroom_title": "Bestuurlijke handoff",
         "boardroom_intro": (
-            "Deze handoff helpt snel zien wat dit ene checkpoint nu bestuurlijk betekent, "
-            "welk eerste werkspoor voorop staat en wanneer onboarding juist klein moet blijven."
+            "Deze handoff brengt dit checkpoint terug tot een bestuurlijke managementread: "
+            "wat speelt nu, waarom telt dat, welk werkspoor vraagt eerst eigenaarschap en wanneer moet bewust worden herijkt."
         ),
         "boardroom_cards": [
             {
-                "title": "Checkpointread nu",
+                "title": "Wat speelt nu",
                 "value": management_band_label(band="MIDDEN"),
-                "body": f"De scherpste vroege frictie of borging zit nu vooral in {top_factor_text}. Gebruik dat als eerste checkpointspoor.",
+                "body": f"De scherpste vroege frictie of borging zit nu vooral in {top_factor_text}. Gebruik dat als eerste managementread van deze instroomgroep.",
             },
             {
-                "title": "Primair werkspoor",
+                "title": "Waarom telt dit nu",
                 "value": top_factor_labels[0] if top_factor_labels else "Nog geen topfactor",
-                "body": f"{top_factor_text.capitalize()} kleuren nu het sterkst welke beperkte handoff of correctie het eerst aandacht vraagt.",
+                "body": f"{top_factor_text.capitalize()} kleuren nu het sterkst waar vroege landing onder druk staat of expliciet geborgd moet worden voordat dit checkpoint doorschuift.",
             },
             {
-                "title": "Checkpoint-richting",
+                "title": "Eerste werkspoor",
                 "value": f"{avg_stay_intent:.1f}/10" if avg_stay_intent is not None else "Nog niet zichtbaar",
                 "body": direction_body,
             },
@@ -149,14 +149,14 @@ def get_management_summary_payload(
                 "body": "Beleg direct wie deze checkpointhuddle trekt, zodat onboarding niet blijft hangen als nette momentopname zonder eigenaar.",
             },
             {
-                "title": "Reviewgrens",
+                "title": "Reviewmoment",
                 "value": "Volgend checkpoint",
                 "body": review_moment,
             },
         ],
         "boardroom_watchout_title": "Wat je hier niet uit moet concluderen",
         "boardroom_watchout": (
-            "Lees onboarding niet als client onboarding-route, volledige 30-60-90 route, individuele beoordeling of bewijs van latere retentie-uitkomst. "
+            "Lees onboarding niet als client onboarding-route, volledige 30-60-90 route, individuele beoordeling of bewijs van een latere onboardinguitkomst. "
             "De waarde zit in een begrensde managementread van dit ene checkpoint."
         ),
         "highlight_cards": [
@@ -256,13 +256,13 @@ def get_methodology_payload() -> dict[str, Any]:
 
 def get_signal_page_payload(*, retention_signal_profile: str | None = None, **_: Any) -> dict[str, Any]:
     return {
-        "title": "Onboardingsignaal en checkpointcontext",
+        "title": "Onboardingsignaal en vroege landing",
         "intro": (
             "Deze pagina laat zien hoe het onboardingsignaal, de checkpoint-richtingsvraag en de scherpste vroege werkfactoren samenkomen. "
             "Lees dit als bounded managementread van een enkel checkpoint op groepsniveau."
         ),
-        "summary_title": "Checkpointcontext in samenhang",
-        "signal_profile_title": "Hoe lees je dit checkpoint?",
+        "summary_title": "Vroege landing in samenhang",
+        "signal_profile_title": "Hoe lees je deze vroege landing?",
         "signal_profile_text": (
             "Gebruik het onboardingsignaal om te kiezen wat in deze fase nu eerst een managementhuddle vraagt. "
             "De richtingsvraag en de scherpste werkfactoren helpen daarna bepalen welke kleine borg- of correctiestap logisch is. "
@@ -314,7 +314,7 @@ def get_hypotheses_payload() -> dict[str, str]:
         "section_title": "Checkpoint-hypothesen",
         "intro_text": (
             "Onderstaande hypotheses helpen bepalen welk eerste werkspoor dit checkpoint nu opent. "
-            "Ze zijn bedoeld voor een bounded managementhuddle, niet als bewijs van een volledige journey of latere retentie-uitkomst."
+            "Ze zijn bedoeld voor een bounded managementhuddle, niet als bewijs van een volledige journey of latere onboardinguitkomst."
         ),
     }
 
@@ -389,12 +389,12 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         "Gebruik een volgend checkpoint alleen als bounded vervolg nadat de eerste stap expliciet is belegd.",
     )
     return {
-        "section_title": "Vervolgstappen",
+        "section_title": "Route en actie",
         "intro_text": (
             "Gebruik onboarding om snel te kiezen wat dit checkpoint nu bestuurlijk vraagt, wie de eerste handoff trekt en wanneer de route juist klein moet blijven. "
             "Houd de read single-checkpoint, assisted en expliciet non-predictive."
         ),
-        "session_title": "Eerste managementhuddle na oplevering",
+        "session_title": "Eerste managementsessie",
         "session_intro": (
             "Houd de eerste sessie klein en bounded: kies eerst het primaire werkspoor, benoem daarna eigenaar, eerste stap en reviewgrens."
         ),

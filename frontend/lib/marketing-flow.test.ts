@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { REPORT_PREVIEW_COPY } from '@/lib/report-preview-copy'
 import {
@@ -10,6 +11,8 @@ import {
 import { getBuyerFacingShowcaseAssets } from '@/lib/sample-showcase-assets'
 import {
   approachSteps,
+  homepageCoreProductRoutes,
+  homepagePortfolioRoute,
   homepageProductRoutes,
   homepageUtilityLinks,
   included,
@@ -19,6 +22,132 @@ import {
 } from '@/components/marketing/site-content'
 
 describe('marketing flow defaults', () => {
+  it('keeps early public RetentieScan site copy centered on Retentiesignaal instead of stay-intent', () => {
+    const siteContentSource = readFileSync(
+      new URL('../components/marketing/site-content.ts', import.meta.url),
+      'utf8',
+    )
+
+    expect(siteContentSource).toContain('Retentiesignaal, aanvullende signalen, bevlogenheid en vertrekintentie op groepsniveau')
+    expect(siteContentSource).toContain(
+      'Retentiesignaal, aanvullende signalen, bevlogenheid en vertrekintentie in een managementrapport',
+    )
+    expect(siteContentSource).toContain('Trendbeeld op Retentiesignaal, bevlogenheid en aanvullende signalen')
+    expect(siteContentSource).not.toContain('Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie op groepsniveau')
+    expect(siteContentSource).not.toContain('Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in een managementrapport')
+    expect(siteContentSource).not.toContain('Trendbeeld op retentiesignaal, bevlogenheid en stay-intent')
+  })
+
+  it('keeps deeper public RetentieScan FAQ copy centered on Retentiesignaal with stay-intent only as secondary signal', () => {
+    const siteContentSource = readFileSync(
+      new URL('../components/marketing/site-content.ts', import.meta.url),
+      'utf8',
+    )
+
+    expect(siteContentSource).toContain(
+      "vroegsignalering op behoud via Retentiesignaal, aanvullende signalen zoals stay-intent en vertrekintentie, en beinvloedbare werkfactoren.",
+    )
+    expect(siteContentSource).toContain(
+      "vroegsignalering op behoud op groeps- en segmentniveau rond Retentiesignaal, aanvullende signalen zoals stay-intent en vertrekintentie, en beinvloedbare werkfactoren.",
+    )
+    expect(siteContentSource).not.toContain(
+      "vroegsignalering op behoud via retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.",
+    )
+    expect(siteContentSource).not.toContain(
+      "vroegsignalering op behoud op groeps- en segmentniveau rond retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.",
+    )
+  })
+
+  it('keeps deeper public ExitScan copy centered on Frictiescore with werkfrictie only as explanatory layer', () => {
+    const siteContentSource = readFileSync(
+      new URL('../components/marketing/site-content.ts', import.meta.url),
+      'utf8',
+    )
+
+    expect(siteContentSource).toContain(
+      'De standaard eerste instap voor organisaties die snel een Frictiescore, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen dat ook in sponsor-, prioriteits- en budgetgesprekken overeind blijft. Werkfrictie blijft daarin de verklarende laag onder het vertrekbeeld.',
+    )
+    expect(siteContentSource).toContain(
+      'Je wilt vertrek achteraf duiden en zoekt meestal het eerste betaalde traject dat Frictiescore en terugkerende werkfrictie bestuurlijk leesbaar maakt.',
+    )
+    expect(siteContentSource).toContain(
+      'ExitScan helpt vertrek achteraf duiden via Frictiescore als eerste managementsamenvatting, met terugkerende werkfactoren, vertrekredenen en werkfrictie als verklarende laag.',
+    )
+    expect(siteContentSource).toContain(
+      'Welke Frictiescore en werkfactoren keren terug in uitstroom?',
+    )
+    expect(siteContentSource).not.toContain(
+      'De standaard eerste instap voor organisaties die snel een betrouwbaar organisatiebeeld, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen dat ook in sponsor-, prioriteits- en budgetgesprekken overeind blijft.',
+    )
+    expect(siteContentSource).not.toContain(
+      'Je wilt vertrek achteraf duiden en zoekt meestal het eerste betaalde traject dat losse exitinput bestuurlijk leesbaar maakt.',
+    )
+    expect(siteContentSource).not.toContain(
+      'ExitScan helpt vertrek achteraf duiden op basis van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie.',
+    )
+    expect(siteContentSource).not.toContain('Welk vertrekbeeld keert terug en welke werkfactoren wegen daarin mee?')
+  })
+
+  it('keeps public trust and privacy copy centered on Frictiescore and Retentiesignaal', () => {
+    const siteContentSource = readFileSync(
+      new URL('../components/marketing/site-content.ts', import.meta.url),
+      'utf8',
+    )
+
+    expect(siteContentSource).toContain(
+      'ExitScan wordt buyer-facing uitgelegd via Frictiescore en RetentieScan via Retentiesignaal, steeds als managementinstrumenten met heldere claimsgrenzen en niet als diagnose of black-box voorspeller.',
+    )
+    expect(siteContentSource).toContain(
+      'Bij ExitScan ziet management Frictiescore, werkfactoren en bestuurlijke handoff op groepsniveau. Bij RetentieScan ziet management Retentiesignaal, aanvullende signalen, topfactoren en prioriteiten op groeps- en segmentniveau.',
+    )
+    expect(siteContentSource).toContain(
+      'Management ziet groeps- en segmentinzichten, geen individuele signalen. ExitScan opent via Frictiescore met werkfrictie als verklarende laag; RetentieScan via Retentiesignaal met aanvullende signalen op groepsniveau. Individuele vertrekintentie en persoonsgerichte actieroutes blijven buiten beeld.',
+    )
+    expect(siteContentSource).toContain(
+      'Lees ExitScan via Frictiescore en RetentieScan via Retentiesignaal. Werkfrictie en aanvullende signalen helpen daarna bij verificatie en prioritering, niet bij causaliteitsclaims of harde diagnoses.',
+    )
+    expect(siteContentSource).not.toContain(
+      'ExitScan en RetentieScan worden buyer-facing uitgelegd als managementinstrumenten met heldere claimsgrenzen, niet als diagnose of black-box voorspeller.',
+    )
+    expect(siteContentSource).not.toContain(
+      'Geaggregeerde bestuurlijke read, bestuurlijke handoff, topfactoren, hypotheses, prioriteiten en opvolgsporen in een vaste executive leeslijn.',
+    )
+    expect(siteContentSource).not.toContain(
+      'Verisight gebruikt signalen, hypotheses en bestuurlijke reads als gespreksinput. De output ondersteunt verificatie en prioritering, niet causaliteitsclaims of harde diagnoses.',
+    )
+  })
+
+  it('keeps public contractual copy neutral without falling back to secondary product anchors', () => {
+    const termsSource = readFileSync(
+      new URL('../app/voorwaarden/page.tsx', import.meta.url),
+      'utf8',
+    )
+
+    expect(termsSource).toContain('ExitScan en RetentieScan')
+    expect(termsSource).toContain('RetentieScan mag niet worden gebruikt als individueel beoordelings-, performance- of beslisinstrument op persoonsniveau.')
+    expect(termsSource).not.toContain('stay-intent')
+    expect(termsSource).not.toContain('werkfrictie')
+    expect(termsSource).not.toContain('Vertreksignaal')
+    expect(termsSource).not.toContain('vertrekbeeld')
+    expect(termsSource).not.toContain('werksignaal')
+  })
+
+  it('keeps shared proof and preview copy centered on Frictiescore and Retentiesignaal', () => {
+    expect(REPORT_PREVIEW_COPY.portfolio.hypotheses[1]?.question).toContain('Frictiescore')
+    expect(REPORT_PREVIEW_COPY.portfolio.hypotheses[1]?.question).toContain('Retentiesignaal')
+
+    expect(REPORT_PREVIEW_COPY.exit.boardroomPoints[1]?.[1]).toContain('Frictiescore')
+    expect(REPORT_PREVIEW_COPY.exit.boardroomPoints[1]?.[1]).not.toContain('werksignaal')
+
+    expect(REPORT_PREVIEW_COPY.retention.proofNotes[2]?.[1]).toContain('Retentiesignaal')
+    expect(REPORT_PREVIEW_COPY.retention.proofNotes[2]?.[1]).toContain('aanvullende signalen zoals stay-intent')
+    expect(REPORT_PREVIEW_COPY.retention.trustPoints[1]?.[1]).toContain('Retentiesignaal')
+    expect(REPORT_PREVIEW_COPY.retention.trustPoints[1]?.[1]).toContain('aanvullende signalen zoals stay-intent')
+    expect(REPORT_PREVIEW_COPY.retention.trustPoints[1]?.[1]).not.toContain(
+      'Retentiesignaal, stay-intent, vertrekintentie, bevlogenheid en topfactoren in een bestuurslaag.',
+    )
+  })
+
   it('keeps the primary and secondary CTA labels aligned with the redesign', () => {
     expect(marketingPrimaryCta).toEqual({
       href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
@@ -40,11 +169,14 @@ describe('marketing flow defaults', () => {
     ])
   })
 
-  it('keeps ExitScan as the first homepage route and RetentieScan as the complement', () => {
+  it('keeps the homepage route choice core-first and treats the combination as a secondary portfolio note', () => {
     expect(homepageProductRoutes.map((route) => route.name)).toEqual(['ExitScan', 'RetentieScan', 'Combinatie'])
-    expect(homepageProductRoutes[0]?.chip).toBe('Kernroute')
-    expect(homepageProductRoutes[1]?.chip).toBe('Kernroute')
-    expect(homepageProductRoutes[2]?.body.toLowerCase()).toContain('nadat de eerste helder staat')
+    expect(homepageCoreProductRoutes.map((route) => route.name)).toEqual(['ExitScan', 'RetentieScan'])
+    expect(homepageCoreProductRoutes[0]?.chip).toBe('Kernroute')
+    expect(homepageCoreProductRoutes[1]?.chip).toBe('Kernroute')
+    expect(homepagePortfolioRoute.name).toBe('Combinatie')
+    expect(homepagePortfolioRoute.label).toBe('Portfolioroute op aanvraag')
+    expect(homepagePortfolioRoute.body.toLowerCase()).toContain('nadat de eerste route helder staat')
   })
 
   it('keeps homepage utility links aligned with buyer flow and due diligence', () => {

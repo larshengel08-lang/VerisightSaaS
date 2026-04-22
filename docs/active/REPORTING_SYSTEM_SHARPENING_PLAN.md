@@ -1,5 +1,8 @@
 # REPORTING_SYSTEM_SHARPENING_PLAN.md
 
+Status: active implementation plan, non-canon.
+Precedence: dit plan beschrijft uitvoeringsrichting en historische tranche-status. Voor canonieke reporting truth en precedence geldt `docs/reporting/REPORT_TRUTH_BASELINE.md`, `docs/reporting/REPORT_STRUCTURE_CANON.md`, `docs/reporting/REPORT_METHODOLOGY_CANON.md` en `docs/reporting/TERMINOLOGY_GOVERNANCE_CANON.md`.
+
 ## 1. Summary
 
 Dit plan scherpt het **rapportagesysteem van Verisight** aan op basis van de huidige repo-implementatie in backend, dashboard, productspecifieke report-content, marketingcopy en tests.
@@ -41,7 +44,7 @@ Status 2026-04-14:
   - RetentieScan-managementread rustiger gemaakt rond groepsbeeld, aanvullende behoudssignalen, verificatie en opvolging
   - frontend productdefinities aangescherpt zodat dashboard, rapport en websitecopy dezelfde kerntermen gebruiken
   - regressiebescherming toegevoegd via backend report payload-tests, paritytests en bestaande PDF smoke-routes
-  - planbestand en prompt-checklist bijgewerkt als repo-source-of-truth
+  - planbestand en prompt-checklist bijgewerkt als repo-owner-document
 - Bewust niet als apart deliverable uitgevoerd:
   - geen los paritymatrix-document; parity is praktisch vastgelegd in productspecifieke definities, report-content en tests
   - geen report-engine rewrite of visual uplift-programma buiten de scope van dit plan
@@ -322,10 +325,10 @@ Dependency: Milestone 5
 - [ ] Houd PDF-validatie op smoke-niveau; test copy en contracts vóór de PDF-renderlaag.
 
 ### Prompt-system closure
-- [x] Uitgevoerd: `REPORTING_SYSTEM_SHARPENING_PLAN.md` is toegevoegd als source of truth en de checklistregel is bijgewerkt voor deze prompt.
-- [ ] Lever `REPORTING_SYSTEM_SHARPENING_PLAN.md` als source of truth op.
+- [x] Uitgevoerd: `REPORTING_SYSTEM_SHARPENING_PLAN.md` is toegevoegd als owner-document en de checklistregel is bijgewerkt voor deze prompt.
+- [ ] Lever `REPORTING_SYSTEM_SHARPENING_PLAN.md` als owner-document op.
 - [ ] Werk `PROMPT_CHECKLIST.xlsx` bij na uitvoering.
-- [ ] Laat vervolgtrajecten pas aansluiten nadat de rapport-source-of-truth is vastgesteld.
+- [ ] Laat vervolgtrajecten pas aansluiten nadat de rapport-owner-document is vastgesteld.
 
 ## 4. Current Product Risks
 
@@ -388,5 +391,5 @@ Dependency: Milestone 5
 - [ ] `backend/report.py` blijft de gedeelde render-engine; productnarratief verschuift naar de productmodules.
 - [ ] PDF-tests blijven smoke-based; parity en copy worden vooral vóór de renderlaag getest.
 - [ ] Dashboard, rapport en website moeten dezelfde productbetekenis dragen, ook als ze niet letterlijk dezelfde tekst gebruiken.
-- [ ] `REPORTING_SYSTEM_SHARPENING_PLAN.md` wordt de source of truth voor de latere uitvoering.
+- [ ] `REPORTING_SYSTEM_SHARPENING_PLAN.md` wordt het owner-document voor de latere uitvoering.
 - [ ] `PROMPT_CHECKLIST.xlsx` wordt pas na daadwerkelijke repo-uitvoering bijgewerkt, niet alleen na analyse.

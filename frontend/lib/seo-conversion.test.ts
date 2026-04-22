@@ -105,7 +105,7 @@ describe('SEO conversion tranche', () => {
     expect(solutionMetadata.alternates?.canonical).toBe('/oplossingen/verloop-analyse')
     expect(exitProductMetadata.title).toBe('ExitScan | Verloopanalyse en vertrekduiding voor HR-teams')
     expect(exitProductMetadata.alternates?.canonical).toBe('/producten/exitscan')
-    expect(pulseProductMetadata.title).toBe('Pulse | Compacte reviewmetingen na diagnose of baseline')
+    expect(pulseProductMetadata.title).toBe('Pulse | Compacte herijking na een eerdere managementread')
     expect(pulseProductMetadata.alternates?.canonical).toBe('/producten/pulse')
     expect(teamProductMetadata.title).toBe('TeamScan | Lokale verificatie na een breder signaal')
     expect(teamProductMetadata.alternates?.canonical).toBe('/producten/teamscan')
@@ -120,6 +120,30 @@ describe('SEO conversion tranche', () => {
       path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),
       'utf8',
     )
+    const exitProductSource = fs.readFileSync(
+      path.join(process.cwd(), 'app', 'producten', '_components', 'exit-scan-core-page.tsx'),
+      'utf8',
+    )
+    const retentionProductSource = fs.readFileSync(
+      path.join(process.cwd(), 'app', 'producten', '_components', 'retention-scan-core-page.tsx'),
+      'utf8',
+    )
+    const pulseProductSource = fs.readFileSync(
+      path.join(process.cwd(), 'app', 'producten', '_components', 'pulse-bounded-page.tsx'),
+      'utf8',
+    )
+    const teamProductSource = fs.readFileSync(
+      path.join(process.cwd(), 'app', 'producten', '_components', 'teamscan-specialist-page.tsx'),
+      'utf8',
+    )
+    const onboardingProductSource = fs.readFileSync(
+      path.join(process.cwd(), 'app', 'producten', '_components', 'onboarding-peer-page.tsx'),
+      'utf8',
+    )
+    const leadershipProductSource = fs.readFileSync(
+      path.join(process.cwd(), 'app', 'producten', '_components', 'leadership-specialist-page.tsx'),
+      'utf8',
+    )
     const pricingPageSource = fs.readFileSync(
       path.join(process.cwd(), 'app', 'tarieven', 'page.tsx'),
       'utf8',
@@ -129,17 +153,23 @@ describe('SEO conversion tranche', () => {
       'utf8',
     )
 
-    expect(productPageSource).toContain('defaultCtaSource="product_exit_form"')
-    expect(productPageSource).toContain('defaultCtaSource="product_retention_form"')
-    expect(productPageSource).toContain('defaultCtaSource="product_pulse_form"')
-    expect(productPageSource).toContain('defaultCtaSource="product_team_form"')
-    expect(productPageSource).toContain('defaultCtaSource="product_onboarding_form"')
-    expect(productPageSource).toContain('defaultCtaSource="product_leadership_form"')
-    expect(productPageSource.includes('ctaHref="#kennismaking"') || productPageSource.includes('href="#kennismaking"')).toBe(true)
+    expect(productPageSource).toContain('ExitScanCorePage')
+    expect(productPageSource).toContain('RetentionScanCorePage')
+    expect(productPageSource).toContain('PulseBoundedPage')
+    expect(productPageSource).toContain('TeamScanSpecialistPage')
+    expect(productPageSource).toContain('OnboardingPeerPage')
+    expect(productPageSource).toContain('LeadershipSpecialistPage')
+    expect(exitProductSource).toContain('defaultCtaSource="product_exit_form"')
+    expect(retentionProductSource).toContain('defaultCtaSource="product_retention_form"')
+    expect(pulseProductSource).toContain('defaultCtaSource="product_pulse_form"')
+    expect(teamProductSource).toContain('defaultCtaSource="product_team_form"')
+    expect(onboardingProductSource).toContain('defaultCtaSource="product_onboarding_form"')
+    expect(leadershipProductSource).toContain('defaultCtaSource="product_leadership_form"')
     expect(pricingPageSource).toContain("ctaSource: 'pricing_primary_cta'")
     expect(pricingPageSource).toContain("ctaSource: 'pricing_closing_cta'")
-    expect(solutionPageSource).toContain('MarketingInlineContactPanel')
-    expect(solutionPageSource).toContain('defaultCtaSource={solutionPage.ctaSource}')
+    expect(solutionPageSource).toContain('MarketingCalloutBand')
+    expect(solutionPageSource).toContain('primaryHref={solutionPage.productHref}')
+    expect(solutionPageSource).toContain('secondaryHref="/vertrouwen"')
   })
 
   it('keeps llms.txt aligned with the current pricing and product routes', () => {

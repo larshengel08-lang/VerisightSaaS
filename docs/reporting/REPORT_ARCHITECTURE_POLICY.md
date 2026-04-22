@@ -2,121 +2,62 @@
 
 ## Status
 
-Verisight Report Architecture v3 is the default Verisight management report architecture.
+Status: demoted legacy governance note.
 
-This policy is leading for Verisight management reports and should be reused across future Verisight management reports where product logic allows, including TeamScan, Onboarding 30-60-90, Pulse, and Leadership Scan.
+This file no longer acts as the active architecture source of truth for reporting. It remains in place only to preserve older references and to make the precedence change explicit.
 
-## Current Implementation Status
+## Korte samenvatting
 
-### ExitScan
+The active architecture source of truth now lives in:
 
-ExitScan is the first fully migrated recipe.
+- [REPORT_TRUTH_BASELINE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/REPORT_TRUTH_BASELINE.md)
+- [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/REPORT_STRUCTURE_CANON.md)
+- [REPORT_METHODOLOGY_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/REPORT_METHODOLOGY_CANON.md)
 
-It is the active baseline for the embedded v3 implementation.
+This legacy file previously described a tighter six-page v3 flow as if it were the active universal architecture. That assumption is now superseded.
 
-That means:
+## What Changed
 
-- ExitScan is the leading embedded implementation reference in the reporting system
-- future embedded refinements should align to the ExitScan structure unless product logic clearly requires otherwise
-- older Exit report flows are no longer the active baseline
+The current canon explicitly distinguishes:
 
-### RetentieScan
+- current embedded baseline
+- target architecture
+- buyer-facing mirror
+- appendix / technical depth
 
-RetentieScan is not yet migrated to the new embedded architecture.
+It also explicitly allows:
 
-It remains on the current flow temporarily.
+- one shared report grammar where product logic allows
+- different product recipes within that grammar
+- ExitScan as first fully normalized embedded recipe
+- RetentieScan as grammar-target without forcing it into the ExitScan recipe
 
-Future migration should inherit the shared reporting grammar where product logic allows.
+## What Still Remains Valid
 
-That means:
+These older principles still hold when they do not conflict with the active canon:
 
-- RetentieScan keeps its current temporary flow until its embedded migration is done explicitly
-- RetentieScan should not be treated as the leading structural baseline while that migration is still open
-- when migrated, it should reuse the same shared reporting grammar where its product logic supports that
+- technical accountability belongs outside the executive opening
+- segment analysis remains appendix-first and threshold-gated
+- product logic may justify recipe differences
+- future reports should reuse shared grammar where product logic allows
 
-### Shared Grammar To Keep Reusable
+## What Is No Longer Active In This File
 
-The following reporting grammar should remain shared across products where product logic allows:
+The following are no longer active claims from this file:
 
-- cover
-- response / read quality layer
-- handoff
-- drivers / priorities
-- route / action
-- method / leeswijzer
-- technical appendix
-
-## Default Reporting Grammar
-
-Where product logic allows, Verisight management reports use this default grammar:
-
-1. Executive summary
-2. Bestuurlijke handoff
-3. Drivers / prioriteitenbeeld
-4. Kernsignalen in samenhang
-5. Eerste route / managementactie
-6. Compact method guide
-7. Appendices when needed
-
-Appendix handling follows the same architecture rule:
-
-- `A1 Segmentanalyse` is conditional by n-threshold.
-- `B1 Technische verantwoording` is always present.
-
-## Decision Rule
-
-The v3 architecture is the primary source of truth for reporting.
-
-That means:
-
-- v3 overrules older report structures when they conflict
-- v2 spread-out page logic must not be reintroduced
-- technical accountability does not move back into the main flow
-- segment analysis does not move back into the main flow
-- exposure is never structurally central
-
-## Reuse Across The Portfolio
-
-Future reports do not need to have identical content, but they should reuse the v3 reporting grammar where product logic allows.
-
-The reusable defaults are:
-
-- executive summary
-- bestuurlijke handoff
-- drivers / priorities
-- core signal synthesis
-- route / action
-- compact method guide
-- appendices only when justified
-
-## Deviation Rule
-
-Deviations from v3 must be explicit and justified.
-
-A valid deviation must state:
-
-1. which page or module deviates
-2. why product logic requires the deviation
-3. why reuse of the default v3 grammar was not sufficient
-4. why management readability remains intact
-
-Implicit improvisation is not allowed.
+- any assumption that the active report architecture is exactly six pages for all products
+- any wording that treats this file as the leading architecture source
+- any framing that could collapse ExitScan and RetentieScan into one identical recipe
 
 ## Precedence Rule
 
-Shared visual language and management readability take precedence over product-specific improvisation.
+If this file conflicts with the active canon, the canon wins.
 
-This includes:
+If visual governance conflicts with the canon, the canon wins.
 
-- the same page hierarchy
-- the same density discipline
-- the same chart discipline
-- the same appendix separation
-- the same management readability standard
+## Next Active References
 
-## Implementation Rule
+For visual governance and master-family rules, use:
 
-The reporting system should be implemented as a reusable scene / page / fallback framework.
-
-ExitScan and RetentieScan are the first required implementations.
-Future products should plug into the same grammar through product-specific content and logic, not through ad hoc page invention.
+- [REPORT_VISUAL_POLICY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/visual/REPORT_VISUAL_POLICY.md)
+- [REPORT_VISUAL_MASTERS.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/visual/REPORT_VISUAL_MASTERS.md)

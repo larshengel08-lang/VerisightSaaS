@@ -212,10 +212,10 @@ export function buildHeroDescription({
   }
 
   if (scanType === 'leadership') {
-    return `Deze Leadership Scan laat een begrensde managementcontext-read zien op groepsniveau. Gebruik de uitkomst om te bepalen welke leiderschaps- of prioriteringscontext nu eerst duiding vraagt, zonder dit te lezen als named leader view, 360-output of performance-oordeel. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+    return `Deze Leadership Scan laat een begrensde support-read zien op groepsniveau. Gebruik de uitkomst om te bepalen welke managementcontext het bestaande people-signaal nu mee kleurt, zonder dit te lezen als named leader view, 360-output of performance-oordeel. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
   }
 
-  return 'Deze ExitScan helpt het vertrekverhaal terugbrengen tot de factoren die het meest beinvloedbaar lijken. Start bovenaan met het beslisoverzicht en gebruik daarna de verdieping om teams, factoren en vervolgacties scherper te maken.'
+  return `Deze ExitScan opent met de Frictiescore als managementsamenvatting van het vertrekbeeld. Gebruik werkfrictie daarna als verklarende laag om te bepalen waar teams, factoren en vervolgacties het meest beinvloedbaar lijken.`
 }
 
 export function getTopFactorLabel(factorAverages: Record<string, number>) {
@@ -304,7 +304,7 @@ export function buildDecisionPanels({
         value: retentionSupplemental.engagement !== null ? `${retentionSupplemental.engagement.toFixed(1)}/10` : '-',
         body: topFactorLabel
           ? `Gebruik bevlogenheid samen met ${topFactorLabel.toLowerCase()} en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.`
-          : 'Gebruik bevlogenheid samen met stay-intent en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.',
+          : 'Gebruik bevlogenheid samen met aanvullende signalen en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.',
         tone: 'emerald',
       },
     ]
@@ -360,10 +360,10 @@ export function buildDecisionPanels({
       ...sharedPanels,
       {
         eyebrow: 'Managementrichting',
-        title: 'Geaggregeerde context-read',
+        title: 'Bounded context-read',
         value: retentionSupplemental.stayIntent !== null ? `${retentionSupplemental.stayIntent.toFixed(1)}/10` : '-',
         body: topFactorLabel
-          ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste managementspoor en lees de richtingsvraag alleen als extra indicatie of de huidige aansturing werkbaarder of juist frictievoller voelt.`
+          ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste contextspoor en lees de richtingsvraag alleen als extra indicatie of de huidige aansturing werkbaarder of juist frictievoller voelt.`
           : 'Gebruik de richtingsvraag als extra indicatie of de huidige managementcontext vooral stabiliteit of juist meer frictie laat zien.',
         tone: retentionSupplemental.stayIntent !== null && retentionSupplemental.stayIntent < 5.5 ? 'amber' : 'emerald',
       },
@@ -390,7 +390,7 @@ export function buildNextStepTitle(scanType: ScanType, hasEnoughData: boolean, h
   if (scanType === 'pulse') return 'Reviewen en bijsturen'
   if (scanType === 'team') return 'Lokaal verifieren'
   if (scanType === 'onboarding') return 'Checkpoint duiden'
-  if (scanType === 'leadership') return 'Managementcontext duiden'
+  if (scanType === 'leadership') return 'Managementcontext toetsen'
   return scanType === 'retention' ? 'Valideren en prioriteren' : 'Duiden en verbeteren'
 }
 
@@ -446,12 +446,12 @@ export function buildNextStepBody({
   if (scanType === 'leadership') {
     return topFactor
       ? `Gebruik ${topFactor.toLowerCase()} als eerste managementspoor en bepaal welke geaggregeerde managementcontext nu eerst een korte check of kleine correctie vraagt.`
-      : 'Gebruik de compact gemeten werkfactoren om te kiezen welke managementcontext nu als eerste duiding verdient.'
+      : 'Gebruik de compact gemeten werkfactoren om te kiezen welke managementcontext nu als eerste een begrensde check verdient.'
   }
 
   return topFactor
-    ? `Gebruik ${topFactor.toLowerCase()} en het werksignaal om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
-    : 'Gebruik het werksignaal en de topfactoren om het eerstvolgende verbetergesprek te richten.'
+    ? `Gebruik Frictiescore als openingssignaal en ${topFactor.toLowerCase()} als eerste werkfrictiespoor om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
+    : 'Gebruik Frictiescore als openingssignaal en werkfrictie als verklarende laag om het eerstvolgende verbetergesprek te richten.'
 }
 
 export function getDisclosureDefaults({
@@ -513,14 +513,14 @@ export function buildInsightWarnings({
         scanType === 'retention'
           ? 'Lees de signalen als groepsinput'
           : scanType === 'pulse'
-            ? 'Lees Pulse als snapshot'
+            ? 'Lees Pulse als compacte groepsread'
             : scanType === 'team'
               ? 'Lees TeamScan als lokale contextlaag'
               : scanType === 'onboarding'
                 ? 'Lees onboarding als checkpoint-read'
                 : scanType === 'leadership'
-                  ? 'Lees Leadership Scan als managementcontext-read'
-            : 'Lees dit als managementinput',
+                ? 'Lees Leadership Scan als bounded support-read'
+                : 'Lees dit als managementinput',
       body:
         scanType === 'retention'
           ? 'RetentieScan blijft een groeps- en segmentinstrument. Gebruik signalen voor prioritering en verificatie, niet als individuele voorspelling.'
@@ -531,7 +531,7 @@ export function buildInsightWarnings({
               : scanType === 'onboarding'
                 ? 'Onboarding blijft een checkpoint-read op groepsniveau. Gebruik de uitkomst om vroege integratie en frictie te duiden, niet als performance-oordeel, retentievoorspelling of volledige 30-60-90-journey.'
                 : scanType === 'leadership'
-                  ? 'Leadership Scan blijft een geaggregeerde managementread op groepsniveau. Gebruik de uitkomst om managementcontext te duiden, niet om individuele leidinggevenden te beoordelen of named leaders te rangschikken.'
+                  ? 'Leadership Scan blijft een geaggregeerde bounded support-read op groepsniveau. Gebruik de uitkomst om managementcontext te duiden, niet om individuele leidinggevenden te beoordelen of named leaders te rangschikken.'
             : 'ExitScan bundelt vertrekervaringen tot managementpatronen. Gebruik deze uitkomsten om gesprekken te richten, niet om een score als sluitend bewijs te behandelen.',
       tone: 'blue',
     })
@@ -911,7 +911,7 @@ export function PulseTrendSection({
           eyebrow="Sinds vorige Pulse"
           title="Vergelijking nog niet veilig"
           value={`${comparison.currentResponsesLength}/${comparison.previousResponsesLength}`}
-          body={`Er is wel een vorige Pulse-campaign (${previousCampaignName} van ${formattedDate}), maar een veilige deltalezing vraagt minimaal ${MIN_N_PATTERNS} responses in beide cycli. Lees de huidige Pulse daarom nog als snapshot met reviewcontext, niet als hard trendbeeld.`}
+          body={`Er is wel een vorige Pulse-campaign (${previousCampaignName} van ${formattedDate}), maar een veilige deltalezing vraagt minimaal ${MIN_N_PATTERNS} responses in beide cycli. Lees de huidige Pulse daarom nog als compacte groepsread met reviewcontext, niet als hard trendbeeld.`}
           tone="amber"
         />
       </div>

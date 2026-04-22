@@ -280,8 +280,9 @@ export function getContactQualificationGuidance({
       recommendedCoreRoute,
       followOnCandidateRoute: null,
       headline: 'Combinatie is alleen logisch als beide kernvragen echt tegelijk spelen.',
-      detail: `De huidige vraag wijst zowel op vertrekduiding als op vroeg behoudssignaal. Daarom mag een gefaseerde combinatieroute in intake getoetst worden, maar alleen als beide managementvragen echt actief zijn en niet als losse bundel.`,
-      operatorSummary: 'Dubbele kernvraag zichtbaar; toets of vertrekduiding en vroeg behoudssignaal echt allebei direct nodig zijn voordat combinatie wordt bevestigd.',
+      detail: `De huidige vraag wijst zowel op vertrekduiding via Frictiescore als op vroeg behoudssignaal via Retentiesignaal. Daarom mag een gefaseerde combinatieroute in intake getoetst worden, maar alleen als beide managementvragen echt actief zijn en niet als losse bundel.`,
+      operatorSummary:
+        'Dubbele kernvraag zichtbaar; toets of Frictiescore en vroeg Retentiesignaal echt allebei direct nodig zijn voordat combinatie wordt bevestigd.',
     }
   }
 
@@ -291,8 +292,9 @@ export function getContactQualificationGuidance({
       recommendedCoreRoute,
       followOnCandidateRoute: null,
       headline: 'RetentieScan lijkt nu de logische eerste route.',
-      detail: `De vraag leest als een vroeg behouds- of stay-intent vraagstuk op groepsniveau. Daardoor mag RetentieScan in intake als eerste route worden getoetst, met ${normalizedTiming === 'zo-snel-mogelijk' ? 'hoge urgentie' : 'bounded eerste verificatie'} als uitgangspunt.`,
-      operatorSummary: 'Vroege behoudsvraag zichtbaar; toets RetentieScan als primaire route en bevestig dat het niet alsnog vooral om vertrekduiding achteraf gaat.',
+      detail: `De vraag leest als een vroeg behoudsvraagstuk rond Retentiesignaal op groepsniveau. Daardoor mag RetentieScan in intake als eerste route worden getoetst, met ${normalizedTiming === 'zo-snel-mogelijk' ? 'hoge urgentie' : 'bounded eerste verificatie'} als uitgangspunt.`,
+      operatorSummary:
+        'Vroege behoudsvraag zichtbaar; toets RetentieScan via Retentiesignaal als primaire route en bevestig dat het niet alsnog vooral om vertrekduiding achteraf gaat.',
     }
   }
 

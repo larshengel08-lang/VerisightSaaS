@@ -22,14 +22,18 @@ export interface SeoSolutionPage {
   contextTitle: string
   contextBody: string
   problemCards: readonly [string, string][]
+  currentApproachCards: readonly [string, string][]
   whyNowTitle: string
   whyNowBody: string
   deliverableTitle: string
   deliverableBody: string
   deliverables: readonly string[]
+  primaryHandoffBody: string
+  primaryHandoffPoints: readonly string[]
   routeCards: readonly [string, string][]
   proofTitle: string
   proofBody: string
+  trustPoints: readonly string[]
   contactTitle: string
   contactBody: string
 }
@@ -68,17 +72,38 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
         'Zonder bestuurlijke handoff blijft uitstroom te snel een HR-observatie in plaats van een managementvraag met eigenaarschap.',
       ],
     ],
+    currentApproachCards: [
+      [
+        'Losse input geeft nog geen managementlijn',
+        'Zonder vaste route blijft verloopanalyse vaak hangen in observaties, notities en losse interpretatie per gesprek of dataset.',
+      ],
+      [
+        'Brede aanpak opent te veel tegelijk',
+        'Een algemene people-aanpak of bredere surveylogica maakt de vertrekvraag sneller diffuser dan bestuurlijk bruikbaar.',
+      ],
+      [
+        'Vervolgstap blijft daardoor onduidelijk',
+        'Zonder duidelijke productroute blijft onhelder welke eerste managementread, handoff en vervolgvraag nu echt logisch zijn.',
+      ],
+    ],
     whyNowTitle: 'Waarom ExitScan hier de juiste route is',
     whyNowBody:
-      'ExitScan maakt vertrekduiding bestuurlijk leesbaar op groepsniveau. Je krijgt een eerste managementbeeld van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie zonder diagnose-, predictor- of causaliteitsclaim.',
+      'ExitScan maakt vertrekduiding bestuurlijk leesbaar op groepsniveau via Frictiescore, met terugkerende werkfactoren, vertrekredenen en werkfrictie als verklarende laag zonder diagnose-, predictor- of causaliteitsclaim.',
     deliverableTitle: 'Wat je als deliverable terugkrijgt',
     deliverableBody:
       'De route combineert dashboard, managementrapport en bestuurlijke handoff in één professionele leeslijn die direct bruikbaar is voor HR, sponsor, MT en directie.',
     deliverables: [
-      'Bestuurlijke read met vertrekbeeld en bestuurlijke relevantie',
-      'Topfactoren en signalen van werkfrictie in een compacte managementstructuur',
+      'Bestuurlijke read met Frictiescore en bestuurlijke relevantie',
+      'Topfactoren en werkfrictie als verklarende laag in een compacte managementstructuur',
       'Bestuurlijke handoff met eerste managementvraag en logische vervolgstap',
       'Publiek toetsbare claims-, privacy- en interpretatiegrenzen',
+    ],
+    primaryHandoffBody:
+      'Deze zoekintentie hoort niet naar een losse knowledge-architectuur, maar naar ExitScan als primaire route voor vertrekduiding op managementniveau.',
+    primaryHandoffPoints: [
+      'Gebruik ExitScan als eerste route wanneer vertrekduiding, terugkerende werkfactoren en bestuurlijke handoff centraal staan.',
+      'Gebruik tarieven en aanpak pas nadat de productfit en output helder zijn.',
+      'Gebruik vertrouwen als ondersteunende due-diligence laag, niet als alternatieve route.',
     ],
     routeCards: [
       ['Productroute', 'Start bij ExitScan als primaire wedge voor vertrekduiding en vergelijkbare managementoutput.'],
@@ -87,7 +112,12 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
     ],
     proofTitle: 'Laat eerst de deliverable zien, daarna pas de uitleg.',
     proofBody:
-      'De voorbeeldoutput op de ExitScan-productpagina laat zien hoe bestuurlijke read, topfactoren en bestuurlijke handoff werkelijk samenkomen.',
+      'De voorbeeldoutput op de ExitScan-productpagina laat zien hoe Frictiescore, topfactoren en bestuurlijke handoff werkelijk samenkomen.',
+    trustPoints: [
+      'De mirror blijft een buyer-facing handofflaag en geen productoverzicht.',
+      'Proof ondersteunt de handoff en vervangt de productpagina niet.',
+      'Claims blijven binnen de publieke trust-, privacy- en productgrenzen van ExitScan.',
+    ],
     contactTitle: 'Plan een kennismaking over verloopanalyse',
     contactBody:
       'Beschrijf kort waar jullie verloopvraag nu vastloopt. Dan toetsen we of ExitScan Baseline de juiste eerste stap is en welke databasis nodig is om snel naar een geloofwaardige eerste managementread te komen.',
@@ -125,6 +155,20 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
         'Wat HR ziet, landt niet automatisch bruikbaar bij sponsor, MT of directie wanneer er geen duidelijke executive leeslijn is.',
       ],
     ],
+    currentApproachCards: [
+      [
+        'Losse exitgesprekken blijven te fragmentarisch',
+        'Zonder vaste route blijft ieder gesprek of gespreksspoor te veel op zichzelf staan en wordt vergelijking moeilijker dan nodig.',
+      ],
+      [
+        'Interpretatie verschilt per lezer',
+        'Als er geen compacte managementlaag onder zit, weegt HR, sponsor of directie dezelfde input telkens anders.',
+      ],
+      [
+        'De buyer mist een heldere vervolgrichting',
+        'Zonder productroute blijft onduidelijk hoe exitinput verandert in bestuurlijke handoff en eerste managementvraag.',
+      ],
+    ],
     whyNowTitle: 'Waarom ExitScan hier sterker is dan losse gespreksduiding',
     whyNowBody:
       'ExitScan helpt organisaties de stap te maken van losse exitgesprekken naar gegroepeerde vertrekduiding op managementniveau. Dat maakt vervolgvragen, prioritering en eigenaarschap sneller intern bespreekbaar.',
@@ -137,6 +181,13 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
       'Bestuurlijke handoff die intern beter doorvertelbaar is dan losse gesprekssamenvattingen',
       'Methodische en privacygrenzen die overclaiming voorkomen',
     ],
+    primaryHandoffBody:
+      'Deze zoekintentie hoort naar ExitScan zodra het doel niet meer is om gesprekken te verzamelen, maar om er een leesbaar managementbeeld en vervolgvraag van te maken.',
+    primaryHandoffPoints: [
+      'Gebruik ExitScan wanneer exitgesprekken moeten landen in één vergelijkbare managementstructuur.',
+      'Gebruik tarieven en aanpak pas nadat duidelijk is dat ExitScan de juiste eerste route is.',
+      'Gebruik vertrouwen als ondersteunende verificatie van claims, privacy en rapportlezing.',
+    ],
     routeCards: [
       ['Productroute', 'De natuurlijke vervolgstap is ExitScan, niet een bredere knowledge base of losse researchlaag.'],
       ['Kooprust', 'Via tarieven zie je hoe ExitScan Baseline en eventuele vervolgvormen commercieel zijn opgebouwd.'],
@@ -145,6 +196,11 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
     proofTitle: 'Voorbeeldrapporten maken de stap van gesprek naar managementbeeld tastbaar.',
     proofBody:
       'De ExitScan showcase laat zien hoe vertrekredenen, signalen van werkfrictie en eerste managementvragen in één executive leeslijn landen.',
+    trustPoints: [
+      'De mirror blijft een buyer-facing handofflaag en geen productoverzicht.',
+      'Proof ondersteunt de routefit en opent geen tweede productarchitectuur.',
+      'Claims blijven binnen de publieke trust-, privacy- en productgrenzen van ExitScan.',
+    ],
     contactTitle: 'Plan een kennismaking over exitgesprekken analyseren',
     contactBody:
       'Beschrijf kort hoe exitgesprekken nu worden verzameld en waar interpretatie of besluitvorming vastloopt. Dan toetsen we of ExitScan Baseline de juiste eerste structuur biedt.',
@@ -182,17 +238,38 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
         'De behoefte zit meestal in groepsduiding en prioritering, niet in persoonsgerichte voorspelling, performance-oordeel of interventies op individueel niveau.',
       ],
     ],
+    currentApproachCards: [
+      [
+        'Brede tevredenheidslogica opent te veel tegelijk',
+        'Een algemene MTO- of brede pulse-aanpak maakt de behoudsvraag sneller diffuus dan verification-first.',
+      ],
+      [
+        'Individuele signalen zijn hier niet de bedoeling',
+        'De buyer zoekt meestal groepsduiding en prioritering, niet predictorlogica of persoonsgerichte interventie.',
+      ],
+      [
+        'Zonder route blijft vervolggesprek te breed',
+        'Als de eerste managementvraag niet scherp genoeg is, blijven vervolgactie en eigenaarschap onnodig vaag.',
+      ],
+    ],
     whyNowTitle: 'Waarom RetentieScan hier de passende route is',
     whyNowBody:
-      'RetentieScan maakt zichtbaar waar behoud op groeps- en segmentniveau onder druk staat via retentiesignaal, stay-intent, bevlogenheid, vertrekintentie en beinvloedbare werkfactoren. Het product blijft expliciet verification-first en niet-predictief.',
+      'RetentieScan maakt zichtbaar waar behoud op groeps- en segmentniveau onder druk staat via Retentiesignaal, aanvullende signalen zoals stay-intent en vertrekintentie, bevlogenheid en beinvloedbare werkfactoren. Het product blijft expliciet verification-first en niet-predictief.',
     deliverableTitle: 'Wat je als deliverable terugkrijgt',
     deliverableBody:
       'De route levert een managementweergave op die behoudsdruk bespreekbaar maakt voor HR, sponsor, MT en directie, met duidelijke grenzen rond privacy, bewijsstatus en interpretatie.',
     deliverables: [
-      'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in dezelfde leeslijn',
+      'Retentiesignaal, aanvullende signalen zoals stay-intent en vertrekintentie, en bevlogenheid in dezelfde leeslijn',
       'Topfactoren en eerste verificatiesporen op groeps- en segmentniveau',
       'Bestuurlijke handoff voor sponsor, MT of directie zonder individuele predictorframing',
       'Publieke trustlaag die privacy-, claims- en bewijsstatus begrijpelijk maakt',
+    ],
+    primaryHandoffBody:
+      'Deze zoekintentie hoort naar RetentieScan zodra de actieve behoudsvraag zelf expliciet op tafel ligt en een verification-first route nodig is.',
+    primaryHandoffPoints: [
+      'Gebruik RetentieScan wanneer behoudsdruk op groepsniveau eerder zichtbaar moet worden gemaakt.',
+      'Gebruik tarieven en aanpak pas nadat duidelijk is dat de eerste route hier echt over behoud gaat.',
+      'Gebruik vertrouwen als ondersteunende laag voor privacy, groepsgrenzen en bewijsstatus.',
     ],
     routeCards: [
       ['Productroute', 'De natuurlijke vervolgstap is RetentieScan als gerichte route voor behoudsvraagstukken op groepsniveau.'],
@@ -202,6 +279,11 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
     proofTitle: 'Laat eerst de verification-first output zien.',
     proofBody:
       'De RetentieScan showcase laat zien hoe retentiesignaal, topfactoren en bestuurlijke handoff samenkomen zonder brede MTO- of predictorclaim.',
+    trustPoints: [
+      'De mirror blijft een buyer-facing handofflaag en geen productoverzicht.',
+      'Proof ondersteunt de routefit en vervangt de RetentieScan-productpagina niet.',
+      'Claims blijven binnen de publieke trust-, privacy- en productgrenzen van RetentieScan.',
+    ],
     contactTitle: 'Plan een kennismaking over medewerkersbehoud analyseren',
     contactBody:
       'Beschrijf kort waar de actieve behoudsvraag nu zit. Dan toetsen we of RetentieScan Baseline de juiste eerste stap is en hoe een geloofwaardige eerste meetroute eruitziet.',

@@ -68,7 +68,7 @@ def get_management_summary_payload(
         if lead_factor_key
         else None
     ) or (
-        f"Beslis eerst of {top_factor_text} nu vooral snelle verificatie of al gerichte 30-90 dagenopvolging vraagt."
+        f"Beslis eerst of {top_factor_text} nu vooral snelle verificatie of al gerichte 30-90 dagen opvolging vraagt."
     )
     first_owner = (
         RETENTION_OWNER_BY_FACTOR.get(lead_factor_key)
@@ -232,7 +232,7 @@ def get_management_summary_payload(
         "boardroom_watchout": boardroom_watchout,
         "highlight_cards": [
             {
-                "title": "Groepsbeeld nu",
+                "title": "Retentiesignaal nu",
                 "value": signal_profile_value,
                 "body": group_body,
             },
@@ -264,7 +264,7 @@ def get_management_summary_payload(
         ],
         "cards": [
             {
-                "title": "Groepsbeeld nu",
+                "title": "Retentiesignaal nu",
                 "body": group_body,
             },
             {
@@ -286,9 +286,8 @@ def get_management_summary_payload(
 def get_methodology_payload() -> dict[str, Any]:
     return {
         "intro_text": (
-            "Dit rapport vertaalt RetentieScan naar een bestuurlijk leesbaar behoudsbeeld op groepsniveau. "
-            "De methodiek is compact en nadrukkelijk geen brede MTO of diagnostisch instrument; de uitkomst is bedoeld voor prioritering, verificatie en actie. "
-            "De labels hieronder zijn managementtaal bovenop ongewijzigde interne scorebanden."
+            "Deze pagina legt compact uit hoe RetentieScan gelezen en gebruikt moet worden. "
+            "Ze zet de productgrenzen, gebruiksregels en vertrouwensregel neer, zonder de hoofdflow opnieuw te openen."
         ),
         "method_text": (
             "In de analyse wordt per response een retentiesignaal op een schaal van 1 tot 10 berekend. "
@@ -363,7 +362,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         if lead_factor_key
         else None
     ) or (
-        f"Beslis eerst of {focus_text.lower()} nu vooral snelle verificatie of al gerichte 30-90 dagenopvolging vragen."
+        f"Beslis eerst of {focus_text.lower()} nu vooral snelle verificatie of al gerichte 30-90 dagen opvolging vragen."
     )
     first_owner = (
         RETENTION_OWNER_BY_FACTOR.get(lead_factor_key)
@@ -371,7 +370,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         else None
     ) or "HR lead met betrokken leidinggevende"
     first_action = (
-        f"Koppel {focus_text.lower()} binnen 30 dagen aan één gerichte verificatie- of interventiestap en leg de opvolging direct vast."
+        f"Koppel {focus_text.lower()} binnen 30 dagen aan gerichte verificatie of een eerste interventiestap en leg de opvolging direct vast."
     )
     review_moment = _retention_review_moment_text(focus_text)
     return {
@@ -440,6 +439,154 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
                 "body": (
                     review_moment
                 ),
+            },
+        ],
+    }
+
+
+def get_methodology_payload() -> dict[str, Any]:
+    return {
+        "intro_text": (
+            "Deze pagina legt compact uit hoe RetentieScan gelezen en gebruikt moet worden. "
+            "Ze zet de productgrenzen, gebruiksregels en vertrouwensregel neer, zonder de hoofdflow opnieuw te openen."
+        ),
+        "method_text": (
+            "Gebruik het retentiesignaal als groepssamenvatting voor behoudsdruk. "
+            "Lees het niet als benchmark, niet als diagnose en niet als individuele voorspeller."
+        ),
+        "weight_rows": [
+            ["Factor", "Bijdrage", "Hoe te lezen"],
+            ["SDT Werkbeleving", "1.0 x", "Verklarende kernlaag voor autonomie, competentie en verbondenheid"],
+            ["Leiderschap", "1.0 x", "Coachend leiderschap en autonomie-ondersteuning als beinvloedbare werkfactor"],
+            ["Psychologische veiligheid & cultuurmatch", "1.0 x", "Pragmatisch signaal voor veiligheid, samenwerking en cultuurfit, geen volledige cultuurdiagnose"],
+            ["Groeiperspectief", "1.0 x", "Ervaren ontwikkelruimte en perspectief binnen de organisatie"],
+            ["Beloning & voorwaarden", "1.0 x", "Ervaren passendheid, uitlegbaarheid en bruikbaarheid van beloning en voorwaarden"],
+            ["Werkbelasting", "1.0 x", "Acceptabele werkdruk en herstelmogelijkheden"],
+            ["Rolhelderheid", "1.0 x", "Duidelijkheid over prioriteiten, verwachtingen en tegenstrijdige opdrachten"],
+        ],
+        "band_rows": [
+            ["Band", "Score", "Betekenis voor de organisatie"],
+            [MANAGEMENT_BAND_LABELS["LAAG"], "< 4.5", "Dit thema is nu niet leidend, maar blijft relevant om te volgen in het behoudsbeeld."],
+            [MANAGEMENT_BAND_LABELS["MIDDEN"], "4.5-7.0", "Dit thema vraagt eerst verificatie voordat management het zwaarder maakt in route of opvolging."],
+            [MANAGEMENT_BAND_LABELS["HOOG"], ">= 7.0", "Dit thema moet nu bestuurlijk als eerste worden gewogen, zonder dat dit een individuele voorspelling of causaliteitsclaim wordt."],
+        ],
+        "trust_rows": [
+            ["Wat dit product wel is", TRUST_CONTRACT["what_it_is"]],
+            ["Niet voor bedoeld", TRUST_CONTRACT["what_it_is_not"]],
+            ["Hoe je de output leest", TRUST_CONTRACT["how_to_read"]],
+            ["Privacy & rapportage", TRUST_CONTRACT["privacy_boundary"]],
+            ["Bewijsstatus nu", TRUST_CONTRACT["evidence_status"]],
+        ],
+    }
+
+
+def get_signal_page_payload(*, retention_signal_profile: str | None = None) -> dict[str, Any]:
+    profile_copy = {
+        "scherp_aandachtssignaal": "Lees het retentiesignaal eerst als samenvatting: hoeveel aandacht vraagt behoud in deze groep nu? Kijk daarna naar de verdeling: hoe breed komt dit beeld in de groep terug? Gebruik de banding vervolgens als bestuurlijk leeslabel voor volgen, eerst toetsen of direct prioriteren.",
+        "vertrekdenken_zichtbaar": "Lees het retentiesignaal eerst als samenvatting: hoeveel aandacht vraagt behoud in deze groep nu? Kijk daarna naar de verdeling: hoe breed komt dit beeld in de groep terug? Gebruik de banding vervolgens als bestuurlijk leeslabel voor volgen, eerst toetsen of direct prioriteren.",
+        "vroegsignaal": "Lees het retentiesignaal eerst als samenvatting: hoeveel aandacht vraagt behoud in deze groep nu? Kijk daarna naar de verdeling: hoe breed komt dit beeld in de groep terug? Gebruik de banding vervolgens als bestuurlijk leeslabel voor volgen, eerst toetsen of direct prioriteren.",
+        "overwegend_stabiel": "Lees het retentiesignaal eerst als samenvatting: hoeveel aandacht vraagt behoud in deze groep nu? Kijk daarna naar de verdeling: hoe breed komt dit beeld in de groep terug? Gebruik de banding vervolgens als bestuurlijk leeslabel voor volgen, eerst toetsen of direct prioriteren.",
+    }
+    return {
+        "title": "Retentiesignaal en aanvullende signalen",
+        "intro": (
+            "Deze pagina helpt bepalen wat vooral gevolgd moet worden, waar eerst beter doorgevraagd moet worden en waar het groepsbeeld nu al duidelijk genoeg is om bestuurlijke aandacht te vragen. "
+            "Dit is nog geen individuele voorspelling en ook nog geen routepagina."
+        ),
+        "summary_title": "Retentiesignaal en aanvullende signalen",
+        "signal_profile_title": "Hoe lees je deze combinatie?",
+        "signal_profile_text": profile_copy.get(
+            retention_signal_profile,
+            "Lees het retentiesignaal eerst als samenvatting: hoeveel aandacht vraagt behoud in deze groep nu? Kijk daarna naar de verdeling: hoe breed komt dit beeld in de groep terug? Gebruik de banding vervolgens als bestuurlijk leeslabel voor volgen, eerst toetsen of direct prioriteren.",
+        ),
+    }
+
+
+def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[str]) -> dict[str, Any]:
+    focus_text = " en ".join(top_focus_labels) if top_focus_labels else "de scherpste werkfactoren"
+    lead_factor_key = top_focus_keys[0] if top_focus_keys else None
+    first_decision = (
+        RETENTION_DECISION_BY_FACTOR.get(lead_factor_key)
+        if lead_factor_key
+        else None
+    ) or (
+        f"Beslis eerst of {focus_text.lower()} nu vooral snelle verificatie of al gerichte 30-90 dagen opvolging vragen."
+    )
+    first_owner = (
+        RETENTION_OWNER_BY_FACTOR.get(lead_factor_key)
+        if lead_factor_key
+        else None
+    ) or "HR lead met betrokken leidinggevende"
+    first_action = (
+        f"Koppel {focus_text.lower()} binnen 30 dagen aan gerichte verificatie of een eerste interventiestap en leg de opvolging direct vast."
+    )
+    review_moment = _retention_review_moment_text(focus_text)
+    return {
+        "section_title": "Vervolgstappen",
+        "intro_text": (
+            "Gebruik RetentieScan eerst om scherp te prioriteren en te verifieren. Pas daarna schaal je acties op of trek je bredere conclusies over behoud."
+        ),
+        "session_title": "Eerste managementsessie na oplevering",
+        "session_intro": (
+            "Gebruik deze route om de eerste managementsessie compact en besluitgericht te houden: kies eerst het verificatiespoor "
+            "en maak daarna expliciet wie trekt, wat de eerste stap is en wanneer je terugkijkt."
+        ),
+        "first_decision": first_decision,
+        "priority_now": first_decision,
+        "first_route": "Gebruik deze eerste route om het vervolg compact, bestuurlijk en zichtbaar te maken.",
+        "decision_now": "Leg direct vast wie trekt, wat eerst gebeurt en wanneer opnieuw wordt gewogen.",
+        "first_owner": first_owner,
+        "first_action": first_action,
+        "review_moment": review_moment,
+        "session_cards": [
+            {
+                "title": "Prioriteit nu",
+                "body": first_decision,
+            },
+            {
+                "title": "Eigenaar",
+                "body": first_owner,
+            },
+            {
+                "title": "Eerste stap",
+                "body": first_action,
+            },
+            {
+                "title": "Review",
+                "body": review_moment,
+            },
+        ],
+        "session_watchout_title": "Leesgrens bij de eerste managementsessie",
+        "session_watchout": (
+            "Gebruik deze sessie om verificatie, eigenaar en eerste interventie te kiezen, niet om RetentieScan als individuele predictor te lezen."
+        ),
+        "steps": [
+            {
+                "number": "1",
+                "title": "Kies binnen 2 weken het eerste managementspoor",
+                "body": (
+                    f"Bespreek het rapport met HR en betrokken leidinggevenden, en maak expliciet welk besluit nu eerst telt: {first_decision}"
+                ),
+            },
+            {
+                "number": "2",
+                "title": "Koppel elk aandachtspunt aan een eerste eigenaar",
+                "body": (
+                    f"Leg per aandachtspunt een {first_owner.lower()} vast, zodat RetentieScan niet blijft hangen in observatie zonder vervolg."
+                ),
+            },
+            {
+                "number": "3",
+                "title": "Vertaal verificatie naar maximaal 3 gerichte acties",
+                "body": (
+                    "Laat acties logisch volgen uit groepsbeeld, topfactoren en aanvullende signalen. "
+                    "Open antwoorden of segmenten mogen die hoofdlijn niet overschrijven."
+                ),
+            },
+            {
+                "number": "4",
+                "title": "Plan direct een evaluatie- of vervolgmeting",
+                "body": review_moment,
             },
         ],
     }

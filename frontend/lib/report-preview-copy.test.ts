@@ -73,4 +73,23 @@ describe('REPORT_PREVIEW_COPY', () => {
     expect(portfolioCopy.sampleReportBody?.toLowerCase()).toContain('core-first')
     expect(portfolioCopy.sampleReportHref).toBe('/producten')
   })
+
+  it('gives onboarding a peer-grade preview without crossing its bounded product limits', () => {
+    const onboardingCopy = REPORT_PREVIEW_COPY.onboarding
+
+    expect(onboardingCopy.label).toContain('Onboarding')
+    expect(onboardingCopy.intro.toLowerCase()).toContain('vroege landing')
+    expect(onboardingCopy.boardroomTitle).toBe('Bestuurlijke handoff')
+    expect(onboardingCopy.boardroomPoints.map(([title]) => title)).toEqual([
+      'Wat speelt nu',
+      'Waarom telt dit nu',
+      'Wat nog niet claimen',
+    ])
+    expect(onboardingCopy.proofNotes.map(([title]) => title)).toContain('Managementsamenvatting')
+    expect(onboardingCopy.proofNotes.map(([title]) => title)).toContain('Route en actie')
+    expect(onboardingCopy.trustPoints.map(([title]) => title)).toContain('Bewijsstatus')
+    expect(onboardingCopy.nuance.toLowerCase()).toContain('geen journey-engine')
+    expect(onboardingCopy.nuance.toLowerCase()).toContain('geen automation')
+    expect(onboardingCopy.sampleReportHref).toBe('/producten/onboarding-30-60-90#preview')
+  })
 })

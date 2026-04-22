@@ -36,6 +36,7 @@ Voor wave 1 van het fix-programma werkt Verisight hybride:
 | Maandelijkse gates en wave-overgangen | `MONTHLY_PHASE_REVIEW.md` | `DECISION_LOG.md`, `SCALABILITY_REVIEW_WORKBOOK.xlsx` | roadmap of losse statusupdates |
 | Capaciteitsgrenzen | `FOUNDER_CAPACITY_MAP.md` | scorecard cash and capacity | impliciet gevoel |
 | Strategische hoofdrichting | `CEO_GROWTH_SYSTEM_2026.md` | `ROADMAP.md` als audit/fase-overzicht | externe roadmaps |
+| Portfoliobrede producttaal, metrics en executive freeze | `docs/active/SHARED_GRAMMAR_INDICATOR_EXECUTIVE_FREEZE.md` | product-specifieke freeze-delta docs | losse wave-docs, buyer-facing mirrors of ad-hoc copy |
 
 ## Required update order
 
@@ -72,6 +73,15 @@ Werk in deze volgorde:
 3. maandreview aan het eind van de cyclus
 4. capacity map bij echte load- of prioriteitswijziging
 
+### 5. Producttaal- en grammar-updates
+
+Voor de vijf productdraden geldt deze volgorde:
+
+1. update eerst `docs/active/SHARED_GRAMMAR_INDICATOR_EXECUTIVE_FREEZE.md` zodra een beslissing portfolio-breed of cross-product is
+2. update daarna de relevante product-specifieke freeze-delta
+3. update daarna pas embedded truth, dashboard, rapport of buyer-facing mirrors
+4. laat een thread nooit direct in mirrorcopy of wave-docs van de freeze afwijken
+
 ## Mirror rules
 
 - `Deals` in `CEO_WEEKLY_SCORECARD.xlsx` is een weekmirror van de CRM-pipeline.
@@ -79,6 +89,7 @@ Werk in deze volgorde:
 - `SCALABILITY_REVIEW_WORKBOOK.xlsx` is geen dagelijkse operatie, maar een gate- en evidenceregister.
 - `ROADMAP.md` en `ROADMAP_WORKBOOK.xlsx` blijven fase- en auditlaag, niet de live fix-werklaag.
 - `Docs_External` mag referentie of assetlaag zijn, maar geen autonome prioriteitenlaag.
+- de shared grammar freeze is upstream voor alle vijf productdraden; freeze-delta docs zijn de verplichte eerstvolgende mirrorlaag per product
 
 ## Forbidden drift
 
@@ -89,6 +100,7 @@ Niet doen:
 - maandreview invullen zonder terug te wijzen naar echte CRM-, app- of workbookevidence
 - externe workbooks of documenten laten afwijken van de actieve repo-playbooks zonder expliciete sync
 - een mirror gebruiken om het primaire systeem te overrulen
+- een van de vijf productdraden laten afwijken van de shared grammar freeze zonder bijbehorende freeze-delta update
 
 ## Acceptance
 

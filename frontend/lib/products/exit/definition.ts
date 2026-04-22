@@ -5,7 +5,7 @@ export const exitScanDefinition: ScanDefinition = {
   productName: 'ExitScan',
   signalLabel: 'Frictiescore',
   signalLabelLower: 'frictiescore',
-  summaryLabel: 'Sterk frictiesignaal',
+  summaryLabel: 'Frictiescore',
   methodologyText:
     'ExitScan maakt vertrekduiding bestuurlijk leesbaar. Het product bundelt vertrekredenen, meespelende factoren, eerdere signalering en signalen van werkfrictie tot een indicatief managementbeeld dat helpt prioriteren en doorvragen, zonder oorzaken definitief vast te stellen.',
   whatItIsText:

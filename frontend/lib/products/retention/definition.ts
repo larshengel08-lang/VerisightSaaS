@@ -5,7 +5,7 @@ export const retentionScanDefinition: ScanDefinition = {
   productName: 'RetentieScan',
   signalLabel: 'Retentiesignaal',
   signalLabelLower: 'retentiesignaal',
-  summaryLabel: 'Stay-intent (aanvullend)',
+  summaryLabel: 'Retentiesignaal',
   methodologyText:
     'Verisight maakt zichtbaar waar behoud op groeps- en segmentniveau onder druk staat en welke beinvloedbare werkfactoren als eerste verificatie vragen. RetentieScan is geen brede MTO en geen individuele voorspeller: het is een SDT-gebaseerd vroegsignaal waarin werkbeleving en werkfactoren samen een v1-retentiesignaal vormen, terwijl bevlogenheid, vertrekintentie en stay-intent apart leesbaar blijven als aanvullende signalen rond behoud.',
   whatItIsText:

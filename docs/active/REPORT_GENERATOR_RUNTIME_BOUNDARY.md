@@ -1,8 +1,8 @@
 ﻿# REPORT_GENERATOR_RUNTIME_BOUNDARY.md
 
 Last updated: 2026-04-18
-Status: active
-Source of truth: dit document beschrijft welke runtimepaden in [report.py](/C:/Users/larsh/Desktop/Business/Verisight/backend/report.py) actief zijn en welke niet als canonieke bron gelezen mogen worden.
+Status: active derived boundary note
+Authoritative inputs: de canonieke reporting truth lives in [REPORT_TRUTH_BASELINE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/REPORT_TRUTH_BASELINE.md), [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/REPORT_STRUCTURE_CANON.md) en [REPORT_METHODOLOGY_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/REPORT_METHODOLOGY_CANON.md). Dit document beschrijft alleen welke runtimepaden in [report.py](/C:/Users/larsh/Desktop/Business/Verisight/backend/report.py) actief zijn en welke niet als canonieke bron gelezen mogen worden.
 
 ## Titel
 
@@ -10,12 +10,12 @@ Report Generator Runtime Boundary
 
 ## Korte samenvatting
 
-De actieve rapportgenerator heeft nu een expliciete runtimegrens: `ExitScan` loopt via een eigen embedded story builder, `RetentieScan` via een benoemd runtime-ingangspunt binnen de gedeelde grammarlaag, en andere niet-Exit-routes vallen voorlopig terug op een gedeeld non-exit runtimepad. De grote historische codeblok onder de eerste `return buf.getvalue()` in `generate_campaign_report` is verwijderd en telt niet meer mee als onderhoudsrisico of pseudo-source-of-truth.
+De actieve rapportgenerator heeft nu een expliciete runtimegrens: `ExitScan` loopt via een eigen embedded story builder, `RetentieScan` via een benoemd runtime-ingangspunt binnen de gedeelde grammarlaag, en andere niet-Exit-routes vallen voorlopig terug op een gedeeld non-exit runtimepad. De grote historische codeblok onder de eerste `return buf.getvalue()` in `generate_campaign_report` is verwijderd en telt niet meer mee als onderhoudsrisico of pseudo-owner-document.
 
 ## Wat is geaudit
 
 - [report.py](/C:/Users/larsh/Desktop/Business/Verisight/backend/report.py)
-- [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md)
+- [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reporting/REPORT_STRUCTURE_CANON.md)
 - [EXITSCAN_IMPLEMENTATION_PARITY_CHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_IMPLEMENTATION_PARITY_CHECK.md)
 
 ## Belangrijkste bevindingen
@@ -58,6 +58,13 @@ De actieve rapportgenerator heeft nu een expliciete runtimegrens: `ExitScan` loo
 - Deze stap verandert geen runtimevolgorde of rapportarchitectuur van `ExitScan` of `RetentieScan`; hij maakt alleen de codepaden explicieter en schoner.
 - Verdere productspecifieke splitsing voor andere niet-Exit-routes blijft later werk en valt buiten deze cleanup.
 
-## Next gate
+## Precedence rule
 
-De beste volgende stap is `cross-layer terminology sweep`, gevolgd door `pricing and commercial language recheck`, zodat docs, previewcopy, productpagina's en commerciële shells dezelfde canonieke termen blijven dragen.
+Dit document beschrijft runtime-boundaries, maar bepaalt niet zelfstandig:
+
+- report truth
+- report structure
+- methodology
+- terminology governance
+
+Als dit document botst met `docs/reporting/*`, dan wint `docs/reporting/*`.

@@ -23,6 +23,7 @@ Voor de huidige fix-tranche:
 
 1. `SCALABILITY_FIX_PROGRAM_PLAN.md`
 2. `docs/ops/SOURCE_OF_TRUTH_CHARTER.md`
+3. `docs/active/SHARED_GRAMMAR_INDICATOR_EXECUTIVE_FREEZE.md`
 3. live CRM- of app-systeem per informatietype
 4. `docs/ops/CEO_WEEKLY_SCORECARD.xlsx` als reviewmirror
 5. `docs/ops/MONTHLY_PHASE_REVIEW.md` als gate review
@@ -49,12 +50,20 @@ Voor de huidige fix-tranche:
 - [METHOD_EVIDENCE_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/METHOD_EVIDENCE_REVIEW.md)
 - [METHOD_RISK_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/METHOD_RISK_MATRIX.md)
 - [METHOD_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/METHOD_SIGNOFF.md)
+- [EXITSCAN_5_NIVEAU_GAP_ANALYSE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_5_NIVEAU_GAP_ANALYSE.md)
 - [NON_CORE_PRODUCT_PARITY_SWEEP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/NON_CORE_PRODUCT_PARITY_SWEEP.md)
 - [NON_CORE_OUTPUT_PARITY_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/NON_CORE_OUTPUT_PARITY_REVIEW.md)
 - [NON_CORE_DASHBOARD_PARITY_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/NON_CORE_DASHBOARD_PARITY_MATRIX.md)
+- [ONBOARDING_SHELL_CORRECTION_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/ONBOARDING_SHELL_CORRECTION_REVIEW.md)
 - [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md)
 - [PRODUCT_LINE_STATUS_BOARD.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LINE_STATUS_BOARD.md)
 - [PRODUCT_TRUTH_HARDENING_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_TRUTH_HARDENING_PROGRAM_PLAN.md)
+- [SHARED_GRAMMAR_INDICATOR_EXECUTIVE_FREEZE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/SHARED_GRAMMAR_INDICATOR_EXECUTIVE_FREEZE.md)
+- [EXITSCAN_SHARED_GRAMMAR_FREEZE_DELTA.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_SHARED_GRAMMAR_FREEZE_DELTA.md)
+- [RETENTIESCAN_SHARED_GRAMMAR_FREEZE_DELTA.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTIESCAN_SHARED_GRAMMAR_FREEZE_DELTA.md)
+- [ONBOARDING_30_60_90_SHARED_GRAMMAR_FREEZE_DELTA.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/ONBOARDING_30_60_90_SHARED_GRAMMAR_FREEZE_DELTA.md)
+- [PULSE_SHARED_GRAMMAR_FREEZE_DELTA.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PULSE_SHARED_GRAMMAR_FREEZE_DELTA.md)
+- [LEADERSHIP_SCAN_SHARED_GRAMMAR_FREEZE_DELTA.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/LEADERSHIP_SCAN_SHARED_GRAMMAR_FREEZE_DELTA.md)
 - [QUESTION_TO_SIGNAL_MAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/QUESTION_TO_SIGNAL_MAP.md)
 - [RAW_FIELD_BOUNDARY_REGISTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RAW_FIELD_BOUNDARY_REGISTER.md)
 - [REPORT_GENERATOR_RUNTIME_BOUNDARY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_GENERATOR_RUNTIME_BOUNDARY.md)
@@ -88,6 +97,7 @@ Voor de huidige fix-tranche:
 - [EXTERNAL_DOCS_ALIGNMENT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/EXTERNAL_DOCS_ALIGNMENT.md)
 - [EXTERNAL_DOCS_REGISTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/EXTERNAL_DOCS_REGISTER.md)
 - [EXTERNAL_DOCS_TOP10_SYNC_SHORTLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/EXTERNAL_DOCS_TOP10_SYNC_SHORTLIST.md)
+- [PORTFOLIO_CANON_STATUS_2026-04-22.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/PORTFOLIO_CANON_STATUS_2026-04-22.md)
 - [ROADMAP_DATA.yaml](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_DATA.yaml)
 - [ROADMAP_SYNC_README.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_SYNC_README.md)
 
@@ -145,6 +155,7 @@ Voor de huidige fix-tranche:
 ## Praktische regels
 
 - Per traject is er bij voorkeur precies een actief source-of-truth planbestand.
+- Productdraden met gedeelde taal- of metricimpact volgen eerst `SHARED_GRAMMAR_INDICATOR_EXECUTIVE_FREEZE.md` en daarna hun freeze-delta.
 - Review- en live-testdocumenten verhuizen na afronding naar `docs/archive`.
 - Nieuwe planbestanden horen bij voorkeur in `docs/active`, behalve een repo-breed commandfile zoals `SCALABILITY_FIX_PROGRAM_PLAN.md`.
 - Gebruik het prompt-systeem in `docs/prompts` voor nieuwe analyse-, plan- en uitvoeringstrajecten.

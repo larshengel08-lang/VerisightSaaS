@@ -2,7 +2,7 @@ import type { DashboardViewModel } from '@/lib/products/shared/types'
 import { FACTOR_LABELS } from '@/lib/types'
 
 const SIGNAL_BANDS_TEXT =
-  'Laag, midden en hoog pulsignal geven alleen de scherpte van deze huidige cycle weer. Gebruik deze banding als reviewhulp op groepsniveau, samen met de vorige vergelijkbare Pulse waar die veilig leesbaar is, niet als trendbewijs of individuele score.'
+  'Laag, midden en hoog pulsignaal laten alleen zien hoe scherp de huidige Pulse als groepsread opent. Gebruik deze banding samen met de vorige vergelijkbare Pulse waar die veilig leesbaar is, niet als trendbewijs of individuele score.'
 
 function getTopFactors(factorAverages: Record<string, number>) {
   return Object.entries(factorAverages)
@@ -41,10 +41,6 @@ export function buildPulseDashboardViewModel(args: {
   const topFactorLabel = topFactors[0] ? FACTOR_LABELS[topFactors[0].factor] ?? topFactors[0].factor : 'de actief gemeten werkfactor'
   const secondFactorLabel = topFactors[1] ? FACTOR_LABELS[topFactors[1].factor] ?? topFactors[1].factor : null
   const signalState = getSignalState(args.averageSignal)
-  const stayIntentText =
-    typeof args.stayIntent === 'number'
-      ? `De huidige richtingsvraag staat op ${args.stayIntent.toFixed(1)}/10.`
-      : 'De richtingsvraag wordt zichtbaar zodra er responses zijn.'
 
   if (!args.hasMinDisplay) {
     return {
@@ -56,8 +52,8 @@ export function buildPulseDashboardViewModel(args: {
         title: 'Eerste reviewvraag',
         body:
           args.pendingCount > 0
-            ? `Welke ${args.pendingCount} respondent(en) ontbreken nog om een eerste bruikbare Pulse-snapshot te lezen?`
-            : 'Welke extra responses zijn nog nodig voordat deze Pulse veilig als groepssnapshot gelezen kan worden?',
+            ? `Welke ${args.pendingCount} respondent(en) ontbreken nog om een eerste bruikbare Pulse-read te openen?`
+            : 'Welke extra responses zijn nog nodig voordat deze Pulse veilig als groepsread gelezen kan worden?',
         tone: 'amber',
       },
       nextStep: {
@@ -65,14 +61,14 @@ export function buildPulseDashboardViewModel(args: {
         body:
           args.pendingCount > 0
             ? `Stuur eerst de resterende ${args.pendingCount} respondent(en) een reminder. Pulse wordt pas bruikbaar zodra er genoeg groepsinput is.`
-            : 'Gebruik deze Pulse nog niet als managementreview. Bouw eerst genoeg responses op voor veilige groepsduiding.',
+            : 'Gebruik deze Pulse nog niet als managementread. Bouw eerst genoeg responses op voor veilige groepsduiding.',
         tone: 'amber',
       },
       focusSectionIntro:
         'Zodra er genoeg responses zijn helpt Pulse vooral om sneller te kiezen welk werkspoor nu review of bijsturing vraagt.',
-      followThroughTitle: 'Van snapshot naar review',
+      followThroughTitle: 'Van eerste read naar review',
       followThroughIntro:
-        'De vaste reviewroute verschijnt zodra Pulse veilig genoeg is om als groepssnapshot te lezen.',
+        'De vaste vervolgroute verschijnt zodra Pulse veilig genoeg is om als compacte groepsread te openen.',
       followThroughCards: [],
     }
   }
@@ -90,12 +86,12 @@ export function buildPulseDashboardViewModel(args: {
       },
       nextStep: {
         title: 'Voorzichtig reviewen',
-        body: `Gebruik ${topFactorLabel.toLowerCase()} alvast als eerste gesprekshaak, maar behandel deze Pulse nog als indicatieve momentopname totdat minimaal 10 responses binnen zijn.`,
+        body: `Gebruik ${topFactorLabel.toLowerCase()} alvast als eerste gesprekshaak, maar behandel deze Pulse nog als indicatieve groepsread totdat minimaal 10 responses binnen zijn.`,
         tone: 'amber',
       },
       focusSectionIntro:
         'Gebruik de vragen hieronder nu vooral om te bepalen welke beperkte review of koerscorrectie als eerste logisch is.',
-      followThroughTitle: 'Van snapshot naar review',
+      followThroughTitle: 'Van eerste read naar review',
       followThroughIntro:
         'Bij een indicatieve Pulse blijft de route bewust compact: kies een eerste reviewspoor, eigenaar en checkmoment, maar claim nog geen hard patroon.',
       followThroughCards: [
@@ -116,7 +112,7 @@ export function buildPulseDashboardViewModel(args: {
         },
         {
           title: 'Reviewmoment',
-          body: 'Herlees deze snapshot zodra minimaal 10 responses binnen zijn of de eerste correctie zichtbaar is.',
+          body: 'Herlees deze Pulse zodra minimaal 10 responses binnen zijn of de eerste correctie zichtbaar is.',
           tone: 'amber',
         },
       ],
@@ -125,14 +121,14 @@ export function buildPulseDashboardViewModel(args: {
 
   const signalRead =
     signalState === 'hoog'
-      ? `Deze Pulse laat een scherp reviewsignaal zien. ${topFactorLabel} vraagt nu zichtbare bespreking of bijsturing.`
+      ? `Deze Pulse opent als scherp reviewsignaal. ${topFactorLabel} vraagt nu zichtbare bespreking of bijsturing.`
       : signalState === 'midden'
-        ? `Deze Pulse laat een gemengd maar duidelijk aandachtssignaal zien. ${topFactorLabel} verdient nu de eerste managementreview.`
-        : `Deze Pulse oogt overwegend stabiel. Gebruik vooral ${topFactorLabel.toLowerCase()} als monitoringsspoor om vast te houden wat werkt.`
+        ? `Deze Pulse opent als compact reviewsignaal. ${topFactorLabel} verdient nu de eerste managementreview.`
+        : `Deze Pulse oogt overwegend stabiel. Gebruik vooral ${topFactorLabel.toLowerCase()} als eerste monitoringsspoor om vast te houden wat werkt.`
 
   const reviewDirection = secondFactorLabel
-    ? `${topFactorLabel} en ${secondFactorLabel.toLowerCase()} vormen samen de eerste reviewrichting voor deze cycle.`
-    : `${topFactorLabel} vormt de eerste reviewrichting voor deze cycle.`
+    ? `${topFactorLabel} en ${secondFactorLabel.toLowerCase()} vormen samen de compacte reviewvraag van deze cycle.`
+    : `${topFactorLabel} vormt de compacte reviewvraag van deze cycle.`
   const repeatMotionText =
     signalState === 'hoog'
       ? 'Doe een volgende Pulse pas nadat een concrete correctie of ontlasting zichtbaar is gestart.'
@@ -147,15 +143,15 @@ export function buildPulseDashboardViewModel(args: {
         title: 'Managementread nu',
         value:
           signalState === 'hoog'
-            ? 'Scherp reviewsignaal'
+            ? 'Directe herijking nodig'
             : signalState === 'midden'
-              ? 'Aandachtssignaal'
+              ? 'Compact reviewsignaal'
               : 'Overwegend stabiel',
         body: signalRead,
         tone: signalState === 'hoog' ? 'amber' : signalState === 'laag' ? 'emerald' : 'blue',
       },
       {
-        title: 'Primair werkspoor',
+        title: 'Eerste reviewspoor',
         value: topFactorLabel,
         body: reviewDirection,
         tone: 'blue',
@@ -163,31 +159,19 @@ export function buildPulseDashboardViewModel(args: {
       {
         title: 'Eerste eigenaar',
         value: 'HR + leidinggevende',
-        body: 'Beleg deze Pulse eerst bij HR met de betrokken leidinggevende. Gebruik pas daarna een bredere sponsor- of MT-escalatie als het spoor dat echt vraagt.',
+        body: 'Beleg deze herijking eerst bij HR met de betrokken leidinggevende en houd de route klein totdat een bredere escalatie echt nodig blijkt.',
         tone: 'emerald',
       },
       {
-        title: 'Volgende check',
+        title: 'Reviewmoment',
         value: '30-45 dagen',
-        body: repeatMotionText,
+        body: `${repeatMotionText} Gebruik de vorige vergelijkbare Pulse alleen als bounded hercheck en niet als brede trendlaag.`,
         tone: signalState === 'hoog' ? 'amber' : 'blue',
-      },
-      {
-        title: 'Richting nu',
-        value: typeof args.stayIntent === 'number' ? `${args.stayIntent.toFixed(1)}/10` : 'Nog niet zichtbaar',
-        body: stayIntentText,
-        tone: typeof args.stayIntent === 'number' && args.stayIntent < 5.5 ? 'amber' : 'emerald',
-      },
-      {
-        title: 'Boundary',
-        value: 'Begrensde vergelijking',
-        body: 'Gebruik deze Pulse als bounded reviewlaag. Vergelijking over tijd tonen we alleen met de vorige vergelijkbare Pulse en voldoende data, niet als breed effectbewijs.',
-        tone: 'blue',
       },
     ],
     managementBlocks: [
       {
-        title: 'Wat vraagt nu directe review?',
+        title: 'Wat vraagt nu directe aandacht?',
         intro: signalRead,
         items: [
           `${topFactorLabel} is nu het eerste werkspoor.`,
@@ -196,59 +180,46 @@ export function buildPulseDashboardViewModel(args: {
         tone: 'blue',
       },
       {
-        title: 'Welk besluit hoort nu eerst?',
+        title: 'Wat moet nu worden herijkt?',
         items: [
-          `Beslis of ${topFactorLabel.toLowerCase()} nu een korte correctie vraagt of eerst een gerichte teamreview.`,
-          'Kies een kleine, zichtbare volgende stap die in de komende 30-45 dagen opnieuw bekeken kan worden.',
+          `Kies rond ${topFactorLabel.toLowerCase()} nu één compacte herijking in plaats van een brede vervolgroute.`,
+          'Beleg direct de eigenaar en zet een bounded hercheck klaar voor de eerstvolgende managementcheck.',
         ],
         tone: 'amber',
-      },
-      {
-        title: 'Wie trekt dit en wanneer kijk je opnieuw?',
-        items: [
-          'Eerste eigenaar: HR met betrokken leidinggevende.',
-          'Leg direct een reviewmoment vast voor de eerstvolgende managementcheck en gebruik een volgende Pulse alleen als bounded hercheck.',
-        ],
-        tone: 'emerald',
       },
     ],
     profileCards: [
       {
         title: 'Leeswijze',
         value: 'Reviewlaag',
-        body: 'Pulse is bedoeld als compacte managementhandoff: actuele snapshot, begrensde vergelijking met de vorige Pulse en een expliciete eerstvolgende check.',
+        body: 'Pulse is bedoeld als compacte managementhandoff: actuele groepsread, begrensde vergelijking met de vorige vergelijkbare Pulse en een expliciete bounded hercheck.',
         tone: 'blue',
       },
     ],
     primaryQuestion: {
       title: 'Eerste managementvraag',
-      body: `Wat moet er nu als eerste gebeuren rond ${topFactorLabel.toLowerCase()} zodat de volgende Pulse-cycle een zichtbaar beter of stabieler beeld kan laten zien?`,
+      body: `Welke compacte review- of herijkingsvraag vraagt nu direct aandacht rond ${topFactorLabel.toLowerCase()}?`,
       tone: 'blue',
     },
     nextStep: {
-      title: 'Beleg correctie en hercheck',
-      body: `Gebruik ${topFactorLabel.toLowerCase()} als eerste reviewspoor, beleg direct de eigenaar en spreek nu al af wanneer je deze correctie opnieuw checkt met een managementreview of volgende Pulse.`,
+      title: 'Beleg herijking',
+      body: `Gebruik ${topFactorLabel.toLowerCase()} als eerste reviewspoor, kies één compacte herijking en spreek direct af wanneer de bounded hercheck plaatsvindt.`,
       tone: signalState === 'hoog' ? 'amber' : 'emerald',
     },
     focusSectionIntro:
-      'Gebruik de vragen en playbooks hieronder om van een Pulse-read direct naar een beperkte maar expliciete correctie- en hercheckroute te gaan.',
-    followThroughTitle: 'Van Pulse-snapshot naar actie',
+      'Gebruik de vragen en playbooks hieronder om van een Pulse-read direct naar een beperkte herijking en bounded hercheck te gaan.',
+    followThroughTitle: 'Van herijking naar bounded hercheck',
     followThroughIntro:
-      'De waarde van Pulse zit in een snelle en begrensde follow-up: eerst kiezen, dan corrigeren, dan bewust opnieuw kijken.',
+      'De waarde van Pulse zit in een korte vervolgroute: eerst kiezen, dan herijken, dan bewust opnieuw kijken.',
     followThroughCards: [
-      {
-        title: 'Prioriteit nu',
-        body: `${topFactorLabel} is het eerste spoor voor deze cycle.`,
-        tone: 'blue',
-      },
       {
         title: 'Eerste gesprek',
         body: `Bespreek binnen 2 weken wat ${topFactorLabel.toLowerCase()} op dit moment precies onder druk zet of juist stabiel houdt.`,
         tone: 'blue',
       },
       {
-        title: 'Wie moet aan tafel',
-        body: 'HR, betrokken leidinggevende en waar nodig de sponsor van het actieplan.',
+        title: 'Eerste stap',
+        body: 'Kies een kleine, zichtbare correctie die binnen 30 dagen merkbaar moet zijn.',
         tone: 'amber',
       },
       {
@@ -257,19 +228,9 @@ export function buildPulseDashboardViewModel(args: {
         tone: 'emerald',
       },
       {
-        title: 'Eerste actie',
-        body: 'Kies een kleine, zichtbare correctie die binnen 30 dagen merkbaar moet zijn.',
-        tone: 'amber',
-      },
-      {
         title: 'Reviewmoment',
         body: 'Plan direct een hercheck binnen 30-45 dagen en gebruik een volgende Pulse alleen als bounded check op de gekozen correctie.',
         tone: 'emerald',
-      },
-      {
-        title: 'Wanneer geen nieuwe Pulse',
-        body: 'Ga niet automatisch door naar nog een Pulse als de vraag eerst bredere duiding, extra verificatie of lokalisatie vraagt.',
-        tone: 'amber',
       },
     ],
   }

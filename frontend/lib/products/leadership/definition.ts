@@ -7,7 +7,7 @@ export const leadershipScanDefinition: ScanDefinition = {
   signalLabelLower: 'leadershipsignaal',
   summaryLabel: 'Managementrichting',
   methodologyText:
-    'Leadership Scan is een begrensde managementcontextscan bovenop een al zichtbaar people-signaal. Het product bundelt een compacte werkbelevingscheck, geselecteerde leiderschaps- en werkfactoren en een managementrichtingsvraag tot een geaggregeerde management-context triage: een group-level read die helpt bepalen welke managementcontext eerst duiding, eigenaar en begrensde eerste stap vraagt. In deze eerste waves blijft Leadership Scan bewust group-level only, zonder named leaders, hierarchylogica of 360-output.',
+    'Leadership Scan is een begrensde managementcontextscan bovenop een al zichtbaar people-signaal. Het product bundelt een compacte werkbelevingscheck, geselecteerde leiderschaps- en werkfactoren en een managementrichtingsvraag tot een geaggregeerde management-context triage: een read op groepsniveau die helpt bepalen welke managementcontext eerst duiding, eigenaar en begrensde eerste stap vraagt. In deze eerste waves blijft Leadership Scan bewust op groepsniveau, zonder named leaders, hierarchylogica of 360-output.',
   whatItIsText:
     'Een compacte scan op groepsniveau die laat zien hoe leiding, prioritering en werkcontext nu samenkomen rond een bestaand people-signaal.',
   whatItIsNotText:

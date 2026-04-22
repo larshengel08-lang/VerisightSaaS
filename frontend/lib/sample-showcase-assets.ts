@@ -5,7 +5,7 @@ export type SampleShowcaseStatus =
   | 'internal demo support'
   | 'legacy archive'
 
-export type SampleShowcaseProduct = 'exit' | 'retention' | 'portfolio' | 'shared'
+export type SampleShowcaseProduct = 'exit' | 'retention' | 'onboarding' | 'portfolio' | 'shared'
 
 export type SampleShowcaseKind = 'pdf' | 'preview' | 'image'
 
@@ -104,6 +104,22 @@ export const SAMPLE_SHOWCASE_ASSETS: SampleShowcaseAsset[] = [
       'Preview op basis van dezelfde managementtaal en voorbeeldstructuur als het actieve RetentieScan-sample-pdf.',
     trustFrame:
       'Benadrukt verification-first lezing, groepsgrenzen en v1-bewijsstatus zonder predictorframing.',
+  },
+  {
+    id: 'onboarding-preview',
+    label: 'Onboarding 30-60-90 productspecifieke preview',
+    product: 'onboarding',
+    kind: 'preview',
+    status: 'buyer-facing active',
+    publicHref: '/producten/onboarding-30-60-90#preview',
+    intendedUse:
+      'Buyer-facing prooflaag op de Onboarding-productpagina om de buyer een volwassen managementdeliverable te laten zien zonder sample-pdf of journey-oversell.',
+    evidenceTier: 'deliverable_proof',
+    buyerUse: 'Gebruik als deliverable-proof en trustproof voor Onboarding; niet als case-proof, klantresultaat of automation-bewijs.',
+    claimBoundary:
+      'Preview op basis van dezelfde managementtaal en bounded architectuur als live Onboarding-output; geen journey-engine, geen automation-suite en geen multi-checkpoint claim.',
+    trustFrame:
+      'Benadrukt vroege landing, eerste eigenaar, eerste actie en reviewgrens in een single-checkpoint managementread op groepsniveau.',
   },
   {
     id: 'segment-deep-dive-visual',

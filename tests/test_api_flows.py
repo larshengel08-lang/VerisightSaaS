@@ -502,17 +502,22 @@ def test_pulse_survey_submit_persists_snapshot_summary(client, db_session: Sessi
     assert stored.full_result["pulse_summary"]["pulse_signal_score"] == stored.risk_score
 
 
-def test_pulse_report_route_is_not_yet_supported(client, db_session: Session):
+def test_pulse_report_route_returns_pdf(client, db_session: Session):
     org = _create_org(db_session, api_key="pulse-report-key")
     campaign = _create_campaign(db_session, org, name="Pulse Report", scan_type="pulse")
+    respondent = _create_respondent(db_session, campaign, email="pulse-report@example.com", department="People")
+    submit = client.post("/survey/submit", json=_pulse_payload(respondent.token))
+
+    assert submit.status_code == 200
 
     response = client.get(
         f"/api/campaigns/{campaign.id}/report",
         headers={"x-api-key": "pulse-report-key"},
     )
 
-    assert response.status_code == 422
-    assert "Pulse" in response.json()["detail"]
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert response.content.startswith(b"%PDF")
 
 
 def test_team_survey_submit_persists_local_summary(client, db_session: Session):

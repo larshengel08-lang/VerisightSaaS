@@ -1,5 +1,8 @@
 # REPORT_TO_ACTION_PROGRAM_PLAN.md
 
+Status: active implementation plan, non-canon.
+Precedence: dit plan beschrijft de report-to-action tranche, maar bepaalt niet zelfstandig report truth, structure canon of methodology canon. Bij conflict wint `docs/reporting/*`.
+
 ## 1. Summary
 
 Dit traject scherpt de stap van rapport en dashboard naar concreet managementgedrag aan binnen Verisight, op basis van de actuele repo-implementatie in `backend/report.py`, de productspecifieke report-content modules, de dashboard campaign page, `RecommendationList`, `ActionPlaybookList`, preview-copy en parity-tests.
@@ -153,14 +156,14 @@ Dependency: Milestone 2 and Milestone 3
 ### Milestone 5 - QA, Acceptance And Prompt-System Closure
 Dependency: Milestone 4
 
-- [x] Uitgevoerd op 2026-04-15: tests uitgebreid, source-of-truth vastgelegd en checklist bijgewerkt.
+- [x] Uitgevoerd op 2026-04-15: tests uitgebreid, owner-document vastgelegd en checklist bijgewerkt.
 
 #### Tasks
 - [x] Backend scoring/paritytests uitgebreid op follow-through contractvelden.
 - [x] Frontend dashboard-, onboarding- en previewtests uitgebreid op routeconsistentie.
 - [x] PDF smoke-validatie uitgebreid zodat de nieuwe late report-secties daadwerkelijk worden meegenomen.
 - [x] Relevante frontend lint- en buildvalidatie uitgevoerd op de aangepaste paden.
-- [x] `REPORT_TO_ACTION_PROGRAM_PLAN.md` vastgelegd als actieve source of truth.
+- [x] `REPORT_TO_ACTION_PROGRAM_PLAN.md` vastgelegd als actieve owner-document.
 - [x] `PROMPT_CHECKLIST.xlsx` bijgewerkt voor `REPORT_TO_ACTION_PROGRAM_PLANMODE_PROMPT.md`.
 
 #### Definition of done
@@ -197,7 +200,7 @@ Dependency: Milestone 4
 - [x] Gerichte lint- en buildvalidatie toegevoegd op de aangepaste frontendlaag.
 
 ### Prompt-system closure
-- [x] Deze file toegevoegd als actieve source of truth.
+- [x] Deze file toegevoegd als actieve owner-document.
 - [x] Prompt-checklist bijgewerkt naar `Voldaan`.
 
 ## 4. Current Product Risks
@@ -228,7 +231,7 @@ Dependency: Milestone 4
 
 ## 8. Defaults Chosen
 
-- [x] `docs/active/REPORT_TO_ACTION_PROGRAM_PLAN.md` is de actieve source of truth voor dit traject.
+- [x] `docs/active/REPORT_TO_ACTION_PROGRAM_PLAN.md` is het actieve owner-document voor dit traject.
 - [x] Bestaand `MANAGEMENT_ACTIONABILITY`-werk bleef basis; deze tranche bouwt daarop voort.
 - [x] ExitScan blijft het primaire product en kreeg de scherpste route van rapport naar managementactie.
 - [x] RetentieScan blijft complementair en verification-first.
