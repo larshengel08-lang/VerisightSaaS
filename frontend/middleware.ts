@@ -45,7 +45,7 @@ export async function middleware(request: NextRequest) {
   })
 
   if (canonicalRedirectUrl) {
-    return NextResponse.redirect(canonicalRedirectUrl, 308)
+    return NextResponse.redirect(canonicalRedirectUrl, { status: 308 })
   }
 
   // Rate limiting op auth-routes
