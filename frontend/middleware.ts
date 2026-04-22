@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { getCanonicalHostRedirectUrl } from '@/lib/canonical-host'
 import {
   isPublicApiRoutePath,
   isPublicRoutePath,
@@ -37,6 +38,20 @@ function cleanupRateLimit() {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const canonicalRedirectUrl = getCanonicalHostRedirectUrl({
+    hostname: request.headers.get('x-forwarded-host') ?? request.headers.get('host') ?? request.nextUrl.hostname,
+    pathname,
+    search: request.nextUrl.search,
+  })
+
+  if (canonicalRedirectUrl) {
+    return new NextResponse(null, {
+      status: 308,
+      headers: {
+        Location: canonicalRedirectUrl,
+      },
+    })
+  }
 
   // Rate limiting op auth-routes
   const isAuthRoute = pathname === '/login' || pathname === '/signup' || pathname.startsWith('/auth')
