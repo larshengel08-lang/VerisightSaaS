@@ -112,7 +112,7 @@ def score_submission(
         ),
         "named_leader_distinction": (
             "Leadership Scan is geen named leader model, geen manager ranking en geen 360-laag. "
-            "De output blijft group-level only en identity-light."
+            "De output blijft op groepsniveau en identity-light."
         ),
         "interpretation_boundary": (
             "Gebruik Leadership Scan als geaggregeerde management-context triage, niet als bewijs van individuele "

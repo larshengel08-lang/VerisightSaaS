@@ -7,10 +7,11 @@ import {
   computeRetentionSupplementalAverages,
 } from './page-helpers'
 import { getScanDefinition } from '@/lib/scan-definitions'
+import type { SurveyResponse } from '@/lib/types'
 
 describe('dashboard page helpers field semantics', () => {
   it('reads the signal alias before falling back to risk_score', () => {
-    const responses = [
+    const responses: SurveyResponse[] = [
       {
         id: 'resp-1',
         respondent_id: 'r-1',
@@ -43,7 +44,7 @@ describe('dashboard page helpers field semantics', () => {
   })
 
   it('reads the direction signal alias before falling back to stay_intent_score', () => {
-    const responses = [
+    const responses: SurveyResponse[] = [
       {
         id: 'resp-1',
         respondent_id: 'r-1',

@@ -174,7 +174,7 @@ function buildLeadershipInterpretation(args: {
     : 'Lees de managementrichtingsvraag mee als tweede contextlaag.'
   const contextBody =
     args.strength === 'pattern'
-      ? 'Leadership Scan blijft een geaggregeerde managementsnapshot van deze campaign. Named leaders, hierarchy en 360-logica blijven buiten scope.'
+      ? 'Leadership Scan blijft een geaggregeerde managementread van deze campaign. Named leaders, hierarchy en 360-logica blijven buiten scope.'
       : 'Leadership Scan is vanaf 5 responses indicatief leesbaar, maar blijft methodisch voorzichtig totdat er minimaal 10 responses binnen zijn.'
 
   if (args.managementState === 'stable_management_context') {
@@ -194,10 +194,10 @@ function buildLeadershipInterpretation(args: {
       directionTone: directionRead.directionTone,
       boundaryValue: 'Geen quality-claim',
       boundaryBody:
-        'Gebruik dit stabiele leadershipbeeld niet als bewijs van individuele leiderschapskwaliteit, named leader kwaliteit of performance. Het blijft een group-level managementread.',
+        'Gebruik dit stabiele leadershipbeeld niet als bewijs van individuele leiderschapskwaliteit, named leader kwaliteit of performance. Het blijft een managementread op groepsniveau.',
       profileValue: args.strength === 'pattern' ? 'Borggerichte managementread' : 'Indicatieve managementread',
       profileBody:
-        'Leadership Scan is bedoeld als geaggregeerde management-context triage: compacte groepssnapshot, eerste borgspoor en expliciete boundary tegen named leader, 360- en individuele claims.',
+        'Leadership Scan is bedoeld als geaggregeerde management-context triage: compacte groepsread, eerste borgspoor en expliciete boundary tegen named leader, 360- en individuele claims.',
       primaryQuestionTitle: 'Eerste borgvraag',
       primaryQuestionBody: `Wat moet er nu expliciet behouden blijven rond ${args.topFactorLabel.toLowerCase()} zodat dit stabiele managementbeeld ook in de volgende review overeind blijft?`,
       nextStepTitle: 'Beleg borging nu',
@@ -206,10 +206,10 @@ function buildLeadershipInterpretation(args: {
           ? `Gebruik ${playbook.owner.toLowerCase()} om vast te leggen wat in ${args.topFactorLabel.toLowerCase()} nu expliciet behouden moet blijven.`
           : `Gebruik HR en een passende MT-sponsor om vast te leggen wat in ${args.topFactorLabel.toLowerCase()} nu expliciet behouden moet blijven.`,
       focusSectionIntro:
-        'Gebruik de vragen en playbooks hieronder nu vooral om te borgen wat in de huidige managementcontext werkt, zonder daar een bredere leiderschapsclaim van te maken.',
-      followThroughTitle: 'Van Leadership Scan naar borgreview',
+        'Gebruik de vragen en checks hieronder nu vooral om te borgen wat in de huidige managementcontext werkt, zonder daar een bredere leiderschapsclaim van te maken.',
+      followThroughTitle: 'Van Leadership Scan naar begrensde check',
       followThroughIntro:
-        'Bij een stabiel leadershipbeeld zit de waarde in een compacte borgroute: benoem wat werkt, leg vast wie het bewaakt en spreek een bounded reviewmoment af.',
+        'Bij een stabiel leadershipbeeld zit de waarde in een kleine support-check: benoem wat werkt, leg vast wat bewaakt blijft en spreek een bounded reviewmoment af.',
       priorityBody: `${args.topFactorLabel} is nu vooral een borgspoor voor deze managementcontext.`,
       firstConversationBody:
         playbook?.validate ??
@@ -261,7 +261,7 @@ function buildLeadershipInterpretation(args: {
       directionTone: directionRead.directionTone,
       boundaryValue: 'Geen named leaders',
       boundaryBody:
-        'Zelfs bij een scherp attention-signaal blijft Leadership Scan group-level only. Gebruik dit niet als named leader oordeel, performanceclaim of bewijs dat causaliteit al vaststaat.',
+        'Zelfs bij een scherp attention-signaal blijft Leadership Scan op groepsniveau. Gebruik dit niet als named leader oordeel, performanceclaim of bewijs dat causaliteit al vaststaat.',
       profileValue: args.strength === 'pattern' ? 'Corrigerende managementread' : 'Indicatieve corrigerende read',
       profileBody:
         'Leadership Scan blijft een compacte management-context triage: scherp genoeg voor een eerste verificatie of correctie, maar niet voor named leaders, 360, individuele claims of hierarchy-output.',
@@ -273,10 +273,10 @@ function buildLeadershipInterpretation(args: {
           ? `${playbook.owner} trekt nu dit managementspoor. ${playbook.actions[0]}`
           : `Gebruik HR en een passende MT-sponsor om nu een kleine, zichtbare correctie rond ${args.topFactorLabel.toLowerCase()} te beleggen.`,
       focusSectionIntro:
-        'Gebruik de vragen en playbooks hieronder om van dit managementsignaal snel naar een kleine, zichtbare correctie met expliciete owner en bounded review te gaan.',
-      followThroughTitle: 'Van Leadership Scan naar eerste managementcorrectie',
+        'Gebruik de vragen en checks hieronder om van dit managementsignaal snel naar een kleine, zichtbare correctie met expliciete owner en bounded review te gaan.',
+      followThroughTitle: 'Van Leadership Scan naar begrensde check',
       followThroughIntro:
-        'De waarde van een scherp leadershipsignaal zit hier in snelle en begrensde opvolging: eerst duiden, dan een kleine correctie, daarna bewust opnieuw toetsen.',
+        'De waarde van een scherp leadershipsignaal zit hier in snelle en begrensde opvolging: eerst duiden, dan een kleine correctie, daarna bewust klein blijven toetsen.',
       priorityBody: `${args.topFactorLabel} is nu het eerste corrigerende managementspoor voor deze campaign.`,
       firstConversationBody:
         playbook?.validate ??
@@ -339,10 +339,10 @@ function buildLeadershipInterpretation(args: {
         ? `${playbook.owner} trekt nu het eerste managementspoor. ${playbook.actions[0]}`
         : `Gebruik HR en een passende MT-sponsor om ${args.topFactorLabel.toLowerCase()} nu eerst begrensd te verifieren of te corrigeren.`,
     focusSectionIntro:
-      'Gebruik de vragen en playbooks hieronder om van dit gemengde leadershipbeeld naar een begrensde managementhuddle en eerste verificatie of correctie te gaan.',
-    followThroughTitle: 'Van Leadership Scan naar managementhuddle',
+      'Gebruik de vragen en checks hieronder om van dit gemengde leadershipbeeld naar een begrensde managementhuddle en eerste verificatie of correctie te gaan.',
+    followThroughTitle: 'Van Leadership Scan naar begrensde check',
     followThroughIntro:
-      'De waarde van Leadership Scan zit hier in snelle en begrensde opvolging: eerst duiden, dan verifieren of corrigeren, en daarna expliciet kiezen of bredere duiding logischer is.',
+      'De waarde van Leadership Scan zit hier in snelle en begrensde opvolging: eerst duiden, dan verifieren of corrigeren, en daarna expliciet kiezen of Leadership klein moet blijven.',
     priorityBody: `${args.topFactorLabel} is nu het eerste managementspoor voor deze campaign.`,
     firstConversationBody:
       playbook?.validate ??
@@ -422,7 +422,7 @@ export function buildLeadershipDashboardViewModel(args: {
         },
         {
           title: 'Boundary',
-          value: 'Group-level only',
+          value: 'Alleen groepsniveau',
           body: 'Leadership Scan blijft in deze wave bewust op groepsniveau. Named leaders of individuele duiding blijven dicht.',
           tone: 'blue',
         },
@@ -432,7 +432,7 @@ export function buildLeadershipDashboardViewModel(args: {
           body:
             args.pendingCount > 0
               ? `Nodig eerst de resterende ${args.pendingCount} respondent(en) uit of stuur een reminder.`
-              : 'Bouw eerst genoeg responses op voor een veilige managementsnapshot.',
+              : 'Bouw eerst genoeg responses op voor een veilige managementread.',
           tone: 'blue',
         },
       ],
@@ -460,7 +460,7 @@ export function buildLeadershipDashboardViewModel(args: {
       },
       focusSectionIntro:
         'Zodra er genoeg responses zijn helpt Leadership Scan vooral om te kiezen welke managementcontext eerst duiding of verificatie vraagt.',
-      followThroughTitle: 'Van eerste snapshot naar managementhuddle',
+      followThroughTitle: 'Van eerste managementread naar managementhuddle',
       followThroughIntro:
         'De vaste managementroute verschijnt zodra Leadership Scan veilig genoeg is om als groepsread te openen.',
       followThroughCards: [],
@@ -573,9 +573,9 @@ export function buildLeadershipDashboardViewModel(args: {
       },
       {
         title: 'Handoffvorm',
-        value: 'Owner -> actie -> review',
+        value: 'Duiding -> check -> grens',
         body:
-          'Leadership wordt pas managementwaardig als groepsread, eerste eigenaar, eerste bounded actie en reviewgrens als een expliciete handoff worden gelezen.',
+          'Leadership blijft alleen geloofwaardig als begrensde support-read wanneer duiding, eerstvolgende check en reviewgrens expliciet samen worden gelezen.',
         tone: managementState === 'stable_management_context' ? 'emerald' : 'blue',
       },
     ],

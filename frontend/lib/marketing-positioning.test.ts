@@ -115,11 +115,19 @@ describe('ExitScan positioning copy', () => {
 
   it('keeps Pulse framed as a bounded review route instead of a diagnostic layer', () => {
     const pulseProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'pulse')
-    const pulseOutput = pulseProduct?.serviceOutput.toLowerCase()
+    const pulseDescription = pulseProduct?.description.toLowerCase() ?? ''
+    const pulseOutput = pulseProduct?.serviceOutput?.toLowerCase() ?? ''
 
     expect(pulseProduct).toBeTruthy()
-    expect(pulseOutput).toContain('begrensde vergelijkingsduiding')
+    expect(pulseDescription).toContain('compacte reviewroute')
+    expect(pulseDescription).toContain('eerdere managementread')
+    expect(pulseDescription).not.toContain('baseline')
+    expect(pulseDescription).not.toContain('effectcheck')
+    expect(pulseDescription).not.toContain('ritme')
+    expect(pulseOutput).toContain('compacte managementhandoff')
+    expect(pulseOutput).toContain('bounded hercheck')
     expect(pulseOutput).not.toContain('delta-uitleg')
+    expect(pulseOutput).not.toContain('ritmesignaal')
   })
 })
 

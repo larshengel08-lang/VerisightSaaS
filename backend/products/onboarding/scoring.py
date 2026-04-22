@@ -117,7 +117,7 @@ def score_submission(
         ),
         "interpretation_boundary": (
             "Gebruik dit als managementread van een enkel meetmoment. Geen journey-engine, "
-            "geen hire-date model, geen retentievoorspeller en geen individuele onboardingbeoordeling."
+            "geen hire-date model, geen later uitkomstmodel en geen individuele onboardingbeoordeling."
         ),
     }
 

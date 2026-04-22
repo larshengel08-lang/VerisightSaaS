@@ -5,6 +5,9 @@ from pathlib import Path
 from backend.products.exit.report_content import (
     get_management_summary_payload as get_exit_management_summary_payload,
 )
+from backend.products.pulse.report_content import (
+    get_management_summary_payload as get_pulse_management_summary_payload,
+)
 from backend.products.retention.report_content import (
     get_management_summary_payload as get_retention_management_summary_payload,
 )
@@ -43,8 +46,13 @@ def test_report_management_payloads_expose_executive_contract_fields():
         avg_stay_intent=4.8,
         retention_theme_title="Werkdruk en planning",
     )
+    pulse_payload = get_pulse_management_summary_payload(
+        top_factor_labels=["Werkbelasting", "Leiderschap"],
+        top_factor_keys=["workload", "leadership"],
+        avg_stay_intent=4.8,
+    )
 
-    for payload in (exit_payload, retention_payload):
+    for payload in (exit_payload, retention_payload, pulse_payload):
         assert payload["executive_title"]
         assert payload["executive_intro"]
         assert payload["trust_note_title"]
@@ -56,6 +64,18 @@ def test_report_management_payloads_expose_executive_contract_fields():
         assert len(payload["highlight_cards"]) >= 3
         assert any(card["title"] == "Eerste besluit" for card in payload["highlight_cards"])
         assert any(card["title"] == "Eerste eigenaar" for card in payload["highlight_cards"])
+
+
+def test_pulse_report_content_stays_bounded_and_non_parity_like():
+    pulse_report_content = _read("backend/products/pulse/report_content.py")
+
+    assert "compacte managementhandoff" in pulse_report_content
+    assert "bounded hercheck" in pulse_report_content
+    assert "frictiescore" not in pulse_report_content
+    assert "retentiesignaal" not in pulse_report_content
+    assert "vertrekintentie" not in pulse_report_content
+    assert "bevlogenheid" not in pulse_report_content
+    assert "segmentanalyse" not in pulse_report_content
 
 
 def test_report_hypotheses_include_owner_and_actionability():

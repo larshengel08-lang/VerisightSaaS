@@ -351,7 +351,7 @@ export default async function CampaignPage({ params }: Props) {
         : stats.scan_type === 'team'
           ? 'Lokale duiding en eerste verificatie'
           : stats.scan_type === 'onboarding'
-            ? 'Checkpoint duiding en eerste vervolgstap'
+            ? 'Vroege landingsduiding en eerste vervolgstap'
             : stats.scan_type === 'leadership'
               ? 'Managementcontext en eerste verificatie'
         : 'Vertrekduiding en managementgesprek'
@@ -359,11 +359,11 @@ export default async function CampaignPage({ params }: Props) {
     stats.scan_type === 'retention'
       ? 'Deze laag volgt dezelfde lijn als het rapport: waar staat behoud onder druk, waarom telt dat bestuurlijk en wat moet eerst geverifieerd worden.'
       : stats.scan_type === 'pulse'
-        ? 'Deze laag vertaalt Pulse naar een bestuurlijk leesbare momentopname: wat vraagt nu aandacht, wat moet je als eerste bijsturen en welke review hoort hier direct achteraan.'
+        ? 'Deze laag vertaalt Pulse naar een bestuurlijk leesbare compacte managementread: welke review- of herijkingsvraag vraagt nu direct aandacht, wat moet je als eerste bijsturen en wanneer hoort daar een bounded hercheck bij.'
         : stats.scan_type === 'team'
           ? 'Deze laag vertaalt TeamScan naar een bestuurlijk leesbare lokale read: welke afdelingen vallen op, wat moet je eerst toetsen en welke lokale context vraagt nu als eerste aandacht.'
           : stats.scan_type === 'onboarding'
-            ? 'Deze laag vertaalt onboarding naar een bestuurlijk leesbaar checkpointbeeld: wat valt nu op in vroege integratie, wat moet je eerst toetsen en welke beperkte correctie hoort hier direct achteraan.'
+            ? 'Deze laag vertaalt onboarding naar een bestuurlijk leesbare landingsduiding: waar stokt de vroege landing, wat telt nu bestuurlijk en welke beperkte correctie hoort hier direct achteraan.'
             : stats.scan_type === 'leadership'
               ? 'Deze laag vertaalt Leadership Scan naar een bestuurlijk leesbare managementread: welke context valt op, wat moet je eerst toetsen en welke begrensde managementstap hoort hier direct achteraan.'
         : 'Deze laag opent met de Frictiescore als bestuurlijk leesbare managementsamenvatting: wat keert terug, waar lijkt werkfrictie beinvloedbaar en waar moet management eerst doorvragen.'
@@ -378,7 +378,7 @@ export default async function CampaignPage({ params }: Props) {
       : stats.scan_type === 'team'
         ? 'Lokaliseren -> verifieren -> begrenzen'
         : stats.scan_type === 'onboarding'
-          ? 'Checkpoint -> corrigeren -> opnieuw toetsen'
+          ? 'Vroege landing -> corrigeren -> opnieuw toetsen'
           : stats.scan_type === 'leadership'
             ? 'Duiden -> verifieren -> begrenzen'
       : stats.scan_type === 'retention'
@@ -386,11 +386,11 @@ export default async function CampaignPage({ params }: Props) {
         : 'Terugblik -> duiden -> verbeteren'
   const methodologyBadgeLabel =
     stats.scan_type === 'pulse'
-      ? 'Snapshotcontext'
+      ? 'Reviewcontext'
       : stats.scan_type === 'team'
         ? 'Lokale context'
         : stats.scan_type === 'onboarding'
-          ? 'Checkpointcontext'
+          ? 'Vroege landing'
           : stats.scan_type === 'leadership'
             ? 'Managementcontext'
       : stats.scan_type === 'retention'
@@ -493,26 +493,26 @@ export default async function CampaignPage({ params }: Props) {
         ? {
             summaryTone: 'blue' as const,
             summarySignalLabel: 'Onboardingsignaal',
-            summaryContextLabel: 'Checkpoint-read · enkel meetmoment',
+            summaryContextLabel: 'Vroege landing · bounded peer-read',
             summaryContextTone: 'blue' as const,
             summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
             summaryLeadDescription:
-              'Lees onboarding eerst als vroege lifecycle-read: welke succesvoorwaarden vallen op, welke frictie is nu zichtbaar en welke beperkte correctie hoort bij dit checkpoint.',
-            summaryCardEyebrow: 'Checkpointspoor',
-            promotedSummaryCards: 2,
-            driverTitle: 'Onboardingsignaal en checkpointcontext',
+              'Lees onboarding eerst als bounded peer-read: waar stokt de vroege landing in de eerste 30-60-90 dagen, welke frictie is nu zichtbaar en welke beperkte correctie hoort daar direct bij.',
+            summaryCardEyebrow: 'Landingsspoor',
+            promotedSummaryCards: 1,
+            driverTitle: 'Onboardingsignaal en vroege landing',
             driverDescription:
-              'Gebruik deze laag om het actuele checkpointbeeld gecontroleerd te verdiepen zonder onboarding te verwarren met client onboarding of een volledige 30-60-90-journey.',
+              'Gebruik deze laag om het actuele landingsbeeld gecontroleerd te verdiepen zonder onboarding te verwarren met client onboarding of een volledige 30-60-90-journey.',
             driverIntro:
-              'Start bij de checkpointread en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke vroege factor nu eerst aandacht vraagt.',
-            driverAsideLabel: hasEnoughData ? 'Checkpointread beschikbaar' : 'Wacht op meer data',
+              'Start bij de landingsduiding en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke vroege factor nu eerst aandacht vraagt.',
+            driverAsideLabel: hasEnoughData ? 'Landingsduiding beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
-            signalTabLabel: 'Checkpointbeeld',
+            signalTabLabel: 'Landingsbeeld',
             signalTabTitle: 'Onboardingsignaal op groepsniveau',
             signalTabDescription:
-              'Laat zien hoe breed en hoe scherp het huidige checkpointsignaal zich over de groep verdeelt zonder dit als journey- of retentieclaim te lezen.',
-            factorTabLabel: 'Checkpointdrivers',
+              'Laat zien hoe breed en hoe scherp het huidige onboardingsignaal zich over de groep verdeelt zonder dit als journey- of retentieclaim te lezen.',
+            factorTabLabel: 'Landingsdrivers',
             factorTabTitle: 'Werkfactoren achter vroege frictie',
             factorTabDescription:
               'Gebruik de scherpste werkfactoren als eerste managementspoor om te bepalen waar nieuwe instroom nu meer steun, duidelijkheid of inbedding nodig heeft.',
@@ -521,16 +521,16 @@ export default async function CampaignPage({ params }: Props) {
             supplementalDescription:
               'Deze laag laat zien hoe autonomie, competentie en verbondenheid onder het huidige onboardingcheckpoint liggen en welke vroege context daardoor meer spanning laat zien.',
             actionTitle: 'Waar eerst op handelen',
-            focusQuestionTitle: 'Prioritaire checkpointvragen',
+            focusQuestionTitle: 'Prioritaire landingsvragen',
             focusQuestionDescription:
-              'Start met de factoren die het checkpointbeeld het scherpst kleuren en gebruik de vragen om te bepalen wat eerst getoetst moet worden voordat een correctieroute wordt gekozen.',
-            playbookTitle: 'Checkpointplaybooks en eerste correctie',
+              'Start met de factoren die de vroege landing het scherpst kleuren en gebruik de vragen om te bepalen wat eerst getoetst moet worden voordat een correctieroute wordt gekozen.',
+            playbookTitle: 'Eerste correctie en borging',
             playbookDescription:
-              'Deze playbooks vormen de uitvoerlaag onder de gekozen correctieroute. Ze helpen van verificatie naar een beperkte eerste correctie en een logisch volgend checkpoint te gaan.',
-            routeTitle: 'Van onboardingread naar managementroute',
+              'Deze uitvoerlaag helpt van verificatie naar een beperkte eerste correctie en een logisch volgend checkpoint te gaan, zonder de managementhoofdlijn zwaarder te maken dan nodig.',
+            routeTitle: 'Van landingsduiding naar eerste managementkeuze',
             routeDescription:
               'Deze laag brengt eerste managementgebruik, de gekozen correctie en het logische vervolgmoment samen zonder onboarding te verwarren met een brede lifecycle-suite.',
-            routeBadgeLabel: 'Bounded vervolgroute',
+            routeBadgeLabel: 'Begrensde peer-route',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een later checkpoint logisch, vraagt deze instroomfrictie eerst extra verificatie of hoort de vraag thuis in een andere productvorm?',
@@ -539,18 +539,18 @@ export default async function CampaignPage({ params }: Props) {
         ? {
             summaryTone: 'blue' as const,
             summarySignalLabel: 'Leadershipsignaal',
-            summaryContextLabel: 'Managementread · group-level only',
+            summaryContextLabel: 'Bounded support-read · group-level only',
             summaryContextTone: 'blue' as const,
             summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
             summaryLeadDescription:
-              'Lees Leadership Scan eerst als geaggregeerde managementcontext-read: welke leiderschaps- of prioriteringsfactor valt op, welke context vraagt nu duiding en welke kleine managementstap hoort daar logisch bij.',
+              'Lees Leadership Scan eerst als begrensde support-read: welke managementcontext kleurt het bestaande people-signaal mee en welke kleine check hoort daar nu logisch bij.',
             summaryCardEyebrow: 'Managementspoor',
-            promotedSummaryCards: 2,
-            driverTitle: 'Leadershipsignaal en managementcontext',
+            promotedSummaryCards: 1,
+            driverTitle: 'Managementcontext in beeld',
             driverDescription:
               'Gebruik deze laag om het actuele leadershipbeeld gecontroleerd te verdiepen zonder Leadership Scan te verwarren met TeamScan, segment deep dive of een named leader view.',
             driverIntro:
-              'Start bij de managementread en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke context eerst duiding verdient.',
+              'Start bij de begrensde read en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke context eerst een kleine check verdient.',
             driverAsideLabel: hasEnoughData ? 'Managementread beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
@@ -569,17 +569,17 @@ export default async function CampaignPage({ params }: Props) {
             actionTitle: 'Waar eerst op handelen',
             focusQuestionTitle: 'Prioritaire managementvragen',
             focusQuestionDescription:
-              'Start met de factoren die het leadershipbeeld het scherpst kleuren en gebruik de vragen om te bepalen wat eerst getoetst moet worden voordat een managementroute wordt gekozen.',
-            playbookTitle: 'Managementplaybooks en eerste verificatie',
+              'Start met de factoren die het leadershipbeeld het scherpst kleuren en gebruik de vragen om te bepalen wat eerst getoetst moet worden voordat een begrensde vervolgstap wordt gekozen.',
+            playbookTitle: 'Begrensde checks en eerste vervolgstap',
             playbookDescription:
-              'Deze playbooks vormen de uitvoerlaag onder de gekozen managementroute. Ze helpen van duiding naar een begrensde eerste stap te gaan zonder named leader output te openen.',
-            routeTitle: 'Van Leadership Scan naar managementroute',
+              'Deze checks vormen de uitvoerlaag onder de gekozen bounded support-read. Ze helpen van duiding naar een kleine vervolgstap te gaan zonder named leader output te openen.',
+            routeTitle: 'Van leadershipread naar begrensde vervolgstap',
             routeDescription:
-              'Deze laag brengt eerste managementgebruik, de gekozen verificatie of correctie en het logische reviewmoment samen zonder Leadership Scan te verwarren met een hierarchy- of 360-suite.',
+              'Deze laag brengt de gekozen check, kleine vervolgstap en reviewgrens samen zonder Leadership Scan te laten lezen als een quasi-peer route.',
             routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
-              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een begrensde managementroute logisch, vraagt de vraag toch bredere duiding of hoort Leadership Scan juist niet verder op te schalen binnen deze context?',
+              'Gebruik het eerste reviewmoment om bewust te kiezen: blijft een kleine bounded check genoeg, vraagt de vraag toch bredere duiding of hoort Leadership Scan hier juist te stoppen?',
           }
       : stats.scan_type === 'exit'
         ? {
@@ -637,11 +637,11 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze eerste laag om het primaire managementsignaal en het eerste werkspoor snel scherp te krijgen, voordat een route, eigenaar en hercheckmoment worden gekozen.',
             summaryCardEyebrow: 'Pulse handoff',
             promotedSummaryCards: 2,
-            driverTitle: 'Pulse snapshot en reviewdelta',
+            driverTitle: 'Pulse groepsread en bounded vergelijking',
             driverDescription:
               'Gebruik deze laag om het actuele Pulse-beeld gecontroleerd te verdiepen zonder de managementhoofdlijn kwijt te raken.',
             driverIntro:
-              'Gebruik de tabs hieronder om tussen snapshot, factoren, aanvullende lagen en reviewdelta te wisselen zonder de hoofdlijn van de managementread kwijt te raken.',
+              'Gebruik de tabs hieronder om tussen groepsread, factoren, aanvullende lagen en bounded vergelijking te wisselen zonder de hoofdlijn van de managementread kwijt te raken.',
             driverAsideLabel: hasEnoughData ? 'Pulse read beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
             driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
@@ -910,7 +910,7 @@ export default async function CampaignPage({ params }: Props) {
               ? [
                   {
                     id: 'trend',
-                    label: 'Reviewdelta',
+                    label: 'Vergelijking',
                     content: (
                       <PulseTrendSection
                         comparison={pulseComparison}

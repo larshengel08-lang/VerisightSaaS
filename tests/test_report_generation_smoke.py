@@ -86,6 +86,68 @@ def _add_response(
     db_session.add_all([respondent, response])
 
 
+def _add_pulse_response(
+    db_session: Session,
+    *,
+    campaign: Campaign,
+    idx: int,
+    department: str,
+    role_level: str,
+    risk_score: float,
+    risk_band: str,
+    stay_intent_score: int,
+) -> None:
+    respondent = Respondent(
+        campaign=campaign,
+        department=department,
+        role_level=role_level,
+        completed=True,
+        completed_at=datetime.now(timezone.utc),
+        exit_month=None,
+        annual_salary_eur=52000 + idx * 500,
+        email=f"pulse{idx}@voorbeeld.nl",
+    )
+    response = SurveyResponse(
+        respondent=respondent,
+        tenure_years=1.0 + idx * 0.1,
+        exit_reason_category=None,
+        exit_reason_code=None,
+        stay_intent_score=stay_intent_score,
+        sdt_raw={"B1": 4, "B5": 3, "B9": 4},
+        sdt_scores={
+            "autonomy": round(5.4 + (idx % 2) * 0.2, 1),
+            "competence": round(5.8 + (idx % 2) * 0.2, 1),
+            "relatedness": round(5.6 + (idx % 2) * 0.2, 1),
+            "sdt_total": round(5.6 + (idx % 2) * 0.2, 1),
+        },
+        org_raw={"leadership_1": 3, "leadership_2": 4, "leadership_3": 3, "growth_1": 2, "growth_2": 3, "growth_3": 2, "workload_1": 2, "workload_2": 3, "workload_3": 2},
+        org_scores={
+            "leadership": round(5.8 - (idx % 3) * 0.2, 1),
+            "growth": round(4.8 - (idx % 2) * 0.2, 1),
+            "workload": round(4.5 - (idx % 3) * 0.2, 1),
+        },
+        pull_factors_raw={},
+        open_text_raw="Meer rust in prioriteiten en opvolging zou nu het meeste verschil maken.",
+        uwes_raw={},
+        uwes_score=None,
+        turnover_intention_raw={},
+        turnover_intention_score=None,
+        risk_score=risk_score,
+        risk_band=risk_band,
+        preventability=None,
+        replacement_cost_eur=None,
+        full_result={
+            "active_factors": ["leadership", "growth", "workload"],
+            "pulse_summary": {
+                "snapshot_type": "current_cycle",
+                "pulse_signal_score": risk_score,
+                "pulse_signal_band": risk_band,
+            },
+        },
+    )
+    db_session.add_all([respondent, response])
+
+
 def _build_campaign(
     db_session: Session,
     *,
@@ -572,3 +634,56 @@ def test_generate_retention_report_uses_product_correct_language_and_clean_appen
     assert "samenkomen in het retentiesignaal" in pages[10].lower()
     assert "samenkomen in de retentiesignaal" not in pages[10].lower()
     assert "opgenomen in het retentiesignaal" in pages[10].lower()
+
+
+def test_generate_pulse_report_smoke_keeps_bounded_management_handoff(db_session: Session):
+    org = Organization(name="Pulse Org", slug="pulse-org", contact_email="people@pulse.nl")
+    db_session.add(org)
+    db_session.flush()
+
+    campaign = _build_campaign(
+        db_session,
+        organization=org,
+        name="Pulse April 2026",
+        scan_type="pulse",
+        created_at=datetime.now(timezone.utc),
+        enabled_modules=["leadership", "growth", "workload"],
+    )
+
+    for idx in range(10):
+        _add_pulse_response(
+            db_session,
+            campaign=campaign,
+            idx=idx,
+            department="People" if idx < 5 else "Operations",
+            role_level="manager" if idx < 4 else "specialist",
+            risk_score=6.1 + (idx % 3) * 0.2,
+            risk_band="MIDDEN" if idx < 7 else "HOOG",
+            stay_intent_score=4 if idx < 6 else 5,
+        )
+
+    db_session.commit()
+
+    pdf_bytes = generate_campaign_report(campaign.id, db_session)
+
+    assert pdf_bytes.startswith(b"%PDF")
+    pages = _extract_pdf_pages(pdf_bytes)
+    full_text = " ".join(pages)
+
+    assert len(pages) == 8
+    assert "RetentieScan" not in pages[0]
+    assert "Pulse" in pages[0]
+    assert "Compacte managementhandoff" in full_text
+    assert "Drivers & prioriteitenbeeld" in full_text
+    assert "Kernsignalen in samenhang" in full_text
+    assert "Pulsesignaal" in full_text
+    assert "Eerste route & managementactie" in full_text
+    assert "Volgende Pulse-cycle pas na expliciete review" in full_text
+    assert "Compacte methodiek / leeswijzer" in full_text
+    assert "Technische verantwoording" in full_text
+    assert "frictiescore" not in full_text.lower()
+    assert "retentiesignaal" not in full_text.lower()
+    assert "vertrekintentie" not in full_text.lower()
+    assert "bevlogenheid" not in full_text.lower()
+    assert "hoofdredenen van vertrek" not in full_text.lower()
+    assert "segmentanalyse" not in full_text.lower()

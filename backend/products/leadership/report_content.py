@@ -99,41 +99,41 @@ def get_management_summary_payload(
     )
 
     trust_note = (
-        "Lees Leadership Scan als geaggregeerde management-context triage op groepsniveau en group-level only. "
+        "Lees Leadership Scan als geaggregeerde management-context triage op groepsniveau. "
         f"{LEADERSHIP_THRESHOLD_NOTE} "
         "Het rapport helpt bepalen welke managementcontext nu eerst duiding, eigenaar en een begrensde eerste stap vraagt. "
         "Dit is geen named leader model, geen manager ranking, geen 360-tool en geen performance-instrument."
     )
 
     executive_intro = (
-        f"Leadership Scan vertaalt deze campaign naar een compacte managementread. "
-        f"Op dit moment ligt het eerste managementspoor vooral in {top_factor_text}. "
-        "Gebruik het rapport om de eerste managementhuddle te richten, een eigenaar te benoemen en een bounded verificatie of correctie te kiezen."
+        "Leadership Scan blijft een compacte managementread bovenop een bestaand people-signaal. "
+        f"In deze campaign kleurt {top_factor_text} nu het sterkst welke managementcontext eerst een begrensde check vraagt. "
+        "Gebruik het rapport om die context te duiden, klein te houden en expliciet op groepsniveau te houden."
     )
 
     return {
         "section_title": "Management-handoff",
         "distribution_title": "Verdeling van het leadershipsignaal",
         "findings_title": "Scherpste managementlezing",
-        "executive_title": "Managementcontext-duiding voor HR en MT",
+        "executive_title": "Begrensde managementcontext",
         "executive_intro": executive_intro,
         "trust_note_title": "Leeswijzer voor management",
         "trust_note": trust_note,
         "boardroom_title": "Management-handoff",
         "boardroom_intro": (
-            "Deze handoff helpt snel zien wat dit leadershipbeeld nu bestuurlijk betekent, "
-            "welk managementspoor voorop staat en wanneer Leadership Scan juist begrensd moet blijven."
+            "Deze handoff houdt Leadership Scan bewust compact: "
+            "welke managementcontext kleurt het bestaande people-signaal nu mee en welke eerstvolgende check volstaat?"
         ),
         "boardroom_cards": [
             {
                 "title": "Managementread nu",
                 "value": management_band_label(band="MIDDEN"),
-                "body": f"De scherpste managementspanning of borging zit nu vooral in {top_factor_text}. Gebruik dat als eerste managementspoor.",
+                "body": f"De scherpste managementspanning of borging zit nu vooral in {top_factor_text}. Gebruik dat als eerste contextspoor.",
             },
             {
-                "title": "Primair managementspoor",
+                "title": "Managementcontext nu",
                 "value": top_factor_labels[0] if top_factor_labels else "Nog geen topfactor",
-                "body": f"{top_factor_text.capitalize()} kleuren nu het sterkst welke beperkte managementhuddle of correctie het eerst aandacht vraagt.",
+                "body": f"{top_factor_text.capitalize()} kleuren nu het sterkst welke beperkte managementcheck het eerst aandacht vraagt.",
             },
             {
                 "title": "Managementrichting",
@@ -141,45 +141,30 @@ def get_management_summary_payload(
                 "body": direction_body,
             },
             {
-                "title": "Eerste eigenaar",
-                "value": first_owner,
-                "body": "Beleg direct wie de eerste managementhuddle trekt, zodat Leadership Scan niet blijft hangen als nette contextsnapshot zonder eigenaar.",
-            },
-            {
-                "title": "Reviewgrens",
-                "value": "Volgende review",
-                "body": review_moment,
+                "title": "Eerstvolgende check",
+                "value": "Begrensde vervolgstap",
+                "body": first_action,
             },
         ],
         "boardroom_watchout_title": "Wat je hier niet uit moet concluderen",
         "boardroom_watchout": (
             "Lees Leadership Scan niet als named leader oordeel, manager ranking, 360-laag, performance-oordeel of bewijs van individuele leiderschapskwaliteit. "
-            "De waarde zit in een begrensde group-level managementread."
+            "De waarde zit in een begrensde managementread op groepsniveau."
         ),
         "highlight_cards": [
             {
                 "title": "Leadershipsignaal nu",
                 "value": management_band_label(band="MIDDEN"),
-                "body": f"Gebruik {top_factor_text} als eerste spoor voor de managementhuddle.",
+                "body": f"Gebruik {top_factor_text} als eerste spoor voor een begrensde managementcheck.",
             },
             {
-                "title": "Primair managementspoor",
+                "title": "Managementcontext",
                 "value": top_factor_value,
-                "body": direction_body,
+                "body": f"{top_factor_text.capitalize()} kleuren nu het sterkst welke context het bestaande people-signaal mee verklaart.",
             },
             {
-                "title": "Eerste besluit",
-                "value": top_factor_labels[0] if top_factor_labels else "Nog geen topfactor",
-                "body": first_decision,
-            },
-            {
-                "title": "Eerste eigenaar",
-                "value": first_owner,
-                "body": "Deze combinatie trekt de eerste handoff en bewaakt tegelijk de bounded group-level productgrens.",
-            },
-            {
-                "title": "Eerste bounded stap",
-                "value": "Managementactie",
+                "title": "Eerstvolgende check",
+                "value": "Begrensde vervolgstap",
                 "body": first_action,
             },
             {
@@ -192,7 +177,7 @@ def get_management_summary_payload(
             {
                 "title": "Managementbetekenis",
                 "body": (
-                    "Gebruik dit rapport als group-level managementread van deze campaign. "
+                    "Gebruik dit rapport als managementread op groepsniveau van deze campaign. "
                     "Het helpt kiezen welke managementcontext nu eerst aandacht vraagt, niet om named leaders of individuele kwaliteit te claimen."
                 ),
             },
@@ -218,7 +203,7 @@ def get_management_summary_payload(
 def get_methodology_payload() -> dict[str, Any]:
     return {
         "intro_text": (
-            "Dit rapport vertaalt Leadership Scan naar een formeel leesbare management-handoff. "
+            "Deze compacte managementread houdt Leadership Scan bewust klein. "
             "De methodiek blijft compact en bounded: Leadership Scan helpt een geaggregeerde managementcontext te structureren, "
             "niet om named leaders, 360-logica of performance-uitspraken te openen. "
             f"{LEADERSHIP_THRESHOLD_NOTE}"
@@ -226,7 +211,7 @@ def get_methodology_payload() -> dict[str, Any]:
         "method_text": (
             "Leadership Scan berekent per response een leadershipsignaal op een schaal van 1 tot 10. "
             "Dat signaal combineert drie korte contextitems, de actieve leiderschaps- en werkfactoren in deze campaign "
-            "en een managementrichtingsvraag. Een hogere score betekent een scherper group-level aandachtssignaal "
+            "en een managementrichtingsvraag. Een hogere score betekent een scherper aandachtssignaal op groepsniveau "
             "dat een expliciete managementhuddle en begrensde vervolgstap vraagt."
         ),
         "weight_rows": [
@@ -239,7 +224,7 @@ def get_methodology_payload() -> dict[str, Any]:
             ["Band", "Score", "Betekenis voor de organisatie"],
             ["Laag", "< 4.5", "Overwegend stabiel leadershipbeeld; vooral borgen wat werkt en beperkt herlezen op een later reviewmoment."],
             ["Midden", "4.5-7.0", "Managementbeeld vraagt bounded verificatie of kleine correctie voordat je groter maakt wat het product zegt."],
-            ["Hoog", ">= 7.0", "Scherp managementsignaal dat nu een expliciete eigenaar, kleine correctie en reviewgrens verdient."],
+            ["Hoog", ">= 7.0", "Scherp managementsignaal dat nu een kleine, zichtbare check vraagt zonder named leader-zwaarte te openen."],
         ],
         "trust_rows": [
             ["Wat dit product wel is", TRUST_CONTRACT["what_it_is"]],
@@ -256,7 +241,7 @@ def get_signal_page_payload(*, retention_signal_profile: str | None = None, **_:
         "title": "Leadershipsignaal en managementcontext",
         "intro": (
             "Deze pagina laat zien hoe het leadershipsignaal, de managementrichtingsvraag en de scherpste managementfactoren samenkomen. "
-            "Lees dit als bounded group-level managementread, niet als named leader oordeel of 360-output."
+            "Lees dit als bounded managementread op groepsniveau, niet als named leader oordeel of 360-output."
         ),
         "summary_title": "Managementcontext in samenhang",
         "signal_profile_title": "Hoe lees je dit managementbeeld?",
@@ -292,7 +277,7 @@ def get_signal_page_cards_payload(
         },
         {
             "title": "Productgrens",
-            "value": "Group-level only",
+            "value": "Alleen groepsniveau",
             "body": "Leadership Scan blijft een geaggregeerde managementread zonder named leaders, hierarchy, 360-output of performanceframing.",
         },
         {
@@ -356,7 +341,7 @@ def get_hypothesis_rows(
         items.append(
             {
                 "title": f"Hypothese: {top_factor_labels[0].lower()} vraagt nu eerst managementduiding",
-                "body": "Leadership Scan laat zien welk managementspoor nu het eerste bestuurlijke gesprek verdient, zonder de route groter te maken dan group-level only.",
+                "body": "Leadership Scan laat zien welk managementspoor nu het eerste bestuurlijke gesprek verdient, zonder de route groter te maken dan een bounded read op groepsniveau.",
                 "question": f"Welke kleine managementstap hoort nu eerst bij {top_factor_labels[0].lower()}?",
                 "action": "Plan nu een beperkte managementhuddle en leg een eerste eigenaar, actie en reviewgrens vast.",
                 "owner": "HR lead met MT-sponsor",
@@ -388,11 +373,11 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
     return {
         "section_title": "Vervolgstappen",
         "intro_text": (
-            "Gebruik Leadership Scan om snel te kiezen wat dit managementbeeld nu bestuurlijk vraagt, wie de eerste handoff trekt en wanneer de route juist group-level only moet blijven."
+            "Gebruik Leadership Scan om één begrensde check te kiezen die past bij het bestaande people-signaal en de huidige managementcontext."
         ),
-        "session_title": "Eerste managementhuddle na oplevering",
+        "session_title": "Eerste begrensde check na oplevering",
         "session_intro": (
-            "Houd de eerste sessie klein en bounded: kies eerst het primaire managementspoor, benoem daarna eigenaar, eerste stap en reviewgrens."
+            "Houd de eerste sessie klein en bounded: kies eerst het primaire contextspoor, spreek daarna een kleine check af en leg de reviewgrens vast."
         ),
         "first_decision": first_decision,
         "first_owner": first_owner,
@@ -421,7 +406,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         ],
         "session_watchout_title": "Leesgrens bij de eerste managementhuddle",
         "session_watchout": (
-            "Gebruik deze sessie om te duiden, begrenzen en opvolgen. Leadership Scan is group-level only, geen named leader route, geen 360-tool en geen performance-oordeel."
+            "Gebruik deze sessie om te duiden, begrenzen en opvolgen. Leadership Scan blijft op groepsniveau, geen named leader route, geen 360-tool en geen performance-oordeel."
         ),
         "steps": [
             {
@@ -433,8 +418,8 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
                 "number": "2",
                 "title": "Beleg direct een bounded eigenaar",
                 "body": (
-                    f"Benoem expliciet wie dit managementspoor trekt: {first_owner}. "
-                    "Zo blijft Leadership Scan een bestuurlijke handoff in plaats van alleen een nette contextsnapshot."
+                    f"Benoem expliciet wie deze begrensde check trekt: {first_owner}. "
+                    "Zo blijft Leadership Scan een compacte support-read in plaats van een open managementroute."
                 ),
             },
             {
