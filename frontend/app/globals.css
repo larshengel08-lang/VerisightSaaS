@@ -382,7 +382,7 @@ details > summary::-webkit-details-marker {
   .marketing-route-card {
     border: 1px solid var(--border);
     background: rgba(255, 252, 247, 0.96);
-    box-shadow: none;
+    box-shadow: 0 16px 34px -30px rgba(16, 24, 32, 0.16);
     border-radius: 1rem;
     padding: 1.35rem;
   }
@@ -432,7 +432,7 @@ details > summary::-webkit-details-marker {
     overflow: hidden;
     border: 1px solid var(--border);
     background: rgba(255, 252, 247, 0.98);
-    box-shadow: none;
+    box-shadow: 0 26px 56px -42px rgba(16, 24, 32, 0.22);
     border-radius: 1.08rem;
   }
 

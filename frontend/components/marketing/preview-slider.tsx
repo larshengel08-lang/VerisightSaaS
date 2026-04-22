@@ -181,15 +181,19 @@ function PreviewCanvas({ variant, current }: { variant: ReportPreviewVariant; cu
 export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
   const [current, setCurrent] = useState(0)
   const copy = COPY[variant]
+  const compactIntro =
+    variant === 'portfolio'
+      ? 'Blader door dashboard, samenvatting, aandachtspunten en volgende stap in dezelfde managementlijn.'
+      : copy.intro
 
   return (
     <div className="marketing-preview-shell">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3C8D8A]">{copy.label}</p>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">{copy.intro}</p>
+          <p className="mt-2 max-w-[42rem] text-[0.94rem] leading-6 text-slate-600">{compactIntro}</p>
         </div>
-        <span className="rounded-[0.58rem] border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        <span className="rounded-[0.58rem] border border-slate-200 bg-slate-50 px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-slate-500">
           {copy.demoLabel}
         </span>
       </div>
@@ -202,7 +206,7 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
             onClick={() => setCurrent(index)}
             className={`rounded-[0.72rem] px-4 py-2.5 text-sm font-semibold transition-all ${
               index === current
-                ? 'border border-[#234B57] bg-[#234B57] text-white shadow-[0_12px_30px_-18px_rgba(35,75,87,0.65)]'
+                ? 'border border-[#17343C] bg-[#17343C] text-white shadow-[0_16px_34px_-20px_rgba(23,52,60,0.72)] ring-1 ring-[#17343C]/20'
                 : 'border border-[#E5E0D6] bg-white text-slate-600 hover:border-[#3C8D8A] hover:text-[#234B57]'
             }`}
           >

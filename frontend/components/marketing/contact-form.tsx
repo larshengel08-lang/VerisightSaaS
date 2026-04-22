@@ -180,7 +180,7 @@ export function ContactForm({
 
   const labelClass = isLight ? 'text-slate-700' : 'text-slate-200'
   const inputClass = isLight
-    ? 'border-slate-200 bg-slate-50 text-slate-950 placeholder:text-slate-400 focus:border-[#3C8D8A] focus:ring-[#3C8D8A]/25'
+    ? 'border-[#E6DED2] bg-white/88 text-slate-950 placeholder:text-slate-400 focus:border-[#3C8D8A] focus:ring-[#3C8D8A]/20'
     : 'border-white/10 bg-slate-950/40 text-white placeholder:text-slate-400 focus:border-[#DCEFEA] focus:ring-[#3C8D8A]/30'
   const helperClass = isLight ? 'text-slate-500' : 'text-slate-300'
   const successClass = isLight
@@ -209,7 +209,7 @@ export function ContactForm({
             required
             value={form.name}
             onChange={(event) => updateField('name', event.target.value)}
-            className={`block min-w-0 w-full rounded-[0.9rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
             placeholder="Voor- en achternaam"
           />
         </div>
@@ -224,7 +224,7 @@ export function ContactForm({
             required
             value={form.workEmail}
             onChange={(event) => updateField('workEmail', event.target.value)}
-            className={`block min-w-0 w-full rounded-[0.9rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
             placeholder="naam@organisatie.nl"
           />
         </div>
@@ -239,7 +239,7 @@ export function ContactForm({
             required
             value={form.organization}
             onChange={(event) => updateField('organization', event.target.value)}
-            className={`block min-w-0 w-full rounded-[0.9rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
             placeholder="Naam organisatie"
           />
         </div>
@@ -253,7 +253,7 @@ export function ContactForm({
             required
             value={form.employeeCount}
             onChange={(event) => updateField('employeeCount', event.target.value)}
-            className={`block min-w-0 w-full rounded-[0.9rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           >
             <option value="" disabled>
               Kies een range
@@ -274,7 +274,7 @@ export function ContactForm({
             required
             value={form.routeInterest}
             onChange={(event) => updateField('routeInterest', normalizeContactRouteInterest(event.target.value))}
-            className={`block min-w-0 w-full rounded-[0.9rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           >
             {CONTACT_ROUTE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -293,7 +293,7 @@ export function ContactForm({
             required
             value={form.desiredTiming}
             onChange={(event) => updateField('desiredTiming', normalizeContactDesiredTiming(event.target.value))}
-            className={`block min-w-0 w-full rounded-[0.9rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           >
             {CONTACT_DESIRED_TIMING_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -314,7 +314,7 @@ export function ContactForm({
           rows={5}
           value={form.currentQuestion}
           onChange={(event) => updateField('currentQuestion', event.target.value)}
-          className={`block min-w-0 w-full rounded-[0.9rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+          className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           placeholder="Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar managementbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven."
         />
       </div>
@@ -364,9 +364,9 @@ export function ContactForm({
         <button
           type="submit"
           disabled={loading}
-          className={`inline-flex min-w-[14rem] items-center justify-center rounded-[0.9rem] px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${buttonClass}`}
+          className={`inline-flex min-w-[14rem] items-center justify-center rounded-[0.82rem] px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${buttonClass}`}
         >
-          {loading ? 'Verstuur bericht...' : submitLabel}
+          {loading ? 'Bezig met plannen...' : submitLabel}
         </button>
       </div>
 

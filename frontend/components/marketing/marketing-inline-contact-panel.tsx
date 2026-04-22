@@ -27,11 +27,12 @@ export function MarketingInlineContactPanel({
 }: MarketingInlineContactPanelProps) {
   const hasHeading = Boolean(eyebrow || title)
   const hasBody = Boolean(body)
+  const shellClass = minimal
+    ? 'overflow-hidden rounded-[1.22rem] border border-[rgba(221,215,203,0.74)] bg-[rgba(255,252,247,0.88)] p-6 md:p-7'
+    : 'overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[rgba(255,252,247,0.96)] p-7 md:p-9'
+
   return (
-    <div
-      id={id}
-      className="overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[rgba(255,252,247,0.96)] p-7 md:p-9"
-    >
+    <div id={id} className={shellClass}>
       {(hasHeading || badge != null) && (
         <div className={`mb-6 flex flex-wrap items-center justify-between gap-3 ${minimal ? '' : 'border-b border-[var(--border)]/80 pb-5'}`}>
           {hasHeading ? (
@@ -55,7 +56,7 @@ export function MarketingInlineContactPanel({
           )}
         </div>
       )}
-      {hasBody ? <p className="max-w-[42rem] text-[0.98rem] leading-8 text-[var(--text)]">{body}</p> : null}
+      {hasBody ? <p className="max-w-[42rem] text-[0.94rem] leading-7 text-[var(--text)]">{body}</p> : null}
       <div className={hasBody ? 'mt-8' : ''}>
         <Suspense
           fallback={

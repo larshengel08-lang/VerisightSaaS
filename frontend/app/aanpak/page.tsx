@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
 import { MarketingHeroIntro } from '@/components/marketing/marketing-hero'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingSection } from '@/components/marketing/marketing-section'
@@ -9,40 +10,45 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Aanpak',
   description:
-    'Van intake tot eerste actie: de Verisight-aanpak in een vaste route met voorspelbare doorlooptijd.',
+    'Van eerste gesprek naar dashboard en rapport in enkele weken, via een vaste en begeleide route.',
   alternates: { canonical: '/aanpak' },
 }
 
 const steps = [
   {
     n: '01',
-    t: 'Intake',
-    d: 'We bepalen samen de vraag, scope en doelgroep. Wat moet het rapport het management laten doen?',
-    result: 'Vraag en scope zijn scherp.',
+    t: 'Kennismaking',
+    d: 'We bespreken welke route nu het best past en wat u van de eerste uitkomst wilt kunnen gebruiken.',
   },
   {
     n: '02',
-    t: 'Setup',
-    d: 'Verisight zet de route klaar, inclusief planning, uitnodiging en aansluiting op het HR-proces.',
-    result: 'Uitvraag staat klaar.',
+    t: 'Inrichten',
+    d: 'Verisight zet de route klaar, plant het moment en zorgt dat de uitvraag goed aansluit op de organisatie.',
   },
   {
     n: '03',
-    t: 'Datacollectie',
-    d: 'Begeleide uitvraag met aandacht voor respons, anonimiteit en het juiste moment in het jaar.',
-    result: 'Respons bouwt gecontroleerd op.',
+    t: 'Inzicht ophalen',
+    d: 'We halen de signalen op en bouwen toe naar een leesbaar beeld dat op groepsniveau bruikbaar is.',
   },
   {
     n: '04',
-    t: 'Analyse en rapportage',
-    d: 'We duiden patronen in managementtaal: wat speelt, waarom telt dit en wat eerst te doen.',
-    result: 'Rapport en dashboard zijn leesbaar.',
+    t: 'Bespreken wat eerst telt',
+    d: 'Dashboard en rapport worden vertaald naar wat nu opvalt, wat eerst besproken moet worden en wat daarna logisch is.',
+  },
+] as const
+
+const outputs = [
+  {
+    title: 'Dashboard',
+    body: 'Een compact overzicht waarmee u snel ziet waar aandacht nodig is.',
   },
   {
-    n: '05',
-    t: 'Eerste actie',
-    d: 'In een gesprek vertalen we prioriteiten naar concrete vervolgstappen en eigenaarschap.',
-    result: 'Er ligt een eerste agenda.',
+    title: 'Samenvatting',
+    body: 'Een korte managementread met wat opvalt en wat eerst telt.',
+  },
+  {
+    title: 'Rapport',
+    body: 'Een leesbaar document dat HR, MT en directie intern kunnen bespreken.',
   },
 ] as const
 
@@ -69,11 +75,10 @@ export default function AanpakPage() {
           <MarketingHeroIntro>
             <p className="marketing-hero-eyebrow text-[#3C8D8A]">Aanpak</p>
             <h1 className="marketing-hero-title marketing-hero-title-page font-display text-[#132033]">
-              Een vaste route, ondersteund door software en begeleiding.
+              Van eerste gesprek naar dashboard en rapport in enkele weken.
             </h1>
             <p className="marketing-hero-copy text-[#4A5563]">
-              Verisight beweegt richting een SaaS-hybride model, maar de commerciële kern blijft begeleid: een vaste
-              route, een aanspreekpunt en een voorspelbare doorlooptijd in plaats van een open traject.
+              U doorloopt een vaste, begeleide route. Zo weet u snel waar u aan toe bent en wat u daarna in handen heeft.
             </p>
           </MarketingHeroIntro>
         }
@@ -81,57 +86,82 @@ export default function AanpakPage() {
         <MarketingSection tone="tint">
           <SectionHeading
             eyebrow="Vaste route"
-            title="Zo loopt een traject van intake tot eerste actie."
-            description="De tooling versnelt voorbereiding, uitvraag en rapportopbouw. De begeleiding blijft zichtbaar in intake, duiding en de eerste managementactie."
+            title="Zo loopt het traject."
+            description="Kort, begeleid en gericht op wat u binnen enkele weken kunt gebruiken."
           />
-          <ol className="mt-10 grid gap-px overflow-hidden rounded-[1.08rem] border border-[#E5E0D6] bg-[#E5E0D6]">
+
+          <ol className="mt-10 grid gap-4 md:grid-cols-4">
             {steps.map((step) => (
-              <li
-                key={step.n}
-                className="grid gap-6 bg-[#FFFCF7] p-7 md:grid-cols-12 md:items-start"
-              >
-                <div className="md:col-span-2">
-                  <p className="text-[12px] font-medium tracking-[0.16em] text-[#3C8D8A]">STAP {step.n}</p>
-                  <p className="mt-2 text-[20px] font-medium text-[#132033]">{step.t}</p>
-                </div>
-                <p className="text-[15px] leading-relaxed text-[#4A5563] md:col-span-7">{step.d}</p>
-                <div className="md:col-span-3 md:border-l md:border-[#E5E0D6] md:pl-6">
-                  <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[#234B57]">Resultaat</p>
-                  <p className="mt-2 text-[13.5px] leading-relaxed text-[#132033]">{step.result}</p>
-                </div>
+              <li key={step.n} className="relative rounded-[1.08rem] border border-[#E5E0D6] bg-[#FFFCF7] px-6 py-6">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#3C8D8A]">Stap {step.n}</p>
+                <h2 className="mt-3 text-[1.18rem] font-medium tracking-[-0.02em] text-[#132033]">{step.t}</h2>
+                <p className="mt-3 text-[14px] leading-7 text-[#4A5563]">{step.d}</p>
               </li>
             ))}
           </ol>
         </MarketingSection>
 
         <MarketingSection tone="plain">
-          <div className="grid gap-10 md:grid-cols-2">
+          <SectionHeading
+            eyebrow="Uitkomst"
+            title="Wat u daarna in handen heeft"
+            description="Dit is waar de route op uitkomt: iets dat intern meteen bruikbaar is."
+          />
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {outputs.map((output) => (
+              <div
+                key={output.title}
+                className="rounded-[1.18rem] border border-[#DCEFEA] bg-[#F7FBFA] px-7 py-7 shadow-[0_28px_60px_-44px_rgba(19,32,51,0.24)]"
+              >
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#3C8D8A]">{output.title}</p>
+                <p className="mt-4 text-[1.22rem] font-medium tracking-[-0.03em] text-[#132033]">{output.title}</p>
+                <p className="mt-3 text-[14px] leading-7 text-[#4A5563]">{output.body}</p>
+              </div>
+            ))}
+          </div>
+        </MarketingSection>
+
+        <MarketingSection tone="plain">
+          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
             <SectionHeading
-              eyebrow="SaaS-hybride"
-              title="Software waar het sneller kan, begeleiding waar het verschil maakt."
-              description="Zo blijft de ervaring lichter dan consultancy, maar zwaarder en bruikbaarder dan een self-service tool."
+              eyebrow="Werkwijze"
+              title="Begeleid waar dat nodig is. Efficiënt waar dat kan."
+              description="Verisight houdt het traject overzichtelijk: begeleiding bij de keuze en duiding, snelheid in de uitvoering."
             />
-            <div className="marketing-panel-soft p-7">
-              <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-[#234B57]">Doorlooptijd</p>
-              <p className="mt-3 text-[17px] leading-relaxed text-[#132033]">
-                Een eerste scan loopt doorgaans in <strong>3 tot 4 weken</strong> van intake tot bespreking.
-                Programma&apos;s lopen langer door, maar blijven in dezelfde ritmiek.
+
+            <div className="rounded-[1.08rem] border border-[#E5E0D6] bg-[#FFFCF7] p-7 md:p-8">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-[#234B57]">Doorlooptijd</p>
+              <p className="mt-3 text-[16px] leading-7 text-[#132033]">
+                Een eerste route loopt vaak in <strong>enkele weken</strong> van kennismaking naar dashboard en rapport.
               </p>
             </div>
           </div>
         </MarketingSection>
 
         <MarketingSection tone="plain">
-          <div className="marketing-panel-dark p-10 text-[#F7F5F1] md:p-12">
-            <h2 className="max-w-2xl text-[28px] leading-tight md:text-[36px]">
-              Liever eerst zien hoe output eruitziet dan lang over proces praten?
+          <div className="rounded-[1.08rem] border border-[rgba(255,255,255,0.08)] bg-[#132033] p-8 text-[#F7F5F1] md:p-10">
+            <h2 className="max-w-2xl text-[28px] leading-tight tracking-[-0.03em] md:text-[34px]">
+              Eerst zien wat u krijgt?
             </h2>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_report_cta' })} className="marketing-button-primary">
-                Vraag voorbeeldrapport aan
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link href="/#voorbeeldoutput" className="marketing-button-primary">
+                Bekijk voorbeeldoutput
               </Link>
             </div>
           </div>
+        </MarketingSection>
+
+        <MarketingSection tone="plain">
+          <MarketingCalloutBand
+            eyebrow="Kennismaking"
+            title="Plan een kennismaking"
+            body="Dan bespreken we wat voor uw situatie logisch is."
+            primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_closing_cta' })}
+            primaryLabel="Plan een kennismaking"
+            secondaryHref="/tarieven"
+            secondaryLabel="Bekijk tarieven"
+          />
         </MarketingSection>
       </MarketingPageShell>
     </>

@@ -77,12 +77,12 @@ const trustPoints = [
   },
   {
     title: 'AVG-conform',
-    body: 'Drempels, segmentonderdrukking en zorgvuldige verwerking zijn standaard ingebouwd.',
+    body: 'Drempels en zorgvuldige verwerking zijn standaard ingebouwd.',
     icon: ChartIcon,
   },
   {
     title: 'Vertrouwelijk',
-    body: 'Open antwoorden en aanvullende context worden zorgvuldig behandeld en compact gerapporteerd.',
+    body: 'Open antwoorden en aanvullende context worden compact en zorgvuldig behandeld.',
     icon: SparklesIcon,
   },
 ] as const
@@ -250,8 +250,8 @@ function HeroDashboardVisual() {
   return (
     <div className="relative w-full">
       <div className="absolute -inset-8 -z-10 rounded-[2.4rem] bg-[radial-gradient(circle_at_top_left,rgba(215,239,233,0.95)_0%,rgba(255,252,247,0.34)_42%,transparent_72%)] blur-3xl" />
-      <div className="overflow-hidden rounded-[2.15rem] border border-[rgba(221,215,203,0.9)] bg-[var(--surface)] shadow-[0_36px_90px_-40px_rgba(16,24,32,0.3)]">
-        <div className="flex items-center justify-between border-b border-[var(--border)] bg-[rgba(245,242,234,0.72)] px-5 py-3">
+      <div className="overflow-hidden rounded-[2.25rem] border border-[rgba(221,215,203,0.82)] bg-[var(--surface)] shadow-[0_42px_110px_-46px_rgba(16,24,32,0.34)]">
+        <div className="flex items-center justify-between border-b border-[rgba(221,215,203,0.82)] bg-[rgba(245,242,234,0.66)] px-5 py-2.5">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[var(--border)]" />
             <span className="h-2 w-2 rounded-full bg-[var(--border)]" />
@@ -261,22 +261,22 @@ function HeroDashboardVisual() {
           <p className="text-[11px] text-[var(--muted)]">Verisight</p>
         </div>
 
-        <div className="relative overflow-hidden bg-[#0B1217] px-6 py-6 text-[#F7F5F1] md:px-8 md:py-8">
+        <div className="relative overflow-hidden bg-[#091015] px-5 py-5 text-[#F7F5F1] md:px-6 md:py-6">
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:72px_72px] opacity-50" />
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,rgba(60,141,138,0.24),transparent_68%)]" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(60,141,138,0.28),transparent_68%)]" />
 
-          <div className="relative grid gap-8 md:grid-cols-[minmax(0,0.6fr)_minmax(0,1.4fr)] md:gap-10">
-            <div className="space-y-7">
+          <div className="relative grid gap-7 md:grid-cols-[minmax(0,0.56fr)_minmax(0,1.44fr)] md:gap-8">
+            <div className="space-y-6">
               <div>
                 <p className="text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-[#A5B7C7]">Dashboard</p>
-                <p className="mt-3 max-w-[24rem] text-[1.1rem] leading-8 text-[#F7F5F1]">
+                <p className="mt-3 max-w-[22rem] text-[1.04rem] leading-7 text-[#F7F5F1]">
                   In één blik ziet management waar druk opbouwt, welke thema&apos;s terugkomen en wat eerst besproken moet worden.
                 </p>
               </div>
 
               <div>
                 <p className="text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-[#A5B7C7]">Top prioriteiten</p>
-                <ul className="mt-4 space-y-3">
+                <ul className="mt-4 space-y-2.5">
                   {(
                     [
                       ['Groei en ontwikkeling', 'Hoog', 'bg-[#F7F5F1] text-[#101820]'],
@@ -284,9 +284,9 @@ function HeroDashboardVisual() {
                       ['Loopbaanperspectief', 'Aandacht', 'bg-[#D7EFE9] text-[#101820]'],
                     ] as const
                   ).map(([label, status, style]) => (
-                    <li key={label} className="flex items-center justify-between gap-3 border-b border-white/10 pb-3 last:border-b-0 last:pb-0">
+                    <li key={label} className="flex items-center justify-between gap-3 border-b border-white/10 pb-2.5 last:border-b-0 last:pb-0">
                       <span className="text-[14px] text-[#F7F5F1]">{label}</span>
-                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${style}`}>{status}</span>
+                      <span className={`rounded-full px-2.5 py-1 text-[10.5px] font-medium ${style}`}>{status}</span>
                     </li>
                   ))}
                 </ul>
@@ -294,7 +294,7 @@ function HeroDashboardVisual() {
 
               <div>
                 <p className="text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-[#A5B7C7]">Eerste actie</p>
-                <p className="mt-3 max-w-[24rem] text-[14px] leading-7 text-[rgba(247,245,241,0.76)]">
+                <p className="mt-3 max-w-[22rem] text-[13px] leading-6 text-[rgba(247,245,241,0.76)]">
                   Plan eerst een managementgesprek over groei, werkdruk en opvolging, zodat prioriteit en eigenaar meteen duidelijk zijn.
                 </p>
               </div>
@@ -309,23 +309,23 @@ function HeroDashboardVisual() {
                     ['Onboarding', '8.1'],
                   ] as const
                 ).map(([label, value]) => (
-                  <div key={label} className="rounded-[1rem] border border-white/10 bg-white/6 px-4 py-4 backdrop-blur-[2px]">
-                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#A5B7C7]">{label}</p>
-                    <p className="mt-2 text-[1.9rem] font-medium tracking-[-0.05em] text-white">{value}</p>
+                  <div key={label} className="rounded-[1.05rem] border border-white/10 bg-white/[0.06] px-4 py-4 md:px-5 md:py-[1.15rem] backdrop-blur-[2px]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#B8C6D2]">{label}</p>
+                    <p className="mt-2 text-[2.15rem] font-medium tracking-[-0.06em] text-white">{value}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="relative mt-5 overflow-hidden rounded-[1.35rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] px-5 py-5 md:px-6 md:py-6">
+              <div className="relative mt-4 overflow-hidden rounded-[1.55rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.028),rgba(255,255,255,0.012))] px-4 py-4 md:px-5 md:py-5">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-[#A5B7C7]">Behoudssignaal · 12 mnd</p>
-                    <p className="mt-2 text-[2.3rem] font-medium tracking-[-0.06em] text-white">+3,1 pt</p>
+                    <p className="mt-2 text-[2.55rem] font-medium tracking-[-0.06em] text-white">+3,1 pt</p>
                   </div>
                   <p className="pt-1 text-[11px] text-[rgba(247,245,241,0.55)]">Trend afgelopen 4 kwartalen</p>
                 </div>
 
-                <svg viewBox="0 0 560 248" className="mt-5 h-72 w-full md:h-[23rem]">
+                <svg viewBox="0 0 560 248" className="mt-4 h-[20rem] w-full md:h-[29rem]">
                   <defs>
                     <linearGradient id="heroTrend" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="rgba(60,141,138,0.55)" />
@@ -352,7 +352,7 @@ function HeroDashboardVisual() {
                   <circle cx="466" cy="57" r="8.5" fill="#0B1217" stroke="#67C3BD" strokeWidth="3" />
                 </svg>
 
-                <div className="mt-3 flex justify-between text-[11px] text-[rgba(247,245,241,0.55)]">
+                <div className="mt-2.5 flex justify-between text-[11px] text-[rgba(247,245,241,0.55)]">
                   <span>Q2 &apos;24</span>
                   <span>Q3</span>
                   <span>Q4</span>
@@ -360,10 +360,10 @@ function HeroDashboardVisual() {
                   <span>Q2</span>
                 </div>
 
-                <div className="mt-5 md:absolute md:bottom-6 md:right-6 md:mt-0 md:w-[17rem]">
-                  <div className="rounded-[1.05rem] border border-[rgba(221,215,203,0.88)] bg-[rgba(255,252,247,0.96)] px-4 py-4 text-[#132033] shadow-[0_24px_60px_-36px_rgba(0,0,0,0.45)]">
+                <div className="mt-4 md:absolute md:bottom-5 md:right-5 md:mt-0 md:w-[19rem]">
+                  <div className="rounded-[1.15rem] border border-[rgba(221,215,203,0.88)] bg-[rgba(255,252,247,0.97)] px-5 py-5 text-[#132033] shadow-[0_24px_60px_-32px_rgba(0,0,0,0.48)]">
                     <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Samenvatting</p>
-                    <p className="mt-2 text-[13px] leading-6 text-[#4A5563]">
+                    <p className="mt-2 text-[14px] leading-6 text-[#4A5563]">
                       Groei, werkdruk en loopbaanperspectief vragen nu eerst een gezamenlijke managementreactie.
                     </p>
                   </div>
@@ -426,9 +426,8 @@ export default function LandingPage() {
                 Begrijp waarom mensen vertrekken. Zie eerder waar behoud onder druk staat.
               </h1>
               <p className="marketing-hero-copy mt-6 max-w-[68rem] text-[#4A5563]">
-                U krijgt binnen enkele weken een dashboard, een samenvatting en een rapport waarmee HR en directie
-                sneller zien wat eerst aandacht vraagt. Dashboard, samenvatting en rapport gebruiken dezelfde leeslijn,
-                zodat beslissen en bespreken sneller gaat.
+                U krijgt binnen enkele weken een dashboard, een samenvatting en een rapport waarmee HR en directie sneller zien wat eerst aandacht vraagt.
+                Zo wordt sneller duidelijk wat opvalt, wat besproken moet worden en welke eerste stap logisch is.
               </p>
 
               <div className="marketing-hero-cta-row marketing-hero-actions mt-7">
@@ -468,21 +467,21 @@ export default function LandingPage() {
               description="Verisight vertaalt vertrek- en behoudssignalen naar een eerste managementbeeld dat helpt kiezen waar gesprek en actie beginnen."
             />
 
-            <div className="mt-7 overflow-hidden rounded-[1rem] border border-[#E5E0D6] bg-[rgba(255,252,247,0.94)] md:grid md:grid-cols-3">
+            <div className="mt-6 overflow-hidden rounded-[0.95rem] border border-[rgba(221,215,203,0.72)] bg-[rgba(255,252,247,0.82)] md:grid md:grid-cols-3">
               {recognitionItems.map((item, index) => (
                 <div
                   key={item.title}
-                  className={`px-5 py-4 ${index < recognitionItems.length - 1 ? 'border-b border-[#E5E0D6] md:border-b-0 md:border-r' : ''}`}
+                  className={`px-4 py-3.5 ${index < recognitionItems.length - 1 ? 'border-b border-[rgba(221,215,203,0.58)] md:border-b-0 md:border-r' : ''}`}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-[4.9rem] shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-[4.4rem] shrink-0 opacity-90">
                       <RecognitionVisual type={item.key} />
                     </div>
                     <div className="min-w-0">
-                      <h2 className="max-w-none text-[0.98rem] font-semibold leading-[1.4] text-[#132033]">
+                      <h2 className="max-w-none text-[0.94rem] font-semibold leading-[1.35] text-[#132033]">
                         {item.title}
                       </h2>
-                      <p className="mt-2 text-[0.9rem] leading-6 text-[#4A5563]">{item.body}</p>
+                      <p className="mt-1.5 text-[0.86rem] leading-5 text-[#4A5563]">{item.body}</p>
                     </div>
                   </div>
                 </div>
@@ -498,7 +497,7 @@ export default function LandingPage() {
                 description="Dit is het soort output waarmee HR en directie sneller zien wat opvalt en wat eerst besproken moet worden."
               />
 
-              <div className="marketing-proof-frame mt-7 p-4 md:p-12">
+              <div className="marketing-proof-frame mt-6 p-4 md:p-12">
                 <PreviewSlider variant="portfolio" />
               </div>
             </div>
@@ -513,7 +512,7 @@ export default function LandingPage() {
 
             <div className="mt-8 grid gap-5 xl:grid-cols-3">
               {homepageRoutes.map((route) => (
-                <div key={route.name} className="marketing-route-card flex h-full flex-col px-6 py-6">
+                <div key={route.name} className="marketing-route-card flex h-full min-h-[23.5rem] flex-col px-7 py-7">
                   <span className="marketing-chip self-start border-[#D7D2C6] bg-white text-[#4A5563]">{route.chip}</span>
                   <h2 className="mt-4 text-[1.32rem] font-semibold tracking-[-0.03em] text-[#132033]">{route.name}</h2>
                   <div className="mt-5">
@@ -534,23 +533,23 @@ export default function LandingPage() {
               ))}
             </div>
 
-            <div className="mt-5 rounded-[0.95rem] border border-[#E5E0D6] bg-[rgba(247,245,241,0.66)] px-5 py-3">
+            <div className="mt-5 rounded-[0.95rem] border border-[rgba(221,215,203,0.72)] bg-[rgba(247,245,241,0.42)] px-5 py-3">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
                   {homepageSupportRoutes.map((route) => (
-                    <div key={route.name} className="text-[12px] leading-6 text-[#6F7A89]">
-                      <Link href={route.href} className="font-medium text-[#132033] hover:underline">
+                    <div key={route.name} className="text-[11.5px] leading-6 text-[#7A8593]">
+                      <Link href={route.href} className="font-medium text-[#233547] hover:underline">
                         {route.name}
                       </Link>
                       <span>{` — ${route.body}`}</span>
                     </div>
                   ))}
                 </div>
-                <Link href="/producten" className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-[#132033] hover:underline">
-                  Bekijk alle producten <span aria-hidden>{'->'}</span>
+                <Link href="/producten" className="inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-[#132033] hover:underline">
+                  Ontdek welke route past <span aria-hidden>{'->'}</span>
                 </Link>
               </div>
-              <p className="mt-3 text-sm leading-7 text-[#4A5563]">
+              <p className="mt-2.5 text-[0.88rem] leading-6 text-[#5D6977]">
                 Combinatie blijft een portfolioroute zodra twee echte managementvragen naast elkaar bestaan.
               </p>
             </div>
@@ -567,22 +566,22 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-7 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               {trustPoints.map((point) => {
                 const Icon = point.icon
                 return (
-                  <div key={point.title} className="rounded-[0.95rem] border border-[#E5E0D6] bg-white px-5 py-4">
-                    <div className="inline-flex h-9 w-9 items-center justify-center rounded-[0.8rem] bg-[#F4FAF8] text-[#234B57]">
+                  <div key={point.title} className="rounded-[0.88rem] border border-[rgba(221,215,203,0.78)] bg-white px-4 py-3.5">
+                    <div className="inline-flex h-8 w-8 items-center justify-center rounded-[0.72rem] bg-[#F4FAF8] text-[#234B57]">
                       <Icon />
                     </div>
-                    <p className="mt-4 text-[15px] font-medium text-[#132033]">{point.title}</p>
-                    <p className="mt-2 text-sm leading-6 text-[#4A5563]">{point.body}</p>
+                    <p className="mt-3 text-[14px] font-medium text-[#132033]">{point.title}</p>
+                    <p className="mt-1.5 text-[0.84rem] leading-5 text-[#4A5563]">{point.body}</p>
                   </div>
                 )
               })}
             </div>
 
-            <div className="mt-7">
+            <div className="mt-4">
               <Link
                 href="/vertrouwen"
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#234B57] transition-colors hover:text-[#132033]"
@@ -596,11 +595,11 @@ export default function LandingPage() {
             <div className="space-y-6">
               <MarketingInlineContactPanel
                 eyebrow="Kennismaking"
-                title="Vertel kort wat er speelt"
+                title="Plan een kennismaking"
                 body="We reageren meestal binnen 1 werkdag."
                 minimal
-                badge="Vrijblijvend"
-                submitLabel="Vraag een kennismaking aan"
+                badge={null}
+                submitLabel="Plan mijn kennismaking"
                 defaultRouteInterest="exitscan"
                 defaultCtaSource="homepage_form"
               />

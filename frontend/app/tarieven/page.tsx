@@ -9,7 +9,7 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Tarieven',
   description:
-    'Prijsankers voor hoofdproducten, compacte add-ons en de portfolioroute zodra beide managementvragen tegelijk spelen.',
+    'Heldere tarieven voor een eerste route, met ruimte om later uit te breiden of te combineren.',
   alternates: { canonical: '/tarieven' },
 }
 
@@ -18,44 +18,47 @@ const mainRoutes = [
     name: 'ExitScan',
     price: 'Vanaf EUR 2.950',
     note: 'eerste traject',
-    body: 'Vaak de eerste entree wanneer de vraag begint bij uitstroom en terugkijkende vertrekduiding.',
+    gets: 'Dashboard, samenvatting en rapport.',
+    fit: 'Past als u wilt begrijpen waarom mensen vertrekken.',
   },
   {
     name: 'RetentieScan',
     price: 'Vanaf EUR 2.950',
     note: 'eerste traject',
-    body: 'Complementaire hoofdroute wanneer behoudsdruk en vroegsignalering de eerste managementvraag vormen.',
+    gets: 'Dashboard, samenvatting en rapport.',
+    fit: 'Past als u eerder wilt zien waar behoud onder druk staat.',
   },
   {
     name: 'Onboarding 30-60-90',
     price: 'Op aanvraag',
     note: 'lifecycle-hoofdroute',
-    body: 'Een eigen lifecycle-route voor vroege checkpoint-duiding rond nieuwe medewerkers.',
+    gets: 'Dashboard, samenvatting en rapport.',
+    fit: 'Past als de eerste vraag draait om de startfase van nieuwe medewerkers.',
   },
 ] as const
 
 const lowerRoutes = [
-  ['Pulse', 'Compacte reviewroute na eerste diagnose of actie. Geen hoofdproduct, wel een kleinere vervolgstap.'],
-  ['Leadership Scan', 'Add-on voor managementcontext na een bestaand signaal. Geen eerste entree.'],
-  ['Combinatie', 'Portfolioroute wanneer twee echte managementvragen naast elkaar bestaan. Geen standaardbundel.'],
+  ['Pulse', 'Compacte vervolgstap na een eerste diagnose of actie.'],
+  ['Leadership Scan', 'Verdieping op managementcontext na een bestaand signaal.'],
+  ['Combinatie', 'Portfolioroute zodra twee echte managementvragen tegelijk spelen.'],
 ] as const
 
 const faqItems = [
   {
     q: 'Is dit een licentie of seatmodel?',
-    a: 'Nee. Verisight blijft een begeleid productaanbod met vaste routes en prijsankers, niet een self-service licentie.',
+    a: 'Nee. U start met een begeleide route, niet met een self-service licentie.',
   },
   {
     q: 'Waarom staat Onboarding 30-60-90 op aanvraag?',
-    a: 'Deze route is wel een peer product, maar heeft vaker scopekeuzes die afhangen van doelgroep, checkpoint-opzet en lifecycle-context in de organisatie.',
+    a: 'Omdat scope en checkpoint-opzet vaker afhangen van doelgroep en context.',
   },
   {
-    q: 'Wanneer wordt Combinatie commercieel logisch?',
-    a: 'Pas wanneer vertrekduiding en behoud tegelijk bestuurlijke aandacht vragen. Niet als standaard instap en niet als bundel om alles ineens mee te nemen.',
+    q: 'Wanneer wordt Combinatie logisch?',
+    a: 'Pas wanneer vertrekduiding en behoud tegelijk bestuurlijke aandacht vragen.',
   },
   {
     q: 'Waar vallen Pulse en Leadership onder?',
-    a: 'Dat blijven add-ons: compactere vervolgvragen na een bestaande route, niet de eerste koop.',
+    a: 'Dat blijven lichtere vervolgroutes, niet de eerste stap.',
   },
 ] as const
 
@@ -82,28 +85,36 @@ export default function TarievenPage() {
           <MarketingHeroIntro>
             <p className="marketing-hero-eyebrow text-[#3C8D8A]">Tarieven</p>
             <h1 className="marketing-hero-title marketing-hero-title-page font-display text-[#132033]">
-              Heldere prijsankers per productlaag.
+              Heldere tarieven voor een eerste route.
             </h1>
             <p className="marketing-hero-copy text-[#4A5563]">
-              Drie routes kunnen zelfstandig starten. Twee routes blijven add-ons. Combinatie is een portfolioroute,
-              geen standaardbundel. Zo blijft de prijslogica net zo scherp als de productlogica.
+              U start met één duidelijke route. Uitbreiden of combineren kan later.
             </p>
           </MarketingHeroIntro>
         }
       >
         <MarketingSection tone="tint">
           <SectionHeading
-            eyebrow="Hoofdproducten"
-            title="Prijsankers voor de drie routes die zelfstandig kunnen openen."
-            description="ExitScan en RetentieScan starten het vaakst. Onboarding blijft daarnaast een peer product met een lifecycle-specifieke scope."
+            eyebrow="Starten"
+            title="Drie routes waarmee u kunt starten."
+            description="Kies eerst de route die nu het duidelijkst past. Breder opzetten kan later nog."
           />
-          <div className="mt-12 grid gap-px overflow-hidden rounded-[1.08rem] border border-[#E5E0D6] bg-[#E5E0D6] md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {mainRoutes.map((route) => (
-              <div key={route.name} className="bg-[#FFFCF7] p-7">
+              <div key={route.name} className="rounded-[1.08rem] border border-[#E5E0D6] bg-[#FFFCF7] p-8 md:p-9">
                 <p className="text-[14px] font-medium text-[#132033]">{route.name}</p>
-                <p className="mt-4 text-[2rem] font-medium text-[#132033]">{route.price}</p>
+                <p className="mt-4 text-[2rem] font-medium tracking-[-0.04em] text-[#132033]">{route.price}</p>
                 <p className="mt-1 text-[12.5px] uppercase tracking-[0.14em] text-[#667085]">{route.note}</p>
-                <p className="mt-5 text-[14px] leading-7 text-[#4A5563]">{route.body}</p>
+                <div className="mt-6 space-y-4">
+                  <div>
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#7A8698]">Wat u krijgt</p>
+                    <p className="mt-1.5 text-[14px] leading-7 text-[#132033]">{route.gets}</p>
+                  </div>
+                  <div>
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#7A8698]">Wanneer dit past</p>
+                    <p className="mt-1.5 text-[14px] leading-7 text-[#4A5563]">{route.fit}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -113,9 +124,9 @@ export default function TarievenPage() {
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="marketing-panel p-8 md:p-9">
               <SectionHeading
-                eyebrow="Add-ons en combinatie"
-                title="Kleiner of later, maar niet onduidelijk."
-                description="Pulse en Leadership blijven commerciële vervolgstappen. Combinatie opent pas als twee echte vragen tegelijk op tafel liggen."
+                eyebrow="Later uitbreiden"
+                title="Begin klein. Breid later uit."
+                description="Pulse en Leadership blijven lichtere vervolgstappen. Combinatie opent pas als twee echte vragen tegelijk op tafel liggen."
               />
               <div className="mt-8 grid gap-px overflow-hidden rounded-[1rem] border border-[#E5E0D6] bg-[#E5E0D6]">
                 {lowerRoutes.map(([title, body]) => (
@@ -127,26 +138,25 @@ export default function TarievenPage() {
               </div>
             </div>
 
-            <div className="marketing-panel-dark p-8 md:p-9">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#9FD1CB]">Commerciële lijn</p>
-              <h2 className="mt-4 font-display text-[clamp(2rem,3vw,3rem)] text-white">
-                Eerst een gerichte route. Daarna pas verbreden of combineren.
+            <div className="rounded-[1.08rem] border border-[rgba(255,255,255,0.08)] bg-[#132033] p-7 md:p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#9FD1CB]">Eerste stap</p>
+              <h2 className="mt-4 font-display text-[clamp(1.8rem,2.6vw,2.55rem)] text-white">
+                Begin klein. Breid later uit.
               </h2>
-              <p className="mt-5 text-base leading-8 text-slate-300">
-                De prijsstructuur voorkomt dat Verisight als brede surveytool of bundel gaat voelen. U koopt eerst
-                één scherpe route. Add-ons en de portfolioroute volgen pas wanneer de vraag dat echt vraagt.
+              <p className="mt-5 text-[15px] leading-7 text-slate-300">
+                Start met één route. Breid later uit als dat nodig is.
               </p>
             </div>
           </div>
         </MarketingSection>
 
         <MarketingSection tone="plain">
-          <SectionHeading eyebrow="Veelgestelde vragen" title="Wat klanten vooraf willen weten." />
+          <SectionHeading eyebrow="Veelgestelde vragen" title="Wat u vooraf wilt weten." />
           <div className="mt-10 grid gap-px overflow-hidden rounded-[1.08rem] border border-[#E5E0D6] bg-[#E5E0D6] md:grid-cols-2">
             {faqItems.map((item) => (
               <div key={item.q} className="bg-[#FFFCF7] p-7">
                 <p className="text-[15.5px] font-medium text-[#132033]">{item.q}</p>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-[#4A5563]">{item.a}</p>
+                <p className="mt-2 text-[14px] leading-7 text-[#4A5563]">{item.a}</p>
               </div>
             ))}
           </div>
@@ -155,8 +165,8 @@ export default function TarievenPage() {
         <MarketingSection tone="plain">
           <MarketingCalloutBand
             eyebrow="Kennismaking"
-            title="Wilt u weten welke route nu commercieel het meest logisch is?"
-            body="In een kort gesprek maken we snel duidelijk welk hoofdproduct nu past, welke add-ons u beter nog laat wachten en wanneer Combinatie pas echt logisch wordt."
+            title="Plan een kennismaking"
+            body="Dan kijken we welke route het best past."
             primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'pricing_closing_cta' })}
             primaryLabel="Plan een kennismaking"
             secondaryHref="/producten"

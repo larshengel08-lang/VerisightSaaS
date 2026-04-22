@@ -42,8 +42,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   turbopack: {
-    // Silences the "multiple lockfiles" workspace root warning
-    root: path.resolve(__dirname),
+    // Keep Turbopack aligned with the repository root so Vercel and local builds use the same workspace root.
+    root: path.resolve(__dirname, '..'),
   },
   async headers() {
     return [
