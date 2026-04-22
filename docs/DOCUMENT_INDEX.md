@@ -23,6 +23,7 @@ Voor de huidige fix-tranche:
 
 1. `SCALABILITY_FIX_PROGRAM_PLAN.md`
 2. `docs/ops/SOURCE_OF_TRUTH_CHARTER.md`
+3. `docs/active/SHARED_GRAMMAR_INDICATOR_EXECUTIVE_FREEZE.md`
 3. live CRM- of app-systeem per informatietype
 4. `docs/ops/CEO_WEEKLY_SCORECARD.xlsx` als reviewmirror
 5. `docs/ops/MONTHLY_PHASE_REVIEW.md` als gate review
@@ -55,6 +56,12 @@ Voor de huidige fix-tranche:
 - [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md)
 - [PRODUCT_LINE_STATUS_BOARD.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LINE_STATUS_BOARD.md)
 - [PRODUCT_TRUTH_HARDENING_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_TRUTH_HARDENING_PROGRAM_PLAN.md)
+- [SHARED_GRAMMAR_INDICATOR_EXECUTIVE_FREEZE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/SHARED_GRAMMAR_INDICATOR_EXECUTIVE_FREEZE.md)
+- [EXITSCAN_SHARED_GRAMMAR_FREEZE_DELTA.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/EXITSCAN_SHARED_GRAMMAR_FREEZE_DELTA.md)
+- [RETENTIESCAN_SHARED_GRAMMAR_FREEZE_DELTA.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTIESCAN_SHARED_GRAMMAR_FREEZE_DELTA.md)
+- [ONBOARDING_30_60_90_SHARED_GRAMMAR_FREEZE_DELTA.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/ONBOARDING_30_60_90_SHARED_GRAMMAR_FREEZE_DELTA.md)
+- [PULSE_SHARED_GRAMMAR_FREEZE_DELTA.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PULSE_SHARED_GRAMMAR_FREEZE_DELTA.md)
+- [LEADERSHIP_SCAN_SHARED_GRAMMAR_FREEZE_DELTA.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/LEADERSHIP_SCAN_SHARED_GRAMMAR_FREEZE_DELTA.md)
 - [QUESTION_TO_SIGNAL_MAP.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/QUESTION_TO_SIGNAL_MAP.md)
 - [RAW_FIELD_BOUNDARY_REGISTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RAW_FIELD_BOUNDARY_REGISTER.md)
 - [REPORT_GENERATOR_RUNTIME_BOUNDARY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_GENERATOR_RUNTIME_BOUNDARY.md)
@@ -145,6 +152,7 @@ Voor de huidige fix-tranche:
 ## Praktische regels
 
 - Per traject is er bij voorkeur precies een actief source-of-truth planbestand.
+- Productdraden met gedeelde taal- of metricimpact volgen eerst `SHARED_GRAMMAR_INDICATOR_EXECUTIVE_FREEZE.md` en daarna hun freeze-delta.
 - Review- en live-testdocumenten verhuizen na afronding naar `docs/archive`.
 - Nieuwe planbestanden horen bij voorkeur in `docs/active`, behalve een repo-breed commandfile zoals `SCALABILITY_FIX_PROGRAM_PLAN.md`.
 - Gebruik het prompt-systeem in `docs/prompts` voor nieuwe analyse-, plan- en uitvoeringstrajecten.
