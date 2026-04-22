@@ -61,6 +61,7 @@ Voor de huidige fix-tranche:
 - [REPORT_TRUTH_BASELINE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_TRUTH_BASELINE.md)
 - [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md)
 - [COMMERCIAL_ARCHITECTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_ARCHITECTURE_CANON.md)
+- [EVIDENCE_PROOF_READINESS_ARCHITECTURE.md](/C:/Users/larsh/Desktop/Business/Verisight/.worktrees/evidence-proof-readiness/docs/active/EVIDENCE_PROOF_READINESS_ARCHITECTURE.md)
 - [RETENTION_REPORT_GRAMMAR_PARITY_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTION_REPORT_GRAMMAR_PARITY_REVIEW.md)
 - [RETENTION_DASHBOARD_REPORT_PARITY_CHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTION_DASHBOARD_REPORT_PARITY_CHECK.md)
 - [RETENTION_METHOD_READ_PARITY_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTION_METHOD_READ_PARITY_REVIEW.md)
