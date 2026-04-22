@@ -30,8 +30,8 @@ SCAN_DEFINITION: dict[str, Any] = {
         ),
         "evidence_status": (
             "Onboarding 30-60-90 is in deze eerste wave een begrensde checkpoint-laag binnen de bestaande "
-            "Verisight-methodiek. De output helpt vroege integratie en eerste frictie duiden, maar is nog geen "
-            "multi-checkpoint journey- of retentiemodel en ook geen client onboarding-route."
+            "Verisight-methodiek. De output helpt vroege integratie, eerste frictie, eigenaar, eerste stap en reviewgrens "
+            "duiden, maar is nog geen multi-checkpoint journey-, automation- of retentiemodel en ook geen client onboarding-route."
         ),
     },
     "survey_intro": (

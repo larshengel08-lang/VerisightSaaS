@@ -49,18 +49,27 @@ describe('buildOnboardingDashboardViewModel', () => {
       signalVisibilityAverage: null,
     })
 
+    expect(model.topSummaryCards.map((card) => card.title)).toEqual([
+      'Wat speelt nu',
+      'Waarom telt dit nu',
+      'Eerste werkspoor',
+      'Richting in deze fase',
+      'Eerste eigenaar',
+      'Eerste stap',
+      'Leesgrens',
+    ])
     expect(model.topSummaryCards[0]?.value).toBe('Overwegend stabiel')
     expect(model.topSummaryCards[3]?.body.toLowerCase()).toContain('ondersteunt een stabieler checkpointbeeld')
     expect(model.topSummaryCards[4]?.value.toLowerCase()).toContain('onboarding-owner')
     expect(model.topSummaryCards[5]?.value).toBe('Borgactie nu')
     expect(model.primaryQuestion.title).toBe('Eerste borgvraag')
     expect(model.nextStep.title).toBe('Beleg borging nu')
-    expect(model.followThroughTitle).toBe('Van checkpoint naar eerste managementhuddle')
+    expect(model.followThroughTitle).toBe('Route en actie')
     expect(model.managementBlocks.map((block) => block.title)).toEqual([
-      'Hoe lees je dit checkpoint nu?',
-      'Welk besluit hoort nu eerst?',
-      'Wie trekt dit en waar ligt de grens?',
-      'Wanneer blijft dit onboarding en wanneer niet?',
+      'Signaalinterpretatie',
+      'Bestuurlijke weging',
+      'Owner, actie en review',
+      'Leesgrens en opschaling',
     ])
     expect(model.followThroughCards.map((card) => card.title)).toEqual([
       'Prioriteit nu',
@@ -73,8 +82,8 @@ describe('buildOnboardingDashboardViewModel', () => {
     expect(model.followThroughCards[3]?.body.toLowerCase()).toContain('borgactie')
     expect(model.managementBandOverride).toBe('LAAG')
     expect(model.profileCards[0]?.body.toLowerCase()).toContain('single-checkpoint lifecycle triage')
-    expect(model.profileCards[1]?.value).toBe('Owner -> actie -> review')
-    expect(model.profileCards[1]?.body.toLowerCase()).toContain('bounded handoff')
+    expect(model.profileCards[1]?.value).toBe('Bestuurlijke handoff')
+    expect(model.profileCards[1]?.body.toLowerCase()).toContain('managementinstrument')
   })
 
   it('keeps a mixed checkpoint indicative before pattern strength is reached', () => {
@@ -104,7 +113,7 @@ describe('buildOnboardingDashboardViewModel', () => {
     expect(model.followThroughCards[4]?.body.toLowerCase()).toContain('volgend checkpoint')
     expect(model.managementBandOverride).toBe('MIDDEN')
     expect(model.profileCards[0]?.body.toLowerCase()).toContain('client onboarding-route')
-    expect(model.profileCards[1]?.body.toLowerCase()).toContain('checkpointread')
+    expect(model.profileCards[1]?.body.toLowerCase()).toContain('managementinstrument')
 expect(model.managementBlocks[3]?.items[1]?.toLowerCase()).toContain('bredere duiding')
   })
 
@@ -139,7 +148,7 @@ expect(model.managementBlocks[3]?.items[1]?.toLowerCase()).toContain('bredere du
     expect(model.followThroughCards[4]?.title).toBe('Reviewgrens')
     expect(model.managementBandOverride).toBe('HOOG')
     expect(model.profileCards[0]?.body.toLowerCase()).toContain('client onboarding-route')
-    expect(model.profileCards[1]?.body.toLowerCase()).toContain('bounded handoff')
+    expect(model.profileCards[1]?.body.toLowerCase()).toContain('managementinstrument')
 expect(model.followThroughCards[5]?.body.toLowerCase()).toContain('bredere duiding')
   })
 })

@@ -304,7 +304,7 @@ function buildOnboardingInterpretation(args: {
       nextStepBody: `${handoff.ownerValue} bewaakt nu het borgspoor. ${handoff.firstActionBody}`,
       focusSectionIntro:
         'Gebruik de vragen en playbooks hieronder nu vooral om scherp te krijgen wat in deze vroege fase al werkt, wie dat bewaakt en welke beperkte borgactie expliciet moet blijven staan.',
-      followThroughTitle: 'Van checkpoint naar eerste managementhuddle',
+      followThroughTitle: 'Route en actie',
       followThroughIntro:
         'Bij een stabiel checkpoint zit de managementwaarde in een compacte handoff: benoem wat werkt, leg de eerste eigenaar vast en spreek een bounded reviewmoment af.',
       priorityBody: `${args.topFactorLabel} is nu vooral een borgspoor voor deze checkpointread.`,
@@ -355,7 +355,7 @@ function buildOnboardingInterpretation(args: {
       nextStepBody: `${handoff.ownerValue} trekt nu het checkpointspoor. ${handoff.firstActionBody}`,
       focusSectionIntro:
         'Gebruik de vragen en playbooks hieronder om van dit vroege aandachtssignaal snel naar een kleine, zichtbare correctie met expliciete eigenaar en bounded review te gaan.',
-      followThroughTitle: 'Van checkpoint naar eerste managementhuddle',
+      followThroughTitle: 'Route en actie',
       followThroughIntro:
         'De waarde van een scherp checkpoint zit hier in snelle begrensde opvolging: eerst duiden, dan een kleine zichtbare correctie, en pas daarna bewust opnieuw meten.',
       priorityBody: `${args.topFactorLabel} is nu het eerste corrigerende werkspoor voor dit checkpoint.`,
@@ -405,7 +405,7 @@ function buildOnboardingInterpretation(args: {
     nextStepBody: `${handoff.ownerValue} trekt nu het checkpointspoor. ${handoff.firstActionBody}`,
     focusSectionIntro:
       'Gebruik de vragen en playbooks hieronder om van een gemengd checkpoint direct naar een beperkte maar expliciete correctie- of verificatierichting met owner en reviewgrens te gaan.',
-    followThroughTitle: 'Van checkpoint naar eerste managementhuddle',
+    followThroughTitle: 'Route en actie',
     followThroughIntro:
       'De waarde van onboarding zit hier in een snelle en begrensde follow-up: eerst duiden, dan een kleine correctie, dan bewust op een later checkpoint opnieuw kijken.',
     priorityBody: `${args.topFactorLabel} is nu het eerste werkspoor voor deze checkpointread.`,
@@ -463,19 +463,19 @@ export function buildOnboardingDashboardViewModel(args: {
       signaalbandenText: SIGNAL_BANDS_TEXT,
       topSummaryCards: [
         {
-          title: 'Managementread nu',
+          title: 'Wat speelt nu',
           value: 'Nog geen veilige checkpointread',
           body: 'Er zijn nog te weinig responses om dit onboardingcheckpoint als bruikbare groepsread te openen.',
           tone: 'amber',
         },
         {
-          title: 'Checkpoint',
+          title: 'Waarom telt dit nu',
           value: 'Te weinig responses',
           body: 'Vanaf 5 responses ontstaat een eerste indicatieve checkpointread. Tot die tijd blijft onboarding vooral een responsopbouwfase.',
           tone: 'blue',
         },
         {
-          title: 'Boundary',
+          title: 'Leesgrens',
           value: 'Nog geen groepsread',
           body: 'Gebruik dit nog niet als managementread, journeyclaim of individuele beoordeling van nieuwe medewerkers.',
           tone: 'blue',
@@ -508,7 +508,7 @@ export function buildOnboardingDashboardViewModel(args: {
       },
       focusSectionIntro:
         'Zodra er genoeg responses zijn helpt onboarding vooral om sneller te kiezen welke vroege succes- of frictiefactor nu de eerste managementvraag vraagt.',
-      followThroughTitle: 'Van checkpoint naar eerste managementhuddle',
+      followThroughTitle: 'Route en actie',
       followThroughIntro:
         'De vaste onboardingroute verschijnt zodra dit checkpoint veilig genoeg is om als groepssnapshot te lezen.',
       followThroughCards: [],
@@ -529,19 +529,19 @@ export function buildOnboardingDashboardViewModel(args: {
     signaalbandenText: SIGNAL_BANDS_TEXT,
     topSummaryCards: [
       {
-        title: 'Managementread nu',
+        title: 'Wat speelt nu',
         value: interpretation.managementReadValue,
         body: interpretation.managementReadBody,
         tone: interpretation.managementTone,
       },
       {
-        title: 'Checkpoint',
+        title: 'Waarom telt dit nu',
         value: interpretation.checkpointValue,
         body: interpretation.checkpointBody,
         tone: 'blue',
       },
       {
-        title: 'Primair werkspoor',
+        title: 'Eerste werkspoor',
         value: topFactorLabel,
         body: secondFactorLabel
           ? `${topFactorLabel} staat nu voorop; ${secondFactorLabel.toLowerCase()} lees je mee als tweede contextlaag.`
@@ -549,7 +549,7 @@ export function buildOnboardingDashboardViewModel(args: {
         tone: 'blue',
       },
       {
-        title: 'Richting nu',
+        title: 'Richting in deze fase',
         value: interpretation.directionValue,
         body: interpretation.directionBody,
         tone: interpretation.directionTone,
@@ -561,13 +561,13 @@ export function buildOnboardingDashboardViewModel(args: {
         tone: 'emerald',
       },
       {
-        title: 'Eerste actie',
+        title: 'Eerste stap',
         value: interpretation.firstActionValue,
         body: interpretation.firstActionBody,
         tone: checkpointState === 'stable_checkpoint' ? 'emerald' : 'amber',
       },
       {
-        title: 'Boundary',
+        title: 'Leesgrens',
         value: interpretation.boundaryValue,
         body: interpretation.boundaryBody,
         tone: 'blue',
@@ -575,7 +575,7 @@ export function buildOnboardingDashboardViewModel(args: {
     ],
     managementBlocks: [
       {
-        title: 'Hoe lees je dit checkpoint nu?',
+        title: 'Signaalinterpretatie',
         intro: interpretation.managementReadBody,
         items: [
           checkpointState === 'stable_checkpoint'
@@ -588,12 +588,12 @@ export function buildOnboardingDashboardViewModel(args: {
         tone: 'blue',
       },
       {
-        title: 'Welk besluit hoort nu eerst?',
+        title: 'Bestuurlijke weging',
         items: interpretation.decisionItems,
         tone: checkpointState === 'high_attention_checkpoint' ? 'amber' : 'blue',
       },
       {
-        title: 'Wie trekt dit en waar ligt de grens?',
+        title: 'Owner, actie en review',
         items: [
           `Eerste eigenaar: ${interpretation.ownerValue}.`,
           interpretation.operatorBody,
@@ -602,7 +602,7 @@ export function buildOnboardingDashboardViewModel(args: {
         tone: 'emerald',
       },
       {
-        title: 'Wanneer blijft dit onboarding en wanneer niet?',
+        title: 'Leesgrens en opschaling',
         items: [
           interpretation.escalationBoundaryBody,
           interpretation.broaderDiagnosisBody,
@@ -619,8 +619,8 @@ export function buildOnboardingDashboardViewModel(args: {
       },
       {
         title: 'Handoffvorm',
-        value: 'Owner -> actie -> review',
-        body: 'Deze route is pas managementwaardig als checkpointread, eerste eigenaar, eerste kleine actie en reviewgrens als één bounded handoff worden gelezen.',
+        value: 'Bestuurlijke handoff',
+        body: 'Deze route is pas een volwassen managementinstrument als checkpointread, eerste eigenaar, eerste stap en reviewgrens als één bestuurlijke handoff worden gelezen.',
         tone: checkpointState === 'stable_checkpoint' ? 'emerald' : 'blue',
       },
     ],
