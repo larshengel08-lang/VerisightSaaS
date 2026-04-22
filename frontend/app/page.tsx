@@ -267,6 +267,20 @@ export default function LandingPage() {
                 Bekijk de routes
               </Link>
             </div>
+
+            <div className="mt-4 rounded-[1.25rem] border border-[#E5E0D6] bg-white px-5 py-4">
+              <p className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-[#4A5563]">
+                Begrensde peer-exceptie
+              </p>
+              <p className="mt-2 text-sm font-medium text-[#132033]">
+                Onboarding 30-60-90 openen we alleen wanneer de lifecycle-vraag rond nieuwe medewerkers nu echt centraal
+                staat.
+              </p>
+              <p className="mt-1 text-sm leading-6 text-[#4A5563]">
+                Pulse en Leadership Scan blijven vervolgroutes na een eerste managementread. TeamScan openen we niet als
+                buyer-facing eerste routekeuze.
+              </p>
+            </div>
           </MarketingSection>
 
           {/* ── 3. Vertrouwen en privacy ──────────────────────────────── */}
@@ -317,7 +331,7 @@ export default function LandingPage() {
               <MarketingInlineContactPanel
                 eyebrow="Plan kennismaking"
                 title="Welke managementvraag speelt nu?"
-                body="Gebruik dit formulier voor ExitScan, RetentieScan of de combinatieroute."
+                body="Gebruik dit formulier voor ExitScan, RetentieScan of bij een expliciete lifecycle-vraag Onboarding 30-60-90. Combinatie en bounded vervolg toetsen we pas daarna."
                 badge="Vrijblijvend"
                 defaultRouteInterest="exitscan"
                 defaultCtaSource="homepage_form"

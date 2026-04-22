@@ -61,7 +61,7 @@ export function TeamScanSpecialistPage() {
     <MarketingPageShell
       theme="support"
       pageType="product"
-      ctaHref={buildContactHref({ routeInterest: 'teamscan', ctaSource: 'product_team_primary_cta' })}
+      ctaHref={buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'product_team_primary_cta' })}
       ctaLabel="Bespreek TeamScan"
       heroIntro={
         <MarketingHeroIntro>
@@ -304,7 +304,7 @@ export function TeamScanSpecialistPage() {
           eyebrow="Volgende stap"
           title="Wilt u toetsen of TeamScan nu de juiste specialistische vervolgstap is?"
           body="Beschrijf kort welk bredere signaal al zichtbaar is en waar de lokale onzekerheid nu zit. Dan bepalen we of TeamScan past of dat een andere route logischer blijft."
-          primaryHref={buildContactHref({ routeInterest: 'teamscan', ctaSource: 'product_team_closing_cta' })}
+          primaryHref={buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'product_team_closing_cta' })}
           primaryLabel="Plan kennismaking"
           secondaryHref="/producten"
           secondaryLabel="Bekijk producten"
@@ -317,7 +317,7 @@ export function TeamScanSpecialistPage() {
             eyebrow="Kennismaking"
             title="Bespreek of TeamScan nu past"
             body="Beschrijf kort welk bredere signaal al speelt en waar de lokale team- of leidingcontext nu het eerst verduidelijking vraagt. Dan toetsen we of TeamScan logisch is."
-            defaultRouteInterest="teamscan"
+            defaultRouteInterest="nog-onzeker"
             defaultCtaSource="product_team_form"
           />
         </div>

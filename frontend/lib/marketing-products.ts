@@ -2,7 +2,9 @@ export type MarketingProductStatus = 'core_live' | 'portfolio_live' | 'bounded_l
 export type MarketingProductPortfolioRole =
   | 'core_product'
   | 'portfolio_route'
+  | 'peer_route'
   | 'follow_on_route'
+  | 'specialist_route'
   | 'future_reserved_route'
 
 export interface MarketingProduct {
@@ -77,6 +79,26 @@ export const PORTFOLIO_ROUTE_MARKETING_PRODUCTS: MarketingProduct[] = [
   },
 ]
 
+export const PEER_CONTEXT_MARKETING_PRODUCTS: MarketingProduct[] = [
+  {
+    slug: 'onboarding-30-60-90',
+    label: 'Onboarding 30-60-90',
+    shortLabel: 'Onboarding 30-60-90',
+    tagline: 'Vroege lifecycle-check voor nieuwe medewerkers',
+    description:
+      'Begrensde peer-route voor een assisted single-checkpoint onboardingread wanneer de eerste managementvraag echt over nieuwe medewerkers, vroege landing en eerste frictie gaat. Niet bedoeld als journey-engine, brede lifecycle-suite of automatische vervolgstap.',
+    seoTitle: 'Onboarding 30-60-90 | Vroege lifecycle-check voor nieuwe medewerkers',
+    ogAlt: 'Onboarding 30-60-90 productpagina van Verisight',
+    serviceType: 'Assisted single-checkpoint onboardingread',
+    serviceAudience: 'HR-teams en directies die een vroege onboardingcheck buyer-facing willen openen',
+    serviceOutput:
+      'Checkpointsignaal, owner, eerste actie en bounded managementhandoff zonder brede journey-claims',
+    status: 'bounded_live',
+    portfolioRole: 'peer_route',
+    href: '/producten/onboarding-30-60-90',
+  },
+]
+
 export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
   {
     slug: 'pulse',
@@ -94,40 +116,6 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     status: 'bounded_live',
     portfolioRole: 'follow_on_route',
     href: '/producten/pulse',
-  },
-  {
-    slug: 'teamscan',
-    label: 'TeamScan',
-    shortLabel: 'TeamScan',
-    tagline: 'Lokale verificatie na een breder signaal',
-    description:
-      'Bounded vervolgroute voor department-first lokalisatie nadat een breder signaal al zichtbaar is. Bedoeld voor lokale verificatie en prioriteit, niet voor manager ranking of brede teamsoftware.',
-    seoTitle: 'TeamScan | Lokale verificatie na een breder signaal',
-    ogAlt: 'TeamScan productpagina van Verisight',
-    serviceType: 'Lokale verificatie en bounded teamprioritering',
-    serviceAudience: 'HR-teams en directies die na een breder signaal lokale verificatie willen starten',
-    serviceOutput:
-      'Lokale prioriteitsread, bounded managementhandoff en suppressie-aware lokale duiding',
-    status: 'bounded_live',
-    portfolioRole: 'follow_on_route',
-    href: '/producten/teamscan',
-  },
-  {
-    slug: 'onboarding-30-60-90',
-    label: 'Onboarding 30-60-90',
-    shortLabel: 'Onboarding 30-60-90',
-    tagline: 'Vroege lifecycle-check voor nieuwe medewerkers',
-    description:
-      'Bounded vervolgroute voor een assisted single-checkpoint onboardingread. Bedoeld om vroege landing en eerste frictie zichtbaar te maken, niet als journey-engine of brede lifecycle-suite.',
-    seoTitle: 'Onboarding 30-60-90 | Vroege lifecycle-check voor nieuwe medewerkers',
-    ogAlt: 'Onboarding 30-60-90 productpagina van Verisight',
-    serviceType: 'Assisted single-checkpoint onboardingread',
-    serviceAudience: 'HR-teams en directies die een vroege onboardingcheck buyer-facing willen openen',
-    serviceOutput:
-      'Checkpointsignaal, owner, eerste actie en bounded managementhandoff zonder brede journey-claims',
-    status: 'bounded_live',
-    portfolioRole: 'follow_on_route',
-    href: '/producten/onboarding-30-60-90',
   },
   {
     slug: 'leadership-scan',
@@ -148,9 +136,30 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
   },
 ]
 
+export const INACTIVE_SPECIALIST_MARKETING_PRODUCTS: MarketingProduct[] = [
+  {
+    slug: 'teamscan',
+    label: 'TeamScan',
+    shortLabel: 'TeamScan',
+    tagline: 'Lokale verificatie na een breder signaal',
+    description:
+      'Specialistische lokalisatieroute voor lokale verificatie na een breder signaal. Inhoudelijk beschikbaar, maar bewust buiten actieve routekeuze en buyer-facing instroom om routeverwarring en productdrift te voorkomen.',
+    seoTitle: 'TeamScan | Lokale verificatie na een breder signaal',
+    ogAlt: 'TeamScan productpagina van Verisight',
+    serviceType: 'Lokale verificatie en bounded teamprioritering',
+    serviceAudience: 'HR-teams en directies die na een breder signaal lokale verificatie willen starten',
+    serviceOutput:
+      'Lokale prioriteitsread, bounded managementhandoff en suppressie-aware lokale duiding',
+    status: 'bounded_live',
+    portfolioRole: 'specialist_route',
+    href: '/producten/teamscan',
+  },
+]
+
 export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
   ...CORE_MARKETING_PRODUCTS,
   ...PORTFOLIO_ROUTE_MARKETING_PRODUCTS,
+  ...PEER_CONTEXT_MARKETING_PRODUCTS,
   ...FOLLOW_ON_MARKETING_PRODUCTS,
 ]
 
@@ -180,7 +189,11 @@ export const RESERVED_MARKETING_PRODUCTS: MarketingProduct[] = [
 ]
 
 export const UPCOMING_MARKETING_PRODUCTS = RESERVED_MARKETING_PRODUCTS
-export const ALL_MARKETING_PRODUCTS = [...LIVE_MARKETING_PRODUCTS, ...RESERVED_MARKETING_PRODUCTS]
+export const ALL_MARKETING_PRODUCTS = [
+  ...LIVE_MARKETING_PRODUCTS,
+  ...INACTIVE_SPECIALIST_MARKETING_PRODUCTS,
+  ...RESERVED_MARKETING_PRODUCTS,
+]
 
 export function getMarketingProductBySlug(slug: string) {
   return ALL_MARKETING_PRODUCTS.find((product) => product.slug === slug) ?? null

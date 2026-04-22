@@ -205,7 +205,7 @@ export const trustSignalHighlights = [
   },
   {
     title: 'Core proof blijft expliciet',
-    body: 'Publieke deliverable-proof blijft bewust anchored op ExitScan en RetentieScan. Bounded follow-on routes zijn wel formeel, maar krijgen publiek vooral bewijs via productpagina en trustlaag.',
+    body: 'Publieke deliverable-proof blijft bewust anchored op ExitScan en RetentieScan. Onboarding 30-60-90 blijft de begrensde peer-exceptie; Pulse en Leadership Scan krijgen publiek vooral bewijs via productpagina en trustlaag.',
   },
   {
     title: 'Begeleide productvorm',
@@ -224,7 +224,7 @@ export const trustVerificationCards = [
   },
   {
     title: 'Waar sample-proof bewust stopt',
-    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Pulse, TeamScan, onboarding en Leadership Scan blijven bounded follow-on routes met formele output, maar zonder aparte publieke samplebibliotheek.',
+    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Onboarding 30-60-90 blijft een begrensde peer-route zonder aparte samplebibliotheek; Pulse en Leadership Scan blijven bounded vervolgroutes met formele output.',
   },
   {
     title: 'Wat management wel ziet',
@@ -263,7 +263,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Heeft elke route een publiek voorbeeldrapport?',
-    body: 'Nee. Publieke deliverable-proof blijft bewust core-first op ExitScan en RetentieScan. Bounded follow-on routes zijn buyer-facing volwassen, maar worden publiek vooral via productpagina, trustlaag en formele routegrenzen uitgelegd.',
+    body: 'Nee. Publieke deliverable-proof blijft bewust core-first op ExitScan en RetentieScan. Onboarding 30-60-90, Pulse en Leadership Scan worden publiek vooral via productpagina, trustlaag en formele routegrenzen uitgelegd.',
   },
 ] as const
 

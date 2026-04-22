@@ -205,38 +205,37 @@ describe('marketing flow defaults', () => {
   it('keeps route labels and first-step defaults aligned with the funnel', () => {
     expect(getContactRouteLabel('exitscan')).toBe('ExitScan')
     expect(getContactRouteLabel('retentiescan')).toBe('RetentieScan')
+    expect(getContactFirstStepLabel('onboarding')).toContain('peer-route')
     expect(getContactFirstStepLabel('combinatie')).toBe('een gefaseerde combinatieroute')
-    expect(getContactFirstStepLabel('teamscan')).toContain('na een bestaand signaal')
     expect(getContactFirstStepLabel('leadership')).toContain('na een bestaand signaal')
   })
 
-  it('keeps the contact route ordering core-first before bounded follow-on routes', () => {
+  it('keeps the contact route ordering heavy first-buy routes first, onboarding as peer exception, and bounded follow-on later', () => {
     expect(CONTACT_ROUTE_OPTIONS.map((option) => option.value)).toEqual([
       'exitscan',
       'retentiescan',
-      'combinatie',
-      'teamscan',
       'onboarding',
+      'combinatie',
       'leadership',
       'nog-onzeker',
     ])
-    expect(CONTACT_ROUTE_OPTIONS.find((option) => option.value === 'teamscan')?.description.toLowerCase()).toContain(
-      'na een breder signaal',
+    expect(CONTACT_ROUTE_OPTIONS.find((option) => option.value === 'onboarding')?.description.toLowerCase()).toContain(
+      'nieuwe medewerkers',
     )
     expect(CONTACT_ROUTE_OPTIONS.find((option) => option.value === 'leadership')?.description.toLowerCase()).toContain(
       'na een bestaand people-signaal',
     )
   })
 
-  it('keeps qualification defaults core-first even when follow-on routes are visible in the funnel', () => {
+  it('keeps onboarding visible as a bounded peer exception instead of reframing it to ExitScan', () => {
     const onboardingGuidance = getContactQualificationGuidance({
       routeInterest: 'onboarding',
       desiredTiming: 'orienterend',
       currentQuestion: 'We willen onboarding beter organiseren voor nieuwe medewerkers.',
     })
 
-    expect(onboardingGuidance.status).toBe('follow_on_reframe')
-    expect(onboardingGuidance.recommendedCoreRoute).toBe('exitscan')
-    expect(onboardingGuidance.followOnCandidateRoute).toBe('onboarding')
+    expect(onboardingGuidance.status).toBe('onboarding_peer_primary')
+    expect(onboardingGuidance.recommendedRoute).toBe('onboarding')
+    expect(onboardingGuidance.followOnCandidateRoute).toBeNull()
   })
 })

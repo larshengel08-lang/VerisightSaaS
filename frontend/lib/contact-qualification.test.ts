@@ -26,6 +26,19 @@ describe('contact qualification visibility summary', () => {
     expect(summary.recommendationLabel).toContain('RetentieScan')
   })
 
+  it('surfaces onboarding as a bounded peer exception instead of a follow-on reframe', () => {
+    const summary = buildContactQualificationVisibilitySummary({
+      routeInterest: 'onboarding',
+      desiredTiming: 'dit-kwartaal',
+      currentQuestion: 'We willen voor nieuwe medewerkers vroeg zien waar onboarding en eerste landing vastlopen.',
+    })
+
+    expect(summary.tone).toBe('amber')
+    expect(summary.headline).toContain('Onboarding 30-60-90')
+    expect(summary.recommendationLabel).toContain('Onboarding 30-60-90')
+    expect(summary.nextAction.toLowerCase()).toContain('lifecycle-vraag')
+  })
+
   it('treats follow-on routes as review items instead of flat first routes', () => {
     const summary = buildContactQualificationVisibilitySummary({
       routeInterest: 'teamscan',

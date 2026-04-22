@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   CORE_MARKETING_PRODUCTS,
   FOLLOW_ON_MARKETING_PRODUCTS,
+  INACTIVE_SPECIALIST_MARKETING_PRODUCTS,
   LIVE_MARKETING_PRODUCTS,
+  PEER_CONTEXT_MARKETING_PRODUCTS,
   PORTFOLIO_ROUTE_MARKETING_PRODUCTS,
   RESERVED_MARKETING_PRODUCTS,
 } from '@/lib/marketing-products'
@@ -26,9 +28,11 @@ import {
 } from '@/components/marketing/site-content'
 
 describe('Portfolio architecture marketing model', () => {
-  it('keeps a core-first seven-route suite with visible bounded follow-on routes', () => {
+  it('keeps a core-first buyer-facing route map with onboarding as peer exception and TeamScan outside active route choice', () => {
     const combination = PORTFOLIO_ROUTE_MARKETING_PRODUCTS[0]
     const followOnSlugs = FOLLOW_ON_MARKETING_PRODUCTS.map((product) => product.slug)
+    const peerSlugs = PEER_CONTEXT_MARKETING_PRODUCTS.map((product) => product.slug)
+    const specialistSlugs = INACTIVE_SPECIALIST_MARKETING_PRODUCTS.map((product) => product.slug)
     const reservedSlugs = RESERVED_MARKETING_PRODUCTS.map((product) => product.slug)
 
     expect(CORE_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual(['exitscan', 'retentiescan'])
@@ -37,13 +41,20 @@ describe('Portfolio architecture marketing model', () => {
     expect(combination.portfolioRole).toBe('portfolio_route')
     expect(combination.description.toLowerCase()).toContain('portfolioroute')
     expect(combination.description.toLowerCase()).toContain('derde kernproduct')
-    expect(followOnSlugs).toEqual(['pulse', 'teamscan', 'onboarding-30-60-90', 'leadership-scan'])
+    expect(peerSlugs).toEqual(['onboarding-30-60-90'])
+    expect(PEER_CONTEXT_MARKETING_PRODUCTS[0]?.portfolioRole).toBe('peer_route')
+    expect(PEER_CONTEXT_MARKETING_PRODUCTS[0]?.description.toLowerCase()).toContain('peer')
+    expect(PEER_CONTEXT_MARKETING_PRODUCTS[0]?.description.toLowerCase()).not.toContain('vervolgroute')
+    expect(followOnSlugs).toEqual(['pulse', 'leadership-scan'])
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.status === 'bounded_live')).toBe(true)
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'follow_on_route')).toBe(true)
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => !product.description.toLowerCase().includes('live bounded'))).toBe(true)
+    expect(specialistSlugs).toEqual(['teamscan'])
+    expect(INACTIVE_SPECIALIST_MARKETING_PRODUCTS[0]?.portfolioRole).toBe('specialist_route')
+    expect(INACTIVE_SPECIALIST_MARKETING_PRODUCTS[0]?.description.toLowerCase()).toContain('buiten actieve routekeuze')
     expect(CORE_MARKETING_PRODUCTS.every((product) => product.status === 'core_live')).toBe(true)
     expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS.every((product) => product.status === 'portfolio_live')).toBe(true)
-    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(7)
+    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(6)
     expect(reservedSlugs).toEqual(['mto', 'customer-feedback'])
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.status === 'reserved_future')).toBe(true)
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'future_reserved_route')).toBe(
@@ -120,6 +131,16 @@ describe('ExitScan positioning copy', () => {
     expect(pulseProduct).toBeTruthy()
     expect(pulseOutput).toContain('begrensde vergelijkingsduiding')
     expect(pulseOutput).not.toContain('delta-uitleg')
+  })
+
+  it('keeps onboarding framed as a bounded peer route instead of a standaard vervolglaag', () => {
+    const onboardingProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'onboarding-30-60-90')
+    const onboardingDescription = onboardingProduct?.description.toLowerCase()
+
+    expect(onboardingProduct).toBeTruthy()
+    expect(onboardingDescription).toContain('peer')
+    expect(onboardingDescription).toContain('single-checkpoint')
+    expect(onboardingDescription).not.toContain('vervolgroute')
   })
 })
 

@@ -40,7 +40,7 @@ export function buildContactQualificationVisibilitySummary({
     currentQuestion,
   })
   const selectedRouteLabel = getContactRouteLabel(routeInterest)
-  const recommendedRouteLabel = getContactRouteLabel(guidance.recommendedCoreRoute)
+  const recommendedRouteLabel = getContactRouteLabel(guidance.recommendedRoute)
   const timingLabel = getContactDesiredTimingLabel(desiredTiming)
   const followOnLabel = guidance.followOnCandidateRoute ? getContactRouteLabel(guidance.followOnCandidateRoute) : null
   const confirmedRouteLabel = qualifiedRoute ? getContactRouteLabel(qualifiedRoute) : null
@@ -76,6 +76,16 @@ export function buildContactQualificationVisibilitySummary({
         recommendationLabel: `Aanbevolen eerste route: ${recommendedRouteLabel}`,
         routeReviewLabel: `Geselecteerd: ${selectedRouteLabel}`,
         nextAction: 'Bevestig dat de vraag echt over vroeg behoudssignaal op groepsniveau gaat en niet alsnog primair over vertrekduiding achteraf.',
+      }
+    case 'onboarding_peer_primary':
+      return {
+        tone: 'amber',
+        headline: 'Onboarding 30-60-90 mag hier als begrensde peer-route worden getoetst.',
+        detail: `${guidance.detail} Gewenste timing: ${timingLabel}.`,
+        recommendationLabel: `Aanbevolen eerste route: ${recommendedRouteLabel}`,
+        routeReviewLabel: `Geselecteerd: ${selectedRouteLabel}`,
+        nextAction:
+          'Bevestig dat nieuwe medewerkers, vroege landing en checkpointfrictie nu echt de primaire lifecycle-vraag vormen; houd combinatie en bounded vervolgstappen daarna bewust kleiner.',
       }
     case 'combination_candidate':
       return {
