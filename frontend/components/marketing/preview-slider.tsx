@@ -195,39 +195,20 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
         ))}
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.12fr)_minmax(18rem,0.88fr)]">
+      <div className="mt-6 space-y-6">
         <div className="min-w-0">
           <PreviewCanvas variant={variant} current={current} />
         </div>
 
-        <div className="grid gap-4 self-start">
-          <div className="rounded-[1.08rem] border border-slate-200 bg-white p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Wat deze preview laat zien</p>
-            <div className="mt-4 space-y-3">
-              {copy.proofNotes.slice(0, 3).map(([title, body]) => (
-                <div key={title} className="rounded-[0.85rem] border border-slate-200 bg-slate-50 px-4 py-3">
-                  <p className="text-sm font-semibold text-slate-950">{title}</p>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
-                </div>
-              ))}
+        <div className="overflow-hidden rounded-[1.08rem] border border-slate-200 bg-white">
+          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-950">{copy.supportVisualTitle}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">{copy.demoBody}</p>
             </div>
           </div>
-
-          <div className="rounded-[1.08rem] border border-[#DCEFEA] bg-[#F4FAF8] p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3C8D8A]">Belangrijke nuance</p>
-            <p className="mt-3 text-sm leading-7 text-slate-700">{copy.nuance}</p>
-          </div>
-
-          <div className="overflow-hidden rounded-[1.08rem] border border-slate-200 bg-white">
-            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-950">{copy.supportVisualTitle}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">{copy.demoBody}</p>
-              </div>
-            </div>
-            <div className="p-4">
-              <SegmentDeepDiveVisual />
-            </div>
+          <div className="p-0">
+            <SegmentDeepDiveVisual />
           </div>
         </div>
       </div>

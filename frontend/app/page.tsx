@@ -31,16 +31,6 @@ function ShieldIcon() {
   )
 }
 
-function SparklesIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3l1.7 4.3L18 9l-4.3 1.7L12 15l-1.7-4.3L6 9l4.3-1.7L12 3Z" />
-      <path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z" />
-      <path d="M5 14l.7 1.6L7.3 16l-1.6.7L5 18.3l-.7-1.6L2.7 16l1.6-.7L5 14Z" />
-    </svg>
-  )
-}
-
 function ChartIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -79,11 +69,6 @@ const trustPoints = [
     title: 'Methodologisch onderbouwd',
     body: 'Vragen en weging zijn gebaseerd op gevalideerd onderzoek naar vertrek en behoud.',
     icon: ChartIcon,
-  },
-  {
-    title: 'Geen individuele voorspellingen',
-    body: 'Verisight ondersteunt prioritering en gesprek, niet diagnose of voorspelling op persoonsniveau.',
-    icon: SparklesIcon,
   },
 ] as const
 
