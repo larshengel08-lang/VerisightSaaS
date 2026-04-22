@@ -26,6 +26,19 @@ describe('contact qualification visibility summary', () => {
     expect(summary.recommendationLabel).toContain('RetentieScan')
   })
 
+  it('surfaces Onboarding as a primary peer route for explicit first-90-days questions', () => {
+    const summary = buildContactQualificationVisibilitySummary({
+      routeInterest: 'onboarding',
+      desiredTiming: 'deze-maand',
+      currentQuestion: 'We willen in de eerste 90 dagen zien hoe nieuwe medewerkers landen en waar de eerste actie ligt.',
+    })
+
+    expect(summary.tone).toBe('emerald')
+    expect(summary.headline).toContain('Onboarding 30-60-90')
+    expect(summary.recommendationLabel).toContain('Onboarding 30-60-90')
+    expect(summary.nextAction.toLowerCase()).toContain('first-90-days')
+  })
+
   it('treats follow-on routes as review items instead of flat first routes', () => {
     const summary = buildContactQualificationVisibilitySummary({
       routeInterest: 'teamscan',

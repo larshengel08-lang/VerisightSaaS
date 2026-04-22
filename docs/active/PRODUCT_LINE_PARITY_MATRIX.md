@@ -1,8 +1,8 @@
 # PRODUCT_LINE_PARITY_MATRIX
 
-Last updated: 2026-04-18  
+Last updated: 2026-04-22  
 Status: active  
-Source of truth: product line baseline review and current repo/runtime behavior.
+Source of truth: product line baseline review, current repo/runtime behavior and onboarding 5-readiness signoff.
 
 ## Titel
 
@@ -24,7 +24,8 @@ De paritymatrix laat zien waar de drift per productlijn precies zit tussen surve
 ## Belangrijkste bevindingen
 
 - ExitScan en RetentieScan scoren het hoogst op cross-layer parity.
-- TeamScan en Onboarding zijn inhoudelijk geloofwaardig, maar breken parity op formele reportoutput.
+- Onboarding 30-60-90 sluit nu ook zichtbaar aan op formele reportoutput, executive architectuur en bounded preview/proof.
+- TeamScan blijft buiten de actieve peerlaag en telt hier niet langer als open paritypromotiecasus.
 - Pulse en Leadership hebben de grootste afstand tussen bounded waarheid en bredere buyer-facing leesbaarheid.
 
 ## Belangrijkste inconsistenties of risico's
@@ -47,14 +48,14 @@ De paritymatrix laat zien waar de drift per productlijn precies zit tussen surve
 | ExitScan | sterk | sterk | sterk | sterk | sterk | middel-sterk | dichtst bij volledige parity |
 | RetentieScan | sterk | sterk | sterk | sterk | sterk | sterk | kernroute met beperkte naming debt |
 | TeamScan | middel-sterk | middel-sterk | zwak | sterk | middel-sterk | middel | parity_build |
-| Onboarding 30-60-90 | middel-sterk | middel-sterk | zwak | sterk | middel-sterk | middel-sterk | parity_build |
+| Onboarding 30-60-90 | sterk | sterk | sterk | sterk | sterk | sterk | peer_5_frozen |
 | Pulse | middel | middel | zwak | middel-sterk | middel | middel | bounded_support_route |
 | Leadership Scan | middel | middel | zwak | middel-sterk | middel | middel | bounded_support_route |
 | Combinatie | n.v.t. | n.v.t. | n.v.t. | n.v.t. | middel | middel | portfolio_route, geen zelfstandig product |
 
 ## Validatie
 
-- `zwak` op report betekent hier expliciet: formele output ontbreekt of is nog niet paritywaardig.
+- `peer_5_frozen` betekent hier: product, report, dashboard, handoff en buyer-facing bounded proof zijn expliciet hard genoeg binnen dezelfde gedeelde grammarrails.
 - De matrix volgt de huidige repo-realiteit en niet gewenste toekomstarchitectuur.
 
 ## Assumptions / defaults

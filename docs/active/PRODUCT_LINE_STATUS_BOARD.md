@@ -1,8 +1,8 @@
 # PRODUCT_LINE_STATUS_BOARD
 
-Last updated: 2026-04-18  
+Last updated: 2026-04-22  
 Status: active  
-Source of truth: product line baseline review, parity matrix, backlog and hardening waves.
+Source of truth: product line baseline review, parity matrix, hardening waves and onboarding 5-readiness signoff.
 
 ## Titel
 
@@ -23,8 +23,9 @@ Dit statusboard geeft per productlijn de huidige interne maturitystand, grootste
 
 ## Belangrijkste bevindingen
 
-- Alleen ExitScan en RetentieScan kunnen intern als `core_proven` worden gelezen.
-- TeamScan en Onboarding hebben de duidelijkste parityroute.
+- ExitScan en RetentieScan blijven de meest volwassen kernroutes.
+- Onboarding 30-60-90 is nu expliciet 5-niveau binnen zijn bounded peer-vorm.
+- TeamScan blijft buiten de actieve peerlaag en vraagt geen statuspromotie.
 - Pulse en Leadership moeten bounded blijven totdat formele output en paritydiepte sterker zijn.
 - De scherpste open methodische blocker zit nu niet meer in kerncopy, maar in claimdiscipline, output parity en gedeelde veldsemantiek.
 
@@ -48,7 +49,7 @@ Dit statusboard geeft per productlijn de huidige interne maturitystand, grootste
 | ExitScan | `core_proven` | intern en buyer-facing kernroute | legacy nevenmetrics en helperlagen begrensd houden | Wave A closeout |
 | RetentieScan | `core_proven` | intern en buyer-facing kernroute | longitudinale claimdiscipline en gedeelde veldsemantiek | metrics/method closeout |
 | TeamScan | `parity_build` | intern bruikbaar, buyer-facing bounded | formele report/output parity en lokale reportgrammar | Wave B parity |
-| Onboarding 30-60-90 | `parity_build` | intern bruikbaar, buyer-facing bounded | formele report/output parity en checkpoint-read hardening | Wave B parity |
+| Onboarding 30-60-90 | `peer_5_frozen` | peer product, buyer-facing bounded en expliciet 5-niveau | bounded lifecycle-discipline en preview/proofgrenzen bewaken | bugfix-only |
 | Pulse | `bounded_support_route` | bounded bruikbaar | trendbegrenzing en formele output parity | Wave A truth boundary -> Wave B parity |
 | Leadership Scan | `bounded_support_route` | bounded bruikbaar | formele output parity en identity-risk | Wave A truth boundary -> Wave B parity |
 | Combinatie | `portfolio_route` | buyer-facing portfolioroute | suite- en bundeldrift voorkomen | commerciele routeverfijning later |
@@ -60,7 +61,7 @@ Dit statusboard geeft per productlijn de huidige interne maturitystand, grootste
 
 ## Assumptions / defaults
 
-- `intern bruikbaar` betekent niet automatisch parity bereikt.
+- `peer_5_frozen` betekent voor Onboarding: expliciet 5-niveau binnen bounded productscope, niet routeverbreding.
 - `buyer-facing bounded` betekent alleen dat routeactivatie kan bestaan, niet dat formele output parity al gehaald is.
 - Working labels blijven intern en volgen de actuele product-, parity- en methodrealiteit; ze zijn geen externe statuspromotie.
 

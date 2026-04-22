@@ -1,8 +1,8 @@
 # COMMERCIAL_AND_ONBOARDING_SIGNOFF
 
-Last updated: 2026-04-18  
+Last updated: 2026-04-22  
 Status: active  
-Source of truth: commercial architecture canon, packaging and route logic and client onboarding flow system.
+Source of truth: commercial architecture canon, packaging and route logic, client onboarding flow system and onboarding 5-readiness signoff.
 
 ## Titel
 
@@ -26,7 +26,8 @@ Deze signoff bevestigt dat de commerciele kernstructuur, packaginglogica en oper
 ## Belangrijkste bevindingen
 
 - De eerste route-, first-value- en report-to-actionlogica vormen nu een doorlopende keten.
-- Dual-core werkt commercieel als default zolang bounded en parity-build routes niet als gelijkwaardige hoofdproposities worden behandeld.
+- Dual-core werkt commercieel als default zolang bounded routes niet als hoofdpropositie worden oversold.
+- Onboarding 30-60-90 kan nu als expliciete first-90-days peer-route openen wanneer de lifecycle-vraag zelf centraal staat.
 - De flowdocs maken operator-overdracht eenvoudiger zonder nieuwe product- of pricingbesluiten af te dwingen.
 
 ## Belangrijkste inconsistenties of risico's
@@ -37,8 +38,9 @@ Deze signoff bevestigt dat de commerciele kernstructuur, packaginglogica en oper
 ## Beslissingen / canonvoorstellen
 
 - `First buy -> first value -> first management use` is nu de canonieke commerciele en operationele hoofdroute.
-- `ExitScan` en `RetentieScan` blijven de enige standaard first-buy routes.
-- `TeamScan`, `Onboarding 30-60-90`, `Pulse` en `Leadership Scan` blijven vervolg-, bounded of parity-build routes volgens de vastgelegde routevormen.
+- `ExitScan` en `RetentieScan` blijven de standaard first-buy routes.
+- `Onboarding 30-60-90` mag als expliciete uitzondering direct openen bij een first-90-days managementvraag rond vroege landing, eerste handoff en eerste managementinterventie.
+- `TeamScan`, `Pulse` en `Leadership Scan` blijven vervolg- of bounded routes volgens de vastgelegde routevormen.
 - Working maturity labels blijven intern en worden door deze signoff niet gepromoveerd tot publieke statuslaag.
 
 ## Concrete wijzigingen

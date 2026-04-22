@@ -77,6 +77,15 @@ export function buildContactQualificationVisibilitySummary({
         routeReviewLabel: `Geselecteerd: ${selectedRouteLabel}`,
         nextAction: 'Bevestig dat de vraag echt over vroeg behoudssignaal op groepsniveau gaat en niet alsnog primair over vertrekduiding achteraf.',
       }
+    case 'onboarding_primary':
+      return {
+        tone: 'emerald',
+        headline: 'Onboarding 30-60-90 mag hier als eerste peer-route worden getoetst.',
+        detail: `${guidance.detail} Gewenste timing: ${timingLabel}.`,
+        recommendationLabel: `Aanbevolen eerste route: ${recommendedRouteLabel}`,
+        routeReviewLabel: `Geselecteerd: ${selectedRouteLabel}`,
+        nextAction: 'Bevestig dat de vraag echt over first-90-days landing, eerste handoff en bounded review gaat en niet alsnog primair over brede behoudsdruk of vertrekduiding.',
+      }
     case 'combination_candidate':
       return {
         tone: 'amber',

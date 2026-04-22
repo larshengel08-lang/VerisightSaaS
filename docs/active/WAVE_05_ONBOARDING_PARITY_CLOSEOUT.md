@@ -1,5 +1,7 @@
 # WAVE_05_ONBOARDING_PARITY_CLOSEOUT.md
 
+> Superseded note (2026-04-22): voor de actuele truth over Onboarding als peer product op expliciet 5-niveau, zie [ONBOARDING_5_READINESS_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/.worktrees/onboarding-to-5/docs/active/ONBOARDING_5_READINESS_SIGNOFF.md). Dit document blijft historisch parity-closeout en is niet langer leidend voor peer-productpositionering, preview/proof of executive freeze.
+
 ## 1. Title
 
 Formally close onboarding parity now that method, management depth, report parity, and trust/QA parity are all green and the remaining bounded differences are no longer maturity gaps.

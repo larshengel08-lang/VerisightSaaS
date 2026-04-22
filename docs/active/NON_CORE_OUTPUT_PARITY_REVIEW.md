@@ -1,8 +1,8 @@
 # NON_CORE_OUTPUT_PARITY_REVIEW
 
-Last updated: 2026-04-18  
+Last updated: 2026-04-22  
 Status: active  
-Source of truth: product language canon, report structure canon, method signoff and metric hardening signoff.
+Source of truth: product language canon, report structure canon, method signoff, metric hardening signoff and onboarding 5-readiness signoff.
 
 ## Titel
 
@@ -39,7 +39,7 @@ TeamScan, Onboarding 30-60-90, Pulse en Leadership Scan zijn opnieuw getoetst op
 - Voor bounded routes heeft `bredere duiding` de voorkeur boven `bredere diagnose` wanneer de tekst verwijst naar een terugschakelroute.
 - Productspecifieke executive labels zijn:
   - TeamScan: `Lokale handoff`
-  - Onboarding 30-60-90: `Checkpoint-handoff`
+  - Onboarding 30-60-90: `Bestuurlijke handoff`
   - Leadership Scan: `Management-handoff`
 - Pulse blijft een bounded reviewlaag en geen diagnostische vervolgmachine.
 

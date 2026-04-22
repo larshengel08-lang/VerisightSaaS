@@ -1,8 +1,8 @@
 # DASHBOARD_REDESIGN_READINESS_BRIEF
 
-Last updated: 2026-04-18  
+Last updated: 2026-04-22  
 Status: active  
-Source of truth: product language canon, metric hierarchy canon, product line status board and report-to-action program plan.
+Source of truth: product language canon, metric hierarchy canon, product line status board, onboarding 5-readiness signoff and report-to-action program plan.
 
 ## Titel
 
@@ -43,7 +43,7 @@ Dit brief geeft de dashboard-redesignthread een duidelijke inhoudelijke rail. De
 - Het dashboard moet dezelfde report-to-action volgorde blijven sturen als rapport en onboarding.
 - Productspecifieke executive labels blijven intact:
   - TeamScan: `Lokale handoff`
-  - Onboarding 30-60-90: `Checkpoint-handoff`
+  - Onboarding 30-60-90: `Bestuurlijke handoff`
   - Leadership Scan: `Management-handoff`
 
 ## Concrete wijzigingen
@@ -80,7 +80,7 @@ Dit brief geeft de dashboard-redesignthread een duidelijke inhoudelijke rail. De
 ## Assumptions / defaults
 
 - Dashboardredesign werkt op bestaande productdefinities en niet op nieuwe productpositionering.
-- De sterkste paritylat ligt nog steeds bij ExitScan en RetentieScan; follow-on routes blijven visueel begrensd totdat parity verder is gehard.
+- De sterkste paritylat ligt nog steeds bij ExitScan en RetentieScan; Onboarding volgt nu dezelfde executive grammatica binnen bounded scope.
 - Statusbadges of CTA-labels mogen non-core routes niet optillen boven hun huidige bounded productrealiteit.
 
 ## Next gate

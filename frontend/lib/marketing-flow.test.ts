@@ -199,6 +199,7 @@ describe('marketing flow defaults', () => {
 
     expect(assetHrefs).toContain(REPORT_PREVIEW_COPY.exit.sampleReportHref)
     expect(assetHrefs).toContain(REPORT_PREVIEW_COPY.retention.sampleReportHref)
+    expect(REPORT_PREVIEW_COPY.onboarding.sampleReportHref).toBe('/producten/onboarding-30-60-90#preview')
     expect(REPORT_PREVIEW_COPY.portfolio.sampleReportHref).toBe('/producten')
   })
 
@@ -235,8 +236,8 @@ describe('marketing flow defaults', () => {
       currentQuestion: 'We willen onboarding beter organiseren voor nieuwe medewerkers.',
     })
 
-    expect(onboardingGuidance.status).toBe('follow_on_reframe')
-    expect(onboardingGuidance.recommendedCoreRoute).toBe('exitscan')
-    expect(onboardingGuidance.followOnCandidateRoute).toBe('onboarding')
+    expect(onboardingGuidance.status).toBe('onboarding_primary')
+    expect(onboardingGuidance.recommendedCoreRoute).toBe('onboarding')
+    expect(onboardingGuidance.followOnCandidateRoute).toBeNull()
   })
 })

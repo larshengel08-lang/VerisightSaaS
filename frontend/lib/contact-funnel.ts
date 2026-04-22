@@ -26,8 +26,8 @@ export const CONTACT_ROUTE_OPTIONS = [
   {
     value: 'onboarding',
     label: 'Onboarding 30-60-90',
-    description: 'Na een onboardingvraag willen we vroeg zien hoe nieuwe medewerkers in een checkpoint landen.',
-    firstStepLabel: 'een bounded onboarding follow-on route na een eerste lifecycle-vraag',
+    description: 'We willen in de eerste 30-60-90 dagen zien hoe nieuwe medewerkers landen en waar eerste handoff nodig is.',
+    firstStepLabel: 'een onboarding peer route rond vroege landing, eerste eigenaar en reviewgrens',
   },
   {
     value: 'leadership',
@@ -68,11 +68,12 @@ export const CONTACT_DESIRED_TIMING_OPTIONS = [
 
 export type ContactRouteInterest = (typeof CONTACT_ROUTE_OPTIONS)[number]['value']
 export type ContactDesiredTiming = (typeof CONTACT_DESIRED_TIMING_OPTIONS)[number]['value']
-export type CoreContactRouteInterest = Extract<ContactRouteInterest, 'exitscan' | 'retentiescan' | 'combinatie'>
-export type FollowOnContactRouteInterest = Extract<ContactRouteInterest, 'teamscan' | 'onboarding' | 'leadership'>
+export type CoreContactRouteInterest = Extract<ContactRouteInterest, 'exitscan' | 'retentiescan' | 'onboarding' | 'combinatie'>
+export type FollowOnContactRouteInterest = Extract<ContactRouteInterest, 'teamscan' | 'leadership'>
 export type ContactQualificationStatus =
   | 'core_default'
   | 'retention_primary'
+  | 'onboarding_primary'
   | 'combination_candidate'
   | 'bounded_follow_on_review'
   | 'follow_on_reframe'
@@ -101,7 +102,7 @@ export type ContactQualificationGuidance = {
 
 const routeOptionMap = new Map(CONTACT_ROUTE_OPTIONS.map((option) => [option.value, option]))
 const timingOptionMap = new Map(CONTACT_DESIRED_TIMING_OPTIONS.map((option) => [option.value, option]))
-const followOnRoutes = new Set<FollowOnContactRouteInterest>(['teamscan', 'onboarding', 'leadership'])
+const followOnRoutes = new Set<FollowOnContactRouteInterest>(['teamscan', 'leadership'])
 
 const EXIT_SIGNAL_KEYWORDS = [
   'exit',
@@ -219,9 +220,6 @@ function detectFollowOnCandidateRoute(text: string): FollowOnContactRouteInteres
   if (includesAnyKeyword(text, TEAM_SIGNAL_KEYWORDS)) {
     return 'teamscan'
   }
-  if (includesAnyKeyword(text, ONBOARDING_SIGNAL_KEYWORDS)) {
-    return 'onboarding'
-  }
   if (includesAnyKeyword(text, LEADERSHIP_SIGNAL_KEYWORDS)) {
     return 'leadership'
   }
@@ -238,6 +236,7 @@ export function getContactQualificationGuidance({
   const normalizedQuestion = (currentQuestion ?? '').trim().toLowerCase()
   const hasExitSignal = includesAnyKeyword(normalizedQuestion, EXIT_SIGNAL_KEYWORDS)
   const hasRetentionSignal = includesAnyKeyword(normalizedQuestion, RETENTION_SIGNAL_KEYWORDS)
+  const hasOnboardingSignal = includesAnyKeyword(normalizedQuestion, ONBOARDING_SIGNAL_KEYWORDS)
   const followOnEvidence = includesAnyKeyword(normalizedQuestion, FOLLOW_ON_EVIDENCE_KEYWORDS)
   const explicitFollowOnCandidate = followOnRoutes.has(normalizedRoute as FollowOnContactRouteInterest)
     ? (normalizedRoute as FollowOnContactRouteInterest)
@@ -248,8 +247,27 @@ export function getContactQualificationGuidance({
   let recommendedCoreRoute: CoreContactRouteInterest = 'exitscan'
   if (hasExitSignal && hasRetentionSignal) {
     recommendedCoreRoute = 'combinatie'
+  } else if (
+    (normalizedRoute === 'onboarding' || hasOnboardingSignal) &&
+    !hasExitSignal &&
+    !hasRetentionSignal
+  ) {
+    recommendedCoreRoute = 'onboarding'
   } else if (hasRetentionSignal && !hasExitSignal) {
     recommendedCoreRoute = 'retentiescan'
+  }
+
+  if (recommendedCoreRoute === 'onboarding') {
+    return {
+      status: 'onboarding_primary',
+      recommendedCoreRoute,
+      followOnCandidateRoute: null,
+      headline: 'Onboarding 30-60-90 mag hier als eerste peer-route worden geopend.',
+      detail:
+        'De intake leest als een expliciete managementvraag over de eerste 90 dagen: vroege landing, eerste frictie en eerste managementinterventie. Daarom hoeft deze aanvraag niet eerst terug naar ExitScan of RetentieScan te worden vernauwd.',
+      operatorSummary:
+        'Expliciete onboardingvraag zichtbaar; behandel Onboarding 30-60-90 als primaire peer-route en toets vooral owner, eerste stap en bounded reviewgrens.',
+    }
   }
 
   if (followOnCandidateRoute && followOnEvidence) {

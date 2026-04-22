@@ -1,8 +1,8 @@
 # NON_CORE_DASHBOARD_PARITY_MATRIX
 
-Last updated: 2026-04-18  
+Last updated: 2026-04-22  
 Status: active  
-Source of truth: product language canon, non-core output parity review and current dashboard implementations.
+Source of truth: product language canon, non-core output parity review, onboarding 5-readiness signoff and current dashboard implementations.
 
 ## Titel
 
@@ -36,7 +36,7 @@ Deze matrix legt vast hoe de non-core lijnen nu over reportcontent en dashboardl
 | Product | Executive label | Hoofdread | Eerste route | Fallbackgrens |
 | --- | --- | --- | --- | --- |
 | TeamScan | Lokale handoff | department-first lokalisatie | bounded lokale check | terug naar bredere duiding |
-| Onboarding 30-60-90 | Checkpoint-handoff | single-checkpoint managementread | kleine correctie of borgactie | terug naar bredere duiding |
+| Onboarding 30-60-90 | Bestuurlijke handoff | single-checkpoint managementread | owner, eerste stap en bounded review | terug naar bredere duiding |
 | Pulse | compacte managementhandoff | bounded reviewmoment | kleine correctie en bounded hercheck | geen extra Pulse als eerst bredere duiding nodig is |
 | Leadership Scan | Management-handoff | geaggregeerde managementcontext-read | bounded verificatie of correctie | terug naar bredere duiding |
 

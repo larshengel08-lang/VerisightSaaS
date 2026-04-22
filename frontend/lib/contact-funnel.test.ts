@@ -58,6 +58,20 @@ describe('contact qualification guidance', () => {
     expect(guidance.detail.toLowerCase()).toContain('bestaand signaal')
   })
 
+  it('lets onboarding open directly when the intake is explicitly about first-90-days landing', () => {
+    const guidance = getContactQualificationGuidance({
+      routeInterest: 'onboarding',
+      desiredTiming: 'deze-maand',
+      currentQuestion: 'We willen vroeg zien hoe nieuwe medewerkers in de eerste 90 dagen landen en waar de eerste managementinterventie nodig is.',
+    })
+
+    expect(guidance.status).toBe('onboarding_primary')
+    expect(guidance.recommendedCoreRoute).toBe('onboarding')
+    expect(guidance.followOnCandidateRoute).toBeNull()
+    expect(guidance.headline).toContain('Onboarding 30-60-90')
+    expect(guidance.detail.toLowerCase()).toContain('eerste 90 dagen')
+  })
+
   it('reframes follow-on routes back to a core route when no earlier signal is present', () => {
     const guidance = getContactQualificationGuidance({
       routeInterest: 'leadership',

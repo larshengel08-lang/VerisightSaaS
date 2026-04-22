@@ -1,5 +1,7 @@
 # ONBOARDING_PARITY_GAP_ANALYSIS_PLAN.md
 
+> Superseded note (2026-04-22): deze parity-gapanalyse blijft historisch ontwikkelspoor. Voor de actuele source of truth over Onboarding als peer product op expliciet 5-niveau, zie [ONBOARDING_5_READINESS_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/.worktrees/onboarding-to-5/docs/active/ONBOARDING_5_READINESS_SIGNOFF.md).
+
 ## 1. Summary
 
 Dit document is de uitvoerbare source of truth voor de **parity gap analysis** van `Onboarding 30-60-90` tegen de volwassenheidslat van `ExitScan` en `RetentieScan`.
