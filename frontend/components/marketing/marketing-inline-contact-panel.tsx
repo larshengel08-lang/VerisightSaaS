@@ -11,6 +11,7 @@ interface MarketingInlineContactPanelProps {
   id?: string
   badge?: string | null
   minimal?: boolean
+  submitLabel?: string
 }
 
 export function MarketingInlineContactPanel({
@@ -22,6 +23,7 @@ export function MarketingInlineContactPanel({
   id = 'kennismaking',
   badge = 'Vrijblijvend gesprek',
   minimal = false,
+  submitLabel,
 }: MarketingInlineContactPanelProps) {
   const hasHeading = Boolean(eyebrow || title)
   const hasBody = Boolean(body)
@@ -67,6 +69,7 @@ export function MarketingInlineContactPanel({
             defaultRouteInterest={defaultRouteInterest}
             defaultCtaSource={defaultCtaSource}
             minimal={minimal}
+            submitLabel={submitLabel}
           />
         </Suspense>
       </div>

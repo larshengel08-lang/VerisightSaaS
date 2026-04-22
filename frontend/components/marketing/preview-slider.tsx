@@ -12,7 +12,7 @@ interface PreviewSliderProps {
   variant?: ReportPreviewVariant
 }
 
-const SLIDES = ['Dashboard', 'Samenvatting', 'Wat valt op'] as const
+const SLIDES = ['Dashboard', 'Samenvatting', 'Wat valt op', 'Volgende stap'] as const
 const COPY = REPORT_PREVIEW_COPY
 
 const toneStyles = {
@@ -129,26 +129,41 @@ function FactorCanvas({ variant }: { variant: ReportPreviewVariant }) {
   )
 }
 
-function HypothesisCanvas({ variant }: { variant: ReportPreviewVariant }) {
+function SummaryCanvas({ variant }: { variant: ReportPreviewVariant }) {
   const copy = COPY[variant]
 
   return (
     <div className="space-y-4">
       <div className="rounded-[0.95rem] border border-slate-200 bg-slate-50 px-5 py-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-          Uit het managementrapport - Duiding en vervolgstappen
-        </p>
-        <p className="mt-2 text-sm leading-6 text-slate-700">{copy.hypothesisLead}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Samenvatting</p>
+        <p className="mt-2 text-sm leading-6 text-slate-700">{copy.boardroomIntro}</p>
+      </div>
+      <div className="grid gap-4 xl:grid-cols-3">
+        {copy.boardroomPoints.map(([title, body]) => (
+          <div key={title} className="rounded-[0.95rem] border border-slate-200 bg-white px-5 py-5">
+            <p className="text-sm font-semibold text-slate-950">{title}</p>
+            <p className="mt-3 text-sm leading-6 text-slate-600">{body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function NextStepCanvas({ variant }: { variant: ReportPreviewVariant }) {
+  const copy = COPY[variant]
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-[0.95rem] border border-[#DCEFEA] bg-[#F4FAF8] px-5 py-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3C8D8A]">Volgende stap</p>
+        <p className="mt-2 text-sm leading-6 text-slate-700">{copy.nuance}</p>
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
-        {copy.hypotheses.map(({ title, body, question }) => (
-          <div key={title} className="rounded-[0.95rem] border border-[#DCEFEA] bg-[#F4FAF8] p-5">
-            <p className="text-sm font-bold text-slate-950">{title}</p>
-            <p className="mt-3 text-sm leading-6 text-slate-700">{body}</p>
-            <div className="mt-4 rounded-[0.85rem] border border-white/80 bg-white/90 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#3C8D8A]">Te toetsen vraag</p>
-              <p className="mt-2 text-sm leading-6 text-slate-800">{question}</p>
-            </div>
+        {copy.hypotheses.map(({ title, question }) => (
+          <div key={title} className="rounded-[0.95rem] border border-slate-200 bg-white px-5 py-5">
+            <p className="text-sm font-semibold text-slate-950">{title}</p>
+            <p className="mt-3 text-sm leading-6 text-slate-600">{question}</p>
           </div>
         ))}
       </div>
@@ -158,8 +173,9 @@ function HypothesisCanvas({ variant }: { variant: ReportPreviewVariant }) {
 
 function PreviewCanvas({ variant, current }: { variant: ReportPreviewVariant; current: number }) {
   if (current === 0) return <DashboardCanvas variant={variant} />
-  if (current === 1) return <FactorCanvas variant={variant} />
-  return <HypothesisCanvas variant={variant} />
+  if (current === 1) return <SummaryCanvas variant={variant} />
+  if (current === 2) return <FactorCanvas variant={variant} />
+  return <NextStepCanvas variant={variant} />
 }
 
 export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
@@ -184,9 +200,9 @@ export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
             key={label}
             type="button"
             onClick={() => setCurrent(index)}
-            className={`rounded-[0.58rem] px-4 py-2 text-sm font-semibold transition-colors ${
+            className={`rounded-[0.72rem] px-4 py-2.5 text-sm font-semibold transition-all ${
               index === current
-                ? 'bg-[#234B57] text-white'
+                ? 'border border-[#234B57] bg-[#234B57] text-white shadow-[0_12px_30px_-18px_rgba(35,75,87,0.65)]'
                 : 'border border-[#E5E0D6] bg-white text-slate-600 hover:border-[#3C8D8A] hover:text-[#234B57]'
             }`}
           >

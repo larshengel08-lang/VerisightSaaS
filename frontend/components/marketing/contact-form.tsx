@@ -33,6 +33,7 @@ interface ContactFormProps {
   defaultRouteInterest?: ContactRouteInterest
   defaultCtaSource?: string
   minimal?: boolean
+  submitLabel?: string
 }
 
 interface SuccessState {
@@ -58,6 +59,7 @@ export function ContactForm({
   defaultRouteInterest = 'exitscan',
   defaultCtaSource = 'website_contact_form',
   minimal = false,
+  submitLabel = 'Verstuur bericht',
 }: ContactFormProps) {
   const searchParams = useSearchParams()
   const [form, setForm] = useState<FormState>({
@@ -364,7 +366,7 @@ export function ContactForm({
           disabled={loading}
           className={`inline-flex min-w-[14rem] items-center justify-center rounded-[0.9rem] px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${buttonClass}`}
         >
-          {loading ? 'Verstuur bericht...' : 'Verstuur bericht'}
+          {loading ? 'Verstuur bericht...' : submitLabel}
         </button>
       </div>
 

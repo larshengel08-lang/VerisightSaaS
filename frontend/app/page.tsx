@@ -54,21 +54,36 @@ function GroupIcon() {
   )
 }
 
+function SparklesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l1.7 4.3L18 9l-4.3 1.7L12 15l-1.7-4.3L6 9l4.3-1.7L12 3Z" />
+      <path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15Z" />
+      <path d="M5 14l.7 1.6L7.3 16l-1.6.7L5 18.3l-.7-1.6L2.7 16l1.6-.7L5 14Z" />
+    </svg>
+  )
+}
+
 const trustPoints = [
   {
-    title: 'Privacy by design',
-    body: 'Antwoorden zijn altijd herleidbaar tot groep, nooit tot persoon. Drempels op kleine teams.',
+    title: 'Groepsniveau',
+    body: 'Uitkomsten blijven bedoeld voor teams en groepen, niet voor personen.',
     icon: ShieldIcon,
   },
   {
-    title: 'Alleen groepsniveau',
-    body: 'Management ziet patronen per groep of segment, niet per persoon of individueel profiel.',
+    title: 'Geen individuele voorspellingen',
+    body: 'Verisight ondersteunt prioritering en gesprek, niet diagnose op persoonsniveau.',
     icon: GroupIcon,
   },
   {
-    title: 'Methodologisch onderbouwd',
-    body: 'Vragen en weging zijn gebaseerd op gevalideerd onderzoek naar vertrek en behoud.',
+    title: 'AVG-conform',
+    body: 'Drempels, segmentonderdrukking en zorgvuldige verwerking zijn standaard ingebouwd.',
     icon: ChartIcon,
+  },
+  {
+    title: 'Vertrouwelijk',
+    body: 'Open antwoorden en aanvullende context worden zorgvuldig behandeld en compact gerapporteerd.',
+    icon: SparklesIcon,
   },
 ] as const
 
@@ -129,8 +144,8 @@ const recognitionItems = [
 
 function RecognitionVisual({ type }: { type: (typeof recognitionItems)[number]['key'] }) {
   return (
-    <div className="mb-8 overflow-hidden rounded-[1rem] border border-[#DDD5C7] bg-[#FFFCF7]">
-      <div className="flex min-h-[7rem] items-center justify-center px-6 py-5">
+    <div className="overflow-hidden rounded-[0.85rem] border border-[#DDD5C7] bg-[#FFFCF7]">
+      <div className="flex min-h-[4.7rem] items-center justify-center px-3 py-2.5">
         {type === 'exit' ? <RecognitionExitVisual /> : null}
         {type === 'retention' ? <RecognitionRetentionVisual /> : null}
         {type === 'signal' ? <RecognitionSignalVisual /> : null}
@@ -145,7 +160,7 @@ function RecognitionExitVisual() {
   const accent = '#4E9A95'
 
   return (
-    <svg viewBox="0 0 320 92" className="h-[5.7rem] w-full max-w-[19rem]" aria-hidden="true">
+    <svg viewBox="0 0 320 92" className="h-[3.1rem] w-full max-w-[10rem]" aria-hidden="true">
       {[0, 1, 2, 3].map((index) => {
         const color = index < 3 ? darkStroke : lightStroke
         const x = 28 + index * 28
@@ -187,7 +202,7 @@ function RecognitionRetentionVisual() {
   const accent = '#4E9A95'
 
   return (
-    <svg viewBox="0 0 320 92" className="h-[5.7rem] w-full max-w-[19rem]" aria-hidden="true">
+    <svg viewBox="0 0 320 92" className="h-[3.1rem] w-full max-w-[10rem]" aria-hidden="true">
       <defs>
         <linearGradient id="recognition-retention-fill" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="#DFF2ED" stopOpacity="0.9" />
@@ -220,7 +235,7 @@ function RecognitionSignalVisual() {
   ] as const
 
   return (
-    <svg viewBox="0 0 320 92" className="h-[5.7rem] w-full max-w-[19rem]" aria-hidden="true">
+    <svg viewBox="0 0 320 92" className="h-[3.1rem] w-full max-w-[10rem]" aria-hidden="true">
       {points.map(([x, y], index) => (
         <circle key={index} cx={x} cy={y} r="2.1" fill={index % 3 === 0 ? line : '#8E99A8'} />
       ))}
@@ -250,7 +265,7 @@ function HeroDashboardVisual() {
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:72px_72px] opacity-50" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,rgba(60,141,138,0.24),transparent_68%)]" />
 
-          <div className="relative grid gap-8 md:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] md:gap-10">
+          <div className="relative grid gap-8 md:grid-cols-[minmax(0,0.6fr)_minmax(0,1.4fr)] md:gap-10">
             <div className="space-y-7">
               <div>
                 <p className="text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-[#A5B7C7]">Dashboard</p>
@@ -286,7 +301,7 @@ function HeroDashboardVisual() {
             </div>
 
             <div className="relative">
-              <div className="flex flex-wrap gap-3">
+              <div className="grid gap-3 sm:grid-cols-3">
                 {(
                   [
                     ['Vertrekrisico', '12%'],
@@ -294,9 +309,9 @@ function HeroDashboardVisual() {
                     ['Onboarding', '8.1'],
                   ] as const
                 ).map(([label, value]) => (
-                  <div key={label} className="min-w-[8.2rem] rounded-[0.95rem] border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-[2px]">
+                  <div key={label} className="rounded-[1rem] border border-white/10 bg-white/6 px-4 py-4 backdrop-blur-[2px]">
                     <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#A5B7C7]">{label}</p>
-                    <p className="mt-2 text-[1.65rem] font-medium tracking-[-0.05em] text-white">{value}</p>
+                    <p className="mt-2 text-[1.9rem] font-medium tracking-[-0.05em] text-white">{value}</p>
                   </div>
                 ))}
               </div>
@@ -310,7 +325,7 @@ function HeroDashboardVisual() {
                   <p className="pt-1 text-[11px] text-[rgba(247,245,241,0.55)]">Trend afgelopen 4 kwartalen</p>
                 </div>
 
-                <svg viewBox="0 0 560 248" className="mt-5 h-56 w-full md:h-72">
+                <svg viewBox="0 0 560 248" className="mt-5 h-72 w-full md:h-[23rem]">
                   <defs>
                     <linearGradient id="heroTrend" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="rgba(60,141,138,0.55)" />
@@ -411,9 +426,9 @@ export default function LandingPage() {
                 Begrijp waarom mensen vertrekken. Zie eerder waar behoud onder druk staat.
               </h1>
               <p className="marketing-hero-copy mt-6 max-w-[68rem] text-[#4A5563]">
-                U krijgt binnen enkele weken een dashboard, een korte samenvatting en een rapport waarmee HR en
-                directie sneller zien wat eerst aandacht vraagt. Geen losse survey, maar concrete stuurinformatie om
-                te bespreken en te prioriteren.
+                U krijgt binnen enkele weken een dashboard, een samenvatting en een rapport waarmee HR en directie
+                sneller zien wat eerst aandacht vraagt. Dashboard, samenvatting en rapport gebruiken dezelfde leeslijn,
+                zodat beslissen en bespreken sneller gaat.
               </p>
 
               <div className="marketing-hero-cta-row marketing-hero-actions mt-7">
@@ -449,21 +464,27 @@ export default function LandingPage() {
           <MarketingSection tone="plain">
             <SectionHeading
               eyebrow="Herkenbaar?"
-              title="Veel data over medewerkers. Weinig houvast voor het management."
-              description="Verisight vertaalt vertrek- en behoudssignalen naar prioriteiten waar HR en directie echt mee verder kunnen."
+              title="Veel signalen. Nog geen duidelijke eerste stap."
+              description="Verisight vertaalt vertrek- en behoudssignalen naar een eerste managementbeeld dat helpt kiezen waar gesprek en actie beginnen."
             />
 
-            <div className="mt-10 overflow-hidden rounded-[1.2rem] border border-[#E5E0D6] bg-[rgba(255,252,247,0.96)] md:grid md:grid-cols-3">
+            <div className="mt-7 overflow-hidden rounded-[1rem] border border-[#E5E0D6] bg-[rgba(255,252,247,0.94)] md:grid md:grid-cols-3">
               {recognitionItems.map((item, index) => (
                 <div
                   key={item.title}
-                  className={`px-7 py-8 ${index < recognitionItems.length - 1 ? 'border-b border-[#E5E0D6] md:border-b-0 md:border-r' : ''}`}
+                  className={`px-5 py-4 ${index < recognitionItems.length - 1 ? 'border-b border-[#E5E0D6] md:border-b-0 md:border-r' : ''}`}
                 >
-                  <RecognitionVisual type={item.key} />
-                  <h2 className="max-w-none text-[1rem] font-semibold leading-[1.45] text-[#132033] md:text-[1.05rem]">
-                    {item.title}
-                  </h2>
-                  <p className="mt-4 text-[0.98rem] leading-8 text-[#4A5563]">{item.body}</p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-[4.9rem] shrink-0">
+                      <RecognitionVisual type={item.key} />
+                    </div>
+                    <div className="min-w-0">
+                      <h2 className="max-w-none text-[0.98rem] font-semibold leading-[1.4] text-[#132033]">
+                        {item.title}
+                      </h2>
+                      <p className="mt-2 text-[0.9rem] leading-6 text-[#4A5563]">{item.body}</p>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -477,7 +498,7 @@ export default function LandingPage() {
                 description="Dit is het soort output waarmee HR en directie sneller zien wat opvalt en wat eerst besproken moet worden."
               />
 
-              <div className="marketing-proof-frame mt-7 p-4 md:p-10">
+              <div className="marketing-proof-frame mt-7 p-4 md:p-12">
                 <PreviewSlider variant="portfolio" />
               </div>
             </div>
@@ -490,28 +511,34 @@ export default function LandingPage() {
               description="Begin met de route die nu het duidelijkst past. Pulse en Leadership blijven bewust lichtere vervolgroutes."
             />
 
-            <div className="mt-8 grid gap-4 xl:grid-cols-3">
+            <div className="mt-8 grid gap-5 xl:grid-cols-3">
               {homepageRoutes.map((route) => (
-                <div key={route.name} className="marketing-route-card flex h-full flex-col">
+                <div key={route.name} className="marketing-route-card flex h-full flex-col px-6 py-6">
                   <span className="marketing-chip self-start border-[#D7D2C6] bg-white text-[#4A5563]">{route.chip}</span>
-                  <h2 className="mt-4 text-[1.26rem] font-semibold tracking-[-0.03em] text-[#132033]">{route.name}</h2>
-                  <p className="mt-4 text-sm leading-7 text-[#132033]">{route.when}</p>
-                  <p className="mt-3 flex-1 text-sm leading-7 text-[#4A5563]">{route.gets}</p>
+                  <h2 className="mt-4 text-[1.32rem] font-semibold tracking-[-0.03em] text-[#132033]">{route.name}</h2>
+                  <div className="mt-5">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#7A8698]">Wanneer past dit</p>
+                    <p className="mt-2 text-sm leading-7 text-[#132033]">{route.when.replace('Wanneer logisch: ', '')}</p>
+                  </div>
+                  <div className="mt-4 flex-1">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#7A8698]">Wat ziet u</p>
+                    <p className="mt-2 text-sm leading-7 text-[#4A5563]">{route.gets.replace('U krijgt ', '')}</p>
+                  </div>
                   <Link
                     href={route.href}
                     className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[#3C8D8A] transition-colors hover:text-[#2d6e6b]"
                   >
-                    Meer over {route.name} <span aria-hidden>{'->'}</span>
+                    Bekijk {route.name} <span aria-hidden>{'->'}</span>
                   </Link>
                 </div>
               ))}
             </div>
 
-            <div className="mt-5 rounded-[1rem] border border-[#E5E0D6] bg-[rgba(247,245,241,0.78)] px-5 py-3.5">
+            <div className="mt-5 rounded-[0.95rem] border border-[#E5E0D6] bg-[rgba(247,245,241,0.66)] px-5 py-3">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
                   {homepageSupportRoutes.map((route) => (
-                    <div key={route.name} className="text-[13px] leading-6 text-[#627084]">
+                    <div key={route.name} className="text-[12px] leading-6 text-[#6F7A89]">
                       <Link href={route.href} className="font-medium text-[#132033] hover:underline">
                         {route.name}
                       </Link>
@@ -529,27 +556,27 @@ export default function LandingPage() {
             </div>
           </MarketingSection>
 
-          <MarketingSection tone="dark">
-            <div className="max-w-[38rem]">
-              <p className="text-[0.72rem] font-medium uppercase tracking-[0.16em] text-[#A8D9D3]">Vertrouwen en privacy</p>
-              <h2 className="mt-3 font-display text-[clamp(1.85rem,3.4vw,2.7rem)] font-light leading-[1.08] tracking-[-0.035em] text-[#F7F5F1]">
-                Compact, zorgvuldig en helder begrensd.
+          <MarketingSection tone="surface">
+            <div className="max-w-[34rem]">
+              <p className="text-[0.72rem] font-medium uppercase tracking-[0.16em] text-[#3C8D8A]">Vertrouwen en privacy</p>
+              <h2 className="mt-3 font-display text-[clamp(1.65rem,3.1vw,2.3rem)] font-light leading-[1.08] tracking-[-0.035em] text-[#132033]">
+                Kort, controleerbaar en zonder ruis.
               </h2>
-              <p className="mt-4 max-w-[56ch] text-[0.95rem] leading-8 text-[rgba(247,245,241,0.72)]">
-                Verisight laat op de homepage kort zien hoe privacy, methodiek en claims zijn ingericht, zonder de flow te vertragen.
+              <p className="mt-4 max-w-[56ch] text-[0.94rem] leading-7 text-[#4A5563]">
+                Verisight laat op de homepage alleen de basis zien die nodig is om zorgvuldig verder te gaan.
               </p>
             </div>
 
-            <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {trustPoints.map((point) => {
                 const Icon = point.icon
                 return (
-                  <div key={point.title} className="rounded-[0.95rem] border border-white/10 bg-white/4 px-5 py-5">
-                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-[0.8rem] bg-white/8 text-[#F7F5F1]">
+                  <div key={point.title} className="rounded-[0.95rem] border border-[#E5E0D6] bg-white px-5 py-4">
+                    <div className="inline-flex h-9 w-9 items-center justify-center rounded-[0.8rem] bg-[#F4FAF8] text-[#234B57]">
                       <Icon />
                     </div>
-                    <p className="mt-4 text-[16px] font-medium text-[#F7F5F1]">{point.title}</p>
-                    <p className="mt-2 text-sm leading-7 text-[rgba(247,245,241,0.76)]">{point.body}</p>
+                    <p className="mt-4 text-[15px] font-medium text-[#132033]">{point.title}</p>
+                    <p className="mt-2 text-sm leading-6 text-[#4A5563]">{point.body}</p>
                   </div>
                 )
               })}
@@ -558,7 +585,7 @@ export default function LandingPage() {
             <div className="mt-7">
               <Link
                 href="/vertrouwen"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#DCEFEA] transition-colors hover:text-white"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#234B57] transition-colors hover:text-[#132033]"
               >
                 Bekijk hoe dit is ingericht <span aria-hidden>{'->'}</span>
               </Link>
@@ -569,10 +596,11 @@ export default function LandingPage() {
             <div className="space-y-6">
               <MarketingInlineContactPanel
                 eyebrow="Kennismaking"
-                title="Plan een kennismaking"
+                title="Vertel kort wat er speelt"
                 body="We reageren meestal binnen 1 werkdag."
                 minimal
                 badge="Vrijblijvend"
+                submitLabel="Vraag een kennismaking aan"
                 defaultRouteInterest="exitscan"
                 defaultCtaSource="homepage_form"
               />
