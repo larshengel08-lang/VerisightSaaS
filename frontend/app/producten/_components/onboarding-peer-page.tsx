@@ -9,6 +9,8 @@ import { MarketingInlineContactPanel } from '@/components/marketing/marketing-in
 import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingProofStrip } from '@/components/marketing/marketing-proof-strip'
+import { PreviewEvidenceRail } from '@/components/marketing/preview-evidence-rail'
+import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { MarketingSection } from '@/components/marketing/marketing-section'
 import { SectionHeading } from '@/components/marketing/section-heading'
 import { buildContactHref } from '@/lib/contact-funnel'
@@ -43,8 +45,8 @@ const includedItems = [
 
 const trustCards = [
   {
-    title: 'Wel serieuze route, geen dominante hoofdwedge',
-    body: 'Onboarding 30-60-90 is een echte route met eigen lifecycle-context, maar neemt de publieke dual-core architectuur niet over.',
+    title: 'Wel peer product, geen suite-oversell',
+    body: 'Onboarding 30-60-90 opent een eigen managementvraag rond vroege landing en eerste handoff, zonder zich voor te doen als brede lifecycle-suite.',
   },
   {
     title: 'Wel lifecycle-read, geen journey-suite',
@@ -70,22 +72,22 @@ export function OnboardingPeerPage() {
             Gebruik Onboarding 30-60-90 wanneer u vroeg wilt zien hoe nieuwe medewerkers nu landen.
           </h1>
           <p className="marketing-hero-copy text-[var(--text)]">
-            Onboarding 30-60-90 is een lifecycle-checkpoint route met een eigen managementvraag. De pagina helpt toetsen
-            wanneer vroege landing, borging en eerste handoff nu centraal staan, zonder dat deze route als gewone support-route
-            of als nieuwe dominante hoofdarchitectuur gaat lezen.
+            Onboarding 30-60-90 is een lifecycle-checkpoint route met een eigen managementvraag. De pagina maakt zichtbaar
+            wanneer vroege landing, eerste frictie, owner en eerste handoff nu centraal staan, zonder journey-engine,
+            automation-claim of brede lifecycle-suite.
           </p>
         </MarketingHeroIntro>
       }
       heroStage={
         <MarketingHeroStage className="h-full">
           <div className="space-y-5">
-            <span className="marketing-stage-tag border border-white/12 bg-white/6 text-amber-100">Lifecycle-checkpoint route</span>
+            <span className="marketing-stage-tag border border-white/12 bg-white/6 text-amber-100">Peer product voor vroege landing</span>
             <h2 className="marketing-stage-title font-display text-white">
-              Een vroege checkpoint-read voor lifecycle-fit, owner en eerste borging.
+              Een volwassen managementread voor vroege landing, eerste eigenaar en bounded review.
             </h2>
             <p className="marketing-stage-copy text-slate-300">
-              Deze route staat steviger dan een kleine support-check, maar blijft begrensd genoeg om de dual-core
-              publieke architectuur niet te overschrijven.
+              Deze route is sterk genoeg om zelfstandig te openen wanneer de first-90-days vraag zelf centraal staat,
+              maar blijft begrensd genoeg om geen journey-suite of pseudo-SaaS-sprong te claimen.
             </p>
             <div className="space-y-3">
               {[
@@ -109,13 +111,13 @@ export function OnboardingPeerPage() {
           <div className="marketing-support-note">
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Portfolio-rol</p>
             <p className="mt-2 text-sm leading-7 text-[var(--text)]">
-              Onboarding 30-60-90 is geen gewone support-route, maar ook geen nieuwe dominante hoofdwedge.
+              Onboarding 30-60-90 is een eigen peer-context voor vroege landing, eerste handoff en eerste managementinterventie.
             </p>
           </div>
           <div className="marketing-support-note">
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Heldere grens</p>
             <p className="mt-2 text-sm leading-7 text-[var(--text)]">
-              Geen client onboarding-tool, geen brede journey-suite en geen vervanging van RetentieScan wanneer behoudsdruk centraal staat.
+              Geen client onboarding-tool, geen brede journey-suite en geen vervanging van RetentieScan wanneer brede behoudsdruk centraal staat.
             </p>
           </div>
           <div className="marketing-link-grid">
@@ -251,6 +253,20 @@ export function OnboardingPeerPage() {
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+      </MarketingSection>
+
+      <MarketingSection tone="plain">
+        <div id="preview">
+          <SectionHeading
+            eyebrow="Preview"
+            title="Zie hoe Onboarding 30-60-90 als managementinstrument leest."
+            description="Deze preview laat dezelfde executive leeslijn zien als de live output: managementsamenvatting, bestuurlijke handoff, eerste werkspoor, owner, eerste stap en bounded reviewgrens."
+          />
+          <div className="mt-10 space-y-6">
+            <PreviewSlider variant="onboarding" />
+            <PreviewEvidenceRail className="mt-6" variant="onboarding" />
           </div>
         </div>
       </MarketingSection>

@@ -115,31 +115,31 @@ def get_management_summary_payload(
     )
 
     return {
-        "section_title": "Checkpoint-handoff",
+        "section_title": "Managementsamenvatting",
         "distribution_title": "Verdeling van het checkpointsignaal",
         "findings_title": "Scherpste checkpointlezing",
-        "executive_title": "Vroege lifecycle-duiding voor HR en leiding",
+        "executive_title": "Vroege landingsduiding voor HR, MT en directie",
         "executive_intro": executive_intro,
         "trust_note_title": "Leeswijzer voor management",
         "trust_note": trust_note,
-        "boardroom_title": "Checkpoint-handoff",
+        "boardroom_title": "Bestuurlijke handoff",
         "boardroom_intro": (
-            "Deze handoff helpt snel zien wat dit ene checkpoint nu bestuurlijk betekent, "
-            "welk eerste werkspoor voorop staat en wanneer onboarding juist klein moet blijven."
+            "Deze handoff brengt dit checkpoint terug tot een bestuurlijke managementread: "
+            "wat speelt nu, waarom telt dat, welk werkspoor vraagt eerst eigenaarschap en wanneer moet bewust worden herijkt."
         ),
         "boardroom_cards": [
             {
-                "title": "Checkpointread nu",
+                "title": "Wat speelt nu",
                 "value": management_band_label(band="MIDDEN"),
-                "body": f"De scherpste vroege frictie of borging zit nu vooral in {top_factor_text}. Gebruik dat als eerste checkpointspoor.",
+                "body": f"De scherpste vroege frictie of borging zit nu vooral in {top_factor_text}. Gebruik dat als eerste managementread van deze instroomgroep.",
             },
             {
-                "title": "Primair werkspoor",
+                "title": "Waarom telt dit nu",
                 "value": top_factor_labels[0] if top_factor_labels else "Nog geen topfactor",
-                "body": f"{top_factor_text.capitalize()} kleuren nu het sterkst welke beperkte handoff of correctie het eerst aandacht vraagt.",
+                "body": f"{top_factor_text.capitalize()} kleuren nu het sterkst waar vroege landing onder druk staat of expliciet geborgd moet worden voordat dit checkpoint doorschuift.",
             },
             {
-                "title": "Checkpoint-richting",
+                "title": "Eerste werkspoor",
                 "value": f"{avg_stay_intent:.1f}/10" if avg_stay_intent is not None else "Nog niet zichtbaar",
                 "body": direction_body,
             },
@@ -149,7 +149,7 @@ def get_management_summary_payload(
                 "body": "Beleg direct wie deze checkpointhuddle trekt, zodat onboarding niet blijft hangen als nette momentopname zonder eigenaar.",
             },
             {
-                "title": "Reviewgrens",
+                "title": "Reviewmoment",
                 "value": "Volgend checkpoint",
                 "body": review_moment,
             },
@@ -389,12 +389,12 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         "Gebruik een volgend checkpoint alleen als bounded vervolg nadat de eerste stap expliciet is belegd.",
     )
     return {
-        "section_title": "Vervolgstappen",
+        "section_title": "Route en actie",
         "intro_text": (
             "Gebruik onboarding om snel te kiezen wat dit checkpoint nu bestuurlijk vraagt, wie de eerste handoff trekt en wanneer de route juist klein moet blijven. "
             "Houd de read single-checkpoint, assisted en expliciet non-predictive."
         ),
-        "session_title": "Eerste managementhuddle na oplevering",
+        "session_title": "Eerste managementsessie",
         "session_intro": (
             "Houd de eerste sessie klein en bounded: kies eerst het primaire werkspoor, benoem daarna eigenaar, eerste stap en reviewgrens."
         ),

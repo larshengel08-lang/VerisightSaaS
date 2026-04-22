@@ -91,9 +91,18 @@ def test_onboarding_report_payloads_keep_single_checkpoint_boundary():
         top_factor_keys=["role_clarity"],
     )
 
-    assert summary["boardroom_title"] == "Checkpoint-handoff"
+    assert summary["section_title"] == "Managementsamenvatting"
+    assert summary["boardroom_title"] == "Bestuurlijke handoff"
+    assert "vroege landingsduiding" in summary["executive_title"].lower()
     assert "single-checkpoint" in summary["trust_note"].lower()
     assert "client onboarding-route" in summary["boardroom_watchout"].lower()
+    assert [card["title"] for card in summary["boardroom_cards"]] == [
+        "Wat speelt nu",
+        "Waarom telt dit nu",
+        "Eerste werkspoor",
+        "Eerste eigenaar",
+        "Reviewmoment",
+    ]
     assert cards[2]["value"] == "Enkel checkpoint"
     assert "journey" in cards[2]["body"].lower()
     assert "rolverwachting" in hypotheses[0]["title"].lower()
@@ -109,6 +118,8 @@ def test_onboarding_methodology_and_next_steps_keep_threshold_and_boundary_contr
 
     assert "5 responses" in methodology["intro_text"].lower()
     assert "10 responses" in methodology["intro_text"].lower()
+    assert next_steps["section_title"] == "Route en actie"
+    assert next_steps["session_title"] == "Eerste managementsessie"
     assert "journey-engine" in next_steps["session_watchout"].lower()
     assert "client onboarding-route" in next_steps["session_watchout"].lower()
     assert isinstance(next_steps["steps"], list)

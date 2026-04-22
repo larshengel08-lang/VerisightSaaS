@@ -1,7 +1,7 @@
 import { MANAGEMENT_BAND_LABELS, MANAGEMENT_CONTEXT_LABELS } from '@/lib/management-language'
 import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
 
-export type ReportPreviewVariant = 'portfolio' | 'exit' | 'retention'
+export type ReportPreviewVariant = 'portfolio' | 'exit' | 'retention' | 'onboarding'
 
 export interface ReportPreviewHypothesis {
   title: string
@@ -112,7 +112,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       ['Bestuurlijke read', 'Dashboard en rapport openen met dezelfde bestuurlijke leesvolgorde'],
       ['Productspecifieke duiding', 'ExitScan en RetentieScan krijgen een eigen managementverhaal binnen een platform'],
       ['Routekeuze eerst', 'ExitScan is meestal de eerste demo; RetentieScan volgt wanneer de actieve behoudsvraag echt centraal staat'],
-      ['Core proof blijft leidend', 'Publieke deliverable-proof blijft bewust bij ExitScan en RetentieScan; bounded follow-on routes worden publiek vooral via productpagina en trustlaag gekaderd.'],
+      ['Core proof blijft leidend', 'Publieke sample-pdf-proof blijft bewust bij ExitScan en RetentieScan; Onboarding krijgt daarnaast een eigen bounded previewlaag op productniveau zonder suite-oversell.'],
       ['Begeleide output', 'Geen losse survey-export of self-serve tool'],
     ],
     trustTitle: 'Hoe je deze voorbeeldoutput leest',
@@ -131,7 +131,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     supportVisualAlt: 'Voorbeeld van een Verisight segment deep dive',
     sampleReportTitle: 'Waar je het volledige voorbeeld ziet',
     sampleReportBody:
-      'Gebruik de portfolio-preview als routekiezer. De publieke deliverable-proof blijft bewust core-first: het volledige buyer-facing voorbeeldrapport open je daarna op de productspecifieke ExitScan- of RetentieScan-pagina, terwijl bounded follow-on routes hun bewijs vooral via productpagina en trustlaag dragen.',
+      'Gebruik de portfolio-preview als routekiezer. De publieke deliverable-proof blijft bewust core-first voor sample-pdf’s: het volledige buyer-facing voorbeeldrapport open je daarna op de productspecifieke ExitScan- of RetentieScan-pagina, terwijl Onboarding een eigen bounded preview- en trustlaag op productniveau krijgt.',
     sampleReportHref: '/producten',
     sampleReportLabel: 'Bekijk productspecifieke voorbeelden',
   },
@@ -290,5 +290,82 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       'Open hier het actuele RetentieScan-voorbeeldrapport met fictieve data, verification-first lezing en dezelfde trustgrenzen als de echte output.',
     sampleReportHref: retentionSampleAsset?.publicHref,
     sampleReportLabel: 'Open RetentieScan-voorbeeldrapport',
+  },
+  onboarding: {
+    label: 'Onboarding 30-60-90 preview',
+    intro:
+      'Onboarding 30-60-90 opent als peer-grade lifecycle-read voor vroege landing: eerst wat in de eerste 30-60-90 dagen nu speelt, daarna waarom dat bestuurlijk telt, welk werkspoor eerst eigenaarschap vraagt en welke reviewgrens de route bounded houdt.',
+    kpis: [
+      ['Responses', '12 van 16', '75% respons'],
+      ['Onboardingsignaal', '5,8 op 10', 'Vraagt gerichte managementread'],
+      ['Checkpoint-richting', '5,6 op 10', 'Ondersteunende richtinglaag'],
+      ['Eerste werkspoor', 'Rolhelderheid', 'Vraagt eerste handoff'],
+    ],
+    boardroomTitle: 'Bestuurlijke handoff',
+    boardroomIntro:
+      'De preview toont dezelfde executive lijn als het product zelf: wat speelt nu, waarom telt dit in de vroege landing, welk eerste werkspoor vraagt eigenaarschap en wat mag management hier nadrukkelijk nog niet van maken.',
+    boardroomPoints: [
+      ['Wat speelt nu', 'De eerste landing laat een leesbaar checkpointsignaal zien met één primair werkspoor voor deze instroomgroep.'],
+      ['Waarom telt dit nu', 'Vroege mismatch of frictie in rol, leiding of teamcontext raakt instroomkwaliteit en vraagt een eerste managementinterventie voordat dit checkpoint doorschuift.'],
+      ['Wat nog niet claimen', 'Dit blijft een single-checkpoint managementread: geen journey-engine, geen automation-suite en geen predictor van latere retentie-uitkomst.'],
+    ],
+    focusTitle: 'Waar vraagt vroege landing nu het eerste eigenaarschap?',
+    dashboardRows: [
+      { label: 'Onboardingsignaal', value: '5,8', band: MANAGEMENT_BAND_LABELS.MIDDEN, width: '58%', tone: 'amber' },
+      { label: 'Checkpoint-richting', value: '5,6', band: 'Contextlaag', width: '56%', tone: 'amber' },
+      { label: 'Rolhelderheid', value: '6,2', band: 'Eerste werkspoor', width: '62%', tone: 'amber' },
+      { label: 'Leiderschap', value: '5,1', band: 'Tweede contextlaag', width: '51%', tone: 'amber' },
+    ],
+    nuance:
+      'Onboarding 30-60-90 is een volwassen managementinstrument voor vroege landing, maar blijft bewust bounded: geen journey-engine, geen automation, geen hire-date orchestration en geen individuele beoordeling.',
+    factorLead:
+      'De factorlaag laat zien waar vroege landing nu steun of correctie vraagt. Onboardingsignaal blijft de hoofdmetric; checkpoint-richting en werkfactoren verdiepen het beeld zonder tweede hoofdscore te worden.',
+    factorCards: [
+      { label: 'Rolhelderheid', scoreDisplay: '4,8/10', signalDisplay: '6,2/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
+      { label: 'Leiderschap', scoreDisplay: '5,2/10', signalDisplay: '5,1/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
+      { label: 'Cultuurmatch', scoreDisplay: '5,9/10', signalDisplay: '4,8/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
+      { label: 'Groeiperspectief', scoreDisplay: '6,1/10', signalDisplay: '4,6/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
+      { label: 'Werkcontext', scoreDisplay: '6,4/10', band: MANAGEMENT_CONTEXT_LABELS.stabilizing, tone: 'emerald' },
+      { label: 'Teaminbedding', scoreDisplay: '6,6/10', band: MANAGEMENT_CONTEXT_LABELS.stabilizing, tone: 'emerald' },
+    ],
+    hypothesisLead:
+      'De preview vertaalt het checkpoint niet naar grote conclusies, maar naar een bestuurlijke handoff: welke eerste managementvraag telt nu, wie wordt eigenaar en welke bounded stap hoort daar direct bij.',
+    hypotheses: [
+      {
+        title: 'Hypothese: rolhelderheid vraagt de eerste managementhuddle',
+        body: 'Nieuwe medewerkers lijken nog te weinig expliciete prioriteit en succesmaat te ervaren in deze fase. Dat maakt rolhelderheid nu het eerste werkspoor.',
+        question: 'Welke rolverwachting, prioriteit of succesmaat moet in deze instroomgroep direct explicieter worden gemaakt?',
+      },
+      {
+        title: 'Hypothese: de eerste handoff is nog niet scherp genoeg belegd',
+        body: 'Het checkpointsignaal vraagt niet om een bredere suite, maar wel om een zichtbare eerste eigenaar, eerste actie en reviewmoment binnen deze fase.',
+        question: 'Wie trekt nu de eerste handoff en welke kleine correctie of borgactie moet op het volgende checkpoint toetsbaar terugkomen?',
+      },
+    ],
+    proofNotes: [
+      ['Managementsamenvatting', 'De preview opent met een compacte executive laag rond wat nu speelt, waarom dat telt en welk werkspoor eerst eigenaarschap vraagt.'],
+      ['Bestuurlijke handoff', 'Owner, eerste stap en reviewgrens staan expliciet in dezelfde managementlijn als dashboard en rapport.'],
+      ['Route en actie', 'De output eindigt bij een begrensde vervolgroute: eerst duiden, dan kleine correctie of borging, daarna bewust herijken.'],
+      ['Bewuste boundedheid', 'De preview verkoopt geen journey-suite, geen automation en geen bredere lifecycle-engine dan het product werkelijk levert.'],
+    ],
+    trustTitle: 'Trust & interpretatie',
+    trustIntro:
+      'Ook in de preview blijft Onboarding zichtbaar begrensd: single-checkpoint managementread op groepsniveau, met expliciete claimsgrenzen en zonder pseudo-SaaS-framing.',
+    trustPoints: [
+      ['Intended use', 'Vroege landingsduiding voor nieuwe medewerkers op groepsniveau in een bounded 30-60-90-context.'],
+      ['Wat management ziet', 'Onboardingsignaal, checkpoint-richting, eerste werkspoor, eigenaar, eerste stap en reviewgrens in één executive lijn.'],
+      ['Privacygrens', 'Groepsniveau met minimale n-grenzen; geen individuele onboardingbeoordeling of named-manager readout.'],
+      ['Bewijsstatus', 'Volwassen managementdeliverable binnen bounded productscope; geen journey-engine, geen automation-suite en geen bewezen predictor.'],
+    ],
+    demoLabel: 'Illustratief voorbeeld',
+    demoBody:
+      'Fictieve voorbeelddata. De managementstructuur, bounded trustlaag en lifecycle-taal volgen dezelfde lijn als de actieve Onboarding-output.',
+    supportVisualTitle: 'Onboarding previewvisual',
+    supportVisualAlt: 'Voorbeeld van een Onboarding 30-60-90 managementpreview',
+    sampleReportTitle: 'Buyer-facing Onboarding preview',
+    sampleReportBody:
+      'Open hier de bounded Onboarding-preview op productniveau om te zien hoe deze route als peer-grade managementinstrument leest zonder sample-pdf, automation-claim of journey-oversell.',
+    sampleReportHref: '/producten/onboarding-30-60-90#preview',
+    sampleReportLabel: 'Open Onboarding-preview',
   },
 }
