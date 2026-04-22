@@ -10,7 +10,7 @@ describe('contact qualification guidance', () => {
     })
 
     expect(guidance.status).toBe('uncertain_core_review')
-    expect(guidance.recommendedCoreRoute).toBe('exitscan')
+    expect(guidance.recommendedRoute).toBe('exitscan')
     expect(guidance.followOnCandidateRoute).toBeNull()
     expect(guidance.headline.toLowerCase()).toContain('exitscan')
   })
@@ -23,7 +23,7 @@ describe('contact qualification guidance', () => {
     })
 
     expect(guidance.status).toBe('retention_primary')
-    expect(guidance.recommendedCoreRoute).toBe('retentiescan')
+    expect(guidance.recommendedRoute).toBe('retentiescan')
     expect(guidance.followOnCandidateRoute).toBeNull()
     expect(guidance.detail).toContain('Retentiesignaal')
     expect(guidance.detail).not.toContain('stay-intent vraagstuk')
@@ -37,7 +37,7 @@ describe('contact qualification guidance', () => {
     })
 
     expect(guidance.status).toBe('combination_candidate')
-    expect(guidance.recommendedCoreRoute).toBe('combinatie')
+    expect(guidance.recommendedRoute).toBe('combinatie')
     expect(guidance.detail).toContain('Frictiescore')
     expect(guidance.detail).toContain('Retentiesignaal')
     expect(guidance.operatorSummary).toContain('Frictiescore')
@@ -53,7 +53,7 @@ describe('contact qualification guidance', () => {
     })
 
     expect(guidance.status).toBe('bounded_follow_on_review')
-    expect(guidance.recommendedCoreRoute).toBe('retentiescan')
+    expect(guidance.recommendedRoute).toBe('retentiescan')
     expect(guidance.followOnCandidateRoute).toBe('teamscan')
     expect(guidance.detail.toLowerCase()).toContain('bestaand signaal')
   })
@@ -66,8 +66,21 @@ describe('contact qualification guidance', () => {
     })
 
     expect(guidance.status).toBe('follow_on_reframe')
-    expect(guidance.recommendedCoreRoute).toBe('exitscan')
+    expect(guidance.recommendedRoute).toBe('exitscan')
     expect(guidance.followOnCandidateRoute).toBe('leadership')
     expect(guidance.operatorSummary.toLowerCase()).toContain('exitscan')
   })
 })
+  it('allows Onboarding 30-60-90 as a bounded peer route when the lifecycle question is explicit', () => {
+    const guidance = getContactQualificationGuidance({
+      routeInterest: 'onboarding',
+      desiredTiming: 'dit-kwartaal',
+      currentQuestion: 'We willen bij nieuwe medewerkers vroeg zien waar onboarding en eerste landing nu vastlopen.',
+    })
+
+    expect(guidance.status).toBe('onboarding_peer_primary')
+    expect(guidance.recommendedRoute).toBe('onboarding')
+    expect(guidance.followOnCandidateRoute).toBeNull()
+    expect(guidance.detail.toLowerCase()).toContain('lifecycle-vraag')
+    expect(guidance.detail.toLowerCase()).toContain('single-checkpoint')
+  })

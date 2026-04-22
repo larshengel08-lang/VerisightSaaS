@@ -1,4 +1,20 @@
-export const CONTACT_ROUTE_OPTIONS = [
+export type ContactRouteInterest =
+  | 'exitscan'
+  | 'retentiescan'
+  | 'onboarding'
+  | 'combinatie'
+  | 'leadership'
+  | 'teamscan'
+  | 'nog-onzeker'
+
+type ContactRouteOption = {
+  value: ContactRouteInterest
+  label: string
+  description: string
+  firstStepLabel: string
+}
+
+export const CONTACT_ROUTE_OPTIONS: ContactRouteOption[] = [
   {
     value: 'exitscan',
     label: 'ExitScan',
@@ -12,22 +28,16 @@ export const CONTACT_ROUTE_OPTIONS = [
     firstStepLabel: 'RetentieScan Baseline',
   },
   {
-    value: 'combinatie',
-    label: 'Combinatie',
-    description: 'We willen beide kernvragen bewust naast elkaar organiseren.',
-    firstStepLabel: 'een gefaseerde combinatieroute',
-  },
-  {
-    value: 'teamscan',
-    label: 'TeamScan',
-    description: 'Na een breder signaal willen we lokaal bepalen waar eerst verificatie nodig is.',
-    firstStepLabel: 'een bounded TeamScan follow-on route na een bestaand signaal',
-  },
-  {
     value: 'onboarding',
     label: 'Onboarding 30-60-90',
-    description: 'Na een onboardingvraag willen we vroeg zien hoe nieuwe medewerkers in een checkpoint landen.',
-    firstStepLabel: 'een bounded onboarding follow-on route na een eerste lifecycle-vraag',
+    description: 'De primaire vraag gaat over nieuwe medewerkers, vroege landing en eerste lifecycle-frictie.',
+    firstStepLabel: 'een begrensde onboarding-checkpoint peer-route',
+  },
+  {
+    value: 'combinatie',
+    label: 'Combinatie',
+    description: 'Alleen wanneer vertrekduiding en behoudsvraag allebei bestuurlijk tegelijk spelen.',
+    firstStepLabel: 'een gefaseerde combinatieroute',
   },
   {
     value: 'leadership',
@@ -40,6 +50,15 @@ export const CONTACT_ROUTE_OPTIONS = [
     label: 'Nog niet zeker',
     description: 'We willen eerst de juiste route bepalen.',
     firstStepLabel: 'de logischste eerste route',
+  },
+] as const
+
+const LEGACY_CONTACT_ROUTE_OPTIONS: ContactRouteOption[] = [
+  {
+    value: 'teamscan',
+    label: 'TeamScan',
+    description: 'Na een breder signaal willen we lokaal bepalen waar eerst verificatie nodig is.',
+    firstStepLabel: 'een bounded TeamScan follow-on route na een bestaand signaal',
   },
 ] as const
 
@@ -66,13 +85,16 @@ export const CONTACT_DESIRED_TIMING_OPTIONS = [
   },
 ] as const
 
-export type ContactRouteInterest = (typeof CONTACT_ROUTE_OPTIONS)[number]['value']
 export type ContactDesiredTiming = (typeof CONTACT_DESIRED_TIMING_OPTIONS)[number]['value']
-export type CoreContactRouteInterest = Extract<ContactRouteInterest, 'exitscan' | 'retentiescan' | 'combinatie'>
-export type FollowOnContactRouteInterest = Extract<ContactRouteInterest, 'teamscan' | 'onboarding' | 'leadership'>
+export type PrimaryContactRouteInterest = Extract<
+  ContactRouteInterest,
+  'exitscan' | 'retentiescan' | 'onboarding' | 'combinatie'
+>
+export type FollowOnContactRouteInterest = Extract<ContactRouteInterest, 'teamscan' | 'leadership'>
 export type ContactQualificationStatus =
   | 'core_default'
   | 'retention_primary'
+  | 'onboarding_peer_primary'
   | 'combination_candidate'
   | 'bounded_follow_on_review'
   | 'follow_on_reframe'
@@ -92,16 +114,16 @@ type ContactQualificationInput = {
 
 export type ContactQualificationGuidance = {
   status: ContactQualificationStatus
-  recommendedCoreRoute: CoreContactRouteInterest
+  recommendedRoute: PrimaryContactRouteInterest
   followOnCandidateRoute: FollowOnContactRouteInterest | null
   headline: string
   detail: string
   operatorSummary: string
 }
 
-const routeOptionMap = new Map(CONTACT_ROUTE_OPTIONS.map((option) => [option.value, option]))
+const routeOptionMap = new Map([...CONTACT_ROUTE_OPTIONS, ...LEGACY_CONTACT_ROUTE_OPTIONS].map((option) => [option.value, option]))
 const timingOptionMap = new Map(CONTACT_DESIRED_TIMING_OPTIONS.map((option) => [option.value, option]))
-const followOnRoutes = new Set<FollowOnContactRouteInterest>(['teamscan', 'onboarding', 'leadership'])
+const followOnRoutes = new Set<FollowOnContactRouteInterest>(['teamscan', 'leadership'])
 
 const EXIT_SIGNAL_KEYWORDS = [
   'exit',
@@ -129,6 +151,8 @@ const ONBOARDING_SIGNAL_KEYWORDS = [
   'onboarding',
   'nieuwe medewerker',
   'nieuwe medewerkers',
+  'landing',
+  'instroom',
   'eerste 30',
   'eerste 60',
   'eerste 90',
@@ -219,9 +243,6 @@ function detectFollowOnCandidateRoute(text: string): FollowOnContactRouteInteres
   if (includesAnyKeyword(text, TEAM_SIGNAL_KEYWORDS)) {
     return 'teamscan'
   }
-  if (includesAnyKeyword(text, ONBOARDING_SIGNAL_KEYWORDS)) {
-    return 'onboarding'
-  }
   if (includesAnyKeyword(text, LEADERSHIP_SIGNAL_KEYWORDS)) {
     return 'leadership'
   }
@@ -245,39 +266,48 @@ export function getContactQualificationGuidance({
   const inferredFollowOnCandidate = detectFollowOnCandidateRoute(normalizedQuestion)
   const followOnCandidateRoute = explicitFollowOnCandidate ?? inferredFollowOnCandidate
 
-  let recommendedCoreRoute: CoreContactRouteInterest = 'exitscan'
+  const hasOnboardingSignal = includesAnyKeyword(normalizedQuestion, ONBOARDING_SIGNAL_KEYWORDS)
+  let recommendedRoute: PrimaryContactRouteInterest = 'exitscan'
   if (hasExitSignal && hasRetentionSignal) {
-    recommendedCoreRoute = 'combinatie'
+    recommendedRoute = 'combinatie'
   } else if (hasRetentionSignal && !hasExitSignal) {
-    recommendedCoreRoute = 'retentiescan'
+    recommendedRoute = 'retentiescan'
+  } else if (hasOnboardingSignal && !hasExitSignal && !hasRetentionSignal) {
+    recommendedRoute = 'onboarding'
+  } else if (normalizedRoute === 'onboarding') {
+    recommendedRoute = 'onboarding'
+  } else if (normalizedRoute === 'retentiescan') {
+    recommendedRoute = 'retentiescan'
+  } else if (normalizedRoute === 'combinatie') {
+    recommendedRoute = 'combinatie'
   }
 
   if (followOnCandidateRoute && followOnEvidence) {
     return {
       status: 'bounded_follow_on_review',
-      recommendedCoreRoute,
+      recommendedRoute,
       followOnCandidateRoute,
       headline: `${getContactRouteLabel(followOnCandidateRoute)} blijft een bounded vervolgrichting.`,
-      detail: `We behandelen dit pas als logische vervolgstap nadat intake bevestigt dat er al een bestaand signaal, baseline of eerdere managementread staat. Tot die bevestiging blijft ${getContactRouteLabel(recommendedCoreRoute)} de veiligste eerste routekaderschets.`,
-      operatorSummary: `${getContactRouteLabel(followOnCandidateRoute)} is genoemd als bounded follow-on route; verifieer bestaand signaal en toets eerst of ${getContactRouteLabel(recommendedCoreRoute)} al stevig staat.`,
+      detail: `We behandelen dit pas als logische vervolgstap nadat intake bevestigt dat er al een bestaand signaal, baseline of eerdere managementread staat. Tot die bevestiging blijft ${getContactRouteLabel(recommendedRoute)} de veiligste eerste routekaderschets.`,
+      operatorSummary: `${getContactRouteLabel(followOnCandidateRoute)} is genoemd als bounded follow-on route; verifieer bestaand signaal en toets eerst of ${getContactRouteLabel(recommendedRoute)} al stevig staat.`,
     }
   }
 
   if (followOnCandidateRoute) {
     return {
       status: 'follow_on_reframe',
-      recommendedCoreRoute,
+      recommendedRoute,
       followOnCandidateRoute,
       headline: `${getContactRouteLabel(followOnCandidateRoute)} openen we niet als vlakke eerste intake-route.`,
-      detail: `Zonder expliciet bestaand signaal of eerdere baseline vernauwen we deze aanvraag eerst richting ${getContactRouteLabel(recommendedCoreRoute)}. Daarna bepalen we pas of ${getContactRouteLabel(followOnCandidateRoute)} echt logisch is als bounded vervolgroute.`,
-      operatorSummary: `${getContactRouteLabel(followOnCandidateRoute)} is nog te vroeg als eerste route; vernauw de intake eerst richting ${getContactRouteLabel(recommendedCoreRoute)} en leg daarna pas een eventuele follow-on vast.`,
+      detail: `Zonder expliciet bestaand signaal of eerdere baseline vernauwen we deze aanvraag eerst richting ${getContactRouteLabel(recommendedRoute)}. Daarna bepalen we pas of ${getContactRouteLabel(followOnCandidateRoute)} echt logisch is als bounded vervolgroute.`,
+      operatorSummary: `${getContactRouteLabel(followOnCandidateRoute)} is nog te vroeg als eerste route; vernauw de intake eerst richting ${getContactRouteLabel(recommendedRoute)} en leg daarna pas een eventuele follow-on vast.`,
     }
   }
 
-  if (recommendedCoreRoute === 'combinatie') {
+  if (recommendedRoute === 'combinatie') {
     return {
       status: 'combination_candidate',
-      recommendedCoreRoute,
+      recommendedRoute,
       followOnCandidateRoute: null,
       headline: 'Combinatie is alleen logisch als beide kernvragen echt tegelijk spelen.',
       detail: `De huidige vraag wijst zowel op vertrekduiding via Frictiescore als op vroeg behoudssignaal via Retentiesignaal. Daarom mag een gefaseerde combinatieroute in intake getoetst worden, maar alleen als beide managementvragen echt actief zijn en niet als losse bundel.`,
@@ -286,10 +316,10 @@ export function getContactQualificationGuidance({
     }
   }
 
-  if (recommendedCoreRoute === 'retentiescan') {
+  if (recommendedRoute === 'retentiescan') {
     return {
       status: 'retention_primary',
-      recommendedCoreRoute,
+      recommendedRoute,
       followOnCandidateRoute: null,
       headline: 'RetentieScan lijkt nu de logische eerste route.',
       detail: `De vraag leest als een vroeg behoudsvraagstuk rond Retentiesignaal op groepsniveau. Daardoor mag RetentieScan in intake als eerste route worden getoetst, met ${normalizedTiming === 'zo-snel-mogelijk' ? 'hoge urgentie' : 'bounded eerste verificatie'} als uitgangspunt.`,
@@ -298,24 +328,36 @@ export function getContactQualificationGuidance({
     }
   }
 
+  if (recommendedRoute === 'onboarding') {
+    return {
+      status: 'onboarding_peer_primary',
+      recommendedRoute,
+      followOnCandidateRoute: null,
+      headline: 'Onboarding 30-60-90 mag hier als begrensde peer-route worden getoetst.',
+      detail: 'De vraag leest als een expliciete lifecycle-vraag rond nieuwe medewerkers en vroege landing. Daarom mag Onboarding 30-60-90 als eerste route worden getoetst, maar alleen als assisted single-checkpoint route met duidelijke owner, eerste actie en reviewgrens.',
+      operatorSummary:
+        'Expliciete lifecycle-vraag zichtbaar; toets Onboarding 30-60-90 als begrensde peer-route en bewaak dat het geen brede journey-suite of standaard vervolgdefault wordt.',
+    }
+  }
+
   if (normalizedRoute === 'nog-onzeker') {
     return {
       status: 'uncertain_core_review',
-      recommendedCoreRoute,
+      recommendedRoute,
       followOnCandidateRoute: null,
-      headline: `${getContactRouteLabel(recommendedCoreRoute)} is nu de veiligste eerste routehypothese.`,
-      detail: `De keuze stond nog open. Op basis van de huidige intake vernauwen we daarom eerst richting ${getContactRouteLabel(recommendedCoreRoute)} en maken we van 'nog niet zeker' geen eindstation.`,
-      operatorSummary: `'Nog niet zeker' blijft niet openstaan; vernauw de intake actief richting ${getContactRouteLabel(recommendedCoreRoute)} en bevestig daarna pas de route.`,
+      headline: `${getContactRouteLabel(recommendedRoute)} is nu de veiligste eerste routehypothese.`,
+      detail: `De keuze stond nog open. Op basis van de huidige intake vernauwen we daarom eerst richting ${getContactRouteLabel(recommendedRoute)} en maken we van 'nog niet zeker' geen eindstation.`,
+      operatorSummary: `'Nog niet zeker' blijft niet openstaan; vernauw de intake actief richting ${getContactRouteLabel(recommendedRoute)} en bevestig daarna pas de route.`,
     }
   }
 
   return {
     status: 'core_default',
-    recommendedCoreRoute,
+    recommendedRoute,
     followOnCandidateRoute: null,
-    headline: `${getContactRouteLabel(recommendedCoreRoute)} blijft de logische eerste route.`,
-    detail: `De huidige intake geeft nog geen reden om van de core-first default af te wijken. Daarom behandelen we ${getContactRouteLabel(recommendedCoreRoute)} als eerste route en schuiven we vervolgroutes of combinaties pas later naar voren als de intake dat echt onderbouwt.`,
-    operatorSummary: `Behoud de core-first start: behandel ${getContactRouteLabel(recommendedCoreRoute)} als eerste route tenzij intake expliciet een sterkere uitzondering onderbouwt.`,
+    headline: `${getContactRouteLabel(recommendedRoute)} blijft de logische eerste route.`,
+    detail: `De huidige intake geeft nog geen reden om van de standaard first-buy logica af te wijken. Daarom behandelen we ${getContactRouteLabel(recommendedRoute)} als eerste route en schuiven we vervolgroutes of combinaties pas later naar voren als de intake dat echt onderbouwt.`,
+    operatorSummary: `Behoud de first-buy start: behandel ${getContactRouteLabel(recommendedRoute)} als eerste route tenzij intake expliciet een sterkere uitzondering onderbouwt.`,
   }
 }
 

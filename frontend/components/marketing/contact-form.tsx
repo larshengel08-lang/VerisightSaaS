@@ -56,6 +56,10 @@ const initialState: FormState = {
   website: '',
 }
 
+function normalizeVisibleRouteInterest(value: ContactRouteInterest): ContactRouteInterest {
+  return CONTACT_ROUTE_OPTIONS.some((option) => option.value === value) ? value : 'nog-onzeker'
+}
+
 export function ContactForm({
   surface = 'dark',
   defaultRouteInterest = 'exitscan',
@@ -64,7 +68,7 @@ export function ContactForm({
   const searchParams = useSearchParams()
   const [form, setForm] = useState<FormState>({
     ...initialState,
-    routeInterest: defaultRouteInterest,
+    routeInterest: normalizeVisibleRouteInterest(defaultRouteInterest),
   })
   const [ctaSource, setCtaSource] = useState(normalizeContactCtaSource(defaultCtaSource))
   const [loading, setLoading] = useState(false)
@@ -92,10 +96,11 @@ export function ContactForm({
       routeFromQuery?.trim()
         ? normalizeContactRouteInterest(routeFromQuery)
         : inferRouteInterestFromSource(resolvedSource) || defaultRouteInterest
+    const visibleRoute = normalizeVisibleRouteInterest(resolvedRoute)
 
     setForm((current) => ({
       ...current,
-      routeInterest: resolvedRoute,
+      routeInterest: visibleRoute,
       desiredTiming: desiredTimingFromQuery
         ? normalizeContactDesiredTiming(desiredTimingFromQuery)
         : current.desiredTiming,
@@ -219,10 +224,11 @@ export function ContactForm({
           isLight ? 'border-[#E5E0D6] bg-[#F7F5F1] text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'
         }`}
       >
-        Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de
-        logische eerste stap is. TeamScan, Onboarding 30-60-90 en Leadership Scan blijven bounded follow-on routes die
-        pas logisch worden nadat een eerste signaal, baseline of managementread al staat. De informatie uit dit
-        formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.
+        Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of uitzonderlijk Onboarding
+        30-60-90 nu de logische eerste route is. Combinatie blijft een portfoliokeuze nadat de eerste route helder
+        staat. Pulse en Leadership Scan blijven bounded vervolgroutes die pas logisch worden nadat een eerste signaal,
+        baseline of managementread al staat. TeamScan houden we buiten de actieve buyer-facing routekeuze. De
+        informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
@@ -354,7 +360,7 @@ export function ContactForm({
 
       <div className="mt-5">
         <label htmlFor="currentQuestion" className={`mb-2 block text-sm font-medium ${labelClass}`}>
-          Wat wil je nu vooral begrijpen van behoud of uitstroom?
+          Wat wil je nu vooral begrijpen van uitstroom, behoud of vroege landing?
         </label>
         <textarea
           id="currentQuestion"
@@ -363,7 +369,7 @@ export function ContactForm({
           value={form.currentQuestion}
           onChange={(event) => updateField('currentQuestion', event.target.value)}
           className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
-          placeholder="Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar managementbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven."
+          placeholder="Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar managementbeeld. Of: we willen eerder zien waar behoud onder druk staat. Of: we willen vroeg zien waar nieuwe medewerkers in onboarding vastlopen."
         />
       </div>
 
@@ -396,7 +402,7 @@ export function ContactForm({
             <p>
               Intake-richting: <span className="font-semibold">{successState.guidanceHeadline}</span> {successState.guidanceDetail}
             </p>
-            <p>Een vervolgroute of combinatieroute wordt pas concreet zodra de eerste route en eerste managementwaarde helder zijn.</p>
+            <p>Combinatie of een bounded vervolgstap wordt pas concreet zodra de eerste route en eerste managementwaarde helder zijn.</p>
             <p>In deze stap krijg je nog geen live inrichting of definitieve offerte zonder intake.</p>
             {successState.leadId ? <p className="text-xs opacity-80">Referentie: {successState.leadId}.</p> : null}
           </div>

@@ -40,24 +40,19 @@ export const metadata: Metadata = {
   },
 }
 
+const peerExceptionRoute = {
+  title: 'Onboarding 30-60-90',
+  label: 'Begrensde peer-exceptie',
+  body: 'Zelfstandig verkoopbare lifecycle-check wanneer de primaire managementvraag echt gaat over nieuwe medewerkers, vroege landing en eerste frictie.',
+  href: '/producten/onboarding-30-60-90',
+} as const
+
 const followOnRoutes = [
   {
     title: 'Pulse',
     label: 'Vervolgroute',
     body: 'Compacte reviewroute na een eerdere managementread. Bedoeld voor bounded herijking, niet als derde brede instap.',
     href: '/producten/pulse',
-  },
-  {
-    title: 'TeamScan',
-    label: 'Lokalisatie',
-    body: 'Bounded lokale verdieping nadat een breder signaal al zichtbaar is en een eerste lokale vraag openstaat.',
-    href: '/producten/teamscan',
-  },
-  {
-    title: 'Onboarding 30-60-90',
-    label: 'Lifecycle-check',
-    body: 'Gerichte assisted checkpointread voor vroege landing van nieuwe medewerkers wanneer die vraag echt centraal staat.',
-    href: '/producten/onboarding-30-60-90',
   },
   {
     title: 'Leadership Scan',
@@ -77,8 +72,8 @@ const portfolioProofCards = [
     body: 'Combinatie bestaat om twee kernroutes bewust te verbinden nadat de eerste route duidelijk is, niet om als derde kernproduct mee te wedgen.',
   },
   {
-    title: 'Bounded vervolg blijft echt kleiner',
-    body: 'Pulse, TeamScan, onboarding en Leadership Scan horen pas na een eerste managementread zichtbaar te worden als kleinere vervolglogica.',
+    title: 'Bounded routes blijven voelbaar kleiner',
+    body: 'Onboarding 30-60-90 blijft alleen open als begrensde peer-exceptie; Pulse en Leadership Scan horen pas na een eerste managementread zichtbaar te worden.',
   },
 ] as const
 
@@ -109,8 +104,8 @@ export default function ProductenPage() {
             </h1>
             <p className="marketing-hero-copy text-[#4A5563]">
               ExitScan en RetentieScan blijven de twee buyer-facing kernroutes. Combinatie en bounded vervolgroutes
-              horen pas daarna in beeld te komen, zodat deze pagina routekeuze ondersteunt zonder een platte
-              productcatalogus te worden.
+              horen pas daarna in beeld te komen, terwijl Onboarding 30-60-90 alleen openstaat bij een expliciete
+              lifecycle-vraag. Zo ondersteunt deze pagina routekeuze zonder een platte productcatalogus te worden.
             </p>
             <div className="marketing-hero-cta-row marketing-hero-actions">
               <Link
@@ -167,7 +162,8 @@ export default function ProductenPage() {
             <div className="marketing-support-note">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#9CA3AF]">Wat later komt</p>
               <p className="mt-2 text-sm leading-7 text-[#4A5563]">
-                Combinatie en bounded vervolgroutes volgen pas nadat de eerste managementvraag en eerste kooproute helder zijn.
+                Combinatie, Pulse en Leadership Scan volgen pas nadat de eerste managementvraag en eerste kooproute
+                helder zijn. Onboarding 30-60-90 blijft alleen open bij een expliciete lifecycle-vraag.
               </p>
             </div>
           </MarketingHeroSupport>
@@ -239,11 +235,47 @@ export default function ProductenPage() {
 
         <MarketingSection tone="tint">
           <SectionHeading
-            eyebrow="Bewuste vervolgroutes"
-            title="Bounded vervolgroutes horen na de eerste managementread."
-            description="Pulse, TeamScan, onboarding en Leadership Scan zijn geen extra wedge-producten naast ExitScan en RetentieScan. Ze bestaan om het vervolg kleiner, gerichter en bestuurlijk logisch te houden."
+            eyebrow="Peer-exceptie"
+            title="Onboarding 30-60-90 staat buyer-facing alleen open bij een expliciete lifecycle-vraag."
+            description="Deze route is geen derde kernproduct en ook geen standaard vervolglaag. Ze blijft een begrensde peer-exceptie wanneer nieuwe medewerkers, vroege landing en eerste lifecycle-frictie nu echt de primaire managementvraag vormen."
           />
-          <div className="mt-10 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-10 grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="marketing-feature-card">
+              <span className="marketing-chip">{peerExceptionRoute.label}</span>
+              <h2 className="mt-4 text-2xl font-semibold text-[#132033]">{peerExceptionRoute.title}</h2>
+              <p className="mt-3 text-sm leading-7 text-[#4A5563]">{peerExceptionRoute.body}</p>
+              <p className="mt-4 text-sm leading-7 text-[#4A5563]">
+                De route blijft assisted, single-checkpoint en managementgericht. Daardoor mag onboarding commercieel
+                serieus zijn zonder als brede journey-suite, algemene onboardinglaag of standaard vervolgroute te gaan
+                lezen.
+              </p>
+              <Link
+                href={peerExceptionRoute.href}
+                className="mt-6 inline-flex items-center rounded-full border border-[#E5E0D6] bg-white px-5 py-2.5 text-sm font-semibold text-[#132033] transition-colors hover:border-[#3C8D8A]"
+              >
+                Meer over Onboarding 30-60-90
+              </Link>
+            </div>
+            <div className="marketing-route-card-dark bg-[linear-gradient(180deg,#5b4012_0%,#241507_100%)]">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#F6E7C1]">Guardrail</p>
+              <h2 className="mt-4 text-[clamp(1.8rem,3vw,2.7rem)] font-light leading-[1.08] tracking-[-0.03em] text-[#FFF8EC]">
+                Geen brede lifecycle-suite en geen automatische upsell.
+              </h2>
+              <p className="mt-4 text-sm leading-7 text-[rgba(255,248,236,0.76)]">
+                Onboarding 30-60-90 hoort alleen vroeg naar voren te komen wanneer de eerste managementvraag echt over
+                nieuwe medewerkers gaat. Anders blijft een kernroute of bewuste portfoliokeuze eerst logischer.
+              </p>
+            </div>
+          </div>
+        </MarketingSection>
+
+        <MarketingSection tone="tint">
+          <SectionHeading
+            eyebrow="Bewuste vervolgroutes"
+            title="Pulse en Leadership Scan horen na de eerste managementread."
+            description="Deze bounded vervolgroutes zijn geen extra wedge-producten naast ExitScan en RetentieScan. Ze bestaan om het vervolg kleiner, gerichter en bestuurlijk logisch te houden nadat een eerste route al managementtaal heeft gegeven."
+          />
+          <div className="mt-10 grid gap-5 lg:grid-cols-2">
             {followOnRoutes.map((route) => (
               <div key={route.title} className="marketing-feature-card">
                 <span className="marketing-chip">{route.label}</span>
@@ -261,7 +293,7 @@ export default function ProductenPage() {
           <SectionHeading
             eyebrow="Portfolio-proof"
             title="De portfoliohiërarchie moet ook publiek geloofwaardig blijven."
-            description="Deze overview moet dezelfde waarheid vertellen als homepage, pricing en trust: twee kernroutes eerst, portfolioroute bewust later en bounded vervolglogica zichtbaar kleiner."
+            description="Deze overview moet dezelfde waarheid vertellen als homepage, pricing en trust: twee kernroutes eerst, Onboarding alleen als begrensde peer-exceptie, portfolioroute bewust later en bounded vervolglogica zichtbaar kleiner."
           />
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {portfolioProofCards.map((card) => (
@@ -277,7 +309,7 @@ export default function ProductenPage() {
           <MarketingCalloutBand
             eyebrow="Route-inschatting"
             title="Twijfelt u welke route nu eerst telt?"
-            body="In een eerste gesprek bepalen we welke kernroute nu logisch is, hoe de productvorm eruitziet en welke combinatie- of vervolgstap bewust later moet blijven."
+            body="In een eerste gesprek bepalen we welke kernroute nu logisch is, wanneer Onboarding 30-60-90 echt als begrensde peer-route past en welke combinatie- of vervolgstap bewust later moet blijven."
             primaryHref={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'products_closing_cta' })}
             primaryLabel="Plan een kennismaking"
             secondaryHref="/vertrouwen"
