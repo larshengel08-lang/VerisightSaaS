@@ -44,6 +44,8 @@ Voor het huidige fix-programma gebruik je deze volgorde:
 
 ### Delivery en onboarding
 
+- [DELIVERY_MATURITY_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/DELIVERY_MATURITY_REVIEW.md)
+  - bestuurlijke review van wat nog ontbreekt voor herhaalbare report-to-action en overdraagbare delivery
 - [CLIENT_ONBOARDING_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_ONBOARDING_PLAYBOOK.md)
   - canonieke route van akkoord naar eerste managementwaarde
 - [CLIENT_ONBOARDING_FLOW_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_ONBOARDING_FLOW_SYSTEM.md)

@@ -33,6 +33,7 @@ Voor de huidige fix-tranche:
 
 ## Active
 - [ANALYTICS_EXPORT_SEMANTICS_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/ANALYTICS_EXPORT_SEMANTICS_REVIEW.md)
+- [DELIVERY_MATURITY_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/DELIVERY_MATURITY_REVIEW.md)
 - [OPS_AND_DELIVERY_SYSTEM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/OPS_AND_DELIVERY_SYSTEM_PLAN.md)
 - [COMMERCIAL_AND_ONBOARDING_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_AND_ONBOARDING_SIGNOFF.md)
 - [COMMERCIAL_LANGUAGE_PARITY_RECHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_LANGUAGE_PARITY_RECHECK.md)
