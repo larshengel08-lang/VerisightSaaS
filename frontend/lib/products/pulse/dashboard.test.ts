@@ -25,30 +25,25 @@ describe('buildPulseDashboardViewModel', () => {
 
     expect(model.topSummaryCards.map((card) => card.title)).toEqual([
       'Managementread nu',
-      'Primair werkspoor',
+      'Eerste reviewspoor',
       'Eerste eigenaar',
-      'Volgende check',
-      'Richting nu',
-      'Boundary',
+      'Reviewmoment',
     ])
     expect(model.topSummaryCards[1]?.value).toBe('Werkbelasting')
     expect(model.topSummaryCards[2]?.value).toBe('HR + leidinggevende')
     expect(model.topSummaryCards[3]?.value).toBe('30-45 dagen')
-    expect(model.topSummaryCards[3]?.body).toContain('volgende Pulse')
-    expect(model.topSummaryCards[5]?.body).toContain('vorige vergelijkbare Pulse')
+    expect(model.topSummaryCards[3]?.body).toContain('bounded hercheck')
     expect(model.profileCards[0]?.value).toBe('Reviewlaag')
     expect(model.profileCards[0]?.body).toContain('begrensde vergelijking')
-    expect(model.nextStep.title).toBe('Beleg correctie en hercheck')
-    expect(model.nextStep.body).toContain('managementreview of volgende Pulse')
-    expect(model.managementBlocks[2]?.items[1]).toContain('bounded hercheck')
+    expect(model.nextStep.title).toBe('Beleg herijking')
+    expect(model.nextStep.body).toContain('compacte herijking')
+    expect(model.managementBlocks).toHaveLength(2)
+    expect(model.managementBlocks[1]?.items[1]).toContain('bounded hercheck')
     expect(model.followThroughCards.map((card) => card.title)).toEqual([
-      'Prioriteit nu',
       'Eerste gesprek',
-      'Wie moet aan tafel',
+      'Eerste stap',
       'Eerste eigenaar',
-      'Eerste actie',
       'Reviewmoment',
-      'Wanneer geen nieuwe Pulse',
     ])
     expect(model.signaalbandenText).toContain('vorige vergelijkbare Pulse')
   })

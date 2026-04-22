@@ -3,7 +3,7 @@ import { FACTOR_LABELS } from '@/lib/types'
 import { ONBOARDING_ACTION_PLAYBOOKS } from './action-playbooks'
 
 const SIGNAL_BANDS_TEXT =
-  'Laag, midden en hoog onboardingsignaal geven alleen de scherpte van het huidige checkpointsignaal weer. Gebruik deze banding als vroege managementhulp op groepsniveau, niet als individuele beoordeling, performance-oordeel of bewijs van latere retentie-uitkomst.'
+  'Laag, midden en hoog onboardingsignaal geven alleen de scherpte van het huidige checkpointsignaal weer. Gebruik deze banding als vroege managementhulp op groepsniveau, niet als individuele beoordeling, performance-oordeel of bewijs van een latere onboardinguitkomst.'
 
 const LOW_SIGNAL_THRESHOLD = 4.5
 const HIGH_SIGNAL_THRESHOLD = 7
@@ -126,7 +126,7 @@ function getDirectionRead(args: {
       directionBody:
         args.checkpointState === 'high_attention_checkpoint'
           ? 'De richtingsvraag versterkt dit vroege aandachtssignaal: nieuwe medewerkers ervaren in deze fase nog te weinig houvast of perspectief. Gebruik dit als extra context, niet als voorspelling.'
-          : 'De richtingsvraag legt extra druk op deze checkpointread. Gebruik dit als signaal voor nadere duiding, niet als losstaande voorspeller van latere uitkomst.',
+          : 'De richtingsvraag legt extra druk op deze landingsread. Gebruik dit als signaal voor nadere duiding, niet als losstaande voorspeller van latere uitkomst.',
       directionTone: 'amber',
     }
   }
@@ -136,7 +136,7 @@ function getDirectionRead(args: {
       directionValue: `${args.stayIntent.toFixed(1)}/10`,
       directionBody:
         args.checkpointState === 'stable_checkpoint'
-          ? 'De richtingsvraag ondersteunt een stabieler checkpointbeeld, maar bewijst nog geen latere retentie of volledige onboardinguitkomst.'
+          ? 'De richtingsvraag ondersteunt een stabieler beeld van de vroege landing, maar bewijst nog geen latere onboardinguitkomst of volledige route-uitkomst.'
           : 'De richtingsvraag ondersteunt dat dit checkpoint nog niet volledig onder druk staat. Gebruik dit als nuance bij de eerste managementread, niet als vrijbrief.',
       directionTone: args.checkpointState === 'stable_checkpoint' ? 'emerald' : 'blue',
     }
@@ -208,7 +208,7 @@ function getPlaybookSupport(args: {
         playbook?.review ??
         'Gebruik een later checkpoint alleen als bounded vervolgmeting nadat de eerste correctie expliciet is belegd.',
       escalationBoundaryBody:
-        'Ga niet automatisch naar brede journey-, retentie- of performanceclaims; gebruik eerst deze managementhuddle om de eerste corrigerende stap te begrenzen.',
+        'Ga niet automatisch naar brede journey-, uitkomst- of performanceclaims; gebruik eerst deze managementhuddle om de eerste corrigerende stap te begrenzen.',
       conversationBody:
         playbook?.validate ??
         `Gebruik binnen twee weken een gerichte managementhuddle om te toetsen wat ${args.topFactorLabel.toLowerCase()} in deze fase het sterkst onder druk zet.`,
@@ -237,7 +237,7 @@ function getPlaybookSupport(args: {
       playbook?.review ??
       'Gebruik een volgend checkpoint alleen als bounded vervolg nadat de eerste correctie of verificatie expliciet is belegd.',
     escalationBoundaryBody:
-      'Maak deze checkpointread niet automatisch groter dan nodig; als de vraag eerst bredere duiding vraagt, zeg dat expliciet in plaats van onboarding te overrekken.',
+      'Maak deze landingsread niet automatisch groter dan nodig; als de vraag eerst bredere duiding vraagt, zeg dat expliciet in plaats van onboarding te overrekken.',
     conversationBody:
       playbook?.validate ??
       `Gebruik een korte managementhuddle om te toetsen wat ${args.topFactorLabel.toLowerCase()} in deze fase nu precies vraagt.`,
@@ -294,10 +294,10 @@ function buildOnboardingInterpretation(args: {
       directionTone: directionRead.directionTone,
       boundaryValue: args.strength === 'pattern' ? 'Geen journey-claim' : 'Nog geen patroonclaim',
       boundaryBody:
-        'Gebruik deze onboardingread als bounded checkpointlaag. Dit is geen performance-read, geen retentievoorspelling en nog geen volledige 30-60-90 journey.',
-      profileValue: args.strength === 'pattern' ? 'Checkpoint-handshake' : 'Indicatieve checkpoint-handshake',
+        'Gebruik deze landingsread als bounded checkpointlaag. Dit is geen performance-read, geen later uitkomstmodel en nog geen volledige 30-60-90 journey.',
+      profileValue: args.strength === 'pattern' ? 'Stabiele landingsduiding' : 'Indicatieve landingsduiding',
       profileBody:
-        'Onboarding is bedoeld als compacte managementhandoff van dit ene meetmoment: actuele groepssnapshot, eerste borgspoor, eerste eigenaar en een expliciet begrensde review. Lees dit als single-checkpoint lifecycle triage, niet als journey-engine of client onboarding-route.',
+        'Onboarding is bedoeld als compacte managementhandoff van dit ene meetmoment: actuele groepsread, eerste borgspoor, eerste eigenaar en een expliciet begrensde review. Lees dit als single-checkpoint lifecycle triage, niet als journey-engine of client onboarding-route.',
       primaryQuestionTitle: 'Eerste borgvraag',
       primaryQuestionBody: `Wat moet er nu expliciet behouden of bevestigd worden rond ${args.topFactorLabel.toLowerCase()} zodat het volgende checkpoint dezelfde stabiele landing laat zien?`,
       nextStepTitle: 'Beleg borging nu',
@@ -307,7 +307,7 @@ function buildOnboardingInterpretation(args: {
       followThroughTitle: 'Route en actie',
       followThroughIntro:
         'Bij een stabiel checkpoint zit de managementwaarde in een compacte handoff: benoem wat werkt, leg de eerste eigenaar vast en spreek een bounded reviewmoment af.',
-      priorityBody: `${args.topFactorLabel} is nu vooral een borgspoor voor deze checkpointread.`,
+      priorityBody: `${args.topFactorLabel} is nu vooral een borgspoor voor deze landingsduiding.`,
       conversationBody: handoff.conversationBody,
       ownerValue: handoff.ownerValue,
       ownerBody: handoff.ownerBody,
@@ -323,7 +323,7 @@ function buildOnboardingInterpretation(args: {
       ],
       scopeItems: [
         'Lees dit checkpoint niet als individuele beoordeling of manageroordeel.',
-        'Claim nog geen volledige 30-60-90 route of latere retentie-uitkomst.',
+        'Claim nog geen volledige 30-60-90 route of latere onboardinguitkomst.',
       ],
     }
   }
@@ -345,10 +345,10 @@ function buildOnboardingInterpretation(args: {
       directionTone: directionRead.directionTone,
       boundaryValue: args.strength === 'pattern' ? 'Geen predictorclaim' : 'Nog geen patroonclaim',
       boundaryBody:
-        'Zelfs bij een scherp vroegsignaal blijft onboarding een checkpointread op groepsniveau. Gebruik dit niet als individuele benchmark, geen individuele voorspelling, performance-oordeel of complete journey-read.',
-      profileValue: args.strength === 'pattern' ? 'Checkpoint-handoff' : 'Indicatieve checkpoint-handoff',
+        'Zelfs bij een scherp vroegsignaal blijft onboarding een managementread van vroege landing op groepsniveau. Gebruik dit niet als individuele benchmark, geen individuele voorspelling, performance-oordeel of complete journey-read.',
+      profileValue: args.strength === 'pattern' ? 'Vroege landingsduiding' : 'Indicatieve landingsduiding',
       profileBody:
-        'Onboarding blijft een vroege managementread van dit ene meetmoment: scherp genoeg voor een eerste corrigerende stap, maar nog geen journey-engine, client onboarding-route of retentievoorspeller.',
+        'Onboarding blijft een vroege managementread van dit ene meetmoment: scherp genoeg voor een eerste corrigerende stap, maar nog geen journey-engine, client onboarding-route of later uitkomstmodel.',
       primaryQuestionTitle: 'Eerste correctievraag',
       primaryQuestionBody: `Wat moet er nu als eerste gecorrigeerd of expliciet geverifieerd worden rond ${args.topFactorLabel.toLowerCase()} zodat dit aandachtsspoor niet doorschuift naar het volgende checkpoint?`,
       nextStepTitle: 'Beleg correctie en review',
@@ -395,10 +395,10 @@ function buildOnboardingInterpretation(args: {
     directionTone: directionRead.directionTone,
     boundaryValue: args.strength === 'pattern' ? 'Geen journey-claim' : 'Nog geen patroonclaim',
     boundaryBody:
-      'Gebruik deze onboardingread als begrensde checkpointlaag. Dit is geen performance-instrument, geen retentievoorspeller en nog geen volledige 30-60-90 journey.',
-    profileValue: args.strength === 'pattern' ? 'Checkpoint-handoff' : 'Indicatieve checkpoint-handoff',
+      'Gebruik deze landingsread als begrensde checkpointlaag. Dit is geen performance-instrument, geen later uitkomstmodel en nog geen volledige 30-60-90 journey.',
+    profileValue: args.strength === 'pattern' ? 'Vroege landingsduiding' : 'Indicatieve landingsduiding',
     profileBody:
-      'Onboarding is bedoeld als compacte managementread van dit ene meetmoment: actuele snapshot, eerste werkspoor, eerste eigenaar en een expliciet begrensde volgende check. Lees dit als single-checkpoint lifecycle triage, niet als journey-engine of client onboarding-route.',
+      'Onboarding is bedoeld als compacte managementread van dit ene meetmoment: actuele groepsread, eerste werkspoor, eerste eigenaar en een expliciet begrensde volgende check. Lees dit als single-checkpoint lifecycle triage, niet als journey-engine of client onboarding-route.',
     primaryQuestionTitle: 'Eerste managementvraag',
     primaryQuestionBody: `Welk beperkt gesprek of welke kleine correctie rond ${args.topFactorLabel.toLowerCase()} helpt nu het meest om dit checkpoint op een volgend meetmoment scherper te begrijpen of te verbeteren?`,
     nextStepTitle: 'Beleg eerste checkpointactie',
@@ -408,7 +408,7 @@ function buildOnboardingInterpretation(args: {
     followThroughTitle: 'Route en actie',
     followThroughIntro:
       'De waarde van onboarding zit hier in een snelle en begrensde follow-up: eerst duiden, dan een kleine correctie, dan bewust op een later checkpoint opnieuw kijken.',
-    priorityBody: `${args.topFactorLabel} is nu het eerste werkspoor voor deze checkpointread.`,
+    priorityBody: `${args.topFactorLabel} is nu het eerste werkspoor voor deze landingsduiding.`,
     conversationBody: handoff.conversationBody,
     ownerValue: handoff.ownerValue,
     ownerBody: handoff.ownerBody,
@@ -423,7 +423,7 @@ function buildOnboardingInterpretation(args: {
       secondaryFactorText,
     ],
     scopeItems: [
-      'Lees dit checkpoint niet als volledige 30-60-90 route of latere retentie-uitkomst.',
+      'Lees dit checkpoint niet als volledige 30-60-90 route of latere onboardinguitkomst.',
       'Gebruik de richtingsvraag als nuance, niet als zelfstandige predictor.',
     ],
   }
@@ -464,14 +464,14 @@ export function buildOnboardingDashboardViewModel(args: {
       topSummaryCards: [
         {
           title: 'Wat speelt nu',
-          value: 'Nog geen veilige checkpointread',
+          value: 'Nog geen veilige managementread',
           body: 'Er zijn nog te weinig responses om dit onboardingcheckpoint als bruikbare groepsread te openen.',
           tone: 'amber',
         },
         {
           title: 'Waarom telt dit nu',
           value: 'Te weinig responses',
-          body: 'Vanaf 5 responses ontstaat een eerste indicatieve checkpointread. Tot die tijd blijft onboarding vooral een responsopbouwfase.',
+          body: 'Vanaf 5 responses ontstaat een eerste indicatieve managementread. Tot die tijd blijft onboarding vooral een responsopbouwfase.',
           tone: 'blue',
         },
         {
@@ -491,10 +491,10 @@ export function buildOnboardingDashboardViewModel(args: {
         },
       ],
       primaryQuestion: {
-        title: 'Nog geen checkpointread',
+        title: 'Nog geen veilige managementread',
         body:
           args.pendingCount > 0
-            ? `Welke ${args.pendingCount} respondent(en) ontbreken nog om een eerste veilige onboarding-checkpointread te kunnen openen?`
+            ? `Welke ${args.pendingCount} respondent(en) ontbreken nog om een eerste veilige onboarding-managementread te kunnen openen?`
             : 'Welke extra responses zijn nog nodig voordat dit checkpoint veilig als groepsread gebruikt kan worden?',
         tone: 'amber',
       },
@@ -510,7 +510,7 @@ export function buildOnboardingDashboardViewModel(args: {
         'Zodra er genoeg responses zijn helpt onboarding vooral om sneller te kiezen welke vroege succes- of frictiefactor nu de eerste managementvraag vraagt.',
       followThroughTitle: 'Route en actie',
       followThroughIntro:
-        'De vaste onboardingroute verschijnt zodra dit checkpoint veilig genoeg is om als groepssnapshot te lezen.',
+        'De vaste onboardingroute verschijnt zodra dit checkpoint veilig genoeg is om als managementread te openen.',
       followThroughCards: [],
       managementBandOverride: null,
     }
@@ -545,7 +545,7 @@ export function buildOnboardingDashboardViewModel(args: {
         value: topFactorLabel,
         body: secondFactorLabel
           ? `${topFactorLabel} staat nu voorop; ${secondFactorLabel.toLowerCase()} lees je mee als tweede contextlaag.`
-          : `${topFactorLabel} vormt nu het eerste spoor voor deze checkpointread.`,
+          : `${topFactorLabel} vormt nu het eerste spoor voor deze landingsduiding.`,
         tone: 'blue',
       },
       {
@@ -620,7 +620,7 @@ export function buildOnboardingDashboardViewModel(args: {
       {
         title: 'Handoffvorm',
         value: 'Bestuurlijke handoff',
-        body: 'Deze route is pas een volwassen managementinstrument als checkpointread, eerste eigenaar, eerste stap en reviewgrens als één bestuurlijke handoff worden gelezen.',
+        body: 'Deze route is pas een volwassen managementinstrument als landingsduiding, eerste eigenaar, eerste stap en reviewgrens als één bestuurlijke handoff worden gelezen.',
         tone: checkpointState === 'stable_checkpoint' ? 'emerald' : 'blue',
       },
     ],

@@ -4337,6 +4337,7 @@ def _append_rebrand_risk_and_prevention(
     story: list,
     *,
     avg_risk: float | None,
+    scan_type: str,
     signal_label: str,
     signal_label_lower: str,
     band_counts: dict[str, int],
@@ -4370,6 +4371,19 @@ def _append_rebrand_risk_and_prevention(
         )
         how_to_read = "Lees eerst het hoofdpatroon bovenaan, daarna de signaalverdeling en pas daarna de aanvullende context."
         why_it_matters = "Zo blijft zichtbaar waar behoud bestuurlijk onder druk staat zonder dat één datapunt de hoofdlijn overneemt."
+    elif scan_type == "pulse":
+        intro_text = signal_page_payload.get(
+            "section_intro",
+            "Deze pagina verbindt Pulsesignaal, actieve werkfactoren en de huidige snapshot tot één compacte managementlezing.",
+        )
+        how_to_read = signal_page_payload.get(
+            "section_how_to_read",
+            "Lees eerst het Pulsesignaal als samenvattend groepsbeeld, daarna de actieve werkfactoren en pas daarna de compacte context.",
+        )
+        why_it_matters = signal_page_payload.get(
+            "section_why_it_matters",
+            "Zo blijft de PDF een bestuurlijke handoff van de huidige momentopname, zonder uit te groeien tot trend- of peer-rapport.",
+        )
     else:
         intro_text = (
             "Deze pagina verbindt hoofdredenen, meespelende factoren en frictiesignaal tot één managementlezing."
@@ -4392,7 +4406,7 @@ def _append_rebrand_risk_and_prevention(
     lower_signal_width = content_width * 0.62
     lower_quotes_width = content_width - lower_signal_width - (8 * mm)
 
-    if not is_retention and top_reasons:
+    if scan_type == "exit" and top_reasons:
         primary_reason_frame = _build_chart_frame_flowable(
             label="Hoofdredenen van vertrek",
             image=_ranked_bar_image(top_reasons[:5], width_cm=7.0, color=MPL_BRAND),
@@ -4857,8 +4871,15 @@ def _append_rebrand_technical_appendix(
 ) -> None:
     product_module = get_product_module(scan_type)
     methodology_payload = product_module.get_methodology_payload()
-    signal_metric_label = "frictiescore" if scan_type == "exit" else "retentiesignaal"
-    signal_metric_with_article = "de frictiescore" if scan_type == "exit" else "het retentiesignaal"
+    if scan_type == "exit":
+        signal_metric_label = "frictiescore"
+        signal_metric_with_article = "de frictiescore"
+    elif scan_type == "pulse":
+        signal_metric_label = "pulsesignaal"
+        signal_metric_with_article = "het pulsesignaal"
+    else:
+        signal_metric_label = "retentiesignaal"
+        signal_metric_with_article = "het retentiesignaal"
     sdt_body = (
         "Autonomie, competentie en verbondenheid blijven de onderliggende psychologische laag in deze rapportage. "
         "Die SDT-laag helpt verklaren waarom werkfactoren zwaarder of lichter doorwerken in het groepsbeeld; "
@@ -6733,6 +6754,7 @@ def _build_shared_non_exit_runtime_story(
     _append_rebrand_risk_and_prevention(
         story,
         avg_risk=avg_risk,
+        scan_type=camp.scan_type,
         signal_label=signal_label,
         signal_label_lower=signal_label_lower,
         band_counts=band_counts,
@@ -6794,6 +6816,7 @@ def _build_shared_non_exit_runtime_story(
         has_segment_appendix=bool((segment_deep_dive or {}).get("appendix_eligible")),
         content_width=content_width,
         report_theme=report_theme,
+        show_segment_note=camp.scan_type != "pulse",
     )
     return story
 
@@ -6859,8 +6882,14 @@ def generate_campaign_report(
     )
     _mode     = (camp.delivery_mode or "baseline").lower()
     _mode_lbl = "Live" if _mode == "live" else "Baseline"
-    scan_lbl  = f"ExitScan {_mode_lbl}" if camp.scan_type == "exit" else "RetentieScan"
     scan_meta = get_scan_definition(camp.scan_type)
+    scan_lbl  = (
+        f"ExitScan {_mode_lbl}"
+        if camp.scan_type == "exit"
+        else f"RetentieScan {_mode_lbl}"
+        if camp.scan_type == "retention"
+        else scan_meta["product_name"]
+    )
     product_module = get_product_module(camp.scan_type)
     signal_label = scan_meta["signal_label"]
     signal_label_lower = scan_meta["signal_short_label"]
@@ -6970,6 +6999,8 @@ def generate_campaign_report(
         ]
         if signal_visibility_scores:
             signal_visibility_average = sum(signal_visibility_scores) / len(signal_visibility_scores)
+    if camp.scan_type == "pulse":
+        signal_visibility_average = None
     retention_hypotheses = _build_retention_action_hypotheses(
         top_risks=top_risks,
         factor_avgs=factor_avgs,
@@ -7024,6 +7055,11 @@ def generate_campaign_report(
             trend_label = None
             previous_campaign_label = None
             previous_responses = []
+    if camp.scan_type == "pulse":
+        trend_delta = None
+        trend_label = None
+        previous_campaign_label = None
+        previous_responses = []
     retention_trend_rows = (
         _build_retention_trend_rows(
             current=_compute_retention_signal_averages(responses),
@@ -7032,10 +7068,14 @@ def generate_campaign_report(
         if is_retention and previous_responses
         else []
     )
-    prior_signal_rows = _build_prior_signal_rows(
-        previous_campaign_label=previous_campaign_label,
-        previous_avg_risk=previous_avg_risk,
-        previous_responses=previous_responses,
+    prior_signal_rows = (
+        []
+        if camp.scan_type == "pulse"
+        else _build_prior_signal_rows(
+            previous_campaign_label=previous_campaign_label,
+            previous_avg_risk=previous_avg_risk,
+            previous_responses=previous_responses,
+        )
     )
     retention_turnover_groups, retention_engagement_dist = (
         _build_retention_group_rows(responses)
@@ -7102,6 +7142,12 @@ def generate_campaign_report(
             strong_work_signal_pct=strong_work_signal_pct,
             signal_visibility_average=signal_visibility_average,
             total_replacement_cost_eur=None,
+        )
+    elif camp.scan_type == "pulse":
+        management_summary_payload = product_module.get_management_summary_payload(
+            top_factor_labels=top_factor_labels,
+            top_factor_keys=top_factor_keys,
+            avg_stay_intent=avg_stay_intent,
         )
     else:
         management_summary_payload = product_module.get_management_summary_payload(

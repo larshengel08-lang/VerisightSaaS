@@ -8,9 +8,7 @@ interface Props {
   scanType?: string
 }
 
-const UNSUPPORTED_REPORT_MESSAGES: Record<string, string> = {
-  pulse: 'Pulse ondersteunt in deze fase nog geen formeel PDF-rapport. Gebruik voorlopig de dashboardread als managementoutput.',
-}
+const UNSUPPORTED_REPORT_MESSAGES: Record<string, string> = {}
 
 export function PdfDownloadButton({ campaignId, campaignName, scanType }: Props) {
   const [loading, setLoading] = useState(false)

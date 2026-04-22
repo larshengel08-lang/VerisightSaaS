@@ -17,7 +17,7 @@ SCAN_DEFINITION: dict[str, Any] = {
         ),
         "what_it_is_not": (
             "Geen client onboarding-check, geen individuele beoordeling, geen performance-instrument en geen "
-            "volledige employee journey of retentievoorspeller."
+            "volledige employee journey of later uitkomstmodel."
         ),
         "how_to_read": (
             "Lees onboarding als checkpoint-read: welke vroege succesvoorwaarden zijn zichtbaar, waar zit frictie "
@@ -31,7 +31,7 @@ SCAN_DEFINITION: dict[str, Any] = {
         "evidence_status": (
             "Onboarding 30-60-90 is in deze eerste wave een begrensde checkpoint-laag binnen de bestaande "
             "Verisight-methodiek. De output helpt vroege integratie, eerste frictie, eigenaar, eerste stap en reviewgrens "
-            "duiden, maar is nog geen multi-checkpoint journey-, automation- of retentiemodel en ook geen client onboarding-route."
+            "duiden, maar is nog geen multi-checkpoint journey-, automation- of uitkomstmodel en ook geen client onboarding-route."
         ),
     },
     "survey_intro": (

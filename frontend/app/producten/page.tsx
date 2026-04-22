@@ -44,7 +44,7 @@ const followOnRoutes = [
   {
     title: 'Pulse',
     label: 'Vervolgroute',
-    body: 'Compacte reviewlaag na diagnose of baseline. Bedoeld voor een volgende managementcheck, niet als derde brede instap.',
+    body: 'Compacte reviewroute na een eerdere managementread. Bedoeld voor bounded herijking, niet als derde brede instap.',
     href: '/producten/pulse',
   },
   {

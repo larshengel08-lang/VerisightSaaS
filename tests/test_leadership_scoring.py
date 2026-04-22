@@ -101,15 +101,22 @@ def test_leadership_report_payloads_keep_group_level_boundary():
         top_focus_keys=["leadership"],
     )
 
-    assert "group-level" in summary["trust_note"].lower()
+    assert "groepsniveau" in summary["trust_note"].lower()
     assert "360" in summary["boardroom_watchout"].lower()
     assert "performance" in summary["boardroom_watchout"].lower()
-    assert cards[2]["value"] == "Group-level only"
+    assert summary["executive_title"] == "Begrensde managementcontext"
+    assert "bestaand people-signaal" in summary["executive_intro"].lower()
+    assert len(summary["boardroom_cards"]) == 4
+    assert len(summary["highlight_cards"]) == 4
+    assert cards[2]["value"] == "Alleen groepsniveau"
     assert "named leaders" in cards[2]["body"].lower()
     assert "performance" in cards[2]["body"].lower()
     assert "leiderschap" in hypotheses[0]["title"].lower()
     assert "performance" not in hypotheses[0]["body"].lower()
     assert "5 responses" in methodology["intro_text"].lower()
     assert "10 responses" in methodology["intro_text"].lower()
+    assert "compacte managementread" in methodology["intro_text"].lower()
+    assert "formeel leesbare" not in methodology["intro_text"].lower()
+    assert next_steps["session_title"] == "Eerste begrensde check na oplevering"
     assert "360" in next_steps["session_watchout"].lower()
-    assert "group-level only" in next_steps["session_watchout"].lower()
+    assert "groepsniveau" in next_steps["session_watchout"].lower()

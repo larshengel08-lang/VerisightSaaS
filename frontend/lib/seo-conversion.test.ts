@@ -105,7 +105,7 @@ describe('SEO conversion tranche', () => {
     expect(solutionMetadata.alternates?.canonical).toBe('/oplossingen/verloop-analyse')
     expect(exitProductMetadata.title).toBe('ExitScan | Verloopanalyse en vertrekduiding voor HR-teams')
     expect(exitProductMetadata.alternates?.canonical).toBe('/producten/exitscan')
-    expect(pulseProductMetadata.title).toBe('Pulse | Compacte reviewmetingen na eerste baseline of managementread')
+    expect(pulseProductMetadata.title).toBe('Pulse | Compacte herijking na een eerdere managementread')
     expect(pulseProductMetadata.alternates?.canonical).toBe('/producten/pulse')
     expect(teamProductMetadata.title).toBe('TeamScan | Lokale verificatie na een breder signaal')
     expect(teamProductMetadata.alternates?.canonical).toBe('/producten/teamscan')

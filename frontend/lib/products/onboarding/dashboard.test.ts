@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { buildOnboardingDashboardViewModel } from '@/lib/products/onboarding/dashboard'
+import { onboardingScanDefinition } from '@/lib/products/onboarding/definition'
 
 describe('buildOnboardingDashboardViewModel', () => {
   it('shows an insufficient checkpoint boundary below the display threshold', () => {
@@ -20,11 +23,11 @@ describe('buildOnboardingDashboardViewModel', () => {
     })
 
     expect(model.topSummaryCards.map((card) => card.value)).toEqual([
-      'Nog geen veilige checkpointread',
+      'Nog geen veilige managementread',
       'Te weinig responses',
       'Nog geen groepsread',
     ])
-    expect(model.primaryQuestion.title).toBe('Nog geen checkpointread')
+    expect(model.primaryQuestion.title).toBe('Nog geen veilige managementread')
     expect(model.nextStep.title).toBe('Eerst respons opbouwen')
     expect(model.followThroughCards).toEqual([])
   })
@@ -59,7 +62,7 @@ describe('buildOnboardingDashboardViewModel', () => {
       'Leesgrens',
     ])
     expect(model.topSummaryCards[0]?.value).toBe('Overwegend stabiel')
-    expect(model.topSummaryCards[3]?.body.toLowerCase()).toContain('ondersteunt een stabieler checkpointbeeld')
+    expect(model.topSummaryCards[3]?.body.toLowerCase()).toContain('ondersteunt een stabieler beeld van de vroege landing')
     expect(model.topSummaryCards[4]?.value.toLowerCase()).toContain('onboarding-owner')
     expect(model.topSummaryCards[5]?.value).toBe('Borgactie nu')
     expect(model.primaryQuestion.title).toBe('Eerste borgvraag')
@@ -77,7 +80,7 @@ describe('buildOnboardingDashboardViewModel', () => {
       'Eerste eigenaar',
       'Eerste actie',
       'Reviewgrens',
-    'Wanneer terug naar bredere duiding',
+      'Wanneer terug naar bredere duiding',
     ])
     expect(model.followThroughCards[3]?.body.toLowerCase()).toContain('borgactie')
     expect(model.managementBandOverride).toBe('LAAG')
@@ -114,7 +117,7 @@ describe('buildOnboardingDashboardViewModel', () => {
     expect(model.managementBandOverride).toBe('MIDDEN')
     expect(model.profileCards[0]?.body.toLowerCase()).toContain('client onboarding-route')
     expect(model.profileCards[1]?.body.toLowerCase()).toContain('managementinstrument')
-expect(model.managementBlocks[3]?.items[1]?.toLowerCase()).toContain('bredere duiding')
+    expect(model.managementBlocks[3]?.items[1]?.toLowerCase()).toContain('bredere duiding')
   })
 
   it('treats a sharp early signal as a bounded checkpoint, not as a predictor', () => {
@@ -149,6 +152,31 @@ expect(model.managementBlocks[3]?.items[1]?.toLowerCase()).toContain('bredere du
     expect(model.managementBandOverride).toBe('HOOG')
     expect(model.profileCards[0]?.body.toLowerCase()).toContain('client onboarding-route')
     expect(model.profileCards[1]?.body.toLowerCase()).toContain('managementinstrument')
-expect(model.followThroughCards[5]?.body.toLowerCase()).toContain('bredere duiding')
+    expect(model.followThroughCards[5]?.body.toLowerCase()).toContain('bredere duiding')
+  })
+
+  it('keeps onboarding shell copy aligned to bounded peer executive rails', () => {
+    const pageSource = readFileSync(
+      resolve(process.cwd(), 'app', '(dashboard)', 'campaigns', '[id]', 'page.tsx'),
+      'utf8',
+    )
+
+    expect(onboardingScanDefinition.summaryLabel).toBe('Onboardingsignaal nu')
+    expect(onboardingScanDefinition.methodologyText.toLowerCase()).toContain('managementinstrument')
+    expect(onboardingScanDefinition.howToReadText.toLowerCase()).toContain('wat speelt nu')
+    expect(onboardingScanDefinition.evidenceStatusText.toLowerCase()).toContain('eerste stap en reviewgrens')
+
+    expect(pageSource).toContain('Vroege landingsduiding en eerste vervolgstap')
+    expect(pageSource).toContain('Onboardingsignaal en vroege landing')
+    expect(pageSource).toContain('Van landingsduiding naar eerste managementkeuze')
+    expect(pageSource).toContain("summaryContextLabel: 'Vroege landing · bounded peer-read'")
+    expect(pageSource).toContain("methodologyBadgeLabel =")
+    expect(pageSource).toContain("? 'Vroege landing'")
+    expect(pageSource).toContain("promotedSummaryCards: 1")
+
+    expect(pageSource).not.toContain('Checkpoint duiding en eerste vervolgstap')
+    expect(pageSource).not.toContain('Onboardingsignaal en checkpointcontext')
+    expect(pageSource).not.toContain('Van onboardingread naar managementroute')
+    expect(pageSource).not.toContain('bounded vervolgroute')
   })
 })

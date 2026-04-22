@@ -8,7 +8,7 @@ from backend.products.onboarding.definition import SCAN_DEFINITION
 
 TRUST_CONTRACT = SCAN_DEFINITION["trust_contract"]
 CHECKPOINT_THRESHOLD_NOTE = (
-    "Vanaf 5 responses lees je onboarding als eerste indicatieve checkpointread; "
+    "Vanaf 5 responses lees je onboarding als eerste indicatieve managementread; "
     "vanaf 10 responses mogen patroonlaag en grafieken voluit meewegen."
 )
 
@@ -105,7 +105,7 @@ def get_management_summary_payload(
         "Lees onboarding als bounded single-checkpoint lifecycle-read op groepsniveau. "
         "Het rapport helpt bepalen hoe nieuwe medewerkers nu landen, wie de eerste handoff trekt en welke kleine borg- of correctiestap logisch is. "
         f"{CHECKPOINT_THRESHOLD_NOTE} "
-        "Dit is geen client onboarding-route, geen journey-engine, geen performance-instrument en geen retentievoorspeller."
+        "Dit is geen client onboarding-route, geen journey-engine, geen performance-instrument en geen later uitkomstmodel."
     )
 
     executive_intro = (
@@ -156,7 +156,7 @@ def get_management_summary_payload(
         ],
         "boardroom_watchout_title": "Wat je hier niet uit moet concluderen",
         "boardroom_watchout": (
-            "Lees onboarding niet als client onboarding-route, volledige 30-60-90 route, individuele beoordeling of bewijs van latere retentie-uitkomst. "
+            "Lees onboarding niet als client onboarding-route, volledige 30-60-90 route, individuele beoordeling of bewijs van een latere onboardinguitkomst. "
             "De waarde zit in een begrensde managementread van dit ene checkpoint."
         ),
         "highlight_cards": [
@@ -256,13 +256,13 @@ def get_methodology_payload() -> dict[str, Any]:
 
 def get_signal_page_payload(*, retention_signal_profile: str | None = None, **_: Any) -> dict[str, Any]:
     return {
-        "title": "Onboardingsignaal en checkpointcontext",
+        "title": "Onboardingsignaal en vroege landing",
         "intro": (
             "Deze pagina laat zien hoe het onboardingsignaal, de checkpoint-richtingsvraag en de scherpste vroege werkfactoren samenkomen. "
             "Lees dit als bounded managementread van een enkel checkpoint op groepsniveau."
         ),
-        "summary_title": "Checkpointcontext in samenhang",
-        "signal_profile_title": "Hoe lees je dit checkpoint?",
+        "summary_title": "Vroege landing in samenhang",
+        "signal_profile_title": "Hoe lees je deze vroege landing?",
         "signal_profile_text": (
             "Gebruik het onboardingsignaal om te kiezen wat in deze fase nu eerst een managementhuddle vraagt. "
             "De richtingsvraag en de scherpste werkfactoren helpen daarna bepalen welke kleine borg- of correctiestap logisch is. "
@@ -314,7 +314,7 @@ def get_hypotheses_payload() -> dict[str, str]:
         "section_title": "Checkpoint-hypothesen",
         "intro_text": (
             "Onderstaande hypotheses helpen bepalen welk eerste werkspoor dit checkpoint nu opent. "
-            "Ze zijn bedoeld voor een bounded managementhuddle, niet als bewijs van een volledige journey of latere retentie-uitkomst."
+            "Ze zijn bedoeld voor een bounded managementhuddle, niet als bewijs van een volledige journey of latere onboardinguitkomst."
         ),
     }
 
