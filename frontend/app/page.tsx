@@ -249,8 +249,8 @@ function RecognitionSignalVisual() {
 function HeroDashboardVisual() {
   return (
     <div className="relative w-full">
-      <div className="absolute -inset-6 -z-10 rounded-[2.2rem] bg-[radial-gradient(circle_at_top_left,rgba(215,239,233,0.85)_0%,rgba(255,252,247,0.2)_45%,transparent_72%)] blur-2xl" />
-      <div className="overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] shadow-[0_30px_60px_-30px_rgba(16,24,32,0.2)]">
+      <div className="absolute -inset-8 -z-10 rounded-[2.4rem] bg-[radial-gradient(circle_at_top_left,rgba(215,239,233,0.95)_0%,rgba(255,252,247,0.34)_42%,transparent_72%)] blur-3xl" />
+      <div className="overflow-hidden rounded-[2.15rem] border border-[rgba(221,215,203,0.9)] bg-[var(--surface)] shadow-[0_36px_90px_-40px_rgba(16,24,32,0.3)]">
         <div className="flex items-center justify-between border-b border-[var(--border)] bg-[rgba(245,242,234,0.72)] px-5 py-3">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[var(--border)]" />
@@ -261,86 +261,112 @@ function HeroDashboardVisual() {
           <p className="text-[11px] text-[var(--muted)]">Verisight</p>
         </div>
 
-        <div className="grid gap-8 p-6 md:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] md:gap-10 md:p-10">
-          <div className="space-y-6">
-            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#4A5563]">Top prioriteiten</p>
-            <ul className="mt-3 space-y-3">
-              {(
-                [
-                  ['Groei en ontwikkeling', 'Hoog', 'bg-[#101820] text-white'],
-                  ['Werkdruk in operatie', 'Verhoogd', 'bg-[#3C8D8A] text-white'],
-                  ['Loopbaanperspectief', 'Aandacht', 'bg-[#D7EFE9] text-[#101820]'],
-                ] as const
-              ).map(([label, status, style]) => (
-                <li
-                  key={label}
-                  className="flex items-center justify-between rounded-[0.9rem] border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5"
-                >
-                  <span className="text-[13px] text-[#132033]">{label}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${style}`}>{status}</span>
-                </li>
-              ))}
-            </ul>
+        <div className="relative overflow-hidden bg-[#0B1217] px-6 py-6 text-[#F7F5F1] md:px-8 md:py-8">
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:72px_72px] opacity-50" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,rgba(60,141,138,0.24),transparent_68%)]" />
 
-            <div className="rounded-[1rem] border border-[rgba(221,215,203,0.82)] bg-[rgba(245,242,234,0.42)] px-4 py-4">
-              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#4A5563]">Eerste bespreking</p>
-              <p className="mt-2 text-[13px] leading-relaxed text-[#4A5563]">
-                Bespreek eerst groei en werkdruk, zodat prioriteit en eigenaar meteen helder zijn.
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <div className="relative grid gap-8 md:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] md:gap-10">
+            <div className="space-y-7">
               <div>
-                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#4A5563]">Behoudssignaal</p>
-                <p className="mt-1 text-[1.75rem] font-medium tracking-[-0.04em] text-[#132033]">+3,1 pt</p>
+                <p className="text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-[#A5B7C7]">Dashboard</p>
+                <p className="mt-3 max-w-[24rem] text-[1.1rem] leading-8 text-[#F7F5F1]">
+                  In één blik ziet management waar druk opbouwt, welke thema&apos;s terugkomen en wat eerst besproken moet worden.
+                </p>
               </div>
-              <p className="text-[11px] text-[var(--muted)]">Trend afgelopen 4 kwartalen</p>
+
+              <div>
+                <p className="text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-[#A5B7C7]">Top prioriteiten</p>
+                <ul className="mt-4 space-y-3">
+                  {(
+                    [
+                      ['Groei en ontwikkeling', 'Hoog', 'bg-[#F7F5F1] text-[#101820]'],
+                      ['Werkdruk in operatie', 'Verhoogd', 'bg-[#3C8D8A] text-white'],
+                      ['Loopbaanperspectief', 'Aandacht', 'bg-[#D7EFE9] text-[#101820]'],
+                    ] as const
+                  ).map(([label, status, style]) => (
+                    <li key={label} className="flex items-center justify-between gap-3 border-b border-white/10 pb-3 last:border-b-0 last:pb-0">
+                      <span className="text-[14px] text-[#F7F5F1]">{label}</span>
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${style}`}>{status}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div>
+                <p className="text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-[#A5B7C7]">Eerste actie</p>
+                <p className="mt-3 max-w-[24rem] text-[14px] leading-7 text-[rgba(247,245,241,0.76)]">
+                  Plan eerst een managementgesprek over groei, werkdruk en opvolging, zodat prioriteit en eigenaar meteen duidelijk zijn.
+                </p>
+              </div>
             </div>
 
-            <div className="mt-4 rounded-[1.1rem] border border-[var(--border)] bg-[rgba(245,242,234,0.45)] p-5">
-              <svg viewBox="0 0 420 156" className="h-40 w-full md:h-48">
-                <defs>
-                  <linearGradient id="heroTrend" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="rgba(60,141,138,0.32)" />
-                    <stop offset="100%" stopColor="rgba(60,141,138,0)" />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M0,108 C44,102 82,113 122,88 C164,62 206,86 247,61 C290,37 334,50 374,28 C393,19 407,17 420,14"
-                  fill="none"
-                  stroke="#3C8D8A"
-                  strokeWidth="2.4"
-                />
-                <path
-                  d="M0,108 C44,102 82,113 122,88 C164,62 206,86 247,61 C290,37 334,50 374,28 C393,19 407,17 420,14 L420,156 L0,156 Z"
-                  fill="url(#heroTrend)"
-                />
-                {[0, 105, 210, 315, 420].map((x) => (
-                  <line key={x} x1={x} y1="0" x2={x} y2="156" stroke="rgba(221,215,203,0.9)" strokeWidth="1" />
+            <div className="relative">
+              <div className="flex flex-wrap gap-3">
+                {(
+                  [
+                    ['Vertrekrisico', '12%'],
+                    ['Engagement', '7.4'],
+                    ['Onboarding', '8.1'],
+                  ] as const
+                ).map(([label, value]) => (
+                  <div key={label} className="min-w-[8.2rem] rounded-[0.95rem] border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-[2px]">
+                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#A5B7C7]">{label}</p>
+                    <p className="mt-2 text-[1.65rem] font-medium tracking-[-0.05em] text-white">{value}</p>
+                  </div>
                 ))}
-              </svg>
-              <div className="mt-2 flex justify-between text-[10.5px] text-[var(--muted)]">
-                <span>Q2</span>
-                <span>Q3</span>
-                <span>Q4</span>
-                <span>Q1</span>
-                <span>Q2</span>
               </div>
-            </div>
 
-            <div className="mt-4 rounded-[0.95rem] border border-[rgba(221,215,203,0.82)] bg-[rgba(255,252,247,0.82)] px-4 py-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="max-w-[28rem]">
-                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Samenvatting</p>
-                  <p className="mt-2 text-[13px] leading-relaxed text-[#4A5563]">
-                    Groei, werkdruk en loopbaanperspectief vragen nu eerst een gezamenlijke managementreactie.
-                  </p>
+              <div className="relative mt-5 overflow-hidden rounded-[1.35rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] px-5 py-5 md:px-6 md:py-6">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[0.66rem] font-semibold uppercase tracking-[0.2em] text-[#A5B7C7]">Behoudssignaal · 12 mnd</p>
+                    <p className="mt-2 text-[2.3rem] font-medium tracking-[-0.06em] text-white">+3,1 pt</p>
+                  </div>
+                  <p className="pt-1 text-[11px] text-[rgba(247,245,241,0.55)]">Trend afgelopen 4 kwartalen</p>
                 </div>
-                <div className="min-w-[11rem] text-left md:text-right">
-                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Status</p>
-                  <p className="mt-2 text-[13px] leading-relaxed text-[#132033]">Prioriteit vastleggen</p>
+
+                <svg viewBox="0 0 560 248" className="mt-5 h-56 w-full md:h-72">
+                  <defs>
+                    <linearGradient id="heroTrend" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(60,141,138,0.55)" />
+                      <stop offset="100%" stopColor="rgba(60,141,138,0)" />
+                    </linearGradient>
+                  </defs>
+                  {[0, 112, 224, 336, 448, 560].map((x) => (
+                    <line key={x} x1={x} y1="0" x2={x} y2="248" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                  ))}
+                  {[28, 94, 160, 226].map((y) => (
+                    <line key={y} x1="0" y1={y} x2="560" y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+                  ))}
+                  <path
+                    d="M0,184 C48,186 84,194 120,172 C158,148 194,154 228,137 C264,119 304,130 344,103 C388,74 428,82 466,57 C500,34 530,28 560,22"
+                    fill="none"
+                    stroke="#67C3BD"
+                    strokeWidth="3.6"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M0,184 C48,186 84,194 120,172 C158,148 194,154 228,137 C264,119 304,130 344,103 C388,74 428,82 466,57 C500,34 530,28 560,22 L560,248 L0,248 Z"
+                    fill="url(#heroTrend)"
+                  />
+                  <circle cx="466" cy="57" r="8.5" fill="#0B1217" stroke="#67C3BD" strokeWidth="3" />
+                </svg>
+
+                <div className="mt-3 flex justify-between text-[11px] text-[rgba(247,245,241,0.55)]">
+                  <span>Q2 &apos;24</span>
+                  <span>Q3</span>
+                  <span>Q4</span>
+                  <span>Q1 &apos;25</span>
+                  <span>Q2</span>
+                </div>
+
+                <div className="mt-5 md:absolute md:bottom-6 md:right-6 md:mt-0 md:w-[17rem]">
+                  <div className="rounded-[1.05rem] border border-[rgba(221,215,203,0.88)] bg-[rgba(255,252,247,0.96)] px-4 py-4 text-[#132033] shadow-[0_24px_60px_-36px_rgba(0,0,0,0.45)]">
+                    <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Samenvatting</p>
+                    <p className="mt-2 text-[13px] leading-6 text-[#4A5563]">
+                      Groei, werkdruk en loopbaanperspectief vragen nu eerst een gezamenlijke managementreactie.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -417,7 +443,7 @@ export default function LandingPage() {
                 </Link>
               </div>
 
-              <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-3 text-[13px] text-[#4A5563]">
+              <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2.5 text-[11px] font-medium uppercase tracking-[0.16em] text-[#708091]">
                 {heroSignals.map((signal) => (
                   <span key={signal} className="flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full bg-[#3C8D8A]" />
@@ -466,7 +492,7 @@ export default function LandingPage() {
                 description="Dit is het soort output waarmee HR en directie sneller zien wat opvalt en wat eerst besproken moet worden."
               />
 
-              <div className="marketing-proof-frame mt-8 p-5 md:p-8">
+              <div className="marketing-proof-frame mt-7 p-4 md:p-10">
                 <PreviewSlider variant="portfolio" />
               </div>
             </div>
@@ -496,11 +522,11 @@ export default function LandingPage() {
               ))}
             </div>
 
-            <div className="mt-5 rounded-[1rem] border border-[#E5E0D6] bg-[rgba(247,245,241,0.9)] px-5 py-4">
+            <div className="mt-5 rounded-[1rem] border border-[#E5E0D6] bg-[rgba(247,245,241,0.78)] px-5 py-3.5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
                   {homepageSupportRoutes.map((route) => (
-                    <div key={route.name} className="text-sm leading-7 text-[#4A5563]">
+                    <div key={route.name} className="text-[13px] leading-6 text-[#627084]">
                       <Link href={route.href} className="font-medium text-[#132033] hover:underline">
                         {route.name}
                       </Link>
