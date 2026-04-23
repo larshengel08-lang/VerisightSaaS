@@ -9,7 +9,15 @@ from typing import Literal
 from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 
-from backend.models import Campaign, Organization, OrganizationSecret, Respondent, SurveyResponse
+from backend.models import (
+    Campaign,
+    CampaignDeliveryCheckpoint,
+    CampaignDeliveryRecord,
+    Organization,
+    OrganizationSecret,
+    Respondent,
+    SurveyResponse,
+)
 from generate_voorbeeldrapport import (
     DEPARTMENTS,
     EXIT_PROFILES,
@@ -52,6 +60,16 @@ RESPONSE_THRESHOLDS = {
     "detail": 5,
     "pattern": 10,
 }
+
+DELIVERY_CHECKPOINT_KEYS = (
+    "implementation_intake",
+    "import_qa",
+    "invite_readiness",
+    "client_activation",
+    "first_value",
+    "report_delivery",
+    "first_management_use",
+)
 
 
 def _is_uuid_like(value: str | None) -> bool:
@@ -431,7 +449,14 @@ def _ensure_org_secret(db: Session, org: Organization) -> None:
 
 
 def _has_table(db: Session, table_name: str) -> bool:
-    return inspect(db.bind).has_table(table_name)
+    return inspect(db.connection()).has_table(table_name)
+
+
+def _qualify_table_name(db: Session, table_name: str) -> str:
+    bind = db.get_bind()
+    if bind is not None and bind.dialect.name == "sqlite":
+        return table_name
+    return f"public.{table_name}"
 
 
 def _ensure_role_memberships(
@@ -453,12 +478,14 @@ def _ensure_role_memberships(
         assignments.append((admin_user_id, "owner", True))
     assignments.extend((user_id, "member", False) for user_id in member_user_ids)
     assignments.extend((user_id, "viewer", False) for user_id in viewer_user_ids)
+    profiles_table = _qualify_table_name(db, "profiles")
+    org_members_table = _qualify_table_name(db, "org_members")
 
     for user_id, role, is_admin in assignments:
         db.execute(
             text(
-                """
-                insert into public.profiles (id, is_verisight_admin)
+                f"""
+                insert into {profiles_table} (id, is_verisight_admin)
                 values (:user_id, :is_admin)
                 on conflict (id) do update
                 set is_verisight_admin = excluded.is_verisight_admin
@@ -468,8 +495,8 @@ def _ensure_role_memberships(
         )
         db.execute(
             text(
-                """
-                insert into public.org_members (org_id, user_id, role)
+                f"""
+                insert into {org_members_table} (org_id, user_id, role)
                 values (:org_id, :user_id, :role)
                 on conflict (org_id, user_id) do update
                 set role = excluded.role
@@ -477,6 +504,46 @@ def _ensure_role_memberships(
             ),
             {"org_id": org.id, "user_id": user_id, "role": role},
         )
+
+
+def _ensure_delivery_sidecars(db: Session, campaign: Campaign) -> None:
+    if not (_has_table(db, "campaign_delivery_records") and _has_table(db, "campaign_delivery_checkpoints")):
+        return
+
+    delivery_record = (
+        db.query(CampaignDeliveryRecord)
+        .filter(CampaignDeliveryRecord.campaign_id == campaign.id)
+        .one_or_none()
+    )
+    if delivery_record is None:
+        delivery_record = CampaignDeliveryRecord(
+            campaign=campaign,
+            organization_id=campaign.organization_id,
+            lifecycle_stage="setup_in_progress",
+            exception_status="none",
+        )
+        db.add(delivery_record)
+        db.flush()
+
+    existing_checkpoint_keys = {
+        checkpoint_key
+        for (checkpoint_key,) in db.query(CampaignDeliveryCheckpoint.checkpoint_key)
+        .filter(CampaignDeliveryCheckpoint.delivery_record_id == delivery_record.id)
+        .all()
+    }
+    for checkpoint_key in DELIVERY_CHECKPOINT_KEYS:
+        if checkpoint_key in existing_checkpoint_keys:
+            continue
+        db.add(
+            CampaignDeliveryCheckpoint(
+                delivery_record=delivery_record,
+                checkpoint_key=checkpoint_key,
+                auto_state="unknown",
+                manual_state="pending",
+                exception_status="none",
+            )
+        )
+    db.flush()
 
 
 def _purge_campaign(db: Session, campaign: Campaign) -> None:
@@ -529,6 +596,7 @@ def _create_exit_campaign(db: Session, *, org: Organization, fixture: ExitSalesF
     )
     db.add(campaign)
     db.flush()
+    _ensure_delivery_sidecars(db, campaign)
     return campaign
 
 
@@ -547,6 +615,7 @@ def _create_retention_campaign(db: Session, *, org: Organization, fixture: Reten
     )
     db.add(campaign)
     db.flush()
+    _ensure_delivery_sidecars(db, campaign)
     return campaign
 
 
@@ -728,6 +797,7 @@ def _create_guided_self_serve_fixture_campaign(
     )
     db.add(campaign)
     db.flush()
+    _ensure_delivery_sidecars(db, campaign)
     return campaign
 
 
