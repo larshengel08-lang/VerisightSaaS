@@ -24,7 +24,10 @@ import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
-import { buildGuidedSelfServeState } from '@/lib/guided-self-serve'
+import {
+  getCampaignCompositionState,
+  isManagementVisibleState,
+} from '@/lib/dashboard/dashboard-state-composition'
 import {
   ActionPlaybookList,
   buildDecisionPanels,
@@ -275,16 +278,64 @@ export default async function CampaignPage({ params }: Props) {
     activeClientAccessCount: activeClientAccessCount ?? 0,
     pendingClientInviteCount: pendingClientInviteCount ?? 0,
   })
-  const guidedSelfServeState = buildGuidedSelfServeState({
+  const compositionState = getCampaignCompositionState({
     isActive: stats.is_active,
     totalInvited: stats.total_invited,
     totalCompleted: stats.total_completed,
     invitesNotSent,
+    incompleteScores,
     hasMinDisplay,
     hasEnoughData,
   })
-  const showClientExecutionFlow = !isVerisightAdmin
-  const showManagementOutput = isVerisightAdmin || guidedSelfServeState.dashboardVisible
+  const showClientExecutionFlow = !isVerisightAdmin && compositionState !== 'closed'
+  const showManagementOutput = isManagementVisibleState(compositionState)
+  const showDetailedManagementOutput = compositionState === 'full' || compositionState === 'closed'
+  const showPartialManagementOutput = compositionState === 'partial'
+  const prefersReportFirst = compositionState === 'closed'
+  const compositionStateMeta = {
+    setup: {
+      label: 'Nog niet live',
+      tone: 'amber' as const,
+      trust:
+        'Deze campaign blijft in setup. Toon hier nog geen managementlaag of rapport-first gedrag.',
+    },
+    ready_to_launch: {
+      label: 'Launch klaar',
+      tone: 'amber' as const,
+      trust:
+        'Respondenten staan klaar, maar invites zijn nog niet volledig live. Dashboard en rapport blijven bewust secundair.',
+    },
+    running: {
+      label: 'Invites live',
+      tone: 'amber' as const,
+      trust:
+        'De inviteflow loopt, maar zonder eerste veilige responslaag hoort dit nog als uitvoerstatus te landen.',
+    },
+    sparse: {
+      label: 'Indicatief, nog dun',
+      tone: 'amber' as const,
+      trust:
+        'Er zijn eerste responses, maar het beeld is nog te dun voor een veilige dashboardread of aanbevelingslaag.',
+    },
+    partial: {
+      label: 'Deels zichtbaar',
+      tone: 'amber' as const,
+      trust:
+        'De eerste read is open, maar drivers, aanbevelingen en vervolgblokken blijven deels verborgen door thresholds of scorecompleetheid.',
+    },
+    full: {
+      label: 'Management ready',
+      tone: 'blue' as const,
+      trust:
+        'Drivers, aanbevelingen en routeblokken mogen nu zichtbaar worden binnen de bestaande productgrenzen.',
+    },
+    closed: {
+      label: 'Rapport-first',
+      tone: 'slate' as const,
+      trust:
+        'Deze campaign is gesloten. Gebruik dashboard en rapport nu voor terugblik, context en bestuurlijke opvolging.',
+    },
+  }[compositionState]
   const utilitySectionVisible = canExecuteCampaign || respondents.length > 0 || isVerisightAdmin
   const riskDistribution = {
     HOOG: stats.band_high,
@@ -711,7 +762,7 @@ export default async function CampaignPage({ params }: Props) {
       value: `${stats.total_completed}/${stats.total_invited || 0} ingevuld`,
       tone: hasEnoughData ? 'emerald' : 'amber',
     },
-    { label: 'Readiness', value: readinessLabel, tone: hasEnoughData ? 'blue' : 'amber' },
+    { label: 'State', value: compositionStateMeta.label, tone: compositionStateMeta.tone },
   ]
   const sectionAnchors = [
     { id: 'samenvatting', label: 'Samenvatting' },
@@ -719,28 +770,38 @@ export default async function CampaignPage({ params }: Props) {
       ? [
           {
             id: 'handoff',
-            label: stats.scan_type === 'retention' ? 'Handoff' : stats.scan_type === 'team' ? 'Lokale read' : 'Handoff',
+            label: showPartialManagementOutput
+              ? 'Compacte read'
+              : stats.scan_type === 'retention'
+                ? 'Handoff'
+                : stats.scan_type === 'team'
+                  ? 'Lokale read'
+                  : 'Handoff',
           },
-          {
-            id: 'drivers',
-            label: stats.scan_type === 'retention' ? 'Signalen' : stats.scan_type === 'team' ? 'Lokaal' : 'Drivers',
-          },
-          {
-            id: 'acties',
-            label: stats.scan_type === 'retention' ? 'Behoudsacties' : stats.scan_type === 'team' ? 'Lokale acties' : 'Acties',
-          },
-          {
-            id: 'route',
-            label:
-              stats.scan_type === 'retention' || stats.scan_type === 'exit'
-                ? 'Kernroute'
-                : stats.scan_type === 'team' ||
-                    stats.scan_type === 'pulse' ||
-                    stats.scan_type === 'onboarding' ||
-                    stats.scan_type === 'leadership'
-                  ? 'Vervolgroute'
-                  : 'Route',
-          },
+          ...(showDetailedManagementOutput
+            ? [
+                {
+                  id: 'drivers',
+                  label: stats.scan_type === 'retention' ? 'Signalen' : stats.scan_type === 'team' ? 'Lokaal' : 'Drivers',
+                },
+                {
+                  id: 'acties',
+                  label: stats.scan_type === 'retention' ? 'Behoudsacties' : stats.scan_type === 'team' ? 'Lokale acties' : 'Acties',
+                },
+                {
+                  id: 'route',
+                  label:
+                    stats.scan_type === 'retention' || stats.scan_type === 'exit'
+                      ? 'Kernroute'
+                      : stats.scan_type === 'team' ||
+                          stats.scan_type === 'pulse' ||
+                          stats.scan_type === 'onboarding' ||
+                          stats.scan_type === 'leadership'
+                        ? 'Vervolgroute'
+                        : 'Route',
+                },
+              ]
+            : []),
         ]
       : []),
     { id: 'methodiek', label: 'Methodiek' },
@@ -749,11 +810,11 @@ export default async function CampaignPage({ params }: Props) {
       : []),
   ]
   const promotedSummaryCards =
-    productExperience.promotedSummaryCards > 0
+    showDetailedManagementOutput && productExperience.promotedSummaryCards > 0
       ? dashboardViewModel.topSummaryCards.slice(0, productExperience.promotedSummaryCards)
       : []
   const handoffSummaryCards =
-    productExperience.promotedSummaryCards > 0
+    showDetailedManagementOutput && productExperience.promotedSummaryCards > 0
       ? dashboardViewModel.topSummaryCards.slice(productExperience.promotedSummaryCards)
       : dashboardViewModel.topSummaryCards
   const availableDriverTabs = hasEnoughData
@@ -987,14 +1048,8 @@ export default async function CampaignPage({ params }: Props) {
               />
               <DashboardChip label={`${stats.completion_rate_pct ?? 0}% respons`} tone="slate" />
               <DashboardChip
-                label={
-                  hasEnoughData
-                    ? 'Beslisniveau bereikt'
-                    : hasMinDisplay
-                      ? 'Indicatief beeld'
-                      : 'Nog onvoldoende responses'
-                }
-                tone={hasEnoughData ? 'blue' : 'amber'}
+                label={compositionStateMeta.label}
+                tone={compositionStateMeta.tone}
               />
               <DashboardChip
                 label={getDeliveryModeLabel(campaignMeta?.delivery_mode ?? null, stats.scan_type)}
@@ -1007,6 +1062,23 @@ export default async function CampaignPage({ params }: Props) {
               <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
                 Dashboard wordt zichtbaar vanaf de eerste veilige responsdrempel
               </div>
+            ) : showPartialManagementOutput ? (
+              <>
+                <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
+                  Compacte read zichtbaar, aanbevelingen nog begrensd
+                </div>
+                <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
+              </>
+            ) : prefersReportFirst ? (
+              <>
+                {!profile?.is_verisight_admin ? <OnboardingAdvancer fromStep={1} /> : null}
+                <div className="relative">
+                  {!profile?.is_verisight_admin ? (
+                    <OnboardingBalloon step={2} label="Download hier je rapport" align="left" />
+                  ) : null}
+                  <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
+                </div>
+              </>
             ) : stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
               <>
                 {!profile?.is_verisight_admin ? <OnboardingAdvancer fromStep={1} /> : null}
@@ -1054,7 +1126,7 @@ export default async function CampaignPage({ params }: Props) {
                     : 'Alle uitgenodigde respondenten hebben afgerond.'}
                 </p>
                 <p className="mt-2 text-xs leading-5 text-slate-500">
-                  Route: {getDeliveryModeLabel(campaignMeta?.delivery_mode ?? null, stats.scan_type)}.
+                  State: {compositionStateMeta.label}. {compositionStateMeta.trust}
                 </p>
               </div>
             </div>
@@ -1091,6 +1163,15 @@ export default async function CampaignPage({ params }: Props) {
             <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
               Eerst uitvoerflow afronden
             </div>
+          ) : showPartialManagementOutput ? (
+            <>
+              <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
+                Aanbevelingen blijven nog begrensd
+              </div>
+              <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
+            </>
+          ) : prefersReportFirst ? (
+            <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
           ) : stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
             <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
               {stats.scan_type === 'pulse'
@@ -1133,6 +1214,42 @@ export default async function CampaignPage({ params }: Props) {
           </DashboardSection>
         ) : null}
 
+      {showPartialManagementOutput ? (
+        <DashboardSection
+          id="handoff"
+          eyebrow="Bestuurlijke handoff"
+          title="Eerste compacte managementread"
+          description="De eerste veilige dashboardlaag is zichtbaar, maar deze campaign blijft nog bewust compact tot thresholds en scorecompleetheid een vollediger beeld dragen."
+          aside={<DashboardChip label={compositionStateMeta.label} tone={compositionStateMeta.tone} />}
+          tone="blue"
+        >
+          <div className="space-y-5">
+            <DashboardRecommendationRail
+              eyebrow="Trustgrens"
+              title="Aanbevelingen blijven nog begrensd"
+              description="Gebruik nu alleen de compacte read, de eerste managementvraag en het bijbehorende trustsignaal. Drivers, playbooks en vervolgblokken blijven bewust nog deels dicht."
+              tone="amber"
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <DashboardPanel
+                  eyebrow="Wat nu wel zichtbaar is"
+                  title="Eerste managementread"
+                  body="Gebruik de hero, samenvatting en eerste managementvraag om richting te houden zonder het beeld al zwaarder te maken dan de data nu draagt."
+                  tone="blue"
+                />
+                <DashboardPanel
+                  eyebrow="Wat bewust nog wacht"
+                  title="Nog geen volle aanbevelingslaag"
+                  body="Drivers, aanbevelingen en 30–90-dagenroute gaan pas open zodra minstens 10 complete responses beschikbaar zijn en privacygrenzen niet meer onnodig veel verbergen."
+                  tone="amber"
+                />
+              </div>
+            </DashboardRecommendationRail>
+            <ManagementReadGuide scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} />
+          </div>
+        </DashboardSection>
+      ) : null}
+
       {showManagementOutput && promotedSummaryCards.length > 0 ? (
         <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4 shadow-[0_12px_30px_rgba(19,32,51,0.05)] sm:p-5">
           <div className="flex flex-col gap-3 border-b border-[color:var(--border)]/80 pb-4 lg:flex-row lg:items-start lg:justify-between">
@@ -1164,7 +1281,7 @@ export default async function CampaignPage({ params }: Props) {
         </div>
       ) : null}
 
-      {showManagementOutput ? (
+      {showDetailedManagementOutput ? (
       <DashboardSection
         id="handoff"
         eyebrow="Bestuurlijke handoff"
@@ -1329,7 +1446,7 @@ export default async function CampaignPage({ params }: Props) {
       </DashboardSection>
       ) : null}
 
-      {showManagementOutput ? (
+      {showDetailedManagementOutput ? (
       <DashboardSection
         id="drivers"
         eyebrow="Wat drijft dit beeld?"
@@ -1352,7 +1469,7 @@ export default async function CampaignPage({ params }: Props) {
         </DashboardSection>
       ) : null}
 
-      {showManagementOutput ? (
+      {showDetailedManagementOutput ? (
       <DashboardSection
         id="acties"
         eyebrow="Waar eerst op handelen"
@@ -1481,7 +1598,7 @@ export default async function CampaignPage({ params }: Props) {
         </DashboardSection>
       ) : null}
 
-      {showManagementOutput ? (
+      {showDetailedManagementOutput ? (
       <DashboardSection
         id="route"
         eyebrow="30–90 dagenroute"

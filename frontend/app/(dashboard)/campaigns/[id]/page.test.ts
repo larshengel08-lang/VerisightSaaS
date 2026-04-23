@@ -37,5 +37,17 @@ describe('campaign page render truth', () => {
     expect(source).toContain('showManagementOutput &&')
     expect(source).toContain('Guided self-serve')
     expect(guidedPanelSource).toContain('Start uitnodigingen')
+    expect(guidedPanelSource).toContain('invite_queue')
+  })
+
+  it('composes the detail route explicitly around sparse, partial, full and closed states', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('getCampaignCompositionState')
+    expect(source).toContain("compositionState === 'partial'")
+    expect(source).toContain("compositionState === 'full'")
+    expect(source).toContain("compositionState === 'closed'")
+    expect(source).toContain('Aanbevelingen blijven nog begrensd')
+    expect(source).toContain('Rapport-first')
   })
 })
