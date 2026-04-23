@@ -17,6 +17,7 @@ import {
 import { DashboardTabs } from '@/components/dashboard/dashboard-tabs'
 import { FactorTable } from '@/components/dashboard/factor-table'
 import { GuidedSelfServePanel } from '@/components/dashboard/guided-self-serve-panel'
+import { buildLaunchControlState } from '@/lib/launch-controls'
 import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
 import { OnboardingAdvancer, OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
 import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
@@ -297,6 +298,12 @@ export default async function CampaignPage({ params }: Props) {
 
   const invitesNotSent = respondents.filter((respondent) => !respondent.sent_at && !respondent.completed).length
   const incompleteScores = responses.filter((response) => !response.org_scores || !response.sdt_scores).length
+  const launchControlState = buildLaunchControlState({
+    launchDate: deliveryRecord?.launch_date ?? null,
+    participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
+    reminderConfig: deliveryRecord?.reminder_config ?? null,
+    launchConfirmedAt: deliveryRecord?.launch_confirmed_at ?? null,
+  })
   const readinessState = buildCampaignReadinessState({
     totalInvited: stats.total_invited,
     totalCompleted: stats.total_completed,
@@ -307,6 +314,8 @@ export default async function CampaignPage({ params }: Props) {
     activeClientAccessCount: activeClientAccessCount ?? 0,
     pendingClientInviteCount: pendingClientInviteCount ?? 0,
     importReady,
+    launchControlReady: launchControlState.ready,
+    launchControlBlockers: launchControlState.blockers,
   })
   const guidedSelfServeState = buildGuidedSelfServeState({
     isActive: stats.is_active,
@@ -1161,13 +1170,18 @@ export default async function CampaignPage({ params }: Props) {
             totalInvited={stats.total_invited}
             totalCompleted={stats.total_completed}
             invitesNotSent={invitesNotSent}
-              hasMinDisplay={hasMinDisplay}
-              hasEnoughData={hasEnoughData}
-              importQaConfirmed={guidedSetupDiscipline.importQaConfirmed}
-              launchTimingConfirmed={guidedSetupDiscipline.launchTimingConfirmed}
-              communicationReady={guidedSetupDiscipline.communicationReady}
-              remindableCount={remindableCount}
-              unsentRespondents={unsentRespondents}
+            hasMinDisplay={hasMinDisplay}
+            hasEnoughData={hasEnoughData}
+            pendingCount={pendingCount}
+            importQaConfirmed={guidedSetupDiscipline.importQaConfirmed}
+            launchTimingConfirmed={guidedSetupDiscipline.launchTimingConfirmed}
+            communicationReady={guidedSetupDiscipline.communicationReady}
+            remindableCount={remindableCount}
+            unsentRespondents={unsentRespondents}
+            launchDate={deliveryRecord?.launch_date ?? null}
+            launchConfirmedAt={deliveryRecord?.launch_confirmed_at ?? null}
+            participantCommsConfig={deliveryRecord?.participant_comms_config ?? null}
+            reminderConfig={deliveryRecord?.reminder_config ?? null}
           />
           </DashboardSection>
         ) : null}

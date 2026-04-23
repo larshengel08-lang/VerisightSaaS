@@ -60,6 +60,8 @@ export function buildCampaignReadinessState({
   activeClientAccessCount,
   pendingClientInviteCount,
   importReady,
+  launchControlReady = true,
+  launchControlBlockers = [],
 }: {
   totalInvited: number
   totalCompleted: number
@@ -70,6 +72,8 @@ export function buildCampaignReadinessState({
   activeClientAccessCount: number
   pendingClientInviteCount: number
   importReady: boolean
+  launchControlReady?: boolean
+  launchControlBlockers?: string[]
 }): CampaignReadinessState {
   const setupComplete = totalInvited > 0
   const invitesLive = setupComplete && invitesNotSent === 0
@@ -77,7 +81,12 @@ export function buildCampaignReadinessState({
   const analysisReady = hasEnoughData && incompleteScores === 0
   const clientAccessActivated = activeClientAccessCount > 0
   const clientActivationPending = !clientAccessActivated && pendingClientInviteCount > 0
-  const launchReady = importReady && invitesLive && outputReady && (clientAccessActivated || clientActivationPending)
+  const launchReady =
+    importReady &&
+    launchControlReady &&
+    invitesLive &&
+    outputReady &&
+    (clientAccessActivated || clientActivationPending)
 
   if (!setupComplete) {
     return {
@@ -121,6 +130,24 @@ export function buildCampaignReadinessState({
       headline: 'Invites nog niet volledig live',
       detail: `${invitesNotSent} respondent(en) hebben nog geen uitnodiging ontvangen. Houd livegang en klantactivatie terughoudend totdat de uitnodigingslaag klopt.`,
       nextStep: 'Controleer importkwaliteit en verstuur eerst alle ontbrekende uitnodigingen of reminders.',
+    }
+  }
+
+  if (!launchControlReady) {
+    return {
+      setupComplete,
+      invitesLive,
+      outputReady,
+      analysisReady,
+      clientAccessActivated,
+      clientActivationPending,
+      launchReady,
+      headline: 'Launchcontrole nog niet compleet',
+      detail:
+        launchControlBlockers.length > 0
+          ? launchControlBlockers.join(' ')
+          : 'Startdatum, communicatiepreview of reminderinstellingen missen nog expliciete bevestiging.',
+      nextStep: 'Rond eerst de pre-launchcontrole af voordat je livegang of eerste klantactivatie als afgerond behandelt.',
     }
   }
 

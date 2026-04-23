@@ -19,6 +19,7 @@ import psycopg2
 ROOT = Path(__file__).resolve().parent
 FRONTEND_DIR = ROOT / "frontend"
 SUPABASE_SCHEMA_PATH = ROOT / "supabase" / "schema.sql"
+MIGRATIONS_DIR = ROOT / "migrations"
 ACCEPTANCE_RUNTIME_DIR = ROOT / ".acceptance-runtime"
 GUIDED_SELF_SERVE_RUNTIME_PATH = ACCEPTANCE_RUNTIME_DIR / "guided-self-serve.json"
 GUIDED_SELF_SERVE_BOOTSTRAP_SCRIPT = FRONTEND_DIR / "scripts" / "bootstrap-guided-self-serve-acceptance.mjs"
@@ -26,9 +27,11 @@ GUIDED_SELF_SERVE_BOOTSTRAP_SCRIPT = FRONTEND_DIR / "scripts" / "bootstrap-guide
 DEFAULT_FRONTEND_PORT = 3002
 DEFAULT_BACKEND_PORT = 8000
 GUIDED_SELF_SERVE_ORG_SLUG = "guided-self-serve-acceptance"
+GUIDED_SELF_SERVE_SETUP_CAMPAIGN_NAME = "Guided Self-Serve - Setup Journey"
+GUIDED_SELF_SERVE_THRESHOLD_CAMPAIGN_NAME = "Guided Self-Serve - Threshold Journey"
 GUIDED_SELF_SERVE_EMAIL = "guided-self-serve.acceptance@demo.verisight.local"
 GUIDED_SELF_SERVE_PASSWORD = "Verisight!Acceptance123"
-LOCAL_FRONTEND_RUNTIME = "dev"
+LOCAL_FRONTEND_RUNTIME = "start"
 DEFAULT_FRONTEND_RUNTIME = "start"
 
 
@@ -212,6 +215,25 @@ def _read_local_supabase_status_env() -> dict[str, str]:
     return env_map
 
 
+def _is_tcp_port_available(port: int, *, host: str = "127.0.0.1") -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind((host, port))
+        except OSError:
+            return False
+    return True
+
+
+def _resolve_local_port(preferred_port: int, *, host: str = "127.0.0.1", attempts: int = 25) -> int:
+    for candidate in range(preferred_port, preferred_port + attempts):
+        if _is_tcp_port_available(candidate, host=host):
+            return candidate
+    raise AcceptanceEnvironmentError(
+        f"Geen vrije lokale poort gevonden vanaf {preferred_port} binnen {attempts} pogingen."
+    )
+
+
 def _build_local_acceptance_env(*, frontend_port: int, backend_port: int) -> dict[str, str]:
     _ensure_local_prerequisites()
     _start_local_supabase()
@@ -286,13 +308,28 @@ def _load_schema_sql() -> str:
     return SUPABASE_SCHEMA_PATH.read_text(encoding="utf-8").lstrip("\ufeff")
 
 
+def _load_migration_sql() -> list[str]:
+    if not MIGRATIONS_DIR.exists():
+        return []
+    return [
+        path.read_text(encoding="utf-8").lstrip("\ufeff")
+        for path in sorted(MIGRATIONS_DIR.glob("*.sql"))
+    ]
+
+
 def _apply_schema(database_url: str) -> None:
     schema_sql = _load_schema_sql()
+    migration_sql = _load_migration_sql()
     connection = psycopg2.connect(database_url)
     try:
         connection.autocommit = True
         with connection.cursor() as cursor:
             cursor.execute(schema_sql)
+            for sql in migration_sql:
+                cursor.execute(sql)
+            # PostgREST houdt een schema cache aan; zonder reload ziet de lokale
+            # Supabase API nieuwe kolommen niet direct tijdens acceptance-runs.
+            cursor.execute("NOTIFY pgrst, 'reload schema';")
     finally:
         connection.close()
 
@@ -313,6 +350,52 @@ def _bootstrap_guided_self_serve_fixture(env: dict[str, str]) -> GuidedSelfServe
     )
 
 
+def _resolve_guided_self_serve_campaign_ids(database_url: str) -> tuple[str, str]:
+    connection = psycopg2.connect(database_url)
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                select c.name, c.id
+                from public.campaigns c
+                join public.organizations o on o.id = c.organization_id
+                where o.slug = %s
+                  and c.name in (%s, %s)
+                """,
+                (
+                    GUIDED_SELF_SERVE_ORG_SLUG,
+                    GUIDED_SELF_SERVE_SETUP_CAMPAIGN_NAME,
+                    GUIDED_SELF_SERVE_THRESHOLD_CAMPAIGN_NAME,
+                ),
+            )
+            rows = dict(cursor.fetchall())
+    finally:
+        connection.close()
+
+    setup_campaign_id = rows.get(GUIDED_SELF_SERVE_SETUP_CAMPAIGN_NAME)
+    threshold_campaign_id = rows.get(GUIDED_SELF_SERVE_THRESHOLD_CAMPAIGN_NAME)
+    if not setup_campaign_id or not threshold_campaign_id:
+        raise AcceptanceEnvironmentError(
+            "Guided self-serve acceptance-campaigns konden niet canoniek uit Postgres worden geladen."
+        )
+    return setup_campaign_id, threshold_campaign_id
+
+
+def _canonicalize_guided_self_serve_fixture(
+    fixture: GuidedSelfServeFixture,
+    *,
+    database_url: str,
+) -> GuidedSelfServeFixture:
+    setup_campaign_id, threshold_campaign_id = _resolve_guided_self_serve_campaign_ids(database_url)
+    return GuidedSelfServeFixture(
+        email=fixture.email,
+        password=fixture.password,
+        setup_campaign_id=setup_campaign_id,
+        threshold_campaign_id=threshold_campaign_id,
+        user_id=fixture.user_id,
+    )
+
+
 def _write_runtime_contract(runtime: GuidedSelfServeAcceptanceRuntime) -> None:
     ACCEPTANCE_RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
     GUIDED_SELF_SERVE_RUNTIME_PATH.write_text(
@@ -327,19 +410,23 @@ def bootstrap_guided_self_serve_acceptance(
     frontend_port: int = DEFAULT_FRONTEND_PORT,
     backend_port: int = DEFAULT_BACKEND_PORT,
 ) -> GuidedSelfServeAcceptanceRuntime:
-    resolved_backend_port = (
-        _reserve_available_local_port(backend_port)
-        if mode == "local"
-        else backend_port
+    resolved_frontend_port = _resolve_local_port(frontend_port) if mode == "local" else frontend_port
+    resolved_backend_port = _resolve_local_port(backend_port) if mode == "local" else backend_port
+    env = build_acceptance_env(
+        mode,
+        frontend_port=resolved_frontend_port,
+        backend_port=resolved_backend_port,
     )
-    env = build_acceptance_env(mode, frontend_port=frontend_port, backend_port=resolved_backend_port)
     if mode == "local":
         _apply_schema(env["DATABASE_URL"])
-    fixture = _bootstrap_guided_self_serve_fixture(env)
+    fixture = _canonicalize_guided_self_serve_fixture(
+        _bootstrap_guided_self_serve_fixture(env),
+        database_url=env["DATABASE_URL"],
+    )
     runtime = GuidedSelfServeAcceptanceRuntime(
         mode=mode,
         profile="guided_self_serve",
-        frontend_port=frontend_port,
+        frontend_port=resolved_frontend_port,
         backend_port=resolved_backend_port,
         env=env,
         fixture=fixture,
@@ -453,10 +540,14 @@ def teardown_acceptance_environment(*, mode: str = "local", reset_data: bool = F
 def run_guided_self_serve_acceptance(*, mode: str = "local", teardown: bool = False) -> GuidedSelfServeAcceptanceRuntime:
     runtime = bootstrap_guided_self_serve_acceptance(mode=mode)
     _run_frontend_build_check(runtime.env)
+    playwright_env = {
+        **runtime.env,
+        "VERISIGHT_ACCEPTANCE_FRONTEND_PREBUILT": "1",
+    }
     backend_process = _start_backend_process(runtime.env, backend_port=runtime.backend_port)
     try:
         _wait_for_health(f"http://127.0.0.1:{runtime.backend_port}/api/health", label="backend")
-        _run_playwright_guided_self_serve(runtime.env)
+        _run_playwright_guided_self_serve(playwright_env)
         return runtime
     finally:
         _stop_backend_process(backend_process)

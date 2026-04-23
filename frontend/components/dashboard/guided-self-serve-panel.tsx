@@ -12,6 +12,20 @@ import {
 import { CLIENT_FILE_SPEC } from '@/lib/client-onboarding'
 import { buildGuidedSelfServeState } from '@/lib/guided-self-serve'
 import {
+  buildLaunchControlState,
+  buildParticipantCommunicationPreview,
+  buildReminderPreview,
+  createDefaultParticipantCommunicationConfig,
+  createDefaultReminderConfig,
+  formatLaunchDate,
+  normalizeParticipantCommunicationConfig,
+  normalizeReminderConfig,
+  REMINDER_DELAY_PRESETS,
+  REMINDER_MAX_COUNT_PRESETS,
+  type ParticipantCommunicationConfig,
+  type ReminderConfig,
+} from '@/lib/launch-controls'
+import {
   getDeliveryModeDescription,
   getInviteDefaultForDeliveryMode,
   getDeliveryModeLabel,
@@ -36,11 +50,16 @@ interface Props {
   invitesNotSent: number
   hasMinDisplay: boolean
   hasEnoughData: boolean
+  pendingCount: number
   importQaConfirmed: boolean
   launchTimingConfirmed: boolean
   communicationReady: boolean
   remindableCount: number
   unsentRespondents: Array<{ token: string; email: string | null }>
+  launchDate: string | null
+  launchConfirmedAt: string | null
+  participantCommsConfig: unknown
+  reminderConfig: unknown
 }
 
 interface ImportIssue {
@@ -75,6 +94,15 @@ interface ImportResponse {
   recovery_hint: string
 }
 
+function formatAmsterdamDateTime(value: string | null) {
+  if (!value) return 'Nog niet bevestigd'
+  return new Intl.DateTimeFormat('nl-NL', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Europe/Amsterdam',
+  }).format(new Date(value))
+}
+
 export function GuidedSelfServePanel({
   campaignId,
   scanType,
@@ -87,11 +115,16 @@ export function GuidedSelfServePanel({
   invitesNotSent,
   hasMinDisplay,
   hasEnoughData,
+  pendingCount,
   importQaConfirmed,
   launchTimingConfirmed,
   communicationReady,
   remindableCount,
   unsentRespondents,
+  launchDate: initialLaunchDate,
+  launchConfirmedAt: initialLaunchConfirmedAt,
+  participantCommsConfig: initialParticipantCommsConfig,
+  reminderConfig: initialReminderConfig,
 }: Props) {
   const router = useRouter()
   const scanDefinition = getScanDefinition(scanType)
@@ -123,16 +156,85 @@ export function GuidedSelfServePanel({
     ],
   )
   const [uploadFile, setUploadFile] = useState<File | null>(null)
-  const [uploadSendInvites, setUploadSendInvites] = useState(true)
+  const [uploadSendInvites, setUploadSendInvites] = useState(
+    getInviteDefaultForDeliveryMode(deliveryMode),
+  )
   const [previewResult, setPreviewResult] = useState<ImportResponse | null>(null)
   const [importSuccess, setImportSuccess] = useState<ImportResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState<'preview' | 'import' | 'launch' | 'remind' | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  const [launchBusy, setLaunchBusy] = useState<'save' | 'confirm' | null>(null)
+  const [launchDate, setLaunchDate] = useState(initialLaunchDate ?? '')
+  const [launchConfirmedAt, setLaunchConfirmedAt] = useState<string | null>(initialLaunchConfirmedAt)
+  const [participantCommsConfig, setParticipantCommsConfig] = useState<ParticipantCommunicationConfig>(
+    normalizeParticipantCommunicationConfig(
+      initialParticipantCommsConfig ?? createDefaultParticipantCommunicationConfig(),
+    ),
+  )
+  const [reminderConfig, setReminderConfig] = useState<ReminderConfig>(
+    normalizeReminderConfig(initialReminderConfig ?? createDefaultReminderConfig()),
+  )
+  const [launchConfirmChecked, setLaunchConfirmChecked] = useState(false)
 
   useEffect(() => {
-    setUploadSendInvites(getInviteDefaultForDeliveryMode(deliveryMode))
-  }, [campaignId, deliveryMode])
+    setLaunchDate(initialLaunchDate ?? '')
+    setLaunchConfirmedAt(initialLaunchConfirmedAt)
+    setParticipantCommsConfig(
+      normalizeParticipantCommunicationConfig(
+        initialParticipantCommsConfig ?? createDefaultParticipantCommunicationConfig(),
+      ),
+    )
+    setReminderConfig(normalizeReminderConfig(initialReminderConfig ?? createDefaultReminderConfig()))
+    setLaunchConfirmChecked(false)
+  }, [
+    campaignId,
+    initialLaunchConfirmedAt,
+    initialLaunchDate,
+    initialParticipantCommsConfig,
+    initialReminderConfig,
+  ])
+
+  const launchControlState = useMemo(
+    () =>
+      buildLaunchControlState({
+        launchDate: launchDate || null,
+        participantCommsConfig,
+        reminderConfig,
+        launchConfirmedAt,
+      }),
+    [launchConfirmedAt, launchDate, participantCommsConfig, reminderConfig],
+  )
+
+  const launchReadyForConfirmation = useMemo(
+    () =>
+      buildLaunchControlState({
+        launchDate: launchDate || null,
+        participantCommsConfig,
+        reminderConfig,
+        launchConfirmedAt: 'confirmed',
+      }).ready,
+    [launchDate, participantCommsConfig, reminderConfig],
+  )
+
+  const participantPreview = useMemo(
+    () =>
+      buildParticipantCommunicationPreview({
+        scanType,
+        deliveryMode,
+        launchDate: launchDate || null,
+        participantCommsConfig,
+      }),
+    [deliveryMode, launchDate, participantCommsConfig, scanType],
+  )
+
+  const reminderPreview = useMemo(() => buildReminderPreview(reminderConfig), [reminderConfig])
+
+  useEffect(() => {
+    if (!launchControlState.ready) {
+      setUploadSendInvites(false)
+    }
+  }, [launchControlState.ready])
 
   async function requestImport(dryRun: boolean) {
     setError(null)
@@ -245,6 +347,55 @@ export function GuidedSelfServePanel({
     }
   }
 
+  async function saveLaunchConfig(confirmLaunch: boolean) {
+    setError(null)
+    setLaunchBusy(confirmLaunch ? 'confirm' : 'save')
+
+    try {
+      const response = await fetch(`/api/campaigns/${campaignId}/launch-config`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          launch_date: launchDate || null,
+          participant_comms_config: participantCommsConfig,
+          reminder_config: reminderConfig,
+          ...(confirmLaunch ? { confirm_launch: true } : {}),
+        }),
+      })
+      const payload = (await response.json().catch(() => ({}))) as {
+        detail?: string
+        message?: string
+        launch_date?: string | null
+        launch_confirmed_at?: string | null
+        participant_comms_config?: unknown
+        reminder_config?: unknown
+      }
+
+      if (!response.ok) {
+        setError(payload.detail ?? 'Launchinstellingen konden niet worden opgeslagen.')
+        setLaunchBusy(null)
+        return
+      }
+
+      setLaunchDate(payload.launch_date ?? '')
+      setLaunchConfirmedAt(payload.launch_confirmed_at ?? null)
+      setParticipantCommsConfig(
+        normalizeParticipantCommunicationConfig(payload.participant_comms_config ?? participantCommsConfig),
+      )
+      setReminderConfig(normalizeReminderConfig(payload.reminder_config ?? reminderConfig))
+      setLaunchConfirmChecked(false)
+      setToast(payload.message ?? 'Launchinstellingen bijgewerkt.')
+      setTimeout(() => setToast(null), 4000)
+      router.refresh()
+    } catch {
+      setError('Verbindingsfout tijdens opslaan van launchinstellingen.')
+    } finally {
+      setLaunchBusy(null)
+    }
+  }
+
   const hasPreviewErrors = (previewResult?.errors.length ?? 0) > 0
   const canImportPreview =
     Boolean(previewResult) &&
@@ -261,6 +412,22 @@ export function GuidedSelfServePanel({
       : previewResult && canImportPreview
         ? 'Import klaar voor launch'
         : null
+  const primaryActionTitle =
+    totalInvited === 0
+      ? 'Lever deelnemers aan'
+      : invitesNotSent > 0 && !launchControlState.ready
+        ? 'Rond pre-launch af'
+        : invitesNotSent > 0
+          ? 'Start de inviteflow'
+          : pendingCount > 0
+            ? 'Volg respons en reminders'
+            : guidedState.deeperInsightsVisible
+              ? 'Maak de eerste stap expliciet'
+              : 'Lees eerst de compacte output'
+  const primaryActionBody =
+    invitesNotSent > 0 && !launchControlState.ready
+      ? 'Zet eerst de formele startdatum, communicatiepreview, reminderinstellingen en launchbevestiging vast. Pas daarna wordt uitnodigen vrijgegeven.'
+      : guidedState.nextAction.body
 
   return (
     <div className="space-y-4">
@@ -289,7 +456,7 @@ export function GuidedSelfServePanel({
         </div>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-3">
         <DashboardPanel
           eyebrow="Route"
           title={`${SCAN_TYPE_LABELS[scanType]} ${getDeliveryModeLabel(deliveryMode, scanType)}`}
@@ -297,11 +464,74 @@ export function GuidedSelfServePanel({
           tone="blue"
         />
         <DashboardPanel
+          eyebrow="Jij doet nu"
+          title={primaryActionTitle}
+          body={primaryActionBody}
+          tone="emerald"
+        />
+        <DashboardPanel
           eyebrow="Dashboardactivatie"
           title="5 responses voor eerste read, 10 voor verdieping"
           body="Het dashboard gaat pas zichtbaar open zodra de eerste veilige responsdrempel is gehaald. Verdiepende patronen en scherpere prioritering volgen bewust pas vanaf 10 responses."
           tone={guidedState.deeperInsightsVisible ? 'emerald' : 'amber'}
         />
+      </div>
+
+      <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)] sm:p-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pre-launch overzicht</p>
+            <h3 className="mt-2 text-lg font-semibold text-slate-950">Controleer launch, communicatie en reminders vóór livegang</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-700">
+              Deze laag geeft alleen veilige launchcontrole. Templatebasis, productgrenzen en survey-operatie blijven bewust bij Verisight.
+            </p>
+          </div>
+          <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+            {launchControlState.ready ? 'Launchcontrole op orde' : 'Launchcontrole nog niet compleet'}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <DashboardPanel
+            eyebrow="Startdatum"
+            title={formatLaunchDate(launchDate || null)}
+            body="Formele start van deze campaign."
+            tone={launchControlState.statusItems[0]?.ready ? 'emerald' : 'amber'}
+          />
+          <DashboardPanel
+            eyebrow="Communicatie"
+            title={launchControlState.statusItems[1]?.ready ? 'Preview klaar' : 'Controle nodig'}
+            body="Canonieke template met alleen veilige contextvelden."
+            tone={launchControlState.statusItems[1]?.ready ? 'emerald' : 'amber'}
+          />
+          <DashboardPanel
+            eyebrow="Reminders"
+            title={launchControlState.statusItems[2]?.ready ? 'Instellingen klaar' : 'Controle nodig'}
+            body={reminderPreview}
+            tone={launchControlState.statusItems[2]?.ready ? 'emerald' : 'amber'}
+          />
+          <DashboardPanel
+            eyebrow="Launch"
+            title={launchConfirmedAt ? 'Bevestigd' : 'Nog niet bevestigd'}
+            body={
+              launchConfirmedAt
+                ? 'Uitnodigen is vrijgegeven binnen de huidige settings.'
+                : 'Expliciete bevestiging is nodig voordat uitnodigen opent.'
+            }
+            tone={launchConfirmedAt ? 'emerald' : 'amber'}
+          />
+        </div>
+
+        {!launchControlState.ready ? (
+          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <p className="font-semibold">Inviteflow blijft nog bewust geblokkeerd</p>
+            <ul className="mt-2 space-y-1">
+              {launchControlState.blockers.map((blocker) => (
+                <li key={blocker}>- {blocker}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </div>
 
       {isActive ? (
@@ -353,6 +583,209 @@ export function GuidedSelfServePanel({
           </div>
 
           <div className="mt-5 space-y-4">
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-slate-950">Deelnemerscommunicatie</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">
+                  Alleen contextregels zijn aanpasbaar. Onderwerp en basiscopy blijven canoniek vast.
+                </p>
+
+                <div className="mt-4 space-y-3">
+                  <label className="block text-sm text-slate-700">
+                    <span className="mb-1 block font-medium">Formele startdatum</span>
+                    <input
+                      type="date"
+                      value={launchDate}
+                      onChange={(event) => setLaunchDate(event.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+                    />
+                  </label>
+
+                  <label className="block text-sm text-slate-700">
+                    <span className="mb-1 block font-medium">Afzendernaam</span>
+                    <input
+                      type="text"
+                      maxLength={80}
+                      value={participantCommsConfig.senderName}
+                      onChange={(event) =>
+                        setParticipantCommsConfig((current) => ({
+                          ...current,
+                          senderName: event.target.value,
+                        }))
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+                    />
+                  </label>
+
+                  <label className="block text-sm text-slate-700">
+                    <span className="mb-1 block font-medium">Reply-to e-mail</span>
+                    <input
+                      type="email"
+                      maxLength={160}
+                      value={participantCommsConfig.replyToEmail}
+                      onChange={(event) =>
+                        setParticipantCommsConfig((current) => ({
+                          ...current,
+                          replyToEmail: event.target.value,
+                        }))
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+                    />
+                  </label>
+
+                  <label className="block text-sm text-slate-700">
+                    <span className="mb-1 block font-medium">Korte introcontext</span>
+                    <textarea
+                      rows={3}
+                      maxLength={180}
+                      value={participantCommsConfig.introContext}
+                      onChange={(event) =>
+                        setParticipantCommsConfig((current) => ({
+                          ...current,
+                          introContext: event.target.value,
+                        }))
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+                    />
+                  </label>
+
+                  <label className="block text-sm text-slate-700">
+                    <span className="mb-1 block font-medium">Korte slotcontext</span>
+                    <textarea
+                      rows={3}
+                      maxLength={180}
+                      value={participantCommsConfig.closingContext}
+                      onChange={(event) =>
+                        setParticipantCommsConfig((current) => ({
+                          ...current,
+                          closingContext: event.target.value,
+                        }))
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <p className="text-sm font-semibold text-slate-950">Preview deelnemerscommunicatie</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">
+                  Dit blijft de vaste basis die Verisight verstuurt. Je contextregels worden alleen op veilige plekken ingevoegd.
+                </p>
+                <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Onderwerp</p>
+                  <p className="mt-1 font-medium text-slate-950">{participantPreview.subject}</p>
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Afzender</p>
+                  <p className="mt-1">{participantPreview.senderName}</p>
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Reply-to</p>
+                  <p className="mt-1">{participantPreview.replyToEmail || 'Geen apart reply-to adres ingesteld'}</p>
+                  <div className="mt-4 space-y-3 rounded-2xl border border-white bg-white px-4 py-4">
+                    {participantPreview.body.map((line) => (
+                      <p key={line} className="leading-6 text-slate-700">
+                        {line}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-950">Reminderinstellingen</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Reminders blijven preset-based. Vrije timing en vrije remindercopy zijn bewust niet beschikbaar.
+              </p>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <label className="block text-sm text-slate-700">
+                  <span className="mb-1 block font-medium">Reminders</span>
+                  <select
+                    value={reminderConfig.enabled ? 'aan' : 'uit'}
+                    onChange={(event) =>
+                      setReminderConfig((current) => ({
+                        ...current,
+                        enabled: event.target.value === 'aan',
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+                  >
+                    <option value="aan">Aan</option>
+                    <option value="uit">Uit</option>
+                  </select>
+                </label>
+                <label className="block text-sm text-slate-700">
+                  <span className="mb-1 block font-medium">Eerste reminder na</span>
+                  <select
+                    value={String(reminderConfig.firstReminderAfterDays)}
+                    disabled={!reminderConfig.enabled}
+                    onChange={(event) =>
+                      setReminderConfig((current) => ({
+                        ...current,
+                        firstReminderAfterDays: Number(event.target.value) as ReminderConfig['firstReminderAfterDays'],
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 disabled:opacity-50"
+                  >
+                    {REMINDER_DELAY_PRESETS.map((preset) => (
+                      <option key={preset} value={preset}>
+                        {preset} dagen
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm text-slate-700">
+                  <span className="mb-1 block font-medium">Maximum reminders</span>
+                  <select
+                    value={String(reminderConfig.maxReminderCount)}
+                    disabled={!reminderConfig.enabled}
+                    onChange={(event) =>
+                      setReminderConfig((current) => ({
+                        ...current,
+                        maxReminderCount: Number(event.target.value) as ReminderConfig['maxReminderCount'],
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 disabled:opacity-50"
+                  >
+                    {REMINDER_MAX_COUNT_PRESETS.map((preset) => (
+                      <option key={preset} value={preset}>
+                        {preset}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="mt-3 rounded-2xl border border-white bg-white px-4 py-3 text-sm leading-6 text-slate-700">
+                {reminderPreview}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-sm font-semibold text-slate-950">Expliciete launchbevestiging</p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                Launch gaat pas open nadat startdatum, communicatiepreview en reminderinstellingen expliciet zijn bevestigd.
+              </p>
+              <label className="mt-4 flex items-start gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={launchConfirmChecked}
+                  onChange={(event) => setLaunchConfirmChecked(event.target.checked)}
+                  className="mt-0.5 rounded"
+                />
+                <span>
+                  Ik heb timing, deelnemerscommunicatie en reminderinstellingen gecontroleerd voor deze campaign.
+                  <span className="block text-xs leading-5 text-slate-500">
+                    Elke inhoudelijke wijziging zet de launchbevestiging opnieuw terug.
+                  </span>
+                </span>
+              </label>
+              {launchConfirmedAt ? (
+                <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                  Launch bevestigd op {formatAmsterdamDateTime(launchConfirmedAt)}.
+                </div>
+              ) : null}
+            </div>
+
             <input
               type="file"
               accept=".csv,.xlsx"
@@ -369,13 +802,16 @@ export function GuidedSelfServePanel({
               <input
                 type="checkbox"
                 checked={uploadSendInvites}
+                disabled={!launchControlState.ready}
                 onChange={(event) => setUploadSendInvites(event.target.checked)}
                 className="mt-0.5 rounded"
               />
               <span>
                 Verstuur direct uitnodigingen na een geslaagde import
                 <span className="block text-xs leading-5 text-slate-500">
-                  Zet dit uit als je eerst alleen de import wilt valideren en de launch later bewust wilt starten.
+                  {launchControlState.ready
+                    ? 'Gebruik dit alleen als startdatum, communicatie en reminders al zijn bevestigd.'
+                    : 'Pas na een complete pre-launch en expliciete launchbevestiging kan directe livegang vanuit import worden vrijgegeven.'}
                 </span>
               </span>
             </label>
@@ -393,7 +829,7 @@ export function GuidedSelfServePanel({
                 <button
                   type="button"
                   onClick={() => void requestImport(false)}
-                  disabled={loading !== null}
+                  disabled={loading !== null || (uploadSendInvites && !launchControlState.ready)}
                   className="rounded-full bg-[#234B57] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading === 'import'
@@ -407,7 +843,7 @@ export function GuidedSelfServePanel({
                 <button
                   type="button"
                   onClick={() => void startInvites()}
-                  disabled={loading !== null}
+                  disabled={loading !== null || !launchControlState.ready}
                   className="rounded-full bg-[#234B57] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading === 'launch'
@@ -415,6 +851,22 @@ export function GuidedSelfServePanel({
                     : `Start uitnodigingen (${unsentRespondents.length})`}
                 </button>
               ) : null}
+              <button
+                type="button"
+                onClick={() => void saveLaunchConfig(false)}
+                disabled={loading !== null || launchBusy !== null}
+                className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {launchBusy === 'save' ? 'Launchinstellingen opslaan...' : 'Sla launchinstellingen op'}
+              </button>
+              <button
+                type="button"
+                onClick={() => void saveLaunchConfig(true)}
+                disabled={loading !== null || launchBusy !== null || !launchReadyForConfirmation || !launchConfirmChecked}
+                className="rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition-colors hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {launchBusy === 'confirm' ? 'Launch bevestigen...' : 'Bevestig launch'}
+              </button>
               {remindableCount > 0 ? (
                 <button
                   type="button"
@@ -447,7 +899,7 @@ export function GuidedSelfServePanel({
                 <p className="mt-1 leading-6">
                   {importSuccess.emails_sent > 0
                     ? `${importSuccess.emails_sent} uitnodiging(en) zijn direct verstuurd.`
-                    : 'De deelnemers zijn toegevoegd. Start de inviteflow zodra timing en communicatie kloppen.'}
+                    : 'De deelnemers zijn toegevoegd. Start de inviteflow zodra startdatum, communicatie en timing kloppen.'}
                 </p>
               </div>
             ) : null}

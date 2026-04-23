@@ -35,6 +35,7 @@ function makeResponse(
       id: `respondent-${department ?? 'none'}-${riskScore}`,
       campaign_id: 'campaign-1',
       token: `token-${department ?? 'none'}-${riskScore}`,
+      email: null,
       department,
       role_level: 'specialist',
       exit_month: null,

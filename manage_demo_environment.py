@@ -165,6 +165,7 @@ def _run_qa_guided_self_serve_acceptance(args: argparse.Namespace) -> int:
             org_slug=args.org_slug or GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
             org_name=args.org_name or GUIDED_SELF_SERVE_ACCEPTANCE_ORG_NAME,
             contact_email=args.contact_email or GUIDED_SELF_SERVE_ACCEPTANCE_CONTACT_EMAIL,
+            member_user_id=(args.member_user_id[0] if args.member_user_id else None),
             viewer_user_id=(args.viewer_user_id[0] if args.viewer_user_id else None),
         )
     finally:
