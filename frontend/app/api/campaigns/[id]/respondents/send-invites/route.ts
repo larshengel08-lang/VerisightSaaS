@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getOrganizationApiKey } from '@/lib/organization-secrets'
+import { buildLaunchControlState } from '@/lib/launch-controls'
 import { getBackendApiUrl } from '@/lib/server-env'
 
 interface Context {
@@ -43,7 +44,8 @@ export async function POST(request: Request, { params }: Context) {
       .maybeSingle(),
   ])
 
-  const canExecuteCampaign = profile?.is_verisight_admin === true || Boolean(membership)
+  const isOrgManager = membership?.role === 'owner' || membership?.role === 'member'
+  const canExecuteCampaign = profile?.is_verisight_admin === true || isOrgManager
   if (!canExecuteCampaign) {
     return NextResponse.json(
       { detail: 'Je hebt geen rechten om uitnodigingen voor deze campaign te versturen.' },
@@ -56,6 +58,26 @@ export async function POST(request: Request, { params }: Context) {
     apiKey = await getOrganizationApiKey(campaign.organization_id, { supabase })
   } catch {
     return NextResponse.json({ detail: 'Autorisatie voor uitnodigingen ontbreekt.' }, { status: 403 })
+  }
+
+  const { data: deliveryRecord } = await supabase
+    .from('campaign_delivery_records')
+    .select('launch_date, launch_confirmed_at, participant_comms_config, reminder_config')
+    .eq('campaign_id', id)
+    .maybeSingle()
+
+  const launchControlState = buildLaunchControlState({
+    launchDate: (deliveryRecord?.launch_date as string | null) ?? null,
+    participantCommsConfig: deliveryRecord?.participant_comms_config ?? null,
+    reminderConfig: deliveryRecord?.reminder_config ?? null,
+    launchConfirmedAt: (deliveryRecord?.launch_confirmed_at as string | null) ?? null,
+  })
+
+  if (!launchControlState.ready) {
+    return NextResponse.json(
+      { detail: `Launch kan nog niet starten: ${launchControlState.blockers.join(' ')}` },
+      { status: 400 },
+    )
   }
 
   const body = await request.text()

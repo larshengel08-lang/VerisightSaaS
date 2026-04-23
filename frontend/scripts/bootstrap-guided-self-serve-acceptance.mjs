@@ -145,7 +145,7 @@ async function main() {
     'qa_guided_self_serve_acceptance',
     '--org-slug',
     acceptanceEnv.orgSlug,
-    '--viewer-user-id',
+    '--member-user-id',
     userId,
   ])
   const campaigns = await fetchCampaignIds()

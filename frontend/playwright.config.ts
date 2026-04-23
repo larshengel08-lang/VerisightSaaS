@@ -5,10 +5,13 @@ const baseURL = `http://127.0.0.1:${port}`
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 const acceptanceMode = process.env.VERISIGHT_ACCEPTANCE_MODE
 const frontendRuntime = process.env.VERISIGHT_ACCEPTANCE_FRONTEND_RUNTIME === 'dev' ? 'dev' : 'start'
+const frontendPrebuilt = process.env.VERISIGHT_ACCEPTANCE_FRONTEND_PREBUILT === '1'
 const webServerCommand =
   frontendRuntime === 'dev'
     ? `${npmCommand} run dev -- --port ${port}`
-    : `${npmCommand} run build && ${npmCommand} run start -- --port ${port}`
+    : frontendPrebuilt
+      ? `${npmCommand} run start -- --port ${port}`
+      : `${npmCommand} run build && ${npmCommand} run start -- --port ${port}`
 const reuseExistingServer =
   acceptanceMode === 'local'
     ? false

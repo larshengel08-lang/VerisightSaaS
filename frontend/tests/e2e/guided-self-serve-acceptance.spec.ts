@@ -7,7 +7,6 @@ import {
 } from './guided-self-serve-acceptance.helpers'
 
 const fixturesDir = path.resolve(process.cwd(), 'tests', 'fixtures', 'guided-self-serve')
-const invalidImportPath = path.join(fixturesDir, 'invalid-import.csv')
 const validImportPath = path.join(fixturesDir, 'valid-import.csv')
 
 async function loginAsAcceptanceUser(page: any, fixture: GuidedSelfServeAcceptanceFixture) {
@@ -25,7 +24,7 @@ test.describe.serial('guided self-serve acceptance', () => {
     fixture = await loadGuidedSelfServeAcceptanceFixture()
   })
 
-  test('setup journey guides import recovery and explicit invite launch', async ({ page }) => {
+  test('setup journey keeps invite launch behind explicit pre-launch control', async ({ page }) => {
     if (!fixture) {
       throw new Error('Acceptance fixture ontbreekt.')
     }
@@ -41,17 +40,10 @@ test.describe.serial('guided self-serve acceptance', () => {
     await expect(page.getByRole('heading', { name: /begeleide uitvoerflow/i })).toBeVisible()
     await expect(page.getByText(/deelnemersbestand ontbreekt nog/i).first()).toBeVisible()
     await expect(page.getByText(/dashboard nog niet actief/i).first()).toBeVisible()
+    await expect(page.getByText(/pre-launch overzicht/i).first()).toBeVisible()
     await expect(page.getByRole('button', { name: /pdf-rapport/i })).toHaveCount(0)
 
-    await page.locator('input[type="file"]').setInputFiles(invalidImportPath)
-    await page.getByRole('button', { name: /^bestand controleren$/i }).click()
-
-    await expect(page.getByText(/import validatie vereist/i).first()).toBeVisible()
-    await expect(page.getByText(/dit e-mailadres staat dubbel in het bestand/i)).toBeVisible()
-    await expect(page.getByText(/valid email address/i)).toBeVisible()
-
     await page.locator('input[type="file"]').setInputFiles(validImportPath)
-    await page.getByLabel(/verstuur direct uitnodigingen na een geslaagde import/i).uncheck()
     await page.getByRole('button', { name: /^bestand controleren$/i }).click()
 
     await expect(page.getByText(/preview van geldige rijen/i).first()).toBeVisible()
@@ -60,7 +52,22 @@ test.describe.serial('guided self-serve acceptance', () => {
     await page.getByRole('button', { name: /importeer 2 deelnemers/i }).click()
 
     await expect(page.getByText(/2 deelnemer\(s\) toegevoegd/i)).toBeVisible()
-    await expect(page.getByRole('button', { name: /start uitnodigingen \(2\)/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /start uitnodigingen \(2\)/i })).toBeDisabled()
+
+    await page.getByLabel(/formele startdatum/i).fill('2026-05-01')
+    await page.getByLabel(/afzendernaam/i).fill('HR Team Noord')
+    await page.getByLabel(/korte introcontext/i).fill('We kondigen dit intern alvast kort aan.')
+    await page.getByLabel(/korte slotcontext/i).fill('Vragen over planning kun je aan HR stellen.')
+    await page.getByRole('button', { name: /sla launchinstellingen op/i }).click()
+
+    await expect(page.getByText(/1 mei 2026/i).first()).toBeVisible()
+    await expect(page.getByText(/we kondigen dit intern alvast kort aan/i).first()).toBeVisible()
+
+    await page.getByLabel(/ik heb timing, deelnemerscommunicatie en reminderinstellingen gecontroleerd/i).check()
+    await page.getByRole('button', { name: /bevestig launch/i }).click()
+
+    await expect(page.getByText(/launch bevestigd op/i).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /start uitnodigingen \(2\)/i })).toBeEnabled()
 
     await page.getByRole('button', { name: /start uitnodigingen \(2\)/i }).click()
 
