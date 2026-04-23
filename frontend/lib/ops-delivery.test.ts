@@ -65,6 +65,7 @@ describe('delivery ops governance helpers', () => {
       hasEnoughData: false,
       activeClientAccessCount: 0,
       pendingClientInviteCount: 0,
+      importReady: false,
     })
 
     const checkpoints = [
@@ -98,6 +99,7 @@ describe('delivery ops governance helpers', () => {
       hasEnoughData: false,
       activeClientAccessCount: 0,
       pendingClientInviteCount: 0,
+      importReady: false,
     })
 
     const transition = validateDeliveryLifecycleTransition({
@@ -155,6 +157,7 @@ describe('delivery ops governance helpers', () => {
       hasEnoughData: true,
       activeClientAccessCount: 1,
       pendingClientInviteCount: 0,
+      importReady: true,
     })
 
     const checkpoints: CampaignDeliveryCheckpoint[] = [
@@ -201,6 +204,7 @@ describe('delivery ops governance helpers', () => {
       hasEnoughData: true,
       activeClientAccessCount: 1,
       pendingClientInviteCount: 0,
+      importReady: true,
     })
 
     const checkpoints: CampaignDeliveryCheckpoint[] = [
@@ -265,5 +269,38 @@ describe('delivery ops governance helpers', () => {
     expect(onboardingGuide.followUpOutcomes.map((item) => item.detail).join(' ')).toContain('geen journey-suite')
     expect(leadershipGuide.followUpOutcomes.map((item) => item.detail).join(' ')).toContain('named-leader')
     expect(leadershipGuide.weeklyReviewRules).toHaveLength(3)
+  })
+
+  it('keeps import qa hard-blocked until a validated dataset has been imported', () => {
+    const blockedSignals = buildDeliveryAutoSignals({
+      scanType: 'retention',
+      linkedLeadPresent: true,
+      totalInvited: 8,
+      totalCompleted: 0,
+      invitesNotSent: 8,
+      incompleteScores: 0,
+      hasMinDisplay: false,
+      hasEnoughData: false,
+      activeClientAccessCount: 0,
+      pendingClientInviteCount: 0,
+      importReady: false,
+    })
+    const readySignals = buildDeliveryAutoSignals({
+      scanType: 'retention',
+      linkedLeadPresent: true,
+      totalInvited: 8,
+      totalCompleted: 0,
+      invitesNotSent: 8,
+      incompleteScores: 0,
+      hasMinDisplay: false,
+      hasEnoughData: false,
+      activeClientAccessCount: 0,
+      pendingClientInviteCount: 0,
+      importReady: true,
+    })
+
+    expect(blockedSignals.import_qa.autoState).toBe('not_ready')
+    expect(blockedSignals.import_qa.summary.toLowerCase()).toContain('deelnemersbestand')
+    expect(readySignals.import_qa.autoState).toBe('ready')
   })
 })

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { getOrganizationApiKey } from '@/lib/organization-secrets'
 import { getBackendApiUrl } from '@/lib/server-env'
@@ -7,13 +8,64 @@ interface Context {
   params: Promise<{ id: string }>
 }
 
+interface ImportIssuePayload {
+  message?: string
+}
+
+interface ImportResponsePayload {
+  dry_run?: boolean
+  valid_rows?: number
+  imported?: number
+  errors?: ImportIssuePayload[]
+  blocking_messages?: string[]
+  launch_blocked?: boolean
+}
+
 export const runtime = 'nodejs'
+
+async function syncImportQaCheckpoint(campaignId: string, launchBlocked: boolean, summary: string) {
+  try {
+    const supabase = createAdminClient()
+    const { data: deliveryRecord } = await supabase
+      .from('campaign_delivery_records')
+      .select('id')
+      .eq('campaign_id', campaignId)
+      .maybeSingle()
+
+    if (!deliveryRecord?.id) return
+
+    await supabase
+      .from('campaign_delivery_checkpoints')
+      .update({
+        auto_state: launchBlocked ? 'not_ready' : 'ready',
+        last_auto_summary: summary,
+      })
+      .eq('delivery_record_id', deliveryRecord.id)
+      .eq('checkpoint_key', 'import_qa')
+  } catch {
+    // Launch-gating is enforced separately; checkpoint sync is best-effort.
+  }
+}
 
 export async function POST(request: Request, { params }: Context) {
   const { id } = await params
+  const contentType = request.headers.get('content-type') ?? ''
+  if (!contentType.toLowerCase().includes('multipart/form-data')) {
+    return NextResponse.json({ detail: 'Upload een .csv of .xlsx bestand.' }, { status: 400 })
+  }
+
+  let incoming: FormData
+  try {
+    incoming = await request.formData()
+  } catch {
+    return NextResponse.json({ detail: 'Upload een geldig .csv of .xlsx bestand.' }, { status: 400 })
+  }
+
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ detail: 'Niet ingelogd.' }, { status: 401 })
   }
@@ -28,15 +80,8 @@ export async function POST(request: Request, { params }: Context) {
     return NextResponse.json({ detail: 'Campaign niet gevonden of niet toegankelijk.' }, { status: 404 })
   }
 
-  const [
-    { data: profile },
-    { data: membership },
-  ] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('is_verisight_admin')
-      .eq('id', user.id)
-      .maybeSingle(),
+  const [{ data: profile }, { data: membership }] = await Promise.all([
+    supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle(),
     supabase
       .from('org_members')
       .select('role')
@@ -60,7 +105,6 @@ export async function POST(request: Request, { params }: Context) {
     return NextResponse.json({ detail: 'Autorisatie voor import ontbreekt.' }, { status: 403 })
   }
 
-  const incoming = await request.formData()
   const file = incoming.get('file')
   if (!(file instanceof File)) {
     return NextResponse.json({ detail: 'Upload een .csv of .xlsx bestand.' }, { status: 400 })
@@ -80,9 +124,23 @@ export async function POST(request: Request, { params }: Context) {
     cache: 'no-store',
   })
 
-  const contentType = backendResponse.headers.get('content-type') ?? ''
-  if (contentType.includes('application/json')) {
-    const payload = await backendResponse.json()
+  const backendContentType = backendResponse.headers.get('content-type') ?? ''
+  if (backendContentType.includes('application/json')) {
+    const payload = (await backendResponse.json()) as ImportResponsePayload
+    const summary =
+      payload.blocking_messages?.[0] ??
+      payload.errors?.[0]?.message ??
+      (payload.imported && payload.imported > 0
+        ? `${payload.imported} deelnemer(s) gecontroleerd en vrijgegeven voor launch.`
+        : null)
+
+    if (
+      summary &&
+      (payload.launch_blocked === true || (payload.dry_run === false && (payload.imported ?? 0) > 0))
+    ) {
+      await syncImportQaCheckpoint(id, payload.launch_blocked === true, summary)
+    }
+
     return NextResponse.json(payload, { status: backendResponse.status })
   }
 

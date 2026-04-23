@@ -1,5 +1,6 @@
 ﻿import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignActions } from './campaign-actions'
 import { PdfDownloadButton } from './pdf-download-button'
@@ -131,6 +132,24 @@ export default async function CampaignPage({ params }: Props) {
   const isVerisightAdmin = profile?.is_verisight_admin === true
   const canExecuteCampaign = isVerisightAdmin || Boolean(membership?.role)
   const hasSegmentDeepDive = hasCampaignAddOn(campaignMeta, 'segment_deep_dive')
+  const deliveryAdminClient = canExecuteCampaign ? createAdminClient() : null
+  const { data: deliveryVisibilityRecord } = deliveryAdminClient
+    ? await deliveryAdminClient
+        .from('campaign_delivery_records')
+        .select('id')
+        .eq('campaign_id', id)
+        .maybeSingle()
+    : { data: null }
+  const { data: importQaCheckpointRaw } =
+    deliveryAdminClient && deliveryVisibilityRecord?.id
+      ? await deliveryAdminClient
+          .from('campaign_delivery_checkpoints')
+          .select('auto_state')
+          .eq('delivery_record_id', deliveryVisibilityRecord.id)
+          .eq('checkpoint_key', 'import_qa')
+          .maybeSingle()
+      : { data: null }
+  const importReady = importQaCheckpointRaw?.auto_state === 'ready'
   const { data: deliveryRecordRaw } = await supabase
     .from('campaign_delivery_records')
     .select('*')
@@ -272,6 +291,7 @@ export default async function CampaignPage({ params }: Props) {
     hasEnoughData,
     activeClientAccessCount: activeClientAccessCount ?? 0,
     pendingClientInviteCount: pendingClientInviteCount ?? 0,
+    importReady,
   })
   const guidedSelfServeState = buildGuidedSelfServeState({
     isActive: stats.is_active,
@@ -280,6 +300,7 @@ export default async function CampaignPage({ params }: Props) {
     invitesNotSent,
     hasMinDisplay,
     hasEnoughData,
+    importReady,
   })
   const showClientExecutionFlow = !isVerisightAdmin
   const showManagementOutput = isVerisightAdmin || guidedSelfServeState.dashboardVisible
@@ -1117,6 +1138,7 @@ export default async function CampaignPage({ params }: Props) {
             scanType={stats.scan_type}
             isActive={stats.is_active}
             deliveryMode={campaignMeta?.delivery_mode ?? null}
+            importReady={importReady}
             hasSegmentDeepDive={hasSegmentDeepDive}
             totalInvited={stats.total_invited}
             totalCompleted={stats.total_completed}
@@ -1642,6 +1664,7 @@ export default async function CampaignPage({ params }: Props) {
                       totalInvited={stats.total_invited}
                       totalCompleted={stats.total_completed}
                       invitesNotSent={invitesNotSent}
+                      importReady={importReady}
                       incompleteScores={incompleteScores}
                       hasMinDisplay={hasMinDisplay}
                       hasEnoughData={hasEnoughData}

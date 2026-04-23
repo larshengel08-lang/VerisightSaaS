@@ -146,6 +146,7 @@ type DeliveryAutoSignalArgs = {
   hasEnoughData: boolean
   activeClientAccessCount: number
   pendingClientInviteCount: number
+  importReady: boolean
 }
 
 export const DELIVERY_LIFECYCLE_OPTIONS: Array<{ value: DeliveryLifecycleStage; label: string }> = [
@@ -457,6 +458,7 @@ export function buildDeliveryAutoSignals({
   hasEnoughData,
   activeClientAccessCount,
   pendingClientInviteCount,
+  importReady,
 }: DeliveryAutoSignalArgs): Record<DeliveryCheckpointKey, DeliveryAutoSignal> {
   return {
     implementation_intake: linkedLeadPresent
@@ -471,17 +473,20 @@ export function buildDeliveryAutoSignals({
             : 'Nog geen gekoppelde lead of intakeharde handoff zichtbaar.',
         },
     import_qa:
-      totalInvited > 0
+      importReady
         ? {
-            autoState: 'warning',
+            autoState: 'ready',
             summary:
               totalInvited === 1
-                ? '1 respondent staat in de campaign. Bevestig handmatig dat preview, metadata en importkeuze zijn gecontroleerd.'
-                : `${totalInvited} respondenten staan in de campaign. Bevestig handmatig dat preview, metadata en importkeuze zijn gecontroleerd.`,
+                ? 'Het deelnemersbestand is gecontroleerd en 1 deelnemer staat vrijgegeven voor launch.'
+                : `Het deelnemersbestand is gecontroleerd en ${totalInvited} deelnemers staan vrijgegeven voor launch.`,
           }
         : {
             autoState: 'not_ready',
-            summary: 'Nog geen respondenten geïmporteerd.',
+            summary:
+              totalInvited > 0
+                ? 'Het deelnemersbestand is nog niet vrijgegeven voor launch.'
+                : 'Nog geen gecontroleerd deelnemersbestand beschikbaar.',
           },
     invite_readiness:
       totalInvited === 0
@@ -626,6 +631,7 @@ export function buildDeliveryGovernanceSnapshot(args: {
     checkpoint: checkpointMap.import_qa,
     autoSignal: args.autoSignals.import_qa,
     pendingMessage: 'Import QA is nog niet expliciet bevestigd.',
+    requireReadyAutoState: true,
   })
   const inviteBlockers = collectCheckpointBlockers({
     checkpoint: checkpointMap.invite_readiness,

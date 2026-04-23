@@ -47,6 +47,8 @@ from fastapi import BackgroundTasks, Depends, FastAPI, File, Form, Header, HTTPE
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.templating import Jinja2Templates
+from pydantic import TypeAdapter
+from pydantic.networks import EmailStr
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
@@ -231,10 +233,8 @@ RESPONDENT_IMPORT_COLUMN_ALIASES = {
     "email": "email",
     "e-mail": "email",
     "e-mailadres": "email",
-    "mailadres": "email",
     "department": "department",
     "afdeling": "department",
-    "team": "department",
     "role_level": "role_level",
     "role level": "role_level",
     "functieniveau": "role_level",
@@ -286,6 +286,20 @@ QUALIFICATION_CONFIRMABLE_ROUTE_INTERESTS = {
     "onboarding",
     "leadership",
 }
+MINIMUM_IMPORT_PARTICIPANTS = 5
+IMPORT_CORE_PLACEHOLDERS = {
+    "-",
+    "--",
+    "n.v.t.",
+    "nvt",
+    "na",
+    "n/a",
+    "geen",
+    "onbekend",
+    "unknown",
+    "null",
+}
+EMAIL_TYPE_ADAPTER = TypeAdapter(EmailStr)
 
 
 def _get_client_ip(request: Request) -> str:
@@ -340,6 +354,55 @@ def _normalize_import_header(value: Any) -> str | None:
         return None
     raw = raw.replace("-", "_")
     return RESPONDENT_IMPORT_COLUMN_ALIASES.get(raw, RESPONDENT_IMPORT_COLUMN_ALIASES.get(raw.replace("_", " ")))
+
+
+def _is_placeholder_import_value(value: Any) -> bool:
+    if value is None:
+        return True
+    normalized = str(value).strip().lower()
+    return not normalized or normalized in IMPORT_CORE_PLACEHOLDERS
+
+
+def _normalize_import_headers(raw_rows: list[tuple[int, dict[str, Any]]]) -> tuple[list[str], list[str], list[RespondentImportIssue]]:
+    if not raw_rows:
+        return [], [], []
+
+    raw_headers = [str(key).strip() for key in raw_rows[0][1].keys()]
+    recognized_columns: list[str] = []
+    ignored_columns: list[str] = []
+    seen_columns: set[str] = set()
+
+    for raw_header in raw_headers:
+        canonical = _normalize_import_header(raw_header)
+        if canonical:
+            if canonical not in seen_columns:
+                recognized_columns.append(canonical)
+                seen_columns.add(canonical)
+        elif raw_header:
+            ignored_columns.append(raw_header)
+
+    issues: list[RespondentImportIssue] = []
+    if "email" not in seen_columns:
+        detail = "Gebruik minimaal de kolom email."
+        if ignored_columns:
+            detail = f"{detail} Niet bruikbaar: {', '.join(ignored_columns)}."
+        issues.append(
+            RespondentImportIssue(
+                row_number=1,
+                field="columns",
+                message=detail,
+            )
+        )
+
+    return recognized_columns, ignored_columns, issues
+
+
+def _validate_email_address(value: str) -> bool:
+    try:
+        EMAIL_TYPE_ADAPTER.validate_python(value)
+    except Exception:
+        return False
+    return True
 
 
 def _normalize_role_level(value: Any) -> str | None:
@@ -409,12 +472,33 @@ def _build_import_preview(
     *,
     raw_rows: list[tuple[int, dict[str, Any]]],
     existing_emails: set[str],
-) -> tuple[list[RespondentCreate], list[RespondentImportIssue], list[RespondentImportPreviewRow], int]:
+) -> tuple[
+    list[RespondentCreate],
+    list[RespondentImportIssue],
+    list[RespondentImportPreviewRow],
+    int,
+    list[str],
+    list[str],
+    list[str],
+]:
     issues: list[RespondentImportIssue] = []
     preview_rows: list[RespondentImportPreviewRow] = []
     normalized_rows: list[RespondentCreate] = []
     seen_emails: set[str] = set()
     duplicate_existing = 0
+    recognized_columns, ignored_columns, header_issues = _normalize_import_headers(raw_rows)
+    issues.extend(header_issues)
+    provided_columns = set(recognized_columns)
+
+    if header_issues:
+        blocking_messages = [
+            "Gebruik het deelnemersbestand met minimaal de kolom email en controleer daarna opnieuw.",
+        ]
+        if len(raw_rows) < MINIMUM_IMPORT_PARTICIPANTS:
+            blocking_messages.append(
+                f"Minimaal {MINIMUM_IMPORT_PARTICIPANTS} deelnemers zijn nodig om deze route veilig te starten."
+            )
+        return normalized_rows, issues, preview_rows, duplicate_existing, recognized_columns, ignored_columns, blocking_messages
 
     for row_number, row in raw_rows:
         normalized = {
@@ -431,31 +515,55 @@ def _build_import_preview(
         if not email:
             issues.append(RespondentImportIssue(row_number=row_number, field="email", message="E-mailadres ontbreekt."))
             continue
+        if not _validate_email_address(email):
+            issues.append(
+                RespondentImportIssue(
+                    row_number=row_number,
+                    field="email",
+                    message="E-mailadres is ongeldig.",
+                )
+            )
+            continue
 
         department_raw = normalized["department"]
         department = str(department_raw).strip() if department_raw not in (None, "") else None
+        row_issues: list[RespondentImportIssue] = []
+        if "department" in provided_columns and _is_placeholder_import_value(department_raw):
+            row_issues.append(
+                RespondentImportIssue(
+                    row_number=row_number,
+                    field="department",
+                    message="Afdeling ontbreekt of is niet bruikbaar. Vul een herkenbare afdelingsnaam in of laat de kolom weg.",
+                )
+            )
 
         role_level = _normalize_role_level(normalized["role_level"])
-        if normalized["role_level"] not in (None, "") and not role_level:
-            issues.append(
+        if "role_level" in provided_columns and _is_placeholder_import_value(normalized["role_level"]):
+            row_issues.append(
+                RespondentImportIssue(
+                    row_number=row_number,
+                    field="role_level",
+                    message="Functieniveau ontbreekt. Gebruik uitvoerend, specialist, senior, manager, director of c_level.",
+                )
+            )
+        elif normalized["role_level"] not in (None, "") and not role_level:
+            row_issues.append(
                 RespondentImportIssue(
                     row_number=row_number,
                     field="role_level",
                     message="Functieniveau niet herkend. Gebruik uitvoerend, specialist, senior, manager, director of c_level.",
                 )
             )
-            continue
 
         exit_month = _normalize_exit_month(normalized["exit_month"])
         if normalized["exit_month"] not in (None, "") and not exit_month:
-            issues.append(
+            row_issues.append(
                 RespondentImportIssue(
                     row_number=row_number,
                     field="exit_month",
                     message="Gebruik voor exitmaand het formaat JJJJ-MM, bijvoorbeeld 2026-03.",
                 )
             )
-            continue
 
         salary_value = normalized["annual_salary_eur"]
         annual_salary_eur: float | None = None
@@ -463,14 +571,17 @@ def _build_import_preview(
             try:
                 annual_salary_eur = float(str(salary_value).replace(",", "."))
             except ValueError:
-                issues.append(
+                row_issues.append(
                     RespondentImportIssue(
                         row_number=row_number,
                         field="annual_salary_eur",
                         message="Jaarsalaris moet numeriek zijn.",
                     )
                 )
-                continue
+
+        if row_issues:
+            issues.extend(row_issues)
+            continue
 
         if email in seen_emails:
             issues.append(
@@ -525,7 +636,24 @@ def _build_import_preview(
                 )
             )
 
-    return normalized_rows, issues, preview_rows, duplicate_existing
+    blocking_messages: list[str] = []
+    if len(normalized_rows) < MINIMUM_IMPORT_PARTICIPANTS:
+        blocking_messages.append(
+            f"Minimaal {MINIMUM_IMPORT_PARTICIPANTS} deelnemers zijn nodig om deze route veilig te starten."
+        )
+
+    if issues:
+        blocking_messages.append("Herstel eerst de gemelde rijen voordat je verdergaat met deze dataset.")
+
+    return (
+        normalized_rows,
+        issues,
+        preview_rows,
+        duplicate_existing,
+        recognized_columns,
+        ignored_columns,
+        blocking_messages,
+    )
 
 
 def _render_survey_status(
@@ -1381,10 +1509,11 @@ async def import_respondents(
         .all()
         if email
     }
-    normalized_rows, issues, preview_rows, duplicate_existing = _build_import_preview(
+    normalized_rows, issues, preview_rows, duplicate_existing, recognized_columns, ignored_columns, blocking_messages = _build_import_preview(
         raw_rows=raw_rows,
         existing_emails=existing_emails,
     )
+    launch_blocked = len(issues) > 0 or len(blocking_messages) > 0
 
     response = RespondentImportResponse(
         dry_run=dry_run,
@@ -1392,13 +1521,23 @@ async def import_respondents(
         valid_rows=len(normalized_rows),
         invalid_rows=len(issues),
         duplicate_existing=duplicate_existing,
+        recognized_columns=recognized_columns,
+        ignored_columns=ignored_columns,
+        blocking_messages=blocking_messages,
         preview_rows=preview_rows,
         errors=issues,
         imported=0,
         emails_sent=0,
+        launch_blocked=launch_blocked,
+        readiness_label="Import vrijgegeven" if not launch_blocked else "Importcontrole vereist",
+        recovery_hint=(
+            "De dataset is klaar voor import en launch."
+            if not launch_blocked
+            else "Werk het deelnemersbestand bij en controleer daarna opnieuw."
+        ),
     )
 
-    if dry_run or issues:
+    if dry_run or launch_blocked:
         return response
 
     respondents, emails_sent = _create_campaign_respondents(

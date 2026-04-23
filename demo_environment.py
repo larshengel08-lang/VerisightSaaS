@@ -498,6 +498,30 @@ def _purge_named_campaigns(db: Session, org: Organization, names: list[str]) -> 
         _purge_campaign(db, campaign)
 
 
+def _mark_import_qa_ready(db: Session, *, campaign: Campaign) -> None:
+    respondent_count = len(campaign.respondents)
+    summary = (
+        "Het deelnemersbestand is gecontroleerd en 1 deelnemer staat vrijgegeven voor launch."
+        if respondent_count == 1
+        else f"Het deelnemersbestand is gecontroleerd en {respondent_count} deelnemers staan vrijgegeven voor launch."
+    )
+    db.execute(
+        text(
+            """
+            update public.campaign_delivery_checkpoints checkpoint
+            set auto_state = 'ready',
+                last_auto_summary = :summary
+            from public.campaign_delivery_records record
+            where record.id = checkpoint.delivery_record_id
+              and record.campaign_id = :campaign_id
+              and checkpoint.checkpoint_key = 'import_qa'
+            """
+        ),
+        {"campaign_id": campaign.id, "summary": summary},
+    )
+    db.flush()
+
+
 def _pick_exit_profile() -> dict[str, float | str]:
     profile = _pick_profile(EXIT_PROFILES)
     return {
@@ -982,10 +1006,21 @@ def seed_guided_self_serve_acceptance(
             exit_month="2026-03",
         )
 
+    _mark_import_qa_ready(db, campaign=threshold_campaign)
+
     db.commit()
     return {
         "org_slug": resolved_org_slug,
         "campaign_count": 2,
+        "setup_campaign_id": str(
+            db.query(Campaign.id)
+            .filter(
+                Campaign.organization_id == org.id,
+                Campaign.name == GUIDED_SELF_SERVE_SETUP_CAMPAIGN_NAME,
+            )
+            .scalar()
+        ),
+        "threshold_campaign_id": str(threshold_campaign.id),
         "detail_threshold": RESPONSE_THRESHOLDS["detail"],
         "pattern_threshold": RESPONSE_THRESHOLDS["pattern"],
         "viewer_user_id": viewer_user_id,
