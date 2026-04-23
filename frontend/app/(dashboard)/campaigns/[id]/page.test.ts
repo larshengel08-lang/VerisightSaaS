@@ -38,4 +38,22 @@ describe('campaign page render truth', () => {
     expect(source).toContain('Guided self-serve')
     expect(guidedPanelSource).toContain('Start uitnodigingen')
   })
+
+  it('keeps customer execution role-aware and critical actions auditable', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const guidedPanelSource = readFileSync(
+      new URL('../../../../components/dashboard/guided-self-serve-panel.tsx', import.meta.url),
+      'utf8',
+    )
+    const preflightSource = readFileSync(
+      new URL('../../../../components/dashboard/preflight-checklist.tsx', import.meta.url),
+      'utf8',
+    )
+
+    expect(source).toContain("getCustomerActionPermission(membership?.role ?? null, 'review_launch')")
+    expect(guidedPanelSource).toContain('Jouw rol en kritieke acties')
+    expect(guidedPanelSource).toContain('Alleen de klant owner kan')
+    expect(preflightSource).toContain('Recente kritieke acties')
+    expect(preflightSource).toContain('Launch-owner')
+  })
 })

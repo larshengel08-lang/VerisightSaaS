@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { insertCampaignAuditEvent } from '@/lib/campaign-audit'
 import { createClient } from '@/lib/supabase/server'
 import {
   DELIVERY_CHECKPOINT_DEFINITIONS,
@@ -88,7 +89,7 @@ export async function PATCH(request: Request, context: Context) {
 
   const { data: checkpoint } = await admin.supabase
     .from('campaign_delivery_checkpoints')
-    .select('id, checkpoint_key')
+    .select('id, checkpoint_key, delivery_record_id')
     .eq('id', id)
     .maybeSingle()
 
@@ -139,6 +140,30 @@ export async function PATCH(request: Request, context: Context) {
 
   if (error) {
     return NextResponse.json({ detail: error.message }, { status: 500 })
+  }
+
+  const { data: deliveryRecord } = await admin.supabase
+    .from('campaign_delivery_records')
+    .select('organization_id, campaign_id')
+    .eq('id', checkpoint.delivery_record_id)
+    .maybeSingle()
+
+  if (deliveryRecord?.campaign_id && deliveryRecord.organization_id) {
+    await insertCampaignAuditEvent({
+      supabase: admin.supabase,
+      organizationId: deliveryRecord.organization_id,
+      campaignId: deliveryRecord.campaign_id,
+      actorUserId: admin.user.id,
+      actorRole: 'verisight_admin',
+      action: 'delivery_checkpoint_confirmed',
+      outcome: 'completed',
+      summary: `Checkpoint ${checkpoint.checkpoint_key} bijgewerkt naar ${body.manual_state ?? 'pending'}.`,
+      metadata: {
+        checkpoint_key: checkpoint.checkpoint_key,
+        manual_state: body.manual_state ?? null,
+        exception_status: body.exception_status ?? null,
+      },
+    })
   }
 
   return NextResponse.json({ message: 'Deliverycheckpoint bijgewerkt.' })
