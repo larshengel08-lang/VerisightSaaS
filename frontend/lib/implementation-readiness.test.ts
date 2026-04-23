@@ -1,0 +1,38 @@
+import { describe, expect, it } from 'vitest'
+import { buildCampaignReadinessState } from '@/lib/implementation-readiness'
+
+describe('campaign implementation readiness', () => {
+  it('keeps first-read readiness explicit while the campaign is still one response short of dashboard activation', () => {
+    const state = buildCampaignReadinessState({
+      totalInvited: 12,
+      totalCompleted: 4,
+      invitesNotSent: 0,
+      incompleteScores: 0,
+      hasMinDisplay: false,
+      hasEnoughData: false,
+      activeClientAccessCount: 0,
+      pendingClientInviteCount: 0,
+    })
+
+    expect(state.headline).toBe('Eerste output nog in opbouw')
+    expect(state.detail).toContain('Nog 1 response tot de eerste dashboardread')
+    expect(state.nextStep).toContain('Bouw eerst 1 extra response op')
+  })
+
+  it('keeps launch messaging compact after dashboard activation until the first pattern threshold is reached', () => {
+    const state = buildCampaignReadinessState({
+      totalInvited: 20,
+      totalCompleted: 6,
+      invitesNotSent: 0,
+      incompleteScores: 0,
+      hasMinDisplay: true,
+      hasEnoughData: false,
+      activeClientAccessCount: 1,
+      pendingClientInviteCount: 0,
+    })
+
+    expect(state.headline).toBe('Dashboard actief, inzichten nog in opbouw')
+    expect(state.detail).toContain('Nog 4 responses tot eerste patroonduiding')
+    expect(state.nextStep).toContain('compacte dashboardread')
+  })
+})

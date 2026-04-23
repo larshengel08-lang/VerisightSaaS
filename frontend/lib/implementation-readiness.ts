@@ -1,4 +1,5 @@
 import type { DeliveryMode, ScanType } from '@/lib/types'
+import { buildResponseActivationState } from '@/lib/response-activation'
 
 export function normalizeDeliveryMode(mode: DeliveryMode | null | undefined): DeliveryMode {
   return mode === 'live' ? 'live' : 'baseline'
@@ -69,6 +70,7 @@ export function buildCampaignReadinessState({
   activeClientAccessCount: number
   pendingClientInviteCount: number
 }): CampaignReadinessState {
+  const activationState = buildResponseActivationState(totalCompleted)
   const setupComplete = totalInvited > 0
   const invitesLive = setupComplete && invitesNotSent === 0
   const outputReady = hasMinDisplay && incompleteScores === 0
@@ -119,8 +121,12 @@ export function buildCampaignReadinessState({
       headline: 'Eerste output nog in opbouw',
       detail: incompleteScores > 0
         ? `${incompleteScores} response(s) bevatten nog onvolledige scoredata.`
-        : `Er zijn ${totalCompleted} responses binnen; vanaf 5 wordt eerste detailweergave veilig genoeg voor klantuitleg en acceptatie.`,
-      nextStep: 'Wacht op voldoende responses of herstel eerst de incomplete scoredata voordat je output als eerste managementread positioneert.',
+        : activationState.statusDetail,
+      nextStep: incompleteScores > 0
+        ? 'Herstel eerst de incomplete scoredata voordat je output als eerste managementread positioneert.'
+        : activationState.remainingToDashboard === 1
+          ? 'Bouw eerst 1 extra response op of stuur gericht een reminder voordat dashboard en rapport worden vrijgegeven.'
+          : `Bouw eerst ${activationState.remainingToDashboard} extra responses op of stuur gericht reminders voordat dashboard en rapport worden vrijgegeven.`,
     }
   }
 
@@ -162,12 +168,12 @@ export function buildCampaignReadinessState({
     clientAccessActivated,
     clientActivationPending,
     launchReady,
-    headline: analysisReady ? 'Launch readiness op orde' : 'Eerste klantread mogelijk',
+    headline: analysisReady ? 'Launch readiness op orde' : 'Dashboard actief, inzichten nog in opbouw',
     detail: analysisReady
       ? 'Setup, inviteflow, eerste output en klanttoegang zijn op orde. Deze campagne is operationeel sterk genoeg voor eerste managementduiding.'
-      : 'De klant kan veilig live, maar het inhoudelijke beeld blijft nog indicatief totdat er minstens 10 responses zijn.',
+      : activationState.statusDetail,
     nextStep: analysisReady
       ? 'Gebruik nu dashboard en rapport samen voor het eerste managementgesprek en leg de eerste eigenaar of vervolgstap vast.'
-      : 'Gebruik deze campagne nu voor eerste klantread en responsopbouw, niet voor te scherpe patroonclaims.',
+      : 'Gebruik nu de compacte dashboardread, houd de duiding indicatief en bouw tegelijk respons op richting eerste patroonduiding.',
   }
 }

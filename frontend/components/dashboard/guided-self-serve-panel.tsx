@@ -15,6 +15,7 @@ import {
   getInviteDefaultForDeliveryMode,
   getDeliveryModeLabel,
 } from '@/lib/implementation-readiness'
+import { buildResponseActivationState } from '@/lib/response-activation'
 import {
   type DeliveryMode,
   REPORT_ADD_ON_LABELS,
@@ -98,6 +99,7 @@ export function GuidedSelfServePanel({
       }),
     [hasEnoughData, hasMinDisplay, invitesNotSent, isActive, totalCompleted, totalInvited],
   )
+  const activationState = useMemo(() => buildResponseActivationState(totalCompleted), [totalCompleted])
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploadSendInvites, setUploadSendInvites] = useState(true)
   const [previewResult, setPreviewResult] = useState<ImportResponse | null>(null)
@@ -299,8 +301,8 @@ export function GuidedSelfServePanel({
         />
         <DashboardPanel
           eyebrow="Dashboardactivatie"
-          title="5 responses voor eerste read, 10 voor verdieping"
-          body="Het dashboard gaat pas zichtbaar open zodra de eerste veilige responsdrempel is gehaald. Verdiepende patronen en scherpere prioritering volgen bewust pas vanaf 10 responses."
+          title={activationState.deeperInsightsVisible ? 'Eerste inzichten actief' : activationState.heroActionLabel}
+          body={activationState.statusDetail}
           tone={guidedState.deeperInsightsVisible ? 'emerald' : 'amber'}
         />
       </div>

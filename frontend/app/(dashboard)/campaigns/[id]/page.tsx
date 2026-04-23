@@ -59,6 +59,7 @@ import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import { buildTeamLocalReadState, buildTeamPriorityReadState } from '@/lib/products/team'
 import { getProductModule } from '@/lib/products/shared/registry'
+import { buildResponseActivationState } from '@/lib/response-activation'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
 import type { CampaignStats, Respondent, SurveyResponse } from '@/lib/types'
@@ -281,8 +282,10 @@ export default async function CampaignPage({ params }: Props) {
     hasMinDisplay,
     hasEnoughData,
   })
+  const activationState = buildResponseActivationState(stats.total_completed)
   const showClientExecutionFlow = !isVerisightAdmin
-  const showManagementOutput = isVerisightAdmin || guidedSelfServeState.dashboardVisible
+  const showManagementOutput = guidedSelfServeState.dashboardVisible
+  const showDeeperInsights = guidedSelfServeState.deeperInsightsVisible
   const utilitySectionVisible = canExecuteCampaign || respondents.length > 0 || isVerisightAdmin
   const riskDistribution = {
     HOOG: stats.band_high,
@@ -385,11 +388,7 @@ export default async function CampaignPage({ params }: Props) {
             : stats.scan_type === 'leadership'
               ? 'Deze laag vertaalt Leadership Scan naar een bestuurlijk leesbare managementread: welke context valt op, wat moet je eerst toetsen en welke begrensde managementstap hoort hier direct achteraan.'
         : 'Deze laag opent met de Frictiescore als bestuurlijk leesbare managementsamenvatting: wat keert terug, waar lijkt werkfrictie beinvloedbaar en waar moet management eerst doorvragen.'
-  const readinessLabel = hasEnoughData
-    ? 'Beslisniveau bereikt'
-    : hasMinDisplay
-      ? 'Indicatief beeld'
-      : 'Nog in opbouw'
+  const readinessLabel = activationState.readinessLabel
   const focusBadgeLabel =
     stats.scan_type === 'pulse'
       ? 'Signaal -> bijsturen -> opnieuw meten'
@@ -701,8 +700,14 @@ export default async function CampaignPage({ params }: Props) {
     },
     {
       label: productExperience.summarySignalLabel,
-      value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : 'Nog geen veilig beeld',
-      tone: averageRiskScore !== null ? (stats.scan_type === 'retention' ? 'emerald' : 'blue') : 'amber',
+      value:
+        showManagementOutput && averageRiskScore !== null
+          ? `${averageRiskScore.toFixed(1)}/10`
+          : 'Nog in opbouw',
+      tone:
+        showManagementOutput && averageRiskScore !== null
+          ? (stats.scan_type === 'retention' ? 'emerald' : 'blue')
+          : 'amber',
     },
     {
       label: 'Responsstatus',
@@ -719,26 +724,30 @@ export default async function CampaignPage({ params }: Props) {
             id: 'handoff',
             label: stats.scan_type === 'retention' ? 'Handoff' : stats.scan_type === 'team' ? 'Lokale read' : 'Handoff',
           },
-          {
-            id: 'drivers',
-            label: stats.scan_type === 'retention' ? 'Signalen' : stats.scan_type === 'team' ? 'Lokaal' : 'Drivers',
-          },
-          {
-            id: 'acties',
-            label: stats.scan_type === 'retention' ? 'Behoudsacties' : stats.scan_type === 'team' ? 'Lokale acties' : 'Acties',
-          },
-          {
-            id: 'route',
-            label:
-              stats.scan_type === 'retention' || stats.scan_type === 'exit'
-                ? 'Kernroute'
-                : stats.scan_type === 'team' ||
-                    stats.scan_type === 'pulse' ||
-                    stats.scan_type === 'onboarding' ||
-                    stats.scan_type === 'leadership'
-                  ? 'Vervolgroute'
-                  : 'Route',
-          },
+          ...(showDeeperInsights
+            ? [
+                {
+                  id: 'drivers',
+                  label: stats.scan_type === 'retention' ? 'Signalen' : stats.scan_type === 'team' ? 'Lokaal' : 'Drivers',
+                },
+                {
+                  id: 'acties',
+                  label: stats.scan_type === 'retention' ? 'Behoudsacties' : stats.scan_type === 'team' ? 'Lokale acties' : 'Acties',
+                },
+                {
+                  id: 'route',
+                  label:
+                    stats.scan_type === 'retention' || stats.scan_type === 'exit'
+                      ? 'Kernroute'
+                      : stats.scan_type === 'team' ||
+                          stats.scan_type === 'pulse' ||
+                          stats.scan_type === 'onboarding' ||
+                          stats.scan_type === 'leadership'
+                        ? 'Vervolgroute'
+                        : 'Route',
+                },
+              ]
+            : []),
         ]
       : []),
     { id: 'methodiek', label: 'Methodiek' },
@@ -984,13 +993,7 @@ export default async function CampaignPage({ params }: Props) {
               />
               <DashboardChip label={`${stats.completion_rate_pct ?? 0}% respons`} tone="slate" />
               <DashboardChip
-                label={
-                  hasEnoughData
-                    ? 'Beslisniveau bereikt'
-                    : hasMinDisplay
-                      ? 'Indicatief beeld'
-                      : 'Nog onvoldoende responses'
-                }
+                label={readinessLabel}
                 tone={hasEnoughData ? 'blue' : 'amber'}
               />
               <DashboardChip
@@ -1002,7 +1005,7 @@ export default async function CampaignPage({ params }: Props) {
           actions={
             !showManagementOutput ? (
               <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
-                Dashboard wordt zichtbaar vanaf de eerste veilige responsdrempel
+                {activationState.heroActionLabel}
               </div>
             ) : stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
               <>
@@ -1037,8 +1040,10 @@ export default async function CampaignPage({ params }: Props) {
                 <DashboardKeyValue label="Ingevuld" value={`${stats.total_completed}`} />
                 <DashboardKeyValue
                   label={`Gem. ${scanDefinition.signalLabelLower}`}
-                  value={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : '-'}
-                  accent={averageRiskScore !== null ? 'text-blue-700' : undefined}
+                  value={
+                    showManagementOutput && averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : 'Nog niet actief'
+                  }
+                  accent={showManagementOutput && averageRiskScore !== null ? 'text-blue-700' : undefined}
                   helpText={scanDefinition.signalHelp}
                 />
               </div>
@@ -1053,6 +1058,7 @@ export default async function CampaignPage({ params }: Props) {
                 <p className="mt-2 text-xs leading-5 text-slate-500">
                   Route: {getDeliveryModeLabel(campaignMeta?.delivery_mode ?? null, stats.scan_type)}.
                 </p>
+                <p className="mt-2 text-xs leading-5 text-slate-500">{activationState.statusDetail}</p>
               </div>
             </div>
           }
@@ -1086,7 +1092,7 @@ export default async function CampaignPage({ params }: Props) {
         actions={
           !showManagementOutput ? (
             <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
-              Eerst uitvoerflow afronden
+              {activationState.heroActionLabel}
             </div>
           ) : stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
             <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
@@ -1130,7 +1136,7 @@ export default async function CampaignPage({ params }: Props) {
           </DashboardSection>
         ) : null}
 
-      {showManagementOutput && promotedSummaryCards.length > 0 ? (
+      {showDeeperInsights && promotedSummaryCards.length > 0 ? (
         <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4 shadow-[0_12px_30px_rgba(19,32,51,0.05)] sm:p-5">
           <div className="flex flex-col gap-3 border-b border-[color:var(--border)]/80 pb-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
@@ -1326,7 +1332,17 @@ export default async function CampaignPage({ params }: Props) {
       </DashboardSection>
       ) : null}
 
-      {showManagementOutput ? (
+      {showManagementOutput && !showDeeperInsights ? (
+      <div className="rounded-[24px] border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-6 text-amber-950">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-800">Verdieping nog dicht</p>
+        <p className="mt-2 font-semibold">Het dashboard is al bruikbaar, maar blijft nog bewust compact.</p>
+        <p className="mt-2">
+          {activationState.statusDetail} Verdiepende drivers, focusvragen en route-uitvoer verschijnen pas zodra de survey ook methodologisch klaar is voor eerste patroonduiding.
+        </p>
+      </div>
+      ) : null}
+
+      {showDeeperInsights ? (
       <DashboardSection
         id="drivers"
         eyebrow="Wat drijft dit beeld?"
@@ -1346,10 +1362,10 @@ export default async function CampaignPage({ params }: Props) {
             Verdiepende analyse wordt zichtbaar vanaf {MIN_N_PATTERNS} ingevulde responses. Tot die tijd blijft het dashboard bewust compact en voorzichtig.
           </div>
           )}
-        </DashboardSection>
+      </DashboardSection>
       ) : null}
 
-      {showManagementOutput ? (
+      {showDeeperInsights ? (
       <DashboardSection
         id="acties"
         eyebrow="Waar eerst op handelen"
@@ -1476,10 +1492,10 @@ export default async function CampaignPage({ params }: Props) {
             Focusvragen en route-uitvoer worden betekenisvoller zodra het dashboard minstens {MIN_N_PATTERNS} responses heeft.
           </div>
           )}
-        </DashboardSection>
+      </DashboardSection>
       ) : null}
 
-      {showManagementOutput ? (
+      {showDeeperInsights ? (
       <DashboardSection
         id="route"
         eyebrow="30–90 dagenroute"
