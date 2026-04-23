@@ -38,4 +38,27 @@ describe('campaign page render truth', () => {
     expect(source).toContain('Guided self-serve')
     expect(guidedPanelSource).toContain('Start uitnodigingen')
   })
+
+  it('keeps module hierarchy differentiated by role, evidence order and trust placement', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain("familyRoleLabel: 'Kernroute'")
+    expect(source).toContain("familyRoleLabel: 'Begrensde peer-route'")
+    expect(source).toContain("familyRoleLabel: 'Begrensde support-route'")
+
+    expect(source).toContain("summaryBarOrder: ['signal', 'owner', 'response', 'readiness']")
+    expect(source).toContain("summaryBarOrder: ['signal', 'next-step', 'response', 'readiness']")
+    expect(source).toContain("summaryBarOrder: ['signal', 'next-step', 'review', 'readiness']")
+    expect(source).toContain("summaryBarOrder: ['signal', 'owner', 'review', 'readiness']")
+
+    expect(source).toContain("evidenceSectionOrder: 'management-first'")
+    expect(source).toContain("evidenceSectionOrder: 'profile-first'")
+    expect(source).toContain("recommendationOrder: 'questions-first'")
+    expect(source).toContain("recommendationOrder: 'playbooks-first'")
+    expect(source).toContain("trustNotePlacement: 'drivers'")
+    expect(source).toContain("trustNotePlacement: 'handoff'")
+
+    expect(source).toContain("driverTabOrder: ['factoren', 'trend', 'signalen', 'aanvullend']")
+    expect(source).toContain("driverTabOrder: ['factoren', 'signalen', 'aanvullend', 'trend']")
+  })
 })

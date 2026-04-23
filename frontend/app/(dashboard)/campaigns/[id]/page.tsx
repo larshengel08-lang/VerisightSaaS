@@ -67,6 +67,102 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
+type PresentationMetricKey =
+  | 'signal'
+  | 'owner'
+  | 'next-step'
+  | 'review'
+  | 'response'
+  | 'readiness'
+
+type PresentationMetric = {
+  label: string
+  value: string
+  tone: 'slate' | 'blue' | 'emerald' | 'amber'
+  accent?: string
+  helpText?: string
+}
+
+function buildPresentationMetrics({
+  productExperience,
+  scanDefinition,
+  dashboardViewModel,
+  averageRiskScore,
+  totalCompleted,
+  totalInvited,
+  readinessLabel,
+  hasEnoughData,
+}: {
+  productExperience: {
+    summarySignalLabel: string
+    summaryFocusLabel: string
+    reviewLabel: string
+  }
+  scanDefinition: ReturnType<typeof getScanDefinition>
+  dashboardViewModel: {
+    topSummaryCards: Array<{ title: string; value?: string }>
+    nextStep: { title: string }
+  }
+  averageRiskScore: number | null
+  totalCompleted: number
+  totalInvited: number
+  readinessLabel: string
+  hasEnoughData: boolean
+}): Record<PresentationMetricKey, PresentationMetric> {
+  const ownerValue =
+    findPresentationCardValue(dashboardViewModel.topSummaryCards, ['Eerste eigenaar']) ?? 'Nog niet vrijgegeven'
+  const reviewValue =
+    findPresentationCardValue(dashboardViewModel.topSummaryCards, ['Reviewmoment', 'Reviewgrens', 'Leesgrens']) ??
+    'Nog indicatief'
+
+  return {
+    signal: {
+      label: productExperience.summarySignalLabel,
+      value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : 'Nog geen veilig beeld',
+      tone: averageRiskScore !== null ? (scanDefinition.scanType === 'retention' ? 'emerald' : 'blue') : 'amber',
+      accent: averageRiskScore !== null ? (scanDefinition.scanType === 'retention' ? 'text-emerald-700' : 'text-blue-700') : undefined,
+      helpText: scanDefinition.signalHelp,
+    },
+    owner: {
+      label: 'Eerste eigenaar',
+      value: ownerValue,
+      tone: 'blue',
+    },
+    'next-step': {
+      label: productExperience.summaryFocusLabel,
+      value: dashboardViewModel.nextStep.title,
+      tone: hasEnoughData ? 'blue' : 'amber',
+    },
+    review: {
+      label: productExperience.reviewLabel,
+      value: reviewValue,
+      tone: 'slate',
+    },
+    response: {
+      label: 'Responsstatus',
+      value: `${totalCompleted}/${totalInvited || 0} ingevuld`,
+      tone: hasEnoughData ? 'emerald' : 'amber',
+    },
+    readiness: {
+      label: 'Readiness',
+      value: readinessLabel,
+      tone: hasEnoughData ? 'blue' : 'amber',
+    },
+  }
+}
+
+function findPresentationCardValue(
+  cards: Array<{ title: string; value?: string }>,
+  titles: string[],
+) {
+  for (const title of titles) {
+    const match = cards.find((card) => card.title === title && card.value)
+    if (match?.value) return match.value
+  }
+
+  return null
+}
+
 export default async function CampaignPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
@@ -417,6 +513,18 @@ export default async function CampaignPage({ params }: Props) {
   const productExperience =
     stats.scan_type === 'retention'
       ? {
+          familyRoleLabel: 'Kernroute',
+          familyRoleTone: 'emerald' as const,
+          summaryBarOrder: ['signal', 'next-step', 'response', 'readiness'] as const,
+          heroAsideOrder: ['signal', 'owner', 'response', 'readiness'] as const,
+          summaryFocusLabel: 'Eerste route',
+          reviewLabel: 'Reviewmoment',
+          evidenceSectionOrder: 'management-first' as const,
+          recommendationOrder: 'questions-first' as const,
+          trustNotePlacement: 'drivers' as const,
+          trustNoteTitle: 'Methodische status',
+          trustNoteBody: scanDefinition.evidenceStatusText,
+          trustNoteTone: 'emerald' as const,
           summaryTone: 'emerald' as const,
           summarySignalLabel: 'Retentiesignaal',
           summaryContextLabel: 'Groepssignaal · verification-first',
@@ -463,6 +571,18 @@ export default async function CampaignPage({ params }: Props) {
         }
       : stats.scan_type === 'team'
         ? {
+            familyRoleLabel: 'Specialistische vervolgstap',
+            familyRoleTone: 'blue' as const,
+            summaryBarOrder: ['signal', 'next-step', 'response', 'readiness'] as const,
+            heroAsideOrder: ['signal', 'next-step', 'response', 'readiness'] as const,
+            summaryFocusLabel: 'Eerste lokale route',
+            reviewLabel: 'Reviewgrens',
+            evidenceSectionOrder: 'profile-first' as const,
+            recommendationOrder: 'playbooks-first' as const,
+            trustNotePlacement: 'handoff' as const,
+            trustNoteTitle: 'Leesgrens van deze route',
+            trustNoteBody: scanDefinition.segmentText,
+            trustNoteTone: 'amber' as const,
             summaryTone: 'blue' as const,
             summarySignalLabel: 'Teamsignaal',
             summaryContextLabel: 'Lokale read · department-first',
@@ -509,6 +629,18 @@ export default async function CampaignPage({ params }: Props) {
           }
       : stats.scan_type === 'onboarding'
         ? {
+            familyRoleLabel: 'Begrensde peer-route',
+            familyRoleTone: 'blue' as const,
+            summaryBarOrder: ['signal', 'owner', 'review', 'readiness'] as const,
+            heroAsideOrder: ['signal', 'owner', 'review', 'response'] as const,
+            summaryFocusLabel: 'Eerste checkpoint',
+            reviewLabel: 'Reviewgrens',
+            evidenceSectionOrder: 'profile-first' as const,
+            recommendationOrder: 'playbooks-first' as const,
+            trustNotePlacement: 'handoff' as const,
+            trustNoteTitle: 'Leesgrens van deze route',
+            trustNoteBody: scanDefinition.evidenceStatusText,
+            trustNoteTone: 'amber' as const,
             summaryTone: 'blue' as const,
             summarySignalLabel: 'Onboardingsignaal',
             summaryContextLabel: 'Vroege landing · bounded peer-read',
@@ -525,7 +657,7 @@ export default async function CampaignPage({ params }: Props) {
               'Start bij de landingsduiding en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke vroege factor nu eerst aandacht vraagt.',
             driverAsideLabel: hasEnoughData ? 'Landingsduiding beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
-            driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
+            driverTabOrder: ['factoren', 'signalen', 'aanvullend', 'trend'],
             signalTabLabel: 'Landingsbeeld',
             signalTabTitle: 'Onboardingsignaal op groepsniveau',
             signalTabDescription:
@@ -555,6 +687,18 @@ export default async function CampaignPage({ params }: Props) {
           }
       : stats.scan_type === 'leadership'
         ? {
+            familyRoleLabel: 'Begrensde support-route',
+            familyRoleTone: 'blue' as const,
+            summaryBarOrder: ['signal', 'next-step', 'review', 'readiness'] as const,
+            heroAsideOrder: ['signal', 'next-step', 'review', 'response'] as const,
+            summaryFocusLabel: 'Eerste check',
+            reviewLabel: 'Reviewgrens',
+            evidenceSectionOrder: 'profile-first' as const,
+            recommendationOrder: 'playbooks-first' as const,
+            trustNotePlacement: 'handoff' as const,
+            trustNoteTitle: 'Leesgrens van deze route',
+            trustNoteBody: scanDefinition.evidenceStatusText,
+            trustNoteTone: 'amber' as const,
             summaryTone: 'blue' as const,
             summarySignalLabel: 'Leadershipsignaal',
             summaryContextLabel: 'Bounded support-read · group-level only',
@@ -571,7 +715,7 @@ export default async function CampaignPage({ params }: Props) {
               'Start bij de begrensde read en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke context eerst een kleine check verdient.',
             driverAsideLabel: hasEnoughData ? 'Managementread beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
-            driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
+            driverTabOrder: ['factoren', 'signalen', 'aanvullend', 'trend'],
             signalTabLabel: 'Managementbeeld',
             signalTabTitle: 'Leadershipsignaal op groepsniveau',
             signalTabDescription:
@@ -601,6 +745,18 @@ export default async function CampaignPage({ params }: Props) {
           }
       : stats.scan_type === 'exit'
         ? {
+            familyRoleLabel: 'Kernroute',
+            familyRoleTone: 'blue' as const,
+            summaryBarOrder: ['signal', 'owner', 'response', 'readiness'] as const,
+            heroAsideOrder: ['signal', 'owner', 'response', 'readiness'] as const,
+            summaryFocusLabel: 'Eerste route',
+            reviewLabel: 'Reviewmoment',
+            evidenceSectionOrder: 'management-first' as const,
+            recommendationOrder: 'questions-first' as const,
+            trustNotePlacement: 'drivers' as const,
+            trustNoteTitle: 'Methodische status',
+            trustNoteBody: scanDefinition.evidenceStatusText,
+            trustNoteTone: 'blue' as const,
             summaryTone: 'blue' as const,
             summarySignalLabel: 'Frictiescore',
             summaryContextLabel: 'Werkfrictie · verklarende laag',
@@ -646,6 +802,18 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik het eerste reviewmoment om bewust te kiezen: blijf je op hetzelfde vertrekspoor, vraagt deze scan verdere verdieping of wordt een tweede product logisch op basis van de eerste managementwaarde?',
           }
         : {
+            familyRoleLabel: 'Begrensde support-route',
+            familyRoleTone: 'blue' as const,
+            summaryBarOrder: ['signal', 'next-step', 'review', 'readiness'] as const,
+            heroAsideOrder: ['signal', 'next-step', 'review', 'response'] as const,
+            summaryFocusLabel: 'Eerste herijking',
+            reviewLabel: 'Reviewmoment',
+            evidenceSectionOrder: 'profile-first' as const,
+            recommendationOrder: 'playbooks-first' as const,
+            trustNotePlacement: 'handoff' as const,
+            trustNoteTitle: 'Leesgrens van deze route',
+            trustNoteBody: scanDefinition.evidenceStatusText,
+            trustNoteTone: 'amber' as const,
             summaryTone: 'blue' as const,
             summarySignalLabel: 'Pulsesignaal',
             summaryContextLabel: 'Reviewlaag · bounded repeat motion',
@@ -662,7 +830,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik de tabs hieronder om tussen groepsread, factoren, aanvullende lagen en bounded vergelijking te wisselen zonder de hoofdlijn van de managementread kwijt te raken.',
             driverAsideLabel: hasEnoughData ? 'Pulse read beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
-            driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
+            driverTabOrder: ['factoren', 'trend', 'signalen', 'aanvullend'],
             signalTabLabel: 'Signaalverdeling',
             signalTabTitle: 'Signaalverdeling',
             signalTabDescription: 'Laat zien hoe breed en hoe scherp de signalen zich over de groep verdelen op dit meetmoment.',
@@ -689,28 +857,18 @@ export default async function CampaignPage({ params }: Props) {
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: doe je nog een bounded Pulse, verdiep je eerst de vraag verder of vraagt het thema nu een andere productvorm?',
           }
-  const summaryItems: Array<{
-    label: string
-    value: string
-    tone?: 'slate' | 'blue' | 'emerald' | 'amber'
-  }> = [
-    {
-      label: 'Scan',
-      value: scanDefinition.productName,
-      tone: stats.scan_type === 'retention' ? 'emerald' : 'blue',
-    },
-    {
-      label: productExperience.summarySignalLabel,
-      value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : 'Nog geen veilig beeld',
-      tone: averageRiskScore !== null ? (stats.scan_type === 'retention' ? 'emerald' : 'blue') : 'amber',
-    },
-    {
-      label: 'Responsstatus',
-      value: `${stats.total_completed}/${stats.total_invited || 0} ingevuld`,
-      tone: hasEnoughData ? 'emerald' : 'amber',
-    },
-    { label: 'Readiness', value: readinessLabel, tone: hasEnoughData ? 'blue' : 'amber' },
-  ]
+  const presentationMetrics = buildPresentationMetrics({
+    productExperience,
+    scanDefinition,
+    dashboardViewModel,
+    averageRiskScore,
+    totalCompleted: stats.total_completed,
+    totalInvited: stats.total_invited,
+    readinessLabel,
+    hasEnoughData,
+  })
+  const summaryItems = productExperience.summaryBarOrder.map((key) => presentationMetrics[key])
+  const heroAsideItems = productExperience.heroAsideOrder.map((key) => presentationMetrics[key])
   const sectionAnchors = [
     { id: 'samenvatting', label: 'Samenvatting' },
     ...(showManagementOutput
@@ -952,6 +1110,145 @@ export default async function CampaignPage({ params }: Props) {
         availableDriverTabs.filter((tab) => tab.id === tabId),
       )
     : []
+  const trustNote = (
+    <div
+      className={`rounded-[22px] border px-4 py-4 ${
+        productExperience.trustNoteTone === 'emerald'
+          ? 'border-emerald-200 bg-emerald-50'
+          : productExperience.trustNoteTone === 'amber'
+            ? 'border-amber-200 bg-amber-50'
+            : 'border-blue-100 bg-blue-50'
+      }`}
+    >
+      <p
+        className={`text-xs font-semibold uppercase tracking-[0.18em] ${
+          productExperience.trustNoteTone === 'emerald'
+            ? 'text-emerald-800'
+            : productExperience.trustNoteTone === 'amber'
+              ? 'text-amber-900'
+              : 'text-blue-800'
+        }`}
+      >
+        {productExperience.trustNoteTitle}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-slate-800">{productExperience.trustNoteBody}</p>
+    </div>
+  )
+  const profileCardsSection =
+    dashboardViewModel.profileCards.length > 0 ? (
+      <div className="grid gap-4 md:grid-cols-2">
+        {dashboardViewModel.profileCards.map((card) => (
+          <DashboardPanel
+            key={`${card.title}-${card.value ?? 'profile'}`}
+            eyebrow={card.title}
+            title={card.value || card.title}
+            body={card.body}
+            tone={card.tone}
+          />
+        ))}
+      </div>
+    ) : null
+  const managementBlocksSection =
+    dashboardViewModel.managementBlocks.length > 0 ? (
+      <div className="grid gap-4 lg:grid-cols-3">
+        {dashboardViewModel.managementBlocks.map((block) => (
+          <div
+            key={block.title}
+            className={`rounded-[22px] border p-4 ${
+              block.tone === 'emerald'
+                ? 'border-[#d2e6e0] bg-[#eef7f4]'
+                : block.tone === 'amber'
+                  ? 'border-[#eadfbe] bg-[#faf6ea]'
+                  : 'border-[#d6e4e8] bg-[#f3f8f8]'
+            }`}
+          >
+            <p
+              className={`text-xs font-semibold uppercase tracking-[0.2em] ${
+                block.tone === 'emerald'
+                  ? 'text-[#3C8D8A]'
+                  : block.tone === 'amber'
+                    ? 'text-[#8C6B1F]'
+                    : 'text-[#234B57]'
+              }`}
+            >
+              {block.title}
+            </p>
+            {block.intro ? <p className="mt-3 text-sm leading-6 text-slate-700">{block.intro}</p> : null}
+            <ul className="mt-3 space-y-2">
+              {block.items.map((item) => (
+                <li key={item} className="flex gap-2 text-sm leading-6 text-slate-700">
+                  <span className="text-slate-400">-</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    ) : null
+  const focusQuestionsBlock = (
+    <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+      <h3 className="text-sm font-semibold text-slate-950">{productExperience.focusQuestionTitle}</h3>
+      <p className="mt-1 text-sm leading-6 text-slate-600">{productExperience.focusQuestionDescription}</p>
+      <div className="mt-4">
+        <RecommendationList
+          factorAverages={factorData.orgAverages}
+          scanType={stats.scan_type}
+          bandOverride={
+            stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
+              ? dashboardViewModel.managementBandOverride
+              : undefined
+          }
+        />
+      </div>
+    </div>
+  )
+  const playbooksBlock =
+    stats.scan_type === 'retention' ||
+    stats.scan_type === 'exit' ||
+    stats.scan_type === 'pulse' ||
+    stats.scan_type === 'team' ||
+    stats.scan_type === 'onboarding' ||
+    stats.scan_type === 'leadership' ? (
+      <>
+        <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold text-slate-950">{productExperience.playbookTitle}</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">{productExperience.playbookDescription}</p>
+          {stats.scan_type === 'retention' && playbookCalibrationNote ? (
+            <p className="mt-2 text-xs leading-6 text-slate-500">{playbookCalibrationNote}</p>
+          ) : null}
+          <div className="mt-4">
+            <ActionPlaybookList
+              factorAverages={factorData.orgAverages}
+              scanType={stats.scan_type}
+              bandOverride={
+                stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
+                  ? dashboardViewModel.managementBandOverride
+                  : undefined
+              }
+            />
+          </div>
+        </div>
+
+        {stats.scan_type === 'retention' && hasSegmentDeepDive ? (
+          <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+            <h3 className="text-sm font-semibold text-slate-950">Segment-specifieke playbooks</h3>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Alleen zichtbaar als segmentvergelijking voldoende respons en metadata heeft.
+            </p>
+            <div className="mt-4">
+              {retentionSegmentPlaybooks.length > 0 ? (
+                <SegmentPlaybookList segments={retentionSegmentPlaybooks} />
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
+                  Nog geen segmenten met voldoende n en voldoende afwijking om apart te tonen.
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </>
+    ) : null
 
   return (
     <div className="space-y-6">
@@ -982,6 +1279,7 @@ export default async function CampaignPage({ params }: Props) {
                 label={stats.is_active ? 'Actief' : 'Gesloten'}
                 tone={stats.is_active ? 'emerald' : 'slate'}
               />
+              <DashboardChip label={productExperience.familyRoleLabel} tone={productExperience.familyRoleTone} />
               <DashboardChip label={`${stats.completion_rate_pct ?? 0}% respons`} tone="slate" />
               <DashboardChip
                 label={
@@ -1032,15 +1330,15 @@ export default async function CampaignPage({ params }: Props) {
           aside={
             <div className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <DashboardKeyValue label="Respons" value={`${stats.completion_rate_pct ?? 0}%`} />
-                <DashboardKeyValue label="Uitnodigingen" value={`${stats.total_invited}`} />
-                <DashboardKeyValue label="Ingevuld" value={`${stats.total_completed}`} />
-                <DashboardKeyValue
-                  label={`Gem. ${scanDefinition.signalLabelLower}`}
-                  value={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : '-'}
-                  accent={averageRiskScore !== null ? 'text-blue-700' : undefined}
-                  helpText={scanDefinition.signalHelp}
-                />
+                {heroAsideItems.map((item) => (
+                  <DashboardKeyValue
+                    key={item.label}
+                    label={item.label}
+                    value={item.value}
+                    accent={item.accent}
+                    helpText={item.helpText}
+                  />
+                ))}
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Campagnestatus</p>
@@ -1271,57 +1569,19 @@ export default async function CampaignPage({ params }: Props) {
             </div>
           ) : null}
 
-          {dashboardViewModel.profileCards.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {dashboardViewModel.profileCards.map((card) => (
-                <DashboardPanel
-                  key={`${card.title}-${card.value ?? 'profile'}`}
-                  eyebrow={card.title}
-                  title={card.value || card.title}
-                  body={card.body}
-                  tone={card.tone}
-                />
-              ))}
-            </div>
-          ) : null}
+          {productExperience.trustNotePlacement === 'handoff' ? trustNote : null}
 
-          {dashboardViewModel.managementBlocks.length > 0 ? (
-            <div className="grid gap-4 lg:grid-cols-3">
-              {dashboardViewModel.managementBlocks.map((block) => (
-                <div
-                  key={block.title}
-                  className={`rounded-[22px] border p-4 ${
-                    block.tone === 'emerald'
-                      ? 'border-[#d2e6e0] bg-[#eef7f4]'
-                      : block.tone === 'amber'
-                        ? 'border-[#eadfbe] bg-[#faf6ea]'
-                        : 'border-[#d6e4e8] bg-[#f3f8f8]'
-                  }`}
-                >
-                  <p
-                    className={`text-xs font-semibold uppercase tracking-[0.2em] ${
-                      block.tone === 'emerald'
-                        ? 'text-[#3C8D8A]'
-                        : block.tone === 'amber'
-                          ? 'text-[#8C6B1F]'
-                          : 'text-[#234B57]'
-                    }`}
-                  >
-                    {block.title}
-                  </p>
-                  {block.intro ? <p className="mt-3 text-sm leading-6 text-slate-700">{block.intro}</p> : null}
-                  <ul className="mt-3 space-y-2">
-                    {block.items.map((item) => (
-                      <li key={item} className="flex gap-2 text-sm leading-6 text-slate-700">
-                        <span className="text-slate-400">-</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          ) : null}
+          {productExperience.evidenceSectionOrder === 'management-first' ? (
+            <>
+              {managementBlocksSection}
+              {profileCardsSection}
+            </>
+          ) : (
+            <>
+              {profileCardsSection}
+              {managementBlocksSection}
+            </>
+          )}
         </div>
       </DashboardSection>
       ) : null}
@@ -1336,6 +1596,7 @@ export default async function CampaignPage({ params }: Props) {
       >
         {hasEnoughData ? (
           <div className="space-y-5">
+            {productExperience.trustNotePlacement === 'drivers' ? trustNote : null}
             <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-4 text-sm leading-6 text-[color:var(--text)]">
               {productExperience.driverIntro}
             </div>
@@ -1410,66 +1671,17 @@ export default async function CampaignPage({ params }: Props) {
               </div>
             ) : null}
 
-            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-              <h3 className="text-sm font-semibold text-slate-950">{productExperience.focusQuestionTitle}</h3>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                {productExperience.focusQuestionDescription}
-              </p>
-              <div className="mt-4">
-                <RecommendationList
-                  factorAverages={factorData.orgAverages}
-                  scanType={stats.scan_type}
-                  bandOverride={
-                    stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
-                      ? dashboardViewModel.managementBandOverride
-                      : undefined
-                  }
-                />
-              </div>
-            </div>
-
-            {stats.scan_type === 'retention' || stats.scan_type === 'exit' || stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
+            {productExperience.recommendationOrder === 'playbooks-first' ? (
               <>
-                <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                  <h3 className="text-sm font-semibold text-slate-950">{productExperience.playbookTitle}</h3>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">
-                    {productExperience.playbookDescription}
-                  </p>
-                  {stats.scan_type === 'retention' && playbookCalibrationNote ? (
-                    <p className="mt-2 text-xs leading-6 text-slate-500">{playbookCalibrationNote}</p>
-                  ) : null}
-                  <div className="mt-4">
-                    <ActionPlaybookList
-                      factorAverages={factorData.orgAverages}
-                      scanType={stats.scan_type}
-                      bandOverride={
-                        stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
-                          ? dashboardViewModel.managementBandOverride
-                          : undefined
-                      }
-                    />
-                  </div>
-                </div>
-
-                {stats.scan_type === 'retention' && hasSegmentDeepDive ? (
-                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                    <h3 className="text-sm font-semibold text-slate-950">Segment-specifieke playbooks</h3>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Alleen zichtbaar als segmentvergelijking voldoende respons en metadata heeft.
-                    </p>
-                    <div className="mt-4">
-                      {retentionSegmentPlaybooks.length > 0 ? (
-                        <SegmentPlaybookList segments={retentionSegmentPlaybooks} />
-                      ) : (
-                        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
-                          Nog geen segmenten met voldoende n en voldoende afwijking om apart te tonen.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : null}
+                {playbooksBlock}
+                {focusQuestionsBlock}
               </>
-            ) : null}
+            ) : (
+              <>
+                {focusQuestionsBlock}
+                {playbooksBlock}
+              </>
+            )}
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
