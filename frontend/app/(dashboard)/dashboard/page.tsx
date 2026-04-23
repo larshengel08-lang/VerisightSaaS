@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
+import { CustomerLaunchControl } from '@/components/dashboard/customer-launch-control'
 import {
   DashboardChip,
   DashboardPanel,
@@ -10,7 +11,7 @@ import {
 } from '@/components/dashboard/dashboard-primitives'
 import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
 import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
-import { buildGuidedSelfServeState } from '@/lib/guided-self-serve'
+import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { CampaignStats } from '@/lib/types'
 
@@ -53,10 +54,32 @@ export default async function DashboardHomePage() {
         .select('sent_at, completed')
         .eq('campaign_id', primaryGuideCampaign.campaign_id)
     : { data: [] }
+  const { data: primaryGuideDeliveryRecord } = primaryGuideCampaign
+    ? await supabase
+        .from('campaign_delivery_records')
+        .select('id')
+        .eq('campaign_id', primaryGuideCampaign.campaign_id)
+        .maybeSingle()
+    : { data: null }
+  const { data: primaryGuideCheckpointsRaw } = primaryGuideDeliveryRecord
+    ? await supabase
+        .from('campaign_delivery_checkpoints')
+        .select('checkpoint_key, manual_state')
+        .eq('delivery_record_id', primaryGuideDeliveryRecord.id)
+    : { data: [] }
   const primaryGuideRespondents = (primaryGuideRespondentsRaw ?? []) as Array<{
     sent_at: string | null
     completed: boolean
   }>
+  const primaryGuideSetupDiscipline = deriveGuidedSelfServeDiscipline(
+    ((primaryGuideCheckpointsRaw ?? []) as Array<{
+      checkpoint_key: 'implementation_intake' | 'import_qa' | 'invite_readiness'
+      manual_state: 'pending' | 'confirmed' | 'not_applicable'
+    }>).map((checkpoint) => ({
+      checkpointKey: checkpoint.checkpoint_key,
+      manualState: checkpoint.manual_state,
+    })),
+  )
   const primaryGuideInvitesNotSent = primaryGuideRespondents.filter(
     (respondent) => !respondent.sent_at && !respondent.completed,
   ).length
@@ -91,11 +114,33 @@ export default async function DashboardHomePage() {
                 : 1,
         hasMinDisplay: primaryGuideCampaign.total_completed >= 5,
         hasEnoughData: primaryGuideCampaign.total_completed >= 10,
+        importQaConfirmed: primaryGuideSetupDiscipline.importQaConfirmed,
+        launchTimingConfirmed: primaryGuideSetupDiscipline.launchTimingConfirmed,
+        communicationReady: primaryGuideSetupDiscipline.communicationReady,
       })
     : null
+  const primaryGuideScanDefinition = primaryGuideCampaign ? getScanDefinition(primaryGuideCampaign.scan_type) : null
 
   return (
     <div className="space-y-6">
+      {!isAdmin && primaryGuideCampaign && primaryExecutionState && primaryGuideScanDefinition ? (
+        <DashboardSection
+          eyebrow="Jouw uitvoerstatus"
+          title="Jouw launchstatus"
+          description="Na login zie je direct welk product actief is, waar de campagne staat, wat nog ontbreekt en wat de eerstvolgende veilige stap is."
+          aside={<DashboardChip label={primaryExecutionState.currentStateLabel} tone="blue" />}
+        >
+          <CustomerLaunchControl
+            campaignName={primaryGuideCampaign.campaign_name}
+            campaignHref={`/campaigns/${primaryGuideCampaign.campaign_id}`}
+            campaignCtaLabel={primaryExecutionState.dashboardVisible ? 'Open campaign en dashboard' : 'Open uitvoerflow'}
+            productName={primaryGuideScanDefinition.productName}
+            productContext={primaryGuideScanDefinition.whatItIsText}
+            state={primaryExecutionState}
+          />
+        </DashboardSection>
+      ) : null}
+
       <DashboardSection
         eyebrow="Cockpit"
         title="Campaign cockpit"
@@ -153,57 +198,6 @@ export default async function DashboardHomePage() {
           />
         </div>
       </DashboardSection>
-
-      {!isAdmin ? (
-        primaryGuideCampaign && primaryExecutionState ? (
-          <DashboardSection
-            eyebrow="Jouw uitvoerstatus"
-            title={primaryExecutionState.headline}
-            description={primaryExecutionState.detail}
-            aside={<DashboardChip label={primaryExecutionState.dashboardVisible ? 'Dashboard actief' : 'Uitvoer loopt'} tone={primaryExecutionState.dashboardVisible ? 'emerald' : 'amber'} />}
-          >
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr),minmax(320px,0.6fr)]">
-              <div className="rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)]">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                  Eerstvolgende stap
-                </p>
-                <p className="mt-2 text-lg font-semibold text-[color:var(--ink)]">
-                  {primaryExecutionState.nextAction.title}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">
-                  {primaryExecutionState.nextAction.body}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {primaryExecutionState.statusBlocks.map((item) => (
-                    <DashboardChip
-                      key={item.key}
-                      label={item.label}
-                      tone={item.status === 'done' ? 'emerald' : item.status === 'current' ? 'blue' : 'slate'}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                  Jouw campagne nu
-                </p>
-                <p className="mt-2 text-base font-semibold text-[color:var(--ink)]">
-                  {primaryGuideCampaign.campaign_name}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">
-                  Open deze campaign voor deelnemersimport, inviteflow, responsmonitoring en pas daarna dashboardgebruik.
-                </p>
-                <Link
-                  href={`/campaigns/${primaryGuideCampaign.campaign_id}`}
-                  className="mt-4 inline-flex rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3]"
-                >
-                  {primaryExecutionState.dashboardVisible ? 'Open campaign en dashboard' : 'Open uitvoerflow'}
-                </Link>
-              </div>
-            </div>
-          </DashboardSection>
-        ) : null
-      ) : null}
 
       {!isAdmin ? (
         <DashboardSection

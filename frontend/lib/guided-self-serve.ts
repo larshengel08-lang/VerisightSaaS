@@ -1,25 +1,41 @@
 type GuidedSelfServePhase =
   | 'closed'
-  | 'data_required'
+  | 'participant_data_required'
+  | 'import_validation_required'
+  | 'launch_date_required'
+  | 'communication_ready'
   | 'ready_to_invite'
-  | 'responses_incoming'
+  | 'survey_running'
   | 'dashboard_active'
   | 'first_next_step_available'
 
 type GuidedStatusKey =
   | 'setup_incomplete'
-  | 'data_required'
+  | 'participant_data_required'
+  | 'import_validation_required'
+  | 'launch_date_required'
+  | 'communication_ready'
   | 'ready_to_invite'
-  | 'responses_incoming'
+  | 'survey_running'
   | 'dashboard_active'
   | 'first_next_step_available'
 
+type GuidedCheckpointKey = 'implementation_intake' | 'import_qa' | 'invite_readiness'
+type GuidedCheckpointState = 'pending' | 'confirmed' | 'not_applicable'
+type GuidedActor = 'verisight' | 'customer' | 'shared'
 type GuidedStatusState = 'done' | 'current' | 'blocked'
 
 export interface GuidedStatusBlock {
   key: GuidedStatusKey
   label: string
   status: GuidedStatusState
+}
+
+export interface GuidedBlocker {
+  title: string
+  detail: string
+  recovery: string
+  actor: GuidedActor
 }
 
 export interface GuidedNextAction {
@@ -29,12 +45,21 @@ export interface GuidedNextAction {
 
 export interface GuidedSelfServeState {
   phase: GuidedSelfServePhase
+  currentStateLabel: string
   headline: string
   detail: string
   nextAction: GuidedNextAction
   dashboardVisible: boolean
   deeperInsightsVisible: boolean
+  verisightNow: string
+  customerNow: string
+  blockers: GuidedBlocker[]
   statusBlocks: GuidedStatusBlock[]
+}
+
+export interface GuidedSelfServeDisciplineInput {
+  checkpointKey: GuidedCheckpointKey
+  manualState: GuidedCheckpointState
 }
 
 interface GuidedSelfServeArgs {
@@ -44,40 +69,168 @@ interface GuidedSelfServeArgs {
   invitesNotSent: number
   hasMinDisplay: boolean
   hasEnoughData: boolean
+  importQaConfirmed?: boolean
+  launchTimingConfirmed?: boolean
+  communicationReady?: boolean
 }
 
 const STATUS_FLOW: GuidedStatusKey[] = [
   'setup_incomplete',
-  'data_required',
+  'participant_data_required',
+  'import_validation_required',
+  'launch_date_required',
+  'communication_ready',
   'ready_to_invite',
-  'responses_incoming',
+  'survey_running',
   'dashboard_active',
   'first_next_step_available',
 ]
 
+const PHASE_FLOW: GuidedSelfServePhase[] = [
+  'participant_data_required',
+  'import_validation_required',
+  'launch_date_required',
+  'communication_ready',
+  'ready_to_invite',
+  'survey_running',
+  'dashboard_active',
+  'first_next_step_available',
+]
+
+const PRE_LIVE_PHASES = new Set<GuidedSelfServePhase>([
+  'participant_data_required',
+  'import_validation_required',
+  'launch_date_required',
+  'communication_ready',
+  'ready_to_invite',
+])
+
 const STATUS_LABELS: Record<GuidedStatusKey, string> = {
   setup_incomplete: 'Setup incompleet',
-  data_required: 'Data vereist',
+  participant_data_required: 'Deelnemersdata vereist',
+  import_validation_required: 'Import validatie vereist',
+  launch_date_required: 'Launchdatum vereist',
+  communication_ready: 'Communicatie gereed',
   ready_to_invite: 'Klaar om uit te nodigen',
-  responses_incoming: 'Responses binnen',
+  survey_running: 'Survey running',
   dashboard_active: 'Dashboard actief',
   first_next_step_available: 'Eerste vervolgstap beschikbaar',
 }
 
-function buildStatusBlocks(current: GuidedStatusKey): GuidedStatusBlock[] {
-  const currentIndex = STATUS_FLOW.indexOf(current)
+function checkpointCountsAsConfirmed(state: GuidedCheckpointState | undefined) {
+  return state === 'confirmed' || state === 'not_applicable'
+}
 
-  return STATUS_FLOW.map((key, index) => ({
-    key,
-    label: STATUS_LABELS[key],
-    status: index < currentIndex ? 'done' : index === currentIndex ? 'current' : current === 'setup_incomplete' ? 'blocked' : 'blocked',
-  }))
+export function deriveGuidedSelfServeDiscipline(
+  checkpoints: GuidedSelfServeDisciplineInput[],
+) {
+  const checkpointMap = new Map(checkpoints.map((checkpoint) => [checkpoint.checkpointKey, checkpoint.manualState]))
+
+  return {
+    importQaConfirmed: checkpointCountsAsConfirmed(checkpointMap.get('import_qa')),
+    launchTimingConfirmed: checkpointCountsAsConfirmed(checkpointMap.get('implementation_intake')),
+    communicationReady: checkpointCountsAsConfirmed(checkpointMap.get('invite_readiness')),
+  }
+}
+
+function buildStatusBlocks(phase: GuidedSelfServePhase): GuidedStatusBlock[] {
+  if (phase === 'closed') {
+    return STATUS_FLOW.map((key) => ({
+      key,
+      label: STATUS_LABELS[key],
+      status: 'done',
+    }))
+  }
+
+  const currentPhaseIndex = PHASE_FLOW.indexOf(phase)
+
+  return STATUS_FLOW.map((key) => {
+    if (key === 'setup_incomplete') {
+      return {
+        key,
+        label: STATUS_LABELS[key],
+        status: PRE_LIVE_PHASES.has(phase) ? 'current' : 'done',
+      }
+    }
+
+    const phaseIndex = PHASE_FLOW.indexOf(key as GuidedSelfServePhase)
+    return {
+      key,
+      label: STATUS_LABELS[key],
+      status: phaseIndex < currentPhaseIndex ? 'done' : phaseIndex === currentPhaseIndex ? 'current' : 'blocked',
+    }
+  })
+}
+
+function buildState(
+  phase: Exclude<GuidedSelfServePhase, 'closed'>,
+  overrides: Omit<GuidedSelfServeState, 'phase' | 'currentStateLabel' | 'statusBlocks'>,
+): GuidedSelfServeState {
+  return {
+    phase,
+    currentStateLabel: STATUS_LABELS[phase],
+    statusBlocks: buildStatusBlocks(phase),
+    ...overrides,
+  }
+}
+
+function buildGovernanceCarryoverBlockers(args: {
+  importQaConfirmed: boolean
+  launchTimingConfirmed: boolean
+  communicationReady: boolean
+  invitesNotSent: number
+}) {
+  const items: GuidedBlocker[] = []
+
+  if (!args.importQaConfirmed) {
+    items.push({
+      title: 'Importcontrole mist nog expliciete bevestiging',
+      detail: 'De survey kan al beweging hebben, maar de administratieve import-QA is nog niet handmatig afgerond.',
+      recovery: 'Laat Verisight de importbevestiging netjes vastleggen zodat uitvoerstatus en deliverydiscipline gelijklopen.',
+      actor: 'verisight',
+    })
+  }
+
+  if (!args.launchTimingConfirmed) {
+    items.push({
+      title: 'Launchdiscipline mist nog timingbevestiging',
+      detail: 'Er is al live survey-activiteit, maar het launchmoment is nog niet expliciet bevestigd in deliverycontrol.',
+      recovery: 'Laat het gekozen launchmoment alsnog expliciet vastleggen zodat de route overdraagbaar blijft.',
+      actor: 'shared',
+    })
+  }
+
+  if (!args.communicationReady) {
+    items.push({
+      title: 'Communicatiebevestiging mist nog',
+      detail: 'De survey loopt of heeft gelopen, maar de communicatiegate staat administratief nog open.',
+      recovery: 'Laat de launchcommunicatie alsnog expliciet bevestigen in dezelfde deliveryroute.',
+      actor: 'shared',
+    })
+  }
+
+  if (args.invitesNotSent > 0) {
+    items.push({
+      title: 'Nog niet alle uitnodigingen zijn verstuurd',
+      detail: `${args.invitesNotSent} deelnemer(s) hebben nog geen uitnodiging of verzendbevestiging, terwijl de survey al wel loopt.`,
+      recovery: 'Werk de resterende uitnodigingen of launchbevestigingen bij zodat de survey netjes volledig live staat.',
+      actor: 'customer',
+    })
+  }
+
+  return items
 }
 
 export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelfServeState {
+  const importQaConfirmed = args.importQaConfirmed ?? false
+  const launchTimingConfirmed = args.launchTimingConfirmed ?? false
+  const communicationReady = args.communicationReady ?? false
+  const surveyLive = args.totalCompleted > 0 || args.invitesNotSent === 0
+
   if (!args.isActive) {
     return {
       phase: 'closed',
+      currentStateLabel: 'Eerste vervolgstap beschikbaar',
       headline: 'Campagne gesloten',
       detail: 'De uitvoerfase is afgerond. Gebruik dashboard, rapport en terugblik nu voor het vervolggesprek en de gekozen opvolgroute.',
       nextAction: {
@@ -86,82 +239,223 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
       },
       dashboardVisible: true,
       deeperInsightsVisible: true,
-      statusBlocks: buildStatusBlocks('first_next_step_available'),
+      verisightNow: 'Verisight bewaakt nu vooral de nette close-out, rapporttoegang en bounded follow-up van deze campagne.',
+      customerNow: 'Gebruik de output nu voor terugblik, besluitvorming en het expliciet kiezen van een vervolgroute.',
+      blockers: [],
+      statusBlocks: buildStatusBlocks('closed'),
     }
   }
 
   if (args.totalInvited === 0) {
-    return {
-      phase: 'data_required',
+    return buildState('participant_data_required', {
       headline: 'Deelnemersbestand ontbreekt nog',
-      detail: 'Verisight heeft account en campagne klaargezet. Lever nu eerst het deelnemersbestand aan en controleer daarna de importpreview voordat iemand wordt uitgenodigd.',
+      detail: 'Na login zie je direct waar de campagne staat: account en campagne staan klaar, maar zonder deelnemersbestand blijft setup bewust dicht.',
       nextAction: {
         title: 'Lever het deelnemersbestand aan',
-        body: 'Upload een CSV- of Excel-bestand, controleer de validatie en ga pas daarna door naar uitnodigen.',
+        body: 'Upload een CSV- of Excel-bestand met minimaal e-mailadressen. Pas daarna kan Verisight de importpreview en launchflow veilig vrijgeven.',
       },
       dashboardVisible: false,
       deeperInsightsVisible: false,
-      statusBlocks: buildStatusBlocks('setup_incomplete').map((item) =>
-        item.key === 'data_required' ? { ...item, status: 'current' } : item,
-      ),
+      verisightNow: 'Verisight bewaakt productgrenzen, campagne-opzet en de gesloten launchflow tot er bruikbare deelnemersdata is.',
+      customerNow: 'Lever nu alleen het juiste deelnemersbestand aan. Je hoeft geen surveytool, productsetup of rapportinstellingen te beheren.',
+      blockers: [
+        {
+          title: 'Deelnemersbestand ontbreekt',
+          detail: 'Zonder deelnemers kan de campaign nog niet naar importcontrole of inviteflow bewegen.',
+          recovery: 'Upload een CSV- of Excel-bestand met minimaal e-mailadressen via de uitvoerflow.',
+          actor: 'customer',
+        },
+        {
+          title: 'Setup blijft bewust begrensd',
+          detail: 'Het dashboard gaat pas open als data, importcontrole en launchdiscipline expliciet rond zijn.',
+          recovery: 'Wacht niet op dashboardoutput; lever eerst het bestand aan zodat Verisight de volgende gate kan vrijgeven.',
+          actor: 'verisight',
+        },
+      ],
+    })
+  }
+
+  if (surveyLive) {
+    const governanceCarryoverBlockers = buildGovernanceCarryoverBlockers({
+      importQaConfirmed,
+      launchTimingConfirmed,
+      communicationReady,
+      invitesNotSent: args.invitesNotSent,
+    })
+
+    if (!args.hasMinDisplay) {
+      return buildState('survey_running', {
+        headline: 'Survey running, dashboard nog bewust dicht',
+        detail: `De inviteflow loopt. Er zijn nu ${args.totalCompleted} responses binnen; vanaf 5 responses wordt de eerste dashboardread pas veilig genoeg om te openen.`,
+        nextAction: {
+          title: 'Volg respons en houd de survey running',
+          body: 'Laat de survey eerst verder lopen, stuur zo nodig reminders en bouw meer responses op voordat je volledige dashboarduitlezing verwacht.',
+        },
+        dashboardVisible: false,
+        deeperInsightsVisible: false,
+        verisightNow: 'Verisight bewaakt de begrensde surveyflow, reminders en deliverykwaliteit terwijl de eerste responses binnenkomen.',
+        customerNow: 'Volg nu alleen respons en wacht met conclusies tot de eerste veilige dashboarddrempel is bereikt.',
+        blockers: [
+          {
+            title: 'Nog onder de eerste leesdrempel',
+            detail: `Met ${args.totalCompleted} responses is de survey live, maar het dashboard nog niet veilig genoeg voor eerste duiding.`,
+            recovery: 'Bouw verder op naar minimaal 5 ingevulde responses voordat je dashboardgebruik verwacht.',
+            actor: 'shared',
+          },
+          ...governanceCarryoverBlockers,
+        ],
+      })
     }
+
+    if (!args.hasEnoughData) {
+      return buildState('dashboard_active', {
+        headline: 'Dashboard actief, nog bewust compact',
+        detail: `De eerste veilige drempel is gehaald. Vanaf ${args.totalCompleted} responses is de eerste dashboardread bruikbaar, maar verdiepende patroonduiding blijft bewust dicht tot minstens 10 responses.`,
+        nextAction: {
+          title: 'Gebruik nu de compacte dashboardread',
+          body: 'Lees wat al zichtbaar is, houd conclusies voorlopig indicatief en blijf tegelijk respons opbouwen richting patroonniveau.',
+        },
+        dashboardVisible: true,
+        deeperInsightsVisible: false,
+        verisightNow: 'Verisight laat nu alleen de veilige eerste dashboardlaag zien en houdt verdiepende patronen nog bewust begrensd.',
+        customerNow: 'Gebruik nu de compacte dashboardread voor eerste richting, maar blijf respons opbouwen voordat je zwaarder gaat besluiten.',
+        blockers: [
+          {
+            title: 'Verdieping blijft nog beperkt',
+            detail: 'Het dashboard is open, maar patroonduiding en stevigere follow-through horen pas bij meer respons.',
+            recovery: 'Werk door naar minstens 10 ingevulde responses voor een volwaardiger eerste vervolgstap.',
+            actor: 'shared',
+          },
+          ...governanceCarryoverBlockers,
+        ],
+      })
+    }
+
+    return buildState('first_next_step_available', {
+      headline: 'Eerste vervolgstap beschikbaar',
+      detail: 'De campagne heeft nu genoeg respons voor veilige dashboardactivatie en eerste patroonduiding. Vanaf hier hoort de flow door te schuiven naar de eerste managementstap, niet terug naar setup.',
+      nextAction: {
+        title: 'Maak de eerste vervolgstap expliciet',
+        body: 'Gebruik dashboard en rapport nu om eerste eigenaar, eerste managementactie en reviewmoment vast te leggen.',
+      },
+      dashboardVisible: true,
+      deeperInsightsVisible: true,
+      verisightNow: 'Verisight bewaakt nu vooral dat de route bounded blijft en netjes doorloopt naar managementgebruik en follow-up.',
+      customerNow: 'Leg nu vast wat de eerste managementactie is, wie eigenaar wordt en wanneer jullie de vervolgstap reviewen.',
+      blockers: governanceCarryoverBlockers,
+    })
+  }
+
+  if (!importQaConfirmed) {
+    return buildState('import_validation_required', {
+      headline: 'Import validatie vereist',
+      detail: `${args.totalInvited} deelnemer(s) staan in de campaign, maar de importcontrole is nog niet expliciet bevestigd. Daardoor blijft launch bewust geblokkeerd.`,
+      nextAction: {
+        title: 'Rond de importcontrole af',
+        body: 'Controleer preview, metadata en fouten eerst volledig. Pas na een schone import hoort deze flow door te schuiven naar launchdiscipline.',
+      },
+      dashboardVisible: false,
+      deeperInsightsVisible: false,
+      verisightNow: 'Verisight bewaakt de importgrenzen, previewkwaliteit en foutopvang zodat de launchflow geen vervuilde deelnemerslaag krijgt.',
+      customerNow: 'Controleer nu alleen of het juiste deelnemersbestand is aangeleverd en herstel eventuele importissues in dezelfde flow.',
+      blockers: [
+        {
+          title: 'Importcontrole staat nog open',
+          detail: 'De campaign heeft deelnemers, maar er is nog geen expliciete QA-bevestiging op preview, metadata en importkeuze.',
+          recovery: 'Bevestig eerst dat de aangeleverde rijen kloppen en herstel fouten voordat je verdergaat.',
+          actor: 'shared',
+        },
+      ],
+    })
+  }
+
+  if (!launchTimingConfirmed) {
+    return buildState('launch_date_required', {
+      headline: 'Launchmoment staat nog niet vast',
+      detail: 'De deelnemerslaag is gevalideerd, maar de survey hoort nog niet live te gaan zolang timing en launchmoment niet expliciet zijn bevestigd.',
+      nextAction: {
+        title: 'Bevestig het launchmoment',
+        body: 'Maak expliciet wanneer de uitnodigingen de deur uit mogen. Daarna kan de flow pas naar communicatiecontrole en bewuste release.',
+      },
+      dashboardVisible: false,
+      deeperInsightsVisible: false,
+      verisightNow: 'Verisight houdt de inviteflow bewust tegen tot timing, doelgroep en launchdiscipline expliciet zijn bevestigd.',
+      customerNow: 'Bevestig nu wanneer de survey echt mag starten. Nog niet uitnodigen voordat dit launchmoment helder is.',
+      blockers: [
+        {
+          title: 'Launchmoment ontbreekt',
+          detail: 'Zonder bevestigd launchmoment wordt uitnodigen te vroeg of oncontroleerbaar.',
+          recovery: 'Leg vast op welk moment de uitnodigingen veilig live mogen gaan.',
+          actor: 'customer',
+        },
+      ],
+    })
+  }
+
+  if (!communicationReady) {
+    return buildState('communication_ready', {
+      headline: 'Communicatie moet nog launch-klaar worden',
+      detail: 'Timing staat, maar de launchflow blijft nog dicht tot de communicatie en contactroute expliciet gereed zijn verklaard.',
+      nextAction: {
+        title: 'Bevestig dat de communicatie gereed is',
+        body: 'Zorg dat aankondiging, intern contactmoment en deliveryverwachting kloppen. Pas dan hoort de inviteflow echt vrijgegeven te worden.',
+      },
+      dashboardVisible: false,
+      deeperInsightsVisible: false,
+      verisightNow: 'Verisight bewaakt releasecontrole, invitegrenzen en deliverydiscipline totdat communicatie en timing samen groen zijn.',
+      customerNow: 'Bevestig nu dat de interne communicatie klaarstaat en dat deelnemers het juiste contactmoment krijgen.',
+      blockers: [
+        {
+          title: 'Communicatie is nog niet vrijgegeven',
+          detail: 'De campaign heeft wel data en timing, maar nog geen expliciete bevestiging dat de launchcommunicatie klopt.',
+          recovery: 'Bevestig eerst dat de aankondiging en het contactmoment gereed zijn voor deze launch.',
+          actor: 'shared',
+        },
+      ],
+    })
   }
 
   if (args.invitesNotSent > 0) {
-    return {
-      phase: 'ready_to_invite',
+    return buildState('ready_to_invite', {
       headline: 'De setup staat klaar voor launch',
-      detail: `${args.totalInvited} deelnemer(s) staan klaar, maar ${args.invitesNotSent} uitnodiging(en) zijn nog niet verstuurd. Controleer de aanlevering en start daarna pas de inviteflow.`,
+      detail: `${args.totalInvited} deelnemer(s) staan klaar. Product, import, launchmoment en communicatie zijn gecontroleerd; de inviteflow wacht alleen nog op bewuste start.`,
       nextAction: {
-        title: 'Verstuur de uitnodigingen',
-        body: 'Zodra het bestand klopt kun je de inviteflow veilig starten. Tot die tijd blijft het dashboard bewust gesloten.',
+        title: 'Start de uitnodigingen',
+        body: 'Open nu bewust de inviteflow. Daarna verschuift de aandacht van setup naar survey running en responsmonitoring.',
       },
       dashboardVisible: false,
       deeperInsightsVisible: false,
-      statusBlocks: buildStatusBlocks('ready_to_invite'),
-    }
+      verisightNow: 'Verisight heeft de veilige launchflow voorbereid en houdt de release begrensd tot deze bewuste startstap.',
+      customerNow: 'Start nu de inviteflow voor deze campaign. Daarna hoef je vooral nog respons te volgen, niet terug naar setup.',
+      blockers: [
+        {
+          title: 'Uitnodigingen zijn nog niet gestart',
+          detail: 'De launchflow is verder groen, maar zonder invite-release blijft de survey nog stil.',
+          recovery: 'Start de uitnodigingen vanuit deze flow zodra het gekozen moment bereikt is.',
+          actor: 'customer',
+        },
+      ],
+    })
   }
 
-  if (!args.hasMinDisplay) {
-    return {
-      phase: 'responses_incoming',
-      headline: 'Responses lopen binnen',
-      detail: `Er zijn ${args.totalCompleted} responses binnen. Vanaf 5 responses wordt de eerste dashboardread veilig genoeg om zichtbaar te maken.`,
-      nextAction: {
-        title: 'Volg respons en stuur zo nodig een reminder',
-        body: 'Laat de inviteflow eerst verder lopen en bouw meer responses op. Het dashboard gaat pas open zodra de eerste veilige responsegrens is gehaald.',
-      },
-      dashboardVisible: false,
-      deeperInsightsVisible: false,
-      statusBlocks: buildStatusBlocks('responses_incoming'),
-    }
-  }
-
-  if (!args.hasEnoughData) {
-    return {
-      phase: 'dashboard_active',
-      headline: 'Dashboard actief, nog bewust compact',
-      detail: `De eerste veilige drempel is gehaald. Vanaf ${args.totalCompleted} responses is de dashboardread bruikbaar, maar verdiepende patroonduiding blijft bewust dicht tot minstens 10 responses.`,
-      nextAction: {
-        title: 'Gebruik nu de compacte dashboardread',
-        body: 'Lees wat al zichtbaar is, houd conclusies voorlopig indicatief en blijf tegelijk respons opbouwen richting patroonniveau.',
-      },
-      dashboardVisible: true,
-      deeperInsightsVisible: false,
-      statusBlocks: buildStatusBlocks('dashboard_active'),
-    }
-  }
-
-  return {
-    phase: 'first_next_step_available',
-    headline: 'Eerste vervolgstap beschikbaar',
-    detail: 'De campagne heeft nu genoeg respons voor veilige dashboardactivatie en eerste patroonduiding. Vanaf hier hoort de flow door te schuiven naar de eerste managementstap, niet terug naar setup.',
+  return buildState('ready_to_invite', {
+    headline: 'De setup staat klaar voor launch',
+    detail: `${args.totalInvited} deelnemer(s) staan klaar. Product, import, launchmoment en communicatie zijn gecontroleerd; de inviteflow wacht alleen nog op bewuste start.`,
     nextAction: {
-      title: 'Maak de eerste vervolgstap expliciet',
-      body: 'Gebruik dashboard en rapport nu om eerste eigenaar, eerste managementactie en reviewmoment vast te leggen.',
+      title: 'Start de uitnodigingen',
+      body: 'Open nu bewust de inviteflow. Daarna verschuift de aandacht van setup naar survey running en responsmonitoring.',
     },
-    dashboardVisible: true,
-    deeperInsightsVisible: true,
-    statusBlocks: buildStatusBlocks('first_next_step_available'),
-  }
+    dashboardVisible: false,
+    deeperInsightsVisible: false,
+    verisightNow: 'Verisight heeft de veilige launchflow voorbereid en houdt de release begrensd tot deze bewuste startstap.',
+    customerNow: 'Start nu de inviteflow voor deze campaign. Daarna hoef je vooral nog respons te volgen, niet terug naar setup.',
+    blockers: [
+      {
+        title: 'Uitnodigingen zijn nog niet gestart',
+        detail: 'De launchflow is verder groen, maar zonder invite-release blijft de survey nog stil.',
+        recovery: 'Start de uitnodigingen vanuit deze flow zodra het gekozen moment bereikt is.',
+        actor: 'customer',
+      },
+    ],
+  })
 }
