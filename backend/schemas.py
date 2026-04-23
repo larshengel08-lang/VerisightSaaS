@@ -141,6 +141,11 @@ class RespondentImportPreviewRow(BaseModel):
     annual_salary_eur: Optional[float] = None
 
 
+class InviteQueueItem(BaseModel):
+    token: str
+    email: Optional[EmailStr] = None
+
+
 class RespondentImportResponse(BaseModel):
     dry_run: bool
     total_rows: int
@@ -157,6 +162,7 @@ class RespondentImportResponse(BaseModel):
     launch_blocked: bool = True
     readiness_label: str = "Importcontrole vereist"
     recovery_hint: str = "Werk het deelnemersbestand bij en controleer daarna opnieuw."
+    invite_queue: list[InviteQueueItem] = Field(default_factory=list)
 
 
 class InviteSendResult(BaseModel):
