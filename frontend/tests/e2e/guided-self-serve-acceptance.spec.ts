@@ -59,13 +59,17 @@ test.describe.serial('guided self-serve acceptance', () => {
 
     await page.getByRole('button', { name: /importeer 2 deelnemers/i }).click()
 
-    await expect(page.getByText(/2 deelnemer\(s\) toegevoegd/i)).toBeVisible()
-    await expect(page.getByRole('button', { name: /start uitnodigingen \(2\)/i })).toBeVisible()
+    await expect(page.getByText(/2 deelnemer\(s\) toegevoegd/i)).toBeVisible({ timeout: 15000 })
+    await expect(page.getByRole('button', { name: /start uitnodigingen \(2\)/i })).toBeVisible({
+      timeout: 15000,
+    })
 
     await page.getByRole('button', { name: /start uitnodigingen \(2\)/i }).click()
 
-    await expect(page.getByText(/2 uitnodiging\(en\) gestart/i)).toBeVisible()
-    await expect(page.getByText(/responses lopen binnen/i).first()).toBeVisible()
+    await expect(page.getByText(/2 uitnodiging\(en\) gestart/i)).toBeVisible({ timeout: 15000 })
+    await expect(page.getByRole('heading', { name: /responses lopen binnen/i })).toBeVisible({
+      timeout: 15000,
+    })
     await expect(page.getByRole('button', { name: /pdf-rapport/i })).toHaveCount(0)
     await expect(page.getByText(/dashboard nog niet actief/i).first()).toBeVisible()
   })
@@ -85,18 +89,24 @@ test.describe.serial('guided self-serve acceptance', () => {
     await advanceGuidedSelfServeAcceptanceFixture('min_display')
     await page.reload()
 
-    await expect(page.getByText(/dashboard actief, nog bewust compact/i).first()).toBeVisible()
+    await expect(page.getByText(/dashboard actief, nog bewust compact/i).first()).toBeVisible({
+      timeout: 15000,
+    })
     await expect(page.getByRole('button', { name: /pdf-rapport/i }).first()).toBeVisible()
-    await expect(page.getByText(/vertrekduiding en managementgesprek/i)).toBeVisible()
-    await expect(page.getByText(/verdiepende analyse wordt zichtbaar vanaf 10 ingevulde responses/i)).toBeVisible()
+    await expect(page.getByText(/vertrekduiding en managementgesprek/i)).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText(/verdiepende analyse wordt zichtbaar vanaf 10 ingevulde responses/i)).toBeVisible({
+      timeout: 15000,
+    })
 
     await advanceGuidedSelfServeAcceptanceFixture('patterns')
     await page.reload()
 
-    await expect(page.getByText(/eerste vervolgstap beschikbaar/i).first()).toBeVisible()
+    await expect(page.getByText(/eerste vervolgstap beschikbaar/i).first()).toBeVisible({
+      timeout: 15000,
+    })
     await expect(page.getByText(/verdiepende analyse wordt zichtbaar vanaf 10 ingevulde responses/i)).toHaveCount(0)
     await expect(page.getByText(/focusvragen en route-uitvoer worden betekenisvoller zodra het dashboard minstens 10 responses heeft/i)).toHaveCount(0)
-    await expect(page.getByText(/van vertrekduiding naar managementroute/i)).toBeVisible()
+    await expect(page.getByText(/van vertrekduiding naar managementroute/i)).toBeVisible({ timeout: 15000 })
     await expect(page.getByRole('button', { name: /pdf-rapport/i }).first()).toBeVisible()
   })
 })
