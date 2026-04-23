@@ -89,6 +89,7 @@ Voor de huidige fix-tranche:
 - [EXTERNAL_DOCS_REGISTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/EXTERNAL_DOCS_REGISTER.md)
 - [EXTERNAL_DOCS_TOP10_SYNC_SHORTLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/EXTERNAL_DOCS_TOP10_SYNC_SHORTLIST.md)
 - [MAIN_READINESS_BACKPORT_REVIEW_2026-04-22.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/MAIN_READINESS_BACKPORT_REVIEW_2026-04-22.md)
+- [MAIN_READINESS_RECHECK_2026-04-23.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/MAIN_READINESS_RECHECK_2026-04-23.md)
 - [ROADMAP_DATA.yaml](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_DATA.yaml)
 - [ROADMAP_SYNC_README.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/ROADMAP_SYNC_README.md)
 
