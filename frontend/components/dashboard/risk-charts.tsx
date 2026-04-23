@@ -16,7 +16,7 @@ interface Props {
   scanType: ScanType
 }
 
-const COLORS = { HOOG: '#DC2626', MIDDEN: '#F59E0B', LAAG: '#16A34A' }
+const COLORS = { HOOG: '#B45309', MIDDEN: '#C78924', LAAG: '#2D6F6C' }
 
 export function RiskCharts({ distribution, histogramBins, averageScore, scanType }: Props) {
   const scanDefinition = getScanDefinition(scanType)
@@ -80,8 +80,8 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-        <p className="font-medium text-slate-900">
+      <div className="rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-4 text-sm text-[color:var(--dashboard-text)]">
+        <p className="font-medium text-[color:var(--dashboard-ink)]">
           {scanType === 'exit'
             ? 'Wat zegt dit over het vertrekbeeld?'
             : scanType === 'team'
@@ -91,7 +91,7 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
               : 'Wat betekent dit voor behoudsduiding?'}
         </p>
         <p className="mt-1">{introText}</p>
-        <p className="mt-2 text-slate-800">{insightText}</p>
+        <p className="mt-2 text-[color:var(--dashboard-ink)]">{insightText}</p>
       </div>
 
       <ResponsiveContainer width="100%" height={160}>
@@ -123,10 +123,10 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
             <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
             <ReferenceLine
               x={`${Math.floor(averageScore)}-${Math.ceil(averageScore)}`}
-              stroke="#6B7280"
+              stroke="#7C8A95"
               strokeDasharray="3 3"
             />
-            <Bar dataKey="count" fill="#2563EB" radius={[2, 2, 0, 0]} />
+            <Bar dataKey="count" fill="#305864" radius={[2, 2, 0, 0]} />
             <Tooltip formatter={(v) => [`${v} responses`, 'Aantal']} />
           </BarChart>
         </ResponsiveContainer>
