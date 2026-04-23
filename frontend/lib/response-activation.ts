@@ -69,7 +69,7 @@ export function buildResponseActivationState(totalCompleted: number): ResponseAc
 
   return {
     stage: 'insights_active',
-    readinessLabel: 'Beslisniveau bereikt',
+    readinessLabel: 'Eerste patroonduiding beschikbaar',
     dashboardVisible: true,
     reportVisible: true,
     deeperInsightsVisible: true,

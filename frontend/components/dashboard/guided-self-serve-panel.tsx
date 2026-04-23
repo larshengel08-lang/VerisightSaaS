@@ -425,7 +425,7 @@ export function GuidedSelfServePanel({
     previewResult && hasPreviewErrors
       ? 'Import validatie vereist'
       : previewResult && canImportPreview
-        ? 'Import klaar voor launch'
+        ? 'Import klaar voor start'
         : null
   const primaryActionTitle =
     totalInvited === 0
@@ -433,7 +433,7 @@ export function GuidedSelfServePanel({
       : invitesNotSent > 0 && !launchControlState.ready
         ? 'Rond pre-launch af'
         : invitesNotSent > 0
-          ? 'Start de inviteflow'
+          ? 'Start de uitnodigingen'
           : pendingCount > 0
             ? 'Volg respons en reminders'
             : guidedState.deeperInsightsVisible
@@ -466,7 +466,7 @@ export function GuidedSelfServePanel({
             />
           </div>
           <p className="mt-3 text-sm leading-6 text-slate-700">
-            Deze lokale controle toont direct of de importpreview nog herstel nodig heeft of dat de route klaarstaat om de inviteflow bewust te starten.
+            Deze lokale controle toont direct of de importpreview nog herstel nodig heeft of dat de route klaarstaat om de uitnodigingen bewust te starten.
           </p>
         </div>
       ) : null}
@@ -510,7 +510,7 @@ export function GuidedSelfServePanel({
           <DashboardPanel
             eyebrow="Startdatum"
             title={formatLaunchDate(launchDate || null)}
-            body="Formele start van deze campaign."
+            body="Formele start van deze campagne."
             tone={launchControlState.statusItems[0]?.ready ? 'emerald' : 'amber'}
           />
           <DashboardPanel
@@ -539,7 +539,7 @@ export function GuidedSelfServePanel({
 
         {!launchControlState.ready ? (
           <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            <p className="font-semibold">Inviteflow blijft nog bewust geblokkeerd</p>
+            <p className="font-semibold">Uitnodigingen blijven nog bewust geblokkeerd</p>
             <ul className="mt-2 space-y-1">
               {launchControlState.blockers.map((blocker) => (
                 <li key={blocker}>- {blocker}</li>
@@ -582,7 +582,7 @@ export function GuidedSelfServePanel({
 
         {!canImportRespondents || !canLaunchInvites || !canSendReminders ? (
           <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-            Alleen de klant owner kan deelnemers aanleveren, de inviteflow starten en reminders versturen.
+            Alleen de klant owner kan deelnemers aanleveren, uitnodigingen starten en reminders versturen.
             Gebruik deze rol daarom vooral voor dashboardlezing en rapportduiding.
           </div>
         ) : null}
@@ -827,7 +827,7 @@ export function GuidedSelfServePanel({
                   className="mt-0.5 rounded"
                 />
                 <span>
-                  Ik heb timing, deelnemerscommunicatie en reminderinstellingen gecontroleerd voor deze campaign.
+                  Ik heb timing, deelnemerscommunicatie en reminderinstellingen gecontroleerd voor deze campagne.
                   <span className="block text-xs leading-5 text-slate-500">
                     Elke inhoudelijke wijziging zet de launchbevestiging opnieuw terug.
                   </span>
@@ -957,7 +957,7 @@ export function GuidedSelfServePanel({
                 <p className="mt-1 leading-6">
                   {importSuccess.emails_sent > 0
                     ? `${importSuccess.emails_sent} uitnodiging(en) zijn direct verstuurd.`
-                    : 'De deelnemers zijn toegevoegd. Start de inviteflow zodra startdatum, communicatie en timing kloppen.'}
+                    : 'De deelnemers zijn toegevoegd. Start de uitnodigingen zodra startdatum, communicatie en timing kloppen.'}
                 </p>
               </div>
             ) : null}

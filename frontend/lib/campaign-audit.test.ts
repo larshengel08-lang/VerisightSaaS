@@ -10,7 +10,8 @@ describe('campaign audit events', () => {
   it('keeps critical launch actions auditable with owner-safe labels', () => {
     expect(CAMPAIGN_AUDIT_ACTIONS.launch_invites.ownerLabel).toBe('Klant owner')
     expect(CAMPAIGN_AUDIT_ACTIONS.import_respondents.actionLabel).toBe('Deelnemersimport')
-    expect(CAMPAIGN_AUDIT_ACTIONS.delivery_lifecycle_changed.actionLabel).toBe('Launchstatus bijgewerkt')
+    expect(CAMPAIGN_AUDIT_ACTIONS.delivery_lifecycle_changed.actionLabel).toBe('Uitvoerstatus bijgewerkt')
+    expect(CAMPAIGN_AUDIT_ACTIONS.delivery_lifecycle_changed.ownerLabel).toBe('Verisight')
   })
 
   it('builds a blocked audit event with clear customer-safe language', () => {
@@ -19,11 +20,11 @@ describe('campaign audit events', () => {
       outcome: 'blocked',
       actorRole: 'viewer',
       actorLabel: 'Viewer',
-      summary: 'Inviteflow geblokkeerd omdat de rol geen launchrecht heeft.',
+      summary: 'Uitnodigingen geblokkeerd omdat de rol geen uitvoerrecht heeft.',
     })
 
     expect(event.owner_label).toBe('Klant owner')
-    expect(event.summary).toContain('launchrecht')
-    expect(formatCampaignAuditHeadline(event)).toBe('Geblokkeerd - Inviteflow gestart')
+    expect(event.summary).toContain('uitvoerrecht')
+    expect(formatCampaignAuditHeadline(event)).toBe('Geblokkeerd - Uitnodigingen gestart')
   })
 })

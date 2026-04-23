@@ -12,10 +12,12 @@ describe('dashboard home guided execution shell', () => {
 
     expect(pageSource).toContain('Jouw uitvoerstatus')
     expect(pageSource).toContain('CustomerLaunchControl')
+    expect(pageSource).toContain('Open campagne en dashboard')
     expect(pageSource).toContain('Open uitvoerflow')
     expect(pageSource).toContain('deriveGuidedSelfServeDiscipline')
     expect(pageSource).toContain('primaryGuideInvitesNotSent')
     expect(pageSource).toContain('getPrimaryGuideCampaign')
+    expect(pageSource).toContain('getPrimaryFirstNextStepCampaign')
     expect(pageSource).toContain('getFirstNextStepGuidance')
     expect(pageSource).toContain('First-next-step')
     expect(pageSource).toContain('Mogelijke vervolgroutes')

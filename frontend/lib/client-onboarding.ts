@@ -46,10 +46,10 @@ export const CANONICAL_ONBOARDING_PHASES = [
   },
   {
     key: 'setup',
-    title: 'Campaign setup',
+    title: 'Campagne-opzet',
     owner: 'Verisight',
     boundary: 'internal',
-    outcome: 'Organisatie en campaign staan correct klaar voor uitvoering.',
+    outcome: 'Organisatie en campagne staan correct klaar voor uitvoering.',
     customerAction: 'Geen toolsetup; alleen validatie van naam, timing en doelgroep waar nodig.',
   },
   {
@@ -57,7 +57,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
     title: 'Respondentimport en uitnodigingen',
     owner: 'Verisight',
     boundary: 'internal',
-    outcome: 'Bestand is gecontroleerd, respondenten staan klaar en inviteflow is veilig gestart.',
+    outcome: 'Bestand is gecontroleerd, respondenten staan klaar en de uitnodigingen zijn veilig gestart.',
     customerAction: 'Lever een bruikbaar respondentbestand aan volgens productspecifieke kolommen.',
   },
   {
@@ -66,7 +66,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
     owner: 'Verisight',
     boundary: 'client',
     outcome: 'De klant kan inloggen en ziet direct het juiste dashboard.',
-    customerAction: 'Activeer account en open de juiste campaign of het overzicht.',
+    customerAction: 'Activeer account en open de juiste campagne of het overzicht.',
   },
   {
     key: 'dashboard',

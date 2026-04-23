@@ -595,7 +595,7 @@ export function PreflightChecklist({
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Operatorrollen</p>
                   <div className="mt-3 space-y-3">
                     <div className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
-                      <p className="text-sm font-semibold text-slate-950">Launch-owner</p>
+                      <p className="text-sm font-semibold text-slate-950">Klant owner</p>
                       <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Klant owner</p>
                       <p className="mt-2 text-sm leading-6 text-slate-700">
                         Draagt deelnemersimport, invitevrijgave, reminderbesluit en de eerste expliciete vervolgstap aan klantzijde.
@@ -666,11 +666,11 @@ export function PreflightChecklist({
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
               <p className="text-sm font-semibold text-slate-950">Recente kritieke acties</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Deze auditlaag laat zien wie een launchkritieke stap heeft uitgevoerd of geblokkeerd zag, en welke owner daarbij hoort.
+                Deze auditlaag laat zien wie een uitvoerkritieke stap heeft uitgevoerd of geblokkeerd zag, en welke owner daarbij hoort.
               </p>
               {auditEvents.length === 0 ? (
                 <div className="mt-4 rounded-2xl border border-white bg-white px-4 py-3 text-sm leading-6 text-slate-600">
-                  Nog geen vastgelegde kritieke acties voor deze campaign.
+                  Nog geen vastgelegde kritieke acties voor deze campagne.
                 </div>
               ) : (
                 <div className="mt-4 space-y-3">

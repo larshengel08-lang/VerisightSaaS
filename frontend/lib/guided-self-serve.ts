@@ -119,7 +119,7 @@ const STATUS_LABELS: Record<GuidedStatusKey, string> = {
   launch_date_required: 'Launchdatum vereist',
   communication_ready: 'Communicatie gereed',
   ready_to_invite: 'Klaar om uit te nodigen',
-  survey_running: 'Survey running',
+  survey_running: 'Respons loopt',
   dashboard_active: 'Dashboard actief',
   first_next_step_available: 'Eerste vervolgstap beschikbaar',
 }
@@ -331,7 +331,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
         {
           title: 'Deelnemersbestand ontbreekt',
           detail:
-            'Zonder deelnemers kan de campaign nog niet naar importcontrole of inviteflow bewegen.',
+            'Zonder deelnemers kan de campagne nog niet naar importcontrole of uitnodigingen bewegen.',
           recovery:
             'Upload een CSV- of Excel-bestand met minimaal e-mailadressen via de uitvoerflow.',
           actor: 'customer',
@@ -355,7 +355,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
         'Het deelnemersbestand is nog niet vrijgegeven voor launch. Controleer de preview, herstel de gemelde rijen of kolommen en ga pas daarna verder.',
       nextAction: {
         title: 'Controleer het deelnemersbestand',
-        body: 'Werk de gemelde rijen of kolommen bij en controleer daarna opnieuw totdat de import echt launch-klaar is.',
+        body: 'Werk de gemelde rijen of kolommen bij en controleer daarna opnieuw totdat de import echt klaar is voor start.',
       },
       dashboardVisible: false,
       deeperInsightsVisible: false,
@@ -367,7 +367,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
         {
           title: 'Het deelnemersbestand vraagt nog herstel',
           detail:
-            'De preview of kolomkwaliteit is nog niet schoon genoeg om deze campaign veilig vrij te geven voor launch.',
+            'De preview of kolomkwaliteit is nog niet schoon genoeg om deze campagne veilig vrij te geven voor start.',
           recovery:
             'Werk de gemelde rijen of kolommen bij en controleer opnieuw tot de import zonder blokkades door de preview komt.',
           actor: 'customer',
@@ -386,11 +386,11 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
 
     if (!args.hasMinDisplay) {
       return buildState('survey_running', {
-        headline: 'Survey running, dashboard nog bewust dicht',
+        headline: 'Respons loopt, dashboard nog bewust dicht',
         detail: activationState.statusDetail,
         nextAction: {
-          title: 'Volg respons en houd de survey running',
-          body: 'Laat de survey eerst verder lopen, stuur zo nodig reminders en bouw meer responses op voordat je volledige dashboarduitlezing verwacht.',
+          title: 'Volg respons en houd de route in beweging',
+          body: 'Laat de vragenlijst eerst verder lopen, stuur zo nodig reminders en bouw meer responses op voordat je volledige dashboarduitlezing verwacht.',
         },
         dashboardVisible: false,
         deeperInsightsVisible: false,
@@ -423,7 +423,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
         verisightNow:
           'Verisight laat nu alleen de veilige eerste dashboardlaag zien en houdt verdiepende patronen nog bewust begrensd.',
         customerNow:
-          'Gebruik nu de compacte dashboardread voor eerste richting, maar blijf respons opbouwen voordat je zwaarder gaat besluiten.',
+          'Gebruik nu de compacte dashboardread voor eerste richting, maar blijf respons opbouwen voordat je bredere managementconclusies trekt.',
         blockers: [
           {
             title: 'Verdieping blijft nog beperkt',
@@ -457,7 +457,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
   if (!importQaConfirmed) {
     return buildState('import_validation_required', {
       headline: 'Import validatie vereist',
-      detail: `${args.totalInvited} deelnemer(s) staan in de campaign, maar de importcontrole is nog niet expliciet bevestigd. Daardoor blijft launch bewust geblokkeerd.`,
+      detail: `${args.totalInvited} deelnemer(s) staan in de campagne, maar de importcontrole is nog niet expliciet bevestigd. Daardoor blijft start bewust geblokkeerd.`,
       nextAction: {
         title: 'Rond de importcontrole af',
         body: 'Controleer preview, metadata en fouten eerst volledig. Pas na een schone import hoort deze flow door te schuiven naar launchdiscipline.',
@@ -472,7 +472,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
         {
           title: 'Importcontrole staat nog open',
           detail:
-            'De campaign heeft deelnemers, maar er is nog geen expliciete QA-bevestiging op preview, metadata en importkeuze.',
+            'De campagne heeft deelnemers, maar er is nog geen expliciete QA-bevestiging op preview, metadata en importkeuze.',
           recovery:
             'Bevestig eerst dat de aangeleverde rijen kloppen en herstel fouten voordat je verdergaat.',
           actor: 'shared',
@@ -493,9 +493,9 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
       dashboardVisible: false,
       deeperInsightsVisible: false,
       verisightNow:
-        'Verisight houdt de inviteflow bewust tegen tot timing, doelgroep en launchdiscipline expliciet zijn bevestigd.',
+        'Verisight houdt de uitnodigingen bewust tegen tot timing, doelgroep en launchdiscipline expliciet zijn bevestigd.',
       customerNow:
-        'Bevestig nu wanneer de survey echt mag starten. Nog niet uitnodigen voordat dit launchmoment helder is.',
+        'Bevestig nu wanneer de vragenlijst echt mag starten. Nog niet uitnodigen voordat dit launchmoment helder is.',
       blockers: [
         {
           title: 'Launchmoment ontbreekt',
@@ -514,7 +514,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
         'Timing staat, maar de launchflow blijft nog dicht tot de communicatie en contactroute expliciet gereed zijn verklaard.',
       nextAction: {
         title: 'Bevestig dat de communicatie gereed is',
-        body: 'Zorg dat aankondiging, intern contactmoment en deliveryverwachting kloppen. Pas dan hoort de inviteflow echt vrijgegeven te worden.',
+        body: 'Zorg dat aankondiging, intern contactmoment en deliveryverwachting kloppen. Pas dan horen de uitnodigingen echt vrijgegeven te worden.',
       },
       dashboardVisible: false,
       deeperInsightsVisible: false,
@@ -526,7 +526,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
         {
           title: 'Communicatie is nog niet vrijgegeven',
           detail:
-            'De campaign heeft wel data en timing, maar nog geen expliciete bevestiging dat de launchcommunicatie klopt.',
+            'De campagne heeft wel data en timing, maar nog geen expliciete bevestiging dat de launchcommunicatie klopt.',
           recovery:
             'Bevestig eerst dat de aankondiging en het contactmoment gereed zijn voor deze launch.',
           actor: 'shared',
@@ -537,18 +537,18 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
 
   return buildState('ready_to_invite', {
     headline: 'De setup staat klaar voor launch',
-    detail:
-      `${args.totalInvited} deelnemer(s) staan klaar. Product, import, launchmoment en communicatie zijn gecontroleerd; de inviteflow wacht alleen nog op bewuste start.`,
+      detail:
+        `${args.totalInvited} deelnemer(s) staan klaar. Product, import, launchmoment en communicatie zijn gecontroleerd; de uitnodigingen wachten alleen nog op bewuste start.`,
     nextAction: {
       title: 'Start de uitnodigingen',
-      body: 'Open nu bewust de inviteflow. Daarna verschuift de aandacht van setup naar survey running en responsmonitoring.',
+      body: 'Start nu bewust de uitnodigingen. Daarna verschuift de aandacht van setup naar lopende respons en responsmonitoring.',
     },
     dashboardVisible: false,
     deeperInsightsVisible: false,
     verisightNow:
       'Verisight heeft de veilige launchflow voorbereid en houdt de release begrensd tot deze bewuste startstap.',
     customerNow:
-      'Start nu de inviteflow voor deze campaign. Daarna hoef je vooral nog respons te volgen, niet terug naar setup.',
+      'Start nu de uitnodigingen voor deze campagne. Daarna hoef je vooral nog respons te volgen, niet terug naar setup.',
     blockers: [
       {
         title: 'Uitnodigingen zijn nog niet gestart',

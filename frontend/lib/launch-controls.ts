@@ -193,8 +193,8 @@ export function buildParticipantCommunicationPreview(args: {
     body: [
       'Beste collega,',
       ...(config.introContext ? [config.introContext] : []),
-      `Op ${launchDateLabel} opent Verisight de ${SCAN_TYPE_LABELS[args.scanType]} als ${getDeliveryModePreviewLabel(args.deliveryMode)} voor deelnemers. Je ontvangt dan een persoonlijke uitnodiging om de vragenlijst in te vullen.`,
-      'Verisight verzorgt de uitnodiging, verzending en verwerking binnen de campaigngrenzen. Jullie interne communicatie ondersteunt alleen timing, deelname en opvolging.',
+      `Op ${launchDateLabel} opent Verisight de vragenlijst voor deze ${SCAN_TYPE_LABELS[args.scanType]} ${getDeliveryModePreviewLabel(args.deliveryMode)}. Je ontvangt dan een persoonlijke uitnodiging om deel te nemen.`,
+      'Verisight verzorgt de uitnodiging, verzending en verwerking binnen de campagnegrenzen. Jullie interne communicatie ondersteunt alleen timing, deelname en opvolging.',
       'De uitkomst wordt op groepsniveau gelezen. Gebruik interne aankondiging daarom alleen om deelname en planning helder te maken, niet om methodiek of productlogica te herschrijven.',
       ...(config.closingContext ? [config.closingContext] : []),
       'Groet,',

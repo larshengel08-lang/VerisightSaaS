@@ -42,7 +42,7 @@ describe('response activation thresholds', () => {
     const state = buildResponseActivationState(FIRST_INSIGHT_THRESHOLD)
 
     expect(state.stage).toBe('insights_active')
-    expect(state.readinessLabel).toBe('Beslisniveau bereikt')
+    expect(state.readinessLabel).toBe('Eerste patroonduiding beschikbaar')
     expect(state.dashboardVisible).toBe(true)
     expect(state.reportVisible).toBe(true)
     expect(state.deeperInsightsVisible).toBe(true)

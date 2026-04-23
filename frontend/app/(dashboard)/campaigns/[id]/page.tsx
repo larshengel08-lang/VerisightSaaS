@@ -1176,9 +1176,9 @@ export default async function CampaignPage({ params }: Props) {
       {showClientExecutionFlow ? (
         <DashboardSection
           id="uitvoering"
-          eyebrow="Guided self-serve"
+          eyebrow="Begeleide uitvoering"
           title="Begeleide uitvoerflow"
-          description="Verisight heeft de campaign ingericht. Vanaf hier lever jij deelnemers aan, start je de inviteflow veilig en volg je respons op zonder buiten de productgrenzen te hoeven treden."
+          description="Verisight heeft de campagne ingericht. Vanaf hier lever jij deelnemers aan, start je de uitnodigingen veilig en volg je respons op zonder buiten de productgrenzen te hoeven treden."
           aside={<DashboardChip label="Klantuitvoering" tone="emerald" />}
         >
           <GuidedSelfServePanel
@@ -1660,15 +1660,15 @@ export default async function CampaignPage({ params }: Props) {
               ? 'Gebruik deze laag om deelnemers, uitnodigingen en respons netjes te volgen. Productsetup, campaignarchitectuur en deliveryrecords blijven bewust bij Verisight.'
               : 'Alles onder deze lijn ondersteunt uitvoering en beheer. De managementhoofdlijn blijft hierboven compact en bestuurlijk.'
           }
-          aside={<DashboardChip label={showClientExecutionFlow ? 'Guided self-serve' : 'Admin en operations'} tone="slate" />}
+          aside={<DashboardChip label={showClientExecutionFlow ? 'Begeleide uitvoering' : 'Admin en operations'} tone="slate" />}
         >
           <div className="space-y-4">
             {canManageCampaign ? (
               <DashboardDisclosure
                 defaultOpen={!hasEnoughData}
-                title="Campagnestatus en launchcontrole"
+                title="Campagnestatus en uitvoercontrole"
                 description="Gebruik deze laag voor lifecycle, readiness, handoff en foutopvang nadat het managementbeeld helder is."
-                badge={<DashboardChip label={readinessState.launchReady ? 'Launch-ready' : 'Aandacht nodig'} tone={readinessState.launchReady ? 'emerald' : 'amber'} />}
+                badge={<DashboardChip label={readinessState.launchReady ? 'Uitvoer op orde' : 'Aandacht nodig'} tone={readinessState.launchReady ? 'emerald' : 'amber'} />}
               >
                 <div className="space-y-4">
                   <CampaignActions
@@ -1695,11 +1695,11 @@ export default async function CampaignPage({ params }: Props) {
                   >
                     <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Implementation readiness</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Implementatiereadiness</p>
                         <p className="mt-1 text-base font-semibold text-slate-950">{readinessState.headline}</p>
                       </div>
                       <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600">
-                        {readinessState.launchReady ? 'Launch-ready' : 'Nog niet launch-ready'}
+                        {readinessState.launchReady ? 'Uitvoer op orde' : 'Nog aandacht nodig'}
                       </span>
                     </div>
                     <p className="mt-3 text-sm leading-6 text-slate-700">{readinessState.detail}</p>

@@ -87,7 +87,7 @@ export function CustomerLaunchControl({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                Launchstates
+                Uitvoerstappen
               </p>
               <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">
                 Een vaste stepper laat zien wat al rond is, wat nu actief is en wat nog geblokkeerd blijft.

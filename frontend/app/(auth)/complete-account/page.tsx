@@ -173,10 +173,10 @@ export default function CompleteAccountPage() {
           <div className="space-y-6">
             <ActivationJourneyPanel />
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Assisted onboarding</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Begeleide onboarding</p>
               <p className="mt-3 text-sm leading-6 text-gray-600">
                 Verisight verkoopt geen self-service surveytool. Dit account is het handoff-moment naar jouw dashboard en
-                rapport, nadat de campaign en respondentflow al voor je zijn voorbereid.
+                rapport, nadat de campagne en respondentflow al voor je zijn voorbereid.
               </p>
             </div>
           </div>

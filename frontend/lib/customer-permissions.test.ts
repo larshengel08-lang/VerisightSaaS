@@ -31,6 +31,6 @@ describe('customer execution permissions', () => {
     const summary = getCustomerRoleSummary('owner')
     expect(summary.label).toBe('Klant owner')
     expect(summary.allowedActions.join(' ').toLowerCase()).toContain('deelnemers')
-    expect(summary.allowedActions.join(' ').toLowerCase()).toContain('inviteflow')
+    expect(summary.allowedActions.join(' ').toLowerCase()).toContain('uitnodigingen')
   })
 })

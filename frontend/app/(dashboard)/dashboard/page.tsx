@@ -13,6 +13,7 @@ import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
 import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
 import { getFirstNextStepGuidance } from '@/lib/client-onboarding'
 import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
+import { FIRST_INSIGHT_THRESHOLD } from '@/lib/response-activation'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { CampaignStats } from '@/lib/types'
 
@@ -49,6 +50,7 @@ export default async function DashboardHomePage() {
   const groups = groupCampaigns(campaigns)
   const activeCampaigns = campaigns.filter((campaign) => campaign.is_active)
   const primaryGuideCampaign = getPrimaryGuideCampaign(activeCampaigns, campaigns)
+  const primaryFirstNextStepCampaign = getPrimaryFirstNextStepCampaign(activeCampaigns, campaigns)
   const { data: primaryGuideRespondentsRaw } = primaryGuideCampaign
     ? await supabase
         .from('respondents')
@@ -121,28 +123,28 @@ export default async function DashboardHomePage() {
       })
     : null
   const showFirstNextStep =
-    !isAdmin &&
-    primaryGuideCampaign &&
-    primaryExecutionState &&
-    (primaryExecutionState.phase === 'first_next_step_available' || primaryExecutionState.phase === 'closed')
-  const primaryFirstNextStepGuidance = primaryGuideCampaign && showFirstNextStep
-    ? getFirstNextStepGuidance(primaryGuideCampaign.scan_type)
+    !isAdmin && primaryFirstNextStepCampaign
+  const primaryFirstNextStepGuidance = primaryFirstNextStepCampaign
+    ? getFirstNextStepGuidance(primaryFirstNextStepCampaign.scan_type)
     : null
   const primaryGuideScanDefinition = primaryGuideCampaign ? getScanDefinition(primaryGuideCampaign.scan_type) : null
+  const primaryFirstNextStepScanDefinition = primaryFirstNextStepCampaign
+    ? getScanDefinition(primaryFirstNextStepCampaign.scan_type)
+    : null
 
   return (
     <div className="space-y-6">
       {!isAdmin && primaryGuideCampaign && primaryExecutionState && primaryGuideScanDefinition ? (
         <DashboardSection
           eyebrow="Jouw uitvoerstatus"
-          title="Jouw launchstatus"
+          title="Jouw uitvoerstatus"
           description="Na login zie je direct welk product actief is, waar de campagne staat, wat nog ontbreekt en wat de eerstvolgende veilige stap is."
           aside={<DashboardChip label={primaryExecutionState.currentStateLabel} tone="blue" />}
         >
           <CustomerLaunchControl
             campaignName={primaryGuideCampaign.campaign_name}
             campaignHref={`/campaigns/${primaryGuideCampaign.campaign_id}`}
-            campaignCtaLabel={primaryExecutionState.dashboardVisible ? 'Open campaign en dashboard' : 'Open uitvoerflow'}
+            campaignCtaLabel={primaryExecutionState.dashboardVisible ? 'Open campagne en dashboard' : 'Open uitvoerflow'}
             productName={primaryGuideScanDefinition.productName}
             productContext={primaryGuideScanDefinition.whatItIsText}
             state={primaryExecutionState}
@@ -208,12 +210,12 @@ export default async function DashboardHomePage() {
         </div>
       </DashboardSection>
 
-      {!isAdmin && primaryGuideCampaign && primaryFirstNextStepGuidance && primaryGuideScanDefinition ? (
+      {!isAdmin && primaryFirstNextStepCampaign && primaryFirstNextStepGuidance && primaryFirstNextStepScanDefinition ? (
         <DashboardSection
           eyebrow="First-next-step"
           title="Van activatie naar eerste managementstap"
           description="Deze laag scheidt bewust wat het actuele inzicht nu zegt, welke eerste managementactie logisch is en welke vervolgroutes eventueel passen zonder het portfolio breder te maken dan de vraag draagt."
-          aside={<DashboardChip label={primaryGuideScanDefinition.productName} tone="blue" />}
+          aside={<DashboardChip label={primaryFirstNextStepScanDefinition.productName} tone="blue" />}
         >
           <div className="space-y-4">
             <div className="grid gap-4 lg:grid-cols-3">
@@ -562,6 +564,26 @@ function getPrimaryGuideCampaign(
   return [...candidatePool].sort((left, right) => {
     const priorityDelta = getExecutionPriority(left) - getExecutionPriority(right)
     if (priorityDelta !== 0) return priorityDelta
+    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+  })[0] ?? null
+}
+
+function getPrimaryFirstNextStepCampaign(
+  activeCampaigns: CampaignStats[],
+  allCampaigns: CampaignStats[],
+): CampaignStats | null {
+  const candidatePool = activeCampaigns.length > 0 ? activeCampaigns : allCampaigns
+  const eligibleCampaigns = candidatePool.filter(
+    (campaign) => campaign.total_completed >= FIRST_INSIGHT_THRESHOLD,
+  )
+
+  if (eligibleCampaigns.length === 0) return null
+
+  return [...eligibleCampaigns].sort((left, right) => {
+    if (left.is_active !== right.is_active) {
+      return left.is_active ? -1 : 1
+    }
+
     return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
   })[0] ?? null
 }

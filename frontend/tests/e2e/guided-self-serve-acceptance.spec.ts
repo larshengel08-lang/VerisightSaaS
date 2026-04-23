@@ -56,7 +56,7 @@ test.describe.serial('guided self-serve acceptance', () => {
     await page.getByRole('button', { name: /^bestand controleren$/i }).click()
 
     await expect(page.getByText(/preview van geldige rijen/i).first()).toBeVisible()
-    await expect(page.getByText(/import klaar voor launch/i).first()).toBeVisible()
+    await expect(page.getByText(/import klaar voor start/i).first()).toBeVisible()
 
     await page.getByRole('button', { name: /importeer 5 deelnemers/i }).click()
 
@@ -82,7 +82,7 @@ test.describe.serial('guided self-serve acceptance', () => {
     await page.getByRole('button', { name: /start uitnodigingen \(5\)/i }).click()
 
     await expect(page.getByText(/5 uitnodiging\(en\) gestart/i)).toBeVisible()
-    await expect(page.getByText(/survey running/i).first()).toBeVisible()
+    await expect(page.getByText(/respons loopt/i).first()).toBeVisible()
     await expect(page.getByRole('button', { name: /pdf-rapport/i })).toHaveCount(0)
     await expect(page.getByText(/dashboard nog niet actief/i).first()).toBeVisible()
   })
@@ -95,7 +95,7 @@ test.describe.serial('guided self-serve acceptance', () => {
     await loginAsAcceptanceUser(page, fixture)
     await page.goto(`/campaigns/${fixture.threshold_campaign_id}`)
 
-    await expect(page.getByText(/survey running/i).first()).toBeVisible()
+    await expect(page.getByText(/respons loopt/i).first()).toBeVisible()
     await expect(page.getByText(/dashboard nog niet actief/i).first()).toBeVisible()
     await expect(page.getByRole('button', { name: /pdf-rapport/i })).toHaveCount(0)
 

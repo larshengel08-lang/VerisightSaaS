@@ -21,7 +21,7 @@ export const CAMPAIGN_AUDIT_ACTIONS: Record<
     ownerLabel: 'Klant owner',
   },
   launch_invites: {
-    actionLabel: 'Inviteflow gestart',
+    actionLabel: 'Uitnodigingen gestart',
     ownerLabel: 'Klant owner',
   },
   send_reminders: {
@@ -33,12 +33,12 @@ export const CAMPAIGN_AUDIT_ACTIONS: Record<
     ownerLabel: 'Verisight',
   },
   delivery_lifecycle_changed: {
-    actionLabel: 'Launchstatus bijgewerkt',
-    ownerLabel: 'Launch-owner',
+    actionLabel: 'Uitvoerstatus bijgewerkt',
+    ownerLabel: 'Verisight',
   },
   delivery_checkpoint_confirmed: {
-    actionLabel: 'Launchcheck bevestigd',
-    ownerLabel: 'Launch-owner',
+    actionLabel: 'Uitvoercheck bevestigd',
+    ownerLabel: 'Verisight',
   },
 }
 

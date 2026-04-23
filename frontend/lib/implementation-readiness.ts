@@ -30,7 +30,7 @@ export function getDeliveryModeDescription(mode: DeliveryMode | null | undefined
     : scanType === 'team'
       ? 'Dit is de standaard eerste route voor TeamScan. Gebruik baseline om eerst een veilige department-first lokale read op te bouwen voordat verdere lokalisatie logisch wordt.'
       : scanType === 'onboarding'
-        ? 'Dit is de standaard eerste route voor onboarding in deze wave. Gebruik baseline om eerst een enkel checkpoint per campaign op groepsniveau leesbaar te maken.'
+        ? 'Dit is de standaard eerste route voor onboarding in deze wave. Gebruik baseline om eerst een enkel checkpoint per campagne op groepsniveau leesbaar te maken.'
         : 'Dit is de standaard eerste route voor ExitScan. Gebruik baseline om vertrek eerst bestuurlijk leesbaar te maken voordat doorlopende opvolging logisch wordt.'
 }
 
@@ -133,10 +133,10 @@ export function buildCampaignReadinessState({
       clientAccessActivated,
       clientActivationPending,
       launchReady,
-      headline: 'Invites nog niet volledig live',
+      headline: 'Uitnodigingen nog niet volledig verstuurd',
       detail: `${invitesNotSent} respondent(en) hebben nog geen uitnodiging ontvangen. Houd livegang en klantactivatie terughoudend totdat de uitnodigingslaag klopt.`,
       nextStep:
-        'Controleer importkwaliteit en verstuur eerst alle ontbrekende uitnodigingen of reminders.',
+        'Controleer importkwaliteit en verstuur eerst alle ontbrekende uitnodigingen of herinneringen.',
     }
   }
 
@@ -224,9 +224,9 @@ export function buildCampaignReadinessState({
     clientAccessActivated,
     clientActivationPending,
     launchReady,
-    headline: analysisReady ? 'Launch readiness op orde' : 'Dashboard actief, inzichten nog in opbouw',
+    headline: analysisReady ? 'Uitvoer op orde' : 'Dashboard actief, inzichten nog in opbouw',
     detail: analysisReady
-      ? 'Setup, inviteflow, eerste output en klanttoegang zijn op orde. Deze campagne is operationeel sterk genoeg voor eerste managementduiding.'
+      ? 'Setup, uitnodigingen, eerste output en klanttoegang zijn op orde. Deze campagne is operationeel sterk genoeg voor eerste managementduiding.'
       : activationState.statusDetail,
     nextStep: analysisReady
       ? 'Gebruik nu dashboard en rapport samen voor het eerste managementgesprek en leg de eerste eigenaar of vervolgstap vast.'

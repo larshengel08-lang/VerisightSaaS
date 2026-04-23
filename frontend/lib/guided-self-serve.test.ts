@@ -35,7 +35,7 @@ describe('guided self-serve execution state', () => {
       'Launchdatum vereist',
       'Communicatie gereed',
       'Klaar om uit te nodigen',
-      'Survey running',
+      'Respons loopt',
       'Dashboard actief',
       'Eerste vervolgstap beschikbaar',
     ])
