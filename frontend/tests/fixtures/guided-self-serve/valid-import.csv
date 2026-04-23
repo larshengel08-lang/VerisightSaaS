@@ -1,3 +1,6 @@
 email,department,role_level,exit_month,annual_salary_eur
 anne@example.com,Operations,specialist,2026-03,55000
 bart@example.com,People,manager,2026-04,64000
+carla@example.com,Finance,senior,2026-04,61000
+daan@example.com,IT,uitvoerend,2026-03,48000
+els@example.com,Sales,director,2026-02,82000

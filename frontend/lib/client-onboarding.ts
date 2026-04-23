@@ -109,6 +109,7 @@ export const CLIENT_FILE_SPEC = {
   recommended: ['department', 'role_level'],
   exitOptional: ['exit_month', 'annual_salary_eur'],
   retentionOptional: ['annual_salary_eur'],
+  minimumParticipants: 5,
   segmentDeepDiveNote:
     'Bij segment deep dive zijn nette metadata extra belangrijk. Zonder afdeling en functieniveau verliest de verdieping snel waarde.',
 } as const

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { getOrganizationApiKey } from '@/lib/organization-secrets'
 import { getBackendApiUrl } from '@/lib/server-env'
@@ -11,7 +12,9 @@ export async function POST(request: Request, { params }: Context) {
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ detail: 'Niet ingelogd.' }, { status: 401 })
   }
@@ -26,15 +29,8 @@ export async function POST(request: Request, { params }: Context) {
     return NextResponse.json({ detail: 'Campaign niet gevonden of niet toegankelijk.' }, { status: 404 })
   }
 
-  const [
-    { data: profile },
-    { data: membership },
-  ] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('is_verisight_admin')
-      .eq('id', user.id)
-      .maybeSingle(),
+  const [{ data: profile }, { data: membership }] = await Promise.all([
+    supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle(),
     supabase
       .from('org_members')
       .select('role')
@@ -48,6 +44,40 @@ export async function POST(request: Request, { params }: Context) {
     return NextResponse.json(
       { detail: 'Je hebt geen rechten om uitnodigingen voor deze campaign te versturen.' },
       { status: 403 },
+    )
+  }
+
+  try {
+    const admin = createAdminClient()
+    const { data: deliveryRecord } = await admin
+      .from('campaign_delivery_records')
+      .select('id')
+      .eq('campaign_id', id)
+      .maybeSingle()
+
+    const { data: checkpoint } = deliveryRecord?.id
+      ? await admin
+          .from('campaign_delivery_checkpoints')
+          .select('auto_state, last_auto_summary')
+          .eq('delivery_record_id', deliveryRecord.id)
+          .eq('checkpoint_key', 'import_qa')
+          .maybeSingle()
+      : { data: null }
+
+    if (!checkpoint || checkpoint.auto_state !== 'ready') {
+      return NextResponse.json(
+        {
+          detail:
+            checkpoint?.last_auto_summary ??
+            'Het deelnemersbestand is nog niet vrijgegeven voor launch. Controleer eerst de import.',
+        },
+        { status: 400 },
+      )
+    }
+  } catch {
+    return NextResponse.json(
+      { detail: 'Importcontrole voor launch kon niet worden bevestigd.' },
+      { status: 400 },
     )
   }
 

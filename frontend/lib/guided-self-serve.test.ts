@@ -28,6 +28,7 @@ describe('guided self-serve execution state', () => {
       invitesNotSent: 18,
       hasMinDisplay: false,
       hasEnoughData: false,
+      importReady: true,
     })
 
     expect(state.phase).toBe('ready_to_invite')
@@ -44,6 +45,7 @@ describe('guided self-serve execution state', () => {
       invitesNotSent: 0,
       hasMinDisplay: false,
       hasEnoughData: false,
+      importReady: true,
     })
 
     expect(state.phase).toBe('responses_incoming')
@@ -60,6 +62,7 @@ describe('guided self-serve execution state', () => {
       invitesNotSent: 0,
       hasMinDisplay: true,
       hasEnoughData: false,
+      importReady: true,
     })
 
     expect(state.phase).toBe('dashboard_active')
@@ -77,6 +80,7 @@ describe('guided self-serve execution state', () => {
       invitesNotSent: 0,
       hasMinDisplay: true,
       hasEnoughData: true,
+      importReady: true,
     })
 
     expect(state.phase).toBe('first_next_step_available')
@@ -94,10 +98,28 @@ describe('guided self-serve execution state', () => {
       invitesNotSent: 0,
       hasMinDisplay: true,
       hasEnoughData: true,
+      importReady: true,
     })
 
     expect(state.phase).toBe('closed')
     expect(state.nextAction.title.toLowerCase()).toContain('vervolggesprek')
     expect(state.statusBlocks.find((item) => item.key === 'dashboard_active')?.status).toBe('done')
+  })
+
+  it('keeps the customer on import recovery until the dataset is really cleared for launch', () => {
+    const state = buildGuidedSelfServeState({
+      isActive: true,
+      totalInvited: 8,
+      totalCompleted: 0,
+      invitesNotSent: 8,
+      hasMinDisplay: false,
+      hasEnoughData: false,
+      importReady: false,
+    })
+
+    expect(state.phase).toBe('data_required')
+    expect(state.dashboardVisible).toBe(false)
+    expect(state.nextAction.title.toLowerCase()).toContain('deelnemersbestand')
+    expect(state.detail.toLowerCase()).toContain('controle')
   })
 })

@@ -49,6 +49,7 @@ describe('client onboarding defaults', () => {
     expect(CLIENT_FILE_SPEC.required).toEqual(['email'])
     expect(CLIENT_FILE_SPEC.recommended).toEqual(['department', 'role_level'])
     expect(CLIENT_FILE_SPEC.exitOptional).toContain('exit_month')
+    expect(CLIENT_FILE_SPEC.minimumParticipants).toBe(5)
   })
 
   it('keeps ExitScan first and follow-on variants explicit', () => {

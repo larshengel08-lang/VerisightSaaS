@@ -643,6 +643,9 @@ def test_respondent_import_creates_rows_without_sending_invites(client, db_sessi
         "email,department,role_level,exit_month,annual_salary_eur\n"
         "a@example.com,Operations,specialist,2026-03,55000\n"
         "b@example.com,Sales,manager,2026-02,72000\n"
+        "c@example.com,People,director,2026-02,81000\n"
+        "d@example.com,Finance,senior,2026-01,61000\n"
+        "e@example.com,IT,uitvoerend,2026-01,43000\n"
     )
 
     response = client.post(
@@ -654,13 +657,15 @@ def test_respondent_import_creates_rows_without_sending_invites(client, db_sessi
 
     assert response.status_code == 200
     body = response.json()
-    assert body["imported"] == 2
+    assert body["imported"] == 5
     assert body["emails_sent"] == 0
     assert body["invalid_rows"] == 0
+    assert body["launch_blocked"] is False
+    assert body["readiness_label"] == "Import vrijgegeven"
 
     rows = db_session.query(Respondent).filter(Respondent.campaign_id == campaign.id).all()
-    assert len(rows) == 2
-    assert {row.exit_month for row in rows} == {"2026-03", "2026-02"}
+    assert len(rows) == 5
+    assert {row.exit_month for row in rows} == {"2026-03", "2026-02", "2026-01"}
 
 
 def test_respondent_import_dry_run_reports_duplicate_email_without_persisting(client, db_session: Session):
@@ -685,9 +690,67 @@ def test_respondent_import_dry_run_reports_duplicate_email_without_persisting(cl
     assert body["invalid_rows"] == 1
     assert body["errors"][0]["field"] == "email"
     assert "bestaat al" in body["errors"][0]["message"].lower()
+    assert body["launch_blocked"] is True
 
     rows = db_session.query(Respondent).filter(Respondent.campaign_id == campaign.id).all()
     assert len(rows) == 1
+
+
+def test_respondent_import_dry_run_blocks_missing_required_columns_and_small_dataset(client, db_session: Session):
+    org = _create_org(db_session, api_key="header-key")
+    campaign = _create_campaign(db_session, org, name="Header guard")
+    csv_content = (
+        "mailadres,team\n"
+        "anne@example.com,Operations\n"
+        "bas@example.com,Sales\n"
+    )
+
+    response = client.post(
+        f"/api/campaigns/{campaign.id}/respondents/import",
+        headers={"x-api-key": "header-key"},
+        data={"dry_run": "true", "send_invites": "false"},
+        files={"upload": ("respondents.csv", io.BytesIO(csv_content.encode("utf-8")), "text/csv")},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["imported"] == 0
+    assert body["launch_blocked"] is True
+    assert "email" in body["blocking_messages"][0].lower()
+    assert "minimaal 5" in " ".join(body["blocking_messages"]).lower()
+    assert body["ignored_columns"] == ["mailadres", "team"]
+    assert any(error["field"] == "columns" for error in body["errors"])
+
+
+def test_respondent_import_dry_run_reports_invalid_email_duplicates_and_empty_core_values(client, db_session: Session):
+    org = _create_org(db_session, api_key="quality-key")
+    campaign = _create_campaign(db_session, org, name="Quality guard")
+    csv_content = (
+        "email,department,role_level\n"
+        "anne@example.com,Operations,manager\n"
+        "anne@example.com,Operations,manager\n"
+        "geen-email,Sales,specialist\n"
+        "bas@example.com,,nvt\n"
+        "carla@example.com,Finance,senior\n"
+        "daan@example.com,People,director\n"
+        "els@example.com,IT,uitvoerend\n"
+    )
+
+    response = client.post(
+        f"/api/campaigns/{campaign.id}/respondents/import",
+        headers={"x-api-key": "quality-key"},
+        data={"dry_run": "true", "send_invites": "false"},
+        files={"upload": ("respondents.csv", io.BytesIO(csv_content.encode("utf-8")), "text/csv")},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["launch_blocked"] is True
+    assert body["valid_rows"] == 4
+    assert any("dubbel" in error["message"].lower() for error in body["errors"])
+    assert any(error["field"] == "email" and "ongeldig" in error["message"].lower() for error in body["errors"])
+    assert any(error["field"] == "department" and "afdeling" in error["message"].lower() for error in body["errors"])
+    assert any(error["field"] == "role_level" and "functieniveau" in error["message"].lower() for error in body["errors"])
 
 
 def test_implementation_smoke_flow_imports_sends_invites_and_generates_output(

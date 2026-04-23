@@ -44,6 +44,7 @@ interface GuidedSelfServeArgs {
   invitesNotSent: number
   hasMinDisplay: boolean
   hasEnoughData: boolean
+  importReady?: boolean
 }
 
 const STATUS_FLOW: GuidedStatusKey[] = [
@@ -104,6 +105,21 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
       statusBlocks: buildStatusBlocks('setup_incomplete').map((item) =>
         item.key === 'data_required' ? { ...item, status: 'current' } : item,
       ),
+    }
+  }
+
+  if (args.importReady === false) {
+    return {
+      phase: 'data_required',
+      headline: 'Deelnemersbestand vraagt nog controle',
+      detail: 'Het deelnemersbestand is nog niet vrijgegeven voor launch. Controleer de preview, herstel de gemelde rijen of kolommen en ga pas daarna verder.',
+      nextAction: {
+        title: 'Controleer het deelnemersbestand',
+        body: 'Werk de gemelde rijen of kolommen bij en controleer daarna opnieuw totdat de import vrijgegeven is.',
+      },
+      dashboardVisible: false,
+      deeperInsightsVisible: false,
+      statusBlocks: buildStatusBlocks('data_required'),
     }
   }
 
