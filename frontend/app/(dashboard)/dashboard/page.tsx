@@ -10,18 +10,27 @@ import {
 } from '@/components/dashboard/dashboard-primitives'
 import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
 import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
+import {
+  getCampaignCompositionState,
+  HOME_STATE_ORDER,
+  type CampaignCompositionState,
+} from '@/lib/dashboard/dashboard-state-composition'
 import { buildGuidedSelfServeState } from '@/lib/guided-self-serve'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { CampaignStats } from '@/lib/types'
 
-type CampaignGroup = {
-  key: string
-  title: string
-  description: string
-  campaigns: CampaignStats[]
+type CampaignHomeEntry = {
+  campaign: CampaignStats
+  state: CampaignCompositionState
+  invitesNotSent: number
 }
 
-type CampaignBucket = 'ready' | 'building' | 'setup' | 'closed'
+type CampaignGroup = {
+  key: CampaignCompositionState
+  title: string
+  description: string
+  entries: CampaignHomeEntry[]
+}
 
 export default async function DashboardHomePage() {
   const supabase = await createClient()
@@ -44,22 +53,38 @@ export default async function DashboardHomePage() {
     .order('created_at', { ascending: false })
 
   const campaigns = (stats ?? []) as CampaignStats[]
-  const groups = groupCampaigns(campaigns)
-  const activeCampaigns = campaigns.filter((campaign) => campaign.is_active)
-  const primaryGuideCampaign = getPrimaryGuideCampaign(activeCampaigns, campaigns)
-  const { data: primaryGuideRespondentsRaw } = primaryGuideCampaign
-    ? await supabase
-        .from('respondents')
-        .select('sent_at, completed')
-        .eq('campaign_id', primaryGuideCampaign.campaign_id)
-    : { data: [] }
-  const primaryGuideRespondents = (primaryGuideRespondentsRaw ?? []) as Array<{
+  const campaignIds = campaigns.map((campaign) => campaign.campaign_id)
+  const { data: respondentStateRowsRaw } =
+    campaignIds.length > 0
+      ? await supabase
+          .from('respondents')
+          .select('campaign_id, sent_at, completed')
+          .in('campaign_id', campaignIds)
+      : { data: [] }
+  const respondentStateRows = (respondentStateRowsRaw ?? []) as Array<{
+    campaign_id: string
     sent_at: string | null
     completed: boolean
   }>
-  const primaryGuideInvitesNotSent = primaryGuideRespondents.filter(
-    (respondent) => !respondent.sent_at && !respondent.completed,
-  ).length
+  const invitesNotSentByCampaign = buildInvitesNotSentByCampaign(campaigns, respondentStateRows)
+  const campaignEntries = campaigns.map((campaign) => ({
+    campaign,
+    invitesNotSent: invitesNotSentByCampaign.get(campaign.campaign_id) ?? 0,
+    state: getCampaignCompositionState({
+      isActive: campaign.is_active,
+      totalInvited: campaign.total_invited,
+      totalCompleted: campaign.total_completed,
+      invitesNotSent: invitesNotSentByCampaign.get(campaign.campaign_id) ?? 0,
+      incompleteScores: 0,
+      hasMinDisplay: campaign.total_completed >= 5,
+      hasEnoughData: campaign.total_completed >= 10,
+    }),
+  }))
+  const groups = groupCampaigns(campaignEntries)
+  const primaryGuideEntry = getPrimaryGuideCampaign(campaignEntries)
+  const primaryGuideCampaign = primaryGuideEntry?.campaign ?? null
+  const primaryGuideInvitesNotSent = primaryGuideEntry?.invitesNotSent ?? 0
+  const primaryGuideStateMeta = primaryGuideEntry ? getHomeStateMeta(primaryGuideEntry.state) : null
   const avgResponse =
     campaigns.length > 0
       ? Math.round(campaigns.reduce((sum, campaign) => sum + (campaign.completion_rate_pct ?? 0), 0) / campaigns.length)
@@ -72,23 +97,18 @@ export default async function DashboardHomePage() {
           campaignsWithSignal.length
         ).toFixed(1)
       : null
-  const readyCount = campaigns.filter((campaign) => getCampaignBucket(campaign) === 'ready').length
-  const buildingCount = campaigns.filter((campaign) => getCampaignBucket(campaign) === 'building').length
-  const setupCount = campaigns.filter((campaign) => getCampaignBucket(campaign) === 'setup').length
-  const closedCount = campaigns.filter((campaign) => getCampaignBucket(campaign) === 'closed').length
+  const fullCount = campaignEntries.filter((entry) => entry.state === 'full').length
+  const partialCount = campaignEntries.filter((entry) => entry.state === 'partial').length
+  const activeExecutionCount = campaignEntries.filter((entry) =>
+    ['setup', 'ready_to_launch', 'running', 'sparse'].includes(entry.state),
+  ).length
+  const closedCount = campaignEntries.filter((entry) => entry.state === 'closed').length
   const primaryExecutionState = primaryGuideCampaign
     ? buildGuidedSelfServeState({
         isActive: primaryGuideCampaign.is_active,
         totalInvited: primaryGuideCampaign.total_invited,
         totalCompleted: primaryGuideCampaign.total_completed,
-        invitesNotSent:
-          primaryGuideRespondents.length > 0
-            ? primaryGuideInvitesNotSent
-            : primaryGuideCampaign.total_invited === 0
-              ? 0
-              : primaryGuideCampaign.total_completed >= 5
-                ? 0
-                : 1,
+        invitesNotSent: primaryGuideInvitesNotSent,
         hasMinDisplay: primaryGuideCampaign.total_completed >= 5,
         hasEnoughData: primaryGuideCampaign.total_completed >= 10,
       })
@@ -110,7 +130,7 @@ export default async function DashboardHomePage() {
               <DashboardChip label="Operations cockpit" tone="blue" />
               <Link
                 href="/beheer"
-                className="inline-flex rounded-full bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-[#1B2E45]"
+                className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
               >
                 Nieuwe campaign
               </Link>
@@ -122,32 +142,32 @@ export default async function DashboardHomePage() {
       >
         <div className="grid gap-4 lg:grid-cols-4">
           <DashboardPanel
-            eyebrow="Management-ready"
-            title={`${readyCount}`}
-            body="Campagnes met genoeg respons om actief te sturen op duiding, prioritering en rapportage."
+            eyebrow="Full / management ready"
+            title={`${fullCount}`}
+            body="Campagnes met genoeg respons en zichtbaarheid om dashboard, aanbevelingen en rapport echt als managementinstrument te gebruiken."
             tone="blue"
           />
           <DashboardPanel
-            eyebrow="Nog in opbouw"
-            title={`${buildingCount}`}
-            body="Campagnes waar de response al loopt, maar waar het patroonbeeld nog eerst steviger moet worden."
-            tone={buildingCount > 0 ? 'amber' : 'slate'}
+            eyebrow="Partial / deels zichtbaar"
+            title={`${partialCount}`}
+            body="Campagnes waar de eerste veilige read open is, maar waar drivers, aanbevelingen of diepere patroonduiding bewust nog begrensd blijven."
+            tone={partialCount > 0 ? 'amber' : 'slate'}
           />
           <DashboardPanel
-            eyebrow="Setup of launch"
-            title={`${setupCount}`}
-            body="Campagnes waar eerst nog respondentimport, uitnodiging of launchcontrole nodig is."
-            tone={setupCount > 0 ? 'amber' : 'slate'}
+            eyebrow="Uitvoering actief"
+            title={`${activeExecutionCount}`}
+            body="Campagnes in setup, launch, running of sparse responsopbouw. Hier hoort de nadruk op uitvoerdiscipline te liggen, niet op managementduiding."
+            tone={activeExecutionCount > 0 ? 'amber' : 'slate'}
           />
           <DashboardPanel
-            eyebrow="Portfolio"
+            eyebrow="Closed / report-first"
             title={avgSignal ? `${avgSignal}/10` : closedCount > 0 ? `${closedCount}` : 'Nog leeg'}
             body={
               avgSignal
-                ? `Gemiddeld groepssignaal over campagnes met leesbare output. Gemiddelde respons: ${avgResponse}%.`
+                ? `Gemiddeld groepssignaal over campagnes met leesbare output. Gesloten campagnes: ${closedCount}. Gemiddelde respons: ${avgResponse}%.`
                 : campaigns.length === 0
                   ? 'Maak eerst een organisatie en campaign aan. Daarna verschijnt hier automatisch de cockpit.'
-                  : `Gesloten of nog niet leesbare campagnes in portfolio: ${closedCount}. Gemiddelde respons: ${avgResponse}%.`
+                  : `Campagnes in report-first status: ${closedCount}. Gemiddelde respons: ${avgResponse}%.`
             }
             tone={avgSignal ? 'emerald' : 'slate'}
           />
@@ -160,10 +180,15 @@ export default async function DashboardHomePage() {
             eyebrow="Jouw uitvoerstatus"
             title={primaryExecutionState.headline}
             description={primaryExecutionState.detail}
-            aside={<DashboardChip label={primaryExecutionState.dashboardVisible ? 'Dashboard actief' : 'Uitvoer loopt'} tone={primaryExecutionState.dashboardVisible ? 'emerald' : 'amber'} />}
+            aside={
+              <DashboardChip
+                label={primaryGuideStateMeta?.label ?? (primaryExecutionState.dashboardVisible ? 'Dashboard actief' : 'Uitvoer loopt')}
+                tone={primaryGuideStateMeta?.tone ?? (primaryExecutionState.dashboardVisible ? 'emerald' : 'amber')}
+              />
+            }
           >
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr),minmax(320px,0.6fr)]">
-              <div className="rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)]">
+              <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] p-5 shadow-[0_18px_40px_rgba(17,24,39,0.07)]">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
                   Eerstvolgende stap
                 </p>
@@ -183,7 +208,7 @@ export default async function DashboardHomePage() {
                   ))}
                 </div>
               </div>
-              <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4">
+              <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] p-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
                   Jouw campagne nu
                 </p>
@@ -191,13 +216,18 @@ export default async function DashboardHomePage() {
                   {primaryGuideCampaign.campaign_name}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">
-                  Open deze campaign voor deelnemersimport, inviteflow, responsmonitoring en pas daarna dashboardgebruik.
+                  {primaryGuideStateMeta?.body ??
+                    'Open deze campaign voor deelnemersimport, inviteflow, responsmonitoring en pas daarna dashboardgebruik.'}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                  {primaryGuideStateMeta?.trust ??
+                    'Houd deze stap eerlijk: eerst uitvoer en veilige drempels, daarna pas managementduiding.'}
                 </p>
                 <Link
                   href={`/campaigns/${primaryGuideCampaign.campaign_id}`}
-                  className="mt-4 inline-flex rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3]"
+                  className="mt-4 inline-flex rounded-full border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:brightness-[0.98]"
                 >
-                  {primaryExecutionState.dashboardVisible ? 'Open campaign en dashboard' : 'Open uitvoerflow'}
+                  {primaryGuideStateMeta?.viewerCta ?? (primaryExecutionState.dashboardVisible ? 'Open campaign en dashboard' : 'Open uitvoerflow')}
                 </Link>
               </div>
             </div>
@@ -225,7 +255,7 @@ export default async function DashboardHomePage() {
       ) : (
         <div className="space-y-5">
           {groups.map((group) =>
-            group.campaigns.length > 0 ? (
+            group.entries.length > 0 ? (
               <DashboardSection
                 key={group.key}
                 eyebrow="Campagnestatus"
@@ -233,18 +263,18 @@ export default async function DashboardHomePage() {
                 description={group.description}
                 aside={
                   <DashboardChip
-                    label={`${group.campaigns.length} campagne${group.campaigns.length === 1 ? '' : 's'}`}
-                    tone={group.key === 'ready' ? 'blue' : group.key === 'closed' ? 'slate' : 'amber'}
+                    label={`${group.entries.length} campagne${group.entries.length === 1 ? '' : 's'}`}
+                    tone={getHomeStateMeta(group.key).tone}
                   />
                 }
-                tone={group.key === 'ready' ? 'blue' : group.key === 'closed' ? 'slate' : 'amber'}
+                tone={getHomeStateMeta(group.key).tone}
               >
                 <div className="space-y-3">
-                  {group.campaigns.map((campaign, index) => (
+                  {group.entries.map((entry, index) => (
                     <CampaignRow
-                      key={campaign.campaign_id}
-                      campaign={campaign}
-                      showOnboarding={!isAdmin && group.key === 'ready' && index === 0}
+                      key={entry.campaign.campaign_id}
+                      entry={entry}
+                      showOnboarding={!isAdmin && group.key === 'full' && index === 0}
                       isAdmin={isAdmin}
                     />
                   ))}
@@ -323,33 +353,34 @@ export default async function DashboardHomePage() {
 }
 
 function CampaignRow({
-  campaign,
+  entry,
   showOnboarding,
   isAdmin,
 }: {
-  campaign: CampaignStats
+  entry: CampaignHomeEntry
   showOnboarding: boolean
   isAdmin: boolean
 }) {
+  const { campaign, state } = entry
   const scanDefinition = getScanDefinition(campaign.scan_type)
-  const nextAction = getNextAction(campaign)
-  const readiness = getCampaignReadiness(campaign)
+  const stateMeta = getHomeStateMeta(state)
+  const ctaLabel = isAdmin && state === 'setup' ? 'Naar setup' : stateMeta.viewerCta
 
   return (
-    <div className="rounded-[24px] border border-[color:var(--border)] bg-white px-4 py-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)]">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+    <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_18px_40px_rgba(17,24,39,0.07)]">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between xl:gap-6">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <DashboardChip label={scanDefinition.productName} tone={campaign.scan_type === 'retention' ? 'emerald' : 'blue'} />
             <DashboardChip label={campaign.is_active ? 'Actief' : 'Gesloten'} tone={campaign.is_active ? 'emerald' : 'slate'} />
-            <DashboardChip label={readiness.label} tone={readiness.tone} />
+            <DashboardChip label={stateMeta.label} tone={stateMeta.tone} />
           </div>
           <h2 className="mt-3 text-lg font-semibold text-[color:var(--ink)]">{campaign.campaign_name}</h2>
-          <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">{readiness.body}</p>
-          <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">{nextAction.body}</p>
+          <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">{stateMeta.body}</p>
+          <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{stateMeta.trust}</p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[420px] xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[420px] xl:grid-cols-2 2xl:min-w-[560px] 2xl:grid-cols-4">
           <StatCell label="Respons" value={`${campaign.completion_rate_pct ?? 0}%`} />
           <StatCell label="Ingevuld" value={`${campaign.total_completed}`} />
           <StatCell label="Uitgenodigd" value={`${campaign.total_invited}`} />
@@ -362,8 +393,8 @@ function CampaignRow({
 
       <div className="mt-4 flex flex-col gap-3 border-t border-[color:var(--border)]/80 pt-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="rounded-full bg-[color:var(--bg)] px-3 py-1 font-medium text-[color:var(--text)]">
-            {nextAction.label}
+          <span className="rounded-full bg-[color:var(--dashboard-soft)] px-3 py-1 font-medium text-[color:var(--dashboard-text)]">
+            {stateMeta.nextStepLabel}
           </span>
           <span className="text-[color:var(--muted)]">•</span>
           <span className="text-[color:var(--text)]">
@@ -371,10 +402,10 @@ function CampaignRow({
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          {isAdmin && getCampaignBucket(campaign) === 'setup' ? (
+          {isAdmin && state === 'setup' ? (
             <Link
               href="/beheer"
-              className="inline-flex rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition-colors hover:border-[#d6e4e8] hover:text-[#234B57]"
+              className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
             >
               Naar setup
             </Link>
@@ -383,12 +414,12 @@ function CampaignRow({
             {showOnboarding ? <OnboardingBalloon step={1} label="Open je campagne" align="left" /> : null}
             <Link
               href={`/campaigns/${campaign.campaign_id}`}
-              className="inline-flex rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3]"
+              className="inline-flex rounded-full border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:brightness-[0.98]"
             >
-              {!isAdmin && getCampaignBucket(campaign) !== 'ready' ? 'Open uitvoerflow' : 'Open dashboard'}
+              {ctaLabel}
             </Link>
           </div>
-          {isAdmin || getCampaignBucket(campaign) === 'ready' || getCampaignBucket(campaign) === 'closed' ? (
+          {isAdmin || state === 'full' || state === 'closed' ? (
             <PdfDownloadButton campaignId={campaign.campaign_id} campaignName={campaign.campaign_name} />
           ) : null}
         </div>
@@ -411,13 +442,13 @@ function UtilityCard({
   cta: string
 }) {
   return (
-    <div className="rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)]">
+    <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] p-5 shadow-[0_18px_40px_rgba(17,24,39,0.07)]">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">{eyebrow}</p>
       <p className="mt-2 text-base font-semibold text-[color:var(--ink)]">{title}</p>
       <p className="mt-3 text-sm leading-6 text-[color:var(--text)]">{body}</p>
       <Link
         href={href}
-        className="mt-4 inline-flex rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition-colors hover:border-[#d6e4e8] hover:text-[#234B57]"
+        className="mt-4 inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
       >
         {cta}
       </Link>
@@ -438,7 +469,7 @@ function StatCell({ label, value }: { label: string; value: string }) {
             : null
 
   return (
-    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-3">
+    <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-3">
       <div className="flex items-center gap-1.5">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
         {helpText ? <InfoTooltip text={helpText} /> : null}
@@ -448,131 +479,163 @@ function StatCell({ label, value }: { label: string; value: string }) {
   )
 }
 
-function getNextAction(campaign: CampaignStats) {
-  if (!campaign.is_active) {
-    return {
-      label: 'Rapport beschikbaar',
-      body: 'Deze campagne is gesloten. Gebruik dashboard en rapport nu vooral voor terugblik, bestuurlijke follow-up en het voorbereiden van het vervolggesprek.',
+function buildInvitesNotSentByCampaign(
+  campaigns: CampaignStats[],
+  respondents: Array<{ campaign_id: string; sent_at: string | null; completed: boolean }>,
+) {
+  const counts = new Map<string, number>()
+
+  for (const respondent of respondents) {
+    if (!respondent.sent_at && !respondent.completed) {
+      counts.set(respondent.campaign_id, (counts.get(respondent.campaign_id) ?? 0) + 1)
     }
   }
 
-  if (campaign.total_invited === 0) {
-    return {
-      label: 'Respondenten toevoegen',
-      body: 'De campaign bestaat al, maar zonder respondenten blijft de cockpit leeg. Dit is nu de eerstvolgende operationele stap.',
+  for (const campaign of campaigns) {
+    if (!counts.has(campaign.campaign_id)) {
+      counts.set(
+        campaign.campaign_id,
+        campaign.total_invited === 0 ? 0 : campaign.total_completed >= 5 ? 0 : 1,
+      )
     }
   }
 
-  if ((campaign.completion_rate_pct ?? 0) < 20) {
-    return {
-      label: 'Respons opbouwen',
-      body: 'De response is nog laag. Focus nu op uitnodigingen, reminders en genoeg basis voor een veilige eerste lezing.',
-    }
-  }
-
-  if (campaign.total_completed < 10) {
-    return {
-      label: 'Nog indicatief',
-      body: 'Er zijn al responses binnen, maar nog niet genoeg voor een stevig patroonbeeld. Gebruik de output nu vooral om richting vast te houden.',
-    }
-  }
-
-  return {
-    label: 'Klaar voor verdieping',
-    body: 'De campaign heeft genoeg respons om actief te sturen op managementduiding, prioritering en rapportage.',
-  }
+  return counts
 }
 
-function getCampaignBucket(campaign: CampaignStats): CampaignBucket {
-  if (!campaign.is_active) return 'closed'
-  if (campaign.total_invited === 0) return 'setup'
-  if (campaign.total_completed < 5) return 'building'
-  return 'ready'
-}
+function getPrimaryGuideCampaign(entries: CampaignHomeEntry[]): CampaignHomeEntry | null {
+  if (entries.length === 0) return null
 
-function getPrimaryGuideCampaign(
-  activeCampaigns: CampaignStats[],
-  allCampaigns: CampaignStats[],
-): CampaignStats | null {
-  const candidatePool = activeCampaigns.length > 0 ? activeCampaigns : allCampaigns
-  if (candidatePool.length === 0) return null
-
-  const priority = (campaign: CampaignStats) => {
-    const bucket = getCampaignBucket(campaign)
-    if (bucket === 'setup') return 0
-    if (bucket === 'building') return 1
-    if (bucket === 'ready') return 2
-    return 3
+  const priority: Record<CampaignCompositionState, number> = {
+    setup: 0,
+    ready_to_launch: 1,
+    running: 2,
+    sparse: 3,
+    partial: 4,
+    full: 5,
+    closed: 6,
   }
 
-  return [...candidatePool].sort((left, right) => {
-    const priorityDelta = priority(left) - priority(right)
+  return [...entries].sort((left, right) => {
+    const priorityDelta = priority[left.state] - priority[right.state]
     if (priorityDelta !== 0) return priorityDelta
-    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+    return new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime()
   })[0] ?? null
 }
 
-function getCampaignReadiness(campaign: CampaignStats) {
-  const bucket = getCampaignBucket(campaign)
-
-  if (bucket === 'closed') {
+function groupCampaigns(entries: CampaignHomeEntry[]): CampaignGroup[] {
+  return HOME_STATE_ORDER.map((state) => {
+    const meta = getHomeStateMeta(state)
     return {
-      label: 'Gesloten campaign',
-      body: 'De primaire waarde zit nu in rapportage, managementfollow-up en het expliciet vastleggen van de vervolgrichting.',
-      tone: 'slate' as const,
+      key: state,
+      title: meta.sectionTitle,
+      description: meta.sectionDescription,
+      entries: entries.filter((entry) => entry.state === state),
     }
-  }
-
-  if (bucket === 'setup') {
-    return {
-      label: 'Nog niet live',
-      body: 'Deze campaign vraagt eerst setup, respondentimport of launchcontrole voordat de cockpit richting managementwaarde kan bewegen.',
-      tone: 'amber' as const,
-    }
-  }
-
-  if (bucket === 'building') {
-    return {
-      label: 'Respons bouwt nog op',
-      body: 'De campaign leeft al, maar het patroonbeeld is nog in ontwikkeling. Houd de route scherp zonder al te zwaar te concluderen.',
-      tone: 'amber' as const,
-    }
-  }
-
-  return {
-    label: 'Klaar voor managementread',
-    body: 'De campaign heeft genoeg basis om dashboard en rapport echt als managementinstrument te gebruiken.',
-    tone: 'blue' as const,
-  }
+  })
 }
 
-function groupCampaigns(campaigns: CampaignStats[]): CampaignGroup[] {
-  return [
-    {
-      key: 'ready',
-      title: 'Klaar voor managementread',
-      description: 'Campagnes met genoeg respons om dashboard en rapport actief te gebruiken voor duiding, prioritering en follow-up.',
-      campaigns: campaigns.filter((campaign) => getCampaignBucket(campaign) === 'ready'),
+function getHomeStateMeta(state: CampaignCompositionState) {
+  const meta = {
+    setup: {
+      label: 'Nog niet live',
+      tone: 'amber' as const,
+      nextStepLabel: 'Setup eerst',
+      viewerCta: 'Open uitvoerflow',
+      sectionTitle: 'Setup / nog niet live',
+      sectionDescription:
+        'Campagnes zonder live uitnodigingen of zonder echte respondentlaag. Hier hoort eerst setupdiscipline te landen.',
+      body: 'Deze campaign vraagt eerst respondentimport of launchcontrole voordat er eerlijke output kan ontstaan.',
+      trust:
+        'Laat deze status operationeel voelen. Dashboard en rapport horen hier nog geen managementgewicht te suggereren.',
     },
-    {
-      key: 'building',
-      title: 'Nog in opbouw',
-      description: 'Campagnes waar al responses binnenkomen, maar waar het patroonbeeld nog eerst steviger moet worden.',
-      campaigns: campaigns.filter((campaign) => getCampaignBucket(campaign) === 'building'),
+    ready_to_launch: {
+      label: 'Launch klaar',
+      tone: 'amber' as const,
+      nextStepLabel: 'Invites versturen',
+      viewerCta: 'Open uitvoerflow',
+      sectionTitle: 'Ready to launch',
+      sectionDescription:
+        'Campagnes waar de respondentlaag klaarstaat, maar waar uitnodigingen nog niet volledig live zijn gezet.',
+      body: 'Respondenten staan klaar, maar de inviteflow is nog niet volledig gestart.',
+      trust:
+        'Dashboard en rapport blijven bewust dicht tot de uitnodigingen echt live zijn en de eerste veilige responsgrens dichterbij komt.',
     },
-    {
-      key: 'setup',
-      title: 'Setup of launch nodig',
-      description: 'Campagnes die nog eerst respondentimport, uitnodiging of launchcontrole nodig hebben voordat managementwaarde zichtbaar wordt.',
-      campaigns: campaigns.filter((campaign) => getCampaignBucket(campaign) === 'setup'),
+    running: {
+      label: 'Invites live',
+      tone: 'amber' as const,
+      nextStepLabel: 'Respons volgen',
+      viewerCta: 'Open uitvoerflow',
+      sectionTitle: 'Invites live / running',
+      sectionDescription:
+        'Campagnes waar uitnodigingen lopen, maar waar nog geen eerste veilige responslaag zichtbaar hoort te worden.',
+      body: 'De inviteflow loopt, maar er is nog geen eerste veilige responslaag om inhoudelijk op te lezen.',
+      trust:
+        'Toon hier alleen uitvoerstatus en responsopbouw. Dit is nog geen managementread.',
     },
-    {
-      key: 'closed',
-      title: 'Afgerond en gesloten',
-      description: 'Gesloten campagnes die nu vooral waarde leveren voor rapportage, terugblik en vervolgbesluiten.',
-      campaigns: campaigns.filter((campaign) => getCampaignBucket(campaign) === 'closed'),
+    sparse: {
+      label: 'Indicatief, nog dun',
+      tone: 'amber' as const,
+      nextStepLabel: 'Meer respons nodig',
+      viewerCta: 'Open uitvoerflow',
+      sectionTitle: 'Sparse / indicatief',
+      sectionDescription:
+        'Campagnes met eerste responses, maar nog onder de veilige dashboarddrempel voor een eerlijke managementread.',
+      body: 'Er zijn eerste responses binnen, maar het beeld is nog te dun voor een veilige dashboardlaag.',
+      trust:
+        'Gebruik dit als signaal dat uitvoering loopt, niet als inhoudelijke conclusie of pseudo-insight.',
     },
-  ]
+    partial: {
+      label: 'Deels zichtbaar',
+      tone: 'amber' as const,
+      nextStepLabel: 'Compacte read',
+      viewerCta: 'Open compacte read',
+      sectionTitle: 'Partial / deels zichtbaar',
+      sectionDescription:
+        'Campagnes waar de eerste veilige dashboardread open is, maar waar thresholds of privacy de verdiepingslaag nog begrenzen.',
+      body: 'De eerste dashboardread is zichtbaar, maar aanbevelingen en patroonduiding blijven nog bewust compact.',
+      trust:
+        'Privacy- en thresholdgrenzen houden drivers, aanbevelingen en diepere claims nog deels dicht.',
+    },
+    full: {
+      label: 'Management ready',
+      tone: 'blue' as const,
+      nextStepLabel: 'Open dashboard',
+      viewerCta: 'Open dashboard',
+      sectionTitle: 'Full / management ready',
+      sectionDescription:
+        'Campagnes met genoeg respons en voldoende zichtbaarheid om dashboard, aanbevelingen en rapport als managementinstrument te gebruiken.',
+      body: 'Dashboard en rapport zijn nu stevig genoeg voor managementduiding, prioritering en eerste vervolgactie.',
+      trust:
+        'Aanbevelingen en vervolgrails mogen nu zichtbaar worden binnen de bestaande productgrenzen en shared grammar.',
+    },
+    closed: {
+      label: 'Rapport eerst',
+      tone: 'slate' as const,
+      nextStepLabel: 'Rapport-first',
+      viewerCta: 'Open rapport en dashboard',
+      sectionTitle: 'Closed / report-first',
+      sectionDescription:
+        'Gesloten campagnes waar de nadruk nu op rapportage, terugblik en bestuurlijke opvolging hoort te liggen.',
+      body: 'Deze campaign is gesloten. Gebruik dashboard en rapport nu voor terugblik, follow-up en het vervolggesprek.',
+      trust:
+        'Geen live uitvoersignalen meer: de waarde zit nu in rapportage, context en de gekozen vervolgrichting.',
+    },
+  } satisfies Record<
+    CampaignCompositionState,
+    {
+      label: string
+      tone: 'slate' | 'blue' | 'emerald' | 'amber'
+      nextStepLabel: string
+      viewerCta: string
+      sectionTitle: string
+      sectionDescription: string
+      body: string
+      trust: string
+    }
+  >
+
+  return meta[state]
 }
 
 function AdminEmptyState() {
