@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { resendPendingAction } from '@/app/(dashboard)/campaigns/[id]/actions'
 import { buildResendResultMessage } from '@/app/(dashboard)/campaigns/[id]/reminder-feedback'
+import { CustomerLaunchControl } from '@/components/dashboard/customer-launch-control'
 import {
   DashboardChip,
   DashboardPanel,
@@ -15,6 +16,7 @@ import {
   getInviteDefaultForDeliveryMode,
   getDeliveryModeLabel,
 } from '@/lib/implementation-readiness'
+import { getScanDefinition } from '@/lib/scan-definitions'
 import {
   type DeliveryMode,
   REPORT_ADD_ON_LABELS,
@@ -33,7 +35,9 @@ interface Props {
   invitesNotSent: number
   hasMinDisplay: boolean
   hasEnoughData: boolean
-  pendingCount: number
+  importQaConfirmed: boolean
+  launchTimingConfirmed: boolean
+  communicationReady: boolean
   remindableCount: number
   unsentRespondents: Array<{ token: string; email: string | null }>
 }
@@ -64,12 +68,6 @@ interface ImportResponse {
   emails_sent: number
 }
 
-function getStatusTone(status: 'done' | 'current' | 'blocked') {
-  if (status === 'done') return 'emerald' as const
-  if (status === 'current') return 'blue' as const
-  return 'slate' as const
-}
-
 export function GuidedSelfServePanel({
   campaignId,
   scanType,
@@ -81,11 +79,14 @@ export function GuidedSelfServePanel({
   invitesNotSent,
   hasMinDisplay,
   hasEnoughData,
-  pendingCount,
+  importQaConfirmed,
+  launchTimingConfirmed,
+  communicationReady,
   remindableCount,
   unsentRespondents,
 }: Props) {
   const router = useRouter()
+  const scanDefinition = getScanDefinition(scanType)
   const guidedState = useMemo(
     () =>
       buildGuidedSelfServeState({
@@ -95,8 +96,21 @@ export function GuidedSelfServePanel({
         invitesNotSent,
         hasMinDisplay,
         hasEnoughData,
+        importQaConfirmed,
+        launchTimingConfirmed,
+        communicationReady,
       }),
-    [hasEnoughData, hasMinDisplay, invitesNotSent, isActive, totalCompleted, totalInvited],
+    [
+      communicationReady,
+      hasEnoughData,
+      hasMinDisplay,
+      importQaConfirmed,
+      invitesNotSent,
+      isActive,
+      launchTimingConfirmed,
+      totalCompleted,
+      totalInvited,
+    ],
   )
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploadSendInvites, setUploadSendInvites] = useState(true)
@@ -236,66 +250,37 @@ export function GuidedSelfServePanel({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-[24px] border border-[#d6e4e8] bg-[#f6fafb] p-4 sm:p-5">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-              Begeleide uitvoering
-            </p>
-            <h2 className="mt-2 text-xl font-semibold text-slate-950">{guidedState.headline}</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-700">{guidedState.detail}</p>
-            <p className="mt-3 text-sm font-medium text-slate-900">
-              Volgende stap: {guidedState.nextAction.title}
-            </p>
-            <p className="mt-1 text-sm leading-6 text-slate-700">{guidedState.nextAction.body}</p>
-          </div>
+      <CustomerLaunchControl
+        campaignName={`${scanDefinition.productName} - ${getDeliveryModeLabel(deliveryMode, scanType)}`}
+        productName={scanDefinition.productName}
+        productContext={scanDefinition.whatItIsText}
+        state={guidedState}
+      />
+
+      {localValidationState ? (
+        <div className="rounded-[22px] border border-[#d6e4e8] bg-[#f6fafb] p-4">
           <div className="flex flex-wrap items-center gap-2">
+            <DashboardChip
+              label={localValidationState}
+              tone={hasPreviewErrors ? 'amber' : 'blue'}
+            />
             <DashboardChip
               label={guidedState.dashboardVisible ? 'Dashboard vrijgegeven' : 'Dashboard nog niet actief'}
               tone={guidedState.dashboardVisible ? 'emerald' : 'amber'}
             />
-            {localValidationState ? (
-              <DashboardChip
-                label={localValidationState}
-                tone={hasPreviewErrors ? 'amber' : 'blue'}
-              />
-            ) : null}
           </div>
+          <p className="mt-3 text-sm leading-6 text-slate-700">
+            Deze lokale controle toont direct of de importpreview nog herstel nodig heeft of dat de route klaarstaat om de inviteflow bewust te starten.
+          </p>
         </div>
+      ) : null}
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {guidedState.statusBlocks.map((item) => (
-            <DashboardChip
-              key={item.key}
-              label={item.label}
-              tone={getStatusTone(item.status)}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-2">
         <DashboardPanel
-          eyebrow="Verisight doet"
-          title="Provisioning en campaigngrenzen"
-          body="Account, campaign, productkaders en de begrensde outputroute staan al klaar. Je hoeft geen surveytool of setuparchitectuur te beheren."
+          eyebrow="Route"
+          title={`${SCAN_TYPE_LABELS[scanType]} ${getDeliveryModeLabel(deliveryMode, scanType)}`}
+          body={getDeliveryModeDescription(deliveryMode, scanType)}
           tone="blue"
-        />
-        <DashboardPanel
-          eyebrow="Jij doet nu"
-          title={
-            totalInvited === 0
-              ? 'Lever deelnemers aan'
-              : invitesNotSent > 0
-                ? 'Start de inviteflow'
-                : pendingCount > 0
-                  ? 'Volg respons en reminders'
-                  : guidedState.deeperInsightsVisible
-                    ? 'Maak de eerste stap expliciet'
-                    : 'Lees eerst de compacte output'
-          }
-          body={guidedState.nextAction.body}
-          tone="emerald"
         />
         <DashboardPanel
           eyebrow="Dashboardactivatie"

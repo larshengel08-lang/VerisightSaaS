@@ -19,6 +19,7 @@ def test_bootstrap_guided_self_serve_acceptance_local_writes_runtime_contract(
 
     monkeypatch.setattr(acceptance, "ACCEPTANCE_RUNTIME_DIR", runtime_dir)
     monkeypatch.setattr(acceptance, "GUIDED_SELF_SERVE_RUNTIME_PATH", runtime_file)
+    monkeypatch.setattr(acceptance, "_reserve_available_local_port", lambda port: 8011)
     monkeypatch.setattr(acceptance, "_ensure_local_prerequisites", lambda: None)
     monkeypatch.setattr(acceptance, "_start_local_supabase", lambda: None)
     monkeypatch.setattr(
@@ -50,9 +51,10 @@ def test_bootstrap_guided_self_serve_acceptance_local_writes_runtime_contract(
     assert runtime.mode == "local"
     assert runtime.fixture.setup_campaign_id == "setup-campaign"
     assert runtime.env["NEXT_PUBLIC_SUPABASE_URL"] == "http://127.0.0.1:54321"
-    assert runtime.env["NEXT_PUBLIC_API_URL"] == "http://127.0.0.1:8000"
+    assert runtime.env["NEXT_PUBLIC_API_URL"] == "http://127.0.0.1:8011"
     assert runtime.env["DATABASE_URL"] == "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
     assert runtime.env["VERISIGHT_ACCEPTANCE_FAKE_EMAIL"] == "1"
+    assert runtime.backend_port == 8011
     assert applied == ["postgresql://postgres:postgres@127.0.0.1:54322/postgres"]
 
     stored = json.loads(runtime_file.read_text(encoding="utf-8"))
