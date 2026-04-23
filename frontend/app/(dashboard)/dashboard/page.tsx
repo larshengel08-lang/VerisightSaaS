@@ -46,7 +46,20 @@ export default async function DashboardHomePage() {
   const campaigns = (stats ?? []) as CampaignStats[]
   const groups = groupCampaigns(campaigns)
   const activeCampaigns = campaigns.filter((campaign) => campaign.is_active)
-  const primaryGuideCampaign = activeCampaigns[0] ?? campaigns[0] ?? null
+  const primaryGuideCampaign = getPrimaryGuideCampaign(activeCampaigns, campaigns)
+  const { data: primaryGuideRespondentsRaw } = primaryGuideCampaign
+    ? await supabase
+        .from('respondents')
+        .select('sent_at, completed')
+        .eq('campaign_id', primaryGuideCampaign.campaign_id)
+    : { data: [] }
+  const primaryGuideRespondents = (primaryGuideRespondentsRaw ?? []) as Array<{
+    sent_at: string | null
+    completed: boolean
+  }>
+  const primaryGuideInvitesNotSent = primaryGuideRespondents.filter(
+    (respondent) => !respondent.sent_at && !respondent.completed,
+  ).length
   const avgResponse =
     campaigns.length > 0
       ? Math.round(campaigns.reduce((sum, campaign) => sum + (campaign.completion_rate_pct ?? 0), 0) / campaigns.length)
@@ -68,7 +81,14 @@ export default async function DashboardHomePage() {
         isActive: primaryGuideCampaign.is_active,
         totalInvited: primaryGuideCampaign.total_invited,
         totalCompleted: primaryGuideCampaign.total_completed,
-        invitesNotSent: Math.max(primaryGuideCampaign.total_invited - primaryGuideCampaign.total_completed, 0),
+        invitesNotSent:
+          primaryGuideRespondents.length > 0
+            ? primaryGuideInvitesNotSent
+            : primaryGuideCampaign.total_invited === 0
+              ? 0
+              : primaryGuideCampaign.total_completed >= 5
+                ? 0
+                : 1,
         hasMinDisplay: primaryGuideCampaign.total_completed >= 5,
         hasEnoughData: primaryGuideCampaign.total_completed >= 10,
       })
@@ -466,8 +486,30 @@ function getNextAction(campaign: CampaignStats) {
 function getCampaignBucket(campaign: CampaignStats): CampaignBucket {
   if (!campaign.is_active) return 'closed'
   if (campaign.total_invited === 0) return 'setup'
-  if (campaign.total_completed < 10) return 'building'
+  if (campaign.total_completed < 5) return 'building'
   return 'ready'
+}
+
+function getPrimaryGuideCampaign(
+  activeCampaigns: CampaignStats[],
+  allCampaigns: CampaignStats[],
+): CampaignStats | null {
+  const candidatePool = activeCampaigns.length > 0 ? activeCampaigns : allCampaigns
+  if (candidatePool.length === 0) return null
+
+  const priority = (campaign: CampaignStats) => {
+    const bucket = getCampaignBucket(campaign)
+    if (bucket === 'setup') return 0
+    if (bucket === 'building') return 1
+    if (bucket === 'ready') return 2
+    return 3
+  }
+
+  return [...candidatePool].sort((left, right) => {
+    const priorityDelta = priority(left) - priority(right)
+    if (priorityDelta !== 0) return priorityDelta
+    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+  })[0] ?? null
 }
 
 function getCampaignReadiness(campaign: CampaignStats) {

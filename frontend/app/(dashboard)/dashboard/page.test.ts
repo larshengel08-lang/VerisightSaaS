@@ -9,5 +9,8 @@ describe('dashboard home guided execution shell', () => {
     expect(source).toContain('Open uitvoerflow')
     expect(source).toContain('Open deze campaign voor deelnemersimport, inviteflow, responsmonitoring')
     expect(source).toContain('Dashboard actief')
+    expect(source).toContain("if (campaign.total_completed < 5) return 'building'")
+    expect(source).toContain('primaryGuideInvitesNotSent')
+    expect(source).toContain('getPrimaryGuideCampaign')
   })
 })
