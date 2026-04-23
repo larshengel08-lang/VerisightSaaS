@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { insertCampaignAuditEvent } from '@/lib/campaign-audit'
 import { createClient } from '@/lib/supabase/server'
 import {
   buildDeliveryCheckpointMap,
@@ -86,7 +87,7 @@ export async function PATCH(request: Request, context: Context) {
 
   const { data: record } = await admin.supabase
     .from('campaign_delivery_records')
-    .select('id, campaign_id, contact_request_id, lifecycle_stage, exception_status, launch_date, launch_confirmed_at, participant_comms_config, reminder_config, first_management_use_confirmed_at, follow_up_decided_at, learning_closed_at')
+    .select('id, organization_id, campaign_id, contact_request_id, lifecycle_stage, exception_status, launch_date, launch_confirmed_at, participant_comms_config, reminder_config, first_management_use_confirmed_at, follow_up_decided_at, learning_closed_at')
     .eq('campaign_id', id)
     .maybeSingle()
 
@@ -218,6 +219,23 @@ export async function PATCH(request: Request, context: Context) {
 
   if (error) {
     return NextResponse.json({ detail: error.message }, { status: 500 })
+  }
+
+  if ('lifecycle_stage' in body && body.lifecycle_stage && body.lifecycle_stage !== record.lifecycle_stage) {
+    await insertCampaignAuditEvent({
+      supabase: admin.supabase,
+      organizationId: record.organization_id,
+      campaignId: id,
+      actorUserId: admin.user.id,
+      actorRole: 'verisight_admin',
+      action: 'delivery_lifecycle_changed',
+      outcome: 'completed',
+      summary: `Lifecycle verschoven van ${record.lifecycle_stage} naar ${body.lifecycle_stage}.`,
+      metadata: {
+        from: record.lifecycle_stage,
+        to: body.lifecycle_stage,
+      },
+    })
   }
 
   return NextResponse.json({ message: 'Deliveryrecord bijgewerkt.' })

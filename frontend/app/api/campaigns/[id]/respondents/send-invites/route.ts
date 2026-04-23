@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { insertCampaignAuditEvent } from '@/lib/campaign-audit'
+import {
+  getCustomerActionPermission,
+  getPermissionDeniedMessage,
+} from '@/lib/customer-permissions'
 import { createClient } from '@/lib/supabase/server'
 import { getOrganizationApiKey } from '@/lib/organization-secrets'
 import { buildLaunchControlState } from '@/lib/launch-controls'
@@ -40,11 +45,24 @@ export async function POST(request: Request, { params }: Context) {
       .maybeSingle(),
   ])
 
-  const isOrgManager = membership?.role === 'owner' || membership?.role === 'member'
-  const canExecuteCampaign = profile?.is_verisight_admin === true || isOrgManager
-  if (!canExecuteCampaign) {
+  const actorRole =
+    profile?.is_verisight_admin === true ? 'verisight_admin' : membership?.role ?? 'unknown'
+  const canLaunchInvites =
+    profile?.is_verisight_admin === true ||
+    getCustomerActionPermission(membership?.role ?? null, 'launch_invites')
+  if (!canLaunchInvites) {
+    await insertCampaignAuditEvent({
+      supabase,
+      organizationId: campaign.organization_id,
+      campaignId: id,
+      actorUserId: user.id,
+      actorRole,
+      action: 'launch_invites',
+      outcome: 'blocked',
+      summary: getPermissionDeniedMessage('launch_invites'),
+    })
     return NextResponse.json(
-      { detail: 'Je hebt geen rechten om uitnodigingen voor deze campaign te versturen.' },
+      { detail: getPermissionDeniedMessage('launch_invites') },
       { status: 403 },
     )
   }
@@ -67,6 +85,18 @@ export async function POST(request: Request, { params }: Context) {
       : { data: null }
 
     if (!checkpoint || checkpoint.auto_state !== 'ready') {
+      await insertCampaignAuditEvent({
+        supabase,
+        organizationId: campaign.organization_id,
+        campaignId: id,
+        actorUserId: user.id,
+        actorRole,
+        action: 'launch_invites',
+        outcome: 'blocked',
+        summary:
+          checkpoint?.last_auto_summary ??
+          'Het deelnemersbestand is nog niet vrijgegeven voor launch. Controleer eerst de import.',
+      })
       return NextResponse.json(
         {
           detail:
@@ -104,6 +134,16 @@ export async function POST(request: Request, { params }: Context) {
   })
 
   if (!launchControlState.ready) {
+    await insertCampaignAuditEvent({
+      supabase,
+      organizationId: campaign.organization_id,
+      campaignId: id,
+      actorUserId: user.id,
+      actorRole,
+      action: 'launch_invites',
+      outcome: 'blocked',
+      summary: `Launch kan nog niet starten: ${launchControlState.blockers.join(' ')}`,
+    })
     return NextResponse.json(
       { detail: `Launch kan nog niet starten: ${launchControlState.blockers.join(' ')}` },
       { status: 400 },
@@ -122,5 +162,25 @@ export async function POST(request: Request, { params }: Context) {
   })
 
   const payload = await backendResponse.json().catch(() => ({}))
+  await insertCampaignAuditEvent({
+    supabase,
+    organizationId: campaign.organization_id,
+    campaignId: id,
+    actorUserId: user.id,
+    actorRole,
+    action: 'launch_invites',
+    outcome: backendResponse.ok ? 'completed' : 'blocked',
+    summary:
+      backendResponse.ok
+        ? `Inviteflow gestart voor ${payload.sent ?? 0} respondent(en).`
+        : typeof payload?.detail === 'string'
+          ? payload.detail
+          : 'Inviteflow kon niet worden gestart.',
+    metadata: {
+      sent: payload.sent ?? null,
+      failed: payload.failed ?? null,
+      skipped: payload.skipped ?? null,
+    },
+  })
   return NextResponse.json(payload, { status: backendResponse.status })
 }

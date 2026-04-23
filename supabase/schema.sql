@@ -43,7 +43,7 @@ create table if not exists public.org_invites (
   org_id      uuid references public.organizations(id) on delete cascade not null,
   email       text not null,
   full_name   text,
-  role        text not null default 'viewer' check (role in ('member', 'viewer')),
+  role        text not null default 'viewer' check (role in ('owner', 'member', 'viewer')),
   invited_by  uuid references auth.users(id) on delete set null,
   invited_at  timestamptz default now(),
   accepted_at timestamptz,
@@ -442,6 +442,22 @@ create table if not exists public.campaign_delivery_checkpoints (
   unique (delivery_record_id, checkpoint_key)
 );
 
+create table if not exists public.campaign_action_audit_events (
+  id                uuid primary key default gen_random_uuid(),
+  organization_id   uuid references public.organizations(id) on delete cascade not null,
+  campaign_id       uuid references public.campaigns(id) on delete cascade not null,
+  actor_user_id     uuid references auth.users(id) on delete set null,
+  action_key        text not null check (action_key in ('import_respondents', 'launch_invites', 'send_reminders', 'grant_client_access', 'delivery_lifecycle_changed', 'delivery_checkpoint_confirmed')),
+  outcome           text not null check (outcome in ('completed', 'blocked')),
+  action_label      text not null,
+  owner_label       text not null,
+  actor_role        text,
+  actor_label       text,
+  summary           text not null,
+  metadata          jsonb not null default '{}'::jsonb,
+  created_at        timestamptz default now()
+);
+
 create table if not exists public.pilot_learning_dossiers (
   id                      uuid primary key default gen_random_uuid(),
   organization_id         uuid references public.organizations(id) on delete cascade,
@@ -624,6 +640,8 @@ create index if not exists idx_delivery_records_contact_request on public.campai
 create index if not exists idx_delivery_records_lifecycle on public.campaign_delivery_records(lifecycle_stage);
 create index if not exists idx_delivery_records_exception on public.campaign_delivery_records(exception_status);
 create index if not exists idx_delivery_checkpoints_record on public.campaign_delivery_checkpoints(delivery_record_id);
+create index if not exists idx_campaign_action_audit_campaign on public.campaign_action_audit_events(campaign_id, created_at desc);
+create index if not exists idx_campaign_action_audit_org on public.campaign_action_audit_events(organization_id, created_at desc);
 
 -- ============================================================
 -- ROW LEVEL SECURITY
@@ -638,6 +656,7 @@ alter table public.respondents      enable row level security;
 alter table public.survey_responses enable row level security;
 alter table public.campaign_delivery_records enable row level security;
 alter table public.campaign_delivery_checkpoints enable row level security;
+alter table public.campaign_action_audit_events enable row level security;
 alter table public.pilot_learning_dossiers enable row level security;
 alter table public.pilot_learning_checkpoints enable row level security;
 
@@ -953,6 +972,17 @@ create policy "org_managers_can_update_delivery_checkpoints"
         and public.is_org_manager(d.organization_id)
     )
   );
+
+drop policy if exists "org_members_can_select_campaign_action_audit_events" on public.campaign_action_audit_events;
+drop policy if exists "org_members_can_insert_campaign_action_audit_events" on public.campaign_action_audit_events;
+
+create policy "org_members_can_select_campaign_action_audit_events"
+  on public.campaign_action_audit_events for select
+  using (public.is_verisight_admin_user() or public.is_org_member(organization_id));
+
+create policy "org_members_can_insert_campaign_action_audit_events"
+  on public.campaign_action_audit_events for insert
+  with check (public.is_verisight_admin_user() or public.is_org_member(organization_id));
 
 -- Pilot learning dossiers
 drop policy if exists "verisight_admins_can_select_learning_dossiers" on public.pilot_learning_dossiers;

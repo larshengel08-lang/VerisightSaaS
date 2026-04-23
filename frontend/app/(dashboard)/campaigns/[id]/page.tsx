@@ -58,6 +58,8 @@ import {
 } from './page-helpers'
 import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
+import { type CampaignAuditEventRecord } from '@/lib/campaign-audit'
+import { getCustomerActionPermission } from '@/lib/customer-permissions'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import { buildTeamLocalReadState, buildTeamPriorityReadState } from '@/lib/products/team'
 import { getProductModule } from '@/lib/products/shared/registry'
@@ -129,10 +131,13 @@ export default async function CampaignPage({ params }: Props) {
 
   const canManageCampaign =
     profile?.is_verisight_admin === true ||
-    membership?.role === 'owner' ||
-    membership?.role === 'member'
+    getCustomerActionPermission(membership?.role ?? null, 'review_launch')
   const isVerisightAdmin = profile?.is_verisight_admin === true
-  const canExecuteCampaign = isVerisightAdmin || Boolean(membership?.role)
+  const canExecuteCampaign =
+    isVerisightAdmin ||
+    getCustomerActionPermission(membership?.role ?? null, 'import_respondents') ||
+    getCustomerActionPermission(membership?.role ?? null, 'launch_invites') ||
+    getCustomerActionPermission(membership?.role ?? null, 'send_reminders')
   const hasSegmentDeepDive = hasCampaignAddOn(campaignMeta, 'segment_deep_dive')
   const deliveryAdminClient = canExecuteCampaign ? createAdminClient() : null
   const { data: deliveryVisibilityRecord } = deliveryAdminClient
@@ -177,10 +182,20 @@ export default async function CampaignPage({ params }: Props) {
           checkpoint.checkpoint_key === 'invite_readiness',
       )
       .map((checkpoint) => ({
-        checkpointKey: checkpoint.checkpoint_key,
-        manualState: checkpoint.manual_state,
-      })),
+          checkpointKey: checkpoint.checkpoint_key,
+          manualState: checkpoint.manual_state,
+        })),
   )
+  const { data: auditEventsRaw } =
+    isVerisightAdmin || Boolean(membership?.role)
+      ? await supabase
+          .from('campaign_action_audit_events')
+          .select('id, action_key, outcome, action_label, owner_label, actor_role, actor_label, summary, metadata, created_at')
+          .eq('campaign_id', id)
+          .order('created_at', { ascending: false })
+          .limit(8)
+      : { data: [] }
+  const auditEvents = (auditEventsRaw ?? []) as CampaignAuditEventRecord[]
   const {
     rows: deliveryLeadOptions,
     configError: deliveryLeadConfigError,
@@ -1188,8 +1203,9 @@ export default async function CampaignPage({ params }: Props) {
             launchConfirmedAt={deliveryRecord?.launch_confirmed_at ?? null}
             participantCommsConfig={deliveryRecord?.participant_comms_config ?? null}
             reminderConfig={deliveryRecord?.reminder_config ?? null}
+            memberRole={membership?.role ?? null}
           />
-          </DashboardSection>
+        </DashboardSection>
         ) : null}
 
       {showDeeperInsights && promotedSummaryCards.length > 0 ? (
@@ -1727,6 +1743,7 @@ export default async function CampaignPage({ params }: Props) {
                       linkedLearningDossierCount={learningDossiers.length}
                       learningCloseoutEvidenceCount={learningCloseoutEvidenceCount}
                       editable={isVerisightAdmin}
+                      auditEvents={auditEvents}
                     />
                   ) : (
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">

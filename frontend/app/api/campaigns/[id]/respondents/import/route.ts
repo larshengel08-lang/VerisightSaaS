@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { insertCampaignAuditEvent } from '@/lib/campaign-audit'
+import {
+  getCustomerActionPermission,
+  getPermissionDeniedMessage,
+} from '@/lib/customer-permissions'
 import { createClient } from '@/lib/supabase/server'
 import { getOrganizationApiKey } from '@/lib/organization-secrets'
 import { buildLaunchControlState } from '@/lib/launch-controls'
@@ -91,18 +96,31 @@ export async function POST(request: Request, { params }: Context) {
       .maybeSingle(),
   ])
 
-  const isOrgManager = membership?.role === 'owner' || membership?.role === 'member'
-  const canExecuteCampaign = profile?.is_verisight_admin === true || isOrgManager
-  if (!canExecuteCampaign) {
+  const actorRole =
+    profile?.is_verisight_admin === true ? 'verisight_admin' : membership?.role ?? 'unknown'
+  const canImportRespondents =
+    profile?.is_verisight_admin === true ||
+    getCustomerActionPermission(membership?.role ?? null, 'import_respondents')
+  if (!canImportRespondents) {
+    await insertCampaignAuditEvent({
+      supabase,
+      organizationId: campaign.organization_id,
+      campaignId: id,
+      actorUserId: user.id,
+      actorRole,
+      action: 'import_respondents',
+      outcome: 'blocked',
+      summary: getPermissionDeniedMessage('import_respondents'),
+    })
     return NextResponse.json(
-      { detail: 'Je hebt geen rechten om deelnemers voor deze campaign aan te leveren.' },
+      { detail: getPermissionDeniedMessage('import_respondents') },
       { status: 403 },
     )
   }
 
   let apiKey: string
   try {
-    apiKey = await getOrganizationApiKey(campaign.organization_id)
+    apiKey = await getOrganizationApiKey(campaign.organization_id, { supabase })
   } catch {
     return NextResponse.json({ detail: 'Autorisatie voor import ontbreekt.' }, { status: 403 })
   }
@@ -134,6 +152,20 @@ export async function POST(request: Request, { params }: Context) {
     })
 
     if (!launchControlState.ready) {
+      await insertCampaignAuditEvent({
+        supabase,
+        organizationId: campaign.organization_id,
+        campaignId: id,
+        actorUserId: user.id,
+        actorRole,
+        action: 'import_respondents',
+        outcome: 'blocked',
+        summary: `Directe launch na import geblokkeerd: ${launchControlState.blockers.join(' ')}`,
+        metadata: {
+          dry_run: false,
+          send_invites: true,
+        },
+      })
       return NextResponse.json(
         { detail: `Directe launch na import kan nog niet: ${launchControlState.blockers.join(' ')}` },
         { status: 400 },
@@ -166,11 +198,44 @@ export async function POST(request: Request, { params }: Context) {
     ) {
       await syncImportQaCheckpoint(id, payload.launch_blocked === true, summary)
     }
-
+    await insertCampaignAuditEvent({
+      supabase,
+      organizationId: campaign.organization_id,
+      campaignId: id,
+      actorUserId: user.id,
+      actorRole,
+      action: 'import_respondents',
+      outcome: backendResponse.ok ? 'completed' : 'blocked',
+      summary:
+        backendResponse.ok
+          ? `Deelnemersimport verwerkt voor ${payload.valid_rows ?? payload.imported ?? 0} rij(en).`
+          : typeof payload?.detail === 'string'
+            ? payload.detail
+            : 'Deelnemersimport kon niet worden verwerkt.',
+      metadata: {
+        dry_run: String(incoming.get('dry_run') ?? 'true') === 'true',
+        valid_rows: payload.valid_rows ?? null,
+        imported: payload.imported ?? null,
+      },
+    })
     return NextResponse.json(payload, { status: backendResponse.status })
   }
 
   const detail = await backendResponse.text()
+  await insertCampaignAuditEvent({
+    supabase,
+    organizationId: campaign.organization_id,
+    campaignId: id,
+    actorUserId: user.id,
+    actorRole,
+    action: 'import_respondents',
+    outcome: backendResponse.ok ? 'completed' : 'blocked',
+    summary: detail || 'Import kon niet worden verwerkt.',
+    metadata: {
+      dry_run: String(incoming.get('dry_run') ?? 'true') === 'true',
+    },
+  })
+
   return NextResponse.json(
     { detail: detail || 'Import kon niet worden verwerkt.' },
     { status: backendResponse.status || 500 },
