@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Literal
 
+from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 
 from backend.models import Campaign, Organization, OrganizationSecret, Respondent, SurveyResponse
@@ -31,6 +32,11 @@ INTERNAL_SALES_DEMO_CONTACT_EMAIL = "sales-demo@verisight.nl"
 
 QA_EXIT_ORG_NAME = "Verisight ExitScan Live Test"
 QA_EXIT_ORG_SLUG = "exitscan-live-test"
+GUIDED_SELF_SERVE_ACCEPTANCE_ORG_NAME = "Verisight Guided Self-Serve Acceptance"
+GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG = "guided-self-serve-acceptance"
+GUIDED_SELF_SERVE_ACCEPTANCE_CONTACT_EMAIL = "guided-acceptance@verisight.nl"
+GUIDED_SELF_SERVE_SETUP_CAMPAIGN_NAME = "Guided Self-Serve - Setup Journey"
+GUIDED_SELF_SERVE_THRESHOLD_CAMPAIGN_NAME = "Guided Self-Serve - Threshold Journey"
 QA_RETENTION_ORG_SLUG = "bakker-partners-demo"
 
 VALIDATION_RETENTION_DEFAULT_DB = "data/retention_pilot_dummy.db"
@@ -39,6 +45,7 @@ VALIDATION_RETENTION_DEFAULT_OUTDIR = "data/retention_pilot_dummy_run"
 RANDOM_SEEDS = {
     "sales_demo_exit": 20260415,
     "sales_demo_retention": 20260416,
+    "qa_guided_self_serve_acceptance": 20260423,
 }
 
 RESPONSE_THRESHOLDS = {
@@ -46,11 +53,22 @@ RESPONSE_THRESHOLDS = {
     "pattern": 10,
 }
 
+
+def _is_uuid_like(value: str | None) -> bool:
+    if not value:
+        return False
+    try:
+        uuid.UUID(str(value))
+    except (ValueError, TypeError, AttributeError):
+        return False
+    return True
+
 DemoLayerKey = Literal["buyer_facing_showcase", "internal_sales_demo", "qa_live_fixture", "validation_sandbox"]
 DemoScenarioKey = Literal[
     "sales_demo_exit",
     "sales_demo_retention",
     "qa_exit_live_test",
+    "qa_guided_self_serve_acceptance",
     "qa_retention_demo",
     "validation_retention_pilot",
 ]
@@ -199,6 +217,21 @@ DEMO_SCENARIOS: dict[DemoScenarioKey, DemoScenarioDefinition] = {
         data_policy="Fictive org, safe demo mailboxes, and token/test-only behavior.",
         expected_campaign_states=("empty", "early_signal", "indicative", "decision_ready", "closed_archive", "action_safe"),
         entrypoint="manage_demo_environment.py run qa_exit_live_test",
+    ),
+    "qa_guided_self_serve_acceptance": DemoScenarioDefinition(
+        key="qa_guided_self_serve_acceptance",
+        label="Guided self-serve acceptance fixture",
+        layer="qa_live_fixture",
+        audience="operators and engineers validating the customer execution flow",
+        scenario_type="qa_live_fixture",
+        org_name=GUIDED_SELF_SERVE_ACCEPTANCE_ORG_NAME,
+        org_slug=GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
+        purpose="Deterministic customer-journey fixture for setup, import recovery, launch gating, dashboard activation and first next-step checks.",
+        claim_boundary="Use only for QA acceptance and seeded browser walkthroughs, never as a sales default.",
+        reset_strategy="Reseeds the dedicated guided self-serve acceptance org and advances only the threshold journey on request.",
+        data_policy="Fictive org, safe demo mailboxes and one linked viewer account for customer-rights validation.",
+        expected_campaign_states=("setup_journey", "threshold_journey"),
+        entrypoint="manage_demo_environment.py run qa_guided_self_serve_acceptance",
     ),
     "qa_retention_demo": DemoScenarioDefinition(
         key="qa_retention_demo",
@@ -359,9 +392,20 @@ def _get_or_create_org(
     slug: str,
     name: str,
     contact_email: str,
+    acting_user_id: str | None = None,
 ) -> Organization:
     org = db.query(Organization).filter(Organization.slug == slug).one_or_none()
     if org is None:
+        bind = db.get_bind()
+        if (
+            bind is not None
+            and bind.dialect.name != "sqlite"
+            and _is_uuid_like(acting_user_id)
+        ):
+            db.execute(
+                text("select set_config('request.jwt.claim.sub', :user_id, true)"),
+                {"user_id": str(acting_user_id)},
+            )
         org = Organization(
             id=str(uuid.uuid4()),
             name=name,
@@ -384,6 +428,55 @@ def _ensure_org_secret(db: Session, org: Organization) -> None:
     if existing is None:
         db.add(OrganizationSecret(org_id=org.id))
         db.flush()
+
+
+def _has_table(db: Session, table_name: str) -> bool:
+    return inspect(db.bind).has_table(table_name)
+
+
+def _ensure_role_memberships(
+    db: Session,
+    *,
+    org: Organization,
+    admin_user_id: str | None = None,
+    member_user_ids: list[str] | None = None,
+    viewer_user_ids: list[str] | None = None,
+) -> None:
+    member_user_ids = member_user_ids or []
+    viewer_user_ids = viewer_user_ids or []
+
+    if not (_has_table(db, "profiles") and _has_table(db, "org_members")):
+        return
+
+    assignments: list[tuple[str, str, bool]] = []
+    if admin_user_id:
+        assignments.append((admin_user_id, "owner", True))
+    assignments.extend((user_id, "member", False) for user_id in member_user_ids)
+    assignments.extend((user_id, "viewer", False) for user_id in viewer_user_ids)
+
+    for user_id, role, is_admin in assignments:
+        db.execute(
+            text(
+                """
+                insert into public.profiles (id, is_verisight_admin)
+                values (:user_id, :is_admin)
+                on conflict (id) do update
+                set is_verisight_admin = excluded.is_verisight_admin
+                """
+            ),
+            {"user_id": user_id, "is_admin": is_admin},
+        )
+        db.execute(
+            text(
+                """
+                insert into public.org_members (org_id, user_id, role)
+                values (:org_id, :user_id, :role)
+                on conflict (org_id, user_id) do update
+                set role = excluded.role
+                """
+            ),
+            {"org_id": org.id, "user_id": user_id, "role": role},
+        )
 
 
 def _purge_campaign(db: Session, campaign: Campaign) -> None:
@@ -613,6 +706,131 @@ def _create_retention_completed_respondent(
     return respondent
 
 
+def _create_guided_self_serve_fixture_campaign(
+    db: Session,
+    *,
+    org: Organization,
+    name: str,
+    created_days_ago: int,
+    enabled_modules: list[str] | None = None,
+) -> Campaign:
+    created_at = datetime.now(timezone.utc) - timedelta(days=created_days_ago)
+    campaign = Campaign(
+        id=str(uuid.uuid4()),
+        organization_id=org.id,
+        name=name,
+        scan_type="exit",
+        delivery_mode="baseline",
+        is_active=True,
+        enabled_modules=enabled_modules,
+        created_at=created_at,
+        closed_at=None,
+    )
+    db.add(campaign)
+    db.flush()
+    return campaign
+
+
+def _safe_guided_acceptance_email(campaign_key: str, status: str, index: int) -> str:
+    return _safe_demo_email("guided-self-serve", campaign_key, status, index)
+
+
+def _get_guided_self_serve_org(db: Session, org_slug: str) -> Organization:
+    org = db.query(Organization).filter(Organization.slug == org_slug).one_or_none()
+    if org is None:
+        raise RuntimeError(f"Organisatie met slug '{org_slug}' niet gevonden voor guided self-serve acceptance.")
+    return org
+
+
+def _get_guided_self_serve_threshold_campaign(db: Session, org: Organization) -> Campaign:
+    campaign = (
+        db.query(Campaign)
+        .filter(
+            Campaign.organization_id == org.id,
+            Campaign.name == GUIDED_SELF_SERVE_THRESHOLD_CAMPAIGN_NAME,
+        )
+        .one_or_none()
+    )
+    if campaign is None:
+        raise RuntimeError("Threshold journey ontbreekt in guided self-serve acceptance fixture.")
+    return campaign
+
+
+def _completed_count(campaign: Campaign) -> int:
+    return sum(1 for respondent in campaign.respondents if respondent.completed)
+
+
+def _ensure_completed_responses(db: Session, *, campaign: Campaign, target_total_completed: int) -> int:
+    current_completed = _completed_count(campaign)
+    if current_completed >= target_total_completed:
+        return current_completed
+
+    pending_rows = [
+        respondent
+        for respondent in sorted(
+            campaign.respondents,
+            key=lambda respondent: (respondent.sent_at or campaign.created_at, respondent.email or respondent.id),
+        )
+        if not respondent.completed
+    ]
+
+    while current_completed < target_total_completed and pending_rows:
+        respondent = pending_rows.pop(0)
+        completed_at = datetime.now(timezone.utc) - timedelta(minutes=(target_total_completed - current_completed) * 9)
+        respondent.completed = True
+        respondent.completed_at = completed_at
+        respondent.opened_at = respondent.opened_at or completed_at - timedelta(hours=6)
+        if respondent.sent_at is None:
+            respondent.sent_at = completed_at - timedelta(days=2)
+        respondent.token_expires_at = completed_at + timedelta(days=30)
+        db.add(respondent)
+        db.flush()
+
+        profile = _pick_exit_profile()
+        response_payload = _build_exit_response(profile, respondent.annual_salary_eur or float(random.choice(SALARIES)), respondent.role_level or random.choice(ROLE_LEVELS))
+        db.add(
+            SurveyResponse(
+                id=str(uuid.uuid4()),
+                respondent_id=respondent.id,
+                tenure_years=response_payload["tenure_years"],
+                exit_reason_category=response_payload["exit_reason_category"],
+                exit_reason_code=response_payload["exit_reason_code"],
+                stay_intent_score=response_payload["stay_intent_score"],
+                sdt_raw=response_payload["sdt_raw"],
+                sdt_scores=response_payload["sdt_scores"],
+                org_raw=response_payload["org_raw"],
+                org_scores=response_payload["org_scores"],
+                pull_factors_raw=response_payload["pull_factors_raw"],
+                open_text_raw=response_payload["open_text_raw"],
+                uwes_raw=response_payload["uwes_raw"],
+                uwes_score=response_payload["uwes_score"],
+                turnover_intention_raw=response_payload["turnover_intention_raw"],
+                turnover_intention_score=response_payload["turnover_intention_score"],
+                risk_score=response_payload["risk_score"],
+                risk_band=response_payload["risk_band"],
+                preventability=response_payload["preventability"],
+                replacement_cost_eur=response_payload["replacement_cost_eur"],
+                full_result=response_payload["full_result"],
+                submitted_at=completed_at,
+                scoring_version="v1.1",
+            )
+        )
+        db.flush()
+        current_completed += 1
+
+    while current_completed < target_total_completed:
+        completed_at = datetime.now(timezone.utc) - timedelta(minutes=(target_total_completed - current_completed) * 7)
+        _create_exit_completed_respondent(
+            db,
+            campaign=campaign,
+            email=_safe_guided_acceptance_email("threshold", "completed", current_completed + 1),
+            completed_at=completed_at,
+        )
+        current_completed += 1
+
+    return current_completed
+
+
 def seed_sales_demo_exit(
     db: Session,
     *,
@@ -700,6 +918,106 @@ def seed_sales_demo_retention(
     return {
         "org_slug": org.slug,
         "campaign_count": len(RETENTION_SALES_FIXTURES),
+        "detail_threshold": RESPONSE_THRESHOLDS["detail"],
+        "pattern_threshold": RESPONSE_THRESHOLDS["pattern"],
+    }
+
+
+def seed_guided_self_serve_acceptance(
+    db: Session,
+    *,
+    org_slug: str = GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
+    org_name: str = GUIDED_SELF_SERVE_ACCEPTANCE_ORG_NAME,
+    contact_email: str = GUIDED_SELF_SERVE_ACCEPTANCE_CONTACT_EMAIL,
+    viewer_user_id: str | None = None,
+) -> dict[str, str | int | None]:
+    random.seed(RANDOM_SEEDS["qa_guided_self_serve_acceptance"])
+    resolved_org_slug = org_slug
+
+    org = _get_or_create_org(
+        db,
+        slug=org_slug,
+        name=org_name,
+        contact_email=contact_email,
+        acting_user_id=viewer_user_id if _is_uuid_like(viewer_user_id) else None,
+    )
+    _ensure_org_secret(db, org)
+    if _is_uuid_like(viewer_user_id):
+        _ensure_role_memberships(db, org=org, viewer_user_ids=[viewer_user_id])
+    _purge_named_campaigns(
+        db,
+        org,
+        [GUIDED_SELF_SERVE_SETUP_CAMPAIGN_NAME, GUIDED_SELF_SERVE_THRESHOLD_CAMPAIGN_NAME],
+    )
+
+    _create_guided_self_serve_fixture_campaign(
+        db,
+        org=org,
+        name=GUIDED_SELF_SERVE_SETUP_CAMPAIGN_NAME,
+        created_days_ago=1,
+    )
+    threshold_campaign = _create_guided_self_serve_fixture_campaign(
+        db,
+        org=org,
+        name=GUIDED_SELF_SERVE_THRESHOLD_CAMPAIGN_NAME,
+        created_days_ago=3,
+    )
+
+    for index in range(4):
+        completed_at = threshold_campaign.created_at + timedelta(days=1, minutes=index * 13)
+        _create_exit_completed_respondent(
+            db,
+            campaign=threshold_campaign,
+            email=_safe_guided_acceptance_email("threshold", "completed", index + 1),
+            completed_at=completed_at,
+        )
+
+    for index in range(4):
+        _create_pending_respondent(
+            db,
+            campaign=threshold_campaign,
+            email=_safe_guided_acceptance_email("threshold", "pending", index + 1),
+            sent_at=threshold_campaign.created_at + timedelta(days=1),
+            opened=index % 2 == 0,
+            exit_month="2026-03",
+        )
+
+    db.commit()
+    return {
+        "org_slug": resolved_org_slug,
+        "campaign_count": 2,
+        "detail_threshold": RESPONSE_THRESHOLDS["detail"],
+        "pattern_threshold": RESPONSE_THRESHOLDS["pattern"],
+        "viewer_user_id": viewer_user_id,
+    }
+
+
+def advance_guided_self_serve_acceptance(
+    db: Session,
+    *,
+    phase: Literal["min_display", "patterns"],
+    org_slug: str = GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
+) -> dict[str, str | int]:
+    target_total_completed = (
+        RESPONSE_THRESHOLDS["detail"]
+        if phase == "min_display"
+        else RESPONSE_THRESHOLDS["pattern"]
+    )
+    resolved_org_slug = org_slug
+    org = _get_guided_self_serve_org(db, org_slug)
+    threshold_campaign = _get_guided_self_serve_threshold_campaign(db, org)
+    campaign_name = threshold_campaign.name
+    total_completed = _ensure_completed_responses(
+        db,
+        campaign=threshold_campaign,
+        target_total_completed=target_total_completed,
+    )
+    db.commit()
+    return {
+        "org_slug": resolved_org_slug,
+        "campaign_name": campaign_name,
+        "phase": phase,
+        "total_completed": total_completed,
         "detail_threshold": RESPONSE_THRESHOLDS["detail"],
         "pattern_threshold": RESPONSE_THRESHOLDS["pattern"],
     }

@@ -41,7 +41,10 @@ Thumbs.db
 # Logs
 *.log
 .codex-artifacts/
+.acceptance-runtime/
 .worktrees/
+supabase/.branches/
+supabase/.temp/
 
 # Node (frontend heeft eigen .gitignore)
 frontend/node_modules/

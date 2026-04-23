@@ -13,14 +13,17 @@ export default function ResetPasswordPage() {
   const [done,      setDone]      = useState(false)
   const [ready,     setReady]     = useState(false)
   const router  = useRouter()
-  const supabase = createClient()
 
   // Supabase verwerkt de reset-token via de URL-hash zodra de client laadt
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event) => {
+    const supabase = createClient()
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setReady(true)
     })
-  }, [supabase])
+    return () => subscription.unsubscribe()
+  }, [])
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault()
@@ -36,6 +39,7 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true)
+    const supabase = createClient()
     const { error } = await supabase.auth.updateUser({ password })
 
     if (error) {

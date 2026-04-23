@@ -3,6 +3,16 @@ import { defineConfig, devices } from '@playwright/test'
 const port = process.env.PLAYWRIGHT_PORT ?? '3002'
 const baseURL = `http://127.0.0.1:${port}`
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
+const acceptanceMode = process.env.VERISIGHT_ACCEPTANCE_MODE
+const frontendRuntime = process.env.VERISIGHT_ACCEPTANCE_FRONTEND_RUNTIME === 'dev' ? 'dev' : 'start'
+const webServerCommand =
+  frontendRuntime === 'dev'
+    ? `${npmCommand} run dev -- --port ${port}`
+    : `${npmCommand} run build && ${npmCommand} run start -- --port ${port}`
+const reuseExistingServer =
+  acceptanceMode === 'local'
+    ? false
+    : !process.env.CI
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -16,10 +26,10 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: `${npmCommand} run build && ${npmCommand} run start -- --port ${port}`,
+    command: webServerCommand,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    reuseExistingServer,
+    timeout: frontendRuntime === 'dev' ? 180 * 1000 : 120 * 1000,
   },
   projects: [
     {

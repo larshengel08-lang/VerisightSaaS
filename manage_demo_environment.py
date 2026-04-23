@@ -9,6 +9,9 @@ from pathlib import Path
 from backend.database import SessionLocal, init_db
 from demo_environment import (
     DEMO_SCENARIOS,
+    GUIDED_SELF_SERVE_ACCEPTANCE_CONTACT_EMAIL,
+    GUIDED_SELF_SERVE_ACCEPTANCE_ORG_NAME,
+    GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
     INTERNAL_SALES_DEMO_CONTACT_EMAIL,
     INTERNAL_SALES_DEMO_ORG_NAME,
     INTERNAL_SALES_DEMO_ORG_SLUG,
@@ -17,8 +20,10 @@ from demo_environment import (
     QA_RETENTION_ORG_SLUG,
     VALIDATION_RETENTION_DEFAULT_DB,
     VALIDATION_RETENTION_DEFAULT_OUTDIR,
+    advance_guided_self_serve_acceptance,
     get_demo_layer_contracts,
     get_demo_scenarios,
+    seed_guided_self_serve_acceptance,
     seed_sales_demo_exit,
     seed_sales_demo_retention,
 )
@@ -47,6 +52,11 @@ def _parse_args() -> argparse.Namespace:
     run_parser.add_argument("--db-path", default=VALIDATION_RETENTION_DEFAULT_DB)
     run_parser.add_argument("--outdir", default=VALIDATION_RETENTION_DEFAULT_OUTDIR)
     run_parser.add_argument("--responses", type=int, default=72)
+
+    advance_parser = subparsers.add_parser("advance", help="Schuif een deterministic QA-scenario door naar de volgende fase.")
+    advance_parser.add_argument("scenario", choices=["qa_guided_self_serve_acceptance"])
+    advance_parser.add_argument("--phase", choices=["min_display", "patterns"], required=True)
+    advance_parser.add_argument("--org-slug", default=None)
     return parser.parse_args()
 
 
@@ -146,6 +156,40 @@ def _run_qa_retention_demo(args: argparse.Namespace) -> int:
     return _run_subprocess(command)
 
 
+def _run_qa_guided_self_serve_acceptance(args: argparse.Namespace) -> int:
+    init_db()
+    db = SessionLocal()
+    try:
+        result = seed_guided_self_serve_acceptance(
+            db,
+            org_slug=args.org_slug or GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
+            org_name=args.org_name or GUIDED_SELF_SERVE_ACCEPTANCE_ORG_NAME,
+            contact_email=args.contact_email or GUIDED_SELF_SERVE_ACCEPTANCE_CONTACT_EMAIL,
+            viewer_user_id=(args.viewer_user_id[0] if args.viewer_user_id else None),
+        )
+    finally:
+        db.close()
+
+    print(json.dumps({"scenario": "qa_guided_self_serve_acceptance", **result}, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _advance_qa_guided_self_serve_acceptance(args: argparse.Namespace) -> int:
+    init_db()
+    db = SessionLocal()
+    try:
+        result = advance_guided_self_serve_acceptance(
+            db,
+            phase=args.phase,
+            org_slug=args.org_slug or GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
+        )
+    finally:
+        db.close()
+
+    print(json.dumps({"scenario": "qa_guided_self_serve_acceptance", **result}, ensure_ascii=False, indent=2))
+    return 0
+
+
 def _run_validation_retention_pilot(args: argparse.Namespace) -> int:
     command = [
         args.python_executable,
@@ -167,10 +211,17 @@ def main() -> None:
         print(_render_json() if args.format == "json" else _render_table())
         return
 
+    if args.command == "advance":
+        runners = {
+            "qa_guided_self_serve_acceptance": _advance_qa_guided_self_serve_acceptance,
+        }
+        raise SystemExit(runners[args.scenario](args))
+
     runners = {
         "sales_demo_exit": _run_sales_demo_exit,
         "sales_demo_retention": _run_sales_demo_retention,
         "qa_exit_live_test": _run_qa_exit_live_test,
+        "qa_guided_self_serve_acceptance": _run_qa_guided_self_serve_acceptance,
         "qa_retention_demo": _run_qa_retention_demo,
         "validation_retention_pilot": _run_validation_retention_pilot,
     }

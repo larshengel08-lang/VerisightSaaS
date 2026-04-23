@@ -10,6 +10,7 @@ import {
 } from '@/components/dashboard/dashboard-primitives'
 import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
 import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
+import { buildGuidedSelfServeState } from '@/lib/guided-self-serve'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { CampaignStats } from '@/lib/types'
 
@@ -45,7 +46,20 @@ export default async function DashboardHomePage() {
   const campaigns = (stats ?? []) as CampaignStats[]
   const groups = groupCampaigns(campaigns)
   const activeCampaigns = campaigns.filter((campaign) => campaign.is_active)
-  const primaryGuideCampaign = activeCampaigns[0] ?? campaigns[0] ?? null
+  const primaryGuideCampaign = getPrimaryGuideCampaign(activeCampaigns, campaigns)
+  const { data: primaryGuideRespondentsRaw } = primaryGuideCampaign
+    ? await supabase
+        .from('respondents')
+        .select('sent_at, completed')
+        .eq('campaign_id', primaryGuideCampaign.campaign_id)
+    : { data: [] }
+  const primaryGuideRespondents = (primaryGuideRespondentsRaw ?? []) as Array<{
+    sent_at: string | null
+    completed: boolean
+  }>
+  const primaryGuideInvitesNotSent = primaryGuideRespondents.filter(
+    (respondent) => !respondent.sent_at && !respondent.completed,
+  ).length
   const avgResponse =
     campaigns.length > 0
       ? Math.round(campaigns.reduce((sum, campaign) => sum + (campaign.completion_rate_pct ?? 0), 0) / campaigns.length)
@@ -62,6 +76,23 @@ export default async function DashboardHomePage() {
   const buildingCount = campaigns.filter((campaign) => getCampaignBucket(campaign) === 'building').length
   const setupCount = campaigns.filter((campaign) => getCampaignBucket(campaign) === 'setup').length
   const closedCount = campaigns.filter((campaign) => getCampaignBucket(campaign) === 'closed').length
+  const primaryExecutionState = primaryGuideCampaign
+    ? buildGuidedSelfServeState({
+        isActive: primaryGuideCampaign.is_active,
+        totalInvited: primaryGuideCampaign.total_invited,
+        totalCompleted: primaryGuideCampaign.total_completed,
+        invitesNotSent:
+          primaryGuideRespondents.length > 0
+            ? primaryGuideInvitesNotSent
+            : primaryGuideCampaign.total_invited === 0
+              ? 0
+              : primaryGuideCampaign.total_completed >= 5
+                ? 0
+                : 1,
+        hasMinDisplay: primaryGuideCampaign.total_completed >= 5,
+        hasEnoughData: primaryGuideCampaign.total_completed >= 10,
+      })
+    : null
 
   return (
     <div className="space-y-6">
@@ -122,6 +153,57 @@ export default async function DashboardHomePage() {
           />
         </div>
       </DashboardSection>
+
+      {!isAdmin ? (
+        primaryGuideCampaign && primaryExecutionState ? (
+          <DashboardSection
+            eyebrow="Jouw uitvoerstatus"
+            title={primaryExecutionState.headline}
+            description={primaryExecutionState.detail}
+            aside={<DashboardChip label={primaryExecutionState.dashboardVisible ? 'Dashboard actief' : 'Uitvoer loopt'} tone={primaryExecutionState.dashboardVisible ? 'emerald' : 'amber'} />}
+          >
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr),minmax(320px,0.6fr)]">
+              <div className="rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                  Eerstvolgende stap
+                </p>
+                <p className="mt-2 text-lg font-semibold text-[color:var(--ink)]">
+                  {primaryExecutionState.nextAction.title}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">
+                  {primaryExecutionState.nextAction.body}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {primaryExecutionState.statusBlocks.map((item) => (
+                    <DashboardChip
+                      key={item.key}
+                      label={item.label}
+                      tone={item.status === 'done' ? 'emerald' : item.status === 'current' ? 'blue' : 'slate'}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                  Jouw campagne nu
+                </p>
+                <p className="mt-2 text-base font-semibold text-[color:var(--ink)]">
+                  {primaryGuideCampaign.campaign_name}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">
+                  Open deze campaign voor deelnemersimport, inviteflow, responsmonitoring en pas daarna dashboardgebruik.
+                </p>
+                <Link
+                  href={`/campaigns/${primaryGuideCampaign.campaign_id}`}
+                  className="mt-4 inline-flex rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3]"
+                >
+                  {primaryExecutionState.dashboardVisible ? 'Open campaign en dashboard' : 'Open uitvoerflow'}
+                </Link>
+              </div>
+            </div>
+          </DashboardSection>
+        ) : null
+      ) : null}
 
       {!isAdmin ? (
         <DashboardSection
@@ -303,10 +385,12 @@ function CampaignRow({
               href={`/campaigns/${campaign.campaign_id}`}
               className="inline-flex rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3]"
             >
-              Open dashboard
+              {!isAdmin && getCampaignBucket(campaign) !== 'ready' ? 'Open uitvoerflow' : 'Open dashboard'}
             </Link>
           </div>
-          <PdfDownloadButton campaignId={campaign.campaign_id} campaignName={campaign.campaign_name} />
+          {isAdmin || getCampaignBucket(campaign) === 'ready' || getCampaignBucket(campaign) === 'closed' ? (
+            <PdfDownloadButton campaignId={campaign.campaign_id} campaignName={campaign.campaign_name} />
+          ) : null}
         </div>
       </div>
     </div>
@@ -402,8 +486,30 @@ function getNextAction(campaign: CampaignStats) {
 function getCampaignBucket(campaign: CampaignStats): CampaignBucket {
   if (!campaign.is_active) return 'closed'
   if (campaign.total_invited === 0) return 'setup'
-  if (campaign.total_completed < 10) return 'building'
+  if (campaign.total_completed < 5) return 'building'
   return 'ready'
+}
+
+function getPrimaryGuideCampaign(
+  activeCampaigns: CampaignStats[],
+  allCampaigns: CampaignStats[],
+): CampaignStats | null {
+  const candidatePool = activeCampaigns.length > 0 ? activeCampaigns : allCampaigns
+  if (candidatePool.length === 0) return null
+
+  const priority = (campaign: CampaignStats) => {
+    const bucket = getCampaignBucket(campaign)
+    if (bucket === 'setup') return 0
+    if (bucket === 'building') return 1
+    if (bucket === 'ready') return 2
+    return 3
+  }
+
+  return [...candidatePool].sort((left, right) => {
+    const priorityDelta = priority(left) - priority(right)
+    if (priorityDelta !== 0) return priorityDelta
+    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+  })[0] ?? null
 }
 
 function getCampaignReadiness(campaign: CampaignStats) {

@@ -9,6 +9,26 @@ const distDir =
       ? configuredDistDir
       : undefined
 
+const connectSrc = [
+  "'self'",
+  'https://*.supabase.co',
+  'wss://*.supabase.co',
+  'https://verisight-production.up.railway.app',
+]
+const scriptSrc = ["'self'", "'unsafe-inline'"]
+const isLocalAcceptanceDev = process.env.VERISIGHT_ACCEPTANCE_FRONTEND_RUNTIME === 'dev'
+const isDevelopment = process.env.NODE_ENV !== 'production'
+if (isLocalAcceptanceDev || isDevelopment) {
+  scriptSrc.push("'unsafe-eval'")
+}
+
+const localSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+if (localSupabaseUrl?.startsWith('http://127.0.0.1') || localSupabaseUrl?.startsWith('http://localhost')) {
+  const localSupabaseOrigin = new URL(localSupabaseUrl).origin
+  connectSrc.push(localSupabaseOrigin)
+  connectSrc.push(localSupabaseOrigin.replace(/^http/, 'ws'))
+}
+
 const securityHeaders = [
   {
     key: 'X-Content-Type-Options',
@@ -35,9 +55,9 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Supabase API + auth
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verisight-production.up.railway.app",
+      `connect-src ${connectSrc.join(' ')}`,
       // Next.js inline scripts + Google Fonts
-      "script-src 'self' 'unsafe-inline'",
+      `script-src ${scriptSrc.join(' ')}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob:",
@@ -50,6 +70,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   ...(distDir ? { distDir } : {}),
+  allowedDevOrigins: ['127.0.0.1', 'localhost'],
   turbopack: {
     // Silences the "multiple lockfiles" workspace root warning
     root: path.resolve(__dirname),

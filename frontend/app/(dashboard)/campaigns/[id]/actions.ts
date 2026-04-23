@@ -45,7 +45,6 @@ export async function resendPendingAction(campaignId: string): Promise<ResendRes
     .select('role')
     .eq('org_id', campaign.organization_id)
     .eq('user_id', user.id)
-    .in('role', ['owner', 'member'])
     .maybeSingle()
 
   if (membershipError || !membership) {

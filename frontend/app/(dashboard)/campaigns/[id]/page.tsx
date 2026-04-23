@@ -15,12 +15,14 @@ import {
 } from '@/components/dashboard/dashboard-primitives'
 import { DashboardTabs } from '@/components/dashboard/dashboard-tabs'
 import { FactorTable } from '@/components/dashboard/factor-table'
+import { GuidedSelfServePanel } from '@/components/dashboard/guided-self-serve-panel'
 import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
 import { OnboardingAdvancer, OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
 import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
+import { buildGuidedSelfServeState } from '@/lib/guided-self-serve'
 import {
   ActionPlaybookList,
   buildDecisionPanels,
@@ -127,6 +129,7 @@ export default async function CampaignPage({ params }: Props) {
     membership?.role === 'owner' ||
     membership?.role === 'member'
   const isVerisightAdmin = profile?.is_verisight_admin === true
+  const canExecuteCampaign = isVerisightAdmin || Boolean(membership?.role)
   const hasSegmentDeepDive = hasCampaignAddOn(campaignMeta, 'segment_deep_dive')
   const { data: deliveryRecordRaw } = await supabase
     .from('campaign_delivery_records')
@@ -187,6 +190,10 @@ export default async function CampaignPage({ params }: Props) {
     .eq('campaign_id', id)
     .order('completed_at', { ascending: false, nullsFirst: false })
   const respondents = (allRespondents ?? []) as Respondent[]
+  const unsentRespondents = respondents
+    .filter((respondent) => !respondent.sent_at && !respondent.completed)
+    .map((respondent) => ({ token: respondent.token, email: respondent.email ?? null }))
+  const remindableCount = respondents.filter((respondent) => Boolean(respondent.sent_at) && !respondent.completed).length
 
   const factorData = computeFactorAverages(responses)
   const averageRiskScore = computeAverageSignalScore(responses)
@@ -266,6 +273,17 @@ export default async function CampaignPage({ params }: Props) {
     activeClientAccessCount: activeClientAccessCount ?? 0,
     pendingClientInviteCount: pendingClientInviteCount ?? 0,
   })
+  const guidedSelfServeState = buildGuidedSelfServeState({
+    isActive: stats.is_active,
+    totalInvited: stats.total_invited,
+    totalCompleted: stats.total_completed,
+    invitesNotSent,
+    hasMinDisplay,
+    hasEnoughData,
+  })
+  const showClientExecutionFlow = !isVerisightAdmin
+  const showManagementOutput = isVerisightAdmin || guidedSelfServeState.dashboardVisible
+  const utilitySectionVisible = canExecuteCampaign || respondents.length > 0 || isVerisightAdmin
   const riskDistribution = {
     HOOG: stats.band_high,
     MIDDEN: stats.band_medium,
@@ -695,34 +713,39 @@ export default async function CampaignPage({ params }: Props) {
   ]
   const sectionAnchors = [
     { id: 'samenvatting', label: 'Samenvatting' },
-    {
-      id: 'handoff',
-      label: stats.scan_type === 'retention' ? 'Handoff' : stats.scan_type === 'team' ? 'Lokale read' : 'Handoff',
-    },
-    {
-      id: 'drivers',
-      label: stats.scan_type === 'retention' ? 'Signalen' : stats.scan_type === 'team' ? 'Lokaal' : 'Drivers',
-    },
-    {
-      id: 'acties',
-      label: stats.scan_type === 'retention' ? 'Behoudsacties' : stats.scan_type === 'team' ? 'Lokale acties' : 'Acties',
-    },
-    {
-      id: 'route',
-      label:
-        stats.scan_type === 'retention' || stats.scan_type === 'exit'
-          ? 'Kernroute'
-          : stats.scan_type === 'team' ||
-              stats.scan_type === 'pulse' ||
-              stats.scan_type === 'onboarding' ||
-              stats.scan_type === 'leadership'
-            ? 'Vervolgroute'
-            : 'Route',
-    },
+    ...(showManagementOutput
+      ? [
+          {
+            id: 'handoff',
+            label: stats.scan_type === 'retention' ? 'Handoff' : stats.scan_type === 'team' ? 'Lokale read' : 'Handoff',
+          },
+          {
+            id: 'drivers',
+            label: stats.scan_type === 'retention' ? 'Signalen' : stats.scan_type === 'team' ? 'Lokaal' : 'Drivers',
+          },
+          {
+            id: 'acties',
+            label: stats.scan_type === 'retention' ? 'Behoudsacties' : stats.scan_type === 'team' ? 'Lokale acties' : 'Acties',
+          },
+          {
+            id: 'route',
+            label:
+              stats.scan_type === 'retention' || stats.scan_type === 'exit'
+                ? 'Kernroute'
+                : stats.scan_type === 'team' ||
+                    stats.scan_type === 'pulse' ||
+                    stats.scan_type === 'onboarding' ||
+                    stats.scan_type === 'leadership'
+                  ? 'Vervolgroute'
+                  : 'Route',
+          },
+        ]
+      : []),
     { id: 'methodiek', label: 'Methodiek' },
-    { id: 'operatie', label: 'Operatie' },
+    ...(utilitySectionVisible
+      ? [{ id: showClientExecutionFlow ? 'uitvoering' : 'operatie', label: showClientExecutionFlow ? 'Uitvoering' : 'Operatie' }]
+      : []),
   ]
-  const utilitySectionVisible = canManageCampaign || respondents.length > 0 || isVerisightAdmin
   const promotedSummaryCards =
     productExperience.promotedSummaryCards > 0
       ? dashboardViewModel.topSummaryCards.slice(0, productExperience.promotedSummaryCards)
@@ -977,7 +1000,11 @@ export default async function CampaignPage({ params }: Props) {
             </>
           }
           actions={
-            stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
+            !showManagementOutput ? (
+              <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
+                Dashboard wordt zichtbaar vanaf de eerste veilige responsdrempel
+              </div>
+            ) : stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
               <>
                 {!profile?.is_verisight_admin ? <OnboardingAdvancer fromStep={1} /> : null}
                 <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
@@ -1057,7 +1084,11 @@ export default async function CampaignPage({ params }: Props) {
         items={summaryItems}
         anchors={sectionAnchors}
         actions={
-          stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
+          !showManagementOutput ? (
+            <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
+              Eerst uitvoerflow afronden
+            </div>
+          ) : stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
             <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
               {stats.scan_type === 'pulse'
                 ? 'Pulse: management handoff live'
@@ -1073,7 +1104,33 @@ export default async function CampaignPage({ params }: Props) {
         }
       />
 
-      {promotedSummaryCards.length > 0 ? (
+      {showClientExecutionFlow ? (
+        <DashboardSection
+          id="uitvoering"
+          eyebrow="Guided self-serve"
+          title="Begeleide uitvoerflow"
+          description="Verisight heeft de campaign ingericht. Vanaf hier lever jij deelnemers aan, start je de inviteflow veilig en volg je respons op zonder buiten de productgrenzen te hoeven treden."
+          aside={<DashboardChip label="Klantuitvoering" tone="emerald" />}
+        >
+          <GuidedSelfServePanel
+            campaignId={id}
+            scanType={stats.scan_type}
+            isActive={stats.is_active}
+            deliveryMode={campaignMeta?.delivery_mode ?? null}
+            hasSegmentDeepDive={hasSegmentDeepDive}
+            totalInvited={stats.total_invited}
+            totalCompleted={stats.total_completed}
+            invitesNotSent={invitesNotSent}
+              hasMinDisplay={hasMinDisplay}
+              hasEnoughData={hasEnoughData}
+              pendingCount={pendingCount}
+              remindableCount={remindableCount}
+              unsentRespondents={unsentRespondents}
+            />
+          </DashboardSection>
+        ) : null}
+
+      {showManagementOutput && promotedSummaryCards.length > 0 ? (
         <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4 shadow-[0_12px_30px_rgba(19,32,51,0.05)] sm:p-5">
           <div className="flex flex-col gap-3 border-b border-[color:var(--border)]/80 pb-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
@@ -1104,6 +1161,7 @@ export default async function CampaignPage({ params }: Props) {
         </div>
       ) : null}
 
+      {showManagementOutput ? (
       <DashboardSection
         id="handoff"
         eyebrow="Bestuurlijke handoff"
@@ -1266,7 +1324,9 @@ export default async function CampaignPage({ params }: Props) {
           ) : null}
         </div>
       </DashboardSection>
+      ) : null}
 
+      {showManagementOutput ? (
       <DashboardSection
         id="drivers"
         eyebrow="Wat drijft dit beeld?"
@@ -1285,9 +1345,11 @@ export default async function CampaignPage({ params }: Props) {
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
             Verdiepende analyse wordt zichtbaar vanaf {MIN_N_PATTERNS} ingevulde responses. Tot die tijd blijft het dashboard bewust compact en voorzichtig.
           </div>
-        )}
-      </DashboardSection>
+          )}
+        </DashboardSection>
+      ) : null}
 
+      {showManagementOutput ? (
       <DashboardSection
         id="acties"
         eyebrow="Waar eerst op handelen"
@@ -1413,9 +1475,11 @@ export default async function CampaignPage({ params }: Props) {
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
             Focusvragen en route-uitvoer worden betekenisvoller zodra het dashboard minstens {MIN_N_PATTERNS} responses heeft.
           </div>
-        )}
-      </DashboardSection>
+          )}
+        </DashboardSection>
+      ) : null}
 
+      {showManagementOutput ? (
       <DashboardSection
         id="route"
         eyebrow="30–90 dagenroute"
@@ -1497,6 +1561,7 @@ export default async function CampaignPage({ params }: Props) {
           </div>
         </div>
       </DashboardSection>
+      ) : null}
 
       <div id="methodiek" className="scroll-mt-36">
         <DashboardDisclosure
@@ -1517,10 +1582,14 @@ export default async function CampaignPage({ params }: Props) {
       {utilitySectionVisible ? (
         <DashboardSection
           id="operatie"
-          eyebrow="Utilitylaag"
-          title="Operatie, respondenten en delivery"
-          description="Alles onder deze lijn ondersteunt uitvoering en beheer. De managementhoofdlijn blijft hierboven compact en bestuurlijk."
-          aside={<DashboardChip label="Admin en operations" tone="slate" />}
+          eyebrow={showClientExecutionFlow ? 'Uitvoering' : 'Utilitylaag'}
+          title={showClientExecutionFlow ? 'Responsmonitoring en begrensde uitvoerlaag' : 'Operatie, respondenten en delivery'}
+          description={
+            showClientExecutionFlow
+              ? 'Gebruik deze laag om deelnemers, uitnodigingen en respons netjes te volgen. Productsetup, campaignarchitectuur en deliveryrecords blijven bewust bij Verisight.'
+              : 'Alles onder deze lijn ondersteunt uitvoering en beheer. De managementhoofdlijn blijft hierboven compact en bestuurlijk.'
+          }
+          aside={<DashboardChip label={showClientExecutionFlow ? 'Guided self-serve' : 'Admin en operations'} tone="slate" />}
         >
           <div className="space-y-4">
             {canManageCampaign ? (
@@ -1535,7 +1604,8 @@ export default async function CampaignPage({ params }: Props) {
                     campaignId={id}
                     isActive={stats.is_active}
                     pendingCount={pendingCount}
-                    canManageCampaign={canManageCampaign}
+                    canResendInvites={canExecuteCampaign}
+                    canArchiveCampaign={canManageCampaign}
                   />
                   <CampaignHealthIndicator
                     totalInvited={stats.total_invited}
@@ -1604,9 +1674,11 @@ export default async function CampaignPage({ params }: Props) {
                 <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center">
                   <p className="text-base font-semibold text-slate-900">Nog geen respondenten toegevoegd</p>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Voeg eerst respondenten toe via de setupflow. Daarna komen uitnodigingen, responsmonitoring en deze tabel automatisch beschikbaar.
+                    {showClientExecutionFlow
+                      ? 'Gebruik de begeleide uitvoerflow hierboven om eerst het deelnemersbestand aan te leveren. Daarna verschijnen uitnodigingen, responsmonitoring en deze tabel automatisch.'
+                      : 'Voeg eerst respondenten toe via de setupflow. Daarna komen uitnodigingen, responsmonitoring en deze tabel automatisch beschikbaar.'}
                   </p>
-                  {canManageCampaign ? (
+                  {!showClientExecutionFlow && canManageCampaign ? (
                     <Link
                       href="/beheer"
                       className="mt-4 inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
