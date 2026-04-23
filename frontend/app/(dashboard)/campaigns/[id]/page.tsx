@@ -4,11 +4,13 @@ import { createClient } from '@/lib/supabase/server'
 import { CampaignActions } from './campaign-actions'
 import { PdfDownloadButton } from './pdf-download-button'
 import {
+  DashboardChartPanel,
   DashboardChip,
   DashboardDisclosure,
   DashboardHero,
   DashboardKeyValue,
   DashboardPanel,
+  DashboardRecommendationRail,
   DashboardSection,
   DashboardSummaryBar,
   DashboardTimeline,
@@ -823,12 +825,13 @@ export default async function CampaignPage({ params }: Props) {
           id: 'signalen',
           label: productExperience.signalTabLabel,
           content: (
-            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-              <h3 className="text-sm font-semibold text-slate-950">{productExperience.signalTabTitle}</h3>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                {productExperience.signalTabDescription}
-              </p>
-              <div className="mt-4">
+            <DashboardChartPanel
+              eyebrow="Signaalbeeld"
+              title={productExperience.signalTabTitle}
+              description={productExperience.signalTabDescription}
+              tone="slate"
+            >
+              <div className="mt-1">
                 <RiskCharts
                   distribution={riskDistribution}
                   histogramBins={riskHistogram}
@@ -836,7 +839,7 @@ export default async function CampaignPage({ params }: Props) {
                   scanType={stats.scan_type}
                 />
               </div>
-            </div>
+            </DashboardChartPanel>
           ),
         },
         {
@@ -1410,12 +1413,12 @@ export default async function CampaignPage({ params }: Props) {
               </div>
             ) : null}
 
-            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-              <h3 className="text-sm font-semibold text-slate-950">{productExperience.focusQuestionTitle}</h3>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                {productExperience.focusQuestionDescription}
-              </p>
-              <div className="mt-4">
+            <DashboardRecommendationRail
+              eyebrow="Eerste managementvragen"
+              title={productExperience.focusQuestionTitle}
+              description={productExperience.focusQuestionDescription}
+              tone="emerald"
+            >
                 <RecommendationList
                   factorAverages={factorData.orgAverages}
                   scanType={stats.scan_type}
@@ -1425,20 +1428,21 @@ export default async function CampaignPage({ params }: Props) {
                       : undefined
                   }
                 />
-              </div>
-            </div>
+            </DashboardRecommendationRail>
 
             {stats.scan_type === 'retention' || stats.scan_type === 'exit' || stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
               <>
-                <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                  <h3 className="text-sm font-semibold text-slate-950">{productExperience.playbookTitle}</h3>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">
-                    {productExperience.playbookDescription}
-                  </p>
-                  {stats.scan_type === 'retention' && playbookCalibrationNote ? (
-                    <p className="mt-2 text-xs leading-6 text-slate-500">{playbookCalibrationNote}</p>
-                  ) : null}
-                  <div className="mt-4">
+                <DashboardRecommendationRail
+                  eyebrow="Eerste playbook"
+                  title={productExperience.playbookTitle}
+                  description={productExperience.playbookDescription}
+                  tone="blue"
+                  aside={
+                    stats.scan_type === 'retention' && playbookCalibrationNote ? (
+                      <p className="text-xs leading-6 text-[color:var(--dashboard-text)]">{playbookCalibrationNote}</p>
+                    ) : null
+                  }
+                >
                     <ActionPlaybookList
                       factorAverages={factorData.orgAverages}
                       scanType={stats.scan_type}
@@ -1448,16 +1452,15 @@ export default async function CampaignPage({ params }: Props) {
                           : undefined
                       }
                     />
-                  </div>
-                </div>
+                </DashboardRecommendationRail>
 
                 {stats.scan_type === 'retention' && hasSegmentDeepDive ? (
-                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                    <h3 className="text-sm font-semibold text-slate-950">Segment-specifieke playbooks</h3>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Alleen zichtbaar als segmentvergelijking voldoende respons en metadata heeft.
-                    </p>
-                    <div className="mt-4">
+                  <DashboardRecommendationRail
+                    eyebrow="Segmentvergelijking"
+                    title="Segment-specifieke playbooks"
+                    description="Alleen zichtbaar als segmentvergelijking voldoende respons en metadata heeft."
+                    tone="slate"
+                  >
                       {retentionSegmentPlaybooks.length > 0 ? (
                         <SegmentPlaybookList segments={retentionSegmentPlaybooks} />
                       ) : (
@@ -1465,8 +1468,7 @@ export default async function CampaignPage({ params }: Props) {
                           Nog geen segmenten met voldoende n en voldoende afwijking om apart te tonen.
                         </div>
                       )}
-                    </div>
-                  </div>
+                  </DashboardRecommendationRail>
                 ) : null}
               </>
             ) : null}

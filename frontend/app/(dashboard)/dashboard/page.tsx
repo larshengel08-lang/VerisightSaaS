@@ -110,7 +110,7 @@ export default async function DashboardHomePage() {
               <DashboardChip label="Operations cockpit" tone="blue" />
               <Link
                 href="/beheer"
-                className="inline-flex rounded-full bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-[#1B2E45]"
+                className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
               >
                 Nieuwe campaign
               </Link>
@@ -163,7 +163,7 @@ export default async function DashboardHomePage() {
             aside={<DashboardChip label={primaryExecutionState.dashboardVisible ? 'Dashboard actief' : 'Uitvoer loopt'} tone={primaryExecutionState.dashboardVisible ? 'emerald' : 'amber'} />}
           >
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr),minmax(320px,0.6fr)]">
-              <div className="rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)]">
+              <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] p-5 shadow-[0_18px_40px_rgba(17,24,39,0.07)]">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
                   Eerstvolgende stap
                 </p>
@@ -183,7 +183,7 @@ export default async function DashboardHomePage() {
                   ))}
                 </div>
               </div>
-              <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4">
+              <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] p-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
                   Jouw campagne nu
                 </p>
@@ -195,7 +195,7 @@ export default async function DashboardHomePage() {
                 </p>
                 <Link
                   href={`/campaigns/${primaryGuideCampaign.campaign_id}`}
-                  className="mt-4 inline-flex rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3]"
+                  className="mt-4 inline-flex rounded-full border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:brightness-[0.98]"
                 >
                   {primaryExecutionState.dashboardVisible ? 'Open campaign en dashboard' : 'Open uitvoerflow'}
                 </Link>
@@ -336,8 +336,8 @@ function CampaignRow({
   const readiness = getCampaignReadiness(campaign)
 
   return (
-    <div className="rounded-[24px] border border-[color:var(--border)] bg-white px-4 py-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)]">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+    <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_18px_40px_rgba(17,24,39,0.07)]">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between xl:gap-6">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <DashboardChip label={scanDefinition.productName} tone={campaign.scan_type === 'retention' ? 'emerald' : 'blue'} />
@@ -349,7 +349,7 @@ function CampaignRow({
           <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">{nextAction.body}</p>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[420px] xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[420px] xl:grid-cols-2 2xl:min-w-[560px] 2xl:grid-cols-4">
           <StatCell label="Respons" value={`${campaign.completion_rate_pct ?? 0}%`} />
           <StatCell label="Ingevuld" value={`${campaign.total_completed}`} />
           <StatCell label="Uitgenodigd" value={`${campaign.total_invited}`} />
@@ -362,7 +362,7 @@ function CampaignRow({
 
       <div className="mt-4 flex flex-col gap-3 border-t border-[color:var(--border)]/80 pt-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="rounded-full bg-[color:var(--bg)] px-3 py-1 font-medium text-[color:var(--text)]">
+          <span className="rounded-full bg-[color:var(--dashboard-soft)] px-3 py-1 font-medium text-[color:var(--dashboard-text)]">
             {nextAction.label}
           </span>
           <span className="text-[color:var(--muted)]">•</span>
@@ -374,7 +374,7 @@ function CampaignRow({
           {isAdmin && getCampaignBucket(campaign) === 'setup' ? (
             <Link
               href="/beheer"
-              className="inline-flex rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition-colors hover:border-[#d6e4e8] hover:text-[#234B57]"
+              className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
             >
               Naar setup
             </Link>
@@ -383,7 +383,7 @@ function CampaignRow({
             {showOnboarding ? <OnboardingBalloon step={1} label="Open je campagne" align="left" /> : null}
             <Link
               href={`/campaigns/${campaign.campaign_id}`}
-              className="inline-flex rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3]"
+              className="inline-flex rounded-full border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:brightness-[0.98]"
             >
               {!isAdmin && getCampaignBucket(campaign) !== 'ready' ? 'Open uitvoerflow' : 'Open dashboard'}
             </Link>
@@ -411,13 +411,13 @@ function UtilityCard({
   cta: string
 }) {
   return (
-    <div className="rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)]">
+    <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] p-5 shadow-[0_18px_40px_rgba(17,24,39,0.07)]">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">{eyebrow}</p>
       <p className="mt-2 text-base font-semibold text-[color:var(--ink)]">{title}</p>
       <p className="mt-3 text-sm leading-6 text-[color:var(--text)]">{body}</p>
       <Link
         href={href}
-        className="mt-4 inline-flex rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)] transition-colors hover:border-[#d6e4e8] hover:text-[#234B57]"
+        className="mt-4 inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
       >
         {cta}
       </Link>
@@ -438,7 +438,7 @@ function StatCell({ label, value }: { label: string; value: string }) {
             : null
 
   return (
-    <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-3">
+    <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-3">
       <div className="flex items-center gap-1.5">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">{label}</p>
         {helpText ? <InfoTooltip text={helpText} /> : null}

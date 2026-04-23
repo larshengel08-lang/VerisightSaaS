@@ -27,6 +27,25 @@
   --marketing-shadow-strong: 0 28px 72px rgba(19, 32, 51, 0.11);
   --dashboard-shadow-soft: 0 16px 42px rgba(19, 32, 51, 0.06);
   --dashboard-shadow-strong: 0 18px 44px rgba(19, 32, 51, 0.1);
+
+  /* Dashboard presentation system */
+  --dashboard-canvas: #f4eee6;
+  --dashboard-surface: #fffaf4;
+  --dashboard-soft: #f3ece2;
+  --dashboard-ink: #132033;
+  --dashboard-text: #4e5b67;
+  --dashboard-muted: #7c8a95;
+  --dashboard-frame-border: rgba(35, 75, 87, 0.14);
+  --dashboard-rail: #172332;
+  --dashboard-rail-text: #f6f1e9;
+  --dashboard-rail-border: rgba(255, 255, 255, 0.08);
+  --dashboard-topbar: rgba(249, 244, 237, 0.84);
+  --dashboard-topbar-strong: rgba(249, 244, 237, 0.92);
+  --dashboard-accent-soft: #e8f0ed;
+  --dashboard-accent-soft-border: rgba(60, 141, 138, 0.18);
+  --dashboard-accent-strong: #2d6f6c;
+  --dashboard-blue-soft: #e9f0f3;
+  --dashboard-amber-soft: #f7efd9;
 }
 
 @theme inline {
@@ -451,6 +470,35 @@ details > summary::-webkit-details-marker {
     color: var(--ink);
   }
 
+  .dashboard-shell-root {
+    background:
+      radial-gradient(circle at top right, rgba(255, 255, 255, 0.9), transparent 26%),
+      linear-gradient(180deg, var(--dashboard-canvas) 0%, #efe7dc 100%);
+  }
+
+  .dashboard-mode-admin {
+    --dashboard-canvas: #f3f1ed;
+    --dashboard-surface: #fcfbf8;
+    --dashboard-soft: #f2f0eb;
+    --dashboard-text: #55606a;
+    --dashboard-muted: #7f8a93;
+    --dashboard-frame-border: rgba(35, 75, 87, 0.11);
+    --dashboard-topbar: rgba(246, 243, 238, 0.86);
+    --dashboard-topbar-strong: rgba(246, 243, 238, 0.94);
+    --dashboard-blue-soft: #ebf0f3;
+    --dashboard-accent-soft: #edf2f1;
+    --dashboard-accent-soft-border: rgba(60, 141, 138, 0.14);
+    --dashboard-accent-strong: #305864;
+  }
+
+  .dashboard-mode-buyer {
+    --dashboard-canvas: #f4eee6;
+    --dashboard-surface: #fffaf4;
+    --dashboard-soft: #f3ece2;
+    --dashboard-topbar: rgba(249, 244, 237, 0.84);
+    --dashboard-topbar-strong: rgba(249, 244, 237, 0.92);
+  }
+
   .dashboard-surface {
     border: 1px solid var(--border);
     background: var(--surface);
@@ -477,6 +525,40 @@ details > summary::-webkit-details-marker {
     font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
+  }
+
+  .dashboard-mode-buyer .bg-slate-50,
+  .dashboard-mode-admin .bg-slate-50 {
+    background-color: var(--dashboard-soft) !important;
+  }
+
+  .dashboard-mode-buyer .bg-white,
+  .dashboard-mode-admin .bg-white {
+    background-color: color-mix(in srgb, var(--dashboard-surface) 94%, white 6%) !important;
+  }
+
+  .dashboard-mode-buyer .border-slate-200,
+  .dashboard-mode-admin .border-slate-200 {
+    border-color: var(--dashboard-frame-border) !important;
+  }
+
+  .dashboard-mode-buyer .text-slate-950,
+  .dashboard-mode-admin .text-slate-950 {
+    color: var(--dashboard-ink) !important;
+  }
+
+  .dashboard-mode-buyer .text-slate-700,
+  .dashboard-mode-admin .text-slate-700 {
+    color: var(--dashboard-text) !important;
+  }
+
+  .dashboard-mode-buyer .text-slate-600,
+  .dashboard-mode-admin .text-slate-600,
+  .dashboard-mode-buyer .text-slate-500,
+  .dashboard-mode-admin .text-slate-500,
+  .dashboard-mode-buyer .text-slate-400,
+  .dashboard-mode-admin .text-slate-400 {
+    color: var(--dashboard-muted) !important;
   }
 
   .marketing-flow-stack > * {
