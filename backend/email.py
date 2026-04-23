@@ -97,6 +97,10 @@ def _sanitize_error_reason(reason: str, *, max_length: int = 240) -> str:
     return normalized[: max_length - 3] + "..."
 
 
+def _acceptance_email_stub_enabled() -> bool:
+    return os.getenv("VERISIGHT_ACCEPTANCE_FAKE_EMAIL", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _send_result(
     *,
     to: str,
@@ -114,6 +118,9 @@ def _send_result(
     if not _CONTACT_EMAIL.strip() and subject.startswith("Kennismakingsaanvraag"):
         logger.warning("E-mail niet verzonden naar %s: CONTACT_EMAIL ontbreekt.", safe_to)
         return EmailSendResult(ok=False, reason="missing_contact_email")
+    if _acceptance_email_stub_enabled():
+        logger.info("Acceptance-stub: e-mail als verzonden gemarkeerd voor %s.", safe_to)
+        return EmailSendResult(ok=True, reason="acceptance_stub")
     if _resend is None:
         logger.warning("E-mail niet verzonden naar %s: resend package ontbreekt.", safe_to)
         return EmailSendResult(ok=False, reason="resend_import_missing")

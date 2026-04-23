@@ -8,7 +8,6 @@ import { createClient } from '@/lib/supabase/client'
 
 export default function CompleteAccountPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [password, setPassword] = useState('')
   const [password2, setPassword2] = useState('')
   const [loading, setLoading] = useState(false)
@@ -21,6 +20,7 @@ export default function CompleteAccountPage() {
     let mounted = true
 
     async function loadSession() {
+      const supabase = createClient()
       const { data } = await supabase.auth.getUser()
 
       if (!mounted) {
@@ -41,7 +41,7 @@ export default function CompleteAccountPage() {
     return () => {
       mounted = false
     }
-  }, [router, supabase])
+  }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -58,6 +58,7 @@ export default function CompleteAccountPage() {
     }
 
     setLoading(true)
+    const supabase = createClient()
     const { error: updateError } = await supabase.auth.updateUser({ password })
     setLoading(false)
 

@@ -24,4 +24,18 @@ describe('campaign page render truth', () => {
     expect(source).not.toContain("signalTabLabel: 'Vertrekbeeld'")
     expect(source).not.toContain('stay-intent')
   })
+
+  it('keeps the client shell guided until the dashboard is actually activated', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const guidedPanelSource = readFileSync(
+      new URL('../../../../components/dashboard/guided-self-serve-panel.tsx', import.meta.url),
+      'utf8',
+    )
+
+    expect(source).toContain('Begeleide uitvoerflow')
+    expect(source).toContain('Dashboard wordt zichtbaar vanaf de eerste veilige responsdrempel')
+    expect(source).toContain('showManagementOutput &&')
+    expect(source).toContain('Guided self-serve')
+    expect(guidedPanelSource).toContain('Start uitnodigingen')
+  })
 })

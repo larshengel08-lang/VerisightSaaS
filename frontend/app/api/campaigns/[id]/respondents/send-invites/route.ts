@@ -16,16 +16,6 @@ export async function POST(request: Request, { params }: Context) {
     return NextResponse.json({ detail: 'Niet ingelogd.' }, { status: 401 })
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_verisight_admin')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.is_verisight_admin !== true) {
-    return NextResponse.json({ detail: 'Alleen Verisight-beheerders kunnen uitnodigingen versturen.' }, { status: 403 })
-  }
-
   const { data: campaign, error: campaignError } = await supabase
     .from('campaigns')
     .select('organization_id')
@@ -34,6 +24,31 @@ export async function POST(request: Request, { params }: Context) {
 
   if (campaignError || !campaign) {
     return NextResponse.json({ detail: 'Campaign niet gevonden of niet toegankelijk.' }, { status: 404 })
+  }
+
+  const [
+    { data: profile },
+    { data: membership },
+  ] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('is_verisight_admin')
+      .eq('id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('org_members')
+      .select('role')
+      .eq('org_id', campaign.organization_id)
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ])
+
+  const canExecuteCampaign = profile?.is_verisight_admin === true || Boolean(membership)
+  if (!canExecuteCampaign) {
+    return NextResponse.json(
+      { detail: 'Je hebt geen rechten om uitnodigingen voor deze campaign te versturen.' },
+      { status: 403 },
+    )
   }
 
   let apiKey: string

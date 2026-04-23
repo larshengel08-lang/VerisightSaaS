@@ -11,13 +11,13 @@ export default function LoginPage() {
   const [error,    setError]    = useState<string | null>(null)
   const [loading,  setLoading]  = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
+    const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
@@ -45,6 +45,14 @@ export default function LoginPage() {
         {/* Card */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
           <h1 className="text-xl font-semibold text-gray-900 mb-6">Inloggen</h1>
+
+          <div className="mb-5 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            <p className="font-semibold">Begeleide klantuitvoering</p>
+            <p className="mt-1 leading-6 text-blue-800">
+              Verisight heeft account, campaign en productgrenzen al voorbereid. Na login zie je direct wat nu ontbreekt,
+              wanneer deelnemers kunnen worden aangeleverd, wanneer uitnodigingen veilig live mogen en wanneer het dashboard echt actief wordt.
+            </p>
+          </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>

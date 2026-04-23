@@ -75,6 +75,21 @@ export async function middleware(request: NextRequest) {
   }
 
   let supabaseResponse = NextResponse.next({ request })
+  const isPublicRoute = isPublicRoutePath(pathname)
+  const isPublicApiRoute = isPublicApiRoutePath(pathname)
+  const hasSupabaseEnv = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  )
+
+  if (!hasSupabaseEnv) {
+    if (isPublicRoute || isPublicApiRoute) {
+      return supabaseResponse
+    }
+
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -101,9 +116,6 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
-  const isPublicRoute = isPublicRoutePath(pathname)
-  const isPublicApiRoute = isPublicApiRoutePath(pathname)
 
   // Niet ingelogd + beveiligde route -> login
   if (!user && !isPublicRoute && !isPublicApiRoute) {

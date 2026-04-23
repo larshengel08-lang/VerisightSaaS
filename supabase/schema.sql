@@ -178,7 +178,10 @@ end $$;
 
 -- Voeg scoring_version toe aan bestaande survey_responses indien nog niet aanwezig
 do $$ begin
-  if not exists (
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'survey_responses'
+  ) and not exists (
     select 1 from information_schema.columns
     where table_name = 'survey_responses' and column_name = 'scoring_version'
   ) then
@@ -666,6 +669,13 @@ as $$
       and org_members.role in ('owner', 'member')
   );
 $$;
+
+-- Zorg dat profiles beschikbaar is voordat adminfuncties en policies ernaar verwijzen.
+create table if not exists public.profiles (
+  id                 uuid primary key references auth.users(id) on delete cascade,
+  is_verisight_admin boolean not null default false,
+  created_at         timestamptz default now()
+);
 
 create or replace function public.is_verisight_admin_user()
 returns boolean
