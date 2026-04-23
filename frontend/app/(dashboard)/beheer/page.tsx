@@ -221,7 +221,7 @@ export default async function BeheerPage() {
         meta={
           <>
             <DashboardChip surface="ops" label={`${activeOrgs.length} actieve organisatie${activeOrgs.length === 1 ? '' : 's'}`} />
-            <DashboardChip surface="ops" label={`${activeCampaignCount} actieve campaign${activeCampaignCount === 1 ? '' : 's'}`} tone={activeCampaignCount > 0 ? 'blue' : 'slate'} />
+            <DashboardChip surface="ops" label={`${activeCampaignCount} actieve campaign${activeCampaignCount === 1 ? '' : 's'}`} tone="slate" />
             <DashboardChip
               surface="ops"
               label={
@@ -266,7 +266,7 @@ export default async function BeheerPage() {
           {
             label: 'Setupvoortgang',
             value: `${setupProgressCount}/4 stappen actief`,
-            tone: setupProgressCount === 4 ? 'emerald' : 'blue',
+            tone: setupProgressCount === 4 ? 'emerald' : 'amber',
           },
           {
             label: 'Respondenten',
@@ -306,7 +306,7 @@ export default async function BeheerPage() {
                 ? 'Nog geen deliveryrecords'
                 : `${deliveryRecords.length} deliveryrecord${deliveryRecords.length === 1 ? '' : 's'}`
             }
-            tone={deliveryRecords.length > 0 ? 'blue' : 'slate'}
+            tone="slate"
           />
         }
       >
@@ -350,7 +350,7 @@ export default async function BeheerPage() {
                 title="Open follow-up"
                 value={`${openFollowUpCount}`}
                 body="Campaigns zonder expliciet gesloten learning- of follow-upbesluit."
-                tone={openFollowUpCount > 0 ? 'blue' : 'slate'}
+                tone={openFollowUpCount > 0 ? 'amber' : 'slate'}
               />
             </div>
 
@@ -483,7 +483,7 @@ export default async function BeheerPage() {
         eyebrow="Werkvolgorde"
         title="Werkvolgorde voor Verisight"
         description="Houd dezelfde assisted setupvolgorde aan over alle adminroutes heen. Dit maakt handoff, import-QA, activatie en learningregistratie sneller scanbaar zonder de buyer-facing shell te imiteren."
-        aside={<DashboardChip surface="ops" label={`${setupProgressCount}/4 setupstappen actief`} tone="blue" />}
+        aside={<DashboardChip surface="ops" label={`${setupProgressCount}/4 setupstappen actief`} tone={step4Done ? 'emerald' : 'amber'} />}
       >
         <div className="space-y-5">
           <div className="flex flex-wrap items-center gap-2">
@@ -511,7 +511,7 @@ export default async function BeheerPage() {
               eyebrow="Learning"
               title="Learning default"
               body="Leg pilots en vroege klantlessen vast in /beheer/klantlearnings, zodat buyer-signalen en implementationfrictie niet in losse notities verdwijnen."
-              tone="blue"
+              tone="slate"
             />
             <DashboardPanel
               surface="ops"

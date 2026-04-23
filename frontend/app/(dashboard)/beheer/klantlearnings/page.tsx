@@ -194,12 +194,12 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           {
             label: 'Leadkoppeling',
             value: `${leadLinkedDossiers}/${dossiers.length || 0}`,
-            tone: leadLinkedDossiers > 0 ? 'blue' : 'slate',
+            tone: leadLinkedDossiers > 0 ? 'slate' : 'slate',
           },
           {
             label: 'Campaignkoppeling',
             value: `${campaignLinkedDossiers}/${dossiers.length || 0}`,
-            tone: campaignLinkedDossiers > 0 ? 'emerald' : 'slate',
+            tone: campaignLinkedDossiers > 0 ? 'slate' : 'slate',
           },
         ]}
         anchors={[
@@ -216,7 +216,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           title="Lead-koppeling"
           value={`${leadLinkedDossiers}/${dossiers.length || 0}`}
           body="Leadcontext hoort niet meer in losse mailtjes te blijven hangen. Gebruik contactaanvragen als vaste eerste hypotheselaag."
-          tone={leadLinkedDossiers > 0 ? 'blue' : 'slate'}
+          tone={leadLinkedDossiers > 0 ? 'slate' : 'slate'}
         />
         <DashboardPanel
           surface="ops"
@@ -224,7 +224,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           title="Campaign-koppeling"
           value={`${campaignLinkedDossiers}/${dossiers.length || 0}`}
           body="Koppel zodra implementation, launch of managementgebruik echt in delivery meelopen."
-          tone={campaignLinkedDossiers > 0 ? 'amber' : 'slate'}
+          tone={campaignLinkedDossiers > 0 ? 'slate' : 'slate'}
         />
         <DashboardPanel
           surface="ops"
@@ -232,7 +232,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           title="Recente leads"
           value={`${leads.length}`}
           body="Nieuwe aanvragen kunnen direct in een learningdossier landen zodra route, koopreden of trustfrictie leerwaarde geeft."
-          tone={leads.length > 0 ? 'emerald' : 'slate'}
+          tone={leads.length > 0 ? 'slate' : 'slate'}
         />
         <DashboardPanel
           surface="ops"

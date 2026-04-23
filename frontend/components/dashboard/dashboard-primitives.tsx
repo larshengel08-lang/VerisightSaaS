@@ -12,7 +12,7 @@ const TONE_SURFACES: Record<Tone, string> = {
 
 const OPS_TONE_SURFACES: Record<Tone, string> = {
   slate: 'border-[color:var(--border)] bg-white',
-  blue: 'border-[#d7e0e5] bg-[#f8fbfc]',
+  blue: 'border-[#dfe6ea] bg-[#fbfcfd]',
   emerald: 'border-[#d8e4df] bg-[#f8fbf9]',
   amber: 'border-[#e7e0d1] bg-[#fcfbf7]',
 }
@@ -26,7 +26,7 @@ const TONE_LABELS: Record<Tone, string> = {
 
 const OPS_TONE_LABELS: Record<Tone, string> = {
   slate: 'text-[color:var(--text)]',
-  blue: 'text-[#234B57]',
+  blue: 'text-[color:var(--text)]',
   emerald: 'text-[#3C8D8A]',
   amber: 'text-[#8C6B1F]',
 }
