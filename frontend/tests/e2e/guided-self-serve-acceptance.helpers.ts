@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import * as path from 'node:path'
 import { promisify } from 'node:util'
+import { createClient } from '@supabase/supabase-js'
 
 const execFileAsync = promisify(execFile)
 
@@ -10,6 +11,8 @@ const frontendRoot = process.cwd()
 const repoRoot = path.resolve(frontendRoot, '..')
 const defaultPythonExecutable = path.join(repoRoot, '.venv', 'Scripts', 'python.exe')
 const runtimePath = path.join(repoRoot, '.acceptance-runtime', 'guided-self-serve.json')
+const setupCampaignName = 'Guided Self-Serve - Setup Journey'
+const thresholdCampaignName = 'Guided Self-Serve - Threshold Journey'
 
 interface GuidedSelfServeAcceptanceRuntime {
   mode: 'local' | 'remote'
@@ -69,7 +72,56 @@ export async function loadGuidedSelfServeAcceptanceRuntime(): Promise<GuidedSelf
 
 export async function loadGuidedSelfServeAcceptanceFixture(): Promise<GuidedSelfServeAcceptanceFixture> {
   const runtime = await loadGuidedSelfServeAcceptanceRuntime()
-  return runtime.fixture
+  const supabaseUrl = runtime.env.NEXT_PUBLIC_SUPABASE_URL ?? runtime.env.SUPABASE_URL
+  const serviceRoleKey = runtime.env.SUPABASE_SERVICE_ROLE_KEY
+  const orgSlug =
+    runtime.env.PLAYWRIGHT_GUIDED_SELF_SERVE_ORG_SLUG ??
+    process.env.PLAYWRIGHT_GUIDED_SELF_SERVE_ORG_SLUG ??
+    'guided-self-serve-acceptance'
+
+  if (!supabaseUrl || !serviceRoleKey) {
+    return runtime.fixture
+  }
+
+  const admin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
+
+  const { data: org, error: orgError } = await admin
+    .from('organizations')
+    .select('id')
+    .eq('slug', orgSlug)
+    .single()
+
+  if (orgError || !org) {
+    return runtime.fixture
+  }
+
+  const { data: campaigns, error: campaignsError } = await admin
+    .from('campaigns')
+    .select('id,name')
+    .eq('organization_id', org.id)
+    .in('name', [setupCampaignName, thresholdCampaignName])
+
+  if (campaignsError || !campaigns) {
+    return runtime.fixture
+  }
+
+  const setupCampaign = campaigns.find((campaign) => campaign.name === setupCampaignName)
+  const thresholdCampaign = campaigns.find((campaign) => campaign.name === thresholdCampaignName)
+
+  if (!setupCampaign || !thresholdCampaign) {
+    return runtime.fixture
+  }
+
+  return {
+    ...runtime.fixture,
+    setup_campaign_id: setupCampaign.id,
+    threshold_campaign_id: thresholdCampaign.id,
+  }
 }
 
 export async function advanceGuidedSelfServeAcceptanceFixture(phase: 'min_display' | 'patterns') {

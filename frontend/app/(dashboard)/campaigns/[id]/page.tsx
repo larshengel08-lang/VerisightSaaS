@@ -22,7 +22,7 @@ import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
-import { buildGuidedSelfServeState } from '@/lib/guided-self-serve'
+import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import {
   ActionPlaybookList,
   buildDecisionPanels,
@@ -145,6 +145,21 @@ export default async function CampaignPage({ params }: Props) {
         .order('created_at', { ascending: true })
     : { data: [] }
   const deliveryCheckpoints = (deliveryCheckpointsRaw ?? []) as CampaignDeliveryCheckpoint[]
+  const guidedSetupDiscipline = deriveGuidedSelfServeDiscipline(
+    deliveryCheckpoints
+      .filter(
+        (checkpoint): checkpoint is CampaignDeliveryCheckpoint & {
+          checkpoint_key: 'implementation_intake' | 'import_qa' | 'invite_readiness'
+        } =>
+          checkpoint.checkpoint_key === 'implementation_intake' ||
+          checkpoint.checkpoint_key === 'import_qa' ||
+          checkpoint.checkpoint_key === 'invite_readiness',
+      )
+      .map((checkpoint) => ({
+        checkpointKey: checkpoint.checkpoint_key,
+        manualState: checkpoint.manual_state,
+      })),
+  )
   const {
     rows: deliveryLeadOptions,
     configError: deliveryLeadConfigError,
@@ -280,6 +295,9 @@ export default async function CampaignPage({ params }: Props) {
     invitesNotSent,
     hasMinDisplay,
     hasEnoughData,
+    importQaConfirmed: guidedSetupDiscipline.importQaConfirmed,
+    launchTimingConfirmed: guidedSetupDiscipline.launchTimingConfirmed,
+    communicationReady: guidedSetupDiscipline.communicationReady,
   })
   const showClientExecutionFlow = !isVerisightAdmin
   const showManagementOutput = isVerisightAdmin || guidedSelfServeState.dashboardVisible
@@ -1123,10 +1141,12 @@ export default async function CampaignPage({ params }: Props) {
             invitesNotSent={invitesNotSent}
               hasMinDisplay={hasMinDisplay}
               hasEnoughData={hasEnoughData}
-              pendingCount={pendingCount}
+              importQaConfirmed={guidedSetupDiscipline.importQaConfirmed}
+              launchTimingConfirmed={guidedSetupDiscipline.launchTimingConfirmed}
+              communicationReady={guidedSetupDiscipline.communicationReady}
               remindableCount={remindableCount}
               unsentRespondents={unsentRespondents}
-            />
+          />
           </DashboardSection>
         ) : null}
 
