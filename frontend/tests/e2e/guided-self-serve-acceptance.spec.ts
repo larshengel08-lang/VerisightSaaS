@@ -38,7 +38,7 @@ test.describe.serial('guided self-serve acceptance', () => {
 
     await page.goto(`/campaigns/${fixture.setup_campaign_id}`)
 
-    await expect(page.getByRole('heading', { name: /begeleide uitvoerflow/i })).toBeVisible()
+    await expect(page.getByText(/begeleide uitvoerflow/i).first()).toBeVisible()
     await expect(page.getByText(/deelnemersbestand ontbreekt nog/i).first()).toBeVisible()
     await expect(page.getByText(/dashboard nog niet actief/i).first()).toBeVisible()
     await expect(page.getByRole('button', { name: /pdf-rapport/i })).toHaveCount(0)
@@ -48,23 +48,25 @@ test.describe.serial('guided self-serve acceptance', () => {
 
     await expect(page.getByText(/import validatie vereist/i).first()).toBeVisible()
     await expect(page.getByText(/corrigeer eerst deze rijen/i)).toBeVisible()
-    await expect(page.getByText(/valid email address/i)).toBeVisible()
+    await expect(page.getByText(/dit e-mailadres staat dubbel in het bestand/i)).toBeVisible()
+    await expect(page.getByText(/e-mailadres is ongeldig/i)).toBeVisible()
 
     await page.locator('input[type="file"]').setInputFiles(validImportPath)
     await page.getByLabel(/verstuur direct uitnodigingen na een geslaagde import/i).uncheck()
     await page.getByRole('button', { name: /^bestand controleren$/i }).click()
 
     await expect(page.getByText(/preview van geldige rijen/i).first()).toBeVisible()
-    await expect(page.getByText(/klaar om uit te nodigen/i).first()).toBeVisible()
+    await expect(page.getByText(/import klaar voor launch/i).first()).toBeVisible()
 
-    await page.getByRole('button', { name: /importeer 2 deelnemers/i }).click()
+    await page.getByRole('button', { name: /importeer 5 deelnemers/i }).click()
 
-    await expect(page.getByText(/2 deelnemer\(s\) toegevoegd/i)).toBeVisible()
-    await expect(page.getByRole('button', { name: /start uitnodigingen \(2\)/i })).toBeVisible()
+    await expect(page.getByText(/5 deelnemer\(s\) toegevoegd/i)).toBeVisible()
+    await page.reload()
+    await expect(page.getByRole('button', { name: /start uitnodigingen \(5\)/i })).toBeVisible()
 
-    await page.getByRole('button', { name: /start uitnodigingen \(2\)/i }).click()
+    await page.getByRole('button', { name: /start uitnodigingen \(5\)/i }).click()
 
-    await expect(page.getByText(/2 uitnodiging\(en\) gestart/i)).toBeVisible()
+    await expect(page.getByText(/5 uitnodiging\(en\) gestart/i)).toBeVisible()
     await expect(page.getByText(/survey running/i).first()).toBeVisible()
     await expect(page.getByRole('button', { name: /pdf-rapport/i })).toHaveCount(0)
     await expect(page.getByText(/dashboard nog niet actief/i).first()).toBeVisible()

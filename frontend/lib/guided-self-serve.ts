@@ -72,6 +72,7 @@ interface GuidedSelfServeArgs {
   importQaConfirmed?: boolean
   launchTimingConfirmed?: boolean
   communicationReady?: boolean
+  importReady?: boolean
 }
 
 const STATUS_FLOW: GuidedStatusKey[] = [
@@ -343,6 +344,29 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
       verisightNow: 'Verisight bewaakt nu vooral dat de route bounded blijft en netjes doorloopt naar managementgebruik en follow-up.',
       customerNow: 'Leg nu vast wat de eerste managementactie is, wie eigenaar wordt en wanneer jullie de vervolgstap reviewen.',
       blockers: governanceCarryoverBlockers,
+    })
+  }
+
+  if (args.importReady === false) {
+    return buildState('import_validation_required', {
+      headline: 'Import validatie vereist',
+      detail: 'Het deelnemersbestand is nog niet vrijgegeven voor launch. Controleer de preview, herstel de gemelde rijen of kolommen en ga pas daarna verder.',
+      nextAction: {
+        title: 'Controleer het deelnemersbestand',
+        body: 'Werk de gemelde rijen of kolommen bij en controleer daarna opnieuw totdat de import echt launch-klaar is.',
+      },
+      dashboardVisible: false,
+      deeperInsightsVisible: false,
+      verisightNow: 'Verisight houdt de importgrenzen dicht tot preview, veldkwaliteit en releasecondities methodisch kloppen.',
+      customerNow: 'Herstel nu alleen het deelnemersbestand en controleer opnieuw; launch en dashboard blijven bewust gesloten.',
+      blockers: [
+        {
+          title: 'Het deelnemersbestand vraagt nog herstel',
+          detail: 'De preview of kolomkwaliteit is nog niet schoon genoeg om deze campaign veilig vrij te geven voor launch.',
+          recovery: 'Werk de gemelde rijen of kolommen bij en controleer opnieuw tot de import zonder blokkades door de preview komt.',
+          actor: 'customer',
+        },
+      ],
     })
   }
 

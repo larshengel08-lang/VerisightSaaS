@@ -36,6 +36,8 @@ describe('campaign page render truth', () => {
     expect(source).toContain('Dashboard wordt zichtbaar vanaf de eerste veilige responsdrempel')
     expect(source).toContain('showManagementOutput &&')
     expect(source).toContain('Guided self-serve')
+    expect(source).toContain("createAdminClient()")
+    expect(source).toContain(".eq('checkpoint_key', 'import_qa')")
     expect(guidedPanelSource).toContain('Start uitnodigingen')
   })
 })

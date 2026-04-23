@@ -55,10 +55,16 @@ interface ImportResponse {
   valid_rows: number
   invalid_rows: number
   duplicate_existing: number
+  recognized_columns: string[]
+  ignored_columns: string[]
+  blocking_messages: string[]
   preview_rows: ImportPreviewRow[]
   errors: ImportIssue[]
   imported: number
   emails_sent: number
+  launch_blocked: boolean
+  readiness_label: string
+  recovery_hint: string
 }
 
 export function AddRespondentsForm({ campaigns, organizations }: Props) {
@@ -237,7 +243,11 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
   }
 
   const hasPreviewErrors = (previewResult?.errors.length ?? 0) > 0
-  const canImportPreview = !!previewResult && !hasPreviewErrors && previewResult.valid_rows > 0
+  const canImportPreview =
+    !!previewResult &&
+    !hasPreviewErrors &&
+    previewResult.valid_rows > 0 &&
+    previewResult.launch_blocked !== true
   const previewMissingDepartmentCount = previewResult?.preview_rows.filter(row => !row.department?.trim()).length ?? 0
   const previewMissingRoleLevelCount = previewResult?.preview_rows.filter(row => !row.role_level?.trim()).length ?? 0
 
@@ -464,6 +474,9 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
               {isExitCampaign ? <>, <code className="font-mono">exit_month</code></> : null} en <code className="font-mono">annual_salary_eur</code> meesturen. Upload een <code className="font-mono">.csv</code>
               {' '}of <code className="font-mono">.xlsx</code> bestand.
             </p>
+            <p className="mt-2 text-xs text-gray-500 leading-relaxed">
+              Lever minimaal {CLIENT_FILE_SPEC.minimumParticipants} deelnemers aan en gebruik alleen herkenbare standaardkolommen.
+            </p>
             {selectedCampaign?.scan_type === 'retention' && (
               <p className="mt-2 text-xs leading-relaxed text-emerald-800">
                 Voor RetentieScan v1.1-validatie zijn <code className="font-mono">department</code> en <code className="font-mono">role_level</code> de aanbevolen standaard. Daarmee kunnen we later betrouwbaarheid, segmentverschillen en pragmatische follow-up veel netter toetsen.
@@ -476,13 +489,22 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                 Gebruik bij voorkeur exact deze kolommen: <code className="font-mono">email</code>, <code className="font-mono">department</code>, <code className="font-mono">role_level</code>, <code className="font-mono">exit_month</code>, <code className="font-mono">annual_salary_eur</code>.
               </p>
             )}
-            <a
-              href="/templates/verisight-respondenten-template.xlsx"
-              download
-              className="inline-flex mt-3 text-xs font-medium text-blue-600 hover:underline"
-            >
-              Download Excel-template
-            </a>
+            <div className="mt-3 flex flex-wrap gap-3 text-xs font-medium">
+              <a
+                href="/templates/verisight-respondenten-template.xlsx"
+                download
+                className="inline-flex text-blue-600 hover:underline"
+              >
+                Download Excel-template
+              </a>
+              <a
+                href="/templates/verisight-respondenten-template.csv"
+                download
+                className="inline-flex text-blue-600 hover:underline"
+              >
+                Download CSV-template
+              </a>
+            </div>
             {selectedCampaign?.scan_type === 'retention' && (
               <p className="mt-2 text-xs text-gray-500">
                 Voor follow-up uitkomsten gebruik je daarna het CSV-template <code className="font-mono">retentionscan_followup_outcomes_template.csv</code> uit de repo.
@@ -548,6 +570,33 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                 <ImportMetric label="Fouten" value={previewResult.invalid_rows} />
                 <ImportMetric label="Bestaat al" value={previewResult.duplicate_existing} />
               </div>
+
+              <div
+                className={`rounded-lg border px-4 py-3 text-sm ${
+                  previewResult.launch_blocked
+                    ? 'border-amber-200 bg-amber-50 text-amber-950'
+                    : 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                }`}
+              >
+                <p className="font-semibold">{previewResult.readiness_label}</p>
+                <p className="mt-1 leading-6">{previewResult.recovery_hint}</p>
+                {previewResult.ignored_columns.length > 0 ? (
+                  <p className="mt-2 text-xs leading-5">
+                    Niet herkend: {previewResult.ignored_columns.join(', ')}.
+                  </p>
+                ) : null}
+              </div>
+
+              {previewResult.blocking_messages.length > 0 ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                  <p className="font-semibold">Je kunt nog niet verder</p>
+                  <ul className="mt-2 space-y-1 text-xs leading-5">
+                    {previewResult.blocking_messages.map((message) => (
+                      <li key={message}>{message}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
 
               {previewResult.preview_rows.length > 0 && (
                 <div>

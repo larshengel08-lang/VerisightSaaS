@@ -59,6 +59,7 @@ export function buildCampaignReadinessState({
   hasEnoughData,
   activeClientAccessCount,
   pendingClientInviteCount,
+  importReady,
 }: {
   totalInvited: number
   totalCompleted: number
@@ -68,6 +69,7 @@ export function buildCampaignReadinessState({
   hasEnoughData: boolean
   activeClientAccessCount: number
   pendingClientInviteCount: number
+  importReady: boolean
 }): CampaignReadinessState {
   const setupComplete = totalInvited > 0
   const invitesLive = setupComplete && invitesNotSent === 0
@@ -75,7 +77,7 @@ export function buildCampaignReadinessState({
   const analysisReady = hasEnoughData && incompleteScores === 0
   const clientAccessActivated = activeClientAccessCount > 0
   const clientActivationPending = !clientAccessActivated && pendingClientInviteCount > 0
-  const launchReady = invitesLive && outputReady && (clientAccessActivated || clientActivationPending)
+  const launchReady = importReady && invitesLive && outputReady && (clientAccessActivated || clientActivationPending)
 
   if (!setupComplete) {
     return {
@@ -89,6 +91,21 @@ export function buildCampaignReadinessState({
       headline: 'Setup nog niet compleet',
       detail: 'Zonder respondenten is de implementation route nog niet gestart. Gebruik eerst een gecontroleerde import als hard startpunt.',
       nextStep: 'Importeer eerst een gevalideerd respondentbestand en bepaal daarna pas of invites direct uit mogen.',
+    }
+  }
+
+  if (!importReady) {
+    return {
+      setupComplete,
+      invitesLive,
+      outputReady,
+      analysisReady,
+      clientAccessActivated,
+      clientActivationPending,
+      launchReady,
+      headline: 'Import nog niet vrijgegeven',
+      detail: 'Het deelnemersbestand is nog niet vrijgegeven voor launch. Controleer eerst de importpreview, herstel de gemelde rijen of kolommen en bevestig daarna opnieuw.',
+      nextStep: 'Werk eerst het deelnemersbestand bij en rond de importcontrole af voordat je uitnodigingen of klantactivatie verder opent.',
     }
   }
 

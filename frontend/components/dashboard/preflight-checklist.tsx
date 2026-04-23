@@ -33,6 +33,7 @@ interface Props {
   totalInvited: number
   totalCompleted: number
   invitesNotSent: number
+  importReady: boolean
   incompleteScores: number
   hasMinDisplay: boolean
   hasEnoughData: boolean
@@ -87,6 +88,7 @@ export function PreflightChecklist({
   totalInvited,
   totalCompleted,
   invitesNotSent,
+  importReady,
   incompleteScores,
   hasMinDisplay,
   hasEnoughData,
@@ -115,12 +117,14 @@ export function PreflightChecklist({
         hasEnoughData,
         activeClientAccessCount,
         pendingClientInviteCount,
+        importReady,
       }),
     [
       activeClientAccessCount,
       hasEnoughData,
       hasMinDisplay,
       incompleteScores,
+      importReady,
       invitesNotSent,
       pendingClientInviteCount,
       record?.contact_request_id,

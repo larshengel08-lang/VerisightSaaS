@@ -29,6 +29,7 @@ interface Props {
   scanType: ScanType
   isActive: boolean
   deliveryMode: DeliveryMode | null
+  importReady: boolean
   hasSegmentDeepDive: boolean
   totalInvited: number
   totalCompleted: number
@@ -62,10 +63,16 @@ interface ImportResponse {
   valid_rows: number
   invalid_rows: number
   duplicate_existing: number
+  recognized_columns: string[]
+  ignored_columns: string[]
+  blocking_messages: string[]
   preview_rows: ImportPreviewRow[]
   errors: ImportIssue[]
   imported: number
   emails_sent: number
+  launch_blocked: boolean
+  readiness_label: string
+  recovery_hint: string
 }
 
 export function GuidedSelfServePanel({
@@ -73,6 +80,7 @@ export function GuidedSelfServePanel({
   scanType,
   isActive,
   deliveryMode,
+  importReady,
   hasSegmentDeepDive,
   totalInvited,
   totalCompleted,
@@ -99,12 +107,14 @@ export function GuidedSelfServePanel({
         importQaConfirmed,
         launchTimingConfirmed,
         communicationReady,
+        importReady,
       }),
     [
       communicationReady,
       hasEnoughData,
       hasMinDisplay,
       importQaConfirmed,
+      importReady,
       invitesNotSent,
       isActive,
       launchTimingConfirmed,
@@ -236,7 +246,11 @@ export function GuidedSelfServePanel({
   }
 
   const hasPreviewErrors = (previewResult?.errors.length ?? 0) > 0
-  const canImportPreview = Boolean(previewResult) && !hasPreviewErrors && (previewResult?.valid_rows ?? 0) > 0
+  const canImportPreview =
+    Boolean(previewResult) &&
+    !hasPreviewErrors &&
+    (previewResult?.valid_rows ?? 0) > 0 &&
+    previewResult?.launch_blocked !== true
   const previewMissingDepartmentCount =
     previewResult?.preview_rows.filter((row) => !row.department?.trim()).length ?? 0
   const previewMissingRoleLevelCount =
@@ -245,7 +259,7 @@ export function GuidedSelfServePanel({
     previewResult && hasPreviewErrors
       ? 'Import validatie vereist'
       : previewResult && canImportPreview
-        ? 'Klaar om uit te nodigen'
+        ? 'Import klaar voor launch'
         : null
 
   return (
@@ -306,6 +320,9 @@ export function GuidedSelfServePanel({
                 . {scanType === 'exit' ? `Exit-specifiek optioneel: ${CLIENT_FILE_SPEC.exitOptional.join(', ')}.` : ''}
               </p>
               <p className="mt-2 text-sm leading-6 text-slate-700">
+                Lever minimaal {CLIENT_FILE_SPEC.minimumParticipants} deelnemers aan voordat launch kan worden vrijgegeven.
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
                 Route: {SCAN_TYPE_LABELS[scanType]} {getDeliveryModeLabel(deliveryMode, scanType)}.{' '}
                 {getDeliveryModeDescription(deliveryMode, scanType)}
               </p>
@@ -317,13 +334,22 @@ export function GuidedSelfServePanel({
                 </p>
               ) : null}
             </div>
-            <a
-              href="/templates/verisight-respondenten-template.xlsx"
-              download
-              className="inline-flex rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3]"
-            >
-              Download template
-            </a>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href="/templates/verisight-respondenten-template.xlsx"
+                download
+                className="inline-flex rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3]"
+              >
+                Download Excel-template
+              </a>
+              <a
+                href="/templates/verisight-respondenten-template.csv"
+                download
+                className="inline-flex rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3]"
+              >
+                Download CSV-template
+              </a>
+            </div>
           </div>
 
           <div className="mt-5 space-y-4">
@@ -377,7 +403,7 @@ export function GuidedSelfServePanel({
                       : `Importeer ${previewResult?.valid_rows ?? 0} deelnemers`}
                 </button>
               ) : null}
-              {invitesNotSent > 0 && unsentRespondents.length > 0 ? (
+              {importReady && invitesNotSent > 0 && unsentRespondents.length > 0 ? (
                 <button
                   type="button"
                   onClick={() => void startInvites()}
@@ -434,6 +460,33 @@ export function GuidedSelfServePanel({
                   <DashboardPanel eyebrow="Fouten" title={`${previewResult.invalid_rows}`} body="Rijen die eerst gecorrigeerd moeten worden" tone={previewResult.invalid_rows > 0 ? 'amber' : 'slate'} />
                   <DashboardPanel eyebrow="Bestaat al" title={`${previewResult.duplicate_existing}`} body="Dubbele adressen in deze campagne" tone={previewResult.duplicate_existing > 0 ? 'amber' : 'slate'} />
                 </div>
+
+                <div
+                  className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${
+                    previewResult.launch_blocked
+                      ? 'border-amber-200 bg-amber-50 text-amber-950'
+                      : 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                  }`}
+                >
+                  <p className="font-semibold">{previewResult.readiness_label}</p>
+                  <p className="mt-1 leading-6">{previewResult.recovery_hint}</p>
+                  {previewResult.ignored_columns.length > 0 ? (
+                    <p className="mt-2 text-xs leading-5">
+                      Niet herkend: {previewResult.ignored_columns.join(', ')}.
+                    </p>
+                  ) : null}
+                </div>
+
+                {previewResult.blocking_messages.length > 0 ? (
+                  <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                    <p className="font-semibold">Je kunt nog niet verder</p>
+                    <ul className="mt-2 space-y-1 text-xs leading-5">
+                      {previewResult.blocking_messages.map((message) => (
+                        <li key={message}>{message}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
 
                 {(previewMissingDepartmentCount > 0 || previewMissingRoleLevelCount > 0) ? (
                   <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">

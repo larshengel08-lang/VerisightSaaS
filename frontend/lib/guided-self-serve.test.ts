@@ -10,6 +10,7 @@ describe('guided self-serve execution state', () => {
       invitesNotSent: 0,
       hasMinDisplay: false,
       hasEnoughData: false,
+      importReady: true,
       importQaConfirmed: false,
       launchTimingConfirmed: false,
       communicationReady: false,
@@ -41,6 +42,21 @@ describe('guided self-serve execution state', () => {
     expect(state.blockers[0]?.recovery.toLowerCase()).toContain('csv')
     expect(state.verisightNow.toLowerCase()).toContain('productgrenzen')
     expect(state.customerNow.toLowerCase()).toContain('deelnemersbestand')
+  })
+
+  it('keeps the customer on import recovery until the dataset is really cleared for launch', () => {
+    const state = buildGuidedSelfServeState(
+      buildArgs({
+        totalInvited: 8,
+        invitesNotSent: 8,
+        importReady: false,
+      }),
+    )
+
+    expect(state.phase).toBe('import_validation_required')
+    expect(state.dashboardVisible).toBe(false)
+    expect(state.nextAction.title.toLowerCase()).toContain('deelnemersbestand')
+    expect(state.detail.toLowerCase()).toContain('nog niet vrijgegeven')
   })
 
   it('keeps import validation as the active blocker until import qa is confirmed', () => {
@@ -95,6 +111,7 @@ describe('guided self-serve execution state', () => {
       buildArgs({
         totalInvited: 18,
         invitesNotSent: 18,
+        importReady: true,
         importQaConfirmed: true,
         launchTimingConfirmed: true,
         communicationReady: true,
@@ -110,9 +127,10 @@ describe('guided self-serve execution state', () => {
   it('keeps dashboard access locked while responses are still below the first safe threshold', () => {
     const state = buildGuidedSelfServeState(
       buildArgs({
-      totalInvited: 24,
-      totalCompleted: 3,
-      invitesNotSent: 0,
+        totalInvited: 24,
+        totalCompleted: 3,
+        invitesNotSent: 0,
+        importReady: true,
         importQaConfirmed: true,
         launchTimingConfirmed: true,
         communicationReady: true,
@@ -128,10 +146,11 @@ describe('guided self-serve execution state', () => {
   it('activates the dashboard at first-value threshold but keeps deeper insights behind the pattern threshold', () => {
     const state = buildGuidedSelfServeState(
       buildArgs({
-      totalInvited: 24,
-      totalCompleted: 6,
-      invitesNotSent: 0,
-      hasMinDisplay: true,
+        totalInvited: 24,
+        totalCompleted: 6,
+        invitesNotSent: 0,
+        hasMinDisplay: true,
+        importReady: true,
         importQaConfirmed: true,
         launchTimingConfirmed: true,
         communicationReady: true,
@@ -148,11 +167,12 @@ describe('guided self-serve execution state', () => {
   it('switches to first-next-step once readiness and pattern threshold are both reached', () => {
     const state = buildGuidedSelfServeState(
       buildArgs({
-      totalInvited: 24,
-      totalCompleted: 11,
-      invitesNotSent: 0,
-      hasMinDisplay: true,
-      hasEnoughData: true,
+        totalInvited: 24,
+        totalCompleted: 11,
+        invitesNotSent: 0,
+        hasMinDisplay: true,
+        hasEnoughData: true,
+        importReady: true,
         importQaConfirmed: true,
         launchTimingConfirmed: true,
         communicationReady: true,
@@ -167,17 +187,20 @@ describe('guided self-serve execution state', () => {
   })
 
   it('keeps a closed campaign out of self-serve execution mode', () => {
-    const state = buildGuidedSelfServeState(buildArgs({
-      isActive: false,
-      totalInvited: 24,
-      totalCompleted: 11,
-      invitesNotSent: 0,
-      hasMinDisplay: true,
-      hasEnoughData: true,
-      importQaConfirmed: true,
-      launchTimingConfirmed: true,
-      communicationReady: true,
-    }))
+    const state = buildGuidedSelfServeState(
+      buildArgs({
+        isActive: false,
+        totalInvited: 24,
+        totalCompleted: 11,
+        invitesNotSent: 0,
+        hasMinDisplay: true,
+        hasEnoughData: true,
+        importReady: true,
+        importQaConfirmed: true,
+        launchTimingConfirmed: true,
+        communicationReady: true,
+      }),
+    )
 
     expect(state.phase).toBe('closed')
     expect(state.nextAction.title.toLowerCase()).toContain('vervolggesprek')
