@@ -5,6 +5,7 @@ import json
 import os
 import shlex
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -33,6 +34,25 @@ DEFAULT_FRONTEND_RUNTIME = "start"
 
 class AcceptanceEnvironmentError(RuntimeError):
     pass
+
+
+def _is_local_port_available(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            sock.bind(("127.0.0.1", port))
+        except OSError:
+            return False
+    return True
+
+
+def _reserve_available_local_port(preferred_port: int) -> int:
+    if _is_local_port_available(preferred_port):
+        return preferred_port
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
 
 
 @dataclass(slots=True)
@@ -307,7 +327,12 @@ def bootstrap_guided_self_serve_acceptance(
     frontend_port: int = DEFAULT_FRONTEND_PORT,
     backend_port: int = DEFAULT_BACKEND_PORT,
 ) -> GuidedSelfServeAcceptanceRuntime:
-    env = build_acceptance_env(mode, frontend_port=frontend_port, backend_port=backend_port)
+    resolved_backend_port = (
+        _reserve_available_local_port(backend_port)
+        if mode == "local"
+        else backend_port
+    )
+    env = build_acceptance_env(mode, frontend_port=frontend_port, backend_port=resolved_backend_port)
     if mode == "local":
         _apply_schema(env["DATABASE_URL"])
     fixture = _bootstrap_guided_self_serve_fixture(env)
@@ -315,7 +340,7 @@ def bootstrap_guided_self_serve_acceptance(
         mode=mode,
         profile="guided_self_serve",
         frontend_port=frontend_port,
-        backend_port=backend_port,
+        backend_port=resolved_backend_port,
         env=env,
         fixture=fixture,
     )
