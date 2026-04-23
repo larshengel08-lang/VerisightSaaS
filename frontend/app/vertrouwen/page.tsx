@@ -6,7 +6,6 @@ import {
   MarketingHeroStage,
   MarketingHeroSupport,
 } from '@/components/marketing/marketing-hero'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingSection } from '@/components/marketing/marketing-section'
@@ -240,16 +239,6 @@ export default function VertrouwenPage() {
             primaryLabel="Plan een kennismaking"
             secondaryHref="/privacy"
             secondaryLabel="Bekijk privacybeleid"
-          />
-        </MarketingSection>
-
-        <MarketingSection tone="surface">
-          <MarketingInlineContactPanel
-            eyebrow="Plan kennismaking"
-            title="Vertel kort welke due-diligencevraag nu speelt."
-            body="In circa 20 minuten krijgt u helderheid over methodiek, privacy, rapportlezing en de fit tussen uw managementvraag en de al gekozen route."
-            defaultRouteInterest="exitscan"
-            defaultCtaSource="trust_form"
           />
         </MarketingSection>
       </MarketingPageShell>

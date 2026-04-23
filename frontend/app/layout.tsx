@@ -66,7 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       contactType: 'sales',
       email: 'hallo@verisight.nl',
       availableLanguage: 'Dutch',
-      url: 'https://www.verisight.nl/#kennismaking',
+      url: 'https://www.verisight.nl/kennismaking',
     },
   }
 

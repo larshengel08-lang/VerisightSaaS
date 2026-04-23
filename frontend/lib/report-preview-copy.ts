@@ -59,14 +59,14 @@ const retentionSampleAsset = getPrimarySampleShowcaseAsset('retention')
 
 export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy> = {
   portfolio: {
-    label: 'Portfolio-overzicht',
+    label: 'Wat u ziet',
     intro:
       'Verisight vertaalt scans naar dezelfde boardroom-structuur: eerst wat nu speelt, daarna waarom dat beeld ontstaat, vervolgens wat eerst getoetst moet worden en pas daarna welke route logisch is. Gebruik dit overzicht om eerst de juiste managementroute te kiezen, niet om meteen alles tegelijk te verkopen.',
     kpis: [
-      ['Actieve campagnes', '2 scans actief', 'ExitScan en RetentieScan'],
-      ['Gemiddeld hoofdsignaal', '5,4 op 10', 'Bespreek met HR, sponsor en MT'],
-      ['Belangrijkste aandachtspunt', 'Groei', 'Hier is het meeste te winnen'],
-      ['Stuurvraag', 'Vertrek of behoud?', 'Kies de juiste scanvorm'],
+      ['Wat speelt nu', '', 'Groei en werkdruk vragen als eerste aandacht.'],
+      ['Hoofdbeeld nu 5,4 op 10', '', 'Het patroon vraagt eerst verificatie en prioritering, niet direct een brede interventie.'],
+      ['Groeiperspectief kleurt het beeld het sterkst', '', 'Dit is nu het logischste startpunt voor gesprek en vervolg.'],
+      ['Beginnen we bij vertrek of bij behoud?', '', 'Kies eerst de route die nu het meeste duidelijk maakt.'],
     ],
     boardroomTitle: 'Bestuurlijke handoff',
     boardroomIntro:
@@ -76,7 +76,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       ['Waarom telt dit nu', 'De toplaag maakt zichtbaar waarom dit een bestuurlijk prioriteitsspoor is en niet alleen een HR-observatie.'],
       ['Wat niet concluderen', 'Verisight versnelt weging en gesprek, maar verkoopt geen diagnose, individuele voorspeller of sluitende causaliteit.'],
     ],
-    focusTitle: 'Welke managementroute past nu het best?',
+    focusTitle: 'De routekeuze hieronder helpt bepalen welk product de vraag nu het best opent.',
     dashboardRows: [
       { label: 'ExitScan', value: 'Vertrekduiding', band: 'Eerste route', width: '64%', tone: 'red' },
       { label: 'RetentieScan', value: 'Behoud eerst signaleren', band: 'Specifieke route', width: '52%', tone: 'amber' },
@@ -105,7 +105,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       {
         title: 'Gebruik dezelfde taal, niet dezelfde conclusie',
         body: 'Leiderschap, groei, cultuur en werkbelasting spelen in beide scans een rol. Het verschil zit in de managementvraag en de manier waarop je de uitkomst gebruikt.',
-        question: 'Lezen we deze signalen als vertrekduiding via Frictiescore of als vroegsignalering via Retentiesignaal?',
+        question: 'Lezen we deze signalen als vertrekduiding of als vroegsignaal op behoud?',
       },
     ],
     proofNotes: [
@@ -124,7 +124,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       ['Privacygrens', 'Groepsinzichten met minimale n-grenzen en geen individuele signalen naar management.'],
       ['Bewijsstatus', 'Methodisch onderbouwde managementoutput, geen diagnose of individuele voorspeller.'],
     ],
-    demoLabel: 'Illustratief',
+    demoLabel: 'Voorbeeldoutput',
     demoBody:
       'Fictieve data. De managementstructuur, trustnotities en leesvolgorde volgen dezelfde lijn als de echte Verisight-output.',
     supportVisualTitle: 'Segment deep dive preview',
@@ -150,7 +150,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       'ExitScan vat de top van het rapport samen in een compacte sponsor-read: wat speelt nu, waarom is dit bestuurlijk relevant en welke factoren kleuren dat beeld het sterkst.',
     boardroomPoints: [
       ['Wat speelt nu', 'Leiderschap en groeiperspectief kleuren het terugkerende vertrekbeeld.'],
-      ['Waarom telt dit nu', 'De Frictiescore maakt dit relevant voor managementprioritering en niet alleen voor HR-nazorg.'],
+      ['Waarom telt dit nu', 'Een breed werksignaal maakt dit relevant voor managementprioritering en niet alleen voor HR-nazorg.'],
       ['Wat niet concluderen', 'Dit is vertrekduiding op groepsniveau, geen bewijs van de ene oorzaak en geen garantie op lagere uitstroom.'],
     ],
     focusTitle: 'Wat moet management nu eerst bespreken?',
@@ -267,7 +267,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     proofNotes: [
       ['Cover + bestuurlijke read', 'De cover toont executive context en kernmetrics; daarna volgen respons, bestuurlijke handoff en de scherpste verificatiesporen in een aparte executive laag'],
       ['Bestuurlijke handoff', 'Compacte sponsor-read met wat nu speelt, waarom dat telt en expliciete watchout tegen overinterpretatie'],
-      ['Signaalmix', 'Retentiesignaal, aanvullende signalen zoals stay-intent en vertrekintentie in een bestuurssamenvatting'],
+      ['Signaalmix', 'Retentiesignaal, stay-intent en vertrekintentie in een bestuurssamenvatting'],
       ['Actielogica', 'Topfactoren en vervolgstappen voor 30-90 dagen, zonder individuele voorspelling'],
       ['Bewijsstatus', 'Inhoudelijk plausibel, intern consistent en testmatig beschermd; nog geen pragmatisch bewezen predictor'],
     ],
@@ -276,7 +276,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       'De preview maakt dezelfde grens zichtbaar als de huidige output: groeps- en segmentduiding voor verificatie en prioritering, zonder individuele predictor of performance-instrument te worden.',
     trustPoints: [
       ['Intended use', 'Vroegsignalering op behoud op groeps- en segmentniveau voor managementgesprek, verificatie en opvolging.'],
-      ['Wat management ziet', 'Retentiesignaal, aanvullende signalen zoals stay-intent en vertrekintentie, bevlogenheid en topfactoren in een bestuurslaag.'],
+      ['Wat management ziet', 'Retentiesignaal, stay-intent, vertrekintentie, bevlogenheid en topfactoren in een bestuurslaag.'],
       ['Privacygrens', 'Geen individuele signalen naar management, segmenten alleen bij voldoende n en open tekst alleen als groepssignaal.'],
       ['Bewijsstatus', 'V1-werkmodel: inhoudelijk plausibel, intern consistent en testmatig beschermd; geen bewezen predictor.'],
     ],

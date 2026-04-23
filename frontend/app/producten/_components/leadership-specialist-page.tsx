@@ -5,7 +5,6 @@ import {
   MarketingHeroStage,
   MarketingHeroSupport,
 } from '@/components/marketing/marketing-hero'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingProofStrip } from '@/components/marketing/marketing-proof-strip'
@@ -309,18 +308,6 @@ export function LeadershipSpecialistPage() {
           secondaryHref="/producten"
           secondaryLabel="Bekijk producten"
         />
-      </MarketingSection>
-
-      <MarketingSection tone="surface">
-        <div id="kennismaking">
-          <MarketingInlineContactPanel
-            eyebrow="Kennismaking"
-            title="Bespreek of Leadership Scan nu past"
-            body="Beschrijf kort welk bestaand signaal nu speelt en waarom de vraag verschuift naar managementcontext. Dan toetsen we of Leadership Scan de logische specialistische vervolgstap is."
-            defaultRouteInterest="leadership"
-            defaultCtaSource="product_leadership_form"
-          />
-        </div>
       </MarketingSection>
     </MarketingPageShell>
   )

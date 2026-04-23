@@ -10,12 +10,12 @@ export const marketingNavLinks = [
 
 export const marketingPrimaryCta = {
   href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-  label: 'Plan kennismaking',
+  label: 'Plan een kennismaking',
 } as const
 
 export const marketingSecondaryCta = {
   href: '/producten',
-  label: 'Bekijk de routes',
+  label: 'Bekijk producten',
 } as const
 
 export const marketingFooterLinks = [
@@ -41,37 +41,34 @@ export const homepageProductRoutes = [
   {
     name: 'ExitScan',
     title: 'Waarom zijn mensen vertrokken?',
-    body: 'Breng vertrekpatronen in beeld en begrijp welke werkfactoren het meest meespelen. Met een rapport dat u intern kunt bespreken.',
+    body: 'Breng vertrekpatronen in beeld en zie welke werkfactoren steeds terugkomen in het rapport voor HR, MT en directie.',
     href: '/producten/exitscan',
     accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
-    chip: 'Kernroute',
+    chip: 'Terugkijken',
   },
   {
     name: 'RetentieScan',
     title: 'Waar staat behoud nu onder druk?',
-    body: 'Zie waar behoud bij actieve medewerkers onder druk staat, voordat mensen weggaan. Op groepsniveau, zonder individuele signalen naar management.',
+    body: 'Zie waar behoud bij actieve medewerkers onder druk staat voordat mensen weggaan, op groepsniveau en zonder individuele signalen naar management.',
     href: '/producten/retentiescan',
     accent: 'border-[#DCEFEA] bg-[#F7F5F1]',
-    chip: 'Kernroute',
+    chip: 'Vooruitkijken',
   },
   {
     name: 'Combinatie',
     title: 'Beide vragen in één aanpak',
-    body: 'Als zowel vertrek als behoud spelen en u ze bewust wilt combineren nadat de eerste route helder staat.',
+    body: 'Als zowel vertrek als behoud spelen en u die bewust later wilt combineren nadat de eerste route helder staat.',
     href: '/producten/combinatie',
     accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
-    chip: 'Op aanvraag',
+    chip: 'Later combineren',
   },
 ] as const
 
-export const homepageCoreProductRoutes = homepageProductRoutes.filter((route) => route.name !== 'Combinatie')
+export const homepageCoreProductRoutes = homepageProductRoutes.slice(0, 2)
 
 export const homepagePortfolioRoute = {
-  name: 'Combinatie',
-  label: 'Portfolioroute op aanvraag',
-  title: 'Beide vragen bewust in dezelfde managementlijn',
-  body: 'Voor organisaties die vertrekduiding en behoudsignalering bewust willen verbinden, nadat de eerste route helder staat.',
-  href: '/producten/combinatie',
+  ...homepageProductRoutes[2],
+  label: 'Later uitbreiden',
 } as const
 
 export const homepageComparisonRows = [
@@ -83,7 +80,7 @@ export const homepageComparisonRows = [
   [
     'Je wilt eerder zien waar behoud onder druk staat',
     'RetentieScan',
-    'Retentiesignaal, aanvullende signalen, bevlogenheid en vertrekintentie op groepsniveau',
+    'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie op groepsniveau',
   ],
   [
     'Je wilt beide vragen bewust naast elkaar organiseren',
@@ -124,23 +121,93 @@ export const homepageUtilityLinks = [
 export const productOverviewComparisonRows = [
   [
     'ExitScan',
-    'Vertrekduiding',
-    'Welke Frictiescore en werkfactoren keren terug in uitstroom?',
-    'Voor terugkijkende analyse op uitstroom',
+    'Vertrekvraag',
+    'Waarom mensen vertrokken en welke patronen terugkomen.',
+    'Dashboard, samenvatting en rapport voor een eerste beeld.',
+    'Vaak de beste start als de vraag begint bij uitstroom.',
   ],
   [
     'RetentieScan',
-    'Vroegsignalering op behoud',
-    'Waar staat behoud nu onder druk in de actieve populatie?',
-    'Voor vroegsignalering en prioritering',
+    'Behoudvraag',
+    'Waar behoud nu onder druk staat in actieve teams.',
+    'Dashboard, samenvatting en rapport voor eerste prioriteiten.',
+    'Logisch als u eerder wilt zien waar risico oploopt.',
+  ],
+  [
+    'Onboarding 30-60-90',
+    'Onboardingvraag',
+    'Hoe nieuwe medewerkers landen in rol, team en leiding.',
+    'Dashboard, samenvatting en rapport rond de eerste fase.',
+    'Logisch als de vraag draait om een sterke start.',
+  ],
+  [
+    'Pulse',
+    'Vervolgstap',
+    'Kort opnieuw kijken na een eerste actie of bespreking.',
+    'Compact beeld van wat is verschoven.',
+    'Handig nadat een eerste traject al liep.',
+  ],
+  [
+    'Leadership Scan',
+    'Vervolgstap',
+    'Extra duiding op managementcontext na een bestaand signaal.',
+    'Gerichte verdieping op wat in leiding en sturing meespeelt.',
+    'Handig als eerst meer context nodig is, niet als openingsstap.',
   ],
   [
     'Combinatie',
-    'Portfolio-aanpak',
-    'Hoe verbinden we vertrekduiding en vroegsignalering in een managementlijn?',
-    'Voor organisaties met beide vraagstukken',
+    'Later combineren',
+    'ExitScan en RetentieScan bewust naast elkaar organiseren.',
+    'Een gedeelde lijn voor twee vragen die tegelijk spelen.',
+    'Pas logisch als beide vragen tegelijk aandacht vragen.',
   ],
 ] as const
+
+export const productOverviewPrimaryRoutes = [
+  {
+    name: 'ExitScan',
+    chip: 'Vertrekvraag',
+    title: 'Waarom zijn mensen vertrokken?',
+    body: 'Voor HR en directie die willen begrijpen waarom mensen vertrokken en welke patronen daarin terugkomen.',
+    href: '/producten/exitscan',
+  },
+  {
+    name: 'RetentieScan',
+    chip: 'Behoudvraag',
+    title: 'Waar staat behoud nu onder druk?',
+    body: 'Voor teams waar u eerder wilt zien waar behoud onder druk staat en waar eerste prioriteiten liggen.',
+    href: '/producten/retentiescan',
+  },
+  {
+    name: 'Onboarding 30-60-90',
+    chip: 'Onboardingvraag',
+    title: 'Hoe landen nieuwe medewerkers in de eerste fase?',
+    body: 'Voor organisaties die de startfase van nieuwe medewerkers sneller leesbaar willen maken.',
+    href: '/producten/onboarding-30-60-90',
+  },
+] as const
+
+export const productOverviewAddOnRoutes = [
+  {
+    title: 'Pulse',
+    body: 'Korte hercheck nadat een eerste traject liep of een eerste actie is ingezet.',
+    href: '/producten/pulse',
+  },
+  {
+    title: 'Leadership Scan',
+    body: 'Extra duiding op managementcontext wanneer u na een eerste beeld verder wilt verdiepen.',
+    href: '/producten/leadership-scan',
+  },
+] as const
+
+export const productOverviewPortfolioRoute = {
+  title: 'Combinatie',
+  eyebrow: 'Later combineren',
+  headline: 'Gebruik Combinatie pas wanneer vertrek en behoud tegelijk een duidelijke vraag zijn.',
+  body:
+    'Combinatie is bedoeld voor situaties waarin zowel vertrek als behoud tegelijk aandacht vragen. U start meestal eerst met een duidelijke route en combineert pas later als dat echt helpt.',
+  href: '/producten/combinatie',
+} as const
 
 export const comparisonCards = [
   {
@@ -193,7 +260,7 @@ export const trustQuickLinks = [
 export const trustSignalHighlights = [
   {
     title: 'Methodische duidelijkheid',
-    body: 'ExitScan wordt buyer-facing uitgelegd via Frictiescore en RetentieScan via Retentiesignaal, steeds als managementinstrumenten met heldere claimsgrenzen en niet als diagnose of black-box voorspeller.',
+    body: 'ExitScan en RetentieScan worden buyer-facing uitgelegd als managementinstrumenten met heldere claimsgrenzen, niet als diagnose of black-box voorspeller.',
   },
   {
     title: 'Privacy op groepsniveau',
@@ -224,11 +291,11 @@ export const trustVerificationCards = [
   },
   {
     title: 'Waar sample-proof bewust stopt',
-    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Pulse, TeamScan, onboarding en Leadership Scan blijven bounded follow-on routes met formele output, maar zonder aparte publieke samplebibliotheek.',
+    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Onboarding 30-60-90 blijft een actief peer product zonder aparte samplebibliotheek. Pulse en Leadership Scan blijven bounded vervolgroutes. TeamScan blijft buiten het actieve portfolio.',
   },
   {
     title: 'Wat management wel ziet',
-    body: 'Bij ExitScan ziet management Frictiescore, werkfactoren en bestuurlijke handoff op groepsniveau. Bij RetentieScan ziet management Retentiesignaal, aanvullende signalen, topfactoren en prioriteiten op groeps- en segmentniveau.',
+    body: 'Geaggregeerde bestuurlijke read, bestuurlijke handoff, topfactoren, hypotheses, prioriteiten en opvolgsporen in een vaste executive leeslijn.',
   },
   {
     title: 'Wat we bewust niet claimen',
@@ -243,7 +310,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Wat ziet management precies?',
-    body: 'Management ziet groeps- en segmentinzichten, geen individuele signalen. ExitScan opent via Frictiescore met werkfrictie als verklarende laag; RetentieScan via Retentiesignaal met aanvullende signalen op groepsniveau. Individuele vertrekintentie en persoonsgerichte actieroutes blijven buiten beeld.',
+    body: 'Management ziet groeps- en segmentinzichten, geen individuele signalen. Bij RetentieScan blijven individuele vertrekintentie en persoonsgerichte actieroutes nadrukkelijk buiten beeld.',
   },
   {
     title: 'Hoe voorkom je schijnprecisie?',
@@ -251,7 +318,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Hoe lees je de output?',
-    body: 'Lees ExitScan via Frictiescore en RetentieScan via Retentiesignaal. Werkfrictie en aanvullende signalen helpen daarna bij verificatie en prioritering, niet bij causaliteitsclaims of harde diagnoses.',
+    body: 'Verisight gebruikt signalen, hypotheses en bestuurlijke reads als gespreksinput. De output ondersteunt verificatie en prioritering, niet causaliteitsclaims of harde diagnoses.',
   },
   {
     title: 'Welke juridische basis is publiek beschikbaar?',
@@ -321,9 +388,9 @@ export const contactTrustSignals = [
 
 export const statCards = [
   {
-    value: '2 kernproducten',
-    label: 'heldere kernportfolio',
-    detail: 'ExitScan en RetentieScan als twee kernroutes binnen een duidelijke first-buy logica.',
+    value: '3 hoofdproducten',
+    label: 'actief portfolio',
+    detail: 'ExitScan, RetentieScan en Onboarding 30-60-90 blijven actief als peer producten binnen een duidelijke first-buy logica.',
   },
   {
     value: '1 leeslijn',
@@ -448,7 +515,7 @@ export const approachRoutes = [
   {
     eyebrow: 'RetentieScan Baseline',
     title: 'De eerste meetvorm voor actieve medewerkers',
-    body: 'Een eenmalige RetentieScan om te zien waar behoud op groepsniveau onder druk staat, welke werkfactoren prioriteit vragen en hoe Retentiesignaal, aanvullende signalen en vertrekintentie zich verhouden.',
+    body: 'Een eenmalige RetentieScan om te zien waar behoud op groepsniveau onder druk staat, welke werkfactoren prioriteit vragen en hoe bevlogenheid, stay-intent en vertrekintentie zich verhouden.',
     bullets: [
       'Actieve medewerkers in plaats van ex-medewerkers',
       'Groepsinzichten, geen brede MTO en geen individuele signalen naar management',
@@ -461,7 +528,7 @@ export const approachRoutes = [
   {
     eyebrow: 'RetentieScan ritmeroute',
     title: 'De vaste vervolgvorm na een baseline',
-    body: 'Herhaalmeting per kwartaal of halfjaar om te zien of het Retentiesignaal, aanvullende signalen, bevlogenheid en prioritaire werkfactoren verbeteren. Dit is de buyer-facing vervolgvorm nadat de eerste baseline en opvolging staan.',
+    body: 'Herhaalmeting per kwartaal of halfjaar om te zien of het retentiesignaal, stay-intent, bevlogenheid en prioritaire werkfactoren verbeteren. Dit is de buyer-facing vervolgvorm nadat de eerste baseline en opvolging staan.',
     bullets: [
       'Compacter vervolg op een baseline',
       'Geschikt om effect van acties zichtbaar te maken in dezelfde signaallogica',
@@ -535,7 +602,7 @@ export const pricingCards = [
     eyebrow: 'ExitScan Baseline',
     price: 'EUR 2.950',
     description:
-      'De standaard eerste instap voor organisaties die snel een Frictiescore, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen dat ook in sponsor-, prioriteits- en budgetgesprekken overeind blijft. Werkfrictie blijft daarin de verklarende laag onder het vertrekbeeld.',
+      'De standaard eerste instap voor organisaties die snel een betrouwbaar organisatiebeeld, duidelijke prioriteiten en een professioneel managementrapport over uitstroom willen dat ook in sponsor-, prioriteits- en budgetgesprekken overeind blijft.',
     bullets: [
       'Inrichting van de exit-campagne en respondentflow',
       'Dashboard, managementrapport en bestuurlijke handoff',
@@ -548,7 +615,7 @@ export const pricingCards = [
     description:
       'De standaard eerste instap voor organisaties die eerder willen zien waar behoud onder druk staat, met extra nadruk op privacy, groepsduiding en een gerichte managementscan in plaats van een brede MTO.',
     bullets: [
-      'Retentiesignaal, aanvullende signalen, bevlogenheid en vertrekintentie in een managementrapport',
+      'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in een managementrapport',
       'Geen individuele signalen naar management',
       'Geschikt als basis voor vervolgmeting of gerichte opvolging',
     ],
@@ -577,7 +644,7 @@ export const pricingFollowOnRoutes = [
     bullets: [
       'Buyer-facing vervolgvorm na RetentieScan Baseline',
       'Baseline plus herhaalmeting per kwartaal of halfjaar',
-      'Trendbeeld op Retentiesignaal, bevlogenheid en aanvullende signalen',
+      'Trendbeeld op retentiesignaal, bevlogenheid en stay-intent',
     ],
   },
 ] as const
@@ -606,7 +673,7 @@ export const retentionPackages = [
 export const pricingChoiceGuide = [
   [
     'ExitScan Baseline',
-    'Je wilt vertrek achteraf duiden en zoekt meestal het eerste betaalde traject dat Frictiescore en terugkerende werkfrictie bestuurlijk leesbaar maakt.',
+    'Je wilt vertrek achteraf duiden en zoekt meestal het eerste betaalde traject dat losse exitinput bestuurlijk leesbaar maakt.',
   ],
   [
     'RetentieScan Baseline',
@@ -647,7 +714,7 @@ export const pricingFaqs = [
   ],
   [
     'Is RetentieScan een MTO-vervanger?',
-    'Nee. Het product is smaller en scherper: het richt zich op vroegsignalering op behoud via Retentiesignaal, aanvullende signalen zoals stay-intent en vertrekintentie, en beinvloedbare werkfactoren.',
+    'Nee. Het product is smaller en scherper: het richt zich op vroegsignalering op behoud via retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
     'Wanneer wordt ExitScan ritmeroute logisch?',
@@ -678,11 +745,11 @@ export const pricingFaqs = [
 export const faqs = [
   [
     'Wat is het verschil tussen ExitScan en RetentieScan?',
-    'ExitScan helpt vertrek achteraf duiden via Frictiescore als eerste managementsamenvatting, met terugkerende werkfactoren, vertrekredenen en werkfrictie als verklarende laag. RetentieScan helpt eerder zien waar behoud op groepsniveau onder druk staat bij actieve medewerkers.',
+    'ExitScan helpt vertrek achteraf duiden op basis van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie. RetentieScan helpt eerder zien waar behoud op groepsniveau onder druk staat bij actieve medewerkers.',
   ],
   [
     'Is RetentieScan gewoon een MTO?',
-    'Nee. RetentieScan is smaller en scherper gepositioneerd: het is een compacte scan voor vroegsignalering op behoud op groeps- en segmentniveau rond Retentiesignaal, aanvullende signalen zoals stay-intent en vertrekintentie, en beinvloedbare werkfactoren.',
+    'Nee. RetentieScan is smaller en scherper gepositioneerd: het is een compacte scan voor vroegsignalering op behoud op groeps- en segmentniveau rond retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren.',
   ],
   [
     'Wanneer kies je voor de combinatie?',
@@ -708,7 +775,7 @@ export const faqs = [
 
 export const marketingPagePurposes = {
   home: 'Product choice + premium proof + conversion',
-  producten: 'Buyer-oriented overview of the two core routes and the combination path',
+  producten: 'Buyer-oriented overview of the active peer products, bounded add-ons and the portfolio path',
   aanpak: 'Process clarity and buying confidence',
   tarieven: 'Commercial packaging and price framing',
 } as const

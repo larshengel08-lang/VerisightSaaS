@@ -5,7 +5,6 @@ import {
   MarketingHeroStage,
   MarketingHeroSupport,
 } from '@/components/marketing/marketing-hero'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { PreviewEvidenceRail } from '@/components/marketing/preview-evidence-rail'
@@ -326,18 +325,6 @@ export function CombinatieBoundedPage() {
           secondaryHref="/producten"
           secondaryLabel="Bekijk de kernroutes"
         />
-      </MarketingSection>
-
-      <MarketingSection tone="surface">
-        <div id="kennismaking">
-          <MarketingInlineContactPanel
-            eyebrow="Kennismaking"
-            title="Plan een gesprek over Combinatie"
-            body="Beschrijf kort of beide managementvragen nu al samen spelen of dat een kernroute eerst helderder moet worden. Dan toetsen we of Combinatie echt logisch is."
-            defaultRouteInterest="combinatie"
-            defaultCtaSource="product_combination_form"
-          />
-        </div>
       </MarketingSection>
     </MarketingPageShell>
   )

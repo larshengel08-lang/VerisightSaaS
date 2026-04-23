@@ -5,7 +5,6 @@ import {
   MarketingHeroStage,
   MarketingHeroSupport,
 } from '@/components/marketing/marketing-hero'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingProofStrip } from '@/components/marketing/marketing-proof-strip'
@@ -310,18 +309,6 @@ export function PulseBoundedPage() {
           secondaryHref="/producten/retentiescan"
           secondaryLabel="Bekijk RetentieScan"
         />
-      </MarketingSection>
-
-      <MarketingSection tone="surface">
-        <div id="kennismaking">
-          <MarketingInlineContactPanel
-            eyebrow="Kennismaking"
-            title="Bespreek of Pulse nu past"
-            body="Beschrijf kort welke eerste route, managementread of actie al loopt en wat u nu vooral wilt herchecken. Dan toetsen we of Pulse logisch is of dat een bredere vervolgstap beter past."
-            defaultRouteInterest="nog-onzeker"
-            defaultCtaSource="product_pulse_form"
-          />
-        </div>
       </MarketingSection>
     </MarketingPageShell>
   )

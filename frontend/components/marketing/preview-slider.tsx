@@ -1,18 +1,18 @@
 'use client'
 
-import Image from 'next/image'
 import { useState } from 'react'
 import {
   REPORT_PREVIEW_COPY,
   type ReportPreviewFactorCard,
   type ReportPreviewVariant,
 } from '@/lib/report-preview-copy'
+import { SegmentDeepDiveVisual } from '@/components/marketing/report-visuals'
 
 interface PreviewSliderProps {
   variant?: ReportPreviewVariant
 }
 
-const SLIDES = ['Dashboard', 'Samenvatting', 'Wat valt op'] as const
+const SLIDES = ['Dashboard', 'Samenvatting', 'Wat valt op', 'Volgende stap'] as const
 const COPY = REPORT_PREVIEW_COPY
 
 const toneStyles = {
@@ -37,7 +37,7 @@ function DashboardCanvas({ variant }: { variant: ReportPreviewVariant }) {
   const copy = COPY[variant]
 
   return (
-    <div className="rounded-[1.9rem] border border-slate-200 bg-slate-950 p-5 text-white">
+    <div className="rounded-[1.08rem] border border-slate-200 bg-slate-950 p-5 text-white">
       <div className="mb-5 flex items-center gap-2">
         <span className="h-3 w-3 rounded-full bg-red-400" />
         <span className="h-3 w-3 rounded-full bg-amber-300" />
@@ -46,15 +46,27 @@ function DashboardCanvas({ variant }: { variant: ReportPreviewVariant }) {
       </div>
       <div className="grid gap-3 sm:grid-cols-4">
         {copy.kpis.map(([label, value, detail]) => (
-          <div key={label} className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
-            <p className="mt-2 text-lg font-bold text-white">{value}</p>
-            <p className="mt-1 text-xs text-slate-400">{detail}</p>
+          <div key={label} className="rounded-[0.95rem] border border-white/10 bg-white/5 p-4">
+            {variant === 'portfolio' ? (
+              <>
+                <p className="text-sm font-semibold leading-6 text-white">{label}</p>
+                {value ? <p className="mt-2 text-sm font-medium text-slate-200">{value}</p> : null}
+                {detail ? <p className="mt-2 text-xs leading-5 text-slate-400">{detail}</p> : null}
+              </>
+            ) : (
+              <>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+                <p className="mt-2 text-lg font-bold text-white">{value}</p>
+                <p className="mt-1 text-xs text-slate-400">{detail}</p>
+              </>
+            )}
           </div>
         ))}
       </div>
-      <div className="mt-5 rounded-[1.4rem] border border-white/10 bg-white/5 p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{copy.focusTitle}</p>
+      <div className="mt-5 rounded-[0.95rem] border border-white/10 bg-white/5 p-4">
+        <p className={`${variant === 'portfolio' ? 'text-sm leading-6 text-white' : 'text-xs font-semibold uppercase tracking-wide text-slate-400'}`}>
+          {copy.focusTitle}
+        </p>
         <div className="mt-4 space-y-3">
           {copy.dashboardRows.map((row) => {
             const tone = toneStyles[row.tone]
@@ -80,7 +92,7 @@ function FactorCard({ card }: { card: ReportPreviewFactorCard }) {
   const signalWidth = card.signalDisplay ? `${Number(card.signalDisplay.replace('/10', '').replace(',', '.')) * 10}%` : '0%'
 
   return (
-    <div className={`rounded-[1.35rem] border p-4 ${tone.surface}`}>
+    <div className={`rounded-[0.95rem] border p-4 ${tone.surface}`}>
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-slate-900">{card.label}</p>
         <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${tone.badge}`}>{card.band}</span>
@@ -93,7 +105,7 @@ function FactorCard({ card }: { card: ReportPreviewFactorCard }) {
       </div>
       {card.showSignal && card.signalDisplay ? (
         <>
-          <div className="mt-3 rounded-[1rem] border border-white/70 bg-white/80 px-3 py-2">
+          <div className="mt-3 rounded-[0.8rem] border border-white/70 bg-white/80 px-3 py-2">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Verdieping</p>
             <p className="mt-1 text-sm font-semibold text-slate-900">Signaalsterkte {card.signalDisplay}</p>
           </div>
@@ -114,7 +126,7 @@ function FactorCanvas({ variant }: { variant: ReportPreviewVariant }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4">
+      <div className="rounded-[0.95rem] border border-slate-200 bg-slate-50 px-5 py-4">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
           Uit het managementrapport - Organisatiefactoren
         </p>
@@ -129,26 +141,41 @@ function FactorCanvas({ variant }: { variant: ReportPreviewVariant }) {
   )
 }
 
-function HypothesisCanvas({ variant }: { variant: ReportPreviewVariant }) {
+function SummaryCanvas({ variant }: { variant: ReportPreviewVariant }) {
   const copy = COPY[variant]
 
   return (
     <div className="space-y-4">
-      <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-          Uit het managementrapport - Duiding en vervolgstappen
-        </p>
-        <p className="mt-2 text-sm leading-6 text-slate-700">{copy.hypothesisLead}</p>
+      <div className="rounded-[0.95rem] border border-slate-200 bg-slate-50 px-5 py-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Samenvatting</p>
+        <p className="mt-2 text-sm leading-6 text-slate-700">{copy.boardroomIntro}</p>
+      </div>
+      <div className="grid gap-4 xl:grid-cols-3">
+        {copy.boardroomPoints.map(([title, body]) => (
+          <div key={title} className="rounded-[0.95rem] border border-slate-200 bg-white px-5 py-5">
+            <p className="text-sm font-semibold text-slate-950">{title}</p>
+            <p className="mt-3 text-sm leading-6 text-slate-600">{body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function NextStepCanvas({ variant }: { variant: ReportPreviewVariant }) {
+  const copy = COPY[variant]
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-[0.95rem] border border-[#DCEFEA] bg-[#F4FAF8] px-5 py-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3C8D8A]">Volgende stap</p>
+        <p className="mt-2 text-sm leading-6 text-slate-700">{copy.nuance}</p>
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
-        {copy.hypotheses.map(({ title, body, question }) => (
-          <div key={title} className="rounded-[1.5rem] border border-[#DCEFEA] bg-[#F4FAF8] p-5">
-            <p className="text-sm font-bold text-slate-950">{title}</p>
-            <p className="mt-3 text-sm leading-6 text-slate-700">{body}</p>
-            <div className="mt-4 rounded-[1.15rem] border border-white/80 bg-white/90 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#3C8D8A]">Te toetsen vraag</p>
-              <p className="mt-2 text-sm leading-6 text-slate-800">{question}</p>
-            </div>
+        {copy.hypotheses.map(({ title, question }) => (
+          <div key={title} className="rounded-[0.95rem] border border-slate-200 bg-white px-5 py-5">
+            <p className="text-sm font-semibold text-slate-950">{title}</p>
+            <p className="mt-3 text-sm leading-6 text-slate-600">{question}</p>
           </div>
         ))}
       </div>
@@ -158,82 +185,81 @@ function HypothesisCanvas({ variant }: { variant: ReportPreviewVariant }) {
 
 function PreviewCanvas({ variant, current }: { variant: ReportPreviewVariant; current: number }) {
   if (current === 0) return <DashboardCanvas variant={variant} />
-  if (current === 1) return <FactorCanvas variant={variant} />
-  return <HypothesisCanvas variant={variant} />
+  if (current === 1) return <SummaryCanvas variant={variant} />
+  if (current === 2) return <FactorCanvas variant={variant} />
+  return <NextStepCanvas variant={variant} />
 }
 
 export function PreviewSlider({ variant = 'portfolio' }: PreviewSliderProps) {
   const [current, setCurrent] = useState(0)
   const copy = COPY[variant]
+  const isPortfolio = variant === 'portfolio'
+  const portfolioFactorCards = copy.factorCards.filter((card) =>
+    ['Leiderschap', 'Werkbelasting', 'Rolhelderheid'].includes(card.label),
+  )
 
   return (
     <div className="marketing-preview-shell">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3C8D8A]">{copy.label}</p>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">{copy.intro}</p>
+      {!isPortfolio ? (
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#3C8D8A]">{copy.label}</p>
+            <p className="mt-2 max-w-[42rem] text-[0.94rem] leading-6 text-slate-600">{copy.intro}</p>
+          </div>
+          <span className="rounded-[0.58rem] border border-slate-200 bg-slate-50 px-3 py-1 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            {copy.demoLabel}
+          </span>
         </div>
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-          {copy.demoLabel}
-        </span>
-      </div>
+      ) : null}
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        {SLIDES.map((label, index) => (
-          <button
-            key={label}
-            type="button"
-            onClick={() => setCurrent(index)}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-              index === current
-                ? 'bg-[#234B57] text-white'
-                : 'border border-[#E5E0D6] bg-white text-slate-600 hover:border-[#3C8D8A] hover:text-[#234B57]'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {!isPortfolio ? (
+        <div className="mt-6 flex flex-wrap gap-2">
+          {SLIDES.map((label, index) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => setCurrent(index)}
+              className={`rounded-[0.72rem] px-4 py-2.5 text-sm font-semibold transition-all ${
+                index === current
+                  ? 'border border-[#17343C] bg-[#17343C] text-white shadow-[0_16px_34px_-20px_rgba(23,52,60,0.72)] ring-1 ring-[#17343C]/20'
+                  : 'border border-[#E5E0D6] bg-white text-slate-600 hover:border-[#3C8D8A] hover:text-[#234B57]'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.12fr)_minmax(18rem,0.88fr)]">
+      <div className="mt-6 space-y-6">
         <div className="min-w-0">
-          <PreviewCanvas variant={variant} current={current} />
+          {isPortfolio ? <DashboardCanvas variant={variant} /> : <PreviewCanvas variant={variant} current={current} />}
         </div>
 
-        <div className="grid gap-4 self-start">
-          <div className="rounded-[1.6rem] border border-slate-200 bg-white p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Wat deze preview laat zien</p>
-            <div className="mt-4 space-y-3">
-              {copy.proofNotes.slice(0, 3).map(([title, body]) => (
-                <div key={title} className="rounded-[1.15rem] border border-slate-200 bg-slate-50 px-4 py-3">
-                  <p className="text-sm font-semibold text-slate-950">{title}</p>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">{body}</p>
-                </div>
+        {isPortfolio ? (
+          <div>
+            <p className="mb-4 text-sm font-medium text-slate-700">Welke factoren kleuren dit beeld het sterkst?</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {portfolioFactorCards.map((card) => (
+                <FactorCard key={card.label} card={card} />
               ))}
             </div>
           </div>
-
-          <div className="rounded-[1.6rem] border border-[#DCEFEA] bg-[#F4FAF8] p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3C8D8A]">Belangrijke nuance</p>
-            <p className="mt-3 text-sm leading-7 text-slate-700">{copy.nuance}</p>
-          </div>
-
-          <div className="overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white">
-            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-950">{copy.supportVisualTitle}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">{copy.demoBody}</p>
+        ) : (
+          <>
+            <div className="overflow-hidden rounded-[1.08rem] border border-slate-200 bg-white">
+              <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-950">{copy.supportVisualTitle}</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">{copy.demoBody}</p>
+                </div>
+              </div>
+              <div className="p-0">
+                <SegmentDeepDiveVisual />
               </div>
             </div>
-            <Image
-              src="/segment-deep-dive-preview.png"
-              alt={copy.supportVisualAlt}
-              width={1600}
-              height={960}
-              className="max-h-[26rem] w-full object-cover"
-            />
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   )

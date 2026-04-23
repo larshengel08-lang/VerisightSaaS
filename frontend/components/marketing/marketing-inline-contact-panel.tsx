@@ -3,13 +3,15 @@ import { ContactForm } from '@/components/marketing/contact-form'
 import type { ContactRouteInterest } from '@/lib/contact-funnel'
 
 interface MarketingInlineContactPanelProps {
-  eyebrow: string
-  title: string
-  body: string
+  eyebrow?: string
+  title?: string
+  body?: string
   defaultRouteInterest: ContactRouteInterest
   defaultCtaSource: string
   id?: string
   badge?: string | null
+  minimal?: boolean
+  submitLabel?: string
 }
 
 export function MarketingInlineContactPanel({
@@ -20,27 +22,42 @@ export function MarketingInlineContactPanel({
   defaultCtaSource,
   id = 'kennismaking',
   badge = 'Vrijblijvend gesprek',
+  minimal = false,
+  submitLabel,
 }: MarketingInlineContactPanelProps) {
+  const hasHeading = Boolean(eyebrow || title)
+  const hasBody = Boolean(body)
+  const shellClass = minimal
+    ? 'overflow-hidden rounded-[1.22rem] border border-[rgba(221,215,203,0.74)] bg-[rgba(255,252,247,0.88)] p-6 md:p-7'
+    : 'overflow-hidden rounded-[1.35rem] border border-[var(--border)] bg-[rgba(255,252,247,0.96)] p-7 md:p-9'
+
   return (
-    <div
-      id={id}
-      className="marketing-panel overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(180deg,#ffffff_0%,#fbfaf8_100%)] p-7 md:p-10"
-    >
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-5">
-        <div>
-          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">{eyebrow}</p>
-          <h2 className="mt-3 text-[clamp(1.8rem,3vw,2.8rem)] font-light leading-[1.06] tracking-[-0.03em] text-[var(--ink)]">
-            {title}
-          </h2>
+    <div id={id} className={shellClass}>
+      {(hasHeading || badge != null) && (
+        <div className={`mb-6 flex flex-wrap items-center justify-between gap-3 ${minimal ? '' : 'border-b border-[var(--border)]/80 pb-5'}`}>
+          {hasHeading ? (
+            <div>
+              {eyebrow ? (
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">{eyebrow}</p>
+              ) : null}
+              {title ? (
+                <h2 className="mt-3 text-[clamp(1.7rem,3vw,2.45rem)] font-light leading-[1.06] tracking-[-0.03em] text-[var(--ink)]">
+                  {title}
+                </h2>
+              ) : null}
+            </div>
+          ) : (
+            <div />
+          )}
+          {badge != null && (
+            <div className="rounded-full border border-[var(--border)] bg-[rgba(255,255,255,0.7)] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+              {badge}
+            </div>
+          )}
         </div>
-        {badge != null && (
-          <div className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-            {badge}
-          </div>
-        )}
-      </div>
-      <p className="text-[1.02rem] leading-8 text-[var(--text)]">{body}</p>
-      <div className="mt-8">
+      )}
+      {hasBody ? <p className="max-w-[42rem] text-[0.94rem] leading-7 text-[var(--text)]">{body}</p> : null}
+      <div className={hasBody ? 'mt-8' : ''}>
         <Suspense
           fallback={
             <div className="rounded-[1.6rem] border border-[var(--border)] bg-[var(--surface)] p-6 text-sm leading-7 text-[var(--text)]">
@@ -52,6 +69,8 @@ export function MarketingInlineContactPanel({
             surface="light"
             defaultRouteInterest={defaultRouteInterest}
             defaultCtaSource={defaultCtaSource}
+            minimal={minimal}
+            submitLabel={submitLabel}
           />
         </Suspense>
       </div>

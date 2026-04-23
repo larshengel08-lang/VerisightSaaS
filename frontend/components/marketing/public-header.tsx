@@ -25,15 +25,15 @@ export function PublicHeader({
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[rgba(255,255,255,0.92)] backdrop-blur-md">
-      <div className="marketing-shell py-4">
-        <div className="flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 border-b border-[rgba(221,215,203,0.78)] bg-[rgba(255,252,247,0.88)] backdrop-blur-md">
+      <div className="marketing-shell flex min-h-[3.85rem] items-center">
+        <div className="flex w-full items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Wordmark size="md" />
           </div>
 
-          <nav className="hidden items-center gap-1 lg:flex">
-            <div className="px-2">
+          <nav className="hidden items-center gap-5 lg:flex">
+            <div>
               <SolutionsDropdown />
             </div>
             {secondaryNavLinks.map((link) => (
@@ -47,7 +47,7 @@ export function PublicHeader({
             ))}
           </nav>
 
-          <div className="hidden items-center gap-3 lg:flex">
+          <div className="hidden items-center gap-4 lg:flex">
             <Link href="/login" prefetch={false} className="marketing-topbar-link">
               Inloggen
             </Link>
@@ -83,7 +83,7 @@ export function PublicHeader({
         {mobileOpen ? (
           <div id="public-mobile-menu" className="marketing-mobile-menu lg:hidden">
             <div className="space-y-1">
-              <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3">
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3">
                 <SolutionsDropdown />
               </div>
               <Link

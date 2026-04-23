@@ -330,5 +330,5 @@ export function buildContactHref({
   if (desiredTiming) {
     params.set('desired_timing', desiredTiming)
   }
-  return `/?${params.toString()}#kennismaking`
+  return `/kennismaking?${params.toString()}`
 }

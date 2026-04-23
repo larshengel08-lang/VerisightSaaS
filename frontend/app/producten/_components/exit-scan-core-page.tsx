@@ -4,7 +4,6 @@ import {
   MarketingHeroStage,
   MarketingHeroSupport,
 } from '@/components/marketing/marketing-hero'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { PreviewEvidenceRail } from '@/components/marketing/preview-evidence-rail'
@@ -285,18 +284,6 @@ export function ExitScanCorePage() {
           secondaryHref="/vertrouwen"
           secondaryLabel="Lees trust en privacy"
         />
-      </MarketingSection>
-
-      <MarketingSection tone="surface">
-        <div id="kennismaking">
-          <MarketingInlineContactPanel
-            eyebrow="Kennismaking"
-            title="Plan een gesprek over ExitScan"
-            body="Beschrijf kort welke vertrekvraag nu bestuurlijk aandacht vraagt. Dan toetsen we of ExitScan de juiste eerste stap is en hoe de aanpak eruitziet."
-            defaultRouteInterest="exitscan"
-            defaultCtaSource="product_exit_form"
-          />
-        </div>
       </MarketingSection>
     </MarketingPageShell>
   )

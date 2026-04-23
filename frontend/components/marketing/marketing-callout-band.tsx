@@ -23,25 +23,19 @@ export function MarketingCalloutBand({
 }: MarketingCalloutBandProps) {
   return (
     <div
-      className={`marketing-panel-soft overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(135deg,rgba(220,239,234,0.38),rgba(247,245,241,0.96)_34%,#ffffff_100%)] p-7 md:p-9 ${className}`.trim()}
+      className={`marketing-panel-soft overflow-hidden rounded-[1.08rem] border border-[var(--border)] bg-[rgba(255,252,247,0.96)] p-7 md:p-9 ${className}`.trim()}
     >
-      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">{eyebrow}</p>
-      <h2 className="mt-4 max-w-[24ch] text-[clamp(1.9rem,3vw,2.9rem)] font-light leading-[1.06] tracking-[-0.03em] text-[var(--ink)]">
+      <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[var(--petrol)]">{eyebrow}</p>
+      <h2 className="mt-3 max-w-none text-[clamp(2rem,3vw,3rem)] font-light leading-[1.03] tracking-[-0.04em] text-[var(--ink)]">
         {title}
       </h2>
-      <p className="mt-5 max-w-3xl text-[1rem] leading-8 text-[var(--text)]">{body}</p>
-      <div className="marketing-hero-cta-row mt-6">
-        <Link
-          href={primaryHref}
-          className="inline-flex items-center justify-center rounded-full bg-[var(--teal)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(60,141,138,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#2d6e6b]"
-        >
+      <p className="mt-4 max-w-[52rem] text-[1rem] leading-8 text-[var(--text)]">{body}</p>
+      <div className="marketing-hero-cta-row mt-7">
+        <Link href={primaryHref} className="marketing-button-primary">
           {primaryLabel}
         </Link>
         {secondaryHref && secondaryLabel ? (
-          <Link
-            href={secondaryHref}
-            className="inline-flex items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--text)] transition-colors hover:border-[var(--teal)] hover:text-[var(--ink)]"
-          >
+          <Link href={secondaryHref} className="marketing-button-secondary">
             {secondaryLabel}
           </Link>
         ) : null}

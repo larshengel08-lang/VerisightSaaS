@@ -102,7 +102,7 @@ export function SolutionsDropdown() {
                 onClick={() => setOpen(false)}
                 className="text-sm font-medium text-[#132033] transition-colors hover:text-[#3C8D8A]"
               >
-                Bekijk alle producten →
+                Bekijk alle producten
               </Link>
             </div>
           </div>

@@ -941,6 +941,18 @@ details > summary::-webkit-details-marker {
       grid-template-columns: 1fr;
     }
 
+    .marketing-hero-grid-home .marketing-hero-region-intro {
+      grid-area: 1 / 1;
+    }
+
+    .marketing-hero-grid-home .marketing-hero-region-stage {
+      grid-area: 2 / 1;
+    }
+
+    .marketing-hero-grid-home .marketing-hero-region-support {
+      grid-area: 3 / 1;
+    }
+
     .marketing-hero-grid-product {
       grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
     }

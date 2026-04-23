@@ -6,7 +6,6 @@ import {
   MarketingHeroStage,
   MarketingHeroSupport,
 } from '@/components/marketing/marketing-hero'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingSection } from '@/components/marketing/marketing-section'
 import { SectionHeading } from '@/components/marketing/section-heading'
@@ -283,16 +282,6 @@ export default function AanpakPage() {
             primaryLabel="Plan een kennismaking"
             secondaryHref="/tarieven"
             secondaryLabel="Bekijk tarieven"
-          />
-        </MarketingSection>
-
-        <MarketingSection tone="plain">
-          <MarketingInlineContactPanel
-            eyebrow="Plan kennismaking"
-            title="Vertel kort welke managementvraag nu speelt."
-            body="In circa 20 minuten krijgt u helderheid over routekeuze, aanpak, timing, privacy en prijs."
-            defaultRouteInterest="exitscan"
-            defaultCtaSource="approach_form"
           />
         </MarketingSection>
       </MarketingPageShell>

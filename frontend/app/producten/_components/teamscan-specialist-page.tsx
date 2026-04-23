@@ -5,7 +5,6 @@ import {
   MarketingHeroStage,
   MarketingHeroSupport,
 } from '@/components/marketing/marketing-hero'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingProofStrip } from '@/components/marketing/marketing-proof-strip'
@@ -309,18 +308,6 @@ export function TeamScanSpecialistPage() {
           secondaryHref="/producten"
           secondaryLabel="Bekijk producten"
         />
-      </MarketingSection>
-
-      <MarketingSection tone="surface">
-        <div id="kennismaking">
-          <MarketingInlineContactPanel
-            eyebrow="Kennismaking"
-            title="Bespreek of TeamScan nu past"
-            body="Beschrijf kort welk bredere signaal al speelt en waar de lokale team- of leidingcontext nu het eerst verduidelijking vraagt. Dan toetsen we of TeamScan logisch is."
-            defaultRouteInterest="teamscan"
-            defaultCtaSource="product_team_form"
-          />
-        </div>
       </MarketingSection>
     </MarketingPageShell>
   )

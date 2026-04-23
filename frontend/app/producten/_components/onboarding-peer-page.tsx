@@ -5,7 +5,6 @@ import {
   MarketingHeroStage,
   MarketingHeroSupport,
 } from '@/components/marketing/marketing-hero'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingProofStrip } from '@/components/marketing/marketing-proof-strip'
@@ -309,18 +308,6 @@ export function OnboardingPeerPage() {
           secondaryHref="/producten"
           secondaryLabel="Bekijk producten"
         />
-      </MarketingSection>
-
-      <MarketingSection tone="surface">
-        <div id="kennismaking">
-          <MarketingInlineContactPanel
-            eyebrow="Kennismaking"
-            title="Bespreek of Onboarding 30-60-90 nu past"
-            body="Beschrijf kort welke lifecycle-vraag rond nieuwe medewerkers nu speelt en of het gaat om een vroeg checkpoint, een bredere behoudsvraag of juist client onboarding. Dan toetsen we welke route logisch is."
-            defaultRouteInterest="onboarding"
-            defaultCtaSource="product_onboarding_form"
-          />
-        </div>
       </MarketingSection>
     </MarketingPageShell>
   )

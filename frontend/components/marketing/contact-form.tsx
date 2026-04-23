@@ -2,12 +2,10 @@
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
-import { contactTrustSignals } from '@/components/marketing/site-content'
+import { useEffect, useState } from 'react'
 import {
   CONTACT_DESIRED_TIMING_OPTIONS,
   CONTACT_ROUTE_OPTIONS,
-  getContactQualificationGuidance,
   getContactDesiredTimingLabel,
   getContactFirstStepLabel,
   getContactRouteLabel,
@@ -34,6 +32,8 @@ interface ContactFormProps {
   surface?: 'dark' | 'light'
   defaultRouteInterest?: ContactRouteInterest
   defaultCtaSource?: string
+  minimal?: boolean
+  submitLabel?: string
 }
 
 interface SuccessState {
@@ -41,8 +41,6 @@ interface SuccessState {
   routeLabel: string
   firstStepLabel: string
   desiredTimingLabel: string
-  guidanceHeadline: string
-  guidanceDetail: string
 }
 
 const initialState: FormState = {
@@ -60,6 +58,8 @@ export function ContactForm({
   surface = 'dark',
   defaultRouteInterest = 'exitscan',
   defaultCtaSource = 'website_contact_form',
+  minimal = false,
+  submitLabel = 'Plan mijn kennismaking',
 }: ContactFormProps) {
   const searchParams = useSearchParams()
   const [form, setForm] = useState<FormState>({
@@ -71,15 +71,6 @@ export function ContactForm({
   const [successState, setSuccessState] = useState<SuccessState | null>(null)
   const [warningMessage, setWarningMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const qualificationGuidance = useMemo(
-    () =>
-      getContactQualificationGuidance({
-        routeInterest: form.routeInterest,
-        desiredTiming: form.desiredTiming,
-        currentQuestion: form.currentQuestion,
-      }),
-    [form.currentQuestion, form.desiredTiming, form.routeInterest],
-  )
 
   const isLight = surface === 'light'
 
@@ -159,18 +150,11 @@ export function ContactForm({
       const routeLabel = getContactRouteLabel(form.routeInterest)
       const firstStepLabel = getContactFirstStepLabel(form.routeInterest)
       const desiredTimingLabel = getContactDesiredTimingLabel(form.desiredTiming)
-      const guidance = getContactQualificationGuidance({
-        routeInterest: form.routeInterest,
-        desiredTiming: form.desiredTiming,
-        currentQuestion: form.currentQuestion,
-      })
       setSuccessState({
         leadId: payload.lead_id ?? null,
         routeLabel,
         firstStepLabel,
         desiredTimingLabel,
-        guidanceHeadline: guidance.headline,
-        guidanceDetail: guidance.detail,
       })
       if (payload.notification_sent === false) {
         const reference = payload.lead_id ? ` Referentie: ${payload.lead_id}.` : ''
@@ -192,11 +176,11 @@ export function ContactForm({
 
   const shellClass = isLight
     ? 'w-full'
-    : 'rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.22)]'
+    : 'rounded-[1.25rem] border border-white/10 bg-white/4 p-6'
 
   const labelClass = isLight ? 'text-slate-700' : 'text-slate-200'
   const inputClass = isLight
-    ? 'border-slate-200 bg-slate-50 text-slate-950 placeholder:text-slate-400 focus:border-[#3C8D8A] focus:ring-[#3C8D8A]/25'
+    ? 'border-[#E6DED2] bg-white/88 text-slate-950 placeholder:text-slate-400 focus:border-[#3C8D8A] focus:ring-[#3C8D8A]/20'
     : 'border-white/10 bg-slate-950/40 text-white placeholder:text-slate-400 focus:border-[#DCEFEA] focus:ring-[#3C8D8A]/30'
   const helperClass = isLight ? 'text-slate-500' : 'text-slate-300'
   const successClass = isLight
@@ -214,38 +198,6 @@ export function ContactForm({
 
   return (
     <form onSubmit={handleSubmit} className={shellClass}>
-      <div
-        className={`mb-6 rounded-[1.5rem] border px-5 py-5 text-sm leading-7 ${
-          isLight ? 'border-[#E5E0D6] bg-[#F7F5F1] text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'
-        }`}
-      >
-        Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de
-        logische eerste stap is. TeamScan, Onboarding 30-60-90 en Leadership Scan blijven bounded follow-on routes die
-        pas logisch worden nadat een eerste signaal, baseline of managementread al staat. De informatie uit dit
-        formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.
-      </div>
-
-      <div className="mb-6 flex flex-wrap gap-2">
-        {contactTrustSignals.map((signal) => (
-          <span
-            key={signal}
-            className={`rounded-full px-3 py-1.5 text-xs font-semibold ${isLight ? 'border border-[#E5E0D6] bg-white text-slate-600' : 'border border-white/10 bg-white/5 text-slate-200'}`}
-          >
-            {signal}
-          </span>
-        ))}
-      </div>
-
-      <div
-        className={`mb-6 rounded-[1.5rem] border px-5 py-5 text-sm leading-7 ${
-          isLight ? 'border-[#D8E7E1] bg-[#EEF7F3] text-slate-700' : 'border-[#3C8D8A]/40 bg-[#3C8D8A]/12 text-slate-100'
-        }`}
-      >
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-80">Routevernauwing</p>
-        <p className="mt-2 font-semibold">{qualificationGuidance.headline}</p>
-        <p className="mt-2">{qualificationGuidance.detail}</p>
-      </div>
-
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="name" className={`mb-2 block text-sm font-medium ${labelClass}`}>
@@ -257,7 +209,7 @@ export function ContactForm({
             required
             value={form.name}
             onChange={(event) => updateField('name', event.target.value)}
-            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
             placeholder="Voor- en achternaam"
           />
         </div>
@@ -272,7 +224,7 @@ export function ContactForm({
             required
             value={form.workEmail}
             onChange={(event) => updateField('workEmail', event.target.value)}
-            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
             placeholder="naam@organisatie.nl"
           />
         </div>
@@ -287,7 +239,7 @@ export function ContactForm({
             required
             value={form.organization}
             onChange={(event) => updateField('organization', event.target.value)}
-            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
             placeholder="Naam organisatie"
           />
         </div>
@@ -301,7 +253,7 @@ export function ContactForm({
             required
             value={form.employeeCount}
             onChange={(event) => updateField('employeeCount', event.target.value)}
-            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           >
             <option value="" disabled>
               Kies een range
@@ -322,7 +274,7 @@ export function ContactForm({
             required
             value={form.routeInterest}
             onChange={(event) => updateField('routeInterest', normalizeContactRouteInterest(event.target.value))}
-            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           >
             {CONTACT_ROUTE_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -341,7 +293,7 @@ export function ContactForm({
             required
             value={form.desiredTiming}
             onChange={(event) => updateField('desiredTiming', normalizeContactDesiredTiming(event.target.value))}
-            className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+            className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           >
             {CONTACT_DESIRED_TIMING_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -362,7 +314,7 @@ export function ContactForm({
           rows={5}
           value={form.currentQuestion}
           onChange={(event) => updateField('currentQuestion', event.target.value)}
-          className={`block min-w-0 w-full rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
+          className={`block min-w-0 w-full rounded-[0.82rem] border px-4 py-3 text-sm outline-none transition focus:ring-2 ${inputClass}`}
           placeholder="Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar managementbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven."
         />
       </div>
@@ -380,11 +332,11 @@ export function ContactForm({
       </div>
 
       {successState ? (
-        <div className={`mt-5 rounded-[1.5rem] border px-5 py-5 text-sm ${successClass}`}>
+        <div className={`mt-5 rounded-[1rem] border px-5 py-5 text-sm ${successClass}`}>
           <p className="font-semibold">Aanvraag ontvangen.</p>
           <div className="mt-2 space-y-2 leading-7">
             <p>
-              We reageren meestal binnen 1 werkdag met een eerste route-inschatting voor{' '}
+              We reageren meestal binnen 1 werkdag met een eerste reactie op{' '}
               <span className="font-semibold">{successState.routeLabel}</span> en of{' '}
               <span className="font-semibold">{successState.firstStepLabel}</span> nu logisch is.
             </p>
@@ -393,49 +345,48 @@ export function ContactForm({
               <span className="font-semibold">{successState.desiredTimingLabel}</span>) en welke intake of
               databasis nodig is om vlot naar uitvoering en eerste waarde te gaan.
             </p>
-            <p>
-              Intake-richting: <span className="font-semibold">{successState.guidanceHeadline}</span> {successState.guidanceDetail}
-            </p>
-            <p>Een vervolgroute of combinatieroute wordt pas concreet zodra de eerste route en eerste managementwaarde helder zijn.</p>
-            <p>In deze stap krijg je nog geen live inrichting of definitieve offerte zonder intake.</p>
+            <p>Een vervolgrichting wordt pas concreet zodra de eerste route en eerste uitkomst helder zijn.</p>
+            <p>In deze stap krijgt u nog geen live inrichting of definitieve offerte.</p>
             {successState.leadId ? <p className="text-xs opacity-80">Referentie: {successState.leadId}.</p> : null}
           </div>
         </div>
       ) : null}
 
       {warningMessage ? (
-        <div className={`mt-5 rounded-[1.5rem] border px-5 py-4 text-sm ${warningClass}`}>{warningMessage}</div>
+        <div className={`mt-5 rounded-[1rem] border px-5 py-4 text-sm ${warningClass}`}>{warningMessage}</div>
       ) : null}
 
       {errorMessage ? (
-        <div className={`mt-5 rounded-[1.5rem] border px-5 py-4 text-sm ${errorClass}`}>{errorMessage}</div>
+        <div className={`mt-5 rounded-[1rem] border px-5 py-4 text-sm ${errorClass}`}>{errorMessage}</div>
       ) : null}
 
       <div className="mt-7 flex flex-col gap-4 border-t border-[var(--border)] pt-6 sm:flex-row sm:items-center sm:justify-end">
         <button
           type="submit"
           disabled={loading}
-          className={`inline-flex min-w-[14rem] items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${buttonClass}`}
+          className={`inline-flex min-w-[14rem] items-center justify-center rounded-[0.82rem] px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${buttonClass}`}
         >
-          {loading ? 'Verstuur bericht...' : 'Verstuur bericht'}
+          {loading ? 'Bezig met plannen...' : submitLabel}
         </button>
       </div>
 
-      <p className={`mt-4 text-xs leading-6 ${helperClass}`}>
-        Bekijk ook{' '}
-        <Link href="/vertrouwen" className="underline">
-          Trust & privacy
-        </Link>
-        , het{' '}
-        <Link href="/privacy" className="underline">
-          privacybeleid
-        </Link>{' '}
-        en de{' '}
-        <Link href="/dpa" className="underline">
-          verwerkersovereenkomst
-        </Link>{' '}
-        voor de publieke buyer-facing basis.
-      </p>
+      {!minimal ? (
+        <p className={`mt-4 text-xs leading-6 ${helperClass}`}>
+          Bekijk ook{' '}
+          <Link href="/vertrouwen" className="underline">
+            Trust & privacy
+          </Link>
+          , het{' '}
+          <Link href="/privacy" className="underline">
+            privacybeleid
+          </Link>{' '}
+          en de{' '}
+          <Link href="/dpa" className="underline">
+            verwerkersovereenkomst
+          </Link>{' '}
+          voor de publieke basis.
+        </p>
+      ) : null}
     </form>
   )
 }
