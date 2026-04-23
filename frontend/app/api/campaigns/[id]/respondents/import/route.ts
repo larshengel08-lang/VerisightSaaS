@@ -1,4 +1,9 @@
 import { NextResponse } from 'next/server'
+import { insertCampaignAuditEvent } from '@/lib/campaign-audit'
+import {
+  getCustomerActionPermission,
+  getPermissionDeniedMessage,
+} from '@/lib/customer-permissions'
 import { createClient } from '@/lib/supabase/server'
 import { getOrganizationApiKey } from '@/lib/organization-secrets'
 import { getBackendApiUrl } from '@/lib/server-env'
@@ -45,10 +50,25 @@ export async function POST(request: Request, { params }: Context) {
       .maybeSingle(),
   ])
 
-  const canExecuteCampaign = profile?.is_verisight_admin === true || Boolean(membership)
-  if (!canExecuteCampaign) {
+  const actorRole =
+    profile?.is_verisight_admin === true ? 'verisight_admin' : membership?.role ?? 'unknown'
+  const canImportRespondents =
+    profile?.is_verisight_admin === true ||
+    getCustomerActionPermission(membership?.role ?? null, 'import_respondents')
+  if (!canImportRespondents) {
+    await insertCampaignAuditEvent({
+      supabase,
+      organizationId: campaign.organization_id,
+      campaignId: id,
+      actorUserId: user.id,
+      actorRole,
+      action: 'import_respondents',
+      outcome: 'blocked',
+      summary: getPermissionDeniedMessage('import_respondents'),
+    })
+
     return NextResponse.json(
-      { detail: 'Je hebt geen rechten om deelnemers voor deze campaign aan te leveren.' },
+      { detail: getPermissionDeniedMessage('import_respondents') },
       { status: 403 },
     )
   }
@@ -83,10 +103,44 @@ export async function POST(request: Request, { params }: Context) {
   const contentType = backendResponse.headers.get('content-type') ?? ''
   if (contentType.includes('application/json')) {
     const payload = await backendResponse.json()
+    await insertCampaignAuditEvent({
+      supabase,
+      organizationId: campaign.organization_id,
+      campaignId: id,
+      actorUserId: user.id,
+      actorRole,
+      action: 'import_respondents',
+      outcome: backendResponse.ok ? 'completed' : 'blocked',
+      summary:
+        backendResponse.ok
+          ? `Deelnemersimport verwerkt voor ${payload.valid_rows ?? payload.imported ?? 0} rij(en).`
+          : typeof payload?.detail === 'string'
+            ? payload.detail
+            : 'Deelnemersimport kon niet worden verwerkt.',
+      metadata: {
+        dry_run: String(incoming.get('dry_run') ?? 'true') === 'true',
+        valid_rows: payload.valid_rows ?? null,
+        imported: payload.imported ?? null,
+      },
+    })
     return NextResponse.json(payload, { status: backendResponse.status })
   }
 
   const detail = await backendResponse.text()
+  await insertCampaignAuditEvent({
+    supabase,
+    organizationId: campaign.organization_id,
+    campaignId: id,
+    actorUserId: user.id,
+    actorRole,
+    action: 'import_respondents',
+    outcome: backendResponse.ok ? 'completed' : 'blocked',
+    summary: detail || 'Import kon niet worden verwerkt.',
+    metadata: {
+      dry_run: String(incoming.get('dry_run') ?? 'true') === 'true',
+    },
+  })
+
   return NextResponse.json(
     { detail: detail || 'Import kon niet worden verwerkt.' },
     { status: backendResponse.status || 500 },

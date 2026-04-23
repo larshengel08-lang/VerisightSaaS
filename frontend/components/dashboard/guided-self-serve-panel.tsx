@@ -9,6 +9,10 @@ import {
   DashboardPanel,
 } from '@/components/dashboard/dashboard-primitives'
 import { CLIENT_FILE_SPEC } from '@/lib/client-onboarding'
+import {
+  getCustomerActionPermission,
+  getCustomerRoleSummary,
+} from '@/lib/customer-permissions'
 import { buildGuidedSelfServeState } from '@/lib/guided-self-serve'
 import {
   getDeliveryModeDescription,
@@ -17,6 +21,7 @@ import {
 } from '@/lib/implementation-readiness'
 import {
   type DeliveryMode,
+  type MemberRole,
   REPORT_ADD_ON_LABELS,
   SCAN_TYPE_LABELS,
   type ScanType,
@@ -36,6 +41,7 @@ interface Props {
   pendingCount: number
   remindableCount: number
   unsentRespondents: Array<{ token: string; email: string | null }>
+  memberRole: MemberRole | null
 }
 
 interface ImportIssue {
@@ -84,8 +90,13 @@ export function GuidedSelfServePanel({
   pendingCount,
   remindableCount,
   unsentRespondents,
+  memberRole,
 }: Props) {
   const router = useRouter()
+  const roleSummary = getCustomerRoleSummary(memberRole)
+  const canImportRespondents = getCustomerActionPermission(memberRole, 'import_respondents')
+  const canLaunchInvites = getCustomerActionPermission(memberRole, 'launch_invites')
+  const canSendReminders = getCustomerActionPermission(memberRole, 'send_reminders')
   const guidedState = useMemo(
     () =>
       buildGuidedSelfServeState({
@@ -305,6 +316,47 @@ export function GuidedSelfServePanel({
         />
       </div>
 
+      <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)] sm:p-5">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,0.8fr),minmax(0,1.2fr)]">
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Jouw rol en kritieke acties
+            </p>
+            <p className="mt-2 text-lg font-semibold text-slate-950">{roleSummary.label}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-700">{roleSummary.description}</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4">
+              <p className="text-sm font-semibold text-slate-950">Mag nu wel</p>
+              <ul className="mt-3 space-y-2">
+                {roleSummary.allowedActions.map((item) => (
+                  <li key={item} className="text-sm leading-6 text-slate-700">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4">
+              <p className="text-sm font-semibold text-slate-950">Blijft begrensd</p>
+              <ul className="mt-3 space-y-2">
+                {roleSummary.restrictedActions.map((item) => (
+                  <li key={item} className="text-sm leading-6 text-slate-700">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {!canImportRespondents || !canLaunchInvites || !canSendReminders ? (
+          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+            Alleen de klant owner kan deelnemers aanleveren, de inviteflow starten en reminders versturen.
+            Gebruik deze rol daarom vooral voor dashboardlezing en rapportduiding.
+          </div>
+        ) : null}
+      </div>
+
       {isActive ? (
         <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)] sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -373,7 +425,7 @@ export function GuidedSelfServePanel({
               <button
                 type="button"
                 onClick={() => void requestImport(true)}
-                disabled={loading !== null || !uploadFile}
+                disabled={loading !== null || !uploadFile || !canImportRespondents}
                 className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {loading === 'preview' ? 'Bestand controleren...' : 'Bestand controleren'}
@@ -382,7 +434,7 @@ export function GuidedSelfServePanel({
                 <button
                   type="button"
                   onClick={() => void requestImport(false)}
-                  disabled={loading !== null}
+                  disabled={loading !== null || !canImportRespondents}
                   className="rounded-full bg-[#234B57] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading === 'import'
@@ -396,7 +448,7 @@ export function GuidedSelfServePanel({
                 <button
                   type="button"
                   onClick={() => void startInvites()}
-                  disabled={loading !== null}
+                  disabled={loading !== null || !canLaunchInvites}
                   className="rounded-full bg-[#234B57] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading === 'launch'
@@ -408,7 +460,7 @@ export function GuidedSelfServePanel({
                 <button
                   type="button"
                   onClick={() => void resendPendingInvites()}
-                  disabled={loading !== null}
+                  disabled={loading !== null || !canSendReminders}
                   className="rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading === 'remind' ? 'Herinneringen versturen...' : `Stuur reminder naar ${remindableCount}`}

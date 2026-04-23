@@ -56,6 +56,8 @@ import {
 } from './page-helpers'
 import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
+import { type CampaignAuditEventRecord } from '@/lib/campaign-audit'
+import { getCustomerActionPermission } from '@/lib/customer-permissions'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import { buildTeamLocalReadState, buildTeamPriorityReadState } from '@/lib/products/team'
 import { getProductModule } from '@/lib/products/shared/registry'
@@ -126,10 +128,13 @@ export default async function CampaignPage({ params }: Props) {
 
   const canManageCampaign =
     profile?.is_verisight_admin === true ||
-    membership?.role === 'owner' ||
-    membership?.role === 'member'
+    getCustomerActionPermission(membership?.role ?? null, 'review_launch')
   const isVerisightAdmin = profile?.is_verisight_admin === true
-  const canExecuteCampaign = isVerisightAdmin || Boolean(membership?.role)
+  const canExecuteCampaign =
+    isVerisightAdmin ||
+    getCustomerActionPermission(membership?.role ?? null, 'import_respondents') ||
+    getCustomerActionPermission(membership?.role ?? null, 'launch_invites') ||
+    getCustomerActionPermission(membership?.role ?? null, 'send_reminders')
   const hasSegmentDeepDive = hasCampaignAddOn(campaignMeta, 'segment_deep_dive')
   const { data: deliveryRecordRaw } = await supabase
     .from('campaign_delivery_records')
@@ -145,6 +150,16 @@ export default async function CampaignPage({ params }: Props) {
         .order('created_at', { ascending: true })
     : { data: [] }
   const deliveryCheckpoints = (deliveryCheckpointsRaw ?? []) as CampaignDeliveryCheckpoint[]
+  const { data: auditEventsRaw } =
+    isVerisightAdmin || Boolean(membership?.role)
+      ? await supabase
+          .from('campaign_action_audit_events')
+          .select('id, action_key, outcome, action_label, owner_label, actor_role, actor_label, summary, metadata, created_at')
+          .eq('campaign_id', id)
+          .order('created_at', { ascending: false })
+          .limit(8)
+      : { data: [] }
+  const auditEvents = (auditEventsRaw ?? []) as CampaignAuditEventRecord[]
   const {
     rows: deliveryLeadOptions,
     configError: deliveryLeadConfigError,
@@ -1112,9 +1127,9 @@ export default async function CampaignPage({ params }: Props) {
           description="Verisight heeft de campaign ingericht. Vanaf hier lever jij deelnemers aan, start je de inviteflow veilig en volg je respons op zonder buiten de productgrenzen te hoeven treden."
           aside={<DashboardChip label="Klantuitvoering" tone="emerald" />}
         >
-          <GuidedSelfServePanel
-            campaignId={id}
-            scanType={stats.scan_type}
+                    <GuidedSelfServePanel
+                      campaignId={id}
+                      scanType={stats.scan_type}
             isActive={stats.is_active}
             deliveryMode={campaignMeta?.delivery_mode ?? null}
             hasSegmentDeepDive={hasSegmentDeepDive}
@@ -1123,10 +1138,11 @@ export default async function CampaignPage({ params }: Props) {
             invitesNotSent={invitesNotSent}
               hasMinDisplay={hasMinDisplay}
               hasEnoughData={hasEnoughData}
-              pendingCount={pendingCount}
-              remindableCount={remindableCount}
-              unsentRespondents={unsentRespondents}
-            />
+                      pendingCount={pendingCount}
+                      remindableCount={remindableCount}
+                      unsentRespondents={unsentRespondents}
+                      memberRole={membership?.role ?? null}
+                    />
           </DashboardSection>
         ) : null}
 
@@ -1654,6 +1670,7 @@ export default async function CampaignPage({ params }: Props) {
                       linkedLearningDossierCount={learningDossiers.length}
                       learningCloseoutEvidenceCount={learningCloseoutEvidenceCount}
                       editable={isVerisightAdmin}
+                      auditEvents={auditEvents}
                     />
                   ) : (
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">

@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const orgId = body.orgId?.trim()
     const email = body.email?.trim().toLowerCase()
     const fullName = body.fullName?.trim() || null
-    const role = body.role === 'member' ? 'member' : 'viewer'
+    const role = body.role === 'owner' ? 'owner' : body.role === 'member' ? 'member' : 'viewer'
 
     if (!orgId || !email) {
       return NextResponse.json({ detail: 'Organisatie en e-mailadres zijn verplicht.' }, { status: 400 })
