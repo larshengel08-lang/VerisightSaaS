@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildDeliveryAutoSignals,
+  buildDeliveryDisciplineWarnings,
   buildDeliveryGovernanceSnapshot,
   buildDeliveryOpsSummary,
+  getDeliveryOperatingGuide,
   validateDeliveryCheckpointUpdate,
   validateDeliveryLifecycleTransition,
   type CampaignDeliveryCheckpoint,
@@ -227,5 +229,41 @@ describe('delivery ops governance helpers', () => {
     expect(transition.allowed).toBe(false)
     expect(transition.blockers.join(' ')).toContain('Follow-up')
     expect(transition.blockers.join(' ')).toContain('Learning closure')
+  })
+
+  it('flags missing operator discipline when lifecycle advances without owner, handoff or dated follow-up', () => {
+    const warnings = buildDeliveryDisciplineWarnings({
+      record: createRecord({
+        lifecycle_stage: 'follow_up_decided',
+        operator_owner: '',
+        next_step: '',
+        customer_handoff_note: '',
+        follow_up_decided_at: null,
+      }),
+      linkedLeadPresent: false,
+      invitesNotSent: 0,
+      pendingClientInviteCount: 0,
+      incompleteScores: 0,
+      activeClientAccessCount: 1,
+      totalCompleted: 8,
+      hasEnoughData: false,
+      governanceBlockers: [],
+      linkedLearningDossierCount: 1,
+      learningCloseoutEvidenceCount: 0,
+    })
+
+    expect(warnings.join(' ')).toContain('sales-to-delivery handoff')
+    expect(warnings.join(' ')).toContain('delivery-owner')
+    expect(warnings.join(' ')).toContain('klant-handoff')
+    expect(warnings.join(' ')).toContain('follow-upbeslissing')
+  })
+
+  it('returns bounded operating guidance for non-core routes', () => {
+    const onboardingGuide = getDeliveryOperatingGuide('onboarding')
+    const leadershipGuide = getDeliveryOperatingGuide('leadership')
+
+    expect(onboardingGuide.followUpOutcomes.map((item) => item.detail).join(' ')).toContain('geen journey-suite')
+    expect(leadershipGuide.followUpOutcomes.map((item) => item.detail).join(' ')).toContain('named-leader')
+    expect(leadershipGuide.weeklyReviewRules).toHaveLength(3)
   })
 })

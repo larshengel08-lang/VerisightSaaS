@@ -7,11 +7,13 @@ import { getContactDesiredTimingLabel, getContactRouteLabel } from '@/lib/contac
 import { getDeliveryModeLabel, normalizeDeliveryMode } from '@/lib/implementation-readiness'
 import {
   buildDeliveryAutoSignals,
+  buildDeliveryDisciplineWarnings,
   buildDeliveryOpsSummary,
   DELIVERY_CHECKPOINT_DEFINITIONS,
   DELIVERY_EXCEPTION_OPTIONS,
   DELIVERY_LIFECYCLE_OPTIONS,
   DELIVERY_MANUAL_STATE_OPTIONS,
+  getDeliveryOperatingGuide,
   getDeliveryAutoStateLabel,
   getDeliveryExceptionLabel,
   getDeliveryLifecycleLabel,
@@ -76,30 +78,6 @@ function formatAmsterdamDate(value: string | null | undefined) {
 
 function buildLeadLabel(lead: ContactRequestRecord) {
   return `${lead.name} — ${lead.organization} — ${getContactRouteLabel(lead.route_interest)} — ${getContactDesiredTimingLabel(lead.desired_timing)}`
-}
-
-function buildOpsWarnings(args: {
-  record: CampaignDeliveryRecord | null
-  linkedLead: ContactRequestRecord | null
-  invitesNotSent: number
-  pendingClientInviteCount: number
-  incompleteScores: number
-  activeClientAccessCount: number
-  totalCompleted: number
-  hasEnoughData: boolean
-  governanceBlockers: string[]
-}) {
-  const items: string[] = []
-
-  if (!args.linkedLead) items.push('De sales-to-delivery handoff is nog niet expliciet gekoppeld aan deze campaign.')
-  if (args.invitesNotSent > 0) items.push(`${args.invitesNotSent} respondent(en) hebben nog geen invite ontvangen of verzendbevestiging.`)
-  if (args.pendingClientInviteCount > 0 && args.activeClientAccessCount === 0) items.push(`${args.pendingClientInviteCount} klantinvite(s) wachten nog op activatie.`)
-  if (args.incompleteScores > 0) items.push(`${args.incompleteScores} opgeslagen responses hebben nog incomplete scoredata.`)
-  if (args.totalCompleted >= 5 && !args.hasEnoughData) items.push('De campaign heeft een indicatief first-value beeld, maar nog geen stevig patroonniveau.')
-  if (args.record?.exception_status && args.record.exception_status !== 'none') items.push(`Open exception: ${getDeliveryExceptionLabel(args.record.exception_status)}.`)
-  items.push(...args.governanceBlockers)
-
-  return Array.from(new Set(items))
 }
 
 export function PreflightChecklist({
@@ -167,6 +145,7 @@ export function PreflightChecklist({
     () => leadOptions.find((lead) => lead.id === record?.contact_request_id) ?? null,
     [leadOptions, record?.contact_request_id],
   )
+  const operatingGuide = useMemo(() => getDeliveryOperatingGuide(scanType), [scanType])
   const [recordDraft, setRecordDraft] = useState<RecordDraft>({
     contact_request_id: record?.contact_request_id ?? '',
     lifecycle_stage: record?.lifecycle_stage ?? 'setup_in_progress',
@@ -193,9 +172,9 @@ export function PreflightChecklist({
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const opsWarnings = buildOpsWarnings({
+  const opsWarnings = buildDeliveryDisciplineWarnings({
     record,
-    linkedLead,
+    linkedLeadPresent: Boolean(linkedLead),
     invitesNotSent,
     pendingClientInviteCount,
     incompleteScores,
@@ -203,6 +182,8 @@ export function PreflightChecklist({
     totalCompleted,
     hasEnoughData,
     governanceBlockers: governance.globalBlockers,
+    linkedLearningDossierCount,
+    learningCloseoutEvidenceCount,
   })
 
   function updateRecordDraft<K extends keyof RecordDraft>(key: K, value: RecordDraft[K]) {
@@ -591,6 +572,77 @@ export function PreflightChecklist({
                         : []),
                   ]}
                 />
+              </div>
+            </div>
+
+            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-950">Operating discipline</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Deze laag maakt de delivery-control overdraagbaar: wie bewaakt de route, wat telt als management use en welke bounded vervolguitkomsten canoniek zijn.
+              </p>
+              <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                <div className="rounded-2xl border border-white bg-white px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Operatorrollen</p>
+                  <div className="mt-3 space-y-3">
+                    {operatingGuide.roles.map((role) => (
+                      <div key={role.title} className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
+                        <p className="text-sm font-semibold text-slate-950">{role.title}</p>
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{role.owner}</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-700">{role.responsibility}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white bg-white px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Management use contract</p>
+                  <div className="mt-3 space-y-3">
+                    {operatingGuide.managementUseSteps.map((step) => (
+                      <div key={step.title} className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
+                        <p className="text-sm font-semibold text-slate-950">{step.title}</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-700">{step.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white bg-white px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Follow-up uitkomsten</p>
+                  <div className="mt-3 space-y-3">
+                    {operatingGuide.followUpOutcomes.map((outcome) => (
+                      <div key={outcome.title} className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
+                        <p className="text-sm font-semibold text-slate-950">{outcome.title}</p>
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{outcome.fit}</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-700">{outcome.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white bg-white px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Exceptions en weekreview</p>
+                  <div className="mt-3 space-y-3">
+                    {operatingGuide.exceptionRules.map((rule) => (
+                      <div key={rule.status} className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
+                        <p className="text-sm font-semibold text-slate-950">{rule.title}</p>
+                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                          {rule.owner} · {rule.responseWindow}
+                        </p>
+                        <p className="mt-2 text-sm leading-6 text-slate-700">{rule.escalationRule}</p>
+                      </div>
+                    ))}
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
+                      <p className="text-sm font-semibold text-slate-950">Weekly delivery review</p>
+                      <ul className="mt-2 space-y-2">
+                        {operatingGuide.weeklyReviewRules.map((rule) => (
+                          <li key={rule.title} className="text-sm leading-6 text-slate-700">
+                            <span className="font-semibold text-slate-900">{rule.title}:</span> {rule.detail}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
