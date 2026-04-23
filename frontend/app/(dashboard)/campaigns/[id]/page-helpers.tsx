@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { getProductModule } from '@/lib/products/shared/registry'
 import type { SegmentPlaybookEntry, SignalTrendCard } from '@/lib/products/shared/types'
 import { buildFactorPresentation, getManagementBandLabel } from '@/lib/management-language'
+import { FIRST_DASHBOARD_THRESHOLD, FIRST_INSIGHT_THRESHOLD } from '@/lib/response-activation'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import {
   EXIT_REASON_LABELS,
@@ -14,8 +15,8 @@ import { DashboardPanel } from '@/components/dashboard/dashboard-primitives'
 
 const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity']
 
-export const MIN_N_PATTERNS = 10
-export const MIN_N_DISPLAY = 5
+export const MIN_N_PATTERNS = FIRST_INSIGHT_THRESHOLD
+export const MIN_N_DISPLAY = FIRST_DASHBOARD_THRESHOLD
 
 export type RetentionSignalAverages = {
   retentionSignal: number | null

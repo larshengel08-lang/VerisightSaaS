@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getOrganizationApiKey } from '@/lib/organization-secrets'
+import { FIRST_DASHBOARD_THRESHOLD, buildResponseActivationState } from '@/lib/response-activation'
 import { getBackendApiUrl } from '@/lib/server-env'
 
 interface Context {
@@ -24,6 +25,22 @@ export async function GET(_request: Request, { params }: Context) {
 
   if (campaignError || !campaign) {
     return NextResponse.json({ detail: 'Campaign niet gevonden of niet toegankelijk.' }, { status: 404 })
+  }
+
+  const { data: stats } = await supabase
+    .from('campaign_stats')
+    .select('total_completed')
+    .eq('campaign_id', id)
+    .maybeSingle()
+  const activationState = buildResponseActivationState(stats?.total_completed ?? 0)
+
+  if (!activationState.reportVisible) {
+    return NextResponse.json(
+      {
+        detail: `Rapport wordt pas vrijgegeven vanaf ${FIRST_DASHBOARD_THRESHOLD} responses. ${activationState.statusDetail}`,
+      },
+      { status: 409 },
+    )
   }
 
   const backendBaseUrl = getBackendApiUrl()

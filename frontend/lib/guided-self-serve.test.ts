@@ -48,7 +48,7 @@ describe('guided self-serve execution state', () => {
 
     expect(state.phase).toBe('responses_incoming')
     expect(state.dashboardVisible).toBe(false)
-    expect(state.detail.toLowerCase()).toContain('vanaf 5')
+    expect(state.detail.toLowerCase()).toContain('nog 2 responses')
     expect(state.nextAction.body.toLowerCase()).toContain('responses')
   })
 
@@ -99,5 +99,21 @@ describe('guided self-serve execution state', () => {
     expect(state.phase).toBe('closed')
     expect(state.nextAction.title.toLowerCase()).toContain('vervolggesprek')
     expect(state.statusBlocks.find((item) => item.key === 'dashboard_active')?.status).toBe('done')
+  })
+
+  it('does not unlock dashboard or report copy for a closed campaign that never reached the first safe threshold', () => {
+    const state = buildGuidedSelfServeState({
+      isActive: false,
+      totalInvited: 24,
+      totalCompleted: 3,
+      invitesNotSent: 0,
+      hasMinDisplay: false,
+      hasEnoughData: false,
+    })
+
+    expect(state.phase).toBe('closed')
+    expect(state.dashboardVisible).toBe(false)
+    expect(state.deeperInsightsVisible).toBe(false)
+    expect(state.detail).toContain('blijven dashboard en rapport nog gesloten')
   })
 })

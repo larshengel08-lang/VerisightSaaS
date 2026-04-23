@@ -1,3 +1,9 @@
+import {
+  FIRST_DASHBOARD_THRESHOLD,
+  FIRST_INSIGHT_THRESHOLD,
+  buildResponseActivationState,
+} from '@/lib/response-activation'
+
 type GuidedSelfServePhase =
   | 'closed'
   | 'data_required'
@@ -75,18 +81,30 @@ function buildStatusBlocks(current: GuidedStatusKey): GuidedStatusBlock[] {
 }
 
 export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelfServeState {
+  const activationState = buildResponseActivationState(args.totalCompleted)
+
   if (!args.isActive) {
     return {
       phase: 'closed',
       headline: 'Campagne gesloten',
-      detail: 'De uitvoerfase is afgerond. Gebruik dashboard, rapport en terugblik nu voor het vervolggesprek en de gekozen opvolgroute.',
+      detail: activationState.dashboardVisible
+        ? 'De uitvoerfase is afgerond. Gebruik dashboard, rapport en terugblik nu voor het vervolggesprek en de gekozen opvolgroute.'
+        : `De uitvoerfase is afgerond voordat de eerste veilige dashboarddrempel is gehaald. Tot er minstens ${FIRST_DASHBOARD_THRESHOLD} responses zijn, blijven dashboard en rapport nog gesloten.`,
       nextAction: {
-        title: 'Plan het vervolggesprek',
-        body: 'Gebruik de uitkomst nu om eerste besluiten, eigenaar en vervolgroute expliciet te maken.',
+        title: activationState.dashboardVisible ? 'Plan het vervolggesprek' : 'Beslis of een heropening nodig is',
+        body: activationState.dashboardVisible
+          ? 'Gebruik de uitkomst nu om eerste besluiten, eigenaar en vervolgroute expliciet te maken.'
+          : 'Zonder eerste dashboardread blijft deze wave onder de veilige leesdrempel. Heropen alleen als extra respons nog logisch en methodologisch eerlijk is.',
       },
-      dashboardVisible: true,
-      deeperInsightsVisible: true,
-      statusBlocks: buildStatusBlocks('first_next_step_available'),
+      dashboardVisible: activationState.dashboardVisible,
+      deeperInsightsVisible: activationState.deeperInsightsVisible,
+      statusBlocks: buildStatusBlocks(
+        activationState.deeperInsightsVisible
+          ? 'first_next_step_available'
+          : activationState.dashboardVisible
+            ? 'dashboard_active'
+            : 'responses_incoming',
+      ),
     }
   }
 
@@ -126,10 +144,10 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
     return {
       phase: 'responses_incoming',
       headline: 'Responses lopen binnen',
-      detail: `Er zijn ${args.totalCompleted} responses binnen. Vanaf 5 responses wordt de eerste dashboardread veilig genoeg om zichtbaar te maken.`,
+      detail: activationState.statusDetail,
       nextAction: {
         title: 'Volg respons en stuur zo nodig een reminder',
-        body: 'Laat de inviteflow eerst verder lopen en bouw meer responses op. Het dashboard gaat pas open zodra de eerste veilige responsegrens is gehaald.',
+        body: 'Laat de inviteflow eerst verder lopen en bouw meer responses op. Dashboard en rapport gaan pas open zodra de eerste veilige responsegrens is gehaald.',
       },
       dashboardVisible: false,
       deeperInsightsVisible: false,
@@ -141,7 +159,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
     return {
       phase: 'dashboard_active',
       headline: 'Dashboard actief, nog bewust compact',
-      detail: `De eerste veilige drempel is gehaald. Vanaf ${args.totalCompleted} responses is de dashboardread bruikbaar, maar verdiepende patroonduiding blijft bewust dicht tot minstens 10 responses.`,
+      detail: activationState.statusDetail,
       nextAction: {
         title: 'Gebruik nu de compacte dashboardread',
         body: 'Lees wat al zichtbaar is, houd conclusies voorlopig indicatief en blijf tegelijk respons opbouwen richting patroonniveau.',
@@ -155,7 +173,7 @@ export function buildGuidedSelfServeState(args: GuidedSelfServeArgs): GuidedSelf
   return {
     phase: 'first_next_step_available',
     headline: 'Eerste vervolgstap beschikbaar',
-    detail: 'De campagne heeft nu genoeg respons voor veilige dashboardactivatie en eerste patroonduiding. Vanaf hier hoort de flow door te schuiven naar de eerste managementstap, niet terug naar setup.',
+    detail: `De campagne heeft nu genoeg respons voor veilige dashboardactivatie en eerste patroonduiding. Vanaf ${FIRST_INSIGHT_THRESHOLD} responses hoort de flow door te schuiven naar de eerste managementstap, niet terug naar setup.`,
     nextAction: {
       title: 'Maak de eerste vervolgstap expliciet',
       body: 'Gebruik dashboard en rapport nu om eerste eigenaar, eerste managementactie en reviewmoment vast te leggen.',
