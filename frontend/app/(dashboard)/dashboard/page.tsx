@@ -11,6 +11,7 @@ import {
 } from '@/components/dashboard/dashboard-primitives'
 import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
 import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
+import { getFirstNextStepGuidance } from '@/lib/client-onboarding'
 import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { CampaignStats } from '@/lib/types'
@@ -119,6 +120,14 @@ export default async function DashboardHomePage() {
         communicationReady: primaryGuideSetupDiscipline.communicationReady,
       })
     : null
+  const showFirstNextStep =
+    !isAdmin &&
+    primaryGuideCampaign &&
+    primaryExecutionState &&
+    (primaryExecutionState.phase === 'first_next_step_available' || primaryExecutionState.phase === 'closed')
+  const primaryFirstNextStepGuidance = primaryGuideCampaign && showFirstNextStep
+    ? getFirstNextStepGuidance(primaryGuideCampaign.scan_type)
+    : null
   const primaryGuideScanDefinition = primaryGuideCampaign ? getScanDefinition(primaryGuideCampaign.scan_type) : null
 
   return (
@@ -199,7 +208,66 @@ export default async function DashboardHomePage() {
         </div>
       </DashboardSection>
 
-      {!isAdmin ? (
+      {!isAdmin && primaryGuideCampaign && primaryFirstNextStepGuidance && primaryGuideScanDefinition ? (
+        <DashboardSection
+          eyebrow="First-next-step"
+          title="Van activatie naar eerste managementstap"
+          description="Deze laag scheidt bewust wat het actuele inzicht nu zegt, welke eerste managementactie logisch is en welke vervolgroutes eventueel passen zonder het portfolio breder te maken dan de vraag draagt."
+          aside={<DashboardChip label={primaryGuideScanDefinition.productName} tone="blue" />}
+        >
+          <div className="space-y-4">
+            <div className="grid gap-4 lg:grid-cols-3">
+              {primaryFirstNextStepGuidance.cards.map((card) => (
+                <DashboardPanel
+                  key={card.key}
+                  eyebrow={
+                    card.key === 'insight'
+                      ? 'Inzicht'
+                      : card.key === 'action'
+                        ? 'Actie'
+                        : 'Vervolg alleen indien nodig'
+                  }
+                  title={card.title}
+                  body={card.body}
+                  tone={card.key === 'insight' ? 'blue' : card.key === 'action' ? 'emerald' : 'amber'}
+                />
+              ))}
+            </div>
+
+            <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4 sm:p-5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                    Mogelijke vervolgroutes
+                  </p>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[color:var(--text)]">
+                    Deze routes openen pas zodra de eerste managementstap expliciet is gemaakt. Het zijn dus geen standaard vervolgaanbiedingen, maar voorwaardelijke routekeuzes binnen de bestaande suite-canon.
+                  </p>
+                </div>
+                <DashboardChip label="Bounded portfolio" tone="slate" />
+              </div>
+
+              <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                {primaryFirstNextStepGuidance.followOnSuggestions.map((suggestion) => (
+                  <div
+                    key={suggestion.productLabel}
+                    className="rounded-2xl border border-white/80 bg-white px-4 py-4 shadow-sm"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                      Alleen als
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-[color:var(--ink)]">{suggestion.productLabel}</p>
+                    <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">{suggestion.when}</p>
+                    <p className="mt-3 text-xs leading-5 text-[color:var(--muted)]">{suggestion.boundary}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </DashboardSection>
+      ) : null}
+
+      {!isAdmin && !showFirstNextStep ? (
         <DashboardSection
           eyebrow="Eerste route"
           title="Van eerste login naar eerste managementread"
@@ -491,19 +559,19 @@ function getPrimaryGuideCampaign(
   const candidatePool = activeCampaigns.length > 0 ? activeCampaigns : allCampaigns
   if (candidatePool.length === 0) return null
 
-  const priority = (campaign: CampaignStats) => {
-    const bucket = getCampaignBucket(campaign)
-    if (bucket === 'setup') return 0
-    if (bucket === 'building') return 1
-    if (bucket === 'ready') return 2
-    return 3
-  }
-
   return [...candidatePool].sort((left, right) => {
-    const priorityDelta = priority(left) - priority(right)
+    const priorityDelta = getExecutionPriority(left) - getExecutionPriority(right)
     if (priorityDelta !== 0) return priorityDelta
     return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
   })[0] ?? null
+}
+
+function getExecutionPriority(campaign: CampaignStats) {
+  const bucket = getCampaignBucket(campaign)
+  if (bucket === 'setup') return 0
+  if (bucket === 'building') return 1
+  if (bucket === 'ready') return 2
+  return 3
 }
 
 function getCampaignReadiness(campaign: CampaignStats) {

@@ -7,6 +7,7 @@ import {
   IMPLEMENTATION_INTAKE_INPUTS,
   PRODUCT_ROUTE_VARIANTS,
   getAdoptionSuccessDefinition,
+  getFirstNextStepGuidance,
   getFirstManagementReadSteps,
   getLifecycleDecisionCards,
 } from '@/lib/client-onboarding'
@@ -122,5 +123,37 @@ describe('client onboarding defaults', () => {
     expect(leadershipDecisions[2]?.body.toLowerCase()).toContain('teamscan')
     expect(leadershipDecisions[2]?.title.toLowerCase()).toContain('bredere duiding')
     expect(leadershipDecisions[2]?.body.toLowerCase()).not.toContain('diagnose')
+  })
+
+  it('keeps first-next-step guidance split between insight, action and possible follow-on products', () => {
+    const exitGuidance = getFirstNextStepGuidance('exit')
+    const onboardingGuidance = getFirstNextStepGuidance('onboarding')
+    const leadershipGuidance = getFirstNextStepGuidance('leadership')
+
+    expect(exitGuidance.cards.map((card) => card.key)).toEqual(['insight', 'action', 'follow_on'])
+    expect(exitGuidance.cards[0]?.title.toLowerCase()).toContain('inzicht')
+    expect(exitGuidance.cards[1]?.title.toLowerCase()).toContain('eerste actie')
+    expect(exitGuidance.cards[2]?.title.toLowerCase()).toContain('mogelijk vervolg')
+    expect(exitGuidance.cards[2]?.body.toLowerCase()).toContain('nieuwe managementvraag')
+    expect(exitGuidance.followOnSuggestions[0]?.productLabel).toBe('ExitScan ritmeroute')
+    expect(exitGuidance.followOnSuggestions[1]?.productLabel).toBe('RetentieScan')
+    expect(exitGuidance.followOnSuggestions[1]?.when.toLowerCase()).toContain('actieve populatie')
+
+    expect(onboardingGuidance.followOnSuggestions.map((suggestion) => suggestion.productLabel)).toEqual([
+      'Onboarding vervolgcheckpoint',
+      'RetentieScan',
+      'TeamScan',
+    ])
+    expect(onboardingGuidance.cards[2]?.body.toLowerCase()).toContain('bounded')
+    expect(onboardingGuidance.followOnSuggestions[0]?.boundary.toLowerCase()).toContain('checkpoint')
+    expect(onboardingGuidance.followOnSuggestions[1]?.boundary.toLowerCase()).toContain('bredere behoudsdruk')
+
+    expect(leadershipGuidance.followOnSuggestions.map((suggestion) => suggestion.productLabel)).toEqual([
+      'Leadership vervolgcheck',
+      'TeamScan',
+    ])
+    expect(leadershipGuidance.cards[2]?.body.toLowerCase()).toContain('mogelijk')
+    expect(leadershipGuidance.followOnSuggestions[1]?.boundary.toLowerCase()).toContain('named leader')
+    expect(leadershipGuidance.followOnSuggestions[1]?.boundary.toLowerCase()).toContain('niet')
   })
 })

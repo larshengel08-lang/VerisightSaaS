@@ -57,7 +57,7 @@ import {
   SdtGauge,
 } from './page-helpers'
 import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/implementation-readiness'
-import { getLifecycleDecisionCards } from '@/lib/client-onboarding'
+import { getFirstNextStepGuidance, getLifecycleDecisionCards } from '@/lib/client-onboarding'
 import { type CampaignAuditEventRecord } from '@/lib/campaign-audit'
 import { getCustomerActionPermission } from '@/lib/customer-permissions'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
@@ -410,7 +410,7 @@ export default async function CampaignPage({ params }: Props) {
         dossier.adoption_outcome,
     ),
   ).length
-  const lifecycleDecisionCards = getLifecycleDecisionCards(stats.scan_type)
+  const firstNextStepGuidance = getFirstNextStepGuidance(stats.scan_type)
   const primaryTeamPriority =
     stats.scan_type === 'team' && teamPriorityRead?.status === 'ready'
       ? teamPriorityRead.groups.find((group) => group.isPrimary) ?? null
@@ -1591,60 +1591,43 @@ export default async function CampaignPage({ params }: Props) {
             <p className="mt-1 text-sm leading-6 text-slate-700">
               {productExperience.afterSessionDescription}
             </p>
-            {stats.scan_type === 'team' ? (
-              <div className="mt-4 grid gap-4 lg:grid-cols-3">
-                <DashboardPanel
-                  eyebrow="Als de lokale check bevestigt"
-                  title="Blijf bounded op dezelfde route"
-                  body="Doe alleen een volgende lokale check als route, lokale actie en reviewmoment uit deze TeamScan al expliciet zijn gemaakt."
-                  tone="blue"
-                />
-                <DashboardPanel
-                  eyebrow="Als de vraag breder wordt"
-                  title="Ga terug naar bredere duiding"
-                  body="Schakel niet door naar extra lokalisatie als de echte vraag weer organisatieniveau, behoudsbeeld of bredere duiding vraagt."
-                  tone="amber"
-                />
-                <DashboardPanel
-                  eyebrow="Als de onderbouwing te smal blijft"
-                  title="Stop met verder lokaliseren"
-                  body="Open geen extra TeamScan-verbreding zolang metadata, groepsgrootte of lokale bevestiging daar nog geen eerlijke basis voor geven."
-                  tone="emerald"
-                />
-              </div>
-            ) : null}
-            {stats.scan_type === 'leadership' ? (
-              <div className="mt-4 grid gap-4 lg:grid-cols-3">
-                <DashboardPanel
-                  eyebrow="Als de managementcheck bevestigt"
-                  title="Blijf bounded op dezelfde route"
-                  body="Doe alleen een volgende Leadership-check als eigenaar, kleine verificatie of correctie en reviewmoment uit deze managementread al expliciet zijn gemaakt."
-                  tone="blue"
-                />
-                <DashboardPanel
-                  eyebrow="Als de vraag breder wordt"
-                  title="Ga terug naar bredere duiding"
-                  body="Schakel niet door naar extra Leadership-verbreding als de echte vraag weer lokale lokalisatie, bredere duiding of een ander productspoor vraagt."
-                  tone="amber"
-                />
-                <DashboardPanel
-                  eyebrow="Als de onderbouwing te smal blijft"
-                  title="Open geen named leaders of 360"
-                  body="Maak Leadership Scan niet groter dan deze wave draagt zolang groepsniveau, suppressie en de huidige data nog geen eerlijke basis geven voor named leader of 360-output."
-                  tone="emerald"
-                />
-              </div>
-            ) : null}
             <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {lifecycleDecisionCards.map((card) => (
+              {firstNextStepGuidance.cards.map((card) => (
                 <DashboardPanel
-                  key={card.title}
-                  eyebrow={card.fit}
+                  key={card.key}
+                  eyebrow={
+                    card.key === 'insight'
+                      ? 'Inzicht'
+                      : card.key === 'action'
+                        ? 'Eerste actie'
+                        : 'Geen standaard vervolg'
+                  }
                   title={card.title}
                   body={card.body}
-                  tone="blue"
+                  tone={card.key === 'insight' ? 'blue' : card.key === 'action' ? 'emerald' : 'amber'}
                 />
               ))}
+            </div>
+            <div className="mt-4 rounded-2xl border border-white/80 bg-white px-4 py-4 shadow-sm">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Mogelijke vervolgroutes</p>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">
+                    Gebruik deze routes alleen als de eerste managementstap al expliciet is gemaakt. Zo blijft vervolg hulpvol en bounded, in plaats van een automatisch groter productverhaal te openen.
+                  </p>
+                </div>
+                <DashboardChip label="Bounded portfolio" tone="slate" />
+              </div>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                {firstNextStepGuidance.followOnSuggestions.map((suggestion) => (
+                  <div key={suggestion.productLabel} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Alleen als</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-950">{suggestion.productLabel}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-700">{suggestion.when}</p>
+                    <p className="mt-3 text-xs leading-5 text-slate-500">{suggestion.boundary}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

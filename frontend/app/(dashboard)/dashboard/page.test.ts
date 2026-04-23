@@ -16,6 +16,10 @@ describe('dashboard home guided execution shell', () => {
     expect(pageSource).toContain('deriveGuidedSelfServeDiscipline')
     expect(pageSource).toContain('primaryGuideInvitesNotSent')
     expect(pageSource).toContain('getPrimaryGuideCampaign')
+    expect(pageSource).toContain('getFirstNextStepGuidance')
+    expect(pageSource).toContain('First-next-step')
+    expect(pageSource).toContain('Mogelijke vervolgroutes')
+    expect(pageSource).toContain('!showFirstNextStep')
     expect(pageSource).toContain("if (campaign.total_completed < 5) return 'building'")
 
     expect(launchControlSource).toContain('Product')

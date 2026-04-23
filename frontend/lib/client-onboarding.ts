@@ -165,6 +165,25 @@ type LifecycleDecisionCard = {
   body: string
 }
 
+type FirstNextStepCardKey = 'insight' | 'action' | 'follow_on'
+
+export type FirstNextStepCard = {
+  key: FirstNextStepCardKey
+  title: string
+  body: string
+}
+
+export type FollowOnSuggestion = {
+  productLabel: string
+  when: string
+  boundary: string
+}
+
+export type FirstNextStepGuidance = {
+  cards: FirstNextStepCard[]
+  followOnSuggestions: FollowOnSuggestion[]
+}
+
 export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecisionCard[] {
   if (scanType === 'retention') {
     return [
@@ -283,6 +302,234 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
       body: 'RetentieScan Baseline wordt logisch zodra dezelfde thema\'s niet alleen achteraf moeten worden geduid, maar ook eerder in de actieve populatie moeten worden gesignaleerd.',
     },
   ] as const
+}
+
+export function getFirstNextStepGuidance(scanType: ScanType): FirstNextStepGuidance {
+  if (scanType === 'retention') {
+    return {
+      cards: [
+        {
+          key: 'insight',
+          title: 'Inzicht nu',
+          body:
+            'Lees RetentieScan nu eerst als verification-first groepssignaal: waar staat behoud onder druk en welk spoor vraagt als eerste verificatie.',
+        },
+        {
+          key: 'action',
+          title: 'Eerste actie',
+          body:
+            'Maak in de eerste managementsessie expliciet welk behoudsspoor nu eerst wordt getoetst, wie eigenaar wordt en wanneer het reviewmoment volgt.',
+        },
+        {
+          key: 'follow_on',
+          title: 'Mogelijk vervolgproduct',
+          body:
+            'Een vervolgproduct is pas logisch bij een nieuwe managementvraag. Blijf eerst op de retentieroute zolang dezelfde behoudsvraag centraal staat.',
+        },
+      ],
+      followOnSuggestions: [
+        {
+          productLabel: 'RetentieScan ritmeroute',
+          when: 'Als baseline, eerste eigenaar en reviewmoment al staan en dezelfde behoudsvraag later opnieuw moet worden gelezen.',
+          boundary: 'Blijft op dezelfde kernroute; geen extra product zolang het nog om dezelfde behoudsvraag gaat.',
+        },
+        {
+          productLabel: 'ExitScan',
+          when: 'Als de vraag verschuift van actieve behoudsdruk naar retrospectieve vertrekduiding op ex-medewerkers.',
+          boundary:
+            'Gebruik ExitScan alleen bij een echt nieuwe managementvraag, niet als standaard vervolg na iedere RetentieScan.',
+        },
+      ],
+    }
+  }
+
+  if (scanType === 'pulse') {
+    return {
+      cards: [
+        {
+          key: 'insight',
+          title: 'Inzicht nu',
+          body:
+            'Lees Pulse nu als compacte managementread van dit meetmoment: welk spoor vraagt herijking en wat moet eerst kort worden getoetst.',
+        },
+        {
+          key: 'action',
+          title: 'Eerste actie',
+          body:
+            'Kies eerst een kleine correctie, leg vast wie die trekt en spreek direct af wanneer de bounded hercheck volgt.',
+        },
+        {
+          key: 'follow_on',
+          title: 'Mogelijk vervolgproduct',
+          body:
+            'Een ander product wordt pas logisch als dezelfde signalen niet meer alleen een reviewvraag zijn, maar een bredere managementvraag openen die Pulse niet eerlijk kan dragen.',
+        },
+      ],
+      followOnSuggestions: [
+        {
+          productLabel: 'Volgende Pulse-cycle',
+          when: 'Als de eerste review, eigenaar en kleine correctie al expliciet zijn gemaakt en je hetzelfde thema bounded wilt herchecken.',
+          boundary: 'Blijft een bounded repeat motion; gebruik dit niet als breed trend- of bewijsverhaal.',
+        },
+        {
+          productLabel: 'RetentieScan',
+          when: 'Als de vraag verschuift naar bredere behoudsdruk op groepsniveau in plaats van een compacte review op dit meetmoment.',
+          boundary: 'Open RetentieScan alleen bij een bredere behoudsvraag, niet als automatische verbreding van elke Pulse.',
+        },
+      ],
+    }
+  }
+
+  if (scanType === 'team') {
+    return {
+      cards: [
+        {
+          key: 'insight',
+          title: 'Inzicht nu',
+          body:
+            'Lees TeamScan nu als lokale contextlaag: welke afdeling vraagt eerst verificatie en welk lokaal spoor lijkt het scherpst.',
+        },
+        {
+          key: 'action',
+          title: 'Eerste actie',
+          body:
+            'Maak expliciet welke lokale check nu eerst plaatsvindt, wie de eerste eigenaar is en wanneer de lokale reviewgrens wordt herzien.',
+        },
+        {
+          key: 'follow_on',
+          title: 'Mogelijk vervolgproduct',
+          body:
+            'Een vervolgproduct is pas logisch als de vraag niet meer lokaal blijft. Gebruik TeamScan eerst voor een begrensde lokale handoff.',
+        },
+      ],
+      followOnSuggestions: [
+        {
+          productLabel: 'TeamScan vervolgcheck',
+          when: 'Als de eerste lokale verificatie al is gedaan en dezelfde afdeling nog een tweede bounded stap vraagt.',
+          boundary: 'Blijft lokaal en begrensd; maak TeamScan niet groter dan deze lokale vraag draagt.',
+        },
+        {
+          productLabel: 'RetentieScan',
+          when: 'Als de vraag weer breder wordt en je groepsniveau of meerdere segmenten opnieuw moet wegen.',
+          boundary: 'Ga alleen terug naar bredere duiding als de lokale vraag niet meer leidend is.',
+        },
+      ],
+    }
+  }
+
+  if (scanType === 'onboarding') {
+    return {
+      cards: [
+        {
+          key: 'insight',
+          title: 'Inzicht nu',
+          body:
+            'Lees onboarding nu eerst als bounded checkpoint-read: waar schuurt de vroege landing op groepsniveau en welk werkspoor telt als eerste.',
+        },
+        {
+          key: 'action',
+          title: 'Eerste actie',
+          body:
+            'Maak expliciet welke borg- of correctiestap nu eerst wordt gezet, wie de eerste eigenaar is en welk volgend checkpoint logisch blijft.',
+        },
+        {
+          key: 'follow_on',
+          title: 'Mogelijk vervolgproduct',
+          body:
+            'Een vervolgproduct is alleen logisch als de vraag breder wordt dan dit checkpoint. Onboarding blijft eerst bounded op vroege landing.',
+        },
+      ],
+      followOnSuggestions: [
+        {
+          productLabel: 'Onboarding vervolgcheckpoint',
+          when: 'Als deze checkpointread al gebruikt is voor een eerste managementactie en later een nieuw checkpoint nodig is.',
+          boundary: 'Blijft bounded op checkpointniveau; maak er geen volledige journey-laag van.',
+        },
+        {
+          productLabel: 'RetentieScan',
+          when: 'Als de vraag verschuift van vroege landing naar bredere behoudsdruk in de actieve populatie.',
+          boundary: 'Open RetentieScan pas bij bredere behoudsdruk, niet als standaard vervolg op elk onboarding-signaal.',
+        },
+        {
+          productLabel: 'TeamScan',
+          when: 'Als dezelfde vraag nu vooral lokale lokalisatie per afdeling of team vraagt.',
+          boundary: 'Gebruik TeamScan alleen voor een nieuwe lokale managementvraag, niet om onboarding breder te laten lezen dan het checkpoint.',
+        },
+      ],
+    }
+  }
+
+  if (scanType === 'leadership') {
+    return {
+      cards: [
+        {
+          key: 'insight',
+          title: 'Inzicht nu',
+          body:
+            'Lees Leadership Scan nu eerst als bounded support-read: welke managementcontext kleurt het bestaande people-signaal mee en wat vraagt nu eerst toetsing.',
+        },
+        {
+          key: 'action',
+          title: 'Eerste actie',
+          body:
+            'Maak expliciet welke kleine verificatie of correctie nu eerst volgt, wie die trekt en wanneer een bounded reviewmoment terugkomt.',
+        },
+        {
+          key: 'follow_on',
+          title: 'Mogelijk vervolgproduct',
+          body:
+            'Een vervolgproduct blijft mogelijk, maar alleen wanneer de managementvraag verandert. Leadership Scan opent niet vanzelf bredere of zwaardere routes.',
+        },
+      ],
+      followOnSuggestions: [
+        {
+          productLabel: 'Leadership vervolgcheck',
+          when: 'Als dezelfde managementcontext later opnieuw bounded moet worden getoetst na de eerste eigenaar en kleine correctie.',
+          boundary: 'Blijft group-level en bounded; geen named leaders, geen 360-output en geen automatische verbreding.',
+        },
+        {
+          productLabel: 'TeamScan',
+          when: 'Als de vraag verschuift naar lokale lokalisatie in teams of afdelingen in plaats van geaggregeerde managementcontext.',
+          boundary: 'Gebruik TeamScan alleen voor die nieuwe lokale vraag; niet voor named leader-logica of individuele beoordeling.',
+        },
+      ],
+    }
+  }
+
+  return {
+    cards: [
+      {
+        key: 'insight',
+        title: 'Inzicht nu',
+        body:
+          'Lees ExitScan nu eerst als managementread van terugkerende vertrekfrictie: welk patroon keert terug en waar lijkt werkfrictie als eerste beinvloedbaar.',
+      },
+      {
+        key: 'action',
+        title: 'Eerste actie',
+        body:
+          'Maak in de eerste managementsessie expliciet welk patroon nu eerst wordt getoetst, wie eigenaar is en welk reviewmoment direct wordt afgesproken.',
+      },
+      {
+        key: 'follow_on',
+        title: 'Mogelijk vervolgproduct',
+        body:
+          'Een vervolgproduct wordt pas logisch bij een nieuwe managementvraag. Blijf eerst op ExitScan zolang dezelfde vertrekduiding nog centraal staat.',
+      },
+    ],
+    followOnSuggestions: [
+      {
+        productLabel: 'ExitScan ritmeroute',
+        when: 'Als proces, volume en eigenaarschap staan en dezelfde vertrekvraag periodiek opnieuw moet worden gelezen.',
+        boundary: 'Blijft op dezelfde kernroute; geen tweede product zolang dezelfde vertrekduiding centraal staat.',
+      },
+      {
+        productLabel: 'RetentieScan',
+        when: 'Als dezelfde thema\'s nu ook in de actieve populatie moeten worden getoetst en vroege behoudsdruk zichtbaar moet worden.',
+        boundary: 'Open RetentieScan pas bij een nieuwe managementvraag in de actieve populatie, niet als standaard upsell na ExitScan.',
+      },
+    ],
+  }
 }
 
 export function getFirstManagementReadSteps(scanType: ScanType) {
