@@ -158,7 +158,7 @@ export default async function ContactAanvragenPage() {
           {
             label: 'Handoff',
             value: `${Object.keys(linkedCampaignsByLead).length} lead${Object.keys(linkedCampaignsByLead).length === 1 ? '' : 's'} gekoppeld`,
-            tone: Object.keys(linkedCampaignsByLead).length > 0 ? 'blue' : 'slate',
+            tone: Object.keys(linkedCampaignsByLead).length > 0 ? 'slate' : 'slate',
           },
         ]}
         anchors={[

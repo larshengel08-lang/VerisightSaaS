@@ -12,7 +12,7 @@ const TONE_STYLES: Record<Tone, string> = {
 
 const OPS_TONE_STYLES: Record<Tone, string> = {
   slate: 'border-[color:var(--border)] bg-white',
-  blue: 'border-[#d7e0e5] bg-[#f8fbfc]',
+  blue: 'border-[#dfe6ea] bg-[#fbfcfd]',
   emerald: 'border-[#d8e4df] bg-[#f8fbf9]',
   amber: 'border-[#e7e0d1] bg-[#fcfbf7]',
 }
@@ -24,8 +24,19 @@ const TONE_ACCENTS: Record<Tone, string> = {
   amber: 'text-[#8C6B1F]',
 }
 
+const OPS_TONE_ACCENTS: Record<Tone, string> = {
+  slate: 'text-[color:var(--text)]',
+  blue: 'text-[color:var(--text)]',
+  emerald: 'text-[#3C8D8A]',
+  amber: 'text-[#8C6B1F]',
+}
+
 function getToneStyles(tone: Tone, surface: Surface) {
   return surface === 'ops' ? OPS_TONE_STYLES[tone] : TONE_STYLES[tone]
+}
+
+function getToneAccent(tone: Tone, surface: Surface) {
+  return surface === 'ops' ? OPS_TONE_ACCENTS[tone] : TONE_ACCENTS[tone]
 }
 
 export function DashboardHero({
@@ -61,7 +72,7 @@ export function DashboardHero({
     <section className={`overflow-visible border ${shellClass} ${toneStyles}`}>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr),minmax(320px,0.9fr)]">
         <div>
-          <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${TONE_ACCENTS[tone]}`}>{eyebrow}</p>
+          <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${getToneAccent(tone, surface)}`}>{eyebrow}</p>
           <h1 className={`mt-3 font-bold tracking-tight text-[color:var(--ink)] ${surface === 'ops' ? 'text-[1.75rem] sm:text-[2rem]' : 'text-3xl'}`}>{title}</h1>
           <p className={`mt-3 max-w-3xl text-sm text-[color:var(--text)] ${surface === 'ops' ? 'leading-6' : 'leading-7'}`}>{description}</p>
           {meta ? <div className="mt-5 flex flex-wrap gap-2">{meta}</div> : null}
@@ -105,7 +116,7 @@ export function DashboardSection({
       <div className="flex flex-col gap-4 border-b border-[color:var(--border)]/80 pb-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           {eyebrow ? (
-            <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${TONE_ACCENTS[tone]}`}>{eyebrow}</p>
+            <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${getToneAccent(tone, surface)}`}>{eyebrow}</p>
           ) : null}
           <h2 className="mt-1 text-lg font-semibold text-[color:var(--ink)]">{title}</h2>
           {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-[color:var(--text)]">{description}</p> : null}
@@ -174,7 +185,7 @@ export function DashboardPanel({
   const toneStyles = getToneStyles(tone, surface)
   return (
     <div className={`border ${surface === 'ops' ? 'rounded-[20px] p-4 shadow-[0_6px_18px_rgba(19,32,51,0.035)]' : 'rounded-[24px] p-4 shadow-[0_8px_24px_rgba(19,32,51,0.04)] sm:p-5'} ${toneStyles}`}>
-      {eyebrow ? <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${TONE_ACCENTS[tone]}`}>{eyebrow}</p> : null}
+      {eyebrow ? <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${getToneAccent(tone, surface)}`}>{eyebrow}</p> : null}
       <p className="mt-1 text-sm font-semibold text-[color:var(--ink)]">{title}</p>
       {value ? <p className={`mt-3 font-bold tracking-tight text-[color:var(--ink)] ${surface === 'ops' ? 'text-[1.7rem]' : 'text-3xl'}`}>{value}</p> : null}
       <p className="mt-3 text-sm leading-6 text-[color:var(--text)]">{body}</p>
@@ -193,7 +204,7 @@ export function DashboardChip({
 }) {
   const toneStyles = getToneStyles(tone, surface)
   return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${toneStyles} ${TONE_ACCENTS[tone]}`}>
+    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${toneStyles} ${getToneAccent(tone, surface)}`}>
       {label}
     </span>
   )
@@ -244,7 +255,7 @@ export function DashboardSummaryBar({
                 key={item.label}
                 className={`rounded-2xl border px-4 py-3 ${getToneStyles(item.tone ?? 'slate', surface)}`}
               >
-                <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${TONE_ACCENTS[item.tone ?? 'slate']}`}>
+                <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${getToneAccent(item.tone ?? 'slate', surface)}`}>
                   {item.label}
                 </p>
                 <p className="mt-2 text-sm font-semibold text-[color:var(--ink)]">{item.value}</p>
@@ -296,7 +307,7 @@ export function DashboardTimeline({
               <div className="hidden h-full w-px bg-[color:var(--border)] md:block" />
             </div>
             <div className={`border p-4 ${surface === 'ops' ? 'rounded-[18px]' : 'rounded-[22px]'} ${getToneStyles(item.tone ?? 'slate', surface)}`}>
-              <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${TONE_ACCENTS[item.tone ?? 'slate']}`}>
+              <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${getToneAccent(item.tone ?? 'slate', surface)}`}>
                 Fase {index + 1}
               </p>
               <p className="mt-2 text-sm font-semibold text-[color:var(--ink)]">{item.title}</p>
