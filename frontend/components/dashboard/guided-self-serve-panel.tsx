@@ -31,6 +31,8 @@ import {
   getDeliveryModeLabel,
 } from '@/lib/implementation-readiness'
 import { getScanDefinition } from '@/lib/scan-definitions'
+import { buildResponseActivationState } from '@/lib/response-activation'
+import { getScanDefinition } from '@/lib/scan-definitions'
 import {
   type DeliveryMode,
   REPORT_ADD_ON_LABELS,
@@ -155,6 +157,7 @@ export function GuidedSelfServePanel({
       totalInvited,
     ],
   )
+  const activationState = useMemo(() => buildResponseActivationState(totalCompleted), [totalCompleted])
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploadSendInvites, setUploadSendInvites] = useState(
     getInviteDefaultForDeliveryMode(deliveryMode),
@@ -471,8 +474,8 @@ export function GuidedSelfServePanel({
         />
         <DashboardPanel
           eyebrow="Dashboardactivatie"
-          title="5 responses voor eerste read, 10 voor verdieping"
-          body="Het dashboard gaat pas zichtbaar open zodra de eerste veilige responsdrempel is gehaald. Verdiepende patronen en scherpere prioritering volgen bewust pas vanaf 10 responses."
+          title={activationState.deeperInsightsVisible ? 'Eerste inzichten actief' : activationState.heroActionLabel}
+          body={activationState.statusDetail}
           tone={guidedState.deeperInsightsVisible ? 'emerald' : 'amber'}
         />
       </div>

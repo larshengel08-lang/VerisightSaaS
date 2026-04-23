@@ -1,4 +1,5 @@
 import type { DeliveryMode, ScanType } from '@/lib/types'
+import { buildResponseActivationState } from '@/lib/response-activation'
 
 export function normalizeDeliveryMode(mode: DeliveryMode | null | undefined): DeliveryMode {
   return mode === 'live' ? 'live' : 'baseline'
@@ -21,7 +22,7 @@ export function getDeliveryModeDescription(mode: DeliveryMode | null | undefined
         ? 'Gebruik dit pas nadat TeamScan in een latere wave ook echt als herhaal- of vervolgroute is geopend. In deze wave blijft TeamScan baseline-only.'
         : scanType === 'onboarding'
           ? 'Gebruik dit pas nadat onboarding in een latere wave ook echt als vervolg- of multi-checkpointroute is geopend. In deze wave blijft onboarding baseline-only.'
-      : 'Gebruik dit pas nadat ExitScan Baseline, volumelogica en eigenaar voor opvolging scherp zijn. Live blijft een bewuste vervolgroute.'
+          : 'Gebruik dit pas nadat ExitScan Baseline, volumelogica en eigenaar voor opvolging scherp zijn. Live blijft een bewuste vervolgroute.'
   }
 
   return scanType === 'retention'
@@ -30,7 +31,7 @@ export function getDeliveryModeDescription(mode: DeliveryMode | null | undefined
       ? 'Dit is de standaard eerste route voor TeamScan. Gebruik baseline om eerst een veilige department-first lokale read op te bouwen voordat verdere lokalisatie logisch wordt.'
       : scanType === 'onboarding'
         ? 'Dit is de standaard eerste route voor onboarding in deze wave. Gebruik baseline om eerst een enkel checkpoint per campaign op groepsniveau leesbaar te maken.'
-    : 'Dit is de standaard eerste route voor ExitScan. Gebruik baseline om vertrek eerst bestuurlijk leesbaar te maken voordat doorlopende opvolging logisch wordt.'
+        : 'Dit is de standaard eerste route voor ExitScan. Gebruik baseline om vertrek eerst bestuurlijk leesbaar te maken voordat doorlopende opvolging logisch wordt.'
 }
 
 export function getInviteDefaultForDeliveryMode(mode: DeliveryMode | null | undefined) {
@@ -75,6 +76,7 @@ export function buildCampaignReadinessState({
   launchControlReady?: boolean
   launchControlBlockers?: string[]
 }): CampaignReadinessState {
+  const activationState = buildResponseActivationState(totalCompleted)
   const setupComplete = totalInvited > 0
   const invitesLive = setupComplete && invitesNotSent === 0
   const outputReady = hasMinDisplay && incompleteScores === 0
@@ -98,8 +100,10 @@ export function buildCampaignReadinessState({
       clientActivationPending,
       launchReady,
       headline: 'Setup nog niet compleet',
-      detail: 'Zonder respondenten is de implementation route nog niet gestart. Gebruik eerst een gecontroleerde import als hard startpunt.',
-      nextStep: 'Importeer eerst een gevalideerd respondentbestand en bepaal daarna pas of invites direct uit mogen.',
+      detail:
+        'Zonder respondenten is de implementation route nog niet gestart. Gebruik eerst een gecontroleerde import als hard startpunt.',
+      nextStep:
+        'Importeer eerst een gevalideerd respondentbestand en bepaal daarna pas of invites direct uit mogen.',
     }
   }
 
@@ -113,8 +117,10 @@ export function buildCampaignReadinessState({
       clientActivationPending,
       launchReady,
       headline: 'Import nog niet vrijgegeven',
-      detail: 'Het deelnemersbestand is nog niet vrijgegeven voor launch. Controleer eerst de importpreview, herstel de gemelde rijen of kolommen en bevestig daarna opnieuw.',
-      nextStep: 'Werk eerst het deelnemersbestand bij en rond de importcontrole af voordat je uitnodigingen of klantactivatie verder opent.',
+      detail:
+        'Het deelnemersbestand is nog niet vrijgegeven voor launch. Controleer eerst de importpreview, herstel de gemelde rijen of kolommen en bevestig daarna opnieuw.',
+      nextStep:
+        'Werk eerst het deelnemersbestand bij en rond de importcontrole af voordat je uitnodigingen of klantactivatie verder opent.',
     }
   }
 
@@ -129,7 +135,8 @@ export function buildCampaignReadinessState({
       launchReady,
       headline: 'Invites nog niet volledig live',
       detail: `${invitesNotSent} respondent(en) hebben nog geen uitnodiging ontvangen. Houd livegang en klantactivatie terughoudend totdat de uitnodigingslaag klopt.`,
-      nextStep: 'Controleer importkwaliteit en verstuur eerst alle ontbrekende uitnodigingen of reminders.',
+      nextStep:
+        'Controleer importkwaliteit en verstuur eerst alle ontbrekende uitnodigingen of reminders.',
     }
   }
 
@@ -147,7 +154,8 @@ export function buildCampaignReadinessState({
         launchControlBlockers.length > 0
           ? launchControlBlockers.join(' ')
           : 'Startdatum, communicatiepreview of reminderinstellingen missen nog expliciete bevestiging.',
-      nextStep: 'Rond eerst de pre-launchcontrole af voordat je livegang of eerste klantactivatie als afgerond behandelt.',
+      nextStep:
+        'Rond eerst de pre-launchcontrole af voordat je livegang of eerste klantactivatie als afgerond behandelt.',
     }
   }
 
@@ -161,10 +169,16 @@ export function buildCampaignReadinessState({
       clientActivationPending,
       launchReady,
       headline: 'Eerste output nog in opbouw',
-      detail: incompleteScores > 0
-        ? `${incompleteScores} response(s) bevatten nog onvolledige scoredata.`
-        : `Er zijn ${totalCompleted} responses binnen; vanaf 5 wordt eerste detailweergave veilig genoeg voor klantuitleg en acceptatie.`,
-      nextStep: 'Wacht op voldoende responses of herstel eerst de incomplete scoredata voordat je output als eerste managementread positioneert.',
+      detail:
+        incompleteScores > 0
+          ? `${incompleteScores} response(s) bevatten nog onvolledige scoredata.`
+          : activationState.statusDetail,
+      nextStep:
+        incompleteScores > 0
+          ? 'Herstel eerst de incomplete scoredata voordat je output als eerste managementread positioneert.'
+          : activationState.remainingToDashboard === 1
+            ? 'Bouw eerst 1 extra response op of stuur gericht een reminder voordat dashboard en rapport worden vrijgegeven.'
+            : `Bouw eerst ${activationState.remainingToDashboard} extra responses op of stuur gericht reminders voordat dashboard en rapport worden vrijgegeven.`,
     }
   }
 
@@ -178,8 +192,10 @@ export function buildCampaignReadinessState({
       clientActivationPending,
       launchReady,
       headline: 'Klantactivatie nog niet gestart',
-      detail: 'Setup en eerste output zijn bruikbaar, maar de klant heeft nog geen dashboardtoegang of openstaande activatie.',
-      nextStep: 'Nodig nu de klantcontactpersoon uit en plan de eerste dashboard- of rapportread in dezelfde beweging.',
+      detail:
+        'Setup en eerste output zijn bruikbaar, maar de klant heeft nog geen dashboardtoegang of openstaande activatie.',
+      nextStep:
+        'Nodig nu de klantcontactpersoon uit en plan de eerste dashboard- of rapportread in dezelfde beweging.',
     }
   }
 
@@ -193,8 +209,10 @@ export function buildCampaignReadinessState({
       clientActivationPending,
       launchReady,
       headline: 'Klantactivatie loopt',
-      detail: 'De activatiemail is verstuurd, maar dashboardtoegang is nog niet bevestigd. Houd support en eerste klantcontact daarom actief in de gaten.',
-      nextStep: 'Bevestig accountactivatie en begeleid daarna het eerste dashboard- of rapportgebruik.',
+      detail:
+        'De activatiemail is verstuurd, maar dashboardtoegang is nog niet bevestigd. Houd support en eerste klantcontact daarom actief in de gaten.',
+      nextStep:
+        'Bevestig accountactivatie en begeleid daarna het eerste dashboard- of rapportgebruik.',
     }
   }
 
@@ -206,12 +224,12 @@ export function buildCampaignReadinessState({
     clientAccessActivated,
     clientActivationPending,
     launchReady,
-    headline: analysisReady ? 'Launch readiness op orde' : 'Eerste klantread mogelijk',
+    headline: analysisReady ? 'Launch readiness op orde' : 'Dashboard actief, inzichten nog in opbouw',
     detail: analysisReady
       ? 'Setup, inviteflow, eerste output en klanttoegang zijn op orde. Deze campagne is operationeel sterk genoeg voor eerste managementduiding.'
-      : 'De klant kan veilig live, maar het inhoudelijke beeld blijft nog indicatief totdat er minstens 10 responses zijn.',
+      : activationState.statusDetail,
     nextStep: analysisReady
       ? 'Gebruik nu dashboard en rapport samen voor het eerste managementgesprek en leg de eerste eigenaar of vervolgstap vast.'
-      : 'Gebruik deze campagne nu voor eerste klantread en responsopbouw, niet voor te scherpe patroonclaims.',
+      : 'Gebruik nu de compacte dashboardread, houd de duiding indicatief en bouw tegelijk respons op richting eerste patroonduiding.',
   }
 }

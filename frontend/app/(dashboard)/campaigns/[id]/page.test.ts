@@ -33,8 +33,10 @@ describe('campaign page render truth', () => {
     )
 
     expect(source).toContain('Begeleide uitvoerflow')
-    expect(source).toContain('Dashboard wordt zichtbaar vanaf de eerste veilige responsdrempel')
+    expect(source).toContain('activationState.heroActionLabel')
     expect(source).toContain('showManagementOutput &&')
+    expect(source).toContain('showDeeperInsights')
+    expect(source).toContain('Verdieping nog dicht')
     expect(source).toContain('Guided self-serve')
     expect(source).toContain("createAdminClient()")
     expect(source).toContain(".eq('checkpoint_key', 'import_qa')")
