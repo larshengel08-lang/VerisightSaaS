@@ -1,16 +1,22 @@
 from __future__ import annotations
 
-from backend.models import Campaign, Organization, Respondent
+import uuid
+
+from sqlalchemy import text
+
+from backend.models import Campaign, CampaignDeliveryCheckpoint, CampaignDeliveryRecord, Organization, Respondent
 from demo_environment import (
     BUYER_FACING_SAMPLE_ORG_SLUG,
     DEMO_LAYER_CONTRACTS,
     DEMO_SCENARIOS,
+    DELIVERY_CHECKPOINT_KEYS,
     GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
     GUIDED_SELF_SERVE_SETUP_CAMPAIGN_NAME,
     GUIDED_SELF_SERVE_THRESHOLD_CAMPAIGN_NAME,
     INTERNAL_SALES_DEMO_ORG_SLUG,
     RESPONSE_THRESHOLDS,
     SAFE_DEMO_EMAIL_DOMAIN,
+    _ensure_delivery_sidecars,
     advance_guided_self_serve_acceptance,
     seed_guided_self_serve_acceptance,
     seed_sales_demo_exit,
@@ -151,6 +157,145 @@ def test_seed_guided_self_serve_acceptance_creates_setup_and_threshold_journeys(
     assert all(
         respondent.email is None or respondent.email.endswith(f"@{SAFE_DEMO_EMAIL_DOMAIN}")
         for respondent in threshold_campaign.respondents
+    )
+
+
+def _create_sqlite_auth_shadow_tables(db_session) -> None:
+    db_session.execute(
+        text(
+            """
+            create table profiles (
+                id text primary key,
+                is_verisight_admin boolean not null default 0,
+                created_at text
+            )
+            """
+        )
+    )
+    db_session.execute(
+        text(
+            """
+            create table org_members (
+                org_id text not null,
+                user_id text not null,
+                role text not null,
+                unique(org_id, user_id)
+            )
+            """
+        )
+    )
+    db_session.commit()
+
+
+def test_seed_guided_self_serve_acceptance_mirrors_viewer_access_and_delivery_sidecars(db_session):
+    _create_sqlite_auth_shadow_tables(db_session)
+    viewer_user_id = str(uuid.uuid4())
+
+    seed_guided_self_serve_acceptance(db_session, viewer_user_id=viewer_user_id)
+
+    org = db_session.query(Organization).filter(Organization.slug == GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG).one()
+    campaigns = (
+        db_session.query(Campaign)
+        .filter(Campaign.organization_id == org.id, Campaign.scan_type == "exit")
+        .order_by(Campaign.name.asc())
+        .all()
+    )
+
+    membership = db_session.execute(
+        text("select role from org_members where org_id = :org_id and user_id = :user_id"),
+        {"org_id": org.id, "user_id": viewer_user_id},
+    ).scalar_one()
+    assert membership == "viewer"
+
+    delivery_records = (
+        db_session.query(CampaignDeliveryRecord)
+        .filter(CampaignDeliveryRecord.organization_id == org.id)
+        .order_by(CampaignDeliveryRecord.campaign_id.asc())
+        .all()
+    )
+
+    assert len(delivery_records) == 2
+    assert {record.campaign_id for record in delivery_records} == {campaign.id for campaign in campaigns}
+    assert all(record.lifecycle_stage == "setup_in_progress" for record in delivery_records)
+    assert all(record.exception_status == "none" for record in delivery_records)
+    assert all(len(record.checkpoints) == 7 for record in delivery_records)
+    assert all(
+        {checkpoint.checkpoint_key for checkpoint in record.checkpoints}
+        == {
+            "implementation_intake",
+            "import_qa",
+            "invite_readiness",
+            "client_activation",
+            "first_value",
+            "report_delivery",
+            "first_management_use",
+        }
+        for record in delivery_records
+    )
+    assert all(
+        checkpoint.auto_state == "unknown"
+        and checkpoint.manual_state == "pending"
+        and checkpoint.exception_status == "none"
+        for record in delivery_records
+        for checkpoint in record.checkpoints
+    )
+
+
+def test_delivery_sidecar_harmonization_is_idempotent_when_acceptance_sidecars_already_exist(db_session):
+    org = Organization(
+        name=GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
+        slug=GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
+        contact_email="guided-acceptance@verisight.nl",
+        is_active=True,
+    )
+    db_session.add(org)
+    db_session.flush()
+
+    campaign = Campaign(
+        organization_id=org.id,
+        name=GUIDED_SELF_SERVE_SETUP_CAMPAIGN_NAME,
+        scan_type="exit",
+        delivery_mode="baseline",
+        is_active=True,
+    )
+    db_session.add(campaign)
+    db_session.flush()
+
+    delivery_record = CampaignDeliveryRecord(
+        organization_id=org.id,
+        campaign_id=campaign.id,
+        lifecycle_stage="setup_in_progress",
+        exception_status="none",
+    )
+    db_session.add(delivery_record)
+    db_session.flush()
+
+    for checkpoint_key in DELIVERY_CHECKPOINT_KEYS:
+        db_session.add(
+            CampaignDeliveryCheckpoint(
+                delivery_record_id=delivery_record.id,
+                checkpoint_key=checkpoint_key,
+                auto_state="unknown",
+                manual_state="pending",
+                exception_status="none",
+            )
+        )
+    db_session.flush()
+
+    _ensure_delivery_sidecars(db_session, campaign)
+    db_session.commit()
+
+    assert (
+        db_session.query(CampaignDeliveryRecord)
+        .filter(CampaignDeliveryRecord.campaign_id == campaign.id)
+        .count()
+        == 1
+    )
+    assert (
+        db_session.query(CampaignDeliveryCheckpoint)
+        .filter(CampaignDeliveryCheckpoint.delivery_record_id == delivery_record.id)
+        .count()
+        == len(DELIVERY_CHECKPOINT_KEYS)
     )
 
 
