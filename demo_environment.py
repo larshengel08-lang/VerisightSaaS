@@ -929,6 +929,7 @@ def seed_guided_self_serve_acceptance(
     org_slug: str = GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
     org_name: str = GUIDED_SELF_SERVE_ACCEPTANCE_ORG_NAME,
     contact_email: str = GUIDED_SELF_SERVE_ACCEPTANCE_CONTACT_EMAIL,
+    member_user_id: str | None = None,
     viewer_user_id: str | None = None,
 ) -> dict[str, str | int | None]:
     random.seed(RANDOM_SEEDS["qa_guided_self_serve_acceptance"])
@@ -939,9 +940,15 @@ def seed_guided_self_serve_acceptance(
         slug=org_slug,
         name=org_name,
         contact_email=contact_email,
-        acting_user_id=viewer_user_id if _is_uuid_like(viewer_user_id) else None,
+        acting_user_id=(
+            member_user_id
+            if _is_uuid_like(member_user_id)
+            else (viewer_user_id if _is_uuid_like(viewer_user_id) else None)
+        ),
     )
     _ensure_org_secret(db, org)
+    if _is_uuid_like(member_user_id):
+        _ensure_role_memberships(db, org=org, member_user_ids=[member_user_id])
     if _is_uuid_like(viewer_user_id):
         _ensure_role_memberships(db, org=org, viewer_user_ids=[viewer_user_id])
     _purge_named_campaigns(
@@ -988,6 +995,7 @@ def seed_guided_self_serve_acceptance(
         "campaign_count": 2,
         "detail_threshold": RESPONSE_THRESHOLDS["detail"],
         "pattern_threshold": RESPONSE_THRESHOLDS["pattern"],
+        "member_user_id": member_user_id,
         "viewer_user_id": viewer_user_id,
     }
 

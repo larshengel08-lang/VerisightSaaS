@@ -1,4 +1,5 @@
 import type { ScanType } from '@/lib/types'
+import { buildLaunchControlState } from '@/lib/launch-controls'
 
 export type DeliveryLifecycleStage =
   | 'setup_in_progress'
@@ -41,6 +42,10 @@ export interface CampaignDeliveryRecord {
   next_step: string | null
   operator_notes: string | null
   customer_handoff_note: string | null
+  launch_date: string | null
+  launch_confirmed_at: string | null
+  participant_comms_config: unknown
+  reminder_config: unknown
   first_management_use_confirmed_at: string | null
   follow_up_decided_at: string | null
   learning_closed_at: string | null
@@ -66,6 +71,10 @@ export type DeliveryRecordGovernanceContext = Pick<
   | 'contact_request_id'
   | 'lifecycle_stage'
   | 'exception_status'
+  | 'launch_date'
+  | 'launch_confirmed_at'
+  | 'participant_comms_config'
+  | 'reminder_config'
   | 'first_management_use_confirmed_at'
   | 'follow_up_decided_at'
   | 'learning_closed_at'
@@ -82,6 +91,7 @@ export type DeliveryGovernanceSnapshot = {
   intakeBlockers: string[]
   importBlockers: string[]
   inviteBlockers: string[]
+  launchControlBlockers: string[]
   activationBlockers: string[]
   firstValueBlockers: string[]
   reportDeliveryBlockers: string[]
@@ -632,6 +642,13 @@ export function buildDeliveryGovernanceSnapshot(args: {
     autoSignal: args.autoSignals.invite_readiness,
     pendingMessage: 'Invite readiness is nog niet expliciet bevestigd.',
   })
+  const launchControlBlockers = buildLaunchControlState({
+    launchDate: args.record?.launch_date ?? null,
+    participantCommsConfig: args.record?.participant_comms_config ?? null,
+    reminderConfig: args.record?.reminder_config ?? null,
+    launchConfirmedAt: args.record?.launch_confirmed_at ?? null,
+  }).blockers
+  const launchInviteBlockers = dedupeMessages([...inviteBlockers, ...launchControlBlockers])
   const activationBlockers = collectCheckpointBlockers({
     checkpoint: checkpointMap.client_activation,
     autoSignal: args.autoSignals.client_activation,
@@ -669,13 +686,13 @@ export function buildDeliveryGovernanceSnapshot(args: {
   ])
 
   const launchReady =
-    dedupeMessages([...globalBlockers, ...intakeBlockers, ...importBlockers, ...inviteBlockers]).length === 0
-  const activationReady = dedupeMessages([...globalBlockers, ...intakeBlockers, ...importBlockers, ...inviteBlockers, ...activationBlockers]).length === 0
+    dedupeMessages([...globalBlockers, ...intakeBlockers, ...importBlockers, ...launchInviteBlockers]).length === 0
+  const activationReady = dedupeMessages([...globalBlockers, ...intakeBlockers, ...importBlockers, ...launchInviteBlockers, ...activationBlockers]).length === 0
   const firstValueReady = dedupeMessages([
     ...globalBlockers,
     ...intakeBlockers,
     ...importBlockers,
-    ...inviteBlockers,
+    ...launchInviteBlockers,
     ...activationBlockers,
     ...firstValueBlockers,
   ]).length === 0
@@ -683,7 +700,7 @@ export function buildDeliveryGovernanceSnapshot(args: {
     ...globalBlockers,
     ...intakeBlockers,
     ...importBlockers,
-    ...inviteBlockers,
+    ...launchInviteBlockers,
     ...activationBlockers,
     ...firstValueBlockers,
     ...reportDeliveryBlockers,
@@ -692,7 +709,7 @@ export function buildDeliveryGovernanceSnapshot(args: {
     ...globalBlockers,
     ...intakeBlockers,
     ...importBlockers,
-    ...inviteBlockers,
+    ...launchInviteBlockers,
     ...activationBlockers,
     ...firstValueBlockers,
     ...reportDeliveryBlockers,
@@ -702,7 +719,7 @@ export function buildDeliveryGovernanceSnapshot(args: {
     ...globalBlockers,
     ...intakeBlockers,
     ...importBlockers,
-    ...inviteBlockers,
+    ...launchInviteBlockers,
     ...activationBlockers,
     ...firstValueBlockers,
     ...reportDeliveryBlockers,
@@ -713,7 +730,7 @@ export function buildDeliveryGovernanceSnapshot(args: {
     ...globalBlockers,
     ...intakeBlockers,
     ...importBlockers,
-    ...inviteBlockers,
+    ...launchInviteBlockers,
     ...activationBlockers,
     ...firstValueBlockers,
     ...reportDeliveryBlockers,
@@ -726,7 +743,8 @@ export function buildDeliveryGovernanceSnapshot(args: {
     globalBlockers,
     intakeBlockers,
     importBlockers,
-    inviteBlockers,
+    inviteBlockers: launchInviteBlockers,
+    launchControlBlockers,
     activationBlockers,
     firstValueBlockers,
     reportDeliveryBlockers,

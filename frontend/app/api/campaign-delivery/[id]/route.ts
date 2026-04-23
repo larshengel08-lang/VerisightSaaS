@@ -86,7 +86,7 @@ export async function PATCH(request: Request, context: Context) {
 
   const { data: record } = await admin.supabase
     .from('campaign_delivery_records')
-    .select('id, campaign_id, contact_request_id, lifecycle_stage, exception_status, first_management_use_confirmed_at, follow_up_decided_at, learning_closed_at')
+    .select('id, campaign_id, contact_request_id, lifecycle_stage, exception_status, launch_date, launch_confirmed_at, participant_comms_config, reminder_config, first_management_use_confirmed_at, follow_up_decided_at, learning_closed_at')
     .eq('campaign_id', id)
     .maybeSingle()
 

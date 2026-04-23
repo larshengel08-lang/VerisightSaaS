@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from sqlalchemy import inspect, text
+
 from backend.models import Campaign, Organization, Respondent
 from demo_environment import (
     BUYER_FACING_SAMPLE_ORG_SLUG,
@@ -152,6 +154,29 @@ def test_seed_guided_self_serve_acceptance_creates_setup_and_threshold_journeys(
         respondent.email is None or respondent.email.endswith(f"@{SAFE_DEMO_EMAIL_DOMAIN}")
         for respondent in threshold_campaign.respondents
     )
+
+
+def test_seed_guided_self_serve_acceptance_can_assign_member_executor(db_session):
+    result = seed_guided_self_serve_acceptance(db_session, member_user_id="member-guided-self-serve")
+
+    assert result["member_user_id"] == "member-guided-self-serve"
+
+    if not inspect(db_session.bind).has_table("org_members"):
+        return
+
+    org = db_session.query(Organization).filter(Organization.slug == GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG).one()
+    membership = db_session.execute(
+        text(
+            """
+            select role
+            from public.org_members
+            where org_id = :org_id and user_id = :user_id
+            """
+        ),
+        {"org_id": org.id, "user_id": "member-guided-self-serve"},
+    ).scalar_one()
+
+    assert membership == "member"
 
 
 def test_advance_guided_self_serve_acceptance_progresses_threshold_journey(db_session):

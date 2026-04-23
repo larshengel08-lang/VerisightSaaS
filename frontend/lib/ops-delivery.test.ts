@@ -11,6 +11,10 @@ import {
   type CampaignDeliveryRecord,
   type DeliveryCheckpointKey,
 } from '@/lib/ops-delivery'
+import {
+  createDefaultParticipantCommunicationConfig,
+  createDefaultReminderConfig,
+} from '@/lib/launch-controls'
 
 function createCheckpoint(
   checkpointKey: DeliveryCheckpointKey,
@@ -43,6 +47,10 @@ function createRecord(overrides: Partial<CampaignDeliveryRecord> = {}): Campaign
     next_step: 'Confirm launch discipline',
     operator_notes: null,
     customer_handoff_note: null,
+    launch_date: '2026-04-18',
+    launch_confirmed_at: '2026-04-18T08:00:00Z',
+    participant_comms_config: createDefaultParticipantCommunicationConfig(),
+    reminder_config: createDefaultReminderConfig(),
     first_management_use_confirmed_at: null,
     follow_up_decided_at: null,
     learning_closed_at: null,
@@ -84,6 +92,41 @@ describe('delivery ops governance helpers', () => {
     expect(snapshot.intakeBlockers.join(' ')).toContain('Implementation intake')
     expect(snapshot.importBlockers.join(' ')).toContain('Import QA')
     expect(snapshot.inviteBlockers.join(' ')).toContain('Invite readiness')
+  })
+
+  it('treats missing launch controls as launch blockers even when invite readiness itself is green', () => {
+    const autoSignals = buildDeliveryAutoSignals({
+      scanType: 'retention',
+      linkedLeadPresent: true,
+      totalInvited: 12,
+      totalCompleted: 0,
+      invitesNotSent: 12,
+      incompleteScores: 0,
+      hasMinDisplay: false,
+      hasEnoughData: false,
+      activeClientAccessCount: 0,
+      pendingClientInviteCount: 0,
+    })
+
+    const snapshot = buildDeliveryGovernanceSnapshot({
+      scanType: 'retention',
+      record: createRecord({
+        launch_date: null,
+        participant_comms_config: createDefaultParticipantCommunicationConfig(),
+        reminder_config: createDefaultReminderConfig(),
+        launch_confirmed_at: null,
+      }),
+      checkpoints: [
+        createCheckpoint('implementation_intake'),
+        createCheckpoint('import_qa'),
+        createCheckpoint('invite_readiness'),
+      ],
+      autoSignals,
+    })
+
+    expect(snapshot.launchReady).toBe(false)
+    expect(snapshot.inviteBlockers.join(' ')).toContain('startdatum')
+    expect(snapshot.inviteBlockers.join(' ')).toContain('launchbevestiging')
   })
 
   it('blocks forward lifecycle moves while launch blockers remain open', () => {
