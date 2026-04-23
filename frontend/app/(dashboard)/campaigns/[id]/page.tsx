@@ -57,7 +57,7 @@ import {
   SdtGauge,
 } from './page-helpers'
 import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/implementation-readiness'
-import { getFirstNextStepGuidance, getLifecycleDecisionCards } from '@/lib/client-onboarding'
+import { getFirstNextStepGuidance } from '@/lib/client-onboarding'
 import { type CampaignAuditEventRecord } from '@/lib/campaign-audit'
 import { getCustomerActionPermission } from '@/lib/customer-permissions'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'

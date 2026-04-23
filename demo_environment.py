@@ -439,9 +439,11 @@ def _ensure_role_memberships(
     *,
     org: Organization,
     admin_user_id: str | None = None,
+    owner_user_ids: list[str] | None = None,
     member_user_ids: list[str] | None = None,
     viewer_user_ids: list[str] | None = None,
 ) -> None:
+    owner_user_ids = owner_user_ids or []
     member_user_ids = member_user_ids or []
     viewer_user_ids = viewer_user_ids or []
 
@@ -451,6 +453,7 @@ def _ensure_role_memberships(
     assignments: list[tuple[str, str, bool]] = []
     if admin_user_id:
         assignments.append((admin_user_id, "owner", True))
+    assignments.extend((user_id, "owner", False) for user_id in owner_user_ids)
     assignments.extend((user_id, "member", False) for user_id in member_user_ids)
     assignments.extend((user_id, "viewer", False) for user_id in viewer_user_ids)
 
@@ -499,25 +502,43 @@ def _purge_named_campaigns(db: Session, org: Organization, names: list[str]) -> 
 
 
 def _mark_import_qa_ready(db: Session, *, campaign: Campaign) -> None:
+    if not (
+        _has_table(db, "campaign_delivery_records")
+        and _has_table(db, "campaign_delivery_checkpoints")
+    ):
+        return
+
     respondent_count = len(campaign.respondents)
     summary = (
         "Het deelnemersbestand is gecontroleerd en 1 deelnemer staat vrijgegeven voor launch."
         if respondent_count == 1
         else f"Het deelnemersbestand is gecontroleerd en {respondent_count} deelnemers staan vrijgegeven voor launch."
     )
+    delivery_record_id = db.execute(
+        text(
+            """
+            select id
+            from campaign_delivery_records
+            where campaign_id = :campaign_id
+            """
+        ),
+        {"campaign_id": campaign.id},
+    ).scalar_one_or_none()
+
+    if delivery_record_id is None:
+        return
+
     db.execute(
         text(
             """
-            update public.campaign_delivery_checkpoints checkpoint
+            update campaign_delivery_checkpoints
             set auto_state = 'ready',
                 last_auto_summary = :summary
-            from public.campaign_delivery_records record
-            where record.id = checkpoint.delivery_record_id
-              and record.campaign_id = :campaign_id
-              and checkpoint.checkpoint_key = 'import_qa'
+            where delivery_record_id = :delivery_record_id
+              and checkpoint_key = 'import_qa'
             """
         ),
-        {"campaign_id": campaign.id, "summary": summary},
+        {"delivery_record_id": delivery_record_id, "summary": summary},
     )
     db.flush()
 
@@ -953,7 +974,7 @@ def seed_guided_self_serve_acceptance(
     org_slug: str = GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
     org_name: str = GUIDED_SELF_SERVE_ACCEPTANCE_ORG_NAME,
     contact_email: str = GUIDED_SELF_SERVE_ACCEPTANCE_CONTACT_EMAIL,
-    member_user_id: str | None = None,
+    owner_user_id: str | None = None,
     viewer_user_id: str | None = None,
 ) -> dict[str, str | int | None]:
     random.seed(RANDOM_SEEDS["qa_guided_self_serve_acceptance"])
@@ -965,14 +986,14 @@ def seed_guided_self_serve_acceptance(
         name=org_name,
         contact_email=contact_email,
         acting_user_id=(
-            member_user_id
-            if _is_uuid_like(member_user_id)
+            owner_user_id
+            if _is_uuid_like(owner_user_id)
             else (viewer_user_id if _is_uuid_like(viewer_user_id) else None)
         ),
     )
     _ensure_org_secret(db, org)
-    if _is_uuid_like(member_user_id):
-        _ensure_role_memberships(db, org=org, member_user_ids=[member_user_id])
+    if _is_uuid_like(owner_user_id):
+        _ensure_role_memberships(db, org=org, owner_user_ids=[owner_user_id])
     if _is_uuid_like(viewer_user_id):
         _ensure_role_memberships(db, org=org, viewer_user_ids=[viewer_user_id])
     _purge_named_campaigns(
@@ -993,6 +1014,8 @@ def seed_guided_self_serve_acceptance(
         name=GUIDED_SELF_SERVE_THRESHOLD_CAMPAIGN_NAME,
         created_days_ago=3,
     )
+    org_id = org.id
+    threshold_campaign_id = threshold_campaign.id
 
     for index in range(4):
         completed_at = threshold_campaign.created_at + timedelta(days=1, minutes=index * 13)
@@ -1022,15 +1045,15 @@ def seed_guided_self_serve_acceptance(
         "setup_campaign_id": str(
             db.query(Campaign.id)
             .filter(
-                Campaign.organization_id == org.id,
+                Campaign.organization_id == org_id,
                 Campaign.name == GUIDED_SELF_SERVE_SETUP_CAMPAIGN_NAME,
             )
             .scalar()
         ),
-        "threshold_campaign_id": str(threshold_campaign.id),
+        "threshold_campaign_id": str(threshold_campaign_id),
         "detail_threshold": RESPONSE_THRESHOLDS["detail"],
         "pattern_threshold": RESPONSE_THRESHOLDS["pattern"],
-        "member_user_id": member_user_id,
+        "owner_user_id": owner_user_id,
         "viewer_user_id": viewer_user_id,
     }
 

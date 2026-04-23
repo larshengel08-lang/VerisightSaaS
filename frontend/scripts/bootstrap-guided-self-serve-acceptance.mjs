@@ -110,7 +110,7 @@ async function main() {
     'qa_guided_self_serve_acceptance',
     '--org-slug',
     acceptanceEnv.orgSlug,
-    '--member-user-id',
+    '--owner-user-id',
     userId,
   ])
 

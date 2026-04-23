@@ -401,7 +401,9 @@ export function GuidedSelfServePanel({
       setLaunchConfirmChecked(false)
       setToast(payload.message ?? 'Launchinstellingen bijgewerkt.')
       setTimeout(() => setToast(null), 4000)
-      router.refresh()
+      if (confirmLaunch) {
+        router.refresh()
+      }
     } catch {
       setError('Verbindingsfout tijdens opslaan van launchinstellingen.')
     } finally {

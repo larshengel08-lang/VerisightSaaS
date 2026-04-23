@@ -156,10 +156,10 @@ def test_seed_guided_self_serve_acceptance_creates_setup_and_threshold_journeys(
     )
 
 
-def test_seed_guided_self_serve_acceptance_can_assign_member_executor(db_session):
-    result = seed_guided_self_serve_acceptance(db_session, member_user_id="member-guided-self-serve")
+def test_seed_guided_self_serve_acceptance_can_assign_owner_executor(db_session):
+    result = seed_guided_self_serve_acceptance(db_session, owner_user_id="owner-guided-self-serve")
 
-    assert result["member_user_id"] == "member-guided-self-serve"
+    assert result["owner_user_id"] == "owner-guided-self-serve"
 
     if not inspect(db_session.bind).has_table("org_members"):
         return
@@ -173,10 +173,10 @@ def test_seed_guided_self_serve_acceptance_can_assign_member_executor(db_session
             where org_id = :org_id and user_id = :user_id
             """
         ),
-        {"org_id": org.id, "user_id": "member-guided-self-serve"},
+        {"org_id": org.id, "user_id": "owner-guided-self-serve"},
     ).scalar_one()
 
-    assert membership == "member"
+    assert membership == "owner"
 
 
 def test_advance_guided_self_serve_acceptance_progresses_threshold_journey(db_session):
