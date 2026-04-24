@@ -62,6 +62,7 @@ interface ImportResponse {
   errors: ImportIssue[]
   imported: number
   emails_sent: number
+  invite_queue: Array<{ token: string; email: string | null }>
 }
 
 function getStatusTone(status: 'done' | 'current' | 'blocked') {
@@ -102,6 +103,7 @@ export function GuidedSelfServePanel({
   const [uploadSendInvites, setUploadSendInvites] = useState(true)
   const [previewResult, setPreviewResult] = useState<ImportResponse | null>(null)
   const [importSuccess, setImportSuccess] = useState<ImportResponse | null>(null)
+  const [optimisticInviteQueue, setOptimisticInviteQueue] = useState<Array<{ token: string; email: string | null }>>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState<'preview' | 'import' | 'launch' | 'remind' | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -109,6 +111,15 @@ export function GuidedSelfServePanel({
   useEffect(() => {
     setUploadSendInvites(getInviteDefaultForDeliveryMode(deliveryMode))
   }, [campaignId, deliveryMode])
+
+  useEffect(() => {
+    setOptimisticInviteQueue([])
+  }, [campaignId, unsentRespondents])
+
+  const launchableRespondents = useMemo(() => {
+    const source = optimisticInviteQueue.length > 0 ? optimisticInviteQueue : unsentRespondents
+    return source.filter((respondent) => respondent.email)
+  }, [optimisticInviteQueue, unsentRespondents])
 
   async function requestImport(dryRun: boolean) {
     setError(null)
@@ -146,6 +157,9 @@ export function GuidedSelfServePanel({
       } else {
         setImportSuccess(typedPayload)
         setPreviewResult(null)
+        setOptimisticInviteQueue(
+          typedPayload.invite_queue.filter((respondent) => Boolean(respondent.email)),
+        )
         router.refresh()
       }
     } catch {
@@ -182,12 +196,10 @@ export function GuidedSelfServePanel({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(
-          unsentRespondents
-            .filter((respondent) => respondent.email)
-            .map((respondent) => ({
-              token: respondent.token,
-              email: respondent.email,
-            })),
+          launchableRespondents.map((respondent) => ({
+            token: respondent.token,
+            email: respondent.email,
+          })),
         ),
       })
 
@@ -212,6 +224,9 @@ export function GuidedSelfServePanel({
           ? `${sent} uitnodiging(en) gestart.${failed > 0 || skipped > 0 ? ` ${failed} mislukt, ${skipped} overgeslagen.` : ''}`
           : 'Er zijn geen nieuwe uitnodigingen gestart.',
       )
+      if (sent > 0) {
+        setOptimisticInviteQueue([])
+      }
       setTimeout(() => setToast(null), 4000)
       router.refresh()
     } catch {
@@ -392,7 +407,7 @@ export function GuidedSelfServePanel({
                       : `Importeer ${previewResult?.valid_rows ?? 0} deelnemers`}
                 </button>
               ) : null}
-              {invitesNotSent > 0 && unsentRespondents.length > 0 ? (
+              {launchableRespondents.length > 0 ? (
                 <button
                   type="button"
                   onClick={() => void startInvites()}
@@ -401,7 +416,7 @@ export function GuidedSelfServePanel({
                 >
                   {loading === 'launch'
                     ? 'Uitnodigingen starten...'
-                    : `Start uitnodigingen (${unsentRespondents.length})`}
+                    : `Start uitnodigingen (${launchableRespondents.length})`}
                 </button>
               ) : null}
               {remindableCount > 0 ? (

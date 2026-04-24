@@ -4,11 +4,13 @@ import { createClient } from '@/lib/supabase/server'
 import { CampaignActions } from './campaign-actions'
 import { PdfDownloadButton } from './pdf-download-button'
 import {
+  DashboardChartPanel,
   DashboardChip,
   DashboardDisclosure,
   DashboardHero,
   DashboardKeyValue,
   DashboardPanel,
+  DashboardRecommendationRail,
   DashboardSection,
   DashboardSummaryBar,
   DashboardTimeline,
@@ -22,7 +24,10 @@ import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
-import { buildGuidedSelfServeState } from '@/lib/guided-self-serve'
+import {
+  getCampaignCompositionState,
+  isManagementVisibleState,
+} from '@/lib/dashboard/dashboard-state-composition'
 import {
   ActionPlaybookList,
   buildDecisionPanels,
@@ -65,6 +70,108 @@ import type { CampaignStats, Respondent, SurveyResponse } from '@/lib/types'
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+type PresentationMetricKey =
+  | 'signal'
+  | 'owner'
+  | 'next-step'
+  | 'review'
+  | 'response'
+  | 'readiness'
+
+type PresentationMetric = {
+  label: string
+  value: string
+  tone: 'slate' | 'blue' | 'emerald' | 'amber'
+  accent?: string
+  helpText?: string
+}
+
+function buildPresentationMetrics({
+  productExperience,
+  scanDefinition,
+  dashboardViewModel,
+  averageRiskScore,
+  totalCompleted,
+  totalInvited,
+  compositionStateMeta,
+  hasEnoughData,
+}: {
+  productExperience: {
+    summarySignalLabel: string
+    summaryFocusLabel: string
+    reviewLabel: string
+  }
+  scanDefinition: ReturnType<typeof getScanDefinition>
+  dashboardViewModel: {
+    topSummaryCards: Array<{ title: string; value?: string }>
+    nextStep: { title: string }
+  }
+  averageRiskScore: number | null
+  totalCompleted: number
+  totalInvited: number
+  compositionStateMeta: {
+    label: string
+    tone: 'slate' | 'blue' | 'emerald' | 'amber'
+  }
+  hasEnoughData: boolean
+}): Record<PresentationMetricKey, PresentationMetric> {
+  const ownerValue =
+    findPresentationCardValue(dashboardViewModel.topSummaryCards, ['Eerste eigenaar']) ?? 'Nog niet vrijgegeven'
+  const reviewValue =
+    findPresentationCardValue(dashboardViewModel.topSummaryCards, ['Reviewmoment', 'Reviewgrens', 'Leesgrens']) ??
+    'Nog indicatief'
+
+  return {
+    signal: {
+      label: productExperience.summarySignalLabel,
+      value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : 'Nog geen veilig beeld',
+      tone: averageRiskScore !== null ? 'slate' : 'amber',
+      helpText: scanDefinition.signalHelp,
+    },
+    owner: {
+      label: 'Eerste eigenaar',
+      value: ownerValue,
+      tone: 'slate',
+    },
+    'next-step': {
+      label: productExperience.summaryFocusLabel,
+      value: dashboardViewModel.nextStep.title,
+      tone: hasEnoughData ? 'slate' : 'amber',
+    },
+    review: {
+      label: productExperience.reviewLabel,
+      value: reviewValue,
+      tone: 'slate',
+    },
+    response: {
+      label: 'Responsstatus',
+      value: `${totalCompleted}/${totalInvited || 0} ingevuld`,
+      tone: hasEnoughData ? 'emerald' : 'amber',
+    },
+    readiness: {
+      label: 'Dashboardstatus',
+      value: compositionStateMeta.label,
+      tone: compositionStateMeta.tone,
+    },
+  }
+}
+
+function findPresentationCardValue(
+  cards: Array<{ title: string; value?: string }>,
+  titles: string[],
+) {
+  for (const title of titles) {
+    const match = cards.find((card) => card.title === title && card.value)
+    if (match?.value) return match.value
+  }
+
+  return null
+}
+
+function normalizeInformationalTone(tone: 'slate' | 'blue' | 'emerald' | 'amber') {
+  return tone === 'blue' ? 'slate' : tone
 }
 
 export default async function CampaignPage({ params }: Props) {
@@ -273,16 +380,64 @@ export default async function CampaignPage({ params }: Props) {
     activeClientAccessCount: activeClientAccessCount ?? 0,
     pendingClientInviteCount: pendingClientInviteCount ?? 0,
   })
-  const guidedSelfServeState = buildGuidedSelfServeState({
+  const compositionState = getCampaignCompositionState({
     isActive: stats.is_active,
     totalInvited: stats.total_invited,
     totalCompleted: stats.total_completed,
     invitesNotSent,
+    incompleteScores,
     hasMinDisplay,
     hasEnoughData,
   })
-  const showClientExecutionFlow = !isVerisightAdmin
-  const showManagementOutput = isVerisightAdmin || guidedSelfServeState.dashboardVisible
+  const showClientExecutionFlow = !isVerisightAdmin && compositionState !== 'closed'
+  const showManagementOutput = isManagementVisibleState(compositionState)
+  const showDetailedManagementOutput = compositionState === 'full' || compositionState === 'closed'
+  const showPartialManagementOutput = compositionState === 'partial'
+  const prefersReportFirst = compositionState === 'closed'
+  const compositionStateMeta = {
+    setup: {
+      label: 'Nog niet live',
+      tone: 'amber' as const,
+      trust:
+        'Deze campaign blijft in setup. Toon hier nog geen managementlaag of rapport-first gedrag.',
+    },
+    ready_to_launch: {
+      label: 'Launch klaar',
+      tone: 'amber' as const,
+      trust:
+        'Respondenten staan klaar, maar invites zijn nog niet volledig live. Dashboard en rapport blijven bewust secundair.',
+    },
+    running: {
+      label: 'Invites live',
+      tone: 'amber' as const,
+      trust:
+        'De inviteflow loopt, maar zonder eerste veilige responslaag hoort dit nog als uitvoerstatus te landen.',
+    },
+    sparse: {
+      label: 'Indicatief, nog dun',
+      tone: 'amber' as const,
+      trust:
+        'Er zijn eerste responses, maar het beeld is nog te dun voor een veilige dashboardread of aanbevelingslaag.',
+    },
+    partial: {
+      label: 'Deels zichtbaar',
+      tone: 'amber' as const,
+      trust:
+        'De eerste read is open, maar drivers, aanbevelingen en vervolgblokken blijven deels verborgen door thresholds of scorecompleetheid.',
+    },
+    full: {
+      label: 'Managementduiding gereed',
+      tone: 'emerald' as const,
+      trust:
+        'Drivers, aanbevelingen en routeblokken mogen nu zichtbaar worden binnen de bestaande productgrenzen.',
+    },
+    closed: {
+      label: 'Rapport eerst',
+      tone: 'slate' as const,
+      trust:
+        'Deze campaign is gesloten. Gebruik dashboard en rapport nu voor terugblik, context en bestuurlijke opvolging.',
+    },
+  }[compositionState]
   const utilitySectionVisible = canExecuteCampaign || respondents.length > 0 || isVerisightAdmin
   const riskDistribution = {
     HOOG: stats.band_high,
@@ -377,13 +532,13 @@ export default async function CampaignPage({ params }: Props) {
     stats.scan_type === 'retention'
       ? 'Deze laag volgt dezelfde lijn als het rapport: waar staat behoud onder druk, waarom telt dat bestuurlijk en wat moet eerst geverifieerd worden.'
       : stats.scan_type === 'pulse'
-        ? 'Deze laag vertaalt Pulse naar een bestuurlijk leesbare compacte managementread: welke review- of herijkingsvraag vraagt nu direct aandacht, wat moet je als eerste bijsturen en wanneer hoort daar een bounded hercheck bij.'
+        ? 'Deze laag vertaalt Pulse naar een bestuurlijk leesbare compacte managementduiding: welke review- of herijkingsvraag vraagt nu direct aandacht, wat moet je als eerste bijsturen en wanneer hoort daar een bounded hercheck bij.'
         : stats.scan_type === 'team'
           ? 'Deze laag vertaalt TeamScan naar een bestuurlijk leesbare lokale read: welke afdelingen vallen op, wat moet je eerst toetsen en welke lokale context vraagt nu als eerste aandacht.'
           : stats.scan_type === 'onboarding'
             ? 'Deze laag vertaalt onboarding naar een bestuurlijk leesbare landingsduiding: waar stokt de vroege landing, wat telt nu bestuurlijk en welke beperkte correctie hoort hier direct achteraan.'
             : stats.scan_type === 'leadership'
-              ? 'Deze laag vertaalt Leadership Scan naar een bestuurlijk leesbare managementread: welke context valt op, wat moet je eerst toetsen en welke begrensde managementstap hoort hier direct achteraan.'
+              ? 'Deze laag vertaalt Leadership Scan naar een bestuurlijk leesbare managementduiding: welke context valt op, wat moet je eerst toetsen en welke begrensde managementstap hoort hier direct achteraan.'
         : 'Deze laag opent met de Frictiescore als bestuurlijk leesbare managementsamenvatting: wat keert terug, waar lijkt werkfrictie beinvloedbaar en waar moet management eerst doorvragen.'
   const readinessLabel = hasEnoughData
     ? 'Beslisniveau bereikt'
@@ -417,10 +572,22 @@ export default async function CampaignPage({ params }: Props) {
   const productExperience =
     stats.scan_type === 'retention'
       ? {
-          summaryTone: 'emerald' as const,
+          familyRoleLabel: 'Kernroute',
+          familyRoleTone: 'emerald' as const,
+          summaryBarOrder: ['signal', 'next-step', 'response', 'readiness'] as const,
+          heroAsideOrder: ['signal', 'owner', 'response', 'readiness'] as const,
+          summaryFocusLabel: 'Eerste route',
+          reviewLabel: 'Reviewmoment',
+          evidenceSectionOrder: 'management-first' as const,
+          recommendationOrder: 'questions-first' as const,
+          trustNotePlacement: 'drivers' as const,
+          trustNoteTitle: 'Methodische status',
+          trustNoteBody: scanDefinition.evidenceStatusText,
+          trustNoteTone: 'emerald' as const,
+          summaryTone: 'slate' as const,
           summarySignalLabel: 'Retentiesignaal',
           summaryContextLabel: 'Groepssignaal · verification-first',
-          summaryContextTone: 'emerald' as const,
+          summaryContextTone: 'slate' as const,
           summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
           summaryLeadDescription:
             'Lees RetentieScan eerst als groepssignaal: waar staat behoud onder druk, wat vraagt eerst verificatie en welk managementspoor moet daarna in Wat nu als eerste route worden gekozen.',
@@ -432,7 +599,7 @@ export default async function CampaignPage({ params }: Props) {
           driverIntro:
             'Begin met het groepssignaal en open pas daarna factoren, trend en aanvullende lagen. Zo blijft RetentieScan een verification-first managementinstrument in plaats van een losse analysetabel.',
           driverAsideLabel: hasEnoughData ? 'Behoudsdrivers beschikbaar' : 'Wacht op meer data',
-          driverAsideTone: hasEnoughData ? ('emerald' as const) : ('amber' as const),
+          driverAsideTone: hasEnoughData ? ('slate' as const) : ('amber' as const),
           driverTabOrder: ['signalen', 'trend', 'factoren', 'aanvullend'],
           signalTabLabel: 'Retentiesignaal',
           signalTabTitle: 'Retentiesignaal op groepsniveau',
@@ -463,10 +630,22 @@ export default async function CampaignPage({ params }: Props) {
         }
       : stats.scan_type === 'team'
         ? {
-            summaryTone: 'blue' as const,
+            familyRoleLabel: 'Specialistische vervolgstap',
+            familyRoleTone: 'blue' as const,
+            summaryBarOrder: ['signal', 'next-step', 'response', 'readiness'] as const,
+            heroAsideOrder: ['signal', 'next-step', 'response', 'readiness'] as const,
+            summaryFocusLabel: 'Eerste lokale route',
+            reviewLabel: 'Reviewgrens',
+            evidenceSectionOrder: 'profile-first' as const,
+            recommendationOrder: 'playbooks-first' as const,
+            trustNotePlacement: 'handoff' as const,
+            trustNoteTitle: 'Leesgrens van deze route',
+            trustNoteBody: scanDefinition.segmentText,
+            trustNoteTone: 'amber' as const,
+            summaryTone: 'slate' as const,
             summarySignalLabel: 'Teamsignaal',
             summaryContextLabel: 'Lokale read · department-first',
-            summaryContextTone: 'blue' as const,
+            summaryContextTone: 'slate' as const,
             summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
           summaryLeadDescription:
               'Lees TeamScan eerst als veilige lokale contextlaag: welke afdelingen vallen op, welke factor kleurt dat beeld en welke lokale verificatie hoort nu als eerste.',
@@ -478,7 +657,7 @@ export default async function CampaignPage({ params }: Props) {
             driverIntro:
               'Start bij de lokale read en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke afdelingen eerst verificatie vragen.',
             driverAsideLabel: hasEnoughData ? 'Lokale read beschikbaar' : 'Wacht op meer data',
-            driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
+            driverAsideTone: hasEnoughData ? ('slate' as const) : ('amber' as const),
             driverTabOrder: ['lokaal', 'factoren', 'signalen', 'aanvullend'],
             signalTabLabel: 'Signaalverdeling',
             signalTabTitle: 'Teamsignaal op groepsniveau',
@@ -509,10 +688,22 @@ export default async function CampaignPage({ params }: Props) {
           }
       : stats.scan_type === 'onboarding'
         ? {
-            summaryTone: 'blue' as const,
+            familyRoleLabel: 'Begrensde peer-route',
+            familyRoleTone: 'blue' as const,
+            summaryBarOrder: ['signal', 'owner', 'review', 'readiness'] as const,
+            heroAsideOrder: ['signal', 'owner', 'review', 'response'] as const,
+            summaryFocusLabel: 'Eerste checkpoint',
+            reviewLabel: 'Reviewgrens',
+            evidenceSectionOrder: 'profile-first' as const,
+            recommendationOrder: 'playbooks-first' as const,
+            trustNotePlacement: 'handoff' as const,
+            trustNoteTitle: 'Leesgrens van deze route',
+            trustNoteBody: scanDefinition.evidenceStatusText,
+            trustNoteTone: 'amber' as const,
+            summaryTone: 'slate' as const,
             summarySignalLabel: 'Onboardingsignaal',
             summaryContextLabel: 'Vroege landing · bounded peer-read',
-            summaryContextTone: 'blue' as const,
+            summaryContextTone: 'slate' as const,
             summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
             summaryLeadDescription:
               'Lees onboarding eerst als bounded peer-read: waar stokt de vroege landing in de eerste 30-60-90 dagen, welke frictie is nu zichtbaar en welke beperkte correctie hoort daar direct bij.',
@@ -524,8 +715,8 @@ export default async function CampaignPage({ params }: Props) {
             driverIntro:
               'Start bij de landingsduiding en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke vroege factor nu eerst aandacht vraagt.',
             driverAsideLabel: hasEnoughData ? 'Landingsduiding beschikbaar' : 'Wacht op meer data',
-            driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
-            driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
+            driverAsideTone: hasEnoughData ? ('slate' as const) : ('amber' as const),
+            driverTabOrder: ['factoren', 'signalen', 'aanvullend', 'trend'],
             signalTabLabel: 'Landingsbeeld',
             signalTabTitle: 'Onboardingsignaal op groepsniveau',
             signalTabDescription:
@@ -555,10 +746,22 @@ export default async function CampaignPage({ params }: Props) {
           }
       : stats.scan_type === 'leadership'
         ? {
-            summaryTone: 'blue' as const,
+            familyRoleLabel: 'Begrensde support-route',
+            familyRoleTone: 'blue' as const,
+            summaryBarOrder: ['signal', 'next-step', 'review', 'readiness'] as const,
+            heroAsideOrder: ['signal', 'next-step', 'review', 'response'] as const,
+            summaryFocusLabel: 'Eerste check',
+            reviewLabel: 'Reviewgrens',
+            evidenceSectionOrder: 'profile-first' as const,
+            recommendationOrder: 'playbooks-first' as const,
+            trustNotePlacement: 'handoff' as const,
+            trustNoteTitle: 'Leesgrens van deze route',
+            trustNoteBody: scanDefinition.evidenceStatusText,
+            trustNoteTone: 'amber' as const,
+            summaryTone: 'slate' as const,
             summarySignalLabel: 'Leadershipsignaal',
             summaryContextLabel: 'Bounded support-read · group-level only',
-            summaryContextTone: 'blue' as const,
+            summaryContextTone: 'slate' as const,
             summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
             summaryLeadDescription:
               'Lees Leadership Scan eerst als begrensde support-read: welke managementcontext kleurt het bestaande people-signaal mee en welke kleine check hoort daar nu logisch bij.',
@@ -570,8 +773,8 @@ export default async function CampaignPage({ params }: Props) {
             driverIntro:
               'Start bij de begrensde read en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke context eerst een kleine check verdient.',
             driverAsideLabel: hasEnoughData ? 'Managementread beschikbaar' : 'Wacht op meer data',
-            driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
-            driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
+            driverAsideTone: hasEnoughData ? ('slate' as const) : ('amber' as const),
+            driverTabOrder: ['factoren', 'signalen', 'aanvullend', 'trend'],
             signalTabLabel: 'Managementbeeld',
             signalTabTitle: 'Leadershipsignaal op groepsniveau',
             signalTabDescription:
@@ -601,10 +804,22 @@ export default async function CampaignPage({ params }: Props) {
           }
       : stats.scan_type === 'exit'
         ? {
-            summaryTone: 'blue' as const,
+            familyRoleLabel: 'Kernroute',
+            familyRoleTone: 'blue' as const,
+            summaryBarOrder: ['signal', 'owner', 'response', 'readiness'] as const,
+            heroAsideOrder: ['signal', 'owner', 'response', 'readiness'] as const,
+            summaryFocusLabel: 'Eerste route',
+            reviewLabel: 'Reviewmoment',
+            evidenceSectionOrder: 'management-first' as const,
+            recommendationOrder: 'questions-first' as const,
+            trustNotePlacement: 'drivers' as const,
+            trustNoteTitle: 'Methodische status',
+            trustNoteBody: scanDefinition.evidenceStatusText,
+            trustNoteTone: 'blue' as const,
+            summaryTone: 'slate' as const,
             summarySignalLabel: 'Frictiescore',
             summaryContextLabel: 'Werkfrictie · verklarende laag',
-            summaryContextTone: 'blue' as const,
+            summaryContextTone: 'slate' as const,
             summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
             summaryLeadDescription:
               'Lees ExitScan eerst via de Frictiescore: wat keert terug, waar lijkt werkfrictie beinvloedbaar en welk managementspoor moet nu als eerste gekozen worden.',
@@ -616,7 +831,7 @@ export default async function CampaignPage({ params }: Props) {
             driverIntro:
               'Begin met de factoren die het vertrekverhaal het meest kleuren. Gebruik signaalverdeling en SDT daarna om het managementgesprek scherper en concreter te maken.',
             driverAsideLabel: hasEnoughData ? 'Vertrekdrivers beschikbaar' : 'Wacht op meer data',
-            driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
+            driverAsideTone: hasEnoughData ? ('slate' as const) : ('amber' as const),
             driverTabOrder: ['factoren', 'signalen', 'aanvullend', 'trend'],
             signalTabLabel: 'Frictiescore',
             signalTabTitle: 'Frictiescore op groepsniveau',
@@ -646,10 +861,22 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik het eerste reviewmoment om bewust te kiezen: blijf je op hetzelfde vertrekspoor, vraagt deze scan verdere verdieping of wordt een tweede product logisch op basis van de eerste managementwaarde?',
           }
         : {
-            summaryTone: 'blue' as const,
+            familyRoleLabel: 'Begrensde support-route',
+            familyRoleTone: 'blue' as const,
+            summaryBarOrder: ['signal', 'next-step', 'review', 'readiness'] as const,
+            heroAsideOrder: ['signal', 'next-step', 'review', 'response'] as const,
+            summaryFocusLabel: 'Eerste herijking',
+            reviewLabel: 'Reviewmoment',
+            evidenceSectionOrder: 'profile-first' as const,
+            recommendationOrder: 'playbooks-first' as const,
+            trustNotePlacement: 'handoff' as const,
+            trustNoteTitle: 'Leesgrens van deze route',
+            trustNoteBody: scanDefinition.evidenceStatusText,
+            trustNoteTone: 'amber' as const,
+            summaryTone: 'slate' as const,
             summarySignalLabel: 'Pulsesignaal',
             summaryContextLabel: 'Reviewlaag · bounded repeat motion',
-            summaryContextTone: 'blue' as const,
+            summaryContextTone: 'slate' as const,
             summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
             summaryLeadDescription:
               'Gebruik deze eerste laag om het primaire managementsignaal en het eerste werkspoor snel scherp te krijgen, voordat een route, eigenaar en hercheckmoment worden gekozen.',
@@ -659,10 +886,10 @@ export default async function CampaignPage({ params }: Props) {
             driverDescription:
               'Gebruik deze laag om het actuele Pulse-beeld gecontroleerd te verdiepen zonder de managementhoofdlijn kwijt te raken.',
             driverIntro:
-              'Gebruik de tabs hieronder om tussen groepsread, factoren, aanvullende lagen en bounded vergelijking te wisselen zonder de hoofdlijn van de managementread kwijt te raken.',
+              'Gebruik de tabs hieronder om tussen groepsread, factoren, aanvullende lagen en bounded vergelijking te wisselen zonder de hoofdlijn van de managementduiding kwijt te raken.',
             driverAsideLabel: hasEnoughData ? 'Pulse read beschikbaar' : 'Wacht op meer data',
-            driverAsideTone: hasEnoughData ? ('blue' as const) : ('amber' as const),
-            driverTabOrder: ['signalen', 'factoren', 'aanvullend', 'trend'],
+            driverAsideTone: hasEnoughData ? ('slate' as const) : ('amber' as const),
+            driverTabOrder: ['factoren', 'trend', 'signalen', 'aanvullend'],
             signalTabLabel: 'Signaalverdeling',
             signalTabTitle: 'Signaalverdeling',
             signalTabDescription: 'Laat zien hoe breed en hoe scherp de signalen zich over de groep verdelen op dit meetmoment.',
@@ -689,56 +916,56 @@ export default async function CampaignPage({ params }: Props) {
             afterSessionDescription:
               'Gebruik het eerste reviewmoment om bewust te kiezen: doe je nog een bounded Pulse, verdiep je eerst de vraag verder of vraagt het thema nu een andere productvorm?',
           }
-  const summaryItems: Array<{
-    label: string
-    value: string
-    tone?: 'slate' | 'blue' | 'emerald' | 'amber'
-  }> = [
-    {
-      label: 'Scan',
-      value: scanDefinition.productName,
-      tone: stats.scan_type === 'retention' ? 'emerald' : 'blue',
-    },
-    {
-      label: productExperience.summarySignalLabel,
-      value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : 'Nog geen veilig beeld',
-      tone: averageRiskScore !== null ? (stats.scan_type === 'retention' ? 'emerald' : 'blue') : 'amber',
-    },
-    {
-      label: 'Responsstatus',
-      value: `${stats.total_completed}/${stats.total_invited || 0} ingevuld`,
-      tone: hasEnoughData ? 'emerald' : 'amber',
-    },
-    { label: 'Readiness', value: readinessLabel, tone: hasEnoughData ? 'blue' : 'amber' },
-  ]
+  const presentationMetrics = buildPresentationMetrics({
+    productExperience,
+    scanDefinition,
+    dashboardViewModel,
+    averageRiskScore,
+    totalCompleted: stats.total_completed,
+    totalInvited: stats.total_invited,
+    compositionStateMeta,
+    hasEnoughData,
+  })
+  const summaryItems = productExperience.summaryBarOrder.map((key) => presentationMetrics[key])
+  const heroAsideItems = productExperience.heroAsideOrder.map((key) => presentationMetrics[key])
   const sectionAnchors = [
     { id: 'samenvatting', label: 'Samenvatting' },
     ...(showManagementOutput
       ? [
           {
             id: 'handoff',
-            label: stats.scan_type === 'retention' ? 'Handoff' : stats.scan_type === 'team' ? 'Lokale read' : 'Handoff',
+            label: showPartialManagementOutput
+              ? 'Compacte read'
+              : stats.scan_type === 'retention'
+                ? 'Handoff'
+                : stats.scan_type === 'team'
+                  ? 'Lokale read'
+                  : 'Handoff',
           },
-          {
-            id: 'drivers',
-            label: stats.scan_type === 'retention' ? 'Signalen' : stats.scan_type === 'team' ? 'Lokaal' : 'Drivers',
-          },
-          {
-            id: 'acties',
-            label: stats.scan_type === 'retention' ? 'Behoudsacties' : stats.scan_type === 'team' ? 'Lokale acties' : 'Acties',
-          },
-          {
-            id: 'route',
-            label:
-              stats.scan_type === 'retention' || stats.scan_type === 'exit'
-                ? 'Kernroute'
-                : stats.scan_type === 'team' ||
-                    stats.scan_type === 'pulse' ||
-                    stats.scan_type === 'onboarding' ||
-                    stats.scan_type === 'leadership'
-                  ? 'Vervolgroute'
-                  : 'Route',
-          },
+          ...(showDetailedManagementOutput
+            ? [
+                {
+                  id: 'drivers',
+                  label: stats.scan_type === 'retention' ? 'Signalen' : stats.scan_type === 'team' ? 'Lokaal' : 'Drivers',
+                },
+                {
+                  id: 'acties',
+                  label: stats.scan_type === 'retention' ? 'Behoudsacties' : stats.scan_type === 'team' ? 'Lokale acties' : 'Acties',
+                },
+                {
+                  id: 'route',
+                  label:
+                    stats.scan_type === 'retention' || stats.scan_type === 'exit'
+                      ? 'Kernroute'
+                      : stats.scan_type === 'team' ||
+                          stats.scan_type === 'pulse' ||
+                          stats.scan_type === 'onboarding' ||
+                          stats.scan_type === 'leadership'
+                        ? 'Vervolgroute'
+                        : 'Route',
+                },
+              ]
+            : []),
         ]
       : []),
     { id: 'methodiek', label: 'Methodiek' },
@@ -747,11 +974,11 @@ export default async function CampaignPage({ params }: Props) {
       : []),
   ]
   const promotedSummaryCards =
-    productExperience.promotedSummaryCards > 0
+    showDetailedManagementOutput && productExperience.promotedSummaryCards > 0
       ? dashboardViewModel.topSummaryCards.slice(0, productExperience.promotedSummaryCards)
       : []
   const handoffSummaryCards =
-    productExperience.promotedSummaryCards > 0
+    showDetailedManagementOutput && productExperience.promotedSummaryCards > 0
       ? dashboardViewModel.topSummaryCards.slice(productExperience.promotedSummaryCards)
       : dashboardViewModel.topSummaryCards
   const availableDriverTabs = hasEnoughData
@@ -784,7 +1011,7 @@ export default async function CampaignPage({ params }: Props) {
                                   ? 'Nog geen harde volgorde'
                                   : 'Prioriteit nog niet vrijgegeven'
                             }
-                            tone={teamPriorityRead?.status === 'ready' ? 'amber' : 'blue'}
+                            tone={teamPriorityRead?.status === 'ready' ? 'amber' : 'slate'}
                           />
                         </div>
                         <p className="mt-1 text-sm leading-6 text-slate-600">
@@ -823,12 +1050,13 @@ export default async function CampaignPage({ params }: Props) {
           id: 'signalen',
           label: productExperience.signalTabLabel,
           content: (
-            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-              <h3 className="text-sm font-semibold text-slate-950">{productExperience.signalTabTitle}</h3>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                {productExperience.signalTabDescription}
-              </p>
-              <div className="mt-4">
+            <DashboardChartPanel
+              eyebrow="Signaalbeeld"
+              title={productExperience.signalTabTitle}
+              description={productExperience.signalTabDescription}
+              tone="slate"
+            >
+              <div className="mt-1">
                 <RiskCharts
                   distribution={riskDistribution}
                   histogramBins={riskHistogram}
@@ -836,7 +1064,7 @@ export default async function CampaignPage({ params }: Props) {
                   scanType={stats.scan_type}
                 />
               </div>
-            </div>
+            </DashboardChartPanel>
           ),
         },
         {
@@ -952,6 +1180,145 @@ export default async function CampaignPage({ params }: Props) {
         availableDriverTabs.filter((tab) => tab.id === tabId),
       )
     : []
+  const trustNote = (
+    <div
+      className={`rounded-[22px] border px-4 py-4 ${
+        productExperience.trustNoteTone === 'emerald'
+          ? 'border-emerald-200 bg-emerald-50'
+          : productExperience.trustNoteTone === 'amber'
+            ? 'border-amber-200 bg-amber-50'
+            : 'border-slate-200 bg-slate-50'
+      }`}
+    >
+      <p
+        className={`text-xs font-semibold uppercase tracking-[0.18em] ${
+          productExperience.trustNoteTone === 'emerald'
+            ? 'text-emerald-800'
+            : productExperience.trustNoteTone === 'amber'
+              ? 'text-amber-900'
+              : 'text-slate-600'
+        }`}
+      >
+        {productExperience.trustNoteTitle}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-slate-800">{productExperience.trustNoteBody}</p>
+    </div>
+  )
+  const profileCardsSection =
+    dashboardViewModel.profileCards.length > 0 ? (
+      <div className="grid gap-4 md:grid-cols-2">
+        {dashboardViewModel.profileCards.map((card) => (
+          <DashboardPanel
+            key={`${card.title}-${card.value ?? 'profile'}`}
+            eyebrow={card.title}
+            title={card.value || card.title}
+            body={card.body}
+            tone={normalizeInformationalTone(card.tone)}
+          />
+        ))}
+      </div>
+    ) : null
+  const managementBlocksSection =
+    dashboardViewModel.managementBlocks.length > 0 ? (
+      <div className="grid gap-4 lg:grid-cols-3">
+        {dashboardViewModel.managementBlocks.map((block) => (
+          <div
+            key={block.title}
+            className={`rounded-[22px] border p-4 ${
+              block.tone === 'emerald'
+                ? 'border-[#d2e6e0] bg-[#eef7f4]'
+                : block.tone === 'amber'
+                  ? 'border-[#eadfbe] bg-[#faf6ea]'
+                  : 'border-slate-200 bg-slate-50'
+            }`}
+          >
+            <p
+              className={`text-xs font-semibold uppercase tracking-[0.2em] ${
+                block.tone === 'emerald'
+                  ? 'text-[#3C8D8A]'
+                  : block.tone === 'amber'
+                    ? 'text-[#8C6B1F]'
+                    : 'text-slate-600'
+              }`}
+            >
+              {block.title}
+            </p>
+            {block.intro ? <p className="mt-3 text-sm leading-6 text-slate-700">{block.intro}</p> : null}
+            <ul className="mt-3 space-y-2">
+              {block.items.map((item) => (
+                <li key={item} className="flex gap-2 text-sm leading-6 text-slate-700">
+                  <span className="text-slate-400">-</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    ) : null
+  const focusQuestionsBlock = (
+    <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+      <h3 className="text-sm font-semibold text-slate-950">{productExperience.focusQuestionTitle}</h3>
+      <p className="mt-1 text-sm leading-6 text-slate-600">{productExperience.focusQuestionDescription}</p>
+      <div className="mt-4">
+        <RecommendationList
+          factorAverages={factorData.orgAverages}
+          scanType={stats.scan_type}
+          bandOverride={
+            stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
+              ? dashboardViewModel.managementBandOverride
+              : undefined
+          }
+        />
+      </div>
+    </div>
+  )
+  const playbooksBlock =
+    stats.scan_type === 'retention' ||
+    stats.scan_type === 'exit' ||
+    stats.scan_type === 'pulse' ||
+    stats.scan_type === 'team' ||
+    stats.scan_type === 'onboarding' ||
+    stats.scan_type === 'leadership' ? (
+      <>
+        <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+          <h3 className="text-sm font-semibold text-slate-950">{productExperience.playbookTitle}</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">{productExperience.playbookDescription}</p>
+          {stats.scan_type === 'retention' && playbookCalibrationNote ? (
+            <p className="mt-2 text-xs leading-6 text-slate-500">{playbookCalibrationNote}</p>
+          ) : null}
+          <div className="mt-4">
+            <ActionPlaybookList
+              factorAverages={factorData.orgAverages}
+              scanType={stats.scan_type}
+              bandOverride={
+                stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
+                  ? dashboardViewModel.managementBandOverride
+                  : undefined
+              }
+            />
+          </div>
+        </div>
+
+        {stats.scan_type === 'retention' && hasSegmentDeepDive ? (
+          <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
+            <h3 className="text-sm font-semibold text-slate-950">Segment-specifieke playbooks</h3>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Alleen zichtbaar als segmentvergelijking voldoende respons en metadata heeft.
+            </p>
+            <div className="mt-4">
+              {retentionSegmentPlaybooks.length > 0 ? (
+                <SegmentPlaybookList segments={retentionSegmentPlaybooks} />
+              ) : (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
+                  Nog geen segmenten met voldoende n en voldoende afwijking om apart te tonen.
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </>
+    ) : null
 
   return (
     <div className="space-y-6">
@@ -975,23 +1342,18 @@ export default async function CampaignPage({ params }: Props) {
             averageRiskScore,
             scanDefinition,
           })}
-          tone={stats.scan_type === 'retention' ? 'emerald' : 'blue'}
+          tone="slate"
           meta={
             <>
               <DashboardChip
                 label={stats.is_active ? 'Actief' : 'Gesloten'}
                 tone={stats.is_active ? 'emerald' : 'slate'}
               />
+              <DashboardChip label={productExperience.familyRoleLabel} tone={productExperience.familyRoleTone} />
               <DashboardChip label={`${stats.completion_rate_pct ?? 0}% respons`} tone="slate" />
               <DashboardChip
-                label={
-                  hasEnoughData
-                    ? 'Beslisniveau bereikt'
-                    : hasMinDisplay
-                      ? 'Indicatief beeld'
-                      : 'Nog onvoldoende responses'
-                }
-                tone={hasEnoughData ? 'blue' : 'amber'}
+                label={compositionStateMeta.label}
+                tone={compositionStateMeta.tone}
               />
               <DashboardChip
                 label={getDeliveryModeLabel(campaignMeta?.delivery_mode ?? null, stats.scan_type)}
@@ -1004,10 +1366,27 @@ export default async function CampaignPage({ params }: Props) {
               <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
                 Dashboard wordt zichtbaar vanaf de eerste veilige responsdrempel
               </div>
+            ) : showPartialManagementOutput ? (
+              <>
+                <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
+                  Compacte read zichtbaar, aanbevelingen nog begrensd
+                </div>
+                <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
+              </>
+            ) : prefersReportFirst ? (
+              <>
+                {!profile?.is_verisight_admin ? <OnboardingAdvancer fromStep={1} /> : null}
+                <div className="relative">
+                  {!profile?.is_verisight_admin ? (
+                    <OnboardingBalloon step={2} label="Download hier je rapport" align="left" />
+                  ) : null}
+                  <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
+                </div>
+              </>
             ) : stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
               <>
                 {!profile?.is_verisight_admin ? <OnboardingAdvancer fromStep={1} /> : null}
-                <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
+                <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700">
                   {stats.scan_type === 'pulse'
                     ? 'Pulse: management handoff live'
                     : stats.scan_type === 'team'
@@ -1032,15 +1411,15 @@ export default async function CampaignPage({ params }: Props) {
           aside={
             <div className="space-y-3">
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <DashboardKeyValue label="Respons" value={`${stats.completion_rate_pct ?? 0}%`} />
-                <DashboardKeyValue label="Uitnodigingen" value={`${stats.total_invited}`} />
-                <DashboardKeyValue label="Ingevuld" value={`${stats.total_completed}`} />
-                <DashboardKeyValue
-                  label={`Gem. ${scanDefinition.signalLabelLower}`}
-                  value={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : '-'}
-                  accent={averageRiskScore !== null ? 'text-blue-700' : undefined}
-                  helpText={scanDefinition.signalHelp}
-                />
+                {heroAsideItems.map((item) => (
+                  <DashboardKeyValue
+                    key={item.label}
+                    label={item.label}
+                    value={item.value}
+                    accent={item.accent}
+                    helpText={item.helpText}
+                  />
+                ))}
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Campagnestatus</p>
@@ -1051,7 +1430,7 @@ export default async function CampaignPage({ params }: Props) {
                     : 'Alle uitgenodigde respondenten hebben afgerond.'}
                 </p>
                 <p className="mt-2 text-xs leading-5 text-slate-500">
-                  Route: {getDeliveryModeLabel(campaignMeta?.delivery_mode ?? null, stats.scan_type)}.
+                  State: {compositionStateMeta.label}. {compositionStateMeta.trust}
                 </p>
               </div>
             </div>
@@ -1071,7 +1450,7 @@ export default async function CampaignPage({ params }: Props) {
                 ? 'border-amber-200 bg-amber-50 text-amber-900'
                 : notice.tone === 'red'
                   ? 'border-red-200 bg-red-50 text-red-900'
-                  : 'border-blue-100 bg-blue-50 text-blue-900'
+                  : 'border-slate-200 bg-slate-50 text-slate-900'
             }`}
           >
             <p className="font-semibold">{notice.title}</p>
@@ -1088,8 +1467,17 @@ export default async function CampaignPage({ params }: Props) {
             <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
               Eerst uitvoerflow afronden
             </div>
+          ) : showPartialManagementOutput ? (
+            <>
+              <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
+                Aanbevelingen blijven nog begrensd
+              </div>
+              <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
+            </>
+          ) : prefersReportFirst ? (
+            <PdfDownloadButton campaignId={id} campaignName={stats.campaign_name} scanType={stats.scan_type} />
           ) : stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
-            <div className="rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57]">
+            <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700">
               {stats.scan_type === 'pulse'
                 ? 'Pulse: management handoff live'
                 : stats.scan_type === 'team'
@@ -1110,7 +1498,7 @@ export default async function CampaignPage({ params }: Props) {
           eyebrow="Guided self-serve"
           title="Begeleide uitvoerflow"
           description="Verisight heeft de campaign ingericht. Vanaf hier lever jij deelnemers aan, start je de inviteflow veilig en volg je respons op zonder buiten de productgrenzen te hoeven treden."
-          aside={<DashboardChip label="Klantuitvoering" tone="emerald" />}
+          aside={<DashboardChip label="Klantuitvoering" tone="slate" />}
         >
           <GuidedSelfServePanel
             campaignId={id}
@@ -1129,6 +1517,42 @@ export default async function CampaignPage({ params }: Props) {
             />
           </DashboardSection>
         ) : null}
+
+      {showPartialManagementOutput ? (
+        <DashboardSection
+          id="handoff"
+          eyebrow="Bestuurlijke handoff"
+          title="Eerste compacte managementduiding"
+          description="De eerste veilige dashboardlaag is zichtbaar, maar deze campaign blijft nog bewust compact tot thresholds en scorecompleetheid een vollediger beeld dragen."
+          aside={<DashboardChip label={compositionStateMeta.label} tone={compositionStateMeta.tone} />}
+          tone="slate"
+        >
+          <div className="space-y-5">
+            <DashboardRecommendationRail
+              eyebrow="Trustgrens"
+              title="Aanbevelingen blijven nog begrensd"
+              description="Gebruik nu alleen de compacte read, de eerste managementvraag en het bijbehorende trustsignaal. Drivers, playbooks en vervolgblokken blijven bewust nog deels dicht."
+              tone="amber"
+            >
+              <div className="grid gap-4 lg:grid-cols-2">
+                <DashboardPanel
+                  eyebrow="Wat nu wel zichtbaar is"
+                  title="Eerste managementduiding"
+                  body="Gebruik de hero, samenvatting en eerste managementvraag om richting te houden zonder het beeld al zwaarder te maken dan de data nu draagt."
+                  tone="slate"
+                />
+                <DashboardPanel
+                  eyebrow="Wat bewust nog wacht"
+                  title="Nog geen volle aanbevelingslaag"
+                  body="Drivers, aanbevelingen en 30–90-dagenroute gaan pas open zodra minstens 10 complete responses beschikbaar zijn en privacygrenzen niet meer onnodig veel verbergen."
+                  tone="amber"
+                />
+              </div>
+            </DashboardRecommendationRail>
+            <ManagementReadGuide scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} />
+          </div>
+        </DashboardSection>
+      ) : null}
 
       {showManagementOutput && promotedSummaryCards.length > 0 ? (
         <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4 shadow-[0_12px_30px_rgba(19,32,51,0.05)] sm:p-5">
@@ -1154,21 +1578,21 @@ export default async function CampaignPage({ params }: Props) {
                 title={card.title}
                 value={card.value}
                 body={card.body}
-                tone={card.tone}
+                tone={normalizeInformationalTone(card.tone)}
               />
             ))}
           </div>
         </div>
       ) : null}
 
-      {showManagementOutput ? (
+      {showDetailedManagementOutput ? (
       <DashboardSection
         id="handoff"
         eyebrow="Bestuurlijke handoff"
         title={handoffTitle}
         description={handoffDescription}
-        aside={<DashboardChip label={readinessLabel} tone={hasEnoughData ? 'blue' : 'amber'} />}
-        tone="blue"
+        aside={<DashboardChip label={readinessLabel} tone={hasEnoughData ? 'emerald' : 'amber'} />}
+        tone="slate"
       >
         <div className="space-y-4">
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr),minmax(320px,0.7fr)]">
@@ -1199,7 +1623,7 @@ export default async function CampaignPage({ params }: Props) {
                   title={card.title}
                   value={card.value}
                   body={card.body}
-                  tone={card.tone}
+                  tone={normalizeInformationalTone(card.tone)}
                 />
               ))}
             </div>
@@ -1209,13 +1633,13 @@ export default async function CampaignPage({ params }: Props) {
                 eyebrow="Eerste managementvraag"
                 title={dashboardViewModel.primaryQuestion.title}
                 body={dashboardViewModel.primaryQuestion.body}
-                tone={dashboardViewModel.primaryQuestion.tone}
+                tone={normalizeInformationalTone(dashboardViewModel.primaryQuestion.tone)}
               />
               <DashboardPanel
                 eyebrow="Logische vervolgstap"
                 title={dashboardViewModel.nextStep.title}
                 body={dashboardViewModel.nextStep.body}
-                tone={dashboardViewModel.nextStep.tone}
+                tone={normalizeInformationalTone(dashboardViewModel.nextStep.tone)}
               />
             </div>
           </div>
@@ -1226,7 +1650,7 @@ export default async function CampaignPage({ params }: Props) {
                 <h3 className="text-sm font-semibold text-slate-950">Lokale managementhandoff</h3>
                 <DashboardChip
                   label={primaryTeamPriority ? `Eerst: ${primaryTeamPriority.label}` : 'Bounded handoff'}
-                  tone={primaryTeamPriority ? 'amber' : 'blue'}
+                    tone={primaryTeamPriority ? 'amber' : 'slate'}
                 />
               </div>
               <p className="mt-1 text-sm leading-6 text-slate-600">
@@ -1244,13 +1668,13 @@ export default async function CampaignPage({ params }: Props) {
                       ? `${primaryTeamPriority.topFactorLabel} is hier nu het scherpste lokale spoor.`
                       : 'Gebruik meerdere zichtbare afdelingen voorlopig als gespreksinput zonder geforceerde top-1.'
                   }
-                  tone={primaryTeamPriority ? 'amber' : 'blue'}
+                  tone={primaryTeamPriority ? 'amber' : 'slate'}
                 />
                 <DashboardPanel
                   eyebrow="Eerste eigenaar"
                   title={primaryTeamPlaybook?.owner ?? 'HR + afdelingsleider'}
                   body="Maak expliciet wie de eerste lokale managementhuddle trekt en wie de vervolgstap terugbrengt in de review."
-                  tone="emerald"
+                  tone="slate"
                 />
                 <DashboardPanel
                   eyebrow="Begrensde eerste actie"
@@ -1259,7 +1683,7 @@ export default async function CampaignPage({ params }: Props) {
                     primaryTeamPlaybook?.decision ??
                     'TeamScan blijft hier gericht op een kleine lokale verificatie of correctie, niet op een brede interventie.'
                   }
-                  tone="blue"
+                  tone="slate"
                 />
                 <DashboardPanel
                   eyebrow="Reviewgrens"
@@ -1271,62 +1695,24 @@ export default async function CampaignPage({ params }: Props) {
             </div>
           ) : null}
 
-          {dashboardViewModel.profileCards.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {dashboardViewModel.profileCards.map((card) => (
-                <DashboardPanel
-                  key={`${card.title}-${card.value ?? 'profile'}`}
-                  eyebrow={card.title}
-                  title={card.value || card.title}
-                  body={card.body}
-                  tone={card.tone}
-                />
-              ))}
-            </div>
-          ) : null}
+          {productExperience.trustNotePlacement === 'handoff' ? trustNote : null}
 
-          {dashboardViewModel.managementBlocks.length > 0 ? (
-            <div className="grid gap-4 lg:grid-cols-3">
-              {dashboardViewModel.managementBlocks.map((block) => (
-                <div
-                  key={block.title}
-                  className={`rounded-[22px] border p-4 ${
-                    block.tone === 'emerald'
-                      ? 'border-[#d2e6e0] bg-[#eef7f4]'
-                      : block.tone === 'amber'
-                        ? 'border-[#eadfbe] bg-[#faf6ea]'
-                        : 'border-[#d6e4e8] bg-[#f3f8f8]'
-                  }`}
-                >
-                  <p
-                    className={`text-xs font-semibold uppercase tracking-[0.2em] ${
-                      block.tone === 'emerald'
-                        ? 'text-[#3C8D8A]'
-                        : block.tone === 'amber'
-                          ? 'text-[#8C6B1F]'
-                          : 'text-[#234B57]'
-                    }`}
-                  >
-                    {block.title}
-                  </p>
-                  {block.intro ? <p className="mt-3 text-sm leading-6 text-slate-700">{block.intro}</p> : null}
-                  <ul className="mt-3 space-y-2">
-                    {block.items.map((item) => (
-                      <li key={item} className="flex gap-2 text-sm leading-6 text-slate-700">
-                        <span className="text-slate-400">-</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          ) : null}
+          {productExperience.evidenceSectionOrder === 'management-first' ? (
+            <>
+              {managementBlocksSection}
+              {profileCardsSection}
+            </>
+          ) : (
+            <>
+              {profileCardsSection}
+              {managementBlocksSection}
+            </>
+          )}
         </div>
       </DashboardSection>
       ) : null}
 
-      {showManagementOutput ? (
+      {showDetailedManagementOutput ? (
       <DashboardSection
         id="drivers"
         eyebrow="Wat drijft dit beeld?"
@@ -1336,6 +1722,7 @@ export default async function CampaignPage({ params }: Props) {
       >
         {hasEnoughData ? (
           <div className="space-y-5">
+            {productExperience.trustNotePlacement === 'drivers' ? trustNote : null}
             <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-4 text-sm leading-6 text-[color:var(--text)]">
               {productExperience.driverIntro}
             </div>
@@ -1349,14 +1736,14 @@ export default async function CampaignPage({ params }: Props) {
         </DashboardSection>
       ) : null}
 
-      {showManagementOutput ? (
+      {showDetailedManagementOutput ? (
       <DashboardSection
         id="acties"
         eyebrow="Waar eerst op handelen"
         title={productExperience.actionTitle}
         description={dashboardViewModel.focusSectionIntro}
-        aside={<DashboardChip label={focusBadgeLabel} tone="emerald" />}
-        tone="emerald"
+        aside={<DashboardChip label={focusBadgeLabel} tone="slate" />}
+        tone="slate"
       >
         {hasEnoughData ? (
           <div className="space-y-5">
@@ -1381,7 +1768,7 @@ export default async function CampaignPage({ params }: Props) {
                       eyebrow="Eerste eigenaar"
                       title={primaryTeamPlaybook.owner}
                       body="Deze combinatie trekt de eerste lokale check en bewaakt tegelijk dat TeamScan bounded blijft."
-                      tone="blue"
+                      tone="slate"
                     />
                     <DashboardPanel
                       eyebrow="Eerste bounded check"
@@ -1390,7 +1777,7 @@ export default async function CampaignPage({ params }: Props) {
                         primaryTeamQuestions[0] ??
                         'Gebruik het eerstvolgende afdelingsgesprek om dit lokale spoor expliciet te verifieren.'
                       }
-                      tone="emerald"
+                      tone="slate"
                     />
                     <DashboardPanel
                       eyebrow="Reviewgrens"
@@ -1399,7 +1786,7 @@ export default async function CampaignPage({ params }: Props) {
                         primaryTeamPlaybook.review ??
                         'Leg direct vast wanneer deze lokale check opnieuw wordt gelezen en of TeamScan daarna nog een tweede bounded stap nodig heeft.'
                       }
-                      tone="blue"
+                      tone="slate"
                     />
                   </div>
                 ) : (
@@ -1410,66 +1797,17 @@ export default async function CampaignPage({ params }: Props) {
               </div>
             ) : null}
 
-            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-              <h3 className="text-sm font-semibold text-slate-950">{productExperience.focusQuestionTitle}</h3>
-              <p className="mt-1 text-sm leading-6 text-slate-600">
-                {productExperience.focusQuestionDescription}
-              </p>
-              <div className="mt-4">
-                <RecommendationList
-                  factorAverages={factorData.orgAverages}
-                  scanType={stats.scan_type}
-                  bandOverride={
-                    stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
-                      ? dashboardViewModel.managementBandOverride
-                      : undefined
-                  }
-                />
-              </div>
-            </div>
-
-            {stats.scan_type === 'retention' || stats.scan_type === 'exit' || stats.scan_type === 'pulse' || stats.scan_type === 'team' || stats.scan_type === 'onboarding' || stats.scan_type === 'leadership' ? (
+            {productExperience.recommendationOrder === 'playbooks-first' ? (
               <>
-                <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                  <h3 className="text-sm font-semibold text-slate-950">{productExperience.playbookTitle}</h3>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">
-                    {productExperience.playbookDescription}
-                  </p>
-                  {stats.scan_type === 'retention' && playbookCalibrationNote ? (
-                    <p className="mt-2 text-xs leading-6 text-slate-500">{playbookCalibrationNote}</p>
-                  ) : null}
-                  <div className="mt-4">
-                    <ActionPlaybookList
-                      factorAverages={factorData.orgAverages}
-                      scanType={stats.scan_type}
-                      bandOverride={
-                        stats.scan_type === 'onboarding' || stats.scan_type === 'leadership'
-                          ? dashboardViewModel.managementBandOverride
-                          : undefined
-                      }
-                    />
-                  </div>
-                </div>
-
-                {stats.scan_type === 'retention' && hasSegmentDeepDive ? (
-                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                    <h3 className="text-sm font-semibold text-slate-950">Segment-specifieke playbooks</h3>
-                    <p className="mt-1 text-sm leading-6 text-slate-600">
-                      Alleen zichtbaar als segmentvergelijking voldoende respons en metadata heeft.
-                    </p>
-                    <div className="mt-4">
-                      {retentionSegmentPlaybooks.length > 0 ? (
-                        <SegmentPlaybookList segments={retentionSegmentPlaybooks} />
-                      ) : (
-                        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-4 text-sm leading-6 text-slate-600">
-                          Nog geen segmenten met voldoende n en voldoende afwijking om apart te tonen.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : null}
+                {playbooksBlock}
+                {focusQuestionsBlock}
               </>
-            ) : null}
+            ) : (
+              <>
+                {focusQuestionsBlock}
+                {playbooksBlock}
+              </>
+            )}
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
@@ -1479,13 +1817,13 @@ export default async function CampaignPage({ params }: Props) {
         </DashboardSection>
       ) : null}
 
-      {showManagementOutput ? (
+      {showDetailedManagementOutput ? (
       <DashboardSection
         id="route"
         eyebrow="30–90 dagenroute"
         title={productExperience.routeTitle}
         description={productExperience.routeDescription}
-        aside={<DashboardChip label={productExperience.routeBadgeLabel} tone="blue" />}
+        aside={<DashboardChip label={productExperience.routeBadgeLabel} tone="slate" />}
       >
         <div className="space-y-5">
           <ManagementReadGuide scanType={stats.scan_type} hasMinDisplay={hasMinDisplay} hasEnoughData={hasEnoughData} />
@@ -1498,7 +1836,7 @@ export default async function CampaignPage({ params }: Props) {
             />
           ) : null}
 
-          <div className="rounded-[22px] border border-[#d6e4e8] bg-[#f3f8f8] p-4 sm:p-5">
+          <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
             <h3 className="text-sm font-semibold text-slate-950">{productExperience.afterSessionTitle}</h3>
             <p className="mt-1 text-sm leading-6 text-slate-700">
               {productExperience.afterSessionDescription}
@@ -1509,7 +1847,7 @@ export default async function CampaignPage({ params }: Props) {
                   eyebrow="Als de lokale check bevestigt"
                   title="Blijf bounded op dezelfde route"
                   body="Doe alleen een volgende lokale check als route, lokale actie en reviewmoment uit deze TeamScan al expliciet zijn gemaakt."
-                  tone="blue"
+                  tone="slate"
                 />
                 <DashboardPanel
                   eyebrow="Als de vraag breder wordt"
@@ -1521,7 +1859,7 @@ export default async function CampaignPage({ params }: Props) {
                   eyebrow="Als de onderbouwing te smal blijft"
                   title="Stop met verder lokaliseren"
                   body="Open geen extra TeamScan-verbreding zolang metadata, groepsgrootte of lokale bevestiging daar nog geen eerlijke basis voor geven."
-                  tone="emerald"
+                  tone="amber"
                 />
               </div>
             ) : null}
@@ -1530,8 +1868,8 @@ export default async function CampaignPage({ params }: Props) {
                 <DashboardPanel
                   eyebrow="Als de managementcheck bevestigt"
                   title="Blijf bounded op dezelfde route"
-                  body="Doe alleen een volgende Leadership-check als eigenaar, kleine verificatie of correctie en reviewmoment uit deze managementread al expliciet zijn gemaakt."
-                  tone="blue"
+                  body="Doe alleen een volgende Leadership-check als eigenaar, kleine verificatie of correctie en reviewmoment uit deze managementduiding al expliciet zijn gemaakt."
+                  tone="slate"
                 />
                 <DashboardPanel
                   eyebrow="Als de vraag breder wordt"
@@ -1543,7 +1881,7 @@ export default async function CampaignPage({ params }: Props) {
                   eyebrow="Als de onderbouwing te smal blijft"
                   title="Open geen named leaders of 360"
                   body="Maak Leadership Scan niet groter dan deze wave draagt zolang groepsniveau, suppressie en de huidige data nog geen eerlijke basis geven voor named leader of 360-output."
-                  tone="emerald"
+                  tone="amber"
                 />
               </div>
             ) : null}
@@ -1554,7 +1892,7 @@ export default async function CampaignPage({ params }: Props) {
                   eyebrow={card.fit}
                   title={card.title}
                   body={card.body}
-                  tone="blue"
+                  tone="slate"
                 />
               ))}
             </div>
@@ -1681,7 +2019,7 @@ export default async function CampaignPage({ params }: Props) {
                   {!showClientExecutionFlow && canManageCampaign ? (
                     <Link
                       href="/beheer"
-                      className="mt-4 inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                      className="mt-4 inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
                     >
                       Naar setup
                     </Link>
@@ -1702,7 +2040,7 @@ export default async function CampaignPage({ params }: Props) {
               <DashboardDisclosure
                 defaultOpen={false}
                 title="Pilot- en early-customer-learning"
-                description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementread en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
+                description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementduiding en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
                 badge={
                   <DashboardChip
                     label={
@@ -1712,7 +2050,7 @@ export default async function CampaignPage({ params }: Props) {
                           ? `${learningCloseoutEvidenceCount} closeout-signaal`
                           : `${learningDossiers.length} gekoppeld, closeout open`
                     }
-                    tone={learningDossiers.length > 0 && learningCloseoutEvidenceCount > 0 ? 'blue' : 'amber'}
+                    tone={learningDossiers.length > 0 && learningCloseoutEvidenceCount > 0 ? 'emerald' : 'amber'}
                   />
                 }
               >
@@ -1725,7 +2063,7 @@ export default async function CampaignPage({ params }: Props) {
                         ? 'Gebruik gekoppelde dossiers om implementationfrictie, launchsignalen, managementgebruik en gekozen vervolgroutes expliciet terug te laten landen in product, report, onboarding, sales en operations.'
                         : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de learning-workbench. Zo blijven echte deliverylessen en vervolgkeuzes niet hangen in losse handover-notes.'
                     }
-                    tone={learningDossiers.length > 0 ? 'blue' : 'amber'}
+                    tone={learningDossiers.length > 0 ? 'slate' : 'amber'}
                   />
                   <DashboardPanel
                     eyebrow="Closeoutdiscipline"
@@ -1765,7 +2103,7 @@ export default async function CampaignPage({ params }: Props) {
                     )}
                     <Link
                       href={`/beheer/klantlearnings?campaign=${id}`}
-                      className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
+                      className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
                     >
                       Open learning-workbench
                     </Link>

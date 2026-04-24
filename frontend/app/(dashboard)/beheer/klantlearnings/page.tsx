@@ -6,6 +6,7 @@ import {
   DashboardHero,
   DashboardPanel,
   DashboardSection,
+  DashboardSummaryBar,
 } from '@/components/dashboard/dashboard-primitives'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import { createClient } from '@/lib/supabase/server'
@@ -132,28 +133,29 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
   return (
     <div className="space-y-6">
       <DashboardHero
-        eyebrow="Internal learning system"
-        title="Pilot- en early-customer-learning"
-        description="Gebruik deze workbench als vaste source of truth voor wat pilots en vroege klanttrajecten Verisight echt leren over product, report, onboarding, sales en operations. Start vanuit lead of campaign, capture daarna dezelfde vijf lifecycle-checkpoints en leg ook case-readiness, approval en buyer-safe claimruimte vast voordat iets als klantbewijs mag bewegen."
-        tone="blue"
+        surface="ops"
+        eyebrow="Adminroute voor pilot- en klantlessen"
+        title="Operations learninglog"
+        description="Leg lessen compact vast per lead of campaign en gebruik deze workbench als interne log voor triage, bewijsstatus en vervolgstappen. Geen buyer-facing claims: alleen operationele observaties, bevestigde lessen en case-readiness."
+        tone="slate"
         meta={
           <>
-            <DashboardChip label={`${dossiers.length} dossier${dossiers.length === 1 ? '' : 's'}`} tone="blue" />
-            <DashboardChip label={`${openLessons} open checkpoints`} tone={openLessons > 0 ? 'amber' : 'slate'} />
-            <DashboardChip label={`${confirmedLessons} bevestigd`} tone={confirmedLessons > 0 ? 'emerald' : 'slate'} />
+            <DashboardChip surface="ops" label={`${dossiers.length} dossier${dossiers.length === 1 ? '' : 's'}`} tone="slate" />
+            <DashboardChip surface="ops" label={`${openLessons} open checkpoints`} tone={openLessons > 0 ? 'amber' : 'slate'} />
+            <DashboardChip surface="ops" label={`${confirmedLessons} bevestigd`} tone={confirmedLessons > 0 ? 'emerald' : 'slate'} />
           </>
         }
         actions={
           <>
             <Link
               href="/beheer"
-              className="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
+              className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
             >
               Terug naar setup
             </Link>
             <Link
               href="/beheer/contact-aanvragen"
-              className="inline-flex items-center rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
             >
               Open leadlijst
             </Link>
@@ -170,68 +172,109 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
               <li>30-90 dagen review</li>
             </ol>
             <p className="text-xs text-slate-500">
-              Manual-first blijft prima, zolang de les hier expliciet wordt vastgelegd en terugkrijgt waar die moet landen. Sample-output blijft deliverable-proof; echte case-proof groeit pas uit dossiers met approval.
+              Manual-first blijft prima zolang de les hier expliciet wordt vastgelegd. Geen buyer-facing claims of portfolioverbreding via deze route; dit blijft een interne adminlog.
             </p>
           </div>
         }
       />
 
-      <div className="grid gap-4 xl:grid-cols-4">
+      <DashboardSummaryBar
+        surface="ops"
+        items={[
+          {
+            label: 'Dossiers',
+            value: `${dossiers.length} actief`,
+            tone: dossiers.length > 0 ? 'slate' : 'amber',
+          },
+          {
+            label: 'Open checkpoints',
+            value: `${openLessons}`,
+            tone: openLessons > 0 ? 'amber' : 'slate',
+          },
+          {
+            label: 'Leadkoppeling',
+            value: `${leadLinkedDossiers}/${dossiers.length || 0}`,
+            tone: leadLinkedDossiers > 0 ? 'slate' : 'slate',
+          },
+          {
+            label: 'Campaignkoppeling',
+            value: `${campaignLinkedDossiers}/${dossiers.length || 0}`,
+            tone: campaignLinkedDossiers > 0 ? 'slate' : 'slate',
+          },
+        ]}
+        anchors={[
+          { id: 'dekking', label: 'Dekking' },
+          { id: 'issues', label: 'Issues' },
+          { id: 'workbench', label: 'Workbench' },
+        ]}
+      />
+
+      <div id="dekking" className="grid gap-4 xl:grid-cols-4">
         <DashboardPanel
+          surface="ops"
           eyebrow="Leads"
           title="Lead-koppeling"
           value={`${leadLinkedDossiers}/${dossiers.length || 0}`}
           body="Leadcontext hoort niet meer in losse mailtjes te blijven hangen. Gebruik contactaanvragen als vaste eerste hypotheselaag."
-          tone={leadLinkedDossiers > 0 ? 'blue' : 'slate'}
+          tone={leadLinkedDossiers > 0 ? 'slate' : 'slate'}
         />
         <DashboardPanel
+          surface="ops"
           eyebrow="Delivery"
           title="Campaign-koppeling"
           value={`${campaignLinkedDossiers}/${dossiers.length || 0}`}
           body="Koppel zodra implementation, launch of managementgebruik echt in delivery meelopen."
-          tone={campaignLinkedDossiers > 0 ? 'amber' : 'slate'}
+          tone={campaignLinkedDossiers > 0 ? 'slate' : 'slate'}
         />
         <DashboardPanel
+          surface="ops"
           eyebrow="Coverage"
           title="Recente leads"
           value={`${leads.length}`}
           body="Nieuwe aanvragen kunnen direct in een learningdossier landen zodra route, koopreden of trustfrictie leerwaarde geeft."
-          tone={leads.length > 0 ? 'emerald' : 'slate'}
+          tone={leads.length > 0 ? 'slate' : 'slate'}
         />
         <DashboardPanel
+          surface="ops"
           eyebrow="Ops"
           title="Actieve klanttoegang"
           value={`${Object.values(activeClientAccessByOrg).reduce((sum, count) => sum + count, 0)}`}
-          body="Use managementread en follow-up vooral bij campagnes waar klanttoegang al actief is of net is uitgenodigd."
+          body="Gebruik managementread en follow-up vooral bij campagnes waar klanttoegang al actief is of net is uitgenodigd."
           tone="slate"
         />
       </div>
 
       {configError ? (
         <DashboardSection
+          id="issues"
+          surface="ops"
           eyebrow="Config"
-          title="Leadinput is nog niet volledig beschikbaar"
+          title="Leadinput is niet volledig beschikbaar"
           description="De workbench werkt wel, maar kan de server-side leadlijst nog niet ophalen."
         >
-          <DashboardPanel title="Ontbrekende configuratie" body={configError} tone="amber" />
+          <DashboardPanel surface="ops" title="Ontbrekende configuratie" body={configError} tone="amber" />
         </DashboardSection>
       ) : null}
 
       {loadError ? (
         <DashboardSection
+          id={configError ? undefined : 'issues'}
+          surface="ops"
           eyebrow="Load"
           title="Leadlijst kon niet worden geladen"
-          description="De learningworkbench blijft bruikbaar, maar recente contactaanvragen konden niet worden opgehaald."
+          description="De learningworkbench blijft bruikbaar, maar recente contactaanvragen konden niet worden opgehaald voor triage."
         >
-          <DashboardPanel title="Backendfout" body={loadError} tone="amber" />
+          <DashboardPanel surface="ops" title="Backendfout" body={loadError} tone="amber" />
         </DashboardSection>
       ) : null}
 
       <DashboardSection
+        id="workbench"
+        surface="ops"
         eyebrow="Workbench"
-        title="Canonical learning source of truth"
-        description="Elke vroege klantroute hoort vanaf nu dezelfde minimale learning-output op te leveren: objective signals, interpreted observation, confirmed lesson, triagebestemming en case-readiness zodra buyer-safe bewijs in zicht komt."
-        aside={<DashboardChip label={`${activeOrgs.length} actieve organisatie${activeOrgs.length === 1 ? '' : 's'}`} tone="slate" />}
+        title="Learninglog en dossiers"
+        description="Elke vroege klantroute hoort minimale learning-output op te leveren: objective signals, interpreted observation, confirmed lesson, triagebestemming en case-readiness zodra buyer-safe bewijs in zicht komt."
+        aside={<DashboardChip surface="ops" label={`${activeOrgs.length} actieve organisatie${activeOrgs.length === 1 ? '' : 's'}`} tone="slate" />}
       >
         <PilotLearningWorkbench
           orgs={activeOrgs}

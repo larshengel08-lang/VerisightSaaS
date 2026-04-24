@@ -1396,6 +1396,7 @@ async def import_respondents(
         errors=issues,
         imported=0,
         emails_sent=0,
+        invite_queue=[],
     )
 
     if dry_run or issues:
@@ -1409,6 +1410,11 @@ async def import_respondents(
     )
     response.imported = len(respondents)
     response.emails_sent = emails_sent
+    response.invite_queue = [
+        {"token": respondent.token, "email": respondent.email}
+        for respondent in respondents
+        if respondent.email and respondent.sent_at is None
+    ]
     return response
 
 
