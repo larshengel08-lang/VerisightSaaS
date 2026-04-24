@@ -17,6 +17,8 @@ import {
   marketingPrimaryCta,
   marketingSecondaryCta,
 } from '@/components/marketing/site-content'
+import fs from 'node:fs'
+import path from 'node:path'
 
 describe('marketing flow defaults', () => {
   it('keeps the primary and secondary CTA labels aligned with the redesign', () => {
@@ -50,10 +52,30 @@ describe('marketing flow defaults', () => {
   it('keeps homepage utility links aligned with buyer flow and due diligence', () => {
     expect(homepageUtilityLinks.map((link) => link.href)).toEqual([
       '/producten',
+      '/inzichten',
       '/aanpak',
       '/tarieven',
       '/vertrouwen',
     ])
+  })
+
+  it('keeps insights discoverable as a secondary content layer through footer and context links', () => {
+    const footerSource = fs.readFileSync(
+      path.join(process.cwd(), 'components', 'marketing', 'public-footer.tsx'),
+      'utf8',
+    )
+    const solutionPageSource = fs.readFileSync(
+      path.join(process.cwd(), 'app', 'oplossingen', '[slug]', 'page.tsx'),
+      'utf8',
+    )
+    const productPageSource = fs.readFileSync(
+      path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),
+      'utf8',
+    )
+
+    expect(footerSource).toContain("/inzichten")
+    expect(solutionPageSource).toContain('/inzichten')
+    expect(productPageSource).toContain('/inzichten')
   })
 
   it('keeps the approach flow explicit about assisted onboarding and first use', () => {

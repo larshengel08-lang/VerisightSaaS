@@ -13,6 +13,7 @@ export function PublicFooter() {
 
   const navLinks = [
     { href: '/aanpak', label: 'Aanpak' },
+    { href: '/inzichten', label: 'Inzichten' },
     { href: '/tarieven', label: 'Tarieven' },
     { href: '/vertrouwen', label: 'Vertrouwen' },
   ]

@@ -196,6 +196,21 @@ function ExitScanPage() {
                 Bekijk tarieven →
               </Link>
             </div>
+            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-[#4A5563]">
+              <span>Verdiep de managementvraag eerst?</span>
+              <Link
+                href="/inzichten/waarom-medewerkers-vertrekken"
+                className="font-medium text-[#132033] transition-colors hover:text-[#3C8D8A]"
+              >
+                Waarom medewerkers vertrekken
+              </Link>
+              <Link
+                href="/inzichten/welke-signalen-gaan-aan-verloop-vooraf"
+                className="font-medium text-[#132033] transition-colors hover:text-[#3C8D8A]"
+              >
+                Welke signalen gaan aan verloop vooraf
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -325,6 +340,21 @@ function ExitScanPage() {
               <span className="text-[0.6rem] font-medium uppercase tracking-[0.12em] text-[#9CA3AF]">Add-on</span>
               <h3 className="mt-1 text-base font-medium text-[#F7F5F1]">Segment Deep Dive</h3>
               <p className="mt-1 text-sm text-[rgba(247,245,241,0.65)]">Verdieping op een specifieke afdeling, functiegroep of locatie. Beschikbaar als er voldoende respondenten en metadata voor zijn.</p>
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-[#4A5563]">
+              <span>Verdiep de managementvraag eerst?</span>
+              <Link
+                href="/inzichten/waar-staat-behoud-onder-druk"
+                className="font-medium text-[#132033] transition-colors hover:text-[#3C8D8A]"
+              >
+                Waar staat behoud onder druk
+              </Link>
+              <Link
+                href="/inzichten"
+                className="font-medium text-[#132033] transition-colors hover:text-[#3C8D8A]"
+              >
+                Bekijk alle inzichten
+              </Link>
             </div>
           </div>
         </section>

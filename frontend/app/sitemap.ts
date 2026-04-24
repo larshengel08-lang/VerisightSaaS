@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { INSIGHT_PAGES } from '@/lib/insights-pages'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
@@ -92,6 +93,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.72,
     },
+    {
+      url: 'https://www.verisight.nl/inzichten',
+      lastModified: new Date('2026-04-18'),
+      changeFrequency: 'monthly',
+      priority: 0.68,
+    },
+    ...INSIGHT_PAGES.map((page) => ({
+      url: `https://www.verisight.nl${page.canonical}`,
+      lastModified: new Date(page.publishedAt),
+      changeFrequency: 'monthly' as const,
+      priority: 0.64,
+    })),
     {
       url: 'https://www.verisight.nl/privacy',
       lastModified: new Date('2026-04-11'),

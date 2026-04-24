@@ -16,6 +16,7 @@ export const PUBLIC_ROUTES = [
   '/aanpak',
   '/tarieven',
   '/oplossingen',
+  '/inzichten',
   '/examples',
 ] as const
 

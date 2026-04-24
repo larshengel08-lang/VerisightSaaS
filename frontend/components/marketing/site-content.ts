@@ -95,6 +95,11 @@ export const homepageUtilityLinks = [
     body: 'Zie snel wanneer ExitScan, RetentieScan of de combinatie logisch wordt.',
   },
   {
+    href: '/inzichten',
+    title: 'Bekijk de inzichten',
+    body: 'Lees drie bounded managementvragen die doorverwijzen naar de juiste productroute.',
+  },
+  {
     href: '/aanpak',
     title: 'Bekijk de aanpak',
     body: 'Lees hoe intake, uitvoering, rapportage en opvolging in een begeleide productvorm samenkomen.',

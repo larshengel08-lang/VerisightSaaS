@@ -163,6 +163,12 @@ export default async function SolutionPage({ params }: Props) {
                 >
                   Bekijk vertrouwen
                 </Link>
+                <Link
+                  href="/inzichten"
+                  className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
+                >
+                  Bekijk inzichten
+                </Link>
               </div>
             </MarketingHeroSupport>
           }
