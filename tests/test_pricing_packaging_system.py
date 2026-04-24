@@ -34,11 +34,11 @@ def test_public_pricing_copy_keeps_package_hierarchy_explicit():
     assert "retentiescan ritme" in site_content
     assert "compacte retentie vervolgmeting" in site_content
     assert "combinatieroute" in site_content
-    assert "wat is je eerste route?" in tarieven_page
-    assert "vervolgvormen" in tarieven_page
-    assert "route-uitbreiding" in tarieven_page
-    assert "eerste traject" in homepage
-    assert "eerste traject" in aanpak_page
+    assert "de eerste koop blijft helder." in tarieven_page
+    assert "vervolg en add-ons" in tarieven_page
+    assert "prijs in context" in tarieven_page
+    assert "welke route past nu?" in homepage
+    assert "rapport, bestuurlijke handoff en eerste opvolging" in aanpak_page
 
 
 def test_sales_docs_keep_same_package_architecture_as_public_site():
@@ -51,30 +51,32 @@ def test_sales_docs_keep_same_package_architecture_as_public_site():
 
     assert "exitscan baseline" in decision_tree
     assert "retentiescan baseline" in decision_tree
-    assert "retentiescan ritme (retention loop)" in decision_tree
+    assert "retentiescan ritmeroute" in decision_tree
+    assert "volwaardige eerste route" in decision_tree
     assert "compacte retentie vervolgmeting" in decision_tree
     assert "quote-only vervolgroute" in comparison
-    assert "geen parallel hoofdpackage" in comparison
+    assert "volwaardige eerste route voor vroegsignalering op behoud" in comparison
     assert "segment deep dive" in comparison
     assert "retentiescan ritme" in proposals
     assert "vanaf eur 1.250" in proposals
     assert "signalen van werkfrictie" in exit_one_pager
-    assert "retentiescan ritme vanaf eur 4.950" in retention_one_pager
-    assert "wanneer wordt exitscan live logisch?" in objection_matrix
-    assert "hoe verhoudt retentiescan ritme zich tot compacte vervolgmeting?" in objection_matrix
+    assert "bestuurlijke read" in exit_one_pager
+    assert "bestuurlijke handoff" in exit_one_pager
+    assert "volwaardige eerste route" in retention_one_pager
+    assert "groepsgerichte managementduiding" in retention_one_pager
+    assert "retentiescan ritmeroute vanaf eur 4.950" in retention_one_pager
+    assert "wanneer wordt exitscan ritmeroute logisch?" in objection_matrix
+    assert "hoe verhoudt retentiescan ritmeroute zich tot compacte vervolgmeting?" in objection_matrix
 
 
 def test_pricing_claims_stay_inside_trust_and_output_boundaries():
-    active_plan = _read("docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md")
-    methodology = _read("docs/reference/METHODOLOGY.md")
+    sales_playbook = _read("docs/reference/SALES_ENABLEMENT_SYSTEM_PLAYBOOK.md")
+    site_content = _read("frontend/components/marketing/site-content.ts")
+    retention_one_pager = _read("docs/reference/RETENTIESCAN_SALES_ONE_PAGER.md")
     trust_matrix = _read("docs/reference/TRUST_AND_CLAIMS_MATRIX.md")
-    preview_copy = _read("frontend/lib/report-preview-copy.ts")
-    report = _read("backend/report.py")
 
-    assert "assisted/productized" in active_plan
-    assert "niet self-serve" in active_plan
-    assert "claims mogen commercieel scherp zijn, maar niet onwaar" in methodology
+    assert "claims mogen commercieel scherp zijn, maar nooit harder dan de repo-basis draagt" in sales_playbook
     assert "niet toegestaan" in trust_matrix
-    assert "managementsamenvatting" in preview_copy
-    assert "bestuurlijke handoff" in preview_copy
-    assert "delivery_mode" in report
+    assert "geen individuele signalen naar management" in site_content
+    assert "geen brede mto" in retention_one_pager
+    assert "geen individuele predictor" in retention_one_pager

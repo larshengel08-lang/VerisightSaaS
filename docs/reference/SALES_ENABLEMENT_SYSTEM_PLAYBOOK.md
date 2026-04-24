@@ -1,7 +1,7 @@
 # Verisight Sales Enablement System Playbook
 
 Intern referentiedocument voor herhaalbare sales enablement over discovery, routekeuze, demo, voorstel en follow-up.
-Laatste update: 2026-04-15
+Laatste update: 2026-04-24
 
 ## Doel
 
@@ -161,7 +161,7 @@ Deze tranche gebruikt de volgende vaste artefacten:
 ## Guardrails
 
 - ExitScan blijft de default eerste commerciele route.
-- RetentieScan blijft complementair en verification-first.
+- RetentieScan blijft een volwaardige eerste route bij expliciete actieve behoudsvraag, zonder predictor- of people-suite framing.
 - De combinatie blijft een bewuste portfolioroute en geen standaard bundel.
 - Claims mogen commercieel scherp zijn, maar nooit harder dan de repo-basis draagt.
 - Salesassets mogen geen losse beloften toevoegen die niet in pricing, preview, rapportoutput of trustdocs terugkomen.

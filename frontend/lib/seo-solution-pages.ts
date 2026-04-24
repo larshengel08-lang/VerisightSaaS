@@ -154,7 +154,7 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
     title: 'Medewerkersbehoud analyseren',
     seoTitle: 'Medewerkersbehoud analyseren | RetentieScan voor vroegsignalering',
     description:
-      'Gebruik RetentieScan om eerder te zien waar medewerkersbehoud op groepsniveau onder druk staat, met verification-first managementoutput voor HR-teams en directie.',
+      'Gebruik RetentieScan om eerder te zien waar medewerkersbehoud op groepsniveau onder druk staat, met groepsgerichte managementoutput voor HR-teams en directie.',
     canonical: '/oplossingen/medewerkersbehoud-analyse',
     routeInterest: 'retentiescan',
     productHref: '/producten/retentiescan',
@@ -167,7 +167,7 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
       'Voor organisaties die eerder willen zien waar behoud op groepsniveau onder druk staat en een gerichte managementroute zoeken in plaats van een brede tevredenheidsmeting.',
     contextTitle: 'Gebruik deze pagina wanneer de actieve behoudsvraag al expliciet op tafel ligt.',
     contextBody:
-      'RetentieScan is hier de juiste route: verification-first, groepsgericht en bedoeld om prioritering en vervolggesprek te ondersteunen zonder individuele signalen naar management te sturen.',
+      'RetentieScan is hier de juiste route: een volwaardige eerste route wanneer de actieve behoudsvraag primair is, groepsgericht en bedoeld om prioritering en vervolggesprek te ondersteunen zonder individuele signalen naar management te sturen.',
     problemCards: [
       [
         'Behoudsdruk is voelbaar, maar niet scherp',
@@ -184,7 +184,7 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
     ],
     whyNowTitle: 'Waarom RetentieScan hier de passende route is',
     whyNowBody:
-      'RetentieScan maakt zichtbaar waar behoud op groeps- en segmentniveau onder druk staat via retentiesignaal, stay-intent, bevlogenheid, vertrekintentie en beinvloedbare werkfactoren. Het product blijft expliciet verification-first en niet-predictief.',
+      'RetentieScan maakt zichtbaar waar behoud op groeps- en segmentniveau onder druk staat via retentiesignaal, stay-intent, bevlogenheid, vertrekintentie en beinvloedbare werkfactoren. Het product blijft expliciet groepsgericht en niet-predictief, zonder RetentieScan kleiner te maken dan de managementvraag vraagt.',
     deliverableTitle: 'Wat je als deliverable terugkrijgt',
     deliverableBody:
       'De route levert een managementweergave op die behoudsdruk bespreekbaar maakt voor HR, sponsor, MT en directie, met duidelijke grenzen rond privacy, bewijsstatus en interpretatie.',
@@ -199,7 +199,7 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
       ['Kooprust', 'Via tarieven zie je hoe RetentieScan Baseline en ritmevormen commercieel zijn opgebouwd.'],
       ['Due diligence', 'Via vertrouwen toets je hoe privacygrenzen, groepsduiding en methodische claims publiek zijn ingericht.'],
     ],
-    proofTitle: 'Laat eerst de verification-first output zien.',
+    proofTitle: 'Laat eerst de groepsgerichte output zien.',
     proofBody:
       'De RetentieScan showcase laat zien hoe retentiesignaal, topfactoren en bestuurlijke handoff samenkomen zonder brede MTO- of predictorclaim.',
     contactTitle: 'Plan een kennismaking over medewerkersbehoud analyseren',
