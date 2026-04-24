@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
-export function LogoutButton() {
+export function LogoutButton({ className }: { className?: string }) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -16,7 +16,10 @@ export function LogoutButton() {
   return (
     <button
       onClick={handleLogout}
-      className="text-xs text-gray-500 hover:text-gray-800 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+      className={
+        className ??
+        'rounded px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800'
+      }
     >
       Uitloggen
     </button>
