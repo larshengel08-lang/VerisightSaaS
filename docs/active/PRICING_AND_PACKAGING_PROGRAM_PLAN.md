@@ -2,17 +2,19 @@
 
 ## 1. Summary
 
-Dit traject heeft van de bestaande prijsankers, package-vormen en commerciële uitleg van Verisight één strakke, verkoopbare en repo-consistente pricing- en packaginglaag gemaakt.
+Dit traject heeft van de bestaande prijsankers, package-vormen en commerciële uitleg van Verisight één strakke, verkoopbare en repo-consistente pricing- en packaginglaag gemaakt. De strategische alignment in deze reviewronde trekt dat verhaal opnieuw gelijk met de huidige productwaarheid: guided execution, assisted self-service discipline, twee eerlijke first-buy routes en een bewust bounded portfolio.
 
 De uitgevoerde richting in deze tranche:
 
-- één canonieke pricing- en packagingarchitectuur vastgelegd rond eerste trajecten, vervolgvormen, add-ons en een portfolioroute
-- ExitScan Baseline expliciet gehouden als primaire publieke eerste route
+- één canonieke pricing- en packagingarchitectuur vastgelegd rond twee first-buy routes, guided vervolgvormen, add-ons en een bounded portfolioroute
+- ExitScan Baseline expliciet gehouden als default publieke eerste route, niet als geforceerde enige entree
 - ExitScan ritmeroute expliciet gehouden als quote-only vervolgroute na baseline of bestaand exitvolume
-- RetentieScan Baseline expliciet gehouden als eigen eerste route voor actieve-populatie vroegsignalering
+- RetentieScan Baseline expliciet gehouden als volwaardige eerste route voor actieve-populatie vroegsignalering
 - RetentieScan ritmeroute expliciet gehouden als buyer-facing vervolgvorm na baseline
 - `Retentie vervolgmeting` genormaliseerd tot compacte vervolgcomponent binnen de RetentieScan-ritmeroute
 - `segment_deep_dive` expliciet gehouden als enige repo-brede add-on
+- guided execution en assisted self-service expliciet behandeld als productrealiteit onder pricing en packaging
+- bounded portfolioverhoudingen expliciet bewaakt zodat combinatie of vervolgroutes geen nieuwe suite- of pricingfantasie openen
 - publieke pricing, salesdocs, proposalspines, buyer-assets en paritytests op dezelfde packageboom gezet
 
 Belangrijkste repo-observaties waarop deze uitvoering is gebaseerd:
@@ -22,11 +24,13 @@ Belangrijkste repo-observaties waarop deze uitvoering is gebaseerd:
 - `segment_deep_dive` was al de enige echte repo-brede add-on
 - `delivery_mode` bestond backendmatig, maar droeg `ExitScan ritmeroute` nog niet als volwaardige publieke productmodus
 - RetentieScan had commercieel meer package-varianten dan ExitScan, waardoor package-uitleg sneller diffuus kon worden
+- frontend-, funnel- en dashboardlagen stuurden inmiddels al op question-first eerste routekeuze en guided self-service discipline
+- portfolio-architectuur en producttaal maakten duidelijk dat bounded vervolgroutes niet als extra kernproducten of brede pricinglaag mogen worden geframed
 - strategie, trust en roadmap maakten expliciet dat pricing assisted/productized moest blijven en niet mocht doorschieten naar plans, seats, subscriptions of Stripe-logica
 
-Status 2026-04-15:
+Status 2026-04-24:
 
-- Uitgevoerd in deze ronde:
+- Oorspronkelijk uitgevoerd op 2026-04-15:
   - `docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md`
   - publieke pricingcopy in `frontend/components/marketing/site-content.ts`
   - tarieflaag in `frontend/app/tarieven/page.tsx`
@@ -42,12 +46,17 @@ Status 2026-04-15:
   - handmatige acceptance in `docs/reference/PRICING_AND_PACKAGING_ACCEPTANCE_CHECKLIST.md`
   - regressietests in `frontend/lib/marketing-positioning.test.ts` en `tests/test_pricing_packaging_system.py`
   - prompt closure in `docs/prompts/PROMPT_CHECKLIST.xlsx`
+- Strategisch aangescherpt op 2026-04-24:
+  - `docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md`
+  - `docs/strategy/STRATEGY.md`
+  - first-buy logica opnieuw gelijkgetrokken met guided execution, assisted self-service en bounded portfolio guardrails
 - Bewust niet uitgevoerd in deze ronde:
   - geen Stripe, billing, subscription- of seatlogica
   - geen self-service checkout of publieke planmatrix
   - geen nieuwe technische campaign-entiteiten voor elke commerciële vervolgroute
   - geen groot website-redesign buiten package- en pricingalignment
   - geen admin/dashboardcopy-wijziging, omdat de huidige interne termen de publieke packagecopy nu niet blokkeren
+  - geen nieuwe pricinglaag voor bounded vervolgroutes of portfolioverbreding zonder apart besluit
 
 ## 2. Milestones
 
@@ -70,7 +79,7 @@ Dependency: none
 
 #### Validation
 - [x] Observaties waren herleidbaar naar actuele repo-bestanden.
-- [x] ExitScan bleef zichtbaar de primaire wedge in de baselineanalyse.
+- [x] ExitScan bleef zichtbaar als commerciële default, terwijl RetentieScan expliciet als volwaardige first-buy route herkenbaar bleef bij een actieve behoudsvraag.
 - [x] Geen bevinding leunde op aannames buiten de repo.
 
 ### Milestone 1 - Define The Canonical Verisight Pricing And Packaging Architecture
@@ -79,17 +88,17 @@ Dependency: Milestone 0
 - [x] Uitgevoerd op 2026-04-15: een decision-complete pricing- en packagingarchitectuur vastgelegd.
 
 #### Tasks
-- [x] De vaste packagehiërarchie vastgelegd: ExitScan Baseline, ExitScan ritmeroute, RetentieScan Baseline, RetentieScan ritmeroute, Segment deep dive en combinatie als portfolioroute.
+- [x] De vaste packagearchitectuur vastgelegd rond twee first-buy routes: ExitScan Baseline en RetentieScan Baseline, plus guided vervolgvormen, `Segment deep dive` en combinatie als bounded portfolioroute.
 - [x] Beslist dat `Retentie vervolgmeting` niet als parallelle hoofdpackage blijft bestaan, maar als compacte vervolgcomponent binnen de RetentieScan-ritmeroute.
 - [x] Vastgelegd dat Baseline en vervolgvormen asymmetrisch mogen zijn per product.
 - [x] Vastgelegd welke prijsankers publiek blijven en welke bewust quote-only zijn.
 - [x] Vaste buyer-facing package-termen vastgelegd: product, eerste traject, vervolgvorm, add-on en portfolioroute.
-- [x] Vastgelegd dat pricing in deze fase verkoopstructuur is en geen billingmodel.
+- [x] Vastgelegd dat pricing in deze fase guided execution ondersteunt, assisted/productized blijft en geen billingmodel is.
 
 #### Definition of done
 - [x] Verisight heeft één decision-complete pricing- en packagingarchitectuur.
 - [x] Elk package-element heeft een vaste plaats in de commerciële boom.
-- [x] De architectuur ondersteunt ExitScan als wedge zonder RetentieScan te degraderen tot feature.
+- [x] De architectuur ondersteunt question-first first-buy routes zonder RetentieScan te degraderen tot afgeleide feature.
 
 #### Validation
 - [x] De architectuur botst niet met strategie-, methodiek- en trustdocs.
@@ -103,17 +112,17 @@ Dependency: Milestone 1
 
 #### Tasks
 - [x] De publieke pricinglaag herschikt naar primaire prijsankers, vervolgvormen, add-ons, combinatie op aanvraag, keuzehulp en FAQ.
-- [x] ExitScan op de tarieflaag zichtbaarder als default eerste route gehouden.
+- [x] ExitScan op de tarieflaag zichtbaar gehouden als default eerste route zonder RetentieScan te verlagen tot pseudo-secundaire optie.
 - [x] Expliciet gemaakt dat ExitScan ritmeroute vooral logisch is na baseline of bestaand volume en daarom quote-only blijft.
 - [x] Expliciet gemaakt dat RetentieScan ritmeroute een vervolgvorm is en geen parallel eerste pakket.
 - [x] `Retentie vervolgmeting` herpositioneerd als compacte vervolgcomponent binnen de ritmelaag.
 - [x] `Segment deep dive` scherp gehouden als bewuste verdieping en niet als standaard inbegrepen laag.
 - [x] Combinatie-taal strikt route-gedreven gehouden: op aanvraag, geen bundel en geen kortingstaal.
-- [x] Homepage-, product-, aanpak- en tarieven-copy consistenter gemaakt in wat je koopt, wanneer je dit koopt en wat daarna logisch volgt.
+- [x] Homepage-, product-, aanpak- en tarieven-copy consistenter gemaakt in wat je koopt, wanneer je dit koopt, hoe guided execution werkt en wat daarna logisch volgt.
 
 #### Definition of done
 - [x] Een buyer kan de publieke packageboom in ongeveer één minuut begrijpen.
-- [x] De site maakt duidelijk onderscheid tussen eerste traject, vervolgvorm en add-on.
+- [x] De site maakt duidelijk onderscheid tussen eerste route, guided vervolgvorm, add-on en portfolioroute.
 - [x] ExitScan, RetentieScan en combinatie kannibaliseren elkaar minder op de pricinglaag.
 
 #### Validation
@@ -133,7 +142,7 @@ Dependency: Milestone 2
 - [x] `RetentieScan ritmeroute` en compacte retentie vervolgmeting hiërarchisch consistent gemaakt.
 - [x] Combinatie-assets en proposals vrijgehouden van bundel- of discountlogica.
 - [x] De vaste regel intact gehouden: geen gratis pilot als standaard, wel een betaald eerste traject.
-- [x] Pricinguitleg direct bruikbaar gemaakt voor discovery, demo en voorstelovergang.
+- [x] Pricinguitleg direct bruikbaar gemaakt voor discovery, demo en voorstelovergang zonder terug te vallen op een geforceerde oude ExitScan-first hiërarchie.
 
 #### Definition of done
 - [x] Site, sales en proposal-lagen vertellen dezelfde pricing- en packaginglijn.
@@ -155,6 +164,7 @@ Dependency: Milestone 3
 - [x] Expliciet vastgelegd hoe `ExitScan ritmeroute` verkocht mag worden zolang `delivery_mode` nog geen volwaardige publieke productmodus is: guided vervolgroute, quote-only, niet self-serve.
 - [x] Expliciet vastgelegd dat `segment_deep_dive` de enige repo-breed echte add-on is en dat andere commerciële vervolgvormen geen technisch add-on-contract hoeven te zijn.
 - [x] Pricing gekoppeld gehouden aan echte voorbeeldoutput en report-structuur.
+- [x] Pricing expliciet gekoppeld gehouden aan guided execution, assisted self-service discipline en bounded portfolio guardrails uit de actuele productlaag.
 - [x] Vastgelegd welke packageclaims niet mogen: always-on live monitoring alsof dit al product-led standaard is, benchmark- of ROI-claims zonder basis en SaaS-planframing.
 - [x] Interne admin/dashboardcopy beoordeeld; geen directe wijziging nodig geacht in deze tranche.
 
@@ -175,7 +185,7 @@ Dependency: Milestone 4
 
 #### Tasks
 - [x] Regressiebescherming toegevoegd voor pricing- en packagingpariteit over publieke pricingcopy, homepage/product/aanpak-routes, sales assets, trustgrenzen en previewproof.
-- [x] Handmatige acceptance toegevoegd voor first-time buyer begrip, ExitScan als default wedge, RetentieScan als eigen product, logische vervolgvormen en combinatie als route.
+- [x] Handmatige acceptance toegevoegd voor first-time buyer begrip, ExitScan als default route, RetentieScan als volwaardige first-buy route, logische vervolgvormen en combinatie als bounded route.
 - [x] Governance vastgelegd voor toekomstige pricingwijzigingen: eerst pricing source of truth, daarna site, sales, assets en tests.
 - [x] Het traject administratief afgesloten met actief planbestand en bijgewerkte `PROMPT_CHECKLIST.xlsx`.
 
@@ -192,13 +202,13 @@ Dependency: Milestone 4
 ## 3. Execution Breakdown By Subsystem
 
 ### Pricing canon and package architecture
-- [x] Eén vaste commerciële boom gedefinieerd met onderscheid tussen product, eerste traject, vervolgvorm, add-on en portfolioroute.
+- [x] Eén vaste commerciële boom gedefinieerd met onderscheid tussen first-buy route, guided vervolgvorm, add-on en bounded portfolioroute.
 - [x] Publieke prijsankers compact en boardroom-geschikt gehouden.
 - [x] Quote-only routes bruikbaar gehouden voor sales zonder publieke verwarring te creëren.
 
 ### Website and buyer-facing surfaces
 - [x] Dezelfde pricinglogica doorgetrokken naar homepage, producten, aanpak en tarieven.
-- [x] ExitScan als eerste route laten domineren zonder RetentieScan kleiner te maken om de verkeerde reden.
+- [x] ExitScan als default eerste route behouden zonder RetentieScan kleiner te maken dan de productwaarheid draagt.
 - [x] Keuzehulp en FAQ gebruikt om verkeerde buyer-interpretaties actief te corrigeren.
 
 ### Sales, proposal and buyer assets
@@ -210,6 +220,7 @@ Dependency: Milestone 4
 - [x] Packageclaims verankerd in echte report-, preview- en campaignrealiteit.
 - [x] `ExitScan ritmeroute` gepositioneerd als guided vervolgroute in plaats van volwaardige publieke productmodus.
 - [x] Alleen echte add-ons technisch en copymatig als add-on laten voelen.
+- [x] Guided execution en assisted self-service expliciet behandeld als deel van de prijs- en packagewaarheid.
 
 ### QA and governance
 - [x] Pricing paritytests en acceptance-checks toegevoegd.
@@ -222,6 +233,7 @@ Dependency: Milestone 4
 - [x] RetentieScan heeft nog steeds een rijkere vervolglijn dan ExitScan; dit wordt nu beter gekaderd, maar moet commercieel bewaakt blijven.
 - [x] `ExitScan ritmeroute` blijft afhankelijk van begeleide delivery en voldoende volume; de quote-only framing verkleint hier het risico op overselling.
 - [x] Alleen `segment_deep_dive` is repo-breed een echte add-on; dit blijft expliciet bewaakt in copy en tests.
+- [x] Oude ExitScan-first taal kan nog steeds terugkeren en de vraaggestuurde first-buy logica onnodig vernauwen.
 - [x] Premature SaaS-logica is in deze tranche bewust buiten scope gehouden.
 - [x] Trust-erosie door te harde packageclaims is verkleind via alignment met preview, trustdocs en paritytests.
 
@@ -231,6 +243,7 @@ Dependency: Milestone 4
 - [ ] Willen we `ExitScan ritmeroute` later publiek prominenter maken zodra `delivery_mode` ook frontend- en admin-breed verder is uitgewerkt?
 - [ ] Willen we later een compactere executive pricing-view naast de huidige tariefpagina?
 - [ ] Willen we combinatie later semi-gestandaardiseerd tonen als portfolio-opbouw, of structureel `op aanvraag` houden?
+- [ ] Willen we bounded vervolgroutes later publiek/commercieel explicieter maken, of blijven die pas na aparte sign-off zichtbaar buiten de huidige kernpricing?
 - [ ] Willen we toekomstige productfamilies pas pricingmatig zichtbaar maken zodra hun packagecontract net zo scherp is als voor ExitScan en RetentieScan?
 
 ## 6. Follow-up Ideas
@@ -247,6 +260,7 @@ Dependency: Milestone 4
 - [x] Geen plan-, seat- of usage-architectuur.
 - [x] Geen herbouw van productmethodiek, scoring of report-engine buiten pricingpariteit.
 - [x] Geen nieuwe productfamilies buiten ExitScan, RetentieScan en combinatie.
+- [x] Geen heropening van bounded vervolgroutes als nieuwe publieke pricinglaag zonder apart besluit.
 - [x] Geen groot website-redesign buiten wat nodig is om pricing- en packagecopy te alignen.
 - [x] Geen verzonnen ROI-, benchmark- of klantproofclaims.
 - [x] Geen verplichting om elke commerciële vervolgroute technisch als aparte campaign- of billing-entiteit te modelleren.
@@ -254,12 +268,12 @@ Dependency: Milestone 4
 ## 8. Defaults Chosen
 
 - [x] `docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md` is de source of truth voor dit traject.
-- [x] ExitScan Baseline blijft de primaire publieke eerste route en `EUR 2.950` het standaard eerste prijsanker.
-- [x] RetentieScan Baseline blijft een specifieke complementaire eerste route op `EUR 3.450`, niet een goedkopere of lichtere afgeleide van ExitScan.
+- [x] ExitScan Baseline blijft de default publieke eerste route en `EUR 2.950` het standaard eerste prijsanker.
+- [x] RetentieScan Baseline blijft een volwaardige first-buy route op `EUR 3.450`, niet een goedkopere of lichtere afgeleide van ExitScan.
 - [x] ExitScan ritmeroute blijft een secundaire vervolgroute op aanvraag, niet een concurrerende publieke eerste package.
 - [x] RetentieScan ritmeroute blijft de buyer-facing vervolgvorm na baseline, met `vanaf EUR 4.950` als anker.
 - [x] `Compacte retentie vervolgmeting` blijft een compact vervolg binnen de RetentieScan-ritmeroute en niet een parallelle hoofdpackage.
 - [x] `Segment deep dive` blijft de enige expliciete add-on die repo-breed technisch en commercieel herkenbaar is.
 - [x] Combinatie blijft een portfolioroute op aanvraag, geen bundel, korting of standaard upsell.
-- [x] Pricing blijft assisted/productized en boardroom-geschikt, zonder premature SaaS-billinglogica.
+- [x] Pricing blijft guided execution ondersteunen, assisted/productized en boardroom-geschikt, zonder premature SaaS-billinglogica.
 - [x] Claims mogen commercieel scherp zijn, maar nooit verder gaan dan huidige output, trustgrenzen en productrealiteit dragen.

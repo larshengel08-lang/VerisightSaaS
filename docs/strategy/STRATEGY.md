@@ -1,27 +1,35 @@
 # Verisight - Strategie En Beslissingen
 
 Levend document. Dit is de strategische samenvatting van wat Verisight nu verkoopt, hoe we het positioneren en welke guardrails gelden.
-Laatste update: 2026-04-16
+Laatste update: 2026-04-24
 
 ## Wat we nu bouwen en verkopen
 
-Verisight is nu geen brede people-suite en ook nog geen self-service SaaS in volle vorm. Verisight is op dit moment een begeleid, productized people-insight aanbod met twee nauw verwante producten:
+Verisight is nu geen brede people-suite en ook nog geen full self-service SaaS. Verisight is op dit moment een guided execution propositie met assisted self-service discipline, twee buyer-facing kernroutes en een bewust bounded portfolio.
 
 - **ExitScan**
-  - primaire entreepropositie
+  - default eerste route wanneer vertrekduiding eerst telt
   - terugkijkende vertrekduiding
   - bedoeld om patronen in vertrek zichtbaar en bestuurbaar te maken
 
 - **RetentieScan**
-  - complementair aan ExitScan
+  - volwaardige eerste route wanneer de buyer-vraag expliciet draait om actieve-populatie behoud
   - vroegsignalering in actieve populaties
   - bedoeld om behoudsrelevante signalen eerder zichtbaar te maken
 
+- **Guided execution-laag**
+  - begeleidt intake, launchdiscipline, dashboardactivatie en eerste vervolgstap
+  - laat de klant zelf werken binnen begrensde product- en deliveryrails
+
+- **Bounded portfoliolaag**
+  - houdt combinatie en andere bounded vervolgroutes ondergeschikt aan de kernroutes
+  - mag pas zichtbaarder worden nadat een eerste route echte managementwaarde heeft opgeleverd
+
 De commerciele default in deze fase is:
 
-- ExitScan Baseline als standaard eerste instap
-- ExitScan Live als doorgroeivorm of maatwerkroute, niet als los hoofdproduct
-- RetentieScan alleen als primaire eerste route wanneer de buyer-vraag expliciet draait om actieve-populatie vroegsignalering
+- first-buy logica is vraaggestuurd: ExitScan is de default, RetentieScan is de eerlijke eerste route bij een expliciete actieve behoudsvraag
+- Baseline blijft de standaard eerste vorm; ritme en live blijven guided vervolg- of deliveryvormen en geen losse hoofdproducten
+- bounded portfolioroutes worden niet als standaard eerste pitch gebruikt en openen de kernhierarchie niet opnieuw
 
 ## Huidige fase
 
@@ -62,9 +70,13 @@ Gebruik deze volgorde als er spanning ontstaat tussen documenten:
    - fasehistorie, exit gates en strategische volgorde van het opgebouwde systeem
 3. [CEO_GROWTH_SYSTEM_2026.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/CEO_GROWTH_SYSTEM_2026.md)
    - huidig forward-looking bedrijfsbesturingssysteem
-4. deze strategie
+4. [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md)
+   - actuele producttaal, bounded routegrenzen en embedded truth parity
+5. [PORTFOLIO_ARCHITECTURE_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PORTFOLIO_ARCHITECTURE_PROGRAM_PLAN.md)
+   - buyer-facing kernroutes, portfoliorollen en begrenzing van vervolgroutes
+6. deze strategie
    - positionering, guardrails en beslissingen
-5. [Docs_External](C:/Users/larsh/Desktop/Business/Docs_External)
+7. [Docs_External](C:/Users/larsh/Desktop/Business/Docs_External)
    - referentie, uitwerking, assets, archief of gevoelige operationele context
 
 ## Product- en commerciële guardrails
@@ -85,25 +97,29 @@ Wat nu niet te hard geclaimd mag worden:
 - exact vaststellen wat vermijdbaar was
 - causale zekerheid op basis van één scan of rapport
 
-### Productvolgorde
+### Product-, route- en portfoliovolgorde
 
-- ExitScan blijft de primaire entree
-- RetentieScan blijft complementair
-- Baseline versus Live is een belangrijke commerciële structuur, maar geen reden om productverwarring te creëren
-- ExitScan blijft één product; Baseline en Live zijn uitvoeringsvormen, geen aparte productfamilies of aparte websites
-- publieke pricing blijft in beginsel op Baseline gericht; Live blijft op aanvraag of vervolgroute totdat de commerciële en operationele realiteit dat breder draagt
+- guided execution is nu een deel van de productwaarheid en niet alleen een deliveryvoetnoot
+- ExitScan en RetentieScan zijn de twee buyer-facing kernroutes; ExitScan blijft de default, maar niet de enige legitieme first-buy route
+- RetentieScan wordt niet lager gezet dan de productrealiteit draagt; het is een eigen eerste kooproute wanneer de managementvraag daarom vraagt
+- Baseline, live, ritme en compacte vervolgmetingen zijn leverings- of vervolgvormen en geen losse productfamilies
+- combinatie en andere bounded vervolgroutes blijven portfolio-keuzes na een eerste route, niet nieuwe kernproducten of nieuwe standaardinstappen
+- publieke pricing blijft gericht op wat delivery en ops nu echt kunnen dragen; geen verbreding zonder expliciet besluit
 
 ### Verkoopvorm nu
 
 De huidige passende vorm is:
-- begeleid
+- guided execution
+- assisted self-service
 - productized
 - professioneel
+- bounded in launch, activatie en opvolging
 - niet overmatig maatwerkgedreven
 
 Nog niet de hoofdvorm:
 - volledig self-service
 - consultancy-intensief traject zonder productkader
+- gefakete product-led motion zonder onderliggende waarheid
 
 ## SaaS-readiness nu
 
@@ -113,12 +129,13 @@ Verisight beweegt wel richting een SaaS-model, maar zit nu nog in een assisted/p
 
 - productfundament met scans, dashboards, rapportage en organisatie-/campagnestructuur
 - beveiligde appflows met auth, login, invites en beheer
+- guided self-service discipline rond intake, importcontrole, launch, dashboardactivatie en eerste vervolgstap
 - demo- en sample-infrastructuur voor assisted verkoop, validatie en showcase
 
 ### Deels aanwezig
 
 - herhaalbare productvorm en steeds scherpere packaging
-- assisted buyer journey die SaaS-readiness ondersteunt
+- assisted self-service buyer journey die SaaS-readiness ondersteunt
 - groeiende standaardisatie in output, demo's en operationele flows
 
 ### Ontbreekt nog
@@ -132,6 +149,7 @@ Verisight beweegt wel richting een SaaS-model, maar zit nu nog in een assisted/p
 De juiste stap nu is niet om Verisight kunstmatig als volledige SaaS te forceren, maar om doelgericht te bouwen aan SaaS-readiness via:
 
 - pricing en packaging
+- guided execution enablement
 - sales enablement
 - sample output en showcase
 - onboarding en adoption
@@ -143,10 +161,11 @@ De juiste stap nu is niet om Verisight kunstmatig als volledige SaaS te forceren
 De hoogste prioriteit ligt nu op:
 
 - herhaalbare omzet en geloofwaardig bewijs
-- strakke eerste kooproute met ExitScan als entree
+- strakke first-buy logica: ExitScan als default, RetentieScan als volwaardige eerste route wanneer de actieve behoudsvraag primair is
 - een duidelijke ICP-focus op organisaties met ongeveer 200 tot 1.000 medewerkers waar uitstroom structureel speelt
-- voorspelbare delivery van akkoord naar managementwaarde
+- voorspelbare guided execution van akkoord naar eerste managementwaarde
 - capture van case proof, bezwaren en leerfeedback
+- eerlijke bounded portfolioverhoudingen zonder suite- of pricinginflatie
 - wekelijkse en maandelijkse bestuurlijke ritmes
 
 Ondersteunend daaraan:
@@ -177,16 +196,19 @@ Niet alles wat nu belangrijk is, zit in code. Deze afhankelijkheden tellen mee i
 - grote self-service onboarding
 - Stripe en brede billing-automatisering
 - nieuwe productfamilies buiten ExitScan/RetentieScan
+- portfolioverbreding of bounded route-promotie zonder expliciet besluit
 - publiek API-werk
 - brede contentmachine zonder stabiele kernpropositie
 
 ## Belangrijke defaults
 
+- waarheid en positionering worden eerst gecorrigeerd; bredere public/commercial promotie volgt pas daarna
 - website-redesign volgt op trust- en packagingwerk
 - sample output is een fundament voor sales en website
 - externe documentmappen zijn in scope voor alignment, maar niet leidend boven repo truth
 - gevoelige operationele data hoort niet in plandocumenten of roadmaps thuis
 - founder-led lean blijft de default totdat omzet, bewijs en deliveryritme sterk genoeg zijn voor structurele capaciteitsuitbreiding
-- ExitScan blijft de primaire entreepropositie
-- RetentieScan blijft complementair en wordt niet als losse hoofdroute geforceerd
-- de eerste commerciële mijlpaal is niet een nieuwe feature, maar een eerste reeks betaalde trajecten via dezelfde kernpropositie
+- ExitScan blijft de default eerste route in generieke gesprekken, maar niet de enige eerlijke first-buy route
+- RetentieScan blijft een kernroute en wordt niet kunstmatig lager gezet wanneer de actieve behoudsvraag primair is
+- bounded portfolioroutes blijven ondergeschikt aan een scherp gekozen eerste route en openen geen nieuwe pricing- of propositiescope
+- de eerste commerciële mijlpaal is niet een nieuwe feature, maar een eerste reeks betaalde trajecten via dezelfde truth-aligned routearchitectuur
