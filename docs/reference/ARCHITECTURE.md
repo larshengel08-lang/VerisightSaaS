@@ -272,8 +272,10 @@ analyses
 |-----------|-----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Publieke anon-sleutel (veilig in browser) |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Server-only sleutel voor adminhelpers, invites en organization secrets |
+| `FRONTEND_URL` | ✅ voor expliciete redirects | Canonieke app-origin voor auth- en invite-links |
 | `NEXT_PUBLIC_API_URL` | ✅ | Railway backend URL |
-| `SENTRY_DSN` | ⬜ | Optioneel: error monitoring |
+| `BACKEND_ADMIN_TOKEN` | ✅ voor backend-proxy's | Server-only token voor interne backendacties |
 
 ---
 
@@ -330,6 +332,7 @@ app.add_middleware(CORSMiddleware,
 - Fix: `git config --global user.email "larshengel08@hotmail.com"`
 - Als build mislukt door missing package: voeg toe aan `frontend/package.json` dependencies.
 - `@sentry/nextjs` config: gebruik **camelCase** (`sendDefaultPii`, niet `send_default_pii`).
+- `frontend/app/layout.tsx` gebruikt `next/font/google` voor IBM Plex Sans, dus `next build` blijft afhankelijk van externe bereikbaarheid van Google Fonts.
 
 ### Railway (backend)
 - Draait op poort `8080` (Railway default) — niet 8000 zoals lokaal.

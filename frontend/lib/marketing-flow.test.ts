@@ -10,6 +10,8 @@ import {
 import { getBuyerFacingShowcaseAssets } from '@/lib/sample-showcase-assets'
 import {
   approachSteps,
+  homepageCoreProductRoutes,
+  homepagePortfolioRoute,
   homepageProductRoutes,
   homepageUtilityLinks,
   included,
@@ -45,6 +47,16 @@ describe('marketing flow defaults', () => {
     expect(homepageProductRoutes[0]?.chip).toBe('Kernroute')
     expect(homepageProductRoutes[1]?.chip).toBe('Kernroute')
     expect(homepageProductRoutes[2]?.body.toLowerCase()).toContain('nadat de eerste helder staat')
+  })
+
+  it('keeps the homepage compatibility exports aligned with the route split used by the landing page', () => {
+    expect(homepageCoreProductRoutes.map((route) => route.name)).toEqual(['ExitScan', 'RetentieScan'])
+    expect(homepagePortfolioRoute).toEqual({
+      label: 'Portfolioroute',
+      title: homepageProductRoutes[2]?.title,
+      body: homepageProductRoutes[2]?.body,
+      href: homepageProductRoutes[2]?.href,
+    })
   })
 
   it('keeps homepage utility links aligned with buyer flow and due diligence', () => {

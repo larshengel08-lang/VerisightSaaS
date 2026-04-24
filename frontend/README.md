@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Verisight frontend
 
-## Getting Started
+Next.js 15 App Router frontend voor de publieke site, loginflow en het dashboard.
 
-First, run the development server:
+## Lokale setup
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+1. Kopieer `frontend/.env.local.example` naar `frontend/.env.local`.
+2. Vul minimaal deze variabelen in:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://jouw-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=jouw-anon-public-key
+SUPABASE_SERVICE_ROLE_KEY=jouw-service-role-key
+FRONTEND_URL=http://localhost:3000
+NEXT_PUBLIC_API_URL=http://localhost:8000
+BACKEND_ADMIN_TOKEN=jouw-backend-admin-token
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Toelichting:
+- `NEXT_PUBLIC_SUPABASE_URL` en `NEXT_PUBLIC_SUPABASE_ANON_KEY` zijn nodig voor login, middleware en server-side Supabase helpers.
+- `SUPABASE_SERVICE_ROLE_KEY` blijft server-only, maar is wel nodig voor dashboardroutes die organisatiegeheimen of invites beheren.
+- `FRONTEND_URL` wordt gebruikt voor canonieke invite- en auth-redirectlinks.
+- `NEXT_PUBLIC_API_URL` is nodig voor de FastAPI-proxyroutes.
+- `BACKEND_ADMIN_TOKEN` is nodig voor server-only routes die de backend-adminproxy gebruiken.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Installeer dependencies en start daarna de devserver:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+## Build en verificatie
 
-To learn more about Next.js, take a look at the following resources:
+Gebruik voor een lokale productiecheck dezelfde minimale env-set als hierboven en draai daarna:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Voor een CI-achtige check kun je dezelfde build met `CI=true` draaien. De repo gebruikt lokaal een aparte `NEXT_DIST_DIR`, maar in Vercel en CI valt die bewust terug naar de standaard `.next` output.
 
-## Deploy on Vercel
+## Vercel preview en production
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Zet in Vercel zowel voor `Preview` als `Production` minimaal deze variabelen:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `FRONTEND_URL`
+- `NEXT_PUBLIC_API_URL`
+- `BACKEND_ADMIN_TOKEN`
+
+Voor previewdeploys mag `FRONTEND_URL` naar de preview-URL wijzen; voor productie moet dit de canonieke productiedomeinnaam zijn.
+
+## Bekende buildnuance
+
+`frontend/app/layout.tsx` gebruikt `next/font/google` voor IBM Plex Sans. Daardoor blijft de build afhankelijk van bereikbaarheid van Google Fonts tijdens `next build`. In normale Vercel- en online CI-omgevingen is dat geen blocker, maar in volledig afgesloten of instabiele netwerken kan dit alsnog een externe buildnuance zijn.

@@ -64,6 +64,21 @@ export const homepageProductRoutes = [
   },
 ] as const
 
+export const homepageCoreProductRoutes = homepageProductRoutes.filter((route) => route.chip === 'Kernroute')
+
+const combinationHomepageRoute = homepageProductRoutes.find((route) => route.name === 'Combinatie')
+
+if (!combinationHomepageRoute) {
+  throw new Error('Homepage portfolioroute ontbreekt.')
+}
+
+export const homepagePortfolioRoute = {
+  label: 'Portfolioroute',
+  title: combinationHomepageRoute.title,
+  body: combinationHomepageRoute.body,
+  href: combinationHomepageRoute.href,
+} as const
+
 export const homepageComparisonRows = [
   [
     'Je wilt begrijpen waarom mensen zijn gegaan',

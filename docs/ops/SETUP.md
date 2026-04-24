@@ -125,8 +125,16 @@ Open `frontend/.env.local` en vul in:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://jouw-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=jouw-anon-public-key
+SUPABASE_SERVICE_ROLE_KEY=jouw-service-role-key
+FRONTEND_URL=http://localhost:3000
 NEXT_PUBLIC_API_URL=http://localhost:8000
+BACKEND_ADMIN_TOKEN=jouw-backend-admin-token
 ```
+
+Extra context:
+- `SUPABASE_SERVICE_ROLE_KEY` blijft server-only, maar is nodig voor dashboardroutes die invites, organisatiegeheimen en admin-acties afhandelen.
+- `FRONTEND_URL` houdt auth- en invite-redirects expliciet.
+- `BACKEND_ADMIN_TOKEN` is nodig voor de interne backend-proxy rond rapportdownload en contactaanvragen.
 
 ### Dependencies installeren
 
@@ -222,14 +230,25 @@ npm run dev
 3. Stel de omgevingsvariabelen in:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `FRONTEND_URL`
    - `NEXT_PUBLIC_API_URL` → jouw Railway-URL
+   - `BACKEND_ADMIN_TOKEN`
 4. Vercel deployt automatisch bij elke push naar `main`
+
+Zet deze set zowel voor `Preview` als `Production`, zodat auth-, invite- en dashboardflows niet alleen lokaal maar ook op preview consistent blijven werken.
 
 ### Supabase CORS instellen
 
 In Supabase → **Authentication → URL Configuration**:
 - **Site URL**: jouw Vercel-URL (bijv. `https://Verisight.vercel.app`)
 - **Redirect URLs**: `https://Verisight.vercel.app/**`
+
+Voeg daarnaast ook je preview-URL's toe als je invite- of authflows op preview wilt testen.
+
+### Google Fonts-buildnuance
+
+De frontend gebruikt IBM Plex Sans via `next/font/google`. Daardoor blijft `next build` afhankelijk van bereikbaarheid van Google Fonts. In Vercel en normale online CI is dat meestal geen probleem, maar in afgesloten netwerken kan dit als externe buildafhankelijkheid terugkomen.
 
 ---
 
