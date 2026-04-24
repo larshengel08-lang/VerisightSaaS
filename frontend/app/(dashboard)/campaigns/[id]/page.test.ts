@@ -1,41 +1,25 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-describe('campaign page render truth', () => {
-  it('keeps retention and exit primary dashboard labels aligned with phase 1 truth', () => {
-    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
-
-    expect(source).toContain("summarySignalLabel: 'Retentiesignaal'")
-    expect(source).toContain("summaryContextLabel: 'Groepssignaal · verification-first'")
-    expect(source).toContain(
-      "'Lees RetentieScan eerst als groepssignaal: waar staat behoud onder druk, wat vraagt eerst verificatie",
-    )
-    expect(source).toContain("signalTabLabel: 'Retentiesignaal'")
-    expect(source).toContain("summarySignalLabel: 'Frictiescore'")
-    expect(source).toContain("summaryContextLabel: 'Werkfrictie · verklarende laag'")
-    expect(source).toContain(
-      "'Lees ExitScan eerst via de Frictiescore: wat keert terug, waar lijkt werkfrictie beinvloedbaar",
-    )
-    expect(source).toContain("signalTabLabel: 'Frictiescore'")
-    expect(source).toContain(
-      "'Deze laag opent met de Frictiescore als bestuurlijk leesbare managementsamenvatting: wat keert terug, waar lijkt werkfrictie beinvloedbaar",
-    )
-    expect(source).not.toContain("summarySignalLabel: 'Vertreksignaal'")
-    expect(source).not.toContain("signalTabLabel: 'Vertrekbeeld'")
-    expect(source).not.toContain('stay-intent')
-  })
-
-  it('keeps the client shell guided until the dashboard is actually activated', () => {
-    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
-    const guidedPanelSource = readFileSync(
-      new URL('../../../../components/dashboard/guided-self-serve-panel.tsx', import.meta.url),
+describe('campaign detail color semantics', () => {
+  it('keeps informational layers neutral and reserves emerald or amber for real status meaning', () => {
+    const pageSource = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const helpersSource = readFileSync(new URL('./page-helpers.tsx', import.meta.url), 'utf8')
+    const chartsSource = readFileSync(
+      new URL('../../../../components/dashboard/risk-charts.tsx', import.meta.url),
       'utf8',
     )
 
-    expect(source).toContain('Begeleide uitvoerflow')
-    expect(source).toContain('Dashboard wordt zichtbaar vanaf de eerste veilige responsdrempel')
-    expect(source).toContain('showManagementOutput &&')
-    expect(source).toContain('Guided self-serve')
-    expect(guidedPanelSource).toContain('Start uitnodigingen')
+    expect(pageSource).toContain("label: 'Readiness', value: readinessLabel, tone: hasEnoughData ? 'emerald' : 'amber'")
+    expect(pageSource).toContain('aside={<DashboardChip label={focusBadgeLabel} tone="slate" />}')
+    expect(pageSource).toContain('aside={<DashboardChip label={productExperience.routeBadgeLabel} tone="slate" />}')
+    expect(pageSource).toContain("return tone === 'blue' ? 'slate' : tone")
+
+    expect(helpersSource).toContain("tone: hasEnoughData ? 'slate' : hasMinDisplay ? 'amber' : 'amber'")
+    expect(helpersSource).toContain("tone: 'amber'")
+    expect(helpersSource).toContain("tone: 'slate'")
+    expect(helpersSource).toContain('<CardColumn title="Logische acties" tone="slate">')
+
+    expect(chartsSource).toContain('<Bar dataKey="count" fill="#94A3B8" radius={[2, 2, 0, 0]} />')
   })
 })

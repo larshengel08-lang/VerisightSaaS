@@ -126,7 +126,7 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
               stroke="#6B7280"
               strokeDasharray="3 3"
             />
-            <Bar dataKey="count" fill="#2563EB" radius={[2, 2, 0, 0]} />
+            <Bar dataKey="count" fill="#94A3B8" radius={[2, 2, 0, 0]} />
             <Tooltip formatter={(v) => [`${v} responses`, 'Aantal']} />
           </BarChart>
         </ResponsiveContainer>

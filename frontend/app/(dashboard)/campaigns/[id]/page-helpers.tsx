@@ -69,7 +69,11 @@ export type DecisionPanel = {
 export type InsightNotice = {
   title: string
   body: string
-  tone: 'blue' | 'amber' | 'red'
+  tone: 'slate' | 'amber' | 'red'
+}
+
+function normalizeInformationalTone(tone: 'slate' | 'blue' | 'emerald' | 'amber') {
+  return tone === 'blue' ? 'slate' : tone
 }
 
 export function buildHeroDescription({
@@ -155,7 +159,7 @@ export function buildDecisionPanels({
       body: averageRiskScore !== null
         ? `Gebruik dit als samenvattend managementsignaal. Lees de score altijd samen met ${topFactorLabel ? topFactorLabel.toLowerCase() : 'de topfactoren'} en de responskwaliteit.`
         : 'Nog geen score zichtbaar zolang er te weinig responses zijn om veilig te tonen.',
-      tone: hasEnoughData ? 'blue' : hasMinDisplay ? 'amber' : 'amber',
+      tone: hasEnoughData ? 'slate' : hasMinDisplay ? 'amber' : 'amber',
     },
     {
       eyebrow: 'Responskwaliteit',
@@ -180,7 +184,7 @@ export function buildDecisionPanels({
         body: topFactorLabel
           ? `Gebruik bevlogenheid samen met ${topFactorLabel.toLowerCase()} en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.`
           : 'Gebruik bevlogenheid samen met aanvullende signalen en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.',
-        tone: 'emerald',
+        tone: 'slate',
       },
     ]
   }
@@ -254,7 +258,7 @@ export function buildDecisionPanels({
       body: topFactorLabel
         ? `${topFactorLabel} is nu de eerste factor om te valideren. Het werksignaal helpt bepalen of het vertrekverhaal vooral binnen beinvloedbare werkcontexten ligt.`
         : 'Gebruik dit om te bepalen in hoeverre vertrek vooral samenhangt met beinvloedbare werkfactoren.',
-      tone: strongWorkSignalRate !== null && strongWorkSignalRate >= 50 ? 'amber' : 'blue',
+      tone: strongWorkSignalRate !== null && strongWorkSignalRate >= 50 ? 'amber' : 'slate',
     },
   ]
 }
@@ -372,7 +376,7 @@ export function buildInsightWarnings({
     items.push({
       title: 'Nog onvoldoende responses voor veilige detailweergave',
       body: `Met minder dan ${MIN_N_DISPLAY} responses blijven individuele details en scores bewust beperkt. Voeg meer responses toe voordat je conclusies trekt.`,
-      tone: 'red',
+      tone: 'amber',
     })
   } else if (hasMinDisplay && !hasEnoughData) {
     items.push({
@@ -408,7 +412,7 @@ export function buildInsightWarnings({
                 : scanType === 'leadership'
                   ? 'Leadership Scan blijft een geaggregeerde bounded support-read op groepsniveau. Gebruik de uitkomst om managementcontext te duiden, niet om individuele leidinggevenden te beoordelen of named leaders te rangschikken.'
             : 'ExitScan bundelt vertrekervaringen tot managementpatronen. Gebruik deze uitkomsten om gesprekken te richten, niet om een score als sluitend bewijs te behandelen.',
-      tone: 'blue',
+      tone: 'slate',
     })
   }
 
@@ -518,7 +522,7 @@ export function RetentionTrendSection({
     : null
   const isImproving = signalDelta !== null && signalDelta < -0.1
   const isWorsening = signalDelta !== null && signalDelta > 0.1
-  const tone = isImproving ? 'emerald' : isWorsening ? 'amber' : 'blue'
+  const tone = isImproving ? 'emerald' : isWorsening ? 'amber' : 'slate'
 
   const formattedDate = new Intl.DateTimeFormat('nl-NL', {
     day: 'numeric',
@@ -544,7 +548,7 @@ export function RetentionTrendSection({
               eyebrow={`${card.title} | vorige ${card.previousValue.toFixed(1)}/10`}
               title={`${card.currentValue.toFixed(1)}/10`}
               body={`${card.body} Delta ${card.delta > 0 ? '+' : ''}${card.delta.toFixed(1)}.`}
-              tone={card.tone}
+              tone={normalizeInformationalTone(card.tone)}
             />
           ))}
         </div>
@@ -593,7 +597,7 @@ export function PulseTrendSection({
       ? 'emerald'
       : comparison.direction === 'worsened'
         ? 'amber'
-        : 'blue'
+        : 'slate'
 
   return (
     <div className="space-y-4">
@@ -619,21 +623,21 @@ export function PulseTrendSection({
               eyebrow={`${card.title} | vorige ${card.previousValue.toFixed(1)}/10`}
               title={`${card.currentValue.toFixed(1)}/10`}
               body={`${card.body} Delta ${card.delta > 0 ? '+' : ''}${card.delta.toFixed(1)}.`}
-              tone={card.tone}
+              tone={normalizeInformationalTone(card.tone)}
             />
           ))}
         </div>
       ) : null}
 
       {comparison.sharedFactorCount === 0 ? (
-        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
           <p className="font-semibold">Factorvergelijking nu nog begrensd</p>
           <p className="mt-1 leading-6">
             Deze twee Pulse-cycli delen geen volledig vergelijkbare actieve werkfactoren. Lees daarom vooral het totale pulssignaal en de richtingsvraag, en gebruik factoruitleg per cycle afzonderlijk.
           </p>
         </div>
       ) : comparison.sharedFactorCount === 1 ? (
-        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
           <p className="font-semibold">Beperkte factoroverlap</p>
           <p className="mt-1 leading-6">
             Er is maar één volledig gedeelde werkfactor tussen beide Pulse-cycli. Lees de factorvergelijking daarom voorzichtig en gebruik hem vooral als reviewhaak.
@@ -799,7 +803,7 @@ export function buildPulseTrendCards(args: {
       previousValue: args.previous.stayIntent,
       delta,
       direction,
-      tone: direction === 'improved' ? 'emerald' : direction === 'worsened' ? 'amber' : 'blue',
+    tone: direction === 'improved' ? 'emerald' : direction === 'worsened' ? 'amber' : 'blue',
       body:
         direction === 'improved'
           ? 'De richtingsvraag is gunstiger dan in de vorige Pulse. Toets vooral welke kleine correctie je wilt vasthouden.'
@@ -829,7 +833,7 @@ export function buildPulseTrendCards(args: {
         previousValue,
         delta,
         direction,
-        tone: direction === 'improved' ? 'emerald' : direction === 'worsened' ? 'amber' : 'blue',
+    tone: direction === 'improved' ? 'emerald' : direction === 'worsened' ? 'amber' : 'blue',
         body:
           direction === 'improved'
             ? `${FACTOR_LABELS[factor] ?? factor} vraagt minder aandacht dan in de vorige Pulse. Kijk vooral wat je hier wilt behouden.`
@@ -1217,7 +1221,7 @@ export function ActionPlaybookList({
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <CardColumn title="Eerste besluit" tone="blue">
+            <CardColumn title="Eerste besluit" tone="slate">
               <p className="text-sm leading-6 text-slate-700">{item.playbook?.decision}</p>
             </CardColumn>
             <CardColumn title="Eerste eigenaar" tone="slate">
@@ -1226,10 +1230,10 @@ export function ActionPlaybookList({
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <CardColumn title="Eerst valideren" tone="blue">
+            <CardColumn title="Eerst valideren" tone="slate">
               <p className="text-sm leading-6 text-slate-700">{item.playbook?.validate}</p>
             </CardColumn>
-            <CardColumn title="Logische acties" tone="emerald">
+            <CardColumn title="Logische acties" tone="slate">
               <ul className="space-y-2">
                 {item.playbook?.actions.map((action) => (
                   <li key={action} className="flex gap-2 text-sm leading-6 text-slate-700">
@@ -1293,7 +1297,7 @@ export function SegmentPlaybookList({ segments }: { segments: SegmentPlaybookEnt
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <CardColumn title="Eerste besluit" tone="blue">
+            <CardColumn title="Eerste besluit" tone="slate">
               <p className="text-sm leading-6 text-slate-700">{segment.decision}</p>
             </CardColumn>
             <CardColumn title="Eerste eigenaar" tone="slate">
@@ -1302,10 +1306,10 @@ export function SegmentPlaybookList({ segments }: { segments: SegmentPlaybookEnt
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <CardColumn title="Eerst valideren" tone="blue">
+            <CardColumn title="Eerst valideren" tone="slate">
               <p className="text-sm leading-6 text-slate-700">{segment.validate}</p>
             </CardColumn>
-            <CardColumn title="Logische acties" tone="emerald">
+            <CardColumn title="Logische acties" tone="slate">
               <ul className="space-y-2">
                 {segment.actions.map((action) => (
                   <li key={action} className="flex gap-2 text-sm leading-6 text-slate-700">
@@ -1335,21 +1339,17 @@ function CardColumn({
   children: ReactNode
 }) {
   const classes =
-    tone === 'slate'
-      ? 'border-slate-200 bg-slate-50'
-      : tone === 'emerald'
-        ? 'border-emerald-100 bg-emerald-50'
-        : tone === 'amber'
-          ? 'border-amber-100 bg-amber-50'
-          : 'border-blue-100 bg-blue-50'
+    tone === 'emerald'
+      ? 'border-emerald-100 bg-emerald-50'
+      : tone === 'amber'
+        ? 'border-amber-100 bg-amber-50'
+        : 'border-slate-200 bg-slate-50'
   const labelClass =
-    tone === 'slate'
-      ? 'text-slate-600'
-      : tone === 'emerald'
-        ? 'text-emerald-700'
-        : tone === 'amber'
-          ? 'text-amber-700'
-          : 'text-blue-700'
+    tone === 'emerald'
+      ? 'text-emerald-700'
+      : tone === 'amber'
+        ? 'text-amber-700'
+        : 'text-slate-600'
 
   return (
     <div className={`rounded-2xl border p-4 ${classes}`}>

@@ -107,7 +107,7 @@ export default async function DashboardHomePage() {
         aside={
           isAdmin ? (
             <div className="flex flex-wrap items-center gap-2">
-              <DashboardChip label="Operations cockpit" tone="blue" />
+              <DashboardChip label="Operations cockpit" tone="slate" />
               <Link
                 href="/beheer"
                 className="inline-flex rounded-full bg-[color:var(--ink)] px-4 py-2 text-sm font-semibold text-[color:var(--bg)] transition-colors hover:bg-[#1B2E45]"
@@ -116,7 +116,7 @@ export default async function DashboardHomePage() {
               </Link>
             </div>
           ) : (
-            <DashboardChip label="Klantdashboard" tone="emerald" />
+            <DashboardChip label="Klantdashboard" tone="slate" />
           )
         }
       >
@@ -125,7 +125,7 @@ export default async function DashboardHomePage() {
             eyebrow="Management-ready"
             title={`${readyCount}`}
             body="Campagnes met genoeg respons om actief te sturen op duiding, prioritering en rapportage."
-            tone="blue"
+            tone="emerald"
           />
           <DashboardPanel
             eyebrow="Nog in opbouw"
@@ -178,7 +178,7 @@ export default async function DashboardHomePage() {
                     <DashboardChip
                       key={item.key}
                       label={item.label}
-                      tone={item.status === 'done' ? 'emerald' : item.status === 'current' ? 'blue' : 'slate'}
+                      tone={item.status === 'done' ? 'emerald' : item.status === 'current' ? 'amber' : 'slate'}
                     />
                   ))}
                 </div>
@@ -210,7 +210,7 @@ export default async function DashboardHomePage() {
           eyebrow="Eerste route"
           title="Van eerste login naar eerste managementread"
           description="Deze laag maakt expliciet hoe je dashboard en rapport als eerste managementinstrument gebruikt, zonder setupverantwoordelijkheid of self-service verwachtingen."
-          aside={<DashboardChip label="Assisted onboarding" tone="blue" />}
+          aside={<DashboardChip label="Assisted onboarding" tone="slate" />}
         >
           <ManagementReadGuide
             scanType={primaryGuideCampaign?.scan_type ?? 'exit'}
@@ -234,10 +234,10 @@ export default async function DashboardHomePage() {
                 aside={
                   <DashboardChip
                     label={`${group.campaigns.length} campagne${group.campaigns.length === 1 ? '' : 's'}`}
-                    tone={group.key === 'ready' ? 'blue' : group.key === 'closed' ? 'slate' : 'amber'}
+                     tone={group.key === 'ready' ? 'emerald' : group.key === 'closed' ? 'slate' : 'amber'}
                   />
                 }
-                tone={group.key === 'ready' ? 'blue' : group.key === 'closed' ? 'slate' : 'amber'}
+                tone={group.key === 'ready' ? 'emerald' : group.key === 'closed' ? 'slate' : 'amber'}
               >
                 <div className="space-y-3">
                   {group.campaigns.map((campaign, index) => (
@@ -296,7 +296,7 @@ export default async function DashboardHomePage() {
                 eyebrow="Rapportgebruik"
                 title="Dashboard eerst, rapport als verdieping"
                 body="Open eerst het dashboard voor de hoofdlijn. Gebruik daarna het rapport als boardroom-waardige samenvatting en vervolgdocument."
-                tone="blue"
+                tone="slate"
               />
               <DashboardPanel
                 eyebrow="Support"
@@ -312,7 +312,7 @@ export default async function DashboardHomePage() {
                     ? 'Gebruik de cockpit hierboven om direct naar de campaign te gaan die nu het meeste managementwaarde oplevert.'
                     : 'Zodra de eerste campagne live staat, verschijnen hier automatisch dashboard- en rapportacties.'
                 }
-                tone="emerald"
+                tone="slate"
               />
             </>
           )}
@@ -340,7 +340,7 @@ function CampaignRow({
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <DashboardChip label={scanDefinition.productName} tone={campaign.scan_type === 'retention' ? 'emerald' : 'blue'} />
+            <DashboardChip label={scanDefinition.productName} tone="slate" />
             <DashboardChip label={campaign.is_active ? 'Actief' : 'Gesloten'} tone={campaign.is_active ? 'emerald' : 'slate'} />
             <DashboardChip label={readiness.label} tone={readiness.tone} />
           </div>
@@ -542,7 +542,7 @@ function getCampaignReadiness(campaign: CampaignStats) {
   return {
     label: 'Klaar voor managementread',
     body: 'De campaign heeft genoeg basis om dashboard en rapport echt als managementinstrument te gebruiken.',
-    tone: 'blue' as const,
+      tone: 'emerald' as const,
   }
 }
 
@@ -587,19 +587,19 @@ function AdminEmptyState() {
           eyebrow="Stap 1"
           title="Organisatie"
           body="Maak eerst de klantorganisatie aan en leg het contactpunt vast."
-          tone="blue"
+          tone="slate"
         />
         <DashboardPanel
           eyebrow="Stap 2"
           title="Campaign"
           body="Kies ExitScan of RetentieScan en zet de campaign op met de juiste metadata."
-          tone="blue"
+          tone="slate"
         />
         <DashboardPanel
           eyebrow="Stap 3"
           title="Respondenten"
           body="Importeer respondenten en stuur uitnodigingen, zodat de cockpit vanzelf in monitoring overgaat."
-          tone="emerald"
+          tone="slate"
         />
       </div>
       <div className="mt-5">
