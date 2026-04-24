@@ -1,4 +1,5 @@
 import type { ScanType } from '@/lib/types'
+import { buildLaunchControlState } from '@/lib/launch-controls'
 
 export type DeliveryLifecycleStage =
   | 'setup_in_progress'
@@ -41,6 +42,10 @@ export interface CampaignDeliveryRecord {
   next_step: string | null
   operator_notes: string | null
   customer_handoff_note: string | null
+  launch_date: string | null
+  launch_confirmed_at: string | null
+  participant_comms_config: unknown
+  reminder_config: unknown
   first_management_use_confirmed_at: string | null
   follow_up_decided_at: string | null
   learning_closed_at: string | null
@@ -66,6 +71,10 @@ export type DeliveryRecordGovernanceContext = Pick<
   | 'contact_request_id'
   | 'lifecycle_stage'
   | 'exception_status'
+  | 'launch_date'
+  | 'launch_confirmed_at'
+  | 'participant_comms_config'
+  | 'reminder_config'
   | 'first_management_use_confirmed_at'
   | 'follow_up_decided_at'
   | 'learning_closed_at'
@@ -82,6 +91,7 @@ export type DeliveryGovernanceSnapshot = {
   intakeBlockers: string[]
   importBlockers: string[]
   inviteBlockers: string[]
+  launchControlBlockers: string[]
   activationBlockers: string[]
   firstValueBlockers: string[]
   reportDeliveryBlockers: string[]
@@ -97,6 +107,44 @@ export type DeliveryGovernanceSnapshot = {
   learningCloseoutReady: boolean
 }
 
+export type DeliveryOperatingRole = {
+  title: string
+  owner: string
+  responsibility: string
+}
+
+export type DeliveryManagementUseStep = {
+  title: string
+  detail: string
+}
+
+export type DeliveryFollowUpOutcome = {
+  title: string
+  fit: string
+  detail: string
+}
+
+export type DeliveryExceptionRule = {
+  status: Exclude<DeliveryExceptionStatus, 'none'>
+  title: string
+  owner: string
+  responseWindow: string
+  escalationRule: string
+}
+
+export type DeliveryWeeklyReviewRule = {
+  title: string
+  detail: string
+}
+
+export type DeliveryOperatingGuide = {
+  roles: DeliveryOperatingRole[]
+  managementUseSteps: DeliveryManagementUseStep[]
+  followUpOutcomes: DeliveryFollowUpOutcome[]
+  exceptionRules: DeliveryExceptionRule[]
+  weeklyReviewRules: DeliveryWeeklyReviewRule[]
+}
+
 type DeliveryAutoSignalArgs = {
   scanType: ScanType
   linkedLeadPresent: boolean
@@ -108,6 +156,7 @@ type DeliveryAutoSignalArgs = {
   hasEnoughData: boolean
   activeClientAccessCount: number
   pendingClientInviteCount: number
+  importReady: boolean
 }
 
 export const DELIVERY_LIFECYCLE_OPTIONS: Array<{ value: DeliveryLifecycleStage; label: string }> = [
@@ -178,6 +227,18 @@ export const DELIVERY_CHECKPOINT_DEFINITIONS: Array<{
   },
 ] as const
 
+const DELIVERY_LIFECYCLE_ORDER: DeliveryLifecycleStage[] = [
+  'setup_in_progress',
+  'import_cleared',
+  'invites_live',
+  'client_activation_pending',
+  'client_activation_confirmed',
+  'first_value_reached',
+  'first_management_use',
+  'follow_up_decided',
+  'learning_closed',
+]
+
 export function getDeliveryLifecycleLabel(value: DeliveryLifecycleStage | null | undefined) {
   return DELIVERY_LIFECYCLE_OPTIONS.find((option) => option.value === value)?.label ?? 'Setup in uitvoering'
 }
@@ -208,10 +269,192 @@ export function getDeliveryAutoStateLabel(value: DeliveryAutoState) {
   }
 }
 
+export function isDeliveryLifecycleAtLeast(
+  current: DeliveryLifecycleStage | null | undefined,
+  target: DeliveryLifecycleStage,
+) {
+  if (!current) return false
+  return DELIVERY_LIFECYCLE_ORDER.indexOf(current) >= DELIVERY_LIFECYCLE_ORDER.indexOf(target)
+}
+
 export function buildDeliveryCheckpointMap(checkpoints: CampaignDeliveryCheckpoint[]) {
   return Object.fromEntries(
     checkpoints.map((checkpoint) => [checkpoint.checkpoint_key, checkpoint]),
   ) as Partial<Record<DeliveryCheckpointKey, CampaignDeliveryCheckpoint>>
+}
+
+export function getDeliveryOperatingGuide(scanType: ScanType): DeliveryOperatingGuide {
+  const sharedRoles: DeliveryOperatingRole[] = [
+    {
+      title: 'Delivery-owner',
+      owner: 'Verisight delivery',
+      responsibility: 'Bewaakt launch discipline, deliverystart, open blockers en de eerstvolgende stap.',
+    },
+    {
+      title: 'Management-use confirmer',
+      owner:
+        scanType === 'exit' || scanType === 'retention'
+          ? 'Klant sponsor of HR-owner'
+          : 'Klant owner van de bounded route',
+      responsibility: 'Bevestigt dat output echt in een eerste managementgesprek is gebruikt en dat eigenaar, eerste stap en reviewdatum expliciet zijn.',
+    },
+    {
+      title: 'Follow-up beslisser',
+      owner: 'Verisight + klant owner',
+      responsibility: 'Kiest bewust of de route doorgaat, bounded vervolgt, verdiept, pauzeert of stopt.',
+    },
+  ]
+
+  const managementUseSteps: DeliveryManagementUseStep[] = [
+    {
+      title: 'Leg de eerste managementvraag vast',
+      detail:
+        scanType === 'onboarding'
+          ? 'Maak expliciet waar de vroege landing nu stokt en welk checkpointspoor eerst aandacht vraagt.'
+          : scanType === 'leadership'
+            ? 'Maak expliciet welke managementcontext nu eerst een begrensde check of correctie vraagt.'
+            : scanType === 'pulse'
+              ? 'Maak expliciet welke review- of herijkingsvraag nu eerst aandacht vraagt.'
+              : scanType === 'retention'
+                ? 'Maak expliciet waar behoud nu onder druk staat en welk verificatiespoor eerst telt.'
+                : 'Maak expliciet welk vertrek- of verbeterpatroon nu als eerste managementvraag telt.',
+    },
+    {
+      title: 'Bevestig eigenaar en eerste stap',
+      detail: 'Leg vast wie de eigenaar is, welke kleine toetsbare stap nu start en wat nog niet besloten is.',
+    },
+    {
+      title: 'Zet reviewdatum en terugkoppeling',
+      detail: 'Management use telt pas echt als een reviewmoment en verwachte terugkoppeling expliciet zijn vastgelegd.',
+    },
+  ]
+
+  const followUpOutcomes: DeliveryFollowUpOutcome[] =
+    scanType === 'onboarding'
+      ? [
+          {
+            title: 'Doorgaan op hetzelfde checkpointspoor',
+            fit: 'Alleen na expliciete eerste borg- of correctiestap',
+            detail: 'Gebruik dit pas als eigenaar, eerste stap en vervolgmoment al vaststaan. Onboarding blijft hierbij een bounded checkpoint-route, geen journey-suite.',
+          },
+          {
+            title: 'Bounded vervolg',
+            fit: 'Alleen bij logische volgende checkpointread',
+            detail: 'Kies dit alleen wanneer dezelfde instroomvraag later opnieuw getoetst moet worden zonder bredere lifecycle-uitbouw.',
+          },
+          {
+            title: 'Stop of ga naar andere route',
+            fit: 'Bij andere managementvraag',
+            detail: 'Schakel pas door als de vraag inmiddels eerder over behoud, retrospectieve duiding of lokale lokalisatie gaat dan over vroege landing.',
+          },
+        ]
+      : scanType === 'leadership'
+        ? [
+            {
+              title: 'Doorgaan met bounded verificatie',
+              fit: 'Alleen na expliciete eerste correctie',
+              detail: 'Gebruik dit wanneer dezelfde managementcontext later opnieuw begrensd getoetst moet worden.',
+            },
+            {
+              title: 'Verdiepen zonder named leaders',
+              fit: 'Alleen bij scherpere groepsvraag',
+              detail: 'Verdiep alleen zolang de route group-level blijft en niet afglijdt naar 360-, named-leader- of performance-logica.',
+            },
+            {
+              title: 'Stop of ga terug naar bredere duiding',
+              fit: 'Bij andere managementvraag',
+              detail: 'Gebruik dit wanneer de contextvraag eigenlijk een bredere people-route of een andere productscope vraagt.',
+            },
+          ]
+        : scanType === 'pulse'
+          ? [
+              {
+                title: 'Doorgaan met bounded hercheck',
+                fit: 'Alleen na zichtbare kleine correctie',
+                detail: 'Gebruik dit wanneer de eerste review al heeft geleid tot een eigenaar, kleine bijsturing en afgesproken hercheck.',
+              },
+              {
+                title: 'Verdiepen naar bredere duiding',
+                fit: 'Alleen als reviewvraag te groot wordt',
+                detail: 'Gebruik dit wanneer dezelfde signalen niet meer als compacte reviewvraag leesbaar blijven.',
+              },
+              {
+                title: 'Pauzeren of stoppen',
+                fit: 'Bij voldoende stabilisatie of te smalle basis',
+                detail: 'Houd Pulse compact en kies bewust voor stop of later opnieuw openen in plaats van automatische ritme-uitbreiding.',
+              },
+            ]
+          : [
+              {
+                title: 'Doorgaan op dezelfde route',
+                fit: 'Standaard na eerste managementuse',
+                detail: 'Gebruik dit als dezelfde managementvraag een logische vervolgmeting of verdere uitvoering vraagt.',
+              },
+              {
+                title: 'Bounded vervolg of verdieping',
+                fit: 'Alleen bij expliciete aanvullende vraag',
+                detail: 'Kies dit wanneer dezelfde route blijft, maar een extra verdiepingslaag of bounded vervolg bewust is gekozen.',
+              },
+              {
+                title: 'Pauzeren of stoppen',
+                fit: 'Bij afgeronde eerste actie of andere routevraag',
+                detail: 'Gebruik dit wanneer de eerste managementactie staat en een volgende stap pas later of via een ander product logisch wordt.',
+              },
+            ]
+
+  const exceptionRules: DeliveryExceptionRule[] = [
+    {
+      status: 'blocked',
+      title: 'Geblokkeerd',
+      owner: 'Delivery-owner',
+      responseWindow: 'Zelfde werkdag triage',
+      escalationRule: 'Escaleer bestuurlijk zodra de blokkade launch, first value of management use direct tegenhoudt.',
+    },
+    {
+      status: 'needs_operator_recovery',
+      title: 'Operator recovery nodig',
+      owner: 'Verisight delivery',
+      responseWindow: 'Binnen 1 werkdag herstelpad',
+      escalationRule: 'Escaleer als herstel niet binnen het afgesproken reviewmoment of de eerstvolgende deliverystap kan landen.',
+    },
+    {
+      status: 'awaiting_client_input',
+      title: 'Wacht op klantinput',
+      owner: 'Klant owner + delivery-owner',
+      responseWindow: 'Binnen 2 werkdagen opvolgen',
+      escalationRule: 'Escaleer als ontbrekende input first value, report delivery of follow-upbesluit blijft blokkeren.',
+    },
+    {
+      status: 'awaiting_external_delivery',
+      title: 'Wacht op externe delivery',
+      owner: 'Delivery-owner',
+      responseWindow: 'Binnen 1 werkdag statusupdate',
+      escalationRule: 'Escaleer zodra externe afhankelijkheid het afgesproken launch- of reviewmoment in gevaar brengt.',
+    },
+  ]
+
+  const weeklyReviewRules: DeliveryWeeklyReviewRule[] = [
+    {
+      title: 'Open launch- en activationblockers',
+      detail: 'Bekijk wekelijks alle dossiers met open intake-, import-, invite- of activatieblokkades en leg de eerstvolgende stap opnieuw vast.',
+    },
+    {
+      title: 'Management use zonder follow-up',
+      detail: 'Bekijk wekelijks alle dossiers waar first management use al bevestigd is, maar follow-up nog niet expliciet is besloten.',
+    },
+    {
+      title: 'Verouderde bounded routes',
+      detail: 'Heropen dossiers waarvan reviewdatum, volgende stap of owner ontbreekt, zodat bounded routes niet stilzwijgend als gezond blijven ogen.',
+    },
+  ]
+
+  return {
+    roles: sharedRoles,
+    managementUseSteps,
+    followUpOutcomes,
+    exceptionRules,
+    weeklyReviewRules,
+  }
 }
 
 export function buildDeliveryAutoSignals({
@@ -225,6 +468,7 @@ export function buildDeliveryAutoSignals({
   hasEnoughData,
   activeClientAccessCount,
   pendingClientInviteCount,
+  importReady,
 }: DeliveryAutoSignalArgs): Record<DeliveryCheckpointKey, DeliveryAutoSignal> {
   return {
     implementation_intake: linkedLeadPresent
@@ -239,17 +483,20 @@ export function buildDeliveryAutoSignals({
             : 'Nog geen gekoppelde lead of intakeharde handoff zichtbaar.',
         },
     import_qa:
-      totalInvited > 0
+      importReady
         ? {
-            autoState: 'warning',
+            autoState: 'ready',
             summary:
               totalInvited === 1
-                ? '1 respondent staat in de campaign. Bevestig handmatig dat preview, metadata en importkeuze zijn gecontroleerd.'
-                : `${totalInvited} respondenten staan in de campaign. Bevestig handmatig dat preview, metadata en importkeuze zijn gecontroleerd.`,
+                ? 'Het deelnemersbestand is gecontroleerd en 1 deelnemer staat vrijgegeven voor launch.'
+                : `Het deelnemersbestand is gecontroleerd en ${totalInvited} deelnemers staan vrijgegeven voor launch.`,
           }
         : {
             autoState: 'not_ready',
-            summary: 'Nog geen respondenten geïmporteerd.',
+            summary:
+              totalInvited > 0
+                ? 'Het deelnemersbestand is nog niet vrijgegeven voor launch.'
+                : 'Nog geen gecontroleerd deelnemersbestand beschikbaar.',
           },
     invite_readiness:
       totalInvited === 0
@@ -394,12 +641,20 @@ export function buildDeliveryGovernanceSnapshot(args: {
     checkpoint: checkpointMap.import_qa,
     autoSignal: args.autoSignals.import_qa,
     pendingMessage: 'Import QA is nog niet expliciet bevestigd.',
+    requireReadyAutoState: true,
   })
   const inviteBlockers = collectCheckpointBlockers({
     checkpoint: checkpointMap.invite_readiness,
     autoSignal: args.autoSignals.invite_readiness,
     pendingMessage: 'Invite readiness is nog niet expliciet bevestigd.',
   })
+  const launchControlBlockers = buildLaunchControlState({
+    launchDate: args.record?.launch_date ?? null,
+    participantCommsConfig: args.record?.participant_comms_config ?? null,
+    reminderConfig: args.record?.reminder_config ?? null,
+    launchConfirmedAt: args.record?.launch_confirmed_at ?? null,
+  }).blockers
+  const launchInviteBlockers = dedupeMessages([...inviteBlockers, ...launchControlBlockers])
   const activationBlockers = collectCheckpointBlockers({
     checkpoint: checkpointMap.client_activation,
     autoSignal: args.autoSignals.client_activation,
@@ -437,13 +692,13 @@ export function buildDeliveryGovernanceSnapshot(args: {
   ])
 
   const launchReady =
-    dedupeMessages([...globalBlockers, ...intakeBlockers, ...importBlockers, ...inviteBlockers]).length === 0
-  const activationReady = dedupeMessages([...globalBlockers, ...intakeBlockers, ...importBlockers, ...inviteBlockers, ...activationBlockers]).length === 0
+    dedupeMessages([...globalBlockers, ...intakeBlockers, ...importBlockers, ...launchInviteBlockers]).length === 0
+  const activationReady = dedupeMessages([...globalBlockers, ...intakeBlockers, ...importBlockers, ...launchInviteBlockers, ...activationBlockers]).length === 0
   const firstValueReady = dedupeMessages([
     ...globalBlockers,
     ...intakeBlockers,
     ...importBlockers,
-    ...inviteBlockers,
+    ...launchInviteBlockers,
     ...activationBlockers,
     ...firstValueBlockers,
   ]).length === 0
@@ -451,7 +706,7 @@ export function buildDeliveryGovernanceSnapshot(args: {
     ...globalBlockers,
     ...intakeBlockers,
     ...importBlockers,
-    ...inviteBlockers,
+    ...launchInviteBlockers,
     ...activationBlockers,
     ...firstValueBlockers,
     ...reportDeliveryBlockers,
@@ -460,7 +715,7 @@ export function buildDeliveryGovernanceSnapshot(args: {
     ...globalBlockers,
     ...intakeBlockers,
     ...importBlockers,
-    ...inviteBlockers,
+    ...launchInviteBlockers,
     ...activationBlockers,
     ...firstValueBlockers,
     ...reportDeliveryBlockers,
@@ -470,7 +725,7 @@ export function buildDeliveryGovernanceSnapshot(args: {
     ...globalBlockers,
     ...intakeBlockers,
     ...importBlockers,
-    ...inviteBlockers,
+    ...launchInviteBlockers,
     ...activationBlockers,
     ...firstValueBlockers,
     ...reportDeliveryBlockers,
@@ -481,7 +736,7 @@ export function buildDeliveryGovernanceSnapshot(args: {
     ...globalBlockers,
     ...intakeBlockers,
     ...importBlockers,
-    ...inviteBlockers,
+    ...launchInviteBlockers,
     ...activationBlockers,
     ...firstValueBlockers,
     ...reportDeliveryBlockers,
@@ -494,7 +749,8 @@ export function buildDeliveryGovernanceSnapshot(args: {
     globalBlockers,
     intakeBlockers,
     importBlockers,
-    inviteBlockers,
+    inviteBlockers: launchInviteBlockers,
+    launchControlBlockers,
     activationBlockers,
     firstValueBlockers,
     reportDeliveryBlockers,
@@ -511,17 +767,82 @@ export function buildDeliveryGovernanceSnapshot(args: {
   } satisfies DeliveryGovernanceSnapshot
 }
 
-const DELIVERY_LIFECYCLE_ORDER: DeliveryLifecycleStage[] = [
-  'setup_in_progress',
-  'import_cleared',
-  'invites_live',
-  'client_activation_pending',
-  'client_activation_confirmed',
-  'first_value_reached',
-  'first_management_use',
-  'follow_up_decided',
-  'learning_closed',
-]
+export function buildDeliveryDisciplineWarnings(args: {
+  record: CampaignDeliveryRecord | null
+  linkedLeadPresent: boolean
+  invitesNotSent: number
+  pendingClientInviteCount: number
+  incompleteScores: number
+  activeClientAccessCount: number
+  totalCompleted: number
+  hasEnoughData: boolean
+  governanceBlockers: string[]
+  linkedLearningDossierCount?: number
+  learningCloseoutEvidenceCount?: number
+}) {
+  const items: string[] = []
+
+  if (!args.linkedLeadPresent) {
+    items.push('De sales-to-delivery handoff is nog niet expliciet gekoppeld aan deze campaign.')
+  }
+  if (!args.record?.operator_owner?.trim()) {
+    items.push('Er is nog geen expliciete delivery-owner vastgelegd voor deze campaign.')
+  }
+  if (args.invitesNotSent > 0) {
+    items.push(`${args.invitesNotSent} respondent(en) hebben nog geen invite ontvangen of verzendbevestiging.`)
+  }
+  if (args.pendingClientInviteCount > 0 && args.activeClientAccessCount === 0) {
+    items.push(`${args.pendingClientInviteCount} klantinvite(s) wachten nog op activatie.`)
+  }
+  if (args.incompleteScores > 0) {
+    items.push(`${args.incompleteScores} opgeslagen responses hebben nog incomplete scoredata.`)
+  }
+  if (args.totalCompleted >= 5 && !args.hasEnoughData) {
+    items.push('De campaign heeft een indicatief first-value beeld, maar nog geen stevig patroonniveau.')
+  }
+  if (args.record?.exception_status && args.record.exception_status !== 'none') {
+    items.push(`Open exception: ${getDeliveryExceptionLabel(args.record.exception_status)}.`)
+  }
+  if (
+    args.record &&
+    isDeliveryLifecycleAtLeast(args.record.lifecycle_stage, 'client_activation_confirmed') &&
+    !args.record.next_step?.trim()
+  ) {
+    items.push('Na klantactivatie ontbreekt nog een expliciete volgende stap voor delivery.')
+  }
+  if (
+    args.record &&
+    isDeliveryLifecycleAtLeast(args.record.lifecycle_stage, 'first_value_reached') &&
+    !args.record.customer_handoff_note?.trim()
+  ) {
+    items.push('First value staat verder dan setup, maar de klant-handoff naar management use is nog niet expliciet vastgelegd.')
+  }
+  if (
+    args.record &&
+    isDeliveryLifecycleAtLeast(args.record.lifecycle_stage, 'first_management_use') &&
+    !args.record.first_management_use_confirmed_at
+  ) {
+    items.push('Lifecycle staat al op of voorbij eerste management use, maar de bevestigingsdatum ontbreekt nog.')
+  }
+  if (
+    args.record &&
+    isDeliveryLifecycleAtLeast(args.record.lifecycle_stage, 'follow_up_decided') &&
+    !args.record.follow_up_decided_at
+  ) {
+    items.push('Follow-up staat bestuurlijk verder, maar er is nog geen expliciete follow-upbeslissing gedateerd vastgelegd.')
+  }
+  if (
+    args.record?.lifecycle_stage === 'learning_closed' &&
+    (args.linkedLearningDossierCount ?? 0) > 0 &&
+    (args.learningCloseoutEvidenceCount ?? 0) === 0
+  ) {
+    items.push('Learning staat op gesloten, maar expliciete review-, vervolg- of stopevidence ontbreekt nog.')
+  }
+
+  items.push(...args.governanceBlockers)
+
+  return dedupeMessages(items)
+}
 
 export function validateDeliveryLifecycleTransition(args: {
   scanType: ScanType

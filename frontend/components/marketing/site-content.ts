@@ -64,8 +64,9 @@ export const homepageProductRoutes = [
   },
 ] as const
 
+// Keep the existing homepage module contract intact for builds that still
+// import the older split names from main.
 export const homepageCoreProductRoutes = homepageProductRoutes.filter((route) => route.name !== 'Combinatie')
-
 export const homepagePortfolioRoute = {
   name: 'Combinatie',
   label: 'Portfolioroute op aanvraag',

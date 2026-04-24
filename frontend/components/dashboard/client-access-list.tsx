@@ -91,7 +91,7 @@ export function ClientAccessList({ invites }: Props) {
                       {statusLabel}
                     </span>
                     <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                      {invite.role === 'member' ? 'Member' : 'Viewer'}
+                      {invite.role === 'owner' ? 'Klant owner' : invite.role === 'member' ? 'Member' : 'Viewer'}
                     </span>
                   </div>
                   <p className="mt-1 text-sm text-gray-500">{invite.email}</p>

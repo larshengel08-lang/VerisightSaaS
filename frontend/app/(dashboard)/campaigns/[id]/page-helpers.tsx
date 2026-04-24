@@ -1,13 +1,8 @@
 import type { ReactNode } from 'react'
 import { getProductModule } from '@/lib/products/shared/registry'
-import type {
-  ActionPlaybook,
-  DashboardDecisionCard,
-  DashboardFollowThroughCard,
-  SegmentPlaybookEntry,
-  SignalTrendCard,
-} from '@/lib/products/shared/types'
+import type { SegmentPlaybookEntry, SignalTrendCard } from '@/lib/products/shared/types'
 import { buildFactorPresentation, getManagementBandLabel } from '@/lib/management-language'
+import { FIRST_DASHBOARD_THRESHOLD, FIRST_INSIGHT_THRESHOLD } from '@/lib/response-activation'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import {
   EXIT_REASON_LABELS,
@@ -20,8 +15,8 @@ import { DashboardPanel } from '@/components/dashboard/dashboard-primitives'
 
 const ORG_FACTORS = ['leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity']
 
-export const MIN_N_PATTERNS = 10
-export const MIN_N_DISPLAY = 5
+export const MIN_N_PATTERNS = FIRST_INSIGHT_THRESHOLD
+export const MIN_N_DISPLAY = FIRST_DASHBOARD_THRESHOLD
 
 export type RetentionSignalAverages = {
   retentionSignal: number | null
@@ -75,101 +70,11 @@ export type DecisionPanel = {
 export type InsightNotice = {
   title: string
   body: string
-  tone: 'blue' | 'amber' | 'red'
+  tone: 'slate' | 'amber' | 'red'
 }
 
-export type ResponseReadState = {
-  title: string
-  body: string
-  badge: string
-  badgeTone: 'slate' | 'blue' | 'emerald' | 'amber'
-  quickLabel: string
-  caution: string
-  nextStep: string
-}
-
-export type ScoreInterpretationGuide = {
-  intro: string
-  steps: Array<{
-    title: string
-    body: string
-  }>
-}
-
-export type ActionExecutionCore = {
-  route: {
-    title: string
-    body: string
-    tone: 'blue' | 'emerald' | 'amber'
-  }
-  owner: {
-    title: string
-    body: string
-    tone: 'blue' | 'emerald' | 'amber'
-  }
-  firstStep: {
-    title: string
-    body: string
-    tone: 'blue' | 'emerald' | 'amber'
-  }
-  review: {
-    title: string
-    body: string
-    tone: 'blue' | 'emerald' | 'amber'
-  }
-  supportPrompt: string
-}
-
-export type EvidenceReadingFlow = {
-  intro: {
-    title: string
-    body: string
-    sequence: string[]
-  }
-  primaryEntry: {
-    title: string
-    description: string
-    badge: string
-    emptyState: string
-  }
-  sections: {
-    sdt: {
-      title: string
-      description: string
-      badge: string
-    }
-    factors: {
-      title: string
-      description: string
-      badge: string
-    }
-    segments: {
-      title: string
-      description: string
-      badge: string
-      tone: 'emerald' | 'amber'
-    }
-    methodology: {
-      title: string
-      description: string
-      badge: string
-    }
-  }
-  supportPrompt: string
-}
-
-export type DriverDrilldownFactor = {
-  factorKey: string
-  factorLabel: string
-  score: number
-  signalValue: number
-}
-
-export type DriverDrilldownModel = {
-  availableFactors: DriverDrilldownFactor[]
-  highlightedFactors: DriverDrilldownFactor[]
-  selectedFactorKey: string | null
-  selectedFactor: DriverDrilldownFactor | null
+function normalizeInformationalTone(tone: 'slate' | 'blue' | 'emerald' | 'amber') {
+  return tone === 'blue' ? 'slate' : tone
 }
 
 export function buildHeroDescription({
@@ -212,10 +117,10 @@ export function buildHeroDescription({
   }
 
   if (scanType === 'leadership') {
-    return `Deze Leadership Scan laat een begrensde managementcontext-read zien op groepsniveau. Gebruik de uitkomst om te bepalen welke leiderschaps- of prioriteringscontext nu eerst duiding vraagt, zonder dit te lezen als named leader view, 360-output of performance-oordeel. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
+    return `Deze Leadership Scan laat een begrensde support-read zien op groepsniveau. Gebruik de uitkomst om te bepalen welke managementcontext het bestaande people-signaal nu mee kleurt, zonder dit te lezen als named leader view, 360-output of performance-oordeel. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
   }
 
-  return 'Deze ExitScan helpt het vertrekverhaal terugbrengen tot de factoren die het meest beinvloedbaar lijken. Start bovenaan met het beslisoverzicht en gebruik daarna de verdieping om teams, factoren en vervolgacties scherper te maken.'
+  return `Deze ExitScan opent met de Frictiescore als managementsamenvatting van het vertrekbeeld. Gebruik werkfrictie daarna als verklarende laag om te bepalen waar teams, factoren en vervolgacties het meest beinvloedbaar lijken.`
 }
 
 export function getTopFactorLabel(factorAverages: Record<string, number>) {
@@ -224,31 +129,6 @@ export function getTopFactorLabel(factorAverages: Record<string, number>) {
     .sort((left, right) => right.signalValue - left.signalValue)[0]
 
   return topFactor ? (FACTOR_LABELS[topFactor.factor] ?? topFactor.factor) : null
-}
-
-export function buildDriverDrilldownModel(args: {
-  factorAverages: Record<string, number>
-  selectedFactorKey: string | null
-}): DriverDrilldownModel {
-  const availableFactors = Object.entries(args.factorAverages)
-    .map(([factorKey, score]) => ({
-      factorKey,
-      factorLabel: FACTOR_LABELS[factorKey] ?? factorKey,
-      score,
-      signalValue: Number((11 - score).toFixed(1)),
-    }))
-    .sort((left, right) => right.signalValue - left.signalValue)
-
-  const fallbackFactor = availableFactors[0] ?? null
-  const selectedFactor =
-    availableFactors.find((factor) => factor.factorKey === args.selectedFactorKey) ?? fallbackFactor
-
-  return {
-    availableFactors,
-    highlightedFactors: availableFactors.slice(0, 2),
-    selectedFactorKey: selectedFactor?.factorKey ?? null,
-    selectedFactor,
-  }
 }
 
 export function buildDecisionPanels({
@@ -280,7 +160,7 @@ export function buildDecisionPanels({
       body: averageRiskScore !== null
         ? `Gebruik dit als samenvattend managementsignaal. Lees de score altijd samen met ${topFactorLabel ? topFactorLabel.toLowerCase() : 'de topfactoren'} en de responskwaliteit.`
         : 'Nog geen score zichtbaar zolang er te weinig responses zijn om veilig te tonen.',
-      tone: hasEnoughData ? 'blue' : hasMinDisplay ? 'amber' : 'amber',
+      tone: hasEnoughData ? 'slate' : hasMinDisplay ? 'amber' : 'amber',
     },
     {
       eyebrow: 'Responskwaliteit',
@@ -304,8 +184,8 @@ export function buildDecisionPanels({
         value: retentionSupplemental.engagement !== null ? `${retentionSupplemental.engagement.toFixed(1)}/10` : '-',
         body: topFactorLabel
           ? `Gebruik bevlogenheid samen met ${topFactorLabel.toLowerCase()} en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.`
-          : 'Gebruik bevlogenheid samen met stay-intent en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.',
-        tone: 'emerald',
+          : 'Gebruik bevlogenheid samen met aanvullende signalen en vertrekintentie om te bepalen hoe scherp het retentiesignaal echt is.',
+        tone: 'slate',
       },
     ]
   }
@@ -360,10 +240,10 @@ export function buildDecisionPanels({
       ...sharedPanels,
       {
         eyebrow: 'Managementrichting',
-        title: 'Geaggregeerde context-read',
+        title: 'Bounded context-read',
         value: retentionSupplemental.stayIntent !== null ? `${retentionSupplemental.stayIntent.toFixed(1)}/10` : '-',
         body: topFactorLabel
-          ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste managementspoor en lees de richtingsvraag alleen als extra indicatie of de huidige aansturing werkbaarder of juist frictievoller voelt.`
+          ? `Gebruik ${topFactorLabel.toLowerCase()} als eerste contextspoor en lees de richtingsvraag alleen als extra indicatie of de huidige aansturing werkbaarder of juist frictievoller voelt.`
           : 'Gebruik de richtingsvraag als extra indicatie of de huidige managementcontext vooral stabiliteit of juist meer frictie laat zien.',
         tone: retentionSupplemental.stayIntent !== null && retentionSupplemental.stayIntent < 5.5 ? 'amber' : 'emerald',
       },
@@ -379,7 +259,7 @@ export function buildDecisionPanels({
       body: topFactorLabel
         ? `${topFactorLabel} is nu de eerste factor om te valideren. Het werksignaal helpt bepalen of het vertrekverhaal vooral binnen beinvloedbare werkcontexten ligt.`
         : 'Gebruik dit om te bepalen in hoeverre vertrek vooral samenhangt met beinvloedbare werkfactoren.',
-      tone: strongWorkSignalRate !== null && strongWorkSignalRate >= 50 ? 'amber' : 'blue',
+      tone: strongWorkSignalRate !== null && strongWorkSignalRate >= 50 ? 'amber' : 'slate',
     },
   ]
 }
@@ -390,7 +270,7 @@ export function buildNextStepTitle(scanType: ScanType, hasEnoughData: boolean, h
   if (scanType === 'pulse') return 'Reviewen en bijsturen'
   if (scanType === 'team') return 'Lokaal verifieren'
   if (scanType === 'onboarding') return 'Checkpoint duiden'
-  if (scanType === 'leadership') return 'Managementcontext duiden'
+  if (scanType === 'leadership') return 'Managementcontext toetsen'
   return scanType === 'retention' ? 'Valideren en prioriteren' : 'Duiden en verbeteren'
 }
 
@@ -446,12 +326,12 @@ export function buildNextStepBody({
   if (scanType === 'leadership') {
     return topFactor
       ? `Gebruik ${topFactor.toLowerCase()} als eerste managementspoor en bepaal welke geaggregeerde managementcontext nu eerst een korte check of kleine correctie vraagt.`
-      : 'Gebruik de compact gemeten werkfactoren om te kiezen welke managementcontext nu als eerste duiding verdient.'
+      : 'Gebruik de compact gemeten werkfactoren om te kiezen welke managementcontext nu als eerste een begrensde check verdient.'
   }
 
   return topFactor
-    ? `Gebruik ${topFactor.toLowerCase()} en het werksignaal om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
-    : 'Gebruik het werksignaal en de topfactoren om het eerstvolgende verbetergesprek te richten.'
+    ? `Gebruik Frictiescore als openingssignaal en ${topFactor.toLowerCase()} als eerste werkfrictiespoor om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
+    : 'Gebruik Frictiescore als openingssignaal en werkfrictie als verklarende laag om het eerstvolgende verbetergesprek te richten.'
 }
 
 export function getDisclosureDefaults({
@@ -497,7 +377,7 @@ export function buildInsightWarnings({
     items.push({
       title: 'Nog onvoldoende responses voor veilige detailweergave',
       body: `Met minder dan ${MIN_N_DISPLAY} responses blijven individuele details en scores bewust beperkt. Voeg meer responses toe voordat je conclusies trekt.`,
-      tone: 'red',
+      tone: 'amber',
     })
   } else if (hasMinDisplay && !hasEnoughData) {
     items.push({
@@ -513,14 +393,14 @@ export function buildInsightWarnings({
         scanType === 'retention'
           ? 'Lees de signalen als groepsinput'
           : scanType === 'pulse'
-            ? 'Lees Pulse als snapshot'
+            ? 'Lees Pulse als compacte groepsread'
             : scanType === 'team'
               ? 'Lees TeamScan als lokale contextlaag'
               : scanType === 'onboarding'
                 ? 'Lees onboarding als checkpoint-read'
                 : scanType === 'leadership'
-                  ? 'Lees Leadership Scan als managementcontext-read'
-            : 'Lees dit als managementinput',
+                ? 'Lees Leadership Scan als bounded support-read'
+                : 'Lees dit als managementinput',
       body:
         scanType === 'retention'
           ? 'RetentieScan blijft een groeps- en segmentinstrument. Gebruik signalen voor prioritering en verificatie, niet als individuele voorspelling.'
@@ -531,222 +411,13 @@ export function buildInsightWarnings({
               : scanType === 'onboarding'
                 ? 'Onboarding blijft een checkpoint-read op groepsniveau. Gebruik de uitkomst om vroege integratie en frictie te duiden, niet als performance-oordeel, retentievoorspelling of volledige 30-60-90-journey.'
                 : scanType === 'leadership'
-                  ? 'Leadership Scan blijft een geaggregeerde managementread op groepsniveau. Gebruik de uitkomst om managementcontext te duiden, niet om individuele leidinggevenden te beoordelen of named leaders te rangschikken.'
+                  ? 'Leadership Scan blijft een geaggregeerde bounded support-read op groepsniveau. Gebruik de uitkomst om managementcontext te duiden, niet om individuele leidinggevenden te beoordelen of named leaders te rangschikken.'
             : 'ExitScan bundelt vertrekervaringen tot managementpatronen. Gebruik deze uitkomsten om gesprekken te richten, niet om een score als sluitend bewijs te behandelen.',
-      tone: 'blue',
+      tone: 'slate',
     })
   }
 
   return items
-}
-
-export function buildResponseReadState(args: {
-  totalInvited: number
-  totalCompleted: number
-  completionRate: number
-  pendingCount: number
-  hasMinDisplay: boolean
-  hasEnoughData: boolean
-  isActive: boolean
-}): ResponseReadState {
-  if (args.totalInvited === 0) {
-    return {
-      title: 'Nog geen responsbasis',
-      body: 'Er zijn nog geen uitnodigingen verstuurd of zichtbaar. Gebruik deze laag pas als eerste responses binnenkomen.',
-      badge: 'Nog leeg',
-      badgeTone: 'amber',
-      quickLabel: 'Wacht nog',
-      caution: 'Er is nog geen leesbasis om managementduiding op te openen.',
-      nextStep: 'Zet eerst livegang en eerste responsstroom aan.',
-    }
-  }
-
-  if (args.hasEnoughData) {
-    return {
-      title: 'Respons sterk genoeg voor managementlezing',
-      body:
-        args.pendingCount > 0
-          ? `Met ${args.totalCompleted} van ${args.totalInvited} responses ligt er een stevig patroonbeeld. Er staan nog ${args.pendingCount} responses open, maar de hoofdlijn is nu leesbaar.`
-          : `Met ${args.totalCompleted} van ${args.totalInvited} responses ligt er een stevig patroonbeeld. De wave kan nu als volwaardige managementread worden gelezen.`,
-      badge: 'Stevige respons',
-      badgeTone: 'emerald',
-      quickLabel: 'Nu lezen',
-      caution:
-        args.pendingCount > 0
-          ? 'Openstaande responses kunnen nog nuance toevoegen, niet de hoofdlijn vervangen.'
-          : 'De responsbasis is nu stevig genoeg om synthese en drivers serieus te lezen.',
-      nextStep: 'Lees nu via handoff, scorelaag en daarna pas synthese en drivers.',
-    }
-  }
-
-  if (args.hasMinDisplay) {
-    return {
-      title: 'Indicatief beeld, nog geen volle patroonlaag',
-      body: args.isActive
-        ? 'Er is al genoeg respons om richting te lezen, maar nog niet genoeg om de diepere driverlaag en bredere routes volledig vrij te geven.'
-        : 'De wave is gesloten, maar blijft qua onderbouwing indicatief. Lees de uitkomst als eerste richting en houd diepe duiding beperkt.',
-      badge: 'Indicatief',
-      badgeTone: 'amber',
-      quickLabel: 'Lees voorzichtig',
-      caution: 'Gebruik dit vooral als eerste richting en niet als volledig patroonbeeld.',
-      nextStep: 'Houd de focus bovenin: handoff en score eerst, diepere drivers later.',
-    }
-  }
-
-  return {
-    title: 'Nog in opbouw',
-    body: `Met ${args.totalCompleted} van ${args.totalInvited} responses is dit nog te smal voor patroonanalyse. Gebruik voorlopig alleen de contextlaag en laat de wave eerst verder vullen.`,
-    badge: 'In opbouw',
-    badgeTone: 'amber',
-    quickLabel: 'Nog te vroeg',
-    caution: 'De huidige basis is nog te smal voor een betrouwbare patroonread.',
-    nextStep: 'Bouw eerst respons op voordat je score, synthese of drivers zwaar laat meewegen.',
-  }
-}
-
-export function buildScoreInterpretationGuide(scanType: ScanType): ScoreInterpretationGuide {
-  switch (scanType) {
-    case 'exit':
-      return {
-        intro:
-          'Lees deze laag als interpretatiehulp: eerst de frictiescoreband, daarna de verdeling van het vertrekbeeld en pas daarna de bestuurlijke synthese.',
-        steps: [
-          {
-            title: 'Lees eerst de Frictiescore',
-            body: 'De score geeft de hoofdrichting van het vertrekbeeld op groepsniveau.',
-          },
-          {
-            title: 'Lees daarna de Verdeling',
-            body: 'Kijk hoe breed en hoe scherp het vertrekbeeld in de groep terugkomt voordat je gaat verklaren.',
-          },
-          {
-            title: 'Ga dan pas naar synthese en drivers',
-            body: 'Gebruik factoren en managementsynthese pas nadat de scorelaag bestuurlijk is geland.',
-          },
-        ],
-      }
-    case 'retention':
-      return {
-        intro:
-          'Lees deze laag eerst als groepssignaal: waar staat behoud onder druk, hoe breed komt dat terug en welke verdieping hoort daar pas daarna achteraan.',
-        steps: [
-          {
-            title: 'Lees eerst het Retentiesignaal',
-            body: 'Het signaal geeft de hoofdrichting van behoudsdruk op groepsniveau.',
-          },
-          {
-            title: 'Lees daarna de Signaalverdeling',
-            body: 'Kijk hoe breed het beeld terugkomt voordat je factoren of segmenten zwaarder laat wegen.',
-          },
-          {
-            title: 'Ga dan pas naar synthese en drivers',
-            body: 'Open daarna pas factoren, open signalen en actie om de eerste route te kiezen.',
-          },
-        ],
-      }
-    default:
-      return {
-        intro:
-          'Lees deze laag eerst als interpretatiehulp: score of signaal geeft richting, verdeling geeft context en daarna pas volgt verdieping.',
-        steps: [
-          {
-            title: 'Lees eerst het hoofdsignaal',
-            body: 'Gebruik de score of signaalwaarde als eerste leesrichting op groepsniveau.',
-          },
-          {
-            title: 'Lees daarna de verdeling',
-            body: 'Kijk hoe breed het beeld terugkomt voordat je verklarende lagen opent.',
-          },
-          {
-            title: 'Ga dan pas naar synthese en drivers',
-            body: 'Gebruik de verdieping daarna pas om het eerste managementspoor te kiezen.',
-          },
-        ],
-      }
-  }
-}
-
-export function buildEvidenceReadingFlow(args: {
-  showDriverDrilldown: boolean
-  showSegmentAnalysis: boolean
-}): EvidenceReadingFlow {
-  return {
-    intro: {
-      title: 'Onderbouwing als tweede leeslaag',
-      body: 'Open hier pas verder nadat handoff, scorelaag en eerste route bestuurlijk zijn geland. De volgorde blijft bewust smal: eerst de kernverdieping, daarna pas verklarende lagen en trustdetails.',
-      sequence: [
-        '1. Kernverdieping',
-        '2. SDT en factoren',
-        '3. Segmenten',
-        '4. Methodiek en accountability',
-      ],
-    },
-    primaryEntry: {
-      title: 'Kernverdieping',
-      description: 'Drivers, signalen en product-specifieke tabs blijven samen in een duidelijke eerste evidence-ingang. Zo voelt verdieping als een gerichte volgende stap, niet als een tweede dashboard.',
-      badge: 'Start hier',
-      emptyState: `De volledige onderbouwing komt vrij vanaf ${MIN_N_PATTERNS} responses.`,
-    },
-    sections: {
-      sdt: {
-        title: 'SDT basislaag',
-        description: 'Autonomie, competentie en verbondenheid blijven zichtbaar als verklarende onderlaag, niet als nieuw hoofdscherm.',
-        badge: 'SDT',
-      },
-      factors: {
-        title: 'Organisatiefactoren',
-        description: 'Volledige factorlezing voor managementduiding, nadat de topdrivers al zijn gelezen.',
-        badge: 'Factoren',
-      },
-      segments: {
-        title: 'Conditionele segmentanalyse',
-        description: args.showSegmentAnalysis
-          ? 'Alleen zichtbaar waar thresholds, deep dive en parity dit veilig toelaten.'
-          : 'Blijft bewust op de achtergrond totdat thresholds, deep dive en privacycondities tegelijk zijn gehaald.',
-        badge: args.showSegmentAnalysis ? 'Beschikbaar' : 'Verborgen tot thresholds',
-        tone: args.showSegmentAnalysis ? 'emerald' : 'amber',
-      },
-      methodology: {
-        title: 'Methodologie, privacy en technische verantwoording',
-        description: 'Leeswijzer, drempels en accountability blijven direct bereikbaar, maar bewust secundair aan de evidence-lezing.',
-        badge: 'Secondary trust layer',
-      },
-    },
-    supportPrompt: 'Klap deze verdiepingslagen alleen open als de kernlezing al staat en extra verificatie of accountability nodig wordt.',
-  }
-}
-
-export function buildActionExecutionCore(args: {
-  selectedPlaybook: ActionPlaybook | null
-  nextStep: DashboardDecisionCard
-  highlightedActionQuestion: string | null
-  followThroughCard: DashboardFollowThroughCard | null
-}): ActionExecutionCore {
-  return {
-    route: {
-      title: args.selectedPlaybook?.title ?? args.nextStep.title,
-      body: args.selectedPlaybook?.decision ?? args.nextStep.body,
-      tone: args.selectedPlaybook ? 'emerald' : args.nextStep.tone,
-    },
-    owner: {
-      title: args.selectedPlaybook?.owner ?? 'HR + lijnmanagement',
-      body: 'Beleg de eerste stap expliciet bij een trekker en leg vast wie de review terugbrengt.',
-      tone: 'blue',
-    },
-    firstStep: {
-      title: args.selectedPlaybook?.actions[0] ?? 'Kies een eerste gerichte verificatie',
-      body: args.highlightedActionQuestion ?? args.selectedPlaybook?.validate ?? args.nextStep.body,
-      tone: 'blue',
-    },
-    review: {
-      title: args.selectedPlaybook?.review ?? args.followThroughCard?.title ?? 'Plan een eerste review',
-      body:
-        args.followThroughCard?.body ??
-        'Leg direct vast wanneer deze eerste route opnieuw gelezen en eventueel begrensd bijgesteld wordt.',
-      tone: args.followThroughCard?.tone ?? 'amber',
-    },
-    supportPrompt: 'Alleen openklappen als de kernroute al gekozen is en extra verificatie of borging nodig wordt.',
-  }
 }
 
 export function SdtGauge({ label, score }: { label: string; score: number }) {
@@ -852,7 +523,7 @@ export function RetentionTrendSection({
     : null
   const isImproving = signalDelta !== null && signalDelta < -0.1
   const isWorsening = signalDelta !== null && signalDelta > 0.1
-  const tone = isImproving ? 'emerald' : isWorsening ? 'amber' : 'blue'
+  const tone = isImproving ? 'emerald' : isWorsening ? 'amber' : 'slate'
 
   const formattedDate = new Intl.DateTimeFormat('nl-NL', {
     day: 'numeric',
@@ -878,7 +549,7 @@ export function RetentionTrendSection({
               eyebrow={`${card.title} | vorige ${card.previousValue.toFixed(1)}/10`}
               title={`${card.currentValue.toFixed(1)}/10`}
               body={`${card.body} Delta ${card.delta > 0 ? '+' : ''}${card.delta.toFixed(1)}.`}
-              tone={card.tone}
+              tone={normalizeInformationalTone(card.tone)}
             />
           ))}
         </div>
@@ -911,7 +582,7 @@ export function PulseTrendSection({
           eyebrow="Sinds vorige Pulse"
           title="Vergelijking nog niet veilig"
           value={`${comparison.currentResponsesLength}/${comparison.previousResponsesLength}`}
-          body={`Er is wel een vorige Pulse-campaign (${previousCampaignName} van ${formattedDate}), maar een veilige deltalezing vraagt minimaal ${MIN_N_PATTERNS} responses in beide cycli. Lees de huidige Pulse daarom nog als snapshot met reviewcontext, niet als hard trendbeeld.`}
+          body={`Er is wel een vorige Pulse-campaign (${previousCampaignName} van ${formattedDate}), maar een veilige deltalezing vraagt minimaal ${MIN_N_PATTERNS} responses in beide cycli. Lees de huidige Pulse daarom nog als compacte groepsread met reviewcontext, niet als hard trendbeeld.`}
           tone="amber"
         />
       </div>
@@ -927,7 +598,7 @@ export function PulseTrendSection({
       ? 'emerald'
       : comparison.direction === 'worsened'
         ? 'amber'
-        : 'blue'
+        : 'slate'
 
   return (
     <div className="space-y-4">
@@ -953,21 +624,21 @@ export function PulseTrendSection({
               eyebrow={`${card.title} | vorige ${card.previousValue.toFixed(1)}/10`}
               title={`${card.currentValue.toFixed(1)}/10`}
               body={`${card.body} Delta ${card.delta > 0 ? '+' : ''}${card.delta.toFixed(1)}.`}
-              tone={card.tone}
+              tone={normalizeInformationalTone(card.tone)}
             />
           ))}
         </div>
       ) : null}
 
       {comparison.sharedFactorCount === 0 ? (
-        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
           <p className="font-semibold">Factorvergelijking nu nog begrensd</p>
           <p className="mt-1 leading-6">
             Deze twee Pulse-cycli delen geen volledig vergelijkbare actieve werkfactoren. Lees daarom vooral het totale pulssignaal en de richtingsvraag, en gebruik factoruitleg per cycle afzonderlijk.
           </p>
         </div>
       ) : comparison.sharedFactorCount === 1 ? (
-        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900">
           <p className="font-semibold">Beperkte factoroverlap</p>
           <p className="mt-1 leading-6">
             Er is maar één volledig gedeelde werkfactor tussen beide Pulse-cycli. Lees de factorvergelijking daarom voorzichtig en gebruik hem vooral als reviewhaak.
@@ -1551,7 +1222,7 @@ export function ActionPlaybookList({
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <CardColumn title="Eerste besluit" tone="blue">
+            <CardColumn title="Eerste besluit" tone="slate">
               <p className="text-sm leading-6 text-slate-700">{item.playbook?.decision}</p>
             </CardColumn>
             <CardColumn title="Eerste eigenaar" tone="slate">
@@ -1560,10 +1231,10 @@ export function ActionPlaybookList({
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <CardColumn title="Eerst valideren" tone="blue">
+            <CardColumn title="Eerst valideren" tone="slate">
               <p className="text-sm leading-6 text-slate-700">{item.playbook?.validate}</p>
             </CardColumn>
-            <CardColumn title="Logische acties" tone="emerald">
+            <CardColumn title="Logische acties" tone="slate">
               <ul className="space-y-2">
                 {item.playbook?.actions.map((action) => (
                   <li key={action} className="flex gap-2 text-sm leading-6 text-slate-700">
@@ -1627,7 +1298,7 @@ export function SegmentPlaybookList({ segments }: { segments: SegmentPlaybookEnt
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <CardColumn title="Eerste besluit" tone="blue">
+            <CardColumn title="Eerste besluit" tone="slate">
               <p className="text-sm leading-6 text-slate-700">{segment.decision}</p>
             </CardColumn>
             <CardColumn title="Eerste eigenaar" tone="slate">
@@ -1636,10 +1307,10 @@ export function SegmentPlaybookList({ segments }: { segments: SegmentPlaybookEnt
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <CardColumn title="Eerst valideren" tone="blue">
+            <CardColumn title="Eerst valideren" tone="slate">
               <p className="text-sm leading-6 text-slate-700">{segment.validate}</p>
             </CardColumn>
-            <CardColumn title="Logische acties" tone="emerald">
+            <CardColumn title="Logische acties" tone="slate">
               <ul className="space-y-2">
                 {segment.actions.map((action) => (
                   <li key={action} className="flex gap-2 text-sm leading-6 text-slate-700">
@@ -1669,21 +1340,17 @@ function CardColumn({
   children: ReactNode
 }) {
   const classes =
-    tone === 'slate'
-      ? 'border-slate-200 bg-slate-50'
-      : tone === 'emerald'
-        ? 'border-emerald-100 bg-emerald-50'
-        : tone === 'amber'
-          ? 'border-amber-100 bg-amber-50'
-          : 'border-blue-100 bg-blue-50'
+    tone === 'emerald'
+      ? 'border-emerald-100 bg-emerald-50'
+      : tone === 'amber'
+        ? 'border-amber-100 bg-amber-50'
+        : 'border-slate-200 bg-slate-50'
   const labelClass =
-    tone === 'slate'
-      ? 'text-slate-600'
-      : tone === 'emerald'
-        ? 'text-emerald-700'
-        : tone === 'amber'
-          ? 'text-amber-700'
-          : 'text-blue-700'
+    tone === 'emerald'
+      ? 'text-emerald-700'
+      : tone === 'amber'
+        ? 'text-amber-700'
+        : 'text-slate-600'
 
   return (
     <div className={`rounded-2xl border p-4 ${classes}`}>

@@ -13,7 +13,7 @@ export function InviteClientUserForm({ orgs }: Props) {
   const [orgId, setOrgId] = useState(orgs[0]?.id ?? '')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState<'viewer' | 'member'>('viewer')
+  const [role, setRole] = useState<'viewer' | 'owner'>('viewer')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -59,6 +59,10 @@ export function InviteClientUserForm({ orgs }: Props) {
         De activatiemail start het account. Nieuwe gebruikers openen de link, kiezen direct een wachtwoord en gaan daarna
         verder naar het dashboard met dit e-mailadres.
       </div>
+      <div className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-3 text-xs leading-5 text-amber-900">
+        Verisight faciliteert hiermee toegang en verzending. De klant blijft verantwoordelijk voor interne communicatie,
+        reminders en voldoende respons op de campagne.
+      </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Organisatie</label>
@@ -99,14 +103,14 @@ export function InviteClientUserForm({ orgs }: Props) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-        <select value={role} onChange={e => setRole(e.target.value as 'viewer' | 'member')} className={selectCls}>
+        <select value={role} onChange={e => setRole(e.target.value as 'viewer' | 'owner')} className={selectCls}>
           <option value="viewer">Viewer - alleen dashboard en rapport</option>
-          <option value="member">Member - uitgebreidere interne rol</option>
+          <option value="owner">Klant owner - kritieke launchacties</option>
         </select>
         <p className="mt-1 text-xs text-gray-400">
           Gebruik standaard <span className="font-medium text-gray-500">Viewer</span>. Kies alleen{' '}
-          <span className="font-medium text-gray-500">Member</span> als iemand later ook schrijfrechten binnen de
-          organisatie moet krijgen.
+          <span className="font-medium text-gray-500">Klant owner</span> als iemand deelnemers mag aanleveren,
+          uitnodigingen mag starten en reminders mag bewaken.
         </p>
       </div>
 

@@ -7,6 +7,11 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { insertCampaignAuditEvent } from '@/lib/campaign-audit'
+import {
+  getCustomerActionPermission,
+  getPermissionDeniedMessage,
+} from '@/lib/customer-permissions'
 import { getOrganizationApiKey } from '@/lib/organization-secrets'
 import { getBackendApiUrl } from '@/lib/server-env'
 import { formatBackendDetail } from './reminder-feedback'
@@ -40,16 +45,38 @@ export async function resendPendingAction(campaignId: string): Promise<ResendRes
     return { sent: 0, failed: 0, skipped: 0, error: 'Campaign niet gevonden of niet toegankelijk.' }
   }
 
-  const { data: membership, error: membershipError } = await supabase
-    .from('org_members')
-    .select('role')
-    .eq('org_id', campaign.organization_id)
-    .eq('user_id', user.id)
-    .in('role', ['owner', 'member'])
-    .maybeSingle()
+  const [
+    { data: profile },
+    { data: membership, error: membershipError },
+  ] = await Promise.all([
+    supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle(),
+    supabase
+      .from('org_members')
+      .select('role')
+      .eq('org_id', campaign.organization_id)
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ])
 
-  if (membershipError || !membership) {
-    return { sent: 0, failed: 0, skipped: 0, error: 'Je hebt geen rechten om herinneringen te versturen.' }
+  const actorRole =
+    profile?.is_verisight_admin === true ? 'verisight_admin' : membership?.role ?? 'unknown'
+  const canSendReminders =
+    profile?.is_verisight_admin === true ||
+    getCustomerActionPermission(membership?.role ?? null, 'send_reminders')
+
+  if (membershipError || (!profile?.is_verisight_admin && !membership) || !canSendReminders) {
+    await insertCampaignAuditEvent({
+      supabase,
+      organizationId: campaign.organization_id,
+      campaignId,
+      actorUserId: user.id,
+      actorRole,
+      action: 'send_reminders',
+      outcome: 'blocked',
+      summary: getPermissionDeniedMessage('send_reminders'),
+    })
+
+    return { sent: 0, failed: 0, skipped: 0, error: getPermissionDeniedMessage('send_reminders') }
   }
 
   let apiKey: string
@@ -93,6 +120,22 @@ export async function resendPendingAction(campaignId: string): Promise<ResendRes
     }
 
     const result = await resp.json()
+    await insertCampaignAuditEvent({
+      supabase,
+      organizationId: campaign.organization_id,
+      campaignId,
+      actorUserId: user.id,
+      actorRole,
+      action: 'send_reminders',
+      outcome: 'completed',
+      summary: `Reminderactie uitgevoerd voor ${result.sent ?? 0} respondent(en).`,
+      metadata: {
+        sent: result.sent ?? 0,
+        failed: result.failed ?? 0,
+        skipped: result.skipped ?? 0,
+      },
+    })
+
     return {
       sent:    result.sent    ?? 0,
       failed:  result.failed  ?? 0,

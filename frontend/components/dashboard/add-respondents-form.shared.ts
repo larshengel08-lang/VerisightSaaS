@@ -33,10 +33,16 @@ export interface ImportResponse {
   valid_rows: number
   invalid_rows: number
   duplicate_existing: number
+  recognized_columns: string[]
+  ignored_columns: string[]
+  blocking_messages: string[]
   preview_rows: ImportPreviewRow[]
   errors: ImportIssue[]
   imported: number
   emails_sent: number
+  launch_blocked: boolean
+  readiness_label: string
+  recovery_hint: string
 }
 
 export function parseEmails(raw: string): string[] {

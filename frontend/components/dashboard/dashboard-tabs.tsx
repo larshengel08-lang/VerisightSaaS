@@ -17,7 +17,8 @@ export function DashboardTabs({
   defaultTabId?: string
 }) {
   const firstTab = tabs[0]?.id ?? ''
-  const [activeTab, setActiveTab] = useState(defaultTabId ?? firstTab)
+  const initialTab = defaultTabId && tabs.some((tab) => tab.id === defaultTabId) ? defaultTabId : firstTab
+  const [activeTab, setActiveTab] = useState(initialTab)
 
   if (tabs.length === 0) return null
 
@@ -31,10 +32,10 @@ export function DashboardTabs({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`rounded-full border px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--teal-light)] ${
+              className={`rounded-full border px-3 py-2 text-xs font-semibold transition-colors ${
                 active
-                  ? 'border-[color:var(--ink)] bg-[color:var(--ink)] text-[color:var(--bg)] shadow-[0_10px_24px_rgba(19,32,51,0.12)]'
-                  : 'border-[color:var(--border)] bg-white text-[color:var(--text)] hover:border-[color:var(--teal)] hover:text-[color:var(--ink)]'
+                  ? 'border-[#d6e4e8] bg-[#f3f8f8] text-[#234B57]'
+                  : 'border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text)] hover:border-[#d6e4e8] hover:text-[color:var(--ink)]'
               }`}
             >
               {tab.label}

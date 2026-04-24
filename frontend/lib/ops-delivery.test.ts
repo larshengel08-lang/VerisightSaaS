@@ -1,14 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildDeliveryAutoSignals,
+  buildDeliveryDisciplineWarnings,
   buildDeliveryGovernanceSnapshot,
   buildDeliveryOpsSummary,
+  getDeliveryOperatingGuide,
   validateDeliveryCheckpointUpdate,
   validateDeliveryLifecycleTransition,
   type CampaignDeliveryCheckpoint,
   type CampaignDeliveryRecord,
   type DeliveryCheckpointKey,
 } from '@/lib/ops-delivery'
+import {
+  createDefaultParticipantCommunicationConfig,
+  createDefaultReminderConfig,
+} from '@/lib/launch-controls'
 
 function createCheckpoint(
   checkpointKey: DeliveryCheckpointKey,
@@ -41,6 +47,10 @@ function createRecord(overrides: Partial<CampaignDeliveryRecord> = {}): Campaign
     next_step: 'Confirm launch discipline',
     operator_notes: null,
     customer_handoff_note: null,
+    launch_date: '2026-04-18',
+    launch_confirmed_at: '2026-04-18T08:00:00Z',
+    participant_comms_config: createDefaultParticipantCommunicationConfig(),
+    reminder_config: createDefaultReminderConfig(),
     first_management_use_confirmed_at: null,
     follow_up_decided_at: null,
     learning_closed_at: null,
@@ -63,6 +73,7 @@ describe('delivery ops governance helpers', () => {
       hasEnoughData: false,
       activeClientAccessCount: 0,
       pendingClientInviteCount: 0,
+      importReady: false,
     })
 
     const checkpoints = [
@@ -84,6 +95,41 @@ describe('delivery ops governance helpers', () => {
     expect(snapshot.inviteBlockers.join(' ')).toContain('Invite readiness')
   })
 
+  it('treats missing launch controls as launch blockers even when invite readiness itself is green', () => {
+    const autoSignals = buildDeliveryAutoSignals({
+      scanType: 'retention',
+      linkedLeadPresent: true,
+      totalInvited: 12,
+      totalCompleted: 0,
+      invitesNotSent: 12,
+      incompleteScores: 0,
+      hasMinDisplay: false,
+      hasEnoughData: false,
+      activeClientAccessCount: 0,
+      pendingClientInviteCount: 0,
+    })
+
+    const snapshot = buildDeliveryGovernanceSnapshot({
+      scanType: 'retention',
+      record: createRecord({
+        launch_date: null,
+        participant_comms_config: createDefaultParticipantCommunicationConfig(),
+        reminder_config: createDefaultReminderConfig(),
+        launch_confirmed_at: null,
+      }),
+      checkpoints: [
+        createCheckpoint('implementation_intake'),
+        createCheckpoint('import_qa'),
+        createCheckpoint('invite_readiness'),
+      ],
+      autoSignals,
+    })
+
+    expect(snapshot.launchReady).toBe(false)
+    expect(snapshot.inviteBlockers.join(' ')).toContain('startdatum')
+    expect(snapshot.inviteBlockers.join(' ')).toContain('launchbevestiging')
+  })
+
   it('blocks forward lifecycle moves while launch blockers remain open', () => {
     const autoSignals = buildDeliveryAutoSignals({
       scanType: 'retention',
@@ -96,6 +142,7 @@ describe('delivery ops governance helpers', () => {
       hasEnoughData: false,
       activeClientAccessCount: 0,
       pendingClientInviteCount: 0,
+      importReady: false,
     })
 
     const transition = validateDeliveryLifecycleTransition({
@@ -153,6 +200,7 @@ describe('delivery ops governance helpers', () => {
       hasEnoughData: true,
       activeClientAccessCount: 1,
       pendingClientInviteCount: 0,
+      importReady: true,
     })
 
     const checkpoints: CampaignDeliveryCheckpoint[] = [
@@ -199,6 +247,7 @@ describe('delivery ops governance helpers', () => {
       hasEnoughData: true,
       activeClientAccessCount: 1,
       pendingClientInviteCount: 0,
+      importReady: true,
     })
 
     const checkpoints: CampaignDeliveryCheckpoint[] = [
@@ -227,5 +276,74 @@ describe('delivery ops governance helpers', () => {
     expect(transition.allowed).toBe(false)
     expect(transition.blockers.join(' ')).toContain('Follow-up')
     expect(transition.blockers.join(' ')).toContain('Learning closure')
+  })
+
+  it('flags missing operator discipline when lifecycle advances without owner, handoff or dated follow-up', () => {
+    const warnings = buildDeliveryDisciplineWarnings({
+      record: createRecord({
+        lifecycle_stage: 'follow_up_decided',
+        operator_owner: '',
+        next_step: '',
+        customer_handoff_note: '',
+        follow_up_decided_at: null,
+      }),
+      linkedLeadPresent: false,
+      invitesNotSent: 0,
+      pendingClientInviteCount: 0,
+      incompleteScores: 0,
+      activeClientAccessCount: 1,
+      totalCompleted: 8,
+      hasEnoughData: false,
+      governanceBlockers: [],
+      linkedLearningDossierCount: 1,
+      learningCloseoutEvidenceCount: 0,
+    })
+
+    expect(warnings.join(' ')).toContain('sales-to-delivery handoff')
+    expect(warnings.join(' ')).toContain('delivery-owner')
+    expect(warnings.join(' ')).toContain('klant-handoff')
+    expect(warnings.join(' ')).toContain('follow-upbeslissing')
+  })
+
+  it('returns bounded operating guidance for non-core routes', () => {
+    const onboardingGuide = getDeliveryOperatingGuide('onboarding')
+    const leadershipGuide = getDeliveryOperatingGuide('leadership')
+
+    expect(onboardingGuide.followUpOutcomes.map((item) => item.detail).join(' ')).toContain('geen journey-suite')
+    expect(leadershipGuide.followUpOutcomes.map((item) => item.detail).join(' ')).toContain('named-leader')
+    expect(leadershipGuide.weeklyReviewRules).toHaveLength(3)
+  })
+
+  it('keeps import qa hard-blocked until a validated dataset has been imported', () => {
+    const blockedSignals = buildDeliveryAutoSignals({
+      scanType: 'retention',
+      linkedLeadPresent: true,
+      totalInvited: 8,
+      totalCompleted: 0,
+      invitesNotSent: 8,
+      incompleteScores: 0,
+      hasMinDisplay: false,
+      hasEnoughData: false,
+      activeClientAccessCount: 0,
+      pendingClientInviteCount: 0,
+      importReady: false,
+    })
+    const readySignals = buildDeliveryAutoSignals({
+      scanType: 'retention',
+      linkedLeadPresent: true,
+      totalInvited: 8,
+      totalCompleted: 0,
+      invitesNotSent: 8,
+      incompleteScores: 0,
+      hasMinDisplay: false,
+      hasEnoughData: false,
+      activeClientAccessCount: 0,
+      pendingClientInviteCount: 0,
+      importReady: true,
+    })
+
+    expect(blockedSignals.import_qa.autoState).toBe('not_ready')
+    expect(blockedSignals.import_qa.summary.toLowerCase()).toContain('deelnemersbestand')
+    expect(readySignals.import_qa.autoState).toBe('ready')
   })
 })

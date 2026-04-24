@@ -5,9 +5,9 @@ export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
 export type CampaignAddOn = 'segment_deep_dive'
 export type DeliveryMode = 'baseline' | 'live'
 // Access roles only. These are not billable seats or plan licenses.
-// owner  = Verisight-beheerder (volledige toegang)
-// member = intern Verisight (zelfde rechten als owner)
-// viewer = HR-klant (alleen lezen: dashboard + PDF)
+// owner  = klant owner voor launchkritieke klantuitvoering
+// member = interne / ondersteunende rol binnen assisted uitvoering
+// viewer = read-first klantrol voor dashboard en rapport
 export type MemberRole = 'owner' | 'member' | 'viewer'
 export type Preventability = 'STERK_WERKSIGNAAL' | 'GEMENGD_WERKSIGNAAL' | 'BEPERKT_WERKSIGNAAL'
 export const SCAN_TYPE_LABELS: Record<ScanType, string> = {
@@ -65,6 +65,7 @@ export interface Respondent {
   id: string
   campaign_id: string
   token: string
+  email: string | null
   department: string | null
   role_level: string | null
   exit_month: string | null
@@ -108,7 +109,7 @@ export interface OrgInvite {
   org_id: string
   email: string
   full_name: string | null
-  role: 'viewer' | 'member'
+  role: MemberRole
   invited_by: string | null
   invited_at: string
   accepted_at: string | null

@@ -9,10 +9,17 @@ interface CampaignActionsProps {
   campaignId: string
   isActive: boolean
   pendingCount: number
-  canManageCampaign: boolean
+  canResendInvites: boolean
+  canArchiveCampaign: boolean
 }
 
-export function CampaignActions({ campaignId, isActive, pendingCount, canManageCampaign }: CampaignActionsProps) {
+export function CampaignActions({
+  campaignId,
+  isActive,
+  pendingCount,
+  canResendInvites,
+  canArchiveCampaign,
+}: CampaignActionsProps) {
   const [loading, setLoading] = useState<'archive' | 'resend' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -71,12 +78,12 @@ export function CampaignActions({ campaignId, isActive, pendingCount, canManageC
     }
   }
 
-  if (!isActive || !canManageCampaign) return null
+  if (!isActive || (!canResendInvites && !canArchiveCampaign)) return null
 
   return (
     <div className="flex flex-col items-start gap-2 sm:items-end">
       <div className="flex flex-wrap gap-2">
-        {pendingCount > 0 ? (
+        {canResendInvites && pendingCount > 0 ? (
           <button
             onClick={handleResend}
             disabled={loading !== null}
@@ -86,13 +93,15 @@ export function CampaignActions({ campaignId, isActive, pendingCount, canManageC
             {loading === 'resend' ? 'Versturen...' : `Herinnering (${pendingCount})`}
           </button>
         ) : null}
-        <button
-          onClick={handleArchive}
-          disabled={loading !== null}
-          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700 disabled:opacity-50"
-        >
-          {loading === 'archive' ? 'Archiveren...' : 'Archiveer campaign'}
-        </button>
+        {canArchiveCampaign ? (
+          <button
+            onClick={handleArchive}
+            disabled={loading !== null}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 transition-colors hover:border-amber-200 hover:bg-amber-50 hover:text-amber-700 disabled:opacity-50"
+          >
+            {loading === 'archive' ? 'Archiveren...' : 'Archiveer campaign'}
+          </button>
+        ) : null}
       </div>
 
       {toast ? (
