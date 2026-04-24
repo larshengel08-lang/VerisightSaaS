@@ -33,15 +33,16 @@ describe('Pulse buyer-facing shell', () => {
       'utf8',
     )
 
-    expect(campaignPageSource).toContain('compacte managementread')
     expect(campaignPageSource).toContain('Reviewcontext')
+    expect(campaignPageSource).toContain('Reviewlaag · bounded repeat motion')
     expect(campaignPageSource).toContain('Pulse groepsread en bounded vergelijking')
     expect(campaignPageSource).not.toContain('Deze laag vertaalt Pulse naar een bestuurlijk leesbare momentopname')
     expect(campaignPageSource).not.toContain('Snapshotcontext')
     expect(campaignPageSource).not.toContain('Pulse snapshot en reviewdelta')
 
+    expect(campaignHelpersSource).toContain('compacte managementread')
     expect(campaignHelpersSource).toContain('Lees Pulse als compacte groepsread')
-    expect(campaignHelpersSource).toContain('compacte groepsread met reviewcontext')
+    expect(campaignHelpersSource).toContain('bounded reviewlaag')
     expect(campaignHelpersSource).not.toContain('Lees Pulse als snapshot')
     expect(campaignHelpersSource).not.toContain('snapshot met reviewcontext')
 
