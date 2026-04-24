@@ -13,7 +13,7 @@ describe('campaign detail review guardrails', () => {
     expect(source).toContain('activationState.heroActionLabel')
     expect(source).toContain('showManagementOutput &&')
     expect(source).toContain('showDeeperInsights')
-    expect(source).toContain('Verdieping nog dicht')
+    expect(source).toContain('Compacte read zichtbaar, aanbevelingen nog begrensd')
     expect(source).toContain('Begeleide uitvoering')
     expect(source).toContain("createAdminClient()")
     expect(source).toContain(".eq('checkpoint_key', 'import_qa')")

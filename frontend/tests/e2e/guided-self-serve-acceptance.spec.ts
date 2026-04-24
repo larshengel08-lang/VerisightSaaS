@@ -106,8 +106,10 @@ test.describe.serial('guided self-serve acceptance', () => {
       timeout: 15000,
     })
     await expect(page.getByRole('button', { name: /pdf-rapport/i }).first()).toBeVisible()
-    await expect(page.getByText(/vertrekduiding en managementgesprek/i)).toBeVisible({ timeout: 15000 })
-    await expect(page.getByText(/verdiepende analyse wordt zichtbaar vanaf 10 ingevulde responses/i)).toBeVisible({
+    await expect(page.getByText(/compacte read zichtbaar, aanbevelingen nog begrensd/i).first()).toBeVisible({
+      timeout: 15000,
+    })
+    await expect(page.getByText(/nog 5 responses tot eerste patroonduiding/i).first()).toBeVisible({
       timeout: 15000,
     })
 

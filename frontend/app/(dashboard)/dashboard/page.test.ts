@@ -28,7 +28,7 @@ describe('dashboard home review guardrails', () => {
     expect(pageSource).toContain('First-next-step')
     expect(pageSource).toContain('Mogelijke vervolgroutes')
     expect(pageSource).toContain('!showFirstNextStep')
-    expect(pageSource).toContain("if (campaign.total_completed < 5) return 'building'")
+    expect(pageSource).toContain('campaign.total_completed >= FIRST_INSIGHT_THRESHOLD')
 
     expect(launchControlSource).toContain('Product')
     expect(launchControlSource).toContain('Verisight doet nu')

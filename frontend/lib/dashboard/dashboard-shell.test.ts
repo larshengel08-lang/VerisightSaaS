@@ -14,8 +14,8 @@ describe('dashboard shell config', () => {
     expect(config.accountLabel).toBe('Klantdashboard')
     expect(config.bannerText).toContain('2 organisatie')
     expect(config.navigation[0]?.label).toBe('Cockpit')
-    expect(config.currentLabel).toBe('Campaign detail')
-    expect(config.modeLabel).toContain('buyer view')
+    expect(config.currentLabel).toBe('Campagnedetail')
+    expect(config.modeLabel).toContain('Klantweergave')
   })
 
   it('keeps admin mode in the same family but deliberately soberer', () => {
@@ -30,7 +30,7 @@ describe('dashboard shell config', () => {
     expect(config.accountLabel).toBe('Verisight beheer')
     expect(config.bannerText).toBeNull()
     expect(config.navigation.some((item) => item.href === '/beheer/klantlearnings')).toBe(true)
-    expect(config.currentLabel).toBe('Lead context')
-    expect(config.modeLabel).toContain('admin view')
+    expect(config.currentLabel).toBe('Leadcontext')
+    expect(config.modeLabel).toContain('Beheerweergave')
   })
 })

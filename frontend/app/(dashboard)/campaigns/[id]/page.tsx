@@ -26,7 +26,7 @@ import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
-import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
+import { deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import {
   getCampaignCompositionState,
   isManagementVisibleState,
@@ -449,18 +449,6 @@ export default async function CampaignPage({ params }: Props) {
     incompleteScores,
     hasMinDisplay,
     hasEnoughData,
-  })
-  const guidedSelfServeState = buildGuidedSelfServeState({
-    isActive: stats.is_active,
-    totalInvited: stats.total_invited,
-    totalCompleted: stats.total_completed,
-    invitesNotSent,
-    hasMinDisplay,
-    hasEnoughData,
-    importQaConfirmed: guidedSetupDiscipline.importQaConfirmed,
-    launchTimingConfirmed: guidedSetupDiscipline.launchTimingConfirmed,
-    communicationReady: guidedSetupDiscipline.communicationReady,
-    importReady,
   })
   const activationState = buildResponseActivationState(stats.total_completed)
   const showClientExecutionFlow = !isVerisightAdmin && compositionState !== 'closed'
