@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-describe('dashboard home guided execution shell', () => {
-  it('keeps the customer landing focused on guided execution before dashboard activation', () => {
+describe('dashboard home review guardrails', () => {
+  it('keeps the home route state-aware and guided before management output takes over', () => {
     const pageSource = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
     const launchControlSource = readFileSync(
       new URL('../../../components/dashboard/customer-launch-control.tsx', import.meta.url),
@@ -38,5 +38,18 @@ describe('dashboard home guided execution shell', () => {
     expect(launchControlSource).toContain('Waar je staat')
     expect(launchControlSource).toContain('Dashboard actief')
     expect(stateSource).toContain('Eerste vervolgstap beschikbaar')
+  })
+
+  it('keeps cockpit colors semantically disciplined', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('<DashboardChip label="Operations cockpit" tone="slate" />')
+    expect(source).toContain('<DashboardChip label="Klantdashboard" tone="slate" />')
+    expect(source).toContain('tone={getHomeStateMeta(group.key).tone}')
+    expect(source).toContain("tone: 'emerald' as const")
+    expect(source).toContain("label: 'Management ready'")
+    expect(source).toContain('label={primaryGuideStateMeta?.label ?? primaryExecutionState.currentStateLabel}')
+    expect(source).toContain("tone={primaryGuideStateMeta?.tone ?? (primaryExecutionState.dashboardVisible ? 'emerald' : 'amber')}")
+    expect(source).toContain('<DashboardChip label={primaryFirstNextStepScanDefinition.productName} tone="slate" />')
   })
 })
