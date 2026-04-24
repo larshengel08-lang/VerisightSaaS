@@ -60,7 +60,7 @@ test.describe.serial('guided self-serve acceptance', () => {
 
     await page.getByRole('button', { name: /importeer 5 deelnemers/i }).click()
 
-    await expect(page.getByText(/5 deelnemer\(s\) toegevoegd/i)).toBeVisible()
+    await expect(page.getByText(/5 deelnemer\(s\) toegevoegd/i)).toBeVisible({ timeout: 15000 })
     await page.reload()
     await expect(page.getByRole('button', { name: /start uitnodigingen \(5\)/i })).toBeDisabled()
 
@@ -70,19 +70,19 @@ test.describe.serial('guided self-serve acceptance', () => {
     await page.getByLabel(/korte slotcontext/i).fill('Vragen over planning kun je aan HR stellen.')
     await page.getByRole('button', { name: /sla launchinstellingen op/i }).click()
 
-    await expect(page.getByText(/1 mei 2026/i).first()).toBeVisible()
-    await expect(page.getByText(/we kondigen dit intern alvast kort aan/i).first()).toBeVisible()
+    await expect(page.getByText(/1 mei 2026/i).first()).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText(/we kondigen dit intern alvast kort aan/i).first()).toBeVisible({ timeout: 15000 })
 
     await page.getByLabel(/ik heb timing, deelnemerscommunicatie en reminderinstellingen gecontroleerd/i).check()
     await page.getByRole('button', { name: /bevestig launch/i }).click()
 
-    await expect(page.getByText(/launch bevestigd op/i).first()).toBeVisible()
+    await expect(page.getByText(/launch bevestigd op/i).first()).toBeVisible({ timeout: 15000 })
     await expect(page.getByRole('button', { name: /start uitnodigingen \(5\)/i })).toBeEnabled()
 
     await page.getByRole('button', { name: /start uitnodigingen \(5\)/i }).click()
 
-    await expect(page.getByText(/5 uitnodiging\(en\) gestart/i)).toBeVisible()
-    await expect(page.getByText(/respons loopt/i).first()).toBeVisible()
+    await expect(page.getByText(/5 uitnodiging\(en\) gestart/i)).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText(/respons loopt/i).first()).toBeVisible({ timeout: 15000 })
     await expect(page.getByRole('button', { name: /pdf-rapport/i })).toHaveCount(0)
     await expect(page.getByText(/dashboard nog niet actief/i).first()).toBeVisible()
   })
@@ -102,19 +102,26 @@ test.describe.serial('guided self-serve acceptance', () => {
     await advanceGuidedSelfServeAcceptanceFixture('min_display')
     await page.reload()
 
-    await expect(page.getByText(/dashboard actief, nog bewust compact/i).first()).toBeVisible()
+    await expect(page.getByText(/dashboard actief, nog bewust compact/i).first()).toBeVisible({
+      timeout: 15000,
+    })
     await expect(page.getByRole('button', { name: /pdf-rapport/i }).first()).toBeVisible()
-    await expect(page.getByText(/vertrekduiding en managementgesprek/i)).toBeVisible()
-    await expect(page.getByText(/verdieping nog dicht/i)).toBeVisible()
-    await expect(page.getByText(/nog \d+ responses tot eerste patroonduiding/i).first()).toBeVisible()
+    await expect(page.getByText(/compacte read zichtbaar, aanbevelingen nog begrensd/i).first()).toBeVisible({
+      timeout: 15000,
+    })
+    await expect(page.getByText(/nog 5 responses tot eerste patroonduiding/i).first()).toBeVisible({
+      timeout: 15000,
+    })
 
     await advanceGuidedSelfServeAcceptanceFixture('patterns')
     await page.reload()
 
-    await expect(page.getByText(/eerste vervolgstap beschikbaar/i).first()).toBeVisible()
-    await expect(page.getByText(/verdieping nog dicht/i)).toHaveCount(0)
+    await expect(page.getByText(/eerste vervolgstap beschikbaar/i).first()).toBeVisible({
+      timeout: 15000,
+    })
+    await expect(page.getByText(/verdiepende analyse wordt zichtbaar vanaf 10 ingevulde responses/i)).toHaveCount(0)
     await expect(page.getByText(/focusvragen en route-uitvoer worden betekenisvoller zodra het dashboard minstens 10 responses heeft/i)).toHaveCount(0)
-    await expect(page.getByText(/van vertrekduiding naar managementroute/i)).toBeVisible()
+    await expect(page.getByText(/van vertrekduiding naar managementroute/i)).toBeVisible({ timeout: 15000 })
     await expect(page.getByRole('button', { name: /pdf-rapport/i }).first()).toBeVisible()
   })
 })

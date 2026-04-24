@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-describe('dashboard home guided execution shell', () => {
-  it('keeps the customer landing focused on guided execution before dashboard activation', () => {
+describe('dashboard home review guardrails', () => {
+  it('keeps the home route state-aware and guided before management output takes over', () => {
     const pageSource = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
     const launchControlSource = readFileSync(
       new URL('../../../components/dashboard/customer-launch-control.tsx', import.meta.url),
@@ -14,6 +14,12 @@ describe('dashboard home guided execution shell', () => {
     expect(pageSource).toContain('CustomerLaunchControl')
     expect(pageSource).toContain('Open campagne en dashboard')
     expect(pageSource).toContain('Open uitvoerflow')
+    expect(pageSource).toContain('getCampaignCompositionState')
+    expect(pageSource).toContain('HOME_STATE_ORDER')
+    expect(pageSource).toContain('Deels zichtbaar')
+    expect(pageSource).toContain('Indicatief, nog dun')
+    expect(pageSource).toContain('Launch klaar')
+    expect(pageSource).toContain('Rapport eerst')
     expect(pageSource).toContain('deriveGuidedSelfServeDiscipline')
     expect(pageSource).toContain('primaryGuideInvitesNotSent')
     expect(pageSource).toContain('getPrimaryGuideCampaign')
@@ -22,7 +28,7 @@ describe('dashboard home guided execution shell', () => {
     expect(pageSource).toContain('First-next-step')
     expect(pageSource).toContain('Mogelijke vervolgroutes')
     expect(pageSource).toContain('!showFirstNextStep')
-    expect(pageSource).toContain("if (campaign.total_completed < 5) return 'building'")
+    expect(pageSource).toContain('campaign.total_completed >= FIRST_INSIGHT_THRESHOLD')
 
     expect(launchControlSource).toContain('Product')
     expect(launchControlSource).toContain('Verisight doet nu')
@@ -32,5 +38,18 @@ describe('dashboard home guided execution shell', () => {
     expect(launchControlSource).toContain('Waar je staat')
     expect(launchControlSource).toContain('Dashboard actief')
     expect(stateSource).toContain('Eerste vervolgstap beschikbaar')
+  })
+
+  it('keeps cockpit colors semantically disciplined', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('<DashboardChip label="Beheeroverzicht" tone="slate" />')
+    expect(source).toContain('<DashboardChip label="Klantdashboard" tone="slate" />')
+    expect(source).toContain('tone={getHomeStateMeta(group.key).tone}')
+    expect(source).toContain("tone: 'emerald' as const")
+    expect(source).toContain("label: 'Managementduiding gereed'")
+    expect(source).toContain('label={primaryGuideStateMeta?.label ?? primaryExecutionState.currentStateLabel}')
+    expect(source).toContain("tone={primaryGuideStateMeta?.tone ?? (primaryExecutionState.dashboardVisible ? 'emerald' : 'amber')}")
+    expect(source).toContain('<DashboardChip label={primaryFirstNextStepScanDefinition.productName} tone="slate" />')
   })
 })

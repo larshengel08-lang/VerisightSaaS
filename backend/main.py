@@ -1535,6 +1535,7 @@ async def import_respondents(
             if not launch_blocked
             else "Werk het deelnemersbestand bij en controleer daarna opnieuw."
         ),
+        invite_queue=[],
     )
 
     if dry_run or launch_blocked:
@@ -1548,6 +1549,11 @@ async def import_respondents(
     )
     response.imported = len(respondents)
     response.emails_sent = emails_sent
+    response.invite_queue = [
+        {"token": respondent.token, "email": respondent.email}
+        for respondent in respondents
+        if respondent.email and respondent.sent_at is None
+    ]
     return response
 
 

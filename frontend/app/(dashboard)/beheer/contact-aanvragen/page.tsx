@@ -9,6 +9,7 @@ import {
   DashboardHero,
   DashboardPanel,
   DashboardSection,
+  DashboardSummaryBar,
 } from '@/components/dashboard/dashboard-primitives'
 
 export default async function ContactAanvragenPage() {
@@ -82,14 +83,16 @@ export default async function ContactAanvragenPage() {
   return (
     <div className="space-y-6">
       <DashboardHero
-        eyebrow="Interne leadlijst"
-        title="Contactaanvragen"
-        description="Bekijk nieuwe website-aanvragen direct in de UI, inclusief routecontext, gewenste timing en afleverstatus van de notificatiemail. Gebruik vanaf hier ook meteen de learning-workbench, zodat vroege buyer-signalen niet in losse opvolgnotities verdwijnen."
-        tone="blue"
+        surface="ops"
+        eyebrow="Adminroute voor website-aanvragen"
+        title="Operationele leadtriage"
+        description="Werk direct de triage, handoff en learningstatus bij voor nieuwe website-aanvragen. Deze adminroute blijft utilitair: routecontext, gewenste timing, notificatiestatus en vervolgstap staan voorop."
+        tone="slate"
         meta={
           <>
-            <DashboardChip label={`${rows.length} recente aanvragen`} tone="blue" />
+            <DashboardChip surface="ops" label={`${rows.length} recente aanvragen`} tone="slate" />
             <DashboardChip
+              surface="ops"
               label={
                 pendingCount === 0
                   ? 'Geen open mailissues'
@@ -103,19 +106,19 @@ export default async function ContactAanvragenPage() {
           <>
             <Link
               href="/beheer"
-              className="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
+              className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
             >
               Terug naar setup
             </Link>
             <Link
               href="/beheer/contact-aanvragen"
-              className="inline-flex items-center rounded-2xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+              className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
             >
               Vernieuwen
             </Link>
             <Link
               href="/beheer/klantlearnings"
-              className="inline-flex items-center rounded-2xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+              className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
             >
               Open learning-workbench
             </Link>
@@ -123,50 +126,86 @@ export default async function ContactAanvragenPage() {
         }
         aside={
           <div className="space-y-3 text-sm text-slate-700">
-            <p className="font-semibold text-slate-950">Wat je hier ziet</p>
+            <p className="font-semibold text-slate-950">Wat je hier bijwerkt</p>
             <p>
-              Elke lead wordt opgeslagen, ook als Resend of de notificatieroute vastloopt. Let vooral op
-              <span className="font-semibold"> route</span>, <span className="font-semibold"> timing</span>,
-              <span className="font-semibold"> notificatie</span> en{' '}
-              <span className="font-semibold">foutreden</span>.
+              Let vooral op <span className="font-semibold">route</span>, <span className="font-semibold">timing</span>,
+              <span className="font-semibold"> notificatie</span>, <span className="font-semibold">handoff</span> en
+              <span className="font-semibold"> foutreden</span>.
             </p>
             <p className="text-xs text-slate-500">
-              Gebruik de actieknop per rij om buyer-vraag, trustfrictie en eerste hypothese meteen in het learningdossier te trekken.
+              Geen buyer-facing dashboardframing hier; gebruik per rij de actieknop om buyer-vraag, trustfrictie en eerste hypothese meteen in het learningdossier te zetten.
             </p>
           </div>
         }
       />
 
+      <DashboardSummaryBar
+        surface="ops"
+        items={[
+          {
+            label: 'Aanvragen',
+            value: `${rows.length} zichtbaar`,
+            tone: rows.length > 0 ? 'slate' : 'amber',
+          },
+          {
+            label: 'Mailissues',
+            value:
+              pendingCount === 0
+                ? 'Geen open issues'
+                : `${pendingCount} zonder notificatie`,
+            tone: pendingCount === 0 ? 'emerald' : 'amber',
+          },
+          {
+            label: 'Handoff',
+            value: `${Object.keys(linkedCampaignsByLead).length} lead${Object.keys(linkedCampaignsByLead).length === 1 ? '' : 's'} gekoppeld`,
+            tone: Object.keys(linkedCampaignsByLead).length > 0 ? 'slate' : 'slate',
+          },
+        ]}
+        anchors={[
+          { id: 'issues', label: 'Issues' },
+          { id: 'leadlijst', label: 'Leadlijst' },
+        ]}
+      />
+
       {configError ? (
         <DashboardSection
+          id="issues"
+          surface="ops"
           eyebrow="Config"
-          title="Interne leadlijst niet beschikbaar"
-          description="De pagina is wel bereikbaar, maar de backend kan de aanvragen nog niet server-side ophalen."
+          title="Leadinput niet beschikbaar"
+          description="De adminroute is bereikbaar, maar de backend kan de aanvragen nog niet server-side ophalen."
         >
-          <DashboardPanel title="Ontbrekende configuratie" body={configError} tone="amber" />
+          <DashboardPanel surface="ops" title="Ontbrekende configuratie" body={configError} tone="amber" />
         </DashboardSection>
       ) : null}
 
       {loadError ? (
         <DashboardSection
+          id={configError ? undefined : 'issues'}
+          surface="ops"
           eyebrow="Load"
           title="Aanvragen konden niet worden geladen"
-          description="De pagina werkt, maar de backendrespons was niet bruikbaar."
+          description="De adminroute werkt, maar de backendrespons was niet bruikbaar voor operationele triage."
         >
-          <DashboardPanel title="Backendfout" body={loadError} tone="amber" />
+          <DashboardPanel surface="ops" title="Backendfout" body={loadError} tone="amber" />
         </DashboardSection>
       ) : null}
 
       <DashboardSection
-        eyebrow="Leads"
-        title="Recente contactaanvragen"
-        description="Nieuwe records staan bovenaan. Routecontext en timing helpen om de eerste opvolging meteen productspecifiek te doen, leadtriage expliciet vast te leggen en de handoff naar delivery of learning niet in losse notities te laten verdwijnen."
-        aside={<DashboardChip label="Maximaal 50 recente leads" tone="slate" />}
+        id="leadlijst"
+        surface="ops"
+        eyebrow="Leadlijst"
+        title="Leadtriage en handoff"
+        description="Nieuwe records staan bovenaan. Routecontext, timing en notificatiestatus helpen om de eerste opvolging compact vast te leggen en door te zetten naar delivery of learning."
+        aside={<DashboardChip surface="ops" label="Maximaal 50 recente leads" tone="slate" />}
       >
         {rows.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
-            Er zijn nog geen contactaanvragen zichtbaar, of de lijst kon nog niet worden opgehaald.
-          </div>
+          <DashboardPanel
+            surface="ops"
+            title="Geen contactaanvragen in beeld"
+            body="Er zijn nog geen records zichtbaar, of de lijst kon nog niet worden opgehaald. Zodra nieuwe website-aanvragen binnenkomen verschijnen ze hier direct voor triage."
+            tone="slate"
+          />
         ) : (
           <LeadOpsTable rows={rows} linkedCampaignsByLead={linkedCampaignsByLead} />
         )}
