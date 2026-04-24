@@ -18,10 +18,10 @@ describe('dashboard home review guardrails', () => {
   it('keeps cockpit colors semantically disciplined', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('<DashboardChip label="Operations cockpit" tone="slate" />')
+    expect(source).toContain('<DashboardChip label="Beheeroverzicht" tone="slate" />')
     expect(source).toContain('<DashboardChip label="Klantdashboard" tone="slate" />')
     expect(source).toContain('tone={getHomeStateMeta(group.key).tone}')
     expect(source).toContain("tone: 'emerald' as const")
-    expect(source).toContain("label: 'Management ready'")
+    expect(source).toContain("label: 'Managementduiding gereed'")
   })
 })

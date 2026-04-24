@@ -12,7 +12,7 @@ describe('campaign detail review guardrails', () => {
     expect(source).toContain("compositionState === 'full'")
     expect(source).toContain("compositionState === 'closed'")
     expect(source).toContain('Aanbevelingen blijven nog begrensd')
-    expect(source).toContain('Rapport-first')
+    expect(source).toContain('Rapport eerst')
   })
 
   it('keeps module hierarchy differentiated by role, evidence order and recommendation flow', () => {

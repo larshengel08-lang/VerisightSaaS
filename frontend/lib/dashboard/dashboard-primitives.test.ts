@@ -11,7 +11,7 @@ describe('dashboard primitives', () => {
   it('renders stat cards with premium metric framing', () => {
     const markup = renderToStaticMarkup(
       React.createElement(DashboardStatCard, {
-        eyebrow: 'Management-ready',
+        eyebrow: 'Managementduiding gereed',
         title: 'Campagnes',
         value: '4',
         body: 'Campagnes met genoeg respons om verantwoord te lezen.',
@@ -20,7 +20,7 @@ describe('dashboard primitives', () => {
     )
 
     expect(markup).toContain('data-dashboard-primitive="stat-card"')
-    expect(markup).toContain('Management-ready')
+    expect(markup).toContain('Managementduiding gereed')
     expect(markup).toContain('Campagnes')
     expect(markup).toContain('4')
   })

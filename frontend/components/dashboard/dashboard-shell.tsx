@@ -190,8 +190,8 @@ export function DashboardShellFrame({
 
           <footer className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 text-xs text-[color:var(--dashboard-muted)] sm:px-6 xl:px-8">
             <div className="mx-auto flex w-full max-w-[1360px] items-center justify-between gap-3">
-              <span>Verisight dashboard family</span>
-              <span>Buyer premium, admin sober, canon bounded</span>
+              <span>Verisight-dashboardfamilie</span>
+              <span>Buyer premium, admin sober, canoniek begrensd</span>
             </div>
           </footer>
         </div>
