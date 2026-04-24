@@ -49,7 +49,7 @@ export default function LoginPage() {
           <div className="mb-5 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
             <p className="font-semibold">Begeleide klantuitvoering</p>
             <p className="mt-1 leading-6 text-blue-800">
-              Verisight heeft account, campaign en productgrenzen al voorbereid. Na login zie je direct wat nu ontbreekt,
+              Verisight heeft account, campagne en productgrenzen al voorbereid. Na login zie je direct wat nu ontbreekt,
               wanneer deelnemers kunnen worden aangeleverd, wanneer uitnodigingen veilig live mogen en wanneer het dashboard echt actief wordt.
             </p>
           </div>

@@ -33,9 +33,31 @@ describe('campaign page render truth', () => {
     )
 
     expect(source).toContain('Begeleide uitvoerflow')
-    expect(source).toContain('Dashboard wordt zichtbaar vanaf de eerste veilige responsdrempel')
+    expect(source).toContain('activationState.heroActionLabel')
     expect(source).toContain('showManagementOutput &&')
-    expect(source).toContain('Guided self-serve')
+    expect(source).toContain('showDeeperInsights')
+    expect(source).toContain('Verdieping nog dicht')
+    expect(source).toContain('Begeleide uitvoering')
+    expect(source).toContain("createAdminClient()")
+    expect(source).toContain(".eq('checkpoint_key', 'import_qa')")
     expect(guidedPanelSource).toContain('Start uitnodigingen')
+  })
+
+  it('keeps customer execution role-aware and critical actions auditable', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const guidedPanelSource = readFileSync(
+      new URL('../../../../components/dashboard/guided-self-serve-panel.tsx', import.meta.url),
+      'utf8',
+    )
+    const preflightSource = readFileSync(
+      new URL('../../../../components/dashboard/preflight-checklist.tsx', import.meta.url),
+      'utf8',
+    )
+
+    expect(source).toContain("getCustomerActionPermission(membership?.role ?? null, 'review_launch')")
+    expect(guidedPanelSource).toContain('Jouw rol en kritieke acties')
+    expect(guidedPanelSource).toContain('Alleen de klant owner kan')
+    expect(preflightSource).toContain('Recente kritieke acties')
+    expect(preflightSource).toContain('Klant owner')
   })
 })

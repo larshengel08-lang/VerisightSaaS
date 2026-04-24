@@ -47,6 +47,7 @@ def _parse_args() -> argparse.Namespace:
     run_parser.add_argument("--contact-email", default=None)
     run_parser.add_argument("--owner-email", default="lars@verisight.nl")
     run_parser.add_argument("--admin-user-id", default=None)
+    run_parser.add_argument("--owner-user-id", action="append", default=[])
     run_parser.add_argument("--member-user-id", action="append", default=[])
     run_parser.add_argument("--viewer-user-id", action="append", default=[])
     run_parser.add_argument("--db-path", default=VALIDATION_RETENTION_DEFAULT_DB)
@@ -165,6 +166,7 @@ def _run_qa_guided_self_serve_acceptance(args: argparse.Namespace) -> int:
             org_slug=args.org_slug or GUIDED_SELF_SERVE_ACCEPTANCE_ORG_SLUG,
             org_name=args.org_name or GUIDED_SELF_SERVE_ACCEPTANCE_ORG_NAME,
             contact_email=args.contact_email or GUIDED_SELF_SERVE_ACCEPTANCE_CONTACT_EMAIL,
+            owner_user_id=(args.owner_user_id[0] if args.owner_user_id else None),
             viewer_user_id=(args.viewer_user_id[0] if args.viewer_user_id else None),
         )
     finally:

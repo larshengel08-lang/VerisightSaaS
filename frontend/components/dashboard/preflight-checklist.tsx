@@ -3,6 +3,10 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
+import {
+  formatCampaignAuditHeadline,
+  type CampaignAuditEventRecord,
+} from '@/lib/campaign-audit'
 import { getContactDesiredTimingLabel, getContactRouteLabel } from '@/lib/contact-funnel'
 import { getDeliveryModeLabel, normalizeDeliveryMode } from '@/lib/implementation-readiness'
 import {
@@ -33,6 +37,7 @@ interface Props {
   totalInvited: number
   totalCompleted: number
   invitesNotSent: number
+  importReady: boolean
   incompleteScores: number
   hasMinDisplay: boolean
   hasEnoughData: boolean
@@ -45,6 +50,7 @@ interface Props {
   linkedLearningDossierCount?: number
   learningCloseoutEvidenceCount?: number
   editable?: boolean
+  auditEvents?: CampaignAuditEventRecord[]
 }
 
 type RecordDraft = {
@@ -87,6 +93,7 @@ export function PreflightChecklist({
   totalInvited,
   totalCompleted,
   invitesNotSent,
+  importReady,
   incompleteScores,
   hasMinDisplay,
   hasEnoughData,
@@ -99,6 +106,7 @@ export function PreflightChecklist({
   linkedLearningDossierCount = 0,
   learningCloseoutEvidenceCount = 0,
   editable = false,
+  auditEvents = [],
 }: Props) {
   const router = useRouter()
   const resolvedMode = normalizeDeliveryMode(deliveryMode)
@@ -115,12 +123,14 @@ export function PreflightChecklist({
         hasEnoughData,
         activeClientAccessCount,
         pendingClientInviteCount,
+        importReady,
       }),
     [
       activeClientAccessCount,
       hasEnoughData,
       hasMinDisplay,
       incompleteScores,
+      importReady,
       invitesNotSent,
       pendingClientInviteCount,
       record?.contact_request_id,
@@ -584,6 +594,13 @@ export function PreflightChecklist({
                 <div className="rounded-2xl border border-white bg-white px-4 py-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Operatorrollen</p>
                   <div className="mt-3 space-y-3">
+                    <div className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
+                      <p className="text-sm font-semibold text-slate-950">Klant owner</p>
+                      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Klant owner</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-700">
+                        Draagt deelnemersimport, invitevrijgave, reminderbesluit en de eerste expliciete vervolgstap aan klantzijde.
+                      </p>
+                    </div>
                     {operatingGuide.roles.map((role) => (
                       <div key={role.title} className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
                         <p className="text-sm font-semibold text-slate-950">{role.title}</p>
@@ -644,6 +661,37 @@ export function PreflightChecklist({
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-slate-950">Recente kritieke acties</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Deze auditlaag laat zien wie een uitvoerkritieke stap heeft uitgevoerd of geblokkeerd zag, en welke owner daarbij hoort.
+              </p>
+              {auditEvents.length === 0 ? (
+                <div className="mt-4 rounded-2xl border border-white bg-white px-4 py-3 text-sm leading-6 text-slate-600">
+                  Nog geen vastgelegde kritieke acties voor deze campagne.
+                </div>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {auditEvents.map((event) => (
+                    <div key={`${event.id ?? event.created_at ?? event.summary}-${event.action_key}`} className="rounded-2xl border border-white bg-white px-4 py-3">
+                      <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-950">
+                            {formatCampaignAuditHeadline(event)}
+                          </p>
+                          <p className="mt-1 text-sm leading-6 text-slate-700">{event.summary}</p>
+                        </div>
+                        <div className="text-xs leading-5 text-slate-500">
+                          <p>{event.owner_label}</p>
+                          <p>{event.actor_label ?? 'Onbekende actor'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">

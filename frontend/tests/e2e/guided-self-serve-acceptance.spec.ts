@@ -25,7 +25,7 @@ test.describe.serial('guided self-serve acceptance', () => {
     fixture = await loadGuidedSelfServeAcceptanceFixture()
   })
 
-  test('setup journey guides import recovery and explicit invite launch', async ({ page }) => {
+  test('setup journey keeps invite launch behind explicit pre-launch control', async ({ page }) => {
     if (!fixture) {
       throw new Error('Acceptance fixture ontbreekt.')
     }
@@ -38,34 +38,51 @@ test.describe.serial('guided self-serve acceptance', () => {
 
     await page.goto(`/campaigns/${fixture.setup_campaign_id}`)
 
-    await expect(page.getByRole('heading', { name: /begeleide uitvoerflow/i })).toBeVisible()
+    await expect(page.getByText(/begeleide uitvoerflow/i).first()).toBeVisible()
     await expect(page.getByText(/deelnemersbestand ontbreekt nog/i).first()).toBeVisible()
     await expect(page.getByText(/dashboard nog niet actief/i).first()).toBeVisible()
+    await expect(page.getByText(/pre-launch overzicht/i).first()).toBeVisible()
     await expect(page.getByRole('button', { name: /pdf-rapport/i })).toHaveCount(0)
 
     await page.locator('input[type="file"]').setInputFiles(invalidImportPath)
     await page.getByRole('button', { name: /^bestand controleren$/i }).click()
 
     await expect(page.getByText(/import validatie vereist/i).first()).toBeVisible()
+    await expect(page.getByText(/corrigeer eerst deze rijen/i)).toBeVisible()
     await expect(page.getByText(/dit e-mailadres staat dubbel in het bestand/i)).toBeVisible()
-    await expect(page.getByText(/valid email address/i)).toBeVisible()
+    await expect(page.getByText(/e-mailadres is ongeldig/i)).toBeVisible()
 
     await page.locator('input[type="file"]').setInputFiles(validImportPath)
-    await page.getByLabel(/verstuur direct uitnodigingen na een geslaagde import/i).uncheck()
     await page.getByRole('button', { name: /^bestand controleren$/i }).click()
 
     await expect(page.getByText(/preview van geldige rijen/i).first()).toBeVisible()
-    await expect(page.getByText(/klaar om uit te nodigen/i).first()).toBeVisible()
+    await expect(page.getByText(/import klaar voor start/i).first()).toBeVisible()
 
-    await page.getByRole('button', { name: /importeer 2 deelnemers/i }).click()
+    await page.getByRole('button', { name: /importeer 5 deelnemers/i }).click()
 
-    await expect(page.getByText(/2 deelnemer\(s\) toegevoegd/i)).toBeVisible()
-    await expect(page.getByRole('button', { name: /start uitnodigingen \(2\)/i })).toBeVisible()
+    await expect(page.getByText(/5 deelnemer\(s\) toegevoegd/i)).toBeVisible()
+    await page.reload()
+    await expect(page.getByRole('button', { name: /start uitnodigingen \(5\)/i })).toBeDisabled()
 
-    await page.getByRole('button', { name: /start uitnodigingen \(2\)/i }).click()
+    await page.getByLabel(/formele startdatum/i).fill('2026-05-01')
+    await page.getByLabel(/afzendernaam/i).fill('HR Team Noord')
+    await page.getByLabel(/korte introcontext/i).fill('We kondigen dit intern alvast kort aan.')
+    await page.getByLabel(/korte slotcontext/i).fill('Vragen over planning kun je aan HR stellen.')
+    await page.getByRole('button', { name: /sla launchinstellingen op/i }).click()
 
-    await expect(page.getByText(/2 uitnodiging\(en\) gestart/i)).toBeVisible()
-    await expect(page.getByText(/responses lopen binnen/i).first()).toBeVisible()
+    await expect(page.getByText(/1 mei 2026/i).first()).toBeVisible()
+    await expect(page.getByText(/we kondigen dit intern alvast kort aan/i).first()).toBeVisible()
+
+    await page.getByLabel(/ik heb timing, deelnemerscommunicatie en reminderinstellingen gecontroleerd/i).check()
+    await page.getByRole('button', { name: /bevestig launch/i }).click()
+
+    await expect(page.getByText(/launch bevestigd op/i).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /start uitnodigingen \(5\)/i })).toBeEnabled()
+
+    await page.getByRole('button', { name: /start uitnodigingen \(5\)/i }).click()
+
+    await expect(page.getByText(/5 uitnodiging\(en\) gestart/i)).toBeVisible()
+    await expect(page.getByText(/respons loopt/i).first()).toBeVisible()
     await expect(page.getByRole('button', { name: /pdf-rapport/i })).toHaveCount(0)
     await expect(page.getByText(/dashboard nog niet actief/i).first()).toBeVisible()
   })
@@ -78,7 +95,7 @@ test.describe.serial('guided self-serve acceptance', () => {
     await loginAsAcceptanceUser(page, fixture)
     await page.goto(`/campaigns/${fixture.threshold_campaign_id}`)
 
-    await expect(page.getByText(/responses lopen binnen/i).first()).toBeVisible()
+    await expect(page.getByText(/respons loopt/i).first()).toBeVisible()
     await expect(page.getByText(/dashboard nog niet actief/i).first()).toBeVisible()
     await expect(page.getByRole('button', { name: /pdf-rapport/i })).toHaveCount(0)
 
@@ -88,13 +105,14 @@ test.describe.serial('guided self-serve acceptance', () => {
     await expect(page.getByText(/dashboard actief, nog bewust compact/i).first()).toBeVisible()
     await expect(page.getByRole('button', { name: /pdf-rapport/i }).first()).toBeVisible()
     await expect(page.getByText(/vertrekduiding en managementgesprek/i)).toBeVisible()
-    await expect(page.getByText(/verdiepende analyse wordt zichtbaar vanaf 10 ingevulde responses/i)).toBeVisible()
+    await expect(page.getByText(/verdieping nog dicht/i)).toBeVisible()
+    await expect(page.getByText(/nog \d+ responses tot eerste patroonduiding/i).first()).toBeVisible()
 
     await advanceGuidedSelfServeAcceptanceFixture('patterns')
     await page.reload()
 
     await expect(page.getByText(/eerste vervolgstap beschikbaar/i).first()).toBeVisible()
-    await expect(page.getByText(/verdiepende analyse wordt zichtbaar vanaf 10 ingevulde responses/i)).toHaveCount(0)
+    await expect(page.getByText(/verdieping nog dicht/i)).toHaveCount(0)
     await expect(page.getByText(/focusvragen en route-uitvoer worden betekenisvoller zodra het dashboard minstens 10 responses heeft/i)).toHaveCount(0)
     await expect(page.getByText(/van vertrekduiding naar managementroute/i)).toBeVisible()
     await expect(page.getByRole('button', { name: /pdf-rapport/i }).first()).toBeVisible()
