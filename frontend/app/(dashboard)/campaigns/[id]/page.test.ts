@@ -29,7 +29,7 @@ describe('campaign detail review guardrails', () => {
     expect(source).toContain("compositionState === 'full'")
     expect(source).toContain("compositionState === 'closed'")
     expect(source).toContain('Aanbevelingen blijven nog begrensd')
-    expect(source).toContain('Rapport-first')
+    expect(source).toContain('Rapport eerst')
   })
 
   it('keeps customer execution role-aware and critical actions auditable', () => {

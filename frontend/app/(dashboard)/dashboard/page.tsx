@@ -180,16 +180,16 @@ export default async function DashboardHomePage() {
 
       <DashboardSection
         eyebrow="Cockpit"
-        title="Campaign cockpit"
+        title="Campagneoverzicht"
         description={
           isAdmin
             ? 'Zie direct welke campagnes klaar zijn voor managementduiding, welke nog operationele aandacht vragen en waar de eerstvolgende deliveryactie ligt.'
-            : 'Zie direct welke campagnes klaar zijn voor managementread, welke nog in opbouw zijn en waar rapport of dashboard nu de logische eerste stap is.'
+            : 'Zie direct welke campagnes klaar zijn voor managementduiding, welke nog in opbouw zijn en waar rapport of dashboard nu de logische eerste stap is.'
         }
         aside={
           isAdmin ? (
             <div className="flex flex-wrap items-center gap-2">
-              <DashboardChip label="Operations cockpit" tone="slate" />
+              <DashboardChip label="Beheeroverzicht" tone="slate" />
               <Link
                 href="/beheer"
                 className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
@@ -204,13 +204,13 @@ export default async function DashboardHomePage() {
       >
         <div className="grid gap-4 lg:grid-cols-4">
           <DashboardPanel
-            eyebrow="Management-ready"
+            eyebrow="Managementduiding gereed"
             title={`${fullCount}`}
             body="Campagnes met genoeg respons en zichtbaarheid om dashboard, aanbevelingen en rapport echt als managementinstrument te gebruiken."
             tone="emerald"
           />
           <DashboardPanel
-            eyebrow="Partial / deels zichtbaar"
+            eyebrow="Deels zichtbaar"
             title={`${partialCount}`}
             body="Campagnes waar de eerste veilige read open is, maar waar drivers, aanbevelingen of diepere patroonduiding bewust nog begrensd blijven."
             tone={partialCount > 0 ? 'amber' : 'slate'}
@@ -222,14 +222,14 @@ export default async function DashboardHomePage() {
             tone={activeExecutionCount > 0 ? 'amber' : 'slate'}
           />
           <DashboardPanel
-            eyebrow="Closed / report-first"
+            eyebrow="Gesloten / rapport eerst"
             title={avgSignal ? `${avgSignal}/10` : closedCount > 0 ? `${closedCount}` : 'Nog leeg'}
             body={
               avgSignal
                 ? `Gemiddeld groepssignaal over campagnes met leesbare output. Gesloten campagnes: ${closedCount}. Gemiddelde respons: ${avgResponse}%.`
                 : campaigns.length === 0
                   ? 'Maak eerst een organisatie en campaign aan. Daarna verschijnt hier automatisch de cockpit.'
-                  : `Campagnes in report-first status: ${closedCount}. Gemiddelde respons: ${avgResponse}%.`
+                  : `Campagnes waar rapport nu voorop staat: ${closedCount}. Gemiddelde respons: ${avgResponse}%.`
             }
             tone={avgSignal ? 'emerald' : 'slate'}
           />
@@ -298,7 +298,7 @@ export default async function DashboardHomePage() {
       {!isAdmin && !showFirstNextStep ? (
         <DashboardSection
           eyebrow="Eerste route"
-          title="Van eerste login naar eerste managementread"
+          title="Van eerste login naar eerste managementduiding"
           description="Deze laag maakt expliciet hoe je dashboard en rapport als eerste managementinstrument gebruikt, zonder setupverantwoordelijkheid of self-service verwachtingen."
           aside={<DashboardChip label="Assisted onboarding" tone="slate" />}
         >
@@ -651,7 +651,7 @@ function getHomeStateMeta(state: CampaignCompositionState) {
         'Campagnes waar uitnodigingen lopen, maar waar nog geen eerste veilige responslaag zichtbaar hoort te worden.',
       body: 'De inviteflow loopt, maar er is nog geen eerste veilige responslaag om inhoudelijk op te lezen.',
       trust:
-        'Toon hier alleen uitvoerstatus en responsopbouw. Dit is nog geen managementread.',
+        'Toon hier alleen uitvoerstatus en responsopbouw. Dit is nog geen managementduiding.',
     },
     sparse: {
       label: 'Indicatief, nog dun',
@@ -660,7 +660,7 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       viewerCta: 'Open uitvoerflow',
       sectionTitle: 'Sparse / indicatief',
       sectionDescription:
-        'Campagnes met eerste responses, maar nog onder de veilige dashboarddrempel voor een eerlijke managementread.',
+        'Campagnes met eerste responses, maar nog onder de veilige dashboarddrempel voor een eerlijke managementduiding.',
       body: 'Er zijn eerste responses binnen, maar het beeld is nog te dun voor een veilige dashboardlaag.',
       trust:
         'Gebruik dit als signaal dat uitvoering loopt, niet als inhoudelijke conclusie of pseudo-insight.',
@@ -670,7 +670,7 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       tone: 'amber' as const,
       nextStepLabel: 'Compacte read',
       viewerCta: 'Open compacte read',
-      sectionTitle: 'Partial / deels zichtbaar',
+      sectionTitle: 'Deels zichtbaar',
       sectionDescription:
         'Campagnes waar de eerste veilige dashboardread open is, maar waar thresholds of privacy de verdiepingslaag nog begrenzen.',
       body: 'De eerste dashboardread is zichtbaar, maar aanbevelingen en patroonduiding blijven nog bewust compact.',
@@ -678,11 +678,11 @@ function getHomeStateMeta(state: CampaignCompositionState) {
         'Privacy- en thresholdgrenzen houden drivers, aanbevelingen en diepere claims nog deels dicht.',
     },
     full: {
-      label: 'Management ready',
+      label: 'Managementduiding gereed',
       tone: 'emerald' as const,
       nextStepLabel: 'Open dashboard',
       viewerCta: 'Open dashboard',
-      sectionTitle: 'Full / management ready',
+      sectionTitle: 'Volledig / managementduiding gereed',
       sectionDescription:
         'Campagnes met genoeg respons en voldoende zichtbaarheid om dashboard, aanbevelingen en rapport als managementinstrument te gebruiken.',
       body: 'Dashboard en rapport zijn nu stevig genoeg voor managementduiding, prioritering en eerste vervolgactie.',
@@ -692,9 +692,9 @@ function getHomeStateMeta(state: CampaignCompositionState) {
     closed: {
       label: 'Rapport eerst',
       tone: 'slate' as const,
-      nextStepLabel: 'Rapport-first',
+      nextStepLabel: 'Rapport eerst',
       viewerCta: 'Open rapport en dashboard',
-      sectionTitle: 'Closed / report-first',
+      sectionTitle: 'Gesloten / rapport eerst',
       sectionDescription:
         'Gesloten campagnes waar de nadruk nu op rapportage, terugblik en bestuurlijke opvolging hoort te liggen.',
       body: 'Deze campaign is gesloten. Gebruik dashboard en rapport nu voor terugblik, follow-up en het vervolggesprek.',

@@ -501,13 +501,13 @@ export default async function CampaignPage({ params }: Props) {
         'De eerste read is open, maar drivers, aanbevelingen en vervolgblokken blijven deels verborgen door thresholds of scorecompleetheid.',
     },
     full: {
-      label: 'Management ready',
+      label: 'Managementduiding gereed',
       tone: 'emerald' as const,
       trust:
         'Drivers, aanbevelingen en routeblokken mogen nu zichtbaar worden binnen de bestaande productgrenzen.',
     },
     closed: {
-      label: 'Rapport-first',
+      label: 'Rapport eerst',
       tone: 'slate' as const,
       trust:
         'Deze campaign is gesloten. Gebruik dashboard en rapport nu voor terugblik, context en bestuurlijke opvolging.',
@@ -607,13 +607,13 @@ export default async function CampaignPage({ params }: Props) {
     stats.scan_type === 'retention'
       ? 'Deze laag volgt dezelfde lijn als het rapport: waar staat behoud onder druk, waarom telt dat bestuurlijk en wat moet eerst geverifieerd worden.'
       : stats.scan_type === 'pulse'
-        ? 'Deze laag vertaalt Pulse naar een bestuurlijk leesbare compacte managementread: welke review- of herijkingsvraag vraagt nu direct aandacht, wat moet je als eerste bijsturen en wanneer hoort daar een bounded hercheck bij.'
+        ? 'Deze laag vertaalt Pulse naar een bestuurlijk leesbare compacte managementduiding: welke review- of herijkingsvraag vraagt nu direct aandacht, wat moet je als eerste bijsturen en wanneer hoort daar een bounded hercheck bij.'
         : stats.scan_type === 'team'
           ? 'Deze laag vertaalt TeamScan naar een bestuurlijk leesbare lokale read: welke afdelingen vallen op, wat moet je eerst toetsen en welke lokale context vraagt nu als eerste aandacht.'
           : stats.scan_type === 'onboarding'
             ? 'Deze laag vertaalt onboarding naar een bestuurlijk leesbare landingsduiding: waar stokt de vroege landing, wat telt nu bestuurlijk en welke beperkte correctie hoort hier direct achteraan.'
             : stats.scan_type === 'leadership'
-              ? 'Deze laag vertaalt Leadership Scan naar een bestuurlijk leesbare managementread: welke context valt op, wat moet je eerst toetsen en welke begrensde managementstap hoort hier direct achteraan.'
+              ? 'Deze laag vertaalt Leadership Scan naar een bestuurlijk leesbare managementduiding: welke context valt op, wat moet je eerst toetsen en welke begrensde managementstap hoort hier direct achteraan.'
         : 'Deze laag opent met de Frictiescore als bestuurlijk leesbare managementsamenvatting: wat keert terug, waar lijkt werkfrictie beinvloedbaar en waar moet management eerst doorvragen.'
   const readinessLabel = activationState.readinessLabel
   const focusBadgeLabel =
@@ -957,7 +957,7 @@ export default async function CampaignPage({ params }: Props) {
             driverDescription:
               'Gebruik deze laag om het actuele Pulse-beeld gecontroleerd te verdiepen zonder de managementhoofdlijn kwijt te raken.',
             driverIntro:
-              'Gebruik de tabs hieronder om tussen groepsread, factoren, aanvullende lagen en bounded vergelijking te wisselen zonder de hoofdlijn van de managementread kwijt te raken.',
+              'Gebruik de tabs hieronder om tussen groepsread, factoren, aanvullende lagen en bounded vergelijking te wisselen zonder de hoofdlijn van de managementduiding kwijt te raken.',
             driverAsideLabel: hasEnoughData ? 'Pulse read beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('slate' as const) : ('amber' as const),
             driverTabOrder: ['factoren', 'trend', 'signalen', 'aanvullend'],
@@ -1603,7 +1603,7 @@ export default async function CampaignPage({ params }: Props) {
         <DashboardSection
           id="handoff"
           eyebrow="Bestuurlijke handoff"
-          title="Eerste compacte managementread"
+          title="Eerste compacte managementduiding"
           description="De eerste veilige dashboardlaag is zichtbaar, maar deze campaign blijft nog bewust compact tot thresholds en scorecompleetheid een vollediger beeld dragen."
           aside={<DashboardChip label={compositionStateMeta.label} tone={compositionStateMeta.tone} />}
           tone="slate"
@@ -1618,7 +1618,7 @@ export default async function CampaignPage({ params }: Props) {
               <div className="grid gap-4 lg:grid-cols-2">
                 <DashboardPanel
                   eyebrow="Wat nu wel zichtbaar is"
-                  title="Eerste managementread"
+                  title="Eerste managementduiding"
                   body="Gebruik de hero, samenvatting en eerste managementvraag om richting te houden zonder het beeld al zwaarder te maken dan de data nu draagt."
                   tone="slate"
                 />
@@ -1949,7 +1949,7 @@ export default async function CampaignPage({ params }: Props) {
                 <DashboardPanel
                   eyebrow="Als de managementcheck bevestigt"
                   title="Blijf bounded op dezelfde route"
-                  body="Doe alleen een volgende Leadership-check als eigenaar, kleine verificatie of correctie en reviewmoment uit deze managementread al expliciet zijn gemaakt."
+                  body="Doe alleen een volgende Leadership-check als eigenaar, kleine verificatie of correctie en reviewmoment uit deze managementduiding al expliciet zijn gemaakt."
                   tone="slate"
                 />
                 <DashboardPanel
@@ -2150,7 +2150,7 @@ export default async function CampaignPage({ params }: Props) {
               <DashboardDisclosure
                 defaultOpen={false}
                 title="Pilot- en early-customer-learning"
-                description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementread en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
+                description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementduiding en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
                 badge={
                   <DashboardChip
                     label={

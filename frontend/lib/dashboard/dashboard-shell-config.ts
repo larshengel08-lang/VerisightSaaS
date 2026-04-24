@@ -27,7 +27,7 @@ const BUYER_NAVIGATION: DashboardNavItem[] = [
   {
     href: '/dashboard',
     label: 'Cockpit',
-    detail: 'Campaignstatus, managementread en rapportdiscipline.',
+    detail: 'Campaignstatus, managementduiding en rapportdiscipline.',
   },
 ]
 
@@ -65,7 +65,7 @@ export function getDashboardShellConfig({
   return {
     mode,
     accountLabel: isAdmin ? 'Verisight beheer' : 'Klantdashboard',
-    modeLabel: isAdmin ? 'admin view · operations sober' : 'buyer view · premium guided execution',
+    modeLabel: isAdmin ? 'Beheerweergave · sobere operationslaag' : 'Klantweergave · premium begeleide uitvoering',
     currentLabel: getDashboardCurrentLabel(pathname),
     bannerText:
       acceptedCount > 0
@@ -85,9 +85,9 @@ export function isDashboardNavActive(pathname: string, href: string) {
 }
 
 function getDashboardCurrentLabel(pathname: string) {
-  if (pathname.startsWith('/campaigns/')) return 'Campaign detail'
-  if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Lead context'
-  if (pathname.startsWith('/beheer/klantlearnings')) return 'Learning workbench'
+  if (pathname.startsWith('/campaigns/')) return 'Campagnedetail'
+  if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
+  if (pathname.startsWith('/beheer/klantlearnings')) return 'Learningoverzicht'
   if (pathname.startsWith('/beheer')) return 'Setup en beheer'
-  return 'Campaign cockpit'
+  return 'Campagneoverzicht'
 }
