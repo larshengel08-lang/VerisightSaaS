@@ -1,7 +1,7 @@
 # Verisight Sales Comparison Matrix
 
 Intern vergelijkingsoverzicht voor discovery, demo, proposal en buyer one-pagers.
-Laatste update: 2026-04-15
+Laatste update: 2026-04-24
 
 ## Kernvergelijking
 
@@ -30,8 +30,8 @@ Laatste update: 2026-04-15
 
 ### RetentieScan
 
-- Complementair product voor vroegsignalering op behoud
-- Sterk wanneer actieve teams centraal staan en de vraag verification-first is
+- Volwaardige eerste route voor vroegsignalering op behoud wanneer de actieve managementvraag primair is
+- Sterk wanneer actieve teams centraal staan en de buyer vroegsignalering op groepsniveau serieus wil openen
 - Verkoop met nadruk op groepssignaal, opvolgprioriteit en expliciete claimsgrenzen
 
 ### Combinatie

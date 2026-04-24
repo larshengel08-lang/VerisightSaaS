@@ -1,7 +1,7 @@
 # Verisight Sales Product Decision Tree
 
 Intern routekader voor discovery, demo en voorstel.
-Laatste update: 2026-04-15
+Laatste update: 2026-04-24
 
 ## Gebruik
 
@@ -112,7 +112,7 @@ Gebruik dan deze vervolgvraag:
 ## Route-defaults
 
 - ExitScan is de default eerste route.
-- RetentieScan is een specifieke of complementaire route.
+- RetentieScan is een volwaardige eerste route wanneer de actieve behoudsvraag primair is.
 - De combinatie is nooit de eerste standaard pitch.
 - Baseline gaat voor Live of ritme.
 - `Compacte retentie vervolgmeting` hoort binnen de ritmelaag en niet als parallel hoofdpackage.

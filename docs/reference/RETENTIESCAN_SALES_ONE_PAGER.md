@@ -1,6 +1,6 @@
 # RetentieScan - compacte buyer one-pager
 
-Verisight RetentieScan is de complementaire route voor organisaties die eerder zichtbaar willen maken waar behoud op groepsniveau onder druk staat.
+Verisight RetentieScan is een volwaardige eerste route wanneer de managementvraag expliciet draait om actieve medewerkers en vroegsignalering op behoud.
 
 ## Wanneer RetentieScan past
 
@@ -21,7 +21,7 @@ Verisight RetentieScan is de complementaire route voor organisaties die eerder z
 
 ## Hoe je RetentieScan leest
 
-RetentieScan is verification-first groepsduiding voor HR, MT en directie.
+RetentieScan is groepsgerichte managementduiding voor HR, MT en directie.
 De uitkomst helpt bepalen waar behoud nu als eerste verificatie, verdieping of actie vraagt.
 Preview, rapport en pricing gebruiken dezelfde managementtaal.
 
@@ -35,7 +35,7 @@ Preview, rapport en pricing gebruiken dezelfde managementtaal.
 ## Waarom RetentieScan een eigen product is
 
 RetentieScan is niet de goedkopere of lichtere versie van ExitScan.
-Het vraagt een eigen managementverhaal, strengere privacyguardrails en een expliciete verification-first lezing op groepsniveau.
+Het vraagt een eigen managementverhaal, strengere privacyguardrails en een eerlijke eerste route op groepsniveau wanneer de actieve behoudsvraag primair is.
 
 ## Eerste commerciële stap
 

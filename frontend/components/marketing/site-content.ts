@@ -49,7 +49,7 @@ export const homepageProductRoutes = [
   {
     name: 'RetentieScan',
     title: 'Zie waar behoud onder druk staat',
-    body: 'Vroegsignalering op behoud op groeps- en segmentniveau, met retentiesignaal en een eerste verificatiespoor.',
+    body: 'Vroegsignalering op behoud op groeps- en segmentniveau, met retentiesignaal en een heldere eerste managementroute.',
     href: '/producten/retentiescan',
     accent: 'border-[#DCEFEA] bg-[#F7F5F1]',
     chip: 'Kernroute',
@@ -94,7 +94,7 @@ export const homepageComparisonRows = [
 ] as const
 
 export const homepageProofSignals = [
-  'ExitScan eerst, RetentieScan gericht aanvullend',
+  'ExitScan als default route, RetentieScan als volwaardige eerste route bij expliciete behoudsvraag',
   'Dashboard, rapport en bestuurlijke handoff in dezelfde leeslijn',
   'Groepsinzichten met expliciete claims- en privacygrenzen',
 ] as const
