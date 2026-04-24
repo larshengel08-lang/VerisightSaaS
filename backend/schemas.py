@@ -147,10 +147,16 @@ class RespondentImportResponse(BaseModel):
     valid_rows: int
     invalid_rows: int
     duplicate_existing: int = 0
+    recognized_columns: list[str] = Field(default_factory=list)
+    ignored_columns: list[str] = Field(default_factory=list)
+    blocking_messages: list[str] = Field(default_factory=list)
     preview_rows: list[RespondentImportPreviewRow] = Field(default_factory=list)
     errors: list[RespondentImportIssue] = Field(default_factory=list)
     imported: int = 0
     emails_sent: int = 0
+    launch_blocked: bool = True
+    readiness_label: str = "Importcontrole vereist"
+    recovery_hint: str = "Werk het deelnemersbestand bij en controleer daarna opnieuw."
 
 
 class InviteSendResult(BaseModel):

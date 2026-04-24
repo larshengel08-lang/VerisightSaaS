@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
+import { CustomerLaunchControl } from '@/components/dashboard/customer-launch-control'
 import {
   DashboardChip,
   DashboardPanel,
@@ -10,7 +11,9 @@ import {
 } from '@/components/dashboard/dashboard-primitives'
 import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
 import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
-import { buildGuidedSelfServeState } from '@/lib/guided-self-serve'
+import { getFirstNextStepGuidance } from '@/lib/client-onboarding'
+import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
+import { FIRST_INSIGHT_THRESHOLD } from '@/lib/response-activation'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { CampaignStats } from '@/lib/types'
 
@@ -47,16 +50,39 @@ export default async function DashboardHomePage() {
   const groups = groupCampaigns(campaigns)
   const activeCampaigns = campaigns.filter((campaign) => campaign.is_active)
   const primaryGuideCampaign = getPrimaryGuideCampaign(activeCampaigns, campaigns)
+  const primaryFirstNextStepCampaign = getPrimaryFirstNextStepCampaign(activeCampaigns, campaigns)
   const { data: primaryGuideRespondentsRaw } = primaryGuideCampaign
     ? await supabase
         .from('respondents')
         .select('sent_at, completed')
         .eq('campaign_id', primaryGuideCampaign.campaign_id)
     : { data: [] }
+  const { data: primaryGuideDeliveryRecord } = primaryGuideCampaign
+    ? await supabase
+        .from('campaign_delivery_records')
+        .select('id')
+        .eq('campaign_id', primaryGuideCampaign.campaign_id)
+        .maybeSingle()
+    : { data: null }
+  const { data: primaryGuideCheckpointsRaw } = primaryGuideDeliveryRecord
+    ? await supabase
+        .from('campaign_delivery_checkpoints')
+        .select('checkpoint_key, manual_state')
+        .eq('delivery_record_id', primaryGuideDeliveryRecord.id)
+    : { data: [] }
   const primaryGuideRespondents = (primaryGuideRespondentsRaw ?? []) as Array<{
     sent_at: string | null
     completed: boolean
   }>
+  const primaryGuideSetupDiscipline = deriveGuidedSelfServeDiscipline(
+    ((primaryGuideCheckpointsRaw ?? []) as Array<{
+      checkpoint_key: 'implementation_intake' | 'import_qa' | 'invite_readiness'
+      manual_state: 'pending' | 'confirmed' | 'not_applicable'
+    }>).map((checkpoint) => ({
+      checkpointKey: checkpoint.checkpoint_key,
+      manualState: checkpoint.manual_state,
+    })),
+  )
   const primaryGuideInvitesNotSent = primaryGuideRespondents.filter(
     (respondent) => !respondent.sent_at && !respondent.completed,
   ).length
@@ -91,11 +117,41 @@ export default async function DashboardHomePage() {
                 : 1,
         hasMinDisplay: primaryGuideCampaign.total_completed >= 5,
         hasEnoughData: primaryGuideCampaign.total_completed >= 10,
+        importQaConfirmed: primaryGuideSetupDiscipline.importQaConfirmed,
+        launchTimingConfirmed: primaryGuideSetupDiscipline.launchTimingConfirmed,
+        communicationReady: primaryGuideSetupDiscipline.communicationReady,
       })
+    : null
+  const showFirstNextStep =
+    !isAdmin && primaryFirstNextStepCampaign
+  const primaryFirstNextStepGuidance = primaryFirstNextStepCampaign
+    ? getFirstNextStepGuidance(primaryFirstNextStepCampaign.scan_type)
+    : null
+  const primaryGuideScanDefinition = primaryGuideCampaign ? getScanDefinition(primaryGuideCampaign.scan_type) : null
+  const primaryFirstNextStepScanDefinition = primaryFirstNextStepCampaign
+    ? getScanDefinition(primaryFirstNextStepCampaign.scan_type)
     : null
 
   return (
     <div className="space-y-6">
+      {!isAdmin && primaryGuideCampaign && primaryExecutionState && primaryGuideScanDefinition ? (
+        <DashboardSection
+          eyebrow="Jouw uitvoerstatus"
+          title="Jouw uitvoerstatus"
+          description="Na login zie je direct welk product actief is, waar de campagne staat, wat nog ontbreekt en wat de eerstvolgende veilige stap is."
+          aside={<DashboardChip label={primaryExecutionState.currentStateLabel} tone="blue" />}
+        >
+          <CustomerLaunchControl
+            campaignName={primaryGuideCampaign.campaign_name}
+            campaignHref={`/campaigns/${primaryGuideCampaign.campaign_id}`}
+            campaignCtaLabel={primaryExecutionState.dashboardVisible ? 'Open campagne en dashboard' : 'Open uitvoerflow'}
+            productName={primaryGuideScanDefinition.productName}
+            productContext={primaryGuideScanDefinition.whatItIsText}
+            state={primaryExecutionState}
+          />
+        </DashboardSection>
+      ) : null}
+
       <DashboardSection
         eyebrow="Cockpit"
         title="Campaign cockpit"
@@ -154,58 +210,66 @@ export default async function DashboardHomePage() {
         </div>
       </DashboardSection>
 
-      {!isAdmin ? (
-        primaryGuideCampaign && primaryExecutionState ? (
-          <DashboardSection
-            eyebrow="Jouw uitvoerstatus"
-            title={primaryExecutionState.headline}
-            description={primaryExecutionState.detail}
-            aside={<DashboardChip label={primaryExecutionState.dashboardVisible ? 'Dashboard actief' : 'Uitvoer loopt'} tone={primaryExecutionState.dashboardVisible ? 'emerald' : 'amber'} />}
-          >
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr),minmax(320px,0.6fr)]">
-              <div className="rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-[0_10px_30px_rgba(19,32,51,0.05)]">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                  Eerstvolgende stap
-                </p>
-                <p className="mt-2 text-lg font-semibold text-[color:var(--ink)]">
-                  {primaryExecutionState.nextAction.title}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">
-                  {primaryExecutionState.nextAction.body}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {primaryExecutionState.statusBlocks.map((item) => (
-                    <DashboardChip
-                      key={item.key}
-                      label={item.label}
-                      tone={item.status === 'done' ? 'emerald' : item.status === 'current' ? 'blue' : 'slate'}
-                    />
-                  ))}
+      {!isAdmin && primaryFirstNextStepCampaign && primaryFirstNextStepGuidance && primaryFirstNextStepScanDefinition ? (
+        <DashboardSection
+          eyebrow="First-next-step"
+          title="Van activatie naar eerste managementstap"
+          description="Deze laag scheidt bewust wat het actuele inzicht nu zegt, welke eerste managementactie logisch is en welke vervolgroutes eventueel passen zonder het portfolio breder te maken dan de vraag draagt."
+          aside={<DashboardChip label={primaryFirstNextStepScanDefinition.productName} tone="blue" />}
+        >
+          <div className="space-y-4">
+            <div className="grid gap-4 lg:grid-cols-3">
+              {primaryFirstNextStepGuidance.cards.map((card) => (
+                <DashboardPanel
+                  key={card.key}
+                  eyebrow={
+                    card.key === 'insight'
+                      ? 'Inzicht'
+                      : card.key === 'action'
+                        ? 'Actie'
+                        : 'Vervolg alleen indien nodig'
+                  }
+                  title={card.title}
+                  body={card.body}
+                  tone={card.key === 'insight' ? 'blue' : card.key === 'action' ? 'emerald' : 'amber'}
+                />
+              ))}
+            </div>
+
+            <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4 sm:p-5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                    Mogelijke vervolgroutes
+                  </p>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[color:var(--text)]">
+                    Deze routes openen pas zodra de eerste managementstap expliciet is gemaakt. Het zijn dus geen standaard vervolgaanbiedingen, maar voorwaardelijke routekeuzes binnen de bestaande suite-canon.
+                  </p>
                 </div>
+                <DashboardChip label="Bounded portfolio" tone="slate" />
               </div>
-              <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                  Jouw campagne nu
-                </p>
-                <p className="mt-2 text-base font-semibold text-[color:var(--ink)]">
-                  {primaryGuideCampaign.campaign_name}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">
-                  Open deze campaign voor deelnemersimport, inviteflow, responsmonitoring en pas daarna dashboardgebruik.
-                </p>
-                <Link
-                  href={`/campaigns/${primaryGuideCampaign.campaign_id}`}
-                  className="mt-4 inline-flex rounded-full border border-[#d6e4e8] bg-[#f3f8f8] px-4 py-2 text-sm font-semibold text-[#234B57] transition-colors hover:border-[#bfd3d8] hover:bg-[#e9f2f3]"
-                >
-                  {primaryExecutionState.dashboardVisible ? 'Open campaign en dashboard' : 'Open uitvoerflow'}
-                </Link>
+
+              <div className="mt-4 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+                {primaryFirstNextStepGuidance.followOnSuggestions.map((suggestion) => (
+                  <div
+                    key={suggestion.productLabel}
+                    className="rounded-2xl border border-white/80 bg-white px-4 py-4 shadow-sm"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                      Alleen als
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-[color:var(--ink)]">{suggestion.productLabel}</p>
+                    <p className="mt-2 text-sm leading-6 text-[color:var(--text)]">{suggestion.when}</p>
+                    <p className="mt-3 text-xs leading-5 text-[color:var(--muted)]">{suggestion.boundary}</p>
+                  </div>
+                ))}
               </div>
             </div>
-          </DashboardSection>
-        ) : null
+          </div>
+        </DashboardSection>
       ) : null}
 
-      {!isAdmin ? (
+      {!isAdmin && !showFirstNextStep ? (
         <DashboardSection
           eyebrow="Eerste route"
           title="Van eerste login naar eerste managementread"
@@ -497,19 +561,39 @@ function getPrimaryGuideCampaign(
   const candidatePool = activeCampaigns.length > 0 ? activeCampaigns : allCampaigns
   if (candidatePool.length === 0) return null
 
-  const priority = (campaign: CampaignStats) => {
-    const bucket = getCampaignBucket(campaign)
-    if (bucket === 'setup') return 0
-    if (bucket === 'building') return 1
-    if (bucket === 'ready') return 2
-    return 3
-  }
-
   return [...candidatePool].sort((left, right) => {
-    const priorityDelta = priority(left) - priority(right)
+    const priorityDelta = getExecutionPriority(left) - getExecutionPriority(right)
     if (priorityDelta !== 0) return priorityDelta
     return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
   })[0] ?? null
+}
+
+function getPrimaryFirstNextStepCampaign(
+  activeCampaigns: CampaignStats[],
+  allCampaigns: CampaignStats[],
+): CampaignStats | null {
+  const candidatePool = activeCampaigns.length > 0 ? activeCampaigns : allCampaigns
+  const eligibleCampaigns = candidatePool.filter(
+    (campaign) => campaign.total_completed >= FIRST_INSIGHT_THRESHOLD,
+  )
+
+  if (eligibleCampaigns.length === 0) return null
+
+  return [...eligibleCampaigns].sort((left, right) => {
+    if (left.is_active !== right.is_active) {
+      return left.is_active ? -1 : 1
+    }
+
+    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+  })[0] ?? null
+}
+
+function getExecutionPriority(campaign: CampaignStats) {
+  const bucket = getCampaignBucket(campaign)
+  if (bucket === 'setup') return 0
+  if (bucket === 'building') return 1
+  if (bucket === 'ready') return 2
+  return 3
 }
 
 function getCampaignReadiness(campaign: CampaignStats) {

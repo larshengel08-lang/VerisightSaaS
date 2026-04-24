@@ -8,7 +8,7 @@ export interface InviteBody {
   orgId?: string
   email?: string
   fullName?: string
-  role?: 'viewer' | 'member'
+  role?: 'owner' | 'viewer' | 'member'
 }
 
 export const RESEND_COOLDOWN_MINUTES = 10

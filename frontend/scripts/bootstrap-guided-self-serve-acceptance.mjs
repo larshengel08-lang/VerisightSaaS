@@ -103,59 +103,27 @@ async function upsertAcceptanceUser() {
   return data.user.id
 }
 
-async function fetchCampaignIds() {
-  const admin = createAdminSupabase()
-  const { data: org, error: orgError } = await admin
-    .from('organizations')
-    .select('id')
-    .eq('slug', acceptanceEnv.orgSlug)
-    .single()
-
-  if (orgError || !org) {
-    throw orgError ?? new Error('Acceptance org niet gevonden na seeden.')
-  }
-
-  const { data: campaigns, error: campaignError } = await admin
-    .from('campaigns')
-    .select('id,name')
-    .eq('organization_id', org.id)
-    .in('name', ['Guided Self-Serve - Setup Journey', 'Guided Self-Serve - Threshold Journey'])
-
-  if (campaignError || !campaigns) {
-    throw campaignError ?? new Error('Acceptance campaigns niet gevonden na seeden.')
-  }
-
-  const setupCampaign = campaigns.find((campaign) => campaign.name === 'Guided Self-Serve - Setup Journey')
-  const thresholdCampaign = campaigns.find((campaign) => campaign.name === 'Guided Self-Serve - Threshold Journey')
-
-  if (!setupCampaign || !thresholdCampaign) {
-    throw new Error('Niet alle acceptance campaigns zijn aanwezig na seeden.')
-  }
-
-  return {
-    setupCampaignId: setupCampaign.id,
-    thresholdCampaignId: thresholdCampaign.id,
-  }
-}
-
 async function main() {
   const userId = await upsertAcceptanceUser()
-  await runManageDemo([
+  const seededScenario = await runManageDemo([
     'run',
     'qa_guided_self_serve_acceptance',
     '--org-slug',
     acceptanceEnv.orgSlug,
-    '--viewer-user-id',
+    '--owner-user-id',
     userId,
   ])
-  const campaigns = await fetchCampaignIds()
+
+  if (!seededScenario.setup_campaign_id || !seededScenario.threshold_campaign_id) {
+    throw new Error('Acceptance bootstrap mist campaign-id output uit de seedstap.')
+  }
 
   process.stdout.write(
     JSON.stringify({
       email: acceptanceEnv.email,
       password: acceptanceEnv.password,
-      setupCampaignId: campaigns.setupCampaignId,
-      thresholdCampaignId: campaigns.thresholdCampaignId,
+      setupCampaignId: seededScenario.setup_campaign_id,
+      thresholdCampaignId: seededScenario.threshold_campaign_id,
       userId,
     }),
   )
