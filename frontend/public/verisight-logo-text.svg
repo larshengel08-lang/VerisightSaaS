@@ -1,6 +1,6 @@
 <svg width="520" height="88" viewBox="0 0 520 88" fill="none" xmlns="http://www.w3.org/2000/svg">
   <style>
-    .word { font: 800 60px Inter, "Segoe UI", Arial, sans-serif; fill: #1d4ed8; letter-spacing: -0.04em; }
+    .word { font: 800 60px Inter, "Segoe UI", Arial, sans-serif; fill: #8c4a00; letter-spacing: -0.04em; }
   </style>
   <text x="26" y="64" class="word">Verisight</text>
 </svg>
