@@ -722,6 +722,9 @@ export function buildActionExecutionCore(args: {
   highlightedActionQuestion: string | null
   followThroughCard: DashboardFollowThroughCard | null
 }): ActionExecutionCore {
+  const firstAction = args.selectedPlaybook?.actions[0] ?? args.nextStep.title
+  const firstStepGuidance = args.highlightedActionQuestion ?? args.selectedPlaybook?.validate ?? args.nextStep.body
+
   return {
     route: {
       title: args.selectedPlaybook?.title ?? args.nextStep.title,
@@ -734,8 +737,8 @@ export function buildActionExecutionCore(args: {
       tone: 'blue',
     },
     firstStep: {
-      title: args.selectedPlaybook?.actions[0] ?? 'Kies een eerste gerichte verificatie',
-      body: args.highlightedActionQuestion ?? args.selectedPlaybook?.validate ?? args.nextStep.body,
+      title: firstAction,
+      body: `Eerste concrete stap: ${firstAction}. ${firstStepGuidance}`,
       tone: 'blue',
     },
     review: {

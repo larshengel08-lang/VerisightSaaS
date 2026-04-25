@@ -148,9 +148,10 @@ export function buildCampaignReadinessState({
       clientAccessActivated,
       clientActivationPending,
       launchReady,
-      headline: 'Klantactivatie loopt',
-      detail: 'De activatiemail is verstuurd, maar dashboardtoegang is nog niet bevestigd. Houd support en eerste klantcontact daarom actief in de gaten.',
-      nextStep: 'Bevestig accountactivatie en begeleid daarna het eerste dashboard- of rapportgebruik.',
+      headline: 'Vrijgave via klantactivatie loopt',
+      detail:
+        'De activatiemail is verstuurd, maar deze campaign is pas echt vrijgegeven zodra dashboardtoegang is bevestigd en het eerste klantcontact klaarstaat.',
+      nextStep: 'Bevestig accountactivatie en begeleid daarna direct de eerste dashboard- of rapportread.',
     }
   }
 

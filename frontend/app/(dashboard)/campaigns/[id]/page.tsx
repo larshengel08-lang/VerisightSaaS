@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignActions } from './campaign-actions'
+import { buildCampaignAccessState } from './campaign-access'
 import { PdfDownloadButton } from './pdf-download-button'
 import {
   DashboardChip,
@@ -76,7 +78,7 @@ import { buildTeamLocalReadState, buildTeamPriorityReadState } from '@/lib/produ
 import { getProductModule } from '@/lib/products/shared/registry'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
-import type { CampaignStats, Respondent, SurveyResponse } from '@/lib/types'
+import type { CampaignStats, MemberRole, Respondent, SurveyResponse } from '@/lib/types'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -90,14 +92,31 @@ export default async function CampaignPage({ params, searchParams }: Props) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
+  const { data: profile } = user
+    ? await supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle()
+    : { data: null }
+  const isVerisightAdmin = profile?.is_verisight_admin === true
 
   const { data: statsRow } = await supabase
     .from('campaign_stats')
     .select('*')
     .eq('campaign_id', id)
-    .single()
+    .maybeSingle()
 
-  if (!statsRow) notFound()
+  if (!statsRow) {
+    if (!(await campaignExists(id))) {
+      notFound()
+    }
+
+    return (
+      <CampaignRouteUnavailable
+        state={buildCampaignAccessState({
+          isVerisightAdmin,
+          membershipRole: null,
+        })}
+      />
+    )
+  }
   const stats = statsRow as CampaignStats
 
   const { data: previousStatsRows } = await supabase
@@ -111,16 +130,12 @@ export default async function CampaignPage({ params, searchParams }: Props) {
   const previousStats = (previousStatsRows?.[0] as CampaignStats | undefined) ?? null
 
   const [
-    { data: profile },
     { data: membership },
     { data: campaignMeta },
     { data: organization },
     { count: activeClientAccessCount },
     { count: pendingClientInviteCount },
   ] = await Promise.all([
-    user
-      ? supabase.from('profiles').select('is_verisight_admin').eq('id', user.id).maybeSingle()
-      : Promise.resolve({ data: null }),
     user
       ? supabase
           .from('org_members')
@@ -142,12 +157,16 @@ export default async function CampaignPage({ params, searchParams }: Props) {
       .eq('org_id', stats.organization_id)
       .is('accepted_at', null),
   ])
+  const accessState = buildCampaignAccessState({
+    isVerisightAdmin,
+    membershipRole: (membership?.role ?? null) as MemberRole | null,
+  })
 
-  const canManageCampaign =
-    profile?.is_verisight_admin === true ||
-    membership?.role === 'owner' ||
-    membership?.role === 'member'
-  const isVerisightAdmin = profile?.is_verisight_admin === true
+  if (!accessState.canRead) {
+    return <CampaignRouteUnavailable state={accessState} />
+  }
+
+  const canManageCampaign = accessState.canManage
   const hasSegmentDeepDive = hasCampaignAddOn(campaignMeta, 'segment_deep_dive')
   const { data: deliveryRecordRaw } = await supabase
     .from('campaign_delivery_records')
@@ -1018,6 +1037,8 @@ export default async function CampaignPage({ params, searchParams }: Props) {
             <DashboardChip label={stats.is_active ? 'Actief' : 'Archief'} tone={stats.is_active ? 'emerald' : 'slate'} />
             <DashboardChip label={`${organization?.name ?? 'Organisatie'} · ${formatCampaignPeriod(stats.created_at)}`} tone="slate" />
             <DashboardChip label={readinessLabel} tone={hasEnoughData ? 'blue' : 'amber'} />
+            <DashboardChip label={accessState.roleChip} tone={accessState.canManage ? 'blue' : 'slate'} />
+            <DashboardChip label={accessState.scopeChip} tone={accessState.canManage ? 'emerald' : 'slate'} />
             {hasSegmentDeepDive ? <DashboardChip label="Segment deep dive" tone="emerald" /> : null}
           </>
         }
@@ -1040,6 +1061,14 @@ export default async function CampaignPage({ params, searchParams }: Props) {
           </div>
         }
       />
+
+      {accessState.noteTitle && accessState.noteBody ? (
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Accountrol en ownerduiding</p>
+          <p className="mt-2 text-sm font-semibold text-slate-900">{accessState.noteTitle}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-700">{accessState.noteBody}</p>
+        </div>
+      ) : null}
 
       <DashboardPrimaryNav items={primaryNavItems} />
 
@@ -1737,6 +1766,55 @@ function ActionCoreRouteCard({
       <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${eyebrowClass}`}>Gekozen route</p>
       <p className="mt-3 text-xl font-semibold text-[color:var(--ink)]">{title}</p>
       <p className="mt-3 max-w-2xl text-sm leading-7 text-[color:var(--text)]">{body}</p>
+    </div>
+  )
+}
+
+async function campaignExists(id: string) {
+  try {
+    const admin = createAdminClient()
+    const { data } = await admin.from('campaigns').select('id').eq('id', id).maybeSingle()
+    return Boolean(data)
+  } catch {
+    return false
+  }
+}
+
+function CampaignRouteUnavailable({
+  state,
+}: {
+  state: ReturnType<typeof buildCampaignAccessState>
+}) {
+  return (
+    <div className="space-y-6 pb-8">
+      <Link
+        href="/dashboard"
+        className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
+      >
+        Terug naar campaignoverzicht
+      </Link>
+
+      <DashboardSection
+        eyebrow="Geen campaigntoegang"
+        title={state.deniedTitle}
+        description={state.deniedBody}
+        aside={<DashboardChip label="Denied / no-access" tone="amber" />}
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <DashboardPanel
+            eyebrow="Waarom je dit ziet"
+            title="Route niet vrijgegeven voor dit account"
+            body="Deze route stopt hier bewust vroeg, zodat denied of no-access direct zichtbaar wordt in plaats van als laadstaat te blijven hangen."
+            tone="amber"
+          />
+          <DashboardPanel
+            eyebrow="Volgende stap"
+            title="Open alleen campaigns uit je eigen overzicht"
+            body="Ga terug naar het campaignoverzicht of laat Verisight bevestigen welke campaign voor jouw account zichtbaar hoort te zijn."
+            tone="blue"
+          />
+        </div>
+      </DashboardSection>
     </div>
   )
 }

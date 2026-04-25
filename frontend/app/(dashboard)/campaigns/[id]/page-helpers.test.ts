@@ -166,6 +166,7 @@ describe('action execution core', () => {
 
     expect(model.route.title).toBe('Start met rolhelderheid')
     expect(model.owner.title).toBe('HR business partner')
+    expect(model.firstStep.body).toContain('Eerste concrete stap')
     expect(model.firstStep.body).toContain('onduidelijkheid')
     expect(model.review.title).toBe('Review binnen 3 weken')
     expect(model.supportPrompt).toContain('Alleen openklappen')

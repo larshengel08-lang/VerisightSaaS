@@ -74,7 +74,7 @@ export function ClientAccessList({ invites }: Props) {
           const isActive = Boolean(invite.accepted_at)
           const cooldownMinutes = !isActive ? getRemainingCooldownMinutes(invite.invited_at) : 0
           const resendBlocked = cooldownMinutes > 0
-          const statusLabel = isActive ? 'Actieve dashboardtoegang' : 'Wacht op accountactivatie'
+          const statusLabel = isActive ? 'Dashboard vrijgegeven' : 'Wacht op vrijgave via activatie'
           const statusCls = isActive
             ? 'bg-green-50 text-green-700 border-green-100'
             : 'bg-amber-50 text-amber-700 border-amber-100'
@@ -105,8 +105,8 @@ export function ClientAccessList({ invites }: Props) {
                   </p>
                   <p className="mt-1 text-xs text-gray-500">
                     {isActive
-                      ? 'Dashboardtoegang is actief. Volgende stap: bevestig het eerste dashboard- of rapportgebruik.'
-                      : 'Activatie loopt nog. Bevestig de activatiemail en plan daarna het eerste klantcontact rond dashboardtoegang.'}
+                      ? 'Dashboardtoegang is actief. De campaign is nu vrijgegeven voor eerste dashboard- of rapportread; bevestig daarna het eerste echte gebruik.'
+                      : 'Activatie loopt nog. De campaign is pas vrijgegeven zodra het account is geactiveerd; plan daarna direct het eerste klantcontact rond dashboard of rapport.'}
                   </p>
                   {!isActive && resendBlocked && (
                     <p className="mt-1 text-xs text-amber-700">

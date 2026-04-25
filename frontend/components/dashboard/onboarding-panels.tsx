@@ -87,9 +87,9 @@ export function ActivationJourneyPanel() {
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">Wat gebeurt er nu?</p>
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         {[
-          'Je account is bedoeld voor dashboardtoegang. Verisight heeft organisatie, campaign en respondentimport al voorbereid.',
-          'Open na activatie eerst je campaignoverzicht. Daar zie je welke campagne al klaar is voor eerste managementread en welke nog respons opbouwt.',
-          'Gebruik daarna dashboard en rapport samen voor het eerste managementgesprek. Je hoeft geen setup of surveylogica meer te beheren.',
+          'Je account wordt met activatie echt vrijgegeven voor dashboardtoegang. Verisight heeft organisatie, campaign en respondentimport al voorbereid.',
+          'Open na activatie eerst je campaignoverzicht. Dat is je eerste volgende stap: daar zie je welke campaign nu al vrijgegeven is voor eerste managementread en welke nog respons opbouwt.',
+          'Gebruik daarna dashboard en rapport samen voor de eerste read. Je hoeft geen setup, reminders of surveylogica meer te beheren; Verisight blijft daarvan owner.',
         ].map((item, index) => (
           <div key={item} className="rounded-2xl border border-white/80 bg-white/90 p-4 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-500">Stap {index + 1}</p>
