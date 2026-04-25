@@ -15,8 +15,8 @@ from .action_center_core import (
 )
 
 
-MtoDesignMode = Literal["active_follow_through"]
-MtoCarrierStatus = Literal["active"]
+MtoDesignMode = Literal["design_input_only"]
+MtoCarrierStatus = Literal["inactive"]
 MtoCarrierOwnerModel = Literal["hr_central"]
 MtoCarrierManagerScope = Literal["department_only"]
 MtoTriageStatus = Literal["nieuw", "bevestigd", "geparkeerd", "uitgevoerd", "verworpen"]
@@ -37,8 +37,8 @@ class MtoDesignInputSummary:
     mode: MtoDesignMode
     theme_count: int
     notes: str | None
-    can_create_assignments: Literal[True]
-    can_open_carrier: Literal[True]
+    can_create_assignments: Literal[False]
+    can_open_carrier: Literal[False]
 
 
 @dataclass(frozen=True)
@@ -81,8 +81,8 @@ class MtoActionCenterWorkspace:
 
 _MTO_ACTION_CENTER_CARRIER = MtoActionCenterCarrier(
     key="mto",
-    label="MTO-carrier",
-    status="active",
+    label="MTO-design-input",
+    status="inactive",
     workspace_kind="follow_through",
     owner_model="hr_central",
     manager_scope="department_only",
@@ -106,11 +106,11 @@ def _is_open(triage_status: MtoTriageStatus) -> bool:
 def describe_mto_design_input(input_data: MtoDesignInput) -> MtoDesignInputSummary:
     return MtoDesignInputSummary(
         source=input_data.source,
-        mode="active_follow_through",
+        mode="design_input_only",
         theme_count=len(input_data.themes),
         notes=input_data.notes,
-        can_create_assignments=True,
-        can_open_carrier=True,
+        can_create_assignments=False,
+        can_open_carrier=False,
     )
 
 

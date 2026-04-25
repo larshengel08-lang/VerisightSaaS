@@ -10,7 +10,7 @@ import {
   getExitActionCenterCarrier,
   isExitActionCenterCandidate,
 } from '@/lib/action-center-exit'
-import { describeMtoDesignInput } from '@/lib/action-center-mto'
+import { describeMtoDesignInput, getMtoActionCenterCarrier } from '@/lib/action-center-mto'
 
 describe('action center shared core', () => {
   it('keeps the workspace bounded to follow-through signals instead of generic project planning', () => {
@@ -85,11 +85,14 @@ describe('action center shared core', () => {
       themes: ['werkdruk', 'rolhelderheid'],
       notes: 'Gebruik alleen als ontwerpinspiratie voor dossiervelden.',
     })
+    const mtoCarrier = getMtoActionCenterCarrier()
     const retentionAdapter = getFutureActionCenterAdapter('retention')
 
     expect(mtoDesignInput.mode).toBe('design_input_only')
     expect(mtoDesignInput.canCreateAssignments).toBe(false)
     expect(mtoDesignInput.canOpenCarrier).toBe(false)
+    expect(mtoCarrier.label).toBe('MTO-design-input')
+    expect(mtoCarrier.status).toBe('inactive')
     expect(retentionAdapter.status).toBe('inactive')
     expect(retentionAdapter.liveEntryEnabled).toBe(false)
   })

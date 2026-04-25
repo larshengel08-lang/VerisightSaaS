@@ -12,7 +12,11 @@ from backend.products.shared.action_center_core import (
     build_permission_envelope,
     summarize_workspace,
 )
-from backend.products.shared.action_center_mto import MtoDesignInput, describe_mto_design_input
+from backend.products.shared.action_center_mto import (
+    MtoDesignInput,
+    describe_mto_design_input,
+    get_mto_action_center_carrier,
+)
 
 
 def test_action_center_summary_stays_follow_through_bounded():
@@ -87,11 +91,14 @@ def test_mto_stays_design_only_while_future_product_adapters_stay_inactive():
             notes="Gebruik alleen als ontwerpinspiratie voor dossiervelden.",
         )
     )
+    mto_carrier = get_mto_action_center_carrier()
     retention_adapter = get_future_action_center_adapter("retention")
 
     assert design_input.mode == "design_input_only"
     assert design_input.can_create_assignments is False
     assert design_input.can_open_carrier is False
+    assert mto_carrier.label == "MTO-design-input"
+    assert mto_carrier.status == "inactive"
     assert retention_adapter.status == "inactive"
     assert retention_adapter.live_entry_enabled is False
 
