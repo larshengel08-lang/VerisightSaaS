@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { PilotLearningWorkbench } from '@/components/dashboard/pilot-learning-workbench'
-import { buildMtoActionCenterWorkspace } from '@/lib/action-center-mto'
+import { buildExitActionCenterWorkspace } from '@/lib/action-center-exit'
 import {
   DashboardChip,
   DashboardHero,
@@ -26,6 +26,19 @@ interface Props {
 
 function getSingleValue(value: string | string[] | undefined) {
   return typeof value === 'string' ? value : null
+}
+
+function isExitRouteInterest(value: ContactRequestRecord['route_interest'] | ContactRequestRecord['qualified_route']) {
+  return value === 'exitscan'
+}
+
+function filterCountsByOrgIds(source: Record<string, number>, orgIds: Set<string>) {
+  return Object.entries(source).reduce<Record<string, number>>((acc, [orgId, count]) => {
+    if (orgIds.has(orgId)) {
+      acc[orgId] = count
+    }
+    return acc
+  }, {})
 }
 
 export default async function KlantLearningsPage({ searchParams }: Props) {
@@ -126,53 +139,94 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
     loadError,
   } = await getContactRequestsForAdmin(50)
 
-  const openLessons = checkpoints.filter((checkpoint) => checkpoint.status === 'nieuw').length
-  const confirmedLessons = checkpoints.filter((checkpoint) => checkpoint.status === 'bevestigd').length
-  const campaignLinkedDossiers = dossiers.filter((dossier) => dossier.campaign_id).length
-  const leadLinkedDossiers = dossiers.filter((dossier) => dossier.contact_request_id).length
-  const checkpointsByDossier = checkpoints.reduce<Record<string, PilotLearningCheckpoint[]>>((acc, checkpoint) => {
+  const exitCampaigns = campaigns.filter((campaign) => campaign.scan_type === 'exit')
+  const exitCampaignIds = new Set(exitCampaigns.map((campaign) => campaign.id))
+  const exitCampaignStats = campaignStats.filter(
+    (stats) => stats.scan_type === 'exit' || exitCampaignIds.has(stats.campaign_id),
+  )
+  const exitDossiers = dossiers.filter(
+    (dossier) =>
+      dossier.scan_type === 'exit' ||
+      dossier.route_interest === 'exitscan' ||
+      (dossier.campaign_id ? exitCampaignIds.has(dossier.campaign_id) : false),
+  )
+  const exitDossierIds = new Set(exitDossiers.map((dossier) => dossier.id))
+  const exitCheckpoints = checkpoints.filter((checkpoint) => exitDossierIds.has(checkpoint.dossier_id))
+  const exitLeads = leads.filter(
+    (lead) =>
+      isExitRouteInterest(lead.route_interest) ||
+      isExitRouteInterest(lead.qualified_route) ||
+      exitDossiers.some((dossier) => dossier.contact_request_id === lead.id),
+  )
+  const exitOrgIds = new Set<string>([
+    ...exitCampaigns.map((campaign) => campaign.organization_id),
+    ...exitDossiers
+      .map((dossier) => dossier.organization_id)
+      .filter((value): value is string => Boolean(value)),
+  ])
+  const exitOrgs = activeOrgs.filter((org) => exitOrgIds.has(org.id))
+  const exitActiveClientAccessByOrg = filterCountsByOrgIds(activeClientAccessByOrg, exitOrgIds)
+  const exitPendingClientInvitesByOrg = filterCountsByOrgIds(pendingClientInvitesByOrg, exitOrgIds)
+
+  const openLessons = exitCheckpoints.filter((checkpoint) => checkpoint.status === 'nieuw').length
+  const confirmedLessons = exitCheckpoints.filter((checkpoint) => checkpoint.status === 'bevestigd').length
+  const campaignLinkedDossiers = exitDossiers.filter((dossier) => dossier.campaign_id).length
+  const leadLinkedDossiers = exitDossiers.filter((dossier) => dossier.contact_request_id).length
+  const checkpointsByDossier = exitCheckpoints.reduce<Record<string, PilotLearningCheckpoint[]>>((acc, checkpoint) => {
     acc[checkpoint.dossier_id] ??= []
     acc[checkpoint.dossier_id].push(checkpoint)
     return acc
   }, {})
-  const mtoWorkspace = buildMtoActionCenterWorkspace({
-    role: 'owner',
-    dossiers: dossiers
-      .filter((dossier) => dossier.scan_type === 'team' || dossier.route_interest === 'teamscan')
-      .map((dossier) => {
-        const dossierCheckpoints = checkpointsByDossier[dossier.id] ?? []
-        const firstManagementCheckpoint =
-          dossierCheckpoints.find((checkpoint) => checkpoint.checkpoint_key === 'first_management_use') ?? null
 
-        return {
-          id: dossier.id,
-          title: dossier.title,
-          triageStatus: dossier.triage_status,
-          departmentLabel: null,
-          managerLabel: firstManagementCheckpoint?.owner_label ?? null,
-          firstActionTaken: dossier.first_action_taken,
-          reviewMoment: dossier.review_moment,
-          managementActionOutcome: dossier.management_action_outcome,
-          nextRoute: dossier.next_route,
-          stopReason: dossier.stop_reason,
-        }
-      }),
+  const exitWorkspace = buildExitActionCenterWorkspace({
+    role: 'owner',
+    dossiers: exitDossiers.map((dossier) => {
+      const dossierCheckpoints = checkpointsByDossier[dossier.id] ?? []
+      const firstManagementCheckpoint =
+        dossierCheckpoints.find((checkpoint) => checkpoint.checkpoint_key === 'first_management_use') ?? null
+      const followUpReviewCheckpoint =
+        dossierCheckpoints.find((checkpoint) => checkpoint.checkpoint_key === 'follow_up_review') ?? null
+
+      return {
+        id: dossier.id,
+        title: dossier.title,
+        triageStatus: dossier.triage_status,
+        deliveryMode: dossier.delivery_mode,
+        managementOwnerLabel: firstManagementCheckpoint?.owner_label ?? null,
+        reviewOwnerLabel: followUpReviewCheckpoint?.owner_label ?? null,
+        firstActionTaken: dossier.first_action_taken,
+        reviewMoment: dossier.review_moment,
+        managementActionOutcome: dossier.management_action_outcome,
+        nextRoute: dossier.next_route,
+        stopReason: dossier.stop_reason,
+      }
+    }),
   })
-  const openMtoDossiers = mtoWorkspace.dossiers.filter((dossier) => dossier.status === 'open')
-  const reviewPressureItems = mtoWorkspace.reviewMoments.filter((reviewMoment) => reviewMoment.state === 'due')
-  const openSignals = mtoWorkspace.followUpSignals.filter((signal) => signal.state === 'open')
+
+  const openExitDossiers = exitWorkspace.dossiers.filter((dossier) => dossier.status === 'open')
+  const reviewPressureItems = exitWorkspace.reviewMoments.filter((reviewMoment) => reviewMoment.state === 'due')
+  const openSignals = exitWorkspace.followUpSignals.filter((signal) => signal.state === 'open')
+  const activeClientAccessCount = Object.values(exitActiveClientAccessByOrg).reduce((sum, count) => sum + count, 0)
+  const initialExitLeadId = exitLeads.some((lead) => lead.id === initialLeadId) ? initialLeadId : null
+  const initialExitCampaignId = exitCampaigns.some((campaign) => campaign.id === initialCampaignId)
+    ? initialCampaignId
+    : null
 
   return (
     <div className="space-y-6">
       <DashboardHero
         surface="ops"
-        eyebrow="Action Center voor MTO-follow-through"
+        eyebrow="Action Center voor ExitScan-follow-through"
         title="Operations Action Center"
-        description="Laat MTO als eerste actieve carrier landen op de shared Action Center-core: HR blijft centraal, reviewdruk blijft zichtbaar en dossiers houden de follow-through bij elkaar zonder andere productkoppelingen te openen."
+        description="ExitScan follow-through als zelfstandige productlaag: deze live slice voedt de bestaande Action Center-core rechtstreeks met echte ExitScan-dossiers, checkpoints en campaigncontext zonder andere productadapters of dashboardsporen te openen."
         tone="slate"
         meta={
           <>
-            <DashboardChip surface="ops" label={`${dossiers.length} dossier${dossiers.length === 1 ? '' : 's'}`} tone="slate" />
+            <DashboardChip
+              surface="ops"
+              label={`${exitDossiers.length} dossier${exitDossiers.length === 1 ? '' : 's'}`}
+              tone="slate"
+            />
             <DashboardChip surface="ops" label={`${openLessons} open checkpoints`} tone={openLessons > 0 ? 'amber' : 'slate'} />
             <DashboardChip surface="ops" label={`${confirmedLessons} bevestigd`} tone={confirmedLessons > 0 ? 'emerald' : 'slate'} />
           </>
@@ -204,7 +258,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
               <li>30-90 dagen review</li>
             </ol>
             <p className="text-xs text-slate-500">
-              Manual-first blijft prima zolang de les hier expliciet wordt vastgelegd. Geen buyer-facing claims of portfolioverbreding via deze route; dit blijft een interne adminlog.
+              Manual-first blijft prima zolang de les hier expliciet wordt vastgelegd. Geen MTO-framing, geen buyer-facing claims en geen portfolioverbreding via deze route; dit blijft een interne ExitScan-adminlaag.
             </p>
           </div>
         }
@@ -214,19 +268,19 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
         surface="ops"
         items={[
           {
-            label: 'MTO dossiers',
-            value: `${mtoWorkspace.summary.openDossierCount}`,
-            tone: mtoWorkspace.summary.openDossierCount > 0 ? 'slate' : 'amber',
+            label: 'ExitScan dossiers',
+            value: `${exitWorkspace.summary.openDossierCount}`,
+            tone: exitWorkspace.summary.openDossierCount > 0 ? 'slate' : 'amber',
           },
           {
             label: 'Reviewdruk',
-            value: `${mtoWorkspace.summary.reviewDueCount}`,
-            tone: mtoWorkspace.summary.reviewDueCount > 0 ? 'amber' : 'slate',
+            value: `${exitWorkspace.summary.reviewDueCount}`,
+            tone: exitWorkspace.summary.reviewDueCount > 0 ? 'amber' : 'slate',
           },
           {
             label: 'Dossiers',
-            value: `${dossiers.length} actief`,
-            tone: dossiers.length > 0 ? 'slate' : 'amber',
+            value: `${exitDossiers.length} actief`,
+            tone: exitDossiers.length > 0 ? 'slate' : 'amber',
           },
           {
             label: 'Open checkpoints',
@@ -235,12 +289,12 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           },
           {
             label: 'Leadkoppeling',
-            value: `${leadLinkedDossiers}/${dossiers.length || 0}`,
+            value: `${leadLinkedDossiers}/${exitDossiers.length || 0}`,
             tone: leadLinkedDossiers > 0 ? 'slate' : 'slate',
           },
           {
             label: 'Campaignkoppeling',
-            value: `${campaignLinkedDossiers}/${dossiers.length || 0}`,
+            value: `${campaignLinkedDossiers}/${exitDossiers.length || 0}`,
             tone: campaignLinkedDossiers > 0 ? 'slate' : 'slate',
           },
         ]}
@@ -255,13 +309,13 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
       <DashboardSection
         id="action-center"
         surface="ops"
-        eyebrow="MTO carrier"
-        title="Shared follow-through voor cockpit, dossiers en reviews"
-        description="Deze bovenlaag gebruikt dezelfde shared Action Center-core voor dossierstatus, reviewdruk en follow-through-signalen. HR blijft de centrale eigenaar; afdelingsscope blijft pas actief zodra een dossier of lokale read die expliciet maakt."
+        eyebrow="ExitScan live consumer"
+        title="Shared follow-through voor ExitScan-dossiers, reviews en workbench"
+        description="Deze live consumer leest een echte ExitScan-stroom uit de huidige learningdossiers, houdt assignment-, review- en follow-through-logica bounded en laat Action Center voor het eerst als zelfstandige productlaag landen op een bestaand runtime-oppervlak."
         aside={
           <DashboardChip
             surface="ops"
-            label={`${mtoWorkspace.carrier.label} · ${mtoWorkspace.carrier.status}`}
+            label={`${exitWorkspace.carrier.label} - ${exitWorkspace.carrier.status}`}
             tone="slate"
           />
         }
@@ -269,41 +323,37 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
         <div className="grid gap-4 xl:grid-cols-4">
           <DashboardPanel
             surface="ops"
-            eyebrow="HR centraal"
+            eyebrow="Expliciete eigenaar"
             title="Shared eigenaar"
-            value="HR centraal"
-            body="Deze carrier houdt de centrale follow-through bij HR. Managers landen alleen op hun eigen afdeling zodra die lokale context expliciet en veilig leesbaar is."
+            value={exitWorkspace.dossiers.some((dossier) => dossier.ownerId) ? 'Named owner' : 'Nog te expliciteren'}
+            body="De live consumer leest management- of revieweigenaars direct uit ExitScan-checkpoints. Zonder expliciete eigenaar opent alleen het bounded waarschuwingssignaal, niet een nieuw permissiemodel."
             tone="slate"
           />
           <DashboardPanel
             surface="ops"
             eyebrow="Reviewdruk"
             title="Actieve reviewqueue"
-            value={`${mtoWorkspace.summary.reviewDueCount}`}
-            body="Elke open MTO-dossierregel blijft zichtbaar in de reviewdruk tot reviewmoment, uitkomst of stopbesluit expliciet zijn vastgelegd."
-            tone={mtoWorkspace.summary.reviewDueCount > 0 ? 'amber' : 'slate'}
+            value={`${exitWorkspace.summary.reviewDueCount}`}
+            body="Elke open ExitScan-dossierregel blijft zichtbaar in de reviewdruk tot reviewmoment, uitkomst of stopbesluit expliciet zijn vastgelegd."
+            tone={exitWorkspace.summary.reviewDueCount > 0 ? 'amber' : 'slate'}
           />
           <DashboardPanel
             surface="ops"
             eyebrow="Dossier-first"
             title="Open follow-through"
-            value={`${mtoWorkspace.summary.openDossierCount}`}
-            body="Besluiten, eerste stap en vervolgrichting blijven dossier-first gegroepeerd in plaats van te verspreiden over losse campaignnotities."
-            tone={mtoWorkspace.summary.openDossierCount > 0 ? 'slate' : 'amber'}
+            value={`${exitWorkspace.summary.openDossierCount}`}
+            body="Besluiten, eerste stap en vervolgrichting blijven dossier-first gegroepeerd in plaats van te verspreiden over losse campaignnotities of een designpreview."
+            tone={exitWorkspace.summary.openDossierCount > 0 ? 'slate' : 'amber'}
           />
           <DashboardPanel
             surface="ops"
-            eyebrow="Afdelingsscope"
-            title="Managerbinding"
-            value={
-              mtoWorkspace.managerDepartmentLabels.length > 0
-                ? `${mtoWorkspace.managerDepartmentLabels.length} afdeling${mtoWorkspace.managerDepartmentLabels.length === 1 ? '' : 'en'}`
-                : 'Nog niet expliciet'
-            }
+            eyebrow="Delivery"
+            title="Actieve routes"
+            value={exitWorkspace.activeDeliveryModes.length > 0 ? exitWorkspace.activeDeliveryModes.join(' / ') : 'Nog niet expliciet'}
             body={
-              mtoWorkspace.managerDepartmentLabels.length > 0
-                ? `Actieve afdelingssporen: ${mtoWorkspace.managerDepartmentLabels.join(', ')}.`
-                : 'Maak de afdeling expliciet in de lokale read of het dossier zodra managergebonden follow-through echt nodig is.'
+              exitWorkspace.activeDeliveryModes.length > 0
+                ? `Actieve ExitScan-routes in deze surface: ${exitWorkspace.activeDeliveryModes.join(', ')}.`
+                : 'Maak deliverymode expliciet in het dossier zodra ExitScan-follow-through echt in baseline of live delivery landt.'
             }
             tone="slate"
           />
@@ -314,22 +364,23 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Dossiers</p>
-                <h3 className="mt-2 text-lg font-semibold text-slate-950">Open MTO follow-through</h3>
+                <h3 className="mt-2 text-lg font-semibold text-slate-950">Open ExitScan follow-through</h3>
               </div>
               <DashboardChip
                 surface="ops"
-                label={`${openMtoDossiers.length} open`}
-                tone={openMtoDossiers.length > 0 ? 'amber' : 'slate'}
+                label={`${openExitDossiers.length} open`}
+                tone={openExitDossiers.length > 0 ? 'amber' : 'slate'}
               />
             </div>
             <div className="mt-4 space-y-3">
-              {openMtoDossiers.length === 0 ? (
+              {openExitDossiers.length === 0 ? (
                 <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                  Nog geen open MTO-dossiers. Zodra TeamScan/MTO follow-through leerwaarde geeft, verschijnt de dossierqueue hier automatisch.
+                  Nog geen open ExitScan-dossiers. Zodra ExitScan follow-through leerwaarde geeft, verschijnt de dossierqueue hier automatisch.
                 </p>
               ) : (
-                openMtoDossiers.slice(0, 5).map((dossier) => {
-                  const assignment = mtoWorkspace.assignments.find((item) => item.dossierId === dossier.id)
+                openExitDossiers.slice(0, 5).map((dossier) => {
+                  const assignment = exitWorkspace.assignments.find((item) => item.dossierId === dossier.id)
+
                   return (
                     <div key={dossier.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-4">
                       <p className="text-sm font-semibold text-slate-950">{dossier.title}</p>
@@ -337,7 +388,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
                         Eerste stap: {assignment?.title ?? 'Nog niet vastgelegd'}.
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        Status {assignment?.state ?? 'onbekend'} · Permission shared-core: {dossier.permissionEnvelope.canUpdateAssignments ? 'bewerkbaar' : 'read-only'}
+                        Status {assignment?.state ?? 'onbekend'} - Permission shared-core: {dossier.permissionEnvelope.canUpdateAssignments ? 'bewerkbaar' : 'read-only'}
                       </p>
                     </div>
                   )
@@ -361,11 +412,11 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
             <div className="mt-4 space-y-3">
               {reviewPressureItems.length === 0 ? (
                 <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                  Geen actieve reviewdruk. De shared core houdt deze lijst leeg zodra dossiers geparkeerd, uitgevoerd of bewust gestopt zijn.
+                  Geen actieve reviewdruk. De shared core houdt deze lijst leeg zodra ExitScan-dossiers geparkeerd, uitgevoerd of bewust gestopt zijn.
                 </p>
               ) : (
                 reviewPressureItems.slice(0, 5).map((reviewMoment) => {
-                  const dossier = mtoWorkspace.dossiers.find((item) => item.id === reviewMoment.dossierId)
+                  const dossier = exitWorkspace.dossiers.find((item) => item.id === reviewMoment.dossierId)
                   const signals = openSignals.filter((signal) => signal.dossierId === reviewMoment.dossierId)
 
                   return (
@@ -389,32 +440,32 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           surface="ops"
           eyebrow="Leads"
           title="Lead-koppeling"
-          value={`${leadLinkedDossiers}/${dossiers.length || 0}`}
-          body="Leadcontext hoort niet meer in losse mailtjes te blijven hangen. Gebruik contactaanvragen als vaste eerste hypotheselaag."
+          value={`${leadLinkedDossiers}/${exitDossiers.length || 0}`}
+          body="Exit-intake hoort niet in losse mailtjes te blijven hangen. Gebruik contactaanvragen als vaste eerste routehypothese voor ExitScan-follow-through."
           tone={leadLinkedDossiers > 0 ? 'slate' : 'slate'}
         />
         <DashboardPanel
           surface="ops"
           eyebrow="Delivery"
           title="Campaign-koppeling"
-          value={`${campaignLinkedDossiers}/${dossiers.length || 0}`}
-          body="Koppel zodra implementation, launch of managementgebruik echt in delivery meelopen."
+          value={`${campaignLinkedDossiers}/${exitDossiers.length || 0}`}
+          body="Koppel zodra ExitScan implementation, launch of managementgebruik echt in delivery meelopen."
           tone={campaignLinkedDossiers > 0 ? 'slate' : 'slate'}
         />
         <DashboardPanel
           surface="ops"
           eyebrow="Coverage"
-          title="Recente leads"
-          value={`${leads.length}`}
-          body="Nieuwe aanvragen kunnen direct in een learningdossier landen zodra route, koopreden of trustfrictie leerwaarde geeft."
-          tone={leads.length > 0 ? 'slate' : 'slate'}
+          title="Recente Exit-leads"
+          value={`${exitLeads.length}`}
+          body="Nieuwe ExitScan-aanvragen kunnen direct in een learningdossier landen zodra route, koopreden of trustfrictie leerwaarde geeft."
+          tone={exitLeads.length > 0 ? 'slate' : 'slate'}
         />
         <DashboardPanel
           surface="ops"
           eyebrow="Ops"
           title="Actieve klanttoegang"
-          value={`${Object.values(activeClientAccessByOrg).reduce((sum, count) => sum + count, 0)}`}
-          body="Gebruik managementread en follow-up vooral bij campagnes waar klanttoegang al actief is of net is uitgenodigd."
+          value={`${activeClientAccessCount}`}
+          body="Gebruik managementread en follow-up vooral bij ExitScan-campaigns waar klanttoegang al actief is of net is uitgenodigd."
           tone="slate"
         />
       </div>
@@ -425,7 +476,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           surface="ops"
           eyebrow="Config"
           title="Leadinput is niet volledig beschikbaar"
-          description="De workbench werkt wel, maar kan de server-side leadlijst nog niet ophalen."
+          description="De ExitScan-workbench werkt wel, maar kan de server-side leadlijst nog niet ophalen."
         >
           <DashboardPanel surface="ops" title="Ontbrekende configuratie" body={configError} tone="amber" />
         </DashboardSection>
@@ -437,7 +488,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           surface="ops"
           eyebrow="Load"
           title="Leadlijst kon niet worden geladen"
-          description="De learningworkbench blijft bruikbaar, maar recente contactaanvragen konden niet worden opgehaald voor triage."
+          description="De ExitScan-workbench blijft bruikbaar, maar recente contactaanvragen konden niet worden opgehaald voor triage."
         >
           <DashboardPanel surface="ops" title="Backendfout" body={loadError} tone="amber" />
         </DashboardSection>
@@ -447,21 +498,27 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
         id="workbench"
         surface="ops"
         eyebrow="Workbench"
-        title="Learninglog en dossiers"
-        description="Elke vroege klantroute hoort minimale learning-output op te leveren: objective signals, interpreted observation, confirmed lesson, triagebestemming en case-readiness zodra buyer-safe bewijs in zicht komt."
-        aside={<DashboardChip surface="ops" label={`${activeOrgs.length} actieve organisatie${activeOrgs.length === 1 ? '' : 's'}`} tone="slate" />}
+        title="ExitScan learninglog en dossiers"
+        description="Elke ExitScan-route hoort minimale learning-output op te leveren: objective signals, interpreted observation, confirmed lesson, triagebestemming en bounded follow-through zonder andere productsporen te openen."
+        aside={
+          <DashboardChip
+            surface="ops"
+            label={`${exitOrgs.length} actieve organisatie${exitOrgs.length === 1 ? '' : 's'}`}
+            tone="slate"
+          />
+        }
       >
         <PilotLearningWorkbench
-          orgs={activeOrgs}
-          campaigns={campaigns}
-          campaignStats={campaignStats}
-          leads={leads as ContactRequestRecord[]}
-          dossiers={dossiers}
-          checkpoints={checkpoints}
-          activeClientAccessByOrg={activeClientAccessByOrg}
-          pendingClientInvitesByOrg={pendingClientInvitesByOrg}
-          initialLeadId={initialLeadId}
-          initialCampaignId={initialCampaignId}
+          orgs={exitOrgs}
+          campaigns={exitCampaigns}
+          campaignStats={exitCampaignStats}
+          leads={exitLeads as ContactRequestRecord[]}
+          dossiers={exitDossiers}
+          checkpoints={exitCheckpoints}
+          activeClientAccessByOrg={exitActiveClientAccessByOrg}
+          pendingClientInvitesByOrg={exitPendingClientInvitesByOrg}
+          initialLeadId={initialExitLeadId}
+          initialCampaignId={initialExitCampaignId}
         />
       </DashboardSection>
     </div>

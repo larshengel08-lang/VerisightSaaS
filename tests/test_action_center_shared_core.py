@@ -1,4 +1,9 @@
 from backend.products.shared.action_center_adapters import get_future_action_center_adapter
+from backend.products.shared.action_center_exit import (
+    ExitDossierInput,
+    build_exit_action_center_workspace,
+    get_exit_action_center_carrier,
+)
 from backend.products.shared.action_center_core import (
     ActionAssignment,
     ActionDossier,
@@ -80,7 +85,7 @@ def test_permission_envelope_stays_within_follow_through_surface():
     assert owner_envelope.can_open_product_adapters is False
 
 
-def test_mto_becomes_the_first_active_action_center_carrier_while_future_adapters_stay_inactive():
+def test_mto_stays_available_while_future_product_adapters_exclude_live_exit():
     design_input = describe_mto_design_input(
         MtoDesignInput(
             source="mto",
@@ -89,7 +94,7 @@ def test_mto_becomes_the_first_active_action_center_carrier_while_future_adapter
         )
     )
     carrier = get_mto_action_center_carrier()
-    exit_adapter = get_future_action_center_adapter("exit")
+    retention_adapter = get_future_action_center_adapter("retention")
 
     assert carrier.status == "active"
     assert carrier.workspace_kind == "follow_through"
@@ -101,8 +106,8 @@ def test_mto_becomes_the_first_active_action_center_carrier_while_future_adapter
     assert design_input.mode == "active_follow_through"
     assert design_input.can_create_assignments is True
     assert design_input.can_open_carrier is True
-    assert exit_adapter.status == "inactive"
-    assert exit_adapter.live_entry_enabled is False
+    assert retention_adapter.status == "inactive"
+    assert retention_adapter.live_entry_enabled is False
 
 
 def test_mto_workspace_projects_dossiers_reviews_and_hr_central_guardrails_onto_shared_core():
@@ -144,6 +149,67 @@ def test_mto_workspace_projects_dossiers_reviews_and_hr_central_guardrails_onto_
     assert workspace.summary.review_due_count == 2
     assert workspace.summary.escalation_count == 1
     assert workspace.manager_departments == ("Sales", "Support")
+    assert workspace.assignments[0].state == "active"
+    assert workspace.assignments[1].state == "blocked"
+    assert any(signal.kind == "owner_missing" for signal in workspace.follow_up_signals)
+    assert any(signal.kind == "decision_due" for signal in workspace.follow_up_signals)
+
+
+def test_exit_becomes_the_first_live_product_consumer_without_opening_other_adapters():
+    carrier = get_exit_action_center_carrier()
+    retention_adapter = get_future_action_center_adapter("retention")
+
+    assert carrier.label == "ExitScan-adapter"
+    assert carrier.status == "active"
+    assert carrier.workspace_kind == "follow_through"
+    assert carrier.route_scope == "exit_only"
+    assert carrier.owner_model == "explicit_named_owner"
+    assert carrier.review_discipline == "follow_up_review_required"
+    assert carrier.can_open_other_product_adapters is False
+    assert retention_adapter.status == "inactive"
+    assert retention_adapter.live_entry_enabled is False
+
+
+def test_exit_workspace_projects_dossiers_with_explicit_owner_and_bounded_review_logic():
+    workspace = build_exit_action_center_workspace(
+        role="owner",
+        dossiers=[
+            ExitDossierInput(
+                id="dos-1",
+                title="ExitScan - Support closeout",
+                triage_status="bevestigd",
+                delivery_mode="live",
+                management_owner_label="Sanne",
+                review_owner_label="Verisight",
+                first_action_taken="Plan exit-closeout met HR en teamlead",
+                review_moment="Herlees over 30 dagen",
+                management_action_outcome=None,
+                next_route=None,
+                stop_reason=None,
+            ),
+            ExitDossierInput(
+                id="dos-2",
+                title="ExitScan - Sales closeout",
+                triage_status="nieuw",
+                delivery_mode="baseline",
+                management_owner_label=None,
+                review_owner_label=None,
+                first_action_taken=None,
+                review_moment=None,
+                management_action_outcome=None,
+                next_route=None,
+                stop_reason=None,
+            ),
+        ],
+    )
+
+    assert workspace.carrier.route_scope == "exit_only"
+    assert workspace.summary.workspace_kind == "follow_through"
+    assert workspace.summary.open_dossier_count == 2
+    assert workspace.summary.blocked_count == 1
+    assert workspace.summary.review_due_count == 2
+    assert workspace.summary.escalation_count == 1
+    assert workspace.active_delivery_modes == ("baseline", "live")
     assert workspace.assignments[0].state == "active"
     assert workspace.assignments[1].state == "blocked"
     assert any(signal.kind == "owner_missing" for signal in workspace.follow_up_signals)

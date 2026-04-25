@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-FutureActionCenterAdapterKey = Literal["exit", "retention", "onboarding", "pulse", "leadership"]
+FutureActionCenterAdapterKey = Literal["retention", "onboarding", "pulse", "leadership"]
 FutureActionCenterAdapterStatus = Literal["inactive"]
 
 
@@ -17,12 +17,6 @@ class FutureActionCenterAdapter:
 
 
 _FUTURE_ADAPTERS: dict[FutureActionCenterAdapterKey, FutureActionCenterAdapter] = {
-    "exit": FutureActionCenterAdapter(
-        key="exit",
-        label="ExitScan-adapter",
-        status="inactive",
-        live_entry_enabled=False,
-    ),
     "retention": FutureActionCenterAdapter(
         key="retention",
         label="RetentieScan-adapter",

@@ -35,6 +35,9 @@ describe('dashboard home review guardrails', () => {
     expect(pageSource).toContain('Mogelijke vervolgroutes')
     expect(pageSource).toContain('!showFirstNextStep')
     expect(pageSource).toContain('campaign.total_completed >= FIRST_INSIGHT_THRESHOLD')
+    expect(pageSource).toContain('ExitScan follow-through en dossiers')
+    expect(pageSource).toContain('Open de shared Action Center-laag voor ExitScan')
+    expect(pageSource).not.toContain('MTO follow-through en dossiers')
 
     expect(launchControlSource).toContain('Product')
     expect(launchControlSource).toContain('Verisight doet nu')

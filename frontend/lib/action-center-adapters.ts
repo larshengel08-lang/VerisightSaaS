@@ -1,5 +1,4 @@
 export type FutureActionCenterAdapterKey =
-  | 'exit'
   | 'retention'
   | 'onboarding'
   | 'pulse'
@@ -15,7 +14,6 @@ export interface FutureActionCenterAdapter {
 }
 
 const FUTURE_ADAPTERS: Record<FutureActionCenterAdapterKey, FutureActionCenterAdapter> = {
-  exit: { key: 'exit', label: 'ExitScan-adapter', status: 'inactive', liveEntryEnabled: false },
   retention: { key: 'retention', label: 'RetentieScan-adapter', status: 'inactive', liveEntryEnabled: false },
   onboarding: { key: 'onboarding', label: 'Onboarding-adapter', status: 'inactive', liveEntryEnabled: false },
   pulse: { key: 'pulse', label: 'Pulse-adapter', status: 'inactive', liveEntryEnabled: false },

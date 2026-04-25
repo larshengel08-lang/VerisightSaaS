@@ -2,16 +2,18 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 describe('klantlearnings action center landing', () => {
-  it('keeps MTO on the shared action center core without opening other carriers', () => {
+  it('wires ExitScan onto the live action center surface without reopening the wider adapter suite', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain("buildMtoActionCenterWorkspace")
-    expect(source).toContain('Action Center voor MTO-follow-through')
+    expect(source).toContain("buildExitActionCenterWorkspace")
+    expect(source).toContain('Action Center voor ExitScan-follow-through')
     expect(source).toContain('Operations Action Center')
-    expect(source).toContain('Shared follow-through voor cockpit, dossiers en reviews')
-    expect(source).toContain('HR blijft de centrale eigenaar')
+    expect(source).toContain('ExitScan follow-through als zelfstandige productlaag')
+    expect(source).toContain('Expliciete eigenaar')
     expect(source).toContain('Reviewdruk')
     expect(source).toContain('Dossier-first')
-    expect(source).toContain('Nog geen open MTO-dossiers')
+    expect(source).toContain('Nog geen open ExitScan-dossiers')
+    expect(source).not.toContain("buildMtoActionCenterWorkspace")
+    expect(source).not.toContain('Action Center voor MTO-follow-through')
   })
 })
