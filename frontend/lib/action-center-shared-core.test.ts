@@ -8,12 +8,9 @@ import {
 import {
   buildExitActionCenterWorkspace,
   getExitActionCenterCarrier,
+  isExitActionCenterCandidate,
 } from '@/lib/action-center-exit'
-import {
-  buildMtoActionCenterWorkspace,
-  describeMtoDesignInput,
-  getMtoActionCenterCarrier,
-} from '@/lib/action-center-mto'
+import { describeMtoDesignInput, getMtoActionCenterCarrier } from '@/lib/action-center-mto'
 
 describe('action center shared core', () => {
   it('keeps the workspace bounded to follow-through signals instead of generic project planning', () => {
@@ -82,75 +79,25 @@ describe('action center shared core', () => {
     expect(ownerEnvelope.canOpenProductAdapters).toBe(false)
   })
 
-  it('keeps MTO available as a bounded carrier while future product adapters exclude live ExitScan', () => {
+  it('keeps MTO design-only while future product adapters stay inactive', () => {
     const mtoDesignInput = describeMtoDesignInput({
       source: 'mto',
       themes: ['werkdruk', 'rolhelderheid'],
       notes: 'Gebruik alleen als ontwerpinspiratie voor dossiervelden.',
     })
-    const carrier = getMtoActionCenterCarrier()
+    const mtoCarrier = getMtoActionCenterCarrier()
     const retentionAdapter = getFutureActionCenterAdapter('retention')
 
-    expect(carrier.status).toBe('active')
-    expect(carrier.workspaceKind).toBe('follow_through')
-    expect(carrier.ownerModel).toBe('hr_central')
-    expect(carrier.managerScope).toBe('department_only')
-    expect(carrier.reviewPressureVisible).toBe(true)
-    expect(carrier.dossierFirst).toBe(true)
-    expect(carrier.canOpenOtherProductAdapters).toBe(false)
-    expect(mtoDesignInput.mode).toBe('active_follow_through')
-    expect(mtoDesignInput.canCreateAssignments).toBe(true)
-    expect(mtoDesignInput.canOpenCarrier).toBe(true)
+    expect(mtoDesignInput.mode).toBe('design_input_only')
+    expect(mtoDesignInput.canCreateAssignments).toBe(false)
+    expect(mtoDesignInput.canOpenCarrier).toBe(false)
+    expect(mtoCarrier.label).toBe('MTO-design-input')
+    expect(mtoCarrier.status).toBe('inactive')
     expect(retentionAdapter.status).toBe('inactive')
     expect(retentionAdapter.liveEntryEnabled).toBe(false)
   })
 
-  it('projects MTO dossiers and review pressure onto the shared follow-through core', () => {
-    const workspace = buildMtoActionCenterWorkspace({
-      role: 'owner',
-      dossiers: [
-        {
-          id: 'dos-1',
-          title: 'Werkdruk - Support',
-          triageStatus: 'bevestigd',
-          departmentLabel: 'Support',
-          managerLabel: 'Sanne',
-          firstActionTaken: 'Roosterdruk binnen 2 weken herverdelen',
-          reviewMoment: 'Herlees over 30 dagen',
-          managementActionOutcome: null,
-          nextRoute: null,
-          stopReason: null,
-        },
-        {
-          id: 'dos-2',
-          title: 'Rolhelderheid - Sales',
-          triageStatus: 'nieuw',
-          departmentLabel: 'Sales',
-          managerLabel: null,
-          firstActionTaken: null,
-          reviewMoment: null,
-          managementActionOutcome: null,
-          nextRoute: null,
-          stopReason: null,
-        },
-      ],
-    })
-
-    expect(workspace.carrier.ownerModel).toBe('hr_central')
-    expect(workspace.carrier.managerScope).toBe('department_only')
-    expect(workspace.summary.workspaceKind).toBe('follow_through')
-    expect(workspace.summary.openDossierCount).toBe(2)
-    expect(workspace.summary.blockedCount).toBe(1)
-    expect(workspace.summary.reviewDueCount).toBe(2)
-    expect(workspace.summary.escalationCount).toBe(1)
-    expect(workspace.managerDepartmentLabels).toEqual(['Sales', 'Support'])
-    expect(workspace.assignments[0]?.state).toBe('active')
-    expect(workspace.assignments[1]?.state).toBe('blocked')
-    expect(workspace.followUpSignals.some((signal) => signal.kind === 'owner_missing')).toBe(true)
-    expect(workspace.followUpSignals.some((signal) => signal.kind === 'decision_due')).toBe(true)
-  })
-
-  it('activates ExitScan as the first live product consumer without opening the other adapters', () => {
+  it('keeps ExitScan as the only live action center consumer in this slice', () => {
     const carrier = getExitActionCenterCarrier()
     const retentionAdapter = getFutureActionCenterAdapter('retention')
 
@@ -165,9 +112,54 @@ describe('action center shared core', () => {
     expect(retentionAdapter.liveEntryEnabled).toBe(false)
   })
 
-  it('projects ExitScan dossiers onto the shared core with explicit owner and bounded review logic', () => {
+  it('keeps route-only intake bounded once another product binding exists', () => {
+    const exitCampaignIds = new Set(['camp-exit'])
+
+    expect(
+      isExitActionCenterCandidate({
+        dossier: {
+          scanType: 'exit',
+          routeInterest: 'retentiescan',
+          campaignId: 'camp-retention',
+        },
+        exitCampaignIds,
+      }),
+    ).toBe(true)
+    expect(
+      isExitActionCenterCandidate({
+        dossier: {
+          scanType: null,
+          routeInterest: 'exitscan',
+          campaignId: null,
+        },
+        exitCampaignIds,
+      }),
+    ).toBe(true)
+    expect(
+      isExitActionCenterCandidate({
+        dossier: {
+          scanType: 'retention',
+          routeInterest: 'exitscan',
+          campaignId: null,
+        },
+        exitCampaignIds,
+      }),
+    ).toBe(false)
+    expect(
+      isExitActionCenterCandidate({
+        dossier: {
+          scanType: null,
+          routeInterest: 'exitscan',
+          campaignId: 'camp-retention',
+        },
+        exitCampaignIds,
+      }),
+    ).toBe(false)
+  })
+
+  it('keeps the admin surface read-only while explicit dossier owners stay visible', () => {
     const workspace = buildExitActionCenterWorkspace({
-      role: 'owner',
+      role: 'member',
       dossiers: [
         {
           id: 'dos-1',
@@ -177,19 +169,6 @@ describe('action center shared core', () => {
           managementOwnerLabel: 'Sanne',
           reviewOwnerLabel: 'Verisight',
           firstActionTaken: 'Plan exit-closeout met HR en teamlead',
-          reviewMoment: 'Herlees over 30 dagen',
-          managementActionOutcome: null,
-          nextRoute: null,
-          stopReason: null,
-        },
-        {
-          id: 'dos-2',
-          title: 'ExitScan - Sales closeout',
-          triageStatus: 'nieuw',
-          deliveryMode: 'baseline',
-          managementOwnerLabel: null,
-          reviewOwnerLabel: null,
-          firstActionTaken: null,
           reviewMoment: null,
           managementActionOutcome: null,
           nextRoute: null,
@@ -198,16 +177,10 @@ describe('action center shared core', () => {
       ],
     })
 
-    expect(workspace.carrier.routeScope).toBe('exit_only')
-    expect(workspace.summary.workspaceKind).toBe('follow_through')
-    expect(workspace.summary.openDossierCount).toBe(2)
-    expect(workspace.summary.blockedCount).toBe(1)
-    expect(workspace.summary.reviewDueCount).toBe(2)
-    expect(workspace.summary.escalationCount).toBe(1)
-    expect(workspace.activeDeliveryModes).toEqual(['baseline', 'live'])
-    expect(workspace.assignments[0]?.state).toBe('active')
-    expect(workspace.assignments[1]?.state).toBe('blocked')
-    expect(workspace.followUpSignals.some((signal) => signal.kind === 'owner_missing')).toBe(true)
-    expect(workspace.followUpSignals.some((signal) => signal.kind === 'decision_due')).toBe(true)
+    expect(workspace.dossiers[0]?.ownerId).toBe('manager:sanne')
+    expect(workspace.assignments[0]?.ownerId).toBe('manager:sanne')
+    expect(workspace.dossiers[0]?.permissionEnvelope.canUpdateAssignments).toBe(false)
+    expect(workspace.dossiers[0]?.permissionEnvelope.canManagePermissions).toBe(false)
+    expect(workspace.reviewMoments[0]?.scheduledFor).toBe('Exit reviewmoment nog vastleggen')
   })
 })

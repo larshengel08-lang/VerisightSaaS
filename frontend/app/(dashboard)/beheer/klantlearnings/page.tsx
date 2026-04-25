@@ -1,7 +1,10 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { PilotLearningWorkbench } from '@/components/dashboard/pilot-learning-workbench'
-import { buildExitActionCenterWorkspace } from '@/lib/action-center-exit'
+import {
+  buildExitActionCenterWorkspace,
+  isExitActionCenterCandidate,
+} from '@/lib/action-center-exit'
 import {
   DashboardChip,
   DashboardHero,
@@ -24,6 +27,8 @@ interface Props {
   searchParams?: Promise<SearchParams>
 }
 
+const REVIEW_MOMENT_PENDING_LABEL = 'Exit reviewmoment nog vastleggen'
+
 function getSingleValue(value: string | string[] | undefined) {
   return typeof value === 'string' ? value : null
 }
@@ -39,6 +44,10 @@ function filterCountsByOrgIds(source: Record<string, number>, orgIds: Set<string
     }
     return acc
   }, {})
+}
+
+function isReviewMomentPlanned(value: string) {
+  return value !== REVIEW_MOMENT_PENDING_LABEL
 }
 
 export default async function KlantLearningsPage({ searchParams }: Props) {
@@ -144,19 +153,28 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
   const exitCampaignStats = campaignStats.filter(
     (stats) => stats.scan_type === 'exit' || exitCampaignIds.has(stats.campaign_id),
   )
-  const exitDossiers = dossiers.filter(
-    (dossier) =>
-      dossier.scan_type === 'exit' ||
-      dossier.route_interest === 'exitscan' ||
-      (dossier.campaign_id ? exitCampaignIds.has(dossier.campaign_id) : false),
+  const exitDossiers = dossiers.filter((dossier) =>
+    isExitActionCenterCandidate({
+      dossier: {
+        scanType: dossier.scan_type,
+        routeInterest: dossier.route_interest,
+        campaignId: dossier.campaign_id,
+      },
+      exitCampaignIds,
+    }),
   )
   const exitDossierIds = new Set(exitDossiers.map((dossier) => dossier.id))
   const exitCheckpoints = checkpoints.filter((checkpoint) => exitDossierIds.has(checkpoint.dossier_id))
+  const exitLeadIdsFromDossiers = new Set(
+    exitDossiers
+      .map((dossier) => dossier.contact_request_id)
+      .filter((value): value is string => Boolean(value)),
+  )
   const exitLeads = leads.filter(
     (lead) =>
       isExitRouteInterest(lead.route_interest) ||
       isExitRouteInterest(lead.qualified_route) ||
-      exitDossiers.some((dossier) => dossier.contact_request_id === lead.id),
+      exitLeadIdsFromDossiers.has(lead.id),
   )
   const exitOrgIds = new Set<string>([
     ...exitCampaigns.map((campaign) => campaign.organization_id),
@@ -179,7 +197,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
   }, {})
 
   const exitWorkspace = buildExitActionCenterWorkspace({
-    role: 'owner',
+    role: 'member',
     dossiers: exitDossiers.map((dossier) => {
       const dossierCheckpoints = checkpointsByDossier[dossier.id] ?? []
       const firstManagementCheckpoint =
@@ -206,6 +224,11 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
   const openExitDossiers = exitWorkspace.dossiers.filter((dossier) => dossier.status === 'open')
   const reviewPressureItems = exitWorkspace.reviewMoments.filter((reviewMoment) => reviewMoment.state === 'due')
   const openSignals = exitWorkspace.followUpSignals.filter((signal) => signal.state === 'open')
+  const explicitOwnerCount = exitWorkspace.dossiers.filter((dossier) => dossier.ownerId).length
+  const explicitOwnerOpenCount = openExitDossiers.filter((dossier) => dossier.ownerId).length
+  const scheduledReviewCount = reviewPressureItems.filter((reviewMoment) =>
+    isReviewMomentPlanned(reviewMoment.scheduledFor),
+  ).length
   const activeClientAccessCount = Object.values(exitActiveClientAccessByOrg).reduce((sum, count) => sum + count, 0)
   const initialExitLeadId = exitLeads.some((lead) => lead.id === initialLeadId) ? initialLeadId : null
   const initialExitCampaignId = exitCampaigns.some((campaign) => campaign.id === initialCampaignId)
@@ -311,7 +334,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
         surface="ops"
         eyebrow="ExitScan live consumer"
         title="Shared follow-through voor ExitScan-dossiers, reviews en workbench"
-        description="Deze live consumer leest een echte ExitScan-stroom uit de huidige learningdossiers, houdt assignment-, review- en follow-through-logica bounded en laat Action Center voor het eerst als zelfstandige productlaag landen op een bestaand runtime-oppervlak."
+        description="Deze live consumer blijft read-only voor de adminroute, leest alleen bounded ExitScan-dossiers in en toont eigenaar- en reviewstatus zonder extra claims over permissions of andere productsporen."
         aside={
           <DashboardChip
             surface="ops"
@@ -323,38 +346,44 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
         <div className="grid gap-4 xl:grid-cols-4">
           <DashboardPanel
             surface="ops"
-            eyebrow="Expliciete eigenaar"
-            title="Shared eigenaar"
-            value={exitWorkspace.dossiers.some((dossier) => dossier.ownerId) ? 'Named owner' : 'Nog te expliciteren'}
-            body="De live consumer leest management- of revieweigenaars direct uit ExitScan-checkpoints. Zonder expliciete eigenaar opent alleen het bounded waarschuwingssignaal, niet een nieuw permissiemodel."
+            eyebrow="Ownerduiding"
+            title="Expliciete dossierhouders"
+            value={
+              openExitDossiers.length > 0
+                ? `${explicitOwnerOpenCount}/${openExitDossiers.length} expliciet`
+                : explicitOwnerCount > 0
+                  ? `${explicitOwnerCount}/${exitWorkspace.dossiers.length} expliciet`
+                  : 'Nog niet expliciet'
+            }
+            body="Deze admin-surface neemt eigenaarschap niet over. Hij leest alleen expliciete manager- of reviewhouders uit ExitScan-checkpoints."
             tone="slate"
           />
           <DashboardPanel
             surface="ops"
-            eyebrow="Reviewdruk"
-            title="Actieve reviewqueue"
-            value={`${exitWorkspace.summary.reviewDueCount}`}
-            body="Elke open ExitScan-dossierregel blijft zichtbaar in de reviewdruk tot reviewmoment, uitkomst of stopbesluit expliciet zijn vastgelegd."
-            tone={exitWorkspace.summary.reviewDueCount > 0 ? 'amber' : 'slate'}
+            eyebrow="Permissions"
+            title="Surface-rechten"
+            value={exitWorkspace.dossiers.some((dossier) => dossier.permissionEnvelope.canUpdateAssignments) ? 'Bewerkbaar' : 'Read-only'}
+            body="De huidige adminroute kijkt mee als shared-core member. Assignment-, permission- en close-acties blijven dus buiten deze surface totdat een echte product-owner ze opent."
+            tone="slate"
           />
           <DashboardPanel
             surface="ops"
-            eyebrow="Dossier-first"
-            title="Open follow-through"
-            value={`${exitWorkspace.summary.openDossierCount}`}
-            body="Besluiten, eerste stap en vervolgrichting blijven dossier-first gegroepeerd in plaats van te verspreiden over losse campaignnotities of een designpreview."
-            tone={exitWorkspace.summary.openDossierCount > 0 ? 'slate' : 'amber'}
-          />
-          <DashboardPanel
-            surface="ops"
-            eyebrow="Delivery"
-            title="Actieve routes"
-            value={exitWorkspace.activeDeliveryModes.length > 0 ? exitWorkspace.activeDeliveryModes.join(' / ') : 'Nog niet expliciet'}
-            body={
-              exitWorkspace.activeDeliveryModes.length > 0
-                ? `Actieve ExitScan-routes in deze surface: ${exitWorkspace.activeDeliveryModes.join(', ')}.`
-                : 'Maak deliverymode expliciet in het dossier zodra ExitScan-follow-through echt in baseline of live delivery landt.'
+            eyebrow="Reviewstatus"
+            title="Open reviewdruk"
+            value={
+              reviewPressureItems.length > 0
+                ? `${scheduledReviewCount}/${reviewPressureItems.length} gepland`
+                : 'Geen open reviews'
             }
+            body="Open dossiers blijven in reviewdruk; zonder expliciet reviewmoment leest deze surface dat ook zo, in plaats van alsof review al gepland is."
+            tone={reviewPressureItems.length > 0 ? 'amber' : 'slate'}
+          />
+          <DashboardPanel
+            surface="ops"
+            eyebrow="Bounded scope"
+            title="Exit-only filter"
+            value={exitWorkspace.carrier.routeScope}
+            body="Dossiers blijven alleen binnen deze surface als scan_type exit is, een exit-campaign is gekoppeld, of de intake nog ongebonden ExitScan-route is."
             tone="slate"
           />
         </div>
@@ -388,7 +417,10 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
                         Eerste stap: {assignment?.title ?? 'Nog niet vastgelegd'}.
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        Status {assignment?.state ?? 'onbekend'} - Permission shared-core: {dossier.permissionEnvelope.canUpdateAssignments ? 'bewerkbaar' : 'read-only'}
+                        Dossierhouder: {dossier.ownerId ?? 'Nog niet expliciet'}.
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Status {assignment?.state ?? 'onbekend'} - Surface: {dossier.permissionEnvelope.canUpdateAssignments ? 'bewerkbaar' : 'read-only'}
                       </p>
                     </div>
                   )
@@ -423,6 +455,9 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
                     <div key={reviewMoment.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-4">
                       <p className="text-sm font-semibold text-slate-950">{dossier?.title ?? reviewMoment.dossierId}</p>
                       <p className="mt-2 text-sm leading-6 text-slate-600">{reviewMoment.scheduledFor}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Reviewstatus: {isReviewMomentPlanned(reviewMoment.scheduledFor) ? 'Gepland' : 'Nog niet gepland'}
+                      </p>
                       <p className="mt-1 text-xs text-slate-500">
                         Open signalen: {signals.map((signal) => signal.kind).join(', ') || 'geen'}
                       </p>

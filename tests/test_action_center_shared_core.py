@@ -14,8 +14,6 @@ from backend.products.shared.action_center_core import (
 )
 from backend.products.shared.action_center_mto import (
     MtoDesignInput,
-    MtoDossierInput,
-    build_mto_action_center_workspace,
     describe_mto_design_input,
     get_mto_action_center_carrier,
 )
@@ -85,7 +83,7 @@ def test_permission_envelope_stays_within_follow_through_surface():
     assert owner_envelope.can_open_product_adapters is False
 
 
-def test_mto_stays_available_while_future_product_adapters_exclude_live_exit():
+def test_mto_stays_design_only_while_future_product_adapters_stay_inactive():
     design_input = describe_mto_design_input(
         MtoDesignInput(
             source="mto",
@@ -93,69 +91,19 @@ def test_mto_stays_available_while_future_product_adapters_exclude_live_exit():
             notes="Gebruik alleen als ontwerpinspiratie voor dossiervelden.",
         )
     )
-    carrier = get_mto_action_center_carrier()
+    mto_carrier = get_mto_action_center_carrier()
     retention_adapter = get_future_action_center_adapter("retention")
 
-    assert carrier.status == "active"
-    assert carrier.workspace_kind == "follow_through"
-    assert carrier.owner_model == "hr_central"
-    assert carrier.manager_scope == "department_only"
-    assert carrier.review_pressure_visible is True
-    assert carrier.dossier_first is True
-    assert carrier.can_open_other_product_adapters is False
-    assert design_input.mode == "active_follow_through"
-    assert design_input.can_create_assignments is True
-    assert design_input.can_open_carrier is True
+    assert design_input.mode == "design_input_only"
+    assert design_input.can_create_assignments is False
+    assert design_input.can_open_carrier is False
+    assert mto_carrier.label == "MTO-design-input"
+    assert mto_carrier.status == "inactive"
     assert retention_adapter.status == "inactive"
     assert retention_adapter.live_entry_enabled is False
 
 
-def test_mto_workspace_projects_dossiers_reviews_and_hr_central_guardrails_onto_shared_core():
-    workspace = build_mto_action_center_workspace(
-        role="owner",
-        dossiers=[
-            MtoDossierInput(
-                id="dos-1",
-                title="Werkdruk - Support",
-                triage_status="bevestigd",
-                department_label="Support",
-                manager_label="Sanne",
-                first_action_taken="Roosterdruk binnen 2 weken herverdelen",
-                review_moment="Herlees over 30 dagen",
-                management_action_outcome=None,
-                next_route=None,
-                stop_reason=None,
-            ),
-            MtoDossierInput(
-                id="dos-2",
-                title="Rolhelderheid - Sales",
-                triage_status="nieuw",
-                department_label="Sales",
-                manager_label=None,
-                first_action_taken=None,
-                review_moment=None,
-                management_action_outcome=None,
-                next_route=None,
-                stop_reason=None,
-            ),
-        ],
-    )
-
-    assert workspace.carrier.owner_model == "hr_central"
-    assert workspace.carrier.manager_scope == "department_only"
-    assert workspace.summary.workspace_kind == "follow_through"
-    assert workspace.summary.open_dossier_count == 2
-    assert workspace.summary.blocked_count == 1
-    assert workspace.summary.review_due_count == 2
-    assert workspace.summary.escalation_count == 1
-    assert workspace.manager_departments == ("Sales", "Support")
-    assert workspace.assignments[0].state == "active"
-    assert workspace.assignments[1].state == "blocked"
-    assert any(signal.kind == "owner_missing" for signal in workspace.follow_up_signals)
-    assert any(signal.kind == "decision_due" for signal in workspace.follow_up_signals)
-
-
-def test_exit_becomes_the_first_live_product_consumer_without_opening_other_adapters():
+def test_exit_becomes_the_only_live_action_center_consumer_in_this_slice():
     carrier = get_exit_action_center_carrier()
     retention_adapter = get_future_action_center_adapter("retention")
 
@@ -170,9 +118,9 @@ def test_exit_becomes_the_first_live_product_consumer_without_opening_other_adap
     assert retention_adapter.live_entry_enabled is False
 
 
-def test_exit_workspace_projects_dossiers_with_explicit_owner_and_bounded_review_logic():
+def test_exit_workspace_keeps_admin_surface_read_only_while_owner_ids_stay_explicit():
     workspace = build_exit_action_center_workspace(
-        role="owner",
+        role="member",
         dossiers=[
             ExitDossierInput(
                 id="dos-1",
@@ -182,19 +130,6 @@ def test_exit_workspace_projects_dossiers_with_explicit_owner_and_bounded_review
                 management_owner_label="Sanne",
                 review_owner_label="Verisight",
                 first_action_taken="Plan exit-closeout met HR en teamlead",
-                review_moment="Herlees over 30 dagen",
-                management_action_outcome=None,
-                next_route=None,
-                stop_reason=None,
-            ),
-            ExitDossierInput(
-                id="dos-2",
-                title="ExitScan - Sales closeout",
-                triage_status="nieuw",
-                delivery_mode="baseline",
-                management_owner_label=None,
-                review_owner_label=None,
-                first_action_taken=None,
                 review_moment=None,
                 management_action_outcome=None,
                 next_route=None,
@@ -203,14 +138,8 @@ def test_exit_workspace_projects_dossiers_with_explicit_owner_and_bounded_review
         ],
     )
 
-    assert workspace.carrier.route_scope == "exit_only"
-    assert workspace.summary.workspace_kind == "follow_through"
-    assert workspace.summary.open_dossier_count == 2
-    assert workspace.summary.blocked_count == 1
-    assert workspace.summary.review_due_count == 2
-    assert workspace.summary.escalation_count == 1
-    assert workspace.active_delivery_modes == ("baseline", "live")
-    assert workspace.assignments[0].state == "active"
-    assert workspace.assignments[1].state == "blocked"
-    assert any(signal.kind == "owner_missing" for signal in workspace.follow_up_signals)
-    assert any(signal.kind == "decision_due" for signal in workspace.follow_up_signals)
+    assert workspace.dossiers[0].owner_id == "manager:sanne"
+    assert workspace.assignments[0].owner_id == "manager:sanne"
+    assert workspace.dossiers[0].permission_envelope.can_update_assignments is False
+    assert workspace.dossiers[0].permission_envelope.can_manage_permissions is False
+    assert workspace.review_moments[0].scheduled_for == "Exit reviewmoment nog vastleggen"

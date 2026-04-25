@@ -9,8 +9,8 @@ import {
 } from '@/lib/action-center-shared-core'
 import type { MemberRole } from '@/lib/types'
 
-export type MtoDesignMode = 'active_follow_through'
-export type MtoCarrierStatus = 'active'
+export type MtoDesignMode = 'design_input_only'
+export type MtoCarrierStatus = 'inactive'
 export type MtoCarrierOwnerModel = 'hr_central'
 export type MtoCarrierManagerScope = 'department_only'
 export type MtoTriageStatus = 'nieuw' | 'bevestigd' | 'geparkeerd' | 'uitgevoerd' | 'verworpen'
@@ -69,8 +69,8 @@ export interface MtoActionCenterWorkspace {
 
 const MTO_ACTION_CENTER_CARRIER: MtoActionCenterCarrier = {
   key: 'mto',
-  label: 'MTO-carrier',
-  status: 'active',
+  label: 'MTO-design-input',
+  status: 'inactive',
   workspaceKind: 'follow_through',
   ownerModel: 'hr_central',
   managerScope: 'department_only',
@@ -92,11 +92,11 @@ function isOpen(triageStatus: MtoTriageStatus) {
 export function describeMtoDesignInput(input: MtoDesignInput): MtoDesignInputSummary {
   return {
     source: input.source,
-    mode: 'active_follow_through',
+    mode: 'design_input_only',
     themeCount: input.themes.length,
     notes: input.notes,
-    canCreateAssignments: true,
-    canOpenCarrier: true,
+    canCreateAssignments: false,
+    canOpenCarrier: false,
   }
 }
 
