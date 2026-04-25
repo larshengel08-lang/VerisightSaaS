@@ -53,6 +53,12 @@ export interface ExitActionCenterWorkspace {
   activeDeliveryModes: ExitDeliveryMode[]
 }
 
+export interface ExitActionCenterCandidateDossier {
+  scanType: string | null
+  routeInterest: string | null
+  campaignId: string | null
+}
+
 const EXIT_ACTION_CENTER_CARRIER: ExitActionCenterCarrier = {
   key: 'exit',
   label: 'ExitScan-adapter',
@@ -80,6 +86,23 @@ function isExitDeliveryMode(value: ExitDeliveryMode | null): value is ExitDelive
 
 export function getExitActionCenterCarrier() {
   return EXIT_ACTION_CENTER_CARRIER
+}
+
+export function isExitActionCenterCandidate(args: {
+  dossier: ExitActionCenterCandidateDossier
+  exitCampaignIds: ReadonlySet<string>
+}) {
+  const { dossier, exitCampaignIds } = args
+
+  if (dossier.scanType === 'exit') {
+    return true
+  }
+
+  if (dossier.campaignId) {
+    return exitCampaignIds.has(dossier.campaignId)
+  }
+
+  return dossier.scanType === null && dossier.routeInterest === 'exitscan'
 }
 
 export function buildExitActionCenterWorkspace(args: {
