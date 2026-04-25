@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildCampaignAccessState } from './campaign-access'
+import { buildCampaignAccessState, buildCampaignRouteUnavailableState } from './campaign-access'
 
 describe('campaign access state', () => {
   it('makes viewer read-only scope and Verisight ownership explicit', () => {
@@ -39,5 +39,14 @@ describe('campaign access state', () => {
     expect(state.canRead).toBe(false)
     expect(state.deniedTitle).toBe('Deze campaign is niet beschikbaar')
     expect(state.deniedBody).toContain('geen toegang')
+  })
+
+  it('keeps missing campaign data distinct from true denied access', () => {
+    const state = buildCampaignRouteUnavailableState('missing_data')
+
+    expect(state.eyebrow).toBe('Campaign nu niet beschikbaar')
+    expect(state.chipLabel).toBe('404-achtig gedrag')
+    expect(state.body).toContain('bestaat wel')
+    expect(state.body).not.toContain('geen toegang')
   })
 })

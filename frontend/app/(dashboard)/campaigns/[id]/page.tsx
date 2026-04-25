@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignActions } from './campaign-actions'
-import { buildCampaignAccessState } from './campaign-access'
+import { buildCampaignAccessState, buildCampaignRouteUnavailableState } from './campaign-access'
 import { PdfDownloadButton } from './pdf-download-button'
 import {
   DashboardChip,
@@ -110,10 +110,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
 
     return (
       <CampaignRouteUnavailable
-        state={buildCampaignAccessState({
-          isVerisightAdmin,
-          membershipRole: null,
-        })}
+        state={buildCampaignRouteUnavailableState('missing_data')}
       />
     )
   }
@@ -163,7 +160,7 @@ export default async function CampaignPage({ params, searchParams }: Props) {
   })
 
   if (!accessState.canRead) {
-    return <CampaignRouteUnavailable state={accessState} />
+    return <CampaignRouteUnavailable state={buildCampaignRouteUnavailableState('denied')} />
   }
 
   const canManageCampaign = accessState.canManage
@@ -1783,7 +1780,7 @@ async function campaignExists(id: string) {
 function CampaignRouteUnavailable({
   state,
 }: {
-  state: ReturnType<typeof buildCampaignAccessState>
+  state: ReturnType<typeof buildCampaignRouteUnavailableState>
 }) {
   return (
     <div className="space-y-6 pb-8">
@@ -1795,10 +1792,10 @@ function CampaignRouteUnavailable({
       </Link>
 
       <DashboardSection
-        eyebrow="Geen campaigntoegang"
-        title={state.deniedTitle}
-        description={state.deniedBody}
-        aside={<DashboardChip label="Denied / no-access" tone="amber" />}
+        eyebrow={state.eyebrow}
+        title={state.title}
+        description={state.body}
+        aside={<DashboardChip label={state.chipLabel} tone="amber" />}
       >
         <div className="grid gap-4 md:grid-cols-2">
           <DashboardPanel

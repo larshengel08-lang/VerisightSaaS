@@ -11,6 +11,13 @@ export type CampaignAccessState = {
   deniedBody: string
 }
 
+export type CampaignRouteUnavailableState = {
+  eyebrow: string
+  chipLabel: string
+  title: string
+  body: string
+}
+
 export function buildCampaignAccessState(args: {
   isVerisightAdmin: boolean
   membershipRole: MemberRole | null | undefined
@@ -82,6 +89,26 @@ export function buildCampaignAccessState(args: {
     noteBody: null,
     deniedTitle: 'Deze campaign is niet beschikbaar',
     deniedBody:
+      'Je hebt geen toegang tot deze campaign of hij bestaat niet meer binnen jouw accountbereik. Ga terug naar het campaignoverzicht of vraag Verisight om de juiste route vrij te geven.',
+  }
+}
+
+export function buildCampaignRouteUnavailableState(reason: 'denied' | 'missing_data'): CampaignRouteUnavailableState {
+  if (reason === 'missing_data') {
+    return {
+      eyebrow: 'Campaign nu niet beschikbaar',
+      chipLabel: '404-achtig gedrag',
+      title: 'Deze campaign is nu niet beschikbaar',
+      body:
+        'De campaign bestaat wel, maar heeft nog geen leesbare route of campaigndata om hier veilig te tonen. Ga terug naar het campaignoverzicht en open alleen campaigns die daar al expliciet zichtbaar zijn.',
+    }
+  }
+
+  return {
+    eyebrow: 'Geen campaigntoegang',
+    chipLabel: 'Denied / no-access',
+    title: 'Deze campaign is niet beschikbaar',
+    body:
       'Je hebt geen toegang tot deze campaign of hij bestaat niet meer binnen jouw accountbereik. Ga terug naar het campaignoverzicht of vraag Verisight om de juiste route vrij te geven.',
   }
 }
