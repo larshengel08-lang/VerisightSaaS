@@ -1,7 +1,11 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { PilotLearningWorkbench } from '@/components/dashboard/pilot-learning-workbench'
-import { buildMtoActionCenterWorkspace } from '@/lib/action-center-mto'
+import { buildMtoActionCenterWorkspace, type MtoCarrierStatus } from '@/lib/action-center-mto'
+import type {
+  ActionCenterAssignmentState,
+  ActionCenterFollowUpSignalKind,
+} from '@/lib/action-center-shared-core'
 import {
   DashboardChip,
   DashboardHero,
@@ -26,6 +30,28 @@ interface Props {
 
 function getSingleValue(value: string | string[] | undefined) {
   return typeof value === 'string' ? value : null
+}
+
+const ACTION_ASSIGNMENT_STATE_LABELS: Record<ActionCenterAssignmentState, string> = {
+  queued: 'In wachtrij',
+  active: 'Loopt',
+  blocked: 'Geblokkeerd',
+  waiting: 'Geparkeerd',
+  completed: 'Afgerond',
+  cancelled: 'Gestopt',
+}
+
+const ACTION_SIGNAL_KIND_LABELS: Record<ActionCenterFollowUpSignalKind, string> = {
+  decision_due: 'Besluit nog vast te leggen',
+  owner_missing: 'Eigenaar ontbreekt',
+  review_due: 'Reviewmoment ontbreekt',
+  blocked_assignment: 'Eerste stap ontbreekt',
+  awaiting_input: 'Input nodig',
+  closure_ready: 'Klaar voor afsluiting',
+}
+
+const MTO_CARRIER_STATUS_LABELS: Record<MtoCarrierStatus, string> = {
+  active: 'actief',
 }
 
 export default async function KlantLearningsPage({ searchParams }: Props) {
@@ -261,7 +287,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
         aside={
           <DashboardChip
             surface="ops"
-            label={`${mtoWorkspace.carrier.label} · ${mtoWorkspace.carrier.status}`}
+            label={`${mtoWorkspace.carrier.label} · ${MTO_CARRIER_STATUS_LABELS[mtoWorkspace.carrier.status]}`}
             tone="slate"
           />
         }
@@ -337,7 +363,8 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
                         Eerste stap: {assignment?.title ?? 'Nog niet vastgelegd'}.
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        Status {assignment?.state ?? 'onbekend'} · Permission shared-core: {dossier.permissionEnvelope.canUpdateAssignments ? 'bewerkbaar' : 'read-only'}
+                        Status {assignment ? ACTION_ASSIGNMENT_STATE_LABELS[assignment.state] : 'Onbekend'} · Bewerkbaarheid:{' '}
+                        {dossier.permissionEnvelope.canUpdateAssignments ? 'Bewerkbaar' : 'Alleen lezen'}
                       </p>
                     </div>
                   )
@@ -373,7 +400,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
                       <p className="text-sm font-semibold text-slate-950">{dossier?.title ?? reviewMoment.dossierId}</p>
                       <p className="mt-2 text-sm leading-6 text-slate-600">{reviewMoment.scheduledFor}</p>
                       <p className="mt-1 text-xs text-slate-500">
-                        Open signalen: {signals.map((signal) => signal.kind).join(', ') || 'geen'}
+                        Open signalen: {signals.map((signal) => ACTION_SIGNAL_KIND_LABELS[signal.kind]).join(', ') || 'geen'}
                       </p>
                     </div>
                   )

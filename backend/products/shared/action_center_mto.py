@@ -103,6 +103,10 @@ def _is_open(triage_status: MtoTriageStatus) -> bool:
     return triage_status in _OPEN_TRIAGE_STATUSES
 
 
+def _has_bounded_text(value: str | None) -> bool:
+    return bool(value and value.strip())
+
+
 def describe_mto_design_input(input_data: MtoDesignInput) -> MtoDesignInputSummary:
     return MtoDesignInputSummary(
         source=input_data.source,
@@ -132,9 +136,12 @@ def build_mto_action_center_workspace(
     for dossier in dossiers:
         permission_envelope = build_permission_envelope(role)
         is_open = _is_open(dossier.triage_status)
-        has_follow_through_decision = bool(
-            dossier.management_action_outcome or dossier.next_route or dossier.stop_reason
+        has_follow_through_decision = (
+            _has_bounded_text(dossier.management_action_outcome)
+            or _has_bounded_text(dossier.next_route)
+            or _has_bounded_text(dossier.stop_reason)
         )
+        has_review_moment = _has_bounded_text(dossier.review_moment)
         department_owner_id = _build_actor_id("department", dossier.department_label)
         manager_owner_id = _build_actor_id("manager", dossier.manager_label)
 
@@ -182,6 +189,8 @@ def build_mto_action_center_workspace(
             if dossier.triage_status == "uitgevoerd"
             else "cancelled"
             if dossier.triage_status in {"geparkeerd", "verworpen"}
+            else "scheduled"
+            if has_review_moment
             else "due"
         )
         review_moments.append(
@@ -215,7 +224,7 @@ def build_mto_action_center_workspace(
                 )
             )
 
-        if is_open:
+        if is_open and not has_review_moment:
             follow_up_signals.append(
                 ActionFollowUpSignal(
                     id=f"sig-review-{dossier.id}",

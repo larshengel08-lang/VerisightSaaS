@@ -89,6 +89,10 @@ function isOpen(triageStatus: MtoTriageStatus) {
   return OPEN_TRIAGE_STATUSES.has(triageStatus)
 }
 
+function hasBoundedText(value: string | null) {
+  return Boolean(value?.trim())
+}
+
 export function describeMtoDesignInput(input: MtoDesignInput): MtoDesignInputSummary {
   return {
     source: input.source,
@@ -119,9 +123,11 @@ export function buildMtoActionCenterWorkspace(args: {
   for (const dossier of args.dossiers) {
     const permissionEnvelope = buildActionCenterPermissionEnvelope({ role: args.role })
     const open = isOpen(dossier.triageStatus)
-    const hasFollowThroughDecision = Boolean(
-      dossier.managementActionOutcome || dossier.nextRoute || dossier.stopReason,
-    )
+    const hasFollowThroughDecision =
+      hasBoundedText(dossier.managementActionOutcome) ||
+      hasBoundedText(dossier.nextRoute) ||
+      hasBoundedText(dossier.stopReason)
+    const hasReviewMoment = hasBoundedText(dossier.reviewMoment)
     const departmentOwnerId = buildActorId('department', dossier.departmentLabel)
     const managerOwnerId = buildActorId('manager', dossier.managerLabel)
 
@@ -160,7 +166,9 @@ export function buildMtoActionCenterWorkspace(args: {
         ? 'completed'
         : dossier.triageStatus === 'geparkeerd' || dossier.triageStatus === 'verworpen'
           ? 'cancelled'
-          : 'due'
+          : hasReviewMoment
+            ? 'scheduled'
+            : 'due'
     reviewMoments.push({
       id: `rev-${dossier.id}`,
       dossierId: dossier.id,
@@ -188,7 +196,7 @@ export function buildMtoActionCenterWorkspace(args: {
       })
     }
 
-    if (open) {
+    if (open && !hasReviewMoment) {
       followUpSignals.push({
         id: `sig-review-${dossier.id}`,
         dossierId: dossier.id,
