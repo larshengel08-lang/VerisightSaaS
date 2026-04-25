@@ -29,7 +29,12 @@ export function PublicHeader({
       <div className="marketing-shell py-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Wordmark size="md" />
+            <div className="flex flex-col gap-0.5">
+              <Wordmark size="md" />
+              <span className="pl-px text-[8px] font-bold tracking-[0.18em] uppercase text-[rgba(22,20,18,0.32)]">
+                People · Patterns · Priorities
+              </span>
+            </div>
           </div>
 
           <nav className="hidden items-center gap-1 lg:flex">
