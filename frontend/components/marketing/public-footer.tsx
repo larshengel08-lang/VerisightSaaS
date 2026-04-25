@@ -22,6 +22,9 @@ export function PublicFooter() {
       <div className="marketing-shell marketing-footer-grid">
         <div>
           <Wordmark size="sm" showTagline={false} light />
+          <p className="mt-2 text-[8px] font-bold tracking-[0.18em] uppercase text-[rgba(247,245,241,0.32)]">
+            People · Patterns · Priorities
+          </p>
           <p className="marketing-footer-copy mt-4 max-w-sm text-sm leading-7">
             Verisight helpt HR en management scherp zien welke vertrek- en retentiesignalen aandacht vragen, zodat
             prioriteiten duidelijk worden.
