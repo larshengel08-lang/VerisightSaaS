@@ -36,6 +36,7 @@ describe('response activation thresholds', () => {
     expect(state.deeperInsightsVisible).toBe(false)
     expect(state.remainingToInsights).toBe(FIRST_INSIGHT_THRESHOLD - (FIRST_DASHBOARD_THRESHOLD + 1))
     expect(state.statusDetail).toContain('Nog 4 responses')
+    expect(state.statusDetail).toContain('first management use')
   })
 
   it('switches to active insights once the pattern threshold is reached', () => {
@@ -47,5 +48,7 @@ describe('response activation thresholds', () => {
     expect(state.reportVisible).toBe(true)
     expect(state.deeperInsightsVisible).toBe(true)
     expect(state.heroActionLabel).toBe('Eerste inzichten actief')
+    expect(state.statusDetail).toContain('reviewmoment')
+    expect(state.statusDetail).toContain('follow-up')
   })
 })

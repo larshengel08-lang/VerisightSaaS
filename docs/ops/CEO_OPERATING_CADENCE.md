@@ -40,7 +40,19 @@ Gebruik dit ritme een keer per week, bij voorkeur op een vaste ochtend.
 - bijgewerkte leadpipeline in `Verisight_CRM.xlsx`
 - bijgewerkte [CEO_WEEKLY_SCORECARD.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CEO_WEEKLY_SCORECARD.xlsx)
 - actuele deliverystatus in de app-surfaces
+- expliciet beeld van actieve campaigns met status op activation, first management use, review due en follow-up decided
 - eventuele aanvulling in [DECISION_LOG.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/DECISION_LOG.md)
+
+### Weekly delivery gate
+
+Toets actieve klanttrajecten elke week minimaal op:
+
+- activation pending versus confirmed
+- first management use scheduled versus held
+- review due versus held
+- follow-up decided versus operationeel open
+
+Gebruik hiervoor de afspraken uit [CLIENT_OWNERSHIP_AND_FOLLOW_UP_CADENCE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_OWNERSHIP_AND_FOLLOW_UP_CADENCE.md).
 
 ## Monthly cadence
 

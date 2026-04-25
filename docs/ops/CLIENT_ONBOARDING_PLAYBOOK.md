@@ -13,7 +13,9 @@ Belangrijke defaults:
 - RetentieScan blijft complementair en verification-first.
 - Verisight beheert setup, importcontrole, invite-activatie en dashboardtoegang.
 - De klant levert input aan en gebruikt daarna dashboard en rapport.
+- Activatie telt pas als bevestigd wanneer klanttoegang live is, de Verisight delivery owner vastligt en first management use voorlopig is ingepland.
 - Adoptie is pas geslaagd wanneer de klant de output echt gebruikt voor het eerste managementgesprek.
+- Follow-up is pas gesloten wanneer eerste eigenaar, eerste actie, reviewmoment en vervolgstatus expliciet zijn vastgelegd.
 - Vroege learnings worden voortaan vastgelegd in `/beheer/klantlearnings`.
 - Een campaign meet standaard live vanaf campagnestart; een retrospectieve baseline of 12-maandsbeeld moet expliciet zo worden ingericht.
 - Voor actieve klanttrajecten is de app-deliverylaag leidend; workbooks zijn alleen samenvatting of governance-mirror.
@@ -96,13 +98,13 @@ Nuance:
 
 - Eigenaar: Verisight
 - Type: klantmoment
-- Doel: klantaccount activeren en de gebruiker in het juiste dashboard laten landen
+- Doel: klantaccount activeren, de gebruiker in het juiste dashboard laten landen en first management use voorlopig inplannen
 
 ### 6. Eerste dashboardread
 
 - Eigenaar: klant
 - Type: klantmoment
-- Doel: begrijpen wat al leesbaar is, wat nog indicatief is en wat de eerstvolgende managementvraag wordt
+- Doel: begrijpen wat al leesbaar is, wat nog indicatief is, welke managementvraag eerst telt en of de managementsessie direct kan worden gehouden
 
 ### 7. Rapportuitleg
 
@@ -114,7 +116,18 @@ Nuance:
 
 - Eigenaar: klant
 - Type: gedeeld
-- Doel: eerste eigenaar, eerste vraag en eerste vervolgstap expliciet maken
+- Doel: eerste eigenaar, eerste vraag, eerste vervolgstap en reviewmoment expliciet maken
+
+## Operating cadence
+
+Gebruik voor alle actieve trajecten ook [CLIENT_OWNERSHIP_AND_FOLLOW_UP_CADENCE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_OWNERSHIP_AND_FOLLOW_UP_CADENCE.md).
+
+Samengevat:
+
+- activatie is pas bevestigd als eigenaar, toegang en first management use-slot helder zijn
+- first management use gebeurt in dezelfde of eerstvolgende managementweek zodra output veilig leesbaar is
+- reviewmoment wordt direct in het eerste managementgesprek vastgelegd
+- follow-up blijft open totdat vervolgrichting en learning handoff zijn bijgewerkt
 
 ## Verplichte learning handoff
 
@@ -217,7 +230,7 @@ Adoptie is pas geslaagd wanneer:
 - de juiste campaign zichtbaar is
 - dashboard of rapport bruikbaar is binnen de juiste drempel
 - een eerste managementread heeft plaatsgevonden
-- een eerste eigenaar of vervolgstap expliciet is gemaakt
+- een eerste eigenaar, eerste vervolgstap en reviewmoment expliciet zijn gemaakt
 
 ## Repo-afhankelijkheden
 

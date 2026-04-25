@@ -11,6 +11,7 @@ Het sluit direct aan op:
 
 - [COMMERCIAL_ARCHITECTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_ARCHITECTURE_CANON.md)
 - [CLIENT_ONBOARDING_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_ONBOARDING_PLAYBOOK.md)
+- [CLIENT_OWNERSHIP_AND_FOLLOW_UP_CADENCE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_OWNERSHIP_AND_FOLLOW_UP_CADENCE.md)
 - [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md)
 - [REPORT_TO_ACTION_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_TO_ACTION_PROGRAM_PLAN.md)
 
@@ -122,6 +123,7 @@ Gebruik `Combinatie` alleen als:
 ### Beslisregels
 
 - geen first-value claim zonder bruikbare responsbasis
+- activatie is pas confirmed als klanttoegang, Verisight delivery owner, klantowner en first management use-slot duidelijk zijn
 - dashboard en rapport moeten dezelfde leeslijn volgen
 - klant moet begrijpen:
   - wat al leesbaar is
@@ -134,6 +136,7 @@ Gebruik `Combinatie` alleen als:
 - klant kan inloggen
 - juiste campaign zichtbaar
 - rapport/dashboards bruikbaar binnen drempels
+- first management use is ingepland of expliciet geblokkeerd met reden
 
 ### Handoff
 
@@ -159,6 +162,7 @@ Gebruik `Combinatie` alleen als:
 - rapport blijft managementinput, geen bewijs van oorzaak
 - eerste actie moet klein, toetsbaar en eigenaar-gebonden zijn
 - reviewmoment direct vastleggen
+- default: reviewmoment binnen 10 werkdagen of eerder in bestaand managementoverleg
 
 ### Output
 
@@ -190,11 +194,12 @@ Gebruik `Combinatie` alleen als:
 
 - nieuwe productroute openen zonder expliciete managementvraag
 - bounded support route verkopen als nieuwe hoofdroute
-- vervolg starten zonder dat first value en first action echt zijn geland
+- vervolg starten zonder dat first value, first management use en first action echt zijn geland
 
 ### Output
 
 - expliciete next step
+- expliciete follow-up status: open, bounded vervolg, bredere duiding of bewust niet opschalen
 - bounded vervolg of verdieping
 - geen productverwarring
 

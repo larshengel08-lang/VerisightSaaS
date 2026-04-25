@@ -12,6 +12,7 @@ Gebruik deze checklist om te beoordelen of een assisted klantstart niet alleen l
 - [ ] Scanmodus en doelgroep bevestigd
 - [ ] Scanperiode expliciet vastgelegd als live vanaf start of bewust retrospectief opgezet
 - [ ] Contactpersoon en eerste managementdoel vastgelegd
+- [ ] Verisight delivery owner vastgelegd
 - [ ] Metadata-verwachting expliciet gemaakt
 
 ## Setup and import
@@ -36,9 +37,14 @@ Gebruik deze checklist om te beoordelen of een assisted klantstart niet alleen l
 ## Activation and first use
 
 - [ ] Klantaccount geactiveerd
+- [ ] Klantowner of managementsponsor bevestigd voor first management use
 - [ ] Eerste dashboardread mogelijk
 - [ ] Eerste rapportuitleg geleverd of ingepland
+- [ ] First management use in dezelfde of eerstvolgende managementweek gepland
 - [ ] Eerste managementgebruik bevestigd
+- [ ] Eerste eigenaar, eerste actie en reviewmoment vastgelegd
+- [ ] Reviewmoment staat binnen 10 werkdagen of eerder in bestaand managementoverleg
+- [ ] Follow-upstatus vastgelegd als open, bounded vervolg, bredere duiding of bewust niet opschalen
 
 ### Managed V1 route check
 
@@ -69,6 +75,7 @@ Praktische signalen zonder zware analytics-stack:
 - [ ] Checkpoint `implementation intake` ingevuld
 - [ ] Checkpoint `launch en eerste output` ingevuld zodra responses bruikbaar zijn
 - [ ] Checkpoint `eerste managementgebruik` ingevuld na walkthrough of managementread
+- [ ] Checkpoint `reviewmoment en follow-upbesluit` ingevuld zodra de eerste opvolging is gekozen
 - [ ] Volgende review of stopreden vastgelegd voor 30-90 dagen follow-up
 
 ## Governance
