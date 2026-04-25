@@ -10,7 +10,7 @@
 
 create table if not exists public.organization_secrets (
   org_id      uuid primary key references public.organizations(id) on delete cascade,
-  api_key     uuid unique default gen_random_uuid(),
+  api_key     text unique default gen_random_uuid()::text,
   created_at  timestamptz default now()
 );
 
