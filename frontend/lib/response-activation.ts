@@ -58,8 +58,8 @@ export function buildResponseActivationState(totalCompleted: number): ResponseAc
       remainingToInsights,
       statusDetail:
         remainingToInsights === 1
-          ? 'Dashboard en rapport zijn nu zichtbaar. Nog 1 response tot eerste patroonduiding; gebruik deze fase om first management use te plannen en de follow-up owner alvast scherp te zetten.'
-          : `Dashboard en rapport zijn nu zichtbaar. Nog ${formatResponseCount(remainingToInsights)} tot eerste patroonduiding; gebruik deze fase om first management use te plannen en de follow-up owner alvast scherp te zetten.`,
+          ? 'Dashboard en rapport zijn nu zichtbaar. Nog 1 response tot eerste patroonduiding; gebruik deze fase om first management use te plannen en de eerste eigenaar alvast scherp te zetten.'
+          : `Dashboard en rapport zijn nu zichtbaar. Nog ${formatResponseCount(remainingToInsights)} tot eerste patroonduiding; gebruik deze fase om first management use te plannen en de eerste eigenaar alvast scherp te zetten.`,
       heroActionLabel:
         remainingToInsights === 1
           ? 'Nog 1 response tot eerste inzichten'
