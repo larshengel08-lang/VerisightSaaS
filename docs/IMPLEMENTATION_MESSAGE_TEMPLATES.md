@@ -37,7 +37,7 @@ De campaign staat nu live. We hebben de respondentimport gecontroleerd en de uit
 De eerstvolgende stap is nu:
 - respons opbouwen
 - eerste dashboardsignalen volgen
-- daarna een eerste managementread inplannen
+- daarna een eerste managementread inplannen met de juiste interne eigenaar
 
 We laten weten zodra het beeld stevig genoeg is voor de eerste rapport- of dashboarduitleg.
 
@@ -58,6 +58,7 @@ Belangrijk:
 - dashboardtoegang is pas echt afgerond na activatie
 - je hoeft zelf geen setup meer te doen
 - wij begeleiden het eerste gebruik van dashboard en rapport
+- we leggen daarbij ook direct het eerste managementmoment vast
 
 Laat het weten als de activatiemail niet aankomt of als je wilt dat we direct een eerste walkthrough plannen.
 
@@ -79,6 +80,7 @@ In dit eerste moment lopen we samen door:
 - de belangrijkste signalen
 - wat nog indicatief is en wat al steviger ligt
 - welke eerste managementactie of eigenaar logisch is
+- welk reviewmoment en welke follow-up daarna echt tellen
 
 Laat weten welke momenten deze week of volgende week passen.
 

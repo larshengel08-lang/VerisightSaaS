@@ -9,6 +9,7 @@ Gebruik deze checklist voor de assisted implementation route vanaf klantakkoord 
 - [ ] Organisatie aangemaakt of gecontroleerd
 - [ ] Campaignnaam, scan_type en add-ons gecontroleerd
 - [ ] Contactpersoon en eerste managementdoel expliciet vastgelegd
+- [ ] Verisight delivery owner expliciet vastgelegd
 
 ## 2. Klantbestand en import
 
@@ -26,6 +27,8 @@ Gebruik deze checklist voor de assisted implementation route vanaf klantakkoord 
 - [ ] Eventuele resend of reminderlogica afgestemd
 - [ ] Klantdashboardtoegang uitgenodigd
 - [ ] Activatie daadwerkelijk bevestigd
+- [ ] Klantowner of managementsponsor bevestigd
+- [ ] First management use-slot voorlopig gepland
 
 ## 4. Launch en acceptatie
 
@@ -37,6 +40,8 @@ Gebruik deze checklist voor de assisted implementation route vanaf klantakkoord 
 - [ ] PDF-rapport werkt
 - [ ] Eerste dashboardread of rapportuitleg ingepland
 - [ ] Eerste managementgebruik bevestigd
+- [ ] Eerste eigenaar, eerste actie en reviewmoment vastgelegd
+- [ ] Follow-upstatus vastgelegd
 
 ## 5. Extra aandacht bij live routes
 
@@ -44,3 +49,4 @@ Gebruik deze checklist voor de assisted implementation route vanaf klantakkoord 
 - [ ] Timing en eigenaarschap nogmaals bevestigd
 - [ ] Uitnodigingen niet automatisch verstuurd zonder laatste controle
 - [ ] Eerste contactmoment na livegang expliciet ingepland
+- [ ] Reviewmoment staat uiterlijk in de eerstvolgende managementweek na first management use
