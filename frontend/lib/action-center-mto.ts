@@ -16,6 +16,7 @@ export type MtoCarrierManagerScope = 'department_only'
 export type MtoTriageStatus = 'nieuw' | 'bevestigd' | 'geparkeerd' | 'uitgevoerd' | 'verworpen'
 
 const OPEN_TRIAGE_STATUSES = new Set<MtoTriageStatus>(['nieuw', 'bevestigd'])
+const GENERIC_MTO_MANAGER_LABELS = new Set(['klant + verisight', 'verisight', 'founder / verisight'])
 
 export interface MtoDesignInput {
   source: 'mto'
@@ -91,6 +92,15 @@ function isOpen(triageStatus: MtoTriageStatus) {
 
 function hasBoundedText(value: string | null) {
   return Boolean(value?.trim())
+}
+
+export function normalizeMtoManagerLabel(value: string | null) {
+  const normalizedValue = value?.trim()
+  if (!normalizedValue) {
+    return null
+  }
+
+  return GENERIC_MTO_MANAGER_LABELS.has(normalizedValue.toLowerCase()) ? null : normalizedValue
 }
 
 export function describeMtoDesignInput(input: MtoDesignInput): MtoDesignInputSummary {

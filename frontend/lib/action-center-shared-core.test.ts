@@ -9,6 +9,7 @@ import {
   buildMtoActionCenterWorkspace,
   describeMtoDesignInput,
   getMtoActionCenterCarrier,
+  normalizeMtoManagerLabel,
 } from '@/lib/action-center-mto'
 
 describe('action center shared core', () => {
@@ -147,5 +148,40 @@ describe('action center shared core', () => {
     expect(workspace.followUpSignals.some((signal) => signal.kind === 'owner_missing')).toBe(true)
     expect(workspace.followUpSignals.some((signal) => signal.kind === 'decision_due')).toBe(true)
     expect(workspace.followUpSignals.filter((signal) => signal.kind === 'review_due')).toHaveLength(1)
+  })
+
+  it('keeps generic shared checkpoint owners out of manager binding', () => {
+    const workspace = buildMtoActionCenterWorkspace({
+      role: 'owner',
+      dossiers: [
+        {
+          id: 'dos-1',
+          title: 'Shared placeholder owner',
+          triageStatus: 'bevestigd',
+          departmentLabel: null,
+          managerLabel: normalizeMtoManagerLabel('Klant + Verisight'),
+          firstActionTaken: 'Start met eerste MT-terugkoppeling',
+          reviewMoment: null,
+          managementActionOutcome: null,
+          nextRoute: null,
+          stopReason: null,
+        },
+        {
+          id: 'dos-2',
+          title: 'Explicit manager owner',
+          triageStatus: 'bevestigd',
+          departmentLabel: null,
+          managerLabel: normalizeMtoManagerLabel('Sanne'),
+          firstActionTaken: 'Plan afdelingsreview',
+          reviewMoment: null,
+          managementActionOutcome: null,
+          nextRoute: null,
+          stopReason: null,
+        },
+      ],
+    })
+
+    expect(workspace.dossiers[0]?.ownerId).toBeNull()
+    expect(workspace.dossiers[1]?.ownerId).toBe('manager:sanne')
   })
 })

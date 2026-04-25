@@ -1,7 +1,11 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { PilotLearningWorkbench } from '@/components/dashboard/pilot-learning-workbench'
-import { buildMtoActionCenterWorkspace, type MtoCarrierStatus } from '@/lib/action-center-mto'
+import {
+  buildMtoActionCenterWorkspace,
+  normalizeMtoManagerLabel,
+  type MtoCarrierStatus,
+} from '@/lib/action-center-mto'
 import type {
   ActionCenterAssignmentState,
   ActionCenterFollowUpSignalKind,
@@ -175,7 +179,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           title: dossier.title,
           triageStatus: dossier.triage_status,
           departmentLabel: null,
-          managerLabel: firstManagementCheckpoint?.owner_label ?? null,
+          managerLabel: normalizeMtoManagerLabel(firstManagementCheckpoint?.owner_label ?? null),
           firstActionTaken: dossier.first_action_taken,
           reviewMoment: dossier.review_moment,
           managementActionOutcome: dossier.management_action_outcome,
