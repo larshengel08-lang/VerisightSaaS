@@ -5,7 +5,11 @@ import {
   buildActionCenterWorkspaceSummary,
   getFutureActionCenterAdapter,
 } from '@/lib/action-center-shared-core'
-import { describeMtoDesignInput } from '@/lib/action-center-mto'
+import {
+  buildMtoActionCenterWorkspace,
+  describeMtoDesignInput,
+  getMtoActionCenterCarrier,
+} from '@/lib/action-center-mto'
 
 describe('action center shared core', () => {
   it('keeps the workspace bounded to follow-through signals instead of generic project planning', () => {
@@ -74,18 +78,71 @@ describe('action center shared core', () => {
     expect(ownerEnvelope.canOpenProductAdapters).toBe(false)
   })
 
-  it('keeps MTO input as design-only and future adapters inactive', () => {
+  it('activates MTO as the first action center carrier while future adapters stay inactive', () => {
     const mtoDesignInput = describeMtoDesignInput({
       source: 'mto',
       themes: ['werkdruk', 'rolhelderheid'],
       notes: 'Gebruik alleen als ontwerpinspiratie voor dossiervelden.',
     })
+    const carrier = getMtoActionCenterCarrier()
     const exitAdapter = getFutureActionCenterAdapter('exit')
 
-    expect(mtoDesignInput.mode).toBe('design_input_only')
-    expect(mtoDesignInput.canCreateAssignments).toBe(false)
-    expect(mtoDesignInput.canOpenCarrier).toBe(false)
+    expect(carrier.status).toBe('active')
+    expect(carrier.workspaceKind).toBe('follow_through')
+    expect(carrier.ownerModel).toBe('hr_central')
+    expect(carrier.managerScope).toBe('department_only')
+    expect(carrier.reviewPressureVisible).toBe(true)
+    expect(carrier.dossierFirst).toBe(true)
+    expect(carrier.canOpenOtherProductAdapters).toBe(false)
+    expect(mtoDesignInput.mode).toBe('active_follow_through')
+    expect(mtoDesignInput.canCreateAssignments).toBe(true)
+    expect(mtoDesignInput.canOpenCarrier).toBe(true)
     expect(exitAdapter.status).toBe('inactive')
     expect(exitAdapter.liveEntryEnabled).toBe(false)
+  })
+
+  it('projects MTO dossiers and review pressure onto the shared follow-through core', () => {
+    const workspace = buildMtoActionCenterWorkspace({
+      role: 'owner',
+      dossiers: [
+        {
+          id: 'dos-1',
+          title: 'Werkdruk - Support',
+          triageStatus: 'bevestigd',
+          departmentLabel: 'Support',
+          managerLabel: 'Sanne',
+          firstActionTaken: 'Roosterdruk binnen 2 weken herverdelen',
+          reviewMoment: 'Herlees over 30 dagen',
+          managementActionOutcome: null,
+          nextRoute: null,
+          stopReason: null,
+        },
+        {
+          id: 'dos-2',
+          title: 'Rolhelderheid - Sales',
+          triageStatus: 'nieuw',
+          departmentLabel: 'Sales',
+          managerLabel: null,
+          firstActionTaken: null,
+          reviewMoment: null,
+          managementActionOutcome: null,
+          nextRoute: null,
+          stopReason: null,
+        },
+      ],
+    })
+
+    expect(workspace.carrier.ownerModel).toBe('hr_central')
+    expect(workspace.carrier.managerScope).toBe('department_only')
+    expect(workspace.summary.workspaceKind).toBe('follow_through')
+    expect(workspace.summary.openDossierCount).toBe(2)
+    expect(workspace.summary.blockedCount).toBe(1)
+    expect(workspace.summary.reviewDueCount).toBe(2)
+    expect(workspace.summary.escalationCount).toBe(1)
+    expect(workspace.managerDepartmentLabels).toEqual(['Sales', 'Support'])
+    expect(workspace.assignments[0]?.state).toBe('active')
+    expect(workspace.assignments[1]?.state).toBe('blocked')
+    expect(workspace.followUpSignals.some((signal) => signal.kind === 'owner_missing')).toBe(true)
+    expect(workspace.followUpSignals.some((signal) => signal.kind === 'decision_due')).toBe(true)
   })
 })

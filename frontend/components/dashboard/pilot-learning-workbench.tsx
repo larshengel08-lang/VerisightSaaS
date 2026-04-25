@@ -23,6 +23,8 @@ import {
   CASE_PERMISSION_STATUS_OPTIONS,
   CASE_POTENTIAL_OPTIONS,
   getCheckpointDefinition,
+  getLearningRouteInterestForCampaign,
+  normalizeLearningRouteInterest,
   getLearningStatusLabel,
   getLearningStrengthLabel,
   getSuggestedLearningDossierTitle,
@@ -303,9 +305,9 @@ export function PilotLearningWorkbench({
     setCreateForm((current) => ({
       ...current,
       contact_request_id: lead.id,
-      route_interest: normalizeContactRouteInterest(lead.route_interest),
+      route_interest: normalizeLearningRouteInterest(normalizeContactRouteInterest(lead.route_interest)),
       title: getSuggestedLearningDossierTitle({
-        routeInterest: normalizeContactRouteInterest(lead.route_interest),
+        routeInterest: normalizeLearningRouteInterest(normalizeContactRouteInterest(lead.route_interest)),
         organizationName: lead.organization,
       }),
       buyer_question: lead.current_question,
@@ -333,9 +335,9 @@ export function PilotLearningWorkbench({
       ...current,
       organization_id: campaign.organization_id,
       campaign_id: campaign.id,
-      route_interest: campaign.scan_type === 'exit' ? 'exitscan' : 'retentiescan',
+      route_interest: getLearningRouteInterestForCampaign(campaign.scan_type),
       title: getSuggestedLearningDossierTitle({
-        routeInterest: campaign.scan_type === 'exit' ? 'exitscan' : 'retentiescan',
+        routeInterest: getLearningRouteInterestForCampaign(campaign.scan_type),
         campaignName: campaign.name,
         organizationName: orgById[campaign.organization_id]?.name,
       }),

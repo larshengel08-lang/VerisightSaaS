@@ -15,7 +15,7 @@ type CreateLearningDossierBody = {
   campaign_id?: string | null
   contact_request_id?: string | null
   title?: string
-  route_interest?: 'exitscan' | 'retentiescan' | 'combinatie' | 'nog-onzeker'
+  route_interest?: 'exitscan' | 'retentiescan' | 'teamscan' | 'combinatie' | 'nog-onzeker'
   buyer_question?: string | null
   expected_first_value?: string | null
   buying_reason?: string | null
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   }
 
   const routeInterest = body.route_interest ?? 'exitscan'
-  if (!['exitscan', 'retentiescan', 'combinatie', 'nog-onzeker'].includes(routeInterest)) {
+  if (!['exitscan', 'retentiescan', 'teamscan', 'combinatie', 'nog-onzeker'].includes(routeInterest)) {
     return NextResponse.json({ detail: 'Ongeldige route_interest.' }, { status: 400 })
   }
 

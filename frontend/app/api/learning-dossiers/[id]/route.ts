@@ -20,7 +20,7 @@ type UpdateLearningDossierBody = {
   campaign_id?: string | null
   contact_request_id?: string | null
   title?: string
-  route_interest?: 'exitscan' | 'retentiescan' | 'combinatie' | 'nog-onzeker'
+  route_interest?: 'exitscan' | 'retentiescan' | 'teamscan' | 'combinatie' | 'nog-onzeker'
   triage_status?: 'nieuw' | 'bevestigd' | 'geparkeerd' | 'uitgevoerd' | 'verworpen'
   buyer_question?: string | null
   expected_first_value?: string | null

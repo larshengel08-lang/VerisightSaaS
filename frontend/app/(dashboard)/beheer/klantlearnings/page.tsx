@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { PilotLearningWorkbench } from '@/components/dashboard/pilot-learning-workbench'
+import { buildMtoActionCenterWorkspace } from '@/lib/action-center-mto'
 import {
   DashboardChip,
   DashboardHero,
@@ -129,14 +130,45 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
   const confirmedLessons = checkpoints.filter((checkpoint) => checkpoint.status === 'bevestigd').length
   const campaignLinkedDossiers = dossiers.filter((dossier) => dossier.campaign_id).length
   const leadLinkedDossiers = dossiers.filter((dossier) => dossier.contact_request_id).length
+  const checkpointsByDossier = checkpoints.reduce<Record<string, PilotLearningCheckpoint[]>>((acc, checkpoint) => {
+    acc[checkpoint.dossier_id] ??= []
+    acc[checkpoint.dossier_id].push(checkpoint)
+    return acc
+  }, {})
+  const mtoWorkspace = buildMtoActionCenterWorkspace({
+    role: 'owner',
+    dossiers: dossiers
+      .filter((dossier) => dossier.scan_type === 'team' || dossier.route_interest === 'teamscan')
+      .map((dossier) => {
+        const dossierCheckpoints = checkpointsByDossier[dossier.id] ?? []
+        const firstManagementCheckpoint =
+          dossierCheckpoints.find((checkpoint) => checkpoint.checkpoint_key === 'first_management_use') ?? null
+
+        return {
+          id: dossier.id,
+          title: dossier.title,
+          triageStatus: dossier.triage_status,
+          departmentLabel: null,
+          managerLabel: firstManagementCheckpoint?.owner_label ?? null,
+          firstActionTaken: dossier.first_action_taken,
+          reviewMoment: dossier.review_moment,
+          managementActionOutcome: dossier.management_action_outcome,
+          nextRoute: dossier.next_route,
+          stopReason: dossier.stop_reason,
+        }
+      }),
+  })
+  const openMtoDossiers = mtoWorkspace.dossiers.filter((dossier) => dossier.status === 'open')
+  const reviewPressureItems = mtoWorkspace.reviewMoments.filter((reviewMoment) => reviewMoment.state === 'due')
+  const openSignals = mtoWorkspace.followUpSignals.filter((signal) => signal.state === 'open')
 
   return (
     <div className="space-y-6">
       <DashboardHero
         surface="ops"
-        eyebrow="Adminroute voor pilot- en klantlessen"
-        title="Operations learninglog"
-        description="Leg lessen compact vast per lead of campaign en gebruik deze workbench als interne log voor triage, bewijsstatus en vervolgstappen. Geen buyer-facing claims: alleen operationele observaties, bevestigde lessen en case-readiness."
+        eyebrow="Action Center voor MTO-follow-through"
+        title="Operations Action Center"
+        description="Laat MTO als eerste actieve carrier landen op de shared Action Center-core: HR blijft centraal, reviewdruk blijft zichtbaar en dossiers houden de follow-through bij elkaar zonder andere productkoppelingen te openen."
         tone="slate"
         meta={
           <>
@@ -182,6 +214,16 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
         surface="ops"
         items={[
           {
+            label: 'MTO dossiers',
+            value: `${mtoWorkspace.summary.openDossierCount}`,
+            tone: mtoWorkspace.summary.openDossierCount > 0 ? 'slate' : 'amber',
+          },
+          {
+            label: 'Reviewdruk',
+            value: `${mtoWorkspace.summary.reviewDueCount}`,
+            tone: mtoWorkspace.summary.reviewDueCount > 0 ? 'amber' : 'slate',
+          },
+          {
             label: 'Dossiers',
             value: `${dossiers.length} actief`,
             tone: dossiers.length > 0 ? 'slate' : 'amber',
@@ -203,11 +245,144 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           },
         ]}
         anchors={[
+          { id: 'action-center', label: 'Action Center' },
           { id: 'dekking', label: 'Dekking' },
           { id: 'issues', label: 'Issues' },
           { id: 'workbench', label: 'Workbench' },
         ]}
       />
+
+      <DashboardSection
+        id="action-center"
+        surface="ops"
+        eyebrow="MTO carrier"
+        title="Shared follow-through voor cockpit, dossiers en reviews"
+        description="Deze bovenlaag gebruikt dezelfde shared Action Center-core voor dossierstatus, reviewdruk en follow-through-signalen. HR blijft de centrale eigenaar; afdelingsscope blijft pas actief zodra een dossier of lokale read die expliciet maakt."
+        aside={
+          <DashboardChip
+            surface="ops"
+            label={`${mtoWorkspace.carrier.label} · ${mtoWorkspace.carrier.status}`}
+            tone="slate"
+          />
+        }
+      >
+        <div className="grid gap-4 xl:grid-cols-4">
+          <DashboardPanel
+            surface="ops"
+            eyebrow="HR centraal"
+            title="Shared eigenaar"
+            value="HR centraal"
+            body="Deze carrier houdt de centrale follow-through bij HR. Managers landen alleen op hun eigen afdeling zodra die lokale context expliciet en veilig leesbaar is."
+            tone="slate"
+          />
+          <DashboardPanel
+            surface="ops"
+            eyebrow="Reviewdruk"
+            title="Actieve reviewqueue"
+            value={`${mtoWorkspace.summary.reviewDueCount}`}
+            body="Elke open MTO-dossierregel blijft zichtbaar in de reviewdruk tot reviewmoment, uitkomst of stopbesluit expliciet zijn vastgelegd."
+            tone={mtoWorkspace.summary.reviewDueCount > 0 ? 'amber' : 'slate'}
+          />
+          <DashboardPanel
+            surface="ops"
+            eyebrow="Dossier-first"
+            title="Open follow-through"
+            value={`${mtoWorkspace.summary.openDossierCount}`}
+            body="Besluiten, eerste stap en vervolgrichting blijven dossier-first gegroepeerd in plaats van te verspreiden over losse campaignnotities."
+            tone={mtoWorkspace.summary.openDossierCount > 0 ? 'slate' : 'amber'}
+          />
+          <DashboardPanel
+            surface="ops"
+            eyebrow="Afdelingsscope"
+            title="Managerbinding"
+            value={
+              mtoWorkspace.managerDepartmentLabels.length > 0
+                ? `${mtoWorkspace.managerDepartmentLabels.length} afdeling${mtoWorkspace.managerDepartmentLabels.length === 1 ? '' : 'en'}`
+                : 'Nog niet expliciet'
+            }
+            body={
+              mtoWorkspace.managerDepartmentLabels.length > 0
+                ? `Actieve afdelingssporen: ${mtoWorkspace.managerDepartmentLabels.join(', ')}.`
+                : 'Maak de afdeling expliciet in de lokale read of het dossier zodra managergebonden follow-through echt nodig is.'
+            }
+            tone="slate"
+          />
+        </div>
+
+        <div className="mt-4 grid gap-4 xl:grid-cols-2">
+          <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Dossiers</p>
+                <h3 className="mt-2 text-lg font-semibold text-slate-950">Open MTO follow-through</h3>
+              </div>
+              <DashboardChip
+                surface="ops"
+                label={`${openMtoDossiers.length} open`}
+                tone={openMtoDossiers.length > 0 ? 'amber' : 'slate'}
+              />
+            </div>
+            <div className="mt-4 space-y-3">
+              {openMtoDossiers.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+                  Nog geen open MTO-dossiers. Zodra TeamScan/MTO follow-through leerwaarde geeft, verschijnt de dossierqueue hier automatisch.
+                </p>
+              ) : (
+                openMtoDossiers.slice(0, 5).map((dossier) => {
+                  const assignment = mtoWorkspace.assignments.find((item) => item.dossierId === dossier.id)
+                  return (
+                    <div key={dossier.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-4">
+                      <p className="text-sm font-semibold text-slate-950">{dossier.title}</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        Eerste stap: {assignment?.title ?? 'Nog niet vastgelegd'}.
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Status {assignment?.state ?? 'onbekend'} · Permission shared-core: {dossier.permissionEnvelope.canUpdateAssignments ? 'bewerkbaar' : 'read-only'}
+                      </p>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Reviews</p>
+                <h3 className="mt-2 text-lg font-semibold text-slate-950">Reviewdruk en open signalen</h3>
+              </div>
+              <DashboardChip
+                surface="ops"
+                label={`${reviewPressureItems.length} review${reviewPressureItems.length === 1 ? '' : 's'}`}
+                tone={reviewPressureItems.length > 0 ? 'amber' : 'slate'}
+              />
+            </div>
+            <div className="mt-4 space-y-3">
+              {reviewPressureItems.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
+                  Geen actieve reviewdruk. De shared core houdt deze lijst leeg zodra dossiers geparkeerd, uitgevoerd of bewust gestopt zijn.
+                </p>
+              ) : (
+                reviewPressureItems.slice(0, 5).map((reviewMoment) => {
+                  const dossier = mtoWorkspace.dossiers.find((item) => item.id === reviewMoment.dossierId)
+                  const signals = openSignals.filter((signal) => signal.dossierId === reviewMoment.dossierId)
+
+                  return (
+                    <div key={reviewMoment.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-4">
+                      <p className="text-sm font-semibold text-slate-950">{dossier?.title ?? reviewMoment.dossierId}</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">{reviewMoment.scheduledFor}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Open signalen: {signals.map((signal) => signal.kind).join(', ') || 'geen'}
+                      </p>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      </DashboardSection>
 
       <div id="dekking" className="grid gap-4 xl:grid-cols-4">
         <DashboardPanel

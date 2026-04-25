@@ -8,8 +8,10 @@ import {
   CASE_PERMISSION_STATUS_OPTIONS,
   CASE_POTENTIAL_OPTIONS,
   createDefaultLearningCheckpoints,
+  getLearningRouteInterestForCampaign,
   LEARNING_CHECKPOINT_DEFINITIONS,
   LEARNING_DESTINATION_OPTIONS,
+  LEARNING_ROUTE_OPTIONS,
   LEARNING_TRIAGE_STATUS_OPTIONS,
 } from '@/lib/pilot-learning'
 
@@ -68,6 +70,14 @@ describe('pilot learning defaults', () => {
       'stevig',
     ])
     expect(CASE_OUTCOME_CLASS_OPTIONS.map((option) => option.value)).toContain('management_adoptie')
+    expect(LEARNING_ROUTE_OPTIONS.map((option) => option.value)).toContain('teamscan')
+  })
+
+  it('maps TeamScan campaigns onto the MTO learning route without opening other carriers', () => {
+    expect(getLearningRouteInterestForCampaign('team')).toBe('teamscan')
+    expect(getLearningRouteInterestForCampaign('exit')).toBe('exitscan')
+    expect(getLearningRouteInterestForCampaign('retention')).toBe('retentiescan')
+    expect(getLearningRouteInterestForCampaign('pulse')).toBe('nog-onzeker')
   })
 
   it('builds route-aware objective signals from lead and campaign context', () => {

@@ -20,6 +20,10 @@ import type {
 import { SCAN_TYPE_LABELS, type CampaignStats, type DeliveryMode, type ScanType } from '@/lib/types'
 
 export type LearningTriageStatus = 'nieuw' | 'bevestigd' | 'geparkeerd' | 'uitgevoerd' | 'verworpen'
+export type LearningRouteInterest = Extract<
+  ContactRouteInterest,
+  'exitscan' | 'retentiescan' | 'teamscan' | 'combinatie' | 'nog-onzeker'
+>
 export type LearningCheckpointKey =
   | 'lead_route_hypothesis'
   | 'implementation_intake'
@@ -72,7 +76,7 @@ export interface PilotLearningDossier {
   campaign_id: string | null
   contact_request_id: string | null
   title: string
-  route_interest: ContactRouteInterest
+  route_interest: LearningRouteInterest
   scan_type: ScanType | null
   delivery_mode: DeliveryMode | null
   triage_status: LearningTriageStatus
@@ -186,12 +190,28 @@ export const LEARNING_STRENGTH_OPTIONS: Array<{ value: LearningStrength; label: 
   { value: 'direct_uitvoerbare_verbetering', label: 'Direct uitvoerbare verbetering' },
 ]
 
-export const LEARNING_ROUTE_OPTIONS: Array<{ value: ContactRouteInterest; label: string }> = [
+export const LEARNING_ROUTE_OPTIONS: Array<{ value: LearningRouteInterest; label: string }> = [
   { value: 'exitscan', label: 'ExitScan' },
   { value: 'retentiescan', label: 'RetentieScan' },
+  { value: 'teamscan', label: 'MTO / TeamScan' },
   { value: 'combinatie', label: 'Combinatie' },
   { value: 'nog-onzeker', label: 'Nog niet zeker' },
 ]
+
+export function getLearningRouteInterestForCampaign(scanType: ScanType): LearningRouteInterest {
+  if (scanType === 'exit') return 'exitscan'
+  if (scanType === 'retention') return 'retentiescan'
+  if (scanType === 'team') return 'teamscan'
+  return 'nog-onzeker'
+}
+
+export function normalizeLearningRouteInterest(value: ContactRouteInterest | null | undefined): LearningRouteInterest {
+  if (value === 'exitscan' || value === 'retentiescan' || value === 'teamscan' || value === 'combinatie') {
+    return value
+  }
+
+  return 'nog-onzeker'
+}
 
 export const CASE_EVIDENCE_CLOSURE_OPTIONS: Array<{ value: CaseEvidenceClosureStatus; label: string }> = [
   { value: 'lesson_only', label: 'Lesson only' },
@@ -262,7 +282,7 @@ export function getLearningStrengthLabel(value: LearningStrength) {
 }
 
 export function getSuggestedLearningDossierTitle(args: {
-  routeInterest: ContactRouteInterest
+  routeInterest: LearningRouteInterest
   campaignName?: string | null
   organizationName?: string | null
 }) {

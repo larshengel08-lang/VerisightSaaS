@@ -474,11 +474,11 @@ export default async function DashboardHomePage({
                 cta="Open leadlijst"
               />
               <UtilityCard
-                eyebrow="Learning"
-                title="Klantlearnings en workbench"
-                body="Leg buyer-signalen, implementationlessen en vervolgkeuzes vast zodra een campagne leerwaarde oplevert."
+                eyebrow="Action Center"
+                title="MTO follow-through en dossiers"
+                body="Open de shared Action Center-laag voor MTO om reviewdruk, dossier-first follow-through en de learning-workbench vanuit één boundary te beheren."
                 href="/beheer/klantlearnings"
-                cta="Open learning-workbench"
+                cta="Open Action Center"
               />
             </>
           ) : (
