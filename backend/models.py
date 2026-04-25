@@ -14,11 +14,12 @@ Tables
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from sqlalchemy import (
     Boolean,
     CHAR,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -348,6 +349,10 @@ class CampaignDeliveryRecord(Base):
     next_step: Mapped[str | None] = mapped_column(Text, nullable=True)
     operator_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     customer_handoff_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    launch_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    launch_confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    participant_comms_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    reminder_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     first_management_use_confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     follow_up_decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     learning_closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

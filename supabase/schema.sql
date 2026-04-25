@@ -414,12 +414,45 @@ create table if not exists public.campaign_delivery_records (
   next_step                       text,
   operator_notes                  text,
   customer_handoff_note           text,
+  launch_date                     date,
+  launch_confirmed_at             timestamptz,
+  participant_comms_config        jsonb not null default '{}'::jsonb,
+  reminder_config                 jsonb not null default '{}'::jsonb,
   first_management_use_confirmed_at timestamptz,
   follow_up_decided_at            timestamptz,
   learning_closed_at              timestamptz,
   created_at                      timestamptz default now(),
   updated_at                      timestamptz default now()
 );
+
+do $$ begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'campaign_delivery_records' and column_name = 'launch_date'
+  ) then
+    alter table public.campaign_delivery_records add column launch_date date;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'campaign_delivery_records' and column_name = 'launch_confirmed_at'
+  ) then
+    alter table public.campaign_delivery_records add column launch_confirmed_at timestamptz;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'campaign_delivery_records' and column_name = 'participant_comms_config'
+  ) then
+    alter table public.campaign_delivery_records
+      add column participant_comms_config jsonb not null default '{}'::jsonb;
+  end if;
+  if not exists (
+    select 1 from information_schema.columns
+    where table_name = 'campaign_delivery_records' and column_name = 'reminder_config'
+  ) then
+    alter table public.campaign_delivery_records
+      add column reminder_config jsonb not null default '{}'::jsonb;
+  end if;
+end $$;
 
 create table if not exists public.campaign_delivery_checkpoints (
   id                uuid primary key default gen_random_uuid(),
