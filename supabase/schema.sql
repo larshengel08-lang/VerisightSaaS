@@ -441,7 +441,7 @@ create table if not exists public.pilot_learning_dossiers (
   campaign_id             uuid references public.campaigns(id) on delete cascade,
   contact_request_id      uuid references public.contact_requests(id) on delete set null,
   title                   text not null,
-  route_interest          text not null default 'exitscan' check (route_interest in ('exitscan', 'retentiescan', 'combinatie', 'nog-onzeker')),
+  route_interest          text not null default 'exitscan' check (route_interest in ('exitscan', 'retentiescan', 'teamscan', 'combinatie', 'nog-onzeker')),
   scan_type               text check (scan_type is null or scan_type in ('exit', 'retention', 'pulse', 'team', 'onboarding', 'leadership')),
   delivery_mode           text check (delivery_mode in ('baseline', 'live')),
   triage_status           text not null default 'nieuw' check (triage_status in ('nieuw', 'bevestigd', 'geparkeerd', 'uitgevoerd', 'verworpen')),

@@ -5,6 +5,10 @@ from backend.models import (
     PilotLearningCheckpoint,
     PilotLearningDossier,
 )
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_learning_dossier_persists_with_checkpoint_defaults(db_session):
@@ -116,3 +120,14 @@ def test_learning_checkpoint_can_store_confirmed_lesson_and_destinations(db_sess
     assert stored_dossier is not None
     assert stored_dossier.case_permission_status == "anonymous_case_only"
     assert stored_dossier.case_outcome_quality == "stevig"
+
+
+def test_learning_route_contract_includes_teamscan_for_persisted_dossiers():
+    schema = (ROOT / "supabase/schema.sql").read_text(encoding="utf-8").lower()
+    migration = (
+        ROOT / "migrations/2026_04_25_add_teamscan_learning_route.sql"
+    ).read_text(encoding="utf-8").lower()
+
+    assert "route_interest in ('exitscan', 'retentiescan', 'teamscan', 'combinatie', 'nog-onzeker')" in schema
+    assert "pilot_learning_dossiers_route_interest_check" in migration
+    assert "teamscan" in migration
