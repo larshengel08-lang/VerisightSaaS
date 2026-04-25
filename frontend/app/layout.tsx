@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { IBM_Plex_Sans } from 'next/font/google'
+import { IBM_Plex_Sans, Fraunces } from 'next/font/google'
 import './globals.css'
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -7,6 +7,15 @@ const ibmPlexSans = IBM_Plex_Sans({
   weight: ['300', '400', '500', '600'],
   display: 'swap',
   variable: '--font-ibm-plex-sans',
+})
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  weight: 'variable',
+  style: ['normal', 'italic'],
+  axes: ['opsz'],
+  display: 'swap',
+  variable: '--font-fraunces',
 })
 
 export const metadata: Metadata = {
@@ -72,7 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="nl">
-      <body className={`${ibmPlexSans.variable} font-[family-name:var(--font-ibm-plex-sans)] bg-[--bg] antialiased`}>
+      <body className={`${ibmPlexSans.variable} ${fraunces.variable} font-[family-name:var(--font-ibm-plex-sans)] bg-[--bg] antialiased`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
