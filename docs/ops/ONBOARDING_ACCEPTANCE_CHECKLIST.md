@@ -13,6 +13,7 @@ Gebruik deze checklist om te beoordelen of een assisted klantstart niet alleen l
 - [ ] Scanperiode expliciet vastgelegd als live vanaf start of bewust retrospectief opgezet
 - [ ] Contactpersoon en eerste managementdoel vastgelegd
 - [ ] Metadata-verwachting expliciet gemaakt
+- [ ] Klant owner expliciet aangewezen voor owner-only acties
 
 ## Setup and import
 
@@ -36,9 +37,11 @@ Gebruik deze checklist om te beoordelen of een assisted klantstart niet alleen l
 ## Activation and first use
 
 - [ ] Klantaccount geactiveerd
+- [ ] Eerste gebruiker voor dashboardtoegang expliciet bevestigd
 - [ ] Eerste dashboardread mogelijk
 - [ ] Eerste rapportuitleg geleverd of ingepland
 - [ ] Eerste managementgebruik bevestigd
+- [ ] Eerste eigenaar of vervolgstap expliciet vastgelegd
 
 ### Managed V1 route check
 
@@ -76,3 +79,7 @@ Praktische signalen zonder zware analytics-stack:
 - Eerst plan en docs aanpassen
 - Daarna UI, flows en tests aanpassen
 - Daarna acceptance-run en checklist opnieuw nalopen
+
+Zie voor owner- en activatiegrenzen ook:
+
+- [CLIENT_CUSTOMER_OWNER_ACTIVATION_CONTRACT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_CUSTOMER_OWNER_ACTIVATION_CONTRACT.md)

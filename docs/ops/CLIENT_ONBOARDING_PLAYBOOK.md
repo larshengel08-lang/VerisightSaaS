@@ -13,6 +13,7 @@ Belangrijke defaults:
 - RetentieScan blijft complementair en verification-first.
 - Verisight beheert setup, importcontrole, invite-activatie en dashboardtoegang.
 - De klant levert input aan en gebruikt daarna dashboard en rapport.
+- De klant owner moet expliciet bekend zijn voordat owner-only acties eerlijk uitvoerbaar zijn.
 - Adoptie is pas geslaagd wanneer de klant de output echt gebruikt voor het eerste managementgesprek.
 - Vroege learnings worden voortaan vastgelegd in `/beheer/klantlearnings`.
 - Een campaign meet standaard live vanaf campagnestart; een retrospectieve baseline of 12-maandsbeeld moet expliciet zo worden ingericht.
@@ -98,6 +99,12 @@ Nuance:
 - Type: klantmoment
 - Doel: klantaccount activeren en de gebruiker in het juiste dashboard laten landen
 
+Wat hierbij expliciet moet zijn:
+
+- wie de klant owner is
+- wie de eerste gebruiker wordt
+- dat activatie pas telt wanneer toegang en eerste read echt geland zijn
+
 ### 6. Eerste dashboardread
 
 - Eigenaar: klant
@@ -115,6 +122,10 @@ Nuance:
 - Eigenaar: klant
 - Type: gedeeld
 - Doel: eerste eigenaar, eerste vraag en eerste vervolgstap expliciet maken
+
+Voor customer-owner en activatiegrenzen:
+
+- zie ook [CLIENT_CUSTOMER_OWNER_ACTIVATION_CONTRACT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_CUSTOMER_OWNER_ACTIVATION_CONTRACT.md)
 
 ## Verplichte learning handoff
 
@@ -206,6 +217,7 @@ Dashboard en rapport zijn vanaf een bruikbare responsbasis het eerste management
 
 - context, timing en contactpersoon bevestigen
 - respondentbestand aanleveren
+- klant owner expliciet aanwijzen voor owner-only acties
 - dashboard en rapport gebruiken voor het eerste managementgesprek
 - prioriteiten, verificatievragen en vervolgstappen bepalen
 
