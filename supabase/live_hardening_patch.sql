@@ -4,8 +4,9 @@
 -- 1. organization_secrets toevoegen
 -- 2. bestaande api_key migreren uit organizations
 -- 3. delivery_mode toevoegen aan campaigns
--- 4. org creation beperken tot Verisight-admins
--- 5. nieuwe organisaties automatisch secret + owner-membership geven
+-- 4. launch-control velden toevoegen aan campaign_delivery_records
+-- 5. org creation beperken tot Verisight-admins
+-- 6. nieuwe organisaties automatisch secret + owner-membership geven
 
 create table if not exists public.organization_secrets (
   org_id      uuid primary key references public.organizations(id) on delete cascade,
@@ -30,6 +31,40 @@ do $$ begin
     add constraint campaigns_delivery_mode_check
     check (delivery_mode in ('baseline', 'live'));
 exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'campaign_delivery_records'
+  ) then
+    if not exists (
+      select 1 from information_schema.columns
+      where table_name = 'campaign_delivery_records' and column_name = 'launch_date'
+    ) then
+      alter table public.campaign_delivery_records add column launch_date date;
+    end if;
+    if not exists (
+      select 1 from information_schema.columns
+      where table_name = 'campaign_delivery_records' and column_name = 'launch_confirmed_at'
+    ) then
+      alter table public.campaign_delivery_records add column launch_confirmed_at timestamptz;
+    end if;
+    if not exists (
+      select 1 from information_schema.columns
+      where table_name = 'campaign_delivery_records' and column_name = 'participant_comms_config'
+    ) then
+      alter table public.campaign_delivery_records
+        add column participant_comms_config jsonb not null default '{}'::jsonb;
+    end if;
+    if not exists (
+      select 1 from information_schema.columns
+      where table_name = 'campaign_delivery_records' and column_name = 'reminder_config'
+    ) then
+      alter table public.campaign_delivery_records
+        add column reminder_config jsonb not null default '{}'::jsonb;
+    end if;
+  end if;
 end $$;
 
 do $$ begin
