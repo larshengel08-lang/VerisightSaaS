@@ -48,6 +48,8 @@ Voor het huidige fix-programma gebruik je deze volgorde:
   - canonieke route van akkoord naar eerste managementwaarde
 - [CLIENT_ONBOARDING_FLOW_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_ONBOARDING_FLOW_SYSTEM.md)
   - praktisch flow-based naslagwerk voor routekeuze, intake, first value en report-to-action
+- [CLIENT_CUSTOMER_OWNER_ACTIVATION_CONTRACT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_CUSTOMER_OWNER_ACTIVATION_CONTRACT.md)
+  - expliciteert wie aan klantzijde owner is voor owner-only acties, activatie en eerste managementgebruik
 - [ONBOARDING_ACCEPTANCE_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/ONBOARDING_ACCEPTANCE_CHECKLIST.md)
   - acceptancecheck voor onboarding
 - [OPS_DELIVERY_FAILURE_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/OPS_DELIVERY_FAILURE_MATRIX.md)

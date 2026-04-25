@@ -94,6 +94,10 @@ Belangrijke defaults:
 - Klantcommunicatie:
   ja, wanneer toegang of timing direct moet worden afgestemd
 
+Extra operatorregel:
+
+- controleer expliciet wie de klant owner is, wie de eerste gebruiker wordt en of activatie al naar eerste read is doorgezet
+
 ### 5. Report delivery gaps
 
 - Detectie:
@@ -119,6 +123,10 @@ Belangrijke defaults:
   bevestig eerste managementsessie, leg eerste eigenaar/vervolgstap vast of zet follow-up open
 - Klantcommunicatie:
   ja, wanneer Verisight actief de eerste read of walkthrough begeleidt
+
+Extra operatorregel:
+
+- first management use telt pas als de eerste managementvraag, eerste eigenaar en eerste vervolgstap expliciet zijn bevestigd
 
 ## Exception language
 
@@ -154,3 +162,4 @@ Neem dit minimaal op in de weekreview:
 - acceptance- en recoverycheckpoints: `campaign_delivery_checkpoints`
 - learning en vervolguitkomst: `pilot_learning_dossiers` en `pilot_learning_checkpoints`
 - actieve tranche: `docs/active/OPS_AND_DELIVERY_SYSTEM_PLAN.md`
+- owner- en activatiegrenzen: `docs/ops/CLIENT_CUSTOMER_OWNER_ACTIVATION_CONTRACT.md`
