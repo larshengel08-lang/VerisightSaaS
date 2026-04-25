@@ -210,10 +210,13 @@ def test_exit_workspace_projects_real_follow_through_pressure_onto_shared_core()
     assert workspace.summary.workspace_kind == "follow_through"
     assert workspace.summary.open_dossier_count == 2
     assert workspace.summary.blocked_count == 1
-    assert workspace.summary.review_due_count == 2
+    assert workspace.summary.review_due_count == 1
     assert workspace.summary.escalation_count == 1
     assert workspace.active_delivery_modes == ("baseline", "live")
     assert workspace.assignments[0].state == "active"
     assert workspace.assignments[1].state == "blocked"
+    assert workspace.review_moments[0].state == "scheduled"
+    assert workspace.review_moments[1].state == "due"
     assert any(signal.kind == "owner_missing" for signal in workspace.follow_up_signals)
     assert any(signal.kind == "decision_due" for signal in workspace.follow_up_signals)
+    assert sum(1 for signal in workspace.follow_up_signals if signal.kind == "review_due") == 1

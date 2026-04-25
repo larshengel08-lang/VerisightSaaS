@@ -203,13 +203,16 @@ describe('action center shared core', () => {
     expect(workspace.summary.workspaceKind).toBe('follow_through')
     expect(workspace.summary.openDossierCount).toBe(2)
     expect(workspace.summary.blockedCount).toBe(1)
-    expect(workspace.summary.reviewDueCount).toBe(2)
+    expect(workspace.summary.reviewDueCount).toBe(1)
     expect(workspace.summary.escalationCount).toBe(1)
     expect(workspace.activeDeliveryModes).toEqual(['baseline', 'live'])
     expect(workspace.assignments[0]?.state).toBe('active')
     expect(workspace.assignments[1]?.state).toBe('blocked')
+    expect(workspace.reviewMoments[0]?.state).toBe('scheduled')
+    expect(workspace.reviewMoments[1]?.state).toBe('due')
     expect(workspace.followUpSignals.some((signal) => signal.kind === 'owner_missing')).toBe(true)
     expect(workspace.followUpSignals.some((signal) => signal.kind === 'decision_due')).toBe(true)
+    expect(workspace.followUpSignals.filter((signal) => signal.kind === 'review_due')).toHaveLength(1)
   })
 
   it('keeps generic shared checkpoint owners out of manager binding', () => {
