@@ -21,6 +21,11 @@ Verisight is nu geen brede people-suite en ook nog geen full self-service SaaS. 
   - begeleidt intake, launchdiscipline, dashboardactivatie en eerste vervolgstap
   - laat de klant zelf werken binnen begrensde product- en deliveryrails
 
+- **Action Center**
+  - bounded follow-through module binnen dezelfde suite als dashboard en rapport
+  - maakt eigenaar, eerste stap, reviewmoment en vervolgbesluit zichtbaar
+  - versterkt Verisight propositioneel van alleen inzicht naar expliciete opvolging
+
 - **Action Center-productlaag**
   - gedeelde follow-through laag onder guided execution en delivery
   - houdt dossiers, assignments, reviewmomenten en open follow-upsignalen bij elkaar op de bestaande adminsurface
@@ -99,12 +104,14 @@ Wat nu verdedigbaar is:
 - werkfactoren rond vertrek of behoud bespreekbaar maken
 - management helpen prioriteren waar verder gesprek of validatie nodig is
 - zelfstandig leesbare rapportage met focusvragen, hypothesen en vervolgrichting
+- opvolging expliciet organiseren via eigenaar, actie, reviewmoment en bounded follow-through
 
 Wat nu niet te hard geclaimd mag worden:
 - harde diagnose van waarom iemand vertrekt
 - voorspellen van individueel verloop
 - exact vaststellen wat vermijdbaar was
 - causale zekerheid op basis van één scan of rapport
+- autonome interventie- of taakmachine die zonder menselijk besluit de juiste actie bepaalt
 
 ### Product-, route- en portfoliovolgorde
 
@@ -228,3 +235,4 @@ Niet alles wat nu belangrijk is, zit in code. Deze afhankelijkheden tellen mee i
 - bounded portfolioroutes blijven ondergeschikt aan een scherp gekozen eerste route en openen geen nieuwe pricing- of propositiescope
 - Action Center blijft commercieel onderliggend aan guided execution: wel echte productlaag, geen zelfstandig prijsanker of pitchlijn
 - de eerste commerciële mijlpaal is niet een nieuwe feature, maar een eerste reeks betaalde trajecten via dezelfde truth-aligned routearchitectuur
+- de volgende commerciële hoofdslag is Action Center expliciet zichtbaar maken als kern-USP binnen die routearchitectuur
