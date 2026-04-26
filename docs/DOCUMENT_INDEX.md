@@ -69,6 +69,7 @@ Voor de huidige fix-tranche:
 - [RETENTIESCAN_LIVE_TEST_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/RETENTIESCAN_LIVE_TEST_PLAN.md)
 - [SCHEMA_DB_SEMANTIC_MIGRATION_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/SCHEMA_DB_SEMANTIC_MIGRATION_PLAN.md)
 - [METRIC_HARDENING_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/METRIC_HARDENING_SIGNOFF.md)
+- [ACTION_CENTER_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/ACTION_CENTER_CANON.md)
 
 ## Reference
 
@@ -115,6 +116,7 @@ Voor de huidige fix-tranche:
 - [SCALABILITY_IMPROVEMENT_WAVES.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_IMPROVEMENT_WAVES.md)
 - [SCALABILITY_REVIEW_WORKBOOK.xlsx](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SCALABILITY_REVIEW_WORKBOOK.xlsx)
 - [SOURCE_OF_TRUTH_CHARTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SOURCE_OF_TRUTH_CHARTER.md)
+- [ACTION_CENTER_OPERATING_MODEL.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/ACTION_CENTER_OPERATING_MODEL.md)
 - [SUPABASE_LIVE_HARDENING_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/SUPABASE_LIVE_HARDENING_CHECKLIST.md)
 - [RETENTION_V11_VALIDATION_WORKFLOW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/RETENTION_V11_VALIDATION_WORKFLOW.md)
 

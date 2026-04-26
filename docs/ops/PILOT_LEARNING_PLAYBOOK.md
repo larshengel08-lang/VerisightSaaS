@@ -11,7 +11,7 @@ Belangrijke defaults:
 
 - ExitScan blijft de primaire eerste route.
 - RetentieScan blijft complementair en verification-first.
-- De learninglaag is internal-only en admin-first.
+- Action Center is de internal-only en admin-first follow-throughlaag.
 - Manual-first is acceptabel, zolang de les persistente capture krijgt.
 - Een lesson sluit pas wanneer repo-bestemming of bewuste afwijzing expliciet is.
 - Case-proof groeit vanuit learningdossiers, nooit vanuit sample-output of losse anekdotes.
@@ -21,7 +21,7 @@ Belangrijke defaults:
 ### 1. Start vanuit lead of campaign
 
 - Gebruik `/beheer/contact-aanvragen` voor nieuwe buyer-signalen.
-- Gebruik `/beheer/klantlearnings` om direct een dossier te starten.
+- Gebruik `/beheer/klantlearnings` als Action Center om direct een dossier te starten.
 - Koppel een campaign zodra implementation, launch of managementgebruik al in de echte route zitten.
 
 ### 2. Leg de vaste dossierbasis vast
@@ -69,6 +69,12 @@ Leg daarnaast op dossierniveau vast zodra dat kan:
 - claimbare observaties
 - supporting artifacts
 
+Deze dossierlaag blijft bounded:
+
+- geen generieke projectplanning
+- geen setupvervanging
+- geen buyer-facing dashboardcopy
+
 ### 4. Gebruik triage expliciet
 
 - `nieuw`: net vastgelegd, nog niet bevestigd
@@ -79,7 +85,7 @@ Leg daarnaast op dossierniveau vast zodra dat kan:
 
 ### 5. Dwing bestemming af
 
-Elke confirmed lesson hoort minimaal één bestemming te krijgen:
+Elke confirmed lesson hoort minimaal een bestemming te krijgen:
 
 - `product`
 - `report`
