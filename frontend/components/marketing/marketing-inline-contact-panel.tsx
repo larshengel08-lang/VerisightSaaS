@@ -19,7 +19,7 @@ export function MarketingInlineContactPanel({
   defaultRouteInterest,
   defaultCtaSource,
   id = 'kennismaking',
-  badge = 'Vrijblijvend gesprek',
+  badge = 'Vrijblijvende suite-demo',
 }: MarketingInlineContactPanelProps) {
   return (
     <div
@@ -47,7 +47,7 @@ export function MarketingInlineContactPanel({
           <Suspense
             fallback={
               <div className="rounded-[1.6rem] border border-[var(--border)] bg-[var(--surface)] p-6 text-sm leading-7 text-[var(--text)]">
-                Het kennismakingsformulier wordt geladen.
+                Het suite-demoformulier wordt geladen.
               </div>
             }
           >

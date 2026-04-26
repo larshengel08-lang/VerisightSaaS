@@ -43,7 +43,7 @@ export default function ProductenPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <div className="min-h-screen">
-        <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan suite-demo" />
         <main id="hoofdinhoud">
           <ProductenContent />
         </main>

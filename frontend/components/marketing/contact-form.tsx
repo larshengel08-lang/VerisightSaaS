@@ -209,8 +209,8 @@ export function ContactForm({
         }`}
       >
         {isCompact
-          ? 'Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke output of intake daarbij logisch wordt.'
-          : 'Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de logische eerste stap is. Onboarding 30-60-90 behandelen we als bounded peer wanneer de vraag direct over nieuwe medewerkers gaat. Pulse en Leadership Scan blijven bounded vervolgroutes die pas logisch worden nadat een eerste signaal, baseline of managementread al staat. We gebruiken de intake ook om te bepalen wanneer dashboard, rapport of Action Center daarna logisch in dezelfde suite-omgeving landen. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.'}
+          ? 'Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke suite-output daarna logisch wordt.'
+          : 'Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de logische eerste stap is. Onboarding 30-60-90 behandelen we als bounded peer wanneer de vraag direct over nieuwe medewerkers gaat. Pulse en Leadership Scan blijven bounded vervolgroutes die pas logisch worden nadat een eerste signaal, baseline of managementread al staat. We gebruiken de intake ook om te bepalen wanneer dashboard, rapport of Action Center daarna logisch in dezelfde suite-omgeving landen en hoe een bounded suite-demo eruit moet zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.'}
       </div>
 
       {!isCompact ? (
@@ -367,7 +367,7 @@ export function ContactForm({
 
       {successState ? (
         <div className={`mt-5 rounded-[1.5rem] border px-5 py-5 text-sm ${successClass}`}>
-          <p className="font-semibold">Aanvraag ontvangen.</p>
+          <p className="font-semibold">Suite-demo aangevraagd.</p>
           <div className="mt-2 space-y-2 leading-7">
             <p>
               We reageren meestal binnen 1 werkdag met een eerste route-inschatting voor{' '}
@@ -375,9 +375,9 @@ export function ContactForm({
               <span className="font-semibold">{successState.firstStepLabel}</span> nu logisch is.
             </p>
             <p>
-              In het gesprek toetsen we jullie managementvraag, gewenste timing (
+              In de suite-demo toetsen we jullie managementvraag, gewenste timing (
               <span className="font-semibold">{successState.desiredTimingLabel}</span>) en welke intake of
-              databasis nodig is om vlot naar uitvoering en eerste waarde te gaan.
+              databasis nodig is om vlot naar dashboard, rapport, Action Center en eerste waarde te gaan.
             </p>
             <p>Een vervolgroute of combinatieroute wordt pas concreet zodra de eerste route en eerste managementwaarde helder zijn.</p>
             <p>In deze stap krijg je nog geen live inrichting of definitieve offerte zonder intake.</p>
@@ -400,7 +400,7 @@ export function ContactForm({
           disabled={loading}
           className={`inline-flex w-full items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 sm:ml-auto sm:min-w-[14rem] sm:w-auto ${buttonClass}`}
         >
-          {loading ? 'Verstuur bericht...' : isCompact ? 'Plan kennismaking' : 'Verstuur bericht'}
+          {loading ? 'Suite-demo wordt verstuurd...' : isCompact ? 'Plan suite-demo' : 'Vraag suite-demo aan'}
         </button>
       </div>
 

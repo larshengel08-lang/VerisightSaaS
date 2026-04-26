@@ -88,7 +88,7 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
     proofTitle: 'Laat eerst de deliverable zien, daarna pas de uitleg.',
     proofBody:
       'De voorbeeldoutput op de ExitScan-productpagina laat zien hoe bestuurlijke read, topfactoren en bestuurlijke handoff werkelijk samenkomen.',
-    contactTitle: 'Plan een kennismaking over verloopanalyse',
+    contactTitle: 'Plan een suite-demo over verloopanalyse',
     contactBody:
       'Beschrijf kort waar jullie verloopvraag nu vastloopt. Dan toetsen we of ExitScan Baseline de juiste eerste stap is en welke databasis nodig is om snel naar een geloofwaardige eerste managementread te komen.',
   },
@@ -145,7 +145,7 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
     proofTitle: 'Voorbeeldrapporten maken de stap van gesprek naar managementbeeld tastbaar.',
     proofBody:
       'De ExitScan showcase laat zien hoe vertrekredenen, signalen van werkfrictie en eerste managementvragen in één executive leeslijn landen.',
-    contactTitle: 'Plan een kennismaking over exitgesprekken analyseren',
+    contactTitle: 'Plan een suite-demo over exitgesprekken analyseren',
     contactBody:
       'Beschrijf kort hoe exitgesprekken nu worden verzameld en waar interpretatie of besluitvorming vastloopt. Dan toetsen we of ExitScan Baseline de juiste eerste structuur biedt.',
   },
@@ -202,7 +202,7 @@ export const SEO_SOLUTION_PAGES: readonly SeoSolutionPage[] = [
     proofTitle: 'Laat eerst de groepsgerichte output zien.',
     proofBody:
       'De RetentieScan showcase laat zien hoe retentiesignaal, topfactoren en bestuurlijke handoff samenkomen zonder brede MTO- of predictorclaim.',
-    contactTitle: 'Plan een kennismaking over medewerkersbehoud analyseren',
+    contactTitle: 'Plan een suite-demo over medewerkersbehoud analyseren',
     contactBody:
       'Beschrijf kort waar de actieve behoudsvraag nu zit. Dan toetsen we of RetentieScan Baseline de juiste eerste stap is en hoe een geloofwaardige eerste meetroute eruitziet.',
   },
