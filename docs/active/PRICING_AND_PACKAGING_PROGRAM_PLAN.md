@@ -4,7 +4,7 @@
 
 Dit traject heeft van de bestaande prijsankers, package-vormen en commerciële uitleg van Verisight één strakke, verkoopbare en repo-consistente pricing- en packaginglaag gemaakt. De strategische alignment in deze reviewronde trekt dat verhaal opnieuw gelijk met de huidige productwaarheid: guided execution, assisted self-service discipline, twee eerlijke first-buy routes en een bewust bounded portfolio.
 
-Sinds 2026-04-26 hoort daar ook expliciet bij dat de inmiddels echte Action Center-productlaag niet meer onzichtbaar onder de commerciële taal mag blijven hangen. Die laag is wél productwaarheid, maar nog niet verkoopbaar als derde product, losse module, add-on of prijsanker. Pricing en packaging moeten dus ruimte laten voor Action Center als embedded follow-through laag zonder daar commerciële fantasie omheen te bouwen.
+Sinds 2026-04-26 hoort daar ook expliciet bij dat de inmiddels echte Action Center-productlaag niet meer onzichtbaar onder de commerciële taal mag blijven hangen. Die laag is wél productwaarheid, maar nog niet verkoopbaar als derde product, losse module, add-on of prijsanker. Pricing en packaging moeten dus ruimte laten voor Action Center als embedded follow-through laag zonder daar commerciële fantasie omheen te bouwen. Concreet draagt de huidige laag dossier-, assignment-, review- en signaalopvolging voor precies twee live consumers (MTO en ExitScan); andere adapters bestaan alleen nog als inactive placeholder en mogen dus niet in pricing worden meegelezen.
 
 De uitgevoerde richting in deze tranche:
 
@@ -28,6 +28,7 @@ Belangrijkste repo-observaties waarop deze uitvoering is gebaseerd:
 - RetentieScan had commercieel meer package-varianten dan ExitScan, waardoor package-uitleg sneller diffuus kon worden
 - frontend-, funnel- en dashboardlagen stuurden inmiddels al op question-first eerste routekeuze en guided self-service discipline
 - de echte Action Center-core bestaat nu als interne follow-through laag met precies twee bounded live consumers, maar nog zonder buyer-facing package- of modulecontract
+- future adapters voor RetentieScan, Onboarding, Pulse en Leadership bestaan alleen als inactive placeholder en mogen niet als commerciële dekking of vervolglijn worden verkocht
 - portfolio-architectuur en producttaal maakten duidelijk dat bounded vervolgroutes niet als extra kernproducten of brede pricinglaag mogen worden geframed
 - strategie, trust en roadmap maakten expliciet dat pricing assisted/productized moest blijven en niet mocht doorschieten naar plans, seats, subscriptions of Stripe-logica
 
@@ -63,9 +64,10 @@ Status 2026-04-26:
   - geen self-service checkout of publieke planmatrix
   - geen nieuwe technische campaign-entiteiten voor elke commerciële vervolgroute
   - geen groot website-redesign buiten package- en pricingalignment
-  - geen admin/dashboardcopy-wijziging, omdat de huidige interne termen de publieke packagecopy nu niet blokkeren
-  - geen standalone Action Center pricing, modulepositionering of buyer-facing upsellcopy
-  - geen nieuwe pricinglaag voor bounded vervolgroutes of portfolioverbreding zonder apart besluit
+- geen admin/dashboardcopy-wijziging, omdat de huidige interne termen de publieke packagecopy nu niet blokkeren
+- geen standalone Action Center pricing, modulepositionering of buyer-facing upsellcopy
+- geen pricingcopy die inactive future adapters, brede orchestration of open adaptertoegang suggereert
+- geen nieuwe pricinglaag voor bounded vervolgroutes of portfolioverbreding zonder apart besluit
 
 ## 2. Milestones
 
@@ -179,6 +181,7 @@ Dependency: Milestone 3
 - [x] Pricing gekoppeld gehouden aan echte voorbeeldoutput en report-structuur.
 - [x] Pricing expliciet gekoppeld gehouden aan guided execution, assisted self-service discipline en bounded portfolio guardrails uit de actuele productlaag.
 - [x] Pricing expliciet gekoppeld gehouden aan de huidige Action Center-truth: dossier-first follow-through, reviewdruk, expliciete eigenaar en slechts twee bounded live consumers.
+- [x] Vastgelegd dat inactive future adapters onder Action Center geen buyer-facing pricingdekking, vervolglijn of routeverbreding rechtvaardigen.
 - [x] Vastgelegd welke packageclaims niet mogen: always-on live monitoring alsof dit al product-led standaard is, benchmark- of ROI-claims zonder basis en SaaS-planframing.
 - [x] Vastgelegd welke Action Center-claims nu niet mogen: losse moduleframing, cross-product orchestration alsof alle adapters al live zijn en buyer-facing pricing alsof follow-through al productized self-serve is.
 - [x] Interne admin/dashboardcopy beoordeeld; geen directe wijziging nodig geacht in deze tranche.
@@ -188,6 +191,7 @@ Dependency: Milestone 3
 - [x] Pricing belooft niet meer dan dashboard, report, preview en campaignmodel waarmaken.
 - [x] De packagearchitectuur blijft assisted/productized in plaats van pseudo-SaaS.
 - [x] Action Center wordt commercieel niet zwaarder gelezen dan de huidige bounded ops- en follow-upcapaciteit draagt.
+- [x] Geen pricinglaag suggereert live entry of buyer-facing dekking voor inactive future adapters.
 
 #### Validation
 - [x] `backend/report.py`, previewcopy, dashboard/admin-context en voorbeeld-PDF's ondersteunen de packageclaims.

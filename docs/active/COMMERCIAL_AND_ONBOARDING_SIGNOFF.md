@@ -10,7 +10,7 @@ Commercial Architecture And Onboarding Flow Refinement - Signoff
 
 ## Korte samenvatting
 
-Deze signoff bevestigt dat de commerciele kernstructuur, packaginglogica en operationele onboardingflows nu op elkaar aansluiten zonder de producttruth te overschrijven. Dual-core is hiermee bruikbaar als commerciele default, terwijl bounded routes begrensd blijven.
+Deze signoff bevestigt dat de commerciele kernstructuur, packaginglogica en operationele onboardingflows nu op elkaar aansluiten zonder de producttruth te overschrijven. Dual-core is hiermee bruikbaar als commerciele default, terwijl bounded routes begrensd blijven en Action Center alleen als embedded follow-through laag op de bestaande adminsurface meegelezen mag worden.
 
 ## Wat is geaudit
 
@@ -28,17 +28,20 @@ Deze signoff bevestigt dat de commerciele kernstructuur, packaginglogica en oper
 - De eerste route-, first-value- en report-to-actionlogica vormen nu een doorlopende keten.
 - Dual-core werkt commercieel als default zolang bounded en parity-build routes niet als gelijkwaardige hoofdproposities worden behandeld.
 - De flowdocs maken operator-overdracht eenvoudiger zonder nieuwe product- of pricingbesluiten af te dwingen.
+- Action Center sluit op die keten aan als bounded follow-through laag voor MTO en ExitScan, zonder nieuw route- of pricingverhaal te openen.
 
 ## Belangrijkste inconsistenties of risico's
 
 - Buyer-facing mirrors kunnen nog steeds vooruitlopen als marketingstatus of detailcopy niet later op deze signoff wordt getoetst.
 - `Combinatie` blijft gevoelig voor suite- en bundeldrift als portfoliokader en first-buy verhaal door elkaar gaan lopen.
+- Als de follow-through laag buiten deze signoff blijft, kan Action Center alsnog onbedoeld als losse module, cockpit of derde product gaan voelen.
 
 ## Beslissingen / canonvoorstellen
 
 - `First buy -> first value -> first management use` is nu de canonieke commerciele en operationele hoofdroute.
 - `ExitScan` en `RetentieScan` blijven de enige standaard first-buy routes.
 - `TeamScan`, `Onboarding 30-60-90`, `Pulse` en `Leadership Scan` blijven vervolg-, bounded of parity-build routes volgens de vastgelegde routevormen.
+- Bounded follow-through via Action Center volgt pas na eerste management use, blijft beperkt tot de huidige MTO- en ExitScan-consumers en is geen extra routekeuze of prijslaag.
 - Working maturity labels blijven intern en worden door deze signoff niet gepromoveerd tot publieke statuslaag.
 
 ## Concrete wijzigingen
@@ -54,6 +57,7 @@ Deze signoff bevestigt dat de commerciele kernstructuur, packaginglogica en oper
 - Alle nieuwe documenten volgen dezelfde dual-core, bounded-route en report-to-action guardrails.
 - Geen van de documenten heropent of wijzigt de vaste ExitScan-report-architectuur.
 - Er is geen pricing- of productstatuspromotie vastgelegd.
+- Er is geen standalone Action Center pricing, modulepositionering of adapterverbreding vastgelegd.
 
 ## Assumptions / defaults
 

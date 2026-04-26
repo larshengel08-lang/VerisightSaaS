@@ -87,11 +87,24 @@ def test_action_center_stays_documented_as_embedded_non_priced_follow_through_la
     strategy = _read("docs/strategy/STRATEGY.md")
     pricing_plan = _read("docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md")
     route_logic = _read("docs/active/PACKAGING_AND_ROUTE_LOGIC.md")
+    language_canon = _read("docs/active/PRODUCT_LANGUAGE_CANON.md")
+    signoff = _read("docs/active/COMMERCIAL_AND_ONBOARDING_SIGNOFF.md")
+    acceptance = _read("docs/reference/PRICING_AND_PACKAGING_ACCEPTANCE_CHECKLIST.md")
 
     assert "action center-productlaag" in strategy
     assert "twee live consumers" in strategy
+    assert "productadapters blijven op deze laag gesloten" in strategy
+    assert "retentiescan-, onboarding-, pulse- en leadership-adapters staan nog inactive" in strategy
     assert "geen buyer-facing route, geen losse pricingmodule" in strategy
     assert "embedded follow-through laag" in pricing_plan
     assert "geen standalone action center pricing" in pricing_plan
+    assert "inactive placeholder" in pricing_plan
     assert "embedded follow-through layer" in route_logic
+    assert "mto + exitscan live" in route_logic
+    assert "geen project-plan/advisory-scope" in route_logic
+    assert "action center is de gedeelde bounded follow-through laag" in language_canon
+    assert "nooit als zelfstandige route, package of prijsanker" in language_canon
+    assert "geen extra routekeuze of prijslaag" in signoff
+    assert "geen standalone action center pricing, modulepositionering of adapterverbreding" in signoff
+    assert "geen pricingcopy leest action center als derde product" in acceptance
     assert "publiek prijsanker, derde product, buyer-facing module" in route_logic

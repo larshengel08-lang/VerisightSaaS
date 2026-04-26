@@ -23,8 +23,10 @@ Verisight is nu geen brede people-suite en ook nog geen full self-service SaaS. 
 
 - **Action Center-productlaag**
   - gedeelde follow-through laag onder guided execution en delivery
-  - houdt dossiers, eerste eigenaar, reviewmoment en open follow-upsignalen bij elkaar op de bestaande adminsurface
+  - houdt dossiers, assignments, reviewmomenten en open follow-upsignalen bij elkaar op de bestaande adminsurface
+  - deelt alleen bounded follow-through permissies; productadapters blijven op deze laag gesloten
   - is nu bewust bounded tot twee live consumers: de bestaande MTO/team follow-through en ExitScan follow-through
+  - RetentieScan-, Onboarding-, Pulse- en Leadership-adapters staan nog inactive en openen geen nieuwe commerciële route
   - is geen buyer-facing route, geen losse pricingmodule en geen open adapterlaag
 
 - **Bounded portfoliolaag**
@@ -112,6 +114,7 @@ Wat nu niet te hard geclaimd mag worden:
 - RetentieScan wordt niet lager gezet dan de productrealiteit draagt; het is een eigen eerste kooproute wanneer de managementvraag daarom vraagt
 - Baseline, live, ritme en compacte vervolgmetingen zijn leverings- of vervolgvormen en geen losse productfamilies
 - Action Center mag niet commercieel worden herlezen als derde kernroute, add-on, module upsell of suite-shell
+- inactive future adapters onder Action Center mogen niet impliciet als live route-, pricing- of orchestrationdekking worden verkocht
 - combinatie en andere bounded vervolgroutes blijven portfolio-keuzes na een eerste route, niet nieuwe kernproducten of nieuwe standaardinstappen
 - publieke pricing blijft gericht op wat delivery en ops nu echt kunnen dragen; geen verbreding zonder expliciet besluit
 
@@ -139,7 +142,7 @@ Verisight beweegt wel richting een SaaS-model, maar zit nu nog in een assisted/p
 - productfundament met scans, dashboards, rapportage en organisatie-/campagnestructuur
 - beveiligde appflows met auth, login, invites en beheer
 - guided self-service discipline rond intake, importcontrole, launch, dashboardactivatie en eerste vervolgstap
-- gedeelde Action Center follow-through core voor dossiers, reviewdruk en expliciete eigenaar/opvolgdiscipline binnen bounded live consumers
+- gedeelde Action Center follow-through core voor dossiers, assignments, reviewdruk en expliciete eigenaar/opvolgdiscipline binnen bounded live consumers, zonder open productadaptertoegang
 - demo- en sample-infrastructuur voor assisted verkoop, validatie en showcase
 
 ### Deels aanwezig
