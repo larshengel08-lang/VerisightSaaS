@@ -55,6 +55,13 @@ Voor het huidige fix-programma gebruik je deze volgorde:
 - [OPS_DELIVERY_FAILURE_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/OPS_DELIVERY_FAILURE_MATRIX.md)
   - recovery- en uitzonderingslogica
 
+### Action Center en bounded follow-through
+
+- [ACTION_CENTER_OPERATING_MODEL.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/ACTION_CENTER_OPERATING_MODEL.md)
+  - primaire usage rules voor dossier-first assignments, reviewmomenten en closeout
+- [SOURCE_OF_TRUTH_CHARTER.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/SOURCE_OF_TRUTH_CHARTER.md)
+  - legt expliciet vast dat customer ops en Action Center twee verschillende primaire app-lagen zijn
+
 ### Product truth en rapportcanon
 
 - [PRODUCT_TRUTH_HARDENING_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_TRUTH_HARDENING_PROGRAM_PLAN.md)
@@ -63,6 +70,8 @@ Voor het huidige fix-programma gebruik je deze volgorde:
   - inventaris van embedded truth, shared grammar en buyer-facing mirror drift
 - [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md)
   - canonieke producttaal en parityregels voor rapport, dashboard, onboarding en buyer-facing copy
+- [ACTION_CENTER_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/ACTION_CENTER_CANON.md)
+  - canonieke afbakening van Action Center als zelfstandige suiteproductlaag
 - [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md)
   - gedeelde rapportgrammar, met ExitScan expliciet vastgezet op de vaste `P1-P10 + Appendix` architectuur
 - [REPORT_GENERATOR_RUNTIME_BOUNDARY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_GENERATOR_RUNTIME_BOUNDARY.md)

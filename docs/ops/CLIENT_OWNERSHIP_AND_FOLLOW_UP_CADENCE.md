@@ -9,6 +9,7 @@ Dit document maakt de operating cadence expliciet rond klantactivatie, first man
 
 Gebruik altijd samen met:
 
+- [ACTION_CENTER_OPERATING_MODEL.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/ACTION_CENTER_OPERATING_MODEL.md)
 - [CLIENT_ONBOARDING_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_ONBOARDING_PLAYBOOK.md)
 - [CLIENT_ONBOARDING_FLOW_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_ONBOARDING_FLOW_SYSTEM.md)
 - [CLIENT_REPORT_TO_ACTION_FLOW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/CLIENT_REPORT_TO_ACTION_FLOW.md)
@@ -43,11 +44,13 @@ Een actief klanttraject blijft operationeel open totdat vier gates expliciet bev
 - Tijdens first management use worden eerste eigenaar, eerste actie en reviewmoment vastgelegd.
 - Default: reviewmoment binnen 10 werkdagen of eerder in het eerstvolgende bestaande managementoverleg.
 - Zonder reviewdatum blijft follow-up operationeel open.
+- Action Center is de primaire plek waar deze follow-through zichtbaar en bijwerkbaar blijft.
 
 ### Gate 4 - Follow-up decided
 
 - Na het reviewmoment kiest de klant expliciet tussen bounded vervolg, bredere duiding of bewust niet opschalen.
 - Verisight werkt lifecycle-status, next step en learninglog binnen 1 werkdag bij.
+- Verisight werkt owner, assignment, reviewdruk en closeout tegelijk bij in Action Center.
 - De 30-90 dagen review blijft een aparte learninglaag en vervangt de eerste follow-up niet.
 
 ## Product
