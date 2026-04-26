@@ -25,22 +25,29 @@
   /* Shadows */
   --marketing-shadow-soft: 0 20px 48px rgba(19, 32, 51, 0.06);
   --marketing-shadow-strong: 0 28px 72px rgba(19, 32, 51, 0.11);
-  --dashboard-shadow-soft: 0 4px 24px rgba(19, 32, 51, 0.06), 0 1px 4px rgba(19, 32, 51, 0.04);
-  --dashboard-shadow-strong: 0 8px 32px rgba(19, 32, 51, 0.09), 0 2px 8px rgba(19, 32, 51, 0.05);
+  --dashboard-shadow-soft: 0 16px 42px rgba(19, 32, 51, 0.06);
+  --dashboard-shadow-strong: 0 18px 44px rgba(19, 32, 51, 0.1);
   --dashboard-shadow-card: 0 2px 12px rgba(19, 32, 51, 0.05);
 
-  /* Dashboard tokens — alle --dashboard-* vars die in components gebruikt worden */
-  --dashboard-ink: #132033;
-  --dashboard-surface: #FFFFFF;
-  --dashboard-soft: #F7F5F1;
-  --dashboard-frame-border: #E5E0D6;
-  --dashboard-text: #4A5563;
-  --dashboard-muted: #9CA3AF;
-  --dashboard-accent-soft: #EAF4F3;
+  /* Brand accent — warm amber/copper (homepage-aligned) */
+  --brand-accent-deep:  oklch(0.42 0.18 52);
+  --brand-accent-mid:   oklch(0.78 0.133 55);
+  --brand-accent-soft:  oklch(0.95 0.055 52);
+
+  /* Dashboard canvas & surfaces */
+  --dashboard-canvas:        #F8F4EE;
+  --dashboard-surface:       #FFFCF8;
+  --dashboard-soft:          #F0EBE1;
+  --dashboard-rail:          #0f1923;
+  --dashboard-frame-border:  rgba(19, 32, 51, 0.10);
+  --dashboard-ink:           #132033;
+  --dashboard-text:          #4e5b67;
+  --dashboard-muted:         #7c8a95;
+  --dashboard-accent-soft:   #EAF4F3;
   --dashboard-accent-soft-border: #B8D8D4;
   --dashboard-accent-strong: #25605C;
-  --dashboard-blue-soft: #F0F5F8;
-  --dashboard-amber-soft: #FEF9F1;
+  --dashboard-blue-soft:     #F0F5F8;
+  --dashboard-amber-soft:    #FEF9F1;
   --dashboard-topbar-strong: rgba(255, 255, 255, 0.97);
 
   /* Dashboard layout */
@@ -48,6 +55,12 @@
   --dashboard-radius-card: 1.25rem;
   --dashboard-radius-hero: 1.75rem;
   --dashboard-radius-chip: 9999px;
+
+  /* Risk band colors */
+  --risk-high:     #C65B52;
+  --risk-mid:      #C88C20;
+  --risk-low:      #2E7C6D;
+  --risk-neutral:  #8A7D6E;
 }
 
 @theme inline {

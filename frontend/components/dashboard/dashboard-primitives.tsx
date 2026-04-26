@@ -687,6 +687,181 @@ export function DashboardTimeline({
   )
 }
 
+export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
+
+const RISK_ACCENT_COLORS: Record<RiskBand, string> = {
+  HOOG: '#C65B52',
+  MIDDEN: '#C88C20',
+  LAAG: '#2E7C6D',
+}
+
+export function SignalStatCard({
+  label,
+  value,
+  subline,
+  band,
+}: {
+  label: string
+  value: string
+  subline?: string
+  band?: RiskBand | 'neutral'
+}) {
+  const accentColor = band && band !== 'neutral' ? RISK_ACCENT_COLORS[band] : '#8A7D6E'
+
+  return (
+    <div
+      className="relative flex overflow-hidden rounded-[18px]"
+      style={{
+        background: 'var(--dashboard-surface)',
+        border: '1px solid var(--dashboard-frame-border)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        padding: '20px 20px 18px',
+      }}
+    >
+      {/* Inset left accent bar */}
+      <div
+        className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full"
+        style={{ backgroundColor: accentColor }}
+      />
+      <div className="min-w-0 pl-4">
+        <p
+          className="text-[0.65rem] font-medium uppercase"
+          style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}
+        >
+          {label}
+        </p>
+        <p
+          className="mt-2 font-medium leading-none"
+          style={{ fontSize: '2.0rem', color: 'var(--dashboard-ink)' }}
+        >
+          {value}
+        </p>
+        {subline && (
+          <p className="mt-2 text-[0.80rem]" style={{ color: 'var(--dashboard-muted)' }}>
+            {subline}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export function InsightStatCard({
+  label,
+  value,
+  subline,
+}: {
+  label: string
+  value: string
+  subline?: string
+}) {
+  return (
+    <div
+      className="relative flex overflow-hidden rounded-[18px]"
+      style={{
+        background: 'var(--dashboard-surface)',
+        border: '1px solid var(--dashboard-frame-border)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        padding: '20px 20px 18px',
+      }}
+    >
+      {/* Neutral inset bar */}
+      <div
+        className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full"
+        style={{ backgroundColor: '#8A7D6E' }}
+      />
+      <div className="min-w-0 pl-4">
+        <p
+          className="text-[0.65rem] font-medium uppercase"
+          style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}
+        >
+          {label}
+        </p>
+        <p
+          className="mt-2 font-semibold leading-snug"
+          style={{ fontSize: '1.25rem', color: 'var(--dashboard-ink)', letterSpacing: '-0.01em' }}
+        >
+          {value}
+        </p>
+        {subline && (
+          <p className="mt-2 text-[0.80rem]" style={{ color: 'var(--dashboard-muted)' }}>
+            {subline}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export function FocusPanel({
+  items,
+}: {
+  items: Array<{ text: string; moduleLabel?: string }>
+}) {
+  return (
+    <aside
+      className="hidden w-[300px] shrink-0 rounded-[18px] xl:block"
+      style={{
+        background: '#132033',
+        padding: '24px',
+        alignSelf: 'start',
+        position: 'sticky',
+        top: '80px',
+      }}
+    >
+      {/* Eyebrow */}
+      <div className="flex items-center gap-2 mb-4">
+        <div className="h-4 w-[2px] rounded-full" style={{ backgroundColor: '#2E7C6D' }} />
+        <p
+          className="text-[0.65rem] font-medium uppercase"
+          style={{ color: 'rgba(246,241,233,0.55)', letterSpacing: '0.18em' }}
+        >
+          Aanbevolen Focus
+        </p>
+      </div>
+
+      {/* Heading */}
+      <p
+        className="font-semibold leading-snug text-white mb-5"
+        style={{ fontSize: '1.2rem' }}
+      >
+        Waar nu aandacht naartoe
+      </p>
+
+      {/* Items */}
+      <ol className="space-y-4">
+        {items.map((item, i) => (
+          <li key={i} className="flex gap-3">
+            <span
+              className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[0.65rem] font-semibold"
+              style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(246,241,233,0.70)' }}
+            >
+              {i + 1}
+            </span>
+            <div className="min-w-0">
+              <p className="text-[0.875rem] leading-snug" style={{ color: 'rgba(246,241,233,0.85)' }}>
+                {item.text}
+              </p>
+              {item.moduleLabel && (
+                <span
+                  className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[0.60rem] font-medium uppercase"
+                  style={{
+                    background: 'rgba(255,255,255,0.07)',
+                    color: 'rgba(246,241,233,0.50)',
+                    letterSpacing: '0.12em',
+                  }}
+                >
+                  {item.moduleLabel}
+                </span>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </aside>
+  )
+}
+
 export function InfoTooltip({ text }: { text: string }) {
   return (
     <span className="group relative inline-flex items-center">
