@@ -1,7 +1,7 @@
 # ACTION_CENTER_CANON
 
-Last updated: 2026-04-26  
-Status: active  
+Last updated: 2026-04-26
+Status: active
 Source of truth: live `/beheer/klantlearnings` runtime, shared Action Center carrier contracts, dashboard boundary docs and follow-up ops cadence.
 
 ## Titel
