@@ -13,6 +13,33 @@ type DashboardShellPortfolioItem = DashboardShellNavItem & {
   key: DashboardPortfolioView
 }
 
+export type DashboardModuleKey = 'overview' | 'exitscan' | 'retentiescan' | 'onboarding' | 'pulse' | 'leadership'
+
+export type DashboardModuleNavItem = {
+  key: DashboardModuleKey
+  label: string
+  href: string
+  section: 'modules' | 'support'
+}
+
+export const DASHBOARD_MODULE_NAV: DashboardModuleNavItem[] = [
+  { key: 'overview',     label: 'Overview',            href: '/dashboard',              section: 'modules' },
+  { key: 'exitscan',    label: 'ExitScan',             href: '/dashboard/exitscan',     section: 'modules' },
+  { key: 'retentiescan', label: 'RetentieScan',        href: '/dashboard/retentiescan', section: 'modules' },
+  { key: 'onboarding',  label: 'Onboarding 30-60-90',  href: '/dashboard/onboarding',   section: 'modules' },
+  { key: 'pulse',       label: 'Pulse',                href: '/dashboard/pulse',        section: 'support' },
+  { key: 'leadership',  label: 'Leadership Scan',      href: '/dashboard/leadership',   section: 'support' },
+]
+
+export function getActiveModuleFromPathname(pathname: string): DashboardModuleKey {
+  if (pathname.startsWith('/dashboard/exitscan') || pathname.startsWith('/campaigns/')) return 'exitscan'
+  if (pathname.startsWith('/dashboard/retentiescan')) return 'retentiescan'
+  if (pathname.startsWith('/dashboard/onboarding')) return 'onboarding'
+  if (pathname.startsWith('/dashboard/pulse')) return 'pulse'
+  if (pathname.startsWith('/dashboard/leadership')) return 'leadership'
+  return 'overview'
+}
+
 export type DashboardShellNavigation = {
   primary: DashboardShellNavItem[]
   portfolio: DashboardShellPortfolioItem[]
@@ -78,21 +105,15 @@ export function buildDashboardShellNavigation({
   const admin: DashboardShellNavItem[] = isAdmin
     ? [
         {
-          label: 'Setup',
+          label: 'Rapporten',
           detail: 'Organisaties, campaignsetup en launchdiscipline.',
           href: '/beheer',
           disabled: false,
         },
         {
-          label: 'Leads',
+          label: 'Nieuwe campagne',
           detail: 'Sales-to-delivery context en contactaanvragen.',
           href: '/beheer/contact-aanvragen',
-          disabled: false,
-        },
-        {
-          label: 'Learnings',
-          detail: 'Klantlearnings en bounded closeoutdiscipline.',
-          href: '/beheer/klantlearnings',
           disabled: false,
         },
       ]

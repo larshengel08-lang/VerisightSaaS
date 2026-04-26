@@ -15,6 +15,9 @@ import {
   DashboardSection,
   DashboardSummaryBar,
   DashboardTimeline,
+  FocusPanel,
+  InsightStatCard,
+  SignalStatCard,
 } from '@/components/dashboard/dashboard-primitives'
 import { DashboardTabs } from '@/components/dashboard/dashboard-tabs'
 import { FactorTable } from '@/components/dashboard/factor-table'
@@ -62,6 +65,7 @@ import {
   SegmentPlaybookList,
   SdtGauge,
 } from './page-helpers'
+import { getRiskBandFromScore } from '@/lib/management-language'
 import { buildCampaignReadinessState, getDeliveryModeLabel } from '@/lib/implementation-readiness'
 import { getFirstNextStepGuidance } from '@/lib/client-onboarding'
 import { type CampaignAuditEventRecord } from '@/lib/campaign-audit'
@@ -1474,8 +1478,29 @@ export default async function CampaignPage({ params }: Props) {
       </>
     ) : null
 
+  const dominantBand = (['HOOG', 'MIDDEN', 'LAAG'] as const).reduce((a, b) =>
+    riskDistribution[a] >= riskDistribution[b] ? a : b
+  )
+  const totalRiskResponses = riskDistribution.HOOG + riskDistribution.MIDDEN + riskDistribution.LAAG
+  const dominantPct = totalRiskResponses > 0
+    ? Math.round((riskDistribution[dominantBand] / totalRiskResponses) * 100)
+    : 0
+  const BAND_LABELS_SHORT = { HOOG: 'Direct prioriteren', MIDDEN: 'Eerst toetsen', LAAG: 'Volgen' }
+
+  const focusPanelItems = showManagementOutput ? [
+    {
+      text: dashboardViewModel.primaryQuestion.title,
+      moduleLabel: scanDefinition.productName,
+    },
+    {
+      text: dashboardViewModel.nextStep.title,
+      moduleLabel: scanDefinition.productName,
+    },
+  ] : []
+
   return (
-    <div className="space-y-6">
+    <div className="flex gap-8 xl:items-start">
+    <div className="min-w-0 flex-1 space-y-6">
       <Link
         href="/dashboard"
         className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
@@ -1615,6 +1640,33 @@ export default async function CampaignPage({ params }: Props) {
             <p className="mt-1 leading-6">{notice.body}</p>
           </div>
         ))}
+      </div>
+
+      {/* Stat cards row */}
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <SignalStatCard
+          label="Signaal-index"
+          value={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : '—'}
+          subline={averageRiskScore !== null ? BAND_LABELS_SHORT[getRiskBandFromScore(averageRiskScore)] : undefined}
+          band={averageRiskScore !== null ? getRiskBandFromScore(averageRiskScore) : undefined}
+        />
+        <SignalStatCard
+          label="Respons"
+          value={`${stats.completion_rate_pct ?? 0}%`}
+          subline={`${stats.total_completed} van ${stats.total_invited} responses`}
+          band="neutral"
+        />
+        <SignalStatCard
+          label="Risicoband"
+          value={`${dominantPct}%`}
+          subline={`valt nu in ${BAND_LABELS_SHORT[dominantBand].toLowerCase()}`}
+          band={dominantBand}
+        />
+        <InsightStatCard
+          label="Sterkste factor"
+          value={topExitReasonLabel ?? topContributingReasonLabel ?? '—'}
+          subline="vraagt nu als eerste aandacht"
+        />
       </div>
 
       <DashboardSummaryBar
@@ -2334,6 +2386,11 @@ export default async function CampaignPage({ params }: Props) {
             ) : null}
           </div>
         </DashboardSection>
-      ) : null}    </div>
+      ) : null}
+    </div>
+    {focusPanelItems.length > 0 && (
+      <FocusPanel items={focusPanelItems} />
+    )}
+    </div>
   )
 }

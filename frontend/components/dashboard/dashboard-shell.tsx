@@ -8,7 +8,10 @@ import {
   buildDashboardShellNavigation,
   getDashboardShellCurrentLabel,
   normalizeDashboardPortfolioView,
+  DASHBOARD_MODULE_NAV,
+  getActiveModuleFromPathname,
   type DashboardPortfolioView,
+  type DashboardModuleNavItem,
 } from '@/lib/dashboard/shell-navigation'
 
 type PortfolioCounts = Record<DashboardPortfolioView, number>
@@ -31,6 +34,7 @@ export function DashboardShellFrame({
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const currentCampaignPath = pathname.startsWith('/campaigns/') ? pathname : null
   const activePortfolioView = normalizeDashboardPortfolioView(searchParams.get('view') ?? undefined)
+  const activeModule = getActiveModuleFromPathname(pathname)
   const navigation = useMemo(
     () =>
       buildDashboardShellNavigation({
@@ -41,159 +45,181 @@ export function DashboardShellFrame({
     [currentCampaignPath, isAdmin, portfolioCounts],
   )
 
+  const moduleItems = DASHBOARD_MODULE_NAV.filter((m) => m.section === 'modules')
+  const supportItems = DASHBOARD_MODULE_NAV.filter((m) => m.section === 'support')
+
+  const activeModuleLabel = DASHBOARD_MODULE_NAV.find((m) => m.key === activeModule)?.label ?? 'Overview'
+  const orgName = userEmail.split('@')[1]?.split('.')[0] ?? 'Dashboard'
+  const orgDisplay = orgName.charAt(0).toUpperCase() + orgName.slice(1)
+
   return (
-    <div className="dashboard-shell min-h-screen bg-[color:var(--bg)] text-[color:var(--ink)]">
+    <div
+      className="min-h-screen text-[color:var(--ink)]"
+      style={{ backgroundColor: 'var(--dashboard-canvas)' }}
+    >
       <div className="mx-auto flex min-h-screen w-full max-w-[1600px]">
+        {/* Sidebar */}
+        <aside
+          className="hidden w-[280px] shrink-0 lg:flex"
+          style={{ backgroundColor: 'var(--dashboard-rail)', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          <div className="sticky top-0 flex h-screen w-full flex-col py-7">
+            {/* Wordmark */}
+            <div className="px-6 pb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <Link href="/dashboard" className="block">
+                <span
+                  className="text-[15px] font-semibold tracking-[-0.01em]"
+                  style={{ color: 'rgba(246,241,233,0.95)' }}
+                >
+                  Verisight
+                </span>
+              </Link>
+            </div>
 
-        {/* ── Desktop Sidebar ── */}
-        <aside className="hidden w-[var(--dashboard-sidebar-width)] shrink-0 border-r border-white/[0.06] bg-[color:var(--ink)] lg:flex">
-          <div className="sticky top-0 flex h-screen w-full flex-col overflow-y-auto py-5">
-
-            {/* Brand */}
-            <Link
-              href="/dashboard"
-              className="mx-4 mb-6 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[0.05]"
-            >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[color:var(--teal)]">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M3 4h10M3 8h7M3 12h4" stroke="white" strokeWidth="1.75" strokeLinecap="round" />
-                </svg>
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold tracking-[-0.02em] text-white">Verisight</p>
-                <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/45">Dashboard</p>
-              </div>
-            </Link>
-
-            {/* Nav */}
-            <nav className="flex-1 px-3 space-y-6">
+            {/* Module navigation */}
+            <nav className="flex-1 overflow-y-auto px-4 pt-6">
+              <SidebarSection label="Modules" items={moduleItems} activeModule={activeModule} onNavigate={() => {}} />
               <SidebarSection
-                title="Navigatie"
-                items={navigation.primary}
-                pathname={pathname}
-                activePortfolioView={activePortfolioView}
+                label="Support"
+                items={supportItems}
+                activeModule={activeModule}
                 onNavigate={() => {}}
+                className="mt-6"
               />
-              <SidebarSection
-                title="Portfolio"
-                items={navigation.portfolio}
-                pathname={pathname}
-                activePortfolioView={activePortfolioView}
-                onNavigate={() => {}}
-                showBadge
-              />
-              {navigation.admin.length > 0 ? (
-                <SidebarSection
-                  title="Beheer"
-                  items={navigation.admin}
-                  pathname={pathname}
-                  activePortfolioView={activePortfolioView}
-                  onNavigate={() => {}}
-                />
-              ) : null}
+              {navigation.admin.length > 0 && (
+                <div className="mt-6">
+                  <p
+                    className="mb-2 px-3 text-[0.60rem] font-medium uppercase"
+                    style={{ color: 'rgba(246,241,233,0.38)', letterSpacing: '0.18em' }}
+                  >
+                    Beheer
+                  </p>
+                  {navigation.admin.map((item) => (
+                    <Link
+                      key={item.label}
+                      href={item.href ?? '/dashboard'}
+                      className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors"
+                      style={{ color: 'rgba(246,241,233,0.70)' }}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </nav>
 
-            {/* Account */}
-            <div className="mx-3 mt-4 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-3">
-              <p className="truncate text-[13px] font-medium text-white/80">{userEmail}</p>
-              <p className="mt-0.5 text-xs text-white/38">
-                {isAdmin ? 'Verisight beheer' : 'Klantdashboard'}
+            {/* Account footer */}
+            <div
+              className="mx-4 rounded-xl px-4 py-3"
+              style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.04)' }}
+            >
+              <p className="truncate text-xs" style={{ color: 'rgba(246,241,233,0.55)' }}>
+                {userEmail}
               </p>
-              <div className="mt-3">
-                <LogoutButton className="w-full justify-center rounded-lg border border-white/[0.1] bg-white/[0.05] px-3 py-1.5 text-xs font-semibold text-white/70 transition-colors hover:bg-white/[0.09] hover:text-white/90" />
+              <div className="mt-2">
+                <LogoutButton className="w-full justify-center rounded-full bg-white/[0.07] px-3 py-1.5 text-xs font-medium text-[rgba(246,241,233,0.80)] transition-colors hover:bg-white/[0.12]" />
               </div>
             </div>
           </div>
         </aside>
 
-        {/* ── Content Column ── */}
         <div className="flex min-w-0 flex-1 flex-col">
-
           {/* Topbar */}
-          <header className="sticky top-0 z-40 border-b border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-topbar-strong)] backdrop-blur-sm">
-            <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-3.5 sm:px-6">
-
-              {/* Mobile hamburger */}
+          <header
+            className="sticky top-0 z-40 backdrop-blur-md"
+            style={{
+              background: 'rgba(248,244,238,0.88)',
+              borderBottom: '1px solid rgba(19,32,51,0.08)',
+            }}
+          >
+            <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-6 py-3">
+              {/* Mobile menu button */}
               <button
                 type="button"
                 onClick={() => setMobileNavOpen((open) => !open)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[color:var(--dashboard-frame-border)] bg-white text-[color:var(--ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--teal)] lg:hidden"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors lg:hidden"
+                style={{ border: '1px solid var(--dashboard-frame-border)', color: 'var(--dashboard-ink)' }}
                 aria-label="Navigatie openen"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {mobileNavOpen ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 6l12 12M18 6L6 18" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 6l12 12M18 6L6 18" />
                   ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h16M4 17h16" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 7h16M4 12h16M4 17h16" />
                   )}
                 </svg>
               </button>
 
-              {/* Page title */}
+              {/* Context label */}
               <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-base font-semibold tracking-[-0.025em] text-[color:var(--ink)]">
-                    {getDashboardShellCurrentLabel(pathname)}
-                  </h1>
-                  <span className="hidden rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-2.5 py-0.5 text-xs font-semibold text-[color:var(--dashboard-muted)] sm:inline-flex">
-                    {pathname.startsWith('/campaigns/') ? 'Verdieping' : 'Overview-first'}
-                  </span>
-                </div>
+                <p className="text-sm font-medium" style={{ color: 'var(--dashboard-ink)' }}>
+                  <span style={{ color: 'var(--dashboard-muted)' }}>{orgDisplay}</span>
+                  <span className="mx-1.5" style={{ color: 'var(--dashboard-frame-border)' }}>·</span>
+                  <span>{activeModuleLabel}</span>
+                </p>
               </div>
 
-              {/* Desktop account */}
-              <div className="hidden items-center gap-3 lg:flex">
-                <span className="max-w-[200px] truncate text-sm text-[color:var(--dashboard-muted)]">{userEmail}</span>
-                <LogoutButton className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-3.5 py-1.5 text-sm font-semibold text-[color:var(--ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--teal)]" />
-              </div>
+              {/* Export button */}
+              <button
+                type="button"
+                className="rounded-full px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+                style={{ background: '#161310' }}
+              >
+                Rapport exporteren
+              </button>
             </div>
 
-            {/* Mobile nav drawer */}
-            {mobileNavOpen ? (
-              <div className="border-t border-[color:var(--dashboard-frame-border)] bg-[color:var(--ink)] px-3 py-4 lg:hidden">
-                <div className="space-y-5">
-                  <SidebarSection
-                    title="Navigatie"
-                    items={navigation.primary}
-                    pathname={pathname}
-                    activePortfolioView={activePortfolioView}
-                    onNavigate={() => setMobileNavOpen(false)}
-                  />
-                  <SidebarSection
-                    title="Portfolio"
-                    items={navigation.portfolio}
-                    pathname={pathname}
-                    activePortfolioView={activePortfolioView}
-                    onNavigate={() => setMobileNavOpen(false)}
-                    showBadge
-                  />
-                  {navigation.admin.length > 0 ? (
-                    <SidebarSection
-                      title="Beheer"
-                      items={navigation.admin}
-                      pathname={pathname}
-                      activePortfolioView={activePortfolioView}
-                      onNavigate={() => setMobileNavOpen(false)}
-                    />
-                  ) : null}
+            {/* Mobile nav */}
+            {mobileNavOpen && (
+              <div
+                className="border-t px-4 py-4 lg:hidden"
+                style={{ borderColor: 'var(--dashboard-frame-border)', background: 'var(--dashboard-surface)' }}
+              >
+                <div className="space-y-1">
+                  {DASHBOARD_MODULE_NAV.map((item) => {
+                    const isActive = item.key === activeModule
+                    return (
+                      <Link
+                        key={item.key}
+                        href={item.href}
+                        onClick={() => setMobileNavOpen(false)}
+                        className="block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
+                        style={{
+                          background: isActive ? 'rgba(19,32,51,0.06)' : 'transparent',
+                          color: isActive ? 'var(--dashboard-ink)' : 'var(--dashboard-text)',
+                        }}
+                      >
+                        {item.label}
+                      </Link>
+                    )
+                  })}
                 </div>
               </div>
-            ) : null}
+            )}
           </header>
 
-          {/* Main content */}
-          <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">
+          <main className="mx-auto flex-1 w-full max-w-7xl px-6 py-8">
             {acceptedCount > 0 ? (
-              <div className="mb-5 rounded-xl border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-4 py-3 text-sm text-[color:var(--dashboard-accent-strong)]">
-                Uw account is gekoppeld aan {acceptedCount} organisatie{acceptedCount === 1 ? '' : 's'}.
-                Het juiste klantdashboard en de bijbehorende rapportages zijn automatisch geladen.
+              <div
+                className="mb-6 rounded-[16px] px-4 py-3 text-sm"
+                style={{
+                  background: 'rgba(46,124,109,0.08)',
+                  border: '1px solid rgba(46,124,109,0.18)',
+                  color: '#2E7C6D',
+                }}
+              >
+                Jouw account is gekoppeld aan {acceptedCount} organisatie{acceptedCount === 1 ? '' : 's'}.
+                Je ziet nu automatisch het juiste klantdashboard en de bijbehorende rapportages.
               </div>
             ) : null}
             {children}
           </main>
 
-          <footer className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-3 text-xs text-[color:var(--dashboard-muted)] sm:px-6">
-            Verisight · Overview-first dashboard
+          <footer
+            className="px-6 py-4 text-xs"
+            style={{ borderTop: '1px solid var(--dashboard-frame-border)', color: 'var(--dashboard-muted)' }}
+          >
+            Verisight · {new Date().getFullYear()}
           </footer>
         </div>
       </div>
@@ -202,85 +228,52 @@ export function DashboardShellFrame({
 }
 
 function SidebarSection({
-  title,
+  label,
   items,
-  pathname,
-  activePortfolioView,
+  activeModule,
   onNavigate,
-  showBadge = false,
+  className = '',
 }: {
-  title: string
-  items: Array<{ label: string; detail: string; href: string | null; disabled: boolean; key?: DashboardPortfolioView }>
-  pathname: string
-  activePortfolioView: DashboardPortfolioView
+  label: string
+  items: DashboardModuleNavItem[]
+  activeModule: string
   onNavigate: () => void
-  showBadge?: boolean
+  className?: string
 }) {
-  if (items.length === 0) return null
-
   return (
-    <div>
-      <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">
-        {title}
+    <div className={className}>
+      <p
+        className="mb-2 px-3 text-[0.60rem] font-medium uppercase"
+        style={{ color: 'rgba(246,241,233,0.38)', letterSpacing: '0.18em' }}
+      >
+        {label}
       </p>
       <div className="space-y-0.5">
         {items.map((item) => {
-          const active = isActiveShellItem({ pathname, activePortfolioView, item })
-          const count = showBadge ? extractCountFromDetail(item.detail) : null
-
-          if (!item.href || item.disabled) {
-            return (
-              <div
-                key={`${title}-${item.label}`}
-                className="dash-nav-item dash-nav-item-disabled"
-              >
-                <span className="truncate">{item.label}</span>
-                {count !== null ? (
-                  <span className="dash-nav-badge opacity-40">{count}</span>
-                ) : null}
-              </div>
-            )
-          }
-
+          const isActive = item.key === activeModule
           return (
             <Link
-              key={`${title}-${item.label}`}
+              key={item.key}
               href={item.href}
               onClick={onNavigate}
-              className={`dash-nav-item ${active ? 'dash-nav-item-active' : 'dash-nav-item-inactive'}`}
+              className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors"
+              style={{
+                background: isActive ? 'rgba(255,255,255,0.07)' : 'transparent',
+                color: isActive ? 'rgba(246,241,233,1)' : 'rgba(246,241,233,0.70)',
+                fontWeight: isActive ? 500 : 400,
+              }}
             >
-              <span className="truncate">{item.label}</span>
-              {count !== null ? (
-                <span className={`dash-nav-badge ${active ? 'dash-nav-badge-active' : ''}`}>
-                  {count}
-                </span>
-              ) : null}
+              <span>{item.label}</span>
+              {isActive && (
+                <span
+                  className="ml-2 h-1.5 w-1.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: 'var(--brand-accent-mid)' }}
+                />
+              )}
             </Link>
           )
         })}
       </div>
     </div>
   )
-}
-
-function extractCountFromDetail(detail: string): number | null {
-  const match = detail.match(/^(\d+)\s+campagne/)
-  return match ? parseInt(match[1], 10) : null
-}
-
-function isActiveShellItem({
-  pathname,
-  activePortfolioView,
-  item,
-}: {
-  pathname: string
-  activePortfolioView: DashboardPortfolioView
-  item: { href: string | null; key?: DashboardPortfolioView; label: string }
-}) {
-  if (!item.href) return false
-  if (item.label === 'Huidige campagne') return pathname.startsWith('/campaigns/')
-  if (item.label === 'Overview') return pathname === '/dashboard' && !item.key
-  if (item.key) return pathname === '/dashboard' && activePortfolioView === item.key
-
-  return pathname === item.href || pathname.startsWith(`${item.href}/`)
 }

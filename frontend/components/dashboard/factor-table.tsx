@@ -1,6 +1,6 @@
 'use client'
 
-import { buildFactorPresentation, getManagementBandBadgeClasses, getRiskBandFromScore } from '@/lib/management-language'
+import { buildFactorPresentation, getRiskBandFromScore, RISK_COLORS, RISK_BG_COLORS } from '@/lib/management-language'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import { FACTOR_LABELS } from '@/lib/types'
 import type { ScanType } from '@/lib/types'
@@ -24,49 +24,73 @@ export function FactorTable({ factorAverages, scanType }: Props) {
       return { factor: f, score, riskVal, band, presentation }
     })
     .sort((a, b) => b.riskVal - a.riskVal)
+
   const introText =
     scanType === 'exit'
-      ? 'De belevingsscore laat zien hoe vertrekkers een thema gemiddeld ervoeren. Het managementlabel vertaalt dat naar wat dit bestuurlijk nu vraagt. De signaallogica blijft ondersteunend en is geen tweede hoofdscore.'
+      ? 'De belevingsscore laat zien hoe vertrekkers een thema gemiddeld ervoeren. Het managementlabel vertaalt dat naar wat dit bestuurlijk nu vraagt.'
       : scanType === 'team'
-        ? `De belevingsscore laat zien hoe medewerkers hun directe werkcontext gemiddeld ervaren. Het managementlabel vertaalt dat naar wat dit lokaal bestuurlijk vraagt. Het ${scanDefinition.signalLabelLower} per factor blijft ondersteunende logica, geen tweede hoofdscore.`
+        ? `De belevingsscore laat zien hoe medewerkers hun directe werkcontext gemiddeld ervaren. Het managementlabel vertaalt dat naar wat dit lokaal bestuurlijk vraagt.`
       : scanType === 'onboarding'
-        ? `De belevingsscore laat zien hoe nieuwe medewerkers dit checkpoint gemiddeld ervaren. Het managementlabel vertaalt dat naar wat dit in de vroege managementread vraagt. Het ${scanDefinition.signalLabelLower} per factor blijft ondersteunende logica, geen tweede hoofdscore.`
-      : `De belevingsscore laat zien hoe medewerkers een thema gemiddeld ervaren. Het managementlabel vertaalt dat naar wat dit bestuurlijk vraagt voor behoud. Het ${scanDefinition.signalLabelLower} per factor blijft ondersteunende logica, geen tweede hoofdscore.`
+        ? `De belevingsscore laat zien hoe nieuwe medewerkers dit checkpoint gemiddeld ervaren. Het managementlabel vertaalt dat naar wat dit in de vroege managementread vraagt.`
+      : `De belevingsscore laat zien hoe medewerkers een thema gemiddeld ervaren. Het managementlabel vertaalt dat naar wat dit bestuurlijk vraagt voor behoud.`
+
+  const BAND_LABELS = { HOOG: 'Direct prioriteren', MIDDEN: 'Eerst toetsen', LAAG: 'Volgen' }
 
   return (
-    <div className="space-y-2">
-      <p className="text-xs leading-5 text-gray-500">
-        {introText} Het is geen extra meting of bewijslaag.
+    <div className="space-y-1">
+      <p className="mb-4 text-[0.85rem] leading-6" style={{ color: 'var(--dashboard-muted)' }}>
+        {introText}
       </p>
-      {rows.map(row => (
-        <div key={row.factor} className="flex items-center gap-3">
-          {/* Naam */}
-          <span className="text-sm text-gray-700 w-44 flex-shrink-0">
+      {rows.map((row, i) => (
+        <div
+          key={row.factor}
+          className="flex items-center gap-4 py-3"
+          style={{
+            borderBottom: i < rows.length - 1 ? '1px solid rgba(19,32,51,0.06)' : undefined,
+          }}
+        >
+          {/* Factor label */}
+          <span
+            className="w-40 shrink-0 text-[0.875rem]"
+            style={{ color: 'var(--dashboard-ink)' }}
+          >
             {FACTOR_LABELS[row.factor]}
           </span>
 
-          {/* Balk */}
-          <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+          {/* Progress bar */}
+          <div
+            className="h-[6px] flex-1 overflow-hidden rounded-[3px]"
+            style={{ background: 'rgba(19,32,51,0.08)' }}
+          >
             <div
-              className="h-full rounded-full"
+              className="h-full rounded-[3px] transition-all"
               style={{
                 width: `${((row.score - 1) / 9) * 100}%`,
-                backgroundColor:
-                  row.band === 'HOOG' ? '#DC2626'
-                  : row.band === 'MIDDEN' ? '#F59E0B'
-                  : '#16A34A',
+                backgroundColor: RISK_COLORS[row.band],
               }}
             />
           </div>
 
           {/* Score */}
-          <span className="text-sm font-semibold text-gray-800 w-20 text-right">
+          <span
+            className="w-16 shrink-0 text-right text-[0.875rem] font-medium"
+            style={{ color: 'var(--dashboard-ink)' }}
+          >
             {row.presentation.scoreDisplay}
           </span>
 
-          {/* Badge */}
-          <span className={`text-xs font-bold px-2 py-0.5 rounded min-w-[124px] text-center ${getManagementBandBadgeClasses(row.band)}`}>
-            {row.presentation.managementLabel}
+          {/* Badge pill */}
+          <span
+            className="shrink-0 rounded-full px-2.5 py-0.5 text-[0.65rem] font-medium uppercase"
+            style={{
+              background: RISK_BG_COLORS[row.band],
+              color: RISK_COLORS[row.band],
+              letterSpacing: '0.04em',
+              minWidth: '7rem',
+              textAlign: 'center',
+            }}
+          >
+            {BAND_LABELS[row.band]}
           </span>
         </div>
       ))}
