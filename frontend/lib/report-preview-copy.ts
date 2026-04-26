@@ -85,7 +85,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     nuance:
       'De output helpt kiezen waar gesprek, verificatie of actie het meeste oplevert. Verisight claimt geen individuele voorspelling of sluitende diagnose.',
     factorLead:
-      'Per factor zie je eerst de belevingsscore en daarna de managementstatus. De signaallogica blijft ondersteunend en verschijnt alleen waar extra verdieping echt helpt.',
+      'Per factor zie je eerst de belevingsscore en daarna de managementduiding. De signaallogica blijft ondersteunend en verschijnt alleen waar extra verdieping echt helpt.',
     factorCards: [
       { label: 'Leiderschap', scoreDisplay: '4,7/10', signalDisplay: '6,3/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
       { label: 'Groei', scoreDisplay: '4,9/10', signalDisplay: '6,1/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
@@ -163,7 +163,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     nuance:
       'ExitScan maakt patronen zichtbaar en helpt bepalen waar vervolgactie het meeste oplevert. Het blijft gegroepeerde vertrekduiding: geen individueel oordeel, geen diagnose, geen harde voorspelling en geen geforceerde ROI-claim.',
     factorLead:
-      'Per factor zie je eerst de belevingsscore en daarna de managementstatus. Signaalsterkte blijft alleen ondersteunend waar extra verdieping helpt verklaren waarom dit vertrekbeeld ontstaat.',
+      'Per factor zie je eerst de belevingsscore en daarna de managementduiding. Signaalsterkte blijft alleen ondersteunend waar extra verdieping helpt verklaren waarom dit vertrekbeeld ontstaat.',
     factorCards: [
       { label: 'Leiderschap', scoreDisplay: '4,7/10', signalDisplay: '6,3/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
       { label: 'Groei', scoreDisplay: '4,9/10', signalDisplay: '6,1/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
@@ -216,7 +216,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
   retention: {
     label: 'RetentieScan-voorbeeld',
     intro:
-      'RetentieScan begint met een cover waarin executive context en kernmetrics al zichtbaar worden. Daarna volgt de bestuurlijke handoff met respons, eerste verificatiespoor en bestuurlijke weging. Vervolgens lopen signaalbeeld, eerste actie en eerste managementsessie in een verification-first lijn door. In demo\'s komt deze route meestal na ExitScan, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.',
+      'RetentieScan begint met een cover waarin executive context en kerncijfers al zichtbaar worden. Daarna volgt de bestuurlijke handoff met respons, eerste verificatiespoor en bestuurlijke weging. Vervolgens lopen signaalbeeld, eerste stap en eerste managementsessie in een eerst-toetsen lijn door. In demo\'s komt deze route meestal na ExitScan, tenzij de buyer-vraag expliciet over actieve medewerkers gaat.',
     kpis: [
       ['Reacties', '63 van 92', '68% respons'],
       ['Gemiddeld retentiesignaal', '5,6 op 10', MANAGEMENT_BAND_LABELS.MIDDEN],
@@ -229,7 +229,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     boardroomPoints: [
       ['Wat speelt nu', 'Het groepsbeeld laat zien waar behoudsdruk oploopt en welke werkfactoren dat het scherpst kleuren.'],
       ['Waarom telt dit nu', 'Zichtbare vertrekintentie of stille behoudsdruk raken teamcontinuiteit, leiding en uitvoerbaarheid.'],
-      ['Wat niet concluderen', 'Dit blijft een verification-first groepssignaal en geen individuele predictor, performance-score of bewezen risicomodel.'],
+      ['Wat niet concluderen', 'Dit blijft een eerst-toetsen groepssignaal en geen individuele predictor, performance-score of bewezen risicomodel.'],
     ],
     focusTitle: 'Waar vraagt behoud nu de meeste aandacht?',
     dashboardRows: [
@@ -241,7 +241,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     nuance:
       'RetentieScan is bedoeld voor groeps- en segmentduiding. De output is nadrukkelijk geen individuele voorspeller of performance-instrument, maar een v1-werkmodel voor verificatie en prioritering.',
     factorLead:
-      'De factoranalyse laat eerst zien hoe medewerkers de thema’s ervaren, en vertaalt dat daarna naar een managementstatus. Signaalsterkte blijft alleen verdiepende logica.',
+      'De factoranalyse laat eerst zien hoe medewerkers de thema’s ervaren, en vertaalt dat daarna naar een managementduiding. Signaalsterkte blijft alleen verdiepende logica.',
     factorCards: [
       { label: 'Groei', scoreDisplay: '4,8/10', signalDisplay: '5,9/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
       { label: 'Werkbelasting', scoreDisplay: '5,0/10', signalDisplay: '5,6/10', showSignal: true, band: MANAGEMENT_BAND_LABELS.MIDDEN, tone: 'amber' },
@@ -265,7 +265,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
       },
     ],
     proofNotes: [
-      ['Cover + bestuurlijke read', 'De cover toont executive context en kernmetrics; daarna volgen respons, bestuurlijke handoff en de scherpste verificatiesporen in een aparte executive laag'],
+      ['Cover + bestuurlijke read', 'De cover toont executive context en kerncijfers; daarna volgen respons, bestuurlijke handoff en de scherpste verificatiesporen in een aparte executive laag'],
       ['Bestuurlijke handoff', 'Compacte sponsor-read met wat nu speelt, waarom dat telt en expliciete watchout tegen overinterpretatie'],
       ['Signaalmix', 'Retentiesignaal, stay-intent en vertrekintentie in een bestuurssamenvatting'],
       ['Actielogica', 'Topfactoren en vervolgstappen voor 30-90 dagen, zonder individuele voorspelling'],
@@ -287,7 +287,7 @@ export const REPORT_PREVIEW_COPY: Record<ReportPreviewVariant, ReportPreviewCopy
     supportVisualAlt: 'Voorbeeld van een RetentieScan segment deep dive',
     sampleReportTitle: 'Volledig buyer-facing voorbeeldrapport',
     sampleReportBody:
-      'Open hier het actuele RetentieScan-voorbeeldrapport met fictieve data, verification-first lezing en dezelfde trustgrenzen als de echte output.',
+      'Open hier het actuele RetentieScan-voorbeeldrapport met fictieve data, eerst-toetsen lezing en dezelfde trustgrenzen als de echte output.',
     sampleReportHref: retentionSampleAsset?.publicHref,
     sampleReportLabel: 'Open RetentieScan-voorbeeldrapport',
   },

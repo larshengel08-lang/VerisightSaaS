@@ -34,7 +34,7 @@ describe('REPORT_PREVIEW_COPY', () => {
     const retentionCopy = REPORT_PREVIEW_COPY.retention
 
     expect(retentionCopy.intro).toContain('eerste verificatiespoor')
-    expect(retentionCopy.intro).toContain('kernmetrics')
+    expect(retentionCopy.intro).toContain('kerncijfers')
     expect(retentionCopy.dashboardRows).toHaveLength(4)
     expect(retentionCopy.factorCards).toHaveLength(6)
     expect(retentionCopy.boardroomTitle).toContain('Bestuurlijke handoff')

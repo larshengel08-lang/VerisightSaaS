@@ -41,7 +41,7 @@ describe('dashboard home review guardrails', () => {
     expect(pageSource).toContain('Mogelijke vervolgroutes')
     expect(pageSource).toContain('!showFirstNextStep')
     expect(pageSource).toContain('campaign.total_completed >= FIRST_INSIGHT_THRESHOLD')
-    expect(pageSource).toContain('ExitScan follow-through, reviews en dossiers')
+    expect(pageSource).toContain('ExitScan opvolging, reviewmomenten en dossiers')
     expect(pageSource).toContain('Open de preview-adoptie van het Action Center voor ExitScan')
     expect(pageSource).not.toContain('MTO follow-through en dossiers')
 
