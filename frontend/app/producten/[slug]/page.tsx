@@ -508,7 +508,7 @@ function PulsePage() {
             Houd na een eerste scan kort en gericht zicht op wat nu verschuift.
           </h1>
           <p className="marketing-hero-copy text-slate-600">
-            Pulse is een compacte vervolgroute na een eerste baseline, bestuurlijke read of eerste actie. Je gebruikt het product voor een
+            Pulse is een compacte vervolgroute na een eerste baseline, bestuurlijke read of eerste vervolgbespreking. Je gebruikt het product voor een
             korte managementreview: wat laat de huidige snapshot zien, welk werkspoor vraagt nu bespreking en wanneer
             is een volgende check logisch.
           </p>
@@ -539,11 +539,11 @@ function PulsePage() {
             </h2>
             <p className="marketing-stage-copy text-slate-300">
               De route blijft bewust smal: actuele groepssnapshot, begrensde vergelijking met de vorige vergelijkbare
-              Pulse en een expliciet reviewmoment.
+              Pulse en een expliciet hercheckmoment.
             </p>
             <div className="marketing-stage-list">
               {[
-                'Start na een eerste baseline, managementread of eerste actie.',
+                'Start na een eerste baseline, managementread of eerste vervolgrichting.',
                 'Lees wat nu verschuift zonder direct opnieuw een brede meting te openen.',
                 'Gebruik Pulse voor review en hercheck, niet als brede trendmachine.',
               ].map((item) => (
@@ -591,7 +591,7 @@ function PulsePage() {
             },
             {
               title: 'Managementhandoff',
-              body: 'De output eindigt bij prioriteit nu, eerste eigenaar en een expliciet afgesproken hercheckmoment.',
+              body: 'De output eindigt bij prioriteit nu, een eerste vervolgrichting en een expliciet afgesproken hercheckmoment.',
             },
           ]}
         />
@@ -602,10 +602,10 @@ function PulsePage() {
           {[
             {
               title: 'Na een eerste baseline',
-              body: 'Pulse wordt logisch zodra management na ExitScan, RetentieScan of een eerste actieplan niet opnieuw breed wil meten, maar wel gericht wil herchecken.',
+              body: 'Pulse wordt logisch zodra management na ExitScan, RetentieScan of een eerste vervolgrichting niet opnieuw breed wil meten, maar wel gericht wil herchecken.',
             },
             {
-              title: 'Na eerste acties',
+              title: 'Na eerste vervolgstappen',
               body: 'Gebruik Pulse om zichtbaar te maken of een gekozen correctie, ontlasting of gesprek het beeld kort daarna anders maakt.',
             },
             {
@@ -628,7 +628,7 @@ function PulsePage() {
             rows={[
               [
                 'Startpunt',
-                'Na een eerste baseline, managementread of eerste actie wanneer een compacte hercheck logisch is.',
+                'Na een eerste baseline, managementread of eerste vervolgrichting wanneer een compacte hercheck logisch is.',
                 'Na RetentieScan Baseline als bredere herhaalvorm op behoud.',
               ],
               [
@@ -644,7 +644,7 @@ function PulsePage() {
               [
                 'Niet bedoeld als',
                 'Nieuwe eerste instap, brede MTO of hard effectbewijs.',
-                'Parallel hoofdpackage naast baseline zonder duidelijke eigenaar of opvolging.',
+                'Parallel hoofdpackage naast baseline zonder duidelijke vervolgrichting of ritme.',
               ],
             ]}
           />
@@ -712,7 +712,7 @@ function TeamScanPage() {
           <p className="marketing-hero-copy text-slate-600">
             TeamScan is geen nieuwe eerste hoofdroute, maar een bounded lokalisatieroute nadat een breder organisatie- of
             groepssignaal al zichtbaar is. De route helpt bepalen welke afdeling eerst een lokaal gesprek, verificatie
-            of begrensde eerste actie vraagt.
+            of begrensde vervolgstap vraagt.
           </p>
           <div className="marketing-hero-actions">
             <div className="marketing-hero-cta-row">
@@ -740,8 +740,8 @@ function TeamScanPage() {
               TeamScan helpt bepalen waar eerst lokaal gesprek of verificatie nodig is, niet wie gelijk heeft.
             </h2>
             <p className="marketing-stage-copy text-slate-300">
-              De route blijft bewust smal: department-first lokale read, bounded prioritering, eerste
-              eigenaar en een begrensde eerste actie zonder manager ranking of brede teamscorekaart.
+              De route blijft bewust smal: department-first lokale read, bounded prioritering, een eerste
+              vervolgrichting en een begrensde vervolgstap zonder manager ranking of brede teamscorekaart.
             </p>
             <div className="marketing-stage-list">
               {[
@@ -793,7 +793,7 @@ function TeamScanPage() {
             },
             {
               title: 'Managementhandoff',
-              body: 'De output eindigt bij eerste eigenaar, begrensde eerste actie en expliciete reviewgrens voor de volgende lokale stap.',
+              body: 'De output eindigt bij een eerste vervolgrichting, begrensde vervolgstap en een expliciet hercheckmoment voor de volgende lokale stap.',
             },
           ]}
         />
@@ -835,7 +835,7 @@ function TeamScanPage() {
               ],
               [
                 'Wat je leest',
-                'Veilige afdelingsuitsplitsing, bounded prioriteit, eerste eigenaar en begrensde eerste actie.',
+                'Veilige afdelingsuitsplitsing, bounded prioriteit, eerste vervolgrichting en begrensde vervolgstap.',
                 'Extra segmentbeeld binnen de bestaande scanoutput, zonder eigen handoffroute.',
               ],
               [
@@ -858,7 +858,7 @@ function TeamScanPage() {
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
               TeamScan verkoopt geen brede teamscan als nieuwe hoofdroute. Het product helpt vooral om na een eerste managementread sneller
-              te zien waar lokale verificatie, eigenaarschap en een begrensde eerste actie het meest logisch zijn.
+              te zien waar lokale verificatie, een heldere vervolgrichting en een begrensde vervolgstap het meest logisch zijn.
             </p>
             <ul className="mt-6 space-y-3 text-sm leading-7 text-slate-300">
               {[
@@ -947,7 +947,7 @@ function OnboardingPage() {
             </h2>
             <p className="marketing-stage-copy text-slate-300">
               De buyer-facing belofte blijft bewust smal: precies een checkpoint per campaign, een assisted
-              managementread, eerste eigenaar, begrensde eerste actie en een expliciete reviewgrens.
+              managementread, eerste vervolgrichting, begrensde vervolgstap en een expliciet hercheckmoment.
             </p>
             <div className="marketing-stage-list">
               {[
@@ -995,7 +995,7 @@ function OnboardingPage() {
             },
             {
               title: 'Assisted handoff',
-              body: 'De output eindigt bij eerste eigenaar, eerste kleine actie en expliciete reviewgrens in plaats van een open eindeloze actielijst.',
+              body: 'De output eindigt bij een eerste vervolgrichting, eerste kleine vervolgstap en een expliciet hercheckmoment in plaats van een open eindeloze actielijst.',
             },
             {
               title: 'Methodische grens',
@@ -1014,7 +1014,7 @@ function OnboardingPage() {
             },
             {
               title: 'Wat je nu krijgt',
-              body: 'Een assisted single-checkpoint read met vroege lifecycle-signalen, eerste eigenaar, begrensde eerste actie en een heldere reviewgrens.',
+              body: 'Een assisted single-checkpoint read met vroege lifecycle-signalen, eerste vervolgrichting, begrensde vervolgstap en een helder hercheckmoment.',
             },
             {
               title: 'Wat het nadrukkelijk niet is',
@@ -1041,7 +1041,7 @@ function OnboardingPage() {
               ],
               [
                 'Wat je leest',
-                'Groepssignalen, eerste eigenaar, eerste kleine actie en reviewgrens op dit meetmoment.',
+                'Groepssignalen, eerste vervolgrichting, eerste kleine vervolgstap en hercheckmoment op dit meetmoment.',
                 'Implementatievoortgang, adoptie, support en deliveryafstemming.',
               ],
               [
@@ -1060,18 +1060,18 @@ function OnboardingPage() {
           <div className="marketing-panel-dark p-8">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">Wat onboarding wel belooft</p>
             <h2 className="mt-4 font-display text-4xl text-white">
-              Een vroege checkpoint-read met owner en eerste actie, geen brede onboardingmachine.
+              Een vroege checkpoint-read met hercheck en eerste vervolgstap, geen brede onboardingmachine.
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
               Onboarding 30-60-90 verkoopt geen volledige employee journey. Het product helpt vooral om vroeg te zien
-              hoe nieuwe medewerkers nu landen, welke frictie of borging als eerste aandacht vraagt en wie daar de
-              eerste handoff op pakt.
+              hoe nieuwe medewerkers nu landen, welke frictie of borging als eerste aandacht vraagt en welke
+              vervolgrichting daar logisch uit volgt.
             </p>
             <ul className="mt-6 space-y-3 text-sm leading-7 text-slate-300">
               {[
                 'Geen hire-date engine of multi-checkpoint orchestration in deze wave.',
                 'Geen individuele onboardingbeoordeling of manageroordeel.',
-                'Wel een compacte route om HR, onboarding-owner en leiding sneller op een lijn te krijgen.',
+                'Wel een compacte route om HR, onboardingverantwoordelijke en leiding sneller op een lijn te krijgen.',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-amber-300" />
@@ -1162,7 +1162,7 @@ function LeadershipScanPage() {
             },
             {
               title: 'Kleine vervolgstap',
-              body: 'De eerste uitkomst is een eigenaar, een eerste managementcheck en een reviewgrens, niet een brede leadership-suite.',
+              body: 'De eerste uitkomst is een eerste vervolgrichting, een eerste managementcheck en een hercheckmoment, niet een brede leadership-suite.',
             },
           ]}
         />
@@ -1177,7 +1177,7 @@ function LeadershipScanPage() {
             },
             {
               title: 'Wat je nu krijgt',
-              body: 'Een bounded managementread met groepssignaal, eerste eigenaar, eerste verificatievraag en duidelijke reviewgrens.',
+              body: 'Een bounded managementread met groepssignaal, eerste verificatievraag en een duidelijk hercheckmoment.',
             },
             {
               title: 'Wat het nadrukkelijk niet is',

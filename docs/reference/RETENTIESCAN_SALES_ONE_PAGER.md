@@ -17,7 +17,7 @@ Verisight RetentieScan is een volwaardige eerste route wanneer de managementvraa
 - stay-intent
 - vertrekintentie
 - bevlogenheid
-- topfactoren en eerste opvolgsporen
+- topfactoren en een eerste vervolgrichting
 
 ## Hoe je RetentieScan leest
 
