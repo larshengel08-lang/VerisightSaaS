@@ -678,6 +678,110 @@ export function DashboardTimeline({
   )
 }
 
+export type RiskBand = 'HOOG' | 'MIDDEN' | 'LAAG'
+
+const RISK_ACCENT_COLORS: Record<RiskBand, string> = {
+  HOOG: '#C65B52',
+  MIDDEN: '#C88C20',
+  LAAG: '#2E7C6D',
+}
+
+export function SignalStatCard({
+  label,
+  value,
+  subline,
+  band,
+}: {
+  label: string
+  value: string
+  subline?: string
+  band?: RiskBand | 'neutral'
+}) {
+  const accentColor = band && band !== 'neutral' ? RISK_ACCENT_COLORS[band] : '#8A7D6E'
+
+  return (
+    <div
+      className="relative flex overflow-hidden rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
+    >
+      <div
+        className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full"
+        style={{ backgroundColor: accentColor }}
+      />
+      <div className="min-w-0 pl-4">
+        <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+          {label}
+        </p>
+        <p className="dash-number mt-2 text-[2rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
+        {subline ? (
+          <p className="mt-2 text-[0.8rem] text-[color:var(--dashboard-muted)]">{subline}</p>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+export function InsightStatCard({
+  label,
+  value,
+  subline,
+}: {
+  label: string
+  value: string
+  subline?: string
+}) {
+  return (
+    <div className="relative flex overflow-hidden rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full bg-[#8A7D6E]" />
+      <div className="min-w-0 pl-4">
+        <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+          {label}
+        </p>
+        <p className="mt-2 text-[1.25rem] font-semibold leading-snug tracking-[-0.01em] text-[color:var(--dashboard-ink)]">
+          {value}
+        </p>
+        {subline ? (
+          <p className="mt-2 text-[0.8rem] text-[color:var(--dashboard-muted)]">{subline}</p>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+export function FocusPanel({
+  items,
+}: {
+  items: Array<{ text: string; moduleLabel?: string }>
+}) {
+  return (
+    <aside className="hidden w-[300px] shrink-0 self-start rounded-[18px] bg-[#132033] p-6 xl:sticky xl:top-[88px] xl:block">
+      <div className="mb-4 flex items-center gap-2">
+        <div className="h-4 w-[2px] rounded-full bg-[#2E7C6D]" />
+        <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-white/55">Aanbevolen focus</p>
+      </div>
+
+      <p className="mb-5 text-[1.2rem] font-semibold leading-snug text-white">Waar nu aandacht naartoe gaat</p>
+
+      <ol className="space-y-4">
+        {items.map((item, index) => (
+          <li key={`${item.text}-${index}`} className="flex gap-3">
+            <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/8 text-[0.65rem] font-semibold text-white/70">
+              {index + 1}
+            </span>
+            <div className="min-w-0">
+              <p className="text-[0.875rem] leading-snug text-white/85">{item.text}</p>
+              {item.moduleLabel ? (
+                <span className="mt-1.5 inline-block rounded-full bg-white/7 px-2 py-0.5 text-[0.6rem] font-medium uppercase tracking-[0.12em] text-white/50">
+                  {item.moduleLabel}
+                </span>
+              ) : null}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </aside>
+  )
+}
+
 export function InfoTooltip({ text }: { text: string }) {
   return (
     <span className="group relative inline-flex items-center">

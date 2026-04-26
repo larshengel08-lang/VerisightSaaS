@@ -1,3 +1,5 @@
+import type { CampaignStats, ScanType } from '@/lib/types'
+
 export type DashboardPortfolioView = 'ready' | 'building' | 'setup' | 'closed'
 
 type PortfolioCounts = Record<DashboardPortfolioView, number>
@@ -9,22 +11,41 @@ type DashboardShellNavItem = {
   disabled: boolean
 }
 
-type DashboardShellPortfolioItem = DashboardShellNavItem & {
-  key: DashboardPortfolioView
+export type DashboardModuleKey =
+  | 'overview'
+  | 'exit'
+  | 'retention'
+  | 'onboarding'
+  | 'team'
+  | 'pulse'
+  | 'reports'
+
+export type DashboardModuleNavItem = {
+  key: DashboardModuleKey
+  label: string
+  href: string | null
+  disabled: boolean
 }
 
+export type DashboardShellCampaignRef = Pick<
+  CampaignStats,
+  'campaign_id' | 'scan_type' | 'is_active' | 'created_at' | 'total_completed'
+>
+
 export type DashboardShellNavigation = {
-  primary: DashboardShellNavItem[]
-  portfolio: DashboardShellPortfolioItem[]
+  modules: DashboardModuleNavItem[]
   admin: DashboardShellNavItem[]
 }
 
-const PORTFOLIO_ITEM_LABELS: Record<DashboardPortfolioView, string> = {
-  ready: 'Management-ready',
-  building: 'In opbouw',
-  setup: 'Setup of launch',
-  closed: 'Afgerond',
-}
+const MODULE_LABELS: Array<{ key: DashboardModuleKey; label: string; scanType?: ScanType }> = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'exit', label: 'ExitScan', scanType: 'exit' },
+  { key: 'retention', label: 'RetentieScan', scanType: 'retention' },
+  { key: 'onboarding', label: 'Onboarding 30-60-90', scanType: 'onboarding' },
+  { key: 'team', label: 'TeamScan', scanType: 'team' },
+  { key: 'pulse', label: 'Pulse', scanType: 'pulse' },
+  { key: 'reports', label: 'Reports' },
+]
 
 export function normalizeDashboardPortfolioView(view: string | undefined): DashboardPortfolioView {
   if (view === 'building' || view === 'setup' || view === 'closed') {
@@ -34,46 +55,94 @@ export function normalizeDashboardPortfolioView(view: string | undefined): Dashb
   return 'ready'
 }
 
+function pickRepresentativeCampaign(
+  campaigns: DashboardShellCampaignRef[],
+  scanType: ScanType,
+): DashboardShellCampaignRef | null {
+  const matches = campaigns.filter((campaign) => campaign.scan_type === scanType)
+  if (matches.length === 0) return null
+
+  return [...matches].sort((left, right) => {
+    if (left.is_active !== right.is_active) return left.is_active ? -1 : 1
+    const completionDelta = (right.total_completed ?? 0) - (left.total_completed ?? 0)
+    if (completionDelta !== 0) return completionDelta
+    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+  })[0] ?? null
+}
+
+function getCampaignHref(campaign: DashboardShellCampaignRef | null) {
+  return campaign ? `/campaigns/${campaign.campaign_id}` : null
+}
+
+function getModuleKeyForScanType(scanType: ScanType): Exclude<DashboardModuleKey, 'overview' | 'reports'> {
+  const moduleKeyByScanType = {
+    exit: 'exit',
+    retention: 'retention',
+    onboarding: 'onboarding',
+    team: 'team',
+    pulse: 'pulse',
+    leadership: 'team',
+  } as const satisfies Record<ScanType, Exclude<DashboardModuleKey, 'overview' | 'reports'>>
+
+  return moduleKeyByScanType[scanType]
+}
+
+export function getActiveModuleFromPathname(
+  pathname: string,
+  campaigns: DashboardShellCampaignRef[],
+): DashboardModuleKey {
+  if (!pathname.startsWith('/campaigns/')) return 'overview'
+
+  const [, , campaignId] = pathname.split('/')
+  if (!campaignId) return 'overview'
+
+  const campaign = campaigns.find((entry) => entry.campaign_id === campaignId)
+  return campaign ? getModuleKeyForScanType(campaign.scan_type) : 'overview'
+}
+
 export function buildDashboardShellNavigation({
   isAdmin,
   currentCampaignPath,
+  campaigns,
   portfolioCounts,
 }: {
   isAdmin: boolean
   currentCampaignPath: string | null
+  campaigns: DashboardShellCampaignRef[]
   portfolioCounts: PortfolioCounts
 }): DashboardShellNavigation {
-  const primary: DashboardShellNavItem[] = [
-    {
-      label: 'Overview',
-      detail: 'Kerncijfers, trend en waar eerst kijken.',
-      href: '/dashboard',
-      disabled: false,
-    },
-  ]
+  void currentCampaignPath
+  void portfolioCounts
 
-  if (currentCampaignPath) {
-    primary.push({
-      label: 'Huidige campagne',
-      detail: 'Verdieping via tabs en bounded uitvoer.',
-      href: currentCampaignPath,
-      disabled: false,
-    })
-  }
-
-  const portfolio: DashboardShellPortfolioItem[] = (Object.keys(PORTFOLIO_ITEM_LABELS) as DashboardPortfolioView[]).map(
-    (key) => {
-      const count = portfolioCounts[key]
-
+  const modules = MODULE_LABELS.map((item) => {
+    if (item.key === 'overview') {
       return {
-        key,
-        label: PORTFOLIO_ITEM_LABELS[key],
-        detail: count > 0 ? `${count} campagne(s)` : 'Nog niet actief in deze omgeving',
-        href: count > 0 ? `/dashboard?view=${key}#portfolio` : null,
-        disabled: count === 0,
+        key: item.key,
+        label: item.label,
+        href: '/dashboard',
+        disabled: false,
       }
-    },
-  )
+    }
+
+    if (item.key === 'reports') {
+      return {
+        key: item.key,
+        label: item.label,
+        href: '/dashboard#reports',
+        disabled: false,
+      }
+    }
+
+    const campaign = item.scanType ? pickRepresentativeCampaign(campaigns, item.scanType) : null
+    const href = getCampaignHref(campaign)
+
+    return {
+      key: item.key,
+      label: item.label,
+      href,
+      disabled: href === null,
+    }
+  })
 
   const admin: DashboardShellNavItem[] = isAdmin
     ? [
@@ -99,14 +168,13 @@ export function buildDashboardShellNavigation({
     : []
 
   return {
-    primary,
-    portfolio,
+    modules,
     admin,
   }
 }
 
 export function getDashboardShellCurrentLabel(pathname: string) {
-  if (pathname.startsWith('/campaigns/')) return 'Campaign detail'
+  if (pathname.startsWith('/campaigns/')) return 'Campagneread'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
   if (pathname.startsWith('/beheer/klantlearnings')) return 'Learning workbench'
   if (pathname.startsWith('/beheer')) return 'Setup en beheer'

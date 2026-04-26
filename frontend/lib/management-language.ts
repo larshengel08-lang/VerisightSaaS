@@ -29,6 +29,23 @@ export function getManagementBandLabel(input: RiskBand | number): string {
   return MANAGEMENT_BAND_LABELS[band]
 }
 
+export const RISK_COLORS: Record<RiskBand, string> = {
+  HOOG: '#C65B52',
+  MIDDEN: '#C88C20',
+  LAAG: '#2E7C6D',
+}
+
+export const RISK_BG_COLORS: Record<RiskBand, string> = {
+  HOOG: 'rgba(198,91,82,0.12)',
+  MIDDEN: 'rgba(200,140,32,0.12)',
+  LAAG: 'rgba(46,124,109,0.12)',
+}
+
+export function getRiskColor(input: RiskBand | number): string {
+  const band = typeof input === 'number' ? getRiskBandFromScore(input) : input
+  return RISK_COLORS[band]
+}
+
 export function getManagementBandBadgeClasses(input: RiskBand | number): string {
   const band = typeof input === 'number' ? getRiskBandFromScore(input) : input
   return {
