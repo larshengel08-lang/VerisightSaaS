@@ -1,7 +1,7 @@
 # Pricing And Packaging Acceptance Checklist
 
 Handmatige acceptance voor publieke pricing, sales parity en package-governance.
-Laatste update: 2026-04-15
+Laatste update: 2026-04-26
 
 ## Buyer begrip
 
@@ -24,6 +24,7 @@ Laatste update: 2026-04-15
 - [ ] Geen packageclaim gaat verder dan preview, reportoutput en trustdocs dragen.
 - [ ] RetentieScan blijft verification-first en niet voorspellend.
 - [ ] ExitScan blijft vertrekduiding en niet diagnostisch.
+- [ ] Geen pricingcopy leest Action Center als derde product, add-on, module, suite-shell of brede adapterdekking buiten MTO en ExitScan.
 
 ## Sales parity
 

@@ -38,6 +38,7 @@ Deze canon legt vast welke producttaal leidend is over rapport, dashboard, onboa
 - De sterkste taalbasis zit al in de embedded definities van ExitScan en RetentieScan.
 - Shared grammar is vooral een rapport- en handofftaal en moet daarom breed worden gebruikt, maar niet verward worden met productspecifieke inhoudsblokken.
 - Buyer-facing mirrors mogen vereenvoudigen, maar niet verschuiven van `duiding` naar `diagnose`, van `vroegsignalering` naar `voorspelling`, of van `bounded route` naar impliciete suiteclaim.
+- Follow-through taal rond Action Center moet intern scherp genoeg blijven om geen cockpit-, module- of orchestrationclaim te suggereren.
 - Working maturity labels helpen intern met hardening, maar zijn nu nog te prematuur voor brede publieke of technische canonisering.
 
 ## Belangrijkste inconsistenties of risico's
@@ -45,6 +46,7 @@ Deze canon legt vast welke producttaal leidend is over rapport, dashboard, onboa
 - Zonder expliciete taalhiërarchie blijven oudere landingpagekoppen en voorbeeldrapporten concurreren met embedded truth.
 - Leveringsvormen zoals `live`, `momentopname` en `retrospectief` zijn nuttig, maar worden te snel ingezet als identiteitstaal.
 - Follow-on routes kunnen onbedoeld te groot of te volwassen klinken wanneer begrenzende taal wegvalt.
+- Action Center kan zonder expliciete follow-through canon te snel gaan voelen als buyer-facing module, brede adaptershell of derde productlijn.
 
 ## Beslissingen / canonvoorstellen
 
@@ -185,6 +187,37 @@ Portfolio- en verbredingstaal moet de huidige grenzen bewaken:
 - `Pulse` is een compacte reviewroute, geen derde brede instaproute naast ExitScan en RetentieScan.
 - `Leadership Scan` is een bounded management read, geen 360-tool en geen named leader assessment.
 
+### Action Center follow-through canon
+
+Hoofdpositionering:
+
+`Action Center is de gedeelde bounded follow-through laag op de bestaande adminsurface voor MTO en ExitScan.`
+
+Hoofdtermen:
+
+- `follow-through`
+- `dossier`
+- `assignment`
+- `reviewmoment`
+- `follow-upsignaal`
+- `eerste eigenaar`
+- `closure`
+
+Verboden of te harde termen als hoofdterm:
+
+- `module`
+- `cockpitproduct`
+- `suite-shell`
+- `cross-product orchestration`
+- `open adapterlaag`
+- `self-serve actieplatform`
+
+Canonregels:
+
+- buyer-facing mirrors mogen Action Center alleen indirect benoemen als onderdeel van guided execution en follow-through, nooit als zelfstandige route, package of prijsanker
+- MTO en ExitScan zijn de enige live consumers; adapters voor RetentieScan, Onboarding 30-60-90, Pulse en Leadership Scan blijven nu `inactive`
+- Action Center-taal mag geen brede project-plan-, advisory- of open-adapter-scope suggereren zolang de gedeelde core expliciet `follow_through` bounded blijft
+
 ### Working maturity labels
 
 De volgende labels zijn toegestaan binnen dit hardening-programma:
@@ -203,6 +236,7 @@ Deze labels zijn intern en mogen nog niet verschijnen als buyer-facing status, d
 - Nieuw bestand aangemaakt: [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md)
 - Taalhiërarchie expliciet gemaakt zodat toekomstige fixes, contentupdates en paritykeuzes aan dezelfde bronvolgorde kunnen worden getoetst
 - Producttaal per kernroute en per follow-on route begrensd om drift naar diagnose-, suite- of statusclaimtaal te voorkomen
+- Action Center-taal begrensd tot bounded follow-through zodat strategy-, pricing- en onboardingdocs dezelfde interne productlaag benoemen zonder commerciële drift
 
 ## Validatie
 

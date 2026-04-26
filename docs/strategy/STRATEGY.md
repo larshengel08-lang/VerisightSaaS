@@ -1,7 +1,7 @@
 # Verisight - Strategie En Beslissingen
 
 Levend document. Dit is de strategische samenvatting van wat Verisight nu verkoopt, hoe we het positioneren en welke guardrails gelden.
-Laatste update: 2026-04-24
+Laatste update: 2026-04-26
 
 ## Wat we nu bouwen en verkopen
 
@@ -21,6 +21,14 @@ Verisight is nu geen brede people-suite en ook nog geen full self-service SaaS. 
   - begeleidt intake, launchdiscipline, dashboardactivatie en eerste vervolgstap
   - laat de klant zelf werken binnen begrensde product- en deliveryrails
 
+- **Action Center-productlaag**
+  - gedeelde follow-through laag onder guided execution en delivery
+  - houdt dossiers, assignments, reviewmomenten en open follow-upsignalen bij elkaar op de bestaande adminsurface
+  - deelt alleen bounded follow-through permissies; productadapters blijven op deze laag gesloten
+  - is nu bewust bounded tot twee live consumers: de bestaande MTO/team follow-through en ExitScan follow-through
+  - RetentieScan-, Onboarding-, Pulse- en Leadership-adapters staan nog inactive en openen geen nieuwe commerciële route
+  - is geen buyer-facing route, geen losse pricingmodule en geen open adapterlaag
+
 - **Bounded portfoliolaag**
   - houdt combinatie en andere bounded vervolgroutes ondergeschikt aan de kernroutes
   - mag pas zichtbaarder worden nadat een eerste route echte managementwaarde heeft opgeleverd
@@ -30,6 +38,7 @@ De commerciele default in deze fase is:
 - first-buy logica is vraaggestuurd: ExitScan is de default, RetentieScan is de eerlijke eerste route bij een expliciete actieve behoudsvraag
 - Baseline blijft de standaard eerste vorm; ritme en live blijven guided vervolg- of deliveryvormen en geen losse hoofdproducten
 - bounded portfolioroutes worden niet als standaard eerste pitch gebruikt en openen de kernhierarchie niet opnieuw
+- Action Center blijft onder deze commerciële laag een interne follow-through productlaag en geen derde publiek aanbod
 
 ## Huidige fase
 
@@ -100,9 +109,12 @@ Wat nu niet te hard geclaimd mag worden:
 ### Product-, route- en portfoliovolgorde
 
 - guided execution is nu een deel van de productwaarheid en niet alleen een deliveryvoetnoot
+- Action Center is nu ook deel van de productwaarheid, maar alleen als embedded follow-through laag binnen guided execution en delivery
 - ExitScan en RetentieScan zijn de twee buyer-facing kernroutes; ExitScan blijft de default, maar niet de enige legitieme first-buy route
 - RetentieScan wordt niet lager gezet dan de productrealiteit draagt; het is een eigen eerste kooproute wanneer de managementvraag daarom vraagt
 - Baseline, live, ritme en compacte vervolgmetingen zijn leverings- of vervolgvormen en geen losse productfamilies
+- Action Center mag niet commercieel worden herlezen als derde kernroute, add-on, module upsell of suite-shell
+- inactive future adapters onder Action Center mogen niet impliciet als live route-, pricing- of orchestrationdekking worden verkocht
 - combinatie en andere bounded vervolgroutes blijven portfolio-keuzes na een eerste route, niet nieuwe kernproducten of nieuwe standaardinstappen
 - publieke pricing blijft gericht op wat delivery en ops nu echt kunnen dragen; geen verbreding zonder expliciet besluit
 
@@ -130,6 +142,7 @@ Verisight beweegt wel richting een SaaS-model, maar zit nu nog in een assisted/p
 - productfundament met scans, dashboards, rapportage en organisatie-/campagnestructuur
 - beveiligde appflows met auth, login, invites en beheer
 - guided self-service discipline rond intake, importcontrole, launch, dashboardactivatie en eerste vervolgstap
+- gedeelde Action Center follow-through core voor dossiers, assignments, reviewdruk en expliciete eigenaar/opvolgdiscipline binnen bounded live consumers, zonder open productadaptertoegang
 - demo- en sample-infrastructuur voor assisted verkoop, validatie en showcase
 
 ### Deels aanwezig
@@ -143,6 +156,7 @@ Verisight beweegt wel richting een SaaS-model, maar zit nu nog in een assisted/p
 - billing/subscription-logica als kern van het model
 - echte self-service onboarding en provisioning als standaardpad
 - volwassen lifecycle-logica rond plans, seats, usage en automated customer operations
+- brede cross-product orchestrationlaag buiten de huidige bounded Action Center consumers
 
 ### Strategische conclusie
 
@@ -196,6 +210,7 @@ Niet alles wat nu belangrijk is, zit in code. Deze afhankelijkheden tellen mee i
 - grote self-service onboarding
 - Stripe en brede billing-automatisering
 - nieuwe productfamilies buiten ExitScan/RetentieScan
+- een buyer-facing Action Center-module, publieke Action Center pricing of brede adapteropening zonder apart besluit
 - portfolioverbreding of bounded route-promotie zonder expliciet besluit
 - publiek API-werk
 - brede contentmachine zonder stabiele kernpropositie
@@ -211,4 +226,5 @@ Niet alles wat nu belangrijk is, zit in code. Deze afhankelijkheden tellen mee i
 - ExitScan blijft de default eerste route in generieke gesprekken, maar niet de enige eerlijke first-buy route
 - RetentieScan blijft een kernroute en wordt niet kunstmatig lager gezet wanneer de actieve behoudsvraag primair is
 - bounded portfolioroutes blijven ondergeschikt aan een scherp gekozen eerste route en openen geen nieuwe pricing- of propositiescope
+- Action Center blijft commercieel onderliggend aan guided execution: wel echte productlaag, geen zelfstandig prijsanker of pitchlijn
 - de eerste commerciële mijlpaal is niet een nieuwe feature, maar een eerste reeks betaalde trajecten via dezelfde truth-aligned routearchitectuur
