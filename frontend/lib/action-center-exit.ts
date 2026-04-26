@@ -80,6 +80,10 @@ function isOpen(triageStatus: ExitTriageStatus) {
   return OPEN_TRIAGE_STATUSES.has(triageStatus)
 }
 
+function hasBoundedText(value: string | null) {
+  return Boolean(value?.trim())
+}
+
 function isExitDeliveryMode(value: ExitDeliveryMode | null): value is ExitDeliveryMode {
   return value === 'baseline' || value === 'live'
 }
@@ -123,6 +127,7 @@ export function buildExitActionCenterWorkspace(args: {
     const hasFollowThroughDecision = Boolean(
       dossier.managementActionOutcome || dossier.nextRoute || dossier.stopReason,
     )
+    const hasReviewMoment = hasBoundedText(dossier.reviewMoment)
     const managementOwnerId = buildActorId('manager', dossier.managementOwnerLabel)
     const reviewOwnerId = buildActorId('review', dossier.reviewOwnerLabel)
     const ownerId = managementOwnerId ?? reviewOwnerId
@@ -162,7 +167,9 @@ export function buildExitActionCenterWorkspace(args: {
         ? 'completed'
         : dossier.triageStatus === 'geparkeerd' || dossier.triageStatus === 'verworpen'
           ? 'cancelled'
-          : 'due'
+          : hasReviewMoment
+            ? 'scheduled'
+            : 'due'
 
     reviewMoments.push({
       id: `rev-${dossier.id}`,
@@ -191,7 +198,7 @@ export function buildExitActionCenterWorkspace(args: {
       })
     }
 
-    if (open) {
+    if (open && !hasReviewMoment) {
       followUpSignals.push({
         id: `sig-review-${dossier.id}`,
         dossierId: dossier.id,

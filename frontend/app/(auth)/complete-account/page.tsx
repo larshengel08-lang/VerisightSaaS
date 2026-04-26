@@ -66,7 +66,7 @@ export default function CompleteAccountPage() {
       return
     }
 
-    setSuccess('Account geactiveerd. Je wordt doorgestuurd naar het dashboard...')
+    setSuccess('Account geactiveerd en vrijgegeven voor je eerste read. Je wordt doorgestuurd naar het dashboard...')
     setTimeout(() => router.push('/dashboard'), 1200)
   }
 
@@ -96,7 +96,8 @@ export default function CompleteAccountPage() {
                 <h1 className="mb-2 text-xl font-semibold text-gray-900">Kies direct een wachtwoord</h1>
                 <p className="mb-6 text-sm text-gray-500">
                   Je bent ingelogd via de activatiemail voor {email ?? 'jouw account'}. Stel nu meteen een wachtwoord in,
-                  zodat je later gewoon via de inlogpagina kunt terugkomen.
+                  zodat je later gewoon via de inlogpagina kunt terugkomen. Na deze stap is je account vrijgegeven voor
+                  het juiste dashboard en de juiste campaign voor je eerste read.
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -175,7 +176,7 @@ export default function CompleteAccountPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Assisted onboarding</p>
               <p className="mt-3 text-sm leading-6 text-gray-600">
                 Verisight verkoopt geen self-service surveytool. Dit account is het handoff-moment naar jouw dashboard en
-                rapport, nadat de campaign en respondentflow al voor je zijn voorbereid.
+                rapport, nadat de campaign en respondentflow al voor je zijn voorbereid en bewust voor jouw eerste read zijn vrijgegeven.
               </p>
             </div>
           </div>

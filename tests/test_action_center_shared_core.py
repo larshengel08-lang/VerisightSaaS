@@ -143,3 +143,29 @@ def test_exit_workspace_keeps_admin_surface_read_only_while_owner_ids_stay_expli
     assert workspace.dossiers[0].permission_envelope.can_update_assignments is False
     assert workspace.dossiers[0].permission_envelope.can_manage_permissions is False
     assert workspace.review_moments[0].scheduled_for == "Exit reviewmoment nog vastleggen"
+    assert workspace.review_moments[0].state == "due"
+    assert sum(1 for signal in workspace.follow_up_signals if signal.kind == "review_due") == 1
+
+
+def test_exit_review_moment_stays_scheduled_once_it_is_explicit():
+    workspace = build_exit_action_center_workspace(
+        role="owner",
+        dossiers=[
+            ExitDossierInput(
+                id="dos-1",
+                title="ExitScan - Support closeout",
+                triage_status="bevestigd",
+                delivery_mode="live",
+                management_owner_label="Sanne",
+                review_owner_label="Verisight",
+                first_action_taken="Plan exit-closeout met HR en teamlead",
+                review_moment="Herlees over 30 dagen",
+                management_action_outcome=None,
+                next_route=None,
+                stop_reason=None,
+            ),
+        ],
+    )
+
+    assert workspace.review_moments[0].state == "scheduled"
+    assert sum(1 for signal in workspace.follow_up_signals if signal.kind == "review_due") == 0

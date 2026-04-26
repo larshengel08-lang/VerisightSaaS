@@ -105,7 +105,10 @@ export default function LoginPage() {
           </a>
         </p>
         <p className="text-center text-xs text-gray-400 mt-2">
-          Uitgenodigd voor dashboardtoegang? Open eerst de activatiemail, kies daar je wachtwoord en log daarna in met hetzelfde e-mailadres.
+          Uitgenodigd voor dashboardtoegang? Open eerst de activatiemail, kies daar je wachtwoord en log daarna in met hetzelfde e-mailadres zodra je account is vrijgegeven voor je eerste read.
+        </p>
+        <p className="text-center text-xs text-gray-400 mt-2">
+          Activatie betekent hier niet alleen mail openen of een wachtwoord kiezen, maar dat het juiste dashboard en de juiste campaign voor jouw eerste read zijn vrijgegeven.
         </p>
         <p className="text-center text-xs text-gray-400 mt-3">
           Verisight v2.0 · Vertrouwelijk platform

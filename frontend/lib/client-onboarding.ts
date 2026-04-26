@@ -65,8 +65,8 @@ export const CANONICAL_ONBOARDING_PHASES = [
     title: 'Klantactivatie',
     owner: 'Verisight',
     boundary: 'client',
-    outcome: 'De klant kan inloggen en ziet direct het juiste dashboard.',
-    customerAction: 'Activeer account en open de juiste campagne of het overzicht.',
+    outcome: 'De klant kan inloggen en krijgt het juiste dashboard en de juiste campaign vrijgegeven voor een eerste read.',
+    customerAction: 'Activeer account en open daarna de vrijgegeven campaign of het juiste dashboard voor de eerste read.',
   },
   {
     key: 'dashboard',
@@ -582,7 +582,7 @@ export function getFirstManagementReadSteps(scanType: ScanType) {
 
 export function getAdoptionSuccessDefinition(scanType: ScanType) {
   if (scanType === 'retention') {
-    return 'Adoptie is pas geslaagd wanneer de klant niet alleen operationeel draait, maar het dashboard en rapport gebruikt om een eerste managementsessie over behoud, verificatie, eerste eigenaar, routekeuze en reviewmoment te voeren.'
+    return 'Adoptie is pas geslaagd wanneer de klant niet alleen operationeel draait, maar het vrijgegeven dashboard en rapport gebruikt om een eerste managementsessie over behoud, verificatie, eerste eigenaar, routekeuze en reviewmoment te voeren.'
   }
   if (scanType === 'pulse') {
     return 'Adoptie is pas geslaagd wanneer de klant Pulse gebruikt om een eerste reviewvraag, kleine correctie en volgend bounded checkmoment expliciet te maken.'
@@ -591,10 +591,10 @@ export function getAdoptionSuccessDefinition(scanType: ScanType) {
     return 'Adoptie is pas geslaagd wanneer de klant TeamScan gebruikt om een eerste lokale verificatievraag, afdeling, begrensde actie en lokaal reviewmoment expliciet te maken.'
   }
   if (scanType === 'onboarding') {
-    return 'Adoptie is pas geslaagd wanneer de klant onboarding gebruikt om een eerste checkpointread, eerste eigenaar, begrensde borg- of correctiestap en logisch vervolgmoment expliciet te maken.'
+    return 'Adoptie is pas geslaagd wanneer de klant onboarding gebruikt om een vrijgegeven eerste checkpointread, eerste eigenaar, begrensde borg- of correctiestap en logisch vervolgmoment expliciet te maken.'
   }
   if (scanType === 'leadership') {
     return 'Adoptie is pas geslaagd wanneer de klant Leadership Scan gebruikt om een eerste managementread, eerste eigenaar, begrensde verificatie of correctie en logisch reviewmoment expliciet te maken.'
   }
-  return 'Adoptie is pas geslaagd wanneer de klant niet alleen operationeel draait, maar het dashboard en rapport gebruikt om een eerste managementsessie over vertrekduiding, prioriteiten, routekeuze en reviewmoment te voeren.'
+  return 'Adoptie is pas geslaagd wanneer de klant niet alleen operationeel draait, maar het vrijgegeven dashboard en rapport gebruikt om een eerste managementsessie over vertrekduiding, prioriteiten, routekeuze en reviewmoment te voeren.'
 }

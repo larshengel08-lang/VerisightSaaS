@@ -25,6 +25,16 @@ describe('client onboarding defaults', () => {
     ])
   })
 
+  it('keeps activatie defined as release to the correct dashboard and campaign', () => {
+    const activationPhase = CANONICAL_ONBOARDING_PHASES.find((phase) => phase.key === 'activation')
+
+    expect(activationPhase?.outcome.toLowerCase()).toContain('vrijgegeven')
+    expect(activationPhase?.outcome.toLowerCase()).toContain('juiste dashboard')
+    expect(activationPhase?.outcome.toLowerCase()).toContain('juiste campaign')
+    expect(activationPhase?.customerAction.toLowerCase()).toContain('vrijgegeven')
+    expect(activationPhase?.customerAction.toLowerCase()).toContain('eerste read')
+  })
+
   it('keeps first-value thresholds aligned with dashboard guardrails', () => {
     expect(FIRST_VALUE_THRESHOLDS).toEqual([
       expect.objectContaining({ minResponses: 0, maxResponses: 4 }),
@@ -76,11 +86,14 @@ describe('client onboarding defaults', () => {
     expect(getFirstManagementReadSteps('exit')[2]?.toLowerCase()).toContain('reviewmoment')
     expect(getFirstManagementReadSteps('retention')[2]?.toLowerCase()).toContain('eerste eigenaar')
     expect(getAdoptionSuccessDefinition('exit').toLowerCase()).toContain('dashboard en rapport')
+    expect(getAdoptionSuccessDefinition('exit').toLowerCase()).toContain('vrijgegeven')
     expect(getAdoptionSuccessDefinition('retention').toLowerCase()).toContain('behoud')
+    expect(getAdoptionSuccessDefinition('retention').toLowerCase()).toContain('vrijgegeven')
     expect(getAdoptionSuccessDefinition('pulse').toLowerCase()).toContain('bounded checkmoment')
     expect(getAdoptionSuccessDefinition('team').toLowerCase()).toContain('lokaal reviewmoment')
     expect(getAdoptionSuccessDefinition('onboarding').toLowerCase()).toContain('checkpoint')
     expect(getAdoptionSuccessDefinition('onboarding').toLowerCase()).toContain('eerste eigenaar')
+    expect(getAdoptionSuccessDefinition('onboarding').toLowerCase()).toContain('vrijgegeven')
     expect(getAdoptionSuccessDefinition('leadership').toLowerCase()).toContain('managementread')
     expect(getAdoptionSuccessDefinition('leadership').toLowerCase()).toContain('begrensde verificatie')
     expect(getAdoptionSuccessDefinition('exit').toLowerCase()).toContain('reviewmoment')

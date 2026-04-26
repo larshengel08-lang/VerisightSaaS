@@ -222,13 +222,14 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
   })
 
   const openExitDossiers = exitWorkspace.dossiers.filter((dossier) => dossier.status === 'open')
-  const reviewPressureItems = exitWorkspace.reviewMoments.filter((reviewMoment) => reviewMoment.state === 'due')
+  const openReviewMoments = exitWorkspace.reviewMoments.filter(
+    (reviewMoment) => reviewMoment.state === 'due' || reviewMoment.state === 'scheduled',
+  )
   const openSignals = exitWorkspace.followUpSignals.filter((signal) => signal.state === 'open')
   const explicitOwnerCount = exitWorkspace.dossiers.filter((dossier) => dossier.ownerId).length
   const explicitOwnerOpenCount = openExitDossiers.filter((dossier) => dossier.ownerId).length
-  const scheduledReviewCount = reviewPressureItems.filter((reviewMoment) =>
-    isReviewMomentPlanned(reviewMoment.scheduledFor),
-  ).length
+  const dueReviewCount = openReviewMoments.filter((reviewMoment) => reviewMoment.state === 'due').length
+  const scheduledReviewCount = openReviewMoments.length - dueReviewCount
   const activeClientAccessCount = Object.values(exitActiveClientAccessByOrg).reduce((sum, count) => sum + count, 0)
   const initialExitLeadId = exitLeads.some((lead) => lead.id === initialLeadId) ? initialLeadId : null
   const initialExitCampaignId = exitCampaigns.some((campaign) => campaign.id === initialCampaignId)
@@ -371,12 +372,12 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
             eyebrow="Reviewstatus"
             title="Open reviewdruk"
             value={
-              reviewPressureItems.length > 0
-                ? `${scheduledReviewCount}/${reviewPressureItems.length} gepland`
+              openReviewMoments.length > 0
+                ? `${scheduledReviewCount}/${openReviewMoments.length} gepland`
                 : 'Geen open reviews'
             }
-            body="Open dossiers blijven in reviewdruk; zonder expliciet reviewmoment leest deze surface dat ook zo, in plaats van alsof review al gepland is."
-            tone={reviewPressureItems.length > 0 ? 'amber' : 'slate'}
+            body="Open dossiers blijven in reviewflow; zonder expliciet reviewmoment blijft de status ook zichtbaar als nog niet gepland."
+            tone={dueReviewCount > 0 ? 'amber' : 'slate'}
           />
           <DashboardPanel
             surface="ops"
@@ -437,17 +438,17 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
               </div>
               <DashboardChip
                 surface="ops"
-                label={`${reviewPressureItems.length} review${reviewPressureItems.length === 1 ? '' : 's'}`}
-                tone={reviewPressureItems.length > 0 ? 'amber' : 'slate'}
+                label={`${openReviewMoments.length} review${openReviewMoments.length === 1 ? '' : 's'}`}
+                tone={dueReviewCount > 0 ? 'amber' : 'slate'}
               />
             </div>
             <div className="mt-4 space-y-3">
-              {reviewPressureItems.length === 0 ? (
+              {openReviewMoments.length === 0 ? (
                 <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                  Geen actieve reviewdruk. De shared core houdt deze lijst leeg zodra ExitScan-dossiers geparkeerd, uitgevoerd of bewust gestopt zijn.
+                  Geen open reviewstatus. Zodra ExitScan-dossiers openstaan, verschijnt de reviewflow hier automatisch.
                 </p>
               ) : (
-                reviewPressureItems.slice(0, 5).map((reviewMoment) => {
+                openReviewMoments.slice(0, 5).map((reviewMoment) => {
                   const dossier = exitWorkspace.dossiers.find((item) => item.id === reviewMoment.dossierId)
                   const signals = openSignals.filter((signal) => signal.dossierId === reviewMoment.dossierId)
 
@@ -456,7 +457,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
                       <p className="text-sm font-semibold text-slate-950">{dossier?.title ?? reviewMoment.dossierId}</p>
                       <p className="mt-2 text-sm leading-6 text-slate-600">{reviewMoment.scheduledFor}</p>
                       <p className="mt-1 text-xs text-slate-500">
-                        Reviewstatus: {isReviewMomentPlanned(reviewMoment.scheduledFor) ? 'Gepland' : 'Nog niet gepland'}
+                        Reviewstatus: {reviewMoment.state === 'scheduled' && isReviewMomentPlanned(reviewMoment.scheduledFor) ? 'Gepland' : 'Nog niet gepland'}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
                         Open signalen: {signals.map((signal) => signal.kind).join(', ') || 'geen'}

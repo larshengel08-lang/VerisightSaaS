@@ -167,179 +167,166 @@ function getProductStructuredData(product: MarketingProduct) {
 }
 
 function ExitScanPage() {
-  return (
-    <div className="min-h-screen bg-white">
-      <PublicHeader />
-      <main>
+  const T = {
+    paper: 'oklch(0.978 0.010 62)', paperSoft: 'oklch(0.956 0.018 60)',
+    white: '#FFFCF8', navy: 'oklch(0.13 0.032 250)', ink: 'oklch(0.16 0.012 250)',
+    inkSoft: 'oklch(0.32 0.010 250)', inkMuted: 'oklch(0.52 0.008 250)',
+    inkFaint: 'oklch(0.70 0.006 250)', rule: 'oklch(0.875 0.012 62)',
+    ruleLight: 'oklch(0.918 0.008 62)', teal: 'oklch(0.50 0.12 188)',
+    tealFaint: 'oklch(0.972 0.018 185)',
+  }
+  const AC = { deep: 'oklch(0.45 0.18 50)', mid: 'oklch(0.76 0.14 53)', soft: 'oklch(0.95 0.045 50)', faint: 'oklch(0.976 0.018 50)' }
+  const FF = 'var(--font-fraunces), serif'
+  const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
+  const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_hero' })
 
-        {/* 1 — Hero */}
-        <section className="bg-[#F7F5F1] border-b border-[#E5E0D6]">
-          <div className="marketing-shell py-14">
-            <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">ExitScan</p>
-            <h1 className="mt-3 max-w-[22ch] font-display text-[clamp(1.6rem,3.5vw,2.2rem)] font-light leading-[1.15] tracking-[-0.02em] text-[#132033]">
-              Breng vertrekduiding scherp in beeld
-            </h1>
-            <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-[#4A5563]">
-              Voor terugkijkende vertrekduiding op groepsniveau, eerst als baseline en daarna eventueel als ritmeroute.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <a
-                href="#kennismaking"
-                className="inline-flex rounded-md bg-[#3C8D8A] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2d6e6b]"
-              >
-                Plan een kennismaking
-              </a>
-              <Link
-                href="/tarieven"
-                className="text-sm font-medium text-[#4A5563] transition-colors hover:text-[#132033]"
-              >
-                Bekijk tarieven →
-              </Link>
+  return (
+    <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
+      <main>
+        {/* Hero */}
+        <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
+          <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`, pointerEvents: 'none' }} />
+          <div style={{ ...SH, position: 'relative' }}>
+            <div style={{ animation: 'slideDownFade .55s cubic-bezier(.16,1,.3,1) .05s both', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
+              <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: AC.deep }}>ExitScan</span>
+              <div style={{ flex: 1, height: '1px', background: T.rule, maxWidth: 200 }} />
+              <Link href="/producten" style={{ fontSize: 11, color: T.inkMuted, textDecoration: 'none' }}>← Alle routes</Link>
+            </div>
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
+              <div>
+                <div style={{ animation: 'slideUpFade .9s cubic-bezier(.16,1,.3,1) .15s both' }}>
+                  <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink }}>
+                    Breng vertrekduiding<br />
+                    <em className="shimmer-text" style={{ fontStyle: 'italic' }}>scherp in beeld.</em>
+                  </h1>
+                </div>
+                <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
+                  <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '26px 0 36px' }}>
+                    Voor terugkijkende vertrekduiding op groepsniveau, eerst als baseline en daarna eventueel als ritmeroute.
+                  </p>
+                </div>
+                <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
+                    Plan een kennismaking
+                  </a>
+                  <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
+                    Bekijk tarieven
+                  </Link>
+                </div>
+              </div>
+              <div style={{ animation: 'slideRightFade .8s cubic-bezier(.16,1,.3,1) .28s both' }}>
+                <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
+                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>EUR 2.950 · Baseline</div>
+                  {['Dashboard met prioriteiten en factoranalyse', 'Managementrapport voor HR, MT en directie', 'Bestuurlijke handoff inbegrepen', 'AVG-conforme dataverwerking'].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: i > 0 ? `1px solid ${T.rule}` : 'none', fontSize: 13, color: T.inkSoft }}>
+                      <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 4 }} />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* 2 — Baseline vs. ritmeroute */}
-        <MarketingSection tone="tint">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Varianten</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Baseline of ritmeroute?</h2>
-          <div className="mt-8 grid gap-5 lg:grid-cols-2">
-            {[
-              {
-                label: 'Baseline',
-                points: [
-                  'Analyse van recent vertrek, bijvoorbeeld over de afgelopen 12 maanden',
-                  'Geschikt als er al voldoende vertrekinput beschikbaar is',
-                  'Geen actieve respondenten nodig — ex-medewerkers',
-                ],
-              },
-              {
-                label: 'Ritmeroute',
-                points: [
-                  'Doorlopende vervolgroute nadat baseline, proces en eigenaar al staan',
-                  'Geschikt als u actuele uitstroomsignalen wilt blijven volgen',
-                  'Respondenten vullen in rond het moment van vertrek',
-                ],
-              },
-            ].map(({ label, points }) => (
-              <div key={label} className="rounded-lg border border-[#E5E0D6] bg-[#F7F5F1] p-6">
-                <p className="text-sm font-medium text-[#132033]">{label}</p>
-                <ul className="mt-3 space-y-2">
-                  {points.map((p) => (
-                    <li key={p} className="flex items-start gap-2.5 text-sm text-[#4A5563]">
-                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#3C8D8A]" />
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </MarketingSection>
-
-        {/* 3 — Wanneer relevant */}
-        <MarketingSection tone="surface">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Wanneer relevant</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">ExitScan is logisch in deze situaties</h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            {[
-              'Bij structureel verloop dat u wilt begrijpen',
-              'Bij voorbereiding op een MT-bespreking over uitstroom',
-              'Bij behoefte aan scherpere stuurinformatie voor HR en management',
-              'Na een reorganisatie of fusie',
-            ].map((item) => (
-              <div key={item} className="rounded-lg border border-[#E5E0D6] bg-white p-5">
-                <p className="text-sm leading-relaxed text-[#132033]">{item}</p>
-              </div>
-            ))}
-          </div>
-        </MarketingSection>
-
-        {/* 4 — Wat zichtbaar wordt */}
-        <MarketingSection tone="tint">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Wat zichtbaar wordt</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Inzichten in uw eigen taal</h2>
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
-            {[
-              { title: 'Waar signalen terugkomen', body: 'Terugkerende thema\'s uit vertrekgesprekken en werkfactoren in een vergelijkbaar beeld.' },
-              { title: 'Waar frictie zichtbaar is', body: 'Leiderschap, werkbelasting, groei en rolhelderheid die doorlopend worden genoemd.' },
-              { title: 'Waar actie het meeste effect heeft', body: 'Prioriteiten op basis van signaalsterkte, niet op basis van aannames.' },
-            ].map(({ title, body }) => (
-              <div key={title} className="flex flex-col gap-2">
-                <h3 className="text-base font-medium text-[#132033]">{title}</h3>
-                <p className="text-sm leading-relaxed text-[#4A5563]">{body}</p>
-              </div>
-            ))}
-          </div>
-        </MarketingSection>
-
-        {/* 5 — Uitkomsten */}
-        <MarketingSection tone="surface">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Uitkomsten</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Wat u ermee kunt doen</h2>
-          <p className="mt-4 max-w-[64ch] text-sm leading-relaxed text-[#4A5563]">
-            De leesrichting blijft compact en bestuurlijk: eerst cover en respons, daarna de bestuurlijke handoff,
-            vervolgens de eerste managementvraag, het eerste verificatiespoor en pas daarna de eerste logische stap.
-          </p>
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
-            {[
-              { title: 'Patronen zichtbaar maken', body: 'Geef management een herkenbaar beeld van terugkerende uitstroomthema\'s.' },
-              { title: 'Focus aanbrengen in vervolg', body: 'Prioriteer acties op basis van signaalsterkte in plaats van aannames.' },
-              { title: 'Gesprekken onderbouwen', body: 'Gebruik de uitkomsten in bespreking met HR, sponsor, MT en directie.' },
-            ].map(({ title, body }) => (
-              <div key={title} className="flex flex-col gap-2">
-                <h3 className="text-base font-medium text-[#132033]">{title}</h3>
-                <p className="text-sm leading-relaxed text-[#4A5563]">{body}</p>
-              </div>
-            ))}
-          </div>
-        </MarketingSection>
-
-        {/* 6 — Wat u ontvangt */}
-        <section className="bg-[#132033]">
-          <div className="marketing-shell marketing-section">
-            <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Wat u ontvangt</p>
-            <h2 className="mt-3 max-w-[24ch] text-xl font-medium text-[#F7F5F1]">Dashboard, rapport en toelichting in dezelfde leeslijn</h2>
-            <ul className="mt-6 space-y-2">
+        {/* Varianten */}
+        <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+          <div style={{ ...SH }}>
+            <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Varianten</div>
+            <h2 style={{ fontFamily: FF, fontSize: 'clamp(24px,3vw,34px)', fontWeight: 400, letterSpacing: '-.02em', color: T.ink, marginBottom: 32, lineHeight: 1.1 }}>Baseline of ritmeroute?</h2>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
               {[
-                'Dashboard met prioriteiten en factoranalyse',
-                'Managementrapport voor HR, MT en directie met een eerste managementsessie als vaste vervolgstap',
-                'Toelichting op de uitkomsten en vervolgstappen',
-                'AVG-conforme dataverwerking',
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2.5 text-sm text-[rgba(247,245,241,0.75)]">
-                  <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#3C8D8A]" />
-                  {item}
-                </li>
+                { label: 'Baseline', accent: AC.deep, points: ['Analyse van recent vertrek, bijv. over de afgelopen 12 maanden', 'Geschikt als er al voldoende vertrekinput beschikbaar is', 'Geen actieve respondenten nodig — ex-medewerkers'] },
+                { label: 'Ritmeroute', accent: T.inkMuted, points: ['Doorlopende vervolgroute nadat baseline, proces en eigenaar al staan', 'Geschikt als u actuele uitstroomsignalen wilt blijven volgen', 'Respondenten vullen in rond het moment van vertrek'] },
+              ].map(({ label, accent, points }) => (
+                <div key={label} style={{ padding: '28px', background: T.white, border: `1px solid ${T.rule}`, borderTop: `3px solid ${accent}` }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{label}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {points.map((p, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
+                        <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
+                        {p}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ))}
-            </ul>
-            <a
-              href="#kennismaking"
-              className="mt-8 inline-flex rounded-md bg-white px-5 py-3 text-sm font-medium text-[#132033] transition-colors hover:bg-[#F7F5F1]"
-            >
-              Plan een kennismaking
-            </a>
+            </div>
+          </div>
+        </section>
 
-            {/* 7 — Segment Deep Dive add-on */}
-            <div id="segment-deep-dive" className="mt-8 rounded-lg border border-[rgba(247,245,241,0.12)] bg-[rgba(247,245,241,0.06)] p-5">
-              <span className="text-[0.6rem] font-medium uppercase tracking-[0.12em] text-[#9CA3AF]">Add-on</span>
-              <h3 className="mt-1 text-base font-medium text-[#F7F5F1]">Segment Deep Dive</h3>
-              <p className="mt-1 text-sm text-[rgba(247,245,241,0.65)]">Verdieping op een specifieke afdeling, functiegroep of locatie. Beschikbaar als er voldoende respondenten en metadata voor zijn.</p>
+        {/* Wanneer logisch */}
+        <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+          <div style={{ ...SH }}>
+            <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wanneer logisch</div>
+            <h2 style={{ fontFamily: FF, fontSize: 'clamp(24px,3vw,34px)', fontWeight: 400, letterSpacing: '-.02em', color: T.ink, marginBottom: 32, lineHeight: 1.1 }}>ExitScan is logisch in deze situaties</h2>
+            <div className="grid grid-cols-1 gap-0 sm:grid-cols-2">
+              {[
+                { text: 'Bij structureel verloop dat u wilt begrijpen', num: '01' },
+                { text: 'Bij voorbereiding op een MT-bespreking over uitstroom', num: '02' },
+                { text: 'Bij behoefte aan scherpere stuurinformatie voor HR en management', num: '03' },
+                { text: 'Na een reorganisatie of fusie', num: '04' },
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', gap: 16, padding: '22px 20px', borderTop: `1px solid ${T.rule}`, borderLeft: i % 2 === 1 ? `1px solid ${T.rule}` : 'none' }}>
+                  <span style={{ fontFamily: FF, fontSize: 12, color: T.inkFaint, minWidth: 24 }}>{item.num}</span>
+                  <p style={{ fontSize: 14, color: T.inkSoft, lineHeight: 1.6 }}>{item.text}</p>
+                </div>
+              ))}
+            </div>
+            <div style={{ borderTop: `1px solid ${T.rule}` }} />
+          </div>
+        </section>
+
+        {/* Wat u ontvangt — dark band */}
+        <section style={{ background: T.navy, padding: 'clamp(48px,5.5vw,72px) 0' }}>
+          <div style={{ ...SH }}>
+            <div style={{ display: 'grid', gap: 'clamp(32px,5vw,64px)' }} className="grid grid-cols-1 lg:grid-cols-[1fr_auto]">
+              <div>
+                <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.mid, marginBottom: 18 }}>Wat u ontvangt</div>
+                <h2 style={{ fontFamily: FF, fontSize: 'clamp(24px,3vw,36px)', fontWeight: 400, letterSpacing: '-.022em', color: '#fff', marginBottom: 24, lineHeight: 1.1 }}>
+                  Dashboard, rapport en toelichting<br />
+                  <em style={{ fontStyle: 'italic', fontWeight: 300, color: 'oklch(.76 .14 53)' }}>in dezelfde leeslijn.</em>
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {['Dashboard met prioriteiten en factoranalyse', 'Managementrapport voor HR, MT en directie met een eerste managementsessie als vaste vervolgstap', 'Toelichting op de uitkomsten en vervolgstappen', 'AVG-conforme dataverwerking'].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 16px', background: 'rgba(255,255,255,.05)', fontSize: 13, color: 'rgba(247,245,241,.8)', lineHeight: 1.5 }}>
+                      <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 5 }} />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+                <div id="segment-deep-dive" style={{ marginTop: 24, padding: '18px 20px', border: '1px solid rgba(255,255,255,.12)', background: 'rgba(255,255,255,.04)' }}>
+                  <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkFaint }}>Add-on</span>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginTop: 6, marginBottom: 6 }}>Segment Deep Dive</div>
+                  <p style={{ fontSize: 12.5, color: 'rgba(247,245,241,.6)', lineHeight: 1.6 }}>Verdieping op een specifieke afdeling, functiegroep of locatie. Beschikbaar als er voldoende respondenten en metadata voor zijn.</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignSelf: 'center', minWidth: 200 }}>
+                <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: T.ink, background: '#fff', whiteSpace: 'nowrap' }}>
+                  Plan een kennismaking
+                </a>
+                <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: 'rgba(255,255,255,.6)', border: '1px solid rgba(255,255,255,.2)', whiteSpace: 'nowrap' }}>
+                  Bekijk tarieven
+                </Link>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Contact form */}
-        <MarketingSection tone="tint">
-          <MarketingInlineContactPanel
-            eyebrow="Kennismaking"
-            title="Plan een gesprek over ExitScan"
-            body="Beschrijf kort welke vertrekvraag nu bestuurlijk aandacht vraagt. Dan toetsen we of ExitScan de juiste eerste stap is en hoe de aanpak eruitziet."
-            defaultRouteInterest="exitscan"
-            defaultCtaSource="product_exit_form"
-          />
-        </MarketingSection>
-
+        <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
+          <div style={{ ...SH, maxWidth: 820 }}>
+            <MarketingInlineContactPanel
+              eyebrow="Kennismaking"
+              title="Plan een gesprek over ExitScan"
+              body="Beschrijf kort welke vertrekvraag nu bestuurlijk aandacht vraagt. Dan toetsen we of ExitScan de juiste eerste stap is en hoe de aanpak eruitziet."
+              defaultRouteInterest="exitscan"
+              defaultCtaSource="product_exit_form"
+            />
+          </div>
+        </section>
       </main>
       <PublicFooter />
     </div>
@@ -347,173 +334,160 @@ function ExitScanPage() {
 }
 
 function RetentionScanPage() {
-  return (
-    <div className="min-h-screen bg-white">
-      <PublicHeader />
-      <main>
+  const T = {
+    paper: 'oklch(0.978 0.010 62)', paperSoft: 'oklch(0.956 0.018 60)',
+    white: '#FFFCF8', navy: 'oklch(0.13 0.032 250)', ink: 'oklch(0.16 0.012 250)',
+    inkSoft: 'oklch(0.32 0.010 250)', inkMuted: 'oklch(0.52 0.008 250)',
+    inkFaint: 'oklch(0.70 0.006 250)', rule: 'oklch(0.875 0.012 62)',
+    ruleLight: 'oklch(0.918 0.008 62)',
+    teal: 'oklch(0.50 0.12 188)', tealMid: 'oklch(0.62 0.10 185)',
+    tealSoft: 'oklch(0.94 0.04 185)', tealFaint: 'oklch(0.972 0.018 185)',
+  }
+  const FF = 'var(--font-fraunces), serif'
+  const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
+  const ctaHref = buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_hero' })
 
-        {/* 1 — Hero */}
-        <section className="bg-[#F7F5F1] border-b border-[#E5E0D6]">
-          <div className="marketing-shell py-14">
-            <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">RetentieScan</p>
-            <h1 className="mt-3 max-w-[22ch] font-display text-[clamp(1.6rem,3.5vw,2.2rem)] font-light leading-[1.15] tracking-[-0.02em] text-[#132033]">
-              Zie eerder waar behoud onder druk staat
-            </h1>
-            <p className="mt-4 max-w-[52ch] text-base leading-relaxed text-[#4A5563]">
-              Voor vroegsignalering op behoud op groeps- en segmentniveau, als baseline of ritmeroute.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center gap-4">
-              <a
-                href="#kennismaking"
-                className="inline-flex rounded-md bg-[#3C8D8A] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2d6e6b]"
-              >
-                Plan een kennismaking
-              </a>
-              <Link
-                href="/tarieven"
-                className="text-sm font-medium text-[#4A5563] transition-colors hover:text-[#132033]"
-              >
-                Bekijk tarieven →
-              </Link>
+  return (
+    <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
+      <main>
+        {/* Hero */}
+        <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
+          <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${T.tealFaint} 0%,transparent 65%)`, pointerEvents: 'none' }} />
+          <div style={{ ...SH, position: 'relative' }}>
+            <div style={{ animation: 'slideDownFade .55s cubic-bezier(.16,1,.3,1) .05s both', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
+              <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: T.teal }}>RetentieScan</span>
+              <div style={{ flex: 1, height: '1px', background: T.rule, maxWidth: 200 }} />
+              <Link href="/producten" style={{ fontSize: 11, color: T.inkMuted, textDecoration: 'none' }}>← Alle routes</Link>
+            </div>
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
+              <div>
+                <div style={{ animation: 'slideUpFade .9s cubic-bezier(.16,1,.3,1) .15s both' }}>
+                  <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink }}>
+                    Zie eerder waar<br />
+                    <em style={{ fontStyle: 'italic', color: T.teal }}>behoud onder druk staat.</em>
+                  </h1>
+                </div>
+                <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
+                  <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '26px 0 36px' }}>
+                    Voor vroegsignalering op behoud op groeps- en segmentniveau, als baseline of ritmeroute.
+                  </p>
+                </div>
+                <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
+                    Plan een kennismaking
+                  </a>
+                  <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
+                    Bekijk tarieven
+                  </Link>
+                </div>
+              </div>
+              <div style={{ animation: 'slideRightFade .8s cubic-bezier(.16,1,.3,1) .28s both' }}>
+                <div style={{ padding: '28px', background: T.tealFaint, border: `1px solid ${T.tealSoft}` }}>
+                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>EUR 3.450 · Baseline</div>
+                  {['Dashboard met retentiesignaal en factoranalyse', 'Managementrapport voor HR, MT en directie', 'Geen individuele signalen — groepsduiding', 'AVG-conforme dataverwerking'].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: i > 0 ? `1px solid ${T.tealSoft}` : 'none', fontSize: 13, color: T.inkSoft }}>
+                      <div style={{ width: 4, height: 4, background: T.teal, flexShrink: 0, marginTop: 4 }} />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* 2 — Wanneer relevant */}
-        <MarketingSection tone="tint">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Wanneer relevant</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">RetentieScan is logisch in deze situaties</h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            {[
-              'Vroeg signaleren voordat sprake is van verloop',
-              'Na een verandertraject of reorganisatie',
-              'Bij behoefte aan MT-rapportage over behoudsdruk en retentiesignalen',
-            ].map((item) => (
-              <div key={item} className="rounded-lg border border-[#E5E0D6] bg-[#F7F5F1] p-5">
-                <p className="text-sm leading-relaxed text-[#132033]">{item}</p>
-              </div>
-            ))}
-          </div>
-        </MarketingSection>
-
-        {/* 3 — Wat de scan meet */}
-        <MarketingSection tone="surface">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Wat de scan meet</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Inzichten in uw eigen taal</h2>
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
-            {[
-              { title: 'Waar frictie zichtbaar wordt', body: 'Signalen over werkbelasting, leiderschap, groei en rolhelderheid op groepsniveau.' },
-              { title: 'Welke factoren behoud beïnvloeden', body: 'Werkfactoren die betrokkenheid, stay-intent en vertrekintentie mede bepalen.' },
-              { title: 'Waar risico\'s het grootst zijn', body: 'Prioriteiten voor HR en management op basis van signaalsterkte.' },
-            ].map(({ title, body }) => (
-              <div key={title} className="flex flex-col gap-2">
-                <h3 className="text-base font-medium text-[#132033]">{title}</h3>
-                <p className="text-sm leading-relaxed text-[#4A5563]">{body}</p>
-              </div>
-            ))}
-          </div>
-        </MarketingSection>
-
-        {/* 4 — Uitkomsten */}
-        <MarketingSection tone="tint">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Uitkomsten</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Wat u ermee kunt doen</h2>
-          <p className="mt-4 max-w-[64ch] text-sm leading-relaxed text-[#4A5563]">
-            Ook hier blijft de managementopbouw compact: eerst cover, daarna een gecombineerde bestuurlijke read met
-            respons, handoff, eerste managementsessie en eerste verificatiespoor, en pas daarna de eerste logische stap
-            rond retentiesignaal en opvolging.
-          </p>
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
-            {[
-              { title: 'Risico\'s vroegtijdig zichtbaar', body: 'Geef management een beeld van waar behoud nu aandacht vraagt.' },
-              { title: 'Focus aanbrengen in vervolg', body: 'Prioriteer op basis van signaalsterkte, niet op aannames.' },
-              { title: 'Gesprekken onderbouwen', body: 'Gebruik de uitkomsten in bespreking met HR, sponsor, MT en directie.' },
-            ].map(({ title, body }) => (
-              <div key={title} className="flex flex-col gap-2">
-                <h3 className="text-base font-medium text-[#132033]">{title}</h3>
-                <p className="text-sm leading-relaxed text-[#4A5563]">{body}</p>
-              </div>
-            ))}
-          </div>
-        </MarketingSection>
-
-        {/* 5 — Ritmeroute vs. compacte hercheck */}
-        <MarketingSection tone="surface">
-          <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Varianten</p>
-          <h2 className="mt-3 text-xl font-medium text-[#132033]">Baseline of ritmeroute?</h2>
-          <div className="mt-8 grid gap-5 lg:grid-cols-2">
-            {[
-              {
-                label: 'Baseline',
-                points: [
-                  'Gerichte eerste read voor actieve medewerkers',
-                  'Geschikt om behoudsdruk en retentiesignalen eerst scherp te krijgen',
-                  'Sterk als startpunt voor verificatie en prioritering',
-                ],
-              },
-              {
-                label: 'Ritmeroute',
-                points: [
-                  'Herhaalvorm nadat baseline en eerste opvolging al staan',
-                  'Geschikt om verschuiving in retentiesignaal en topfactoren te volgen',
-                  'Bewust kleiner dan opnieuw een brede eerste scan',
-                ],
-              },
-            ].map(({ label, points }) => (
-              <div key={label} className="rounded-lg border border-[#E5E0D6] bg-[#F7F5F1] p-6">
-                <p className="text-sm font-medium text-[#132033]">{label}</p>
-                <ul className="mt-3 space-y-2">
-                  {points.map((p) => (
-                    <li key={p} className="flex items-start gap-2.5 text-sm text-[#4A5563]">
-                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#3C8D8A]" />
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </MarketingSection>
-
-        {/* 6 — Wat u ontvangt */}
-        <section className="bg-[#132033]">
-          <div className="marketing-shell marketing-section">
-            <p className="text-[0.6rem] font-medium uppercase tracking-[0.14em] text-[#3C8D8A]">Wat u ontvangt</p>
-            <h2 className="mt-3 max-w-[24ch] text-xl font-medium text-[#F7F5F1]">Dashboard, rapport en toelichting in dezelfde leeslijn</h2>
-            <ul className="mt-6 space-y-2">
+        {/* Wanneer logisch */}
+        <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+          <div style={{ ...SH }}>
+            <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wanneer logisch</div>
+            <h2 style={{ fontFamily: FF, fontSize: 'clamp(24px,3vw,34px)', fontWeight: 400, letterSpacing: '-.02em', color: T.ink, marginBottom: 32, lineHeight: 1.1 }}>RetentieScan is logisch in deze situaties</h2>
+            <div className="grid grid-cols-1 gap-0 sm:grid-cols-3">
               {[
-                'Dashboard met retentiesignaal en factoranalyse',
-                'Managementrapport voor HR, MT en directie met een eerste managementsessie als vaste vervolgstap',
-                'Toelichting op de uitkomsten en vervolgstappen',
-                'Geen individuele signalen — groepsduiding',
-                'AVG-conforme dataverwerking',
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2.5 text-sm text-[rgba(247,245,241,0.75)]">
-                  <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#3C8D8A]" />
-                  {item}
-                </li>
+                { text: 'Vroeg signaleren voordat sprake is van verloop', num: '01' },
+                { text: 'Na een verandertraject of reorganisatie', num: '02' },
+                { text: 'Bij behoefte aan MT-rapportage over behoudsdruk en retentiesignalen', num: '03' },
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', gap: 16, padding: '22px 20px', borderTop: `1px solid ${T.rule}`, borderLeft: i > 0 ? `1px solid ${T.rule}` : 'none' }}>
+                  <span style={{ fontFamily: FF, fontSize: 12, color: T.inkFaint, minWidth: 24 }}>{item.num}</span>
+                  <p style={{ fontSize: 14, color: T.inkSoft, lineHeight: 1.6 }}>{item.text}</p>
+                </div>
               ))}
-            </ul>
-            <a
-              href="#kennismaking"
-              className="mt-8 inline-flex rounded-md bg-white px-5 py-3 text-sm font-medium text-[#132033] transition-colors hover:bg-[#F7F5F1]"
-            >
-              Plan een kennismaking
-            </a>
+            </div>
+            <div style={{ borderTop: `1px solid ${T.rule}` }} />
+          </div>
+        </section>
+
+        {/* Varianten */}
+        <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+          <div style={{ ...SH }}>
+            <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Varianten</div>
+            <h2 style={{ fontFamily: FF, fontSize: 'clamp(24px,3vw,34px)', fontWeight: 400, letterSpacing: '-.02em', color: T.ink, marginBottom: 32, lineHeight: 1.1 }}>Baseline of ritmeroute?</h2>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              {[
+                { label: 'Baseline', accent: T.teal, points: ['Gerichte eerste read voor actieve medewerkers', 'Geschikt om behoudsdruk en retentiesignalen eerst scherp te krijgen', 'Sterk als startpunt voor verificatie en prioritering'] },
+                { label: 'Ritmeroute', accent: T.inkMuted, points: ['Herhaalvorm nadat baseline en eerste opvolging al staan', 'Geschikt om verschuiving in retentiesignaal en topfactoren te volgen', 'Bewust kleiner dan opnieuw een brede eerste scan'] },
+              ].map(({ label, accent, points }) => (
+                <div key={label} style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}`, borderTop: `3px solid ${accent}` }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{label}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {points.map((p, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
+                        <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
+                        {p}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Wat u ontvangt — dark band */}
+        <section style={{ background: T.navy, padding: 'clamp(48px,5.5vw,72px) 0' }}>
+          <div style={{ ...SH }}>
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 18 }}>Wat u ontvangt</div>
+                <h2 style={{ fontFamily: FF, fontSize: 'clamp(24px,3vw,36px)', fontWeight: 400, letterSpacing: '-.022em', color: '#fff', marginBottom: 24, lineHeight: 1.1 }}>
+                  Dashboard, rapport en toelichting<br />
+                  <em style={{ fontStyle: 'italic', fontWeight: 300, color: 'oklch(.62 .10 185)' }}>in dezelfde leeslijn.</em>
+                </h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {['Dashboard met retentiesignaal en factoranalyse', 'Managementrapport voor HR, MT en directie met een eerste managementsessie als vaste vervolgstap', 'Toelichting op de uitkomsten en vervolgstappen', 'Geen individuele signalen — groepsduiding', 'AVG-conforme dataverwerking'].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 16px', background: 'rgba(255,255,255,.05)', fontSize: 13, color: 'rgba(247,245,241,.8)', lineHeight: 1.5 }}>
+                      <div style={{ width: 4, height: 4, background: T.teal, flexShrink: 0, marginTop: 5 }} />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignSelf: 'center', minWidth: 200 }}>
+                <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: T.ink, background: '#fff', whiteSpace: 'nowrap' }}>
+                  Plan een kennismaking
+                </a>
+                <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: 'rgba(255,255,255,.6)', border: '1px solid rgba(255,255,255,.2)', whiteSpace: 'nowrap' }}>
+                  Bekijk tarieven
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* Contact form */}
-        <MarketingSection tone="tint">
-          <MarketingInlineContactPanel
-            eyebrow="Kennismaking"
-            title="Plan een gesprek over RetentieScan"
-            body="Beschrijf kort waar behoud nu onder druk staat. Dan toetsen we of RetentieScan de juiste eerste stap is en hoe de aanpak eruitziet."
-            defaultRouteInterest="retentiescan"
-            defaultCtaSource="product_retention_form"
-          />
-        </MarketingSection>
-
+        <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
+          <div style={{ ...SH, maxWidth: 820 }}>
+            <MarketingInlineContactPanel
+              eyebrow="Kennismaking"
+              title="Plan een gesprek over RetentieScan"
+              body="Beschrijf kort waar behoud nu onder druk staat. Dan toetsen we of RetentieScan de juiste eerste stap is en hoe de aanpak eruitziet."
+              defaultRouteInterest="retentiescan"
+              defaultCtaSource="product_retention_form"
+            />
+          </div>
+        </section>
       </main>
       <PublicFooter />
     </div>

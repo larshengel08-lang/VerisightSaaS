@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { buildContactHref } from '@/lib/contact-funnel'
+import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 
 // ── Design tokens ────────────────────────────────────────────────
 const T = {
@@ -770,6 +771,23 @@ function CTASection() {
   )
 }
 
+// ── ⑦ Contact ─────────────────────────────────────────────────────
+function ContactSection() {
+  return (
+    <section style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0', borderTop: `1px solid ${T.rule}` }}>
+      <div style={{ ...SHELL, maxWidth: 820 }}>
+        <MarketingInlineContactPanel
+          eyebrow="Plan kennismaking"
+          title="Vertel kort welke managementvraag nu speelt."
+          body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy en prijs."
+          defaultRouteInterest="exitscan"
+          defaultCtaSource="homepage_form"
+        />
+      </div>
+    </section>
+  )
+}
+
 // ── Export ───────────────────────────────────────────────────────
 export function HomePageContent() {
   return (
@@ -780,6 +798,7 @@ export function HomePageContent() {
       <RoutesSection />
       <TrustSection />
       <CTASection />
+      <ContactSection />
     </div>
   )
 }

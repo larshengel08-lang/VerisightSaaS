@@ -182,5 +182,31 @@ describe('action center shared core', () => {
     expect(workspace.dossiers[0]?.permissionEnvelope.canUpdateAssignments).toBe(false)
     expect(workspace.dossiers[0]?.permissionEnvelope.canManagePermissions).toBe(false)
     expect(workspace.reviewMoments[0]?.scheduledFor).toBe('Exit reviewmoment nog vastleggen')
+    expect(workspace.reviewMoments[0]?.state).toBe('due')
+    expect(workspace.followUpSignals.filter((signal) => signal.kind === 'review_due')).toHaveLength(1)
+  })
+
+  it('marks an explicit exit review moment as scheduled instead of overdue', () => {
+    const workspace = buildExitActionCenterWorkspace({
+      role: 'owner',
+      dossiers: [
+        {
+          id: 'dos-1',
+          title: 'ExitScan - Support closeout',
+          triageStatus: 'bevestigd',
+          deliveryMode: 'live',
+          managementOwnerLabel: 'Sanne',
+          reviewOwnerLabel: 'Verisight',
+          firstActionTaken: 'Plan exit-closeout met HR en teamlead',
+          reviewMoment: 'Herlees over 30 dagen',
+          managementActionOutcome: null,
+          nextRoute: null,
+          stopReason: null,
+        },
+      ],
+    })
+
+    expect(workspace.reviewMoments[0]?.state).toBe('scheduled')
+    expect(workspace.followUpSignals.filter((signal) => signal.kind === 'review_due')).toHaveLength(0)
   })
 })
