@@ -15,6 +15,14 @@ export interface LiveActionCenterCampaignContext {
   stats: CampaignStats | null
   organizationName: string
   memberRole: MemberRole | null
+  scopeType: 'department' | 'item'
+  scopeValue: string
+  scopeLabel: string
+  peopleCount: number
+  assignedManager: {
+    userId: string
+    displayName: string | null
+  } | null
   deliveryRecord: CampaignDeliveryRecord | null
   deliveryCheckpoints: CampaignDeliveryCheckpoint[]
   learningDossier: PilotLearningDossier | null
@@ -327,12 +335,19 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
           context.learningDossier?.first_management_value ||
           defaults.managementQuestion,
         sourceLabel: definition.productName,
-        teamId: context.campaign.id,
-        teamLabel: context.campaign.name,
-        ownerName,
-        ownerRole: ownerName ? `Owner - ${context.organizationName}` : getRoleFallback(context.memberRole),
-        ownerSubtitle: context.organizationName,
-        reviewOwnerName,
+        orgId: context.campaign.organization_id,
+        scopeType: context.scopeType,
+        teamId: context.scopeValue,
+        teamLabel: context.scopeLabel,
+        ownerId: context.assignedManager?.userId ?? null,
+        ownerName: context.assignedManager?.displayName ?? ownerName,
+        ownerRole: context.assignedManager?.displayName
+          ? `Manager - ${context.scopeLabel}`
+          : ownerName
+            ? `Owner - ${context.organizationName}`
+            : getRoleFallback(context.memberRole),
+        ownerSubtitle: context.scopeLabel,
+        reviewOwnerName: reviewOwnerName ?? context.assignedManager?.displayName ?? null,
         priority,
         status,
         reviewDate,
@@ -341,7 +356,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         signalLabel: `${definition.productName} - ${context.campaign.name}`,
         signalBody: getSignalBody(context.campaign.scan_type, context.deliveryRecord, latestUpdate),
         nextStep,
-        peopleCount: context.stats?.total_invited ?? context.stats?.total_completed ?? 0,
+        peopleCount: context.peopleCount,
         openSignals,
         updates,
       } satisfies ActionCenterPreviewItem

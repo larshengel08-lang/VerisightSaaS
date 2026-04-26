@@ -128,3 +128,86 @@ drop policy if exists "authenticated_can_insert_org" on public.organizations;
 create policy "verisight_admins_can_insert_org"
   on public.organizations for insert
   with check (public.is_verisight_admin_user());
+
+create or replace function public.is_org_owner(org_id uuid)
+returns boolean
+language sql
+security definer
+stable
+as $$
+  select exists (
+    select 1 from public.org_members
+    where org_members.org_id = $1
+      and org_members.user_id = auth.uid()
+      and org_members.role = 'owner'
+  );
+$$;
+
+create table if not exists public.action_center_workspace_members (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.organizations(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  display_name text,
+  login_email text,
+  access_role text not null check (access_role in ('hr_owner', 'hr_member', 'manager_assignee')),
+  scope_type text not null check (scope_type in ('org', 'department', 'item')),
+  scope_value text not null,
+  can_view boolean not null default true,
+  can_update boolean not null default false,
+  can_assign boolean not null default false,
+  can_schedule_review boolean not null default false,
+  created_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (org_id, user_id, access_role, scope_type, scope_value)
+);
+
+create index if not exists action_center_workspace_members_org_idx
+  on public.action_center_workspace_members(org_id, scope_type, scope_value);
+
+create index if not exists action_center_workspace_members_user_idx
+  on public.action_center_workspace_members(user_id);
+
+create or replace function public.set_action_center_workspace_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists action_center_workspace_members_set_updated_at on public.action_center_workspace_members;
+create trigger action_center_workspace_members_set_updated_at
+before update on public.action_center_workspace_members
+for each row execute function public.set_action_center_workspace_updated_at();
+
+alter table public.action_center_workspace_members enable row level security;
+
+drop policy if exists "workspace_members_can_select_own_rows" on public.action_center_workspace_members;
+drop policy if exists "workspace_owners_and_admins_can_select_rows" on public.action_center_workspace_members;
+drop policy if exists "workspace_owners_and_admins_can_insert_rows" on public.action_center_workspace_members;
+drop policy if exists "workspace_owners_and_admins_can_update_rows" on public.action_center_workspace_members;
+drop policy if exists "workspace_owners_and_admins_can_delete_rows" on public.action_center_workspace_members;
+
+create policy "workspace_members_can_select_own_rows"
+  on public.action_center_workspace_members for select
+  using (user_id = auth.uid());
+
+create policy "workspace_owners_and_admins_can_select_rows"
+  on public.action_center_workspace_members for select
+  using (public.is_org_owner(org_id) or public.is_verisight_admin_user());
+
+create policy "workspace_owners_and_admins_can_insert_rows"
+  on public.action_center_workspace_members for insert
+  with check (public.is_org_owner(org_id) or public.is_verisight_admin_user());
+
+create policy "workspace_owners_and_admins_can_update_rows"
+  on public.action_center_workspace_members for update
+  using (public.is_org_owner(org_id) or public.is_verisight_admin_user())
+  with check (public.is_org_owner(org_id) or public.is_verisight_admin_user());
+
+create policy "workspace_owners_and_admins_can_delete_rows"
+  on public.action_center_workspace_members for delete
+  using (public.is_org_owner(org_id) or public.is_verisight_admin_user());

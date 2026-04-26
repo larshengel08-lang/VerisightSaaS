@@ -119,6 +119,7 @@ describe('dashboard shell navigation', () => {
   it('keeps admin links separate from buyer overview navigation', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: true,
+      shellMode: 'full',
       currentCampaignPath: null,
       campaigns: [...campaigns],
       portfolioCounts: {
@@ -154,6 +155,7 @@ describe('dashboard shell navigation', () => {
   it('disables module slots that do not have a real campaign route yet', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: false,
+      shellMode: 'full',
       currentCampaignPath: null,
       campaigns: [],
       portfolioCounts: {
@@ -184,6 +186,31 @@ describe('dashboard shell navigation', () => {
       href: '/action-center',
       disabled: false,
     })
+  })
+
+  it('reduces the shared shell to action center only for manager assignees', () => {
+    const navigation = buildDashboardShellNavigation({
+      isAdmin: false,
+      shellMode: 'action_center_only',
+      currentCampaignPath: null,
+      campaigns: [...campaigns],
+      portfolioCounts: {
+        ready: 2,
+        building: 1,
+        setup: 0,
+        closed: 0,
+      },
+    })
+
+    expect(navigation.modules).toEqual([
+      {
+        key: 'action_center',
+        label: 'Action Center',
+        href: '/action-center',
+        disabled: false,
+      },
+    ])
+    expect(navigation.admin).toEqual([])
   })
 
   it('normalizes unknown portfolio views back to overview-ready tabs', () => {

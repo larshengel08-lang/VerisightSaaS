@@ -39,7 +39,7 @@ export default function LoginPage() {
           <Link href="/" className="text-2xl font-bold text-blue-600 tracking-tight">
             Verisight
           </Link>
-          <p className="mt-2 text-sm text-gray-500">Dashboardtoegang voor klanten en beheerders</p>
+          <p className="mt-2 text-sm text-gray-500">Suite-toegang voor klanten, beheerders en Action Center-managers</p>
         </div>
 
         {/* Card */}
@@ -106,6 +106,9 @@ export default function LoginPage() {
         </p>
         <p className="text-center text-xs text-gray-400 mt-2">
           Uitgenodigd voor dashboardtoegang? Open eerst de activatiemail, kies daar je wachtwoord en log daarna in met hetzelfde e-mailadres zodra je account is vrijgegeven voor je eerste read.
+        </p>
+        <p className="text-center text-xs text-gray-400 mt-2">
+          Uitgenodigd als manager voor Action Center? Dan opent dezelfde login alleen jouw follow-through werkruimte, zonder survey-inzichten of rapporten.
         </p>
         <p className="text-center text-xs text-gray-400 mt-2">
           Activatie betekent hier niet alleen mail openen of een wachtwoord kiezen, maar dat het juiste dashboard en de juiste campaign voor jouw eerste read zijn vrijgegeven.

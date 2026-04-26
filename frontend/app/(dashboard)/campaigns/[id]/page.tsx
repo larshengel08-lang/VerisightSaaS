@@ -28,6 +28,7 @@ import { OnboardingAdvancer, OnboardingBalloon } from '@/components/dashboard/on
 import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
+import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import { deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import {
@@ -75,6 +76,7 @@ import { buildTeamLocalReadState, buildTeamPriorityReadState } from '@/lib/produ
 import { getProductModule } from '@/lib/products/shared/registry'
 import { buildResponseActivationState } from '@/lib/response-activation'
 import { getScanDefinition } from '@/lib/scan-definitions'
+import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { FACTOR_LABELS, hasCampaignAddOn } from '@/lib/types'
 import type { CampaignStats, Respondent, SurveyResponse } from '@/lib/types'
 
@@ -190,6 +192,21 @@ export default async function CampaignPage({ params }: Props) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
+  if (!user) {
+    notFound()
+  }
+
+  const { context } = await loadSuiteAccessContext(supabase, user.id)
+
+  if (!context.canViewInsights) {
+    return (
+      <SuiteAccessDenied
+        title="Campaigninzichten blijven buiten je manager-scope"
+        description="Jouw login geeft alleen toegang tot het Action Center voor toegewezen afdelingen. Surveyresultaten, campaigndetail en rapportage blijven bewust gesloten."
+      />
+    )
+  }
 
   const { data: statsRow } = await supabase
     .from('campaign_stats')

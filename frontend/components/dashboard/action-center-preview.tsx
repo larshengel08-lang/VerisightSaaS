@@ -21,8 +21,11 @@ export interface ActionCenterPreviewItem {
   summary: string
   reason: string
   sourceLabel: string
+  orgId?: string | null
+  scopeType?: 'department' | 'item' | 'org'
   teamId: string
   teamLabel: string
+  ownerId?: string | null
   ownerName: string | null
   ownerRole: string
   ownerSubtitle: string
@@ -40,11 +43,19 @@ export interface ActionCenterPreviewItem {
   updates: ActionCenterPreviewUpdate[]
 }
 
+export interface ActionCenterPreviewManagerOption {
+  value: string
+  label: string
+}
+
 interface Props {
   initialItems: ActionCenterPreviewItem[]
   initialView?: ActionCenterPreviewView
   fallbackOwnerName: string
   ownerOptions: string[]
+  managerOptions?: ActionCenterPreviewManagerOption[]
+  canAssignManagers?: boolean
+  managerAssignmentEndpoint?: string
   workbenchHref: string
   workbenchLabel?: string
   workspaceName?: string
@@ -247,8 +258,11 @@ function buildTeamRows(items: ActionCenterPreviewItem[], fallbackOwnerName: stri
     string,
     {
       id: string
+      orgId: string | null
+      scopeType: 'department' | 'item' | 'org'
       label: string
       peopleCount: number
+      currentManagerId: string | null | undefined
       currentManagerName: string | null
       openActions: number
       reviewSoonCount: number
@@ -259,8 +273,11 @@ function buildTeamRows(items: ActionCenterPreviewItem[], fallbackOwnerName: stri
   for (const item of items) {
     const current = rows.get(item.teamId) ?? {
       id: item.teamId,
+      orgId: item.orgId ?? null,
+      scopeType: item.scopeType ?? 'department',
       label: item.teamLabel,
       peopleCount: item.peopleCount,
+      currentManagerId: item.ownerId,
       currentManagerName: item.ownerName,
       openActions: 0,
       reviewSoonCount: 0,
@@ -268,6 +285,9 @@ function buildTeamRows(items: ActionCenterPreviewItem[], fallbackOwnerName: stri
     }
 
     current.peopleCount = Math.max(current.peopleCount, item.peopleCount)
+    if (!current.currentManagerId && item.ownerId) {
+      current.currentManagerId = item.ownerId
+    }
     if (!current.currentManagerName && item.ownerName) {
       current.currentManagerName = item.ownerName
     }
@@ -297,6 +317,9 @@ export function ActionCenterPreview({
   initialView = 'overview',
   fallbackOwnerName,
   ownerOptions,
+  managerOptions = [],
+  canAssignManagers = false,
+  managerAssignmentEndpoint,
   workbenchHref,
   workbenchLabel = 'Open dossierbron',
   workspaceName,
@@ -312,6 +335,8 @@ export function ActionCenterPreview({
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createForm, setCreateForm] = useState<CreateActionFormState>(() => getCreateDefaults(initialItems))
   const [updateDraft, setUpdateDraft] = useState('')
+  const [assignmentError, setAssignmentError] = useState<string | null>(null)
+  const [assignmentPendingTeamId, setAssignmentPendingTeamId] = useState<string | null>(null)
   const deferredSearchQuery = useDeferredValue(searchQuery)
 
   useEffect(() => {
@@ -355,6 +380,20 @@ export function ActionCenterPreview({
 
   const selectedItem = filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? filteredItems[0] ?? items[0] ?? null
   const selectedItemHref = selectedItem ? (itemHrefs[selectedItem.id] ?? workbenchHref) : workbenchHref
+  const assignmentOptions = useMemo<ActionCenterPreviewManagerOption[]>(
+    () =>
+      managerOptions.length > 0
+        ? managerOptions
+        : ownerOptions.map((option) => ({
+            value: option,
+            label: option,
+          })),
+    [managerOptions, ownerOptions],
+  )
+  const managerLabelByValue = useMemo(
+    () => new Map(assignmentOptions.map((option) => [option.value, option.label])),
+    [assignmentOptions],
+  )
   const teamRows = buildTeamRows(items, fallbackOwnerName)
   const selectedTeam = teamRows.find((team) => team.id === selectedTeamId) ?? teamRows[0] ?? null
   const allSources = [...new Set(items.map((item) => item.sourceLabel))]
@@ -433,22 +472,55 @@ export function ActionCenterPreview({
     setCreateForm(getCreateDefaults([newItem, ...items]))
   }
 
-  function handleManagerChange(teamId: string, ownerName: string) {
-    const trimmedOwnerName = ownerName.trim()
+  async function handleManagerChange(teamId: string, managerValue: string) {
+    const trimmedManagerValue = managerValue.trim()
+    const managerLabel = trimmedManagerValue ? (managerLabelByValue.get(trimmedManagerValue) ?? trimmedManagerValue) : null
+    const team = teamRows.find((entry) => entry.id === teamId) ?? null
 
+    setAssignmentError(null)
     setItems((currentItems) =>
       currentItems.map((item) =>
         item.teamId === teamId
           ? {
               ...item,
-              ownerName: trimmedOwnerName || null,
-              ownerRole: trimmedOwnerName ? `Manager - ${item.teamLabel}` : 'Nog niet toegewezen',
+              ownerId: trimmedManagerValue || null,
+              ownerName: managerLabel,
+              ownerRole: managerLabel ? `Manager - ${item.teamLabel}` : 'Nog niet toegewezen',
               ownerSubtitle: item.teamLabel,
-              reviewOwnerName: trimmedOwnerName || item.reviewOwnerName,
+              reviewOwnerName: managerLabel || item.reviewOwnerName,
             }
           : item,
       ),
     )
+
+    if (!canAssignManagers || !managerAssignmentEndpoint || !team?.orgId) {
+      return
+    }
+
+    setAssignmentPendingTeamId(teamId)
+    try {
+      const response = await fetch(managerAssignmentEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orgId: team.orgId,
+          scopeType: team.scopeType ?? 'department',
+          scopeValue: teamId,
+          managerUserId: trimmedManagerValue || null,
+        }),
+      })
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null
+        throw new Error(payload?.error ?? 'Managerassignment kon niet worden opgeslagen.')
+      }
+    } catch (error) {
+      setAssignmentError(error instanceof Error ? error.message : 'Managerassignment kon niet worden opgeslagen.')
+    } finally {
+      setAssignmentPendingTeamId(null)
+    }
   }
 
   function handleStatusChange(nextStatus: ActionCenterPreviewStatus) {
@@ -1076,19 +1148,22 @@ export function ActionCenterPreview({
                             </div>
                             <div className="min-w-0">
                               <p className="truncate font-semibold">{team.currentManagerName ?? 'Nog niet toegewezen'}</p>
-                              <p className="truncate text-[#7c7368]">Wijzigen in preview</p>
+                              <p className="truncate text-[#7c7368]">
+                                {canAssignManagers ? 'Live toewijzing binnen dezelfde suite-shell' : 'Leest live mee vanuit de bronlaag'}
+                              </p>
                             </div>
                           </div>
-                          {!readOnly ? (
+                          {canAssignManagers ? (
                             <select
-                              value={team.currentManagerName ?? ''}
-                              onChange={(event) => handleManagerChange(team.id, event.target.value)}
+                              value={team.currentManagerId ?? ''}
+                              onChange={(event) => void handleManagerChange(team.id, event.target.value)}
+                              disabled={assignmentPendingTeamId === team.id}
                               className="w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-2.5 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
                             >
                               <option value="">Manager toewijzen</option>
-                              {ownerOptions.map((option) => (
-                                <option key={`${team.id}-${option}`} value={option}>
-                                  {option}
+                              {assignmentOptions.map((option) => (
+                                <option key={`${team.id}-${option.value}`} value={option.value}>
+                                  {option.label}
                                 </option>
                               ))}
                             </select>
@@ -1106,6 +1181,11 @@ export function ActionCenterPreview({
                 </section>
 
                 <section className="space-y-6">
+                  {assignmentError ? (
+                    <div className="rounded-[24px] border border-[#f3c0bc] bg-[#fff1ef] px-6 py-5 text-sm leading-7 text-[#9c3f36] shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
+                      {assignmentError}
+                    </div>
+                  ) : null}
                   <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Fallback-eigenaar</p>
                     <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.03em] text-[#132033]">{fallbackOwnerName}</h2>

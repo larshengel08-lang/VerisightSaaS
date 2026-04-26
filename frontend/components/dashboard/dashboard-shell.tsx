@@ -12,12 +12,14 @@ import {
   type DashboardModuleNavItem,
   type DashboardPortfolioView,
   type DashboardShellCampaignRef,
+  type DashboardShellMode,
 } from '@/lib/dashboard/shell-navigation'
 
 type PortfolioCounts = Record<DashboardPortfolioView, number>
 
 export function DashboardShellFrame({
   isAdmin,
+  shellMode,
   userEmail,
   acceptedCount,
   portfolioCounts,
@@ -25,6 +27,7 @@ export function DashboardShellFrame({
   children,
 }: {
   isAdmin: boolean
+  shellMode: DashboardShellMode
   userEmail: string
   acceptedCount: number
   portfolioCounts: PortfolioCounts
@@ -39,16 +42,18 @@ export function DashboardShellFrame({
     () =>
       buildDashboardShellNavigation({
         isAdmin,
+        shellMode,
         currentCampaignPath,
         campaigns,
         portfolioCounts,
       }),
-    [campaigns, currentCampaignPath, isAdmin, portfolioCounts],
+    [campaigns, currentCampaignPath, isAdmin, portfolioCounts, shellMode],
   )
   const currentLabel = getDashboardShellCurrentLabel(pathname)
   const accountLabel = userEmail.split('@')[1]?.split('.')[0] ?? 'Verisight'
   const accountName = accountLabel.charAt(0).toUpperCase() + accountLabel.slice(1)
   const mobileItems = [...navigation.modules, ...navigation.admin]
+  const showReportsQuickLink = shellMode === 'full'
 
   return (
     <div className="min-h-screen bg-[color:var(--bg)] text-[color:var(--ink)]">
@@ -137,12 +142,14 @@ export function DashboardShellFrame({
               </div>
 
               <div className="hidden items-center gap-2 lg:flex">
-                <Link
-                  href="/reports"
-                  className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
-                >
-                  Reports
-                </Link>
+                {showReportsQuickLink ? (
+                  <Link
+                    href="/reports"
+                    className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
+                  >
+                    Reports
+                  </Link>
+                ) : null}
                 <Link
                   href="/action-center"
                   className="rounded-full border border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
@@ -192,7 +199,7 @@ export function DashboardShellFrame({
           </header>
 
           <main className="mx-auto flex-1 w-full max-w-7xl px-4 py-6 sm:px-6">
-            {acceptedCount > 0 ? (
+            {acceptedCount > 0 && shellMode === 'full' ? (
               <div className="mb-6 rounded-[20px] border border-[#d2e6e0] bg-[#eef7f4] px-4 py-3 text-sm text-[#234B57]">
                 Jouw account is gekoppeld aan {acceptedCount} organisatie{acceptedCount === 1 ? '' : 's'}.
                 Je ziet nu automatisch het juiste klantdashboard en de bijbehorende rapportages.
@@ -202,7 +209,9 @@ export function DashboardShellFrame({
           </main>
 
           <footer className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 text-xs text-[color:var(--dashboard-muted)] sm:px-6">
-            Verisight dashboard · preview-adoptie op bestaande routes
+            {shellMode === 'action_center_only'
+              ? 'Verisight Action Center · manager-only workspace binnen dezelfde suite-shell'
+              : 'Verisight dashboard · preview-adoptie op bestaande routes'}
           </footer>
         </div>
       </div>
