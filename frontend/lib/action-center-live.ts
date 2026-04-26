@@ -15,6 +15,7 @@ export interface LiveActionCenterCampaignContext {
   stats: CampaignStats | null
   organizationName: string
   memberRole: MemberRole | null
+  scopeType: 'department' | 'item'
   scopeValue: string
   scopeLabel: string
   peopleCount: number
@@ -334,6 +335,8 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
           context.learningDossier?.first_management_value ||
           defaults.managementQuestion,
         sourceLabel: definition.productName,
+        orgId: context.campaign.organization_id,
+        scopeType: context.scopeType,
         teamId: context.scopeValue,
         teamLabel: context.scopeLabel,
         ownerId: context.assignedManager?.userId ?? null,

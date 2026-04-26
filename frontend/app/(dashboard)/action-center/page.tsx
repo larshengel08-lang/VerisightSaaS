@@ -199,12 +199,14 @@ export default async function ActionCenterPage() {
     const scopes =
       departmentEntries.length > 0
         ? departmentEntries.map(([departmentLabel, peopleCount]) => ({
+            scopeType: 'department' as const,
             scopeValue: buildDepartmentScopeValue(campaign.organization_id, departmentLabel),
             scopeLabel: departmentLabel,
             peopleCount,
           }))
         : [
             {
+              scopeType: 'item' as const,
               scopeValue: buildCampaignFallbackScopeValue(campaign.organization_id, campaign.id),
               scopeLabel: campaign.name,
               peopleCount: statsByCampaignId.get(campaign.id)?.total_completed ?? statsByCampaignId.get(campaign.id)?.total_invited ?? 0,
@@ -223,6 +225,7 @@ export default async function ActionCenterPage() {
           stats: statsByCampaignId.get(campaign.id) ?? null,
           organizationName: organizationById.get(campaign.organization_id)?.name ?? 'Verisight organisatie',
           memberRole: roleByOrgId[campaign.organization_id] ?? null,
+          scopeType: scope.scopeType,
           scopeValue: scope.scopeValue,
           scopeLabel: scope.scopeLabel,
           peopleCount: scope.peopleCount,
@@ -293,7 +296,6 @@ export default async function ActionCenterPage() {
         managerOptions={managerOptions}
         canAssignManagers={context.canManageActionCenterAssignments}
         managerAssignmentEndpoint="/api/action-center/workspace-members"
-        managerAssignmentOrgId={context.primaryOrgId}
         workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
         workbenchLabel={context.canViewInsights ? 'Open broncampaign' : 'Action Center blijft je werkruimte'}
         workspaceName={getDisplayName(user.email)}

@@ -21,6 +21,8 @@ export interface ActionCenterPreviewItem {
   summary: string
   reason: string
   sourceLabel: string
+  orgId?: string | null
+  scopeType?: 'department' | 'item' | 'org'
   teamId: string
   teamLabel: string
   ownerId?: string | null
@@ -54,7 +56,6 @@ interface Props {
   managerOptions?: ActionCenterPreviewManagerOption[]
   canAssignManagers?: boolean
   managerAssignmentEndpoint?: string
-  managerAssignmentOrgId?: string | null
   workbenchHref: string
   workbenchLabel?: string
   workspaceName?: string
@@ -257,6 +258,8 @@ function buildTeamRows(items: ActionCenterPreviewItem[], fallbackOwnerName: stri
     string,
     {
       id: string
+      orgId: string | null
+      scopeType: 'department' | 'item' | 'org'
       label: string
       peopleCount: number
       currentManagerId: string | null | undefined
@@ -270,6 +273,8 @@ function buildTeamRows(items: ActionCenterPreviewItem[], fallbackOwnerName: stri
   for (const item of items) {
     const current = rows.get(item.teamId) ?? {
       id: item.teamId,
+      orgId: item.orgId ?? null,
+      scopeType: item.scopeType ?? 'department',
       label: item.teamLabel,
       peopleCount: item.peopleCount,
       currentManagerId: item.ownerId,
@@ -315,7 +320,6 @@ export function ActionCenterPreview({
   managerOptions = [],
   canAssignManagers = false,
   managerAssignmentEndpoint,
-  managerAssignmentOrgId = null,
   workbenchHref,
   workbenchLabel = 'Open dossierbron',
   workspaceName,
@@ -471,6 +475,7 @@ export function ActionCenterPreview({
   async function handleManagerChange(teamId: string, managerValue: string) {
     const trimmedManagerValue = managerValue.trim()
     const managerLabel = trimmedManagerValue ? (managerLabelByValue.get(trimmedManagerValue) ?? trimmedManagerValue) : null
+    const team = teamRows.find((entry) => entry.id === teamId) ?? null
 
     setAssignmentError(null)
     setItems((currentItems) =>
@@ -488,7 +493,7 @@ export function ActionCenterPreview({
       ),
     )
 
-    if (!canAssignManagers || !managerAssignmentEndpoint || !managerAssignmentOrgId) {
+    if (!canAssignManagers || !managerAssignmentEndpoint || !team?.orgId) {
       return
     }
 
@@ -500,8 +505,8 @@ export function ActionCenterPreview({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          orgId: managerAssignmentOrgId,
-          scopeType: 'department',
+          orgId: team.orgId,
+          scopeType: team.scopeType ?? 'department',
           scopeValue: teamId,
           managerUserId: trimmedManagerValue || null,
         }),

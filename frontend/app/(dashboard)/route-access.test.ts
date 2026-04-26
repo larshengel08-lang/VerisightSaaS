@@ -7,6 +7,7 @@ describe('suite access route guardrails', () => {
     const reportsSource = readFileSync(new URL('./reports/page.tsx', import.meta.url), 'utf8')
     const campaignSource = readFileSync(new URL('./campaigns/[id]/page.tsx', import.meta.url), 'utf8')
     const actionCenterSource = readFileSync(new URL('./action-center/page.tsx', import.meta.url), 'utf8')
+    const previewSource = readFileSync(new URL('../../components/dashboard/action-center-preview.tsx', import.meta.url), 'utf8')
 
     expect(dashboardSource).toContain("if (context.managerOnly) redirect('/action-center')")
     expect(reportsSource).toContain('SuiteAccessDenied')
@@ -15,5 +16,7 @@ describe('suite access route guardrails', () => {
     expect(actionCenterSource).toContain('manager-assignees landen alleen op deze module')
     expect(actionCenterSource).toContain('managerAssignmentEndpoint="/api/action-center/workspace-members"')
     expect(actionCenterSource).toContain('isScopeVisibleToActionCenterContext')
+    expect(previewSource).toContain('orgId: team.orgId')
+    expect(previewSource).toContain("scopeType: team.scopeType ?? 'department'")
   })
 })
