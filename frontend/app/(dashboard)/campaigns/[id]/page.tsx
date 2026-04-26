@@ -260,7 +260,7 @@ export default async function CampaignPage({ params }: Props) {
           href="/dashboard"
           className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
         >
-          ← Terug naar campaignoverzicht
+          ← Terug naar dashboardoverzicht
         </Link>
 
         <div id="samenvatting" className="scroll-mt-36 space-y-4">
