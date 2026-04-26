@@ -7,6 +7,8 @@ Laatste update: 2026-04-15
 
 Dit document legt vast welke sample-assets buyer-facing actief zijn, welke alleen ondersteunend zijn en welke alleen nog als legacy-archief bestaan.
 
+De showcase-hiërarchie volgt de actieve first-buy canon en bepaalt die niet zelfstandig opnieuw.
+
 Gebruik het als eerste referentie voor:
 
 - buyer-facing voorbeeldrapporten
@@ -28,14 +30,13 @@ Voor internal sales demo, QA/live-fixtures en validation-sandboxes geldt:
 Gebruik bij spanning deze volgorde:
 
 1. `docs/strategy/STRATEGY.md`
-2. `docs/reference/METHODOLOGY.md`
-3. `docs/reference/TRUST_AND_CLAIMS_MATRIX.md`
-4. `docs/active/BOARDROOM_READINESS_PLAN.md`
-5. `docs/active/REPORT_VISUAL_AND_COMMERCIAL_UPLIFT_PLAN.md`
-6. `docs/active/SAMPLE_OUTPUT_AND_SHOWCASE_PLAN.md`
-7. `docs/reference/CASE_PROOF_AND_EVIDENCE_SYSTEM.md`
-8. dit document
-9. `frontend/lib/sample-showcase-assets.ts`
+2. `docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md`
+3. `docs/active/COMMERCIAL_AND_ONBOARDING_SIGNOFF.md`
+4. `docs/reference/TRUST_AND_CLAIMS_MATRIX.md`
+5. `docs/active/SAMPLE_OUTPUT_AND_SHOWCASE_PLAN.md`
+6. `docs/reference/CASE_PROOF_AND_EVIDENCE_SYSTEM.md`
+7. dit document
+8. `frontend/lib/sample-showcase-assets.ts`
 
 ## Canonieke asset stack
 
@@ -91,8 +92,8 @@ Elke actieve sample-asset volgt deze regels:
 - Home en producten-overzicht gebruiken alleen teaser-preview en routekeuze.
 - Productdetailpagina's zijn de primaire showcase-ingang voor volledige voorbeeldrapporten.
 - Tarieven en vertrouwen gebruiken sample-output alleen ondersteunend als deliverable-proof en trustproof.
-- ExitScan blijft de standaard eerste showcase-route.
-- RetentieScan blijft complementair en verification-first.
+- ExitScan blijft de standaard eerste showcase-route in generieke buyer-flows.
+- RetentieScan blijft een geldige showcase-route wanneer de actieve behoudsvraag primair is, maar blijft verification-first.
 
 ## Generator and refresh governance
 
@@ -111,8 +112,8 @@ Werk sample-output en showcase bij wanneer:
 
 ## Guardrails
 
-- ExitScan blijft de primaire buyer-facing showcase-route.
-- RetentieScan blijft complementair en verification-first.
+- ExitScan blijft de default buyer-facing showcase-route in generieke buyer-flows.
+- RetentieScan blijft een geldige verification-first showcase-route wanneer de actieve behoudsvraag primair is.
 - Demo-output mag niet rijker ogen dan het echte product.
 - Sample-output is deliverable-proof, geen case-proof.
 - Voor echte case-proof en references geldt `docs/reference/CASE_PROOF_AND_EVIDENCE_SYSTEM.md`.

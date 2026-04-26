@@ -9,8 +9,8 @@ Laatste update: 2026-04-15
 - [ ] RetentieScan-voorbeeldrapport opent zonder vertrouwelijkheidsframing.
 - [ ] Beide actieve pdf's gebruiken expliciet fictieve data.
 - [ ] Beide actieve pdf's volgen dezelfde managementstructuur als live output.
-- [ ] ExitScan leest als primaire showcase voor vertrekduiding.
-- [ ] RetentieScan leest als complementaire verification-first showcase voor behoud op groepsniveau.
+- [ ] ExitScan leest als default showcase voor vertrekduiding in generieke buyer-flows.
+- [ ] RetentieScan leest als geldige verification-first showcase wanneer de actieve behoudsvraag primair is.
 - [ ] Geen actief sample-asset verkoopt diagnose, predictor, performance-instrument of bewezen causaliteit.
 
 ## Website showcase

@@ -1,5 +1,15 @@
 # PRODUCT_TERMINOLOGY_AND_TAXONOMY_SYSTEM_PLAN.md
 
+Status: uitgevoerd in repo
+Last updated: 2026-04-15
+Source of truth: dit bestand documenteert de terminologie-tranche; actuele taal- en routewaarheid wint in de huidige canon- en paritydocs.
+
+Historical boundary note:
+
+- dit plan beschrijft de tranche-uitrol van terminologieharmonisatie, maar is niet de hoogste actieve bron voor commerciële first-buy of routehiërarchie
+- actuele producttaal wint nu in [PRODUCT_LANGUAGE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRODUCT_LANGUAGE_CANON.md), [COMMERCIAL_LANGUAGE_PARITY_RECHECK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_LANGUAGE_PARITY_RECHECK.md) en [REPORT_STRUCTURE_CANON.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/REPORT_STRUCTURE_CANON.md)
+- oudere glossary- en checklistdocs blijven bruikbaar, maar alleen ondergeschikt aan die actieve canon
+
 ## 1. Summary
 
 Dit traject heeft de productterminologie en taxonomie van Verisight aangescherpt over reference docs, marketingcopy, preview, dashboard, report-content, surveycopy en paritytests.

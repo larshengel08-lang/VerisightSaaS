@@ -4,7 +4,7 @@
 
 - [ ] Er is een expliciete scheiding tussen deliverable-proof, trustproof, validation evidence, case candidate, approved case proof en reference-ready.
 - [ ] Sample-output, demo en validatie kunnen niet ongemerkt opschuiven naar marktbewijs.
-- [ ] ExitScan staat expliciet als primaire case-proofroute en RetentieScan blijft complementair.
+- [ ] ExitScan staat expliciet als default publieke case-anchor en RetentieScan leest als geldige first-buy evidence-route bij een expliciete actieve behoudsvraag, zonder de verification-first grens te verliezen.
 - [ ] De repo maakt duidelijk dat echte case-proof nog pas buyer-facing wordt na approval.
 
 ## Capture Read

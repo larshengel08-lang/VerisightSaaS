@@ -7,7 +7,7 @@ Laatste update: 2026-04-15
 
 - [ ] Er is een expliciet contentmodel met route, proof, trust, conversion, sales enablement en reserved growth.
 - [ ] `docs/reference/CONTENT_OPERATING_SYSTEM.md` en `frontend/lib/content-operating-system.ts` noemen dezelfde contentlagen en defaults.
-- [ ] ExitScan staat expliciet als primaire contentwedge en RetentieScan blijft complementair.
+- [ ] ExitScan staat expliciet als default contentwedge en RetentieScan leest als volwaardige eerste route bij een expliciete actieve behoudsvraag, zonder de verification-first grens te verliezen.
 - [ ] Portfolio-architectuur blijft expliciet als upstream dependency zichtbaar en wordt in deze tranche niet opnieuw geopend.
 
 ## Surface Ownership

@@ -6,6 +6,8 @@ Laatste update: 2026-04-15
 ## Doel
 
 Dit document legt vast hoe Verisight content als systeem ordent in plaats van als losse marketing- of salesassets.
+
+De commerciële first-buy waarheid en routehiërarchie worden niet zelfstandig in dit document vastgelegd; dit systeemdoc volgt de actieve canon.
 Gebruik het als eerste referentie voor:
 
 - buyer-facing websitecopy
@@ -37,16 +39,17 @@ Gebruik het als eerste referentie voor:
 Gebruik bij spanning deze volgorde:
 
 1. `docs/strategy/STRATEGY.md`
-2. `docs/strategy/ROADMAP.md`
-3. `docs/prompts/PROMPT_CHECKLIST.xlsx`
-4. `docs/active/CONTENT_OPERATING_SYSTEM_PLAN.md`
-5. `docs/reference/PRODUCT_TERMINOLOGY_AND_TAXONOMY.md`
-6. `docs/reference/TRUST_AND_CLAIMS_MATRIX.md`
-7. `docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md`
-8. `docs/reference/CASE_PROOF_AND_EVIDENCE_SYSTEM.md`
-9. `docs/reference/SALES_ENABLEMENT_SYSTEM_PLAYBOOK.md`
-10. `frontend/lib/content-operating-system.ts`
-11. buyer-facing registries zoals `site-content.ts`, `marketing-products.ts`, `seo-solution-pages.ts` en `sample-showcase-assets.ts`
+2. `docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md`
+3. `docs/active/COMMERCIAL_AND_ONBOARDING_SIGNOFF.md`
+4. `docs/active/PACKAGING_AND_ROUTE_LOGIC.md`
+5. `docs/active/PRODUCT_LANGUAGE_CANON.md`
+6. `docs/active/COMMERCIAL_LANGUAGE_PARITY_RECHECK.md`
+7. `docs/reference/TRUST_AND_CLAIMS_MATRIX.md`
+8. `docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md`
+9. `docs/reference/CASE_PROOF_AND_EVIDENCE_SYSTEM.md`
+10. `docs/reference/SALES_ENABLEMENT_SYSTEM_PLAYBOOK.md`
+11. `frontend/lib/content-operating-system.ts`
+12. buyer-facing registries zoals `site-content.ts`, `marketing-products.ts`, `seo-solution-pages.ts` en `sample-showcase-assets.ts`
 
 Belangrijke interpretatie:
 
@@ -157,7 +160,7 @@ Nieuwe of gewijzigde buyer-facing content gaat in deze volgorde langs review:
 
 Praktische betekenis:
 
-- klopt de content nog met ExitScan-first, RetentieScan-complementair en de huidige assisted productvorm?
+- klopt de content nog met de huidige first-buy truth: ExitScan als default, RetentieScan als volwaardige eerste route bij een expliciete actieve behoudsvraag, en de assisted productvorm daaronder?
 - gebruikt de content canonieke product- en outputtaal?
 - claimt de content niets dat trust-, methodiek- of privacydocs niet dragen?
 - gebruikt de content sample, validation of case-proof op de juiste evidence-tier?
@@ -221,8 +224,8 @@ Werk dan minimaal mee:
 
 ## Guardrails
 
-- ExitScan blijft de primaire content-, SEO- en saleswedge.
-- RetentieScan blijft complementair en verification-first.
+- ExitScan blijft de default content-, SEO- en saleswedge in generieke buyer-flows.
+- RetentieScan blijft een volwaardige first-buy route wanneer de actieve behoudsvraag primair is, en blijft verification-first in claims en proof.
 - Combinatie blijft een portfolioroute en geen derde contentzwaartepunt.
 - Sample-output blijft publieke proofdefault tot approved case-proof echt bestaat.
 - Trust blijft reassurance en due diligence, niet de eerste pitch.

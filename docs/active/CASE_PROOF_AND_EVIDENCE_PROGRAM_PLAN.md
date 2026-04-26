@@ -4,6 +4,12 @@ Status: uitgevoerd in repo
 Last updated: 2026-04-15
 Source of truth: dit bestand is leidend voor deze tranche.
 
+Historical boundary note:
+
+- dit plan blijft leidend voor de bewijsarchitectuur binnen deze tranche, maar niet voor de huidige first-buy hiërarchie of publieke routepromotie
+- lees oudere formuleringen zoals `ExitScan` primair / `RetentieScan` complementair ondergeschikt aan [STRATEGY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/STRATEGY.md), [PRICING_AND_PACKAGING_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md) en [COMMERCIAL_AND_ONBOARDING_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_AND_ONBOARDING_SIGNOFF.md)
+- actuele bewijs- en claimtoepassing wint in [CASE_PROOF_AND_EVIDENCE_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reference/CASE_PROOF_AND_EVIDENCE_SYSTEM.md), [SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md) en [TRUST_AND_CLAIMS_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reference/TRUST_AND_CLAIMS_MATRIX.md)
+
 ## 1. Summary
 
 Deze tranche maakt van case-proof en evidence bij Verisight een expliciet systeem bovenop de bestaande sample-output-, pilot-learning-, trust- en saleslagen.
