@@ -79,6 +79,12 @@ export function buildDashboardShellNavigation({
           href: '/beheer/contact-aanvragen',
           disabled: false,
         },
+        {
+          label: 'Action Center',
+          detail: 'Admin-first follow-through, reviewdruk en bounded dossieropvolging.',
+          href: '/beheer/klantlearnings',
+          disabled: false,
+        },
       ]
     : []
 
@@ -92,7 +98,7 @@ export function buildDashboardShellNavigation({
 export function getDashboardShellCurrentLabel(pathname: string) {
   if (pathname.startsWith('/campaigns/')) return 'Campagneread'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
-  if (pathname.startsWith('/beheer/klantlearnings')) return 'Learningdossiers'
+  if (pathname.startsWith('/beheer/klantlearnings')) return 'Action Center'
   if (pathname.startsWith('/beheer')) return 'Setup en beheer'
 
   return 'Dashboardoverzicht'

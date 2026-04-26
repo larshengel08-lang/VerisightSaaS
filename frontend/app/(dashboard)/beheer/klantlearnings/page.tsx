@@ -1,16 +1,17 @@
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import {
+  ActionCenterPreview,
+  type ActionCenterPreviewItem,
+  type ActionCenterPreviewView,
+} from '@/components/dashboard/action-center-preview'
 import { PilotLearningWorkbench } from '@/components/dashboard/pilot-learning-workbench'
 import {
   buildExitActionCenterWorkspace,
   isExitActionCenterCandidate,
 } from '@/lib/action-center-exit'
 import {
-  DashboardChip,
-  DashboardHero,
   DashboardPanel,
   DashboardSection,
-  DashboardSummaryBar,
 } from '@/components/dashboard/dashboard-primitives'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import { createClient } from '@/lib/supabase/server'
@@ -19,7 +20,7 @@ import type {
   PilotLearningCheckpoint,
   PilotLearningDossier,
 } from '@/lib/pilot-learning'
-import type { Campaign, CampaignStats, Organization } from '@/lib/types'
+import { SCAN_TYPE_LABELS, type Campaign, type CampaignStats, type Organization } from '@/lib/types'
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -27,7 +28,18 @@ interface Props {
   searchParams?: Promise<SearchParams>
 }
 
-const REVIEW_MOMENT_PENDING_LABEL = 'Exit reviewmoment nog vastleggen'
+const ACTION_CENTER_VIEWS = new Set<ActionCenterPreviewView>([
+  'overview',
+  'actions',
+  'reviews',
+  'managers',
+  'teams',
+])
+
+const DUTCH_SHORT_DATE = new Intl.DateTimeFormat('nl-NL', {
+  day: 'numeric',
+  month: 'short',
+})
 
 function getSingleValue(value: string | string[] | undefined) {
   return typeof value === 'string' ? value : null
@@ -46,14 +58,45 @@ function filterCountsByOrgIds(source: Record<string, number>, orgIds: Set<string
   }, {})
 }
 
-function isReviewMomentPlanned(value: string) {
-  return value !== REVIEW_MOMENT_PENDING_LABEL
+function getInitialActionCenterView(value: string | null): ActionCenterPreviewView {
+  if (value && ACTION_CENTER_VIEWS.has(value as ActionCenterPreviewView)) {
+    return value as ActionCenterPreviewView
+  }
+
+  return 'overview'
+}
+
+function formatPreviewDate(value: string | null) {
+  if (!value) return 'Nog niet gepland'
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return value
+  return DUTCH_SHORT_DATE.format(parsed).replace('.', '')
+}
+
+function inferPreviewRhythm(reviewMoment: string | null) {
+  if (!reviewMoment) return 'Tweewekelijks'
+
+  const parsed = new Date(reviewMoment)
+  if (Number.isNaN(parsed.getTime())) return 'Maandelijks'
+
+  const diffDays = Math.ceil((parsed.getTime() - Date.now()) / 86400000)
+  if (diffDays <= 7) return 'Wekelijks'
+  if (diffDays <= 14) return 'Tweewekelijks'
+  if (diffDays <= 45) return 'Maandelijks'
+  return 'Per kwartaal'
+}
+
+function estimateHeadcount(value: string | null) {
+  const match = value?.match(/\d+/)
+  return match ? Number.parseInt(match[0], 10) : 0
 }
 
 export default async function KlantLearningsPage({ searchParams }: Props) {
   const resolvedSearchParams = searchParams ? await searchParams : {}
   const initialLeadId = getSingleValue(resolvedSearchParams.lead)
   const initialCampaignId = getSingleValue(resolvedSearchParams.campaign)
+  const initialView = getInitialActionCenterView(getSingleValue(resolvedSearchParams.view))
 
   const supabase = await createClient()
   const {
@@ -186,13 +229,17 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
   const exitActiveClientAccessByOrg = filterCountsByOrgIds(activeClientAccessByOrg, exitOrgIds)
   const exitPendingClientInvitesByOrg = filterCountsByOrgIds(pendingClientInvitesByOrg, exitOrgIds)
 
-  const openLessons = exitCheckpoints.filter((checkpoint) => checkpoint.status === 'nieuw').length
-  const confirmedLessons = exitCheckpoints.filter((checkpoint) => checkpoint.status === 'bevestigd').length
-  const campaignLinkedDossiers = exitDossiers.filter((dossier) => dossier.campaign_id).length
-  const leadLinkedDossiers = exitDossiers.filter((dossier) => dossier.contact_request_id).length
   const checkpointsByDossier = exitCheckpoints.reduce<Record<string, PilotLearningCheckpoint[]>>((acc, checkpoint) => {
     acc[checkpoint.dossier_id] ??= []
     acc[checkpoint.dossier_id].push(checkpoint)
+    return acc
+  }, {})
+  const exitCampaignById = new Map(exitCampaigns.map((campaign) => [campaign.id, campaign]))
+  const exitCampaignStatsById = new Map(exitCampaignStats.map((stats) => [stats.campaign_id, stats]))
+  const exitLeadById = new Map(exitLeads.map((lead) => [lead.id, lead]))
+  const exitOrgById = new Map(exitOrgs.map((org) => [org.id, org]))
+  const invitedCountByOrgId = exitCampaignStats.reduce<Record<string, number>>((acc, stats) => {
+    acc[stats.organization_id] = (acc[stats.organization_id] ?? 0) + stats.total_invited
     return acc
   }, {})
 
@@ -221,290 +268,150 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
     }),
   })
 
-  const openExitDossiers = exitWorkspace.dossiers.filter((dossier) => dossier.status === 'open')
-  const openReviewMoments = exitWorkspace.reviewMoments.filter(
-    (reviewMoment) => reviewMoment.state === 'due' || reviewMoment.state === 'scheduled',
-  )
   const openSignals = exitWorkspace.followUpSignals.filter((signal) => signal.state === 'open')
-  const explicitOwnerCount = exitWorkspace.dossiers.filter((dossier) => dossier.ownerId).length
-  const explicitOwnerOpenCount = openExitDossiers.filter((dossier) => dossier.ownerId).length
-  const dueReviewCount = openReviewMoments.filter((reviewMoment) => reviewMoment.state === 'due').length
-  const scheduledReviewCount = openReviewMoments.length - dueReviewCount
-  const activeClientAccessCount = Object.values(exitActiveClientAccessByOrg).reduce((sum, count) => sum + count, 0)
   const initialExitLeadId = exitLeads.some((lead) => lead.id === initialLeadId) ? initialLeadId : null
   const initialExitCampaignId = exitCampaigns.some((campaign) => campaign.id === initialCampaignId)
     ? initialCampaignId
     : null
+  const fallbackOwnerName = 'Verisight beheer'
+  const previewItems: ActionCenterPreviewItem[] = exitDossiers.map((dossier, index) => {
+    const dossierCheckpoints = checkpointsByDossier[dossier.id] ?? []
+    const managementCheckpoint =
+      dossierCheckpoints.find((checkpoint) => checkpoint.checkpoint_key === 'first_management_use') ?? null
+    const reviewCheckpoint =
+      dossierCheckpoints.find((checkpoint) => checkpoint.checkpoint_key === 'follow_up_review') ?? null
+    const assignment = exitWorkspace.assignments.find((item) => item.dossierId === dossier.id) ?? null
+    const reviewMoment = exitWorkspace.reviewMoments.find((item) => item.dossierId === dossier.id) ?? null
+    const dossierSignals = openSignals.filter((signal) => signal.dossierId === dossier.id)
+    const organization = dossier.organization_id ? exitOrgById.get(dossier.organization_id) ?? null : null
+    const campaign = dossier.campaign_id ? exitCampaignById.get(dossier.campaign_id) ?? null : null
+    const campaignStats = dossier.campaign_id ? exitCampaignStatsById.get(dossier.campaign_id) ?? null : null
+    const lead = dossier.contact_request_id ? exitLeadById.get(dossier.contact_request_id) ?? null : null
+    const ownerName = managementCheckpoint?.owner_label?.trim() || reviewCheckpoint?.owner_label?.trim() || null
+    const teamLabel =
+      organization?.name ??
+      dossier.lead_organization_name ??
+      lead?.organization ??
+      campaign?.name ??
+      `Dossier ${index + 1}`
+    const sourceLabel =
+      dossier.route_interest === 'exitscan'
+        ? 'ExitScan'
+        : dossier.route_interest === 'retentiescan'
+          ? 'RetentieScan'
+          : dossier.route_interest === 'combinatie'
+            ? 'Combinatie'
+            : dossier.route_interest === 'teamscan'
+              ? 'TeamScan'
+              : dossier.scan_type
+                ? SCAN_TYPE_LABELS[dossier.scan_type]
+                : 'ExitScan'
+    const priority =
+      dossierSignals.some((signal) => signal.severity === 'critical')
+        ? 'hoog'
+        : dossierSignals.length > 1
+          ? 'midden'
+          : 'laag'
+    const status =
+      assignment?.state === 'completed'
+        ? 'afgerond'
+        : assignment?.state === 'cancelled'
+          ? 'gestopt'
+          : assignment?.state === 'waiting' || dossierSignals.some((signal) => signal.severity === 'critical')
+            ? 'geblokkeerd'
+            : assignment?.state === 'active'
+              ? 'in-uitvoering'
+              : 'te-bespreken'
+    const summary =
+      dossier.first_action_taken ??
+      dossier.management_action_outcome ??
+      dossier.first_management_value ??
+      dossier.expected_first_value ??
+      lead?.current_question ??
+      'Eerste vervolgstap nog vast te leggen.'
+    const reason =
+      dossier.first_management_value ??
+      dossier.buyer_question ??
+      dossier.buying_reason ??
+      dossier.trust_friction ??
+      lead?.current_question ??
+      'Nog geen expliciete onderbouwing vastgelegd in de dossierbron.'
+    const signalBody =
+      managementCheckpoint?.confirmed_lesson ??
+      managementCheckpoint?.interpreted_observation ??
+      managementCheckpoint?.qualitative_notes ??
+      reviewCheckpoint?.confirmed_lesson ??
+      reviewCheckpoint?.qualitative_notes ??
+      dossier.management_action_outcome ??
+      dossier.implementation_risk ??
+      'Gebruik dossierbron en checkpoints om de follow-through verder te concretiseren.'
+    const updates = [...dossierCheckpoints]
+      .sort((left, right) => new Date(right.updated_at).getTime() - new Date(left.updated_at).getTime())
+      .slice(0, 3)
+      .map((checkpoint) => ({
+        id: checkpoint.id,
+        author: checkpoint.owner_label || fallbackOwnerName,
+        dateLabel: formatPreviewDate(checkpoint.updated_at),
+        note:
+          checkpoint.confirmed_lesson ??
+          checkpoint.interpreted_observation ??
+          checkpoint.qualitative_notes ??
+          checkpoint.objective_signal_notes ??
+          `${checkpoint.checkpoint_key.replace(/_/g, ' ')} bijgewerkt in dossierbron.`,
+      }))
+
+    return {
+      id: dossier.id,
+      code: `ACT-${1041 + index}`,
+      title: dossier.title,
+      summary,
+      reason,
+      sourceLabel,
+      teamId: organization?.id ?? campaign?.organization_id ?? `team-${dossier.id}`,
+      teamLabel,
+      ownerName,
+      ownerRole: ownerName ? 'Manager' : 'Nog niet toegewezen',
+      ownerSubtitle: teamLabel,
+      reviewOwnerName: reviewCheckpoint?.owner_label?.trim() || ownerName,
+      priority,
+      status,
+      reviewDate: reviewMoment?.state === 'scheduled' ? reviewMoment.scheduledFor : null,
+      reviewDateLabel: formatPreviewDate(reviewMoment?.state === 'scheduled' ? reviewMoment.scheduledFor : null),
+      reviewRhythm: inferPreviewRhythm(reviewMoment?.state === 'scheduled' ? reviewMoment.scheduledFor : null),
+      signalLabel: `${sourceLabel} - ${teamLabel}`,
+      signalBody,
+      nextStep: assignment?.title ?? 'Leg eerste follow-up stap vast',
+      peopleCount:
+        organization?.id && invitedCountByOrgId[organization.id]
+          ? invitedCountByOrgId[organization.id]
+          : campaignStats?.total_invited ?? estimateHeadcount(dossier.lead_employee_count),
+      openSignals: dossierSignals.map((signal) => signal.kind),
+      updates:
+        updates.length > 0
+          ? updates
+          : [
+              {
+                id: `fallback-${dossier.id}`,
+                author: ownerName ?? fallbackOwnerName,
+                dateLabel: formatPreviewDate(dossier.updated_at),
+                note: summary,
+              },
+            ],
+    }
+  })
+  const ownerOptions = Array.from(
+    new Set(previewItems.map((item) => item.ownerName).filter((value): value is string => Boolean(value))),
+  ).sort((left, right) => left.localeCompare(right))
 
   return (
     <div className="space-y-6">
-      <DashboardHero
-        surface="ops"
-        eyebrow="Action Center voor ExitScan-follow-through"
-        title="Operations Action Center"
-        description="ExitScan follow-through als zelfstandige productlaag: deze live slice voedt de bestaande Action Center-core rechtstreeks met echte ExitScan-dossiers, checkpoints en campaigncontext zonder andere productadapters of dashboardsporen te openen."
-        tone="slate"
-        meta={
-          <>
-            <DashboardChip
-              surface="ops"
-              label={`${exitDossiers.length} dossier${exitDossiers.length === 1 ? '' : 's'}`}
-              tone="slate"
-            />
-            <DashboardChip surface="ops" label={`${openLessons} open checkpoints`} tone={openLessons > 0 ? 'amber' : 'slate'} />
-            <DashboardChip surface="ops" label={`${confirmedLessons} bevestigd`} tone={confirmedLessons > 0 ? 'emerald' : 'slate'} />
-          </>
-        }
-        actions={
-          <>
-            <Link
-              href="/beheer"
-              className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-            >
-              Terug naar setup
-            </Link>
-            <Link
-              href="/beheer/contact-aanvragen"
-              className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
-            >
-              Open leadlijst
-            </Link>
-          </>
-        }
-        aside={
-          <div className="space-y-3 text-sm text-slate-700">
-            <p className="font-semibold text-slate-950">Vaste checkpointvolgorde</p>
-            <ol className="list-decimal space-y-1 pl-5">
-              <li>Lead en routehypothese</li>
-              <li>Implementation intake</li>
-              <li>Launch en eerste output</li>
-              <li>Eerste managementgebruik</li>
-              <li>30-90 dagen review</li>
-            </ol>
-            <p className="text-xs text-slate-500">
-              Manual-first blijft prima zolang de les hier expliciet wordt vastgelegd. Geen MTO-framing, geen buyer-facing claims en geen portfolioverbreding via deze route; dit blijft een interne ExitScan-adminlaag.
-            </p>
-          </div>
-        }
+      <ActionCenterPreview
+        initialItems={previewItems}
+        initialView={initialView}
+        fallbackOwnerName={fallbackOwnerName}
+        ownerOptions={ownerOptions}
+        workbenchHref="#dossierbron"
       />
-
-      <DashboardSummaryBar
-        surface="ops"
-        items={[
-          {
-            label: 'ExitScan dossiers',
-            value: `${exitWorkspace.summary.openDossierCount}`,
-            tone: exitWorkspace.summary.openDossierCount > 0 ? 'slate' : 'amber',
-          },
-          {
-            label: 'Reviewdruk',
-            value: `${exitWorkspace.summary.reviewDueCount}`,
-            tone: exitWorkspace.summary.reviewDueCount > 0 ? 'amber' : 'slate',
-          },
-          {
-            label: 'Dossiers',
-            value: `${exitDossiers.length} actief`,
-            tone: exitDossiers.length > 0 ? 'slate' : 'amber',
-          },
-          {
-            label: 'Open checkpoints',
-            value: `${openLessons}`,
-            tone: openLessons > 0 ? 'amber' : 'slate',
-          },
-          {
-            label: 'Leadkoppeling',
-            value: `${leadLinkedDossiers}/${exitDossiers.length || 0}`,
-            tone: leadLinkedDossiers > 0 ? 'slate' : 'slate',
-          },
-          {
-            label: 'Campaignkoppeling',
-            value: `${campaignLinkedDossiers}/${exitDossiers.length || 0}`,
-            tone: campaignLinkedDossiers > 0 ? 'slate' : 'slate',
-          },
-        ]}
-        anchors={[
-          { id: 'action-center', label: 'Action Center' },
-          { id: 'dekking', label: 'Dekking' },
-          { id: 'issues', label: 'Issues' },
-          { id: 'workbench', label: 'Workbench' },
-        ]}
-      />
-
-      <DashboardSection
-        id="action-center"
-        surface="ops"
-        eyebrow="ExitScan live consumer"
-        title="Shared follow-through voor ExitScan-dossiers, reviews en workbench"
-        description="Deze live consumer blijft read-only voor de adminroute, leest alleen bounded ExitScan-dossiers in en toont eigenaar- en reviewstatus zonder extra claims over permissions of andere productsporen."
-        aside={
-          <DashboardChip
-            surface="ops"
-            label={`${exitWorkspace.carrier.label} - ${exitWorkspace.carrier.status}`}
-            tone="slate"
-          />
-        }
-      >
-        <div className="grid gap-4 xl:grid-cols-4">
-          <DashboardPanel
-            surface="ops"
-            eyebrow="Ownerduiding"
-            title="Expliciete dossierhouders"
-            value={
-              openExitDossiers.length > 0
-                ? `${explicitOwnerOpenCount}/${openExitDossiers.length} expliciet`
-                : explicitOwnerCount > 0
-                  ? `${explicitOwnerCount}/${exitWorkspace.dossiers.length} expliciet`
-                  : 'Nog niet expliciet'
-            }
-            body="Deze admin-surface neemt eigenaarschap niet over. Hij leest alleen expliciete manager- of reviewhouders uit ExitScan-checkpoints."
-            tone="slate"
-          />
-          <DashboardPanel
-            surface="ops"
-            eyebrow="Permissions"
-            title="Surface-rechten"
-            value={exitWorkspace.dossiers.some((dossier) => dossier.permissionEnvelope.canUpdateAssignments) ? 'Bewerkbaar' : 'Read-only'}
-            body="De huidige adminroute kijkt mee als shared-core member. Assignment-, permission- en close-acties blijven dus buiten deze surface totdat een echte product-owner ze opent."
-            tone="slate"
-          />
-          <DashboardPanel
-            surface="ops"
-            eyebrow="Reviewstatus"
-            title="Open reviewdruk"
-            value={
-              openReviewMoments.length > 0
-                ? `${scheduledReviewCount}/${openReviewMoments.length} gepland`
-                : 'Geen open reviews'
-            }
-            body="Open dossiers blijven in reviewflow; zonder expliciet reviewmoment blijft de status ook zichtbaar als nog niet gepland."
-            tone={dueReviewCount > 0 ? 'amber' : 'slate'}
-          />
-          <DashboardPanel
-            surface="ops"
-            eyebrow="Bounded scope"
-            title="Exit-only filter"
-            value={exitWorkspace.carrier.routeScope}
-            body="Dossiers blijven alleen binnen deze surface als scan_type exit is, een exit-campaign is gekoppeld, of de intake nog ongebonden ExitScan-route is."
-            tone="slate"
-          />
-        </div>
-
-        <div className="mt-4 grid gap-4 xl:grid-cols-2">
-          <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Dossiers</p>
-                <h3 className="mt-2 text-lg font-semibold text-slate-950">Open ExitScan follow-through</h3>
-              </div>
-              <DashboardChip
-                surface="ops"
-                label={`${openExitDossiers.length} open`}
-                tone={openExitDossiers.length > 0 ? 'amber' : 'slate'}
-              />
-            </div>
-            <div className="mt-4 space-y-3">
-              {openExitDossiers.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                  Nog geen open ExitScan-dossiers. Zodra ExitScan follow-through leerwaarde geeft, verschijnt de dossierqueue hier automatisch.
-                </p>
-              ) : (
-                openExitDossiers.slice(0, 5).map((dossier) => {
-                  const assignment = exitWorkspace.assignments.find((item) => item.dossierId === dossier.id)
-
-                  return (
-                    <div key={dossier.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-4">
-                      <p className="text-sm font-semibold text-slate-950">{dossier.title}</p>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Eerste stap: {assignment?.title ?? 'Nog niet vastgelegd'}.
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        Dossierhouder: {dossier.ownerId ?? 'Nog niet expliciet'}.
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        Status {assignment?.state ?? 'onbekend'} - Surface: {dossier.permissionEnvelope.canUpdateAssignments ? 'bewerkbaar' : 'read-only'}
-                      </p>
-                    </div>
-                  )
-                })
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Reviews</p>
-                <h3 className="mt-2 text-lg font-semibold text-slate-950">Reviewdruk en open signalen</h3>
-              </div>
-              <DashboardChip
-                surface="ops"
-                label={`${openReviewMoments.length} review${openReviewMoments.length === 1 ? '' : 's'}`}
-                tone={dueReviewCount > 0 ? 'amber' : 'slate'}
-              />
-            </div>
-            <div className="mt-4 space-y-3">
-              {openReviewMoments.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600">
-                  Geen open reviewstatus. Zodra ExitScan-dossiers openstaan, verschijnt de reviewflow hier automatisch.
-                </p>
-              ) : (
-                openReviewMoments.slice(0, 5).map((reviewMoment) => {
-                  const dossier = exitWorkspace.dossiers.find((item) => item.id === reviewMoment.dossierId)
-                  const signals = openSignals.filter((signal) => signal.dossierId === reviewMoment.dossierId)
-
-                  return (
-                    <div key={reviewMoment.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-4">
-                      <p className="text-sm font-semibold text-slate-950">{dossier?.title ?? reviewMoment.dossierId}</p>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">{reviewMoment.scheduledFor}</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        Reviewstatus: {reviewMoment.state === 'scheduled' && isReviewMomentPlanned(reviewMoment.scheduledFor) ? 'Gepland' : 'Nog niet gepland'}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        Open signalen: {signals.map((signal) => signal.kind).join(', ') || 'geen'}
-                      </p>
-                    </div>
-                  )
-                })
-              )}
-            </div>
-          </div>
-        </div>
-      </DashboardSection>
-
-      <div id="dekking" className="grid gap-4 xl:grid-cols-4">
-        <DashboardPanel
-          surface="ops"
-          eyebrow="Leads"
-          title="Lead-koppeling"
-          value={`${leadLinkedDossiers}/${exitDossiers.length || 0}`}
-          body="Exit-intake hoort niet in losse mailtjes te blijven hangen. Gebruik contactaanvragen als vaste eerste routehypothese voor ExitScan-follow-through."
-          tone={leadLinkedDossiers > 0 ? 'slate' : 'slate'}
-        />
-        <DashboardPanel
-          surface="ops"
-          eyebrow="Delivery"
-          title="Campaign-koppeling"
-          value={`${campaignLinkedDossiers}/${exitDossiers.length || 0}`}
-          body="Koppel zodra ExitScan implementation, launch of managementgebruik echt in delivery meelopen."
-          tone={campaignLinkedDossiers > 0 ? 'slate' : 'slate'}
-        />
-        <DashboardPanel
-          surface="ops"
-          eyebrow="Coverage"
-          title="Recente Exit-leads"
-          value={`${exitLeads.length}`}
-          body="Nieuwe ExitScan-aanvragen kunnen direct in een learningdossier landen zodra route, koopreden of trustfrictie leerwaarde geeft."
-          tone={exitLeads.length > 0 ? 'slate' : 'slate'}
-        />
-        <DashboardPanel
-          surface="ops"
-          eyebrow="Ops"
-          title="Actieve klanttoegang"
-          value={`${activeClientAccessCount}`}
-          body="Gebruik managementread en follow-up vooral bij ExitScan-campaigns waar klanttoegang al actief is of net is uitgenodigd."
-          tone="slate"
-        />
-      </div>
 
       {configError ? (
         <DashboardSection
@@ -531,18 +438,11 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
       ) : null}
 
       <DashboardSection
-        id="workbench"
+        id="dossierbron"
         surface="ops"
-        eyebrow="Workbench"
-        title="ExitScan learninglog en dossiers"
-        description="Elke ExitScan-route hoort minimale learning-output op te leveren: objective signals, interpreted observation, confirmed lesson, triagebestemming en bounded follow-through zonder andere productsporen te openen."
-        aside={
-          <DashboardChip
-            surface="ops"
-            label={`${exitOrgs.length} actieve organisatie${exitOrgs.length === 1 ? '' : 's'}`}
-            tone="slate"
-          />
-        }
+        eyebrow="Dossierbron"
+        title="Learninglog en bounded follow-through"
+        description="Bewuste delta ten opzichte van de preview: de echte dossierbron blijft zichtbaar onder de nieuwe surface, zodat admin-first follow-through en workbench op current main bij elkaar blijven."
       >
         <PilotLearningWorkbench
           orgs={exitOrgs}
