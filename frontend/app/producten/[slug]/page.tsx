@@ -181,7 +181,7 @@ function ExitScanPage() {
 
   return (
     <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
-      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan suite-demo" />
       <main>
         {/* Hero */}
         <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
@@ -208,7 +208,7 @@ function ExitScanPage() {
                 </div>
                 <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
-                    Plan een kennismaking
+                    Plan suite-demo
                   </a>
                   <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
                     Bekijk tarieven
@@ -304,7 +304,7 @@ function ExitScanPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignSelf: 'center', minWidth: 200 }}>
                 <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: T.ink, background: '#fff', whiteSpace: 'nowrap' }}>
-                  Plan een kennismaking
+                  Plan suite-demo
                 </a>
                 <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: 'rgba(255,255,255,.6)', border: '1px solid rgba(255,255,255,.2)', whiteSpace: 'nowrap' }}>
                   Bekijk tarieven
@@ -318,7 +318,7 @@ function ExitScanPage() {
         <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
           <div style={{ ...SH, maxWidth: 1180 }}>
             <MarketingInlineContactPanel
-              eyebrow="Kennismaking"
+              eyebrow="Plan suite-demo"
               title="Plan een gesprek over ExitScan"
               body="Beschrijf kort welke vertrekvraag nu bestuurlijk aandacht vraagt. Dan toetsen we of ExitScan de juiste eerste stap is en hoe de aanpak eruitziet."
               defaultRouteInterest="exitscan"
@@ -348,7 +348,7 @@ function RetentionScanPage() {
 
   return (
     <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
-      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan suite-demo" />
       <main>
         {/* Hero */}
         <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
@@ -375,7 +375,7 @@ function RetentionScanPage() {
                 </div>
                 <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
-                    Plan een kennismaking
+                    Plan suite-demo
                   </a>
                   <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
                     Bekijk tarieven
@@ -465,7 +465,7 @@ function RetentionScanPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignSelf: 'center', minWidth: 200 }}>
                 <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: T.ink, background: '#fff', whiteSpace: 'nowrap' }}>
-                  Plan een kennismaking
+                  Plan suite-demo
                 </a>
                 <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: 'rgba(255,255,255,.6)', border: '1px solid rgba(255,255,255,.2)', whiteSpace: 'nowrap' }}>
                   Bekijk tarieven
@@ -479,7 +479,7 @@ function RetentionScanPage() {
         <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
           <div style={{ ...SH, maxWidth: 1180 }}>
             <MarketingInlineContactPanel
-              eyebrow="Kennismaking"
+              eyebrow="Plan suite-demo"
               title="Plan een gesprek over RetentieScan"
               body="Beschrijf kort waar behoud nu onder druk staat. Dan toetsen we of RetentieScan de juiste eerste stap is en hoe de aanpak eruitziet."
               defaultRouteInterest="retentiescan"
@@ -673,7 +673,7 @@ function PulsePage() {
 
       <MarketingSection tone="plain">
         <MarketingInlineContactPanel
-          eyebrow="Kennismaking"
+          eyebrow="Plan suite-demo"
           title="Toets of Pulse als vervolgroute nu echt logisch is."
           body="Beschrijf kort welke eerste baseline, managementread of actie al loopt en wat je nu vooral wilt herchecken. Dan bepalen we of Pulse past of dat een bredere vervolgroute logischer is."
           defaultRouteInterest="pulse"
@@ -687,7 +687,7 @@ function PulsePage() {
           title="Twijfel je tussen Pulse en een bredere vervolgronde?"
           body="We helpen je kiezen tussen een compacte Pulse-hercheck, RetentieScan ritmeroute of een andere vervolgroute. Zo blijft de volgende stap scherp in plaats van breder dan nodig."
           primaryHref={buildContactHref({ routeInterest: 'pulse', ctaSource: 'product_pulse_callout' })}
-          primaryLabel="Plan kennismaking"
+          primaryLabel="Plan suite-demo"
           secondaryHref="/tarieven"
           secondaryLabel="Bekijk tarieven"
         />
@@ -719,7 +719,7 @@ function TeamScanPage() {
                 href={buildContactHref({ routeInterest: 'teamscan', ctaSource: 'product_team_hero' })}
                 className="inline-flex items-center justify-center rounded-full bg-[#3C8D8A] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(60,141,138,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#2d6e6b]"
               >
-                Plan kennismaking
+                Plan suite-demo
               </a>
               <Link
                 href="/producten"
@@ -877,7 +877,7 @@ function TeamScanPage() {
 
       <MarketingSection tone="plain">
         <MarketingInlineContactPanel
-          eyebrow="Kennismaking"
+          eyebrow="Plan suite-demo"
           title="Toets of TeamScan als lokale vervolgronde nu echt logisch is."
           body="Beschrijf kort welk bredere signaal al zichtbaar is en waar de lokale onzekerheid nu zit. Dan bepalen we of TeamScan past of dat een bredere route of add-on logischer blijft."
           defaultRouteInterest="teamscan"
@@ -891,7 +891,7 @@ function TeamScanPage() {
           title="Twijfel je tussen TeamScan en een andere vervolgronde?"
           body="We helpen je kiezen tussen TeamScan, Segment Deep Dive of terug naar een bredere kernroute. Zo blijft de vervolgstap lokaal scherp in plaats van diffuser dan nodig."
           primaryHref={buildContactHref({ routeInterest: 'teamscan', ctaSource: 'product_team_callout' })}
-          primaryLabel="Plan kennismaking"
+          primaryLabel="Plan suite-demo"
           secondaryHref="/tarieven"
           secondaryLabel="Bekijk tarieven"
         />
@@ -927,7 +927,7 @@ function OnboardingPage() {
                 href={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_hero' })}
                 className="inline-flex items-center justify-center rounded-full bg-amber-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(217,119,6,0.18)] transition-all hover:-translate-y-0.5 hover:bg-amber-700"
               >
-                Plan kennismaking
+                Plan suite-demo
               </a>
               <Link
                 href="/producten"
@@ -1086,7 +1086,7 @@ function OnboardingPage() {
 
       <MarketingSection tone="plain">
         <MarketingInlineContactPanel
-          eyebrow="Kennismaking"
+          eyebrow="Plan suite-demo"
           title="Toets of onboarding als lifecycle-vervolgronde nu echt logisch is."
           body="Beschrijf kort welke vraag nu speelt rond nieuwe medewerkers en of het gaat om een vroeg checkpoint, een bredere retentievraag of juist client onboarding. Dan bepalen we welke route past."
           defaultRouteInterest="onboarding"
@@ -1100,7 +1100,7 @@ function OnboardingPage() {
           title="Twijfel je tussen onboarding, RetentieScan of client onboarding?"
           body="We helpen je kiezen tussen een vroege onboardingcheck, een bredere retentie- of teamroute of terug naar implementatiebegeleiding. Zo blijft de vervolgstap kleiner en eerlijker dan nodig."
           primaryHref={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_callout' })}
-          primaryLabel="Plan kennismaking"
+          primaryLabel="Plan suite-demo"
           secondaryHref="/tarieven"
           secondaryLabel="Bekijk tarieven"
         />
@@ -1195,7 +1195,7 @@ function LeadershipScanPage() {
 
       <MarketingSection tone="plain">
         <MarketingInlineContactPanel
-          eyebrow="Kennismaking"
+          eyebrow="Plan suite-demo"
           title="Toets of Leadership Scan nu de logische vervolgronde is."
           body="Beschrijf kort welk bestaand signaal nu speelt en waarom de vraag verschuift naar managementcontext. Dan bepalen we of Leadership Scan echt de juiste bounded follow-on route is."
           defaultRouteInterest="leadership"
@@ -1229,7 +1229,7 @@ function CombinatiePage() {
                 href={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_hero' })}
                 className="inline-flex items-center justify-center rounded-full bg-[#3C8D8A] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(60,141,138,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#2d6e6b]"
               >
-                Plan kennismaking
+                Plan suite-demo
               </a>
               <Link
                 href="/producten"
@@ -1375,7 +1375,7 @@ function CombinatiePage() {
 
       <MarketingSection tone="plain">
         <MarketingInlineContactPanel
-          eyebrow="Kennismaking"
+          eyebrow="Plan suite-demo"
           title="Plan een gesprek over de combinatieroute"
           body="Beschrijf kort of jullie vooral met een product willen starten of dat beide managementvragen nu al tegelijk spelen. Dan bepalen we welke route logisch is en wanneer dashboard, rapport en Action Center daarna in dezelfde suite-omgeving mogen samenkomen."
           defaultRouteInterest="combinatie"
@@ -1389,7 +1389,7 @@ function CombinatiePage() {
           title="Wil je bepalen of de combinatie logisch is?"
           body="In een kort gesprek kijken we of jullie vooral met een product moeten starten of dat beide managementvragen pas na de eerste route genoeg onderbouwd zijn voor een portfolio-aanpak in dezelfde suite-omgeving."
           primaryHref={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_callout' })}
-          primaryLabel="Plan kennismaking"
+          primaryLabel="Plan suite-demo"
           secondaryHref="/producten"
           secondaryLabel="Bekijk producten"
         />

@@ -380,7 +380,7 @@ function HeroSection() {
                     background: T.ink,
                   }}
                 >
-                  Plan een kennismaking <Arrow />
+            Plan suite-demo <Arrow />
                 </Link>
                 <Link
                   href="/#suite"
@@ -681,20 +681,20 @@ function CTASection() {
         </Reveal>
         <Reveal delay={0.06}>
           <h2 style={{ fontFamily: FF, fontSize: 'clamp(36px,5.5vw,64px)', fontWeight: 400, letterSpacing: '-.03em', color: '#fff', lineHeight: 1, marginBottom: 22 }}>
-            Plan een eerste gesprek
+            Plan een suite-demo
             <br />
             <em style={{ fontStyle: 'italic', fontWeight: 300, color: AC.light }}>en maak de juiste route scherp.</em>
           </h2>
         </Reveal>
         <Reveal delay={0.12}>
           <p style={{ fontSize: 16, lineHeight: 1.72, color: 'rgba(255,255,255,.6)', maxWidth: '42ch', margin: '0 auto 38px' }}>
-            In een eerste gesprek toetsen we niet alleen welke scan past, maar ook waar prioritering, actie en follow-through nu het meeste verschil maken.
+            In een suite-demo toetsen we niet alleen welke scan past, maar ook hoe prioritering, actie en follow-through daarna bounded samenkomen.
           </p>
         </Reveal>
         <Reveal delay={0.18}>
           <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href={ctaHref} style={{ fontSize: 15, fontWeight: 700, color: T.ink, textDecoration: 'none', padding: '15px 36px', borderRadius: 999, background: AC.mid, display: 'inline-flex', alignItems: 'center', gap: 9 }}>
-              Plan een kennismaking <Arrow />
+              Plan suite-demo <Arrow />
             </Link>
             <Link href="/#suite" style={{ fontSize: 15, fontWeight: 500, borderRadius: 999, color: 'rgba(255,255,255,.78)', textDecoration: 'none', padding: '15px 30px', border: '1.5px solid rgba(255,255,255,.24)', display: 'inline-flex', alignItems: 'center', gap: 9 }}>
               Bekijk de suite
@@ -711,7 +711,7 @@ function ContactSection() {
     <section style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0', borderTop: `1px solid ${T.rule}` }}>
       <div style={{ ...SHELL, maxWidth: 1180 }}>
         <MarketingInlineContactPanel
-          eyebrow="Plan kennismaking"
+          eyebrow="Plan suite-demo"
           title="Vertel kort welke managementvraag nu speelt."
           body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy, prijs en welke opvolging daarna logisch wordt."
           defaultRouteInterest="exitscan"

@@ -11,12 +11,12 @@ export const marketingNavLinks = [
 
 export const marketingPrimaryCta = {
   href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-  label: 'Plan kennismaking',
+  label: 'Plan suite-demo',
 } as const
 
 export const marketingSecondaryCta = {
-  href: '/producten',
-  label: 'Bekijk de routes',
+  href: '/#suite',
+  label: 'Bekijk de suite',
 } as const
 
 export const marketingFooterLinks = [
