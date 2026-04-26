@@ -88,7 +88,7 @@ function HeroSection() {
           </div>
           <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
             <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, margin: '28px 0 36px' }}>
-              ExitScan helpt vertrek achteraf begrijpen. RetentieScan helpt eerder signaleren waar behoud onder druk staat. Combinatie blijft een kleinere portfolioroute, onboarding een bounded peer en Pulse plus Leadership Scan blijven bewust vervolg.
+              ExitScan helpt vertrek achteraf begrijpen. RetentieScan helpt eerder signaleren waar behoud onder druk staat. Daarna landen dashboard, rapport en Action Center in dezelfde suite-omgeving, terwijl combinatie een kleinere portfolioroute blijft en onboarding plus vervolgroutes bounded blijven.
             </p>
           </div>
           <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -164,7 +164,7 @@ function FollowOnSection() {
             Eerst een bounded peer, daarna pas kleiner vervolg.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 40, maxWidth: '52ch' }}>
-            Onboarding 30-60-90 staat buyer-facing naast de kernroutes als bounded peer. Pulse en Leadership Scan blijven daarna bewust kleiner als vervolgroutes.
+            Onboarding 30-60-90 staat buyer-facing naast de kernroutes als bounded peer. Pulse en Leadership Scan blijven daarna bewust kleiner als vervolgroutes. De gedeelde suite-omgeving blijft wel hetzelfde: eerst inzicht, daarna bounded follow-through.
           </p>
         </Reveal>
         <Reveal delay={.08}>
@@ -202,7 +202,7 @@ function FollowOnSection() {
           <Reveal delay={.1}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
               <p style={{ fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
-                Buyer-facing blijft Verisight draaien om twee kernproducten, een kleine portfolioroute en een scherp begrensde vervolglaag.
+                Buyer-facing blijft Verisight draaien om twee kernproducten, een kleine portfolioroute en een scherp begrensde vervolglaag binnen dezelfde suite-omgeving.
               </p>
               <Link href="/vertrouwen" style={{ fontSize: 13, fontWeight: 600, color: T.teal, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                 Meer over trust en privacy <Arrow />
@@ -222,7 +222,7 @@ function ContactSection() {
         <MarketingInlineContactPanel
           eyebrow="Plan kennismaking"
           title="Twijfelt u tussen ExitScan, RetentieScan, onboarding of een vervolgronde?"
-          body="In een eerste gesprek bepalen we welke route nu echt logisch is, of onboarding een bounded peer blijft en welke vervolgstap bewust kleiner moet blijven."
+          body="In een eerste gesprek bepalen we welke route nu echt logisch is, hoe dashboard, rapport en Action Center daarna in dezelfde suite-omgeving landen en welke vervolgstap bewust kleiner moet blijven."
           defaultRouteInterest="exitscan"
           defaultCtaSource="products_form"
         />

@@ -1221,7 +1221,7 @@ function CombinatiePage() {
           <p className="marketing-hero-copy text-slate-600">
             De combinatie is logisch voor organisaties die zowel willen leren van uitstroom als eerder willen
             signaleren waar behoud nu onder druk staat, zonder daarvan een bundel of standaardpakket te maken. Het is
-            geen derde kernproduct.
+            geen derde kernproduct. Dashboard, rapport en Action Center komen daarna in dezelfde suite-omgeving samen.
           </p>
           <div className="marketing-hero-actions">
             <div className="marketing-hero-cta-row">
@@ -1250,7 +1250,7 @@ function CombinatiePage() {
             </h2>
             <p className="marketing-stage-copy text-slate-300">
               Deze pagina moet duidelijk maken dat het portfolio pas sterker wordt zodra beide vragen bestaan en de
-              eerste route al scherp staat.
+              eerste route al scherp staat. Pas daarna verbindt dezelfde suite-omgeving dashboard, rapport en Action Center in één bounded managementlijn.
             </p>
             <div className="marketing-stage-list">
               {[
@@ -1270,7 +1270,7 @@ function CombinatiePage() {
         <MarketingHeroSupport>
           <div className="marketing-support-note text-sm leading-7 text-slate-600">
             Combinatie betekent niet meer features, maar twee gerichte routes die pas logisch naast elkaar komen te
-            staan wanneer de eerste keuze al landt.
+            staan wanneer de eerste keuze al landt en dezelfde suite-omgeving daarna de follow-through kan dragen.
           </div>
           <div className="marketing-link-grid">
             <Link
@@ -1299,7 +1299,7 @@ function CombinatiePage() {
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">
                 De combinatie gebruikt dezelfde previewstructuur, maar de echte sample-output blijft via ExitScan en
-                RetentieScan publiek verifieerbaar.
+                RetentieScan publiek verifieerbaar. Daarna moeten dashboard, rapport en Action Center wel in dezelfde bounded lijn blijven lezen.
               </p>
               <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
                 <PreviewSlider variant="portfolio" />
@@ -1344,7 +1344,7 @@ function CombinatiePage() {
             },
             {
               title: 'Stap 3: stuur in een lijn',
-              body: 'Gebruik een gedeelde managementtaal voor prioritering, opvolging en herhaalmeting.',
+              body: 'Gebruik een gedeelde managementtaal voor prioritering, opvolging en herhaalmeting via dashboard, rapport en Action Center.',
             },
           ]}
         />
@@ -1355,21 +1355,21 @@ function CombinatiePage() {
             rows={[
               ['Hoofdvraag', 'Hoe verbinden we vertrekduiding en vroegsignalering in dezelfde lijn?'],
               ['Leesrichting', 'Achteraf begrijpen en vooruit kijken'],
-              ['Managementoutput', 'Twee gerichte scans in een gedeeld portfolio'],
+              ['Managementoutput', 'Twee gerichte scans met dashboard, rapport en Action Center in een gedeeld portfolio'],
               ['Niet bedoeld als', 'Een algemene survey waar alles tegelijk in wordt gepropt'],
             ]}
           />
 
-          <div className="marketing-panel-dark p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300">Hoe je het verkoopt</p>
-            <h2 className="font-display mt-4 text-4xl text-white">
-              Start vaak met een product, maar houd de tweede route bewust klaar.
-            </h2>
-            <p className="mt-5 text-base leading-8 text-slate-300">
-              De combinatie is geen verplichte instap. Het is een koopreden voor organisaties die beide vragen tegelijk
-              serieus willen adresseren in dezelfde managementtaal.
-            </p>
-          </div>
+            <div className="marketing-panel-dark p-8">
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-sky-300">Hoe je het verkoopt</p>
+              <h2 className="font-display mt-4 text-4xl text-white">
+                Start vaak met een product, maar houd de tweede route bewust klaar.
+              </h2>
+              <p className="mt-5 text-base leading-8 text-slate-300">
+                De combinatie is geen verplichte instap. Het is een koopreden voor organisaties die beide vragen tegelijk
+                serieus willen adresseren in dezelfde managementtaal en uiteindelijk in dezelfde suite-omgeving willen laten landen.
+              </p>
+            </div>
         </div>
       </MarketingSection>
 
@@ -1377,7 +1377,7 @@ function CombinatiePage() {
         <MarketingInlineContactPanel
           eyebrow="Kennismaking"
           title="Plan een gesprek over de combinatieroute"
-          body="Beschrijf kort of jullie vooral met een product willen starten of dat beide managementvragen nu al tegelijk spelen. Dan bepalen we welke route logisch is."
+          body="Beschrijf kort of jullie vooral met een product willen starten of dat beide managementvragen nu al tegelijk spelen. Dan bepalen we welke route logisch is en wanneer dashboard, rapport en Action Center daarna in dezelfde suite-omgeving mogen samenkomen."
           defaultRouteInterest="combinatie"
           defaultCtaSource="product_combination_form"
         />
@@ -1387,7 +1387,7 @@ function CombinatiePage() {
         <MarketingCalloutBand
           eyebrow="Volgende stap"
           title="Wil je bepalen of de combinatie logisch is?"
-          body="In een kort gesprek kijken we of jullie vooral met een product moeten starten of dat beide managementvragen pas na de eerste route genoeg onderbouwd zijn voor een portfolio-aanpak."
+          body="In een kort gesprek kijken we of jullie vooral met een product moeten starten of dat beide managementvragen pas na de eerste route genoeg onderbouwd zijn voor een portfolio-aanpak in dezelfde suite-omgeving."
           primaryHref={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_callout' })}
           primaryLabel="Plan kennismaking"
           secondaryHref="/producten"
