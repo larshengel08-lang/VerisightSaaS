@@ -6,7 +6,6 @@ import {
   type PieLabelRenderProps,
 } from 'recharts'
 import { getManagementBandLabel, RISK_COLORS } from '@/lib/management-language'
-import { getScanDefinition } from '@/lib/scan-definitions'
 import type { ScanType } from '@/lib/types'
 
 interface Props {
@@ -67,7 +66,6 @@ export function StackedRiskBar({
 }
 
 export function RiskCharts({ distribution, histogramBins, averageScore, scanType }: Props) {
-  const scanDefinition = getScanDefinition(scanType)
   const totalResponses = distribution.HOOG + distribution.MIDDEN + distribution.LAAG
   const pieLabels =
     scanType === 'exit'
@@ -101,19 +99,19 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
         ? 'De signaalverdeling laat zien hoe breed het huidige lokale beeld is verdeeld over directe aandachtspunten, aandacht en voorlopige stabiliteit.'
         : scanType === 'onboarding'
           ? 'De signaalverdeling laat zien hoe breed het huidige onboardingcheckpoint is verdeeld over directe aandachtspunten, aandacht en voorlopige stabiliteit.'
-      : 'De signaalverdeling laat zien hoe responses zijn verdeeld over voorlopige stabiliteit, aandacht en directe aandachtspunten.'
+      : 'De signaalverdeling laat zien hoe reacties zijn verdeeld over voorlopige stabiliteit, aandacht en directe aandachtspunten.'
 
   const insightText = scanType === 'exit'
     ? dominantBand.band === 'HOOG'
-      ? `${dominantPercent}% van de exitresponses valt in ${getManagementBandLabel('HOOG').toLowerCase()}. Dat wijst op een breder werkgerelateerd vertrekbeeld dat eerst managementverificatie verdient.`
+      ? `${dominantPercent}% van de exitreacties valt in ${getManagementBandLabel('HOOG').toLowerCase()}. Dat wijst op een breder werkgerelateerd vertrekbeeld dat eerst managementverificatie verdient.`
       : dominantBand.band === 'LAAG'
-        ? `${dominantPercent}% van de exitresponses valt in ${getManagementBandLabel('LAAG').toLowerCase()}. Dat wijst niet op een breed werkpatroon, maar laat nog steeds ruimte voor afwijkende factoren.`
-        : `${dominantPercent}% van de exitresponses valt in ${getManagementBandLabel('MIDDEN').toLowerCase()}. Dat past bij een beeld met terugkerende signalen, maar nog zonder eenduidige managementduiding.`
+        ? `${dominantPercent}% van de exitreacties valt in ${getManagementBandLabel('LAAG').toLowerCase()}. Dat wijst niet op een breed werkpatroon, maar laat nog steeds ruimte voor afwijkende factoren.`
+        : `${dominantPercent}% van de exitreacties valt in ${getManagementBandLabel('MIDDEN').toLowerCase()}. Dat past bij een beeld met terugkerende signalen, maar nog zonder eenduidige managementduiding.`
     : dominantBand.band === 'HOOG'
-      ? `${dominantPercent}% van de responses valt in de hoogste risicoband. Kijk eerst naar de topfactoren en plan snelle verdieping.`
+      ? `${dominantPercent}% van de reacties valt in de hoogste risicoband. Kijk eerst naar de topfactoren en plan snelle verdieping.`
       : dominantBand.band === 'LAAG'
-        ? `${dominantPercent}% van de responses valt in de laagste risicoband. Het blijft zinvol om de opvallendste factoren te controleren.`
-        : `${dominantPercent}% van de responses valt in de middelste risicoband. Gebruik de topfactoren om gericht door te vragen.`
+        ? `${dominantPercent}% van de reacties valt in de laagste risicoband. Het blijft zinvol om de opvallendste factoren te controleren.`
+        : `${dominantPercent}% van de reacties valt in de middelste risicoband. Gebruik de topfactoren om gericht door te vragen.`
 
   return (
     <div className="space-y-6">
@@ -152,8 +150,8 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
               stroke="#7C8A95"
               strokeDasharray="3 3"
             />
-            <Bar dataKey="count" fill="rgba(19,32,51,0.18)" radius={[2, 2, 0, 0]} />
-            <Tooltip formatter={(v) => [`${v} responses`, 'Aantal']} />
+            <Bar dataKey="count" fill="#94A3B8" radius={[2, 2, 0, 0]} />
+            <Tooltip formatter={(v) => [`${v} reacties`, 'Aantal']} />
           </BarChart>
         </ResponsiveContainer>
       )}
@@ -184,7 +182,7 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
                 <Cell key={entry.name} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip formatter={(v) => [`${v} responses`]} />
+            <Tooltip formatter={(v) => [`${v} reacties`]} />
           </PieChart>
         </ResponsiveContainer>
       </details>

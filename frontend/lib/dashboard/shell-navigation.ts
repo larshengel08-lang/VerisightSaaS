@@ -23,7 +23,7 @@ export type DashboardModuleNavItem = {
 }
 
 export const DASHBOARD_MODULE_NAV: DashboardModuleNavItem[] = [
-  { key: 'overview',     label: 'Overview',            href: '/dashboard',              section: 'modules' },
+  { key: 'overview',     label: 'Overzicht',           href: '/dashboard',              section: 'modules' },
   { key: 'exitscan',    label: 'ExitScan',             href: '/dashboard/exitscan',     section: 'modules' },
   { key: 'retentiescan', label: 'RetentieScan',        href: '/dashboard/retentiescan', section: 'modules' },
   { key: 'onboarding',  label: 'Onboarding 30-60-90',  href: '/dashboard/onboarding',   section: 'modules' },
@@ -72,7 +72,7 @@ export function buildDashboardShellNavigation({
 }): DashboardShellNavigation {
   const primary: DashboardShellNavItem[] = [
     {
-      label: 'Overview',
+      label: 'Overzicht',
       detail: 'Kerncijfers, trend en waar eerst kijken.',
       href: '/dashboard',
       disabled: false,
@@ -127,10 +127,10 @@ export function buildDashboardShellNavigation({
 }
 
 export function getDashboardShellCurrentLabel(pathname: string) {
-  if (pathname.startsWith('/campaigns/')) return 'Campaign detail'
+  if (pathname.startsWith('/campaigns/')) return 'Campagneread'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
-  if (pathname.startsWith('/beheer/klantlearnings')) return 'Learning workbench'
+  if (pathname.startsWith('/beheer/klantlearnings')) return 'Learningdossiers'
   if (pathname.startsWith('/beheer')) return 'Setup en beheer'
 
-  return 'Dashboard overview'
+  return 'Dashboardoverzicht'
 }

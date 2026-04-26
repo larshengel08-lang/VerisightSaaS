@@ -1,7 +1,6 @@
 'use client'
 
 import { buildFactorPresentation, getRiskBandFromScore, RISK_COLORS, RISK_BG_COLORS } from '@/lib/management-language'
-import { getScanDefinition } from '@/lib/scan-definitions'
 import { FACTOR_LABELS } from '@/lib/types'
 import type { ScanType } from '@/lib/types'
 
@@ -13,7 +12,6 @@ interface Props {
 }
 
 export function FactorTable({ factorAverages, scanType }: Props) {
-  const scanDefinition = getScanDefinition(scanType)
   const rows = ORG_FACTORS
     .filter(f => f in factorAverages)
     .map(f => {

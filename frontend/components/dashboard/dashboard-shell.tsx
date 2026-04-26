@@ -1,13 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { LogoutButton } from '@/components/ui/logout-button'
 import {
   buildDashboardShellNavigation,
   getDashboardShellCurrentLabel,
-  normalizeDashboardPortfolioView,
   DASHBOARD_MODULE_NAV,
   getActiveModuleFromPathname,
   type DashboardPortfolioView,
@@ -30,10 +29,8 @@ export function DashboardShellFrame({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const currentCampaignPath = pathname.startsWith('/campaigns/') ? pathname : null
-  const activePortfolioView = normalizeDashboardPortfolioView(searchParams.get('view') ?? undefined)
   const activeModule = getActiveModuleFromPathname(pathname)
   const navigation = useMemo(
     () =>
@@ -48,7 +45,8 @@ export function DashboardShellFrame({
   const moduleItems = DASHBOARD_MODULE_NAV.filter((m) => m.section === 'modules')
   const supportItems = DASHBOARD_MODULE_NAV.filter((m) => m.section === 'support')
 
-  const activeModuleLabel = DASHBOARD_MODULE_NAV.find((m) => m.key === activeModule)?.label ?? 'Overview'
+  const activeModuleLabel = DASHBOARD_MODULE_NAV.find((m) => m.key === activeModule)?.label ?? 'Overzicht'
+  const currentLabel = getDashboardShellCurrentLabel(pathname)
   const orgName = userEmail.split('@')[1]?.split('.')[0] ?? 'Dashboard'
   const orgDisplay = orgName.charAt(0).toUpperCase() + orgName.slice(1)
 
@@ -139,7 +137,7 @@ export function DashboardShellFrame({
                 onClick={() => setMobileNavOpen((open) => !open)}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors lg:hidden"
                 style={{ border: '1px solid var(--dashboard-frame-border)', color: 'var(--dashboard-ink)' }}
-                aria-label="Navigatie openen"
+                aria-label={mobileNavOpen ? 'Navigatie sluiten' : 'Navigatie openen'}
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {mobileNavOpen ? (
@@ -157,16 +155,11 @@ export function DashboardShellFrame({
                   <span className="mx-1.5" style={{ color: 'var(--dashboard-frame-border)' }}>·</span>
                   <span>{activeModuleLabel}</span>
                 </p>
+                <p className="mt-1 text-xs" style={{ color: 'var(--dashboard-muted)' }}>
+                  {currentLabel}
+                </p>
               </div>
 
-              {/* Export button */}
-              <button
-                type="button"
-                className="rounded-full px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-                style={{ background: '#161310' }}
-              >
-                Rapport exporteren
-              </button>
             </div>
 
             {/* Mobile nav */}

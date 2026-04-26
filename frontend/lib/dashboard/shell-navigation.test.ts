@@ -1,7 +1,13 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { buildDashboardShellNavigation, normalizeDashboardPortfolioView } from './shell-navigation'
+import {
+  buildDashboardShellNavigation,
+  DASHBOARD_MODULE_NAV,
+  getDashboardShellCurrentLabel,
+  normalizeDashboardPortfolioView,
+} from './shell-navigation'
 
-describe('dashboard shell navigation', () => {
+describe('dashboard shell buyer-readiness', () => {
   it('builds a route-first buyer rail with disabled portfolio slots when no campaigns are available', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: false,
@@ -14,7 +20,7 @@ describe('dashboard shell navigation', () => {
       },
     })
 
-    expect(navigation.primary.map((item) => item.label)).toEqual(['Overview', 'Huidige campagne'])
+    expect(navigation.primary.map((item) => item.label)).toEqual(['Overzicht', 'Huidige campagne'])
     expect(navigation.primary[1]?.href).toBe('/campaigns/campaign-123')
 
     expect(navigation.portfolio).toEqual([
@@ -62,8 +68,8 @@ describe('dashboard shell navigation', () => {
       },
     })
 
-    expect(navigation.primary.map((item) => item.label)).toEqual(['Overview'])
-    expect(navigation.admin.map((item) => item.label)).toEqual(['Setup', 'Leads', 'Learnings'])
+    expect(navigation.primary.map((item) => item.label)).toEqual(['Overzicht'])
+    expect(navigation.admin.map((item) => item.label)).toEqual(['Rapporten', 'Nieuwe campagne'])
     expect(navigation.portfolio[2]).toMatchObject({
       key: 'setup',
       href: null,
@@ -76,5 +82,18 @@ describe('dashboard shell navigation', () => {
     expect(normalizeDashboardPortfolioView('closed')).toBe('closed')
     expect(normalizeDashboardPortfolioView('unknown')).toBe('ready')
     expect(normalizeDashboardPortfolioView(undefined)).toBe('ready')
+  })
+
+  it('keeps primary shell labels in Dutch and context-aware', () => {
+    expect(DASHBOARD_MODULE_NAV[0]?.label).toBe('Overzicht')
+    expect(getDashboardShellCurrentLabel('/dashboard')).toBe('Dashboardoverzicht')
+    expect(getDashboardShellCurrentLabel('/campaigns/demo')).toBe('Campagneread')
+  })
+
+  it('does not render a dead global export CTA in the shell header', () => {
+    const source = readFileSync(new URL('../../components/dashboard/dashboard-shell.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('getDashboardShellCurrentLabel(pathname)')
+    expect(source).not.toContain('Rapport exporteren')
   })
 })
