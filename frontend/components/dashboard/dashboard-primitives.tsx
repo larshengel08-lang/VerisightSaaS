@@ -501,18 +501,27 @@ export function DashboardKeyValue({
   return (
     <div
       className={joinClasses(
-        'rounded-[var(--dashboard-radius-card)] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-3',
+        'rounded-[var(--dashboard-radius-card)] border px-4 py-3',
+        surface === 'ops'
+          ? 'border-[color:var(--border)] bg-[color:var(--bg)]'
+          : 'border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]',
       )}
     >
       <div className="flex items-center gap-1.5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+        <p
+          className={joinClasses(
+            'text-[11px] font-semibold uppercase tracking-[0.2em]',
+            surface === 'ops' ? 'text-[color:var(--muted)]' : 'text-[color:var(--dashboard-muted)]',
+          )}
+        >
           {label}
         </p>
         {helpText ? <InfoTooltip text={helpText} /> : null}
       </div>
       <p
         className={joinClasses(
-          'mt-2 dash-number text-[1.5rem] text-[color:var(--dashboard-ink)]',
+          'mt-2 dash-number text-[1.5rem]',
+          surface === 'ops' ? 'text-[color:var(--ink)]' : 'text-[color:var(--dashboard-ink)]',
           accent,
         )}
       >
