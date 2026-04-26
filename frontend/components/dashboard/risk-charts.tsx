@@ -27,35 +27,30 @@ export function StackedRiskBar({
     { key: 'HOOG' as const, label: 'Direct prioriteren', value: distribution.HOOG },
     { key: 'MIDDEN' as const, label: 'Eerst toetsen', value: distribution.MIDDEN },
     { key: 'LAAG' as const, label: 'Volgen', value: distribution.LAAG },
-  ].filter((s) => s.value > 0)
+  ].filter((segment) => segment.value > 0)
 
   return (
     <div>
-      {/* Stacked bar */}
       <div className="flex h-3 w-full overflow-hidden rounded-full">
-        {segments.map((seg) => (
+        {segments.map((segment) => (
           <div
-            key={seg.key}
+            key={segment.key}
             style={{
-              width: `${(seg.value / total) * 100}%`,
-              backgroundColor: RISK_COLORS[seg.key],
+              width: `${(segment.value / total) * 100}%`,
+              backgroundColor: RISK_COLORS[segment.key],
             }}
           />
         ))}
       </div>
 
-      {/* Legend */}
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
-        {segments.map((seg) => (
-          <div key={seg.key} className="flex items-center gap-1.5">
-            <div
-              className="h-2 w-2 shrink-0 rounded-full"
-              style={{ backgroundColor: RISK_COLORS[seg.key] }}
-            />
-            <span className="text-[0.75rem]" style={{ color: 'var(--dashboard-text)' }}>
-              {seg.label}{' '}
-              <span style={{ color: 'var(--dashboard-ink)', fontWeight: 500 }}>
-                {Math.round((seg.value / total) * 100)}%
+        {segments.map((segment) => (
+          <div key={segment.key} className="flex items-center gap-1.5">
+            <div className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: RISK_COLORS[segment.key] }} />
+            <span className="text-[0.75rem] text-[color:var(--dashboard-text)]">
+              {segment.label}{' '}
+              <span className="font-medium text-[color:var(--dashboard-ink)]">
+                {Math.round((segment.value / total) * 100)}%
               </span>
             </span>
           </div>
@@ -74,32 +69,30 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
         ? { HOOG: 'Direct lokaal aandachtspunt', MIDDEN: 'Lokaal aandacht nodig', LAAG: 'Lokaal voorlopig stabiel' }
         : scanType === 'onboarding'
           ? { HOOG: 'Direct checkpoint aandachtspunt', MIDDEN: 'Checkpoint aandacht nodig', LAAG: 'Checkpoint voorlopig stabiel' }
-      : { HOOG: getManagementBandLabel('HOOG'), MIDDEN: getManagementBandLabel('MIDDEN'), LAAG: getManagementBandLabel('LAAG') }
+          : { HOOG: getManagementBandLabel('HOOG'), MIDDEN: getManagementBandLabel('MIDDEN'), LAAG: getManagementBandLabel('LAAG') }
 
   const pieData = [
     { name: pieLabels.HOOG, value: distribution.HOOG, color: RISK_COLORS.HOOG },
     { name: pieLabels.MIDDEN, value: distribution.MIDDEN, color: RISK_COLORS.MIDDEN },
     { name: pieLabels.LAAG, value: distribution.LAAG, color: RISK_COLORS.LAAG },
-  ].filter((d) => d.value > 0)
+  ].filter((distributionItem) => distributionItem.value > 0)
 
   const dominantBand = [
     { band: 'HOOG', value: distribution.HOOG },
     { band: 'MIDDEN', value: distribution.MIDDEN },
     { band: 'LAAG', value: distribution.LAAG },
-  ].sort((a, b) => b.value - a.value)[0]
+  ].sort((left, right) => right.value - left.value)[0]
 
-  const dominantPercent = totalResponses > 0
-    ? Math.round((dominantBand.value / totalResponses) * 100)
-    : 0
+  const dominantPercent = totalResponses > 0 ? Math.round((dominantBand.value / totalResponses) * 100) : 0
 
   const introText =
     scanType === 'exit'
-      ? 'De signaalverdeling laat zien hoe breed het vertrekbeeld is verdeeld over voorlopige stabiliteit, aandacht en directe aandachtspunten. Dat helpt bepalen hoe scherp de managementread nu is.'
+      ? 'De signaalverdeling laat zien hoe breed het vertrekbeeld is verdeeld over voorlopige stabiliteit, aandacht en directe aandachtspunten.'
       : scanType === 'team'
         ? 'De signaalverdeling laat zien hoe breed het huidige lokale beeld is verdeeld over directe aandachtspunten, aandacht en voorlopige stabiliteit.'
         : scanType === 'onboarding'
           ? 'De signaalverdeling laat zien hoe breed het huidige onboardingcheckpoint is verdeeld over directe aandachtspunten, aandacht en voorlopige stabiliteit.'
-      : 'De signaalverdeling laat zien hoe reacties zijn verdeeld over voorlopige stabiliteit, aandacht en directe aandachtspunten.'
+          : 'De signaalverdeling laat zien hoe reacties zijn verdeeld over voorlopige stabiliteit, aandacht en directe aandachtspunten.'
 
   const insightText = scanType === 'exit'
     ? dominantBand.band === 'HOOG'
@@ -115,32 +108,23 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
 
   return (
     <div className="space-y-6">
-      {/* Stacked bar — primary visualization */}
       <StackedRiskBar distribution={distribution} />
 
-      <div
-        className="rounded-[16px] px-4 py-4 text-sm"
-        style={{
-          background: 'var(--dashboard-soft)',
-          border: '1px solid var(--dashboard-frame-border)',
-          color: 'var(--dashboard-text)',
-        }}
-      >
-        <p className="font-medium" style={{ color: 'var(--dashboard-ink)' }}>
+      <div className="rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-4 text-sm text-[color:var(--dashboard-text)]">
+        <p className="font-medium text-[color:var(--dashboard-ink)]">
           {scanType === 'exit'
             ? 'Wat zegt dit over het vertrekbeeld?'
             : scanType === 'team'
               ? 'Wat betekent dit voor lokale duiding?'
               : scanType === 'onboarding'
                 ? 'Wat betekent dit voor dit checkpoint?'
-              : 'Wat betekent dit voor behoudsduiding?'}
+                : 'Wat betekent dit voor behoudsduiding?'}
         </p>
         <p className="mt-1">{introText}</p>
-        <p className="mt-2" style={{ color: 'var(--dashboard-ink)' }}>{insightText}</p>
+        <p className="mt-2 text-[color:var(--dashboard-ink)]">{insightText}</p>
       </div>
 
-      {/* Histogram */}
-      {averageScore !== null && (
+      {averageScore !== null ? (
         <ResponsiveContainer width="100%" height={100}>
           <BarChart data={histogramBins} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
             <XAxis dataKey="range" tick={{ fontSize: 10, fill: '#7c8a95' }} />
@@ -151,17 +135,13 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
               strokeDasharray="3 3"
             />
             <Bar dataKey="count" fill="#94A3B8" radius={[2, 2, 0, 0]} />
-            <Tooltip formatter={(v) => [`${v} reacties`, 'Aantal']} />
+            <Tooltip formatter={(value) => [`${value} reacties`, 'Aantal']} />
           </BarChart>
         </ResponsiveContainer>
-      )}
+      ) : null}
 
-      {/* Pie chart — secondary/supplementary */}
       <details>
-        <summary
-          className="cursor-pointer select-none text-[0.80rem]"
-          style={{ color: 'var(--dashboard-muted)' }}
-        >
+        <summary className="cursor-pointer select-none text-[0.8rem] text-[color:var(--dashboard-muted)]">
           Toon taartdiagram
         </summary>
         <ResponsiveContainer width="100%" height={160}>
@@ -178,11 +158,11 @@ export function RiskCharts({ distribution, histogramBins, averageScore, scanType
               }
               labelLine={false}
             >
-              {pieData.map((entry) => (
-                <Cell key={entry.name} fill={entry.color} />
+              {pieData.map((distributionItem) => (
+                <Cell key={distributionItem.name} fill={distributionItem.color} />
               ))}
             </Pie>
-            <Tooltip formatter={(v) => [`${v} reacties`]} />
+            <Tooltip formatter={(value) => [`${value} reacties`]} />
           </PieChart>
         </ResponsiveContainer>
       </details>

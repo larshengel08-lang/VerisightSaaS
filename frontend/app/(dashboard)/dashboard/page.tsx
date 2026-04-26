@@ -8,6 +8,7 @@ import {
   DashboardHero,
   DashboardPanel,
   DashboardSection,
+  FocusPanel,
   InfoTooltip,
 } from '@/components/dashboard/dashboard-primitives'
 import { DashboardTabs } from '@/components/dashboard/dashboard-tabs'
@@ -46,6 +47,21 @@ type PortfolioBucket = {
   label: string
   groups: CampaignGroup[]
   entries: CampaignHomeEntry[]
+}
+
+type CentralHighlight = {
+  campaignId: string
+  index: number
+  title: string
+  body: string
+  moduleLabel: string
+}
+
+type ReportCandidate = {
+  campaign: CampaignStats
+  moduleLabel: string
+  stateLabel: string
+  dateLabel: string
 }
 
 export default async function DashboardHomePage({
@@ -174,6 +190,14 @@ export default async function DashboardHomePage({
     : null
   const primaryOverviewCampaign = primaryFirstNextStepCampaign ?? primaryGuideCampaign
   const primaryOverviewDefinition = primaryOverviewCampaign ? getScanDefinition(primaryOverviewCampaign.scan_type) : null
+  const centralHighlights = buildCentralHighlights(campaignEntries)
+  const reportCandidates = buildReportCandidates(campaigns)
+  const primaryReportCandidate = reportCandidates[0] ?? null
+  const focusPanelItems = buildOverviewFocusItems({
+    highlights: centralHighlights,
+    firstNextStepGuidance: primaryFirstNextStepGuidance,
+    firstNextStepDefinition: primaryFirstNextStepScanDefinition?.productName ?? null,
+  })
   const portfolioTabs = portfolioBuckets
     .filter((bucket) => bucket.entries.length > 0)
     .map((bucket) => {
@@ -218,7 +242,7 @@ export default async function DashboardHomePage({
     : portfolioTabs[0]?.id ?? 'ready'
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-dashboard-home="dashboard-overview-preview">
       <DashboardHero
         eyebrow="Overview"
         title={isAdmin ? 'Campagneoverzicht' : 'Eerste managementoverview'}
@@ -229,6 +253,7 @@ export default async function DashboardHomePage({
         }
         meta={
           <>
+            <DashboardChip label="Boardroom-ready" tone="emerald" />
             <DashboardChip label={`${fullCount} managementduiding gereed`} tone="emerald" />
             <DashboardChip label={`${partialCount} deels zichtbaar`} tone={partialCount > 0 ? 'amber' : 'slate'} />
             <DashboardChip label={`${activeExecutionCount} uitvoering actief`} tone={activeExecutionCount > 0 ? 'amber' : 'slate'} />
@@ -432,6 +457,45 @@ export default async function DashboardHomePage({
         </section>
       </div>
 
+      {centralHighlights.length > 0 ? (
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr),300px]">
+          <DashboardSection
+            eyebrow="Centraal"
+            title="Wat valt op deze periode."
+            description="Een rustige preview-laag over bestaande campagnes: eerst de terugkerende signalen, daarna pas de verdiepende route per module."
+            aside={<DashboardChip label="Preview van overzichtslaag" tone="slate" />}
+          >
+            <div className="space-y-4">
+              {centralHighlights.map((highlight) => (
+                <div
+                  key={highlight.campaignId}
+                  className="rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex min-w-0 gap-4">
+                      <span className="dash-number text-[2rem] leading-none text-[#b7d8d0]">
+                        {String(highlight.index).padStart(2, '0')}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+                          {highlight.title}
+                        </p>
+                        <p className="mt-2 text-sm leading-7 text-[color:var(--dashboard-text)]">{highlight.body}</p>
+                      </div>
+                    </div>
+                    <span className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">
+                      {highlight.moduleLabel}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DashboardSection>
+
+          {focusPanelItems.length > 0 ? <FocusPanel items={focusPanelItems} /> : null}
+        </div>
+      ) : null}
+
       {campaigns.length === 0 ? (
         isAdmin ? <AdminEmptyState /> : <ViewerEmptyState />
       ) : (
@@ -507,6 +571,128 @@ export default async function DashboardHomePage({
               />
             </>
           )}
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
+        id="reports"
+        eyebrow="Reports & exports"
+        title="Klaar voor het overleg."
+        description="De rapportlaag blijft bounded op echte campagnes: eerst een preview van wat klaarstaat, daarna directe routes naar rapport of campagneread."
+        aside={<DashboardChip label="Preview van rapportlaag" tone="slate" />}
+      >
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr),minmax(280px,0.8fr)]" data-dashboard-report-preview="dashboard-report-preview">
+          <div className="grid gap-4 lg:grid-cols-[minmax(220px,0.42fr),minmax(0,0.58fr)]">
+            <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-6">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+                {primaryReportCandidate ? `${primaryReportCandidate.moduleLabel} · preview` : 'Rapportpreview'}
+              </p>
+              <div className="mt-6 rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] p-6">
+                <div className="space-y-3">
+                  <div className="h-2 w-24 rounded-full bg-[color:var(--dashboard-frame-border)]" />
+                  <div className="h-2 w-36 rounded-full bg-[color:var(--dashboard-frame-border)]" />
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <div className="h-12 rounded-2xl bg-white/80" />
+                    <div className="h-12 rounded-2xl bg-[color:var(--dashboard-accent-soft)]" />
+                  </div>
+                  <div className="h-24 rounded-[20px] bg-[color:var(--dashboard-ink)]/85" />
+                  <div className="h-2 w-28 rounded-full bg-[color:var(--dashboard-frame-border)]" />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-ink)] px-6 py-6 text-white">
+              <DashboardChip label="Boardroom-ready" tone="emerald" />
+              <p className="mt-5 text-[2rem] font-semibold tracking-[-0.04em]">
+                {primaryReportCandidate ? primaryReportCandidate.campaign.campaign_name : 'Rapportlaag opent zodra output leesbaar is'}
+              </p>
+              <p className="mt-4 max-w-xl text-sm leading-7 text-white/78">
+                {primaryReportCandidate
+                  ? `Gebruik ${primaryReportCandidate.moduleLabel} als eerste rapportlaag. Status: ${primaryReportCandidate.stateLabel.toLowerCase()} op ${primaryReportCandidate.dateLabel}.`
+                  : 'Zodra een campagne minimaal de eerste veilige outputlaag bereikt, verschijnt hier automatisch de eerste rapportpreview.'}
+              </p>
+
+              <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                <div>
+                  <p className="dash-number text-[2rem]">{reportCandidates.length}</p>
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/55">Exports</p>
+                </div>
+                <div>
+                  <p className="dash-number text-[2rem]">{managementReadyCount}</p>
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/55">Leesbaar</p>
+                </div>
+                <div>
+                  <p className="dash-number text-[2rem]">{closedCount}</p>
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/55">Gesloten</p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                {primaryReportCandidate ? (
+                  <PdfDownloadButton
+                    campaignId={primaryReportCandidate.campaign.campaign_id}
+                    campaignName={primaryReportCandidate.campaign.campaign_name}
+                  />
+                ) : null}
+                {primaryReportCandidate ? (
+                  <Link
+                    href={`/campaigns/${primaryReportCandidate.campaign.campaign_id}`}
+                    className="inline-flex rounded-full border border-white/18 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/8"
+                  >
+                    Open campagneread
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-6">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+                  Recent
+                </p>
+                <p className="mt-2 text-[1.4rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+                  Recente rapporten
+                </p>
+              </div>
+              <Link href="/dashboard#portfolio" className="text-sm font-medium text-[color:var(--dashboard-accent-strong)]">
+                Alle campagnes
+              </Link>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {reportCandidates.length > 0 ? (
+                reportCandidates.slice(0, 4).map((candidate) => (
+                  <div
+                    key={candidate.campaign.campaign_id}
+                    className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-4"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-[color:var(--dashboard-ink)]">
+                          {candidate.campaign.campaign_name}
+                        </p>
+                        <p className="mt-1 text-xs text-[color:var(--dashboard-muted)]">
+                          {candidate.moduleLabel} · {candidate.stateLabel} · {candidate.dateLabel}
+                        </p>
+                      </div>
+                      <Link
+                        href={`/campaigns/${candidate.campaign.campaign_id}`}
+                        className="shrink-0 text-sm font-medium text-[color:var(--dashboard-accent-strong)]"
+                      >
+                        Open
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-[22px] border border-dashed border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-5 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  De rapportlaag verschijnt zodra een campagne minimaal gedeeltelijk leesbaar is of formeel gesloten wordt.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </DashboardSection>
     </div>
@@ -682,6 +868,83 @@ function getPrimaryGuideCampaign(entries: CampaignHomeEntry[]): CampaignHomeEntr
     if (priorityDelta !== 0) return priorityDelta
     return new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime()
   })[0] ?? null
+}
+
+function buildCentralHighlights(entries: CampaignHomeEntry[]): CentralHighlight[] {
+  const highlightableStates: CampaignCompositionState[] = ['full', 'partial', 'sparse', 'running', 'ready_to_launch', 'closed']
+
+  return entries
+    .filter((entry) => highlightableStates.includes(entry.state))
+    .sort((left, right) => {
+      const order = highlightableStates.indexOf(left.state) - highlightableStates.indexOf(right.state)
+      if (order !== 0) return order
+      return new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime()
+    })
+    .slice(0, 3)
+    .map((entry, index) => {
+      const definition = getScanDefinition(entry.campaign.scan_type)
+      const stateMeta = getHomeStateMeta(entry.state)
+
+      return {
+        campaignId: entry.campaign.campaign_id,
+        index: index + 1,
+        title: `${definition.productName} vraagt nu ${entry.state === 'full' || entry.state === 'partial' ? 'managementduiding' : 'gerichte opvolging'}.`,
+        body: `${stateMeta.body} ${stateMeta.trust}`,
+        moduleLabel: definition.productName,
+      }
+    })
+}
+
+function buildOverviewFocusItems({
+  highlights,
+  firstNextStepGuidance,
+  firstNextStepDefinition,
+}: {
+  highlights: CentralHighlight[]
+  firstNextStepGuidance: ReturnType<typeof getFirstNextStepGuidance> | null
+  firstNextStepDefinition: string | null
+}) {
+  const guidanceItems = firstNextStepGuidance?.cards.slice(0, 2).map((card) => ({
+    text: card.title,
+    moduleLabel: firstNextStepDefinition ?? undefined,
+  })) ?? []
+
+  const highlightItems = highlights.slice(0, Math.max(0, 3 - guidanceItems.length)).map((highlight) => ({
+    text: highlight.title,
+    moduleLabel: highlight.moduleLabel,
+  }))
+
+  return [...guidanceItems, ...highlightItems].slice(0, 3)
+}
+
+function buildReportCandidates(campaigns: CampaignStats[]): ReportCandidate[] {
+  const formatter = new Intl.DateTimeFormat('nl-NL', {
+    day: '2-digit',
+    month: 'short',
+  })
+
+  return campaigns
+    .filter((campaign) => !campaign.is_active || campaign.total_completed >= FIRST_INSIGHT_THRESHOLD)
+    .sort((left, right) => {
+      if (left.is_active !== right.is_active) return left.is_active ? -1 : 1
+      return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+    })
+    .map((campaign) => ({
+      campaign,
+      moduleLabel: getScanDefinition(campaign.scan_type).productName,
+      stateLabel: getHomeStateMeta(
+        getCampaignCompositionState({
+          isActive: campaign.is_active,
+          totalInvited: campaign.total_invited,
+          totalCompleted: campaign.total_completed,
+          invitesNotSent: 0,
+          incompleteScores: 0,
+          hasMinDisplay: campaign.total_completed >= 5,
+          hasEnoughData: campaign.total_completed >= 10,
+        }),
+      ).label,
+      dateLabel: formatter.format(new Date(campaign.created_at)),
+    }))
 }
 
 function getPrimaryFirstNextStepCampaign(

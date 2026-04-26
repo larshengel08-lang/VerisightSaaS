@@ -21,7 +21,9 @@ export default async function DashboardLayout({
     .select('is_verisight_admin')
     .eq('id', user.id)
     .single()
-  const { data: stats } = await supabase.from('campaign_stats').select('is_active, total_invited, total_completed')
+  const { data: stats } = await supabase
+    .from('campaign_stats')
+    .select('campaign_id, scan_type, is_active, created_at, total_invited, total_completed')
 
   const isAdmin = profile?.is_verisight_admin === true
   const portfolioCounts = {
@@ -32,6 +34,13 @@ export default async function DashboardLayout({
     setup: (stats ?? []).filter((campaign) => campaign.is_active && (campaign.total_invited ?? 0) === 0).length,
     closed: (stats ?? []).filter((campaign) => !campaign.is_active).length,
   }
+  const shellCampaigns = (stats ?? []).map((campaign) => ({
+    campaign_id: campaign.campaign_id,
+    scan_type: campaign.scan_type,
+    is_active: campaign.is_active,
+    created_at: campaign.created_at,
+    total_completed: campaign.total_completed ?? 0,
+  }))
 
   return (
     <DashboardShellFrame
@@ -39,6 +48,7 @@ export default async function DashboardLayout({
       userEmail={user.email ?? ''}
       acceptedCount={acceptedCount}
       portfolioCounts={portfolioCounts}
+      campaigns={shellCampaigns}
     >
       {children}
     </DashboardShellFrame>

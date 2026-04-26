@@ -4,35 +4,35 @@ type Tone = 'slate' | 'blue' | 'emerald' | 'amber'
 type Surface = 'default' | 'ops'
 
 const TONE_SURFACES: Record<Tone, string> = {
-  slate:   'border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)]',
-  blue:    'border-[#c4d4dc] bg-[color:var(--dashboard-blue-soft)]',
+  slate: 'border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)]',
+  blue: 'border-[#c8d7df] bg-[color:var(--dashboard-blue-soft)]',
   emerald: 'border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)]',
-  amber:   'border-[#e2d3a8] bg-[color:var(--dashboard-amber-soft)]',
+  amber: 'border-[#e6d6af] bg-[color:var(--dashboard-amber-soft)]',
 }
 
 const OPS_TONE_SURFACES: Record<Tone, string> = {
-  slate:   'border-[color:var(--dashboard-frame-border)] bg-white',
-  blue:    'border-[#d8e4ea] bg-[#f8fbfd]',
-  emerald: 'border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)]',
-  amber:   'border-[#e5dcc8] bg-[#fdfaf4]',
+  slate: 'border-[color:var(--border)] bg-white',
+  blue: 'border-[#dfe6ea] bg-[#fbfcfd]',
+  emerald: 'border-[#d8e4df] bg-[#f8fbf9]',
+  amber: 'border-[#e7e0d1] bg-[#fcfbf7]',
 }
 
 const TONE_LABELS: Record<Tone, string> = {
-  slate:   'text-[color:var(--dashboard-muted)]',
-  blue:    'text-[#1f4455]',
+  slate: 'text-[color:var(--dashboard-text)]',
+  blue: 'text-[#204655]',
   emerald: 'text-[color:var(--dashboard-accent-strong)]',
-  amber:   'text-[#7a5918]',
+  amber: 'text-[#7a5b18]',
 }
 
 const OPS_TONE_LABELS: Record<Tone, string> = {
-  slate:   'text-[color:var(--dashboard-muted)]',
-  blue:    'text-[color:var(--dashboard-text)]',
-  emerald: 'text-[color:var(--dashboard-accent-strong)]',
-  amber:   'text-[#8a651c]',
+  slate: 'text-[color:var(--text)]',
+  blue: 'text-[color:var(--text)]',
+  emerald: 'text-[#3C8D8A]',
+  amber: 'text-[#8C6B1F]',
 }
 
-const CARD_SHADOW = 'shadow-[var(--dashboard-shadow-soft)]'
-const PANEL_GLOW = 'before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/60'
+const CARD_SHADOW = 'shadow-[0_18px_40px_rgba(17,24,39,0.07)]'
+const PANEL_GLOW = 'before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/72'
 
 function joinClasses(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(' ')
@@ -67,7 +67,8 @@ function DashboardSectionHeader({
         {eyebrow ? (
           <p
             className={joinClasses(
-              'text-[11px] font-semibold uppercase tracking-[0.2em]',
+              surface === 'ops' ? 'text-xs tracking-[0.22em]' : 'text-[11px] tracking-[0.24em]',
+              'font-semibold uppercase',
               getToneLabel(tone, surface),
             )}
           >
@@ -77,9 +78,9 @@ function DashboardSectionHeader({
         <h2
           className={joinClasses(
             surface === 'ops'
-              ? 'mt-1.5 text-[1.1rem] text-[color:var(--ink)]'
-              : 'mt-2 max-w-4xl text-[1.5rem] text-[color:var(--dashboard-ink)] sm:text-[1.65rem]',
-            'font-semibold tracking-[-0.035em]',
+              ? 'mt-1 text-lg text-[color:var(--ink)]'
+              : 'mt-2 max-w-4xl text-[1.65rem] text-[color:var(--dashboard-ink)] sm:text-[1.85rem]',
+            'font-semibold tracking-[-0.04em]',
           )}
         >
           {title}
@@ -88,8 +89,8 @@ function DashboardSectionHeader({
           <p
             className={joinClasses(
               surface === 'ops'
-                ? 'mt-2 max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]'
-                : 'mt-2.5 max-w-3xl text-sm leading-[1.7] text-[color:var(--dashboard-text)]',
+                ? 'mt-2 max-w-3xl text-sm leading-6 text-[color:var(--text)]'
+                : 'mt-3 max-w-4xl text-sm leading-7 text-[color:var(--dashboard-text)] sm:text-[0.95rem]',
             )}
           >
             {description}
@@ -127,27 +128,28 @@ export function DashboardHero({
       data-dashboard-primitive="hero"
       className={joinClasses(
         surface === 'ops'
-          ? 'overflow-visible rounded-[var(--dashboard-radius-card)] border p-5 shadow-[var(--dashboard-shadow-card)] sm:p-6'
-          : 'relative overflow-hidden rounded-[var(--dashboard-radius-hero)] border px-6 py-6 sm:px-7 sm:py-7',
+          ? 'overflow-visible rounded-[24px] border p-5 shadow-[0_10px_28px_rgba(19,32,51,0.05)] sm:p-6'
+          : 'relative overflow-hidden rounded-[34px] border px-6 py-6 sm:px-7 sm:py-7',
         surface === 'default' && CARD_SHADOW,
         surface === 'default' && PANEL_GLOW,
         toneSurface,
       )}
     >
       {surface === 'default' ? (
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_-10%,rgba(255,255,255,0.9),transparent_48%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.86),transparent_36%)]" />
       ) : null}
       <div
         className={joinClasses(
           surface === 'ops'
-            ? 'grid gap-6 xl:grid-cols-[minmax(0,1.5fr),minmax(300px,0.85fr)]'
-            : 'relative grid gap-5 xl:grid-cols-[minmax(0,1.4fr),minmax(260px,0.6fr)] xl:items-start',
+            ? 'grid gap-6 xl:grid-cols-[minmax(0,1.5fr),minmax(320px,0.9fr)]'
+            : 'relative grid gap-5 xl:grid-cols-[minmax(0,1.4fr),minmax(280px,0.6fr)] xl:items-start',
         )}
       >
         <div className={surface === 'default' ? 'min-w-0' : undefined}>
           <p
             className={joinClasses(
-              'text-[11px] font-semibold uppercase tracking-[0.22em]',
+              surface === 'ops' ? 'text-xs tracking-[0.22em]' : 'text-[11px] tracking-[0.24em]',
+              'font-semibold uppercase',
               getToneLabel(tone, surface),
             )}
           >
@@ -156,8 +158,8 @@ export function DashboardHero({
           <h1
             className={joinClasses(
               surface === 'ops'
-                ? 'mt-2.5 text-[1.65rem] font-semibold tracking-[-0.03em] text-[color:var(--ink)] sm:text-[1.85rem]'
-                : 'mt-2.5 max-w-4xl text-[1.9rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)] sm:text-[2.25rem]',
+                ? 'mt-3 text-[1.75rem] font-bold tracking-tight text-[color:var(--ink)] sm:text-[2rem]'
+                : 'mt-3 max-w-4xl text-[2rem] font-semibold tracking-[-0.05em] text-[color:var(--dashboard-ink)] sm:text-[2.45rem]',
             )}
           >
             {title}
@@ -165,21 +167,21 @@ export function DashboardHero({
           <p
             className={joinClasses(
               surface === 'ops'
-                ? 'mt-3 max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]'
-                : 'mt-3 max-w-3xl text-sm leading-7 text-[color:var(--dashboard-text)] sm:text-[0.95rem]',
+                ? 'mt-3 max-w-3xl text-sm leading-6 text-[color:var(--text)]'
+                : 'mt-4 max-w-4xl text-sm leading-7 text-[color:var(--dashboard-text)] sm:text-[0.97rem]',
             )}
           >
             {description}
           </p>
-          {meta ? <div className="mt-4 flex flex-wrap gap-2">{meta}</div> : null}
-          {actions ? <div className="mt-5 flex flex-wrap items-center gap-2.5">{actions}</div> : null}
+          {meta ? <div className="mt-5 flex flex-wrap gap-2">{meta}</div> : null}
+          {actions ? <div className={surface === 'ops' ? 'mt-5 flex flex-wrap items-center gap-3' : 'mt-6 flex flex-wrap items-center gap-3'}>{actions}</div> : null}
         </div>
         {aside ? (
           <div
             className={joinClasses(
               surface === 'ops'
-                ? 'rounded-[var(--dashboard-radius-card)] border border-[color:var(--dashboard-frame-border)] bg-white p-4 shadow-[var(--dashboard-shadow-card)]'
-                : 'rounded-[var(--dashboard-radius-card)] border border-white/70 bg-white/88 p-5 shadow-[var(--dashboard-shadow-card)] backdrop-blur',
+                ? 'rounded-[22px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(19,32,51,0.04)]'
+                : 'rounded-[28px] border border-white/75 bg-white/84 p-5 shadow-[0_20px_40px_rgba(17,24,39,0.07)] backdrop-blur',
             )}
           >
             {aside}
@@ -215,8 +217,8 @@ export function DashboardSection({
       data-dashboard-primitive="section"
       className={joinClasses(
         surface === 'ops'
-          ? 'scroll-mt-36 rounded-[var(--dashboard-radius-card)] border p-5 shadow-[var(--dashboard-shadow-card)]'
-          : 'relative scroll-mt-40 overflow-hidden rounded-[var(--dashboard-radius-hero)] border px-5 py-5 sm:px-6 sm:py-6',
+          ? 'scroll-mt-36 rounded-[24px] border p-5 shadow-[0_10px_28px_rgba(19,32,51,0.05)]'
+          : 'relative scroll-mt-40 overflow-hidden rounded-[32px] border px-5 py-5 sm:px-6 sm:py-6',
         surface === 'default' && CARD_SHADOW,
         surface === 'default' && PANEL_GLOW,
         getToneSurface(tone, surface),
@@ -233,8 +235,8 @@ export function DashboardSection({
       <div
         className={joinClasses(
           surface === 'ops'
-            ? 'mt-5 border-t border-[color:var(--dashboard-frame-border)]/70 pt-5'
-            : 'mt-5 border-t border-[color:var(--dashboard-frame-border)]/60 pt-5',
+            ? 'mt-5 border-t border-[color:var(--border)]/80 pt-5'
+            : 'mt-5 border-t border-white/72 pt-5',
         )}
       >
         {children}
@@ -331,8 +333,8 @@ export function DashboardStatCard({
       data-dashboard-primitive="stat-card"
       className={joinClasses(
         surface === 'ops'
-          ? 'rounded-[var(--dashboard-radius-card)] border p-4 shadow-[var(--dashboard-shadow-card)] sm:p-5'
-          : 'relative overflow-hidden rounded-[var(--dashboard-radius-card)] border px-4 py-4 sm:px-5 sm:py-5',
+          ? 'rounded-[20px] border p-4 shadow-[0_6px_18px_rgba(19,32,51,0.035)] sm:p-5'
+          : 'relative overflow-hidden rounded-[28px] border px-4 py-4 sm:px-5 sm:py-5',
         surface === 'default' && CARD_SHADOW,
         surface === 'default' && PANEL_GLOW,
         getToneSurface(tone, surface),
@@ -341,38 +343,27 @@ export function DashboardStatCard({
       {eyebrow ? (
         <p
           className={joinClasses(
-            'text-[11px] font-semibold uppercase tracking-[0.2em]',
+            surface === 'ops' ? 'text-xs tracking-[0.18em]' : 'text-[11px] tracking-[0.22em]',
+            'font-semibold uppercase',
             getToneLabel(tone, surface),
           )}
         >
           {eyebrow}
         </p>
       ) : null}
-      <p className={joinClasses(
-        surface === 'ops' ? 'text-[color:var(--ink)]' : 'text-[color:var(--dashboard-ink)]',
-        eyebrow ? 'mt-1.5' : 'mt-0',
-        'text-sm font-semibold',
-      )}>
-        {title}
-      </p>
+      <p className={joinClasses(surface === 'ops' ? 'mt-1 text-[color:var(--ink)]' : 'mt-2 text-[color:var(--dashboard-ink)]', 'text-sm font-semibold')}>{title}</p>
       {value ? (
         <p
           className={joinClasses(
-            'dash-number',
             surface === 'ops'
-              ? 'mt-3 text-[1.9rem] text-[color:var(--ink)]'
-              : 'mt-3 text-[2.2rem] text-[color:var(--dashboard-ink)]',
+              ? 'mt-3 text-[1.7rem] font-bold tracking-tight text-[color:var(--ink)]'
+              : 'mt-4 text-[2.15rem] font-semibold tracking-[-0.06em] text-[color:var(--dashboard-ink)]',
           )}
         >
           {value}
         </p>
       ) : null}
-      <p className={joinClasses(
-        surface === 'ops' ? 'text-[color:var(--dashboard-text)]' : 'text-[color:var(--dashboard-text)]',
-        'mt-3 text-sm leading-[1.65]',
-      )}>
-        {body}
-      </p>
+      <p className={joinClasses(surface === 'ops' ? 'text-[color:var(--text)]' : 'text-[color:var(--dashboard-text)]', 'mt-3 text-sm leading-6')}>{body}</p>
     </div>
   )
 }
@@ -475,7 +466,8 @@ export function DashboardChip({
   return (
     <span
       className={joinClasses(
-        'inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold tracking-[0.01em]',
+        surface === 'ops' ? 'px-3 py-1 text-xs' : 'px-3 py-1.5 text-xs',
+        'inline-flex items-center rounded-full border font-semibold',
         getToneSurface(tone, surface),
         getToneLabel(tone, surface),
       )}
@@ -501,17 +493,16 @@ export function DashboardKeyValue({
   return (
     <div
       className={joinClasses(
-        'rounded-[var(--dashboard-radius-card)] border px-4 py-3',
         surface === 'ops'
-          ? 'border-[color:var(--border)] bg-[color:var(--bg)]'
-          : 'border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]',
+          ? 'rounded-[18px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-3'
+          : 'rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-3',
       )}
     >
       <div className="flex items-center gap-1.5">
         <p
           className={joinClasses(
-            'text-[11px] font-semibold uppercase tracking-[0.2em]',
             surface === 'ops' ? 'text-[color:var(--muted)]' : 'text-[color:var(--dashboard-muted)]',
+            'text-[11px] font-semibold uppercase tracking-[0.22em]',
           )}
         >
           {label}
@@ -520,8 +511,8 @@ export function DashboardKeyValue({
       </div>
       <p
         className={joinClasses(
-          'mt-2 dash-number text-[1.5rem]',
           surface === 'ops' ? 'text-[color:var(--ink)]' : 'text-[color:var(--dashboard-ink)]',
+          'mt-2 text-lg font-semibold',
           accent,
         )}
       >
@@ -710,37 +701,20 @@ export function SignalStatCard({
 
   return (
     <div
-      className="relative flex overflow-hidden rounded-[18px]"
-      style={{
-        background: 'var(--dashboard-surface)',
-        border: '1px solid var(--dashboard-frame-border)',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-        padding: '20px 20px 18px',
-      }}
+      className="relative flex overflow-hidden rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
     >
-      {/* Inset left accent bar */}
       <div
         className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full"
         style={{ backgroundColor: accentColor }}
       />
       <div className="min-w-0 pl-4">
-        <p
-          className="text-[0.65rem] font-medium uppercase"
-          style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}
-        >
+        <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
           {label}
         </p>
-        <p
-          className="mt-2 font-medium leading-none"
-          style={{ fontSize: '2.0rem', color: 'var(--dashboard-ink)' }}
-        >
-          {value}
-        </p>
-        {subline && (
-          <p className="mt-2 text-[0.80rem]" style={{ color: 'var(--dashboard-muted)' }}>
-            {subline}
-          </p>
-        )}
+        <p className="dash-number mt-2 text-[2rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
+        {subline ? (
+          <p className="mt-2 text-[0.8rem] text-[color:var(--dashboard-muted)]">{subline}</p>
+        ) : null}
       </div>
     </div>
   )
@@ -756,38 +730,18 @@ export function InsightStatCard({
   subline?: string
 }) {
   return (
-    <div
-      className="relative flex overflow-hidden rounded-[18px]"
-      style={{
-        background: 'var(--dashboard-surface)',
-        border: '1px solid var(--dashboard-frame-border)',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-        padding: '20px 20px 18px',
-      }}
-    >
-      {/* Neutral inset bar */}
-      <div
-        className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full"
-        style={{ backgroundColor: '#8A7D6E' }}
-      />
+    <div className="relative flex overflow-hidden rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full bg-[#8A7D6E]" />
       <div className="min-w-0 pl-4">
-        <p
-          className="text-[0.65rem] font-medium uppercase"
-          style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}
-        >
+        <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
           {label}
         </p>
-        <p
-          className="mt-2 font-semibold leading-snug"
-          style={{ fontSize: '1.25rem', color: 'var(--dashboard-ink)', letterSpacing: '-0.01em' }}
-        >
+        <p className="mt-2 text-[1.25rem] font-semibold leading-snug tracking-[-0.01em] text-[color:var(--dashboard-ink)]">
           {value}
         </p>
-        {subline && (
-          <p className="mt-2 text-[0.80rem]" style={{ color: 'var(--dashboard-muted)' }}>
-            {subline}
-          </p>
-        )}
+        {subline ? (
+          <p className="mt-2 text-[0.8rem] text-[color:var(--dashboard-muted)]">{subline}</p>
+        ) : null}
       </div>
     </div>
   )
@@ -799,61 +753,27 @@ export function FocusPanel({
   items: Array<{ text: string; moduleLabel?: string }>
 }) {
   return (
-    <aside
-      className="hidden w-[300px] shrink-0 rounded-[18px] xl:block"
-      style={{
-        background: '#132033',
-        padding: '24px',
-        alignSelf: 'start',
-        position: 'sticky',
-        top: '80px',
-      }}
-    >
-      {/* Eyebrow */}
-      <div className="flex items-center gap-2 mb-4">
-        <div className="h-4 w-[2px] rounded-full" style={{ backgroundColor: '#2E7C6D' }} />
-        <p
-          className="text-[0.65rem] font-medium uppercase"
-          style={{ color: 'rgba(246,241,233,0.55)', letterSpacing: '0.18em' }}
-        >
-          Aanbevolen Focus
-        </p>
+    <aside className="hidden w-[300px] shrink-0 self-start rounded-[18px] bg-[#132033] p-6 xl:sticky xl:top-[88px] xl:block">
+      <div className="mb-4 flex items-center gap-2">
+        <div className="h-4 w-[2px] rounded-full bg-[#2E7C6D]" />
+        <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-white/55">Aanbevolen focus</p>
       </div>
 
-      {/* Heading */}
-      <p
-        className="font-semibold leading-snug text-white mb-5"
-        style={{ fontSize: '1.2rem' }}
-      >
-        Waar nu aandacht naartoe
-      </p>
+      <p className="mb-5 text-[1.2rem] font-semibold leading-snug text-white">Waar nu aandacht naartoe gaat</p>
 
-      {/* Items */}
       <ol className="space-y-4">
-        {items.map((item, i) => (
-          <li key={i} className="flex gap-3">
-            <span
-              className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[0.65rem] font-semibold"
-              style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(246,241,233,0.70)' }}
-            >
-              {i + 1}
+        {items.map((item, index) => (
+          <li key={`${item.text}-${index}`} className="flex gap-3">
+            <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/8 text-[0.65rem] font-semibold text-white/70">
+              {index + 1}
             </span>
             <div className="min-w-0">
-              <p className="text-[0.875rem] leading-snug" style={{ color: 'rgba(246,241,233,0.85)' }}>
-                {item.text}
-              </p>
-              {item.moduleLabel && (
-                <span
-                  className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[0.60rem] font-medium uppercase"
-                  style={{
-                    background: 'rgba(255,255,255,0.07)',
-                    color: 'rgba(246,241,233,0.50)',
-                    letterSpacing: '0.12em',
-                  }}
-                >
+              <p className="text-[0.875rem] leading-snug text-white/85">{item.text}</p>
+              {item.moduleLabel ? (
+                <span className="mt-1.5 inline-block rounded-full bg-white/7 px-2 py-0.5 text-[0.6rem] font-medium uppercase tracking-[0.12em] text-white/50">
                   {item.moduleLabel}
                 </span>
-              )}
+              ) : null}
             </div>
           </li>
         ))}
