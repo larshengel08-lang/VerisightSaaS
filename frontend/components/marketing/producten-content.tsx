@@ -218,7 +218,7 @@ function FollowOnSection() {
 function ContactSection() {
   return (
     <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
-      <div style={{ ...SHELL, maxWidth: 820 }}>
+      <div style={{ ...SHELL, maxWidth: 1180 }}>
         <MarketingInlineContactPanel
           eyebrow="Plan kennismaking"
           title="Twijfelt u tussen ExitScan, RetentieScan, onboarding of een vervolgronde?"

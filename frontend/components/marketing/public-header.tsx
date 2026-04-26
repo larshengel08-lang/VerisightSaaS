@@ -24,6 +24,14 @@ export function PublicHeader({
     setMobileOpen(false)
   }
 
+  function isActive(href: string) {
+    if (href.startsWith('/#')) {
+      return pathname === '/'
+    }
+
+    return pathname === href
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[rgba(255,255,255,0.92)] backdrop-blur-md">
       <div className="marketing-shell py-4">
@@ -32,7 +40,7 @@ export function PublicHeader({
             <div className="flex flex-col gap-0.5">
               <Wordmark size="md" />
               <span className="pl-px text-[8px] font-bold tracking-[0.18em] uppercase text-[rgba(22,20,18,0.32)]">
-                People · Patterns · Priorities
+                People insights + opvolging
               </span>
             </div>
           </div>
@@ -45,7 +53,7 @@ export function PublicHeader({
               <Link
                 key={link.href}
                 href={link.href}
-                className={`marketing-nav-link ${pathname === link.href ? 'marketing-nav-link-active' : ''}`}
+                className={`marketing-nav-link ${isActive(link.href) ? 'marketing-nav-link-active' : ''}`}
               >
                 {link.label}
               </Link>
@@ -103,7 +111,7 @@ export function PublicHeader({
                   key={link.href}
                   href={link.href}
                   onClick={closeMenu}
-                  className={`marketing-mobile-nav-link ${pathname === link.href ? 'marketing-mobile-nav-link-active' : ''}`}
+                  className={`marketing-mobile-nav-link ${isActive(link.href) ? 'marketing-mobile-nav-link-active' : ''}`}
                 >
                   {link.label}
                 </Link>

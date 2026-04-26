@@ -316,7 +316,7 @@ function ExitScanPage() {
 
         {/* Contact form */}
         <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
-          <div style={{ ...SH, maxWidth: 820 }}>
+          <div style={{ ...SH, maxWidth: 1180 }}>
             <MarketingInlineContactPanel
               eyebrow="Kennismaking"
               title="Plan een gesprek over ExitScan"
@@ -477,7 +477,7 @@ function RetentionScanPage() {
 
         {/* Contact form */}
         <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
-          <div style={{ ...SH, maxWidth: 820 }}>
+          <div style={{ ...SH, maxWidth: 1180 }}>
             <MarketingInlineContactPanel
               eyebrow="Kennismaking"
               title="Plan een gesprek over RetentieScan"
