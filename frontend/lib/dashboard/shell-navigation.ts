@@ -16,9 +16,11 @@ export type DashboardModuleKey =
   | 'exit'
   | 'retention'
   | 'onboarding'
-  | 'team'
   | 'pulse'
+  | 'leadership'
+  | 'team'
   | 'reports'
+  | 'action_center'
 
 export type DashboardModuleNavItem = {
   key: DashboardModuleKey
@@ -42,9 +44,11 @@ const MODULE_LABELS: Array<{ key: DashboardModuleKey; label: string; scanType?: 
   { key: 'exit', label: 'ExitScan', scanType: 'exit' },
   { key: 'retention', label: 'RetentieScan', scanType: 'retention' },
   { key: 'onboarding', label: 'Onboarding 30-60-90', scanType: 'onboarding' },
-  { key: 'team', label: 'TeamScan', scanType: 'team' },
   { key: 'pulse', label: 'Pulse', scanType: 'pulse' },
+  { key: 'leadership', label: 'Leadership Scan', scanType: 'leadership' },
+  { key: 'team', label: 'TeamScan', scanType: 'team' },
   { key: 'reports', label: 'Reports' },
+  { key: 'action_center', label: 'Action Center' },
 ]
 
 export function normalizeDashboardPortfolioView(view: string | undefined): DashboardPortfolioView {
@@ -81,8 +85,8 @@ function getModuleKeyForScanType(scanType: ScanType): Exclude<DashboardModuleKey
     onboarding: 'onboarding',
     team: 'team',
     pulse: 'pulse',
-    leadership: 'team',
-  } as const satisfies Record<ScanType, Exclude<DashboardModuleKey, 'overview' | 'reports'>>
+    leadership: 'leadership',
+  } as const satisfies Record<ScanType, Exclude<DashboardModuleKey, 'overview' | 'reports' | 'action_center'>>
 
   return moduleKeyByScanType[scanType]
 }
@@ -92,6 +96,7 @@ export function getActiveModuleFromPathname(
   campaigns: DashboardShellCampaignRef[],
 ): DashboardModuleKey {
   if (pathname.startsWith('/reports')) return 'reports'
+  if (pathname.startsWith('/action-center')) return 'action_center'
   if (!pathname.startsWith('/campaigns/')) return 'overview'
 
   const [, , campaignId] = pathname.split('/')
@@ -134,6 +139,15 @@ export function buildDashboardShellNavigation({
       }
     }
 
+    if (item.key === 'action_center') {
+      return {
+        key: item.key,
+        label: item.label,
+        href: '/action-center',
+        disabled: false,
+      }
+    }
+
     const campaign = item.scanType ? pickRepresentativeCampaign(campaigns, item.scanType) : null
     const href = getCampaignHref(campaign)
 
@@ -160,8 +174,8 @@ export function buildDashboardShellNavigation({
           disabled: false,
         },
         {
-          label: 'Action Center',
-          detail: 'Admin-first follow-through, reviewdruk en bounded dossieropvolging.',
+          label: 'Action Center bron',
+          detail: 'Dossierbron, admin-first follow-through en bounded dossieropvolging.',
           href: '/beheer/klantlearnings',
           disabled: false,
         },
@@ -176,6 +190,7 @@ export function buildDashboardShellNavigation({
 
 export function getDashboardShellCurrentLabel(pathname: string) {
   if (pathname.startsWith('/reports')) return 'Reports & exports'
+  if (pathname.startsWith('/action-center')) return 'Action Center'
   if (pathname.startsWith('/campaigns/')) return 'Campagneread'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
   if (pathname.startsWith('/beheer/klantlearnings')) return 'Action Center'
