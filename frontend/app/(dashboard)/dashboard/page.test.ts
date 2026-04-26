@@ -10,7 +10,7 @@ describe('dashboard home review guardrails', () => {
     )
     const stateSource = readFileSync(new URL('../../../lib/guided-self-serve.ts', import.meta.url), 'utf8')
 
-    expect(pageSource).toContain('Jouw uitvoerstatus')
+    expect(pageSource).toContain('Eerste managementoverview')
     expect(pageSource).toContain('CustomerLaunchControl')
     expect(pageSource).toContain('Open campagne en dashboard')
     expect(pageSource).toContain('Open uitvoerflow')
@@ -41,8 +41,8 @@ describe('dashboard home review guardrails', () => {
     expect(pageSource).toContain('Mogelijke vervolgroutes')
     expect(pageSource).toContain('!showFirstNextStep')
     expect(pageSource).toContain('campaign.total_completed >= FIRST_INSIGHT_THRESHOLD')
-    expect(pageSource).toContain('ExitScan follow-through en dossiers')
-    expect(pageSource).toContain('Open de shared Action Center-laag voor ExitScan')
+    expect(pageSource).toContain('ExitScan follow-through, reviews en dossiers')
+    expect(pageSource).toContain('Open de preview-adoptie van het Action Center voor ExitScan')
     expect(pageSource).not.toContain('MTO follow-through en dossiers')
 
     expect(launchControlSource).toContain('Product')
