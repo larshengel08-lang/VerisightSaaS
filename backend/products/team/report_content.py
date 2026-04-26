@@ -197,7 +197,7 @@ def get_management_summary_payload(
                 "body": "Beleg direct wie de eerste lokale managementcheck trekt, zodat TeamScan geen losse lokalisatietabel blijft.",
             },
             {
-                "title": "Reviewgrens",
+                "title": "Reviewmoment",
                 "value": "30-45 dagen",
                 "body": review_moment,
             },
@@ -234,7 +234,7 @@ def get_management_summary_payload(
                 "body": first_action,
             },
             {
-                "title": "Reviewgrens",
+                "title": "Reviewmoment",
                 "value": "Binnen 30-45 dagen",
                 "body": review_moment,
             },
@@ -416,7 +416,7 @@ def get_hypothesis_rows(
                 "title": f"Hypothese: {top_factor_labels[0].lower()} vraagt eerst lokale verificatie",
                 "body": "TeamScan laat zien waar eerst een bounded lokale check nodig is voordat de organisatie bredere conclusies trekt.",
                 "question": f"Welke afdeling moet nu als eerste worden geverifieerd op {top_factor_labels[0].lower()}?",
-                "action": "Plan binnen 2 weken een beperkte lokale managementcheck en leg daarna een reviewgrens vast.",
+                "action": "Plan binnen 2 weken een beperkte lokale managementcheck en leg daarna een reviewmoment vast.",
                 "owner": "HR business partner met verantwoordelijke afdelingsleider",
             }
         )
@@ -450,7 +450,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         ),
         "session_title": "Eerste lokale managementsessie na oplevering",
         "session_intro": (
-            "Houd de eerste sessie klein en bounded: kies eerst de afdeling voor verificatie, maak daarna eigenaar, eerste stap en reviewgrens expliciet."
+            "Houd de eerste sessie klein en bounded: kies eerst de afdeling voor verificatie, maak daarna eigenaar, eerste stap en reviewmoment expliciet."
         ),
         "first_decision": first_decision,
         "first_owner": first_owner,
@@ -501,7 +501,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
             },
             {
                 "number": "4",
-                "title": "Leg expliciet de reviewgrens vast",
+                "title": "Leg expliciet het reviewmoment vast",
                 "body": review_moment,
             },
         ],

@@ -88,7 +88,7 @@ export function ActivationJourneyPanel() {
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         {[
           'Je account is bedoeld voor dashboardtoegang. Verisight heeft organisatie, campaign en respondentimport al voorbereid.',
-          'Open na activatie eerst je campaignoverzicht. Daar zie je welke campagne al klaar is voor eerste managementread en welke nog respons opbouwt.',
+          'Open na activatie eerst je campaignoverzicht. Daar zie je welke campagne al klaar is voor eerste managementduiding en welke nog respons opbouwt.',
           'Gebruik daarna dashboard en rapport samen voor het eerste managementgesprek. Je hoeft geen setup of surveylogica meer te beheren.',
         ].map((item, index) => (
           <div key={item} className="rounded-2xl border border-white/80 bg-white/90 p-4 shadow-sm">

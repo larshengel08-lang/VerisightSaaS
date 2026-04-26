@@ -248,7 +248,7 @@ export default async function DashboardHomePage({
         title={isAdmin ? 'Campagneoverzicht' : 'Eerste managementoverview'}
         description={
           isAdmin
-            ? 'Zie eerst de kerncijfers, het portfoliobeeld en waar operations of managementread nu het eerst aandacht vraagt. Verdiep daarna pas via beheer of campaignroutes.'
+            ? 'Zie eerst de kerncijfers, het portfoliobeeld en waar operations of managementduiding nu het eerst aandacht vraagt. Verdiep daarna pas via beheer of campaignroutes.'
             : 'Zie eerst de kerncijfers, het hoofdsignaal en waar je als buyer het eerst moet kijken. Verdiep daarna via portfolio en campagne, niet via een lange stacked home.'
         }
         meta={
@@ -303,11 +303,11 @@ export default async function DashboardHomePage({
                       isAdmin,
                       avgSignal,
                     })
-                  : 'Zodra de eerste campagne live of leesbaar wordt, verschijnt hier automatisch de eerste managementread.'}
+                  : 'Zodra de eerste campagne live of leesbaar wordt, verschijnt hier automatisch de eerste managementduiding.'}
               </p>
             </div>
             <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-1">
-              <StatCell label="Management-ready" value={`${managementReadyCount}`} />
+              <StatCell label="Managementduiding gereed" value={`${managementReadyCount}`} />
               <StatCell label="Setup of launch" value={`${setupCount}`} />
             </div>
           </div>
@@ -539,8 +539,8 @@ export default async function DashboardHomePage({
               />
               <UtilityCard
                 eyebrow="Action Center"
-                title="ExitScan follow-through, reviews en dossiers"
-                body="Open de preview-adoptie van het Action Center voor ExitScan om reviewdruk, expliciet eigenaarschap en dossier-first follow-through vanuit een bounded live consumer te beheren."
+                title="ExitScan opvolging, reviewmomenten en dossiers"
+                body="Open de preview-adoptie van het Action Center voor ExitScan om reviewmomenten, expliciet eigenaarschap en dossier-first opvolging vanuit een bounded live consumer te beheren."
                 href="/beheer/klantlearnings"
                 cta="Open Action Center"
               />
@@ -981,7 +981,7 @@ function groupCampaigns(entries: CampaignHomeEntry[]): CampaignGroup[] {
 
 function buildPortfolioBuckets(groups: CampaignGroup[]): PortfolioBucket[] {
   const definitions: Array<{ key: DashboardPortfolioView; label: string; states: CampaignCompositionState[] }> = [
-    { key: 'ready', label: 'Management-ready', states: ['full', 'partial'] },
+    { key: 'ready', label: 'Managementduiding gereed', states: ['full', 'partial'] },
     { key: 'building', label: 'In opbouw', states: ['sparse', 'running', 'ready_to_launch'] },
     { key: 'setup', label: 'Setup of launch', states: ['setup'] },
     { key: 'closed', label: 'Afgerond', states: ['closed'] },
@@ -1128,13 +1128,13 @@ function getOverviewHeadline({
 
   if (campaign.total_completed < 5) {
     return avgSignal
-      ? `Het portfolio bouwt nog respons op. Het leesbare gemiddelde staat nu op ${avgSignal}/10, maar de managementread blijft nog bewust voorzichtig.`
+      ? `Het portfolio bouwt nog respons op. Het leesbare gemiddelde staat nu op ${avgSignal}/10, maar de managementduiding blijft nog bewust voorzichtig.`
       : 'De portfolio bouwt nog respons op. Lees dus eerst richting en voortgang, nog niet te zwaar de duiding.'
   }
 
   return avgSignal
-    ? `Er ligt nu een leesbare managementread. Het gemiddelde groepssignaal in het portfolio staat op ${avgSignal}/10.`
-    : 'Er ligt nu een leesbare managementread. Gebruik home voor de hoofdlijn en open daarna de campagne voor verdieping.'
+    ? `Er ligt nu een leesbare managementduiding. Het gemiddelde groepssignaal in het portfolio staat op ${avgSignal}/10.`
+    : 'Er ligt nu een leesbare managementduiding. Gebruik home voor de hoofdlijn en open daarna de campagne voor verdieping.'
 }
 
 function AdminEmptyState() {

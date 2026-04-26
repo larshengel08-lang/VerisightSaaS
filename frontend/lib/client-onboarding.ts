@@ -250,7 +250,7 @@ export function getLifecycleDecisionCards(scanType: ScanType): LifecycleDecision
       {
         title: 'Blijf op dezelfde route',
         fit: 'Checkpoint vervolg pas later',
-        body: 'Een volgend onboardingcheckpoint wordt pas logisch zodra deze eerste checkpointread al gebruikt is voor een expliciete managementvraag, een eerste eigenaar, een begrensde borg- of correctiestap en een afgesproken vervolgmoment.',
+        body: 'Een volgend onboardingcheckpoint wordt pas logisch zodra deze eerste checkpointduiding al gebruikt is voor een expliciete managementvraag, een eerste eigenaar, een begrensde borg- of correctiestap en een afgesproken vervolgmoment.',
       },
       {
         title: 'Verdiep bewust',
@@ -543,7 +543,7 @@ export function getFirstManagementReadSteps(scanType: ScanType) {
 
   if (scanType === 'pulse') {
     return [
-      'Open eerst het beslisoverzicht en lees Pulse als compacte managementread van dit meetmoment, niet als brede trendclaim.',
+      'Open eerst het beslisoverzicht en lees Pulse als compacte managementduiding van dit meetmoment, niet als brede trendclaim.',
       'Gebruik een indicatief beeld vanaf 5 responses om een eerste reviewrichting te kiezen, maar wacht voor stevigere patroonduiding bij voorkeur tot 10 responses of meer.',
       'Plan daarna de eerste managementreview rond de vraag welk spoor nu bijsturing vraagt, welke kleine correctie volgt en wanneer de volgende bounded check plaatsvindt.',
     ] as const
@@ -567,7 +567,7 @@ export function getFirstManagementReadSteps(scanType: ScanType) {
 
   if (scanType === 'leadership') {
     return [
-      'Open eerst het beslisoverzicht en lees Leadership Scan als geaggregeerde managementread, niet als named leader view, manager ranking of performanceclaim.',
+      'Open eerst het beslisoverzicht en lees Leadership Scan als geaggregeerde managementduiding, niet als named leader view, manager ranking of performanceclaim.',
       'Gebruik een indicatief beeld vanaf 5 responses om een eerste stabiele, gemengde of scherpe managementcontext te zien, maar wacht voor stevigere managementduiding bij voorkeur tot 10 responses of meer.',
       'Plan daarna de eerste managementreview rond de vraag welke context nu eerst aandacht vraagt, wie de eerste eigenaar is, welke begrensde verificatie of correctie volgt en wanneer een bounded vervolgcheck logisch is.',
     ] as const
@@ -591,10 +591,10 @@ export function getAdoptionSuccessDefinition(scanType: ScanType) {
     return 'Adoptie is pas geslaagd wanneer de klant TeamScan gebruikt om een eerste lokale verificatievraag, afdeling, begrensde actie en lokaal reviewmoment expliciet te maken.'
   }
   if (scanType === 'onboarding') {
-    return 'Adoptie is pas geslaagd wanneer de klant onboarding gebruikt om een vrijgegeven eerste checkpointread, eerste eigenaar, begrensde borg- of correctiestap en logisch vervolgmoment expliciet te maken.'
+    return 'Adoptie is pas geslaagd wanneer de klant onboarding gebruikt om een vrijgegeven eerste checkpointduiding, eerste eigenaar, begrensde borg- of correctiestap en logisch vervolgmoment expliciet te maken.'
   }
   if (scanType === 'leadership') {
-    return 'Adoptie is pas geslaagd wanneer de klant Leadership Scan gebruikt om een eerste managementread, eerste eigenaar, begrensde verificatie of correctie en logisch reviewmoment expliciet te maken.'
+    return 'Adoptie is pas geslaagd wanneer de klant Leadership Scan gebruikt om een eerste managementduiding, eerste eigenaar, begrensde verificatie of correctie en logisch reviewmoment expliciet te maken.'
   }
   return 'Adoptie is pas geslaagd wanneer de klant niet alleen operationeel draait, maar het vrijgegeven dashboard en rapport gebruikt om een eerste managementsessie over vertrekduiding, prioriteiten, routekeuze en reviewmoment te voeren.'
 }

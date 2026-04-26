@@ -126,7 +126,7 @@ def get_management_summary_payload(
         ),
         "boardroom_cards": [
             {
-                "title": "Managementread nu",
+                "title": "Managementduiding nu",
                 "value": management_band_label(band="MIDDEN"),
                 "body": f"De scherpste managementspanning of borging zit nu vooral in {top_factor_text}. Gebruik dat als eerste managementspoor.",
             },
@@ -146,7 +146,7 @@ def get_management_summary_payload(
                 "body": "Beleg direct wie de eerste managementhuddle trekt, zodat Leadership Scan niet blijft hangen als nette contextsnapshot zonder eigenaar.",
             },
             {
-                "title": "Reviewgrens",
+                "title": "Reviewmoment",
                 "value": "Volgende review",
                 "body": review_moment,
             },
@@ -179,11 +179,11 @@ def get_management_summary_payload(
             },
             {
                 "title": "Eerste bounded stap",
-                "value": "Managementactie",
+                "value": "Eerste stap",
                 "body": first_action,
             },
             {
-                "title": "Reviewgrens",
+                "title": "Reviewmoment",
                 "value": "Volgende review",
                 "body": review_moment,
             },
@@ -239,7 +239,7 @@ def get_methodology_payload() -> dict[str, Any]:
             ["Band", "Score", "Betekenis voor de organisatie"],
             ["Laag", "< 4.5", "Overwegend stabiel leadershipbeeld; vooral borgen wat werkt en beperkt herlezen op een later reviewmoment."],
             ["Midden", "4.5-7.0", "Managementbeeld vraagt bounded verificatie of kleine correctie voordat je groter maakt wat het product zegt."],
-            ["Hoog", ">= 7.0", "Scherp managementsignaal dat nu een expliciete eigenaar, kleine correctie en reviewgrens verdient."],
+            ["Hoog", ">= 7.0", "Scherp managementsignaal dat nu een expliciete eigenaar, kleine correctie en reviewmoment verdient."],
         ],
         "trust_rows": [
             ["Wat dit product wel is", TRUST_CONTRACT["what_it_is"]],
@@ -358,7 +358,7 @@ def get_hypothesis_rows(
                 "title": f"Hypothese: {top_factor_labels[0].lower()} vraagt nu eerst managementduiding",
                 "body": "Leadership Scan laat zien welk managementspoor nu het eerste bestuurlijke gesprek verdient, zonder de route groter te maken dan group-level only.",
                 "question": f"Welke kleine managementstap hoort nu eerst bij {top_factor_labels[0].lower()}?",
-                "action": "Plan nu een beperkte managementhuddle en leg een eerste eigenaar, actie en reviewgrens vast.",
+                "action": "Plan nu een beperkte managementhuddle en leg een eerste eigenaar, eerste stap en reviewmoment vast.",
                 "owner": "HR lead met MT-sponsor",
             }
         )
@@ -392,7 +392,7 @@ def get_next_steps_payload(*, top_focus_labels: list[str], top_focus_keys: list[
         ),
         "session_title": "Eerste managementhuddle na oplevering",
         "session_intro": (
-            "Houd de eerste sessie klein en bounded: kies eerst het primaire managementspoor, benoem daarna eigenaar, eerste stap en reviewgrens."
+            "Houd de eerste sessie klein en bounded: kies eerst het primaire managementspoor, benoem daarna eigenaar, eerste stap en reviewmoment."
         ),
         "first_decision": first_decision,
         "first_owner": first_owner,

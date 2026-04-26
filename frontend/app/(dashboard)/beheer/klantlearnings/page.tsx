@@ -344,7 +344,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
       reviewCheckpoint?.qualitative_notes ??
       dossier.management_action_outcome ??
       dossier.implementation_risk ??
-      'Gebruik dossierbron en checkpoints om de follow-through verder te concretiseren.'
+      'Gebruik dossierbron en checkpoints om de opvolging verder te concretiseren.'
     const updates = [...dossierCheckpoints]
       .sort((left, right) => new Date(right.updated_at).getTime() - new Date(left.updated_at).getTime())
       .slice(0, 3)
@@ -380,7 +380,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
       reviewRhythm: inferPreviewRhythm(reviewMoment?.state === 'scheduled' ? reviewMoment.scheduledFor : null),
       signalLabel: `${sourceLabel} - ${teamLabel}`,
       signalBody,
-      nextStep: assignment?.title ?? 'Leg eerste follow-up stap vast',
+      nextStep: assignment?.title ?? 'Leg eerste opvolgstap vast',
       peopleCount:
         organization?.id && invitedCountByOrgId[organization.id]
           ? invitedCountByOrgId[organization.id]
@@ -441,8 +441,8 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
         id="dossierbron"
         surface="ops"
         eyebrow="Dossierbron"
-        title="Learninglog en bounded follow-through"
-        description="Bewuste delta ten opzichte van de preview: de echte dossierbron blijft zichtbaar onder de nieuwe surface, zodat admin-first follow-through en workbench op current main bij elkaar blijven."
+        title="Dossierlog en bounded opvolging"
+        description="Bewuste delta ten opzichte van de preview: de echte dossierbron blijft zichtbaar onder de nieuwe surface, zodat admin-first opvolging en dossierbron op current main bij elkaar blijven."
       >
         <PilotLearningWorkbench
           orgs={exitOrgs}

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Verisight — PDF-rapportgenerator
 ========================================
 Genereert productspecifieke managementrapporten per campaign.
@@ -2270,7 +2270,7 @@ def _build_boardroom_story(
             if item.get("question"):
                 body += f" <br/><br/><b>Te toetsen vraag:</b> {item['question']}"
             if item.get("action"):
-                body += f" <br/><b>Eerste actie:</b> {item['action']}"
+                body += f" <br/><b>Eerste stap:</b> {item['action']}"
             hypothesis_cards.append({
                 "title": item["title"],
                 "value": item.get("owner", ""),
@@ -3808,14 +3808,14 @@ def _append_rebrand_actions(
     is_retention: bool,
     content_width: float,
     report_theme: dict[str, colors.Color],
-    title: str = "Eerste route & managementactie",
+    title: str = "Eerste route & eerste stap",
     intro: str | None = None,
 ) -> None:
     _append_section_heading(
         story,
         eyebrow="Route",
         title=title,
-        intro=intro or "Hier komen verificatie, eigenaar, eerste stap en review samen. In v3 staat dit nog maar op één plek: de eerste route, de eerste eigenaar en de eerste 30–90-dagenactie.",
+        intro=intro or "Hier komen verificatie, eigenaar, eerste stap en reviewmoment samen. In v3 staat dit nog maar op één plek: de eerste route, de eerste eigenaar en de eerste 30–90-dagenstap.",
         content_width=content_width,
     )
     left_width = (content_width - (8 * mm)) / 2
@@ -3835,7 +3835,7 @@ def _append_rebrand_actions(
                 ),
                 _build_divider_flowable(width=left_width, color=report_theme["border"]),
                 _build_editorial_group(
-                    title="Route-eigenaar",
+                    title="Eerste eigenaar",
                     value=next_steps_payload.get("first_owner", "Nog te bepalen"),
                     body="Beleg verificatie, opvolging en terugkoppeling expliciet bij één eigenaar.",
                     width=left_width,
@@ -3854,7 +3854,7 @@ def _append_rebrand_actions(
                 ),
                 _build_divider_flowable(width=right_width, color=report_theme["border"]),
                 _build_editorial_group(
-                    title="Review",
+                    title="Reviewmoment",
                     value=next_steps_payload.get("review_moment", "45–90 dagen" if is_retention else "60–90 dagen"),
                     body="Leg nu vast wanneer je route, uitvoering en bewijs opnieuw weegt.",
                     width=right_width,
@@ -3874,7 +3874,7 @@ def _append_rebrand_actions(
                 "body": (
                     f"<b>Vraag:</b> {_truncate_copy(item.get('question') or item['title'], limit=105)}<br/><br/>"
                     f"<b>Waarom nu:</b> {_truncate_copy(item['body'], limit=110)}<br/><br/>"
-                    f"<b>Eerste actie:</b> {_truncate_copy(item.get('action', next_steps_payload.get('first_action', 'Maak de eerste stap expliciet binnen 30 dagen.')), limit=105)}"
+                    f"<b>Eerste stap:</b> {_truncate_copy(item.get('action', next_steps_payload.get('first_action', 'Maak de eerste stap expliciet binnen 30 dagen.')), limit=105)}"
                 ),
                 "background": TOKENS["cream"] if len(action_cards) % 2 == 0 else TOKENS["surface"],
             })
@@ -4999,7 +4999,7 @@ def _build_exit_embedded_story(
         content_width=content_width,
         report_theme=report_theme,
         title="Eerste route & actie",
-        intro="Hier komt de vertaalslag van interpretatie naar managementactie samen: eerste route, eigenaar, eerste stap en reviewmoment.",
+        intro="Hier komt de vertaalslag van interpretatie naar opvolging samen: eerste route, eerste eigenaar, eerste stap en reviewmoment.",
     )
     _append_exit_methodology_page(
         story,

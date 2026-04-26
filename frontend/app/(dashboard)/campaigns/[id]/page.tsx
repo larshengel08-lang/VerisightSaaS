@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
@@ -649,7 +649,7 @@ export default async function CampaignPage({ params }: Props) {
           trustNoteTone: 'emerald' as const,
           summaryTone: 'slate' as const,
           summarySignalLabel: 'Retentiesignaal',
-          summaryContextLabel: 'Groepssignaal · verification-first',
+          summaryContextLabel: 'Groepssignaal · eerst toetsen',
           summaryContextTone: 'slate' as const,
           summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
           summaryLeadDescription:
@@ -660,7 +660,7 @@ export default async function CampaignPage({ params }: Props) {
           driverDescription:
             'Start bij retentiesignaal, trend en aanvullende signalen. Gebruik factoren en segmenten daarna om te bepalen waarom dit beeld ontstaat en waar behoud eerst nadere toetsing vraagt.',
           driverIntro:
-            'Begin met het groepssignaal en open pas daarna factoren, trend en aanvullende lagen. Zo blijft RetentieScan een verification-first managementinstrument in plaats van een losse analysetabel.',
+            'Begin met het groepssignaal en open pas daarna factoren, trend en aanvullende lagen. Zo blijft RetentieScan een eerst-toetsen managementinstrument in plaats van een losse analysetabel.',
           driverAsideLabel: hasEnoughData ? 'Behoudsdrivers beschikbaar' : 'Wacht op meer data',
           driverAsideTone: hasEnoughData ? ('slate' as const) : ('amber' as const),
           driverTabOrder: ['signalen', 'trend', 'factoren', 'aanvullend'],
@@ -698,7 +698,7 @@ export default async function CampaignPage({ params }: Props) {
             summaryBarOrder: ['signal', 'next-step', 'response', 'readiness'] as const,
             heroAsideOrder: ['signal', 'next-step', 'response', 'readiness'] as const,
             summaryFocusLabel: 'Eerste lokale route',
-            reviewLabel: 'Reviewgrens',
+            reviewLabel: 'Reviewmoment',
             evidenceSectionOrder: 'profile-first' as const,
             recommendationOrder: 'playbooks-first' as const,
             trustNotePlacement: 'handoff' as const,
@@ -756,7 +756,7 @@ export default async function CampaignPage({ params }: Props) {
             summaryBarOrder: ['signal', 'owner', 'review', 'readiness'] as const,
             heroAsideOrder: ['signal', 'owner', 'review', 'response'] as const,
             summaryFocusLabel: 'Eerste checkpoint',
-            reviewLabel: 'Reviewgrens',
+            reviewLabel: 'Reviewmoment',
             evidenceSectionOrder: 'profile-first' as const,
             recommendationOrder: 'playbooks-first' as const,
             trustNotePlacement: 'handoff' as const,
@@ -814,7 +814,7 @@ export default async function CampaignPage({ params }: Props) {
             summaryBarOrder: ['signal', 'next-step', 'review', 'readiness'] as const,
             heroAsideOrder: ['signal', 'next-step', 'review', 'response'] as const,
             summaryFocusLabel: 'Eerste check',
-            reviewLabel: 'Reviewgrens',
+            reviewLabel: 'Reviewmoment',
             evidenceSectionOrder: 'profile-first' as const,
             recommendationOrder: 'playbooks-first' as const,
             trustNotePlacement: 'handoff' as const,
@@ -835,7 +835,7 @@ export default async function CampaignPage({ params }: Props) {
               'Gebruik deze laag om het actuele leadershipbeeld gecontroleerd te verdiepen zonder Leadership Scan te verwarren met TeamScan, segment deep dive of een named leader view.',
             driverIntro:
               'Start bij de begrensde read en gebruik daarna pas factoren, signaalverdeling en basisbehoeften om te bepalen welke context eerst een kleine check verdient.',
-            driverAsideLabel: hasEnoughData ? 'Managementread beschikbaar' : 'Wacht op meer data',
+            driverAsideLabel: hasEnoughData ? 'Managementduiding beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('slate' as const) : ('amber' as const),
             driverTabOrder: ['factoren', 'signalen', 'aanvullend', 'trend'],
             signalTabLabel: 'Managementbeeld',
@@ -859,7 +859,7 @@ export default async function CampaignPage({ params }: Props) {
               'Deze checks vormen de uitvoerlaag onder de gekozen bounded support-read. Ze helpen van duiding naar een kleine vervolgstap te gaan zonder named leader output te openen.',
             routeTitle: 'Van leadershipread naar begrensde vervolgstap',
             routeDescription:
-              'Deze laag brengt de gekozen check, kleine vervolgstap en reviewgrens samen zonder Leadership Scan te laten lezen als een quasi-peer route.',
+              'Deze laag brengt de gekozen check, kleine vervolgstap en het reviewmoment samen zonder Leadership Scan te laten lezen als een quasi-peer route.',
             routeBadgeLabel: 'Bounded vervolgroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
@@ -1807,7 +1807,7 @@ export default async function CampaignPage({ params }: Props) {
                   tone="slate"
                 />
                 <DashboardPanel
-                  eyebrow="Reviewgrens"
+                  eyebrow="Reviewmoment"
                   title={primaryTeamPlaybook?.review ?? 'Lokale hercheck eerst'}
                   body="Gebruik het reviewmoment om bewust te kiezen: nog een lokale vervolgstap, terug naar bredere duiding of juist stoppen met verder lokaliseren."
                   tone="amber"
@@ -1901,7 +1901,7 @@ export default async function CampaignPage({ params }: Props) {
                       tone="slate"
                     />
                     <DashboardPanel
-                      eyebrow="Reviewgrens"
+                      eyebrow="Reviewmoment"
                       title={primaryTeamPlaybook.actions[0] ?? primaryTeamPlaybook.title}
                       body={
                         primaryTeamPlaybook.review ??
@@ -2190,7 +2190,7 @@ export default async function CampaignPage({ params }: Props) {
               <DashboardDisclosure
                 defaultOpen={false}
                 title="Pilot- en early-customer-learning"
-                description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementduiding en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
+                description="Gebruik de dossierbron om buyer-signalen, implementationlessen, eerste managementduiding en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
                 badge={
                   <DashboardChip
                     label={
@@ -2211,7 +2211,7 @@ export default async function CampaignPage({ params }: Props) {
                     body={
                       learningDossiers.length > 0
                         ? 'Gebruik gekoppelde dossiers om implementationfrictie, launchsignalen, managementgebruik en gekozen vervolgroutes expliciet terug te laten landen in product, report, onboarding, sales en operations.'
-                        : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de learning-workbench. Zo blijven echte deliverylessen en vervolgkeuzes niet hangen in losse handover-notes.'
+                        : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de dossierbron. Zo blijven echte deliverylessen en vervolgkeuzes niet hangen in losse handover-notes.'
                     }
                     tone={learningDossiers.length > 0 ? 'slate' : 'amber'}
                   />
@@ -2228,7 +2228,7 @@ export default async function CampaignPage({ params }: Props) {
                       learningCloseoutEvidenceCount > 0
                         ? 'Er is al minstens één expliciete review-, vervolg- of stopuitkomst vastgelegd. Daarmee kan delivery later eerlijker naar follow-up of learning closeout bewegen.'
                         : learningDossiers.length > 0
-                          ? 'Er zijn al gekoppelde dossiers, maar nog geen expliciete review-, vervolg- of stopuitkomst. Houd delivery dus bewust open tot die follow-through echt is vastgelegd.'
+                          ? 'Er zijn al gekoppelde dossiers, maar nog geen expliciete review-, vervolg- of stopuitkomst. Houd delivery dus bewust open tot die opvolging echt is vastgelegd.'
                           : 'Zonder gekoppeld learningdossier hoort delivery-closeout nog niet als afgerond te voelen.'
                     }
                     tone={learningCloseoutEvidenceCount > 0 ? 'emerald' : 'amber'}
@@ -2255,7 +2255,7 @@ export default async function CampaignPage({ params }: Props) {
                       href={`/beheer/klantlearnings?campaign=${id}`}
                       className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
                     >
-                      Open learning-workbench
+                      Open dossierbron
                     </Link>
                   </div>
                 </div>

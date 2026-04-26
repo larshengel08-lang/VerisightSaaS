@@ -224,7 +224,7 @@ function getViewCopy(view: ActionCenterPreviewView, selectedTitle: string | null
       return {
         eyebrow: 'Action Center',
         title: 'Mijn teams',
-        description: 'Inspirationele teamweergave op basis van dezelfde follow-through laag, zonder consumerverbreding.',
+        description: 'Inspirationele teamweergave op basis van dezelfde opvolgingslaag, zonder consumerverbreding.',
       }
     default:
       return {
@@ -518,7 +518,7 @@ export function ActionCenterPreview({
               </div>
               <div>
                 <p className="text-[1.05rem] font-semibold tracking-[-0.02em]">Verisight</p>
-                <p className="text-sm text-white/55">Insight &amp; opvolging</p>
+                <p className="text-sm text-white/55">Duiding &amp; opvolging</p>
               </div>
             </Link>
           </div>
@@ -576,7 +576,7 @@ export function ActionCenterPreview({
               </div>
               <div className="min-w-0">
                 <p className="truncate font-semibold">{fallbackOwnerName}</p>
-                <p className="truncate text-sm text-white/48">Admin-first follow-through</p>
+                <p className="truncate text-sm text-white/48">Admin-first opvolging</p>
               </div>
             </div>
           </div>
@@ -970,7 +970,7 @@ export function ActionCenterPreview({
               ) : (
                 <EmptySection
                   title="Nog geen acties beschikbaar"
-                  body="Zodra er bounded ExitScan-dossiers zichtbaar zijn, toont deze view automatisch de open follow-through."
+                  body="Zodra er bounded ExitScan-dossiers zichtbaar zijn, toont deze view automatisch de open opvolging."
                 />
               )
             ) : null}
@@ -1113,7 +1113,7 @@ export function ActionCenterPreview({
                     </div>
                     <div className="mt-6 space-y-4">
                       {teamOpenItems.length === 0 ? (
-                        <EmptyBlock text="Voor dit team staan nu geen open follow-through acties meer zichtbaar." />
+                        <EmptyBlock text="Voor dit team staan nu geen open opvolgacties meer zichtbaar." />
                       ) : (
                         teamOpenItems.slice(0, 3).map((item) => (
                           <button
