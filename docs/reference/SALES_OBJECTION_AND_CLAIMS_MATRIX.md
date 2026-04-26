@@ -1,7 +1,7 @@
 # Verisight Sales Objection And Claims Matrix
 
 Intern referentiedocument voor bezwaarafhandeling en veilige claimkeuzes.
-Laatste update: 2026-04-15
+Laatste update: 2026-04-26
 
 ## Claimladder
 
@@ -12,6 +12,7 @@ Laatste update: 2026-04-15
 - RetentieScan maakt eerder zichtbaar waar behoud op groepsniveau aandacht vraagt.
 - Dashboard, rapport en preview volgen dezelfde managementtaal.
 - Verisight helpt prioriteren, verifieren en vervolgstappen bepalen.
+- Verisight begeleidt waar nodig ook de eerste bounded follow-through via expliciete eigenaar, reviewmoment en vervolgrichting.
 
 ### Wat sales alleen contextueel mag zeggen
 
@@ -30,6 +31,8 @@ Laatste update: 2026-04-15
 - RetentieScan geeft individuele retentiescores of performance-oordelen.
 - Verisight garandeert lager verloop.
 - Verisight heeft al echte cases, quotes of pragmatisch bewijs als dat nog niet in de repo staat.
+- Action Center is een losse module, cockpit of derde product dat standaard wordt meegeleverd.
+- Action Center orkestreert al breed alle productroutes of adapters alsof die allemaal live staan.
 
 ## Bezwaarpatroon
 
@@ -52,6 +55,7 @@ Gebruik steeds deze volgorde:
 | Waarom is RetentieScan niet goedkoper dan ExitScan? | Dat lijkt begrijpelijk als RetentieScan kleiner voelt. | Smaller in scope betekent niet lichter in management- of privacycomplexiteit. | RetentieScan vraagt een eigen managementverhaal, strengere guardrails en scherpere leeswijzers. | Toets welke route nu echt het beste past. |
 | Wanneer wordt ExitScan ritmeroute logisch? | Doorlopende signalering klinkt aantrekkelijk. | Zonder nulmeting, proces en volume wordt een ritmeroute snel onzuiver. | ExitScan ritmeroute is bewust een quote-only vervolgroute na baseline of bij bestaand exitproces. | Toets of baseline, proces en volume al stevig genoeg staan. |
 | Hoe verhoudt RetentieScan ritmeroute zich tot compacte vervolgmeting? | Die termen kunnen op elkaar lijken. | De ritmeroute is de buyer-facing vervolgvorm; de compacte vervolgmeting is een lichtere component daarbinnen. | Verisight verkoopt geen parallel hoofdpackage naast RetentieScan ritmeroute. | Toets of de buyer ritmeroute, een compact vervolg of nog gewoon de eerste baseline nodig heeft. |
+| Krijgen we daar ook een Action Center-module bij? | Het is logisch dat buyers vervolg en eigenaarschap expliciet willen zien. | Wat nu echt bestaat is een bounded follow-through laag binnen guided execution, niet een los product of cockpitpropositie. | Verisight kan de werkwijze rond eerste eigenaar, reviewmoment en opvolging toelichten, maar verkoopt Action Center nu niet als aparte module of prijslaag. | Toets of de buyer duidelijkheid zoekt over werkwijze of feitelijk om extra productscope vraagt. |
 | Kunnen we gratis starten? | Dat is een begrijpelijke vraag in een vroege fase. | Gratis pilots leveren vaak wel feedback op, maar weinig echte besluitvorming. | Verisight werkt beter als serieus eerste traject met duidelijke scope en deliverables. | Bepaal welk klein maar betaald eerste traject logisch is. |
 | Waarom niet meteen de combinatie? | Beide vragen kunnen tegelijk belangrijk voelen. | Alles tegelijk tonen maakt de eerste koopbeslissing vaak diffuser. | De combinatie is logisch als beide managementvragen echt bestaan, maar meestal start je met een duidelijke eerste wedge. | Kies eerst welke route nu het meeste urgentie heeft. |
 | Waar is jullie eerste proof? | Die vraag is logisch. | In deze fase ligt de sterkste proof in productrealiteit, voorbeeldoutput en expliciete trustgrenzen. | Verisight toont preview, voorbeeldrapporten, pricing, trustlaag en report parity, maar claimt nog geen klantcases die er niet zijn. | Toets of de buyer vooral bewijs van leverbaarheid of bewijs van klantimpact zoekt. |

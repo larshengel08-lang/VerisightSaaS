@@ -33,6 +33,7 @@
 
 - [ ] ExitScan wordt nergens als diagnose, causaliteitsbewijs of predictor verkocht.
 - [ ] RetentieScan wordt nergens als brede MTO, individuele predictor of performance-instrument verkocht.
+- [ ] Action Center wordt nergens als losse module, cockpit of derde product verkocht.
 - [ ] Groepsniveau, minimale n-grenzen en bewijsstatus blijven zichtbaar waar relevant.
 - [ ] Trust blijft reassurance en claimsgrens, niet de primaire pitch.
 

@@ -1,7 +1,7 @@
 # Verisight Sales Enablement System Playbook
 
 Intern referentiedocument voor herhaalbare sales enablement over discovery, routekeuze, demo, voorstel en follow-up.
-Laatste update: 2026-04-24
+Laatste update: 2026-04-26
 
 ## Doel
 
@@ -130,6 +130,12 @@ Elk voorstel moet productized blijven:
 - prijsanker
 - logische vervolgrichting
 
+Action Center-regel binnen voorstellen:
+
+- bounded follow-through mag alleen als onderdeel van guided execution worden beschreven
+- noem hooguit expliciete eigenaar, reviewmoment en follow-through discipline wanneer dat helpt om de werkwijze te verduidelijken
+- verkoop Action Center niet als losse module, cockpit, extra product of aparte prijslaag
+
 ### 8. Follow-up
 
 Elke follow-up bevestigt:
@@ -139,6 +145,11 @@ Elke follow-up bevestigt:
 - wat er wordt opgeleverd
 - wat nodig is om te starten
 - welke vervolgstap logisch is
+
+Action Center mag in follow-up alleen mee als embedded werkwijze:
+
+- als taal voor reviewdiscipline, eigenaarschap en dossier-first opvolging
+- niet als extra aanbod, niet als modulepitch en niet als bewijs dat brede cross-product orchestration al live staat
 
 ## Canonieke asset stack
 
@@ -169,6 +180,7 @@ Deze tranche gebruikt de volgende vaste artefacten:
 - Geen enkel asset gebruikt testimonials, cases of bewijsclaims die de repo nog niet draagt.
 - Sample-output blijft `deliverable_proof`; alleen `approved_case_proof` of `reference_ready` mag als klantbewijs worden ingezet.
 - `reference_ready` blijft beperkt tot warme salescontext en is geen generieke publieke claimlaag.
+- Action Center mag alleen worden genoemd als embedded follow-through laag onder guided execution en nooit als zelfstandig product, module, cockpit of publiek prijsanker.
 
 ## Governance
 

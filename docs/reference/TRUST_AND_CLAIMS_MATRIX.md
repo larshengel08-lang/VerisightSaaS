@@ -1,7 +1,7 @@
 # Verisight Trust And Claims Matrix
 
 Intern referentiedocument voor website, rapport, dashboard, demo, sales en legal.
-Laatste update: 2026-04-14
+Laatste update: 2026-04-26
 
 ## Gebruik
 
@@ -20,6 +20,7 @@ Gebruik deze matrix wanneer copy, reporttaal of salesuitleg moet worden beoordee
 | Niveau van output | Groeps- en segmentduiding | Individuele beoordeling of persoonsgerichte actie-output |
 | Status van uitkomst | Signaal, hypothese, managementsamenvatting | Diagnose, bewijs, objectieve uitspraak |
 | Methodische framing | Inhoudelijk plausibel, methodisch onderbouwd, testmatig beschermd | Wetenschappelijk bewezen zonder passend bewijs |
+| Embedded follow-through | Dossier-first opvolging, reviewmoment en expliciete eigenaar als onderdeel van guided execution | Alsof Action Center al een losse buyer-facing module, cockpit of brede orchestrationlaag is |
 
 ## ExitScan
 
@@ -88,5 +89,6 @@ Deze signalen mogen niet te hard of onnauwkeurig worden geclaimd:
 - [ ] Wordt causaliteit of diagnose vermeden?
 - [ ] Wordt RetentieScan nergens predictor, performance-instrument of MTO?
 - [ ] Wordt ExitScan nergens als harde vertrekdiagnose verkocht?
+- [ ] Wordt Action Center nergens als losse module, cockpit of extra pricinglaag verkocht?
 - [ ] Klopt de privacytaal met privacy- en DPA-pagina's?
 - [ ] Klopt de bewijsstatus met de huidige repo-basis?

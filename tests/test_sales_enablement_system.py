@@ -31,6 +31,7 @@ def test_sales_enablement_artifacts_exist_and_define_system_contract():
     assert "geen bewezen predictor" in objections
     assert "vaste voorstelvolgorde" in proposals
     assert "buyer asset parity" in checklist
+    assert "action center wordt nergens als losse module, cockpit of derde product verkocht" in checklist
 
 
 def test_sales_routing_and_comparison_stay_aligned_with_site_and_preview_language():
@@ -68,11 +69,15 @@ def test_sales_claims_and_proposal_spines_respect_current_trust_and_price_anchor
     assert "geen bewezen predictor" in objections
     assert "geen brede mto" in objections
     assert "geen individuele signalen" in objections
+    assert "action center is een losse module, cockpit of derde product" in objections
+    assert "embedded follow-through" in trust_matrix
+    assert "action center nergens als losse module, cockpit of extra pricinglaag verkocht" in trust_matrix
     assert "eur 2.950" in proposals
     assert "eur 3.450" in proposals
     assert "vanaf eur 4.950" in proposals
     assert "op aanvraag" in proposals
     assert "claims mogen commercieel scherp zijn, maar nooit harder dan de repo-basis draagt" in playbook
+    assert "action center mag alleen worden genoemd als embedded follow-through laag" in playbook
     assert "niet toegestaan" in trust_matrix
     assert "waarom starten jullie niet met een gratis pilot?" in site_content
     assert "waarom is retentiescan niet goedkoper dan exitscan?" in site_content
