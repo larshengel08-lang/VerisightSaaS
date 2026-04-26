@@ -23,6 +23,7 @@ import {
   type DashboardPortfolioView,
 } from '@/lib/dashboard/shell-navigation'
 import { createClient } from '@/lib/supabase/server'
+import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { getFirstNextStepGuidance } from '@/lib/client-onboarding'
 import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import { FIRST_INSIGHT_THRESHOLD } from '@/lib/response-activation'
@@ -78,14 +79,10 @@ export default async function DashboardHomePage({
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+  const { context } = await loadSuiteAccessContext(supabase, user.id)
+  if (context.managerOnly) redirect('/action-center')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_verisight_admin')
-    .eq('id', user.id)
-    .single()
-
-  const isAdmin = profile?.is_verisight_admin === true
+  const isAdmin = context.isVerisightAdmin
 
   const { data: stats } = await supabase.from('campaign_stats').select('*').order('created_at', { ascending: false })
 

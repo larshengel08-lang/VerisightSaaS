@@ -39,6 +39,8 @@ export type DashboardShellNavigation = {
   admin: DashboardShellNavItem[]
 }
 
+export type DashboardShellMode = 'full' | 'action_center_only'
+
 const MODULE_LABELS: Array<{ key: DashboardModuleKey; label: string; scanType?: ScanType }> = [
   { key: 'overview', label: 'Overview' },
   { key: 'exit', label: 'ExitScan', scanType: 'exit' },
@@ -108,17 +110,33 @@ export function getActiveModuleFromPathname(
 
 export function buildDashboardShellNavigation({
   isAdmin,
+  shellMode = 'full',
   currentCampaignPath,
   campaigns,
   portfolioCounts,
 }: {
   isAdmin: boolean
+  shellMode?: DashboardShellMode
   currentCampaignPath: string | null
   campaigns: DashboardShellCampaignRef[]
   portfolioCounts: PortfolioCounts
 }): DashboardShellNavigation {
   void currentCampaignPath
   void portfolioCounts
+
+  if (shellMode === 'action_center_only') {
+    return {
+      modules: [
+        {
+          key: 'action_center',
+          label: 'Action Center',
+          href: '/action-center',
+          disabled: false,
+        },
+      ],
+      admin: [],
+    }
+  }
 
   const modules = MODULE_LABELS.map((item) => {
     if (item.key === 'overview') {

@@ -11,7 +11,9 @@ import {
   filterReportLibraryEntries,
   type ReportLibraryCategory,
 } from '@/lib/dashboard/report-library'
+import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { createClient } from '@/lib/supabase/server'
+import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { getCampaignAverageSignalScore } from '@/lib/types'
 
 const CATEGORY_OPTIONS: Array<{ key: ReportLibraryCategory; label: string }> = [
@@ -41,6 +43,16 @@ export default async function ReportsPage({
 
   if (!user) {
     redirect('/login')
+  }
+  const { context } = await loadSuiteAccessContext(supabase, user.id)
+
+  if (!context.canViewReports) {
+    return (
+      <SuiteAccessDenied
+        title="Rapporten blijven bij HR en klant"
+        description="Jouw manager-login opent alleen het Action Center. Rapporten, survey-inzichten en campaignreads blijven bewust bij HR, klant owner en Verisight."
+      />
+    )
   }
 
   const { data: stats } = await supabase.from('campaign_stats').select('*').order('created_at', { ascending: false })
