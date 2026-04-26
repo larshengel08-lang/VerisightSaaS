@@ -19,6 +19,17 @@ Source-of-truth volgorde:
 4. `docs/strategy/STRATEGY.md`
 5. `Docs_External` als gesynchroniseerde referentie- en assetlaag
 
+Voor de huidige commerciële/documentaire truth na PR `#28`, PR `#29` en Issue `#30`:
+
+1. `docs/strategy/STRATEGY.md`
+2. `docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md`
+3. `docs/active/COMMERCIAL_AND_ONBOARDING_SIGNOFF.md`
+4. `docs/active/PACKAGING_AND_ROUTE_LOGIC.md`
+5. `docs/active/PRODUCT_LANGUAGE_CANON.md`
+6. `docs/active/COMMERCIAL_LANGUAGE_PARITY_RECHECK.md`
+7. `docs/active/HISTORICAL_CANON_BOUNDARY_REGISTER.md`
+8. downstream systeemdocs in `docs/reference` en oudere trancheplannen in `docs/active`, maar alleen voor hun eigen subsystemen en nooit als zelfstandige first-buy of routecanon
+
 Voor de huidige fix-tranche:
 
 1. `SCALABILITY_FIX_PROGRAM_PLAN.md`
@@ -151,3 +162,4 @@ Voor de huidige fix-tranche:
 - Nieuwe planbestanden horen bij voorkeur in `docs/active`, behalve een repo-breed commandfile zoals `SCALABILITY_FIX_PROGRAM_PLAN.md`.
 - Gebruik het prompt-systeem in `docs/prompts` voor nieuwe analyse-, plan- en uitvoeringstrajecten.
 - Gebruik externe documenten als referentie, assetbron of archief, niet als concurrerende roadmap.
+- Oudere trancheplannen of reference systems mogen subsystemen uitleggen, maar mogen de first-buy waarheid uit de actieve commerciële canon niet overschrijven.

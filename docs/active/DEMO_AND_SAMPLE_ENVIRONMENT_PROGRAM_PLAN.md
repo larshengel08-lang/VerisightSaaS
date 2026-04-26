@@ -4,6 +4,12 @@ Status: uitgevoerd in repo
 Last updated: 2026-04-15
 Source of truth: dit bestand is leidend voor deze tranche.
 
+Historical boundary note:
+
+- dit plan blijft leidend voor demo-, sample- en showcase-architectuur binnen deze tranche, maar niet voor de zelfstandige commerciële routehiërarchie
+- actuele first-buy truth en buyer-facing routewoorden winnen in [STRATEGY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/STRATEGY.md), [PRICING_AND_PACKAGING_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md) en [COMMERCIAL_AND_ONBOARDING_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_AND_ONBOARDING_SIGNOFF.md)
+- sample-, showcase- en bewijsgrenzen winnen in [SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md) en [CASE_PROOF_AND_EVIDENCE_SYSTEM.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reference/CASE_PROOF_AND_EVIDENCE_SYSTEM.md)
+
 ## 1. Summary
 
 Dit traject maakt van de losse demo- en samplelagen van Verisight een expliciet systeem met vaste laagindeling, scenario-contracten, seed-orchestratie, playbook en regressiebescherming.

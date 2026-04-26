@@ -1,5 +1,15 @@
 # SALES_ENABLEMENT_SYSTEM_PLAN.md
 
+Status: uitgevoerd in repo
+Last updated: 2026-04-15
+Source of truth: dit bestand documenteert de sales enablement tranche; actuele commerciële routewaarheid wint in de actieve canon en de actuele sales reference docs.
+
+Historical boundary note:
+
+- dit plan beschrijft de tranche-uitrol, maar is niet de hoogste actieve first-buy of routecanon
+- buyer-facing routevolgorde en commerciële guardrails winnen nu in [STRATEGY.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/strategy/STRATEGY.md), [PRICING_AND_PACKAGING_PROGRAM_PLAN.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md), [COMMERCIAL_AND_ONBOARDING_SIGNOFF.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/COMMERCIAL_AND_ONBOARDING_SIGNOFF.md) en [PACKAGING_AND_ROUTE_LOGIC.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/PACKAGING_AND_ROUTE_LOGIC.md)
+- dagelijkse sales-uitvoering wint in [SALES_ENABLEMENT_SYSTEM_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reference/SALES_ENABLEMENT_SYSTEM_PLAYBOOK.md) en [SALES_PRODUCT_DECISION_TREE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/reference/SALES_PRODUCT_DECISION_TREE.md)
+
 ## 1. Summary
 
 Dit traject heeft van de bestaande founder-led backbone, boardroom-laag, trustcontracten, pricingrichting en voorbeeldoutput een herhaalbaar Sales Enablement System gemaakt dat direct aansluit op de actuele repo-implementatie.

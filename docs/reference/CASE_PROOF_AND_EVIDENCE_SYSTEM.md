@@ -7,6 +7,8 @@ Laatste update: 2026-04-15
 
 Dit document legt vast hoe Verisight bewijs ordent tussen deliverable-proof, trustproof, validatie, case-opbouw en referentiegebruik.
 
+Commerciële first-buy truth en routehiërarchie worden niet zelfstandig in dit document bepaald; daarvoor winnen de actieve strategy-, pricing- en signoff-docs.
+
 Gebruik het als eerste referentie voor:
 
 - evidence-tiers en claimgrenzen
@@ -20,13 +22,14 @@ Gebruik het als eerste referentie voor:
 Gebruik bij spanning deze volgorde:
 
 1. `docs/strategy/STRATEGY.md`
-2. `docs/reference/METHODOLOGY.md`
-3. `docs/reference/TRUST_AND_CLAIMS_MATRIX.md`
-4. `docs/active/PILOT_AND_EARLY_CUSTOMER_LEARNING_SYSTEM_PLAN.md`
-5. `docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md`
-6. `docs/reference/FOUNDER_LED_SALES_PLAYBOOK.md`
-7. dit document
-8. `frontend/lib/case-proof-evidence.ts`
+2. `docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md`
+3. `docs/active/COMMERCIAL_AND_ONBOARDING_SIGNOFF.md`
+4. `docs/reference/TRUST_AND_CLAIMS_MATRIX.md`
+5. `docs/reference/METHODOLOGY.md`
+6. `docs/active/PILOT_AND_EARLY_CUSTOMER_LEARNING_SYSTEM_PLAN.md`
+7. `docs/reference/SAMPLE_OUTPUT_AND_SHOWCASE_SYSTEM.md`
+8. dit document
+9. `frontend/lib/case-proof-evidence.ts`
 
 ## Baseline van de huidige repo
 
@@ -147,8 +150,8 @@ Per format gelden deze minimumregels:
 
 ## Productspecifieke defaults
 
-- ExitScan blijft de primaire case-proofroute.
-- RetentieScan blijft complementair en verification-first.
+- ExitScan blijft de default publieke case-anchor in generieke proofflows.
+- RetentieScan kan een geldige eerste evidence-route zijn wanneer de actieve behoudsvraag primair is, maar blijft verification-first en bewijstechnisch strenger.
 - De eerste publieke prooflaag groeit anoniem of minimaal herleidbaar.
 - Named proof is nooit de default.
 
@@ -174,6 +177,6 @@ Refresh en review zijn verplicht wanneer:
 - Sample-output blijft deliverable-proof en trustproof, niet case-proof.
 - Synthetische, dummy- en showcase-data tellen nooit als market evidence.
 - Internal-only lessons worden pas buyer-facing na expliciete evidence- en claimreview.
-- ExitScan blijft de eerste publieke case-anchor.
-- RetentieScan krijgt pas een publieke case-anchor zodra daar echte bewijsbasis voor is.
+- ExitScan blijft de default eerste publieke case-anchor in generieke buyer-flows.
+- RetentieScan krijgt pas een eigen publieke case-anchor zodra daar echte bewijsbasis voor is; tot die tijd blijft die route verification-first en vraaggestuurd.
 - Named testimonials, logo use en ROI-verhalen zijn verboden zonder expliciete basis en toestemming.

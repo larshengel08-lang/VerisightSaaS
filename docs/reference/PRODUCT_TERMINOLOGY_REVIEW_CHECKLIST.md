@@ -4,8 +4,8 @@ Gebruik deze checklist bij wijzigingen in website, dashboard, rapport, survey, p
 
 ## Portfolio And Routing
 
-- [ ] ExitScan blijft de primaire entreepropositie.
-- [ ] RetentieScan blijft complementair tenzij de buyer-vraag expliciet over actieve medewerkers en vroegsignalering gaat.
+- [ ] ExitScan blijft de default entreepropositie in generieke buyer-flows.
+- [ ] RetentieScan blijft een volwaardige first-buy route wanneer de buyer-vraag expliciet over actieve medewerkers en vroegsignalering gaat; verification-first blijft intact.
 - [ ] Combinatie wordt gelezen als portfolioroute en niet als derde peer-product.
 
 ## Canonical Terms
