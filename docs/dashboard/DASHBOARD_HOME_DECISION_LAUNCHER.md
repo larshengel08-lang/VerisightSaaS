@@ -77,6 +77,18 @@ De volgende zaken zijn expres lager in de hierarchie geplaatst:
 - supportverwachting
 - beheer- en operationele taken
 
+## Relatie tot Action Center
+
+Deze homepage blijft bewust gescheiden van Action Center:
+
+- dashboard = campaignkeuze, eerste managementread en portfolio-context
+- Action Center = admin-first follow-through, dossierstatus, reviewdruk en bounded closeout
+
+Boundaryregel:
+
+- open eerst de juiste campaign via dashboard
+- gebruik Action Center pas zodra interne follow-through, eigenaar of reviewdiscipline expliciet bewaakt moet worden
+
 Deze content blijft beschikbaar via secundaire blocks en disclosures, maar concurreert niet meer met de hoofdvraag: welke campaign open je nu?
 
 ## Visuele hierarchie

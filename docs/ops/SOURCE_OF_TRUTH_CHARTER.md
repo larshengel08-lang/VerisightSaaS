@@ -18,8 +18,8 @@ Kernregel:
 Voor wave 1 van het fix-programma werkt Verisight hybride:
 
 - leadpipeline primair in `Verisight_CRM.xlsx`
-- delivery primair in de app-surfaces
-- learning primair in `/beheer/klantlearnings`
+- customer ops primair in `/beheer` en `/campaigns/[id]`
+- Action Center primair in `/beheer/klantlearnings`
 - governance primair in scorecard, maandreview, decision log en capacity map
 - evidence primair in `SCALABILITY_REVIEW_WORKBOOK.xlsx`
 
@@ -29,9 +29,9 @@ Voor wave 1 van het fix-programma werkt Verisight hybride:
 | --- | --- | --- | --- |
 | Actieve leads en deals | `Docs_External/.../Verisight_CRM.xlsx` | `CEO_WEEKLY_SCORECARD.xlsx` tab `Deals` | prospectlijst, losse notities, maandreview |
 | Seed prospects en outbound-voorraad | `Verisight_Prospectlijst_2026-04-10.xlsx` | geen vaste mirror nodig | CRM-pipeline zodra een prospect nog niet actief is |
-| Actieve klanttrajecten | `/beheer` en `/campaigns/[id]` | `CEO_WEEKLY_SCORECARD.xlsx` tab `Clients` | onboardingflow-workbooks, losse checklists |
-| Delivery exceptions en checkpoints | `/beheer` en `/campaigns/[id]` | weekreview en maandreview | losse e-mails of operatorgeheugen |
-| Learning en vroege proof | `/beheer/klantlearnings` | maandreview en case-proof docs | losse notities |
+| Actieve klanttrajecten en setup | `/beheer` en `/campaigns/[id]` | `CEO_WEEKLY_SCORECARD.xlsx` tab `Clients` | onboardingflow-workbooks, losse checklists |
+| Delivery exceptions en checkpoints | `/beheer` en `/campaigns/[id]` | weekreview en maandreview | losse e-mails, operatorgeheugen of `/beheer/klantlearnings` als vervanging |
+| Learning, dossier-follow-through en reviewdruk | `/beheer/klantlearnings` | maandreview en case-proof docs | losse notities, setup-surfaces of scorecard-only |
 | Wekelijkse prioriteiten en stopregels | `CEO_WEEKLY_SCORECARD.xlsx` | `DECISION_LOG.md` waar nodig | CRM of deliverysurfaces |
 | Maandelijkse gates en wave-overgangen | `MONTHLY_PHASE_REVIEW.md` | `DECISION_LOG.md`, `SCALABILITY_REVIEW_WORKBOOK.xlsx` | roadmap of losse statusupdates |
 | Capaciteitsgrenzen | `FOUNDER_CAPACITY_MAP.md` | scorecard cash and capacity | impliciet gevoel |
@@ -55,13 +55,14 @@ Werk in deze volgorde:
 2. zet alleen de wekelijkse samenvatting in `CEO_WEEKLY_SCORECARD.xlsx`
 3. gebruik `MONTHLY_PHASE_REVIEW.md` voor terugkerende fricties of gates
 
-### 3. Learning and proof updates
+### 3. Action Center, learning and proof updates
 
 Werk in deze volgorde:
 
 1. update `/beheer/klantlearnings`
-2. trek relevante patroonlessen door naar maandreview
-3. gebruik case-proof docs pas als bewijs of claimruimte echt hard genoeg is
+2. leg eigenaar, eerste stap, reviewmoment en follow-upbesluit eerst daar vast
+3. trek relevante patroonlessen door naar maandreview
+4. gebruik case-proof docs pas als bewijs of claimruimte echt hard genoeg is
 
 ### 4. Governance updates
 
@@ -76,6 +77,7 @@ Werk in deze volgorde:
 
 - `Deals` in `CEO_WEEKLY_SCORECARD.xlsx` is een weekmirror van de CRM-pipeline.
 - `Clients` in `CEO_WEEKLY_SCORECARD.xlsx` is een weekmirror van de app-deliverylaag.
+- `/beheer/klantlearnings` is de primaire Action Center-laag voor learning, bounded follow-through en closeoutdiscipline.
 - `SCALABILITY_REVIEW_WORKBOOK.xlsx` is geen dagelijkse operatie, maar een gate- en evidenceregister.
 - `ROADMAP.md` en `ROADMAP_WORKBOOK.xlsx` blijven fase- en auditlaag, niet de live fix-werklaag.
 - `Docs_External` mag referentie of assetlaag zijn, maar geen autonome prioriteitenlaag.
@@ -86,6 +88,7 @@ Niet doen:
 
 - actieve leads alleen in de prospectlijst laten staan
 - deliverystatus alleen in scorecard of losse notities bijhouden
+- Action Center-follow-through verplaatsen naar setupnotities, maandreview of dashboardcopy zonder de primaire surface bij te werken
 - maandreview invullen zonder terug te wijzen naar echte CRM-, app- of workbookevidence
 - externe workbooks of documenten laten afwijken van de actieve repo-playbooks zonder expliciete sync
 - een mirror gebruiken om het primaire systeem te overrulen
