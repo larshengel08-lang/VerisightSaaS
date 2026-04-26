@@ -50,6 +50,15 @@ describe('campaign detail review guardrails', () => {
     expect(preflightSource).toContain('Klant owner')
   })
 
+  it('keeps owner guidance and the first next step visible above the fold', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('Jouw rol')
+    expect(source).toContain('Eerste volgende stap')
+    expect(source).toContain('Deze vervolgstap wordt bevestigd door de klant owner')
+    expect(source).toContain('defaultOpen={!hasEnoughData || (canManageCampaign && !readinessState.launchReady)}')
+  })
+
   it('keeps module hierarchy differentiated by role, evidence order and trust placement', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 

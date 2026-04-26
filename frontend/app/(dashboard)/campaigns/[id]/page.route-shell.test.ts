@@ -11,4 +11,13 @@ describe('campaign detail first-next-step shell', () => {
     expect(source).toContain('Geen standaard vervolg')
     expect(source).toContain('followOnSuggestions.map')
   })
+
+  it('keeps no-access and role clarity inside the same campaign shell', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('getCustomerRoleSummary')
+    expect(source).toContain('Geen toegang tot deze campaign')
+    expect(source).toContain('Terug naar dashboard')
+    expect(source).toContain('Jouw rol')
+  })
 })
