@@ -23,9 +23,9 @@ def test_active_pricing_plan_tracks_outputs_and_prompt_closure():
 
 def test_public_pricing_copy_keeps_package_hierarchy_explicit():
     site_content = _read("frontend/components/marketing/site-content.ts")
-    tarieven_page = _read("frontend/app/tarieven/page.tsx")
-    aanpak_page = _read("frontend/app/aanpak/page.tsx")
-    homepage = _read("frontend/app/page.tsx")
+    tarieven_content = _read("frontend/components/marketing/tarieven-content.tsx")
+    aanpak_content = _read("frontend/components/marketing/aanpak-content.tsx")
+    homepage_content = _read("frontend/components/marketing/home-page-content.tsx")
 
     assert "exitscan baseline" in site_content
     assert "retentiescan baseline" in site_content
@@ -34,11 +34,12 @@ def test_public_pricing_copy_keeps_package_hierarchy_explicit():
     assert "retentiescan ritme" in site_content
     assert "compacte retentie vervolgmeting" in site_content
     assert "combinatieroute" in site_content
-    assert "de eerste koop blijft helder." in tarieven_page
-    assert "vervolg en add-ons" in tarieven_page
-    assert "prijs in context" in tarieven_page
-    assert "welke route past nu?" in homepage
-    assert "rapport, bestuurlijke handoff en eerste opvolging" in aanpak_page
+    assert "de eerste koop blijft helder." in tarieven_content
+    assert "vervolg en add-ons" in tarieven_content
+    assert "prijs in context" in tarieven_content
+    assert "kies de route" in homepage_content
+    assert "die past bij uw vraagstuk." in homepage_content
+    assert "rapport, bestuurlijke handoff en eerste opvolging" in aanpak_content
 
 
 def test_sales_docs_keep_same_package_architecture_as_public_site():
@@ -80,3 +81,17 @@ def test_pricing_claims_stay_inside_trust_and_output_boundaries():
     assert "geen individuele signalen naar management" in site_content
     assert "geen brede mto" in retention_one_pager
     assert "geen individuele predictor" in retention_one_pager
+
+
+def test_action_center_stays_documented_as_embedded_non_priced_follow_through_layer():
+    strategy = _read("docs/strategy/STRATEGY.md")
+    pricing_plan = _read("docs/active/PRICING_AND_PACKAGING_PROGRAM_PLAN.md")
+    route_logic = _read("docs/active/PACKAGING_AND_ROUTE_LOGIC.md")
+
+    assert "action center-productlaag" in strategy
+    assert "twee live consumers" in strategy
+    assert "geen buyer-facing route, geen losse pricingmodule" in strategy
+    assert "embedded follow-through laag" in pricing_plan
+    assert "geen standalone action center pricing" in pricing_plan
+    assert "embedded follow-through layer" in route_logic
+    assert "publiek prijsanker, derde product, buyer-facing module" in route_logic
