@@ -1069,7 +1069,7 @@ function OnboardingPage() {
             </p>
             <ul className="mt-6 space-y-3 text-sm leading-7 text-slate-300">
               {[
-                'Geen hire-date engine of multi-checkpoint orchestration in deze wave.',
+                'Geen brede hire-date workflow of extra checkpoint-suite in deze wave.',
                 'Geen individuele onboardingbeoordeling of manageroordeel.',
                 'Wel een compacte route om HR, onboarding-owner en leiding sneller op een lijn te krijgen.',
               ].map((item) => (

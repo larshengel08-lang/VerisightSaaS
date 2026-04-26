@@ -108,3 +108,15 @@ def test_action_center_stays_documented_as_embedded_non_priced_follow_through_la
     assert "geen standalone action center pricing, modulepositionering of adapterverbreding" in signoff
     assert "geen pricingcopy leest action center als derde product" in acceptance
     assert "publiek prijsanker, derde product, buyer-facing module" in route_logic
+
+
+def test_buyer_facing_surfaces_keep_action_center_out_of_public_product_copy():
+    homepage_content = _read("frontend/components/marketing/home-page-content.tsx")
+    site_content = _read("frontend/components/marketing/site-content.ts")
+    product_detail = _read("frontend/app/producten/[slug]/page.tsx")
+
+    assert "action center" not in homepage_content
+    assert "action center" not in site_content
+    assert "action center" not in product_detail
+    assert "multi-checkpoint orchestration" not in product_detail
+    assert "cockpit" not in product_detail
