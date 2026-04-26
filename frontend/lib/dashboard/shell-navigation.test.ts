@@ -90,7 +90,7 @@ describe('dashboard shell navigation', () => {
       {
         key: 'reports',
         label: 'Reports',
-        href: '/dashboard#reports',
+        href: '/reports',
         disabled: false,
       },
     ])
@@ -126,7 +126,7 @@ describe('dashboard shell navigation', () => {
     expect(getActiveModuleFromPathname('/campaigns/retention-1', [...campaigns])).toBe('retention')
     expect(getActiveModuleFromPathname('/campaigns/pulse-1', [...campaigns])).toBe('pulse')
     expect(getActiveModuleFromPathname('/campaigns/unknown', [...campaigns])).toBe('overview')
-    expect(getActiveModuleFromPathname('/dashboard#reports', [...campaigns])).toBe('overview')
+    expect(getActiveModuleFromPathname('/reports', [...campaigns])).toBe('reports')
     expect(getActiveModuleFromPathname('/beheer', [...campaigns])).toBe('overview')
   })
 
@@ -155,7 +155,7 @@ describe('dashboard shell navigation', () => {
     })
     expect(navigation.modules[6]).toMatchObject({
       key: 'reports',
-      href: '/dashboard#reports',
+      href: '/reports',
       disabled: false,
     })
   })

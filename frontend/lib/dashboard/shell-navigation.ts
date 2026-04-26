@@ -91,6 +91,7 @@ export function getActiveModuleFromPathname(
   pathname: string,
   campaigns: DashboardShellCampaignRef[],
 ): DashboardModuleKey {
+  if (pathname.startsWith('/reports')) return 'reports'
   if (!pathname.startsWith('/campaigns/')) return 'overview'
 
   const [, , campaignId] = pathname.split('/')
@@ -128,7 +129,7 @@ export function buildDashboardShellNavigation({
       return {
         key: item.key,
         label: item.label,
-        href: '/dashboard#reports',
+        href: '/reports',
         disabled: false,
       }
     }
@@ -174,6 +175,7 @@ export function buildDashboardShellNavigation({
 }
 
 export function getDashboardShellCurrentLabel(pathname: string) {
+  if (pathname.startsWith('/reports')) return 'Reports & exports'
   if (pathname.startsWith('/campaigns/')) return 'Campagneread'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
   if (pathname.startsWith('/beheer/klantlearnings')) return 'Action Center'

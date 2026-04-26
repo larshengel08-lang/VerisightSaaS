@@ -137,7 +137,7 @@ export function DashboardShellFrame({
               </div>
 
               <Link
-                href="/dashboard#reports"
+                href="/reports"
                 className="hidden rounded-full border border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45] lg:inline-flex"
               >
                 Rapportlaag
