@@ -91,11 +91,10 @@ export default async function ProductDetailPage({ params }: Props) {
       {slug === 'retentiescan' ? <RetentionScanPage /> : null}
       {slug === 'exitscan' ? <ExitScanPage /> : null}
       {slug === 'pulse' ? <PulsePage /> : null}
-      {slug === 'teamscan' ? <TeamScanPage /> : null}
       {slug === 'onboarding-30-60-90' ? <OnboardingPage /> : null}
       {slug === 'leadership-scan' ? <LeadershipScanPage /> : null}
       {slug === 'combinatie' ? <CombinatiePage /> : null}
-      {!['retentiescan', 'exitscan', 'pulse', 'teamscan', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
+      {!['retentiescan', 'exitscan', 'pulse', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
     </>
   )
 }
@@ -499,7 +498,7 @@ function PulsePage() {
     <MarketingPageShell
       theme="neutral"
       pageType="product"
-      ctaHref={buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'product_pulse_hero' })}
+      ctaHref={buildContactHref({ routeInterest: 'pulse', ctaSource: 'product_pulse_hero' })}
       ctaLabel="Bespreek Pulse"
       heroIntro={
         <MarketingHeroIntro>
@@ -515,7 +514,7 @@ function PulsePage() {
           <div className="marketing-hero-actions">
             <div className="marketing-hero-cta-row">
               <a
-                href={buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'product_pulse_hero' })}
+                href={buildContactHref({ routeInterest: 'pulse', ctaSource: 'product_pulse_hero' })}
                 className="inline-flex items-center justify-center rounded-full bg-amber-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(217,119,6,0.22)] transition-all hover:-translate-y-0.5 hover:bg-amber-700"
               >
                 Bespreek Pulse
@@ -677,7 +676,7 @@ function PulsePage() {
           eyebrow="Kennismaking"
           title="Toets of Pulse als vervolgroute nu echt logisch is."
           body="Beschrijf kort welke eerste baseline, managementread of actie al loopt en wat je nu vooral wilt herchecken. Dan bepalen we of Pulse past of dat een bredere vervolgroute logischer is."
-          defaultRouteInterest="nog-onzeker"
+          defaultRouteInterest="pulse"
           defaultCtaSource="product_pulse_form"
         />
       </MarketingSection>
@@ -687,7 +686,7 @@ function PulsePage() {
           eyebrow="Portfoliohelderheid"
           title="Twijfel je tussen Pulse en een bredere vervolgronde?"
           body="We helpen je kiezen tussen een compacte Pulse-hercheck, RetentieScan ritmeroute of een andere vervolgroute. Zo blijft de volgende stap scherp in plaats van breder dan nodig."
-          primaryHref={buildContactHref({ routeInterest: 'nog-onzeker', ctaSource: 'product_pulse_callout' })}
+          primaryHref={buildContactHref({ routeInterest: 'pulse', ctaSource: 'product_pulse_callout' })}
           primaryLabel="Plan kennismaking"
           secondaryHref="/tarieven"
           secondaryLabel="Bekijk tarieven"
@@ -901,6 +900,8 @@ function TeamScanPage() {
   )
 }
 
+void TeamScanPage
+
 function OnboardingPage() {
   return (
     <MarketingPageShell
@@ -1010,7 +1011,7 @@ function OnboardingPage() {
           {[
             {
               title: 'Wanneer deze route logisch wordt',
-              body: 'Gebruik onboarding wanneer management vroeg wil toetsen hoe nieuwe medewerkers nu landen en die vraag smaller is dan een bredere retentiescan of teamscan.',
+              body: 'Gebruik onboarding wanneer management vroeg wil toetsen hoe nieuwe medewerkers nu landen en die vraag smaller is dan een bredere retentiescan of combinatieroute.',
             },
             {
               title: 'Wat je nu krijgt',
@@ -1173,7 +1174,7 @@ function LeadershipScanPage() {
           {[
             {
               title: 'Wanneer deze route logisch wordt',
-              body: 'Na een bestaand signaal uit ExitScan, RetentieScan, TeamScan of onboarding, wanneer de vraag verschuift naar managementcontext en eerste verificatie.',
+              body: 'Na een bestaand signaal uit ExitScan, RetentieScan, onboarding of Pulse, wanneer de vraag verschuift naar managementcontext en eerste verificatie.',
             },
             {
               title: 'Wat je nu krijgt',

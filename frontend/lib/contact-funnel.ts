@@ -18,16 +18,16 @@ export const CONTACT_ROUTE_OPTIONS = [
     firstStepLabel: 'een gefaseerde combinatieroute',
   },
   {
-    value: 'teamscan',
-    label: 'TeamScan',
-    description: 'Na een breder signaal willen we lokaal bepalen waar eerst verificatie nodig is.',
-    firstStepLabel: 'een bounded TeamScan follow-on route na een bestaand signaal',
-  },
-  {
     value: 'onboarding',
     label: 'Onboarding 30-60-90',
-    description: 'Na een onboardingvraag willen we vroeg zien hoe nieuwe medewerkers in een checkpoint landen.',
-    firstStepLabel: 'een bounded onboarding follow-on route na een eerste lifecycle-vraag',
+    description: 'We willen vroeg zien hoe nieuwe medewerkers landen zonder daar een brede lifecycle-suite van te maken.',
+    firstStepLabel: 'een bounded peer onboarding-route naast de kernproducten',
+  },
+  {
+    value: 'pulse',
+    label: 'Pulse',
+    description: 'Na een eerste baseline of managementread willen we compact herchecken wat nu verschuift.',
+    firstStepLabel: 'een bounded Pulse vervolgroute na een eerste baseline of managementread',
   },
   {
     value: 'leadership',
@@ -40,6 +40,15 @@ export const CONTACT_ROUTE_OPTIONS = [
     label: 'Nog niet zeker',
     description: 'We willen eerst de juiste route bepalen.',
     firstStepLabel: 'de logischste eerste route',
+  },
+] as const
+
+const LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS = [
+  {
+    value: 'teamscan',
+    label: 'TeamScan',
+    description: 'Verborgen legacy route voor interne of historische teamreads.',
+    firstStepLabel: 'een legacy TeamScan-route na een bestaand signaal',
   },
 ] as const
 
@@ -66,14 +75,17 @@ export const CONTACT_DESIRED_TIMING_OPTIONS = [
   },
 ] as const
 
-export type ContactRouteInterest = (typeof CONTACT_ROUTE_OPTIONS)[number]['value']
+export type ContactRouteInterest =
+  | (typeof CONTACT_ROUTE_OPTIONS)[number]['value']
+  | (typeof LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS)[number]['value']
 export type ContactDesiredTiming = (typeof CONTACT_DESIRED_TIMING_OPTIONS)[number]['value']
 export type CoreContactRouteInterest = Extract<ContactRouteInterest, 'exitscan' | 'retentiescan' | 'combinatie'>
-export type FollowOnContactRouteInterest = Extract<ContactRouteInterest, 'teamscan' | 'onboarding' | 'leadership'>
+export type FollowOnContactRouteInterest = Extract<ContactRouteInterest, 'teamscan' | 'onboarding' | 'pulse' | 'leadership'>
 export type ContactQualificationStatus =
   | 'core_default'
   | 'retention_primary'
   | 'combination_candidate'
+  | 'bounded_peer_review'
   | 'bounded_follow_on_review'
   | 'follow_on_reframe'
   | 'uncertain_core_review'
@@ -99,9 +111,9 @@ export type ContactQualificationGuidance = {
   operatorSummary: string
 }
 
-const routeOptionMap = new Map(CONTACT_ROUTE_OPTIONS.map((option) => [option.value, option]))
+const routeOptionMap = new Map([...CONTACT_ROUTE_OPTIONS, ...LEGACY_HIDDEN_CONTACT_ROUTE_OPTIONS].map((option) => [option.value, option]))
 const timingOptionMap = new Map(CONTACT_DESIRED_TIMING_OPTIONS.map((option) => [option.value, option]))
-const followOnRoutes = new Set<FollowOnContactRouteInterest>(['teamscan', 'onboarding', 'leadership'])
+const followOnRoutes = new Set<FollowOnContactRouteInterest>(['pulse', 'leadership'])
 
 const EXIT_SIGNAL_KEYWORDS = [
   'exit',
@@ -124,6 +136,14 @@ const RETENTION_SIGNAL_KEYWORDS = [
   'verloop voorkomen',
 ]
 
+const PULSE_SIGNAL_KEYWORDS = [
+  'pulse',
+  'hercheck',
+  'hermeting',
+  'vervolgmeting',
+  'effectcheck',
+  'ritme',
+]
 const TEAM_SIGNAL_KEYWORDS = ['team', 'teams', 'afdeling', 'afdelingen', 'lokaal', 'leidingcontext']
 const ONBOARDING_SIGNAL_KEYWORDS = [
   'onboarding',
@@ -141,8 +161,11 @@ const FOLLOW_ON_EVIDENCE_KEYWORDS = [
   'baseline',
   'bestaand beeld',
   'vervolg',
+  'vervolgmeting',
   'verdieping',
   'opvolging',
+  'hercheck',
+  'hermeting',
   'review',
   'na een',
   'na het',
@@ -185,6 +208,9 @@ export function inferRouteInterestFromSource(source: string | null | undefined):
   if (normalizedSource.includes('onboarding')) {
     return 'onboarding'
   }
+  if (normalizedSource.includes('pulse')) {
+    return 'pulse'
+  }
   if (normalizedSource.includes('leadership')) {
     return 'leadership'
   }
@@ -222,6 +248,9 @@ function detectFollowOnCandidateRoute(text: string): FollowOnContactRouteInteres
   if (includesAnyKeyword(text, ONBOARDING_SIGNAL_KEYWORDS)) {
     return 'onboarding'
   }
+  if (includesAnyKeyword(text, PULSE_SIGNAL_KEYWORDS)) {
+    return 'pulse'
+  }
   if (includesAnyKeyword(text, LEADERSHIP_SIGNAL_KEYWORDS)) {
     return 'leadership'
   }
@@ -244,12 +273,25 @@ export function getContactQualificationGuidance({
     : null
   const inferredFollowOnCandidate = detectFollowOnCandidateRoute(normalizedQuestion)
   const followOnCandidateRoute = explicitFollowOnCandidate ?? inferredFollowOnCandidate
+  const onboardingCandidate =
+    normalizedRoute === 'onboarding' || inferredFollowOnCandidate === 'onboarding' ? 'onboarding' : null
 
   let recommendedCoreRoute: CoreContactRouteInterest = 'exitscan'
   if (hasExitSignal && hasRetentionSignal) {
     recommendedCoreRoute = 'combinatie'
   } else if (hasRetentionSignal && !hasExitSignal) {
     recommendedCoreRoute = 'retentiescan'
+  }
+
+  if (onboardingCandidate) {
+    return {
+      status: 'bounded_peer_review',
+      recommendedCoreRoute,
+      followOnCandidateRoute: 'onboarding',
+      headline: 'Onboarding 30-60-90 blijft een bounded peer naast de kernroutes.',
+      detail: `We behandelen onboarding als een eigen lifecycle-check voor nieuwe medewerkers. De route hoeft niet eerst te worden teruggeduwd naar een gewone follow-up, maar we toetsen wel bewust of een smallere onboardingread past of dat ${getContactRouteLabel(recommendedCoreRoute)} inhoudelijk logischer blijft.`,
+      operatorSummary: `Onboarding is genoemd als bounded peer; toets direct de lifecycle-vraag, maar check ook of ${getContactRouteLabel(recommendedCoreRoute)} toch de sterkere eerste managementroute is.`,
+    }
   }
 
   if (followOnCandidateRoute && followOnEvidence) {

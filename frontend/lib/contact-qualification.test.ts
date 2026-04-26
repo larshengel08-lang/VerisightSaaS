@@ -26,17 +26,17 @@ describe('contact qualification visibility summary', () => {
     expect(summary.recommendationLabel).toContain('RetentieScan')
   })
 
-  it('treats follow-on routes as review items instead of flat first routes', () => {
+  it('treats onboarding as a bounded peer instead of a flat first route', () => {
     const summary = buildContactQualificationVisibilitySummary({
-      routeInterest: 'teamscan',
+      routeInterest: 'onboarding',
       desiredTiming: 'dit-kwartaal',
-      currentQuestion: 'Na een bestaand retentiesignaal willen we in teams zien waar eerst verificatie nodig is.',
+      currentQuestion: 'We willen vroeg zien hoe nieuwe medewerkers landen en waar het eerste checkpoint frictie laat zien.',
     })
 
     expect(summary.tone).toBe('amber')
-    expect(summary.headline).toContain('TeamScan')
-    expect(summary.recommendationLabel).toContain('RetentieScan')
-    expect(summary.nextAction.toLowerCase()).toContain('baseline')
+    expect(summary.headline.toLowerCase()).toContain('bounded peer')
+    expect(summary.routeReviewLabel).toContain('Onboarding 30-60-90')
+    expect(summary.nextAction.toLowerCase()).toContain('checkpoint')
   })
 
   it('shows confirmed qualification routes as the handoff truth once review is done', () => {
