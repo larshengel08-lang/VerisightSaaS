@@ -12,7 +12,7 @@ describe('bounded commerce helpers', () => {
     expect(supportsBoundedCommerceRoute('exitscan')).toBe(true)
     expect(supportsBoundedCommerceRoute('retentiescan')).toBe(true)
     expect(supportsBoundedCommerceRoute('combinatie')).toBe(false)
-    expect(supportsBoundedCommerceRoute('teamscan')).toBe(false)
+    expect(supportsBoundedCommerceRoute('pulse')).toBe(false)
     expect(supportsBoundedCommerceRoute('leadership')).toBe(false)
   })
 
@@ -77,7 +77,7 @@ describe('bounded commerce helpers', () => {
 
   it('keeps non-core routes outside bounded commerce visibility', () => {
     const summary = buildBoundedCommerceVisibilitySummary({
-      routeInterest: 'teamscan',
+      routeInterest: 'pulse',
       agreementStatus: 'confirmed',
       pricingMode: 'custom_quote',
       startReadinessStatus: 'ready',

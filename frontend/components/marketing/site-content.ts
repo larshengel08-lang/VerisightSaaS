@@ -225,7 +225,7 @@ export const trustVerificationCards = [
   },
   {
     title: 'Waar sample-proof bewust stopt',
-    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Pulse, TeamScan, onboarding en Leadership Scan blijven bounded follow-on routes met formele output, maar zonder aparte publieke samplebibliotheek.',
+    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Onboarding blijft een bounded peer en Pulse plus Leadership Scan blijven bounded vervolgroutes met formele output, maar zonder aparte publieke samplebibliotheek.',
   },
   {
     title: 'Wat management wel ziet',

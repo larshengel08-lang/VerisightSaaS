@@ -86,6 +86,15 @@ export function buildContactQualificationVisibilitySummary({
         routeReviewLabel: `Geselecteerd: ${selectedRouteLabel}`,
         nextAction: 'Toets expliciet of zowel vertrekduiding als vroeg behoudssignaal direct nodig zijn; zo niet, vernauw eerst naar een enkele kernroute.',
       }
+    case 'bounded_peer_review':
+      return {
+        tone: 'amber',
+        headline: 'Onboarding blijft hier een bounded peer, geen gewone vervolgronde.',
+        detail: `${guidance.detail} Gewenste timing: ${timingLabel}.`,
+        recommendationLabel: `Kernroute-check: ${recommendedRouteLabel}`,
+        routeReviewLabel: `Geselecteerd: ${selectedRouteLabel}`,
+        nextAction: 'Toets eerst of de onboardingvraag echt smal en checkpoint-gedreven is. Bevestig anders alsnog een kernroute als eerste managementstap.',
+      }
     case 'bounded_follow_on_review':
       return {
         tone: 'amber',

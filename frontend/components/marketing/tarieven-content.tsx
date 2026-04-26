@@ -40,9 +40,8 @@ const followOnRows = [
   ['ExitScan ritmeroute', 'Op aanvraag', 'Logisch vervolg na eerste baseline wanneer proces, volume en eigenaarschap al staan.'],
   ['RetentieScan ritmeroute', 'Op aanvraag', 'Doorlopende vervolgvorm wanneer vroegsignalering structureel onderdeel van de managementcyclus wordt.'],
   ['Segment Deep Dive', 'EUR 950', 'Extra segmentanalyse als metadata en minimale respondentengroep dat dragen.'],
+  ['Onboarding 30-60-90', 'Op aanvraag', 'Bounded peer-route wanneer vroege landing van nieuwe medewerkers centraal staat.'],
   ['Pulse', 'Op aanvraag', 'Compacte reviewlaag na een eerste kernroute of baseline, geen nieuwe eerste instap.'],
-  ['TeamScan', 'Op aanvraag', 'Bounded lokale verdieping nadat een breder signaal al zichtbaar is.'],
-  ['Onboarding 30-60-90', 'Op aanvraag', 'Gerichte lifecycle-check wanneer vroege landing van nieuwe medewerkers centraal staat.'],
   ['Leadership Scan', 'Op aanvraag', 'Begrensde managementread nadat een bestaand people-signaal eerst duiding of verificatie vraagt.'],
 ] as const
 
@@ -140,13 +139,13 @@ function FollowOnSection() {
     <section style={{ background: T.white, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: FF, fontSize: 260, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: .4 }}>03</div>
       <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
-        <SectionMark num="03" label="Vervolg en add-ons" inView={sInView} />
+        <SectionMark num="03" label="Peer, vervolg en add-ons" inView={sInView} />
         <Reveal delay={.05}>
           <h2 style={{ fontFamily: FF, fontSize: 'clamp(26px,3vw,38px)', fontWeight: 400, letterSpacing: '-.022em', color: T.ink, marginBottom: 14, lineHeight: 1.1 }}>
-            Kleinere routes na de eerste kernroute.
+            Kleinere routes rond de eerste kernroute.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 40, maxWidth: '52ch' }}>
-            De vervolglaag blijft bewust bounded. Vervolgprijzen blijven logisch in verhouding tot de eerste managementvraag.
+            Onboarding blijft een bounded peer. Pulse en Leadership Scan blijven bewust klein als vervolg. De prijslaag blijft zo logisch in verhouding tot de eerste managementvraag.
           </p>
         </Reveal>
         <Reveal delay={.1}>

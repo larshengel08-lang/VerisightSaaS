@@ -582,9 +582,12 @@ function RoutesSection() {
     },
   ]
 
+  const primaryRoutes = mainRoutes.slice(0, 2)
+
   const supportRoutes = [
+    { tag: 'Bounded peer', title: 'Onboarding 30-60-90', desc: 'Vroege checkpoint-read voor nieuwe medewerkers, naast de kernroutes maar kleiner dan een hoofdproduct.', color: 'oklch(.46 .14 72)', href: '/producten/onboarding-30-60-90' },
     { tag: 'Vervolgstap', title: 'Pulse', desc: 'Korte hercheck na een traject. Snel zichtbaar of de beweging zet.', color: AC.mid, href: '/producten/pulse' },
-    { tag: 'Extra duiding voor management', title: 'Leadership Scan', desc: 'Alleen als vervolgstap.', color: 'oklch(.42 .12 290)', href: '/producten' },
+    { tag: 'Extra duiding voor management', title: 'Leadership Scan', desc: 'Alleen als vervolgstap na een bestaand people-signaal.', color: 'oklch(.42 .12 290)', href: '/producten/leadership-scan' },
   ]
 
   return (
@@ -601,15 +604,15 @@ function RoutesSection() {
           </Reveal>
           <Reveal delay={.14}>
             <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '32ch' }}>
-              Drie hoofdroutes. Aanvullende routes sluiten later aan.
+              Twee hoofdroutes. Onboarding staat daarnaast als bounded peer. Pulse en Leadership sluiten later aan.
             </p>
           </Reveal>
         </div>
 
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-0" style={{ borderBottom: `1px solid ${T.rule}`, paddingBottom: 0 }}>
-          {mainRoutes.map((r, i) => (
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-0" style={{ borderBottom: `1px solid ${T.rule}`, paddingBottom: 0 }}>
+          {primaryRoutes.map((r, i) => (
             <Reveal key={i} delay={.08 + i * .1}>
-              <div style={{ paddingRight: i < 2 ? 'clamp(0px,3vw,44px)' : 0, paddingLeft: i > 0 ? 'clamp(0px,3vw,44px)' : 0, borderLeft: i > 0 ? `1px solid ${T.rule}` : 'none', paddingBottom: 32 }}>
+              <div style={{ paddingRight: i < 1 ? 'clamp(0px,3vw,44px)' : 0, paddingLeft: i > 0 ? 'clamp(0px,3vw,44px)' : 0, borderLeft: i > 0 ? `1px solid ${T.rule}` : 'none', paddingBottom: 32 }}>
                 <RouteColumn route={r} />
               </div>
             </Reveal>
@@ -619,13 +622,13 @@ function RoutesSection() {
         <div style={{ marginTop: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
             <div style={{ flex: 1, height: '1px', background: T.rule }} />
-            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, whiteSpace: 'nowrap', padding: '0 4px' }}>Vervolg- en supportroutes</span>
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, whiteSpace: 'nowrap', padding: '0 4px' }}>Bounded peer en vervolgroutes</span>
             <div style={{ flex: 1, height: '1px', background: T.rule }} />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3">
             {supportRoutes.map((r, i) => (
               <Reveal key={i} delay={.1 + i * .08}>
-                <div style={{ padding: '20px 24px', borderTop: `1px solid ${T.rule}`, borderRight: i === 0 ? `1px solid ${T.rule}` : 'none' }}
+                <div style={{ padding: '20px 24px', borderTop: `1px solid ${T.rule}`, borderRight: i < supportRoutes.length - 1 ? `1px solid ${T.rule}` : 'none' }}
                   className="transition-colors hover:bg-[oklch(0.956_0.018_60)]">
                   <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 7 }}>{r.tag}</div>
                   <div style={{ fontFamily: FF, fontSize: 18, fontWeight: 400, color: T.inkMuted, marginBottom: 6 }}>{r.title}</div>

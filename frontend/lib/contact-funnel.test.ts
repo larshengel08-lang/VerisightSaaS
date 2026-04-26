@@ -38,18 +38,30 @@ describe('contact qualification guidance', () => {
     expect(guidance.recommendedCoreRoute).toBe('combinatie')
   })
 
-  it('treats follow-on routes as bounded vervolgkeuzes when a prior signal is explicitly present', () => {
+  it('treats Pulse and Leadership as bounded vervolgkeuzes when a prior signal is explicitly present', () => {
     const guidance = getContactQualificationGuidance({
-      routeInterest: 'teamscan',
+      routeInterest: 'pulse',
       desiredTiming: 'deze-maand',
-      currentQuestion:
-        'Na een bestaand retentiesignaal willen we lokaal zien in welke teams eerst verificatie nodig is.',
+      currentQuestion: 'Na een bestaand retentiesignaal willen we met een compacte vervolgmeting zien wat nu verschuift.',
     })
 
     expect(guidance.status).toBe('bounded_follow_on_review')
     expect(guidance.recommendedCoreRoute).toBe('retentiescan')
-    expect(guidance.followOnCandidateRoute).toBe('teamscan')
+    expect(guidance.followOnCandidateRoute).toBe('pulse')
     expect(guidance.detail.toLowerCase()).toContain('bestaand signaal')
+  })
+
+  it('keeps onboarding as a bounded peer wanneer de vraag direct over nieuwe medewerkers gaat', () => {
+    const guidance = getContactQualificationGuidance({
+      routeInterest: 'onboarding',
+      desiredTiming: 'deze-maand',
+      currentQuestion: 'We willen op 30, 60 en 90 dagen beter zien hoe nieuwe medewerkers landen.',
+    })
+
+    expect(guidance.status).toBe('bounded_peer_review')
+    expect(guidance.recommendedCoreRoute).toBe('exitscan')
+    expect(guidance.followOnCandidateRoute).toBe('onboarding')
+    expect(guidance.headline.toLowerCase()).toContain('bounded peer')
   })
 
   it('reframes follow-on routes back to a core route when no earlier signal is present', () => {
