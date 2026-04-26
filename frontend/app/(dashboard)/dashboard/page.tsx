@@ -475,8 +475,8 @@ export default async function DashboardHomePage({
               />
               <UtilityCard
                 eyebrow="Action Center"
-                title="ExitScan follow-through en dossiers"
-                body="Open de shared Action Center-laag voor ExitScan om reviewdruk, expliciet eigenaarschap en dossier-first follow-through vanuit een bounded live consumer te beheren."
+                title="ExitScan follow-through, reviews en dossiers"
+                body="Open de preview-adoptie van het Action Center voor ExitScan om reviewdruk, expliciet eigenaarschap en dossier-first follow-through vanuit een bounded live consumer te beheren."
                 href="/beheer/klantlearnings"
                 cta="Open Action Center"
               />

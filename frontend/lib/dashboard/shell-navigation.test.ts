@@ -41,7 +41,7 @@ describe('dashboard shell buyer-readiness', () => {
       },
     })
 
-    expect(navigation.admin.map((item) => item.label)).toEqual(['Rapporten', 'Nieuwe campagne'])
+    expect(navigation.admin.map((item) => item.label)).toEqual(['Rapporten', 'Nieuwe campagne', 'Action Center'])
     expect(navigation.modules[0]?.href).toBe('/dashboard')
     expect(navigation.support[1]?.href).toBe('/dashboard/leadership')
   })
@@ -56,6 +56,7 @@ describe('dashboard shell buyer-readiness', () => {
   it('keeps primary shell labels in Dutch and context-aware', () => {
     expect(getDashboardShellCurrentLabel('/dashboard')).toBe('Dashboardoverzicht')
     expect(getDashboardShellCurrentLabel('/campaigns/demo')).toBe('Campagneread')
+    expect(getDashboardShellCurrentLabel('/beheer/klantlearnings')).toBe('Action Center')
   })
 
   it('keeps the rendered shell sections aligned with the navigation model and avoids a dead global export CTA', () => {
