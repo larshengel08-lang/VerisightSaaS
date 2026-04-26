@@ -95,8 +95,9 @@ export const homepageComparisonRows = [
 ] as const
 
 export const homepageProofSignals = [
+  'Eén suite-login voor dashboard, rapport en Action Center',
+  'HR kan managers per afdeling toewijzen zonder survey-inzichten open te zetten',
   'ExitScan als default route, RetentieScan als volwaardige eerste route bij expliciete behoudsvraag',
-  'Dashboard, rapport en bestuurlijke handoff in dezelfde leeslijn',
   'Groepsinzichten met expliciete claims- en privacygrenzen',
 ] as const
 
@@ -206,6 +207,10 @@ export const trustSignalHighlights = [
     body: 'Dashboard, rapport en preview volgen dezelfde bestuurlijke leeslijn, zodat de site niet rijker verkoopt dan het product werkelijk levert.',
   },
   {
+    title: 'Manager-scope blijft bounded',
+    body: 'HR kan managers per afdeling toewijzen. Zij loggen in via dezelfde suite, maar zien alleen Action Center en geen dashboard- of rapportinzichten.',
+  },
+  {
     title: 'Core proof blijft expliciet',
     body: 'Publieke deliverable-proof blijft bewust anchored op ExitScan en RetentieScan. Bounded follow-on routes zijn wel formeel, maar krijgen publiek vooral bewijs via productpagina en trustlaag.',
   },
@@ -233,6 +238,10 @@ export const trustVerificationCards = [
     body: 'Geaggregeerde bestuurlijke read, bestuurlijke handoff, topfactoren, hypotheses, prioriteiten en vervolgrichtingen in een vaste executive leeslijn.',
   },
   {
+    title: 'Hoe manager-toegang werkt',
+    body: 'HR kan managers per afdeling toewijzen. Zij loggen in via dezelfde suite, maar zien alleen Action Center en geen dashboard- of rapportinzichten.',
+  },
+  {
     title: 'Wat we bewust niet claimen',
     body: 'Geen individuele voorspelling, geen persoonsgerichte beoordeling, geen brede people-suite en geen bewijsclaims die niet door de repo-basis worden gedragen.',
   },
@@ -254,6 +263,10 @@ export const trustHubAnswerCards = [
   {
     title: 'Hoe lees je de output?',
     body: 'Verisight gebruikt signalen, hypotheses en bestuurlijke reads als gespreksinput. De output ondersteunt verificatie en prioritering, niet causaliteitsclaims of harde diagnoses.',
+  },
+  {
+    title: 'Hoe werkt manager-toegang?',
+    body: 'HR kan managers per afdeling toewijzen. Zij loggen in via dezelfde suite, maar zien alleen Action Center en geen dashboard- of rapportinzichten.',
   },
   {
     title: 'Welke juridische basis is publiek beschikbaar?',
@@ -323,19 +336,19 @@ export const contactTrustSignals = [
 
 export const statCards = [
   {
-    value: '2 kernproducten',
-    label: 'heldere kernportfolio',
-    detail: 'ExitScan en RetentieScan als twee kernroutes binnen een duidelijke first-buy logica.',
+    value: '1 suite-login',
+    label: 'voor inzicht + opvolging',
+    detail: 'Dashboard, rapport en Action Center blijven bereikbaar in dezelfde omgeving.',
   },
   {
-    value: '1 leeslijn',
-    label: 'van demo tot rapport',
-    detail: 'Preview, dashboard, managementrapport en bestuurlijke handoff vertellen hetzelfde verhaal.',
+    value: '2 modules',
+    label: 'insights en follow-through',
+    detail: 'HR en klant zien dashboard plus Action Center; managers kunnen bounded alleen de opvolglaag in.',
   },
   {
-    value: '1 portfolioroute',
-    label: 'bewust aanvullend',
-    detail: 'Combinatie blijft zichtbaar als route tussen twee producten en niet als derde kernpropositie.',
+    value: 'Afdelingstoewijzing',
+    label: 'bounded manager-scope',
+    detail: 'HR kan managers aan afdelingen koppelen terwijl survey-inzicht en rapportlezing afgeschermd blijven.',
   },
 ] as const
 
@@ -350,7 +363,7 @@ export const outcomeCards = [
   ],
   [
     'Proof die kooprust geeft',
-    'Voorbeeldrapporten, pricing en trust werken samen als bewijs van de productvorm in plaats van als losse supportblokken.',
+    'Voorbeeldrapporten, pricing, trust en bounded manager-toegang werken samen als bewijs van de productvorm in plaats van als losse supportblokken.',
   ],
   [
     'Geen extra toolbeheer',

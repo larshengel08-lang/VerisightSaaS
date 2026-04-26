@@ -402,7 +402,7 @@ function HeroSection() {
             </Reveal>
             <Reveal delay={0.34}>
               <div style={{ paddingTop: 24, borderTop: `1px solid ${T.rule}`, display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
-                {['Dashboard + rapport', 'Action Center follow-through', 'AVG-conform op groepsniveau'].map((label) => (
+                {['Eén suite-login', 'Action Center follow-through', 'AVG-conform op groepsniveau'].map((label) => (
                   <span key={label} style={{ fontSize: 11.5, color: T.inkFaint, display: 'flex', alignItems: 'center', gap: 5 }}>
                     <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.tealMid, display: 'inline-block', flexShrink: 0 }} />
                     {label}
@@ -474,7 +474,7 @@ function SuiteSection() {
     {
       label: 'Action Center',
       title: 'Organiseer de opvolging.',
-      body: 'Maak acties expliciet, wijs eigenaren toe en bewaak reviewmomenten zonder dat follow-through verdwijnt in losse notities.',
+      body: 'HR kan acties expliciet toewijzen, managers per afdeling laten opvolgen en reviewmomenten bewaken zonder dat managers survey-inzicht hoeven te krijgen.',
     },
   ]
 
@@ -547,7 +547,7 @@ function RoutesSection() {
   const boundedRoutes = [
     { label: 'Bounded peer', title: 'Onboarding 30-60-90', body: 'Vroege lifecycle-check naast de kernroutes, niet als brede suite op zichzelf.', href: '/producten/onboarding-30-60-90' },
     { label: 'Portfolioroute', title: 'Combinatie', body: 'Voeg pas een tweede route toe wanneer beide managementvragen echt actief zijn.', href: '/producten/combinatie' },
-    { label: 'Vervolgroute', title: 'Pulse + Leadership', body: 'Compacte review en extra managementduiding na de eerste scan of eerste actie.', href: '/producten' },
+    { label: 'Vervolgroute', title: 'Pulse + Leadership', body: 'Compacte review en extra managementduiding na de eerste scan of eerste actie, terwijl managers alleen de opvolglaag zien.', href: '/producten' },
   ]
 
   return (
@@ -619,6 +619,7 @@ function TrustSection() {
     'Groepsniveau en expliciete n-grenzen',
     'Geen individuele voorspellingen of performanceframing',
     'Dashboard, rapport en Action Center vertellen dezelfde bounded waarheid',
+    'Managers kunnen na HR-toewijzing alleen de opvolglaag zien',
     'AVG-conform en begeleid in plaats van losse surveysoftware',
   ]
 
