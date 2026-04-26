@@ -35,6 +35,13 @@ describe('dashboard shell navigation', () => {
       created_at: '2026-04-16T10:00:00.000Z',
       total_completed: 22,
     },
+    {
+      campaign_id: 'leadership-1',
+      scan_type: 'leadership',
+      is_active: true,
+      created_at: '2026-04-15T10:00:00.000Z',
+      total_completed: 9,
+    },
   ] as const
 
   it('maps the preview rail onto real overview, campaign and report-layer routes', () => {
@@ -76,21 +83,33 @@ describe('dashboard shell navigation', () => {
         disabled: false,
       },
       {
-        key: 'team',
-        label: 'TeamScan',
-        href: null,
-        disabled: true,
-      },
-      {
         key: 'pulse',
         label: 'Pulse',
         href: '/campaigns/pulse-1',
         disabled: false,
       },
       {
+        key: 'leadership',
+        label: 'Leadership Scan',
+        href: '/campaigns/leadership-1',
+        disabled: false,
+      },
+      {
+        key: 'team',
+        label: 'TeamScan',
+        href: null,
+        disabled: true,
+      },
+      {
         key: 'reports',
         label: 'Reports',
         href: '/reports',
+        disabled: false,
+      },
+      {
+        key: 'action_center',
+        label: 'Action Center',
+        href: '/action-center',
         disabled: false,
       },
     ])
@@ -114,7 +133,7 @@ describe('dashboard shell navigation', () => {
       key: 'overview',
       href: '/dashboard',
     })
-    expect(navigation.admin.map((item) => item.label)).toEqual(['Setup', 'Leads', 'Action Center'])
+    expect(navigation.admin.map((item) => item.label)).toEqual(['Setup', 'Leads', 'Action Center bron'])
     expect(navigation.modules[3]).toMatchObject({
       key: 'onboarding',
       href: '/campaigns/onboarding-1',
@@ -125,8 +144,10 @@ describe('dashboard shell navigation', () => {
     expect(getActiveModuleFromPathname('/dashboard', [...campaigns])).toBe('overview')
     expect(getActiveModuleFromPathname('/campaigns/retention-1', [...campaigns])).toBe('retention')
     expect(getActiveModuleFromPathname('/campaigns/pulse-1', [...campaigns])).toBe('pulse')
+    expect(getActiveModuleFromPathname('/campaigns/leadership-1', [...campaigns])).toBe('leadership')
     expect(getActiveModuleFromPathname('/campaigns/unknown', [...campaigns])).toBe('overview')
     expect(getActiveModuleFromPathname('/reports', [...campaigns])).toBe('reports')
+    expect(getActiveModuleFromPathname('/action-center', [...campaigns])).toBe('action_center')
     expect(getActiveModuleFromPathname('/beheer', [...campaigns])).toBe('overview')
   })
 
@@ -148,14 +169,19 @@ describe('dashboard shell navigation', () => {
       href: null,
       disabled: true,
     })
-    expect(navigation.modules[5]).toMatchObject({
+    expect(navigation.modules[4]).toMatchObject({
       key: 'pulse',
       href: null,
       disabled: true,
     })
-    expect(navigation.modules[6]).toMatchObject({
+    expect(navigation.modules[7]).toMatchObject({
       key: 'reports',
       href: '/reports',
+      disabled: false,
+    })
+    expect(navigation.modules[8]).toMatchObject({
+      key: 'action_center',
+      href: '/action-center',
       disabled: false,
     })
   })

@@ -136,12 +136,20 @@ export function DashboardShellFrame({
                 <p className="mt-1 text-sm text-[color:var(--dashboard-text)]">{currentLabel}</p>
               </div>
 
-              <Link
-                href="/reports"
-                className="hidden rounded-full border border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45] lg:inline-flex"
-              >
-                Rapportlaag
-              </Link>
+              <div className="hidden items-center gap-2 lg:flex">
+                <Link
+                  href="/reports"
+                  className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
+                >
+                  Reports
+                </Link>
+                <Link
+                  href="/action-center"
+                  className="rounded-full border border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
+                >
+                  Action Center
+                </Link>
+              </div>
             </div>
 
             {mobileNavOpen ? (

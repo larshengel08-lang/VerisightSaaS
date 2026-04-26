@@ -46,6 +46,11 @@ interface Props {
   fallbackOwnerName: string
   ownerOptions: string[]
   workbenchHref: string
+  workbenchLabel?: string
+  workspaceName?: string
+  workspaceSubtitle?: string
+  readOnly?: boolean
+  itemHrefs?: Record<string, string>
 }
 
 interface CreateActionFormState {
@@ -293,6 +298,11 @@ export function ActionCenterPreview({
   fallbackOwnerName,
   ownerOptions,
   workbenchHref,
+  workbenchLabel = 'Open dossierbron',
+  workspaceName,
+  workspaceSubtitle = 'Admin-first opvolging',
+  readOnly = false,
+  itemHrefs = {},
 }: Props) {
   const [items, setItems] = useState(initialItems)
   const [activeView, setActiveView] = useState<ActionCenterPreviewView>(initialView)
@@ -344,6 +354,7 @@ export function ActionCenterPreview({
     })
 
   const selectedItem = filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? filteredItems[0] ?? items[0] ?? null
+  const selectedItemHref = selectedItem ? (itemHrefs[selectedItem.id] ?? workbenchHref) : workbenchHref
   const teamRows = buildTeamRows(items, fallbackOwnerName)
   const selectedTeam = teamRows.find((team) => team.id === selectedTeamId) ?? teamRows[0] ?? null
   const allSources = [...new Set(items.map((item) => item.sourceLabel))]
@@ -561,10 +572,10 @@ export function ActionCenterPreview({
                 Eerstvolgende reviewmoment: <span className="font-semibold text-[#ffb16e]">{earliestReview}</span>
               </p>
               <Link
-                href={workbenchHref}
+                href={selectedItemHref}
                 className="mt-4 inline-flex rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm font-semibold text-white/82 transition hover:bg-white/[0.08]"
               >
-                Open dossierbron
+                {workbenchLabel}
               </Link>
             </div>
           </div>
@@ -575,8 +586,8 @@ export function ActionCenterPreview({
                 {getInitials(fallbackOwnerName)}
               </div>
               <div className="min-w-0">
-                <p className="truncate font-semibold">{fallbackOwnerName}</p>
-                <p className="truncate text-sm text-white/48">Admin-first opvolging</p>
+                <p className="truncate font-semibold">{workspaceName ?? fallbackOwnerName}</p>
+                <p className="truncate text-sm text-white/48">{workspaceSubtitle}</p>
               </div>
             </div>
           </div>
@@ -614,14 +625,16 @@ export function ActionCenterPreview({
                     className="w-full bg-transparent text-[0.97rem] text-[#2a3442] outline-none placeholder:text-[#9a9084]"
                   />
                 </label>
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#1a2533] px-5 py-3 text-[0.97rem] font-semibold text-white transition hover:bg-[#223247]"
-                  onClick={() => setShowCreateModal(true)}
-                >
-                  <span className="mr-2 text-lg leading-none">+</span>
-                  Actie aanmaken
-                </button>
+                {!readOnly ? (
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-2xl bg-[#1a2533] px-5 py-3 text-[0.97rem] font-semibold text-white transition hover:bg-[#223247]"
+                    onClick={() => setShowCreateModal(true)}
+                  >
+                    <span className="mr-2 text-lg leading-none">+</span>
+                    Actie aanmaken
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
@@ -752,7 +765,15 @@ export function ActionCenterPreview({
                           </div>
                           <div>
                             <p className="font-semibold">{team.currentManagerName ?? 'Manager toewijzen'}</p>
-                            <p className="mt-1 text-[#7c7368]">{team.currentManagerName ? 'Wijzigbaar in preview' : 'Valt terug op admin'}</p>
+                            <p className="mt-1 text-[#7c7368]">
+                              {readOnly
+                                ? team.currentManagerName
+                                  ? 'Leest live mee vanuit de bronlaag'
+                                  : 'Nog geen expliciete eigenaar in de bronlaag'
+                                : team.currentManagerName
+                                  ? 'Wijzigbaar in preview'
+                                  : 'Valt terug op admin'}
+                            </p>
                           </div>
                           <p>{team.peopleCount}</p>
                           <div>
@@ -787,13 +808,15 @@ export function ActionCenterPreview({
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Dossier-first</p>
                       <h2 className="mt-2 text-[1.25rem] font-semibold tracking-[-0.03em] text-[#132033]">Dossierbron blijft leidend</h2>
                       <p className="mt-3 text-sm leading-7 text-[#4f6175]">
-                        Voor echte wijzigingen blijft de dossierbron onder deze surface de waarheid. Deze preview houdt de adminlaag dicht bij het referentiebeeld, maar opent geen extra carriers of consumerflows.
+                        {readOnly
+                          ? 'Deze live surface leest direct mee met campaigns, delivery en bestaande dossiers. Bewerkbare opvolging openen we alleen waar rol, bronlaag en bounded productwaarheid dat al veilig dragen.'
+                          : 'Voor echte wijzigingen blijft de dossierbron onder deze surface de waarheid. Deze preview houdt de adminlaag dicht bij het referentiebeeld, maar opent geen extra carriers of consumerflows.'}
                       </p>
                       <Link
                         href={workbenchHref}
                         className="mt-4 inline-flex rounded-2xl border border-[#ded3c6] bg-[#faf6f0] px-4 py-2 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
                       >
-                        Open dossierbron
+                        {workbenchLabel}
                       </Link>
                     </div>
                   </section>
@@ -812,20 +835,24 @@ export function ActionCenterPreview({
                     >
                       Terug naar overzicht
                     </button>
-                    <button
-                      type="button"
-                      className="inline-flex items-center rounded-full border border-[#ded3c6] bg-white px-4 py-2 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
-                      onClick={() => handleStatusChange(selectedItem.status === 'in-uitvoering' ? 'te-bespreken' : 'in-uitvoering')}
-                    >
-                      Status wijzigen
-                    </button>
-                    <button
-                      type="button"
-                      className="inline-flex items-center rounded-full bg-[#ff9b4a] px-4 py-2 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
-                      onClick={() => handleReviewPlanChange(selectedItem.reviewDate ?? new Date().toISOString(), selectedItem.reviewRhythm)}
-                    >
-                      Review plannen
-                    </button>
+                    {!readOnly ? (
+                      <>
+                        <button
+                          type="button"
+                          className="inline-flex items-center rounded-full border border-[#ded3c6] bg-white px-4 py-2 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
+                          onClick={() => handleStatusChange(selectedItem.status === 'in-uitvoering' ? 'te-bespreken' : 'in-uitvoering')}
+                        >
+                          Status wijzigen
+                        </button>
+                        <button
+                          type="button"
+                          className="inline-flex items-center rounded-full bg-[#ff9b4a] px-4 py-2 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
+                          onClick={() => handleReviewPlanChange(selectedItem.reviewDate ?? new Date().toISOString(), selectedItem.reviewRhythm)}
+                        >
+                          Review plannen
+                        </button>
+                      </>
+                    ) : null}
                   </div>
 
                   <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr),minmax(320px,0.85fr)]">
@@ -847,8 +874,8 @@ export function ActionCenterPreview({
                               <p className="mt-3 text-lg font-semibold tracking-[-0.02em] text-[#132033]">{selectedItem.signalLabel}</p>
                               <p className="mt-2 text-sm leading-7 text-[#4f6175]">{selectedItem.signalBody}</p>
                             </div>
-                            <Link href={workbenchHref} className="text-sm font-semibold text-[#5a7088] transition hover:text-[#132033]">
-                              Open dossierbron
+                            <Link href={selectedItemHref} className="text-sm font-semibold text-[#5a7088] transition hover:text-[#132033]">
+                              {workbenchLabel}
                             </Link>
                           </div>
                         </div>
@@ -878,22 +905,24 @@ export function ActionCenterPreview({
                           )}
                         </div>
 
-                        <div className="mt-8 border-t border-[#efe7dc] pt-6">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Update toevoegen</p>
-                          <textarea
-                            value={updateDraft}
-                            onChange={(event) => setUpdateDraft(event.target.value)}
-                            placeholder="Korte voortgang of besluit..."
-                            className="mt-4 min-h-[138px] w-full rounded-[20px] border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-4 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
-                          />
-                          <button
-                            type="button"
-                            className="mt-4 inline-flex rounded-2xl bg-[#ff9b4a] px-4 py-2 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
-                            onClick={handleAddUpdate}
-                          >
-                            Update opslaan
-                          </button>
-                        </div>
+                        {!readOnly ? (
+                          <div className="mt-8 border-t border-[#efe7dc] pt-6">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Update toevoegen</p>
+                            <textarea
+                              value={updateDraft}
+                              onChange={(event) => setUpdateDraft(event.target.value)}
+                              placeholder="Korte voortgang of besluit..."
+                              className="mt-4 min-h-[138px] w-full rounded-[20px] border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-4 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                            />
+                            <button
+                              type="button"
+                              className="mt-4 inline-flex rounded-2xl bg-[#ff9b4a] px-4 py-2 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
+                              onClick={handleAddUpdate}
+                            >
+                              Update opslaan
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
                     </section>
 
@@ -937,33 +966,35 @@ export function ActionCenterPreview({
                         </div>
                       </div>
 
-                      <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Review plannen</p>
-                        <div className="mt-4 grid gap-4">
-                          <input
-                            type="date"
-                            value={selectedItem.reviewDate ? selectedItem.reviewDate.slice(0, 10) : ''}
-                            onChange={(event) => handleReviewPlanChange(event.target.value, selectedItem.reviewRhythm)}
-                            className="rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
-                          />
-                          <div className="grid grid-cols-2 gap-3">
-                            {REVIEW_RHYTHM_OPTIONS.map((option) => (
-                              <button
-                                key={option}
-                                type="button"
-                                className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
-                                  option === selectedItem.reviewRhythm
-                                    ? 'border-[#ff9b4a] bg-[#fff3e8] text-[#132033]'
-                                    : 'border-[#ddd3c7] bg-[#fbf8f4] text-[#5f564a]'
-                                }`}
-                                onClick={() => handleReviewPlanChange(selectedItem.reviewDate ?? '', option)}
-                              >
-                                {option}
-                              </button>
-                            ))}
+                      {!readOnly ? (
+                        <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Review plannen</p>
+                          <div className="mt-4 grid gap-4">
+                            <input
+                              type="date"
+                              value={selectedItem.reviewDate ? selectedItem.reviewDate.slice(0, 10) : ''}
+                              onChange={(event) => handleReviewPlanChange(event.target.value, selectedItem.reviewRhythm)}
+                              className="rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                            />
+                            <div className="grid grid-cols-2 gap-3">
+                              {REVIEW_RHYTHM_OPTIONS.map((option) => (
+                                <button
+                                  key={option}
+                                  type="button"
+                                  className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                                    option === selectedItem.reviewRhythm
+                                      ? 'border-[#ff9b4a] bg-[#fff3e8] text-[#132033]'
+                                      : 'border-[#ddd3c7] bg-[#fbf8f4] text-[#5f564a]'
+                                  }`}
+                                  onClick={() => handleReviewPlanChange(selectedItem.reviewDate ?? '', option)}
+                                >
+                                  {option}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ) : null}
                     </section>
                   </div>
                 </div>
@@ -1048,18 +1079,20 @@ export function ActionCenterPreview({
                               <p className="truncate text-[#7c7368]">Wijzigen in preview</p>
                             </div>
                           </div>
-                          <select
-                            value={team.currentManagerName ?? ''}
-                            onChange={(event) => handleManagerChange(team.id, event.target.value)}
-                            className="w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-2.5 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
-                          >
-                            <option value="">Manager toewijzen</option>
-                            {ownerOptions.map((option) => (
-                              <option key={`${team.id}-${option}`} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
+                          {!readOnly ? (
+                            <select
+                              value={team.currentManagerName ?? ''}
+                              onChange={(event) => handleManagerChange(team.id, event.target.value)}
+                              className="w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-2.5 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                            >
+                              <option value="">Manager toewijzen</option>
+                              {ownerOptions.map((option) => (
+                                <option key={`${team.id}-${option}`} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                          ) : null}
                         </div>
                         <p className="pt-2">{team.peopleCount}</p>
                         <div className="pt-1">
