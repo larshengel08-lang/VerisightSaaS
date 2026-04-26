@@ -15,12 +15,12 @@ Verisight ExitScan is de primaire route voor organisaties die vertrek niet lange
 - vertrekduiding
 - signalen van werkfrictie
 - prioritaire werkfactoren
-- hypotheses, eerste besluit en eerste eigenaar
+- hypotheses, eerste besluit en eerste vervolgrichting
 
 ## Hoe je ExitScan leest
 
 ExitScan is gegroepeerde vertrekduiding voor HR, MT en directie.
-De uitkomst helpt prioriteren, verifiëren en vervolgstappen bepalen.
+De uitkomst helpt prioriteren, verifiëren en een eerste vervolgrichting bepalen.
 Het rapport en de preview openen met dezelfde managementstructuur, zodat de eerste managementvraag snel zichtbaar wordt.
 
 ## Wat ExitScan nadrukkelijk niet is

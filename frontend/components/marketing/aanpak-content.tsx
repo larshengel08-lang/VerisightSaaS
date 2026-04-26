@@ -27,7 +27,7 @@ function HeroSection() {
             </div>
             <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .32s both' }}>
               <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 36px' }}>
-                Verisight begeleidt het traject van intake en uitvoering naar rapport, bestuurlijke handoff en eerste opvolging — zonder losse eindes.
+                Verisight begeleidt het traject van intake en uitvoering naar rapport, bestuurlijke handoff en een eerste vervolgafspraak — zonder losse eindes.
               </p>
             </div>
             <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -186,7 +186,7 @@ function FirstValueSection() {
                 <em className="shimmer-text" style={{ fontStyle: 'italic' }}>grenzen.</em>
               </h2>
               <p style={{ fontSize: 13.5, lineHeight: 1.7, color: T.inkSoft }}>
-                First value is snel, maar nooit sneller dan de responsbasis toelaat. De route stopt niet bij het rapport, maar bij de eerste bestuurlijke opvolging.
+                First value is snel, maar nooit sneller dan de responsbasis toelaat. De route stopt niet bij het rapport, maar bij een eerste bestuurlijke vervolgbespreking.
               </p>
             </div>
           </Reveal>

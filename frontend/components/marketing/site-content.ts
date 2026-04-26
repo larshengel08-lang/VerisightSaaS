@@ -108,7 +108,7 @@ export const homepageUtilityLinks = [
   {
     href: '/aanpak',
     title: 'Bekijk de aanpak',
-    body: 'Lees hoe intake, uitvoering, rapportage en opvolging in een begeleide productvorm samenkomen.',
+    body: 'Lees hoe intake, uitvoering, rapportage en een begeleide vervolgrichting in een productvorm samenkomen.',
   },
   {
     href: '/tarieven',
@@ -210,7 +210,7 @@ export const trustSignalHighlights = [
   },
   {
     title: 'Begeleide productvorm',
-    body: 'Verisight verkoopt een strakke productvorm met intake, uitvoering, rapportage en opvolging in plaats van losse surveysoftware of open consultancy.',
+    body: 'Verisight verkoopt een strakke productvorm met intake, uitvoering, rapportage en begeleide vervolgstappen in plaats van losse surveysoftware of open consultancy.',
   },
   {
     title: 'Publiek verifieerbare basis',
@@ -229,7 +229,7 @@ export const trustVerificationCards = [
   },
   {
     title: 'Wat management wel ziet',
-    body: 'Geaggregeerde bestuurlijke read, bestuurlijke handoff, topfactoren, hypotheses, prioriteiten en opvolgsporen in een vaste executive leeslijn.',
+    body: 'Geaggregeerde bestuurlijke read, bestuurlijke handoff, topfactoren, hypotheses, prioriteiten en vervolgrichtingen in een vaste executive leeslijn.',
   },
   {
     title: 'Wat we bewust niet claimen',
@@ -345,7 +345,7 @@ export const outcomeCards = [
   ],
   [
     'Beter intern doorvertellen',
-    'De output helpt HR, sponsor, MT en directie sneller op een lijn komen over waar prioriteit, verdieping of eerste actie het meeste oplevert.',
+    'De output helpt HR, sponsor, MT en directie sneller op een lijn komen over waar prioriteit, verdieping of eerste vervolgstap het meeste oplevert.',
   ],
   [
     'Proof die kooprust geeft',
@@ -485,7 +485,7 @@ export const customerLifecycleStages = [
   },
   {
     title: '3. Eerste managementwaarde',
-    body: 'Vanaf een bruikbare responsbasis vertalen dashboard en rapport de scan naar prioriteit nu, eerste eigenaar, eerste actie en een concreet reviewmoment.',
+    body: 'Vanaf een bruikbare responsbasis vertalen dashboard en rapport de scan naar prioriteit nu en een eerste vervolgrichting. Daarna begeleiden we hoe een hercheckmoment en bounded follow-through expliciet worden afgesproken.',
   },
   {
     title: '4. Zelfde route herhalen of verdiepen',
@@ -507,7 +507,7 @@ export const pricingLifecycleLadder = [
   {
     route: 'RetentieScan',
     firstSale: 'RetentieScan Baseline alleen wanneer de actieve behoudsvraag nu het echte startpunt is.',
-    nextStep: 'RetentieScan ritmeroute blijft de vaste buyer-facing vervolgvorm na baseline en eerste opvolging.',
+    nextStep: 'RetentieScan ritmeroute blijft de vaste buyer-facing vervolgvorm na baseline en eerste managementwaarde.',
     expansion: 'ExitScan Baseline wordt pas logisch als retrospectieve vertrekduiding alsnog nodig blijkt.',
   },
 ] as const
@@ -518,12 +518,12 @@ export const expansionTriggerCards = [
     body: 'Expansion hoort pas op tafel nadat de eerste route al heeft geleid tot een bruikbare managementread in plaats van alleen respons of nieuwsgierigheid.',
   },
   {
-    title: 'Er is een eigenaar en eerste actie',
-    body: 'Een vervolgstap voelt geloofwaardig wanneer prioriteit, eerste eigenaar en eerste actie al zijn benoemd in de eerste managementsessie.',
+    title: 'Er ligt een eerste vervolgrichting',
+    body: 'Een vervolgstap voelt geloofwaardig wanneer prioriteit en eerste vervolgrichting al expliciet zijn benoemd in de eerste managementsessie.',
   },
   {
-    title: 'Er is een reviewmoment afgesproken',
-    body: 'Repeat en expansion worden verkoopbaar zodra het reviewmoment duidelijk is en de organisatie weet wanneer zij terugkijkt op voortgang, effect of nieuwe signalen.',
+    title: 'Er is een hercheckmoment afgesproken',
+    body: 'Repeat en expansion worden verkoopbaar zodra duidelijk is wanneer de organisatie terugkijkt op voortgang, effect of nieuwe signalen.',
   },
   {
     title: 'De volgende route vult een echte vraag aan',
@@ -540,7 +540,7 @@ export const pricingCards = [
     bullets: [
       'Inrichting van de exit-campagne en respondentflow',
       'Dashboard, managementrapport en bestuurlijke handoff',
-      'Geschikt als eerste nulmeting of start van structurele opvolging',
+      'Geschikt als eerste nulmeting of start van een begeleide vervolgroute',
     ],
   },
   {
@@ -551,7 +551,7 @@ export const pricingCards = [
     bullets: [
       'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie in een managementrapport',
       'Geen individuele signalen naar management',
-      'Geschikt als basis voor vervolgmeting of gerichte opvolging',
+      'Geschikt als basis voor vervolgmeting of een gerichte vervolgronde',
     ],
   },
 ] as const
@@ -574,7 +574,7 @@ export const pricingFollowOnRoutes = [
     price: 'vanaf EUR 4.950',
     fit: 'Vaste vervolgvorm na baseline',
     description:
-      'Voor organisaties die van een eerste RetentieScan willen doorgroeien naar een ritme met herhaalmeting, trendduiding en beter onderbouwde opvolging op behoud.',
+      'Voor organisaties die van een eerste RetentieScan willen doorgroeien naar een ritme met herhaalmeting, trendduiding en beter onderbouwde vervolgkeuzes op behoud.',
     bullets: [
       'Buyer-facing vervolgvorm na RetentieScan Baseline',
       'Baseline plus herhaalmeting per kwartaal of halfjaar',
@@ -598,9 +598,9 @@ export const retentionPackages = [
   },
   {
     title: 'RetentieScan ritmeroute',
-    fit: 'Voor structurele opvolging',
-    body: 'Voor organisaties die retentie als terugkerend stuurthema willen benaderen nadat baseline en eerste opvolging staan.',
-    bullets: ['Herhaalmeting en trendduiding', 'Betere opvolging van acties', 'Buyer-facing vervolgvorm na de eerste baseline'],
+    fit: 'Voor structureel herijken',
+    body: 'Voor organisaties die retentie als terugkerend stuurthema willen benaderen nadat baseline en eerste managementwaarde staan.',
+    bullets: ['Herhaalmeting en trendduiding', 'Betere bespreking van effect en verschuiving', 'Buyer-facing vervolgvorm na de eerste baseline'],
   },
 ] as const
 

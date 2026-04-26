@@ -106,8 +106,8 @@ describe('ExitScan positioning copy', () => {
 
   it('keeps expansion framed as a value-based follow-up instead of a loose upsell', () => {
     expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('eerste route al heeft geleid'))).toBe(true)
-    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('eerste eigenaar'))).toBe(true)
-    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('reviewmoment'))).toBe(true)
+    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('eerste vervolgrichting'))).toBe(true)
+    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('terugkijkt op voortgang'))).toBe(true)
     expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('upsell'))).toBe(true)
   })
 
@@ -117,6 +117,9 @@ describe('ExitScan positioning copy', () => {
     expect(pulseProduct).toBeTruthy()
     const pulseOutput = pulseProduct?.serviceOutput?.toLowerCase() ?? ''
     expect(pulseOutput).toContain('begrensde vergelijkingsduiding')
+    expect(pulseOutput).toContain('hercheckmoment')
+    expect(pulseOutput).not.toContain('owner')
+    expect(pulseOutput).not.toContain('reviewgrens')
     expect(pulseOutput).not.toContain('delta-uitleg')
   })
 })
