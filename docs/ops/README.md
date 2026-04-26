@@ -55,6 +55,23 @@ Voor het huidige fix-programma gebruik je deze volgorde:
 - [OPS_DELIVERY_FAILURE_MATRIX.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/OPS_DELIVERY_FAILURE_MATRIX.md)
   - recovery- en uitzonderingslogica
 
+### Assisted SaaS operations
+
+- [ASSISTED_SAAS_OPERATING_CONTRACT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/ASSISTED_SAAS_OPERATING_CONTRACT.md)
+  - primaire operationele waarheid voor Verisight als assisted suite
+- [SUITE_WORKSPACE_ACCOUNT_AND_PROVISIONING_MODEL.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/SUITE_WORKSPACE_ACCOUNT_AND_PROVISIONING_MODEL.md)
+  - tenant-, account- en provisioningmodel
+- [SUITE_PRODUCT_ACTIVATION_AND_ENTITLEMENT_FLOW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/SUITE_PRODUCT_ACTIVATION_AND_ENTITLEMENT_FLOW.md)
+  - product- en moduleactivatie zonder plan- of billingfictie
+- [SUITE_LIFECYCLE_AND_HANDOFF_DISCIPLINE.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/SUITE_LIFECYCLE_AND_HANDOFF_DISCIPLINE.md)
+  - canonieke lifecycle van intake naar follow-through
+- [ASSISTED_SAAS_SUPPORT_AND_OPERATOR_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/ASSISTED_SAAS_SUPPORT_AND_OPERATOR_PLAYBOOK.md)
+  - herhaalbare support- en escalatieregels
+- [ASSISTED_SAAS_HEALTH_AND_ADOPTION_REVIEW.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/ASSISTED_SAAS_HEALTH_AND_ADOPTION_REVIEW.md)
+  - minimale weekly/monthly reviewlaag
+- [ASSISTED_SAAS_OPERATIONS_CLOSEOUT_2026-04-26.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/ASSISTED_SAAS_OPERATIONS_CLOSEOUT_2026-04-26.md)
+  - closeout van spoor 9
+
 ### Action Center en bounded follow-through
 
 - [ACTION_CENTER_OPERATING_MODEL.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/ACTION_CENTER_OPERATING_MODEL.md)
