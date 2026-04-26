@@ -9,10 +9,6 @@ type DashboardShellNavItem = {
   disabled: boolean
 }
 
-type DashboardShellPortfolioItem = DashboardShellNavItem & {
-  key: DashboardPortfolioView
-}
-
 export type DashboardModuleKey = 'overview' | 'exitscan' | 'retentiescan' | 'onboarding' | 'pulse' | 'leadership'
 
 export type DashboardModuleNavItem = {
@@ -41,16 +37,9 @@ export function getActiveModuleFromPathname(pathname: string): DashboardModuleKe
 }
 
 export type DashboardShellNavigation = {
-  primary: DashboardShellNavItem[]
-  portfolio: DashboardShellPortfolioItem[]
+  modules: DashboardModuleNavItem[]
+  support: DashboardModuleNavItem[]
   admin: DashboardShellNavItem[]
-}
-
-const PORTFOLIO_ITEM_LABELS: Record<DashboardPortfolioView, string> = {
-  ready: 'Management-ready',
-  building: 'In opbouw',
-  setup: 'Setup of launch',
-  closed: 'Afgerond',
 }
 
 export function normalizeDashboardPortfolioView(view: string | undefined): DashboardPortfolioView {
@@ -70,37 +59,11 @@ export function buildDashboardShellNavigation({
   currentCampaignPath: string | null
   portfolioCounts: PortfolioCounts
 }): DashboardShellNavigation {
-  const primary: DashboardShellNavItem[] = [
-    {
-      label: 'Overzicht',
-      detail: 'Kerncijfers, trend en waar eerst kijken.',
-      href: '/dashboard',
-      disabled: false,
-    },
-  ]
+  void currentCampaignPath
+  void portfolioCounts
 
-  if (currentCampaignPath) {
-    primary.push({
-      label: 'Huidige campagne',
-      detail: 'Verdieping via tabs en bounded uitvoer.',
-      href: currentCampaignPath,
-      disabled: false,
-    })
-  }
-
-  const portfolio: DashboardShellPortfolioItem[] = (Object.keys(PORTFOLIO_ITEM_LABELS) as DashboardPortfolioView[]).map(
-    (key) => {
-      const count = portfolioCounts[key]
-
-      return {
-        key,
-        label: PORTFOLIO_ITEM_LABELS[key],
-        detail: count > 0 ? `${count} campagne(s)` : 'Nog niet actief in deze omgeving',
-        href: count > 0 ? `/dashboard?view=${key}#portfolio` : null,
-        disabled: count === 0,
-      }
-    },
-  )
+  const modules = DASHBOARD_MODULE_NAV.filter((item) => item.section === 'modules')
+  const support = DASHBOARD_MODULE_NAV.filter((item) => item.section === 'support')
 
   const admin: DashboardShellNavItem[] = isAdmin
     ? [
@@ -120,8 +83,8 @@ export function buildDashboardShellNavigation({
     : []
 
   return {
-    primary,
-    portfolio,
+    modules,
+    support,
     admin,
   }
 }

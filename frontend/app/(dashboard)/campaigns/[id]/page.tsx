@@ -548,7 +548,7 @@ export default async function CampaignPage({ params }: Props) {
       label: 'Nog niet live',
       tone: 'amber' as const,
       trust:
-        'Deze campaign blijft in setup. Toon hier nog geen managementlaag of rapport-first gedrag.',
+        'Dit traject blijft in setup. Toon hier nog geen managementlaag of rapport-first gedrag.',
     },
     ready_to_launch: {
       label: 'Launch klaar',
@@ -566,7 +566,7 @@ export default async function CampaignPage({ params }: Props) {
       label: 'Indicatief, nog dun',
       tone: 'amber' as const,
       trust:
-        'Er zijn eerste responses, maar het beeld is nog te dun voor een veilige dashboardread of aanbevelingslaag.',
+        'Er is eerste respons, maar het beeld is nog te dun voor een veilige dashboardread of aanbevelingslaag.',
     },
     partial: {
       label: 'Deels zichtbaar',
@@ -584,7 +584,7 @@ export default async function CampaignPage({ params }: Props) {
       label: 'Rapport eerst',
       tone: 'slate' as const,
       trust:
-        'Deze campaign is gesloten. Gebruik dashboard en rapport nu voor terugblik, context en bestuurlijke opvolging.',
+        'Dit traject is gesloten. Gebruik dashboard en rapport nu voor terugblik, context en bestuurlijke opvolging.',
     },
   }[compositionState]
   const utilitySectionVisible = canExecuteCampaign || respondents.length > 0 || isVerisightAdmin
@@ -1505,7 +1505,7 @@ export default async function CampaignPage({ params }: Props) {
         href="/dashboard"
         className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
       >
-        ← Terug naar campaignoverzicht
+        ← Terug naar dashboardoverzicht
       </Link>
 
       <div id="samenvatting" className="scroll-mt-36 space-y-4">
@@ -1612,7 +1612,7 @@ export default async function CampaignPage({ params }: Props) {
                     : 'Alle uitgenodigde respondenten hebben afgerond.'}
                 </p>
                 <p className="mt-2 text-xs leading-5 text-slate-500">
-                  State: {compositionStateMeta.label}. {compositionStateMeta.trust}
+                  Status: {compositionStateMeta.label}. {compositionStateMeta.trust}
                 </p>
                 <p className="mt-2 text-xs leading-5 text-slate-500">{activationState.statusDetail}</p>
               </div>
@@ -1653,7 +1653,7 @@ export default async function CampaignPage({ params }: Props) {
         <SignalStatCard
           label="Respons"
           value={`${stats.completion_rate_pct ?? 0}%`}
-          subline={`${stats.total_completed} van ${stats.total_invited} responses`}
+          subline={`${stats.total_completed} van ${stats.total_invited} responsen`}
           band="neutral"
         />
         <SignalStatCard
@@ -1767,7 +1767,7 @@ export default async function CampaignPage({ params }: Props) {
           id="handoff"
           eyebrow="Bestuurlijke handoff"
           title="Eerste compacte managementduiding"
-          description="De eerste veilige dashboardlaag is zichtbaar, maar deze campaign blijft nog bewust compact tot thresholds en scorecompleetheid een vollediger beeld dragen."
+          description="De eerste veilige dashboardlaag is zichtbaar, maar dit traject blijft nog bewust compact tot thresholds en scorecompleetheid een vollediger beeld dragen."
           aside={<DashboardChip label={compositionStateMeta.label} tone={compositionStateMeta.tone} />}
           tone="slate"
         >
@@ -1788,7 +1788,7 @@ export default async function CampaignPage({ params }: Props) {
                 <DashboardPanel
                   eyebrow="Wat bewust nog wacht"
                   title="Nog geen volle aanbevelingslaag"
-                  body="Drivers, aanbevelingen en 30–90-dagenroute gaan pas open zodra minstens 10 complete responses beschikbaar zijn en privacygrenzen niet meer onnodig veel verbergen."
+                  body="Drivers, aanbevelingen en 30–90-dagenroute gaan pas open zodra minstens 10 complete responsen beschikbaar zijn en privacygrenzen niet meer onnodig veel verbergen."
                   tone="amber"
                 />
               </div>
@@ -1974,7 +1974,7 @@ export default async function CampaignPage({ params }: Props) {
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-            Verdiepende analyse wordt zichtbaar vanaf {MIN_N_PATTERNS} ingevulde responses. Tot die tijd blijft het dashboard bewust compact en voorzichtig.
+            Verdiepende analyse wordt zichtbaar vanaf {MIN_N_PATTERNS} ingevulde responsen. Tot die tijd blijft het dashboard bewust compact en voorzichtig.
           </div>
           )}
       </DashboardSection>
@@ -2055,7 +2055,7 @@ export default async function CampaignPage({ params }: Props) {
           </div>
         ) : (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
-            Focusvragen en route-uitvoer worden betekenisvoller zodra het dashboard minstens {MIN_N_PATTERNS} responses heeft.
+            Focusvragen en route-uitvoer worden betekenisvoller zodra het dashboard minstens {MIN_N_PATTERNS} responsen heeft.
           </div>
           )}
       </DashboardSection>
@@ -2192,13 +2192,13 @@ export default async function CampaignPage({ params }: Props) {
         <DashboardSection
           id="operatie"
           eyebrow={showClientExecutionFlow ? 'Uitvoering' : 'Utilitylaag'}
-          title={showClientExecutionFlow ? 'Responsmonitoring en begrensde uitvoerlaag' : 'Operatie, respondenten en delivery'}
+          title={showClientExecutionFlow ? 'Responsmonitoring en begrensde uitvoerlaag' : 'Operatie, respondenten en uitvoering'}
           description={
             showClientExecutionFlow
-              ? 'Gebruik deze laag om deelnemers, uitnodigingen en respons netjes te volgen. Productsetup, campaignarchitectuur en deliveryrecords blijven bewust bij Verisight.'
+              ? 'Gebruik deze laag om deelnemers, uitnodigingen en respons netjes te volgen. Productinrichting, trajectarchitectuur en uitvoerregistratie blijven bewust bij Verisight.'
               : 'Alles onder deze lijn ondersteunt uitvoering en beheer. De managementhoofdlijn blijft hierboven compact en bestuurlijk.'
           }
-          aside={<DashboardChip label={showClientExecutionFlow ? 'Begeleide uitvoering' : 'Admin en operations'} tone="slate" />}
+          aside={<DashboardChip label={showClientExecutionFlow ? 'Begeleide uitvoering' : 'Beheer en operatie'} tone="slate" />}
         >
           <div className="space-y-4">
             {canManageCampaign ? (
@@ -2312,16 +2312,16 @@ export default async function CampaignPage({ params }: Props) {
             {profile?.is_verisight_admin ? (
               <DashboardDisclosure
                 defaultOpen={false}
-                title="Pilot- en early-customer-learning"
-                description="Gebruik de learning-workbench om buyer-signalen, implementationlessen, eerste managementduiding en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
+                title="Pilot- en vroege-klantlessen"
+                description="Gebruik de leerwerkbank om koopsignalen, implementatielessen, eerste managementduiding en de gekozen vervolg- of uitbreidingsrichting expliciet vast te leggen voor dit traject."
                 badge={
                   <DashboardChip
                     label={
                       learningDossiers.length === 0
                         ? 'Nog geen dossier'
                         : learningCloseoutEvidenceCount > 0
-                          ? `${learningCloseoutEvidenceCount} closeout-signaal`
-                          : `${learningDossiers.length} gekoppeld, closeout open`
+                          ? `${learningCloseoutEvidenceCount} afrondingssignaal`
+                          : `${learningDossiers.length} gekoppeld, afronding open`
                     }
                     tone={learningDossiers.length > 0 && learningCloseoutEvidenceCount > 0 ? 'emerald' : 'amber'}
                   />
@@ -2330,29 +2330,29 @@ export default async function CampaignPage({ params }: Props) {
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr),minmax(320px,0.9fr)]">
                   <DashboardPanel
                     eyebrow="Waarom nu"
-                    title={learningDossiers.length > 0 ? 'Campaign is al opgenomen in de learninglus' : 'Koppel deze campaign aan een learningdossier'}
+                    title={learningDossiers.length > 0 ? 'Dit traject zit al in de leerlus' : 'Koppel dit traject aan een leerdossier'}
                     body={
                       learningDossiers.length > 0
-                        ? 'Gebruik gekoppelde dossiers om implementationfrictie, launchsignalen, managementgebruik en gekozen vervolgroutes expliciet terug te laten landen in product, report, onboarding, sales en operations.'
-                        : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de learning-workbench. Zo blijven echte deliverylessen en vervolgkeuzes niet hangen in losse handover-notes.'
+                        ? 'Gebruik gekoppelde dossiers om implementatiefrictie, launchsignalen, managementgebruik en gekozen vervolgroutes expliciet terug te laten landen in product, rapport, onboarding, sales en operatie.'
+                        : 'Zodra dit traject leerwaarde geeft, koppel je het aan een dossier in de leerwerkbank. Zo blijven echte uitvoerlessen en vervolgkeuzes niet hangen in losse overdrachtsnotities.'
                     }
                     tone={learningDossiers.length > 0 ? 'slate' : 'amber'}
                   />
                   <DashboardPanel
-                    eyebrow="Closeoutdiscipline"
+                    eyebrow="Afrondingsdiscipline"
                     title={
                       learningCloseoutEvidenceCount > 0
-                        ? 'Learning kan naar formele closeout toewerken'
+                        ? 'De leerlus kan naar formele afronding toewerken'
                         : learningDossiers.length > 0
-                          ? 'Learning bestaat, maar closeout-evidence mist nog'
-                          : 'Nog geen learning-closeout mogelijk'
+                          ? 'De leerlus loopt, maar afrondingsbewijs mist nog'
+                          : 'Nog geen formele leerafronding mogelijk'
                     }
                     body={
                       learningCloseoutEvidenceCount > 0
-                        ? 'Er is al minstens één expliciete review-, vervolg- of stopuitkomst vastgelegd. Daarmee kan delivery later eerlijker naar follow-up of learning closeout bewegen.'
+                        ? 'Er is al minstens één expliciete review-, vervolg- of stopuitkomst vastgelegd. Daarmee kan de uitvoering later eerlijker naar opvolging of formele leerafronding bewegen.'
                         : learningDossiers.length > 0
-                          ? 'Er zijn al gekoppelde dossiers, maar nog geen expliciete review-, vervolg- of stopuitkomst. Houd delivery dus bewust open tot die follow-through echt is vastgelegd.'
-                          : 'Zonder gekoppeld learningdossier hoort delivery-closeout nog niet als afgerond te voelen.'
+                          ? 'Er zijn al gekoppelde dossiers, maar nog geen expliciete review-, vervolg- of stopuitkomst. Houd de uitvoering dus bewust open tot die vervolgstap echt is vastgelegd.'
+                          : 'Zonder gekoppeld leerdossier hoort de uitvoerafronding nog niet als afgerond te voelen.'
                     }
                     tone={learningCloseoutEvidenceCount > 0 ? 'emerald' : 'amber'}
                   />
@@ -2360,7 +2360,7 @@ export default async function CampaignPage({ params }: Props) {
                     <p className="text-sm font-semibold text-slate-950">Gekoppelde dossiers</p>
                     {learningDossiers.length === 0 ? (
                       <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Er is nog geen dossier gekoppeld aan deze campaign.
+                        Er is nog geen dossier gekoppeld aan dit traject.
                       </p>
                     ) : (
                       <div className="mt-3 space-y-3">
@@ -2378,7 +2378,7 @@ export default async function CampaignPage({ params }: Props) {
                       href={`/beheer/klantlearnings?campaign=${id}`}
                       className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
                     >
-                      Open learning-workbench
+                      Open leerwerkbank
                     </Link>
                   </div>
                 </div>

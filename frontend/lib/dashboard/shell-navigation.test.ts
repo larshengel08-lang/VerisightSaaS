@@ -2,13 +2,12 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   buildDashboardShellNavigation,
-  DASHBOARD_MODULE_NAV,
   getDashboardShellCurrentLabel,
   normalizeDashboardPortfolioView,
 } from './shell-navigation'
 
 describe('dashboard shell buyer-readiness', () => {
-  it('builds a route-first buyer rail with disabled portfolio slots when no campaigns are available', () => {
+  it('builds the same module and support sections that the shell actually renders', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: false,
       currentCampaignPath: '/campaigns/campaign-123',
@@ -20,43 +19,17 @@ describe('dashboard shell buyer-readiness', () => {
       },
     })
 
-    expect(navigation.primary.map((item) => item.label)).toEqual(['Overzicht', 'Huidige campagne'])
-    expect(navigation.primary[1]?.href).toBe('/campaigns/campaign-123')
-
-    expect(navigation.portfolio).toEqual([
-      {
-        key: 'ready',
-        label: 'Management-ready',
-        detail: 'Nog niet actief in deze omgeving',
-        href: null,
-        disabled: true,
-      },
-      {
-        key: 'building',
-        label: 'In opbouw',
-        detail: '2 campagne(s)',
-        href: '/dashboard?view=building#portfolio',
-        disabled: false,
-      },
-      {
-        key: 'setup',
-        label: 'Setup of launch',
-        detail: '1 campagne(s)',
-        href: '/dashboard?view=setup#portfolio',
-        disabled: false,
-      },
-      {
-        key: 'closed',
-        label: 'Afgerond',
-        detail: 'Nog niet actief in deze omgeving',
-        href: null,
-        disabled: true,
-      },
+    expect(navigation.modules.map((item) => item.label)).toEqual([
+      'Overzicht',
+      'ExitScan',
+      'RetentieScan',
+      'Onboarding 30-60-90',
     ])
+    expect(navigation.support.map((item) => item.label)).toEqual(['Pulse', 'Leadership Scan'])
     expect(navigation.admin).toEqual([])
   })
 
-  it('keeps admin links separate from buyer overview navigation', () => {
+  it('keeps admin links separate from the shared buyer rail', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: true,
       currentCampaignPath: null,
@@ -68,13 +41,9 @@ describe('dashboard shell buyer-readiness', () => {
       },
     })
 
-    expect(navigation.primary.map((item) => item.label)).toEqual(['Overzicht'])
     expect(navigation.admin.map((item) => item.label)).toEqual(['Rapporten', 'Nieuwe campagne'])
-    expect(navigation.portfolio[2]).toMatchObject({
-      key: 'setup',
-      href: null,
-      disabled: true,
-    })
+    expect(navigation.modules[0]?.href).toBe('/dashboard')
+    expect(navigation.support[1]?.href).toBe('/dashboard/leadership')
   })
 
   it('normalizes unknown portfolio views back to overview-ready tabs', () => {
@@ -85,15 +54,18 @@ describe('dashboard shell buyer-readiness', () => {
   })
 
   it('keeps primary shell labels in Dutch and context-aware', () => {
-    expect(DASHBOARD_MODULE_NAV[0]?.label).toBe('Overzicht')
     expect(getDashboardShellCurrentLabel('/dashboard')).toBe('Dashboardoverzicht')
     expect(getDashboardShellCurrentLabel('/campaigns/demo')).toBe('Campagneread')
   })
 
-  it('does not render a dead global export CTA in the shell header', () => {
+  it('keeps the rendered shell sections aligned with the navigation model and avoids a dead global export CTA', () => {
     const source = readFileSync(new URL('../../components/dashboard/dashboard-shell.tsx', import.meta.url), 'utf8')
 
     expect(source).toContain('getDashboardShellCurrentLabel(pathname)')
+    expect(source).toContain('items={navigation.modules}')
+    expect(source).toContain('items={navigation.support}')
+    expect(source).toContain('{mobileItems.map((item) => {')
+    expect(source).not.toContain('DASHBOARD_MODULE_NAV.filter')
     expect(source).not.toContain('Rapport exporteren')
   })
 })

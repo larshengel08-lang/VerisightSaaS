@@ -95,4 +95,18 @@ describe('campaign detail review guardrails', () => {
     expect(pageSource).toContain("'border-slate-200 bg-slate-50'")
     expect(chartSource).toContain('<Bar dataKey="count" fill="#94A3B8" radius={[2, 2, 0, 0]} />')
   })
+
+  it('keeps deeper operational copy in Dutch so management and admin layers read consistently', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('← Terug naar dashboardoverzicht')
+    expect(source).toContain('Operatie, respondenten en uitvoering')
+    expect(source).toContain('Beheer en operatie')
+    expect(source).toContain('leerwerkbank')
+    expect(source).toContain('responsen')
+    expect(source).not.toContain('Terug naar campaignoverzicht')
+    expect(source).not.toContain('Admin en operations')
+    expect(source).not.toContain('learning-workbench')
+    expect(source).not.toContain('Campaign is al opgenomen in de learninglus')
+  })
 })

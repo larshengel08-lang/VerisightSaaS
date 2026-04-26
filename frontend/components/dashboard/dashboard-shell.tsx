@@ -41,9 +41,7 @@ export function DashboardShellFrame({
       }),
     [currentCampaignPath, isAdmin, portfolioCounts],
   )
-
-  const moduleItems = DASHBOARD_MODULE_NAV.filter((m) => m.section === 'modules')
-  const supportItems = DASHBOARD_MODULE_NAV.filter((m) => m.section === 'support')
+  const mobileItems = [...navigation.modules, ...navigation.support]
 
   const activeModuleLabel = DASHBOARD_MODULE_NAV.find((m) => m.key === activeModule)?.label ?? 'Overzicht'
   const currentLabel = getDashboardShellCurrentLabel(pathname)
@@ -76,10 +74,10 @@ export function DashboardShellFrame({
 
             {/* Module navigation */}
             <nav className="flex-1 overflow-y-auto px-4 pt-6">
-              <SidebarSection label="Modules" items={moduleItems} activeModule={activeModule} onNavigate={() => {}} />
+              <SidebarSection label="Modules" items={navigation.modules} activeModule={activeModule} onNavigate={() => {}} />
               <SidebarSection
                 label="Support"
-                items={supportItems}
+                items={navigation.support}
                 activeModule={activeModule}
                 onNavigate={() => {}}
                 className="mt-6"
@@ -169,7 +167,7 @@ export function DashboardShellFrame({
                 style={{ borderColor: 'var(--dashboard-frame-border)', background: 'var(--dashboard-surface)' }}
               >
                 <div className="space-y-1">
-                  {DASHBOARD_MODULE_NAV.map((item) => {
+                  {mobileItems.map((item) => {
                     const isActive = item.key === activeModule
                     return (
                       <Link
