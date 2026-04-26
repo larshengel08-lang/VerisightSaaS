@@ -1,15 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { T, AC, FF, SHELL, useInView, Reveal, Arrow, SectionMark } from '@/components/marketing/design-tokens'
+import { T, FF, SHELL, useInView, Reveal, Arrow, SectionMark } from '@/components/marketing/design-tokens'
 import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
-import { buildContactHref } from '@/lib/contact-funnel'
 import {
   trustItems,
   trustSignalHighlights,
   trustVerificationCards,
   trustHubAnswerCards,
-  trustReadingRows,
   trustSupportCards,
 } from '@/components/marketing/site-content'
 
@@ -28,12 +26,12 @@ function HeroSection() {
             <div style={{ animation: 'slideUpFade .9s cubic-bezier(.16,1,.3,1) .15s both' }}>
               <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink }}>
                 Methodiek, privacy<br />
-                <em style={{ fontStyle: 'italic', color: T.teal }}>en rapportgrenzen.</em>
+                <em style={{ fontStyle: 'italic', color: T.teal }}>en suitegrenzen.</em>
               </h1>
             </div>
             <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
               <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 0' }}>
-                Verisight laat publiek zien hoe methodiek, privacy, rapportlezing en formele basis zijn ingericht — zodat u dit kunt toetsen voordat een traject start.
+                Verisight laat publiek zien hoe methodiek, privacy, dashboard, rapport en Action Center samenhangen — en waar die suite-output bewust begrensd blijft voordat een traject start.
               </p>
             </div>
           </div>
@@ -68,7 +66,7 @@ function TrustSignalsSection() {
             <em style={{ fontStyle: 'italic', color: T.teal }}>als het product werkelijk levert.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 44, maxWidth: '50ch' }}>
-            Deze pagina maakt expliciet wat Verisight wel en niet claimt, hoe privacy is ingebouwd en hoe management de output moet lezen.
+            Deze pagina maakt expliciet wat Verisight wel en niet claimt, hoe privacy is ingebouwd en hoe management dashboard, rapport en Action Center in dezelfde bounded leeslijn moet lezen.
           </p>
         </Reveal>
         <div className="grid grid-cols-1 gap-0 md:grid-cols-2 xl:grid-cols-3">
@@ -122,7 +120,7 @@ function VerificationSection() {
                 <em style={{ fontStyle: 'italic', fontWeight: 300, color: 'oklch(.62 .10 185)' }}>zonder schijnzekerheid.</em>
               </h3>
               <p style={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(247,245,241,.65)', marginBottom: 24 }}>
-                Verisight werkt met geaggregeerde uitkomsten en benoemt bewust wat wel en niet geconcludeerd kan worden.
+                Verisight werkt met geaggregeerde uitkomsten en benoemt bewust wat wel en niet geconcludeerd kan worden, ook wanneer follow-through via Action Center wordt toegevoegd.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {trustItems.map((item, i) => (
@@ -160,7 +158,7 @@ function ReadingGuideSection() {
             <em style={{ fontStyle: 'italic', color: T.teal }}>niet als diagnose.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 36, maxWidth: '50ch' }}>
-            De publieke reading guide moet dezelfde interpretatiegrenzen laten zien als rapport en dashboard.
+            De publieke reading guide moet dezelfde interpretatiegrenzen laten zien als dashboard, rapport en Action Center.
           </p>
         </Reveal>
         <Reveal delay={.1}>
@@ -240,7 +238,7 @@ function ContactSection() {
         <MarketingInlineContactPanel
           eyebrow="Plan kennismaking"
           title="Vertel kort welke managementvraag nu speelt."
-          body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy en prijs."
+          body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy, prijs en hoe dashboard, rapport en Action Center bounded samenhangen."
           defaultRouteInterest="exitscan"
           defaultCtaSource="trust_form"
         />
