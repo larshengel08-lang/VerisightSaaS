@@ -1,0 +1,35 @@
+{
+  "seededAt": "2026-04-27T08:07:05.261Z",
+  "organizations": [
+    {
+      "id": "26b85e72-2f92-4995-b995-2f435830ebcf",
+      "name": "Pulse Smoke 8afc"
+    },
+    {
+      "id": "6487223a-b61c-402b-8fa0-c1d5bb551938",
+      "name": "Pulse Smoke 955e"
+    },
+    {
+      "id": "43165d75-08b2-497b-a52c-e566d47d1bfc",
+      "name": "Pulse Smoke 134b"
+    },
+    {
+      "id": "9d476aa5-9e79-4b5e-9dab-112265a6fae7",
+      "name": "Verisight Guided Self-Serve Acceptance"
+    }
+  ],
+  "campaignIds": [
+    "069ee28a-2038-46ba-9d37-6a38d0fd8691",
+    "7e74e0f8-48e1-4ca7-acc0-63e4f679c51a",
+    "535a57d2-b0b5-4acb-9f12-8cf18c8fb359",
+    "2f452cfe-bc3e-4afc-aedc-b3344d369464"
+  ],
+  "billingCount": 4,
+  "telemetryCount": 20,
+  "proofCount": 4,
+  "storageMode": {
+    "billing": "fallback_only",
+    "telemetry": "fallback_only",
+    "proof": "fallback_only"
+  }
+}

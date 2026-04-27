@@ -14,6 +14,23 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
+vi.mock('@/lib/proof-registry-server', () => ({
+  listProofRegistryEntries: async () => [
+    {
+      id: 'proof_1',
+      orgId: 'org_1',
+      campaignId: 'cmp_1',
+      route: 'ExitScan',
+      proofState: 'public_usable',
+      approvalState: 'approved',
+      summary: 'ExitScan toonde een bounded eerste managementread plus reviewritme.',
+      claimableObservation: null,
+      supportingArtifacts: [],
+      createdAt: '2026-04-27T10:00:00.000Z',
+    },
+  ],
+}))
+
 import ProofPage from './page'
 
 describe('beheer proof page', () => {
@@ -21,6 +38,6 @@ describe('beheer proof page', () => {
     const html = renderToString(await ProofPage())
     expect(html).toContain('Case proof registry')
     expect(html).toContain('sales_usable')
-    expect(html).toContain('public_usable')
+    expect(html).toContain('Publiek bruikbaar')
   })
 })

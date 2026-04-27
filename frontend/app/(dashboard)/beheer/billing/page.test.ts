@@ -14,13 +14,26 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
+vi.mock('@/lib/billing-registry-server', () => ({
+  listBillingRegistryRows: async () => [
+    {
+      orgId: 'org_1',
+      organizationName: 'Verisight Demo Org',
+      legalCustomerName: 'Verisight Demo Org B.V.',
+      contractState: 'signed',
+      billingState: 'active_manual',
+      paymentMethodConfirmed: true,
+    },
+  ],
+}))
+
 import BillingPage from './page'
 
 describe('beheer billing page', () => {
-  it('renders the manual billing registry framing', async () => {
+  it('renders the live billing registry framing', async () => {
     const html = renderToString(await BillingPage())
     expect(html).toContain('Billing registry')
     expect(html).toContain('Actief (handmatig)')
-    expect(html).toContain('Geen Stripe of checkout in deze fase')
+    expect(html).toContain('launch-ready')
   })
 })

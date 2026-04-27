@@ -2,131 +2,9 @@ import React from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { DashboardChip, DashboardHero, DashboardPanel, DashboardSection } from '@/components/dashboard/dashboard-primitives'
-import { buildActionCenterTelemetryEvents } from '@/lib/action-center-live'
-import { buildSuiteAccessContext, buildSuiteAccessTelemetryEvents } from '@/lib/suite-access'
-import { countSuiteTelemetryEvents } from '@/lib/telemetry/events'
+import { countSuiteTelemetryEventRows, getSuiteTelemetryEventLabel } from '@/lib/telemetry/events'
+import { listSuiteTelemetryEventRows } from '@/lib/telemetry/store'
 import { createClient } from '@/lib/supabase/server'
-
-function getSampleCounts() {
-  const managerContext = buildSuiteAccessContext({
-    isVerisightAdmin: false,
-    orgMemberships: [],
-    workspaceMemberships: [
-      {
-        org_id: 'org-1',
-        user_id: 'manager-1',
-        display_name: 'Manager Noord',
-        login_email: 'manager@example.com',
-        access_role: 'manager_assignee',
-        scope_type: 'department',
-        scope_value: 'sales',
-        can_view: true,
-        can_update: true,
-        can_assign: false,
-        can_schedule_review: true,
-      },
-    ],
-  })
-  const ownerContext = buildSuiteAccessContext({
-    isVerisightAdmin: false,
-    orgMemberships: [{ org_id: 'org-1', role: 'owner' }],
-    workspaceMemberships: [],
-  })
-
-  const events = [
-    ...buildSuiteAccessTelemetryEvents({ context: managerContext, actorId: 'manager-1' }),
-    ...buildSuiteAccessTelemetryEvents({ context: ownerContext, actorId: 'owner-1' }),
-    ...buildActionCenterTelemetryEvents([
-      {
-        campaign: {
-          id: 'campaign-exit',
-          organization_id: 'org-1',
-          name: 'Exit voorjaar',
-          scan_type: 'exit',
-          delivery_mode: 'live',
-          is_active: true,
-          enabled_modules: null,
-          created_at: '2026-04-10T10:00:00.000Z',
-          closed_at: null,
-        },
-        stats: null,
-        organizationName: 'Acme BV',
-        memberRole: 'owner',
-        scopeType: 'department',
-        scopeValue: 'sales',
-        scopeLabel: 'Sales',
-        peopleCount: 18,
-        assignedManager: null,
-        deliveryRecord: {
-          id: 'delivery-exit',
-          organization_id: 'org-1',
-          campaign_id: 'campaign-exit',
-          contact_request_id: null,
-          lifecycle_stage: 'first_management_use',
-          exception_status: 'none',
-          operator_owner: 'Verisight delivery',
-          next_step: 'Plan de follow-up review.',
-          operator_notes: null,
-          customer_handoff_note: null,
-          launch_date: null,
-          launch_confirmed_at: null,
-          participant_comms_config: null,
-          reminder_config: null,
-          first_management_use_confirmed_at: null,
-          follow_up_decided_at: null,
-          learning_closed_at: null,
-          created_at: '2026-04-15T10:00:00.000Z',
-          updated_at: '2026-04-24T10:00:00.000Z',
-        },
-        deliveryCheckpoints: [],
-        learningDossier: {
-          id: 'dossier-exit',
-          organization_id: 'org-1',
-          campaign_id: 'campaign-exit',
-          contact_request_id: null,
-          title: 'Exit follow-through',
-          route_interest: 'exitscan',
-          scan_type: 'exit',
-          delivery_mode: 'live',
-          triage_status: 'bevestigd',
-          lead_contact_name: null,
-          lead_organization_name: null,
-          lead_work_email: null,
-          lead_employee_count: null,
-          buyer_question: null,
-          expected_first_value: null,
-          buying_reason: null,
-          trust_friction: null,
-          implementation_risk: null,
-          first_management_value: null,
-          first_action_taken: null,
-          review_moment: '2026-05-12',
-          adoption_outcome: null,
-          management_action_outcome: null,
-          next_route: null,
-          stop_reason: null,
-          case_evidence_closure_status: 'lesson_only',
-          case_approval_status: 'draft',
-          case_permission_status: 'not_requested',
-          case_quote_potential: 'laag',
-          case_reference_potential: 'laag',
-          case_outcome_quality: 'indicatief',
-          case_outcome_classes: [],
-          claimable_observations: null,
-          supporting_artifacts: null,
-          case_public_summary: null,
-          created_by: null,
-          updated_by: null,
-          created_at: '2026-04-15T10:00:00.000Z',
-          updated_at: '2026-04-24T10:00:00.000Z',
-        },
-        learningCheckpoints: [],
-      },
-    ]),
-  ]
-
-  return countSuiteTelemetryEvents(events)
-}
 
 export default async function HealthPage() {
   const supabase = await createClient()
@@ -148,7 +26,8 @@ export default async function HealthPage() {
     redirect('/dashboard')
   }
 
-  const counts = getSampleCounts()
+  const rows = await listSuiteTelemetryEventRows()
+  const counts = countSuiteTelemetryEventRows(rows)
 
   return (
     <div className="space-y-6">
@@ -182,6 +61,41 @@ export default async function HealthPage() {
           <DashboardPanel title="Manager denied insights" value={`${counts.manager_denied_insights}`} body="Manager-only persona blijft buiten insight-routes." tone="amber" />
           <DashboardPanel title="Action Center review scheduled" value={`${counts.action_center_review_scheduled}`} body="Reviewmomenten die expliciet gepland zijn." tone="slate" />
           <DashboardPanel title="Action Center closeout recorded" value={`${counts.action_center_closeout_recorded}`} body="Follow-through items met expliciete closeout." tone="slate" />
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
+        title="Recente evidence"
+        description="De laatste bounded telemetryevents uit de live suite. Dit vervangt de oude sampletelling."
+      >
+        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white">
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <tr>
+                <th className="px-5 py-4">Event</th>
+                <th className="px-5 py-4">Org</th>
+                <th className="px-5 py-4">Campaign</th>
+                <th className="px-5 py-4">Moment</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td className="px-5 py-4 font-medium text-slate-900">{getSuiteTelemetryEventLabel(row.eventType)}</td>
+                  <td className="px-5 py-4 text-slate-600">{row.orgId ?? 'n.v.t.'}</td>
+                  <td className="px-5 py-4 text-slate-600">{row.campaignId ?? 'n.v.t.'}</td>
+                  <td className="px-5 py-4 text-slate-600">{new Date(row.createdAt).toLocaleString('nl-NL')}</td>
+                </tr>
+              ))}
+              {rows.length === 0 ? (
+                <tr>
+                  <td className="px-5 py-5 text-slate-500" colSpan={4}>
+                    Nog geen live suite-telemetryevents. De semireële RU-seed of de eerste bounded trajecten vullen deze healthlaag.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
         </div>
       </DashboardSection>
     </div>

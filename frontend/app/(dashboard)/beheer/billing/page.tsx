@@ -2,18 +2,14 @@ import React from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { DashboardChip, DashboardHero, DashboardPanel, DashboardSection } from '@/components/dashboard/dashboard-primitives'
-import { getBillingReadinessCopy, getBillingRegistryStatusLabel, type BillingRegistryRow } from '@/lib/billing-registry'
+import {
+  getBillingReadinessCopy,
+  getBillingRegistryStatusLabel,
+  getContractStateLabel,
+  summarizeBillingRegistry,
+} from '@/lib/billing-registry'
+import { listBillingRegistryRows } from '@/lib/billing-registry-server'
 import { createClient } from '@/lib/supabase/server'
-
-const sampleRegistryRows: BillingRegistryRow[] = [
-  {
-    orgId: 'verisight-demo',
-    legalCustomerName: 'Verisight Demo Org',
-    contractState: 'signed',
-    billingState: 'active_manual',
-    paymentMethodConfirmed: true,
-  },
-]
 
 export default async function BillingPage() {
   const supabase = await createClient()
@@ -35,9 +31,11 @@ export default async function BillingPage() {
     redirect('/dashboard')
   }
 
+  const registryRows = await listBillingRegistryRows()
+  const summary = summarizeBillingRegistry(registryRows)
   const readinessCopy = getBillingReadinessCopy({
-    contractSigned: true,
-    paymentMethodConfirmed: true,
+    contractSigned: summary.readyCount > 0,
+    paymentMethodConfirmed: summary.readyCount > 0,
   })
 
   return (
@@ -50,8 +48,8 @@ export default async function BillingPage() {
         description="Maak contract-, betaal- en activatiewaarheid expliciet zonder checkout-first fictie. Dit blijft een admin-only operating surface voor assisted suite-activatie."
         meta={
           <>
-            <DashboardChip surface="ops" label="Actief (handmatig)" tone="emerald" />
-            <DashboardChip surface="ops" label="Geen Stripe of checkout in deze fase" />
+            <DashboardChip surface="ops" label={`${summary.readyCount} launch-ready`} tone="emerald" />
+            <DashboardChip surface="ops" label={`${summary.pendingCount} nog assisted te bevestigen`} />
           </>
         }
         actions={
@@ -68,7 +66,7 @@ export default async function BillingPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <DashboardPanel
             title="Registryregels"
-            body="Contract en betaalwijze worden intern bevestigd voordat assisted launch readiness groen wordt."
+            body="Contract en betaalwijze worden intern bevestigd voordat assisted launch readiness groen wordt. Deze page leest nu direct uit de live billing_registry."
             tone="slate"
           />
           <DashboardPanel
@@ -81,27 +79,36 @@ export default async function BillingPage() {
 
       <DashboardSection
         title="Actuele billing registry"
-        description="Voorbeeldweergave van de huidige assisted registry. Seat- of planlogica bestaat hier bewust niet."
+        description="Live assisted registry zonder seat- of planlogica. De status hieronder komt direct uit de huidige billing_registry-tabel."
       >
         <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
               <tr>
                 <th className="px-5 py-4">Organisatie</th>
+                <th className="px-5 py-4">Juridische naam</th>
                 <th className="px-5 py-4">Contract</th>
                 <th className="px-5 py-4">Billing</th>
                 <th className="px-5 py-4">Betaalwijze</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {sampleRegistryRows.map((row) => (
+              {registryRows.map((row) => (
                 <tr key={row.orgId}>
-                  <td className="px-5 py-4 font-medium text-slate-900">{row.legalCustomerName}</td>
-                  <td className="px-5 py-4 text-slate-600">{row.contractState}</td>
+                  <td className="px-5 py-4 font-medium text-slate-900">{row.organizationName ?? row.legalCustomerName}</td>
+                  <td className="px-5 py-4 text-slate-600">{row.legalCustomerName}</td>
+                  <td className="px-5 py-4 text-slate-600">{getContractStateLabel(row.contractState)}</td>
                   <td className="px-5 py-4 text-slate-600">{getBillingRegistryStatusLabel(row.billingState)}</td>
                   <td className="px-5 py-4 text-slate-600">{row.paymentMethodConfirmed ? 'Bevestigd' : 'Openstaand'}</td>
                 </tr>
               ))}
+              {registryRows.length === 0 ? (
+                <tr>
+                  <td className="px-5 py-5 text-slate-500" colSpan={5}>
+                    Nog geen live billing registryregels. Seed of assisted intake vult deze surface zodra een eerste suite-traject wordt klaargezet.
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
