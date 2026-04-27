@@ -1,8 +1,60 @@
 'use client'
 
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
+import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { buildContactHref } from '@/lib/contact-funnel'
+
+// Tokens used by HeroSection (De Rapporteur palette)
+const T = {
+  paper: 'oklch(0.978 0.01 62)',
+  paperSoft: 'oklch(0.956 0.018 60)',
+  white: '#FFFCF8',
+  ink: 'oklch(0.16 0.012 250)',
+  inkSoft: 'oklch(0.32 0.01 250)',
+  inkMuted: 'oklch(0.52 0.008 250)',
+  inkFaint: 'oklch(0.7 0.006 250)',
+  rule: 'oklch(0.875 0.012 62)',
+  teal: 'oklch(0.5 0.12 188)',
+  tealMid: 'oklch(0.62 0.1 185)',
+} as const
+const AC = {
+  deep: 'oklch(0.45 0.18 50)',
+  mid: 'oklch(0.76 0.14 53)',
+  faint: 'oklch(0.976 0.018 50)',
+} as const
+const FF = 'var(--font-fraunces), serif'
+
+function useInView(threshold = 0.12) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [inView, setInView] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect() } }, { threshold })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [threshold])
+  return [ref, inView] as const
+}
+
+function Reveal({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
+  const [ref, inView] = useInView(0.08)
+  return (
+    <div ref={ref} style={{ opacity: inView ? 1 : 0, transform: inView ? 'none' : 'translateY(16px)', transition: `opacity .65s ease ${delay}s, transform .65s cubic-bezier(.16,1,.3,1) ${delay}s` }}>
+      {children}
+    </div>
+  )
+}
+
+function Arrow() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path d="M2.5 7h9M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
 
 const SURFACE = {
   paper: '#f5f0e8',
@@ -357,15 +409,11 @@ function HeroSection() {
 
   return (
     <section style={{ background: T.white, position: 'relative', overflow: 'hidden', borderBottom: `1px solid ${T.rule}` }}>
-      {/* Subtle grid — softer than before */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}50 1px,transparent 1px),linear-gradient(90deg,${T.rule}50 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: 0.28 }} />
-      {/* Single ambient glow, top-right */}
       <div style={{ position: 'absolute', top: -160, right: -100, width: 720, height: 720, background: `radial-gradient(circle,${AC.faint} 0%,transparent 58%)`, pointerEvents: 'none' }} />
 
-      {/* ── Text block ───────────────────────────────────────── */}
+      {/* ── Text block ─────────────────────────────────── */}
       <div style={{ ...SHELL, position: 'relative', paddingTop: 'clamp(68px,8.5vw,104px)', paddingBottom: 'clamp(52px,6vw,72px)' }}>
-
-        {/* Minimal eyebrow */}
         <Reveal delay={0.02}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 40 }}>
             <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.22em', textTransform: 'uppercase', color: T.inkFaint }}>Verisight</span>
@@ -374,7 +422,6 @@ function HeroSection() {
           </div>
         </Reveal>
 
-        {/* Headline */}
         <Reveal delay={0.07}>
           <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(52px,7.5vw,100px)', lineHeight: 0.94, letterSpacing: '-.036em', color: T.ink, marginBottom: 20 }}>
             Van people insights
@@ -383,8 +430,8 @@ function HeroSection() {
             <br />
             actie en opvolging.
           </h1>
+        </Reveal>
 
-        {/* Flow — editorial, no boxes */}
         <Reveal delay={0.14}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 30, flexWrap: 'wrap' }}>
             {['Inzicht', 'Prioriteit', 'Actie', 'Toewijzing', 'Opvolging'].map((step, i, arr) => (
@@ -398,21 +445,22 @@ function HeroSection() {
           </div>
         </Reveal>
 
-        {/* Supporting copy — natural, flowing */}
         <Reveal delay={0.2}>
           <p style={{ fontSize: 16.5, lineHeight: 1.76, color: T.inkSoft, maxWidth: '56ch', marginBottom: 36 }}>
             Verisight helpt HR en management zien wat speelt, bepalen wat eerst telt en opvolging daadwerkelijk organiseren. Dashboard, rapport en Action Center vormen één suite — van eerste inzicht tot aantoonbare actie.
           </p>
+        </Reveal>
 
-        {/* CTAs */}
         <Reveal delay={0.26}>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 36 }}>
-            <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '13px 30px', color: '#fff', background: T.ink, transition: 'background .18s' }}
+            <Link href={ctaHref}
+              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '13px 30px', color: '#fff', background: T.ink, transition: 'background .18s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = AC.deep }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.ink }}>
               Plan suite-demo <Arrow />
             </Link>
-            <Link href="/#suite" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 500, padding: '12px 28px', color: T.inkSoft, border: `1px solid ${T.rule}`, transition: 'border-color .18s' }}
+            <Link href="/#suite"
+              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 500, padding: '12px 28px', color: T.inkSoft, border: `1px solid ${T.rule}`, transition: 'border-color .18s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T.inkMuted }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = T.rule }}>
               Bekijk de suite
@@ -420,7 +468,6 @@ function HeroSection() {
           </div>
         </Reveal>
 
-        {/* Trust strip */}
         <Reveal delay={0.32}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap', paddingTop: 24, borderTop: `1px solid ${T.rule}` }}>
             {[
@@ -437,39 +484,18 @@ function HeroSection() {
         </Reveal>
       </div>
 
-      {/* ── Suite preview ─────────────────────────────────────── */}
+      {/* ── Interactive preview ─────────────────────────── */}
       <div style={{ background: T.paperSoft, borderTop: `1px solid ${T.rule}` }}>
         <div style={{ ...SHELL, paddingTop: 'clamp(40px,5vw,56px)', paddingBottom: 'clamp(52px,6vw,72px)' }}>
-
-          {/* Minimal label */}
           <Reveal delay={0.3}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
               <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: T.inkFaint, whiteSpace: 'nowrap' }}>Suite-preview</span>
               <div style={{ flex: 1, height: 1, background: T.rule }} />
             </div>
           </Reveal>
-
-          {/* Two previews, equal weight */}
-          <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-            <Reveal delay={0.36}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 5, height: 5, background: T.tealMid, display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal }}>Dashboard & Rapport</span>
-                </div>
-                <DashboardPreview />
-              </div>
-            </Reveal>
-            <Reveal delay={0.44}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 5, height: 5, background: AC.deep, display: 'inline-block', flexShrink: 0 }} />
-                  <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep }}>Action Center</span>
-                </div>
-                <ActionCenterPreview />
-              </div>
-            </Reveal>
-          </div>
+          <Reveal delay={0.36}>
+            <PreviewSlider variant="portfolio" />
+          </Reveal>
         </div>
       </div>
     </section>
@@ -483,10 +509,7 @@ function SuitePreviewSection() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
           <SectionLabel index="02" label="Dashboard, rapport en Action Center" />
         </div>
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <DashboardSuitePreview />
-          <ActionCenterSuitePreview />
-        </div>
+        <PreviewSlider variant="portfolio" />
       </div>
     </section>
   )
