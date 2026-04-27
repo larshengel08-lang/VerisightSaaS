@@ -3,15 +3,15 @@
 :root {
   /* Brand tokens */
   --ink:        #132033;
-  --navy:       #1B2E45;
-  --petrol:     #234B57;
-  --bg:         #F7F5F1;
-  --surface:    #FFFFFF;
-  --teal:       #3C8D8A;
-  --teal-light: #DCEFEA;
-  --text:       #4A5563;
-  --muted:      #9CA3AF;
-  --border:     #E5E0D6;
+  --navy:       #162534;
+  --petrol:     #234b57;
+  --bg:         #f4efe6;
+  --surface:    #fffdf9;
+  --teal:       #3a7f7d;
+  --teal-light: #e4f0ed;
+  --text:       #4d5a66;
+  --muted:      #8f998f;
+  --border:     #ded6ca;
 
   /* Legacy compat */
   --background: var(--surface);
@@ -23,11 +23,11 @@
   --marketing-hero-space: clamp(3.5rem, 5.5vw, 5.75rem);
 
   /* Shadows */
-  --marketing-shadow-soft: 0 20px 48px rgba(19, 32, 51, 0.06);
-  --marketing-shadow-strong: 0 28px 72px rgba(19, 32, 51, 0.11);
-  --dashboard-shadow-soft: 0 16px 42px rgba(19, 32, 51, 0.06);
-  --dashboard-shadow-strong: 0 18px 44px rgba(19, 32, 51, 0.1);
-  --dashboard-shadow-card: 0 2px 12px rgba(19, 32, 51, 0.05);
+  --marketing-shadow-soft: 0 16px 38px rgba(19, 32, 51, 0.05);
+  --marketing-shadow-strong: 0 24px 56px rgba(19, 32, 51, 0.09);
+  --dashboard-shadow-soft: 0 12px 30px rgba(19, 32, 51, 0.05);
+  --dashboard-shadow-strong: 0 18px 38px rgba(19, 32, 51, 0.08);
+  --dashboard-shadow-card: 0 1px 6px rgba(19, 32, 51, 0.04);
 
   /* Brand accent — warm amber/copper (homepage-aligned) */
   --brand-accent-deep:  oklch(0.42 0.18 52);
@@ -35,25 +35,25 @@
   --brand-accent-soft:  oklch(0.95 0.055 52);
 
   /* Dashboard canvas & surfaces */
-  --dashboard-canvas:        #F8F4EE;
-  --dashboard-surface:       #FFFCF8;
-  --dashboard-soft:          #F0EBE1;
-  --dashboard-rail:          #0f1923;
-  --dashboard-frame-border:  rgba(19, 32, 51, 0.10);
+  --dashboard-canvas:        #f5f0e8;
+  --dashboard-surface:       #fffdf9;
+  --dashboard-soft:          #f3eee6;
+  --dashboard-rail:          #121a22;
+  --dashboard-frame-border:  rgba(19, 32, 51, 0.08);
   --dashboard-ink:           #132033;
-  --dashboard-text:          #4e5b67;
-  --dashboard-muted:         #7c8a95;
-  --dashboard-accent-soft:   #EAF4F3;
-  --dashboard-accent-soft-border: #B8D8D4;
-  --dashboard-accent-strong: #25605C;
-  --dashboard-blue-soft:     #F0F5F8;
-  --dashboard-amber-soft:    #FEF9F1;
+  --dashboard-text:          #51606d;
+  --dashboard-muted:         #7b8893;
+  --dashboard-accent-soft:   #edf4f1;
+  --dashboard-accent-soft-border: #c3dcd5;
+  --dashboard-accent-strong: #245c59;
+  --dashboard-blue-soft:     #f2f6f8;
+  --dashboard-amber-soft:    #fbf6ed;
   --dashboard-topbar-strong: rgba(255, 255, 255, 0.97);
 
   /* Dashboard layout */
   --dashboard-sidebar-width: 260px;
-  --dashboard-radius-card: 1.25rem;
-  --dashboard-radius-hero: 1.75rem;
+  --dashboard-radius-card: 1rem;
+  --dashboard-radius-hero: 1.4rem;
   --dashboard-radius-chip: 9999px;
 
   /* Risk band colors */
@@ -92,6 +92,7 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
+  font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
   text-rendering: optimizeLegibility;
   overflow-x: clip;
 }
@@ -133,12 +134,7 @@ summary:focus-visible {
 @keyframes borderPulse    { 0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,0)} 50%{box-shadow:0 0 0 8px rgba(255,255,255,.06)} }
 
 .shimmer-text {
-  background: linear-gradient(90deg, oklch(0.45 0.18 50) 20%, oklch(0.86 0.10 55) 50%, oklch(0.45 0.18 50) 80%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shimmer 4s linear infinite;
+  color: var(--brand-accent-deep);
 }
 
 .float-anim { animation: floatY 6s ease-in-out infinite; }
@@ -149,7 +145,7 @@ summary:focus-visible {
 }
 
 .font-display {
-  font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
+  font-family: var(--font-fraunces), Georgia, serif;
   font-weight: 400;
   letter-spacing: -0.02em;
 }
@@ -191,7 +187,7 @@ details > summary::-webkit-details-marker {
     border: 1px solid var(--border);
     background: var(--surface);
     box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1rem;
+    border-radius: 0.875rem;
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -201,7 +197,7 @@ details > summary::-webkit-details-marker {
     border: 1px solid var(--border);
     background: var(--bg);
     box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1rem;
+    border-radius: 0.875rem;
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -211,7 +207,7 @@ details > summary::-webkit-details-marker {
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: var(--navy);
     box-shadow: var(--marketing-shadow-strong);
-    border-radius: 1rem;
+    border-radius: 0.875rem;
     color: var(--bg);
     width: 100%;
     min-width: 0;
@@ -224,7 +220,7 @@ details > summary::-webkit-details-marker {
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: var(--navy);
     box-shadow: var(--marketing-shadow-strong);
-    border-radius: 1rem;
+    border-radius: 0.875rem;
     color: var(--bg);
     width: 100%;
     min-width: 0;
@@ -236,7 +232,7 @@ details > summary::-webkit-details-marker {
     position: absolute;
     inset: 1px;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: calc(1rem - 1px);
+    border-radius: calc(0.875rem - 1px);
     pointer-events: none;
   }
 
@@ -602,12 +598,10 @@ details > summary::-webkit-details-marker {
     color: var(--teal-light);
   }
 
-  /* Fraunces number display */
   .dash-number {
-    font-family: var(--font-fraunces), Georgia, serif;
-    font-weight: 300;
-    letter-spacing: -0.02em;
-    font-variation-settings: "opsz" 32;
+    font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.04em;
   }
 
   .marketing-flow-stack > * {

@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { CustomerLaunchControl } from '@/components/dashboard/customer-launch-control'
 import { OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
-import { ManagementReadGuide } from '@/components/dashboard/onboarding-panels'
 import {
   DashboardChip,
   DashboardSection,
@@ -21,7 +20,6 @@ import {
   type DashboardPortfolioView,
 } from '@/lib/dashboard/shell-navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getFirstNextStepGuidance } from '@/lib/client-onboarding'
 import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import { FIRST_INSIGHT_THRESHOLD } from '@/lib/response-activation'
 import { getScanDefinition } from '@/lib/scan-definitions'
@@ -144,7 +142,6 @@ export default async function DashboardHomePage({
       : null
   const fullCount = campaignEntries.filter((entry) => entry.state === 'full').length
   const partialCount = campaignEntries.filter((entry) => entry.state === 'partial').length
-  const setupCount = campaignEntries.filter((entry) => entry.state === 'setup').length
   const activeExecutionCount = campaignEntries.filter((entry) =>
     ['setup', 'ready_to_launch', 'running', 'sparse'].includes(entry.state),
   ).length
@@ -163,16 +160,8 @@ export default async function DashboardHomePage({
         communicationReady: primaryGuideSetupDiscipline.communicationReady,
       })
     : null
-  const showFirstNextStep = !isAdmin && Boolean(primaryFirstNextStepCampaign)
-  const primaryFirstNextStepGuidance = primaryFirstNextStepCampaign
-    ? getFirstNextStepGuidance(primaryFirstNextStepCampaign.scan_type)
-    : null
   const primaryGuideScanDefinition = primaryGuideCampaign ? getScanDefinition(primaryGuideCampaign.scan_type) : null
-  const primaryFirstNextStepScanDefinition = primaryFirstNextStepCampaign
-    ? getScanDefinition(primaryFirstNextStepCampaign.scan_type)
-    : null
   const primaryOverviewCampaign = primaryFirstNextStepCampaign ?? primaryGuideCampaign
-  const primaryOverviewDefinition = primaryOverviewCampaign ? getScanDefinition(primaryOverviewCampaign.scan_type) : null
   const portfolioTabs = portfolioBuckets
     .filter((bucket) => bucket.entries.length > 0)
     .map((bucket) => {
@@ -224,14 +213,14 @@ export default async function DashboardHomePage({
           className="text-[1.35rem] font-semibold tracking-[-0.02em]"
           style={{ color: 'var(--dashboard-ink)' }}
         >
-          {isAdmin ? 'Campagneoverzicht' : 'Managementoverview'}
+          {isAdmin ? 'Campagneoverzicht' : 'Overview'}
         </h1>
         <p className="mt-1 text-sm" style={{ color: 'var(--dashboard-muted)' }}>
           {isAdmin
             ? `${campaigns.length} campagne${campaigns.length === 1 ? '' : 's'} · ${managementReadyCount} management-ready`
             : primaryOverviewCampaign
               ? getOverviewHeadline({ campaign: primaryOverviewCampaign, stateMeta: primaryGuideStateMeta, isAdmin, avgSignal })
-              : 'Zodra de eerste campagne live of leesbaar wordt, verschijnt hier de eerste managementread.'}
+              : 'Zodra de eerste campagne leesbaar wordt, opent hier automatisch de eerste managementread.'}
         </p>
       </div>
 
@@ -552,10 +541,10 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       viewerCta: 'Open uitvoerflow',
       sectionTitle: 'Setup / nog niet live',
       sectionDescription:
-        'Campagnes zonder live uitnodigingen of zonder echte respondentlaag. Hier hoort eerst setupdiscipline te landen.',
-      body: 'Deze campaign vraagt eerst respondentimport of launchcontrole voordat er eerlijke output kan ontstaan.',
+        'Campagnes zonder live uitnodigingen of zonder echte respondentlaag. Hier telt eerst setup en launchdiscipline.',
+      body: 'Deze campaign vraagt eerst respondentimport of launchcontrole voordat er een leesbaar dashboard kan openen.',
       trust:
-        'Laat deze status operationeel voelen. Dashboard en rapport horen hier nog geen managementgewicht te suggereren.',
+        'Nog geen managementduiding. Eerst setup, daarna pas read en rapport.',
     },
     ready_to_launch: {
       label: 'Launch klaar',
@@ -567,7 +556,7 @@ function getHomeStateMeta(state: CampaignCompositionState) {
         'Campagnes waar de respondentlaag klaarstaat, maar waar uitnodigingen nog niet volledig live zijn gezet.',
       body: 'Respondenten staan klaar, maar de inviteflow is nog niet volledig gestart.',
       trust:
-        'Dashboard en rapport blijven bewust dicht tot de uitnodigingen echt live zijn en de eerste veilige responsgrens dichterbij komt.',
+        'Dashboard en rapport blijven dicht tot de eerste veilige responslaag echt opbouwt.',
     },
     running: {
       label: 'Invites live',
@@ -577,9 +566,9 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Invites live / running',
       sectionDescription:
         'Campagnes waar uitnodigingen lopen, maar waar nog geen eerste veilige responslaag zichtbaar hoort te worden.',
-      body: 'De inviteflow loopt, maar er is nog geen eerste veilige responslaag om inhoudelijk op te lezen.',
+      body: 'De inviteflow loopt, maar het beeld is nog te dun voor een eerste inhoudelijke read.',
       trust:
-        'Toon hier alleen uitvoerstatus en responsopbouw. Dit is nog geen managementduiding.',
+        'Laat hier alleen voortgang zien. Dit is nog geen managementduiding.',
     },
     sparse: {
       label: 'Indicatief, nog dun',
@@ -589,9 +578,9 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Sparse / indicatief',
       sectionDescription:
         'Campagnes met eerste responses, maar nog onder de veilige dashboarddrempel voor een eerlijke managementduiding.',
-      body: 'Er zijn eerste responses binnen, maar het beeld is nog te dun voor een veilige dashboardlaag.',
+      body: 'Er zijn eerste responses binnen, maar het beeld is nog te dun voor een stevige dashboardread.',
       trust:
-        'Gebruik dit als signaal dat uitvoering loopt, niet als inhoudelijke conclusie of pseudo-insight.',
+        'Gebruik dit als signaal dat uitvoering loopt, niet als conclusie.',
     },
     partial: {
       label: 'Deels zichtbaar',
@@ -601,9 +590,9 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Deels zichtbaar',
       sectionDescription:
         'Campagnes waar de eerste veilige dashboardread open is, maar waar thresholds of privacy de verdiepingslaag nog begrenzen.',
-      body: 'De eerste dashboardread is zichtbaar, maar aanbevelingen en patroonduiding blijven nog bewust compact.',
+      body: 'De eerste dashboardread is zichtbaar, maar verdiepende duiding blijft nog bewust compact.',
       trust:
-        'Privacy- en thresholdgrenzen houden drivers, aanbevelingen en diepere claims nog deels dicht.',
+        'Privacy- en thresholdgrenzen houden detail en claims nog deels dicht.',
     },
     full: {
       label: 'Managementduiding gereed',
@@ -615,7 +604,7 @@ function getHomeStateMeta(state: CampaignCompositionState) {
         'Campagnes met genoeg respons en voldoende zichtbaarheid om dashboard, aanbevelingen en rapport als managementinstrument te gebruiken.',
       body: 'Dashboard en rapport zijn nu stevig genoeg voor managementduiding, prioritering en eerste vervolgactie.',
       trust:
-        'Aanbevelingen en vervolgrails mogen nu zichtbaar worden binnen de bestaande productgrenzen en shared grammar.',
+        'Nu mag ook de vervolglijn in beeld komen, binnen dezelfde bounded producttaal.',
     },
     closed: {
       label: 'Rapport eerst',
@@ -625,9 +614,9 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Gesloten / rapport eerst',
       sectionDescription:
         'Gesloten campagnes waar de nadruk nu op rapportage, terugblik en bestuurlijke opvolging hoort te liggen.',
-      body: 'Deze campaign is gesloten. Gebruik dashboard en rapport nu voor terugblik, follow-up en het vervolggesprek.',
+      body: 'Deze campaign is gesloten. Gebruik rapport en dashboard nu voor terugblik en vervolggesprek.',
       trust:
-        'Geen live uitvoersignalen meer: de waarde zit nu in rapportage, context en de gekozen vervolgrichting.',
+        'Geen live uitvoersignalen meer, nu telt vooral rapportage, context en vervolgrichting.',
     },
   } satisfies Record<
     CampaignCompositionState,
@@ -658,28 +647,28 @@ function getOverviewHeadline({
   avgSignal: string | null
 }) {
   if (!campaign.is_active) {
-    return 'De hoofdread zit nu in rapportage, bestuurlijke follow-up en het voorbereiden van het vervolggesprek.'
+    return 'Deze campaign is gesloten. De hoofdread zit nu in rapportage, opvolging en vervolggesprek.'
   }
 
   if (campaign.total_invited === 0) {
     return isAdmin
       ? 'De eerstvolgende stap ligt nog in setup of launchdiscipline voordat managementwaarde zichtbaar wordt.'
-      : 'De eerstvolgende stap ligt nog in bounded uitvoering voordat dashboard of rapport de hoofdroute wordt.'
+      : 'De eerstvolgende stap ligt nog in uitvoering voordat dashboard of rapport de hoofdroute wordt.'
   }
 
   if (stateMeta?.label === 'Deels zichtbaar') {
-    return 'Er ligt al een eerste dashboardread, maar de verdiepingslaag blijft nog bewust compact tot thresholds en patroonsterkte verder zijn opgebouwd.'
+    return 'Er ligt al een eerste dashboardread, maar de verdiepingslaag blijft nog bewust compact.'
   }
 
   if (campaign.total_completed < 5) {
     return avgSignal
-      ? `Het portfolio bouwt nog respons op. Het leesbare gemiddelde staat nu op ${avgSignal}/10, maar de managementread blijft nog bewust voorzichtig.`
-      : 'De portfolio bouwt nog respons op. Lees dus eerst richting en voortgang, nog niet te zwaar de duiding.'
+      ? `Het portfolio bouwt nog respons op. Het leesbare gemiddelde staat nu op ${avgSignal}/10, maar de managementread blijft nog voorzichtig.`
+      : 'Het portfolio bouwt nog respons op. Lees hier eerst richting en voortgang.'
   }
 
   return avgSignal
     ? `Er ligt nu een leesbare managementread. Het gemiddelde groepssignaal in het portfolio staat op ${avgSignal}/10.`
-    : 'Er ligt nu een leesbare managementread. Gebruik home voor de hoofdlijn en open daarna de campagne voor verdieping.'
+    : 'Er ligt nu een leesbare managementread. Gebruik home voor de hoofdlijn en open daarna de campaign voor verdieping.'
 }
 
 function AdminEmptyState() {

@@ -61,11 +61,11 @@ export function CustomerLaunchControl({
         </p>
       </div>
 
-      {/* Product + next action — two flat columns */}
+      {/* Product + next action, two flat columns */}
       <div className="grid gap-4 lg:grid-cols-2">
         <div>
           <p className="text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
-            Product · {productName}
+            Product, {productName}
           </p>
           <p className="mt-1.5 text-sm font-semibold" style={{ color: 'var(--dashboard-ink)' }}>{campaignName}</p>
           <p className="mt-1.5 text-sm leading-[1.65]" style={{ color: 'var(--dashboard-text)' }}>{productContext}</p>
@@ -92,7 +92,7 @@ export function CustomerLaunchControl({
         </div>
       </div>
 
-      {/* Stepper — flat list, no card per step */}
+      {/* Stepper, flat list without extra card nesting */}
       <div>
         <p className="mb-3 text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
           Uitvoerstappen

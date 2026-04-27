@@ -24,18 +24,16 @@ export function PublicFooter() {
         <div>
           <Wordmark size="sm" showTagline={false} light />
           <p className="mt-2 text-[8px] font-bold tracking-[0.18em] uppercase text-[rgba(247,245,241,0.32)]">
-            People · Patterns · Priorities
+            People • Priorities • Follow-through
           </p>
           <p className="marketing-footer-copy mt-4 max-w-sm text-sm leading-7">
-            Verisight helpt HR en management scherp zien welke vertrek- en retentiesignalen aandacht vragen, zodat
-            prioriteiten duidelijk worden.
+            Verisight helpt HR en management zien wat speelt, bepalen wat eerst telt en opvolging organiseren in
+            dashboard, rapport en Action Center.
           </p>
           <p className="mt-5 text-xs uppercase tracking-[0.12em] text-[rgba(247,245,241,0.5)]">
             Voor organisaties met 200+ medewerkers
           </p>
-          <div className="marketing-footer-chip mt-6">
-            Boardroom-ready dashboards en rapporten
-          </div>
+          <div className="marketing-footer-chip mt-6">Een suite voor insight, prioriteit en opvolging</div>
         </div>
 
         <div>

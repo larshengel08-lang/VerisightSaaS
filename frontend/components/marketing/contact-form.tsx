@@ -17,6 +17,7 @@ import {
   type ContactDesiredTiming,
   type ContactRouteInterest,
 } from '@/lib/contact-funnel'
+import { getBillingReadinessCopy } from '@/lib/billing-registry'
 
 interface FormState {
   name: string
@@ -200,6 +201,10 @@ export function ContactForm({
   const panelSpacingClass = isCompact ? 'mb-5 rounded-[1.35rem] px-4 py-4 leading-6 sm:px-5 sm:py-5 sm:leading-7' : 'mb-6 rounded-[1.5rem] px-5 py-5 leading-7'
   const fieldGridClass = isCompact ? 'grid gap-4 sm:grid-cols-2' : 'grid gap-5 sm:grid-cols-2'
   const fieldClass = `block min-w-0 w-full rounded-2xl border px-4 ${isCompact ? 'py-2.5 sm:py-3' : 'py-3'} text-sm outline-none transition focus:ring-2 ${inputClass}`
+  const billingReadinessCopy = getBillingReadinessCopy({
+    contractSigned: false,
+    paymentMethodConfirmed: false,
+  })
 
   return (
     <form onSubmit={handleSubmit} className={shellClass}>
@@ -211,6 +216,7 @@ export function ContactForm({
         {isCompact
           ? 'Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke suite-output daarna logisch wordt.'
           : 'Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de logische eerste stap is. Onboarding 30-60-90 behandelen we als bounded peer wanneer de vraag direct over nieuwe medewerkers gaat. Pulse en Leadership Scan blijven bounded vervolgroutes die pas logisch worden nadat een eerste signaal, baseline of managementread al staat. We gebruiken de intake ook om te bepalen wanneer dashboard, rapport of Action Center daarna logisch in dezelfde suite-omgeving landen en hoe een bounded suite-demo eruit moet zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.'}
+        {!isCompact ? <span className={`mt-3 block text-xs ${helperClass}`}>{billingReadinessCopy}</span> : null}
       </div>
 
       {!isCompact ? (

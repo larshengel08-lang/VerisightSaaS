@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { PublicHeader } from '@/components/marketing/public-header'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { TarievenContent } from '@/components/marketing/tarieven-content'
+import { getBillingReadinessCopy } from '@/lib/billing-registry'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 export const metadata: Metadata = {
@@ -36,6 +37,10 @@ export default function TarievenPage() {
   }
 
   const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'pricing_primary_cta' })
+  const billingReadinessCopy = getBillingReadinessCopy({
+    contractSigned: false,
+    paymentMethodConfirmed: false,
+  })
 
   return (
     <>
@@ -43,6 +48,12 @@ export default function TarievenPage() {
       <div className="min-h-screen">
       <PublicHeader ctaHref={ctaHref} ctaLabel="Plan suite-demo" />
         <main id="hoofdinhoud">
+          <section className="border-b border-[#e7dfd2] bg-[#f7f4ee] px-6 py-4 text-sm text-slate-700 sm:px-10">
+            <div className="mx-auto max-w-6xl">
+              <strong className="font-semibold text-slate-900">Billing en activatie blijven assisted.</strong>{' '}
+              {billingReadinessCopy}
+            </div>
+          </section>
           <TarievenContent />
         </main>
         <PublicFooter />

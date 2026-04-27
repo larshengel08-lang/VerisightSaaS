@@ -88,7 +88,8 @@ function HeroSection() {
           </div>
           <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
             <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, margin: '28px 0 36px' }}>
-              ExitScan helpt vertrek achteraf begrijpen. RetentieScan helpt eerder signaleren waar behoud onder druk staat. Daarna landen dashboard, rapport en Action Center in dezelfde suite-omgeving, terwijl combinatie een kleinere portfolioroute blijft en onboarding plus vervolgroutes bounded blijven.
+              ExitScan en RetentieScan zijn de twee hoofdinstappen. Daarna landen dashboard, rapport en Action Center in
+              dezelfde suite-omgeving, zodat u niet alleen inzicht krijgt maar ook kunt prioriteren, toewijzen en opvolgen.
             </p>
           </div>
           <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -202,7 +203,8 @@ function FollowOnSection() {
           <Reveal delay={.1}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
               <p style={{ fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
-                Buyer-facing blijft Verisight draaien om twee kernproducten, een kleine portfolioroute en een scherp begrensde vervolglaag binnen dezelfde suite-omgeving.
+                Buyer-facing blijft Verisight draaien om twee kernproducten, een kleine portfolioroute en een bewust begrensde
+                vervolglaag binnen dezelfde suite-omgeving.
               </p>
               <Link href="/vertrouwen" style={{ fontSize: 13, fontWeight: 600, color: T.teal, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                 Meer over trust en privacy <Arrow />

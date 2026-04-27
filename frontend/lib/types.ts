@@ -116,6 +116,18 @@ export interface OrgInvite {
   organizations?: Pick<Organization, 'id' | 'name'>
 }
 
+export interface BillingRegistry {
+  id: string
+  org_id: string
+  legal_customer_name: string
+  contract_state: 'draft' | 'pending_signature' | 'signed'
+  billing_state: 'draft' | 'active_manual' | 'paused' | 'closed'
+  payment_method_confirmed: boolean
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
 // Scoring constanten (gespiegeld van Python backend)
 export const FACTOR_LABELS: Record<string, string> = {
   leadership:   'Leiderschap',

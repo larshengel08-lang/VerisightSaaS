@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildLiveActionCenterItems, isLiveActionCenterScanType } from './action-center-live'
+import { buildActionCenterTelemetryEvents, buildLiveActionCenterItems, isLiveActionCenterScanType } from './action-center-live'
 import type { Campaign, CampaignStats } from '@/lib/types'
 import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
@@ -205,5 +205,68 @@ describe('live action center builder', () => {
       ownerRole: 'Viewer',
       status: 'te-bespreken',
     })
+  })
+
+  it('derives bounded telemetry signals from lifecycle and review truth', () => {
+    const campaign: Campaign = {
+      id: 'campaign-exit',
+      organization_id: 'org-1',
+      name: 'Exit voorjaar',
+      scan_type: 'exit',
+      delivery_mode: 'live',
+      is_active: true,
+      enabled_modules: null,
+      created_at: '2026-04-10T10:00:00.000Z',
+      closed_at: null,
+    }
+    const deliveryRecord: CampaignDeliveryRecord = {
+      id: 'delivery-exit',
+      organization_id: 'org-1',
+      campaign_id: 'campaign-exit',
+      contact_request_id: null,
+      lifecycle_stage: 'first_management_use',
+      exception_status: 'none',
+      operator_owner: 'Verisight delivery',
+      next_step: 'Plan follow-up.',
+      operator_notes: null,
+      customer_handoff_note: null,
+      launch_date: null,
+      launch_confirmed_at: null,
+      participant_comms_config: null,
+      reminder_config: null,
+      first_management_use_confirmed_at: null,
+      follow_up_decided_at: null,
+      learning_closed_at: null,
+      created_at: '2026-04-15T10:00:00.000Z',
+      updated_at: '2026-04-24T10:00:00.000Z',
+    }
+    const dossier = {
+      review_moment: '2026-05-12',
+      triage_status: 'bevestigd',
+    } as PilotLearningDossier
+
+    const events = buildActionCenterTelemetryEvents([
+      {
+        campaign,
+        stats: null,
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue: 'operations',
+        scopeLabel: 'Operations',
+        peopleCount: 12,
+        assignedManager: null,
+        deliveryRecord,
+        deliveryCheckpoints: [],
+        learningDossier: dossier,
+        learningCheckpoints: [],
+      },
+    ])
+
+    expect(events.map((event) => event.eventType)).toEqual([
+      'first_value_confirmed',
+      'first_management_use_confirmed',
+      'action_center_review_scheduled',
+    ])
   })
 })

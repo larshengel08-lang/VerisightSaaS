@@ -53,7 +53,7 @@ function HeroSection() {
       <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`, pointerEvents: 'none' }} />
       <div style={{ ...SHELL, position: 'relative' }}>
         <div style={{ animation: 'slideDownFade .55s cubic-bezier(.16,1,.3,1) .05s both' }}>
-          <SectionMark num="——" label="Tarieven" inView />
+          <SectionMark num="--" label="Tarieven" inView />
         </div>
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] lg:gap-16 items-start">
           <div>
@@ -65,7 +65,8 @@ function HeroSection() {
             </div>
             <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
               <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 0' }}>
-                U koopt een gerichte route met vaste output, geen licentie. ExitScan en RetentieScan vormen de twee kerninstappen; dashboard, rapport en Action Center landen daarna bounded in dezelfde suite-omgeving.
+                U koopt een gerichte route met vaste output, geen licentie. Dashboard, rapport en Action Center horen
+                daarna bij dezelfde suite-output, zodat prijs niet stopt bij inzicht maar doorloopt naar prioriteit en opvolging.
               </p>
             </div>
           </div>
@@ -99,7 +100,8 @@ function CorePricingSection() {
             De eerste koop blijft helder.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 44, maxWidth: '50ch' }}>
-            ExitScan en RetentieScan zijn de twee buyer-facing kernproducten. De prijsopbouw is bedoeld om de eerste route duidelijk te houden en pas daarna dashboard, rapport en Action Center als gedeelde suite-output te laten doorlopen.
+            ExitScan en RetentieScan zijn de twee buyer-facing kernproducten. De prijsopbouw houdt de eerste route helder,
+            terwijl dashboard, rapport en Action Center daarna als gedeelde suite-output meebewegen.
           </p>
         </Reveal>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -185,7 +187,9 @@ function CtaBand() {
                 Twijfelt u welke eerste route commercieel en inhoudelijk het best past?
               </h2>
               <p style={{ fontSize: 14, lineHeight: 1.7, color: T.inkSoft, maxWidth: '52ch' }}>
-                Gebruik het kennismakingsgesprek om eerst de kernroute, timing en privacygrenzen logisch te bepalen. Zo blijft de offerte kleiner, helderder en beter verdedigbaar, terwijl dashboard, rapport en Action Center pas meebewegen zodra de eerste route scherp staat.
+                Gebruik het kennismakingsgesprek om eerst de kernroute, timing en privacygrenzen logisch te bepalen. Zo
+                blijft de offerte kleiner, helderder en beter verdedigbaar, terwijl dashboard, rapport en Action Center pas
+                meebewegen zodra de eerste route scherp staat.
               </p>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
