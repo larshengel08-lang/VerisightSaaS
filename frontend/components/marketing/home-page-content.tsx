@@ -18,10 +18,13 @@ const T = {
   rule: 'oklch(0.875 0.012 62)',
   teal: 'oklch(0.5 0.12 188)',
   tealMid: 'oklch(0.62 0.1 185)',
+  tealFaint: 'oklch(0.972 0.018 185)',
 } as const
 const AC = {
   deep: 'oklch(0.45 0.18 50)',
   mid: 'oklch(0.76 0.14 53)',
+  light: 'oklch(0.86 0.10 55)',
+  soft: 'oklch(0.95 0.045 50)',
   faint: 'oklch(0.976 0.018 50)',
 } as const
 const FF = 'var(--font-fraunces), serif'
@@ -404,98 +407,261 @@ function ActionCenterSuitePreview() {
   )
 }
 
+// ── Interactive report preview ───────────────────────────────────
+type TabId = 'samenvatting' | 'themas' | 'rapportage'
+
+function SamenvattingTab() {
+  const [ready, setReady] = useState(false)
+  useEffect(() => { const t = setTimeout(() => setReady(true), 120); return () => clearTimeout(t) }, [])
+  const rows = [
+    { label: 'Groei en ontwikkeling', tag: 'Hoog',     tagBg: AC.faint,                  tagColor: AC.deep,             delay: 0 },
+    { label: 'Werkdruk in operatie',  tag: 'Verhoogd', tagBg: 'oklch(.88 .06 75 / .32)', tagColor: 'oklch(.40 .12 65)', delay: .07 },
+    { label: 'Loopbaanperspectief',   tag: 'Aandacht', tagBg: T.tealFaint,               tagColor: T.teal,              delay: .14 },
+  ]
+  const kpis = [
+    { label: 'Vertrekrisico',  disp: '12%',  sub: '+1.4 pp',          subColor: T.inkMuted },
+    { label: 'Engagement',     disp: '7,4',  sub: 'Stabiel',          subColor: T.inkMuted },
+    { label: 'Behoud +12 mnd', disp: '+3,1', sub: 'Positief signaal', subColor: AC.deep },
+  ]
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 5 }}>Voorbeeldoutput · Q2 2025</div>
+      <div style={{ fontFamily: FF, fontSize: 17, fontWeight: 400, color: T.ink, marginBottom: 22, lineHeight: 1.25 }}>
+        Managementsamenvatting. Topprioriteiten, trend en eerste actie.
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 22 }}>
+        {rows.map((item, i) => (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '10px 13px', background: T.paperSoft, fontSize: 13,
+            opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateX(-8px)',
+            transition: `opacity .5s ease ${item.delay}s, transform .5s cubic-bezier(.16,1,.3,1) ${item.delay}s`,
+          }}>
+            <span style={{ color: T.ink, fontWeight: 500 }}>{item.label}</span>
+            <span style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', padding: '2px 8px', background: item.tagBg, color: item.tagColor }}>{item.tag}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 20 }}>
+        {kpis.map((k, i) => (
+          <div key={i} style={{
+            padding: '12px 14px', background: T.paperSoft,
+            opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateY(8px)',
+            transition: `opacity .5s ease ${.25 + i * .07}s, transform .5s cubic-bezier(.16,1,.3,1) ${.25 + i * .07}s`,
+          }}>
+            <div style={{ fontSize: 9.5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.1em', color: T.inkMuted, marginBottom: 5 }}>{k.label}</div>
+            <div style={{ fontFamily: FF, fontSize: 24, color: T.ink, lineHeight: 1, letterSpacing: '-.02em' }}>{k.disp}</div>
+            <div style={{ fontSize: 9.5, color: k.subColor, marginTop: 3 }}>{k.sub}</div>
+          </div>
+        ))}
+      </div>
+      <div>
+        <div style={{ fontSize: 9.5, color: T.inkMuted, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 7 }}>Trend afgelopen 4 kwartalen</div>
+        <div style={{ height: 52, background: T.paperSoft, display: 'flex', alignItems: 'flex-end', padding: '8px 12px', gap: 6, overflow: 'hidden' }}>
+          {[42, 55, 50, 63, 78].map((h, i) => (
+            <div key={i} style={{ flex: 1, background: AC.mid, height: ready ? `${h}%` : '0%', opacity: .28 + i * .18, transition: `height .7s cubic-bezier(.4,0,0,1) ${.35 + i * .06}s` }} />
+          ))}
+        </div>
+        <div style={{ fontSize: 9.5, color: T.inkMuted, marginTop: 6, fontStyle: 'italic' }}>Resultaten op groepsniveau · n ≥ 8 per categorie</div>
+      </div>
+    </div>
+  )
+}
+
+function ThemasTab() {
+  const [ready, setReady] = useState(false)
+  useEffect(() => { const t = setTimeout(() => setReady(true), 100); return () => clearTimeout(t) }, [])
+  const themes = [
+    { label: 'Groei & ontwikkeling', pct: 68, color: AC.deep },
+    { label: 'Werkdruk',             pct: 54, color: 'oklch(.60 .12 65)' },
+    { label: 'Loopbaan',             pct: 47, color: T.tealMid },
+    { label: 'Samenwerking',         pct: 32, color: T.inkFaint },
+    { label: 'Leiderschap',          pct: 28, color: T.inkFaint },
+  ]
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 5 }}>Thema-analyse · ExitScan</div>
+      <div style={{ fontFamily: FF, fontSize: 17, fontWeight: 400, color: T.ink, marginBottom: 24, lineHeight: 1.25 }}>{"Vertrekthema's op frequentie."}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {themes.map((th, i) => (
+          <div key={i} style={{ opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateY(6px)', transition: `opacity .5s ease ${i * .07}s, transform .5s cubic-bezier(.16,1,.3,1) ${i * .07}s` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
+              <span style={{ color: T.ink, fontWeight: 500 }}>{th.label}</span>
+              <span style={{ color: T.inkMuted, fontVariantNumeric: 'tabular-nums' }}>{th.pct}%</span>
+            </div>
+            <div style={{ height: 5, background: T.paperSoft, overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: th.color, width: ready ? `${th.pct}%` : '0%', transition: `width .8s cubic-bezier(.4,0,0,1) ${.1 + i * .08}s` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 22, padding: '13px 15px', background: T.tealFaint, borderLeft: `2px solid ${T.teal}`, opacity: ready ? 1 : 0, transition: 'opacity .5s ease .5s' }}>
+        <div style={{ fontSize: 10, fontWeight: 600, color: T.teal, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 6 }}>Eerste prioriteit</div>
+        <div style={{ fontSize: 13, color: T.ink, lineHeight: 1.62 }}>Verifieer werkdruk-patroon Operations. Groei en ontwikkeling vraagt in drie teams tegelijkertijd aandacht.</div>
+      </div>
+      <div style={{ fontSize: 9.5, color: T.inkMuted, marginTop: 12, fontStyle: 'italic' }}>Groepsdata · n ≥ 8 · geen individuele herleidbaarheid</div>
+    </div>
+  )
+}
+
+function RapportageTab() {
+  const [ready, setReady] = useState(false)
+  useEffect(() => { const t = setTimeout(() => setReady(true), 80); return () => clearTimeout(t) }, [])
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 5 }}>Rapportage-output</div>
+      <div style={{ fontFamily: FF, fontSize: 17, fontWeight: 400, color: T.ink, marginBottom: 22, lineHeight: 1.25 }}>Leesbaar, gegroepeerd en direct bruikbaar.</div>
+      <div style={{ background: T.paperSoft, padding: 16, border: `1px solid ${T.rule}`, opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateY(10px)', transition: 'opacity .5s ease, transform .5s cubic-bezier(.16,1,.3,1)' }}>
+        <div style={{ background: T.ink, padding: '16px 18px', marginBottom: 12 }}>
+          <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: AC.soft, marginBottom: 10 }}>Verisight · ExitScan · Q2 2025</div>
+          <div style={{ fontFamily: FF, fontSize: 18, fontWeight: 400, color: '#fff', lineHeight: 1.2, letterSpacing: '-.015em' }}>
+            Managementrapport.<br />
+            <em style={{ fontStyle: 'italic', fontWeight: 300, color: AC.light, opacity: .85 }}>Eerste beeld en prioriteiten.</em>
+          </div>
+        </div>
+        {['Executive samenvatting', 'Thema-analyse', 'Teamoverzicht', 'Eerste acties'].map((s, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: i < 3 ? `1px solid ${T.rule}` : 'none', opacity: ready ? 1 : 0, transition: `opacity .4s ease ${.15 + i * .07}s` }}>
+            <div style={{ width: 18, height: 18, background: i === 0 ? AC.mid : T.rule, flexShrink: 0 }} />
+            <span style={{ fontSize: 12.5, color: T.ink }}>{s}</span>
+            <span style={{ marginLeft: 'auto', fontSize: 10.5, color: T.inkMuted, fontVariantNumeric: 'tabular-nums' }}>p.{i + 2}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+        {[
+          { label: 'PDF-rapport', bg: T.paperSoft, color: T.inkSoft, bold: false },
+          { label: 'Dashboard',   bg: AC.faint,    color: AC.deep,   bold: true },
+          { label: 'Presentatie', bg: T.paperSoft, color: T.inkSoft, bold: false },
+        ].map((b, i) => (
+          <div key={i} style={{ flex: 1, padding: '9px 12px', background: b.bg, fontSize: 12, color: b.color, fontWeight: b.bold ? 600 : 400, opacity: ready ? 1 : 0, transition: `opacity .4s ease ${.45 + i * .06}s` }}>{b.label}</div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function DashboardPreview() {
+  const [tab, setTab] = useState<TabId>('samenvatting')
+  const tabs: { id: TabId; label: string }[] = [
+    { id: 'samenvatting', label: 'Samenvatting' },
+    { id: 'themas',       label: "Thema's" },
+    { id: 'rapportage',   label: 'Rapportage' },
+  ]
+  return (
+    <div style={{ background: T.white, border: `1px solid ${T.rule}`, borderRadius: 14, overflow: 'hidden', boxShadow: `0 2px 4px rgba(0,0,0,.04),0 32px 72px -16px rgba(20,14,10,.22),0 0 0 1px ${AC.soft}` }}>
+      <div style={{ display: 'flex', gap: 2, padding: '10px 14px', background: T.paperSoft, borderBottom: `1px solid ${T.rule}` }}>
+        {tabs.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{
+            fontSize: 12, fontWeight: t.id === tab ? 600 : 400, padding: '6px 14px',
+            border: 'none', cursor: 'pointer', borderRadius: 5,
+            background: t.id === tab ? T.white : 'transparent',
+            color: t.id === tab ? T.ink : T.inkMuted,
+            boxShadow: t.id === tab ? '0 1px 3px rgba(0,0,0,.08)' : 'none',
+            transition: 'all .12s',
+          }}>{t.label}</button>
+        ))}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: AC.mid, boxShadow: `0 0 0 3px ${AC.soft}` }} />
+          <span style={{ fontSize: 10.5, color: T.inkMuted, fontWeight: 500 }}>ExitScan · Q2</span>
+        </div>
+      </div>
+      <div key={tab} style={{ padding: '26px 28px', animation: 'scaleIn .3s ease both' }}>
+        {tab === 'samenvatting' && <SamenvattingTab />}
+        {tab === 'themas'       && <ThemasTab />}
+        {tab === 'rapportage'   && <RapportageTab />}
+      </div>
+    </div>
+  )
+}
+
 function HeroSection() {
   const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero_primary' })
 
   return (
     <section style={{ background: T.white, position: 'relative', overflow: 'hidden', borderBottom: `1px solid ${T.rule}` }}>
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}50 1px,transparent 1px),linear-gradient(90deg,${T.rule}50 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: 0.28 }} />
-      <div style={{ position: 'absolute', top: -160, right: -100, width: 720, height: 720, background: `radial-gradient(circle,${AC.faint} 0%,transparent 58%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: -120, right: -80, width: 600, height: 600, background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`, pointerEvents: 'none', animation: 'ctaPulse 6s ease-in-out infinite' }} />
 
-      {/* ── Text block ─────────────────────────────────── */}
-      <div style={{ ...SHELL, position: 'relative', paddingTop: 'clamp(68px,8.5vw,104px)', paddingBottom: 'clamp(52px,6vw,72px)' }}>
-        <Reveal delay={0.02}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 40 }}>
-            <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.22em', textTransform: 'uppercase', color: T.inkFaint }}>Verisight</span>
-            <span style={{ fontSize: 9.5, color: T.rule }}>—</span>
-            <span style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint }}>People suite</span>
+      <div style={{ ...SHELL, position: 'relative', paddingTop: 'clamp(56px,7vw,88px)', paddingBottom: 'clamp(56px,7vw,88px)' }}>
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_520px] lg:gap-16 xl:grid-cols-[1fr_560px] xl:gap-20 items-start">
+
+          {/* ── Left: text ───────────────────────────────── */}
+          <div>
+            <Reveal delay={0.02}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 36 }}>
+                <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.22em', textTransform: 'uppercase', color: T.inkFaint }}>Verisight</span>
+                <span style={{ fontSize: 9.5, color: T.rule }}>—</span>
+                <span style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint }}>People suite</span>
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.07}>
+              <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(44px,6.2vw,84px)', lineHeight: 0.95, letterSpacing: '-.034em', color: T.ink, marginBottom: 20 }}>
+                Van people insights
+                <br />
+                <em className="shimmer-text" style={{ fontStyle: 'italic' }}>naar prioriteit,</em>
+                <br />
+                actie en opvolging.
+              </h1>
+            </Reveal>
+
+            <Reveal delay={0.14}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28, flexWrap: 'wrap' }}>
+                {['Inzicht', 'Prioriteit', 'Actie', 'Toewijzing', 'Opvolging'].map((step, i, arr) => (
+                  <span key={step} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: i === 0 ? AC.deep : i === arr.length - 1 ? T.teal : T.inkFaint }}>
+                      {step}
+                    </span>
+                    {i < arr.length - 1 && <span style={{ fontSize: 10, color: T.rule, lineHeight: 1 }}>→</span>}
+                  </span>
+                ))}
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.2}>
+              <p style={{ fontSize: 16, lineHeight: 1.76, color: T.inkSoft, maxWidth: '44ch', marginBottom: 32 }}>
+                Verisight helpt HR en management zien wat speelt, bepalen wat eerst telt en opvolging daadwerkelijk organiseren. Dashboard, rapport en Action Center — van eerste inzicht tot aantoonbare actie.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.26}>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 32 }}>
+                <Link href={ctaHref}
+                  style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '13px 30px', color: '#fff', background: T.ink, transition: 'background .18s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = AC.deep }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.ink }}>
+                  Plan suite-demo <Arrow />
+                </Link>
+                <Link href="/#suite"
+                  style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 500, padding: '12px 28px', color: T.inkSoft, border: `1px solid ${T.rule}`, transition: 'border-color .18s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T.inkMuted }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = T.rule }}>
+                  Bekijk de suite
+                </Link>
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.32}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap', paddingTop: 22, borderTop: `1px solid ${T.rule}` }}>
+                {[
+                  { label: 'Eén suite-login', dot: T.tealMid },
+                  { label: 'Action Center inbegrepen', dot: AC.mid },
+                  { label: 'AVG-conform op groepsniveau', dot: T.tealMid },
+                ].map(({ label, dot }) => (
+                  <span key={label} style={{ fontSize: 11.5, color: T.inkFaint, display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: dot, display: 'inline-block', flexShrink: 0 }} />
+                    {label}
+                  </span>
+                ))}
+              </div>
+            </Reveal>
           </div>
-        </Reveal>
 
-        <Reveal delay={0.07}>
-          <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(52px,7.5vw,100px)', lineHeight: 0.94, letterSpacing: '-.036em', color: T.ink, marginBottom: 20 }}>
-            Van people insights
-            <br />
-            <em className="shimmer-text" style={{ fontStyle: 'italic' }}>naar prioriteit,</em>
-            <br />
-            actie en opvolging.
-          </h1>
-        </Reveal>
-
-        <Reveal delay={0.14}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 30, flexWrap: 'wrap' }}>
-            {['Inzicht', 'Prioriteit', 'Actie', 'Toewijzing', 'Opvolging'].map((step, i, arr) => (
-              <span key={step} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: i === 0 ? AC.deep : i === arr.length - 1 ? T.teal : T.inkFaint }}>
-                  {step}
-                </span>
-                {i < arr.length - 1 && <span style={{ fontSize: 10, color: T.rule, lineHeight: 1 }}>→</span>}
-              </span>
-            ))}
-          </div>
-        </Reveal>
-
-        <Reveal delay={0.2}>
-          <p style={{ fontSize: 16.5, lineHeight: 1.76, color: T.inkSoft, maxWidth: '56ch', marginBottom: 36 }}>
-            Verisight helpt HR en management zien wat speelt, bepalen wat eerst telt en opvolging daadwerkelijk organiseren. Dashboard, rapport en Action Center vormen één suite — van eerste inzicht tot aantoonbare actie.
-          </p>
-        </Reveal>
-
-        <Reveal delay={0.26}>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 36 }}>
-            <Link href={ctaHref}
-              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '13px 30px', color: '#fff', background: T.ink, transition: 'background .18s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = AC.deep }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.ink }}>
-              Plan suite-demo <Arrow />
-            </Link>
-            <Link href="/#suite"
-              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 500, padding: '12px 28px', color: T.inkSoft, border: `1px solid ${T.rule}`, transition: 'border-color .18s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T.inkMuted }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = T.rule }}>
-              Bekijk de suite
-            </Link>
-          </div>
-        </Reveal>
-
-        <Reveal delay={0.32}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap', paddingTop: 24, borderTop: `1px solid ${T.rule}` }}>
-            {[
-              { label: 'Eén suite-login', dot: T.tealMid },
-              { label: 'Action Center inbegrepen', dot: AC.mid },
-              { label: 'AVG-conform op groepsniveau', dot: T.tealMid },
-            ].map(({ label, dot }) => (
-              <span key={label} style={{ fontSize: 11.5, color: T.inkFaint, display: 'flex', alignItems: 'center', gap: 7 }}>
-                <span style={{ width: 3, height: 3, borderRadius: '50%', background: dot, display: 'inline-block', flexShrink: 0 }} />
-                {label}
-              </span>
-            ))}
-          </div>
-        </Reveal>
-      </div>
-
-      {/* ── Interactive preview ─────────────────────────── */}
-      <div style={{ background: T.paperSoft, borderTop: `1px solid ${T.rule}` }}>
-        <div style={{ ...SHELL, paddingTop: 'clamp(40px,5vw,56px)', paddingBottom: 'clamp(52px,6vw,72px)' }}>
-          <Reveal delay={0.3}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
-              <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: T.inkFaint, whiteSpace: 'nowrap' }}>Suite-preview</span>
-              <div style={{ flex: 1, height: 1, background: T.rule }} />
-            </div>
+          {/* ── Right: interactive preview ───────────────── */}
+          <Reveal delay={0.36} from="right">
+            <DashboardPreview />
           </Reveal>
-          <Reveal delay={0.36}>
-            <PreviewSlider variant="portfolio" />
-          </Reveal>
+
         </div>
       </div>
     </section>
@@ -509,7 +675,7 @@ function SuitePreviewSection() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
           <SectionLabel index="02" label="Dashboard, rapport en Action Center" />
         </div>
-        <PreviewSlider variant="portfolio" />
+        <DashboardPreview />
       </div>
     </section>
   )
