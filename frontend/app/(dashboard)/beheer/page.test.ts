@@ -13,5 +13,7 @@ describe('beheer admin alignment', () => {
     expect(source).toContain('Werkvolgorde voor Verisight')
     expect(source).toContain('Open deliverylaag')
     expect(source).toContain('Gebruik dit overzicht voor organisatie-setup, campaign-setup')
+    expect(source).toContain('Open health review')
+    expect(source).toContain('Health review default')
   })
 })

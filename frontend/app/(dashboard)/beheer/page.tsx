@@ -247,6 +247,12 @@ export default async function BeheerPage() {
             >
               Open klantlearnings
             </Link>
+            <Link
+              href="/beheer/health"
+              className="inline-flex items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50"
+            >
+              Open health review
+            </Link>
           </>
         }
         aside={
@@ -511,6 +517,13 @@ export default async function BeheerPage() {
               eyebrow="Learning"
               title="Learning default"
               body="Leg pilots en vroege klantlessen vast in /beheer/klantlearnings, zodat buyer-signalen en implementationfrictie niet in losse notities verdwijnen."
+              tone="slate"
+            />
+            <DashboardPanel
+              surface="ops"
+              eyebrow="Health"
+              title="Health review default"
+              body="Gebruik /beheer/health voor bounded activation-, denied-access- en follow-through signalen zonder brede analytics-stack."
               tone="slate"
             />
             <DashboardPanel
