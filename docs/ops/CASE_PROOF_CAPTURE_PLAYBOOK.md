@@ -57,6 +57,11 @@ Leg minimaal vast:
 
 Pas buyer-facing gebruik toe vanaf `approved`.
 
+Extra regels:
+
+- public proof mag alleen vanuit `public_usable`
+- Action Center en manager-only usage mogen wel proof dragen, maar geen brede orchestrationclaim
+
 ### 5. Kies het juiste format
 
 - mini-case: compacte salesproof met beperkte claimscope

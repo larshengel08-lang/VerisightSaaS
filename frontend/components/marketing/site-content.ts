@@ -99,6 +99,20 @@ export const homepageProofSignals = [
   'HR kan managers per afdeling toewijzen zonder survey-inzichten open te zetten',
   'ExitScan als default route, RetentieScan als volwaardige eerste route bij expliciete behoudsvraag',
   'Groepsinzichten met expliciete claims- en privacygrenzen',
+  'Publieke proof verschijnt pas na expliciete approval en provenance',
+] as const
+
+export const publicProofCards = [
+  {
+    title: 'Van signaal naar opvolging',
+    body: 'Goedgekeurde proof laat zien hoe dashboard, rapport en Action Center samen worden gebruikt zonder brede workflowclaims.',
+    approval: 'public_usable',
+  },
+  {
+    title: 'Bounded manager-toegang',
+    body: 'Proof blijft expliciet over manager-only Action Center toegang en zet geen surveyinzichten open in publieke claims.',
+    approval: 'public_usable',
+  },
 ] as const
 
 export const homepageUtilityLinks = [
