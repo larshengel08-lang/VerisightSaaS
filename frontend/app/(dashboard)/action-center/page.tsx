@@ -284,25 +284,21 @@ export default async function ActionCenterPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-4 text-sm text-[color:var(--dashboard-text)]">
-        Action Center is hier een aparte module binnen dezelfde ingelogde suite-shell. HR en klant zien hier opvolging naast dashboard en rapport; manager-assignees landen alleen op deze module en alleen binnen hun toegewezen afdelingen.
-      </div>
-      <ActionCenterPreview
-        initialItems={items}
-        initialView="overview"
-        fallbackOwnerName={getDisplayName(user.email)}
-        ownerOptions={ownerOptions}
-        managerOptions={managerOptions}
-        canAssignManagers={context.canManageActionCenterAssignments}
-        managerAssignmentEndpoint="/api/action-center/workspace-members"
-        workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
-        workbenchLabel={context.canViewInsights ? 'Open broncampaign' : 'Action Center blijft je werkruimte'}
-        workspaceName={getDisplayName(user.email)}
-        workspaceSubtitle={workspaceSubtitle}
-        readOnly
-        itemHrefs={itemHrefs}
-      />
-    </div>
+    <ActionCenterPreview
+      initialItems={items}
+      initialView="overview"
+      fallbackOwnerName={getDisplayName(user.email)}
+      ownerOptions={ownerOptions}
+      managerOptions={managerOptions}
+      canAssignManagers={context.canManageActionCenterAssignments}
+      managerAssignmentEndpoint="/api/action-center/workspace-members"
+      workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
+      workbenchLabel={context.canViewInsights ? 'Open broncampaign' : 'Action Center blijft je werkruimte'}
+      workspaceName={getDisplayName(user.email)}
+      workspaceSubtitle={workspaceSubtitle}
+      readOnly
+      itemHrefs={itemHrefs}
+      hideSidebar
+    />
   )
 }

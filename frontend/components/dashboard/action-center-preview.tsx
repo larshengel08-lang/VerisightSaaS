@@ -62,6 +62,7 @@ interface Props {
   workspaceSubtitle?: string
   readOnly?: boolean
   itemHrefs?: Record<string, string>
+  hideSidebar?: boolean
 }
 
 interface CreateActionFormState {
@@ -326,6 +327,7 @@ export function ActionCenterPreview({
   workspaceSubtitle = 'Admin-first opvolging',
   readOnly = false,
   itemHrefs = {},
+  hideSidebar = false,
 }: Props) {
   const [items, setItems] = useState(initialItems)
   const [activeView, setActiveView] = useState<ActionCenterPreviewView>(initialView)
@@ -591,9 +593,9 @@ export function ActionCenterPreview({
   }, [missingManagerCount, openItems.length, overdueReviews.length, selectedTeam, teamOpenItems.length, thisWeekReviews.length])
 
   return (
-    <div className="overflow-hidden rounded-[32px] border border-[#e6dccf] bg-[#f8f3ec] shadow-[0_24px_80px_rgba(19,32,51,0.12)]">
-      <div className="flex min-h-[980px] flex-col lg:flex-row">
-        <aside className="flex w-full shrink-0 flex-col bg-[#182231] text-[#f6f1e9] lg:w-[286px]">
+    <div className={hideSidebar ? '' : 'overflow-hidden rounded-[32px] border border-[#e6dccf] bg-[#f8f3ec] shadow-[0_24px_80px_rgba(19,32,51,0.12)]'}>
+      <div className={`flex flex-col lg:flex-row ${hideSidebar ? '' : 'min-h-[980px]'}`}>
+        <aside className={`flex w-full shrink-0 flex-col bg-[#182231] text-[#f6f1e9] lg:w-[286px] ${hideSidebar ? 'hidden' : ''}`}>
           <div className="border-b border-white/6 px-6 py-6">
             <Link href="/dashboard" className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#ff9b4a] text-base font-semibold text-[#182231]">
