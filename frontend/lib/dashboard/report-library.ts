@@ -26,7 +26,7 @@ export interface FeaturedReportEntry {
   stats: Array<{ label: string; value: string }>
 }
 
-const MANAGEMENT_SCAN_TYPES: ScanType[] = ['exit', 'retention', 'leadership']
+const MANAGEMENT_SCAN_TYPES: ScanType[] = ['exit', 'retention']
 const MODULE_SCAN_TYPES: ScanType[] = ['pulse', 'team']
 
 function formatDutchDate(dateLike: string) {
@@ -55,10 +55,10 @@ function getCategoryLabel(category: Exclude<ReportLibraryCategory, 'all'>) {
     case 'management':
       return 'Managementsamenvatting'
     case 'cohort':
-      return 'Cohortrapport'
+      return 'Cohortread'
     case 'module':
     default:
-      return 'Modulerapport'
+      return 'Bounded output'
   }
 }
 
@@ -74,7 +74,7 @@ function getEntrySummary(campaign: CampaignStats, category: Exclude<ReportLibrar
     return `${SCAN_TYPE_LABELS[campaign.scan_type]} als bounded cohortread, met nadruk op checkpointduiding en opvolging.`
   }
 
-  return `${SCAN_TYPE_LABELS[campaign.scan_type]} als verdiepende modulelaag, met ${signalText.toLowerCase()}.`
+  return `${SCAN_TYPE_LABELS[campaign.scan_type]} als bounded outputlaag, met ${signalText.toLowerCase()}.`
 }
 
 function getEntryTitle(campaign: CampaignStats, category: Exclude<ReportLibraryCategory, 'all'>) {
@@ -143,7 +143,7 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
           `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} ${formatDutchQuarter(featuredCandidate.created_at)}`,
         subtitle: `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} · ${formatDutchQuarter(featuredCandidate.created_at)}`,
         description:
-          'Gebruik dit rapport als eerste boardroom-ready handoff: wat speelt nu, wat vraagt verificatie en welke eigenaar, eerste stap en reviewmoment moeten daarna expliciet worden vastgelegd.',
+          'Gebruik deze formele reportlaag als eerste boardroom-ready handoff: wat speelt nu, wat vraagt verificatie en welke eigenaar, eerste stap en reviewmoment moeten daarna expliciet worden vastgelegd.',
         stats: [
           { label: 'Responses', value: String(featuredCandidate.total_completed) },
           {

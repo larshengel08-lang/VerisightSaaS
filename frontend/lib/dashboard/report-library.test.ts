@@ -36,6 +36,22 @@ const campaigns: CampaignStats[] = [
     band_low: 3,
   },
   {
+    campaign_id: 'leadership-1',
+    campaign_name: 'Leadership read Q4',
+    scan_type: 'leadership',
+    organization_id: 'org-1',
+    is_active: true,
+    created_at: '2025-09-25T09:00:00Z',
+    total_invited: 42,
+    total_completed: 12,
+    completion_rate_pct: 29,
+    avg_risk_score: 4.9,
+    avg_signal_score: 5.0,
+    band_high: 3,
+    band_medium: 5,
+    band_low: 4,
+  },
+  {
     campaign_id: 'onboarding-1',
     campaign_name: 'Onboarding cohort sep 25',
     scan_type: 'onboarding',
@@ -73,7 +89,7 @@ describe('report library', () => {
   it('builds only report-ready entries and marks one featured management report', () => {
     const model = buildReportLibraryEntries(campaigns)
 
-    expect(model.entries.map((entry) => entry.campaignId)).toEqual(['exit-1', 'onboarding-1', 'pulse-1'])
+    expect(model.entries.map((entry) => entry.campaignId)).toEqual(['exit-1', 'onboarding-1', 'leadership-1', 'pulse-1'])
     expect(model.featured).toMatchObject({
       campaignId: 'exit-1',
       scanType: 'exit',
@@ -86,15 +102,16 @@ describe('report library', () => {
 
     expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.category).toBe('management')
     expect(model.entries.find((entry) => entry.campaignId === 'pulse-1')?.category).toBe('module')
+    expect(model.entries.find((entry) => entry.campaignId === 'leadership-1')?.category).toBe('module')
     expect(model.entries.find((entry) => entry.campaignId === 'onboarding-1')?.category).toBe('cohort')
   })
 
   it('filters cards per category without inventing an all-in-one export layer', () => {
     const model = buildReportLibraryEntries(campaigns)
 
-    expect(filterReportLibraryEntries(model.entries, 'all')).toHaveLength(3)
+    expect(filterReportLibraryEntries(model.entries, 'all')).toHaveLength(4)
     expect(filterReportLibraryEntries(model.entries, 'management').map((entry) => entry.campaignId)).toEqual(['exit-1'])
-    expect(filterReportLibraryEntries(model.entries, 'module').map((entry) => entry.campaignId)).toEqual(['pulse-1'])
+    expect(filterReportLibraryEntries(model.entries, 'module').map((entry) => entry.campaignId)).toEqual(['leadership-1', 'pulse-1'])
     expect(filterReportLibraryEntries(model.entries, 'cohort').map((entry) => entry.campaignId)).toEqual(['onboarding-1'])
   })
 })

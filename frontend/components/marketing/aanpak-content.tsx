@@ -26,8 +26,8 @@ function HeroSection() {
               </h1>
             </div>
             <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .32s both' }}>
-              <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 36px' }}>
-                Verisight begeleidt het traject van intake en uitvoering naar dashboard, rapport, bestuurlijke handoff en
+            <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 36px' }}>
+                Verisight begeleidt het traject van intake en uitvoering naar dashboard, managementread, bestuurlijke handoff en
                 een eerste Action Center-opvolgafspraak, zonder losse eindes.
               </p>
             </div>
@@ -50,7 +50,7 @@ function HeroSection() {
               {[
                 { week: 'Week 1', label: 'Routekeuze, intake en setup' },
                 { week: 'Week 2', label: 'Uitnodiging, responses en opbouw' },
-                { week: 'Week 3', label: 'Dashboard, rapport en eerste read' },
+                { week: 'Week 3', label: 'Dashboard, eerste read en waar passend rapport' },
               ].map((item, i) => (
                 <div key={i} style={{ padding: '14px 0', borderBottom: i < 2 ? `1px solid ${T.rule}` : 'none', display: 'flex', gap: 16, alignItems: 'baseline' }}>
                   <span style={{ fontFamily: FF, fontSize: 11, color: T.inkFaint, minWidth: 52 }}>{item.week}</span>
@@ -124,7 +124,7 @@ function RolesSection() {
                 <em className="shimmer-text" style={{ fontStyle: 'italic' }}>Verisight regelt de uitvoering.</em>
               </h2>
               <p style={{ fontSize: 14, lineHeight: 1.72, color: T.inkSoft, marginBottom: 28 }}>
-                U bevestigt route en timing, levert het respondentbestand aan en ontvangt dashboard, rapport, toelichting
+                U bevestigt route en timing, levert het respondentbestand aan en ontvangt dashboard, managementread of rapport waar passend, toelichting
                 en de eerste bounded opvolglaag in Action Center.
               </p>
             </Reveal>
@@ -132,7 +132,7 @@ function RolesSection() {
               {[
                 { title: 'Route bevestigen', body: 'U bevestigt scan, variant, timing, doelgroep en contactpersoon na akkoord.' },
                 { title: 'Respondentbestand aanleveren', body: 'U levert het bestand aan; Verisight controleert de import en zet uitnodigingen klaar.' },
-                { title: 'Dashboard en rapport ontvangen', body: 'U ontvangt dashboard, managementrapport en toelichting in dezelfde leeslijn.' },
+                { title: 'Dashboard en output ontvangen', body: 'U ontvangt dashboard, managementread of rapport waar passend en toelichting in dezelfde leeslijn.' },
               ].map((item, i) => (
                 <Reveal key={i} delay={.1 + i * .08}>
                   <div style={{ display: 'flex', gap: 18, padding: '20px 0', borderTop: `1px solid ${T.rule}` }}>
@@ -188,7 +188,7 @@ function FirstValueSection() {
                 <em className="shimmer-text" style={{ fontStyle: 'italic' }}>grenzen.</em>
               </h2>
               <p style={{ fontSize: 13.5, lineHeight: 1.7, color: T.inkSoft }}>
-                First value is snel, maar nooit sneller dan de responsbasis toelaat. De route stopt niet bij het rapport, maar bij een eerste bestuurlijke vervolgbespreking.
+                First value is snel, maar nooit sneller dan de responsbasis toelaat. De route stopt niet bij output of rapport, maar bij een eerste bestuurlijke vervolgbespreking.
               </p>
             </div>
           </Reveal>

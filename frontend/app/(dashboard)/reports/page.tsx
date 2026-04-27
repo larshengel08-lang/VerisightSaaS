@@ -72,9 +72,9 @@ export default async function ReportsPage({
   return (
     <div className="space-y-6">
       <DashboardHero
-        eyebrow="Reports & Exports"
+        eyebrow="Reportlaag & output"
         title="Klaar voor het overleg."
-        description="Gebruik de rapportlaag als compacte managementread en handofflaag: eerst wat nu telt, daarna welke verificatie, eigenaar en opvolging logisch zijn. Geen ruwe data-dump, wel bestuurlijke output in dezelfde familie als dashboard en Action Center."
+        description="Gebruik de formele rapportlaag vooral voor ExitScan en RetentieScan: eerst wat nu telt, daarna welke verificatie, eigenaar en opvolging logisch zijn. Andere routes kunnen hier wel bounded outputreads tonen, maar dragen niet automatisch dezelfde reportzwaarte."
         tone="slate"
         meta={
           <>
@@ -129,9 +129,9 @@ export default async function ReportsPage({
           ) : (
             <div className="space-y-3">
               <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">Wanneer de rapportlaag opent</p>
-              <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
-                Rapporten verschijnen pas als een campaign genoeg respons en managementduiding heeft om een bounded handoff te dragen.
-              </p>
+                <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  Formele rapporten openen pas als een campaign genoeg respons en managementduiding heeft om een bounded handoff te dragen. ExitScan en RetentieScan blijven daarin de primaire reportroutes.
+                </p>
             </div>
           )
         }
@@ -139,8 +139,8 @@ export default async function ReportsPage({
 
       <DashboardSection
         eyebrow="Bibliotheek"
-        title="Beschikbare rapporten"
-        description="Open alleen rapporten die al een echte managementread dragen. De rapportlaag blijft gekoppeld aan echte campaigns en volgt dezelfde bounded taal als dashboard en Action Center."
+        title="Beschikbare reports en outputreads"
+        description="Open alleen formele rapporten of bounded outputreads die al een echte managementread dragen. De formele reportlaag blijft primair gekoppeld aan ExitScan en RetentieScan; andere routes blijven bewust compacter."
         aside={
           <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
             {CATEGORY_OPTIONS.map((option) => {
@@ -208,22 +208,22 @@ export default async function ReportsPage({
           </div>
         ) : (
           <div className="rounded-[24px] border border-dashed border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-8 text-sm leading-7 text-[color:var(--dashboard-text)]">
-            Er zijn in deze categorie nog geen rapporten met voldoende respons en managementduiding. Gebruik eerst dashboard en campaignroute om de eerste read te laten landen.
+            Er zijn in deze categorie nog geen formele rapporten of bounded outputreads met voldoende respons en managementduiding. Gebruik eerst dashboard en campaignroute om de eerste read te laten landen.
           </div>
         )}
       </DashboardSection>
 
       <DashboardSection
         eyebrow="Handoff"
-        title="Van rapport naar opvolging"
-        description="De rapportlaag is geen eindpunt. Gebruik hem om managementduiding te bundelen en leg daarna in Action Center expliciet vast wie de eigenaar is, wat de eerste stap is en wanneer het reviewmoment terugkomt."
+        title="Van managementread naar opvolging"
+        description="De formele reportlaag of bounded outputread is geen eindpunt. Gebruik die read om managementduiding te bundelen en leg daarna in Action Center expliciet vast wie de eigenaar is, wat de eerste stap is en wanneer het reviewmoment terugkomt."
         tone="blue"
       >
         <div className="grid gap-4 lg:grid-cols-3">
           {[
-            ['1. Managementread', 'Gebruik dashboard en rapport samen om te bepalen welk patroon nu bestuurlijk telt en welke claim bewust nog niet hoort.'],
-            ['2. Eerste stap', 'Leg de eerste eigenaar en eerste stap vast zodra het rapport een echt managementgesprek opent. Zo blijft de output niet hangen in alleen inzicht.'],
-            ['3. Reviewmoment', 'Koppel het rapport altijd aan een reviewmoment in Action Center. Dan wordt opvolging zichtbaar, bounded en controleerbaar.'],
+            ['1. Managementread', 'Gebruik dashboard en formeel rapport of bounded outputread samen om te bepalen welk patroon nu bestuurlijk telt en welke claim bewust nog niet hoort.'],
+            ['2. Eerste stap', 'Leg de eerste eigenaar en eerste stap vast zodra de read een echt managementgesprek opent. Zo blijft de output niet hangen in alleen inzicht.'],
+            ['3. Reviewmoment', 'Koppel de read altijd aan een reviewmoment in Action Center. Dan wordt opvolging zichtbaar, bounded en controleerbaar.'],
           ].map(([title, body]) => (
             <div
               key={title}

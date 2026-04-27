@@ -88,7 +88,7 @@ function HeroSection() {
           </div>
           <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
             <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, margin: '28px 0 36px' }}>
-              ExitScan en RetentieScan zijn de twee hoofdinstappen. Daarna landen dashboard, rapport en Action Center in
+              ExitScan en RetentieScan zijn de twee hoofdinstappen. Daarna landen dashboard, formele managementread waar passend en Action Center in
               dezelfde suite-omgeving, zodat u niet alleen inzicht krijgt maar ook kunt prioriteren, toewijzen en opvolgen.
             </p>
           </div>
@@ -224,7 +224,7 @@ function ContactSection() {
         <MarketingInlineContactPanel
           eyebrow="Plan suite-demo"
           title="Twijfelt u tussen ExitScan, RetentieScan, onboarding of een vervolgronde?"
-          body="In een eerste gesprek bepalen we welke route nu echt logisch is, hoe dashboard, rapport en Action Center daarna in dezelfde suite-omgeving landen en welke vervolgstap bewust kleiner moet blijven."
+          body="In een eerste gesprek bepalen we welke route nu echt logisch is, hoe dashboard, managementread of rapport waar passend en Action Center daarna in dezelfde suite-omgeving landen en welke vervolgstap bewust kleiner moet blijven."
           defaultRouteInterest="exitscan"
           defaultCtaSource="products_form"
         />

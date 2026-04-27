@@ -215,7 +215,7 @@ export function ContactForm({
       >
         {isCompact
           ? 'Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke suite-output daarna logisch wordt.'
-          : 'Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de logische eerste stap is. Onboarding 30-60-90 behandelen we als bounded peer wanneer de vraag direct over nieuwe medewerkers gaat. Pulse en Leadership Scan blijven bounded vervolgroutes die pas logisch worden nadat een eerste signaal, baseline of managementread al staat. We gebruiken de intake ook om te bepalen wanneer dashboard, rapport of Action Center daarna logisch in dezelfde suite-omgeving landen en hoe een bounded suite-demo eruit moet zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.'}
+          : 'Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de logische eerste stap is. Onboarding 30-60-90 behandelen we als bounded peer wanneer de vraag direct over nieuwe medewerkers gaat. Pulse en Leadership Scan blijven bounded vervolgroutes die pas logisch worden nadat een eerste signaal, baseline of managementread al staat. We gebruiken de intake ook om te bepalen wanneer dashboard, managementread of rapport waar passend en Action Center daarna logisch in dezelfde suite-omgeving landen en hoe een bounded suite-demo eruit moet zien. De informatie uit dit formulier gebruiken we alleen om jullie vraag te duiden en gericht op te volgen.'}
         {!isCompact ? <span className={`mt-3 block text-xs ${helperClass}`}>{billingReadinessCopy}</span> : null}
       </div>
 
