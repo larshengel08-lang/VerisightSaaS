@@ -38,9 +38,9 @@ export function PublicHeader({
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="flex flex-col gap-0.5">
-              <Wordmark size="md" />
+              <Wordmark size="md" showTagline={false} />
               <span className="pl-px text-[8px] font-bold tracking-[0.18em] uppercase text-[rgba(22,20,18,0.32)]">
-                People insights + opvolging
+                People insights, prioriteit en opvolging
               </span>
             </div>
           </div>

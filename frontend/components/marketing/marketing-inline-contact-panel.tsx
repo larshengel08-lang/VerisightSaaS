@@ -24,24 +24,24 @@ export function MarketingInlineContactPanel({
   return (
     <div
       id={id}
-      className="marketing-panel overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[linear-gradient(180deg,#ffffff_0%,#fbfaf8_100%)] p-7 md:p-10"
+      className="marketing-panel overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[linear-gradient(180deg,#fffdf9_0%,#fbfaf8_100%)] p-7 md:p-10"
     >
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:items-start xl:gap-10">
-        <div className="xl:pr-4">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-5">
-            <div>
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:items-start xl:gap-12">
+        <div className="xl:pr-2">
+          <div className="mb-6 border-b border-[var(--border)] pb-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">{eyebrow}</p>
-              <h2 className="mt-3 text-[clamp(1.8rem,3vw,2.8rem)] font-light leading-[1.06] tracking-[-0.03em] text-[var(--ink)]">
-                {title}
-              </h2>
+              {badge != null && (
+                <div className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                  {badge}
+                </div>
+              )}
             </div>
-            {badge != null && (
-              <div className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                {badge}
-              </div>
-            )}
+            <h2 className="mt-4 text-[clamp(2rem,3vw,3rem)] font-light leading-[1.04] tracking-[-0.03em] text-[var(--ink)]">
+                {title}
+            </h2>
           </div>
-          <p className="text-[1.02rem] leading-8 text-[var(--text)]">{body}</p>
+          <p className="max-w-[34rem] text-[1.02rem] leading-8 text-[var(--text)]">{body}</p>
         </div>
         <div className="xl:pl-2">
           <Suspense

@@ -31,7 +31,7 @@ const OPS_TONE_LABELS: Record<Tone, string> = {
   amber: 'text-[#8C6B1F]',
 }
 
-const CARD_SHADOW = 'shadow-[0_18px_40px_rgba(17,24,39,0.07)]'
+const CARD_SHADOW = 'shadow-[0_12px_28px_rgba(17,24,39,0.05)]'
 const PANEL_GLOW = 'before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/72'
 
 function joinClasses(...classes: Array<string | false | null | undefined>) {
@@ -128,8 +128,8 @@ export function DashboardHero({
       data-dashboard-primitive="hero"
       className={joinClasses(
         surface === 'ops'
-          ? 'overflow-visible rounded-[24px] border p-5 shadow-[0_10px_28px_rgba(19,32,51,0.05)] sm:p-6'
-          : 'relative overflow-hidden rounded-[34px] border px-6 py-6 sm:px-7 sm:py-7',
+          ? 'overflow-visible rounded-[20px] border p-5 shadow-[0_8px_22px_rgba(19,32,51,0.04)] sm:p-6'
+          : 'relative overflow-hidden rounded-[24px] border px-6 py-6 sm:px-7 sm:py-7',
         surface === 'default' && CARD_SHADOW,
         surface === 'default' && PANEL_GLOW,
         toneSurface,
@@ -180,8 +180,8 @@ export function DashboardHero({
           <div
             className={joinClasses(
               surface === 'ops'
-                ? 'rounded-[22px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(19,32,51,0.04)]'
-                : 'rounded-[28px] border border-white/75 bg-white/84 p-5 shadow-[0_20px_40px_rgba(17,24,39,0.07)] backdrop-blur',
+                ? 'rounded-[18px] border border-slate-200 bg-white p-4 shadow-[0_6px_18px_rgba(19,32,51,0.03)]'
+                : 'rounded-[20px] border border-white/75 bg-white/84 p-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)] backdrop-blur',
             )}
           >
             {aside}
@@ -217,8 +217,8 @@ export function DashboardSection({
       data-dashboard-primitive="section"
       className={joinClasses(
         surface === 'ops'
-          ? 'scroll-mt-36 rounded-[24px] border p-5 shadow-[0_10px_28px_rgba(19,32,51,0.05)]'
-          : 'relative scroll-mt-40 overflow-hidden rounded-[32px] border px-5 py-5 sm:px-6 sm:py-6',
+          ? 'scroll-mt-36 rounded-[20px] border p-5 shadow-[0_8px_22px_rgba(19,32,51,0.04)]'
+          : 'relative scroll-mt-40 overflow-hidden rounded-[22px] border px-5 py-5 sm:px-6 sm:py-6',
         surface === 'default' && CARD_SHADOW,
         surface === 'default' && PANEL_GLOW,
         getToneSurface(tone, surface),
@@ -265,8 +265,8 @@ export function DashboardDisclosure({
       open={defaultOpen}
       className={joinClasses(
         surface === 'ops'
-          ? 'group scroll-mt-36 rounded-[20px] border border-[color:var(--border)] bg-white shadow-[0_8px_24px_rgba(19,32,51,0.04)]'
-          : 'group scroll-mt-40 overflow-hidden rounded-[30px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)]',
+          ? 'group scroll-mt-36 rounded-[18px] border border-[color:var(--border)] bg-white shadow-[0_6px_18px_rgba(19,32,51,0.03)]'
+          : 'group scroll-mt-40 overflow-hidden rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)]',
         surface === 'default' && CARD_SHADOW,
       )}
     >
@@ -333,8 +333,8 @@ export function DashboardStatCard({
       data-dashboard-primitive="stat-card"
       className={joinClasses(
         surface === 'ops'
-          ? 'rounded-[20px] border p-4 shadow-[0_6px_18px_rgba(19,32,51,0.035)] sm:p-5'
-          : 'relative overflow-hidden rounded-[28px] border px-4 py-4 sm:px-5 sm:py-5',
+          ? 'rounded-[18px] border p-4 shadow-[0_5px_14px_rgba(19,32,51,0.03)] sm:p-5'
+          : 'relative overflow-hidden rounded-[18px] border px-4 py-4 sm:px-5 sm:py-5',
         surface === 'default' && CARD_SHADOW,
         surface === 'default' && PANEL_GLOW,
         getToneSurface(tone, surface),
@@ -389,7 +389,7 @@ export function DashboardChartPanel({
     <div
       data-dashboard-primitive="chart-panel"
       className={joinClasses(
-        'relative overflow-hidden rounded-[28px] border px-4 py-4 sm:px-5 sm:py-5',
+        'relative overflow-hidden rounded-[20px] border px-4 py-4 sm:px-5 sm:py-5',
         CARD_SHADOW,
         PANEL_GLOW,
         TONE_SURFACES[tone],
@@ -427,14 +427,14 @@ export function DashboardRecommendationRail({
     <section
       data-dashboard-primitive="recommendation-rail"
       className={joinClasses(
-        'relative overflow-hidden rounded-[30px] border px-4 py-4 sm:px-5 sm:py-5',
+        'relative overflow-hidden rounded-[22px] border px-4 py-4 sm:px-5 sm:py-5',
         CARD_SHADOW,
         PANEL_GLOW,
         TONE_SURFACES[tone],
       )}
     >
       <div className="grid gap-5 xl:grid-cols-[minmax(220px,0.34fr),minmax(0,0.66fr)] xl:items-start">
-        <div className="rounded-[24px] border border-white/70 bg-white/78 px-4 py-4">
+        <div className="px-1 py-1">
           {eyebrow ? (
             <p className={joinClasses('text-[11px] font-semibold uppercase tracking-[0.24em]', TONE_LABELS[tone])}>
               {eyebrow}
@@ -494,8 +494,8 @@ export function DashboardKeyValue({
     <div
       className={joinClasses(
         surface === 'ops'
-          ? 'rounded-[18px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-3'
-          : 'rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-3',
+          ? 'rounded-[16px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-3'
+          : 'rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-3',
       )}
     >
       <div className="flex items-center gap-1.5">
@@ -538,8 +538,8 @@ export function DashboardSummaryBar({
       <div
         className={joinClasses(
           surface === 'ops'
-            ? 'rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface)]/95 p-3 shadow-[0_10px_24px_rgba(19,32,51,0.08)] backdrop-blur'
-            : 'rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-topbar-strong)] p-3 shadow-[0_24px_52px_rgba(17,24,39,0.10)] backdrop-blur-xl',
+            ? 'rounded-[18px] border border-[color:var(--border)] bg-[color:var(--surface)]/95 p-3 shadow-[0_8px_18px_rgba(19,32,51,0.06)] backdrop-blur'
+            : 'rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-topbar-strong)] p-3 shadow-[0_14px_28px_rgba(17,24,39,0.08)] backdrop-blur-xl',
         )}
       >
         <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr),auto] xl:items-start">
@@ -574,8 +574,8 @@ export function DashboardSummaryBar({
       <nav
         className={joinClasses(
           surface === 'ops'
-            ? 'rounded-[18px] border border-[color:var(--border)] bg-[color:var(--surface)]/95 px-3 py-2 shadow-[0_12px_28px_rgba(19,32,51,0.08)] backdrop-blur'
-            : 'rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-topbar-strong)] px-3 py-2 shadow-[0_16px_34px_rgba(17,24,39,0.07)] backdrop-blur-xl',
+            ? 'rounded-[16px] border border-[color:var(--border)] bg-[color:var(--surface)]/95 px-3 py-2 shadow-[0_8px_18px_rgba(19,32,51,0.06)] backdrop-blur'
+            : 'rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-topbar-strong)] px-3 py-2 shadow-[0_10px_20px_rgba(17,24,39,0.06)] backdrop-blur-xl',
         )}
       >
         <div className="flex flex-wrap gap-2">
@@ -613,8 +613,8 @@ export function DashboardTimeline({
     <div
       className={joinClasses(
         surface === 'ops'
-          ? 'rounded-[20px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4 sm:p-5'
-          : 'rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] p-4 sm:p-5',
+          ? 'rounded-[18px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4 sm:p-5'
+          : 'rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] p-4 sm:p-5',
       )}
     >
       {title ? (
@@ -633,9 +633,9 @@ export function DashboardTimeline({
             <div className="flex items-start gap-3 md:flex-col md:gap-2">
               <span
                 className={joinClasses(
-                  surface === 'ops'
-                    ? 'h-9 w-9 bg-[color:var(--ink)] text-[color:var(--bg)]'
-                    : 'h-10 w-10 bg-[color:var(--dashboard-ink)] text-white',
+                surface === 'ops'
+                  ? 'h-9 w-9 bg-[color:var(--ink)] text-[color:var(--bg)]'
+                  : 'h-10 w-10 bg-[color:var(--dashboard-accent-strong)] text-white',
                   'inline-flex items-center justify-center rounded-full text-sm font-semibold',
                 )}
               >
@@ -650,7 +650,7 @@ export function DashboardTimeline({
             </div>
             <div
               className={joinClasses(
-                surface === 'ops' ? 'rounded-[18px] border p-4' : 'rounded-[24px] border px-4 py-4',
+                surface === 'ops' ? 'rounded-[16px] border p-4' : 'rounded-[16px] border px-4 py-4',
                 surface === 'default' && CARD_SHADOW,
                 getToneSurface(item.tone ?? 'slate', surface),
               )}
@@ -700,22 +700,17 @@ export function SignalStatCard({
   const accentColor = band && band !== 'neutral' ? RISK_ACCENT_COLORS[band] : '#8A7D6E'
 
   return (
-    <div
-      className="relative flex overflow-hidden rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]"
-    >
-      <div
-        className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full"
-        style={{ backgroundColor: accentColor }}
-      />
-      <div className="min-w-0 pl-4">
+    <div className="rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="flex items-center gap-2">
+        <span className="inline-flex h-2.5 w-2.5 rounded-full" style={{ backgroundColor: accentColor }} />
         <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
           {label}
         </p>
-        <p className="dash-number mt-2 text-[2rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
-        {subline ? (
-          <p className="mt-2 text-[0.8rem] text-[color:var(--dashboard-muted)]">{subline}</p>
-        ) : null}
       </div>
+      <p className="dash-number mt-3 text-[2rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
+      {subline ? (
+        <p className="mt-2 text-[0.8rem] text-[color:var(--dashboard-muted)]">{subline}</p>
+      ) : null}
     </div>
   )
 }
@@ -730,19 +725,19 @@ export function InsightStatCard({
   subline?: string
 }) {
   return (
-    <div className="relative flex overflow-hidden rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-      <div className="absolute left-0 top-[6px] bottom-[6px] w-[3px] rounded-r-full bg-[#8A7D6E]" />
-      <div className="min-w-0 pl-4">
+    <div className="rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+      <div className="flex items-center gap-2">
+        <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#8A7D6E]" />
         <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
           {label}
         </p>
-        <p className="mt-2 text-[1.25rem] font-semibold leading-snug tracking-[-0.01em] text-[color:var(--dashboard-ink)]">
-          {value}
-        </p>
-        {subline ? (
-          <p className="mt-2 text-[0.8rem] text-[color:var(--dashboard-muted)]">{subline}</p>
-        ) : null}
       </div>
+      <p className="mt-3 text-[1.25rem] font-semibold leading-snug tracking-[-0.01em] text-[color:var(--dashboard-ink)]">
+        {value}
+      </p>
+      {subline ? (
+        <p className="mt-2 text-[0.8rem] text-[color:var(--dashboard-muted)]">{subline}</p>
+      ) : null}
     </div>
   )
 }

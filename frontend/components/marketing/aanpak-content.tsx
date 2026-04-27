@@ -15,7 +15,7 @@ function HeroSection() {
       <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`, pointerEvents: 'none' }} />
       <div style={{ ...SHELL, position: 'relative' }}>
         <div style={{ animation: 'slideDownFade .55s cubic-bezier(.16,1,.3,1) .05s both' }}>
-          <SectionMark num="——" label="Aanpak" inView />
+          <SectionMark num="--" label="Aanpak" inView />
         </div>
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_380px] lg:gap-20 items-start">
           <div>
@@ -27,7 +27,8 @@ function HeroSection() {
             </div>
             <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .32s both' }}>
               <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 36px' }}>
-                Verisight begeleidt het traject van intake en uitvoering naar rapport, bestuurlijke handoff en een eerste vervolgafspraak — zonder losse eindes.
+                Verisight begeleidt het traject van intake en uitvoering naar dashboard, rapport, bestuurlijke handoff en
+                een eerste Action Center-opvolgafspraak, zonder losse eindes.
               </p>
             </div>
             <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -123,7 +124,8 @@ function RolesSection() {
                 <em className="shimmer-text" style={{ fontStyle: 'italic' }}>Verisight regelt de uitvoering.</em>
               </h2>
               <p style={{ fontSize: 14, lineHeight: 1.72, color: T.inkSoft, marginBottom: 28 }}>
-                U bevestigt route en timing, levert het respondentbestand aan en ontvangt dashboard, rapport en toelichting.
+                U bevestigt route en timing, levert het respondentbestand aan en ontvangt dashboard, rapport, toelichting
+                en de eerste bounded opvolglaag in Action Center.
               </p>
             </Reveal>
             <div>

@@ -18,7 +18,6 @@ export type DashboardModuleKey =
   | 'onboarding'
   | 'pulse'
   | 'leadership'
-  | 'team'
   | 'reports'
   | 'action_center'
 
@@ -48,7 +47,6 @@ const MODULE_LABELS: Array<{ key: DashboardModuleKey; label: string; scanType?: 
   { key: 'onboarding', label: 'Onboarding 30-60-90', scanType: 'onboarding' },
   { key: 'pulse', label: 'Pulse', scanType: 'pulse' },
   { key: 'leadership', label: 'Leadership Scan', scanType: 'leadership' },
-  { key: 'team', label: 'TeamScan', scanType: 'team' },
   { key: 'reports', label: 'Reports' },
   { key: 'action_center', label: 'Action Center' },
 ]
@@ -80,15 +78,21 @@ function getCampaignHref(campaign: DashboardShellCampaignRef | null) {
   return campaign ? `/campaigns/${campaign.campaign_id}` : null
 }
 
-function getModuleKeyForScanType(scanType: ScanType): Exclude<DashboardModuleKey, 'overview' | 'reports'> {
-  const moduleKeyByScanType = {
+function getModuleKeyForScanType(scanType: ScanType): DashboardModuleKey {
+  if (scanType === 'team') {
+    return 'overview'
+  }
+
+  const moduleKeyByScanType: Record<
+    Exclude<ScanType, 'team'>,
+    Exclude<DashboardModuleKey, 'overview' | 'reports' | 'action_center'>
+  > = {
     exit: 'exit',
     retention: 'retention',
     onboarding: 'onboarding',
-    team: 'team',
     pulse: 'pulse',
     leadership: 'leadership',
-  } as const satisfies Record<ScanType, Exclude<DashboardModuleKey, 'overview' | 'reports' | 'action_center'>>
+  }
 
   return moduleKeyByScanType[scanType]
 }
