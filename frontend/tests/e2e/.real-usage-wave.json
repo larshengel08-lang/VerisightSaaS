@@ -1,5 +1,5 @@
 {
-  "seededAt": "2026-04-27T08:07:05.261Z",
+  "seededAt": "2026-04-27T10:47:00.080Z",
   "organizations": [
     {
       "id": "26b85e72-2f92-4995-b995-2f435830ebcf",
@@ -28,8 +28,8 @@
   "telemetryCount": 20,
   "proofCount": 4,
   "storageMode": {
-    "billing": "fallback_only",
-    "telemetry": "fallback_only",
-    "proof": "fallback_only"
+    "billing": "supabase+fallback",
+    "telemetry": "supabase+fallback",
+    "proof": "supabase+fallback"
   }
 }

@@ -2,7 +2,7 @@
 
 ## Korte samenvatting
 
-De RU-wave is werkend gemaakt voor de huidige suitebasis met echte adminsurfaces voor billing, telemetry en proof, plus een semireële seedlaag voor 2-4 trajecten. De bedoelde Supabase-tabellen ontbreken nog in deze live omgeving, daarom draait deze slice nu bewust in `fallback_only`-modus op gecontroleerde JSON registries die uit echte campagnes en organisaties zijn afgeleid.
+De RU-wave draait nu echt DB-backed op de huidige suitebasis: billing, telemetry en proof hebben live adminsurfaces, de drie RU-tabellen zijn geprovisioneerd in de gekoppelde Supabase-omgeving en de semireele seedlaag voor 2-4 trajecten schrijft nu direct naar Supabase. De fallback registries blijven bewust bestaan als bounded noodgeval en lokale veiligheidslaag, maar zijn niet langer de primaire runtimewaarheid.
 
 ## Wat is geland
 
@@ -14,7 +14,7 @@ De RU-wave is werkend gemaakt voor de huidige suitebasis met echte adminsurfaces
   - billing registry
   - suite telemetry events
   - proof registry
-- semireële seedscript:
+- semireele seedscript:
   - `frontend/scripts/seed-real-usage-proof-wave.mjs`
 - runtime fallback store:
   - `frontend/data/runtime-registries/billing-registry.json`
@@ -24,11 +24,13 @@ De RU-wave is werkend gemaakt voor de huidige suitebasis met echte adminsurfaces
   - `POST /api/internal/telemetry`
   - `GET/POST /api/billing-registry`
   - `GET/POST /api/proof-registry`
+- live schema-aanvulling:
+  - `migrations/2026_04_27_add_real_usage_registry_tables.sql`
 
-## Wat de semireële wave nu dekt
+## Wat de semireele wave nu dekt
 
 - `billing registry echt gebruiken`
-  - 4 semireële assisted rows
+  - 4 semireele assisted rows
 - `telemetry live laten meelopen`
   - 20 bounded events over owner access, first value, first management use, manager denied insights, review scheduling en closeout
 - `proof registry vullen`
@@ -37,40 +39,38 @@ De RU-wave is werkend gemaakt voor de huidige suitebasis met echte adminsurfaces
     - `internal_proof_only`
     - `sales_usable`
     - `public_usable`
-- `2-4 echte of semireële trajecten`
-  - 4 semireële suite-runs gebaseerd op huidige campaigns en organizations
+- `2-4 echte of semireele trajecten`
+  - 4 semireele suite-runs gebaseerd op huidige campaigns en organizations
 
 ## Belangrijke nuance
 
-De huidige Supabase-omgeving mist nog:
+De slice blijft bewust in een dubbel veilig model:
 
-- `billing_registry`
-- `suite_telemetry_events`
-- `case_proof_registry`
+- **primaire waarheid**:
+  - `billing_registry`
+  - `suite_telemetry_events`
+  - `case_proof_registry`
+  - live in Supabase
+- **fallbacklaag**:
+  - gecontroleerde JSON registries in de repo
+  - alleen voor lokale noodpaden of als een omgeving tijdelijk de schema-objecten nog niet heeft
 
-Daarom is de slice nu bewust zo opgezet:
-
-- **als de tabellen bestaan**:
-  - lees en schrijf direct in Supabase
-- **als de tabellen ontbreken**:
-  - lees en schrijf via gecontroleerde fallback registries in de repo
-
-Dat maakt de wave direct bruikbaar voor appgedrag, review, demo en interne proofdiscipline, zonder te doen alsof de live schema-stap al af is.
+Dat houdt de suite eerlijk assisted en operationeel robuust, zonder de live waarheid opnieuw te verleggen naar demo- of mockdata.
 
 ## Nog open
 
-- de drie RU-tabellen alsnog echt provisionen in de gekoppelde Supabase-omgeving
-- daarna dezelfde seed nog een keer door de echte DB laten lopen
-- en pas daarna public proof verder opvoeren op basis van goedgekeurde echte cases
+- de eerste echte live cases door deze nieuwe registrylaag laten lopen
+- public proof alleen verder opvoeren op basis van goedgekeurde echte cases
+- fallbackgebruik alleen nog als noodgeval of lokale ontwikkelguardrail behandelen
 
 ## Oordeel
 
-Technisch geslaagd en reviewklaar als bounded RU-wave.
+Technisch geslaagd en live afgerond als bounded RU-wave.
 
 De suite heeft nu:
 
 - werkende billing / telemetry / proof surfaces
-- semireële usage-evidence
+- DB-backed semireele usage-evidence
 - expliciete public-proof scheiding
 
-Maar de definitieve live afronding vraagt nog één echte schema-applicatiestap in Supabase.
+De infrastructuurgap is nu gesloten; het vervolgwerk zit niet meer in schema, maar in echt gebruik en zwaardere proof.
