@@ -8,6 +8,7 @@ import {
   buildDashboardShellNavigation,
   getActiveModuleFromPathname,
   getDashboardShellCurrentLabel,
+  ACTION_CENTER_NAV,
   type DashboardModuleKey,
   type DashboardModuleNavItem,
   type DashboardPortfolioView,
@@ -49,11 +50,15 @@ export function DashboardShellFrame({
       }),
     [campaigns, currentCampaignPath, isAdmin, portfolioCounts, shellMode],
   )
+  const isActionCenter = pathname.startsWith('/action-center')
   const currentLabel = getDashboardShellCurrentLabel(pathname)
   const accountLabel = userEmail.split('@')[1]?.split('.')[0] ?? 'Verisight'
   const accountName = accountLabel.charAt(0).toUpperCase() + accountLabel.slice(1)
-  const mobileItems = [...navigation.modules, ...navigation.admin]
-  const showReportsQuickLink = shellMode === 'full'
+  const mobileItems = isActionCenter ? ACTION_CENTER_NAV : [...navigation.modules, ...navigation.admin]
+  const showReportsQuickLink = shellMode === 'full' && !isActionCenter
+  const activeAcHref = ACTION_CENTER_NAV.find(
+    (item) => pathname === item.href || pathname.startsWith(item.href + '/'),
+  )?.href ?? '/action-center'
 
   return (
     <div className="min-h-screen bg-[color:var(--bg)] text-[color:var(--ink)]">
@@ -75,29 +80,35 @@ export function DashboardShellFrame({
             </div>
 
             <nav className="flex-1 overflow-y-auto">
-              <SidebarSection
-                label="Modules"
-                items={navigation.modules}
-                activeModule={activeModule}
-                onNavigate={() => setMobileNavOpen(false)}
-              />
-              {navigation.admin.length > 0 ? (
-                <div className="mt-6 space-y-2 px-2">
-                  <p className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#66758a]">
-                    Beheer
-                  </p>
-                  {navigation.admin.map((item) => (
-                    <Link
-                      key={item.label}
-                      href={item.href ?? '/dashboard'}
-                      className="block rounded-2xl border border-white/6 px-4 py-3 text-sm text-[#dbe3ec] transition-colors hover:border-white/12 hover:bg-white/4"
-                    >
-                      <p className="font-medium">{item.label}</p>
-                      <p className="mt-1 text-xs leading-5 text-[#8fa1b3]">{item.detail}</p>
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
+              {isActionCenter ? (
+                <ActionCenterSidebarNav activeHref={activeAcHref} />
+              ) : (
+                <>
+                  <SidebarSection
+                    label="Modules"
+                    items={navigation.modules}
+                    activeModule={activeModule}
+                    onNavigate={() => setMobileNavOpen(false)}
+                  />
+                  {navigation.admin.length > 0 ? (
+                    <div className="mt-6 space-y-2 px-2">
+                      <p className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#66758a]">
+                        Beheer
+                      </p>
+                      {navigation.admin.map((item) => (
+                        <Link
+                          key={item.label}
+                          href={item.href ?? '/dashboard'}
+                          className="block rounded-2xl border border-white/6 px-4 py-3 text-sm text-[#dbe3ec] transition-colors hover:border-white/12 hover:bg-white/4"
+                        >
+                          <p className="font-medium">{item.label}</p>
+                          <p className="mt-1 text-xs leading-5 text-[#8fa1b3]">{item.detail}</p>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </>
+              )}
             </nav>
 
             <div className="mt-6 rounded-3xl border border-white/8 bg-white/[0.04] px-4 py-4">
@@ -142,20 +153,31 @@ export function DashboardShellFrame({
               </div>
 
               <div className="hidden items-center gap-2 lg:flex">
-                {showReportsQuickLink ? (
+                {isActionCenter ? (
                   <Link
-                    href="/reports"
-                    className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
+                    href="/action-center/acties/nieuw"
+                    className="rounded-full border border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
                   >
-                    Reports
+                    Actie aanmaken
                   </Link>
-                ) : null}
-                <Link
-                  href="/action-center"
-                  className="rounded-full border border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
-                >
-                  Action Center
-                </Link>
+                ) : (
+                  <>
+                    {showReportsQuickLink ? (
+                      <Link
+                        href="/reports"
+                        className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
+                      >
+                        Rapporten
+                      </Link>
+                    ) : null}
+                    <Link
+                      href="/action-center"
+                      className="rounded-full border border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
+                    >
+                      Action Center
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
 
@@ -163,9 +185,9 @@ export function DashboardShellFrame({
               <div className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 sm:px-6 lg:hidden">
                 <div className="space-y-2 rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--surface)] p-4 shadow-[0_18px_40px_rgba(19,32,51,0.08)]">
                   {mobileItems.map((item) => {
-                    const href = 'key' in item ? item.href : item.href
-                    const disabled = 'key' in item ? item.disabled : item.disabled
-                    const isActive = 'key' in item && item.key === activeModule
+                    const href = item.href
+                    const disabled = 'disabled' in item ? item.disabled : false
+                    const isActive = 'key' in item ? item.key === activeModule : pathname === item.href || pathname.startsWith(item.href + '/')
 
                     if (!href || disabled) {
                       return (
@@ -214,6 +236,41 @@ export function DashboardShellFrame({
               : 'Verisight dashboard · preview-adoptie op bestaande routes'}
           </footer>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function ActionCenterSidebarNav({ activeHref }: { activeHref: string }) {
+  return (
+    <div className="space-y-6 px-2">
+      <div className="space-y-1">
+        <p className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#66758a]">Werkruimte</p>
+        {ACTION_CENTER_NAV.map((item) => {
+          const isActive = activeHref === item.href
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-colors ${
+                isActive
+                  ? 'bg-white/[0.08] text-[#f5f2eb]'
+                  : 'text-[#c8d2dd] hover:bg-white/[0.04] hover:text-[#f5f2eb]'
+              }`}
+            >
+              <span className="font-medium">{item.label}</span>
+              {isActive && <span className="h-2.5 w-2.5 rounded-full bg-[#71c8b5]" />}
+            </Link>
+          )
+        })}
+      </div>
+      <div className="border-t border-white/8 pt-4">
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm text-[#66758a] transition-colors hover:text-[#94a3b8]"
+        >
+          ← Dashboard
+        </Link>
       </div>
     </div>
   )
