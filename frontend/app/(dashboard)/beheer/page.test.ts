@@ -15,5 +15,7 @@ describe('beheer admin alignment', () => {
     expect(source).toContain('Gebruik dit overzicht voor organisatie-setup, campaign-setup')
     expect(source).toContain('Open billing registry')
     expect(source).toContain('Billing default')
+    expect(source).toContain('Open health review')
+    expect(source).toContain('Health review default')
   })
 })

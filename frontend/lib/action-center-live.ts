@@ -9,6 +9,7 @@ import type { MemberRole, Campaign, CampaignStats, ScanType } from '@/lib/types'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord, DeliveryExceptionStatus } from '@/lib/ops-delivery'
 import { getDeliveryExceptionLabel } from '@/lib/ops-delivery'
 import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
+import { buildSuiteTelemetryEvent, type SuiteTelemetryEvent } from '@/lib/telemetry/events'
 
 export interface LiveActionCenterCampaignContext {
   campaign: Campaign
@@ -384,4 +385,78 @@ export function getLiveActionCenterSummary(items: ActionCenterPreviewItem[]) {
     blockedCount: items.filter((item) => item.status === 'geblokkeerd').length,
     reviewCount: items.filter((item) => item.reviewDate).length,
   }
+}
+
+export function buildActionCenterTelemetryEvents(
+  contexts: LiveActionCenterCampaignContext[],
+  actorId?: string | null,
+) {
+  const events: SuiteTelemetryEvent[] = []
+
+  for (const context of contexts) {
+    const orgId = context.campaign.organization_id
+    const campaignId = context.campaign.id
+    const lifecycleStage = context.deliveryRecord?.lifecycle_stage ?? null
+
+    if (
+      lifecycleStage &&
+      ['first_value_reached', 'first_management_use', 'follow_up_decided', 'learning_closed'].includes(lifecycleStage)
+    ) {
+      events.push(
+        buildSuiteTelemetryEvent('first_value_confirmed', {
+          orgId,
+          campaignId,
+          actorId: actorId ?? null,
+          payload: { lifecycleStage },
+        }),
+      )
+    }
+
+    if (
+      lifecycleStage &&
+      ['first_management_use', 'follow_up_decided', 'learning_closed'].includes(lifecycleStage)
+    ) {
+      events.push(
+        buildSuiteTelemetryEvent('first_management_use_confirmed', {
+          orgId,
+          campaignId,
+          actorId: actorId ?? null,
+          payload: { lifecycleStage },
+        }),
+      )
+    }
+
+    if (context.learningDossier?.review_moment) {
+      events.push(
+        buildSuiteTelemetryEvent('action_center_review_scheduled', {
+          orgId,
+          campaignId,
+          actorId: actorId ?? null,
+          payload: {
+            reviewMoment: context.learningDossier.review_moment,
+            scopeValue: context.scopeValue,
+          },
+        }),
+      )
+    }
+
+    if (
+      context.learningDossier?.triage_status === 'uitgevoerd' ||
+      lifecycleStage === 'learning_closed'
+    ) {
+      events.push(
+        buildSuiteTelemetryEvent('action_center_closeout_recorded', {
+          orgId,
+          campaignId,
+          actorId: actorId ?? null,
+          payload: {
+            triageStatus: context.learningDossier?.triage_status ?? null,
+            lifecycleStage,
+          },
+        }),
+      )
+    }
+  }
+
+  return events
 }

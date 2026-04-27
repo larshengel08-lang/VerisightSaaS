@@ -1,4 +1,5 @@
 import type { MemberRole } from '@/lib/types'
+import { buildSuiteTelemetryEvent, type SuiteTelemetryEvent } from '@/lib/telemetry/events'
 
 export type ActionCenterWorkspaceRole = 'hr_owner' | 'hr_member' | 'manager_assignee'
 export type ActionCenterWorkspaceScopeType = 'org' | 'department' | 'item'
@@ -146,4 +147,34 @@ export function isScopeVisibleToActionCenterContext(
   }
 
   return context.managerScopeValues.includes(scopeValue)
+}
+
+export function buildSuiteAccessTelemetryEvents(args: {
+  actorId?: string | null
+  context: Pick<SuiteAccessContext, 'persona' | 'primaryOrgId' | 'canViewInsights' | 'managerOnly'>
+}) {
+  const events: SuiteTelemetryEvent[] = []
+
+  if (
+    args.context.persona === 'customer_owner' &&
+    args.context.canViewInsights
+  ) {
+    events.push(
+      buildSuiteTelemetryEvent('owner_access_confirmed', {
+        orgId: args.context.primaryOrgId,
+        actorId: args.actorId ?? null,
+      }),
+    )
+  }
+
+  if (args.context.managerOnly && !args.context.canViewInsights) {
+    events.push(
+      buildSuiteTelemetryEvent('manager_denied_insights', {
+        orgId: args.context.primaryOrgId,
+        actorId: args.actorId ?? null,
+      }),
+    )
+  }
+
+  return events
 }
