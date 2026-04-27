@@ -63,17 +63,17 @@ export function DashboardShellFrame({
   return (
     <div className="min-h-screen bg-[color:var(--bg)] text-[color:var(--ink)]">
       <div className="mx-auto flex min-h-screen w-full max-w-[1600px]">
-        <aside className="hidden w-[316px] shrink-0 border-r border-white/8 bg-[#101418] text-[#f3efe8] lg:flex">
+        <aside className="hidden w-[292px] shrink-0 border-r border-white/8 bg-[color:var(--dashboard-rail)] text-[#f4efe6] lg:flex">
           <div className="sticky top-0 flex h-screen w-full flex-col px-4 py-5">
-            <div className="px-3 pb-8">
+            <div className="px-3 pb-7">
               <Link href="/dashboard" className="flex items-start gap-4">
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-[#71c8b5] text-sm font-semibold text-[#101418]">
                   V
                 </span>
                 <span className="block">
                   <span className="block font-serif text-[1.1rem] leading-5 text-[#f5f2eb]">Verisight</span>
-                  <span className="mt-0.5 block text-[0.72rem] uppercase tracking-[0.24em] text-[#94a3b8]">
-                    People Insight
+                  <span className="mt-0.5 block text-[0.72rem] uppercase tracking-[0.24em] text-[#8fa1b3]">
+                    People Suite
                   </span>
                 </span>
               </Link>
@@ -99,7 +99,7 @@ export function DashboardShellFrame({
                         <Link
                           key={item.label}
                           href={item.href ?? '/dashboard'}
-                          className="block rounded-2xl border border-white/6 px-4 py-3 text-sm text-[#dbe3ec] transition-colors hover:border-white/12 hover:bg-white/4"
+                          className="block rounded-xl px-4 py-3 text-sm text-[#c8d2dd] transition-colors hover:bg-white/4 hover:text-[#f5f2eb]"
                         >
                           <p className="font-medium">{item.label}</p>
                           <p className="mt-1 text-xs leading-5 text-[#8fa1b3]">{item.detail}</p>
@@ -111,12 +111,14 @@ export function DashboardShellFrame({
               )}
             </nav>
 
-            <div className="mt-6 rounded-3xl border border-white/8 bg-white/[0.04] px-4 py-4">
+            <div className="mt-6 border-t border-white/8 px-4 pt-5">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#7e8b9a]">Account</p>
               <p className="mt-2 truncate text-sm text-[#f5f2eb]">{userEmail}</p>
-              <p className="mt-1 text-xs text-[#8fa1b3]">{acceptedCount > 0 ? `${acceptedCount} gekoppelde organisatie${acceptedCount === 1 ? '' : 's'}` : accountName}</p>
+              <p className="mt-1 text-xs leading-5 text-[#8fa1b3]">
+                {acceptedCount > 0 ? `${acceptedCount} gekoppelde organisatie${acceptedCount === 1 ? '' : 's'}` : accountName}
+              </p>
               <div className="mt-4">
-                <LogoutButton className="w-full justify-center rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-semibold text-[#f5f2eb] transition-colors hover:bg-white/[0.1]" />
+                <LogoutButton className="w-full justify-center rounded-full border border-white/10 bg-transparent px-4 py-2 text-sm font-semibold text-[#f5f2eb] transition-colors hover:bg-white/[0.06]" />
               </div>
             </div>
           </div>
@@ -183,7 +185,7 @@ export function DashboardShellFrame({
 
             {mobileNavOpen ? (
               <div className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 sm:px-6 lg:hidden">
-                <div className="space-y-2 rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--surface)] p-4 shadow-[0_18px_40px_rgba(19,32,51,0.08)]">
+                  <div className="space-y-2 rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--surface)] p-4 shadow-[0_12px_30px_rgba(19,32,51,0.08)]">
                   {mobileItems.map((item) => {
                     const href = item.href
                     const disabled = 'disabled' in item ? item.disabled : false
@@ -232,8 +234,8 @@ export function DashboardShellFrame({
 
           <footer className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 text-xs text-[color:var(--dashboard-muted)] sm:px-6">
             {shellMode === 'action_center_only'
-              ? 'Verisight Action Center · manager-only workspace binnen dezelfde suite-shell'
-              : 'Verisight dashboard · preview-adoptie op bestaande routes'}
+              ? 'Verisight Action Center, manager-only workspace binnen dezelfde suite-shell'
+              : 'Verisight suite, dashboard en Action Center binnen dezelfde routeomgeving'}
           </footer>
         </div>
       </div>
@@ -267,9 +269,9 @@ function ActionCenterSidebarNav({ activeHref }: { activeHref: string }) {
       <div className="border-t border-white/8 pt-4">
         <Link
           href="/dashboard"
-          className="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm text-[#66758a] transition-colors hover:text-[#94a3b8]"
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#94a3b8] transition-colors hover:bg-white/[0.04] hover:text-[#f5f2eb]"
         >
-          ← Dashboard
+          Terug naar dashboard
         </Link>
       </div>
     </div>
@@ -295,7 +297,7 @@ function SidebarSection({
           return (
             <div
               key={item.key}
-              className="rounded-2xl border border-dashed border-white/8 px-4 py-3 text-sm text-[#66758a]"
+            className="rounded-xl border border-dashed border-white/8 px-4 py-3 text-sm text-[#66758a]"
             >
               {item.label}
             </div>
@@ -309,7 +311,7 @@ function SidebarSection({
             key={item.key}
             href={item.href}
             onClick={onNavigate}
-            className={`flex items-center justify-between rounded-2xl px-4 py-3 text-sm transition-colors ${
+            className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm transition-colors ${
               isActive
                 ? 'bg-white/[0.08] text-[#f5f2eb]'
                 : 'text-[#c8d2dd] hover:bg-white/[0.04] hover:text-[#f5f2eb]'

@@ -44,7 +44,7 @@ describe('dashboard shell navigation', () => {
     },
   ] as const
 
-  it('maps the preview rail onto real overview, campaign and report-layer routes', () => {
+  it('maps the shared suite rail onto real overview, campaign and report-layer routes', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: false,
       currentCampaignPath: '/campaigns/campaign-123',
@@ -93,12 +93,6 @@ describe('dashboard shell navigation', () => {
         label: 'Leadership Scan',
         href: '/campaigns/leadership-1',
         disabled: false,
-      },
-      {
-        key: 'team',
-        label: 'TeamScan',
-        href: null,
-        disabled: true,
       },
       {
         key: 'reports',
@@ -176,12 +170,12 @@ describe('dashboard shell navigation', () => {
       href: null,
       disabled: true,
     })
-    expect(navigation.modules[7]).toMatchObject({
+    expect(navigation.modules[6]).toMatchObject({
       key: 'reports',
       href: '/reports',
       disabled: false,
     })
-    expect(navigation.modules[8]).toMatchObject({
+    expect(navigation.modules[7]).toMatchObject({
       key: 'action_center',
       href: '/action-center',
       disabled: false,

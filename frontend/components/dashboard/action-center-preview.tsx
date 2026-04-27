@@ -592,8 +592,33 @@ export function ActionCenterPreview({
     }
   }, [missingManagerCount, openItems.length, overdueReviews.length, selectedTeam, teamOpenItems.length, thisWeekReviews.length])
 
+  const headerTabs = hideSidebar
+    ? SIDEBAR_ITEMS.map((item) => ({
+        key: item.key,
+        label: item.label,
+        active: activeView === item.key,
+        count:
+          item.key === 'overview'
+            ? 0
+            : item.key === 'actions'
+              ? navigationCounts.actions
+              : item.key === 'reviews'
+                ? navigationCounts.reviews
+                : item.key === 'managers'
+                  ? navigationCounts.managers
+                  : navigationCounts.teams,
+        onClick: () => setActiveView(item.key),
+      }))
+    : []
+
   return (
-    <div className={hideSidebar ? '' : 'overflow-hidden rounded-[32px] border border-[#e6dccf] bg-[#f8f3ec] shadow-[0_24px_80px_rgba(19,32,51,0.12)]'}>
+    <div
+      className={
+        hideSidebar
+          ? 'overflow-hidden rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] shadow-[0_18px_48px_rgba(19,32,51,0.08)]'
+          : 'overflow-hidden rounded-[30px] border border-[#e6dccf] bg-[#f8f3ec] shadow-[0_24px_80px_rgba(19,32,51,0.12)]'
+      }
+    >
       <div className={`flex flex-col lg:flex-row ${hideSidebar ? '' : 'min-h-[980px]'}`}>
         <aside className={`flex w-full shrink-0 flex-col bg-[#182231] text-[#f6f1e9] lg:w-[286px] ${hideSidebar ? 'hidden' : ''}`}>
           <div className="border-b border-white/6 px-6 py-6">
@@ -668,7 +693,7 @@ export function ActionCenterPreview({
         </aside>
 
         <div className="min-w-0 flex-1">
-          <div className="border-b border-[#e4d9cb] bg-[#f7f2ea] px-6 py-5">
+          <div className={`border-b border-[#e4d9cb] px-6 py-5 ${hideSidebar ? 'bg-white' : 'bg-[#f7f2ea]'}`}>
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div>
                 <p className="text-sm text-[#8b8174]">
@@ -711,6 +736,33 @@ export function ActionCenterPreview({
                 ) : null}
               </div>
             </div>
+            {hideSidebar ? (
+              <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[#eee6da] pt-4">
+                {headerTabs.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                      item.active
+                        ? 'border-[#1a2533] bg-[#1a2533] text-white'
+                        : 'border-[#ddd3c7] bg-[#fbf8f4] text-[#5f564a] hover:border-[#bfb2a3] hover:text-[#132033]'
+                    }`}
+                    onClick={item.onClick}
+                  >
+                    <span>{item.label}</span>
+                    {item.count > 0 ? (
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] ${
+                          item.active ? 'bg-white/16 text-white' : 'bg-white text-[#73695d]'
+                        }`}
+                      >
+                        {item.count}
+                      </span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className="px-6 py-6">
@@ -1512,20 +1564,23 @@ function MetricCard({
 }) {
   const accentClass =
     accent === 'amber'
-      ? 'before:bg-[#ff9b4a]'
+      ? 'bg-[#ff9b4a]'
       : accent === 'red'
-        ? 'before:bg-[#ef6e64]'
+        ? 'bg-[#ef6e64]'
         : accent === 'teal'
-          ? 'before:bg-[#70b7aa]'
+          ? 'bg-[#70b7aa]'
           : accent === 'green'
-            ? 'before:bg-[#77b78d]'
-            : 'before:bg-[#d6cdc2]'
+            ? 'bg-[#77b78d]'
+            : 'bg-[#d6cdc2]'
 
   return (
-    <div className={`relative overflow-hidden rounded-[24px] border border-[#e4d9cb] bg-white px-5 py-5 shadow-[0_12px_40px_rgba(19,32,51,0.08)] before:absolute before:inset-y-0 before:left-0 before:w-1 ${accentClass}`}>
-      <p className="pl-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7d7368]">{label}</p>
-      <p className="dash-number mt-3 pl-3 text-[2.2rem] font-semibold tracking-[-0.05em] text-[#132033]">{value}</p>
-      <p className="mt-1 pl-3 text-sm text-[#6d6458]">{subcopy}</p>
+    <div className="rounded-[20px] border border-[#e4d9cb] bg-white px-5 py-5 shadow-[0_10px_28px_rgba(19,32,51,0.06)]">
+      <div className="flex items-center gap-2">
+        <span className={`h-2.5 w-2.5 rounded-full ${accentClass}`} />
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7d7368]">{label}</p>
+      </div>
+      <p className="dash-number mt-3 text-[2.15rem] font-semibold tracking-[-0.05em] text-[#132033]">{value}</p>
+      <p className="mt-1 text-sm text-[#6d6458]">{subcopy}</p>
     </div>
   )
 }
