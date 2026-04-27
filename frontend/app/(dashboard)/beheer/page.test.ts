@@ -17,5 +17,7 @@ describe('beheer admin alignment', () => {
     expect(source).toContain('Billing default')
     expect(source).toContain('Open health review')
     expect(source).toContain('Health review default')
+    expect(source).toContain('Open case proof registry')
+    expect(source).toContain('Proof ladder default')
   })
 })
