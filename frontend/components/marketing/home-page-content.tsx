@@ -305,116 +305,258 @@ function ActionCenterPreview() {
 function HeroSection() {
   const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero_primary' })
 
+  const flowSteps = [
+    { label: 'Inzicht', accent: true },
+    { label: 'Prioriteit', accent: false },
+    { label: 'Actie', accent: false },
+    { label: 'Toewijzing', accent: false },
+    { label: 'Opvolging', teal: true },
+  ]
+
   return (
     <section
       style={{
         background: T.white,
-        padding: 'clamp(48px,6vw,72px) 0 clamp(56px,7vw,80px)',
-        borderBottom: `1px solid ${T.rule}`,
         position: 'relative',
         overflow: 'hidden',
+        borderBottom: `1px solid ${T.rule}`,
       }}
     >
+      {/* Grid texture */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          backgroundImage: `linear-gradient(${T.rule}80 1px,transparent 1px),linear-gradient(90deg,${T.rule}80 1px,transparent 1px)`,
+          backgroundImage: `linear-gradient(${T.rule}70 1px,transparent 1px),linear-gradient(90deg,${T.rule}70 1px,transparent 1px)`,
           backgroundSize: '72px 72px',
-          opacity: 0.4,
+          opacity: 0.38,
         }}
       />
+      {/* Ambient glow top-right */}
       <div
         style={{
           position: 'absolute',
-          top: -120,
-          right: -80,
-          width: 600,
-          height: 600,
-          background: `radial-gradient(circle,${AC.faint} 0%,transparent 65%)`,
+          top: -140,
+          right: -100,
+          width: 700,
+          height: 700,
+          background: `radial-gradient(circle,${AC.faint} 0%,transparent 62%)`,
+          pointerEvents: 'none',
+        }}
+      />
+      {/* Ambient glow bottom-left */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: -80,
+          left: -60,
+          width: 480,
+          height: 480,
+          background: `radial-gradient(circle,${T.tealFaint} 0%,transparent 65%)`,
           pointerEvents: 'none',
         }}
       />
 
-      <div style={{ ...SHELL, position: 'relative' }}>
+      {/* ── Text block ─────────────────────────────────────── */}
+      <div
+        style={{
+          ...SHELL,
+          position: 'relative',
+          paddingTop: 'clamp(52px,6.5vw,80px)',
+          paddingBottom: 'clamp(40px,5vw,60px)',
+        }}
+      >
         <Reveal delay={0.02}>
           <SectionMark num="01" label="People suite · inzicht en opvolging" />
         </Reveal>
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_540px] lg:gap-16 xl:grid-cols-[1fr_580px] items-start">
-          <div>
-            <Reveal delay={0.06}>
-              <div style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(48px,6.4vw,88px)', lineHeight: 0.95, letterSpacing: '-.034em', color: T.ink }}>
-                Van people
-                <br />
-                insights naar
-              </div>
-            </Reveal>
-            <Reveal delay={0.14}>
-              <div style={{ fontFamily: FF, fontWeight: 300, fontSize: 'clamp(48px,6.4vw,88px)', lineHeight: 0.95, letterSpacing: '-.034em', marginBottom: 28 }}>
-                <em className="shimmer-text" style={{ fontStyle: 'italic' }}>
-                  prioriteit en opvolging
-                  <br />
-                  voor HR en management.
-                </em>
-              </div>
-            </Reveal>
-            <Reveal delay={0.22}>
-              <p style={{ fontSize: 16.5, lineHeight: 1.7, color: T.inkSoft, maxWidth: '46ch', marginBottom: 34 }}>
-                Verisight helpt HR en management sneller zien wat speelt, bepalen wat eerst telt en opvolging bounded organiseren. Met dashboard, rapport en Action Center in een gedeelde suite.
-              </p>
-            </Reveal>
-            <Reveal delay={0.28}>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 34 }}>
-                <Link
-                  href={ctaHref}
+
+        {/* Headline — full width, dominant */}
+        <Reveal delay={0.07}>
+          <h1
+            style={{
+              fontFamily: FF,
+              fontWeight: 400,
+              fontSize: 'clamp(54px,7.8vw,104px)',
+              lineHeight: 0.93,
+              letterSpacing: '-.038em',
+              color: T.ink,
+              marginBottom: 24,
+              maxWidth: '18ch',
+            }}
+          >
+            Van people insights
+            <br />
+            <em className="shimmer-text" style={{ fontStyle: 'italic' }}>
+              naar prioriteit,
+            </em>
+            <br />
+            actie en opvolging.
+          </h1>
+        </Reveal>
+
+        {/* Flow chain */}
+        <Reveal delay={0.14}>
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4, marginBottom: 30 }}>
+            {flowSteps.map((step, i) => (
+              <span key={step.label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span
                   style={{
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 7,
-                    fontSize: 14.5,
-                    fontWeight: 600,
-                    padding: '12px 28px',
-                    color: '#fff',
-                    background: T.ink,
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    letterSpacing: '.12em',
+                    textTransform: 'uppercase',
+                    padding: '4px 11px',
+                    color: step.accent ? AC.deep : step.teal ? T.teal : T.inkMuted,
+                    background: step.accent ? AC.faint : step.teal ? T.tealFaint : 'transparent',
+                    border: `1px solid ${step.accent ? AC.light : step.teal ? T.tealSoft : T.rule}`,
                   }}
                 >
-            Plan suite-demo <Arrow />
-                </Link>
-                <Link
-                  href="/#suite"
-                  style={{
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 7,
-                    fontSize: 14.5,
-                    fontWeight: 500,
-                    padding: '11px 27px',
-                    color: T.inkSoft,
-                    border: `1px solid ${T.rule}`,
-                  }}
-                >
-                  Bekijk de suite
-                </Link>
-              </div>
-            </Reveal>
+                  {step.label}
+                </span>
+                {i < flowSteps.length - 1 && (
+                  <span style={{ color: T.inkFaint, fontSize: 13, lineHeight: 1 }}>→</span>
+                )}
+              </span>
+            ))}
+          </div>
+        </Reveal>
+
+        {/* Supporting copy — wider, Action Center explicit */}
+        <Reveal delay={0.2}>
+          <p
+            style={{
+              fontSize: 17,
+              lineHeight: 1.72,
+              color: T.inkSoft,
+              maxWidth: '60ch',
+              marginBottom: 34,
+            }}
+          >
+            Verisight helpt HR en management sneller zien wat speelt, bepalen wat eerst telt en — met het{' '}
+            <strong style={{ color: T.ink, fontWeight: 600 }}>Action Center</strong> — acties expliciet maken, toewijzen
+            aan managers en opvolging bewaken. Dashboard, rapport en Action Center in één suite.
+          </p>
+        </Reveal>
+
+        {/* CTAs */}
+        <Reveal delay={0.26}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 34 }}>
+            <Link
+              href={ctaHref}
+              style={{
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                fontSize: 14.5,
+                fontWeight: 600,
+                padding: '13px 30px',
+                color: '#fff',
+                background: T.ink,
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = AC.deep }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.ink }}
+            >
+              Plan suite-demo <Arrow />
+            </Link>
+            <Link
+              href="/#suite"
+              style={{
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                fontSize: 14.5,
+                fontWeight: 500,
+                padding: '12px 28px',
+                color: T.inkSoft,
+                border: `1px solid ${T.rule}`,
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T.inkMuted }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = T.rule }}
+            >
+              Bekijk de suite
+            </Link>
+          </div>
+        </Reveal>
+
+        {/* Trust pills */}
+        <Reveal delay={0.32}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', paddingTop: 22, borderTop: `1px solid ${T.rule}` }}>
+            {[
+              { label: 'Eén suite-login', dot: T.tealMid },
+              { label: 'Action Center follow-through', dot: AC.mid },
+              { label: 'AVG-conform op groepsniveau', dot: T.tealMid },
+            ].map(({ label, dot }) => (
+              <span key={label} style={{ fontSize: 11.5, color: T.inkFaint, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 4, height: 4, borderRadius: '50%', background: dot, display: 'inline-block', flexShrink: 0 }} />
+                {label}
+              </span>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+
+      {/* ── Suite preview — direct under text ──────────────── */}
+      <div style={{ background: T.paperSoft, borderTop: `1px solid ${T.rule}` }}>
+        <div style={{ ...SHELL, paddingTop: 'clamp(32px,4vw,48px)', paddingBottom: 'clamp(40px,5vw,60px)' }}>
+          {/* Suite label bar */}
+          <Reveal delay={0.3}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: T.inkFaint, whiteSpace: 'nowrap' }}>
+                Suite-preview
+              </span>
+              <div style={{ flex: 1, height: 1, background: T.rule }} />
+              <span style={{ fontSize: 11.5, color: T.inkMuted, whiteSpace: 'nowrap' }}>Dashboard · Rapport · Action Center</span>
+            </div>
+          </Reveal>
+
+          {/* Two-column preview */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
             <Reveal delay={0.34}>
-              <div style={{ paddingTop: 24, borderTop: `1px solid ${T.rule}`, display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
-                {['Eén suite-login', 'Action Center follow-through', 'AVG-conform op groepsniveau'].map((label) => (
-                  <span key={label} style={{ fontSize: 11.5, color: T.inkFaint, display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: T.tealMid, display: 'inline-block', flexShrink: 0 }} />
-                    {label}
-                  </span>
-                ))}
+              <div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginBottom: 10,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: '.14em',
+                    textTransform: 'uppercase',
+                    color: T.teal,
+                  }}
+                >
+                  <span style={{ width: 6, height: 6, background: T.tealMid, display: 'inline-block', flexShrink: 0 }} />
+                  Dashboard & Rapport — inzicht en prioriteit
+                </div>
+                <DashboardPreview />
+              </div>
+            </Reveal>
+            <Reveal delay={0.42}>
+              <div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginBottom: 10,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: '.14em',
+                    textTransform: 'uppercase',
+                    color: AC.deep,
+                  }}
+                >
+                  <span style={{ width: 6, height: 6, background: AC.deep, display: 'inline-block', flexShrink: 0 }} />
+                  Action Center — actie, toewijzing en opvolging
+                </div>
+                <ActionCenterPreview />
               </div>
             </Reveal>
           </div>
-
-          <Reveal delay={0.18}>
-            <DashboardPreview />
-          </Reveal>
         </div>
       </div>
     </section>
