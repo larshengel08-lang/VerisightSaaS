@@ -89,6 +89,16 @@ export function buildDashboardShellNavigation({
   }
 }
 
+export const ACTION_CENTER_NAV = [
+  { href: '/action-center', label: 'Overzicht' },
+  { href: '/action-center/acties', label: 'Acties' },
+  { href: '/action-center/reviewmomenten', label: 'Reviewmomenten' },
+  { href: '/action-center/managers', label: 'Managers' },
+  { href: '/action-center/mijn-teams', label: 'Mijn teams' },
+] as const
+
+export type ActionCenterNavItem = (typeof ACTION_CENTER_NAV)[number]
+
 export function getDashboardShellCurrentLabel(pathname: string) {
   if (pathname.startsWith('/campaigns/')) return 'Campagneread'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
