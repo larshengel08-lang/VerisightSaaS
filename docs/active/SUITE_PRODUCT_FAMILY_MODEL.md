@@ -64,7 +64,14 @@ Pas daarna zijn logisch:
 
 ### Shared module logic
 
-Dashboard en report volgen de productroute.
+Dashboard volgt de productroute als gedeelde readlaag.
+
+De formele reportlaag draagt nu standaard kerngewicht bij:
+
+- ExitScan
+- RetentieScan
+
+Andere routes kunnen wel een bounded outputread of managementsamenvatting dragen, maar niet automatisch dezelfde formele reportbelofte.
 
 Action Center volgt de follow-through behoefte, niet de first-buy status.
 

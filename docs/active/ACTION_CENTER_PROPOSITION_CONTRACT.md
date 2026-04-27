@@ -66,7 +66,9 @@ Dashboard blijft:
 Rapport blijft:
 
 - de compacte management read en handofflaag
-- de formele output die gedeeld, besproken en doorverteld kan worden
+- de formele output die vooral bij ExitScan en RetentieScan standaard gedeeld, besproken en doorverteld kan worden
+
+Bij bounded peer- en vervolgroutes kan de suite wel een managementread of outputlaag dragen, zonder dat iedere route dezelfde formele reportzwaarte opent.
 
 ### Action Center
 
@@ -78,7 +80,7 @@ Action Center blijft:
 De commerciële suitewaarheid is dus:
 
 - dashboard = zien
-- rapport = samenvatten en overdragen
+- rapport = formeel samenvatten en overdragen waar de route dat draagt
 - Action Center = opvolging organiseren en bewaken
 
 ## 4. Strong propositional framing
