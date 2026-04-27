@@ -10,6 +10,7 @@ export const PUBLIC_ROUTES = [
   '/voorwaarden',
   '/dpa',
   '/vertrouwen',
+  '/kennismaking',
   '/survey',
   '/product',
   '/producten',

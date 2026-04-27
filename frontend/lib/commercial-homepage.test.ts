@@ -24,4 +24,19 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource).toContain('Rapport')
     expect(homepageSource).toContain('Action Center')
   })
+
+  it('uses the quieter hero and unified suite-flow copy for the public homepage opening', () => {
+    const homepageSource = fs.readFileSync(
+      path.join(process.cwd(), 'components', 'marketing', 'home-page-content.tsx'),
+      'utf8',
+    )
+
+    expect(homepageSource).toContain('Voor HR, directie en managementteams')
+    expect(homepageSource).toContain('Zien.')
+    expect(homepageSource).toContain('Prioriteren.')
+    expect(homepageSource).toContain('Handelen.')
+    expect(homepageSource).toContain('Geen losse output.')
+    expect(homepageSource).toContain('Wel een duidelijke lijn.')
+    expect(homepageSource).toContain('Voorbeeldoutput is illustratief en gebaseerd op fictieve data.')
+  })
 })
