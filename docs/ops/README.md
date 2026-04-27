@@ -116,6 +116,11 @@ Voor het huidige fix-programma gebruik je deze volgorde:
 - [PILOT_LEARNING_PLAYBOOK.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/PILOT_LEARNING_PLAYBOOK.md)
   - hoe vroege klantlearnings worden vastgelegd
 
+### Billing en self-serve
+
+- [BILLING_AND_SELF_SERVE_EXECUTION_CONTRACT.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/active/BILLING_AND_SELF_SERVE_EXECUTION_CONTRACT.md)
+  - bounded execution contract voor account-, billing- en self-serve waarheid
+
 ### Repo, livegang en veiligheid
 
 - [LIVE_RELEASE_CHECKLIST.md](/C:/Users/larsh/Desktop/Business/Verisight/docs/ops/LIVE_RELEASE_CHECKLIST.md)
