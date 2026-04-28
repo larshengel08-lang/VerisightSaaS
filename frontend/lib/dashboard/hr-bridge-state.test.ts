@@ -25,8 +25,8 @@ describe('hr bridge state', () => {
       sourceType: 'campaign',
       sourceId: 'cmp-2',
       signalReadable: false,
-      managementMeaningClear: false,
-      plausibleFollowUpExists: false,
+      managementMeaningClear: true,
+      plausibleFollowUpExists: true,
       assessedAt: '2026-04-28T09:00:00.000Z',
     })
 
@@ -56,5 +56,29 @@ describe('hr bridge state', () => {
     expect(presentation.label).toBe('Route-kandidaat')
     expect(presentation.ctaKind).toBe('view')
     expect(presentation.ctaLabel).toBe('Ga naar campaign detail')
+  })
+
+  it('maps active state to action center open semantics', () => {
+    const presentation = getHrBridgePresentation({
+      bridgeState: 'active',
+      surface: 'overview',
+    })
+
+    expect(presentation.label).toBe('Actieve opvolging')
+    expect(presentation.body).toBe('Deze opvolging loopt al in Action Center.')
+    expect(presentation.ctaKind).toBe('open')
+    expect(presentation.ctaLabel).toBe('Open in Action Center')
+  })
+
+  it('maps attention state to read-first semantics', () => {
+    const presentation = getHrBridgePresentation({
+      bridgeState: 'attention',
+      surface: 'reports',
+    })
+
+    expect(presentation.label).toBe('Alleen aandacht')
+    expect(presentation.body).toBe('Lees eerst verder voordat je hier opvolging van maakt.')
+    expect(presentation.ctaKind).toBe('view')
+    expect(presentation.ctaLabel).toBe('Lees campagne')
   })
 })
