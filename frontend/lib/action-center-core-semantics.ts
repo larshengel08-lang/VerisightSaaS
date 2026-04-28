@@ -1,8 +1,6 @@
-import { projectActionCenterRoute, type ActionCenterReviewOutcome, type ActionCenterRouteContract } from './action-center-route-contract'
+import type { ActionCenterReviewOutcome, ActionCenterRouteContract } from './action-center-route-contract'
+import type { LiveActionCenterCampaignContext } from './action-center-live-context'
 import type { PilotLearningCheckpoint } from './pilot-learning'
-import type { Campaign, CampaignStats, MemberRole } from '@/lib/types'
-import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
-import type { PilotLearningDossier } from './pilot-learning'
 
 export type ActionCenterVisibleReviewOutcome = Exclude<ActionCenterReviewOutcome, 'opschalen'>
 export type ActionCenterClosingStatus = 'lopend' | 'afgerond' | 'gestopt'
@@ -30,24 +28,11 @@ export interface ActionCenterCoreSemantics {
   }
 }
 
-export interface ActionCenterCoreSemanticsProjectionInput {
-  campaign: Campaign
-  stats: CampaignStats | null
-  organizationName: string
-  memberRole: MemberRole | null
-  scopeType: 'department' | 'item'
-  scopeValue: string
-  scopeLabel: string
-  peopleCount: number
-  assignedManager: {
-    userId: string
-    displayName: string | null
-    assignedAt?: string | null
-  } | null
-  deliveryRecord: CampaignDeliveryRecord | null
-  deliveryCheckpoints: CampaignDeliveryCheckpoint[]
-  learningDossier: PilotLearningDossier | null
-  learningCheckpoints: PilotLearningCheckpoint[]
+export type ActionCenterCoreSemanticsProjectionInput = Pick<
+  LiveActionCenterCampaignContext,
+  'campaign' | 'assignedManager' | 'deliveryRecord' | 'learningDossier' | 'learningCheckpoints'
+> & {
+  route: ActionCenterRouteContract
 }
 
 const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
@@ -156,7 +141,7 @@ function getLatestObservation(context: ActionCenterCoreSemanticsProjectionInput,
 export function projectActionCenterCoreSemantics(
   context: ActionCenterCoreSemanticsProjectionInput,
 ): ActionCenterCoreSemantics {
-  const route = projectActionCenterRoute(context)
+  const { route } = context
   const reviewCheckpoint = getCheckpoint(context, 'follow_up_review')
   const managementCheckpoint = getCheckpoint(context, 'first_management_use')
   const reviewOutcomeVisible = getVisibleReviewOutcome(route.reviewOutcome)

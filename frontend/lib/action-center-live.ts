@@ -6,32 +6,15 @@ import type {
 } from '@/lib/action-center-preview-model'
 import { projectActionCenterCoreSemantics } from '@/lib/action-center-core-semantics'
 import { getScanDefinition } from '@/lib/scan-definitions'
-import type { MemberRole, Campaign, CampaignStats, ScanType } from '@/lib/types'
+import type { MemberRole, ScanType } from '@/lib/types'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord, DeliveryExceptionStatus } from '@/lib/ops-delivery'
 import { getDeliveryExceptionLabel } from '@/lib/ops-delivery'
 import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
 import { projectActionCenterRoute } from '@/lib/action-center-route-contract'
 import { buildSuiteTelemetryEvent, type SuiteTelemetryEvent } from '@/lib/telemetry/events'
+import type { LiveActionCenterCampaignContext } from './action-center-live-context'
 
-export interface LiveActionCenterCampaignContext {
-  campaign: Campaign
-  stats: CampaignStats | null
-  organizationName: string
-  memberRole: MemberRole | null
-  scopeType: 'department' | 'item'
-  scopeValue: string
-  scopeLabel: string
-  peopleCount: number
-  assignedManager: {
-    userId: string
-    displayName: string | null
-    assignedAt?: string | null
-  } | null
-  deliveryRecord: CampaignDeliveryRecord | null
-  deliveryCheckpoints: CampaignDeliveryCheckpoint[]
-  learningDossier: PilotLearningDossier | null
-  learningCheckpoints: PilotLearningCheckpoint[]
-}
+export type { LiveActionCenterCampaignContext } from './action-center-live-context'
 
 const DUTCH_SHORT_DATE = new Intl.DateTimeFormat('nl-NL', {
   day: 'numeric',
@@ -329,7 +312,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         status,
         reviewDate,
         reviewDateLabel: formatShortDate(reviewDate),
-        reviewRhythm: reviewDate ? defaults.fallbackRhythm : defaults.fallbackRhythm,
+        reviewRhythm: defaults.fallbackRhythm,
         signalLabel: `${definition.productName} - ${context.campaign.name}`,
         signalBody: getSignalBody(context.campaign.scan_type, context.deliveryRecord, latestUpdate),
         nextStep,
@@ -337,7 +320,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         reviewReason: route.reviewReason,
         reviewOutcome: route.reviewOutcome,
         peopleCount: context.peopleCount,
-        coreSemantics: projectActionCenterCoreSemantics(context),
+        coreSemantics: projectActionCenterCoreSemantics({ ...context, route }),
         openSignals,
         updates,
       } satisfies ActionCenterPreviewItem]

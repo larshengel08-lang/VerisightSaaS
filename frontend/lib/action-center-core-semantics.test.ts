@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { projectActionCenterCoreSemantics, type ActionCenterCoreSemanticsProjectionInput } from './action-center-core-semantics'
+import { projectActionCenterRoute } from './action-center-route-contract'
 import type { Campaign, CampaignStats } from '@/lib/types'
 import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
+import type { LiveActionCenterCampaignContext } from './action-center-live-context'
 
 function buildCampaign(overrides: Partial<Campaign> = {}): Campaign {
   return {
@@ -131,10 +133,10 @@ function buildCheckpoint(overrides: Partial<PilotLearningCheckpoint> = {}): Pilo
 function buildContext(args: {
   dossier?: PilotLearningDossier | null
   deliveryRecord?: CampaignDeliveryRecord | null
-  assignedManager?: ActionCenterCoreSemanticsProjectionInput['assignedManager']
+  assignedManager?: LiveActionCenterCampaignContext['assignedManager']
   learningCheckpoints?: PilotLearningCheckpoint[]
 } = {}): ActionCenterCoreSemanticsProjectionInput {
-  return {
+  const liveContext: LiveActionCenterCampaignContext = {
     campaign: buildCampaign(),
     stats: buildStats(),
     organizationName: 'Acme BV',
@@ -148,6 +150,15 @@ function buildContext(args: {
     deliveryCheckpoints: [],
     learningDossier: args.dossier ?? buildDossier(),
     learningCheckpoints: args.learningCheckpoints ?? [],
+  }
+
+  return {
+    campaign: liveContext.campaign,
+    assignedManager: liveContext.assignedManager,
+    deliveryRecord: liveContext.deliveryRecord,
+    learningDossier: liveContext.learningDossier,
+    learningCheckpoints: liveContext.learningCheckpoints,
+    route: projectActionCenterRoute(liveContext),
   }
 }
 

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { projectActionCenterCoreSemantics } from "@/lib/action-center-core-semantics";
-import { buildLiveActionCenterItems, type LiveActionCenterCampaignContext } from "@/lib/action-center-live";
+import { buildLiveActionCenterItems } from "@/lib/action-center-live";
+import type { LiveActionCenterCampaignContext } from "@/lib/action-center-live-context";
 import type { Campaign, CampaignStats } from "@/lib/types";
 import type { CampaignDeliveryRecord } from "@/lib/ops-delivery";
 import type { PilotLearningDossier } from "@/lib/pilot-learning";
@@ -169,14 +169,22 @@ describe("action center landing shell", () => {
     const [item] = buildLiveActionCenterItems([context]);
 
     expect(item).toBeDefined();
-    expect(item.coreSemantics).toEqual(projectActionCenterCoreSemantics(context));
     expect(item.coreSemantics).toMatchObject({
       route: {
         campaignId: context.campaign.id,
         entryStage: "active",
+        reviewOutcome: item.reviewOutcome,
+      },
+      reviewSemantics: {
+        reviewOutcomeRaw: item.reviewOutcome,
+        reviewOutcomeVisible: "bijstellen",
       },
       actionFrame: {
-        owner: "Manager Operations",
+        owner: item.ownerName,
+        expectedEffect: item.expectedEffect,
+      },
+      resultLoop: {
+        whatWasTried: "Leg eigenaar en eerste correctie in het MT-overleg vast.",
       },
       closingSemantics: {
         status: "lopend",
