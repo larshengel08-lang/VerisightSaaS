@@ -185,7 +185,7 @@ describe('action center core semantics', () => {
       resultLoop: {
         whatWasTried: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
         whatWeObserved: 'De eerste review liet zien dat dezelfde frictie in twee teams terugkomt.',
-        whatWasDecided: 'Bijstellen',
+        whatWasDecided: 'De eerste review liet zien dat dezelfde frictie in twee teams terugkomt.',
       },
       closingSemantics: {
         status: 'lopend',
@@ -242,7 +242,7 @@ describe('action center core semantics', () => {
       resultLoop: {
         whatWasTried: 'Plan het bijgestelde reviewgesprek met HR en operations.',
         whatWeObserved: 'De frictie bleef terugkomen in elk vervolggesprek.',
-        whatWasDecided: 'Bijstellen',
+        whatWasDecided: 'Vervolg met een bounded teamreview in operations.',
       },
     })
   })
@@ -385,6 +385,19 @@ describe('action center core semantics', () => {
 
     expect(projectActionCenterCoreSemantics(context).resultLoop.whatWasDecided).toBe(
       'Vervolg met een bounded teamreview in operations.',
+    )
+  })
+
+  it('prefers richer authored decision text over the generic visible review outcome label', () => {
+    const context = buildContext({
+      dossier: buildDossier({
+        management_action_outcome: 'opschalen',
+        next_route: 'Breid de follow-through uit naar een tweede teamreview met operations.',
+      }),
+    })
+
+    expect(projectActionCenterCoreSemantics(context).resultLoop.whatWasDecided).toBe(
+      'Breid de follow-through uit naar een tweede teamreview met operations.',
     )
   })
 })

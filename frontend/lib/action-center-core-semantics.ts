@@ -108,12 +108,6 @@ function joinReasonAndStep(reason: string | null, step: string | null) {
   return values.join(' ')
 }
 
-function joinExpectedEffectAndStep(expectedEffect: string | null, step: string | null) {
-  const values = [normalizeText(expectedEffect), normalizeText(step)].filter((value): value is string => Boolean(value))
-  if (values.length === 0) return null
-  return values.join(' ')
-}
-
 function getLatestActionUpdate(context: LiveActionCenterCampaignContext) {
   return pickFirst([
     context.learningDossier?.first_action_taken,
@@ -162,9 +156,7 @@ export function projectActionCenterCoreSemantics(
   const reviewQuestion = pickFirst([
     primaryReason,
     route.expectedEffect,
-    expectedEffectFromReason,
     nextStep,
-    joinExpectedEffectAndStep(route.expectedEffect, nextStep),
     getReviewQuestionTemplate(route),
   ])
 
@@ -229,11 +221,11 @@ export function projectActionCenterCoreSemantics(
         observationFallback,
       ]),
       whatWasDecided: pickFirst([
-        getReviewOutcomeLabel(reviewOutcomeVisible),
-        normalizeText(context.learningDossier?.management_action_outcome),
         context.learningDossier?.next_route,
         context.learningDossier?.stop_reason,
         route.outcomeSummary,
+        getReviewOutcomeLabel(reviewOutcomeVisible),
+        normalizeText(context.learningDossier?.management_action_outcome),
       ]),
     },
     closingSemantics: {
