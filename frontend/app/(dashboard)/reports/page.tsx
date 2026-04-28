@@ -79,7 +79,21 @@ export default async function ReportsPage({
     .select("*")
     .order("created_at", { ascending: false });
   const campaigns = stats ?? [];
-  const reportModel = buildReportLibraryEntries(campaigns);
+  const campaignIds = campaigns.map((campaign) => campaign.campaign_id);
+  const { data: deliveryRecords } =
+    campaignIds.length > 0
+      ? await supabase
+          .from("campaign_delivery_records")
+          .select("campaign_id, first_management_use_confirmed_at")
+          .in("campaign_id", campaignIds)
+          .not("first_management_use_confirmed_at", "is", null)
+      : { data: [] };
+  const routeEntryStageByCampaignId = Object.fromEntries(
+    (deliveryRecords ?? []).map((record) => [record.campaign_id, "active" as const]),
+  );
+  const reportModel = buildReportLibraryEntries(campaigns, {
+    routeEntryStageByCampaignId,
+  });
   const filteredEntries = filterReportLibraryEntries(
     reportModel.entries,
     category,

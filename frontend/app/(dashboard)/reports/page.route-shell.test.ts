@@ -32,4 +32,12 @@ describe("reports route shell", () => {
     expect(source).not.toContain("getReportEntryHref");
     expect(source).not.toContain('entry.bridgeState === "active"');
   });
+
+  it("wires active route truth into the report library model", () => {
+    const source = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
+
+    expect(source).toContain("first_management_use_confirmed_at");
+    expect(source).toContain("routeEntryStageByCampaignId");
+    expect(source).toContain("buildReportLibraryEntries(campaigns,");
+  });
 });
