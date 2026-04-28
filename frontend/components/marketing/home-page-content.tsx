@@ -176,7 +176,7 @@ function OutputMetric({
       style={{
         background: SURFACE.surfaceSoft,
         border: `1px solid ${SURFACE.border}`,
-        padding: '16px 16px 18px',
+        padding: '12px 12px 14px',
       }}
     >
       <p
@@ -186,7 +186,7 @@ function OutputMetric({
           fontSize: 10,
           fontWeight: 700,
           letterSpacing: '.16em',
-          marginBottom: 10,
+          marginBottom: 8,
           textTransform: 'uppercase',
         }}
       >
@@ -196,14 +196,14 @@ function OutputMetric({
         className="dash-number"
         style={{
           color: SURFACE.ink,
-          fontSize: 30,
+          fontSize: 24,
           lineHeight: 1,
-          marginBottom: 8,
+          marginBottom: 6,
         }}
       >
         {value}
       </p>
-      <p style={{ color: SURFACE.text, fontSize: 13.5, lineHeight: 1.55 }}>{body}</p>
+      <p style={{ color: SURFACE.text, fontSize: 12.5, lineHeight: 1.45 }}>{body}</p>
     </div>
   )
 }
@@ -791,9 +791,6 @@ function SuitePreviewSection() {
 
                         <div className="suite-prioritize-intro">
                           <p className="suite-priority-title">Kies wat nu eerst telt.</p>
-                          <p className="suite-priority-copy">
-                            Dezelfde signalen worden teruggebracht tot een eerste, tweede en derde prioriteit.
-                          </p>
                         </div>
 
                         <div className="suite-priority-ladder">
@@ -823,7 +820,6 @@ function SuitePreviewSection() {
                             <div>
                               <p className="suite-action-title">Niet alleen zien.</p>
                               <p className="suite-action-accent">Ook handelen.</p>
-                              <p className="suite-action-subcopy">Van prioriteit naar eerste concrete opvolging.</p>
                             </div>
                           </div>
 
@@ -863,7 +859,7 @@ function SuitePreviewSection() {
 
         <style>{`
           .suite-motion-shell {
-            --suite-window-height: 516px;
+            --suite-window-height: 308px;
             --suite-cycle-duration: 9s;
             position: relative;
           }
@@ -871,8 +867,8 @@ function SuitePreviewSection() {
           .suite-phase-tabs {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 8px;
+            margin-bottom: 12px;
           }
 
           .suite-phase-tab {
@@ -880,10 +876,10 @@ function SuitePreviewSection() {
             border-radius: 999px;
             color: ${SURFACE.text};
             font-family: ${bodyFont};
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             letter-spacing: 0.12em;
-            padding: 7px 12px;
+            padding: 6px 10px;
             text-transform: uppercase;
           }
 
@@ -923,7 +919,7 @@ function SuitePreviewSection() {
             background: rgba(255, 251, 247, 0.72);
             border: 1px solid ${SURFACE.borderSoft};
             box-shadow: 0 34px 78px rgba(19, 32, 51, 0.08);
-            padding: 16px;
+            padding: 12px;
             position: relative;
             z-index: 1;
           }
@@ -931,18 +927,18 @@ function SuitePreviewSection() {
           .suite-motion-frame-head {
             align-items: flex-end;
             display: flex;
-            gap: 20px;
+            gap: 16px;
             justify-content: space-between;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
           }
 
           .suite-motion-frame-title {
             color: ${SURFACE.ink};
             font-family: ${displayFont};
-            font-size: clamp(1.2rem, 1.7vw, 1.55rem);
+            font-size: clamp(1.05rem, 1.45vw, 1.35rem);
             letter-spacing: -0.03em;
             line-height: 1;
-            margin-top: 6px;
+            margin-top: 2px;
           }
 
           .suite-motion-progress {
@@ -950,10 +946,10 @@ function SuitePreviewSection() {
             border: 1px solid ${SURFACE.border};
             border-radius: 999px;
             flex-shrink: 0;
-            height: 10px;
+            height: 8px;
             overflow: hidden;
             position: relative;
-            width: 148px;
+            width: 136px;
           }
 
           .suite-motion-progress-fill {
@@ -965,7 +961,7 @@ function SuitePreviewSection() {
             left: 0;
             position: absolute;
             top: 0;
-            width: 44px;
+            width: 40px;
           }
 
           .suite-motion-window {
@@ -992,7 +988,7 @@ function SuitePreviewSection() {
             flex: 0 0 var(--suite-window-height);
             height: var(--suite-window-height);
             overflow: hidden;
-            padding: 20px 22px 22px;
+            padding: 14px 16px 16px;
           }
 
           .suite-motion-screen-prioritize {
@@ -1007,18 +1003,18 @@ function SuitePreviewSection() {
           .suite-action-head {
             align-items: center;
             display: flex;
-            gap: 18px;
+            gap: 14px;
             justify-content: space-between;
           }
 
           .suite-action-head {
-            margin-bottom: 18px;
+            margin-bottom: 12px;
           }
 
           .suite-phase-eyebrow {
             color: ${SURFACE.muted};
             font-family: ${bodyFont};
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: 700;
             letter-spacing: 0.18em;
             margin-bottom: 0;
@@ -1031,7 +1027,7 @@ function SuitePreviewSection() {
             font-size: 10px;
             font-weight: 700;
             letter-spacing: 0.14em;
-            padding: 6px 10px;
+            padding: 5px 9px;
             text-transform: uppercase;
             white-space: nowrap;
           }
@@ -1052,14 +1048,14 @@ function SuitePreviewSection() {
           }
 
           .suite-phase-title {
-            margin: 16px 0 18px;
+            margin: 10px 0 12px;
           }
 
           .suite-phase-title p,
           .suite-action-title,
           .suite-action-accent {
             font-family: ${displayFont};
-            font-size: clamp(2rem, 3vw, 2.7rem);
+            font-size: clamp(1.55rem, 2.15vw, 2rem);
             letter-spacing: -0.04em;
             line-height: 0.98;
           }
@@ -1073,7 +1069,7 @@ function SuitePreviewSection() {
 
           .suite-metrics-grid {
             display: grid;
-            gap: 8px;
+            gap: 6px;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             margin-bottom: 0;
             margin-top: auto;
@@ -1083,7 +1079,7 @@ function SuitePreviewSection() {
           .suite-priority-ladder,
           .suite-action-list {
             display: grid;
-            gap: 8px;
+            gap: 6px;
           }
 
           .suite-priority-ladder {
@@ -1095,9 +1091,9 @@ function SuitePreviewSection() {
             align-items: center;
             background: ${SURFACE.surfaceSoft};
             display: grid;
-            gap: 14px;
-            grid-template-columns: 40px minmax(0, 1fr) auto;
-            padding: 14px 16px;
+            gap: 10px;
+            grid-template-columns: 30px minmax(0, 1fr) auto;
+            padding: 10px 12px;
           }
 
           .suite-ladder-row {
@@ -1113,40 +1109,40 @@ function SuitePreviewSection() {
 
           .suite-list-index {
             color: ${SURFACE.subtle};
-            font-size: 13px;
+            font-size: 12px;
           }
 
           .suite-list-title {
             color: ${SURFACE.ink};
             font-family: ${bodyFont};
-            font-size: 15px;
+            font-size: 13.5px;
             font-weight: 600;
-            margin-bottom: 3px;
+            margin-bottom: 2px;
           }
 
           .suite-list-body {
             color: ${SURFACE.text};
             font-family: ${bodyFont};
-            font-size: 13.5px;
-            line-height: 1.5;
+            font-size: 12.5px;
+            line-height: 1.42;
           }
 
           .suite-list-badge {
             font-family: ${bodyFont};
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 700;
             letter-spacing: 0.14em;
-            padding: 5px 10px;
+            padding: 4px 8px;
             text-transform: uppercase;
           }
 
           .suite-priority-title {
             color: ${SURFACE.ink};
             font-family: ${displayFont};
-            font-size: clamp(1.88rem, 2.4vw, 2.2rem);
+            font-size: clamp(1.45rem, 1.95vw, 1.7rem);
             letter-spacing: -0.04em;
             line-height: 0.98;
-            margin-bottom: 12px;
+            margin-bottom: 0;
             max-width: 11ch;
           }
 
@@ -1159,7 +1155,7 @@ function SuitePreviewSection() {
           }
 
           .suite-prioritize-intro {
-            margin: 12px 0 16px;
+            margin: 8px 0 10px;
           }
 
           .suite-action-panel {
@@ -1171,20 +1167,11 @@ function SuitePreviewSection() {
             flex: 1 1 auto;
             flex-direction: column;
             height: 100%;
-            padding: 20px 20px 22px;
+            padding: 14px 14px 16px;
           }
 
           .suite-action-title {
             color: ${SURFACE.ink};
-          }
-
-          .suite-action-subcopy {
-            color: ${SURFACE.text};
-            font-family: ${bodyFont};
-            font-size: 14px;
-            line-height: 1.68;
-            margin-top: 10px;
-            max-width: 31ch;
           }
 
           .suite-action-list {
@@ -1196,9 +1183,9 @@ function SuitePreviewSection() {
             background: rgba(255, 255, 255, 0.62);
             border: 1px solid ${SURFACE.borderSoft};
             display: grid;
-            gap: 12px;
+            gap: 10px;
             grid-template-columns: minmax(0, 1fr) auto;
-            padding: 14px 16px;
+            padding: 10px 12px;
           }
 
           .suite-action-row-primary {
@@ -1210,18 +1197,18 @@ function SuitePreviewSection() {
           .suite-action-label {
             color: ${SURFACE.muted};
             font-family: ${bodyFont};
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 700;
             letter-spacing: 0.14em;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             text-transform: uppercase;
           }
 
           .suite-action-body {
             color: ${SURFACE.ink};
             font-family: ${bodyFont};
-            font-size: 14px;
-            line-height: 1.55;
+            font-size: 12.5px;
+            line-height: 1.4;
           }
 
           .suite-action-badge {
@@ -1230,10 +1217,10 @@ function SuitePreviewSection() {
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
             color: ${SURFACE.ink};
             font-family: ${bodyFont};
-            font-size: 10.5px;
+            font-size: 9px;
             font-weight: 700;
             letter-spacing: 0.12em;
-            padding: 6px 10px;
+            padding: 5px 8px;
             border-radius: 999px;
             text-transform: uppercase;
             white-space: nowrap;
@@ -1323,13 +1310,13 @@ function SuitePreviewSection() {
 
           @media (max-width: 1180px) {
             .suite-motion-shell {
-              --suite-window-height: 500px;
+              --suite-window-height: 332px;
             }
           }
 
           @media (max-width: 820px) {
             .suite-motion-shell {
-              --suite-window-height: 560px;
+              --suite-window-height: 408px;
             }
 
             .suite-metrics-grid {
