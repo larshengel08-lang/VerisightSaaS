@@ -1224,7 +1224,7 @@ export function ActionCenterPreview({
                               />
                               <RouteFieldCard
                                 label="Wat we dan toetsen"
-                                value={selectedItem.coreSemantics.actionFrame.expectedEffect}
+                                value={selectedItem.coreSemantics.reviewSemantics.reviewFocus}
                               />
                               <RouteOutcomeCard outcome={selectedItem.coreSemantics.reviewSemantics.reviewOutcomeVisible} />
                             </div>
@@ -2077,7 +2077,7 @@ function RouteFieldCard({ label, value }: { label: string; value: string | null 
   return (
     <div className="rounded-[18px] border border-[#eadfce] bg-[#fcfaf6] px-4 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
-      <p className="mt-3 text-sm leading-7 text-[#32465d]">{value ?? 'Nog niet vastgelegd'}</p>
+      <p className="mt-3 text-sm leading-7 text-[#32465d]">{value}</p>
     </div>
   )
 }

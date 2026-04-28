@@ -175,7 +175,7 @@ describe("action center landing shell", () => {
     expect(previewSource).toContain('label="Waarom we opnieuw kijken"');
     expect(previewSource).toContain("value={selectedItem.coreSemantics.reviewSemantics.reviewQuestion}");
     expect(previewSource).toContain('label="Wat we dan toetsen"');
-    expect(previewSource).toContain("value={selectedItem.coreSemantics.actionFrame.expectedEffect}");
+    expect(previewSource).toContain("value={selectedItem.coreSemantics.reviewSemantics.reviewFocus}");
     expect(previewSource).toContain("outcome={selectedItem.coreSemantics.reviewSemantics.reviewOutcomeVisible}");
     expect(previewSource).toContain('label="Waarom nu"');
     expect(previewSource).toContain("value={selectedItem.coreSemantics.actionFrame.whyNow}");
@@ -184,6 +184,7 @@ describe("action center landing shell", () => {
     expect(previewSource).toContain('label="Eigenaar"');
     expect(previewSource).toContain("value={selectedItem.coreSemantics.actionFrame.owner}");
     expect(previewSource).toContain('label="Verwacht effect"');
+    expect(previewSource).not.toContain("value ?? 'Nog niet vastgelegd'");
   });
 
   it("requires preview items to carry canonical core semantics as one grouped field", () => {
@@ -209,6 +210,7 @@ describe("action center landing shell", () => {
       reviewSemantics: {
         reviewOutcomeRaw: item.reviewOutcome,
         reviewOutcomeVisible: "bijstellen",
+        reviewFocus: item.expectedEffect,
       },
       actionFrame: {
         owner: item.ownerName,

@@ -183,6 +183,7 @@ describe('action center core semantics', () => {
     expect(projectActionCenterCoreSemantics(context)).toMatchObject({
       reviewSemantics: {
         reviewQuestion: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
+        reviewFocus: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
         reviewOutcomeRaw: 'opschalen',
         reviewOutcomeVisible: 'bijstellen',
       },
@@ -239,6 +240,8 @@ describe('action center core semantics', () => {
     expect(projectActionCenterCoreSemantics(context)).toMatchObject({
       reviewSemantics: {
         reviewQuestion: 'Waar moeten we als management nu als eerste op ingrijpen?',
+        reviewFocus:
+          'Waar moeten we als management nu als eerste op ingrijpen? Plan het bijgestelde reviewgesprek met HR en operations.',
         reviewOutcomeRaw: 'opschalen',
         reviewOutcomeVisible: 'bijstellen',
       },
@@ -279,6 +282,7 @@ describe('action center core semantics', () => {
     expect(projectActionCenterCoreSemantics(context)).toMatchObject({
       reviewSemantics: {
         reviewQuestion: 'Plan de eerste bounded opvolgstap met HR.',
+        reviewFocus: 'Plan de eerste bounded opvolgstap met HR.',
       },
       actionFrame: {
         whyNow: 'De managementread staat klaar voor een eerste bounded follow-through.',
@@ -313,6 +317,7 @@ describe('action center core semantics', () => {
     expect(projectActionCenterCoreSemantics(context)).toMatchObject({
       reviewSemantics: {
         reviewQuestion: 'Welke vervolgstap vraagt deze route nu als eerste review?',
+        reviewFocus: null,
       },
       actionFrame: {
         whyNow: 'Exit follow-through voorjaar',

@@ -9,6 +9,7 @@ export interface ActionCenterCoreSemantics {
   route: ActionCenterRouteContract
   reviewSemantics: {
     reviewQuestion: string | null
+    reviewFocus: string | null
     reviewOutcomeRaw: ActionCenterReviewOutcome
     reviewOutcomeVisible: ActionCenterVisibleReviewOutcome
   }
@@ -166,6 +167,11 @@ export function projectActionCenterCoreSemantics(
     nextStep,
     getReviewQuestionTemplate(route),
   ])
+  const reviewFocus = pickFirst([
+    route.expectedEffect,
+    expectedEffectFromReason,
+    nextStep,
+  ])
 
   const whyNow = pickFirst([
     primaryReason,
@@ -208,6 +214,7 @@ export function projectActionCenterCoreSemantics(
     route,
     reviewSemantics: {
       reviewQuestion,
+      reviewFocus,
       reviewOutcomeRaw: route.reviewOutcome,
       reviewOutcomeVisible,
     },
