@@ -1,3 +1,5 @@
+import type { ActionCenterEntryStage } from '@/lib/action-center-route-contract'
+import { getHrBridgePresentation } from '@/lib/dashboard/hr-bridge-state'
 import { FIRST_DASHBOARD_THRESHOLD } from '@/lib/response-activation'
 import { buildBridgeAssessmentTruth, resolveHrBridgeState } from '@/lib/dashboard/hr-bridge-state'
 import { SCAN_TYPE_LABELS, getCampaignAverageSignalScore, type CampaignStats, type ScanType } from '@/lib/types'
@@ -26,6 +28,10 @@ export interface FeaturedReportEntry {
   subtitle: string
   description: string
   stats: Array<{ label: string; value: string }>
+}
+
+export interface BuildReportLibraryEntriesOptions {
+  routeEntryStageByCampaignId?: Partial<Record<string, ActionCenterEntryStage | null>>
 }
 
 const MANAGEMENT_SCAN_TYPES: ScanType[] = ['exit', 'retention', 'leadership']
@@ -104,7 +110,11 @@ function getPriority(campaign: CampaignStats) {
   return base * 1000 + campaign.total_completed
 }
 
-function getReportBridgeState(campaign: CampaignStats): ReportLibraryEntry['bridgeState'] {
+function getReportBridgeState(args: {
+  campaign: CampaignStats
+  routeEntryStage: ActionCenterEntryStage | null
+}): ReportLibraryEntry['bridgeState'] {
+  const { campaign, routeEntryStage } = args
   const isReportReady = campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD
   const assessment = buildBridgeAssessmentTruth({
     sourceType: 'report',
@@ -116,12 +126,24 @@ function getReportBridgeState(campaign: CampaignStats): ReportLibraryEntry['brid
   })
 
   return resolveHrBridgeState({
-    routeEntryStage: null,
+    routeEntryStage,
     assessment,
   })
 }
 
-export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
+export function getReportEntryBridge(entry: Pick<ReportLibraryEntry, 'campaignId' | 'bridgeState'>) {
+  const bridge = getHrBridgePresentation({
+    bridgeState: entry.bridgeState,
+    surface: 'reports',
+  })
+
+  return {
+    bridge,
+    href: bridge.ctaKind === 'open' ? '/action-center' : `/campaigns/${entry.campaignId}`,
+  }
+}
+
+export function buildReportLibraryEntries(campaigns: CampaignStats[], options: BuildReportLibraryEntriesOptions = {}) {
   const readyCampaigns = campaigns
     .filter((campaign) => campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD)
     .sort((left, right) => {
@@ -149,7 +171,10 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
       metaLeft: `${campaign.total_completed} responses`,
       metaRight: formatDutchDate(campaign.created_at),
       recommended: featuredCandidate?.campaign_id === campaign.campaign_id,
-      bridgeState: getReportBridgeState(campaign),
+      bridgeState: getReportBridgeState({
+        campaign,
+        routeEntryStage: options.routeEntryStageByCampaignId?.[campaign.campaign_id] ?? null,
+      }),
     }
   })
 

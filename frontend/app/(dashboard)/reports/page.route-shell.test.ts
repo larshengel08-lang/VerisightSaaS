@@ -27,7 +27,9 @@ describe("reports route shell", () => {
   it("never offers direct route-open from reports for a candidate", () => {
     const source = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
 
+    expect(source).toContain("getReportEntryBridge");
     expect(source).toContain("Ga naar campaign detail");
+    expect(source).not.toContain("getReportEntryHref");
     expect(source).not.toContain('entry.bridgeState === "active"');
   });
 });

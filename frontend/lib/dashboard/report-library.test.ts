@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildReportLibraryEntries, filterReportLibraryEntries } from './report-library'
+import { buildReportLibraryEntries, filterReportLibraryEntries, getReportEntryBridge } from './report-library'
 import type { CampaignStats } from '@/lib/types'
 
 const campaigns: CampaignStats[] = [
@@ -93,6 +93,40 @@ describe('report library', () => {
     const model = buildReportLibraryEntries(campaigns)
 
     expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.bridgeState).toBe('candidate')
+  })
+
+  it('allows report entries to become active when real route truth is available', () => {
+    const model = buildReportLibraryEntries(campaigns, {
+      routeEntryStageByCampaignId: {
+        'exit-1': 'active',
+      },
+    })
+
+    expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.bridgeState).toBe('active')
+  })
+
+  it('keeps candidate and active report destinations aligned with reports bridge policy', () => {
+    const candidateEntry = buildReportLibraryEntries(campaigns).entries.find((entry) => entry.campaignId === 'exit-1')
+    const activeEntry = buildReportLibraryEntries(campaigns, {
+      routeEntryStageByCampaignId: {
+        'exit-1': 'active',
+      },
+    }).entries.find((entry) => entry.campaignId === 'exit-1')
+
+    expect(candidateEntry).toBeDefined()
+    expect(activeEntry).toBeDefined()
+    expect(getReportEntryBridge(candidateEntry!)).toMatchObject({
+      href: '/campaigns/exit-1',
+      bridge: {
+        ctaLabel: 'Ga naar campaign detail',
+      },
+    })
+    expect(getReportEntryBridge(activeEntry!)).toMatchObject({
+      href: '/action-center',
+      bridge: {
+        ctaLabel: 'Open in Action Center',
+      },
+    })
   })
 
   it('filters cards per category without inventing an all-in-one export layer', () => {

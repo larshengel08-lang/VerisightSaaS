@@ -9,9 +9,9 @@ import {
 import {
   buildReportLibraryEntries,
   filterReportLibraryEntries,
+  getReportEntryBridge,
   type ReportLibraryCategory,
 } from "@/lib/dashboard/report-library";
-import { getHrBridgePresentation } from "@/lib/dashboard/hr-bridge-state";
 import { SuiteAccessDenied } from "@/components/dashboard/suite-access-denied";
 import { createClient } from "@/lib/supabase/server";
 import { loadSuiteAccessContext } from "@/lib/suite-access-server";
@@ -39,8 +39,6 @@ const REPORT_FLOW_STEPS = [
   },
 ];
 
-type ReportBridgePresentation = ReturnType<typeof getHrBridgePresentation>;
-
 function normalizeCategory(
   value: string | string[] | undefined,
 ): ReportLibraryCategory {
@@ -48,15 +46,6 @@ function normalizeCategory(
     CATEGORY_OPTIONS.some((option) => option.key === value)
     ? (value as ReportLibraryCategory)
     : "all";
-}
-
-function getReportEntryHref(args: {
-  campaignId: string;
-  bridge: ReportBridgePresentation;
-}) {
-  return args.bridge.ctaKind === "open"
-    ? "/action-center"
-    : `/campaigns/${args.campaignId}`;
 }
 
 export default async function ReportsPage({
@@ -96,18 +85,11 @@ export default async function ReportsPage({
     category,
   );
   const reportCards = filteredEntries.map((entry) => {
-    const bridge = getHrBridgePresentation({
-      bridgeState: entry.bridgeState,
-      surface: "reports",
-    });
+    const reportBridge = getReportEntryBridge(entry);
 
     return {
       entry,
-      bridge,
-      href: getReportEntryHref({
-        campaignId: entry.campaignId,
-        bridge,
-      }),
+      ...reportBridge,
     };
   });
   const averageSignal =
