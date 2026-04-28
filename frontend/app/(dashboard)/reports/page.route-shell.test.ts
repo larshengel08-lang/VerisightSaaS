@@ -24,10 +24,11 @@ describe("reports route shell", () => {
     expect(source).not.toContain("download center");
   });
 
-  it("never offers direct route-open from reports for a candidate", () => {
+  it("derives report CTA routing from the shared bridge contract", () => {
     const source = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
 
-    expect(source).toContain("Ga naar campaign detail");
-    expect(source).not.toContain("optional secondary `Open in Action Center`");
+    expect(source).toContain("getHrBridgePresentation");
+    expect(source).toContain('bridge.ctaKind === "open"');
+    expect(source).not.toContain('entry.bridgeState === "active"');
   });
 });

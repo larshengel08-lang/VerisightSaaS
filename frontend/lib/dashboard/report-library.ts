@@ -104,6 +104,22 @@ function getPriority(campaign: CampaignStats) {
   return base * 1000 + campaign.total_completed
 }
 
+function getReportBridgeState(campaign: CampaignStats): ReportLibraryEntry['bridgeState'] {
+  const assessment = buildBridgeAssessmentTruth({
+    sourceType: 'report',
+    sourceId: campaign.campaign_id,
+    signalReadable: campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD,
+    managementMeaningClear: false,
+    plausibleFollowUpExists: false,
+    assessedAt: campaign.created_at,
+  })
+
+  return resolveHrBridgeState({
+    routeEntryStage: null,
+    assessment,
+  })
+}
+
 export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
   const readyCampaigns = campaigns
     .filter((campaign) => campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD)
@@ -120,15 +136,6 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
 
   const entries: ReportLibraryEntry[] = readyCampaigns.map((campaign) => {
     const category = getCategory(campaign.scan_type)
-    const isReportReady = campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD
-    const assessment = buildBridgeAssessmentTruth({
-      sourceType: 'report',
-      sourceId: campaign.campaign_id,
-      signalReadable: isReportReady,
-      managementMeaningClear: isReportReady,
-      plausibleFollowUpExists: isReportReady,
-      assessedAt: campaign.created_at,
-    })
 
     return {
       campaignId: campaign.campaign_id,
@@ -141,10 +148,7 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
       metaLeft: `${campaign.total_completed} responses`,
       metaRight: formatDutchDate(campaign.created_at),
       recommended: featuredCandidate?.campaign_id === campaign.campaign_id,
-      bridgeState: resolveHrBridgeState({
-        routeEntryStage: null,
-        assessment,
-      }),
+      bridgeState: getReportBridgeState(campaign),
     }
   })
 
