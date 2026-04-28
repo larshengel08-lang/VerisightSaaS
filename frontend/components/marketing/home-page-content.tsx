@@ -235,22 +235,24 @@ function MarqueeBand() {
       }}
     >
       <div style={{ ...SHELL, paddingTop: 16, paddingBottom: 16 }}>
-        <div
-          style={{
-            alignItems: 'center',
-            color: '#efe5d8',
-            display: 'flex',
-            fontFamily: bodyFont,
-            fontSize: 12,
-            fontWeight: 700,
-            justifyContent: 'center',
-            letterSpacing: '.22em',
-            textTransform: 'uppercase',
-            textAlign: 'center',
-          }}
-        >
-          <span>{marqueeLine}</span>
-        </div>
+        <Reveal>
+          <div
+            style={{
+              alignItems: 'center',
+              color: '#efe5d8',
+              display: 'flex',
+              fontFamily: bodyFont,
+              fontSize: 12,
+              fontWeight: 700,
+              justifyContent: 'center',
+              letterSpacing: '.22em',
+              textAlign: 'center',
+              textTransform: 'uppercase',
+            }}
+          >
+            <span>{marqueeLine}</span>
+          </div>
+        </Reveal>
       </div>
     </section>
   )
@@ -289,7 +291,8 @@ function HeroSection() {
       <div style={{ ...SHELL, paddingTop: 'clamp(74px, 8vw, 120px)', paddingBottom: 'clamp(70px, 8vw, 104px)', position: 'relative' }}>
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_640px]">
           <div style={{ maxWidth: 560 }}>
-            <div style={{ marginBottom: 18 }}>
+            <Reveal delay={0.02}>
+              <div style={{ marginBottom: 18 }}>
               <p
                 style={{
                   color: SURFACE.muted,
@@ -319,33 +322,39 @@ function HeroSection() {
                 <br />
                 Handelen.
               </h1>
-            </div>
+              </div>
+            </Reveal>
 
-            <p
-              style={{
-                color: SURFACE.ink,
-                fontSize: 17,
-                lineHeight: 1.55,
-                marginBottom: 14,
-                maxWidth: '32rem',
-              }}
-            >
-              Zie waar vertrek, behoud of vroege uitval aandacht vraagt. U krijgt geen losse data, maar een helder dashboard, een managementsamenvatting en een eerste actieroute.
-            </p>
+            <Reveal delay={0.08}>
+              <p
+                style={{
+                  color: SURFACE.ink,
+                  fontSize: 17,
+                  lineHeight: 1.55,
+                  marginBottom: 14,
+                  maxWidth: '32rem',
+                }}
+              >
+                Zie waar vertrek, behoud of vroege uitval aandacht vraagt. U krijgt geen losse data, maar een helder dashboard, een managementsamenvatting en een eerste actieroute.
+              </p>
+            </Reveal>
 
-            <p
-              style={{
-                color: SURFACE.text,
-                fontSize: 17,
-                lineHeight: 1.6,
-                marginBottom: 28,
-                maxWidth: '32rem',
-              }}
-            >
-              Verisight laat zien waar vertrek, behoud of vroege uitval echt aandacht vraagt. Geen losse surveydata, maar een scherp dashboard, een korte managementsamenvatting en een eerste route voor opvolging.
-            </p>
+            <Reveal delay={0.12}>
+              <p
+                style={{
+                  color: SURFACE.text,
+                  fontSize: 17,
+                  lineHeight: 1.6,
+                  marginBottom: 28,
+                  maxWidth: '32rem',
+                }}
+              >
+                Verisight laat zien waar vertrek, behoud of vroege uitval echt aandacht vraagt. Geen losse surveydata, maar een scherp dashboard, een korte managementsamenvatting en een eerste route voor opvolging.
+              </p>
+            </Reveal>
 
-            <div className="flex flex-wrap items-center gap-4" style={{ marginBottom: 34 }}>
+            <Reveal delay={0.16}>
+              <div className="flex flex-wrap items-center gap-4" style={{ marginBottom: 34 }}>
               <Link
                 href={primaryHref}
                 style={{
@@ -379,42 +388,46 @@ function HeroSection() {
               >
                 Bekijk voorbeeldoutput
               </Link>
-            </div>
+              </div>
+            </Reveal>
 
-            <div
-              style={{
-                borderTop: `1px solid ${SURFACE.border}`,
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '14px 28px',
-                paddingTop: 22,
-              }}
-            >
-              {heroTrustItems.map((item, index) => (
-                <div
-                  key={item}
-                  style={{
-                    alignItems: 'center',
-                    color: SURFACE.muted,
-                    display: 'flex',
-                    fontFamily: bodyFont,
-                    fontSize: 13,
-                    fontWeight: 500,
-                    gap: 10,
-                  }}
-                >
-                  {index === 1 ? (
-                    <span style={{ color: SURFACE.teal, fontSize: 15, lineHeight: 1 }}>○</span>
-                  ) : (
-                    <span style={{ background: index === 0 ? '#d45a51' : SURFACE.amber, borderRadius: 999, height: 4, width: 4 }} />
-                  )}
-                  <span>{item}</span>
-                </div>
-              ))}
-            </div>
+            <Reveal delay={0.22}>
+              <div
+                style={{
+                  borderTop: `1px solid ${SURFACE.border}`,
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '14px 28px',
+                  paddingTop: 22,
+                }}
+              >
+                {heroTrustItems.map((item, index) => (
+                  <div
+                    key={item}
+                    style={{
+                      alignItems: 'center',
+                      color: SURFACE.muted,
+                      display: 'flex',
+                      fontFamily: bodyFont,
+                      fontSize: 13,
+                      fontWeight: 500,
+                      gap: 10,
+                    }}
+                  >
+                    {index === 1 ? (
+                      <span style={{ color: SURFACE.teal, fontSize: 15, lineHeight: 1 }}>○</span>
+                    ) : (
+                      <span style={{ background: index === 0 ? '#d45a51' : SURFACE.amber, borderRadius: 999, height: 4, width: 4 }} />
+                    )}
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
           </div>
 
-          <div className="relative hidden h-[620px] select-none lg:block">
+          <Reveal delay={0.12} from="right">
+            <div className="relative hidden h-[620px] select-none lg:block">
             <div
               style={{
                 background: SURFACE.surface,
@@ -674,7 +687,8 @@ function HeroSection() {
                 zIndex: 0,
               }}
             />
-          </div>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>
