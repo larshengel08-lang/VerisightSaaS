@@ -80,6 +80,7 @@ describe('action center preview display helpers', () => {
         },
         closingSemantics: {
           status: 'lopend',
+          summary: null,
         },
       },
     } satisfies ActionCenterPreviewItem

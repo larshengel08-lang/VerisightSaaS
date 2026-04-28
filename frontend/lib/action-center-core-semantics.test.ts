@@ -329,6 +329,24 @@ describe('action center core semantics', () => {
     })
   })
 
+  it('reuses reviewReason for reviewQuestion before falling back to the generic route template', () => {
+    const context = buildContext({
+      deliveryRecord: buildDeliveryRecord({
+        next_step: null,
+      }),
+      dossier: buildDossier({
+        first_management_value: 'Welke vertrekduiding vraagt nu als eerste bestuurlijke review?',
+        expected_first_value: null,
+        first_action_taken: null,
+      }),
+    })
+
+    expect(projectActionCenterCoreSemantics(context).reviewSemantics).toMatchObject({
+      reviewReason: 'Welke vertrekduiding vraagt nu als eerste bestuurlijke review?',
+      reviewQuestion: 'Welke vertrekduiding vraagt nu als eerste bestuurlijke review?',
+    })
+  })
+
   it('falls back to explicit unassigned owner label and reason-plus-nextStep expected effect when canonical truth is absent', () => {
     const context = buildContext({
       assignedManager: null,
@@ -360,7 +378,7 @@ describe('action center core semantics', () => {
     })
   })
 
-  it('collapses closeout semantics to lopend, afgerond, or gestopt only', () => {
+  it('collapses closeout semantics to lopend, afgerond, or gestopt with a compact closeout summary when closed', () => {
     const ongoing = buildContext({
       deliveryRecord: buildDeliveryRecord({
         exception_status: 'awaiting_client_input',
@@ -372,17 +390,28 @@ describe('action center core semantics', () => {
     const completed = buildContext({
       dossier: buildDossier({
         triage_status: 'uitgevoerd',
+        case_public_summary: 'De route is afgerond na de laatste teamreview.',
       }),
     })
     const stopped = buildContext({
       dossier: buildDossier({
         triage_status: 'verworpen',
+        stop_reason: 'De route stopt omdat er nu geen draagvlak is voor opvolging.',
       }),
     })
 
-    expect(projectActionCenterCoreSemantics(ongoing).closingSemantics.status).toBe('lopend')
-    expect(projectActionCenterCoreSemantics(completed).closingSemantics.status).toBe('afgerond')
-    expect(projectActionCenterCoreSemantics(stopped).closingSemantics.status).toBe('gestopt')
+    expect(projectActionCenterCoreSemantics(ongoing).closingSemantics).toEqual({
+      status: 'lopend',
+      summary: null,
+    })
+    expect(projectActionCenterCoreSemantics(completed).closingSemantics).toEqual({
+      status: 'afgerond',
+      summary: 'De route is afgerond na de laatste teamreview.',
+    })
+    expect(projectActionCenterCoreSemantics(stopped).closingSemantics).toEqual({
+      status: 'gestopt',
+      summary: 'De route stopt omdat er nu geen draagvlak is voor opvolging.',
+    })
   })
 
   it('falls back to the visible review outcome label when no richer decision text exists', () => {
@@ -481,6 +510,84 @@ describe('action center core semantics', () => {
     expect(semantics.actionFrame.firstStep).toBe('Bestaande canonieke vervolgstap.')
     expect(semantics.route.outcomeSummary).toBeNull()
     expect(semantics.resultLoop.whatWasDecided).toBeNull()
+  })
+
+  it('reuses preview reviewReason for reviewQuestion before falling back to the generic route template', () => {
+    const semantics = projectActionCenterPreviewCoreSemantics({
+      id: 'preview-review-reason',
+      title: 'Exit preview',
+      status: 'te-bespreken',
+      ownerName: null,
+      reviewDate: null,
+      expectedEffect: null,
+      reviewReason: 'Welke vertrekduiding vraagt nu als eerste bestuurlijke review?',
+      reviewOutcome: 'geen-uitkomst',
+      reason: null,
+      summary: 'Samenvatting voor de lijstweergave.',
+      signalBody: 'Signaaltekst uit de laatste zichtbare update.',
+      nextStep: null,
+      route: {
+        campaignId: 'campaign-exit',
+        entryStage: 'active',
+        routeOpenedAt: '2026-04-20T09:00:00.000Z',
+        ownerAssignedAt: null,
+        routeStatus: 'te-bespreken',
+        reviewOutcome: 'geen-uitkomst',
+        reviewCompletedAt: null,
+        outcomeRecordedAt: null,
+        outcomeSummary: null,
+        intervention: null,
+        owner: null,
+        expectedEffect: null,
+        reviewScheduledFor: null,
+        reviewReason: 'Welke vertrekduiding vraagt nu als eerste bestuurlijke review?',
+        blockedBy: null,
+      },
+    })
+
+    expect(semantics.reviewSemantics).toMatchObject({
+      reviewReason: 'Welke vertrekduiding vraagt nu als eerste bestuurlijke review?',
+      reviewQuestion: 'Welke vertrekduiding vraagt nu als eerste bestuurlijke review?',
+    })
+  })
+
+  it('derives a compact preview closeout summary for completed routes from canonical route truth', () => {
+    const semantics = projectActionCenterPreviewCoreSemantics({
+      id: 'preview-closeout',
+      title: 'Exit preview',
+      status: 'afgerond',
+      ownerName: 'Manager Operations',
+      reviewDate: '2026-05-12',
+      expectedEffect: null,
+      reviewReason: 'Welke route-uitkomst wilden we vastleggen?',
+      reviewOutcome: 'afronden',
+      reason: null,
+      summary: 'Samenvatting voor de lijstweergave.',
+      signalBody: 'Signaaltekst uit de laatste zichtbare update.',
+      nextStep: null,
+      route: {
+        campaignId: 'campaign-exit',
+        entryStage: 'active',
+        routeOpenedAt: '2026-04-20T09:00:00.000Z',
+        ownerAssignedAt: '2026-04-21T08:00:00.000Z',
+        routeStatus: 'afgerond',
+        reviewOutcome: 'afronden',
+        reviewCompletedAt: null,
+        outcomeRecordedAt: null,
+        outcomeSummary: 'De route is afgerond na de laatste teamreview.',
+        intervention: null,
+        owner: 'Manager Operations',
+        expectedEffect: null,
+        reviewScheduledFor: '2026-05-12',
+        reviewReason: 'Welke route-uitkomst wilden we vastleggen?',
+        blockedBy: null,
+      },
+    })
+
+    expect(semantics.closingSemantics).toEqual({
+      status: 'afgerond',
+      summary: 'De route is afgerond na de laatste teamreview.',
+    })
   })
 
   it('prefers the latest explicit preview update before nextStep in whatWasTried', () => {

@@ -460,6 +460,7 @@ export function ActionCenterPreview({
   const closingLabel = selectedItem
     ? getClosingStatusLabel(selectedItem.coreSemantics.closingSemantics.status)
     : null
+  const closingSummary = selectedItem?.coreSemantics.closingSemantics.summary ?? null
 
   function handleCreateAction() {
     if (!createForm.title.trim() || !createForm.teamId) {
@@ -1302,6 +1303,9 @@ export function ActionCenterPreview({
                           <div className="mt-5 rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Afronding</p>
                             <p className="mt-2 text-sm font-semibold text-white/86">{closingLabel}</p>
+                            {closingSummary ? (
+                              <p className="mt-2 text-sm leading-7 text-white/72">{closingSummary}</p>
+                            ) : null}
                           </div>
                         ) : null}
 

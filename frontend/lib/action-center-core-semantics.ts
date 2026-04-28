@@ -26,6 +26,7 @@ export interface ActionCenterCoreSemantics {
   }
   closingSemantics: {
     status: ActionCenterClosingStatus
+    summary: string | null
   }
 }
 
@@ -208,6 +209,17 @@ function getPreviewClosingStatus(status: ActionCenterRouteContract['routeStatus'
   return 'lopend'
 }
 
+function getClosingSummary(status: ActionCenterClosingStatus, values: Array<string | null | undefined>) {
+  if (status === 'lopend') {
+    return null
+  }
+
+  return (
+    pickFirst(values) ??
+    (status === 'afgerond' ? 'De route is voor nu afgerond.' : 'De route is bewust gestopt.')
+  )
+}
+
 function buildPreviewRoute(input: ActionCenterPreviewCoreSemanticsProjectionInput): ActionCenterRouteContract {
   const reviewReason = pickFirst([input.reviewReason, input.route?.reviewReason])
   const nextStep = pickFirst([input.nextStep, input.route?.intervention])
@@ -258,6 +270,7 @@ export function projectActionCenterPreviewCoreSemantics(
     route.expectedEffect,
     expectedEffectFromReason,
     nextStep,
+    route.reviewReason,
     getReviewQuestionTemplateFromStatus(route.routeStatus),
   ])
   const whyNow = pickFirst([
@@ -278,6 +291,7 @@ export function projectActionCenterPreviewCoreSemantics(
     managementActionOutcomeText: getRawManagementActionOutcomeText(input.reviewOutcome),
     outcomeSummary: route.outcomeSummary,
   })
+  const closingStatus = getPreviewClosingStatus(route.routeStatus)
 
   return {
     route,
@@ -307,7 +321,11 @@ export function projectActionCenterPreviewCoreSemantics(
       whatWasDecided,
     },
     closingSemantics: {
-      status: getPreviewClosingStatus(route.routeStatus),
+      status: closingStatus,
+      summary: getClosingSummary(closingStatus, [
+        route.outcomeSummary,
+        route.reviewReason,
+      ]),
     },
   }
 }
@@ -344,6 +362,7 @@ export function projectActionCenterCoreSemantics(
     route.expectedEffect,
     expectedEffectFromReason,
     nextStep,
+    route.reviewReason,
     getReviewQuestionTemplate(route),
   ])
 
@@ -385,6 +404,7 @@ export function projectActionCenterCoreSemantics(
 
   const latestObservation = getLatestObservation(context, route)
   const latestActionUpdate = getLatestActionUpdate(context)
+  const closingStatus = getClosingStatus(context, route)
 
   return {
     route,
@@ -420,7 +440,13 @@ export function projectActionCenterCoreSemantics(
       }),
     },
     closingSemantics: {
-      status: getClosingStatus(context, route),
+      status: closingStatus,
+      summary: getClosingSummary(closingStatus, [
+        context.learningDossier?.stop_reason,
+        route.outcomeSummary,
+        context.learningDossier?.next_route,
+        route.reviewReason,
+      ]),
     },
   }
 }

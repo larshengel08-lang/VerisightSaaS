@@ -204,7 +204,7 @@ describe("action center landing shell", () => {
     expect(markup).toContain(item.coreSemantics.resultLoop.whatWasDecided);
   });
 
-  it("renders closing semantics only for completed or intentionally stopped routes", () => {
+  it("renders closing semantics with a compact closeout summary only for completed or intentionally stopped routes", () => {
     const context = buildLiveContext();
     const [baseItem] = buildLiveActionCenterItems([context]);
     const completedItem = {
@@ -213,6 +213,7 @@ describe("action center landing shell", () => {
         ...baseItem.coreSemantics,
         closingSemantics: {
           status: "afgerond" as const,
+          summary: "De route is afgerond na de laatste teamreview.",
         },
       },
     };
@@ -222,6 +223,7 @@ describe("action center landing shell", () => {
         ...baseItem.coreSemantics,
         closingSemantics: {
           status: "gestopt" as const,
+          summary: "De route stopt omdat er nu geen draagvlak is voor opvolging.",
         },
       },
     };
@@ -265,8 +267,12 @@ describe("action center landing shell", () => {
 
     expect(ongoingMarkup).not.toContain("Afgerond voor nu");
     expect(ongoingMarkup).not.toContain("Bewust gestopt");
+    expect(ongoingMarkup).not.toContain("De route is afgerond na de laatste teamreview.");
+    expect(ongoingMarkup).not.toContain("De route stopt omdat er nu geen draagvlak is voor opvolging.");
     expect(completedMarkup).toContain("Afgerond voor nu");
+    expect(completedMarkup).toContain("De route is afgerond na de laatste teamreview.");
     expect(stoppedMarkup).toContain("Bewust gestopt");
+    expect(stoppedMarkup).toContain("De route stopt omdat er nu geen draagvlak is voor opvolging.");
   });
 
   it("keeps the landing summary compact with a last route-read instead of full detail semantics", () => {

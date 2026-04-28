@@ -434,6 +434,7 @@ describe('live action center builder', () => {
         },
         closingSemantics: {
           status: 'lopend',
+          summary: null,
         },
       },
     })
