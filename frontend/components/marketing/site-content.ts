@@ -11,7 +11,7 @@ export const marketingNavLinks = [
 
 export const marketingPrimaryCta = {
   href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-  label: 'Plan suite-demo',
+  label: 'Plan een eerste route-inschatting',
 } as const
 
 export const marketingSecondaryCta = {
@@ -423,15 +423,15 @@ export const included = [
 export const approachSteps = [
   {
     title: '1. Kennismaking',
-    body: 'We bepalen welke managementvraag nu eerst telt en of ExitScan, RetentieScan of een gefaseerde combinatie logisch is.',
+    body: 'We bepalen welke vraag nu het eerst duidelijkheid vraagt en welke route daarvoor het meest logisch is: ExitScan, RetentieScan of een gefaseerde combinatie.',
   },
   {
     title: '2. Intake en databasis',
-    body: 'We spreken af welke respondentdata, segmentinformatie en timing nodig zijn om dashboard en rapport leesbaar en privacyveilig te maken.',
+    body: 'We stemmen af welke input nodig is om dashboard en rapport snel leesbaar en zorgvuldig ingericht te krijgen, zonder extra complexiteit voor je team.',
   },
   {
     title: '3. Campaign setup',
-    body: 'Verisight richt de campaign in, helpt met respondentimport en zet uitnodigingen en herinneringen klaar zonder extra toolbeheer voor HR.',
+    body: 'Verisight richt de campagne in, helpt met respondentimport en zet uitnodigingen en herinneringen klaar, zonder extra toolbeheer voor HR.',
   },
   {
     title: '4. Eerste responses',

@@ -236,7 +236,7 @@ function ContactSection() {
     <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
       <div style={{ ...SHELL, maxWidth: 1180 }}>
         <MarketingInlineContactPanel
-          eyebrow="Plan suite-demo"
+          eyebrow="Plan een eerste route-inschatting"
           title="Vertel kort welke managementvraag nu speelt."
           body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy, prijs en hoe dashboard, rapport en Action Center bounded samenhangen."
           defaultRouteInterest="exitscan"

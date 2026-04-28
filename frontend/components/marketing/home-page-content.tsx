@@ -30,6 +30,7 @@ const SHELL = {
 } as const
 
 const displayFont = 'var(--font-fraunces), Georgia, serif'
+const bodyFont = 'var(--font-ibm-plex-sans), system-ui, sans-serif'
 
 const heroTrustItems = [
   'Op groepsniveau',
@@ -37,15 +38,7 @@ const heroTrustItems = [
   'Dashboard, samenvatting en rapport',
 ]
 
-const marqueeItems = [
-  'Dashboard',
-  'Samenvatting',
-  'Rapport',
-  'Eerste actie',
-  'ExitScan',
-  'RetentieScan',
-  'Onboarding 30-60-90',
-]
+const marqueeLine = 'Van eerste inzicht naar concrete opvolging in dezelfde leeslijn'
 
 const suiteFlowPoints = [
   {
@@ -82,14 +75,14 @@ const routeCards = [
     index: '02',
     eyebrow: 'Behoud & vroegsignalering',
     title: 'RetentieScan',
-    body: 'Zie waar behoud onder druk staat en waar eerst aandacht nodig is. Vroeg signaleren voordat het te laat is.',
+    body: 'Zie waar behoud onder druk staat voordat het te laat is. Vroege signalering op groepsniveau.',
     accent: SURFACE.teal,
   },
   {
     index: '03',
     eyebrow: 'Onboarding',
     title: 'Onboarding 30-60-90',
-    body: 'Zie vroeg hoe nieuwe medewerkers landen in hun eerste weken en maanden.',
+    body: 'Zie vroeg hoe nieuwe medewerkers landen en waar uitval kan ontstaan.',
     accent: '#9b5f1e',
   },
 ]
@@ -108,6 +101,7 @@ function SectionLabel({ index, label }: { index: string; label: string }) {
       <span
         style={{
           color: SURFACE.muted,
+          fontFamily: bodyFont,
           fontSize: 10,
           fontWeight: 700,
           letterSpacing: '.18em',
@@ -170,6 +164,7 @@ function Tag({ children, tone = 'default' }: { children: React.ReactNode; tone?:
         borderRadius: 999,
         color: palette.color,
         display: 'inline-flex',
+        fontFamily: bodyFont,
         fontSize: 11,
         fontWeight: 700,
         letterSpacing: '.12em',
@@ -202,6 +197,7 @@ function OutputMetric({
       <p
         style={{
           color: SURFACE.muted,
+          fontFamily: bodyFont,
           fontSize: 10,
           fontWeight: 700,
           letterSpacing: '.16em',
@@ -230,7 +226,7 @@ function OutputMetric({
 function MarqueeBand() {
   return (
     <section
-      aria-label="Suite-onderdelen"
+      aria-label="Suite-leeslijn"
       style={{
         background: SURFACE.charcoal,
         borderBottom: `1px solid ${SURFACE.charcoalSoft}`,
@@ -243,22 +239,16 @@ function MarqueeBand() {
             alignItems: 'center',
             color: '#efe5d8',
             display: 'flex',
-            flexWrap: 'nowrap',
+            fontFamily: bodyFont,
             fontSize: 12,
             fontWeight: 700,
-            gap: 18,
+            justifyContent: 'center',
             letterSpacing: '.22em',
-            overflowX: 'auto',
             textTransform: 'uppercase',
-            whiteSpace: 'nowrap',
+            textAlign: 'center',
           }}
         >
-          {marqueeItems.map((item, index) => (
-            <span key={`${item}-${index}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 18 }}>
-              {item}
-              {index < marqueeItems.length - 1 ? <span style={{ color: '#c18355' }}>.</span> : null}
-            </span>
-          ))}
+          <span>{marqueeLine}</span>
         </div>
       </div>
     </section>
@@ -309,7 +299,7 @@ function HeroSection() {
                   textTransform: 'uppercase',
                 }}
               >
-                Voor HR, directie en managementteams
+                Voor organisaties die sneller willen zien wat nu echt aandacht vraagt.
               </p>
               <h1
                 style={{
@@ -324,7 +314,7 @@ function HeroSection() {
               >
                 Zien.
                 <br />
-                <span style={{ color: SURFACE.amber }}>Prioriteren.</span>
+                <span style={{ color: SURFACE.amber, fontStyle: 'italic' }}>Prioriteren.</span>
                 <br />
                 Handelen.
               </h1>
@@ -332,14 +322,26 @@ function HeroSection() {
 
             <p
               style={{
+                color: SURFACE.ink,
+                fontSize: 17,
+                lineHeight: 1.55,
+                marginBottom: 14,
+                maxWidth: '32rem',
+              }}
+            >
+              Zie waar vertrek, behoud of vroege uitval aandacht vraagt. U krijgt geen losse data, maar een helder dashboard, een managementsamenvatting en een eerste actieroute.
+            </p>
+
+            <p
+              style={{
                 color: SURFACE.text,
-                fontSize: 18,
+                fontSize: 17,
                 lineHeight: 1.6,
                 marginBottom: 28,
                 maxWidth: '32rem',
               }}
             >
-              Verisight laat zien waar vertrek, behoud of vroege uitval aandacht vraagt. U krijgt geen losse surveydata, maar een helder dashboard, een korte samenvatting en een eerste route voor opvolging.
+              Verisight laat zien waar vertrek, behoud of vroege uitval echt aandacht vraagt. Geen losse surveydata, maar een scherp dashboard, een korte managementsamenvatting en een eerste route voor opvolging.
             </p>
 
             <div className="flex flex-wrap items-center gap-4" style={{ marginBottom: 34 }}>
@@ -350,13 +352,14 @@ function HeroSection() {
                   borderRadius: 2,
                   color: '#fff',
                   display: 'inline-flex',
+                  fontFamily: bodyFont,
                   fontSize: 15,
                   fontWeight: 600,
                   padding: '16px 28px',
                   textDecoration: 'none',
                 }}
               >
-                Plan een kennismaking
+                Bespreek de juiste eerste route
               </Link>
               <Link
                 href="/#suite"
@@ -366,6 +369,7 @@ function HeroSection() {
                   borderRadius: 2,
                   color: SURFACE.ink,
                   display: 'inline-flex',
+                  fontFamily: bodyFont,
                   fontSize: 15,
                   fontWeight: 600,
                   padding: '16px 28px',
@@ -392,6 +396,7 @@ function HeroSection() {
                     alignItems: 'center',
                     color: SURFACE.muted,
                     display: 'flex',
+                    fontFamily: bodyFont,
                     fontSize: 13,
                     fontWeight: 500,
                     gap: 10,
@@ -408,26 +413,24 @@ function HeroSection() {
             </div>
           </div>
 
-          <div className="relative hidden h-[630px] select-none lg:block">
+          <div className="relative hidden h-[620px] select-none lg:block">
             <div
               style={{
                 background: SURFACE.surface,
                 border: `1px solid ${SURFACE.borderSoft}`,
                 borderRadius: 8,
                 boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
-                height: 310,
+                height: 286,
                 padding: '24px 28px',
                 position: 'absolute',
-                right: 34,
-                top: 10,
-                width: 510,
+                right: 18,
+                top: 0,
+                width: 452,
                 zIndex: 10,
               }}
             >
               <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 28 }}>
-                <span style={{ color: '#9aa1a8', fontSize: 10, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase' }}>
-                  Trend dashboard
-                </span>
+                <span />
                 <span
                   style={{
                     background: SURFACE.tealSoft,
@@ -468,13 +471,13 @@ function HeroSection() {
                 border: `1px solid ${SURFACE.borderSoft}`,
                 borderRadius: 4,
                 boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
-                height: 386,
+                height: 360,
                 overflow: 'hidden',
-                padding: '28px 32px',
+                padding: '30px 32px',
                 position: 'absolute',
-                right: 8,
-                top: 116,
-                width: 526,
+                left: 6,
+                top: 118,
+                width: 438,
                 zIndex: 20,
               }}
             >
@@ -491,10 +494,10 @@ function HeroSection() {
                     textWrap: 'balance',
                   }}
                 >
-                  Managementsamenvatting
+                  Exit-analyse Q3
                 </h3>
                 <p style={{ color: SURFACE.muted, fontSize: 12.5, lineHeight: 1.5 }}>
-                  Topprioriteiten en eerste route
+                  Redenen van Vertrek - Senior Staff
                 </p>
               </div>
 
@@ -532,11 +535,11 @@ function HeroSection() {
                 borderRadius: 18,
                 boxShadow: '0 14px 34px rgba(13, 17, 24, 0.18)',
                 color: '#fff',
-                left: 8,
+                left: -28,
                 padding: '24px 28px 22px',
                 position: 'absolute',
-                top: 308,
-                width: 600,
+                top: 346,
+                width: 470,
                 zIndex: 30,
               }}
             >
@@ -707,10 +710,10 @@ function SuitePreviewSection() {
                 textWrap: 'pretty',
               }}
             >
-              Geen losse output.
+              Geen losse rapportage.
               <br />
               <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
-                Wel een duidelijke lijn.
+                Wel een helder besluitspoor.
               </span>
             </h2>
 
@@ -777,7 +780,7 @@ function SuitePreviewSection() {
                     <div className="suite-motion-track">
                       <section className="suite-motion-screen suite-motion-screen-see">
                         <div className="suite-screen-head">
-                          <p className="suite-phase-eyebrow">ExitScan Results</p>
+                          <p className="suite-phase-eyebrow">Eerste signalen</p>
                           <span className="suite-phase-chip suite-phase-chip-amber">Zien</span>
                         </div>
 
@@ -787,16 +790,16 @@ function SuitePreviewSection() {
                         </div>
 
                         <div className="suite-metrics-grid">
-                          <OutputMetric label="Vertrekrisico" value="12%" body="+1.4 pp" />
-                          <OutputMetric label="Engagement" value="7,4" body="Stabiel" />
-                          <OutputMetric label="Behoud +12 mnd" value="+3,1" body="Positief signaal" />
+                          <OutputMetric label="Vertreksignaal" value="12%" body="+1.4 pp" />
+                          <OutputMetric label="Betrokkenheid" value="7,4" body="Stabiel" />
+                          <OutputMetric label="Behoudssignaal 12 mnd" value="+3,1" body="Positieve richting" />
                         </div>
 
                         <div className="suite-phase-list">
                           {[
-                            ['01', 'Groei en ontwikkeling', 'Operations en Finance', 'Direct', SURFACE.amberSoft, SURFACE.amber],
-                            ['02', 'Werkdruk', 'Piekperiode in Operations', 'Verhoogd', '#f1dfcf', '#9a5b19'],
-                            ['03', 'Loopbaanperspectief', 'Organisatiebreed signaal', 'Aandacht', SURFACE.tealSoft, SURFACE.teal],
+                            ['01', 'Groei en ontwikkeling blijft achter', 'Operations en Finance', 'Direct', SURFACE.amberSoft, SURFACE.amber],
+                            ['02', 'Werkdruk loopt op', 'Piekperiode in Operations', 'Verhoogd', '#f1dfcf', '#9a5b19'],
+                            ['03', 'Loopbaanperspectief blijft achter', 'Organisatiebreed signaal', 'Aandacht', SURFACE.tealSoft, SURFACE.teal],
                           ].map(([index, title, body, badge, bg, color]) => (
                             <div key={title} className="suite-list-row">
                               <span className="suite-list-index">{index}</span>
@@ -820,10 +823,10 @@ function SuitePreviewSection() {
 
                         <div className="suite-priority-spotlight">
                           <div>
-                            <p className="suite-priority-kicker">Focusgebied</p>
-                            <p className="suite-priority-title">Leren &amp; Ontwikkeling</p>
+                            <p className="suite-priority-title">Van breed signaal naar eerste prioriteit.</p>
+                            <p className="suite-priority-theme">Leren &amp; ontwikkeling</p>
                             <p className="suite-priority-copy">
-                              Binnen Finance valt dit thema het sterkst op in twee teams. Daarmee wordt brede output teruggebracht naar een concrete bestuurlijke prioriteit.
+                              Binnen Finance komt dit signaal het sterkst terug. Daarom wordt dit het eerste gesprekspunt voor management.
                             </p>
                           </div>
 
@@ -838,16 +841,16 @@ function SuitePreviewSection() {
                             </div>
                             <div className="suite-priority-note-row">
                               <span>Volgorde</span>
-                              <strong>Eerst bespreken in MT</strong>
+                              <strong>Eerste bespreking in MT</strong>
                             </div>
                           </div>
                         </div>
 
                         <div className="suite-priority-ladder">
                           {[
-                            ['01', 'Groei en ontwikkeling', 'Operations en Finance', 'Direct', SURFACE.amberSoft, SURFACE.amber],
-                            ['02', 'Werkdruk', 'Piekperiode in Operations', 'Verhoogd', '#f1dfcf', '#9a5b19'],
-                            ['03', 'Loopbaanperspectief', 'Organisatiebreed signaal', 'Aandacht', SURFACE.tealSoft, SURFACE.teal],
+                            ['01', 'Groei en ontwikkeling blijft achter', 'Operations en Finance', 'Direct', SURFACE.amberSoft, SURFACE.amber],
+                            ['02', 'Werkdruk loopt op', 'Piekperiode in Operations', 'Verhoogd', '#f1dfcf', '#9a5b19'],
+                            ['03', 'Loopbaanperspectief blijft achter', 'Organisatiebreed signaal', 'Aandacht', SURFACE.tealSoft, SURFACE.teal],
                           ].map(([index, title, body, badge, bg, color]) => (
                             <div key={`${index}-${title}`} className={`suite-ladder-row ${index === '01' ? 'suite-ladder-row-active' : ''}`}>
                               <span className="suite-list-index">{index}</span>
@@ -866,7 +869,7 @@ function SuitePreviewSection() {
                       <section className="suite-motion-screen suite-motion-screen-act">
                         <div className="suite-action-panel">
                           <div className="suite-screen-head">
-                            <p className="suite-phase-eyebrow" style={{ color: 'rgba(255, 247, 239, 0.58)' }}>Action Center</p>
+                            <p className="suite-phase-eyebrow">Action Center</p>
                             <span className="suite-phase-chip suite-phase-chip-dark">Handelen</span>
                           </div>
 
@@ -874,22 +877,23 @@ function SuitePreviewSection() {
                             <div>
                               <p className="suite-action-title">Niet alleen zien.</p>
                               <p className="suite-action-accent">Ook handelen.</p>
+                              <p className="suite-action-subcopy">Van prioriteit naar eerste concrete opvolging.</p>
                             </div>
                           </div>
 
                           <div className="suite-action-list">
                             {[
-                              ['Prioriteit', 'Leren & Ontwikkeling, Finance', 'Bevestigd'],
+                              ['Prioriteit', 'Ontwikkelkansen blijven achter, Finance', 'Bevestigd'],
                               ['Eigenaar', 'HRBP Finance', 'Toegewezen'],
-                              ['Eerste actie', 'Teamoverleg + verdiepend gesprek', 'Deze week'],
-                              ['Reviewmoment', 'Nieuwe check over 21 dagen', 'Ingepland'],
+                              ['Eerste actie', 'Bespreken in teamoverleg, daarna verdiepend gesprek', 'Deze week'],
+                              ['Reviewmoment', 'Hercheck over 21 dagen', 'Ingepland'],
                             ].map(([label, body, badge]) => (
-                              <div key={label} className="suite-action-row">
+                              <div key={label} className={`suite-action-row ${label === 'Prioriteit' ? 'suite-action-row-primary' : ''}`}>
                                 <div>
                                   <p className="suite-action-label">{label}</p>
                                   <p className="suite-action-body">{body}</p>
                                 </div>
-                                <span className="suite-action-badge">{badge}</span>
+                                <span className={`suite-action-badge ${badge === 'Deze week' ? 'suite-action-badge-urgent' : ''}`}>{badge}</span>
                               </div>
                             ))}
                           </div>
@@ -916,6 +920,7 @@ function SuitePreviewSection() {
         <style>{`
           .suite-motion-shell {
             --suite-window-height: 592px;
+            --suite-cycle-duration: 9s;
             position: relative;
           }
 
@@ -930,6 +935,7 @@ function SuitePreviewSection() {
             border: 1px solid ${SURFACE.border};
             border-radius: 999px;
             color: ${SURFACE.text};
+            font-family: ${bodyFont};
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.12em;
@@ -938,15 +944,18 @@ function SuitePreviewSection() {
           }
 
           .suite-phase-tab-1 {
-            animation: suite-pill-see 18s infinite both;
+            animation: suite-pill-see var(--suite-cycle-duration) infinite both;
+            animation-timing-function: cubic-bezier(.65, 0, .35, 1);
           }
 
           .suite-phase-tab-2 {
-            animation: suite-pill-prioritize 18s infinite both;
+            animation: suite-pill-prioritize var(--suite-cycle-duration) infinite both;
+            animation-timing-function: cubic-bezier(.65, 0, .35, 1);
           }
 
           .suite-phase-tab-3 {
-            animation: suite-pill-act 18s infinite both;
+            animation: suite-pill-act var(--suite-cycle-duration) infinite both;
+            animation-timing-function: cubic-bezier(.65, 0, .35, 1);
           }
 
           .suite-motion-stage {
@@ -1004,7 +1013,8 @@ function SuitePreviewSection() {
           }
 
           .suite-motion-progress-fill {
-            animation: suite-progress-flow 18s infinite both;
+            animation: suite-progress-flow var(--suite-cycle-duration) infinite both;
+            animation-timing-function: cubic-bezier(.65, 0, .35, 1);
             background: linear-gradient(90deg, ${SURFACE.amber} 0%, ${SURFACE.teal} 100%);
             border-radius: inherit;
             height: 100%;
@@ -1023,12 +1033,15 @@ function SuitePreviewSection() {
           }
 
           .suite-motion-track {
-            animation: suite-track-flow 18s infinite both;
+            animation: suite-track-flow var(--suite-cycle-duration) infinite both;
+            animation-timing-function: cubic-bezier(.65, 0, .35, 1);
             display: flex;
             flex-direction: column;
+            will-change: transform;
           }
 
           .suite-motion-screen {
+            background: linear-gradient(180deg, rgba(255, 251, 247, 0.98) 0%, rgba(247, 238, 231, 0.98) 100%);
             box-sizing: border-box;
             flex: 0 0 var(--suite-window-height);
             height: var(--suite-window-height);
@@ -1041,8 +1054,7 @@ function SuitePreviewSection() {
           }
 
           .suite-motion-screen-act {
-            background: transparent;
-            padding: 0;
+            background: linear-gradient(180deg, rgba(255, 250, 245, 0.98) 0%, rgba(246, 238, 231, 0.98) 100%);
           }
 
           .suite-screen-head,
@@ -1059,6 +1071,7 @@ function SuitePreviewSection() {
 
           .suite-phase-eyebrow {
             color: ${SURFACE.muted};
+            font-family: ${bodyFont};
             font-size: 10px;
             font-weight: 700;
             letter-spacing: 0.18em;
@@ -1068,6 +1081,7 @@ function SuitePreviewSection() {
 
           .suite-phase-chip {
             border-radius: 999px;
+            font-family: ${bodyFont};
             font-size: 10px;
             font-weight: 700;
             letter-spacing: 0.14em;
@@ -1087,8 +1101,8 @@ function SuitePreviewSection() {
           }
 
           .suite-phase-chip-dark {
-            background: rgba(255, 255, 255, 0.08);
-            color: rgba(255, 247, 239, 0.8);
+            background: rgba(22, 34, 56, 0.08);
+            color: ${SURFACE.ink};
           }
 
           .suite-phase-title {
@@ -1113,9 +1127,9 @@ function SuitePreviewSection() {
 
           .suite-metrics-grid {
             display: grid;
-            gap: 12px;
+            gap: 8px;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            margin-bottom: 18px;
+            margin-bottom: 10px;
           }
 
           .suite-phase-list,
@@ -1141,9 +1155,9 @@ function SuitePreviewSection() {
           }
 
           .suite-ladder-row-active {
-            background: rgba(255, 255, 255, 0.86);
-            border-color: rgba(191, 148, 110, 0.32);
-            box-shadow: inset 0 0 0 1px rgba(185, 87, 31, 0.08);
+            background: rgba(255, 248, 241, 0.96);
+            border-color: rgba(191, 148, 110, 0.38);
+            box-shadow: inset 0 0 0 1px rgba(185, 87, 31, 0.11);
           }
 
           .suite-list-index {
@@ -1153,6 +1167,7 @@ function SuitePreviewSection() {
 
           .suite-list-title {
             color: ${SURFACE.ink};
+            font-family: ${bodyFont};
             font-size: 15px;
             font-weight: 600;
             margin-bottom: 3px;
@@ -1160,11 +1175,13 @@ function SuitePreviewSection() {
 
           .suite-list-body {
             color: ${SURFACE.text};
+            font-family: ${bodyFont};
             font-size: 13.5px;
             line-height: 1.5;
           }
 
           .suite-list-badge {
+            font-family: ${bodyFont};
             font-size: 10px;
             font-weight: 700;
             letter-spacing: 0.14em;
@@ -1178,34 +1195,38 @@ function SuitePreviewSection() {
             border: 1px solid ${SURFACE.border};
             box-shadow: 0 24px 42px rgba(19, 32, 51, 0.06);
             display: grid;
-            gap: 18px;
-            grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.8fr);
-            margin-top: 16px;
-            padding: 18px 18px 20px;
+            gap: 14px;
+            grid-template-columns: minmax(0, 1.08fr) minmax(196px, 0.72fr);
+            margin-top: 12px;
+            padding: 16px 16px 18px;
           }
 
-          .suite-priority-kicker {
+          .suite-priority-title {
+            color: ${SURFACE.ink};
+            font-family: ${displayFont};
+            font-size: clamp(1.86rem, 2.5vw, 2.18rem);
+            letter-spacing: -0.04em;
+            line-height: 0.98;
+            margin-bottom: 10px;
+            max-width: 11ch;
+          }
+
+          .suite-priority-theme {
             color: ${SURFACE.teal};
-            font-size: 10px;
+            font-family: ${bodyFont};
+            font-size: 12px;
             font-weight: 700;
             letter-spacing: 0.16em;
             margin-bottom: 10px;
             text-transform: uppercase;
           }
 
-          .suite-priority-title {
-            color: ${SURFACE.ink};
-            font-family: ${displayFont};
-            font-size: clamp(1.7rem, 2.4vw, 2.3rem);
-            letter-spacing: -0.04em;
-            line-height: 0.98;
-            margin-bottom: 12px;
-          }
-
           .suite-priority-copy {
             color: ${SURFACE.text};
+            font-family: ${bodyFont};
             font-size: 14.5px;
-            line-height: 1.75;
+            line-height: 1.68;
+            max-width: 27ch;
           }
 
           .suite-priority-note {
@@ -1224,6 +1245,7 @@ function SuitePreviewSection() {
 
           .suite-priority-note-row span {
             color: ${SURFACE.teal};
+            font-family: ${bodyFont};
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.12em;
@@ -1232,34 +1254,53 @@ function SuitePreviewSection() {
 
           .suite-priority-note-row strong {
             color: ${SURFACE.ink};
+            font-family: ${bodyFont};
             font-size: 14px;
             font-weight: 600;
             text-align: right;
           }
 
           .suite-action-panel {
-            background: ${SURFACE.charcoal};
-            color: #fff7ef;
+            background: rgba(255, 252, 249, 0.9);
+            border: 1px solid ${SURFACE.border};
+            box-shadow: 0 24px 42px rgba(19, 32, 51, 0.06);
             box-sizing: border-box;
             height: 100%;
             padding: 22px 22px 24px;
           }
 
           .suite-action-title {
-            color: #fff7ef;
+            color: ${SURFACE.ink};
+          }
+
+          .suite-action-subcopy {
+            color: ${SURFACE.text};
+            font-family: ${bodyFont};
+            font-size: 14px;
+            line-height: 1.68;
+            margin-top: 10px;
+            max-width: 31ch;
           }
 
           .suite-action-row {
             align-items: center;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px solid ${SURFACE.borderSoft};
             display: grid;
             gap: 12px;
             grid-template-columns: minmax(0, 1fr) auto;
             padding: 14px 16px;
           }
 
+          .suite-action-row-primary {
+            background: rgba(255, 248, 241, 0.96);
+            border-color: rgba(191, 148, 110, 0.38);
+            box-shadow: inset 0 0 0 1px rgba(185, 87, 31, 0.11);
+          }
+
           .suite-action-label {
-            color: rgba(255, 247, 239, 0.6);
+            color: ${SURFACE.muted};
+            font-family: ${bodyFont};
             font-size: 10px;
             font-weight: 700;
             letter-spacing: 0.14em;
@@ -1268,14 +1309,16 @@ function SuitePreviewSection() {
           }
 
           .suite-action-body {
-            color: #fff7ef;
+            color: ${SURFACE.ink};
+            font-family: ${bodyFont};
             font-size: 14px;
             line-height: 1.55;
           }
 
           .suite-action-badge {
-            background: rgba(255, 255, 255, 0.08);
-            color: rgba(255, 247, 239, 0.78);
+            background: rgba(22, 34, 56, 0.06);
+            color: ${SURFACE.text};
+            font-family: ${bodyFont};
             font-size: 10px;
             font-weight: 700;
             letter-spacing: 0.12em;
@@ -1284,14 +1327,19 @@ function SuitePreviewSection() {
             white-space: nowrap;
           }
 
+          .suite-action-badge-urgent {
+            background: ${SURFACE.amberSoft};
+            color: ${SURFACE.amber};
+          }
+
           @keyframes suite-track-flow {
-            0%, 28% {
+            0%, 33.2% {
               transform: translateY(0);
             }
-            33%, 61% {
+            33.34%, 66.5% {
               transform: translateY(calc(var(--suite-window-height) * -1));
             }
-            66%, 94% {
+            66.67%, 99.9% {
               transform: translateY(calc(var(--suite-window-height) * -2));
             }
             100% {
@@ -1300,12 +1348,12 @@ function SuitePreviewSection() {
           }
 
           @keyframes suite-pill-see {
-            0%, 28% {
+            0%, 33.2% {
               background: ${SURFACE.amberSoft};
               border-color: ${SURFACE.amberSoft};
               color: ${SURFACE.amber};
             }
-            33%, 100% {
+            33.34%, 100% {
               background: transparent;
               border-color: ${SURFACE.border};
               color: ${SURFACE.text};
@@ -1313,13 +1361,13 @@ function SuitePreviewSection() {
           }
 
           @keyframes suite-pill-prioritize {
-            0%, 28%,
-            66%, 100% {
+            0%, 33.2%,
+            66.67%, 100% {
               background: transparent;
               border-color: ${SURFACE.border};
               color: ${SURFACE.text};
             }
-            33%, 61% {
+            33.34%, 66.5% {
               background: ${SURFACE.tealSoft};
               border-color: #cbe7e2;
               color: ${SURFACE.teal};
@@ -1327,12 +1375,12 @@ function SuitePreviewSection() {
           }
 
           @keyframes suite-pill-act {
-            0%, 61% {
+            0%, 66.5% {
               background: transparent;
               border-color: ${SURFACE.border};
               color: ${SURFACE.text};
             }
-            66%, 94% {
+            66.67%, 99.9% {
               background: ${SURFACE.ink};
               border-color: ${SURFACE.ink};
               color: #fff7ef;
@@ -1345,13 +1393,13 @@ function SuitePreviewSection() {
           }
 
           @keyframes suite-progress-flow {
-            0%, 28% {
+            0%, 33.2% {
               transform: translateX(0);
             }
-            33%, 61% {
+            33.34%, 66.5% {
               transform: translateX(50px);
             }
-            66%, 94% {
+            66.67%, 99.9% {
               transform: translateX(102px);
             }
             100% {
@@ -1467,10 +1515,11 @@ function RoutesSection() {
               <div
                 style={{
                   alignItems: 'center',
-                  color: route.accent,
-                  display: 'flex',
-                  fontSize: 11,
-                  fontWeight: 700,
+              color: route.accent,
+              display: 'flex',
+              fontFamily: bodyFont,
+              fontSize: 11,
+              fontWeight: 700,
                   gap: 12,
                   letterSpacing: '.16em',
                   marginBottom: 18,
@@ -1533,7 +1582,7 @@ function RoutesSection() {
                 textTransform: 'uppercase',
               }}
             >
-              Aanvullende routes
+              Vervolgvragen
             </p>
             <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.75, maxWidth: '38rem' }}>
               Pulse voor compacte vervolgmetingen, Leadership Scan voor extra managementcontext en een combinatieroute wanneer meerdere vragen tegelijk spelen.
@@ -1547,7 +1596,7 @@ function RoutesSection() {
               ['Combinatie', '#ece7df', SURFACE.ink],
             ].map(([label, bg, color]) => (
               <div key={label} style={{ minWidth: 132 }}>
-                <div style={{ background: String(bg), color: String(color), display: 'inline-block', fontSize: 11, fontWeight: 700, letterSpacing: '.14em', marginBottom: 10, padding: '5px 10px', textTransform: 'uppercase' }}>
+                <div style={{ background: String(bg), color: String(color), display: 'inline-block', fontFamily: bodyFont, fontSize: 11, fontWeight: 700, letterSpacing: '.14em', marginBottom: 10, padding: '5px 10px', textTransform: 'uppercase' }}>
                   {label}
                 </div>
               </div>
@@ -1563,6 +1612,7 @@ function RoutesSection() {
               background: SURFACE.charcoal,
               color: '#fff',
               display: 'inline-flex',
+              fontFamily: bodyFont,
               fontSize: 15,
               fontWeight: 600,
               gap: 10,
@@ -1647,6 +1697,7 @@ function TrustSection() {
               <p
                 style={{
                   color: SURFACE.muted,
+                  fontFamily: bodyFont,
                   fontSize: 10,
                   fontWeight: 700,
                   letterSpacing: '.18em',
@@ -1708,17 +1759,17 @@ function ContactSection() {
                 maxWidth: '10.5ch',
               }}
             >
-              Wilt u scherper zien
+              Wilt u zien
               <br />
               <span style={{ color: SURFACE.amber, fontStyle: 'italic', fontWeight: 300 }}>
-                wat nu aandacht vraagt?
+                welke route nu het meest logisch is?
               </span>
             </h2>
           </div>
 
           <div style={{ minWidth: 0, maxWidth: '31rem' }}>
             <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.8, marginBottom: 28 }}>
-              Plan een korte kennismaking. Dan ziet u hoe Verisight signalen vertaalt naar dashboard, samenvatting, rapport en een eerste route voor opvolging.
+              Plan een korte kennismaking. Dan ziet u of Verisight past, welke eerste route logisch is en hoe de output er in uw situatie uit kan zien.
             </p>
 
             <Link
@@ -1728,6 +1779,7 @@ function ContactSection() {
                 background: SURFACE.charcoal,
                 color: '#fff',
                 display: 'inline-flex',
+                fontFamily: bodyFont,
                 fontSize: 15,
                 fontWeight: 600,
                 gap: 10,

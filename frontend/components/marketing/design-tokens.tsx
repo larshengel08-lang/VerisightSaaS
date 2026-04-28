@@ -39,9 +39,21 @@ export function useInView(threshold = 0.12) {
   useEffect(() => {
     const el = ref.current
     if (!el) return
+
+    // If the page restores scroll position or the block is already close to the
+    // viewport on first paint, reveal immediately instead of waiting on the
+    // observer tick.
+    const rect = el.getBoundingClientRect()
+    const vh = window.innerHeight || document.documentElement.clientHeight
+    const alreadyNearViewport = rect.top < vh * 0.96 && rect.bottom > vh * 0.04
+    if (alreadyNearViewport) {
+      setInView(true)
+      return
+    }
+
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect() } },
-      { threshold }
+      { threshold, rootMargin: '0px 0px -6% 0px' }
     )
     obs.observe(el)
     return () => obs.disconnect()

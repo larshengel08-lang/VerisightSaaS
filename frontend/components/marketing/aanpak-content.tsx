@@ -1,10 +1,29 @@
 'use client'
 
 import Link from 'next/link'
-import { T, AC, FF, SHELL, useInView, Reveal, Arrow, SectionMark } from '@/components/marketing/design-tokens'
+import { T, AC, FF, SHELL, Arrow, SectionMark } from '@/components/marketing/design-tokens'
 import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { buildContactHref } from '@/lib/contact-funnel'
 import { approachSteps, included } from '@/components/marketing/site-content'
+
+function Reveal({
+  children,
+  delay = 0,
+  from = 'up' as 'up' | 'right' | 'none',
+}: {
+  children: React.ReactNode
+  delay?: number
+  from?: 'up' | 'right' | 'none'
+}) {
+  return (
+    <div
+      className={`aanpak-reveal aanpak-reveal-${from}`}
+      style={{ ['--aanpak-reveal-delay' as string]: `${delay}s` }}
+    >
+      {children}
+    </div>
+  )
+}
 
 // ── ① Hero ────────────────────────────────────────────────────────
 function HeroSection() {
@@ -14,28 +33,22 @@ function HeroSection() {
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
       <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`, pointerEvents: 'none' }} />
       <div style={{ ...SHELL, position: 'relative' }}>
-        <div style={{ animation: 'slideDownFade .55s cubic-bezier(.16,1,.3,1) .05s both' }}>
-          <SectionMark num="--" label="Aanpak" inView />
-        </div>
+        <SectionMark num="--" label="Aanpak" inView />
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_380px] lg:gap-20 items-start">
           <div>
-            <div style={{ animation: 'slideUpFade .9s cubic-bezier(.16,1,.3,1) .15s both' }}>
-              <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, marginBottom: 0 }}>
-                Van eerste contact<br />
-                <em className="shimmer-text" style={{ fontStyle: 'italic' }}>tot managementinzicht.</em>
-              </h1>
-            </div>
-            <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .32s both' }}>
-              <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 36px' }}>
-                Verisight begeleidt het traject van intake en uitvoering naar dashboard, rapport, bestuurlijke handoff en
-                een eerste Action Center-opvolgafspraak, zonder losse eindes.
-              </p>
-            </div>
-            <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, marginBottom: 0 }}>
+              Van eerste contact<br />
+              <em className="shimmer-text" style={{ fontStyle: 'italic' }}>tot managementinzicht.</em>
+            </h1>
+            <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 36px' }}>
+              Verisight begeleidt het traject van intake en uitvoering naar dashboard, rapport, bestuurlijke handoff en
+              een eerste Action Center-opvolgafspraak, zonder losse eindes.
+            </p>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink, transition: 'all .18s cubic-bezier(.4,0,0,1)' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.background = AC.deep }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.background = T.ink }}>
-              Plan suite-demo <Arrow />
+              Plan een eerste route-inschatting <Arrow />
               </Link>
               <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 500, padding: '11px 27px', color: T.inkSoft, border: `1px solid ${T.rule}`, transition: 'all .18s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T.inkMuted; (e.currentTarget as HTMLElement).style.color = T.ink }}
@@ -44,7 +57,7 @@ function HeroSection() {
               </Link>
             </div>
           </div>
-          <div style={{ animation: 'slideRightFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
+          <div>
             <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 18 }}>Begeleide productvorm</div>
               {[
@@ -68,18 +81,17 @@ function HeroSection() {
 
 // ── ② Process steps ────────────────────────────────────────────────
 function ProcessSection() {
-  const [sRef, sInView] = useInView(.08)
   return (
     <section style={{ background: T.paperSoft, padding: 'clamp(56px,7vw,88px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: FF, fontSize: 260, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: .4 }}>02</div>
-      <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
-        <SectionMark num="02" label="Procesroute" inView={sInView} />
+      <div style={{ ...SHELL, position: 'relative' }}>
+        <SectionMark num="02" label="Procesroute" inView />
         <Reveal delay={.05}>
           <h2 style={{ fontFamily: FF, fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 400, letterSpacing: '-.026em', color: T.ink, marginBottom: 14, lineHeight: 1.06 }}>
             Hoe een traject verloopt.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 44, maxWidth: '48ch' }}>
-            Van eerste gesprek naar de eerste managementread in een ritme dat voorspelbaar genoeg is voor planning en snel genoeg voor momentum.
+            Van eerste gesprek naar een bruikbare eerste managementsamenvatting, in een ritme dat snel genoeg is voor vaart en rustig genoeg voor goede besluitvorming.
           </p>
         </Reveal>
         <div className="grid grid-cols-1 gap-0 md:grid-cols-2 xl:grid-cols-3">
@@ -110,12 +122,11 @@ function ProcessSection() {
 
 // ── ③ Roles ────────────────────────────────────────────────────────
 function RolesSection() {
-  const [sRef, sInView] = useInView(.1)
   return (
     <section style={{ background: T.white, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: FF, fontSize: 260, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: .4 }}>03</div>
-      <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
-        <SectionMark num="03" label="Wat u zelf doet" inView={sInView} />
+      <div style={{ ...SHELL, position: 'relative' }}>
+        <SectionMark num="03" label="Wat u zelf doet" inView />
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 items-start">
           <div>
             <Reveal delay={.05}>
@@ -169,17 +180,16 @@ function RolesSection() {
 
 // ── ④ First value ──────────────────────────────────────────────────
 function FirstValueSection() {
-  const [sRef, sInView] = useInView(.1)
   const items = [
-    { threshold: 'Eerste responses', text: 'Campagne zichtbaar op gang, maar we lezen nog terughoudend.' },
-    { threshold: '≥ 5 responses', text: 'Eerste bruikbare detailweergave in dashboard en rapport.' },
-    { threshold: '≥ 10 responses', text: 'Steviger patroonbeeld voor prioritering en managementduiding.' },
+    { threshold: 'Eerste responses', text: 'De campagne is zichtbaar op gang, maar we trekken nog geen grote conclusies.' },
+    { threshold: '≥ 5 responses', text: 'De eerste bruikbare weergave wordt zichtbaar in dashboard en rapport.' },
+    { threshold: '≥ 10 responses', text: 'Het patroon wordt stevig genoeg om prioriteiten te kiezen en een eerste managementrichting te bepalen.' },
   ]
   return (
     <section style={{ background: T.paperBlush, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: FF, fontSize: 260, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: .35 }}>04</div>
-      <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
-        <SectionMark num="04" label="Eerste waarde" inView={sInView} />
+      <div style={{ ...SHELL, position: 'relative' }}>
+        <SectionMark num="04" label="Eerste waarde" inView />
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[280px_1fr] lg:gap-20 items-start">
           <Reveal delay={.05}>
             <div>
@@ -188,7 +198,7 @@ function FirstValueSection() {
                 <em className="shimmer-text" style={{ fontStyle: 'italic' }}>grenzen.</em>
               </h2>
               <p style={{ fontSize: 13.5, lineHeight: 1.7, color: T.inkSoft }}>
-                First value is snel, maar nooit sneller dan de responsbasis toelaat. De route stopt niet bij het rapport, maar bij een eerste bestuurlijke vervolgbespreking.
+                De eerste waarde komt snel, maar nooit sneller dan de responsbasis toelaat. Het traject stopt niet bij een rapport, maar bij een eerste concreet vervolggesprek.
               </p>
             </div>
           </Reveal>
@@ -217,9 +227,9 @@ function ContactSection() {
     <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
       <div style={{ ...SHELL, maxWidth: 1180 }}>
         <MarketingInlineContactPanel
-          eyebrow="Plan suite-demo"
+          eyebrow="Plan een eerste route-inschatting"
           title="Vertel kort welke managementvraag nu speelt."
-          body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy, prijs en hoe de suite-demo naar een bounded eerste route leidt."
+          body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy, prijs en hoe een eerste route-inschatting naar een bounded eerste route leidt."
           defaultRouteInterest="exitscan"
           defaultCtaSource="approach_form"
         />
@@ -236,6 +246,51 @@ export function AanpakContent() {
       <RolesSection />
       <FirstValueSection />
       <ContactSection />
+      <style>{`
+        .aanpak-reveal {
+          opacity: 1;
+          transform: none;
+        }
+
+        @supports (animation-timeline: view()) {
+          .aanpak-reveal {
+            opacity: 0;
+            animation-duration: .75s;
+            animation-delay: var(--aanpak-reveal-delay, 0s);
+            animation-fill-mode: both;
+            animation-timing-function: cubic-bezier(.16,1,.3,1);
+            animation-timeline: view();
+            animation-range: entry 10% cover 34%;
+          }
+
+          .aanpak-reveal-up {
+            animation-name: aanpakRevealUp;
+          }
+
+          .aanpak-reveal-right {
+            animation-name: aanpakRevealRight;
+          }
+
+          .aanpak-reveal-none {
+            animation-name: aanpakRevealFade;
+          }
+
+          @keyframes aanpakRevealUp {
+            from { opacity: 0; transform: translateY(22px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+
+          @keyframes aanpakRevealRight {
+            from { opacity: 0; transform: translateX(24px); }
+            to { opacity: 1; transform: translateX(0); }
+          }
+
+          @keyframes aanpakRevealFade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+        }
+      `}</style>
     </div>
   )
 }
