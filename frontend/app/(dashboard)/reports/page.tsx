@@ -328,8 +328,9 @@ export default async function ReportsPage({
                   exports of handmatige bundels.
                 </div>
                 <div>
-                  Ga naar campaign detail als een rapport een route-kandidaat
-                  toont; open nog niets direct vanuit deze bibliotheek.
+                  Ga naar campaign detail bij een route-kandidaat. Open
+                  actieve opvolging vanuit deze bibliotheek direct in Action
+                  Center.
                 </div>
               </div>
             </aside>

@@ -31,6 +31,7 @@ describe("reports route shell", () => {
     expect(source).toContain("Ga naar campaign detail");
     expect(source).not.toContain("getReportEntryHref");
     expect(source).not.toContain('entry.bridgeState === "active"');
+    expect(source).not.toContain("open nog niets direct vanuit deze bibliotheek");
   });
 
   it("wires active route truth into the report library model", () => {
