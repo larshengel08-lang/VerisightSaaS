@@ -250,7 +250,7 @@ describe('action center core semantics', () => {
   it('falls back from primary reason truth to existing route context for actionFrame.whyNow and summary-style firstStep', () => {
     const context = buildContext({
       deliveryRecord: buildDeliveryRecord({
-        next_step: null,
+        next_step: 'Plan de eerste bounded opvolgstap met HR.',
         customer_handoff_note: 'De managementread staat klaar voor een eerste bounded follow-through.',
       }),
       dossier: buildDossier({
@@ -268,14 +268,14 @@ describe('action center core semantics', () => {
 
     expect(projectActionCenterCoreSemantics(context)).toMatchObject({
       reviewSemantics: {
-        reviewQuestion: 'Exit follow-through voorjaar',
+        reviewQuestion: 'Plan de eerste bounded opvolgstap met HR.',
       },
       actionFrame: {
-        whyNow: 'De managementread staat klaar voor een eerste bounded follow-through.',
-        firstStep: 'De managementread staat klaar voor een eerste bounded follow-through.',
+        whyNow: 'Exit follow-through voorjaar',
+        firstStep: 'Plan de eerste bounded opvolgstap met HR.',
       },
       resultLoop: {
-        whatWasTried: 'De managementread staat klaar voor een eerste bounded follow-through.',
+        whatWasTried: 'Plan de eerste bounded opvolgstap met HR.',
         whatWeObserved: null,
       },
     })
@@ -305,8 +305,7 @@ describe('action center core semantics', () => {
       },
       resultLoop: {
         whatWasTried: 'Plan een eerste bounded follow-up met de teamlead.',
-        whatWeObserved:
-          'Waar moeten we als management nu als eerste op ingrijpen? Plan een eerste bounded follow-up met de teamlead.',
+        whatWeObserved: null,
       },
     })
   })
@@ -344,5 +343,19 @@ describe('action center core semantics', () => {
     })
 
     expect(projectActionCenterCoreSemantics(context).resultLoop.whatWasDecided).toBe('Bijstellen')
+  })
+
+  it('prefers explicit decision carriers over outcome summary fallback in whatWasDecided', () => {
+    const context = buildContext({
+      dossier: buildDossier({
+        management_action_outcome: null,
+        next_route: 'Vervolg met een bounded teamreview in operations.',
+        case_public_summary: 'De review maakte zichtbaar dat meerdere teams dezelfde frictie herkenden.',
+      }),
+    })
+
+    expect(projectActionCenterCoreSemantics(context).resultLoop.whatWasDecided).toBe(
+      'Vervolg met een bounded teamreview in operations.',
+    )
   })
 })

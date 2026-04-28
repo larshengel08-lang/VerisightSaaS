@@ -85,6 +85,12 @@ function joinReasonAndStep(reason: string | null, step: string | null) {
   return values.join(' ')
 }
 
+function joinExpectedEffectAndStep(expectedEffect: string | null, step: string | null) {
+  const values = [normalizeText(expectedEffect), normalizeText(step)].filter((value): value is string => Boolean(value))
+  if (values.length === 0) return null
+  return values.join(' ')
+}
+
 function getLatestActionUpdate(context: LiveActionCenterCampaignContext) {
   return pickFirst([
     context.learningDossier?.first_action_taken,
@@ -120,23 +126,28 @@ export function projectActionCenterCoreSemantics(
     route.intervention,
   ])
 
-  const reviewQuestion = pickFirst([
+  const primaryReason = pickFirst([
     route.reviewReason,
     context.learningDossier?.buyer_question,
     context.learningDossier?.buying_reason,
     context.learningDossier?.trust_friction,
-    route.outcomeSummary,
+  ])
+
+  const expectedEffectFromReason = joinReasonAndStep(primaryReason, nextStep)
+
+  const reviewQuestion = pickFirst([
+    primaryReason,
+    route.expectedEffect,
+    expectedEffectFromReason,
+    nextStep,
+    joinExpectedEffectAndStep(route.expectedEffect, nextStep),
     context.learningDossier?.title,
     context.campaign.name,
   ])
 
   const whyNow = pickFirst([
-    route.reviewReason,
-    context.learningDossier?.buyer_question,
-    context.learningDossier?.buying_reason,
-    context.learningDossier?.trust_friction,
-    route.outcomeSummary,
-    context.deliveryRecord?.customer_handoff_note,
+    primaryReason,
+    route.expectedEffect,
     context.learningDossier?.title,
     context.campaign.name,
   ])
@@ -157,19 +168,15 @@ export function projectActionCenterCoreSemantics(
     context.learningDossier?.title,
   ])
 
-  const derivedExpectedEffect = joinReasonAndStep(
-    pickFirst([
-      route.reviewReason,
-      context.learningDossier?.buyer_question,
-      context.learningDossier?.buying_reason,
-      context.learningDossier?.trust_friction,
-    ]),
-    nextStep,
-  )
+  const derivedExpectedEffect = expectedEffectFromReason
 
   const expectedEffect = pickFirst([
     route.expectedEffect,
     derivedExpectedEffect,
+  ])
+  const observationFallback = pickFirst([
+    route.expectedEffect,
+    context.learningDossier?.expected_first_value,
   ])
 
   const latestObservation = getLatestObservation(context, route)
@@ -196,15 +203,14 @@ export function projectActionCenterCoreSemantics(
       ]),
       whatWeObserved: pickFirst([
         latestObservation,
-        expectedEffect,
-        context.learningDossier?.expected_first_value,
+        observationFallback,
       ]),
       whatWasDecided: pickFirst([
         getReviewOutcomeLabel(reviewOutcomeVisible),
         normalizeText(context.learningDossier?.management_action_outcome),
-        route.outcomeSummary,
         context.learningDossier?.next_route,
         context.learningDossier?.stop_reason,
+        route.outcomeSummary,
       ]),
     },
     closingSemantics: {
