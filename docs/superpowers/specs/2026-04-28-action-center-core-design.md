@@ -104,6 +104,39 @@ In deze fase krijgt elke route daarom een kleine canonieke review-semantiek met 
 - wat de laatste reviewbeslissing was
 - deze gebruikt de canonieke outcome-taal uit het routecontract
 
+### 5.2 Projectieregel
+
+In deze fase voegen we geen nieuwe review-inputflow toe.
+
+Daarom geldt:
+- `reviewReason` is een canonieke afgeleide presentatielaag
+- `reviewQuestion` is in deze fase ook een canonieke afgeleide presentatielaag
+- alleen `reviewOutcome` is al een volwaardig canoniek routeveld uit de bestaande route-truth
+
+Dat betekent expliciet:
+- `reviewQuestion` is in deze fase nog geen zelfstandig eerste-klas datastoreveld
+- `reviewQuestion` mag niet als vrije tekst per component of per route-type worden bedacht
+- `reviewQuestion` moet altijd uit dezelfde gedeelde projectieregel komen
+
+De projectieregel is:
+
+1. primair uit bestaande review-truth als die al een expliciete reviewvraag of equivalent draagt
+2. anders uit bestaande route-truth die de reviewreden het directst begrenst:
+   - `reviewReason`
+   - bestaande `reason`
+   - bestaande `expectedEffect`
+   - bestaande `nextStep`
+3. anders uit een kleine canonieke templatemap per bestaande routevorm, afgeleid uit dezelfde routewaarheid
+
+Dus:
+- geen vrije UI-copy
+- geen per component bedachte reviewvraag
+- wel een gedeelde afgeleide presentatielaag met vaste fallback
+
+Concreet betekent dat:
+- als de bestaande waarheid al zegt dat de eerste stap een gesprek of lokale correctie is, dan toetst `reviewQuestion` of die stap is uitgevoerd en wat die terugliet zien
+- als de bestaande waarheid vooral een verwacht effect draagt, dan toetst `reviewQuestion` of dat effect zichtbaar, bevestigd of juist niet bevestigd is
+
 ### 5.3 Zichtbaarheid
 
 Deze review-semantiek landt:
@@ -122,6 +155,24 @@ Deze fase gebruikt dezelfde compacte `reviewOutcome`-laag als in het routecontra
 - `stoppen`
 
 In deze fase wordt `opschalen` nog niet actief zichtbaar gemaakt als afsluit- of route-uitkomst in de UI, ook al kan die latere productlaag bestaan in het masterplan.
+
+### 5.5 Tijdelijke UI-regel voor `opschalen`
+
+De onderliggende route-truth kan `reviewOutcome = opschalen` al wel dragen.
+
+In deze fase is de tijdelijke renderingregel:
+- detail en landing tonen `opschalen` nog niet als aparte zichtbare uitkomsttaal
+- de UI projecteert `opschalen` tijdelijk als `bijstellen` in de zichtbare review-uitkomstlaag
+- de route blijft wel technisch dezelfde onderliggende outcome-waarheid dragen
+
+Reden:
+- `opschalen` krijgt later een eigen producttaal
+- in deze fase houden we de zichtbare semantiek compact
+- implementatie mag dus niet per component zelf kiezen tussen verbergen, herlabelen of uitzonderen
+
+Er is in deze fase dus een expliciete globale fallback:
+- `opschalen` in truth
+- `bijstellen` in zichtbare UI-semantiek
 
 ## 6. Klein Canoniek Actieframe
 
@@ -166,6 +217,30 @@ De canonieke projectie wordt afgeleid uit bestaande waarheid zoals:
 
 Maar de UI toont die waarheid niet langer als losse platte tekst, alleen nog via dit compacte actieframe.
 
+De fallback-volgorde is:
+
+`waaromNu`
+1. primair uit bestaande `reason`
+2. anders uit bestaande `summary`
+3. anders uit bestaande `title`
+
+`eersteStap`
+1. primair uit bestaande `nextStep`
+2. anders uit de meest expliciete vervolgactie in bestaande route- of dossiertruth
+3. anders uit bestaande `summary` als daar al een concrete stapformulering in zit
+
+`eigenaar`
+1. primair uit bestaande canonieke owner truth
+2. anders uit bestaande owner label / owner name projectie
+3. anders expliciet als onbelegd labelen in plaats van vrije fallback-copy
+
+`verwachtEffect`
+1. primair uit bestaande `expectedEffect` als die onderliggende truth al bestaat
+2. anders uit bestaande `expected_first_value`
+3. anders afgeleid uit de combinatie van `reason` + `nextStep` via een gedeelde templatemap
+
+Deze volgorde moet gedeeld blijven over landing en detail. Geen component mag hier lokaal van afwijken.
+
 ## 7. Mini-resultaatlus
 
 ### 7.1 Doel
@@ -192,6 +267,30 @@ De mini-resultaatlus verschijnt:
 - niet als groot historieblok op de landing
 
 Landing mag hooguit impliciet samenvatten dat er een recente reviewuitkomst of voortgang is, maar niet de hele lus uitspreiden.
+
+### 7.4 Projectieregel
+
+Ook de mini-resultaatlus krijgt een vaste fallback-volgorde.
+
+`wat is geprobeerd`
+1. primair uit de meest recente expliciete update of route-actie die een uitgevoerde stap beschrijft
+2. anders uit bestaande `nextStep` als er nog geen rijkere update-truth is
+3. anders uit het canonieke `eersteStap` uit het actieframe
+
+`wat zagen we terug`
+1. primair uit de meest recente expliciete update, reviewnotitie of route-outcome truth die een waarneming of effect beschrijft
+2. anders uit bestaande `expectedEffect` / `expected_first_value` als tijdelijke toetslaag
+3. anders leeg laten in plaats van vrije interpretatieve copy toevoegen
+
+`wat is besloten`
+1. primair uit bestaande `reviewOutcome`
+2. anders uit bestaande `management_action_outcome`
+3. anders uit de meest recente expliciete route-update die een duidelijke vervolgbeslissing draagt
+
+Belangrijke regel:
+- de resultaatlus mag compacter worden weergegeven
+- maar de inhoud mag niet per component opnieuw worden geïnterpreteerd
+- dezelfde route-truth moet dus altijd tot dezelfde mini-resultaatlus leiden
 
 ## 8. Kleine Afsluitlogica
 
@@ -296,6 +395,7 @@ Wat niet mag:
 - per tab of per component losse afleidregels verzinnen
 - reviewbetekenis in de landing anders interpreteren dan in detail
 - actietaal per surface opnieuw formuleren zonder canonieke projectie
+- `reviewQuestion` of resultaatregels als vrije copy per route renderen zonder gedeelde fallback-logica
 
 ## 12. UX-risicos
 
