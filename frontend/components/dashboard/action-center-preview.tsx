@@ -101,6 +101,8 @@ const DUTCH_LONG_DATE = new Intl.DateTimeFormat('nl-NL', {
   year: 'numeric',
 })
 
+const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
+
 function formatShortDate(value: string | null) {
   if (!value) return 'Nog niet gepland'
 
@@ -125,6 +127,18 @@ function getInitials(name: string | null) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('')
+}
+
+export function getOwnerDisplayName(ownerName: string | null) {
+  return ownerName ?? UNASSIGNED_OWNER_LABEL
+}
+
+export function getReviewOwnerDisplayName(reviewOwnerName: string | null) {
+  return reviewOwnerName ?? UNASSIGNED_OWNER_LABEL
+}
+
+export function getTeamManagerDisplayName(managerName: string | null) {
+  return managerName ?? UNASSIGNED_OWNER_LABEL
 }
 
 function getPriorityMeta(priority: ActionCenterPreviewPriority) {
@@ -258,7 +272,7 @@ function getViewCopy(view: ActionCenterPreviewView, selectedTitle: string | null
   }
 }
 
-function buildTeamRows(items: ActionCenterPreviewItem[], fallbackOwnerName: string) {
+function buildTeamRows(items: ActionCenterPreviewItem[]) {
   const rows = new Map<
     string,
     {
@@ -311,10 +325,7 @@ function buildTeamRows(items: ActionCenterPreviewItem[], fallbackOwnerName: stri
   return [...rows.values()].sort((left, right) => {
     if (right.openActions !== left.openActions) return right.openActions - left.openActions
     return left.label.localeCompare(right.label)
-  }).map((row) => ({
-    ...row,
-    fallbackOwnerName,
-  }))
+  })
 }
 
 export function ActionCenterPreview({
@@ -400,7 +411,7 @@ export function ActionCenterPreview({
     () => new Map(assignmentOptions.map((option) => [option.value, option.label])),
     [assignmentOptions],
   )
-  const teamRows = buildTeamRows(items, fallbackOwnerName)
+  const teamRows = buildTeamRows(items)
   const selectedTeam = teamRows.find((team) => team.id === selectedTeamId) ?? teamRows[0] ?? null
   const allSources = [...new Set(items.map((item) => item.sourceLabel))]
   const today = new Date()
@@ -839,7 +850,7 @@ export function ActionCenterPreview({
                                 <MiniTag>{item.sourceLabel}</MiniTag>
                                 <span>{item.teamLabel}</span>
                                 <span className="text-[#b2a496]">/</span>
-                                <span>{item.ownerName ?? fallbackOwnerName}</span>
+                                <span>{getOwnerDisplayName(item.ownerName)}</span>
                               </div>
                               <h3 className="mt-3 text-[1.15rem] font-semibold tracking-[-0.02em] text-[#132033]">{item.title}</h3>
                               <p className="mt-2 max-w-[44rem] text-[0.98rem] leading-7 text-[#4f6175]">{item.summary}</p>
@@ -869,7 +880,7 @@ export function ActionCenterPreview({
 
                     <div className="mt-6 space-y-4 border-t border-white/10 pt-6">
                       <FocusSummaryRow label="Afdeling" value={focusItem?.teamLabel ?? 'Nog niet zichtbaar'} />
-                      <FocusSummaryRow label="Eigenaar" value={focusItem?.ownerName ?? fallbackOwnerName} />
+                      <FocusSummaryRow label="Eigenaar" value={getOwnerDisplayName(focusItem?.ownerName ?? null)} />
                       <FocusSummaryRow label="Bron" value={focusItem?.sourceLabel ?? 'Action Center'} />
                       <FocusSummaryRow label="Volgende review" value={focusItem?.reviewDateLabel ?? earliestReview} />
                     </div>
@@ -940,9 +951,9 @@ export function ActionCenterPreview({
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="text-[1.02rem] font-semibold leading-7 text-[#132033]">{item.title}</p>
-                              <p className="mt-1 text-sm text-[#6d6458]">
-                                {item.ownerName ?? fallbackOwnerName} / {item.reviewRhythm}
-                              </p>
+                                <p className="mt-1 text-sm text-[#6d6458]">
+                                  {getOwnerDisplayName(item.ownerName)} / {item.reviewRhythm}
+                                </p>
                             </div>
                             <div className="hidden text-right text-sm text-[#8b8174] xl:block">
                               <p>{item.teamLabel}</p>
@@ -1049,10 +1060,10 @@ export function ActionCenterPreview({
                     <div className="rounded-[28px] bg-[#182231] px-6 py-6 text-white shadow-[0_22px_54px_rgba(19,32,51,0.2)]">
                       <div className="flex items-center gap-4">
                         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/8 text-xl font-semibold">
-                          {getInitials(selectedTeam?.currentManagerName ?? fallbackOwnerName)}
+                          {getInitials(getTeamManagerDisplayName(selectedTeam?.currentManagerName ?? null))}
                         </div>
                         <div>
-                          <p className="text-xl font-semibold">{selectedTeam?.currentManagerName ?? fallbackOwnerName}</p>
+                          <p className="text-xl font-semibold">{getTeamManagerDisplayName(selectedTeam?.currentManagerName ?? null)}</p>
                           <p className="mt-1 text-sm text-white/58">Manager - {selectedTeam?.label ?? 'Adminroute'}</p>
                         </div>
                       </div>
@@ -1186,11 +1197,11 @@ export function ActionCenterPreview({
                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Behandelroute</p>
                         <div className="mt-5 flex items-center gap-4">
                           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/8 text-xl font-semibold">
-                            {getInitials(selectedItem.ownerName ?? fallbackOwnerName)}
+                            {getInitials(getOwnerDisplayName(selectedItem.ownerName))}
                           </div>
                           <div>
                             <p className="text-[1.45rem] font-semibold tracking-[-0.03em]">
-                              {selectedItem.ownerName ?? fallbackOwnerName}
+                              {getOwnerDisplayName(selectedItem.ownerName)}
                             </p>
                             <p className="mt-1 text-sm text-white/58">{selectedItem.ownerRole}</p>
                           </div>
@@ -1224,7 +1235,7 @@ export function ActionCenterPreview({
                           <LabelValue label="Streefdatum" value={selectedItem.reviewDateLabel} />
                           <LabelValue label="Volgende review" value={formatLongDate(selectedItem.reviewDate)} />
                           <LabelValue label="Reviewritme" value={selectedItem.reviewRhythm} />
-                          <LabelValue label="Review-eigenaar" value={selectedItem.reviewOwnerName ?? fallbackOwnerName} />
+                          <LabelValue label="Review-eigenaar" value={getReviewOwnerDisplayName(selectedItem.reviewOwnerName)} />
                         </dl>
                       </div>
 
@@ -1510,12 +1521,12 @@ export function ActionCenterPreview({
                       </h2>
                       <p className="mt-4 text-[0.98rem] leading-8 text-white/72">
                         {selectedTeam
-                          ? `Voor ${selectedTeam.label} blijft ${selectedTeam.currentManagerName ?? fallbackOwnerName} nu de belangrijkste eigenaar in beeld.`
+                          ? `Voor ${selectedTeam.label} blijft ${getTeamManagerDisplayName(selectedTeam.currentManagerName)} nu de belangrijkste eigenaar in beeld.`
                           : 'Kies een team om de ownership-context te lezen.'}
                       </p>
 
                       <div className="mt-6 space-y-4 border-t border-white/10 pt-6">
-                        <FocusSummaryRow label="Manager" value={selectedTeam?.currentManagerName ?? fallbackOwnerName} />
+                        <FocusSummaryRow label="Manager" value={getTeamManagerDisplayName(selectedTeam?.currentManagerName ?? null)} />
                         <FocusSummaryRow label="Open acties" value={`${selectedTeam?.openActions ?? 0}`} />
                         <FocusSummaryRow label="Reviews < 7 dagen" value={`${selectedTeam?.reviewSoonCount ?? 0}`} />
                         <FocusSummaryRow label="Mensen" value={`${selectedTeam?.peopleCount ?? 0}`} />
@@ -1523,10 +1534,10 @@ export function ActionCenterPreview({
                     </div>
 
                     <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Fallback-eigenaar</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Werkruimte</p>
                       <h3 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">{fallbackOwnerName}</h3>
                       <p className="mt-3 text-sm leading-7 text-[#4f6175]">
-                        Als geen manager is toegewezen, valt eigenaarschap hier terug op Verisight beheer.
+                        On toegewezen eigenaarschap blijft zichtbaar als nog niet toegewezen; deze naam laat alleen zien wie de werkruimte nu geopend heeft.
                       </p>
                       <div className="mt-5 space-y-4">
                         <SummaryRow label="Toegewezen" value={`${ownerCoverageCount} van ${teamRows.length}`} />
@@ -1586,7 +1597,7 @@ export function ActionCenterPreview({
                                   <MiniTag>{item.sourceLabel}</MiniTag>
                                   <span>{getPriorityMeta(item.priority).label}</span>
                                   <span className="text-[#b2a496]">/</span>
-                                  <span>{item.ownerName ?? fallbackOwnerName}</span>
+                                  <span>{getOwnerDisplayName(item.ownerName)}</span>
                                 </div>
                                 <p className="mt-3 text-[1.08rem] font-semibold tracking-[-0.02em] text-[#132033]">{item.title}</p>
                                 <p className="mt-2 text-sm text-[#5d6f84]">
@@ -1605,11 +1616,11 @@ export function ActionCenterPreview({
                         <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Teamverantwoordelijke</p>
                         <div className="mt-5 flex items-center gap-4">
                           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/8 text-xl font-semibold">
-                            {getInitials(selectedTeam.currentManagerName ?? fallbackOwnerName)}
+                            {getInitials(getTeamManagerDisplayName(selectedTeam.currentManagerName))}
                           </div>
                           <div>
                             <p className="text-[1.4rem] font-semibold tracking-[-0.03em]">
-                              {selectedTeam.currentManagerName ?? fallbackOwnerName}
+                              {getTeamManagerDisplayName(selectedTeam.currentManagerName)}
                             </p>
                             <p className="mt-1 text-sm text-white/58">Manager - {selectedTeam.label}</p>
                           </div>
