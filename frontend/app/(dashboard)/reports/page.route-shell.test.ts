@@ -23,4 +23,11 @@ describe("reports route shell", () => {
     expect(source).toContain("Eerst bespreken");
     expect(source).not.toContain("download center");
   });
+
+  it("never offers direct route-open from reports for a candidate", () => {
+    const source = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
+
+    expect(source).toContain("Ga naar campaign detail");
+    expect(source).not.toContain("optional secondary `Open in Action Center`");
+  });
 });

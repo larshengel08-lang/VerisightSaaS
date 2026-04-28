@@ -11,6 +11,7 @@ import {
   filterReportLibraryEntries,
   type ReportLibraryCategory,
 } from "@/lib/dashboard/report-library";
+import { getHrBridgePresentation } from "@/lib/dashboard/hr-bridge-state";
 import { SuiteAccessDenied } from "@/components/dashboard/suite-access-denied";
 import { createClient } from "@/lib/supabase/server";
 import { loadSuiteAccessContext } from "@/lib/suite-access-server";
@@ -231,55 +232,74 @@ export default async function ReportsPage({
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr),300px]">
             <div className="space-y-3">
               {filteredEntries.map((entry) => (
-                <article
-                  key={entry.campaignId}
-                  className={`rounded-[28px] border px-4 py-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)] sm:px-5 sm:py-5 ${
-                    entry.recommended
-                      ? "border-[color:var(--dashboard-accent-soft-border)] bg-[linear-gradient(180deg,rgba(230,245,240,0.9),rgba(244,250,247,0.96))]"
-                      : "border-[color:var(--dashboard-frame-border)] bg-white/82"
-                  }`}
-                >
-                  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr),160px,auto] xl:items-start">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
-                          {entry.categoryLabel}
-                        </p>
-                        {entry.recommended ? (
-                          <DashboardChip
-                            label="Eerst bespreken"
-                            tone="emerald"
+                (() => {
+                  const bridge = getHrBridgePresentation({
+                    bridgeState: entry.bridgeState,
+                    surface: "reports",
+                  });
+
+                  return (
+                    <article
+                      key={entry.campaignId}
+                      className={`rounded-[28px] border px-4 py-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)] sm:px-5 sm:py-5 ${
+                        entry.recommended
+                          ? "border-[color:var(--dashboard-accent-soft-border)] bg-[linear-gradient(180deg,rgba(230,245,240,0.9),rgba(244,250,247,0.96))]"
+                          : "border-[color:var(--dashboard-frame-border)] bg-white/82"
+                      }`}
+                    >
+                      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr),160px,auto] xl:items-start">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+                              {entry.categoryLabel}
+                            </p>
+                            {entry.recommended ? (
+                              <DashboardChip
+                                label="Eerst bespreken"
+                                tone="emerald"
+                              />
+                            ) : null}
+                          </div>
+                          <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+                            {entry.title}
+                          </h3>
+                          <p className="mt-2 max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]">
+                            {entry.summary}
+                          </p>
+                          <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#8b7d6b]">
+                            {bridge.label}
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-[#5e6b78]">
+                            {bridge.body}
+                          </p>
+                        </div>
+
+                        <div className="grid gap-1.5 text-sm text-[color:var(--dashboard-text)] xl:justify-items-end xl:pt-1 xl:text-right">
+                          <p>{entry.metaLeft}</p>
+                          <p>{entry.metaRight}</p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 xl:self-start xl:justify-end">
+                          <Link
+                            href={
+                              entry.bridgeState === "active"
+                                ? "/action-center"
+                                : `/campaigns/${entry.campaignId}`
+                            }
+                            className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:border-[#d6e4e8] hover:bg-white"
+                          >
+                            {bridge.ctaLabel}
+                          </Link>
+                          <PdfDownloadButton
+                            campaignId={entry.campaignId}
+                            campaignName={entry.campaignName}
+                            scanType={entry.scanType}
                           />
-                        ) : null}
+                        </div>
                       </div>
-                      <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
-                        {entry.title}
-                      </h3>
-                      <p className="mt-2 max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]">
-                        {entry.summary}
-                      </p>
-                    </div>
-
-                    <div className="grid gap-1.5 text-sm text-[color:var(--dashboard-text)] xl:justify-items-end xl:pt-1 xl:text-right">
-                      <p>{entry.metaLeft}</p>
-                      <p>{entry.metaRight}</p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2 xl:self-start xl:justify-end">
-                      <Link
-                        href={`/campaigns/${entry.campaignId}`}
-                        className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:border-[#d6e4e8] hover:bg-white"
-                      >
-                        Open rapportread
-                      </Link>
-                      <PdfDownloadButton
-                        campaignId={entry.campaignId}
-                        campaignName={entry.campaignName}
-                        scanType={entry.scanType}
-                      />
-                    </div>
-                  </div>
-                </article>
+                    </article>
+                  );
+                })()
               ))}
             </div>
 
@@ -299,8 +319,8 @@ export default async function ReportsPage({
                   exports of handmatige bundels.
                 </div>
                 <div>
-                  Gebruik eerst dashboard en campagnedetail als het beeld nog
-                  niet stevig genoeg is om als rapport te delen.
+                  Ga naar campaign detail als een rapport een route-kandidaat
+                  toont; open nog niets direct vanuit deze bibliotheek.
                 </div>
               </div>
             </aside>

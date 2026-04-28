@@ -1,4 +1,5 @@
 import { FIRST_DASHBOARD_THRESHOLD } from '@/lib/response-activation'
+import { buildBridgeAssessmentTruth, resolveHrBridgeState } from '@/lib/dashboard/hr-bridge-state'
 import { SCAN_TYPE_LABELS, getCampaignAverageSignalScore, type CampaignStats, type ScanType } from '@/lib/types'
 
 export type ReportLibraryCategory = 'all' | 'management' | 'module' | 'cohort'
@@ -14,6 +15,7 @@ export interface ReportLibraryEntry {
   metaLeft: string
   metaRight: string
   recommended: boolean
+  bridgeState: 'attention' | 'candidate' | 'active'
 }
 
 export interface FeaturedReportEntry {
@@ -67,11 +69,11 @@ function getEntrySummary(campaign: CampaignStats, category: Exclude<ReportLibrar
   const signalText = signalDisplay !== null ? `${signalDisplay.toFixed(1)}/10 signaal` : 'signaal volgt na voldoende respons'
 
   if (category === 'management') {
-    return `${SCAN_TYPE_LABELS[campaign.scan_type]} voor eerste managementduiding, handoff en reviewmoment.`
+    return `${SCAN_TYPE_LABELS[campaign.scan_type]} voor eerste samenvatting, vervolgstap en reviewmoment.`
   }
 
   if (category === 'cohort') {
-    return `${SCAN_TYPE_LABELS[campaign.scan_type]} als bounded cohortread, met nadruk op checkpointduiding en opvolging.`
+    return `${SCAN_TYPE_LABELS[campaign.scan_type]} als cohortoverzicht, met nadruk op checkpoint en opvolging.`
   }
 
   return `${SCAN_TYPE_LABELS[campaign.scan_type]} als verdiepende modulelaag, met ${signalText.toLowerCase()}.`
@@ -118,6 +120,15 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
 
   const entries: ReportLibraryEntry[] = readyCampaigns.map((campaign) => {
     const category = getCategory(campaign.scan_type)
+    const isReportReady = campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD
+    const assessment = buildBridgeAssessmentTruth({
+      sourceType: 'report',
+      sourceId: campaign.campaign_id,
+      signalReadable: isReportReady,
+      managementMeaningClear: isReportReady,
+      plausibleFollowUpExists: isReportReady,
+      assessedAt: campaign.created_at,
+    })
 
     return {
       campaignId: campaign.campaign_id,
@@ -130,6 +141,10 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
       metaLeft: `${campaign.total_completed} responses`,
       metaRight: formatDutchDate(campaign.created_at),
       recommended: featuredCandidate?.campaign_id === campaign.campaign_id,
+      bridgeState: resolveHrBridgeState({
+        routeEntryStage: null,
+        assessment,
+      }),
     }
   })
 
@@ -143,7 +158,7 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
           `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} ${formatDutchQuarter(featuredCandidate.created_at)}`,
         subtitle: `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} · ${formatDutchQuarter(featuredCandidate.created_at)}`,
         description:
-          'Gebruik dit rapport als eerste boardroom-ready handoff: wat speelt nu, wat vraagt verificatie en welke eigenaar, eerste stap en reviewmoment moeten daarna expliciet worden vastgelegd.',
+          'Gebruik dit rapport als eerste samenvatting: wat speelt nu, wat vraagt verificatie en welke eigenaar, eerste stap en reviewmoment horen daarna vastgelegd te worden.',
         stats: [
           { label: 'Responses', value: String(featuredCandidate.total_completed) },
           {
