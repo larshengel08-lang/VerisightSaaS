@@ -64,6 +64,18 @@ const suiteFlowPoints = [
   },
 ]
 
+const suiteSignalMetrics = [
+  ['Vertreksignaal', '12%', '+1.4 pp'],
+  ['Betrokkenheid', '7,4', 'Stabiel'],
+  ['Behoudssignaal 12 mnd', '+3,1', 'Positieve richting'],
+] as const
+
+const suitePriorityRows = [
+  ['01', 'Groei en ontwikkeling blijft achter', 'Operations en Finance', 'Direct', SURFACE.amberSoft, SURFACE.amber],
+  ['02', 'Werkdruk loopt op', 'Piekperiode in Operations', 'Verhoogd', '#f1dfcf', '#9a5b19'],
+  ['03', 'Loopbaanperspectief blijft achter', 'Organisatiebreed signaal', 'Aandacht', SURFACE.tealSoft, SURFACE.teal],
+] as const
+
 const routeCards = [
   {
     index: '01',
@@ -707,7 +719,6 @@ function SuitePreviewSection() {
               {suiteFlowPoints.map((item, index) => (
                 <Reveal key={item.index} delay={0.12 + index * 0.06}>
                   <div
-                  key={item.index}
                   style={{
                     borderBottom: `1px solid ${SURFACE.border}`,
                     display: 'grid',
@@ -731,7 +742,7 @@ function SuitePreviewSection() {
             <Reveal delay={0.08} from="right">
               <div className="suite-motion-shell">
               <div className="suite-phase-tabs" aria-label="Visual flow">
-                {['Signalen', 'Prioriteit', 'Opvolging'].map((phase, index) => (
+                {['Zien', 'Prioriteren', 'Handelen'].map((phase, index) => (
                   <span key={phase} className={`suite-phase-tab suite-phase-tab-${index + 1}`}>
                     {phase}
                   </span>
@@ -767,68 +778,27 @@ function SuitePreviewSection() {
                         </div>
 
                         <div className="suite-metrics-grid">
-                          <OutputMetric label="Vertreksignaal" value="12%" body="+1.4 pp" />
-                          <OutputMetric label="Betrokkenheid" value="7,4" body="Stabiel" />
-                          <OutputMetric label="Behoudssignaal 12 mnd" value="+3,1" body="Positieve richting" />
-                        </div>
-
-                        <div className="suite-phase-list">
-                          {[
-                            ['01', 'Groei en ontwikkeling blijft achter', 'Operations en Finance', 'Direct', SURFACE.amberSoft, SURFACE.amber],
-                            ['02', 'Werkdruk loopt op', 'Piekperiode in Operations', 'Verhoogd', '#f1dfcf', '#9a5b19'],
-                            ['03', 'Loopbaanperspectief blijft achter', 'Organisatiebreed signaal', 'Aandacht', SURFACE.tealSoft, SURFACE.teal],
-                          ].map(([index, title, body, badge, bg, color]) => (
-                            <div key={title} className="suite-list-row">
-                              <span className="suite-list-index">{index}</span>
-                              <div>
-                                <p className="suite-list-title">{title}</p>
-                                <p className="suite-list-body">{body}</p>
-                              </div>
-                              <span className="suite-list-badge" style={{ background: String(bg), color: String(color) }}>
-                                {badge}
-                              </span>
-                            </div>
+                          {suiteSignalMetrics.map(([label, value, body]) => (
+                            <OutputMetric key={label} label={label} value={value} body={body} />
                           ))}
                         </div>
                       </section>
 
                       <section className="suite-motion-screen suite-motion-screen-prioritize">
                         <div className="suite-screen-head">
-                          <p className="suite-phase-eyebrow">Finance Department</p>
+                          <p className="suite-phase-eyebrow">Eerste prioriteiten</p>
                           <span className="suite-phase-chip suite-phase-chip-teal">Prioriteren</span>
                         </div>
 
-                        <div className="suite-priority-spotlight">
-                          <div>
-                            <p className="suite-priority-title">Van breed signaal naar eerste prioriteit.</p>
-                            <p className="suite-priority-theme">Leren &amp; ontwikkeling</p>
-                            <p className="suite-priority-copy">
-                              Binnen Finance komt dit signaal het sterkst terug. Daarom wordt dit het eerste gesprekspunt voor management.
-                            </p>
-                          </div>
-
-                          <div className="suite-priority-note">
-                            <div className="suite-priority-note-row">
-                              <span>Afdeling</span>
-                              <strong>Finance</strong>
-                            </div>
-                            <div className="suite-priority-note-row">
-                              <span>Signaal</span>
-                              <strong>Ontwikkelkansen blijven achter</strong>
-                            </div>
-                            <div className="suite-priority-note-row">
-                              <span>Volgorde</span>
-                              <strong>Eerste bespreking in MT</strong>
-                            </div>
-                          </div>
+                        <div className="suite-prioritize-intro">
+                          <p className="suite-priority-title">Van eerste signalen naar wat nu eerst telt.</p>
+                          <p className="suite-priority-copy">
+                            Dezelfde signalen worden teruggebracht tot een eerste, tweede en derde prioriteit.
+                          </p>
                         </div>
 
                         <div className="suite-priority-ladder">
-                          {[
-                            ['01', 'Groei en ontwikkeling blijft achter', 'Operations en Finance', 'Direct', SURFACE.amberSoft, SURFACE.amber],
-                            ['02', 'Werkdruk loopt op', 'Piekperiode in Operations', 'Verhoogd', '#f1dfcf', '#9a5b19'],
-                            ['03', 'Loopbaanperspectief blijft achter', 'Organisatiebreed signaal', 'Aandacht', SURFACE.tealSoft, SURFACE.teal],
-                          ].map(([index, title, body, badge, bg, color]) => (
+                          {suitePriorityRows.map(([index, title, body, badge, bg, color]) => (
                             <div key={`${index}-${title}`} className={`suite-ladder-row ${index === '01' ? 'suite-ladder-row-active' : ''}`}>
                               <span className="suite-list-index">{index}</span>
                               <div>
@@ -894,7 +864,7 @@ function SuitePreviewSection() {
 
         <style>{`
           .suite-motion-shell {
-            --suite-window-height: 592px;
+            --suite-window-height: 516px;
             --suite-cycle-duration: 9s;
             position: relative;
           }
@@ -954,7 +924,7 @@ function SuitePreviewSection() {
             background: rgba(255, 251, 247, 0.72);
             border: 1px solid ${SURFACE.borderSoft};
             box-shadow: 0 34px 78px rgba(19, 32, 51, 0.08);
-            padding: 18px;
+            padding: 16px;
             position: relative;
             z-index: 1;
           }
@@ -1021,7 +991,7 @@ function SuitePreviewSection() {
             flex: 0 0 var(--suite-window-height);
             height: var(--suite-window-height);
             overflow: hidden;
-            padding: 22px 24px 24px;
+            padding: 20px 22px 22px;
           }
 
           .suite-motion-screen-prioritize {
@@ -1081,7 +1051,7 @@ function SuitePreviewSection() {
           }
 
           .suite-phase-title {
-            margin: 18px 0 22px;
+            margin: 16px 0 18px;
           }
 
           .suite-phase-title p,
@@ -1104,7 +1074,7 @@ function SuitePreviewSection() {
             display: grid;
             gap: 8px;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            margin-bottom: 10px;
+            margin-bottom: 0;
           }
 
           .suite-phase-list,
@@ -1164,75 +1134,26 @@ function SuitePreviewSection() {
             text-transform: uppercase;
           }
 
-          .suite-priority-spotlight {
-            align-items: stretch;
-            background: rgba(255, 252, 249, 0.88);
-            border: 1px solid ${SURFACE.border};
-            box-shadow: 0 24px 42px rgba(19, 32, 51, 0.06);
-            display: grid;
-            gap: 14px;
-            grid-template-columns: minmax(0, 1.08fr) minmax(196px, 0.72fr);
-            margin-top: 12px;
-            padding: 16px 16px 18px;
-          }
-
           .suite-priority-title {
             color: ${SURFACE.ink};
             font-family: ${displayFont};
-            font-size: clamp(1.86rem, 2.5vw, 2.18rem);
+            font-size: clamp(1.88rem, 2.4vw, 2.2rem);
             letter-spacing: -0.04em;
             line-height: 0.98;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             max-width: 11ch;
-          }
-
-          .suite-priority-theme {
-            color: ${SURFACE.teal};
-            font-family: ${bodyFont};
-            font-size: 12px;
-            font-weight: 700;
-            letter-spacing: 0.16em;
-            margin-bottom: 10px;
-            text-transform: uppercase;
           }
 
           .suite-priority-copy {
             color: ${SURFACE.text};
             font-family: ${bodyFont};
-            font-size: 14.5px;
-            line-height: 1.68;
-            max-width: 27ch;
-          }
-
-          .suite-priority-note {
-            background: ${SURFACE.tealSoft};
-            display: grid;
-            gap: 10px;
-            padding: 16px 16px 18px;
-          }
-
-          .suite-priority-note-row {
-            align-items: baseline;
-            display: flex;
-            gap: 16px;
-            justify-content: space-between;
-          }
-
-          .suite-priority-note-row span {
-            color: ${SURFACE.teal};
-            font-family: ${bodyFont};
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-          }
-
-          .suite-priority-note-row strong {
-            color: ${SURFACE.ink};
-            font-family: ${bodyFont};
             font-size: 14px;
-            font-weight: 600;
-            text-align: right;
+            line-height: 1.66;
+            max-width: 34ch;
+          }
+
+          .suite-prioritize-intro {
+            margin: 12px 0 16px;
           }
 
           .suite-action-panel {
@@ -1241,7 +1162,7 @@ function SuitePreviewSection() {
             box-shadow: 0 24px 42px rgba(19, 32, 51, 0.06);
             box-sizing: border-box;
             height: 100%;
-            padding: 22px 22px 24px;
+            padding: 20px 20px 22px;
           }
 
           .suite-action-title {
@@ -1389,21 +1310,16 @@ function SuitePreviewSection() {
 
           @media (max-width: 1180px) {
             .suite-motion-shell {
-              --suite-window-height: 560px;
-            }
-
-            .suite-priority-spotlight {
-              grid-template-columns: 1fr;
+              --suite-window-height: 500px;
             }
           }
 
           @media (max-width: 820px) {
             .suite-motion-shell {
-              --suite-window-height: 620px;
+              --suite-window-height: 560px;
             }
 
-            .suite-metrics-grid,
-            .suite-priority-spotlight {
+            .suite-metrics-grid {
               grid-template-columns: 1fr;
             }
 
