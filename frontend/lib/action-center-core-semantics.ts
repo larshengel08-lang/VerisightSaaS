@@ -66,6 +66,33 @@ const DECISION_ONLY_ACTION_TEXTS = new Set([
   'afronden',
   'stoppen',
 ])
+const ACTION_STEP_PREFIXES = new Set([
+  'plan',
+  'leg',
+  'bevestig',
+  'kies',
+  'maak',
+  'zet',
+  'start',
+  'bespreek',
+  'neem',
+  'stem',
+  'deel',
+  'werk',
+  'rond',
+  'stop',
+  'onderzoek',
+  'borg',
+  'vraag',
+  'mail',
+  'bel',
+  'organiseer',
+  'herplan',
+  'corrigeer',
+  'check',
+  'koppel',
+  'vervolg',
+])
 
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
@@ -111,6 +138,19 @@ function normalizeAttemptText(value: string | null | undefined) {
   return DECISION_ONLY_ACTION_TEXTS.has(normalized.toLocaleLowerCase('nl-NL')) ? null : normalized
 }
 
+function readsLikeActionStep(value: string | null | undefined) {
+  const normalized = normalizeText(value)
+  if (!normalized) return false
+
+  const lower = normalized.toLocaleLowerCase('nl-NL')
+  if (DECISION_ONLY_ACTION_TEXTS.has(lower) || lower.endsWith('?')) {
+    return false
+  }
+
+  const firstWord = lower.split(/\s+/, 1)[0] ?? ''
+  return ACTION_STEP_PREFIXES.has(firstWord)
+}
+
 function getRawManagementActionOutcomeText(outcome: ActionCenterReviewOutcome | string | null | undefined) {
   const normalized = normalizeText(outcome)
   if (!normalized || normalized === 'geen-uitkomst') {
@@ -126,6 +166,7 @@ function getDecisionText(args: {
   nextRoute?: string | null
   stopReason?: string | null
   outcomeSummary?: string | null
+  latestVisibleUpdateNote?: string | null
 }) {
   return pickFirst([
     getReviewOutcomeLabel(args.reviewOutcomeVisible),
@@ -133,6 +174,7 @@ function getDecisionText(args: {
     args.nextRoute,
     args.stopReason,
     args.outcomeSummary,
+    args.latestVisibleUpdateNote,
   ])
 }
 
@@ -318,6 +360,7 @@ export function projectActionCenterPreviewCoreSemantics(
     reviewOutcomeVisible,
     managementActionOutcomeText: getRawManagementActionOutcomeText(input.reviewOutcome),
     outcomeSummary: route.outcomeSummary,
+    latestVisibleUpdateNote,
   })
   const closingStatus = getPreviewClosingStatus(route.routeStatus)
 
@@ -410,9 +453,12 @@ export function projectActionCenterCoreSemantics(
     nextStep,
     route.intervention,
     context.learningDossier?.first_action_taken,
-    route.outcomeSummary,
-    context.deliveryRecord?.customer_handoff_note,
-    context.learningDossier?.title,
+  ]) ?? pickFirst([
+    readsLikeActionStep(route.outcomeSummary) ? route.outcomeSummary : null,
+    readsLikeActionStep(context.deliveryRecord?.customer_handoff_note)
+      ? context.deliveryRecord?.customer_handoff_note
+      : null,
+    readsLikeActionStep(context.learningDossier?.title) ? context.learningDossier?.title : null,
   ])
 
   const derivedExpectedEffect = expectedEffectFromReason
@@ -462,6 +508,7 @@ export function projectActionCenterCoreSemantics(
         nextRoute: context.learningDossier?.next_route,
         stopReason: context.learningDossier?.stop_reason,
         outcomeSummary: route.outcomeSummary,
+        latestVisibleUpdateNote: normalizeText(context.latestVisibleUpdateNote),
       }),
     },
     closingSemantics: {

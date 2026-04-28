@@ -299,6 +299,42 @@ describe('action center core semantics', () => {
     })
   })
 
+  it('does not promote summary-style route text into firstStep when no real action step exists', () => {
+    const context = buildContext({
+      deliveryRecord: buildDeliveryRecord({
+        next_step: null,
+        customer_handoff_note: 'De managementread staat klaar voor een eerste bounded follow-through.',
+      }),
+      dossier: buildDossier({
+        title: 'Exit follow-through voorjaar',
+        first_action_taken: null,
+        management_action_outcome: null,
+        case_public_summary: 'De eerste review liet zien dat dezelfde frictie in twee teams terugkomt.',
+      }),
+    })
+
+    expect(projectActionCenterCoreSemantics(context).actionFrame.firstStep).toBe('Nog te bepalen in review')
+  })
+
+  it('allows softer fallback copy into firstStep only when it still reads as a concrete next step', () => {
+    const context = buildContext({
+      deliveryRecord: buildDeliveryRecord({
+        next_step: null,
+        customer_handoff_note: 'Plan een eerste bounded opvolgstap met HR.',
+      }),
+      dossier: buildDossier({
+        title: 'Exit follow-through voorjaar',
+        first_action_taken: null,
+        management_action_outcome: null,
+        case_public_summary: null,
+      }),
+    })
+
+    expect(projectActionCenterCoreSemantics(context).actionFrame.firstStep).toBe(
+      'Plan een eerste bounded opvolgstap met HR.',
+    )
+  })
+
   it('uses a deterministic route-shape template for reviewQuestion when no existing review or route truth remains', () => {
     const context = buildContext({
       deliveryRecord: buildDeliveryRecord({
@@ -467,6 +503,31 @@ describe('action center core semantics', () => {
     })
 
     expect(projectActionCenterCoreSemantics(context).resultLoop.whatWasDecided).toBe('Bijstellen')
+  })
+
+  it('uses the latest explicit live update note as decision fallback when no canonical decision truth exists', () => {
+    const context = buildContext({
+      deliveryRecord: buildDeliveryRecord({
+        next_step: 'Plan het vervolggesprek met HR en operations.',
+        customer_handoff_note: null,
+        operator_notes: null,
+      }),
+      dossier: buildDossier({
+        management_action_outcome: null,
+        next_route: null,
+        stop_reason: null,
+        case_public_summary: null,
+        adoption_outcome: null,
+      }),
+      learningCheckpoints: [],
+    })
+
+    expect(
+      projectActionCenterCoreSemantics({
+        ...context,
+        latestVisibleUpdateNote: 'Update: review blijft bewust lopen tot de volgende MT-check.',
+      }).resultLoop.whatWasDecided,
+    ).toBe('Update: review blijft bewust lopen tot de volgende MT-check.')
   })
 
   it('uses the same latest visible update note as observation fallback when canonical observation truth is absent', () => {
@@ -701,6 +762,43 @@ describe('action center core semantics', () => {
     })
 
     expect(semantics.resultLoop.whatWasTried).toBe('Update: eigenaar en eerste correctie zijn al bevestigd.')
+  })
+
+  it('uses the latest explicit preview update note as decision fallback when no canonical decision truth exists', () => {
+    const semantics = projectActionCenterPreviewCoreSemantics({
+      id: 'preview-decision-fallback',
+      title: 'Exit preview',
+      status: 'in-uitvoering',
+      ownerName: 'Manager Operations',
+      reviewDate: '2026-05-12',
+      expectedEffect: null,
+      reviewReason: 'Waarom reviewen we dit nu opnieuw?',
+      reviewOutcome: 'geen-uitkomst',
+      reason: 'Waarom reviewen we dit nu opnieuw?',
+      summary: 'Samenvatting voor de lijstweergave.',
+      signalBody: 'Het team zag dezelfde frictie terug.',
+      nextStep: 'Plan het vervolggesprek met HR en operations.',
+      latestVisibleUpdateNote: 'Update: review blijft bewust lopen tot de volgende MT-check.',
+      route: {
+        campaignId: 'campaign-exit',
+        entryStage: 'active',
+        routeOpenedAt: '2026-04-20T09:00:00.000Z',
+        ownerAssignedAt: '2026-04-21T08:00:00.000Z',
+        routeStatus: 'in-uitvoering',
+        reviewOutcome: 'geen-uitkomst',
+        reviewCompletedAt: null,
+        outcomeRecordedAt: null,
+        outcomeSummary: null,
+        intervention: 'Canonieke vorige stap.',
+        owner: 'Manager Operations',
+        expectedEffect: null,
+        reviewScheduledFor: '2026-05-12',
+        reviewReason: 'Waarom reviewen we dit nu opnieuw?',
+        blockedBy: null,
+      },
+    })
+
+    expect(semantics.resultLoop.whatWasDecided).toBe('Update: review blijft bewust lopen tot de volgende MT-check.')
   })
 
   it('includes the latest visible live update note in the whatWasTried precedence bucket', () => {
