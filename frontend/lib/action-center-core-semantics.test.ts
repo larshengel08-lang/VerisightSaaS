@@ -200,7 +200,7 @@ describe('action center core semantics', () => {
       resultLoop: {
         whatWasTried: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
         whatWeObserved: 'De eerste review liet zien dat dezelfde frictie in twee teams terugkomt.',
-        whatWasDecided: 'De eerste review liet zien dat dezelfde frictie in twee teams terugkomt.',
+        whatWasDecided: 'Bijstellen',
       },
       closingSemantics: {
         status: 'lopend',
@@ -259,7 +259,7 @@ describe('action center core semantics', () => {
       resultLoop: {
         whatWasTried: 'Plan het bijgestelde reviewgesprek met HR en operations.',
         whatWeObserved: 'De frictie bleef terugkomen in elk vervolggesprek.',
-        whatWasDecided: 'Vervolg met een bounded teamreview in operations.',
+        whatWasDecided: 'Bijstellen',
       },
     })
   })
@@ -395,7 +395,7 @@ describe('action center core semantics', () => {
     expect(projectActionCenterCoreSemantics(context).resultLoop.whatWasDecided).toBe('Bijstellen')
   })
 
-  it('prefers explicit decision carriers over outcome summary fallback in whatWasDecided', () => {
+  it('prefers explicit decision carriers over outcome summary fallback in whatWasDecided when no review outcome truth exists', () => {
     const context = buildContext({
       dossier: buildDossier({
         management_action_outcome: null,
@@ -409,7 +409,7 @@ describe('action center core semantics', () => {
     )
   })
 
-  it('prefers richer authored decision text over the generic visible review outcome label', () => {
+  it('prefers the visible review outcome label over richer authored decision text when review outcome truth exists', () => {
     const context = buildContext({
       dossier: buildDossier({
         management_action_outcome: 'opschalen',
@@ -417,9 +417,7 @@ describe('action center core semantics', () => {
       }),
     })
 
-    expect(projectActionCenterCoreSemantics(context).resultLoop.whatWasDecided).toBe(
-      'Breid de follow-through uit naar een tweede teamreview met operations.',
-    )
+    expect(projectActionCenterCoreSemantics(context).resultLoop.whatWasDecided).toBe('Bijstellen')
   })
 
   it('uses the same latest visible update note as observation fallback when canonical observation truth is absent', () => {
@@ -520,5 +518,24 @@ describe('action center core semantics', () => {
     })
 
     expect(semantics.resultLoop.whatWasTried).toBe('Update: eigenaar en eerste correctie zijn al bevestigd.')
+  })
+
+  it('includes the latest visible live update note in the whatWasTried precedence bucket', () => {
+    const context = buildContext({
+      deliveryRecord: buildDeliveryRecord({
+        next_step: 'Plan het vervolggesprek met HR en operations.',
+        operator_notes: null,
+      }),
+      dossier: buildDossier({
+        first_action_taken: null,
+      }),
+    })
+
+    expect(
+      projectActionCenterCoreSemantics({
+        ...context,
+        latestVisibleUpdateNote: 'Update: de eerste correctie is al besproken in het MT.',
+      }).resultLoop.whatWasTried,
+    ).toBe('Update: de eerste correctie is al besproken in het MT.')
   })
 })

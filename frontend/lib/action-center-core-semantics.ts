@@ -96,6 +96,31 @@ function getReviewOutcomeLabel(outcome: ActionCenterVisibleReviewOutcome) {
   }
 }
 
+function getRawManagementActionOutcomeText(outcome: ActionCenterReviewOutcome | string | null | undefined) {
+  const normalized = normalizeText(outcome)
+  if (!normalized || normalized === 'geen-uitkomst') {
+    return null
+  }
+
+  return normalized
+}
+
+function getDecisionText(args: {
+  reviewOutcomeVisible: ActionCenterVisibleReviewOutcome
+  managementActionOutcomeText?: string | null
+  nextRoute?: string | null
+  stopReason?: string | null
+  outcomeSummary?: string | null
+}) {
+  return pickFirst([
+    getReviewOutcomeLabel(args.reviewOutcomeVisible),
+    args.managementActionOutcomeText,
+    args.nextRoute,
+    args.stopReason,
+    args.outcomeSummary,
+  ])
+}
+
 function getClosingStatus(context: ActionCenterCoreSemanticsProjectionInput, route: ActionCenterRouteContract): ActionCenterClosingStatus {
   if (context.learningDossier?.triage_status === 'uitgevoerd' || route.routeStatus === 'afgerond') {
     return 'afgerond'
@@ -248,10 +273,11 @@ export function projectActionCenterPreviewCoreSemantics(
     input.signalBody,
     route.expectedEffect,
   ])
-  const whatWasDecided = pickFirst([
-    route.outcomeSummary,
-    getReviewOutcomeLabel(reviewOutcomeVisible),
-  ])
+  const whatWasDecided = getDecisionText({
+    reviewOutcomeVisible,
+    managementActionOutcomeText: getRawManagementActionOutcomeText(input.reviewOutcome),
+    outcomeSummary: route.outcomeSummary,
+  })
 
   return {
     route,
@@ -376,6 +402,7 @@ export function projectActionCenterCoreSemantics(
     },
     resultLoop: {
       whatWasTried: pickFirst([
+        context.latestVisibleUpdateNote,
         latestActionUpdate,
         nextStep,
         firstStep,
@@ -384,13 +411,13 @@ export function projectActionCenterCoreSemantics(
         latestObservation,
         observationFallback,
       ]),
-      whatWasDecided: pickFirst([
-        context.learningDossier?.next_route,
-        context.learningDossier?.stop_reason,
-        route.outcomeSummary,
-        getReviewOutcomeLabel(reviewOutcomeVisible),
-        normalizeText(context.learningDossier?.management_action_outcome),
-      ]),
+      whatWasDecided: getDecisionText({
+        reviewOutcomeVisible,
+        managementActionOutcomeText: normalizeText(context.learningDossier?.management_action_outcome),
+        nextRoute: context.learningDossier?.next_route,
+        stopReason: context.learningDossier?.stop_reason,
+        outcomeSummary: route.outcomeSummary,
+      }),
     },
     closingSemantics: {
       status: getClosingStatus(context, route),
