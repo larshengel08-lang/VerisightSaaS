@@ -185,7 +185,8 @@ function buildUpdates(args: {
   }
 
   const fallbackNote =
-    args.learningDossier?.management_action_outcome ||
+    args.learningDossier?.case_public_summary ||
+    args.learningDossier?.adoption_outcome ||
     args.learningDossier?.expected_first_value ||
     args.deliveryRecord?.customer_handoff_note ||
     'Nog geen expliciete review-update uit campaign of dossierbron.'
@@ -324,7 +325,8 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         deliveryRecord: context.deliveryRecord,
         fallbackAuthor,
       })
-      const latestUpdate = updates[0]?.note ?? null
+      const hasExplicitUpdates = context.learningCheckpoints.length > 0 || context.deliveryCheckpoints.length > 0
+      const latestUpdate = hasExplicitUpdates ? (updates[0]?.note ?? null) : null
       const coreSemantics = projectActionCenterCoreSemantics({
         ...context,
         route,

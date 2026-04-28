@@ -424,6 +424,26 @@ describe('action center core semantics', () => {
     expect(projectActionCenterCoreSemantics(context).resultLoop.whatWasDecided).toBe('Bijstellen')
   })
 
+  it('does not let a bare decision label overwrite whatWasTried when the latest visible update is only outcome text', () => {
+    const context = buildContext({
+      deliveryRecord: buildDeliveryRecord({
+        next_step: 'Plan het vervolggesprek met HR en operations.',
+        operator_notes: null,
+      }),
+      dossier: buildDossier({
+        first_action_taken: 'Leg de eerste correctie vast in het MT-overleg.',
+        management_action_outcome: 'stoppen',
+      }),
+    })
+
+    expect(
+      projectActionCenterCoreSemantics({
+        ...context,
+        latestVisibleUpdateNote: 'stoppen',
+      }).resultLoop.whatWasTried,
+    ).toBe('Leg de eerste correctie vast in het MT-overleg.')
+  })
+
   it('prefers explicit decision carriers over outcome summary fallback in whatWasDecided when no review outcome truth exists', () => {
     const context = buildContext({
       dossier: buildDossier({
@@ -587,6 +607,62 @@ describe('action center core semantics', () => {
     expect(semantics.closingSemantics).toEqual({
       status: 'afgerond',
       summary: 'De route is afgerond na de laatste teamreview.',
+    })
+  })
+
+  it('uses real closeout truth before generic fallback copy when a completed route has no outcome summary', () => {
+    const semantics = projectActionCenterCoreSemantics(buildContext({
+      dossier: buildDossier({
+        triage_status: 'uitgevoerd',
+        first_management_value: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
+        case_public_summary: null,
+        adoption_outcome: null,
+        next_route: 'Vervolg via het reguliere HR-overleg, zonder aparte action-center route.',
+      }),
+    }))
+
+    expect(semantics.closingSemantics).toEqual({
+      status: 'afgerond',
+      summary: 'Vervolg via het reguliere HR-overleg, zonder aparte action-center route.',
+    })
+  })
+
+  it('falls back to generic stopped closeout copy instead of reusing reviewReason when no stop truth exists', () => {
+    const semantics = projectActionCenterPreviewCoreSemantics({
+      id: 'preview-stopped-closeout',
+      title: 'Exit preview',
+      status: 'gestopt',
+      ownerName: 'Manager Operations',
+      reviewDate: '2026-05-12',
+      expectedEffect: null,
+      reviewReason: 'Welke stopreden vraagt nu de eerste review?',
+      reviewOutcome: 'stoppen',
+      reason: null,
+      summary: 'Samenvatting voor de lijstweergave.',
+      signalBody: 'Signaaltekst uit de laatste zichtbare update.',
+      nextStep: null,
+      route: {
+        campaignId: 'campaign-exit',
+        entryStage: 'active',
+        routeOpenedAt: '2026-04-20T09:00:00.000Z',
+        ownerAssignedAt: '2026-04-21T08:00:00.000Z',
+        routeStatus: 'gestopt',
+        reviewOutcome: 'stoppen',
+        reviewCompletedAt: null,
+        outcomeRecordedAt: null,
+        outcomeSummary: null,
+        intervention: null,
+        owner: 'Manager Operations',
+        expectedEffect: null,
+        reviewScheduledFor: '2026-05-12',
+        reviewReason: 'Welke stopreden vraagt nu de eerste review?',
+        blockedBy: null,
+      },
+    })
+
+    expect(semantics.closingSemantics).toEqual({
+      status: 'gestopt',
+      summary: 'De route is bewust gestopt.',
     })
   })
 

@@ -320,7 +320,7 @@ describe("action center landing shell", () => {
       deliveryRecord: context.deliveryRecord,
       learningDossier: context.learningDossier,
       learningCheckpoints: context.learningCheckpoints,
-      latestVisibleUpdateNote: item.updates[0]?.note ?? null,
+      latestVisibleUpdateNote: null,
       route,
     }));
     expect(item.coreSemantics).toMatchObject({
@@ -340,7 +340,7 @@ describe("action center landing shell", () => {
         expectedEffect: item.expectedEffect,
       },
       resultLoop: {
-        whatWasTried: "opschalen",
+        whatWasTried: "Leg eigenaar en eerste correctie in het MT-overleg vast.",
       },
       closingSemantics: {
         status: "lopend",

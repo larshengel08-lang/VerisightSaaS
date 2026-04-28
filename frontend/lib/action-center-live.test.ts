@@ -472,6 +472,45 @@ describe('live action center builder', () => {
     )
   })
 
+  it('does not promote management_action_outcome into the latest visible update fallback for live items', () => {
+    const items = buildLiveActionCenterItems([
+      {
+        campaign: buildCampaign(),
+        stats: buildStats(),
+        organizationName: 'Acme BV',
+        memberRole: 'owner' as const,
+        scopeType: 'department' as const,
+        scopeValue: 'operations',
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: null,
+        deliveryRecord: buildDeliveryRecord({
+          lifecycle_stage: 'first_management_use',
+          first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+          next_step: 'Plan het vervolggesprek met HR en operations.',
+          customer_handoff_note: null,
+          operator_owner: 'Verisight delivery',
+          operator_notes: null,
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          expected_first_value: 'Maak zichtbaar welke route nu zonder extra follow-through kan sluiten.',
+          first_management_value: 'Welke route kan nu bewust worden afgesloten?',
+          first_action_taken: 'Bevestig in het MT dat deze route bewust stopt.',
+          management_action_outcome: 'stoppen',
+          adoption_outcome: null,
+          case_public_summary: null,
+        }),
+        learningCheckpoints: [],
+      },
+    ])
+    const item = items[0]
+
+    expect(items).toHaveLength(1)
+    expect(item.updates[0]?.note).not.toBe('stoppen')
+    expect(item.coreSemantics.resultLoop.whatWasTried).toBe('Bevestig in het MT dat deze route bewust stopt.')
+  })
+
   it('derives bounded telemetry signals from lifecycle and review truth', () => {
     const campaign: Campaign = {
       id: 'campaign-exit',

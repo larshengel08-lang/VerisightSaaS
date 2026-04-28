@@ -59,6 +59,13 @@ const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
 const REVIEW_REASON_FALLBACK = 'Welke vervolgstap vraagt deze route nu als eerste review?'
 const REVIEW_QUESTION_FALLBACK = 'Welke vervolgstap vraagt deze route nu als eerste review?'
 const ACTION_FRAME_FALLBACK = 'Nog te bepalen in review'
+const DECISION_ONLY_ACTION_TEXTS = new Set([
+  'doorgaan',
+  'bijstellen',
+  'opschalen',
+  'afronden',
+  'stoppen',
+])
 
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
@@ -95,6 +102,13 @@ function getReviewOutcomeLabel(outcome: ActionCenterVisibleReviewOutcome) {
     default:
       return null
   }
+}
+
+function normalizeAttemptText(value: string | null | undefined) {
+  const normalized = normalizeText(value)
+  if (!normalized) return null
+
+  return DECISION_ONLY_ACTION_TEXTS.has(normalized.toLocaleLowerCase('nl-NL')) ? null : normalized
 }
 
 function getRawManagementActionOutcomeText(outcome: ActionCenterReviewOutcome | string | null | undefined) {
@@ -141,8 +155,8 @@ function getRouteSummary(route: ActionCenterRouteContract, context: ActionCenter
   ])
 }
 
-function getReviewQuestionTemplate(route: ActionCenterRouteContract) {
-  switch (route.routeStatus) {
+function getReviewQuestionTemplateForStatus(status: ActionCenterRouteContract['routeStatus']) {
+  switch (status) {
     case 'geblokkeerd':
       return 'Wat blokkeert deze route nu het meest?'
     case 'in-uitvoering':
@@ -187,22 +201,6 @@ function getLatestObservation(context: ActionCenterCoreSemanticsProjectionInput,
   ])
 }
 
-function getReviewQuestionTemplateFromStatus(status: ActionCenterRouteContract['routeStatus']) {
-  switch (status) {
-    case 'geblokkeerd':
-      return 'Wat blokkeert deze route nu het meest?'
-    case 'in-uitvoering':
-      return 'Welke vervolgstap vraagt deze route nu als eerste review?'
-    case 'afgerond':
-      return 'Welke uitkomst van deze route verdient nu de eerste review?'
-    case 'gestopt':
-      return 'Welke stopreden vraagt nu de eerste review?'
-    case 'te-bespreken':
-    default:
-      return 'Welke vervolgstap vraagt deze route nu als eerste review?'
-  }
-}
-
 function getPreviewClosingStatus(status: ActionCenterRouteContract['routeStatus']): ActionCenterClosingStatus {
   if (status === 'afgerond') return 'afgerond'
   if (status === 'gestopt') return 'gestopt'
@@ -218,6 +216,36 @@ function getClosingSummary(status: ActionCenterClosingStatus, values: Array<stri
     pickFirst(values) ??
     (status === 'afgerond' ? 'De route is voor nu afgerond.' : 'De route is bewust gestopt.')
   )
+}
+
+function getPreviewClosingSummaryValues(route: ActionCenterRouteContract, status: ActionCenterClosingStatus) {
+  if (status === 'afgerond' || status === 'gestopt') {
+    return [route.outcomeSummary]
+  }
+
+  return []
+}
+
+function getLiveClosingSummaryValues(
+  context: ActionCenterCoreSemanticsProjectionInput,
+  route: ActionCenterRouteContract,
+  status: ActionCenterClosingStatus,
+) {
+  if (status === 'afgerond') {
+    return [
+      route.outcomeSummary,
+      context.learningDossier?.next_route,
+    ]
+  }
+
+  if (status === 'gestopt') {
+    return [
+      context.learningDossier?.stop_reason,
+      route.outcomeSummary,
+    ]
+  }
+
+  return []
 }
 
 function buildPreviewRoute(input: ActionCenterPreviewCoreSemanticsProjectionInput): ActionCenterRouteContract {
@@ -264,14 +292,14 @@ export function projectActionCenterPreviewCoreSemantics(
     input.reason,
     input.signalBody,
     input.summary,
-    getReviewQuestionTemplateFromStatus(route.routeStatus),
+    getReviewQuestionTemplateForStatus(route.routeStatus),
   ])
   const reviewQuestion = pickFirst([
     route.expectedEffect,
     expectedEffectFromReason,
     nextStep,
     route.reviewReason,
-    getReviewQuestionTemplateFromStatus(route.routeStatus),
+    getReviewQuestionTemplateForStatus(route.routeStatus),
   ])
   const whyNow = pickFirst([
     primaryReason,
@@ -313,7 +341,7 @@ export function projectActionCenterPreviewCoreSemantics(
     },
     resultLoop: {
       whatWasTried: pickFirst([
-        latestVisibleUpdateNote,
+        normalizeAttemptText(latestVisibleUpdateNote),
         input.nextStep,
         nextStep,
       ]),
@@ -322,10 +350,7 @@ export function projectActionCenterPreviewCoreSemantics(
     },
     closingSemantics: {
       status: closingStatus,
-      summary: getClosingSummary(closingStatus, [
-        route.outcomeSummary,
-        route.reviewReason,
-      ]),
+      summary: getClosingSummary(closingStatus, getPreviewClosingSummaryValues(route, closingStatus)),
     },
   }
 }
@@ -356,14 +381,14 @@ export function projectActionCenterCoreSemantics(
     primaryReason,
     route.expectedEffect,
     nextStep,
-    getReviewQuestionTemplate(route),
+    getReviewQuestionTemplateForStatus(route.routeStatus),
   ])
   const reviewQuestion = pickFirst([
     route.expectedEffect,
     expectedEffectFromReason,
     nextStep,
     route.reviewReason,
-    getReviewQuestionTemplate(route),
+    getReviewQuestionTemplateForStatus(route.routeStatus),
   ])
 
   const whyNow = pickFirst([
@@ -422,7 +447,7 @@ export function projectActionCenterCoreSemantics(
     },
     resultLoop: {
       whatWasTried: pickFirst([
-        context.latestVisibleUpdateNote,
+        normalizeAttemptText(context.latestVisibleUpdateNote),
         latestActionUpdate,
         nextStep,
         firstStep,
@@ -441,12 +466,7 @@ export function projectActionCenterCoreSemantics(
     },
     closingSemantics: {
       status: closingStatus,
-      summary: getClosingSummary(closingStatus, [
-        context.learningDossier?.stop_reason,
-        route.outcomeSummary,
-        context.learningDossier?.next_route,
-        route.reviewReason,
-      ]),
+      summary: getClosingSummary(closingStatus, getLiveClosingSummaryValues(context, route, closingStatus)),
     },
   }
 }
