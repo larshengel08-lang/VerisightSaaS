@@ -24,6 +24,7 @@ export interface FeaturedReportEntry {
   campaignId: string
   campaignName: string
   scanType: ScanType
+  bridgeState: 'attention' | 'candidate' | 'active'
   title: string
   subtitle: string
   description: string
@@ -183,6 +184,10 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[], options: B
         campaignId: featuredCandidate.campaign_id,
         campaignName: featuredCandidate.campaign_name,
         scanType: featuredCandidate.scan_type,
+        bridgeState: getReportBridgeState({
+          campaign: featuredCandidate,
+          routeEntryStage: options.routeEntryStageByCampaignId?.[featuredCandidate.campaign_id] ?? null,
+        }),
         title:
           featuredCandidate.campaign_name ||
           `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} ${formatDutchQuarter(featuredCandidate.created_at)}`,

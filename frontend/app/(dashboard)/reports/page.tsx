@@ -106,6 +106,9 @@ export default async function ReportsPage({
       ...reportBridge,
     };
   });
+  const featuredReportBridge = reportModel.featured
+    ? getReportEntryBridge(reportModel.featured)
+    : null;
   const averageSignal =
     reportModel.entries.length > 0
       ? (
@@ -161,10 +164,10 @@ export default async function ReportsPage({
                 scanType={reportModel.featured.scanType}
               />
               <Link
-                href={`/campaigns/${reportModel.featured.campaignId}`}
+                href={featuredReportBridge?.href ?? `/campaigns/${reportModel.featured.campaignId}`}
                 className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
               >
-                Open campagnedetail
+                {featuredReportBridge?.bridge.ctaLabel ?? "Open campagnedetail"}
               </Link>
             </>
           ) : (

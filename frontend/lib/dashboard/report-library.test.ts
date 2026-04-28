@@ -105,6 +105,22 @@ describe('report library', () => {
     expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.bridgeState).toBe('active')
   })
 
+  it('keeps the featured report on the same bridge policy as regular entries', () => {
+    const model = buildReportLibraryEntries(campaigns, {
+      routeEntryStageByCampaignId: {
+        'exit-1': 'active',
+      },
+    })
+
+    expect(model.featured?.bridgeState).toBe('active')
+    expect(getReportEntryBridge(model.featured!)).toMatchObject({
+      href: '/action-center',
+      bridge: {
+        ctaLabel: 'Open in Action Center',
+      },
+    })
+  })
+
   it('keeps candidate and active report destinations aligned with reports bridge policy', () => {
     const candidateEntry = buildReportLibraryEntries(campaigns).entries.find((entry) => entry.campaignId === 'exit-1')
     const activeEntry = buildReportLibraryEntries(campaigns, {

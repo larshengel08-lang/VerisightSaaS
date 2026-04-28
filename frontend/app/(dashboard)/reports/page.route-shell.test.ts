@@ -6,6 +6,7 @@ describe("reports route shell", () => {
     const source = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
 
     expect(source).toContain("Rapportbibliotheek");
+    expect(source).toContain("featuredReportBridge");
     expect(source).toContain('variant="editorial"');
     expect(source).toContain("Klaar voor bespreking");
     expect(source).toContain("Open campagnedetail");
