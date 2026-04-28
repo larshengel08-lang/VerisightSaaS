@@ -114,7 +114,7 @@ export default async function DashboardHomePage({
   const { data: primaryGuideDeliveryRecord } = primaryGuideCampaign
     ? await supabase
         .from('campaign_delivery_records')
-        .select('id')
+        .select('id, first_management_use_confirmed_at')
         .eq('campaign_id', primaryGuideCampaign.campaign_id)
         .maybeSingle()
     : { data: null }
@@ -170,42 +170,54 @@ export default async function DashboardHomePage({
   const primaryOverviewEntry = primaryOverviewCampaign
     ? campaignEntries.find((entry) => entry.campaign.campaign_id === primaryOverviewCampaign.campaign_id) ?? null
     : null
-  const primaryOverviewCompositionState = primaryOverviewEntry?.state ?? null
   const primaryOverviewStateMeta = primaryOverviewEntry ? getHomeStateMeta(primaryOverviewEntry.state) : null
-  const overviewBridgeAssessment =
-    primaryOverviewCampaign && primaryOverviewCompositionState
+  const leadCampaign = primaryGuideCampaign ?? primaryOverviewCampaign
+  const leadCampaignEntry = leadCampaign
+    ? campaignEntries.find((entry) => entry.campaign.campaign_id === leadCampaign.campaign_id) ?? null
+    : null
+  const leadCampaignCompositionState = leadCampaignEntry?.state ?? null
+  const leadCampaignStateMeta = leadCampaignEntry ? getHomeStateMeta(leadCampaignEntry.state) : null
+  const { data: leadCampaignDeliveryRecord } =
+    leadCampaign && leadCampaign.campaign_id !== primaryGuideCampaign?.campaign_id
+      ? await supabase
+          .from('campaign_delivery_records')
+          .select('id, first_management_use_confirmed_at')
+          .eq('campaign_id', leadCampaign.campaign_id)
+          .maybeSingle()
+      : { data: primaryGuideDeliveryRecord ?? null }
+  const leadCampaignRouteEntryStage = leadCampaignDeliveryRecord?.first_management_use_confirmed_at ? 'active' : null
+  const leadCampaignBridgeAssessment =
+    leadCampaign && leadCampaignCompositionState
       ? buildBridgeAssessmentTruth({
           sourceType: 'campaign',
-          sourceId: primaryOverviewCampaign.campaign_id,
-          signalReadable: isManagementVisibleState(primaryOverviewCompositionState),
-          managementMeaningClear: isRecommendationReadyState(primaryOverviewCompositionState),
-          plausibleFollowUpExists: isRecommendationReadyState(primaryOverviewCompositionState),
-          assessedAt: primaryOverviewCampaign.created_at,
+          sourceId: leadCampaign.campaign_id,
+          signalReadable: isManagementVisibleState(leadCampaignCompositionState),
+          managementMeaningClear: isRecommendationReadyState(leadCampaignCompositionState),
+          plausibleFollowUpExists: isRecommendationReadyState(leadCampaignCompositionState),
+          assessedAt: leadCampaign.created_at,
         })
       : null
-  const overviewBridgeState = overviewBridgeAssessment
+  const leadBridgeState = leadCampaignBridgeAssessment
     ? resolveHrBridgeState({
-        routeEntryStage: null,
-        assessment: overviewBridgeAssessment,
+        routeEntryStage: leadCampaignRouteEntryStage,
+        assessment: leadCampaignBridgeAssessment,
       })
     : null
-  const overviewBridgePresentation = overviewBridgeState
+  const leadBridgePresentation = leadBridgeState
     ? getHrBridgePresentation({
-        bridgeState: overviewBridgeState,
+        bridgeState: leadBridgeState,
         surface: 'overview',
       })
     : null
-  const overviewBridgeStatusLabel =
-    overviewBridgePresentation?.label === 'Actieve opvolging'
+  const leadBridgeStatusLabel =
+    leadBridgePresentation?.label === 'Actieve opvolging'
       ? 'Actieve opvolging'
-      : overviewBridgePresentation?.label ?? null
-  const overviewBridgeCtaLabel =
-    overviewBridgePresentation?.ctaLabel === 'Beoordeel opvolging'
+      : leadBridgePresentation?.label ?? null
+  const leadBridgeCtaLabel =
+    leadBridgePresentation?.ctaLabel === 'Beoordeel opvolging'
       ? 'Beoordeel opvolging'
-      : overviewBridgePresentation?.ctaLabel ?? null
-  const leadCampaign = primaryGuideCampaign ?? primaryOverviewCampaign
+      : leadBridgePresentation?.ctaLabel ?? null
   const leadCampaignScanDefinition = leadCampaign ? getScanDefinition(leadCampaign.scan_type) : null
-  const leadCampaignStateMeta = primaryGuideCampaign ? primaryGuideStateMeta : primaryOverviewStateMeta
   const overviewFocusItems = buildOverviewFocusItems({
     isAdmin,
     primaryOverviewCampaign,
@@ -304,16 +316,16 @@ export default async function DashboardHomePage({
                     : 'Het eerste overzicht verschijnt hier zodra er genoeg respons is om eerlijk te kunnen lezen.'
                 }
                 footer={
-                  primaryOverviewCampaign &&
-                  overviewBridgeState &&
-                  overviewBridgeStatusLabel &&
-                  overviewBridgeCtaLabel ? (
+                  leadCampaign &&
+                  leadBridgeState &&
+                  leadBridgeStatusLabel &&
+                  leadBridgeCtaLabel ? (
                     <div className="mt-3 flex items-center gap-3 text-sm text-[#5e6b78]">
                       <span className="rounded-full border border-[#ddd3c7] bg-[#fbf8f4] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b7d6b]">
-                        {overviewBridgeStatusLabel}
+                        {leadBridgeStatusLabel}
                       </span>
-                      <Link href={overviewBridgeState === 'active' ? '/action-center' : `/campaigns/${primaryOverviewCampaign.campaign_id}`}>
-                        {overviewBridgeCtaLabel}
+                      <Link href={leadBridgeState === 'active' ? '/action-center' : `/campaigns/${leadCampaign.campaign_id}`}>
+                        {leadBridgeCtaLabel}
                       </Link>
                     </div>
                   ) : null
