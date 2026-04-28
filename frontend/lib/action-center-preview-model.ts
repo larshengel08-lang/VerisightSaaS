@@ -1,4 +1,5 @@
 import type { ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
+import type { ActionCenterCoreSemantics } from '@/lib/action-center-core-semantics'
 
 export type ActionCenterPreviewView = 'overview' | 'actions' | 'reviews' | 'managers' | 'teams'
 export type ActionCenterPreviewStatus = 'te-bespreken' | 'in-uitvoering' | 'geblokkeerd' | 'afgerond' | 'gestopt'
@@ -39,6 +40,7 @@ export interface ActionCenterPreviewItem {
   signalBody: string
   nextStep: string
   peopleCount: number
+  coreSemantics: ActionCenterCoreSemantics
   openSignals: string[]
   updates: ActionCenterPreviewUpdate[]
 }

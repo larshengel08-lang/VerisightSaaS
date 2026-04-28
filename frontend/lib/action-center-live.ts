@@ -4,6 +4,7 @@ import type {
   ActionCenterPreviewStatus,
   ActionCenterPreviewUpdate,
 } from '@/lib/action-center-preview-model'
+import { projectActionCenterCoreSemantics } from '@/lib/action-center-core-semantics'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { MemberRole, Campaign, CampaignStats, ScanType } from '@/lib/types'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord, DeliveryExceptionStatus } from '@/lib/ops-delivery'
@@ -336,6 +337,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         reviewReason: route.reviewReason,
         reviewOutcome: route.reviewOutcome,
         peopleCount: context.peopleCount,
+        coreSemantics: projectActionCenterCoreSemantics(context),
         openSignals,
         updates,
       } satisfies ActionCenterPreviewItem]

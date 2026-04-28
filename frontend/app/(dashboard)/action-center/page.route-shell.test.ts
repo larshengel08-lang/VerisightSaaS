@@ -31,4 +31,20 @@ describe("action center landing shell", () => {
     expect(previewSource).toContain("getOwnerDisplayName");
     expect(previewSource).toContain("initialItems.find((item) => item.id === initialSelectedItemId)");
   });
+
+  it("requires preview items to carry canonical core semantics as one grouped field", () => {
+    const previewModelSource = readFileSync(
+      new URL("../../../lib/action-center-preview-model.ts", import.meta.url),
+      "utf8",
+    );
+    const liveProjectionSource = readFileSync(
+      new URL("../../../lib/action-center-live.ts", import.meta.url),
+      "utf8",
+    );
+
+    expect(previewModelSource).toContain("coreSemantics:");
+    expect(previewModelSource).toContain("ActionCenterCoreSemantics");
+    expect(liveProjectionSource).toContain("projectActionCenterCoreSemantics");
+    expect(liveProjectionSource).toContain("coreSemantics: projectActionCenterCoreSemantics(");
+  });
 });

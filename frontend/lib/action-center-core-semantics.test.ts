@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { projectActionCenterCoreSemantics } from './action-center-core-semantics'
-import type { LiveActionCenterCampaignContext } from './action-center-live'
+import { projectActionCenterCoreSemantics, type ActionCenterCoreSemanticsProjectionInput } from './action-center-core-semantics'
 import type { Campaign, CampaignStats } from '@/lib/types'
 import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
@@ -132,9 +131,9 @@ function buildCheckpoint(overrides: Partial<PilotLearningCheckpoint> = {}): Pilo
 function buildContext(args: {
   dossier?: PilotLearningDossier | null
   deliveryRecord?: CampaignDeliveryRecord | null
-  assignedManager?: LiveActionCenterCampaignContext['assignedManager']
+  assignedManager?: ActionCenterCoreSemanticsProjectionInput['assignedManager']
   learningCheckpoints?: PilotLearningCheckpoint[]
-} = {}): LiveActionCenterCampaignContext {
+} = {}): ActionCenterCoreSemanticsProjectionInput {
   return {
     campaign: buildCampaign(),
     stats: buildStats(),

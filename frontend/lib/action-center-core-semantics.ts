@@ -1,6 +1,8 @@
 import { projectActionCenterRoute, type ActionCenterReviewOutcome, type ActionCenterRouteContract } from './action-center-route-contract'
-import type { LiveActionCenterCampaignContext } from './action-center-live'
 import type { PilotLearningCheckpoint } from './pilot-learning'
+import type { Campaign, CampaignStats, MemberRole } from '@/lib/types'
+import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
+import type { PilotLearningDossier } from './pilot-learning'
 
 export type ActionCenterVisibleReviewOutcome = Exclude<ActionCenterReviewOutcome, 'opschalen'>
 export type ActionCenterClosingStatus = 'lopend' | 'afgerond' | 'gestopt'
@@ -28,6 +30,26 @@ export interface ActionCenterCoreSemantics {
   }
 }
 
+export interface ActionCenterCoreSemanticsProjectionInput {
+  campaign: Campaign
+  stats: CampaignStats | null
+  organizationName: string
+  memberRole: MemberRole | null
+  scopeType: 'department' | 'item'
+  scopeValue: string
+  scopeLabel: string
+  peopleCount: number
+  assignedManager: {
+    userId: string
+    displayName: string | null
+    assignedAt?: string | null
+  } | null
+  deliveryRecord: CampaignDeliveryRecord | null
+  deliveryCheckpoints: CampaignDeliveryCheckpoint[]
+  learningDossier: PilotLearningDossier | null
+  learningCheckpoints: PilotLearningCheckpoint[]
+}
+
 const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
 
 function normalizeText(value: string | null | undefined) {
@@ -44,7 +66,7 @@ function pickFirst(values: Array<string | null | undefined>) {
   return null
 }
 
-function getCheckpoint(context: LiveActionCenterCampaignContext, key: PilotLearningCheckpoint['checkpoint_key']) {
+function getCheckpoint(context: ActionCenterCoreSemanticsProjectionInput, key: PilotLearningCheckpoint['checkpoint_key']) {
   return context.learningCheckpoints.find((checkpoint) => checkpoint.checkpoint_key === key) ?? null
 }
 
@@ -67,7 +89,7 @@ function getReviewOutcomeLabel(outcome: ActionCenterVisibleReviewOutcome) {
   }
 }
 
-function getClosingStatus(context: LiveActionCenterCampaignContext, route: ActionCenterRouteContract): ActionCenterClosingStatus {
+function getClosingStatus(context: ActionCenterCoreSemanticsProjectionInput, route: ActionCenterRouteContract): ActionCenterClosingStatus {
   if (context.learningDossier?.triage_status === 'uitgevoerd' || route.routeStatus === 'afgerond') {
     return 'afgerond'
   }
@@ -79,7 +101,7 @@ function getClosingStatus(context: LiveActionCenterCampaignContext, route: Actio
   return 'lopend'
 }
 
-function getRouteSummary(route: ActionCenterRouteContract, context: LiveActionCenterCampaignContext) {
+function getRouteSummary(route: ActionCenterRouteContract, context: ActionCenterCoreSemanticsProjectionInput) {
   return pickFirst([
     route.outcomeSummary,
     context.deliveryRecord?.customer_handoff_note,
@@ -108,14 +130,14 @@ function joinReasonAndStep(reason: string | null, step: string | null) {
   return values.join(' ')
 }
 
-function getLatestActionUpdate(context: LiveActionCenterCampaignContext) {
+function getLatestActionUpdate(context: ActionCenterCoreSemanticsProjectionInput) {
   return pickFirst([
     context.learningDossier?.first_action_taken,
     context.deliveryRecord?.operator_notes,
   ])
 }
 
-function getLatestObservation(context: LiveActionCenterCampaignContext, route: ActionCenterRouteContract) {
+function getLatestObservation(context: ActionCenterCoreSemanticsProjectionInput, route: ActionCenterRouteContract) {
   return pickFirst([
     route.outcomeSummary,
     getCheckpoint(context, 'follow_up_review')?.confirmed_lesson,
@@ -132,7 +154,7 @@ function getLatestObservation(context: LiveActionCenterCampaignContext, route: A
 }
 
 export function projectActionCenterCoreSemantics(
-  context: LiveActionCenterCampaignContext,
+  context: ActionCenterCoreSemanticsProjectionInput,
 ): ActionCenterCoreSemantics {
   const route = projectActionCenterRoute(context)
   const reviewCheckpoint = getCheckpoint(context, 'follow_up_review')
