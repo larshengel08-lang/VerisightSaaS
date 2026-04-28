@@ -3,7 +3,7 @@ import type {
   ActionCenterPreviewPriority,
   ActionCenterPreviewStatus,
   ActionCenterPreviewUpdate,
-} from '@/components/dashboard/action-center-preview'
+} from '@/lib/action-center-preview-model'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { MemberRole, Campaign, CampaignStats, ScanType } from '@/lib/types'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord, DeliveryExceptionStatus } from '@/lib/ops-delivery'

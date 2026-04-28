@@ -2,55 +2,14 @@
 
 import Link from 'next/link'
 import type { ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
+import type {
+  ActionCenterPreviewItem,
+  ActionCenterPreviewManagerOption,
+  ActionCenterPreviewPriority,
+  ActionCenterPreviewStatus,
+  ActionCenterPreviewView,
+} from '@/lib/action-center-preview-model'
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
-
-export type ActionCenterPreviewView = 'overview' | 'actions' | 'reviews' | 'managers' | 'teams'
-export type ActionCenterPreviewStatus = 'te-bespreken' | 'in-uitvoering' | 'geblokkeerd' | 'afgerond' | 'gestopt'
-export type ActionCenterPreviewPriority = 'hoog' | 'midden' | 'laag'
-
-export interface ActionCenterPreviewUpdate {
-  id: string
-  author: string
-  dateLabel: string
-  note: string
-}
-
-export interface ActionCenterPreviewItem {
-  id: string
-  code: string
-  title: string
-  summary: string
-  reason: string
-  sourceLabel: string
-  orgId?: string | null
-  scopeType?: 'department' | 'item' | 'org'
-  teamId: string
-  teamLabel: string
-  ownerId?: string | null
-  ownerName: string | null
-  ownerRole: string
-  ownerSubtitle: string
-  reviewOwnerName: string | null
-  priority: ActionCenterPreviewPriority
-  status: ActionCenterPreviewStatus
-  reviewDate: string | null
-  expectedEffect?: string | null
-  reviewReason?: string | null
-  reviewOutcome?: ActionCenterReviewOutcome | null
-  reviewDateLabel: string
-  reviewRhythm: string
-  signalLabel: string
-  signalBody: string
-  nextStep: string
-  peopleCount: number
-  openSignals: string[]
-  updates: ActionCenterPreviewUpdate[]
-}
-
-export interface ActionCenterPreviewManagerOption {
-  value: string
-  label: string
-}
 
 interface Props {
   initialItems: ActionCenterPreviewItem[]
@@ -191,6 +150,41 @@ function getStatusMeta(status: ActionCenterPreviewStatus) {
       return {
         label: 'Te bespreken',
         pillClass: 'border-[#caece8] bg-[#dff7f4] text-[#0d6a7c]',
+      }
+  }
+}
+
+function getReviewOutcomeMeta(outcome: ActionCenterReviewOutcome) {
+  switch (outcome) {
+    case 'doorgaan':
+      return {
+        label: 'Doorgaan',
+        className: 'border-[#d7ece8] bg-[#eef9f6] text-[#28776f]',
+      }
+    case 'bijstellen':
+      return {
+        label: 'Bijstellen',
+        className: 'border-[#ffe1c7] bg-[#fff3e8] text-[#bb6b1f]',
+      }
+    case 'opschalen':
+      return {
+        label: 'Opschalen',
+        className: 'border-[#d7e3f7] bg-[#edf3ff] text-[#3c5f9b]',
+      }
+    case 'afronden':
+      return {
+        label: 'Afronden',
+        className: 'border-[#d5ebdb] bg-[#edf8f0] text-[#2f8454]',
+      }
+    case 'stoppen':
+      return {
+        label: 'Stoppen',
+        className: 'border-[#f0d9d4] bg-[#fff1ef] text-[#c4584d]',
+      }
+    default:
+      return {
+        label: 'Nog geen uitkomst',
+        className: 'border-[#e3d8ca] bg-[#fbf7f1] text-[#6b6257]',
       }
   }
 }
@@ -465,6 +459,9 @@ export function ActionCenterPreview({
       ownerRole: createForm.ownerName ? `Manager - ${team?.label ?? 'team'}` : 'Nog niet toegewezen',
       ownerSubtitle: team?.label ?? 'Adminroute',
       reviewOwnerName: createForm.ownerName || null,
+      expectedEffect: null,
+      reviewReason: null,
+      reviewOutcome: 'geen-uitkomst',
       priority: createForm.priority,
       status: 'te-bespreken',
       reviewDate: createForm.reviewDate || null,
@@ -1216,6 +1213,18 @@ export function ActionCenterPreview({
                         <div className="mt-6 rounded-[22px] border border-white/10 bg-white/[0.04] px-5 py-5">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Volgende stap</p>
                           <p className="mt-3 text-base leading-7 text-white/86">{selectedItem.nextStep}</p>
+                        </div>
+
+                        <div className="mt-6 grid gap-3 md:grid-cols-3">
+                          <RouteFieldCard
+                            label="Verwacht effect"
+                            value={selectedItem.expectedEffect ?? 'Nog niet vastgelegd'}
+                          />
+                          <RouteFieldCard
+                            label="Waarom reviewen we dit"
+                            value={selectedItem.reviewReason ?? 'Nog niet vastgelegd'}
+                          />
+                          <RouteOutcomeCard outcome={selectedItem.reviewOutcome} />
                         </div>
 
                         <div className="mt-5 space-y-3">
@@ -2035,6 +2044,30 @@ function EmptySection({ title, body }: { title: string; body: string }) {
       <h2 className="text-[1.45rem] font-semibold tracking-[-0.03em] text-[#132033]">{title}</h2>
       <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#5d6f84]">{body}</p>
     </section>
+  )
+}
+
+function RouteFieldCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[18px] border border-[#eadfce] bg-[#fcfaf6] px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
+      <p className="mt-3 text-sm leading-7 text-[#32465d]">{value}</p>
+    </div>
+  )
+}
+
+function RouteOutcomeCard({ outcome }: { outcome: ActionCenterReviewOutcome }) {
+  const meta = getReviewOutcomeMeta(outcome)
+
+  return (
+    <div className="rounded-[18px] border border-[#eadfce] bg-[#fcfaf6] px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Laatste reviewuitkomst</p>
+      <div className="mt-3">
+        <span className={`inline-flex items-center rounded-xl border px-3 py-2 text-sm font-semibold ${meta.className}`}>
+          {meta.label}
+        </span>
+      </div>
+    </div>
   )
 }
 

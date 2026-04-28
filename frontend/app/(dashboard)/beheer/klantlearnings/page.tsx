@@ -1,9 +1,12 @@
 import { redirect } from 'next/navigation'
+import type { ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
 import {
   ActionCenterPreview,
-  type ActionCenterPreviewItem,
-  type ActionCenterPreviewView,
 } from '@/components/dashboard/action-center-preview'
+import type {
+  ActionCenterPreviewItem,
+  ActionCenterPreviewView,
+} from '@/lib/action-center-preview-model'
 import { PilotLearningWorkbench } from '@/components/dashboard/pilot-learning-workbench'
 import {
   buildExitActionCenterWorkspace,
@@ -72,6 +75,20 @@ function formatPreviewDate(value: string | null) {
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return value
   return DUTCH_SHORT_DATE.format(parsed).replace('.', '')
+}
+
+function normalizePreviewReviewOutcome(value: string | null | undefined): ActionCenterReviewOutcome {
+  switch (value) {
+    case 'doorgaan':
+    case 'bijstellen':
+    case 'opschalen':
+    case 'afronden':
+    case 'stoppen':
+    case 'geen-uitkomst':
+      return value
+    default:
+      return 'geen-uitkomst'
+  }
 }
 
 function inferPreviewRhythm(reviewMoment: string | null) {
@@ -373,6 +390,9 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
       ownerRole: ownerName ? 'Manager' : 'Nog niet toegewezen',
       ownerSubtitle: teamLabel,
       reviewOwnerName: reviewCheckpoint?.owner_label?.trim() || ownerName,
+      expectedEffect: dossier.expected_first_value ?? null,
+      reviewReason: dossier.first_management_value ?? null,
+      reviewOutcome: normalizePreviewReviewOutcome(dossier.management_action_outcome),
       priority,
       status,
       reviewDate: reviewMoment?.state === 'scheduled' ? reviewMoment.scheduledFor : null,
