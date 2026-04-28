@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { CustomerLaunchControl } from '@/components/dashboard/customer-launch-control'
 import { OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
 import {
   DashboardChip,
@@ -104,7 +103,6 @@ export default async function DashboardHomePage({
   const primaryGuideEntry = getPrimaryGuideCampaign(campaignEntries)
   const primaryGuideCampaign = primaryGuideEntry?.campaign ?? null
   const primaryGuideInvitesNotSent = primaryGuideEntry?.invitesNotSent ?? 0
-  const primaryGuideStateMeta = primaryGuideEntry ? getHomeStateMeta(primaryGuideEntry.state) : null
   const primaryFirstNextStepCampaign = getPrimaryFirstNextStepCampaign(activeCampaigns, campaigns)
   const { data: primaryGuideDeliveryRecord } = primaryGuideCampaign
     ? await supabase
@@ -204,6 +202,10 @@ export default async function DashboardHomePage({
   const portfolioView = portfolioTabs.some((tab) => tab.id === requestedPortfolioView)
     ? requestedPortfolioView
     : portfolioTabs[0]?.id ?? 'ready'
+  const primaryGuideBuyerSafeName =
+    primaryGuideCampaign && primaryGuideScanDefinition
+      ? getBuyerSafeCampaignName(primaryGuideCampaign.campaign_name, primaryGuideScanDefinition.productName)
+      : null
 
   return (
     <div className="space-y-7">
@@ -219,37 +221,9 @@ export default async function DashboardHomePage({
           {isAdmin
             ? `${campaigns.length} scan${campaigns.length === 1 ? '' : 's'} · ${managementReadyCount} leesbaar`
             : primaryOverviewCampaign
-              ? getOverviewHeadline({ campaign: primaryOverviewCampaign, stateMeta: primaryGuideStateMeta, isAdmin, avgSignal })
-              : 'Zodra de eerste scan leesbaar wordt, verschijnt hier automatisch het overzicht.'}
+              ? 'De hoofdscan hieronder laat zien waar jullie nu staan en wat eerst nodig is.'
+              : 'Zodra de eerste scan klaarstaat, verschijnt hier automatisch de hoofdlijn.'}
         </p>
-      </div>
-
-      {/* 4 stat cards */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <SignalStatCard
-          label="Leesbaar"
-          value={`${managementReadyCount}`}
-          subline={`${fullCount} volledig · ${partialCount} compact`}
-          band={managementReadyCount > 0 ? 'LAAG' : 'neutral'}
-        />
-        <SignalStatCard
-          label="In uitvoering"
-          value={`${activeExecutionCount}`}
-          subline={activeExecutionCount > 0 ? 'Setup, live of eerste responses' : 'Geen actieve uitvoering'}
-          band={activeExecutionCount > 0 ? 'MIDDEN' : 'neutral'}
-        />
-        <SignalStatCard
-          label="Gem. groepssignaal"
-          value={avgSignal ? `${avgSignal}/10` : '—'}
-          subline={avgSignal ? `Gem. respons ${avgResponse}%` : 'Nog geen leesbaar signaal'}
-          band={avgSignal ? (parseFloat(avgSignal) >= 6 ? 'HOOG' : parseFloat(avgSignal) >= 4 ? 'MIDDEN' : 'LAAG') : 'neutral'}
-        />
-        <SignalStatCard
-          label="Afgerond"
-          value={`${closedCount}`}
-          subline={closedCount > 0 ? 'Rapport en dashboard beschikbaar' : 'Geen afgeronde scans'}
-          band="neutral"
-        />
       </div>
 
       {/* Primary campaign + execution state */}
@@ -261,27 +235,22 @@ export default async function DashboardHomePage({
             border: '1px solid var(--dashboard-frame-border)',
           }}
         >
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-4" style={{ borderBottom: '1px solid var(--dashboard-frame-border)' }}>
+          <div className="pb-4" style={{ borderBottom: '1px solid var(--dashboard-frame-border)' }}>
             <div>
               <p className="text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
                 Hoofdscan · {primaryGuideScanDefinition.productName}
               </p>
-              <p className="mt-1 text-base font-semibold tracking-[-0.02em]" style={{ color: 'var(--dashboard-ink)' }}>
-                {primaryGuideCampaign.campaign_name}
-              </p>
+              {primaryGuideBuyerSafeName &&
+              primaryGuideBuyerSafeName !== primaryGuideScanDefinition.productName ? (
+                <p className="mt-1 text-sm leading-6" style={{ color: 'var(--dashboard-text)' }}>
+                  {primaryGuideBuyerSafeName}
+                </p>
+              ) : null}
             </div>
-            <DashboardChip
-              label={primaryGuideStateMeta?.label ?? primaryExecutionState.currentStateLabel}
-              tone={primaryGuideStateMeta?.tone ?? (primaryExecutionState.dashboardVisible ? 'emerald' : 'amber')}
-            />
           </div>
           <div className="pt-4">
-            <CustomerLaunchControl
-              campaignName={primaryGuideCampaign.campaign_name}
+            <DashboardHomePrimaryPanel
               campaignHref={`/campaigns/${primaryGuideCampaign.campaign_id}`}
-              campaignCtaLabel={primaryExecutionState.dashboardVisible ? 'Open scan' : 'Open uitvoering'}
-              productName={primaryGuideScanDefinition.productName}
-              productContext={primaryGuideScanDefinition.whatItIsText}
               state={primaryExecutionState}
             />
           </div>
@@ -289,6 +258,97 @@ export default async function DashboardHomePage({
       ) : !isAdmin && !primaryGuideCampaign ? (
         <ViewerEmptyState />
       ) : null}
+
+      {!isAdmin && primaryGuideCampaign && primaryExecutionState && primaryGuideScanDefinition ? (
+        <div className="space-y-5">
+          <DashboardSection
+            eyebrow="Voortgang"
+            title="Volledige voortgang"
+            description="Dit blijft de volledige route onder de hoofdlijn. Gebruik hem pas nadat duidelijk is waar jullie nu staan en wat eerst moet gebeuren."
+          >
+            <ol className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {primaryExecutionState.statusBlocks.map((item, index) => (
+                <li
+                  key={item.key}
+                  className="flex items-center justify-between rounded-[10px] px-3 py-2.5"
+                  style={{
+                    background: item.status === 'current' ? 'var(--dashboard-accent-soft)' : 'var(--dashboard-soft)',
+                    border: `1px solid ${item.status === 'current' ? 'var(--dashboard-accent-soft-border)' : 'var(--dashboard-frame-border)'}`,
+                  }}
+                >
+                  <p className="text-sm" style={{ color: 'var(--dashboard-ink)' }}>
+                    {index + 1}. {item.label}
+                  </p>
+                  <DashboardChip
+                    label={item.status === 'done' ? 'Rond' : item.status === 'current' ? 'Actief' : 'Geblokkeerd'}
+                    tone={item.status === 'done' ? 'emerald' : item.status === 'current' ? 'blue' : 'slate'}
+                  />
+                </li>
+              ))}
+            </ol>
+          </DashboardSection>
+
+          <DashboardSection
+            eyebrow="Over deze scan"
+            title={primaryGuideScanDefinition.productName}
+            description={primaryGuideScanDefinition.whatItIsText}
+          >
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <SignalStatCard
+                label="Leesbaar"
+                value={`${managementReadyCount}`}
+                subline={`${fullCount} volledig · ${partialCount} compact`}
+                band={managementReadyCount > 0 ? 'LAAG' : 'neutral'}
+              />
+              <SignalStatCard
+                label="In uitvoering"
+                value={`${activeExecutionCount}`}
+                subline={activeExecutionCount > 0 ? 'Setup, live of eerste responses' : 'Geen actieve uitvoering'}
+                band={activeExecutionCount > 0 ? 'MIDDEN' : 'neutral'}
+              />
+              <SignalStatCard
+                label="Gem. groepssignaal"
+                value={avgSignal ? `${avgSignal}/10` : '—'}
+                subline={avgSignal ? `Gem. respons ${avgResponse}%` : 'Nog geen leesbaar signaal'}
+                band={avgSignal ? (parseFloat(avgSignal) >= 6 ? 'HOOG' : parseFloat(avgSignal) >= 4 ? 'MIDDEN' : 'LAAG') : 'neutral'}
+              />
+              <SignalStatCard
+                label="Afgerond"
+                value={`${closedCount}`}
+                subline={closedCount > 0 ? 'Rapport en dashboard beschikbaar' : 'Geen afgeronde scans'}
+                band="neutral"
+              />
+            </div>
+          </DashboardSection>
+        </div>
+      ) : !isAdmin ? null : (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <SignalStatCard
+            label="Leesbaar"
+            value={`${managementReadyCount}`}
+            subline={`${fullCount} volledig · ${partialCount} compact`}
+            band={managementReadyCount > 0 ? 'LAAG' : 'neutral'}
+          />
+          <SignalStatCard
+            label="In uitvoering"
+            value={`${activeExecutionCount}`}
+            subline={activeExecutionCount > 0 ? 'Setup, live of eerste responses' : 'Geen actieve uitvoering'}
+            band={activeExecutionCount > 0 ? 'MIDDEN' : 'neutral'}
+          />
+          <SignalStatCard
+            label="Gem. groepssignaal"
+            value={avgSignal ? `${avgSignal}/10` : '—'}
+            subline={avgSignal ? `Gem. respons ${avgResponse}%` : 'Nog geen leesbaar signaal'}
+            band={avgSignal ? (parseFloat(avgSignal) >= 6 ? 'HOOG' : parseFloat(avgSignal) >= 4 ? 'MIDDEN' : 'LAAG') : 'neutral'}
+          />
+          <SignalStatCard
+            label="Afgerond"
+            value={`${closedCount}`}
+            subline={closedCount > 0 ? 'Rapport en dashboard beschikbaar' : 'Geen afgeronde scans'}
+            band="neutral"
+          />
+        </div>
+      )}
 
       {/* Portfolio */}
       {campaigns.length === 0 && isAdmin ? (
@@ -435,6 +495,182 @@ function StatCell({ label, value }: { label: string; value: string }) {
       <p className="dash-number mt-2 text-[1.5rem] text-[color:var(--dashboard-ink)]">{value}</p>
     </div>
   )
+}
+
+function DashboardHomePrimaryPanel({
+  campaignHref,
+  state,
+}: {
+  campaignHref: string
+  state: ReturnType<typeof buildGuidedSelfServeState>
+}) {
+  const primaryActionLabel = getDashboardHomePrimaryActionLabel(state)
+  const phaseSummary = getDashboardHomePhaseSummary(state)
+  const currentCount = state.statusBlocks.filter((item) => item.status === 'current').length
+  const blockedCount = state.statusBlocks.filter((item) => item.status === 'blocked').length
+
+  return (
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr),minmax(240px,0.5fr)] xl:items-start">
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-[1.6rem] font-semibold tracking-[-0.05em]" style={{ color: 'var(--dashboard-ink)' }}>
+            {getDashboardHomeStatusTitle(state)}
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-[1.75]" style={{ color: 'var(--dashboard-text)' }}>
+            {getDashboardHomeStatusDetail(state)}
+          </p>
+        </div>
+
+        <div
+          className="rounded-[16px] px-4 py-4"
+          style={{ background: 'var(--dashboard-soft)', border: '1px solid var(--dashboard-frame-border)' }}
+        >
+          <p className="text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
+            Wat nu eerst telt
+          </p>
+          <p className="mt-2 text-sm font-semibold" style={{ color: 'var(--dashboard-ink)' }}>
+            {state.nextAction.title}
+          </p>
+          <p className="mt-1.5 text-sm leading-[1.7]" style={{ color: 'var(--dashboard-text)' }}>
+            {getDashboardHomeNextStepBody(state)}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href={`${campaignHref}#uitvoering`}
+            className="inline-flex rounded-full px-4 py-2 text-sm font-semibold transition-colors"
+            style={{
+              background: 'var(--dashboard-ink)',
+              border: '1px solid var(--dashboard-ink)',
+              color: 'white',
+            }}
+          >
+            {primaryActionLabel}
+          </Link>
+          <Link
+            href={`${campaignHref}#uitvoering`}
+            className="inline-flex rounded-full px-4 py-2 text-sm font-semibold transition-colors"
+            style={{
+              background: 'var(--dashboard-soft)',
+              border: '1px solid var(--dashboard-frame-border)',
+              color: 'var(--dashboard-ink)',
+            }}
+          >
+            Open uitvoering
+          </Link>
+        </div>
+      </div>
+
+      <div
+        className="rounded-[18px] px-4 py-4"
+        style={{ background: 'var(--dashboard-soft)', border: '1px solid var(--dashboard-frame-border)' }}
+      >
+        <p className="text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
+          Compacte voortgang
+        </p>
+        <div className="mt-3 space-y-3">
+          <CompactProgressRow label="Fase" value={phaseSummary} />
+          <CompactProgressRow label="Actief" value={`${currentCount} actieve ${currentCount === 1 ? 'stap' : 'stappen'}`} />
+          <CompactProgressRow label="Geblokkeerd" value={`${blockedCount} geblokkeerd`} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function CompactProgressRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--dashboard-muted)' }}>
+        {label}
+      </span>
+      <span className="text-sm font-semibold" style={{ color: 'var(--dashboard-ink)' }}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function getDashboardHomePrimaryActionLabel(state: ReturnType<typeof buildGuidedSelfServeState>) {
+  switch (state.phase) {
+    case 'participant_data_required':
+      return 'Upload deelnemersbestand'
+    case 'import_validation_required':
+      return 'Controleer importpreview'
+    case 'launch_date_required':
+      return 'Bevestig launchmoment'
+    case 'communication_ready':
+      return 'Bevestig communicatie'
+    case 'ready_to_invite':
+      return 'Start uitnodigingen'
+    case 'survey_running':
+      return 'Volg respons'
+    case 'dashboard_active':
+      return 'Lees compacte output'
+    case 'first_next_step_available':
+      return 'Leg eerste stap vast'
+    case 'closed':
+      return 'Open rapport en dashboard'
+    default:
+      return state.nextAction.title
+  }
+}
+
+function getDashboardHomePhaseSummary(state: ReturnType<typeof buildGuidedSelfServeState>) {
+  switch (state.phase) {
+    case 'participant_data_required':
+    case 'import_validation_required':
+    case 'launch_date_required':
+    case 'communication_ready':
+    case 'ready_to_invite':
+      return 'Setup'
+    case 'survey_running':
+      return 'Respons'
+    case 'dashboard_active':
+      return 'Dashboard'
+    case 'first_next_step_available':
+      return 'Eerste opvolging'
+    case 'closed':
+      return 'Afgerond'
+    default:
+      return state.currentStateLabel
+  }
+}
+
+function getDashboardHomeStatusTitle(state: ReturnType<typeof buildGuidedSelfServeState>) {
+  if (state.phase === 'participant_data_required') {
+    return 'Deelnemersbestand ontbreekt nog'
+  }
+
+  return state.headline
+}
+
+function getDashboardHomeStatusDetail(state: ReturnType<typeof buildGuidedSelfServeState>) {
+  if (state.phase === 'participant_data_required') {
+    return 'Zonder deelnemersbestand blijft deze scan in setup. Dashboard en rapport komen daarna pas vrij.'
+  }
+
+  return state.detail
+}
+
+function getDashboardHomeNextStepBody(state: ReturnType<typeof buildGuidedSelfServeState>) {
+  if (state.phase === 'participant_data_required') {
+    return 'Upload nu een CSV- of Excel-bestand met minimaal e-mailadressen. Daarna kan de route pas door naar importcontrole en launch.'
+  }
+
+  return state.nextAction.body
+}
+
+function getBuyerSafeCampaignName(campaignName: string, fallbackName: string) {
+  const normalized = campaignName.replace(/\s+/g, ' ').trim()
+  const looksLikeSeedName = /(live test|empty|demo|seed)/i.test(normalized)
+
+  if (looksLikeSeedName) {
+    return fallbackName
+  }
+
+  return normalized
 }
 
 function buildInvitesNotSentByCampaign(
@@ -633,42 +869,6 @@ function getHomeStateMeta(state: CampaignCompositionState) {
   >
 
   return meta[state]
-}
-
-function getOverviewHeadline({
-  campaign,
-  stateMeta,
-  isAdmin,
-  avgSignal,
-}: {
-  campaign: CampaignStats
-  stateMeta: ReturnType<typeof getHomeStateMeta> | null
-  isAdmin: boolean
-  avgSignal: string | null
-}) {
-  if (!campaign.is_active) {
-    return 'Deze scan is gesloten. Gebruik rapport en dashboard nu voor terugblik en opvolging.'
-  }
-
-  if (campaign.total_invited === 0) {
-    return isAdmin
-      ? 'De eerstvolgende stap ligt nog in setup of launchdiscipline voordat managementwaarde zichtbaar wordt.'
-      : 'De eerstvolgende stap ligt nog in uitvoering voordat dashboard of rapport de hoofdroute wordt.'
-  }
-
-  if (stateMeta?.label === 'Compact zichtbaar') {
-    return 'Er is al een eerste leesbare laag, maar de verdieping blijft nog bewust compact.'
-  }
-
-  if (campaign.total_completed < 5) {
-    return avgSignal
-      ? `De respons bouwt nog op. Het gemiddelde staat nu op ${avgSignal}/10, maar het beeld blijft nog voorzichtig.`
-      : 'De respons bouwt nog op. Kijk hier eerst naar voortgang en eerste richting.'
-  }
-
-  return avgSignal
-    ? `Er ligt nu een leesbaar overzicht. Het gemiddelde groepssignaal in de scans staat op ${avgSignal}/10.`
-    : 'Er ligt nu een leesbaar overzicht. Gebruik deze pagina voor de hoofdlijn en open daarna de scan voor verdieping.'
 }
 
 function AdminEmptyState() {
