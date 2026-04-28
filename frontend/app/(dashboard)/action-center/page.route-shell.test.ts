@@ -166,6 +166,26 @@ describe("action center landing shell", () => {
     expect(previewSource).toContain("initialItems.find((item) => item.id === initialSelectedItemId)");
   });
 
+  it("renders detail-first review meaning and action frame from grouped core semantics", () => {
+    const previewSource = readFileSync(
+      new URL("../../../components/dashboard/action-center-preview.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(previewSource).toContain('label="Waarom we opnieuw kijken"');
+    expect(previewSource).toContain("value={selectedItem.coreSemantics.reviewSemantics.reviewQuestion}");
+    expect(previewSource).toContain('label="Wat we dan toetsen"');
+    expect(previewSource).toContain("value={selectedItem.coreSemantics.actionFrame.expectedEffect}");
+    expect(previewSource).toContain("outcome={selectedItem.coreSemantics.reviewSemantics.reviewOutcomeVisible}");
+    expect(previewSource).toContain('label="Waarom nu"');
+    expect(previewSource).toContain("value={selectedItem.coreSemantics.actionFrame.whyNow}");
+    expect(previewSource).toContain('label="Eerste stap"');
+    expect(previewSource).toContain("value={selectedItem.coreSemantics.actionFrame.firstStep}");
+    expect(previewSource).toContain('label="Eigenaar"');
+    expect(previewSource).toContain("value={selectedItem.coreSemantics.actionFrame.owner}");
+    expect(previewSource).toContain('label="Verwacht effect"');
+  });
+
   it("requires preview items to carry canonical core semantics as one grouped field", () => {
     const context = buildLiveContext();
     const [item] = buildLiveActionCenterItems([context]);

@@ -1214,21 +1214,43 @@ export function ActionCenterPreview({
                           <DarkMetric label="Prioriteit" value={getPriorityMeta(selectedItem.priority).label} accent="text-white" />
                         </div>
 
-                        <div className="mt-6 rounded-[22px] border border-white/10 bg-white/[0.04] px-5 py-5">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Volgende stap</p>
-                          <p className="mt-3 text-base leading-7 text-white/86">{selectedItem.nextStep}</p>
-                        </div>
+                        <div className="mt-6 space-y-5">
+                          <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Reviewbetekenis</p>
+                            <div className="mt-3 grid gap-3 md:grid-cols-3">
+                              <RouteFieldCard
+                                label="Waarom we opnieuw kijken"
+                                value={selectedItem.coreSemantics.reviewSemantics.reviewQuestion}
+                              />
+                              <RouteFieldCard
+                                label="Wat we dan toetsen"
+                                value={selectedItem.coreSemantics.actionFrame.expectedEffect}
+                              />
+                              <RouteOutcomeCard outcome={selectedItem.coreSemantics.reviewSemantics.reviewOutcomeVisible} />
+                            </div>
+                          </div>
 
-                        <div className="mt-6 grid gap-3 md:grid-cols-3">
-                          <RouteFieldCard
-                            label="Verwacht effect"
-                            value={selectedItem.expectedEffect ?? 'Nog niet vastgelegd'}
-                          />
-                          <RouteFieldCard
-                            label="Waarom reviewen we dit"
-                            value={selectedItem.reviewReason ?? 'Nog niet vastgelegd'}
-                          />
-                          <RouteOutcomeCard outcome={selectedItem.reviewOutcome} />
+                          <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Actiekader</p>
+                            <div className="mt-3 grid gap-3 md:grid-cols-2">
+                              <RouteFieldCard
+                                label="Waarom nu"
+                                value={selectedItem.coreSemantics.actionFrame.whyNow}
+                              />
+                              <RouteFieldCard
+                                label="Eerste stap"
+                                value={selectedItem.coreSemantics.actionFrame.firstStep}
+                              />
+                              <RouteFieldCard
+                                label="Eigenaar"
+                                value={selectedItem.coreSemantics.actionFrame.owner}
+                              />
+                              <RouteFieldCard
+                                label="Verwacht effect"
+                                value={selectedItem.coreSemantics.actionFrame.expectedEffect}
+                              />
+                            </div>
+                          </div>
                         </div>
 
                         <div className="mt-5 space-y-3">
@@ -2051,11 +2073,11 @@ function EmptySection({ title, body }: { title: string; body: string }) {
   )
 }
 
-function RouteFieldCard({ label, value }: { label: string; value: string }) {
+function RouteFieldCard({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="rounded-[18px] border border-[#eadfce] bg-[#fcfaf6] px-4 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
-      <p className="mt-3 text-sm leading-7 text-[#32465d]">{value}</p>
+      <p className="mt-3 text-sm leading-7 text-[#32465d]">{value ?? 'Nog niet vastgelegd'}</p>
     </div>
   )
 }
