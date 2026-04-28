@@ -93,17 +93,23 @@ describe('report library', () => {
     expect(model.featured).toMatchObject({
       campaignId: 'exit-1',
       scanType: 'exit',
+      formalReport: true,
     })
     expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.recommended).toBe(true)
+    expect(model.entries.find((entry) => entry.campaignId === 'leadership-1')?.recommended).toBe(false)
   })
 
   it('maps management, module and cohort categories in a bounded way', () => {
     const model = buildReportLibraryEntries(campaigns)
 
     expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.category).toBe('management')
+    expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.formalReport).toBe(true)
     expect(model.entries.find((entry) => entry.campaignId === 'pulse-1')?.category).toBe('module')
+    expect(model.entries.find((entry) => entry.campaignId === 'pulse-1')?.formalReport).toBe(false)
     expect(model.entries.find((entry) => entry.campaignId === 'leadership-1')?.category).toBe('module')
+    expect(model.entries.find((entry) => entry.campaignId === 'leadership-1')?.formalReport).toBe(false)
     expect(model.entries.find((entry) => entry.campaignId === 'onboarding-1')?.category).toBe('cohort')
+    expect(model.entries.find((entry) => entry.campaignId === 'onboarding-1')?.formalReport).toBe(false)
   })
 
   it('filters cards per category without inventing an all-in-one export layer', () => {
@@ -113,6 +119,14 @@ describe('report library', () => {
     expect(filterReportLibraryEntries(model.entries, 'management').map((entry) => entry.campaignId)).toEqual(['exit-1'])
     expect(filterReportLibraryEntries(model.entries, 'module').map((entry) => entry.campaignId)).toEqual(['leadership-1', 'pulse-1'])
     expect(filterReportLibraryEntries(model.entries, 'cohort').map((entry) => entry.campaignId)).toEqual(['onboarding-1'])
+  })
+
+  it('keeps featured empty when only bounded output routes are report-ready', () => {
+    const boundedOnly = campaigns.filter((campaign) => campaign.scan_type !== 'exit' && campaign.scan_type !== 'retention')
+    const model = buildReportLibraryEntries(boundedOnly)
+
+    expect(model.entries).toHaveLength(3)
+    expect(model.featured).toBeNull()
   })
 })
 

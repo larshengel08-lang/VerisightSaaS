@@ -200,7 +200,11 @@ export default async function ReportsPage({
                     >
                       Open ↗
                     </Link>
-                    <PdfDownloadButton campaignId={entry.campaignId} campaignName={entry.campaignName} scanType={entry.scanType} />
+                    {entry.formalReport ? (
+                      <PdfDownloadButton campaignId={entry.campaignId} campaignName={entry.campaignName} scanType={entry.scanType} />
+                    ) : (
+                      <DashboardChip label="Bounded outputread" tone="blue" />
+                    )}
                   </div>
                 </div>
               </div>

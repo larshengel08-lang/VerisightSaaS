@@ -8,6 +8,7 @@ export interface ReportLibraryEntry {
   campaignName: string
   scanType: ScanType
   category: Exclude<ReportLibraryCategory, 'all'>
+  formalReport: boolean
   categoryLabel: string
   title: string
   summary: string
@@ -20,6 +21,7 @@ export interface FeaturedReportEntry {
   campaignId: string
   campaignName: string
   scanType: ScanType
+  formalReport: true
   title: string
   subtitle: string
   description: string
@@ -48,6 +50,10 @@ function getCategory(scanType: ScanType): Exclude<ReportLibraryCategory, 'all'> 
   if (MANAGEMENT_SCAN_TYPES.includes(scanType)) return 'management'
   if (MODULE_SCAN_TYPES.includes(scanType)) return 'module'
   return 'module'
+}
+
+function isFormalReportRoute(scanType: ScanType) {
+  return MANAGEMENT_SCAN_TYPES.includes(scanType)
 }
 
 function getCategoryLabel(category: Exclude<ReportLibraryCategory, 'all'>) {
@@ -113,7 +119,7 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
 
   const featuredCandidate =
     [...readyCampaigns]
-      .filter((campaign) => campaign.total_completed >= 10)
+      .filter((campaign) => campaign.total_completed >= 10 && isFormalReportRoute(campaign.scan_type))
       .sort((left, right) => getPriority(right) - getPriority(left))[0] ?? null
 
   const entries: ReportLibraryEntry[] = readyCampaigns.map((campaign) => {
@@ -124,6 +130,7 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
       campaignName: campaign.campaign_name,
       scanType: campaign.scan_type,
       category,
+      formalReport: isFormalReportRoute(campaign.scan_type),
       categoryLabel: getCategoryLabel(category),
       title: getEntryTitle(campaign, category),
       summary: getEntrySummary(campaign, category),
@@ -138,6 +145,7 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
         campaignId: featuredCandidate.campaign_id,
         campaignName: featuredCandidate.campaign_name,
         scanType: featuredCandidate.scan_type,
+        formalReport: true,
         title:
           featuredCandidate.campaign_name ||
           `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} ${formatDutchQuarter(featuredCandidate.created_at)}`,
