@@ -89,10 +89,10 @@ describe('report library', () => {
     expect(model.entries.find((entry) => entry.campaignId === 'onboarding-1')?.category).toBe('cohort')
   })
 
-  it('keeps report-ready entries at attention until reports know real follow-up truth', () => {
+  it('marks report-ready entries with shared bridge assessment truth', () => {
     const model = buildReportLibraryEntries(campaigns)
 
-    expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.bridgeState).toBe('attention')
+    expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.bridgeState).toBe('candidate')
   })
 
   it('filters cards per category without inventing an all-in-one export layer', () => {

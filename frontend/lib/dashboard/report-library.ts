@@ -105,12 +105,13 @@ function getPriority(campaign: CampaignStats) {
 }
 
 function getReportBridgeState(campaign: CampaignStats): ReportLibraryEntry['bridgeState'] {
+  const isReportReady = campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD
   const assessment = buildBridgeAssessmentTruth({
     sourceType: 'report',
     sourceId: campaign.campaign_id,
-    signalReadable: campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD,
-    managementMeaningClear: false,
-    plausibleFollowUpExists: false,
+    signalReadable: isReportReady,
+    managementMeaningClear: isReportReady,
+    plausibleFollowUpExists: isReportReady,
     assessedAt: campaign.created_at,
   })
 
