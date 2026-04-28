@@ -124,18 +124,6 @@ function getRoleFallback(memberRole: MemberRole | null) {
   return ROLE_LABELS[memberRole]
 }
 
-function getOwnerNames(checkpoints: PilotLearningCheckpoint[], deliveryRecord: CampaignDeliveryRecord | null) {
-  const managementOwner =
-    checkpoints.find((checkpoint) => checkpoint.checkpoint_key === 'first_management_use')?.owner_label?.trim() ?? null
-  const reviewOwner =
-    checkpoints.find((checkpoint) => checkpoint.checkpoint_key === 'follow_up_review')?.owner_label?.trim() ?? null
-
-  return {
-    ownerName: managementOwner || reviewOwner || deliveryRecord?.operator_owner || null,
-    reviewOwnerName: reviewOwner || managementOwner || deliveryRecord?.operator_owner || null,
-  }
-}
-
 function buildOpenSignals(args: {
   status: ActionCenterPreviewStatus
   routeOwner: string | null
@@ -275,7 +263,6 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
       const avgSignal = context.stats?.avg_signal_score ?? context.stats?.avg_risk_score ?? null
       const fallbackAuthor = context.organizationName || 'Verisight'
       const reviewDate = route.reviewScheduledFor
-      const { ownerName, reviewOwnerName } = getOwnerNames(context.learningCheckpoints, context.deliveryRecord)
       const status = route.routeStatus
       const openSignals = buildOpenSignals({
         status,
@@ -320,14 +307,12 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         teamId: context.scopeValue,
         teamLabel: context.scopeLabel,
         ownerId: context.assignedManager?.userId ?? null,
-        ownerName: context.assignedManager?.displayName ?? ownerName,
+        ownerName: route.owner,
         ownerRole: context.assignedManager?.displayName
           ? `Manager - ${context.scopeLabel}`
-          : ownerName
-            ? `Owner - ${context.organizationName}`
-            : getRoleFallback(context.memberRole),
+          : getRoleFallback(context.memberRole),
         ownerSubtitle: context.scopeLabel,
-        reviewOwnerName: reviewOwnerName ?? context.assignedManager?.displayName ?? route.owner ?? null,
+        reviewOwnerName: route.owner,
         priority,
         status,
         reviewDate,
