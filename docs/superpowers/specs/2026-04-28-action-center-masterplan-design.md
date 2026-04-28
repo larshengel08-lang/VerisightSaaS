@@ -109,7 +109,6 @@ Die route draagt minimaal deze waarheden:
 - `reviewScheduledFor`
 - `reviewRhythm`
 - `reviewReason`
-- `reviewDecisionType`
 
 5. `routeState`
 - `routeStatus`
@@ -139,6 +138,7 @@ Niet elk veld hoeft op dag een al zichtbaar of verplicht te zijn, maar de waarhe
   - `routeIdentity`
   - `signalContext.signalSummary`
   - `signalContext.managementQuestion`
+  - `routeOpenedAt`
 - nog niet verplicht:
   - eigenaar
   - expected effect
@@ -186,6 +186,15 @@ Semantische regel:
 - `routeStatus` zegt waar de route staat
 - `reviewOutcome` zegt wat de laatste reviewbeslissing was
 
+Voor V1 bestaat er bewust geen apart canoniek veld naast `reviewOutcome` voor een toekomstige reviewbeslissing.
+De spec introduceert dus geen `reviewDecisionType` als tweede beslislaag.
+
+Als later een pre-review intentielaag nodig blijkt, moet die expliciet als aparte semantiek worden toegevoegd:
+- intentie voor de komende review
+- uitkomst van de afgeronde review
+
+Die laag hoort niet in V1 thuis.
+
 Voorbeeld:
 - een route kan `in-uitvoering` zijn met laatste `reviewOutcome = bijstellen`
 - een route kan `afgerond` zijn met laatste `reviewOutcome = afronden`
@@ -231,15 +240,46 @@ De grens tussen `aandacht` en `opvolging` moet niet impliciet blijven. Daarom kr
 - het signaal is managementwaardig genoeg om opvolging te overwegen
 - er is al een voorstelbare scope en eerste interventierichting
 - eigenaar of review zijn nog niet expliciet vastgelegd
+- er bestaat nog geen canonieke Action Center-route
 
 `Actieve route`
-- er is expliciet gekozen voor opvolging
-- eigenaar, interventie en reviewplan zijn vastgelegd
-- de route hoort thuis in Action Center
+- er is expliciet gekozen om een route te openen in Action Center
+- de route heeft een canoniek routecontract
+- de route projecteert altijd naar een `routeStatus`
+
+### 6.1.1 Mapping tussen entry-lifecycle en routeStatus
+
+De twee lifecycle-vocabulaires beschrijven verschillende dingen:
+
+- `aandacht -> route-kandidaat -> actieve route` beschrijft toegangsdrempel en zichtbaarheid
+- `te-bespreken / in-uitvoering / geblokkeerd / afgerond / gestopt` beschrijft de status van een reeds geopende route
+
+Canonieke mapping:
+- `aandacht`
+  - buiten Action Center
+  - geen routecontract
+  - geen `routeStatus`
+
+- `route-kandidaat`
+  - buiten de echte routeflow
+  - nog geen canonieke Action Center-route
+  - nog geen `routeStatus`
+
+- `actieve route`
+  - routecontract bestaat
+  - altijd zichtbaar als route in Action Center
+  - projecteert naar precies een `routeStatus`
+
+Startstatus voor een actieve route:
+- `te-bespreken` wanneer de route is geopend, maar eigenaar, interventie of reviewplan nog niet compleet zijn
+- `in-uitvoering` wanneer eigenaar, interventie, expected effect en reviewplan compleet zijn
 
 ### 6.2 Canonieke entry rule
 
-Een signaal wordt `Action Center-waardig` zodra aan alle onderstaande voorwaarden is voldaan:
+De overgang heeft twee drempels.
+
+`Drempel 1: route-kandidaat`
+Een signaal wordt kandidaat voor opvolging zodra aan alle onderstaande voorwaarden is voldaan:
 
 1. Het signaal is leesbaar genoeg voor managementactie.
 De campagne of route zit op een niveau waarop overview, campaign detail of report al een echte eerste managementvraag dragen.
@@ -256,6 +296,12 @@ Dat kan HR, manager of een specifieke verantwoordelijke combinatie zijn, maar ni
 5. Er is een logisch reviewmoment te plannen.
 Niet alleen een datum, maar een uitlegbaar moment waarop iets opnieuw gelezen of besloten wordt.
 
+`Drempel 2: actieve route`
+Een kandidaat wordt pas een echte Action Center-route zodra:
+- HR of de verantwoordelijke gebruiker expliciet kiest om de route te openen
+- de route een canoniek routecontract krijgt
+- de route daarna projecteert naar `te-bespreken` of `in-uitvoering`
+
 ### 6.3 Wat blijft nog buiten Action Center
 
 Een signaal blijft in overview / campaign / report als:
@@ -266,7 +312,24 @@ Een signaal blijft in overview / campaign / report als:
 
 Dat betekent:
 - aandacht zonder expliciete opvolgkeuze blijft buiten Action Center
-- Action Center begint pas bij echte opvolgbaarheid
+- Action Center begint pas bij een expliciet geopende route
+
+### 6.3.1 Waar de kandidaat zichtbaar is
+
+`route-kandidaat` is zichtbaar in:
+- HR overview
+- campaign detail
+- reports
+
+`route-kandidaat` mag optioneel ook op Action Center landing als samenvattend signaal zichtbaar zijn, maar telt dan nog niet als echte route.
+
+Een kandidaat verschijnt pas in:
+- actie-overzichten
+- routedetail
+- reviewflow
+- managerflow
+
+wanneer de route daadwerkelijk is geopend en dus een canoniek routecontract heeft.
 
 ### 6.4 Korte-termijn productregel
 
