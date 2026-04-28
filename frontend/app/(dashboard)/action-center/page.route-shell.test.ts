@@ -1,7 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { projectActionCenterCoreSemantics } from "@/lib/action-center-core-semantics";
 import { buildLiveActionCenterItems } from "@/lib/action-center-live";
 import type { LiveActionCenterCampaignContext } from "@/lib/action-center-live-context";
+import { projectActionCenterRoute } from "@/lib/action-center-route-contract";
 import type { Campaign, CampaignStats } from "@/lib/types";
 import type { CampaignDeliveryRecord } from "@/lib/ops-delivery";
 import type { PilotLearningDossier } from "@/lib/pilot-learning";
@@ -167,8 +169,17 @@ describe("action center landing shell", () => {
   it("requires preview items to carry canonical core semantics as one grouped field", () => {
     const context = buildLiveContext();
     const [item] = buildLiveActionCenterItems([context]);
+    const route = projectActionCenterRoute(context);
 
     expect(item).toBeDefined();
+    expect(item.coreSemantics).toEqual(projectActionCenterCoreSemantics({
+      campaign: context.campaign,
+      assignedManager: context.assignedManager,
+      deliveryRecord: context.deliveryRecord,
+      learningDossier: context.learningDossier,
+      learningCheckpoints: context.learningCheckpoints,
+      route,
+    }));
     expect(item.coreSemantics).toMatchObject({
       route: {
         campaignId: context.campaign.id,
