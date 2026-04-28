@@ -10,6 +10,7 @@ interface MarketingInlineContactPanelProps {
   defaultCtaSource: string
   id?: string
   badge?: string | null
+  contactQuestionPlaceholder?: string
 }
 
 export function MarketingInlineContactPanel({
@@ -20,6 +21,7 @@ export function MarketingInlineContactPanel({
   defaultCtaSource,
   id = 'kennismaking',
   badge = 'Vrijblijvende suite-demo',
+  contactQuestionPlaceholder,
 }: MarketingInlineContactPanelProps) {
   return (
     <div
@@ -55,6 +57,7 @@ export function MarketingInlineContactPanel({
               surface="light"
               defaultRouteInterest={defaultRouteInterest}
               defaultCtaSource={defaultCtaSource}
+              questionPlaceholder={contactQuestionPlaceholder}
             />
           </Suspense>
         </div>

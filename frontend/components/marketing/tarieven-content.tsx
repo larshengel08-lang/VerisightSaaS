@@ -11,12 +11,12 @@ const corePricing = [
     price: 'EUR 2.950',
     accent: AC.deep,
     accentFaint: AC.faint,
-    body: 'De standaard eerste instap voor terugkijkende vertrekduiding en een professioneel managementrapport over uitstroom.',
+    body: 'De standaard eerste stap voor organisaties die vertrek scherp willen duiden en daar een bruikbaar managementrapport voor nodig hebben.',
     bullets: [
-      'Inrichting exit-campagne en respondentflow',
+      'Inrichting van de exit-campagne en respondentflow',
       'Dashboard en managementrapport',
-      'Toelichting op de uitkomsten',
-      'Bestuurlijke handoff inbegrepen',
+      'Toelichting op de uitkomsten en eerste vervolgstap',
+      'Eerste managementhandoff inbegrepen',
     ],
     href: '/producten/exitscan',
   },
@@ -25,11 +25,11 @@ const corePricing = [
     price: 'EUR 3.450',
     accent: T.teal,
     accentFaint: T.tealFaint,
-    body: 'Gerichte baseline om behoudsdruk eerder zichtbaar te maken, met extra nadruk op privacy en groepsduiding.',
+    body: 'Gerichte baseline om eerder te zien waar behoud onder druk staat, met extra nadruk op privacy en groepsduiding.',
     bullets: [
       'Retentiesignaal, stay-intent en vertrekintentie',
       'Dashboard en managementrapport',
-      'Gerichte managementduiding',
+      'Gerichte eerste duiding voor management',
       'Geen individuele signalen naar management',
     ],
     href: '/producten/retentiescan',
@@ -37,12 +37,12 @@ const corePricing = [
 ] as const
 
 const followOnRows = [
-  ['ExitScan ritmeroute', 'Op aanvraag', 'Logisch vervolg na eerste baseline wanneer proces, volume en eigenaarschap al staan.'],
-  ['RetentieScan ritmeroute', 'Op aanvraag', 'Doorlopende vervolgvorm wanneer vroegsignalering structureel onderdeel van de managementcyclus wordt.'],
-  ['Segment Deep Dive', 'EUR 950', 'Extra segmentanalyse als metadata en minimale respondentengroep dat dragen.'],
-  ['Onboarding 30-60-90', 'Op aanvraag', 'Bounded peer-route wanneer vroege landing van nieuwe medewerkers centraal staat.'],
-  ['Pulse', 'Op aanvraag', 'Compacte reviewlaag na een eerste kernroute of baseline, geen nieuwe eerste instap.'],
-  ['Leadership Scan', 'Op aanvraag', 'Begrensde managementread nadat een bestaand people-signaal eerst duiding of verificatie vraagt.'],
+  ['ExitScan ritmeroute', 'Op aanvraag', 'Logisch vervolg na een eerste baseline, wanneer proces, volume en eigenaarschap al staan.'],
+  ['RetentieScan ritmeroute', 'Op aanvraag', 'Doorlopende vervolgvorm wanneer vroegsignalering een vast onderdeel van de managementcyclus wordt.'],
+  ['Segment Deep Dive', 'EUR 950', 'Extra segmentanalyse als metadata en minimale respondentgroep dat toelaten.'],
+  ['Onboarding 30-60-90', 'Op aanvraag', 'Gerichte vervolgronde wanneer vroege landing van nieuwe medewerkers centraal staat.'],
+  ['Pulse', 'Op aanvraag', 'Compacte vervolgronde na een eerste kernroute of baseline, geen nieuwe eerste stap.'],
+  ['Leadership Scan', 'Op aanvraag', 'Gerichte managementronde nadat een bestaand people-signaal eerst duiding of verificatie vraagt.'],
 ] as const
 
 // ── ① Hero ────────────────────────────────────────────────────────
@@ -60,13 +60,13 @@ function HeroSection() {
             <div style={{ animation: 'slideUpFade .9s cubic-bezier(.16,1,.3,1) .15s both' }}>
               <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink }}>
                 Transparante prijs.<br />
-                <em className="shimmer-text" style={{ fontStyle: 'italic' }}>Heldere scope.</em>
+                <em className="shimmer-text" style={{ fontStyle: 'italic' }}>Heldere eerste stap.</em>
               </h1>
             </div>
             <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
               <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 0' }}>
-                U koopt een gerichte route met vaste output, geen licentie. Dashboard, rapport en Action Center horen
-                daarna bij dezelfde suite-output, zodat prijs niet stopt bij inzicht maar doorloopt naar prioriteit en opvolging.
+                U koopt geen licentie, maar een gerichte eerste route met vaste output. Dashboard, rapport en Action Center horen
+                daarbij, zodat prijs niet stopt bij inzicht maar doorloopt naar eerste prioriteit en opvolging.
               </p>
             </div>
           </div>
@@ -97,11 +97,11 @@ function CorePricingSection() {
         <SectionMark num="02" label="Kernproducten" inView={sInView} />
         <Reveal delay={.05}>
           <h2 style={{ fontFamily: FF, fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 400, letterSpacing: '-.026em', color: T.ink, marginBottom: 14, lineHeight: 1.06 }}>
-            De eerste koop blijft helder.
+            De eerste koop blijft eenvoudig.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 44, maxWidth: '50ch' }}>
-            ExitScan en RetentieScan zijn de twee buyer-facing kernproducten. De prijsopbouw houdt de eerste route helder,
-            terwijl dashboard, rapport en Action Center daarna als gedeelde suite-output meebewegen.
+            ExitScan en RetentieScan zijn de twee kernproducten. De prijsopbouw houdt de eerste keuze eenvoudig,
+            terwijl dashboard, rapport en Action Center daarna in dezelfde outputlijn blijven meebewegen.
           </p>
         </Reveal>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -184,12 +184,12 @@ function CtaBand() {
             <div>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 12 }}>Prijs in context</div>
               <h2 style={{ fontFamily: FF, fontSize: 'clamp(22px,2.8vw,32px)', fontWeight: 400, letterSpacing: '-.02em', color: T.ink, lineHeight: 1.15, marginBottom: 12 }}>
-                Twijfelt u welke eerste route commercieel en inhoudelijk het best past?
+                Twijfelt u welke eerste route nu het best past?
               </h2>
               <p style={{ fontSize: 14, lineHeight: 1.7, color: T.inkSoft, maxWidth: '52ch' }}>
-                Gebruik het kennismakingsgesprek om eerst de kernroute, timing en privacygrenzen logisch te bepalen. Zo
-                blijft de offerte kleiner, helderder en beter verdedigbaar, terwijl dashboard, rapport en Action Center pas
-                meebewegen zodra de eerste route scherp staat.
+                Gebruik het kennismakingsgesprek om eerst route, timing en privacygrenzen scherp te krijgen. Zo
+                blijft de eerste offerte kleiner, helderder en beter verdedigbaar, terwijl dashboard, rapport en Action Center pas
+                meebewegen zodra de eerste route echt vaststaat.
               </p>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -222,6 +222,7 @@ function ContactSection() {
           body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy, prijs en hoe dashboard, rapport en Action Center daarna bounded samenkomen."
           defaultRouteInterest="exitscan"
           defaultCtaSource="pricing_form"
+          contactQuestionPlaceholder="Beschrijf kort wat u nu vooral wilt begrijpen van vertrek of behoud, waar besluitvorming nog vastloopt en welke eerste route nu het meest logisch lijkt."
         />
       </div>
     </section>
