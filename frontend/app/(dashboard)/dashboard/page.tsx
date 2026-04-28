@@ -23,6 +23,10 @@ import {
   resolveHrBridgeState,
 } from '@/lib/dashboard/hr-bridge-state'
 import {
+  canOpenActionCenterRoute,
+  hasOpenedActionCenterRoute,
+} from '@/lib/dashboard/open-action-center-route'
+import {
   normalizeDashboardPortfolioView,
   type DashboardPortfolioView,
 } from '@/lib/dashboard/shell-navigation'
@@ -114,7 +118,7 @@ export default async function DashboardHomePage({
   const { data: primaryGuideDeliveryRecord } = primaryGuideCampaign
     ? await supabase
         .from('campaign_delivery_records')
-        .select('id, first_management_use_confirmed_at')
+        .select('id, lifecycle_stage, first_management_use_confirmed_at')
         .eq('campaign_id', primaryGuideCampaign.campaign_id)
         .maybeSingle()
     : { data: null }
@@ -181,11 +185,14 @@ export default async function DashboardHomePage({
     leadCampaign && leadCampaign.campaign_id !== primaryGuideCampaign?.campaign_id
       ? await supabase
           .from('campaign_delivery_records')
-          .select('id, first_management_use_confirmed_at')
+          .select('id, lifecycle_stage, first_management_use_confirmed_at')
           .eq('campaign_id', leadCampaign.campaign_id)
           .maybeSingle()
       : { data: primaryGuideDeliveryRecord ?? null }
-  const leadCampaignRouteEntryStage = leadCampaignDeliveryRecord?.first_management_use_confirmed_at ? 'active' : null
+  const leadCampaignRouteEntryStage =
+    leadCampaignDeliveryRecord && hasOpenedActionCenterRoute(leadCampaignDeliveryRecord) ? 'active' : null
+  const leadCampaignRouteOpenable =
+    leadCampaignDeliveryRecord ? canOpenActionCenterRoute(leadCampaignDeliveryRecord) : false
   const leadCampaignBridgeAssessment =
     leadCampaign && leadCampaignCompositionState
       ? buildBridgeAssessmentTruth({
@@ -193,7 +200,8 @@ export default async function DashboardHomePage({
           sourceId: leadCampaign.campaign_id,
           signalReadable: isManagementVisibleState(leadCampaignCompositionState),
           managementMeaningClear: isRecommendationReadyState(leadCampaignCompositionState),
-          plausibleFollowUpExists: isRecommendationReadyState(leadCampaignCompositionState),
+          plausibleFollowUpExists:
+            isRecommendationReadyState(leadCampaignCompositionState) && leadCampaignRouteOpenable,
           assessedAt: leadCampaign.created_at,
         })
       : null

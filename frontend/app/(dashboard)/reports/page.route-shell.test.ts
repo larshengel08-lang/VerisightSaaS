@@ -38,8 +38,10 @@ describe("reports route shell", () => {
   it("wires active route truth into the report library model", () => {
     const source = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
 
+    expect(source).toContain("lifecycle_stage");
     expect(source).toContain("first_management_use_confirmed_at");
     expect(source).toContain("routeEntryStageByCampaignId");
+    expect(source).toContain("routeOpenableByCampaignId");
     expect(source).toContain("buildReportLibraryEntries(campaigns,");
   });
 });

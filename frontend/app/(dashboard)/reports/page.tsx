@@ -12,6 +12,10 @@ import {
   getReportEntryBridge,
   type ReportLibraryCategory,
 } from "@/lib/dashboard/report-library";
+import {
+  canOpenActionCenterRoute,
+  hasOpenedActionCenterRoute,
+} from "@/lib/dashboard/open-action-center-route";
 import { SuiteAccessDenied } from "@/components/dashboard/suite-access-denied";
 import { createClient } from "@/lib/supabase/server";
 import { loadSuiteAccessContext } from "@/lib/suite-access-server";
@@ -84,15 +88,22 @@ export default async function ReportsPage({
     campaignIds.length > 0
       ? await supabase
           .from("campaign_delivery_records")
-          .select("campaign_id, first_management_use_confirmed_at")
+          .select("campaign_id, lifecycle_stage, first_management_use_confirmed_at")
           .in("campaign_id", campaignIds)
-          .not("first_management_use_confirmed_at", "is", null)
       : { data: [] };
   const routeEntryStageByCampaignId = Object.fromEntries(
-    (deliveryRecords ?? []).map((record) => [record.campaign_id, "active" as const]),
+    (deliveryRecords ?? [])
+      .filter((record) => hasOpenedActionCenterRoute(record))
+      .map((record) => [record.campaign_id, "active" as const]),
+  );
+  const routeOpenableByCampaignId = Object.fromEntries(
+    (deliveryRecords ?? [])
+      .filter((record) => canOpenActionCenterRoute(record))
+      .map((record) => [record.campaign_id, true]),
   );
   const reportModel = buildReportLibraryEntries(campaigns, {
     routeEntryStageByCampaignId,
+    routeOpenableByCampaignId,
   });
   const filteredEntries = filterReportLibraryEntries(
     reportModel.entries,

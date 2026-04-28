@@ -97,9 +97,19 @@ describe('report library', () => {
   })
 
   it('marks report-ready entries with shared bridge assessment truth', () => {
-    const model = buildReportLibraryEntries(campaigns)
+    const model = buildReportLibraryEntries(campaigns, {
+      routeOpenableByCampaignId: {
+        'exit-1': true,
+      },
+    })
 
     expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.bridgeState).toBe('candidate')
+  })
+
+  it('keeps report-ready entries on attention until canonical route-openable truth exists', () => {
+    const model = buildReportLibraryEntries(campaigns)
+
+    expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.bridgeState).toBe('attention')
   })
 
   it('allows report entries to become active when real route truth is available', () => {
@@ -129,7 +139,11 @@ describe('report library', () => {
   })
 
   it('keeps candidate and active report destinations aligned with reports bridge policy', () => {
-    const candidateEntry = buildReportLibraryEntries(campaigns).entries.find((entry) => entry.campaignId === 'exit-1')
+    const candidateEntry = buildReportLibraryEntries(campaigns, {
+      routeOpenableByCampaignId: {
+        'exit-1': true,
+      },
+    }).entries.find((entry) => entry.campaignId === 'exit-1')
     const activeEntry = buildReportLibraryEntries(campaigns, {
       routeEntryStageByCampaignId: {
         'exit-1': 'active',

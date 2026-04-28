@@ -49,6 +49,8 @@ describe('dashboard home UX guardrails', () => {
 
     expect(source).toContain('Beoordeel opvolging')
     expect(source).toContain('Actieve opvolging')
+    expect(source).toContain('lifecycle_stage')
+    expect(source).toContain('canOpenActionCenterRoute')
     expect(source).toContain('first_management_use_confirmed_at')
     expect(source).toContain('leadCampaign.campaign_id')
     expect(source).not.toContain('routeEntryStage: null')

@@ -7,6 +7,7 @@ describe('campaign detail review guardrails', () => {
     const normalizedSource = source.replaceAll('"', "'")
 
     expect(source).toContain('Open in Action Center')
+    expect(source).toContain('canOpenActionCenterRoute(deliveryRecord)')
     expect(source).toContain('first_management_use_confirmed_at')
     expect(normalizedSource).toContain(".select('id, lifecycle_stage, first_management_use_confirmed_at')")
   })

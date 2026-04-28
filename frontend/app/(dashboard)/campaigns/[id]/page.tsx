@@ -556,11 +556,15 @@ export default async function CampaignPage({ params }: Props) {
   const prefersReportFirst = compositionState === "closed";
   const actionCenterBridge = buildCampaignDetailActionCenterBridge({
     campaignId: id,
-    routeEntryStage: deliveryRecord?.first_management_use_confirmed_at
-      ? "active"
-      : null,
+    routeEntryStage:
+      deliveryRecord && hasOpenedActionCenterRoute(deliveryRecord)
+        ? "active"
+        : null,
     canOpenRoute:
-      showManagementOutput && isLiveActionCenterScanType(stats.scan_type),
+      showManagementOutput &&
+      isLiveActionCenterScanType(stats.scan_type) &&
+      Boolean(deliveryRecord) &&
+      canOpenActionCenterRoute(deliveryRecord),
     assessedAt: deliveryRecord?.updated_at ?? stats.created_at,
   });
   const compositionStateMeta = {
@@ -770,7 +774,7 @@ export default async function CampaignPage({ params }: Props) {
           trustNoteTone: "emerald" as const,
           summaryTone: "slate" as const,
           summarySignalLabel: "Retentiesignaal",
-          summaryContextLabel: "Groepssignaal Ã‚Â· eerst toetsen",
+          summaryContextLabel: "Groepssignaal · eerst toetsen",
           summaryContextTone: "slate" as const,
           summaryLeadTitle: "Eerste bestuurlijke leesrichting",
           summaryLeadDescription:
@@ -842,7 +846,7 @@ export default async function CampaignPage({ params }: Props) {
             trustNoteTone: "amber" as const,
             summaryTone: "slate" as const,
             summarySignalLabel: "Teamsignaal",
-            summaryContextLabel: "Lokale read Ã‚Â· department-first",
+            summaryContextLabel: "Lokale context · afdeling eerst",
             summaryContextTone: "slate" as const,
             summaryLeadTitle: "Eerste bestuurlijke leesrichting",
             summaryLeadDescription:
@@ -986,7 +990,7 @@ export default async function CampaignPage({ params }: Props) {
                 trustNoteTone: "amber" as const,
                 summaryTone: "slate" as const,
                 summarySignalLabel: "Leadershipsignaal",
-                summaryContextLabel: "Compacte contextread Â· groepsniveau",
+                summaryContextLabel: "Compacte context · groepsniveau",
                 summaryContextTone: "slate" as const,
                 summaryLeadTitle: "Eerste bestuurlijke leesrichting",
                 summaryLeadDescription:
@@ -1058,7 +1062,7 @@ export default async function CampaignPage({ params }: Props) {
                   trustNoteTone: "blue" as const,
                   summaryTone: "slate" as const,
                   summarySignalLabel: "Frictiescore",
-                  summaryContextLabel: "Werkfrictie Ã‚Â· verklarende laag",
+                  summaryContextLabel: "Werkfrictie · verklarende laag",
                   summaryContextTone: "slate" as const,
                   summaryLeadTitle: "Eerste bestuurlijke leesrichting",
                   summaryLeadDescription:
@@ -1334,7 +1338,7 @@ export default async function CampaignPage({ params }: Props) {
                         {teamPriorityRead.groups.map((group) => (
                           <DashboardPanel
                             key={group.label}
-                            eyebrow={`${group.priorityTitle} Ã‚Â· Afdeling Ã‚Â· n = ${group.n}`}
+                            eyebrow={`${group.priorityTitle} · Afdeling · n = ${group.n}`}
                             title={group.label}
                             value={`${group.avgSignal.toFixed(1)}/10`}
                             body={`${group.summary} ${group.priorityBody} Eerste lokale factor: ${group.topFactorLabel}.`}
@@ -1408,7 +1412,7 @@ export default async function CampaignPage({ params }: Props) {
                     {productExperience.supplementalTitle}
                   </h3>
                   <DashboardChip
-                    label="Autonomie Ã‚Â· Competentie Ã‚Â· Verbondenheid"
+                    label="Autonomie · Competentie · Verbondenheid"
                     tone="slate"
                   />
                 </div>
@@ -2140,7 +2144,7 @@ export default async function CampaignPage({ params }: Props) {
                   <DashboardPanel
                     eyebrow="Wat bewust nog wacht"
                     title="Nog geen volle aanbevelingslaag"
-                    body="Drivers, aanbevelingen en 30Ã¢â‚¬â€œ90-dagenroute gaan pas open zodra minstens 10 complete responses beschikbaar zijn en privacygrenzen niet meer onnodig veel verbergen."
+                    body="Drivers, aanbevelingen en de vervolgrichting openen pas zodra minstens 10 complete responses beschikbaar zijn en privacygrenzen niet meer onnodig veel verbergen."
                     tone="amber"
                   />
                 </div>
@@ -2271,7 +2275,7 @@ export default async function CampaignPage({ params }: Props) {
                   </div>
                   <p className="mt-1 text-sm leading-6 text-slate-600">
                     {primaryTeamPriority && primaryTeamPlaybook
-                      ? `Gebruik deze TeamScan nu als compacte vervolgstap: ${primaryTeamPriority.label} vraagt eerst verificatie op ${primaryTeamPriority.topFactorLabel.toLowerCase()}, daarna kies je bewust wie de eerste lokale stap trekt en hoe smal de review blijft.`
+                      ? `Gebruik deze TeamScan nu als compacte vervolgstap: ${primaryTeamPriority.label} vraagt eerst verificatie op ${primaryTeamPriority.topFactorLabel.toLowerCase()}, daarna kies je bewust wie de eerste lokale stap trekt en hoe klein de review blijft.`
                       : "TeamScan geeft al wel lokale richting, maar blijft bewust klein zolang er nog geen eerlijke eerste prioriteit kan worden vrijgegeven."}
                   </p>
                   <div className="mt-4 grid gap-4 lg:grid-cols-4">
@@ -2293,7 +2297,7 @@ export default async function CampaignPage({ params }: Props) {
                       title={
                         primaryTeamPlaybook?.owner ?? "HR + afdelingsleider"
                       }
-                      body="Maak expliciet wie de eerste lokale managementhuddle trekt en wie de vervolgstap terugbrengt in de review."
+                      body="Maak expliciet wie het eerste lokale gesprek trekt en wie de vervolgstap terugbrengt in de review."
                       tone="slate"
                     />
                     <DashboardPanel
@@ -2313,7 +2317,7 @@ export default async function CampaignPage({ params }: Props) {
                       title={
                         primaryTeamPlaybook?.review ?? "Lokale hercheck eerst"
                       }
-                      body="Gebruik het reviewmoment om bewust te kiezen: nog een lokale vervolgstap, terug naar bredere duiding of juist stoppen met verder lokaliseren."
+                      body="Gebruik het reviewmoment om bewust te kiezen: nog een lokale vervolgstap, terug naar het bredere beeld of juist stoppen."
                       tone="amber"
                     />
                   </div>
@@ -2468,7 +2472,7 @@ export default async function CampaignPage({ params }: Props) {
         {showDetailedManagementOutput ? (
           <DashboardSection
             id="route"
-            eyebrow="30Ã¢â‚¬â€œ90 dagenroute"
+            eyebrow="Vervolg na het eerste gesprek"
             title={productExperience.routeTitle}
             description={productExperience.routeDescription}
             aside={
@@ -2511,7 +2515,7 @@ export default async function CampaignPage({ params }: Props) {
                     />
                     <DashboardPanel
                       eyebrow="Als de vraag breder wordt"
-                      title="Ga terug naar bredere duiding"
+                        title="Ga terug naar het bredere beeld"
                       body="Schakel niet door naar extra lokalisatie als de echte vraag weer organisatieniveau, behoudsbeeld of bredere duiding vraagt."
                       tone="amber"
                     />
@@ -2533,7 +2537,7 @@ export default async function CampaignPage({ params }: Props) {
                     />
                     <DashboardPanel
                       eyebrow="Als de vraag breder wordt"
-                      title="Ga terug naar bredere duiding"
+                        title="Ga terug naar het bredere beeld"
                       body="Schakel niet door naar extra Leadership-verbreding als de echte vraag weer lokale lokalisatie, bredere duiding of een ander productspoor vraagt."
                       tone="amber"
                     />
@@ -2566,13 +2570,11 @@ export default async function CampaignPage({ params }: Props) {
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                        Mogelijke vervolgroutes
+                        Alleen als vervolg echt nodig is
                       </p>
                       <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">
-                        Gebruik deze routes alleen als de eerste managementstap
-                        al expliciet is gemaakt. Zo blijft vervolg hulpvol en
-                        compact, in plaats van automatisch een grotere route
-                        te openen.
+                        Gebruik deze routes alleen als de eerste stap al expliciet is gemaakt. Zo blijft vervolg
+                        gericht, in plaats van automatisch groter te worden.
                       </p>
                     </div>
                     <DashboardChip label="Compacte vervolgroutes" tone="slate" />
@@ -2836,7 +2838,7 @@ export default async function CampaignPage({ params }: Props) {
                       }
                       body={
                         learningCloseoutEvidenceCount > 0
-                          ? "Er is al minstens ÃƒÂ©ÃƒÂ©n expliciete review-, vervolg- of stopuitkomst vastgelegd. Daarmee kan delivery later eerlijker naar follow-up of learning closeout bewegen."
+                          ? "Er is al minstens één expliciete review-, vervolg- of stopuitkomst vastgelegd. Daarmee kan delivery later eerlijker naar opvolging of learning closeout bewegen."
                           : learningDossiers.length > 0
                             ? "Er zijn al gekoppelde dossiers, maar nog geen expliciete review-, vervolg- of stopuitkomst. Houd delivery dus bewust open tot die opvolging echt is vastgelegd."
                             : "Zonder gekoppeld learningdossier hoort delivery-closeout nog niet als afgerond te voelen."

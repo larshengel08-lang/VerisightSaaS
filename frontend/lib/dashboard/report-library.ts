@@ -33,6 +33,7 @@ export interface FeaturedReportEntry {
 
 export interface BuildReportLibraryEntriesOptions {
   routeEntryStageByCampaignId?: Partial<Record<string, ActionCenterEntryStage | null>>
+  routeOpenableByCampaignId?: Partial<Record<string, boolean>>
 }
 
 const MANAGEMENT_SCAN_TYPES: ScanType[] = ['exit', 'retention', 'leadership']
@@ -114,15 +115,16 @@ function getPriority(campaign: CampaignStats) {
 function getReportBridgeState(args: {
   campaign: CampaignStats
   routeEntryStage: ActionCenterEntryStage | null
+  routeOpenable: boolean
 }): ReportLibraryEntry['bridgeState'] {
-  const { campaign, routeEntryStage } = args
+  const { campaign, routeEntryStage, routeOpenable } = args
   const isReportReady = campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD
   const assessment = buildBridgeAssessmentTruth({
     sourceType: 'report',
     sourceId: campaign.campaign_id,
     signalReadable: isReportReady,
     managementMeaningClear: isReportReady,
-    plausibleFollowUpExists: isReportReady,
+    plausibleFollowUpExists: isReportReady && routeOpenable,
     assessedAt: campaign.created_at,
   })
 
@@ -175,6 +177,7 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[], options: B
       bridgeState: getReportBridgeState({
         campaign,
         routeEntryStage: options.routeEntryStageByCampaignId?.[campaign.campaign_id] ?? null,
+        routeOpenable: options.routeOpenableByCampaignId?.[campaign.campaign_id] === true,
       }),
     }
   })
@@ -187,6 +190,7 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[], options: B
         bridgeState: getReportBridgeState({
           campaign: featuredCandidate,
           routeEntryStage: options.routeEntryStageByCampaignId?.[featuredCandidate.campaign_id] ?? null,
+          routeOpenable: options.routeOpenableByCampaignId?.[featuredCandidate.campaign_id] === true,
         }),
         title:
           featuredCandidate.campaign_name ||
