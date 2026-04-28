@@ -190,6 +190,17 @@ function getReviewOutcomeMeta(outcome: ActionCenterReviewOutcome) {
   }
 }
 
+function getClosingStatusLabel(status: 'lopend' | 'afgerond' | 'gestopt') {
+  switch (status) {
+    case 'afgerond':
+      return 'Afgerond voor nu'
+    case 'gestopt':
+      return 'Bewust gestopt'
+    default:
+      return null
+  }
+}
+
 function compareReviewDate(left: string | null, right: string | null) {
   if (!left && !right) return 0
   if (!left) return 1
@@ -442,6 +453,10 @@ export function ActionCenterPreview({
       currentItems.map((item) => (item.id === itemId ? updater(item) : item)),
     )
   }
+
+  const closingLabel = selectedItem
+    ? getClosingStatusLabel(selectedItem.coreSemantics.closingSemantics.status)
+    : null
 
   function handleCreateAction() {
     if (!createForm.title.trim() || !createForm.teamId) {
@@ -855,6 +870,7 @@ export function ActionCenterPreview({
                               </div>
                               <h3 className="mt-3 text-[1.15rem] font-semibold tracking-[-0.02em] text-[#132033]">{item.title}</h3>
                               <p className="mt-2 max-w-[44rem] text-[0.98rem] leading-7 text-[#4f6175]">{item.summary}</p>
+                              <CompactLandingSummary item={item} />
                             </div>
                             <div className="flex shrink-0 items-start gap-3 xl:min-w-[198px] xl:justify-end">
                               <StatusPill status={item.status} />
@@ -1251,7 +1267,38 @@ export function ActionCenterPreview({
                               />
                             </div>
                           </div>
+
+                          <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Resultaatlus</p>
+                            <div className="mt-3 grid gap-3 md:grid-cols-3">
+                              {selectedItem.coreSemantics.resultLoop.whatWasTried ? (
+                                <RouteFieldCard
+                                  label="Wat is geprobeerd"
+                                  value={selectedItem.coreSemantics.resultLoop.whatWasTried}
+                                />
+                              ) : null}
+                              {selectedItem.coreSemantics.resultLoop.whatWeObserved ? (
+                                <RouteFieldCard
+                                  label="Wat zagen we terug"
+                                  value={selectedItem.coreSemantics.resultLoop.whatWeObserved}
+                                />
+                              ) : null}
+                              {selectedItem.coreSemantics.resultLoop.whatWasDecided ? (
+                                <RouteFieldCard
+                                  label="Wat is besloten"
+                                  value={selectedItem.coreSemantics.resultLoop.whatWasDecided}
+                                />
+                              ) : null}
+                            </div>
+                          </div>
                         </div>
+
+                        {closingLabel ? (
+                          <div className="mt-5 rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Afronding</p>
+                            <p className="mt-2 text-sm font-semibold text-white/86">{closingLabel}</p>
+                          </div>
+                        ) : null}
 
                         <div className="mt-5 space-y-3">
                           {selectedItem.openSignals.map((signal) => (
@@ -2070,6 +2117,31 @@ function EmptySection({ title, body }: { title: string; body: string }) {
       <h2 className="text-[1.45rem] font-semibold tracking-[-0.03em] text-[#132033]">{title}</h2>
       <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#5d6f84]">{body}</p>
     </section>
+  )
+}
+
+function CompactLandingSummary({ item }: { item: ActionCenterPreviewItem }) {
+  const summaryLines = [
+    item.coreSemantics.resultLoop.whatWeObserved,
+    item.coreSemantics.resultLoop.whatWasDecided,
+    item.coreSemantics.resultLoop.whatWasTried,
+  ].filter((value): value is string => Boolean(value)).slice(0, 2)
+
+  if (summaryLines.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="mt-4 rounded-[18px] border border-[#eadfce] bg-white px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Laatste route-read</p>
+      <div className="mt-3 space-y-2">
+        {summaryLines.map((line) => (
+          <p key={line} className="text-sm leading-6 text-[#42556b]">
+            {line}
+          </p>
+        ))}
+      </div>
+    </div>
   )
 }
 

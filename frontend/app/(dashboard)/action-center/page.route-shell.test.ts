@@ -202,6 +202,122 @@ describe("action center landing shell", () => {
     expect(markup).toContain(item.coreSemantics.actionFrame.expectedEffect);
   });
 
+  it("renders the compact result loop on route detail from grouped result semantics", () => {
+    const context = buildLiveContext();
+    const [item] = buildLiveActionCenterItems([context]);
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+
+    expect(markup).toContain("Wat is geprobeerd");
+    expect(markup).toContain(item.coreSemantics.resultLoop.whatWasTried);
+    expect(markup).toContain("Wat zagen we terug");
+    expect(markup).toContain(item.coreSemantics.resultLoop.whatWeObserved);
+    expect(markup).toContain("Wat is besloten");
+    expect(markup).toContain(item.coreSemantics.resultLoop.whatWasDecided);
+  });
+
+  it("renders closing semantics only for completed or intentionally stopped routes", () => {
+    const context = buildLiveContext();
+    const [baseItem] = buildLiveActionCenterItems([context]);
+    const completedItem = {
+      ...baseItem,
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        closingSemantics: {
+          status: "afgerond" as const,
+        },
+      },
+    };
+    const stoppedItem = {
+      ...baseItem,
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        closingSemantics: {
+          status: "gestopt" as const,
+        },
+      },
+    };
+
+    const ongoingMarkup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [baseItem],
+        initialSelectedItemId: baseItem.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+    const completedMarkup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [completedItem],
+        initialSelectedItemId: completedItem.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+    const stoppedMarkup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [stoppedItem],
+        initialSelectedItemId: stoppedItem.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+
+    expect(ongoingMarkup).not.toContain("Afgerond voor nu");
+    expect(ongoingMarkup).not.toContain("Bewust gestopt");
+    expect(completedMarkup).toContain("Afgerond voor nu");
+    expect(stoppedMarkup).toContain("Bewust gestopt");
+  });
+
+  it("keeps the landing summary compact with a last route-read instead of full detail semantics", () => {
+    const context = buildLiveContext();
+    const [item] = buildLiveActionCenterItems([context]);
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "overview",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+
+    expect(markup).toContain("Laatste route-read");
+    expect(markup).toContain(item.coreSemantics.resultLoop.whatWeObserved);
+    expect(markup).not.toContain("Waarom we opnieuw kijken");
+    expect(markup).not.toContain("Wat we dan toetsen");
+    expect(markup).not.toContain("Wat is geprobeerd");
+    expect(markup).not.toContain("Wat zagen we terug");
+    expect(markup).not.toContain("Wat is besloten");
+  });
+
   it("requires preview items to carry canonical core semantics as one grouped field", () => {
     const context = buildLiveContext();
     const [item] = buildLiveActionCenterItems([context]);
