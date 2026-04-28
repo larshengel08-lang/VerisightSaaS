@@ -36,7 +36,7 @@ const bodyFont = 'var(--font-ibm-plex-sans), system-ui, sans-serif'
 const heroTrustItems = [
   'Op groepsniveau',
   'Geen individuele voorspellingen',
-  'Dashboard, samenvatting en rapport',
+  'Dashboard, samenvatting en eerste opvolging',
 ]
 
 const marqueeLine = 'Van eerste inzicht naar concrete opvolging in dezelfde leeslijn'
@@ -90,7 +90,7 @@ const routeCards = [
 
 const trustPrinciples = [
   'Verisight helpt patronen op groepsniveau zichtbaar maken, niet om individuele medewerkers te beoordelen.',
-  'Dashboard, samenvatting en rapport dragen dezelfde managementlijn, zonder dat elk detail overal terug hoeft te komen.',
+  'Dashboard, samenvatting en eerste opvolging dragen dezelfde managementlijn, zonder dat elk detail overal terug hoeft te komen.',
   'Methodologische zorgvuldigheid blijft zichtbaar in de output: patronen, geen grote causaliteitsclaims.',
   'Opvolging wordt concreet gemaakt, maar blijft een begeleid gesprek in plaats van een automatisch oordeel.',
 ]
