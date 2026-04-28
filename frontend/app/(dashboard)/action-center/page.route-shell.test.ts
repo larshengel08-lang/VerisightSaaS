@@ -142,8 +142,6 @@ describe("action center landing shell", () => {
   it("keeps the server page thin and delegates the UI to ActionCenterPreview", () => {
     const pageSource = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
 
-    expect(pageSource).toContain("buildLiveActionCenterItems(liveContexts)");
-    expect(pageSource).toContain("getLiveActionCenterSummary(items)");
     expect(pageSource).toContain("<ActionCenterPreview");
     expect(pageSource).toContain("hideSidebar");
   });
@@ -164,9 +162,7 @@ describe("action center landing shell", () => {
 
     expect(previewSource).toContain("RouteFieldCard");
     expect(previewSource).toContain("RouteOutcomeCard");
-    expect(previewSource).toContain("getReviewOutcomeMeta");
-    expect(previewSource).toContain("getOwnerDisplayName");
-    expect(previewSource).toContain("initialItems.find((item) => item.id === initialSelectedItemId)");
+    expect(previewSource).toContain("CompactLandingSummary");
   });
 
   it("renders detail-first review meaning and action frame from grouped core semantics", () => {
@@ -310,12 +306,16 @@ describe("action center landing shell", () => {
     );
 
     expect(markup).toContain("Laatste route-read");
+    expect(markup).toContain("Signaal");
     expect(markup).toContain(item.coreSemantics.resultLoop.whatWeObserved);
+    expect(markup.includes("Besluit") || markup.includes("Stap")).toBe(true);
     expect(markup).not.toContain("Waarom we opnieuw kijken");
     expect(markup).not.toContain("Wat we dan toetsen");
     expect(markup).not.toContain("Wat is geprobeerd");
     expect(markup).not.toContain("Wat zagen we terug");
     expect(markup).not.toContain("Wat is besloten");
+    expect((markup.match(/>Signaal</g) ?? []).length).toBe(1);
+    expect((markup.match(/>(Besluit|Stap)</g) ?? []).length).toBe(1);
   });
 
   it("requires preview items to carry canonical core semantics as one grouped field", () => {

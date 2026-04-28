@@ -2122,10 +2122,18 @@ function EmptySection({ title, body }: { title: string; body: string }) {
 
 function CompactLandingSummary({ item }: { item: ActionCenterPreviewItem }) {
   const summaryLines = [
-    item.coreSemantics.resultLoop.whatWeObserved,
-    item.coreSemantics.resultLoop.whatWasDecided,
-    item.coreSemantics.resultLoop.whatWasTried,
-  ].filter((value): value is string => Boolean(value)).slice(0, 2)
+    { label: 'Signaal', value: item.coreSemantics.resultLoop.whatWeObserved },
+    { label: 'Besluit', value: item.coreSemantics.resultLoop.whatWasDecided },
+    { label: 'Stap', value: item.coreSemantics.resultLoop.whatWasTried },
+  ].filter(
+    (
+      entry,
+      index,
+      entries,
+    ): entry is { label: string; value: string } =>
+      Boolean(entry.value) &&
+      entries.findIndex((candidate) => candidate.value === entry.value) === index,
+  ).slice(0, 2)
 
   if (summaryLines.length === 0) {
     return null
@@ -2134,11 +2142,12 @@ function CompactLandingSummary({ item }: { item: ActionCenterPreviewItem }) {
   return (
     <div className="mt-4 rounded-[18px] border border-[#eadfce] bg-white px-4 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Laatste route-read</p>
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 space-y-2.5">
         {summaryLines.map((line) => (
-          <p key={line} className="text-sm leading-6 text-[#42556b]">
-            {line}
-          </p>
+          <div key={`${line.label}-${line.value}`} className="flex items-start justify-between gap-3 text-sm">
+            <span className="shrink-0 font-semibold text-[#7d7368]">{line.label}</span>
+            <span className="text-right leading-6 text-[#42556b]">{line.value}</span>
+          </div>
         ))}
       </div>
     </div>
