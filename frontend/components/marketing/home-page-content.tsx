@@ -709,7 +709,7 @@ function SuitePreviewSection() {
                   textWrap: 'pretty',
                 }}
               >
-                Geen losse rapportage.
+                Geen losse output.
                 <br />
                 <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
                   Wel een helder besluitspoor.
@@ -727,7 +727,7 @@ function SuitePreviewSection() {
                   maxWidth: '33rem',
                 }}
               >
-                Verisight brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie zichtbaar te maken.
+                Verisight brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie vast te leggen.
               </p>
             </Reveal>
 
@@ -1322,19 +1322,24 @@ function SuitePreviewSection() {
           }
 
           .suite-action-badge {
-            background: rgba(22, 34, 56, 0.06);
-            color: ${SURFACE.text};
+            background: rgba(22, 34, 56, 0.1);
+            border: 1px solid rgba(22, 34, 56, 0.12);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+            color: ${SURFACE.ink};
             font-family: ${bodyFont};
-            font-size: 10px;
+            font-size: 10.5px;
             font-weight: 700;
             letter-spacing: 0.12em;
-            padding: 5px 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
             text-transform: uppercase;
             white-space: nowrap;
           }
 
           .suite-action-badge-urgent {
-            background: ${SURFACE.amberSoft};
+            background: rgba(244, 221, 208, 0.92);
+            border-color: rgba(185, 87, 31, 0.2);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
             color: ${SURFACE.amber};
           }
 
