@@ -81,6 +81,13 @@ describe('report library', () => {
     expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.recommended).toBe(true)
   })
 
+  it('formats the featured subtitle without encoding artifacts', () => {
+    const model = buildReportLibraryEntries(campaigns)
+
+    expect(model.featured?.subtitle).toContain('·')
+    expect(model.featured?.subtitle).not.toContain('Â·')
+  })
+
   it('maps management, module and cohort categories in a bounded way', () => {
     const model = buildReportLibraryEntries(campaigns)
 
