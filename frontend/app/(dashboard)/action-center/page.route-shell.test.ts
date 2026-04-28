@@ -138,6 +138,12 @@ function buildLiveContext(): LiveActionCenterCampaignContext {
   };
 }
 
+function getIsoDateDaysFromNow(daysFromNow: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString().slice(0, 10);
+}
+
 describe("action center landing shell", () => {
   it("keeps a thin shell around the preview and route params", () => {
     const pageSource = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
@@ -306,6 +312,34 @@ describe("action center landing shell", () => {
     expect(markup).not.toContain("Wat is besloten");
     expect((markup.match(/>Stap</g) ?? []).length).toBe(1);
     expect((markup.match(/>Uitkomst</g) ?? []).length).toBe(1);
+  });
+
+  it("shows team Review < 7 dagen for upcoming reviews within the next week", () => {
+    const context = buildLiveContext();
+    const [item] = buildLiveActionCenterItems([
+      {
+        ...context,
+        learningDossier: buildDossier({
+          review_moment: getIsoDateDaysFromNow(5),
+        }),
+      },
+    ]);
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "teams",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+
+    expect(markup).toContain("Review &lt; 7 dagen");
+    expect(markup).toMatch(/Review &lt; 7 dagen<\/p><\/div><p[^>]*>1<\/p>/);
   });
 
   it("requires preview items to carry canonical core semantics as one grouped field", () => {

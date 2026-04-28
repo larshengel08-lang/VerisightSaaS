@@ -135,6 +135,15 @@ function buildOpenSignals(args: {
   return signals
 }
 
+function getInterventionTruth(value: string | null | undefined) {
+  const normalized = value?.trim() ?? ''
+  if (!normalized || normalized === 'Nog te bepalen in review') {
+    return null
+  }
+
+  return normalized
+}
+
 type ActionCenterPreviewItemDraft = Omit<ActionCenterPreviewItem, 'coreSemantics' | 'openSignals'> & {
   coreSemantics?: ActionCenterPreviewItem['coreSemantics']
   openSignals?: string[]
@@ -293,7 +302,7 @@ export function finalizeActionCenterPreviewItem(
       status: item.status,
       routeOwner: item.ownerName,
       reviewDate: item.reviewDate,
-      intervention: nextStep,
+      intervention: getInterventionTruth(coreSemantics.route.intervention ?? item.nextStep),
     }),
   }
 }
@@ -372,7 +381,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         reviewRhythm: defaults.fallbackRhythm,
         signalLabel: `${definition.productName} - ${context.campaign.name}`,
         signalBody: getSignalBody(context.campaign.scan_type, context.deliveryRecord, latestUpdate),
-        nextStep: coreSemantics.actionFrame.firstStep || nextStep,
+        nextStep,
         expectedEffect: coreSemantics.actionFrame.expectedEffect,
         reviewReason: coreSemantics.route.reviewReason,
         reviewOutcome: route.reviewOutcome,
@@ -522,16 +531,14 @@ export function buildActionCenterTelemetryEvents(
       )
     }
 
-    if (
-      context.learningDossier?.triage_status === 'uitgevoerd' ||
-      lifecycleStage === 'learning_closed'
-    ) {
+    if (routeStatus === 'afgerond' || routeStatus === 'gestopt' || lifecycleStage === 'learning_closed') {
       events.push(
         buildSuiteTelemetryEvent('action_center_closeout_recorded', {
           orgId,
           campaignId,
           actorId: actorId ?? null,
           payload: {
+            routeStatus,
             triageStatus: context.learningDossier?.triage_status ?? null,
             lifecycleStage,
           },

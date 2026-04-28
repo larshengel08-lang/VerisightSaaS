@@ -280,6 +280,7 @@ function getViewCopy(view: ActionCenterPreviewView, selectedTitle: string | null
 }
 
 function buildTeamRows(items: ActionCenterPreviewItem[]) {
+  const now = new Date()
   const rows = new Map<
     string,
     {
@@ -320,7 +321,7 @@ function buildTeamRows(items: ActionCenterPreviewItem[]) {
     if (item.status !== 'afgerond' && item.status !== 'gestopt') {
       current.openActions += 1
     }
-    if (item.reviewDate && compareReviewDate(item.reviewDate, new Date().toISOString()) <= 0) {
+    if (getReviewBucket(item.reviewDate, now) === 'deze-week') {
       current.reviewSoonCount += 1
     }
     if (!item.ownerName) {

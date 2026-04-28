@@ -369,6 +369,48 @@ describe('live action center builder', () => {
     expect(item.openSignals).toEqual(['owner_missing', 'review_due'])
   })
 
+  it('keeps decision_due tied to canonical intervention truth instead of preview fallback copy', () => {
+    const item = finalizeActionCenterPreviewItem({
+      id: 'local-1b',
+      code: 'ACT-2001B',
+      title: 'Nieuwe follow-up zonder stap',
+      summary: 'Nieuwe opvolgactie vanuit Action Center.',
+      reason: 'Nieuwe actie gekoppeld aan een bestaand dossier of signaal.',
+      sourceLabel: 'ExitScan',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerId: 'manager-1',
+      ownerName: 'Manager Operations',
+      ownerRole: 'Manager - Operations',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: 'Manager Operations',
+      priority: 'hoog',
+      status: 'te-bespreken',
+      reviewDate: '2026-05-12',
+      expectedEffect: null,
+      reviewReason: null,
+      reviewOutcome: 'geen-uitkomst',
+      reviewDateLabel: '12 mei',
+      reviewRhythm: 'Tweewekelijks',
+      signalLabel: 'ExitScan - Operations',
+      signalBody: 'Nieuwe opvolgactie vanuit Action Center.',
+      nextStep: null,
+      peopleCount: 38,
+      updates: [
+        {
+          id: 'update-1b',
+          author: 'Admin',
+          dateLabel: '28 apr',
+          note: 'Actie handmatig toegevoegd in de preview-surface.',
+        },
+      ],
+    })
+
+    expect(item.coreSemantics.route.intervention).toBeNull()
+    expect(item.coreSemantics.actionFrame.firstStep).toBe('Nog te bepalen in review')
+    expect(item.openSignals).toEqual(['decision_due'])
+  })
+
   it('recompute keeps existing canonical preview route truth instead of re-promoting projected display fields', () => {
     const seeded = finalizeActionCenterPreviewItem({
       id: 'local-2',
@@ -597,5 +639,48 @@ describe('live action center builder', () => {
         },
       },
     ])
+  })
+
+  it('records closeout telemetry for intentionally stopped routes too', () => {
+    const events = buildActionCenterTelemetryEvents([
+      {
+        campaign: buildCampaign(),
+        stats: null,
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue: 'operations',
+        scopeLabel: 'Operations',
+        peopleCount: 12,
+        assignedManager: {
+          userId: 'manager-1',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-21T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          lifecycle_stage: 'follow_up_decided',
+          first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          triage_status: 'verworpen',
+          stop_reason: 'Er is bewust besloten om deze route nu te stoppen.',
+          management_action_outcome: 'stoppen',
+        }),
+        learningCheckpoints: [],
+      },
+    ])
+
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          eventType: 'action_center_closeout_recorded',
+          payload: expect.objectContaining({
+            triageStatus: 'verworpen',
+            lifecycleStage: 'follow_up_decided',
+          }),
+        }),
+      ]),
+    )
   })
 })
