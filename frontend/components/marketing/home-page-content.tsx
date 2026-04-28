@@ -291,8 +291,12 @@ function HeroSection() {
       <div style={{ ...SHELL, paddingTop: 'clamp(74px, 8vw, 120px)', paddingBottom: 'clamp(70px, 8vw, 104px)', position: 'relative' }}>
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_640px]">
           <div style={{ maxWidth: 560 }}>
-            <Reveal delay={0.02}>
-              <div style={{ marginBottom: 18 }}>
+              <div
+                style={{
+                  animation: 'slideUpFade .78s cubic-bezier(.16,1,.3,1) .04s both',
+                  marginBottom: 18,
+                }}
+              >
               <p
                 style={{
                   color: SURFACE.muted,
@@ -323,11 +327,10 @@ function HeroSection() {
                 Handelen.
               </h1>
               </div>
-            </Reveal>
 
-            <Reveal delay={0.08}>
               <p
                 style={{
+                  animation: 'slideUpFade .78s cubic-bezier(.16,1,.3,1) .12s both',
                   color: SURFACE.ink,
                   fontSize: 17,
                   lineHeight: 1.55,
@@ -337,11 +340,10 @@ function HeroSection() {
               >
                 Zie waar vertrek, behoud of vroege uitval aandacht vraagt. U krijgt geen losse data, maar een helder dashboard, een managementsamenvatting en een eerste actieroute.
               </p>
-            </Reveal>
 
-            <Reveal delay={0.12}>
               <p
                 style={{
+                  animation: 'slideUpFade .78s cubic-bezier(.16,1,.3,1) .18s both',
                   color: SURFACE.text,
                   fontSize: 17,
                   lineHeight: 1.6,
@@ -351,10 +353,14 @@ function HeroSection() {
               >
                 Verisight laat zien waar vertrek, behoud of vroege uitval echt aandacht vraagt. Geen losse surveydata, maar een scherp dashboard, een korte managementsamenvatting en een eerste route voor opvolging.
               </p>
-            </Reveal>
 
-            <Reveal delay={0.16}>
-              <div className="flex flex-wrap items-center gap-4" style={{ marginBottom: 34 }}>
+              <div
+                className="flex flex-wrap items-center gap-4"
+                style={{
+                  animation: 'slideUpFade .78s cubic-bezier(.16,1,.3,1) .24s both',
+                  marginBottom: 34,
+                }}
+              >
               <Link
                 href={primaryHref}
                 style={{
@@ -389,11 +395,10 @@ function HeroSection() {
                 Bekijk voorbeeldoutput
               </Link>
               </div>
-            </Reveal>
 
-            <Reveal delay={0.22}>
               <div
                 style={{
+                  animation: 'slideUpFade .78s cubic-bezier(.16,1,.3,1) .3s both',
                   borderTop: `1px solid ${SURFACE.border}`,
                   display: 'flex',
                   flexWrap: 'wrap',
@@ -423,11 +428,14 @@ function HeroSection() {
                   </div>
                 ))}
               </div>
-            </Reveal>
           </div>
 
-          <Reveal delay={0.12} from="right">
-            <div className="relative hidden h-[620px] select-none lg:block">
+            <div
+              className="relative hidden h-[620px] select-none lg:block"
+              style={{
+                animation: 'slideRightFade .9s cubic-bezier(.16,1,.3,1) .18s both',
+              }}
+            >
             <div
               style={{
                 background: SURFACE.surface,
@@ -688,7 +696,6 @@ function HeroSection() {
               }}
             />
             </div>
-          </Reveal>
         </div>
       </div>
     </section>
