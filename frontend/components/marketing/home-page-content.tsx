@@ -306,7 +306,7 @@ function HeroSection() {
                   color: SURFACE.ink,
                   fontFamily: displayFont,
                   fontSize: 'clamp(3.4rem, 5.2vw, 5.9rem)',
-                  fontWeight: 700,
+                  fontWeight: 400,
                   letterSpacing: '-0.045em',
                   lineHeight: 0.98,
                   marginBottom: 0,
@@ -314,7 +314,7 @@ function HeroSection() {
               >
                 Zien.
                 <br />
-                <span style={{ color: SURFACE.amber, fontStyle: 'italic' }}>Prioriteren.</span>
+                <span style={{ color: SURFACE.amber, fontStyle: 'italic', fontWeight: 400 }}>Prioriteren.</span>
                 <br />
                 Handelen.
               </h1>
