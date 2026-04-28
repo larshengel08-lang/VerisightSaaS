@@ -18,7 +18,7 @@ export function PublicHeader({
 }: PublicHeaderProps) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const secondaryNavLinks = marketingNavLinks.filter((link) => link.href !== '/' && link.href !== '/producten')
+  const secondaryNavLinks = marketingNavLinks.filter((link) => link.href !== '/producten')
 
   function closeMenu() {
     setMobileOpen(false)
@@ -104,7 +104,7 @@ export function PublicHeader({
                 onClick={closeMenu}
                 className={`marketing-mobile-nav-link ${pathname === '/producten' ? 'marketing-mobile-nav-link-active' : ''}`}
               >
-                Alle producten
+                Producten
               </Link>
               {secondaryNavLinks.map((link) => (
                 <Link

@@ -1,8 +1,6 @@
 import { buildContactHref } from '@/lib/contact-funnel'
 
 export const marketingNavLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/#suite', label: 'Suite' },
   { href: '/producten', label: 'Producten' },
   { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
