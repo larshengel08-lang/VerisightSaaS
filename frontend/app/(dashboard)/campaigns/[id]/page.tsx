@@ -29,6 +29,8 @@ import { PreflightChecklist } from '@/components/dashboard/preflight-checklist'
 import { RespondentTable } from '@/components/dashboard/respondent-table'
 import { RiskCharts } from '@/components/dashboard/risk-charts'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
+import { projectActionCenterRoute } from '@/lib/action-center-route-contract'
+import { getActionCenterEntryState } from '@/lib/dashboard/action-center-entry-state'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import { deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import {
@@ -292,6 +294,40 @@ export default async function CampaignPage({ params }: Props) {
     .eq('campaign_id', id)
     .maybeSingle()
   const deliveryRecord = (deliveryRecordRaw ?? null) as CampaignDeliveryRecord | null
+  const routeDataClient = deliveryAdminClient ?? createAdminClient()
+  const { data: actionCenterDossierRaw } = await routeDataClient
+    .from('pilot_learning_dossiers')
+    .select('*')
+    .eq('campaign_id', id)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const actionCenterRoute = projectActionCenterRoute({
+    campaign: {
+      id,
+      organization_id: stats.organization_id,
+      name: stats.campaign_name,
+      scan_type: stats.scan_type,
+      delivery_mode: campaignMeta?.delivery_mode ?? 'live',
+      is_active: stats.is_active,
+      enabled_modules: campaignMeta?.enabled_modules ?? null,
+      created_at: stats.created_at,
+      closed_at: null,
+    },
+    stats,
+    organizationName: '',
+    memberRole: membership?.role ?? null,
+    scopeType: 'item',
+    scopeValue: id,
+    scopeLabel: stats.campaign_name,
+    peopleCount: stats.total_completed || stats.total_invited || 0,
+    assignedManager: null,
+    deliveryRecord,
+    deliveryCheckpoints: [],
+    learningDossier: (actionCenterDossierRaw ?? null) as PilotLearningDossier | null,
+    learningCheckpoints: [],
+  })
+  const actionCenterEntryState = getActionCenterEntryState(actionCenterRoute)
   const { data: deliveryCheckpointsRaw } = deliveryRecord
     ? await supabase
         .from('campaign_delivery_checkpoints')
@@ -1455,6 +1491,7 @@ export default async function CampaignPage({ params }: Props) {
                 label={compositionStateMeta.label}
                 tone={compositionStateMeta.tone}
               />
+              <DashboardChip label={actionCenterEntryState.label} tone={actionCenterEntryState.tone} />
               <DashboardChip
                 label={getDeliveryModeLabel(campaignMeta?.delivery_mode ?? null, stats.scan_type)}
                 tone="slate"
@@ -1533,6 +1570,13 @@ export default async function CampaignPage({ params }: Props) {
                   State: {compositionStateMeta.label}. {compositionStateMeta.trust}
                 </p>
                 <p className="mt-2 text-xs leading-5 text-slate-500">{activationState.statusDetail}</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Action Center-status</p>
+                  <DashboardChip label={actionCenterEntryState.label} tone={actionCenterEntryState.tone} />
+                </div>
+                <p className="mt-2 text-sm leading-6 text-slate-700">{actionCenterEntryState.body}</p>
               </div>
             </div>
           }

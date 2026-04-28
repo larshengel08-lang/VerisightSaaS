@@ -13,6 +13,8 @@ import {
 } from '@/components/dashboard/dashboard-primitives'
 import { DashboardTabs } from '@/components/dashboard/dashboard-tabs'
 import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
+import { projectActionCenterRoute } from '@/lib/action-center-route-contract'
+import { getActionCenterEntryState, type HrActionCenterEntryState } from '@/lib/dashboard/action-center-entry-state'
 import {
   getCampaignCompositionState,
   HOME_STATE_ORDER,
@@ -22,6 +24,8 @@ import {
   normalizeDashboardPortfolioView,
   type DashboardPortfolioView,
 } from '@/lib/dashboard/shell-navigation'
+import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
+import type { PilotLearningDossier } from '@/lib/pilot-learning'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { getFirstNextStepGuidance } from '@/lib/client-onboarding'
@@ -34,6 +38,7 @@ type CampaignHomeEntry = {
   campaign: CampaignStats
   state: CampaignCompositionState
   invitesNotSent: number
+  actionCenterState: HrActionCenterEntryState
 }
 
 type CampaignGroup = {
@@ -63,6 +68,7 @@ type ReportCandidate = {
   moduleLabel: string
   stateLabel: string
   dateLabel: string
+  actionCenterState: HrActionCenterEntryState
 }
 
 export default async function DashboardHomePage({
@@ -89,6 +95,23 @@ export default async function DashboardHomePage({
   const campaigns = (stats ?? []) as CampaignStats[]
   const activeCampaigns = campaigns.filter((campaign) => campaign.is_active)
   const campaignIds = campaigns.map((campaign) => campaign.campaign_id)
+  const [{ data: deliveryRecordsRaw }, { data: learningDossiersRaw }] = await Promise.all([
+    campaignIds.length > 0
+      ? supabase.from('campaign_delivery_records').select('*').in('campaign_id', campaignIds)
+      : Promise.resolve({ data: [] }),
+    campaignIds.length > 0
+      ? supabase
+          .from('pilot_learning_dossiers')
+          .select('*')
+          .in('campaign_id', campaignIds)
+          .order('updated_at', { ascending: false })
+      : Promise.resolve({ data: [] }),
+  ])
+  const actionCenterStateByCampaignId = buildActionCenterStateByCampaignId({
+    campaigns,
+    deliveryRecords: (deliveryRecordsRaw ?? []) as CampaignDeliveryRecord[],
+    learningDossiers: (learningDossiersRaw ?? []) as PilotLearningDossier[],
+  })
   const { data: respondentStateRowsRaw } =
     campaignIds.length > 0
       ? await supabase
@@ -105,6 +128,9 @@ export default async function DashboardHomePage({
   const campaignEntries = campaigns.map((campaign) => ({
     campaign,
     invitesNotSent: invitesNotSentByCampaign.get(campaign.campaign_id) ?? 0,
+    actionCenterState:
+      actionCenterStateByCampaignId.get(campaign.campaign_id) ??
+      getActionCenterEntryState({ entryStage: 'attention', routeStatus: null }),
     state: getCampaignCompositionState({
       isActive: campaign.is_active,
       totalInvited: campaign.total_invited,
@@ -188,7 +214,7 @@ export default async function DashboardHomePage({
   const primaryOverviewCampaign = primaryFirstNextStepCampaign ?? primaryGuideCampaign
   const primaryOverviewDefinition = primaryOverviewCampaign ? getScanDefinition(primaryOverviewCampaign.scan_type) : null
   const centralHighlights = buildCentralHighlights(campaignEntries)
-  const reportCandidates = buildReportCandidates(campaigns)
+  const reportCandidates = buildReportCandidates(campaigns, actionCenterStateByCampaignId)
   const primaryReportCandidate = reportCandidates[0] ?? null
   const focusPanelItems = buildOverviewFocusItems({
     highlights: centralHighlights,
@@ -673,13 +699,22 @@ export default async function DashboardHomePage({
                         <p className="mt-1 text-xs text-[color:var(--dashboard-muted)]">
                           {candidate.moduleLabel} · {candidate.stateLabel} · {candidate.dateLabel}
                         </p>
+                        <p className="mt-2 text-xs font-medium text-[color:var(--dashboard-text)]">
+                          {candidate.actionCenterState.label}
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-[color:var(--dashboard-muted)]">
+                          {candidate.actionCenterState.body}
+                        </p>
                       </div>
-                      <Link
-                        href={`/campaigns/${candidate.campaign.campaign_id}`}
-                        className="shrink-0 text-sm font-medium text-[color:var(--dashboard-accent-strong)]"
-                      >
-                        Open
-                      </Link>
+                      <div className="flex shrink-0 flex-col items-end gap-2">
+                        <DashboardChip label={candidate.actionCenterState.label} tone={candidate.actionCenterState.tone} />
+                        <Link
+                          href={`/campaigns/${candidate.campaign.campaign_id}`}
+                          className="text-sm font-medium text-[color:var(--dashboard-accent-strong)]"
+                        >
+                          Open
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -705,7 +740,7 @@ function CampaignRow({
   showOnboarding: boolean
   isAdmin: boolean
 }) {
-  const { campaign, state } = entry
+  const { campaign, state, actionCenterState: campaignActionCenterState } = entry
   const scanDefinition = getScanDefinition(campaign.scan_type)
   const stateMeta = getHomeStateMeta(state)
   const ctaLabel = isAdmin && state === 'setup' ? 'Naar setup' : stateMeta.viewerCta
@@ -718,9 +753,11 @@ function CampaignRow({
             <DashboardChip label={scanDefinition.productName} tone="slate" />
             <DashboardChip label={campaign.is_active ? 'Actief' : 'Gesloten'} tone={campaign.is_active ? 'emerald' : 'slate'} />
             <DashboardChip label={stateMeta.label} tone={stateMeta.tone} />
+            <DashboardChip label={campaignActionCenterState.label} tone={campaignActionCenterState.tone} />
           </div>
           <h2 className="mt-3 text-base font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">{campaign.campaign_name}</h2>
           <p className="mt-1.5 text-sm leading-[1.65] text-[color:var(--dashboard-text)]">{stateMeta.body}</p>
+          <p className="mt-1.5 text-sm leading-[1.65] text-[color:var(--dashboard-text)]">{campaignActionCenterState.body}</p>
           <p className="mt-1 text-xs leading-5 text-[color:var(--dashboard-muted)]">{stateMeta.trust}</p>
         </div>
 
@@ -914,7 +951,10 @@ function buildOverviewFocusItems({
   return [...guidanceItems, ...highlightItems].slice(0, 3)
 }
 
-function buildReportCandidates(campaigns: CampaignStats[]): ReportCandidate[] {
+function buildReportCandidates(
+  campaigns: CampaignStats[],
+  actionCenterStateByCampaignId: Map<string, HrActionCenterEntryState>,
+): ReportCandidate[] {
   const formatter = new Intl.DateTimeFormat('nl-NL', {
     day: '2-digit',
     month: 'short',
@@ -941,7 +981,57 @@ function buildReportCandidates(campaigns: CampaignStats[]): ReportCandidate[] {
         }),
       ).label,
       dateLabel: formatter.format(new Date(campaign.created_at)),
+      actionCenterState:
+        actionCenterStateByCampaignId.get(campaign.campaign_id) ??
+        getActionCenterEntryState({ entryStage: 'attention', routeStatus: null }),
     }))
+}
+
+function buildActionCenterStateByCampaignId(args: {
+  campaigns: CampaignStats[]
+  deliveryRecords: CampaignDeliveryRecord[]
+  learningDossiers: PilotLearningDossier[]
+}) {
+  const deliveryRecordByCampaignId = new Map(args.deliveryRecords.map((record) => [record.campaign_id, record]))
+  const learningDossierByCampaignId = new Map<string, PilotLearningDossier>()
+
+  for (const dossier of args.learningDossiers) {
+    if (dossier.campaign_id && !learningDossierByCampaignId.has(dossier.campaign_id)) {
+      learningDossierByCampaignId.set(dossier.campaign_id, dossier)
+    }
+  }
+
+  return new Map(
+    args.campaigns.map((campaign) => {
+      const route = projectActionCenterRoute({
+        campaign: {
+          id: campaign.campaign_id,
+          organization_id: campaign.organization_id,
+          name: campaign.campaign_name,
+          scan_type: campaign.scan_type,
+          delivery_mode: 'live',
+          is_active: campaign.is_active,
+          enabled_modules: null,
+          created_at: campaign.created_at,
+          closed_at: null,
+        },
+        stats: campaign,
+        organizationName: '',
+        memberRole: null,
+        scopeType: 'item',
+        scopeValue: campaign.campaign_id,
+        scopeLabel: campaign.campaign_name,
+        peopleCount: campaign.total_completed || campaign.total_invited || 0,
+        assignedManager: null,
+        deliveryRecord: deliveryRecordByCampaignId.get(campaign.campaign_id) ?? null,
+        deliveryCheckpoints: [],
+        learningDossier: learningDossierByCampaignId.get(campaign.campaign_id) ?? null,
+        learningCheckpoints: [],
+      })
+
+      return [campaign.campaign_id, getActionCenterEntryState(route)] as const
+    }),
+  )
 }
 
 function getPrimaryFirstNextStepCampaign(

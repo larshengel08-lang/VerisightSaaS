@@ -70,4 +70,19 @@ describe('dashboard home review guardrails', () => {
     expect(source).toContain('<DashboardChip label={primaryFirstNextStepScanDefinition.productName} tone="slate" />')
     expect(source).toContain('dashboard-report-preview')
   })
+
+  it('shows shared action center follow-up semantics in the overview surfaces', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const helperSource = readFileSync(
+      new URL('../../../lib/dashboard/action-center-entry-state.ts', import.meta.url),
+      'utf8',
+    )
+
+    expect(source).toContain('getActionCenterEntryState')
+    expect(helperSource).toContain('Nog geen opvolging geopend')
+    expect(helperSource).toContain('Route-kandidaat')
+    expect(helperSource).toContain('Actieve opvolging')
+    expect(source).toContain('candidate.actionCenterState.label')
+    expect(source).toContain('campaignActionCenterState.label')
+  })
 })

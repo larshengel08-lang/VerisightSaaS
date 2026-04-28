@@ -1,20 +1,24 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download-button'
+import { projectActionCenterRoute } from '@/lib/action-center-route-contract'
 import {
   DashboardChip,
   DashboardHero,
   DashboardSection,
 } from '@/components/dashboard/dashboard-primitives'
+import { getActionCenterEntryState } from '@/lib/dashboard/action-center-entry-state'
 import {
   buildReportLibraryEntries,
   filterReportLibraryEntries,
   type ReportLibraryCategory,
 } from '@/lib/dashboard/report-library'
+import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
+import type { PilotLearningDossier } from '@/lib/pilot-learning'
 import { SuiteAccessDenied } from '@/components/dashboard/suite-access-denied'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
-import { getCampaignAverageSignalScore } from '@/lib/types'
+import { getCampaignAverageSignalScore, type CampaignStats } from '@/lib/types'
 
 const CATEGORY_OPTIONS: Array<{ key: ReportLibraryCategory; label: string }> = [
   { key: 'all', label: 'Alle' },
@@ -27,6 +31,53 @@ function normalizeCategory(value: string | string[] | undefined): ReportLibraryC
   return typeof value === 'string' && CATEGORY_OPTIONS.some((option) => option.key === value)
     ? (value as ReportLibraryCategory)
     : 'all'
+}
+
+function buildActionCenterStateByCampaignId(args: {
+  campaigns: CampaignStats[]
+  deliveryRecords: CampaignDeliveryRecord[]
+  learningDossiers: PilotLearningDossier[]
+}) {
+  const deliveryRecordByCampaignId = new Map(args.deliveryRecords.map((record) => [record.campaign_id, record]))
+  const learningDossierByCampaignId = new Map<string, PilotLearningDossier>()
+
+  for (const dossier of args.learningDossiers) {
+    if (dossier.campaign_id && !learningDossierByCampaignId.has(dossier.campaign_id)) {
+      learningDossierByCampaignId.set(dossier.campaign_id, dossier)
+    }
+  }
+
+  return new Map(
+    args.campaigns.map((campaign) => {
+      const route = projectActionCenterRoute({
+        campaign: {
+          id: campaign.campaign_id,
+          organization_id: campaign.organization_id,
+          name: campaign.campaign_name,
+          scan_type: campaign.scan_type,
+          delivery_mode: 'live',
+          is_active: campaign.is_active,
+          enabled_modules: null,
+          created_at: campaign.created_at,
+          closed_at: null,
+        },
+        stats: campaign,
+        organizationName: '',
+        memberRole: null,
+        scopeType: 'item',
+        scopeValue: campaign.campaign_id,
+        scopeLabel: campaign.campaign_name,
+        peopleCount: campaign.total_completed || campaign.total_invited || 0,
+        assignedManager: null,
+        deliveryRecord: deliveryRecordByCampaignId.get(campaign.campaign_id) ?? null,
+        deliveryCheckpoints: [],
+        learningDossier: learningDossierByCampaignId.get(campaign.campaign_id) ?? null,
+        learningCheckpoints: [],
+      })
+
+      return [campaign.campaign_id, getActionCenterEntryState(route)] as const
+    }),
+  )
 }
 
 export default async function ReportsPage({
@@ -56,9 +107,36 @@ export default async function ReportsPage({
   }
 
   const { data: stats } = await supabase.from('campaign_stats').select('*').order('created_at', { ascending: false })
-  const campaigns = stats ?? []
+  const campaigns = (stats ?? []) as CampaignStats[]
+  const campaignIds = campaigns.map((campaign) => campaign.campaign_id)
+  const [{ data: deliveryRecordsRaw }, { data: learningDossiersRaw }] = await Promise.all([
+    campaignIds.length > 0
+      ? supabase.from('campaign_delivery_records').select('*').in('campaign_id', campaignIds)
+      : Promise.resolve({ data: [] }),
+    campaignIds.length > 0
+      ? supabase
+          .from('pilot_learning_dossiers')
+          .select('*')
+          .in('campaign_id', campaignIds)
+          .order('updated_at', { ascending: false })
+      : Promise.resolve({ data: [] }),
+  ])
+  const actionCenterStateByCampaignId = buildActionCenterStateByCampaignId({
+    campaigns,
+    deliveryRecords: (deliveryRecordsRaw ?? []) as CampaignDeliveryRecord[],
+    learningDossiers: (learningDossiersRaw ?? []) as PilotLearningDossier[],
+  })
   const reportModel = buildReportLibraryEntries(campaigns)
-  const filteredEntries = filterReportLibraryEntries(reportModel.entries, category)
+  const filteredEntries = filterReportLibraryEntries(reportModel.entries, category).map((entry) => ({
+    ...entry,
+    actionCenterState:
+      actionCenterStateByCampaignId.get(entry.campaignId) ??
+      getActionCenterEntryState({ entryStage: 'attention', routeStatus: null }),
+  }))
+  const featuredActionCenterState = reportModel.featured
+    ? actionCenterStateByCampaignId.get(reportModel.featured.campaignId) ??
+      getActionCenterEntryState({ entryStage: 'attention', routeStatus: null })
+    : null
   const averageSignal =
     reportModel.entries.length > 0
       ? (
@@ -113,6 +191,12 @@ export default async function ReportsPage({
                   {reportModel.featured.title}
                 </p>
                 <p className="mt-2 text-sm text-[color:var(--dashboard-text)]">{reportModel.featured.description}</p>
+                {featuredActionCenterState ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <DashboardChip label={featuredActionCenterState.label} tone={featuredActionCenterState.tone} />
+                    <p className="text-sm text-[color:var(--dashboard-text)]">{featuredActionCenterState.body}</p>
+                  </div>
+                ) : null}
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {reportModel.featured.stats.map((stat) => (
@@ -173,20 +257,24 @@ export default async function ReportsPage({
                     : 'border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)]'
                 }`}
               >
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
-                        {entry.categoryLabel}
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+                          {entry.categoryLabel}
                       </p>
-                      <h3 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
-                        {entry.title}
-                      </h3>
+                        <h3 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+                          {entry.title}
+                        </h3>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        {entry.recommended ? <DashboardChip label="Aanbevolen" tone="emerald" /> : null}
+                        <DashboardChip label={entry.actionCenterState.label} tone={entry.actionCenterState.tone} />
+                      </div>
                     </div>
-                    {entry.recommended ? <DashboardChip label="Aanbevolen" tone="emerald" /> : null}
-                  </div>
 
                   <p className="text-sm leading-7 text-[color:var(--dashboard-text)]">{entry.summary}</p>
+                  <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">{entry.actionCenterState.body}</p>
 
                   <div className="grid grid-cols-2 gap-3 border-t border-[color:var(--dashboard-frame-border)] pt-4 text-sm text-[color:var(--dashboard-text)]">
                     <div>{entry.metaLeft}</div>

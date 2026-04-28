@@ -109,4 +109,19 @@ describe('campaign detail review guardrails', () => {
     expect(source).not.toContain('learning-workbench')
     expect(source).not.toContain('Campaign is al opgenomen in de learninglus')
   })
+
+  it('makes candidate and active follow-up semantics distinguishable in the campaign detail', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const helperSource = readFileSync(
+      new URL('../../../../lib/dashboard/action-center-entry-state.ts', import.meta.url),
+      'utf8',
+    )
+
+    expect(source).toContain('getActionCenterEntryState')
+    expect(helperSource).toContain('Nog geen opvolging geopend')
+    expect(helperSource).toContain('Route-kandidaat')
+    expect(helperSource).toContain('Actieve opvolging')
+    expect(source).toContain('Action Center-status')
+    expect(source).toContain('actionCenterEntryState.body')
+  })
 })
