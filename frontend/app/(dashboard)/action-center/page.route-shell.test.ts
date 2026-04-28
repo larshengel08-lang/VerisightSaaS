@@ -289,16 +289,16 @@ describe("action center landing shell", () => {
     expect(markup).toContain("Laatste route-read");
     expect(markup).toContain("Uitkomst");
     expect(markup).toContain("Bijstellen");
-    expect(markup).toContain("Signaal");
-    expect(markup).toContain(item.coreSemantics.resultLoop.whatWeObserved);
+    expect(markup).toContain("Stap");
+    expect(markup).toContain(item.coreSemantics.actionFrame.firstStep);
     expect(markup).not.toContain("Besluit");
-    expect(markup).not.toContain("Stap");
+    expect(markup).not.toContain("Signaal");
     expect(markup).not.toContain("Waarom we opnieuw kijken");
     expect(markup).not.toContain("Wat we dan toetsen");
     expect(markup).not.toContain("Wat is geprobeerd");
     expect(markup).not.toContain("Wat zagen we terug");
     expect(markup).not.toContain("Wat is besloten");
-    expect((markup.match(/>Signaal</g) ?? []).length).toBe(1);
+    expect((markup.match(/>Stap</g) ?? []).length).toBe(1);
     expect((markup.match(/>Uitkomst</g) ?? []).length).toBe(1);
   });
 

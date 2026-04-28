@@ -2127,11 +2127,8 @@ function EmptySection({ title, body }: { title: string; body: string }) {
 
 export function buildCompactLandingSummaryLines(item: ActionCenterPreviewItem) {
   const outcomeLabel = getReviewOutcomeMeta(item.coreSemantics.reviewSemantics.reviewOutcomeVisible).label
-  const supportingLine = [
-    { label: 'Besluit', value: item.coreSemantics.resultLoop.whatWasDecided },
-    { label: 'Signaal', value: item.coreSemantics.resultLoop.whatWeObserved },
-    { label: 'Stap', value: item.coreSemantics.resultLoop.whatWasTried },
-  ].find((entry) => Boolean(entry.value) && entry.value !== outcomeLabel) ?? null
+  const supportingLine =
+    { label: 'Stap', value: item.coreSemantics.actionFrame.firstStep }
 
   return [
     { label: 'Uitkomst', value: outcomeLabel },
