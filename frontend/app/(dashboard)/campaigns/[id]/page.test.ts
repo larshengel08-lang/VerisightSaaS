@@ -4,9 +4,11 @@ import { describe, expect, it } from 'vitest'
 describe('campaign detail review guardrails', () => {
   it('makes campaign detail the only surface that opens a new action center route', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const normalizedSource = source.replaceAll('"', "'")
 
     expect(source).toContain('Open in Action Center')
     expect(source).toContain('first_management_use_confirmed_at')
+    expect(normalizedSource).toContain(".select('id, lifecycle_stage, first_management_use_confirmed_at')")
   })
 
   it('keeps the client shell guided until dashboard output is genuinely visible', () => {

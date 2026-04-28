@@ -4,6 +4,9 @@ import { isLiveActionCenterScanType } from "@/lib/action-center-live";
 import {
   buildActionCenterRouteOpenPatch,
   buildActionCenterRouteOpenRedirect,
+  canOpenActionCenterRoute,
+  getActionCenterRouteOpenableStages,
+  hasOpenedActionCenterRoute,
 } from "@/lib/dashboard/open-action-center-route";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -1705,26 +1708,55 @@ export default async function CampaignPage({ params }: Props) {
   async function openActionCenterRoute() {
     "use server";
 
-    if (actionCenterBridge.bridgeState !== "candidate") {
-      redirect(buildActionCenterRouteOpenRedirect(id));
+    const admin = createAdminClient();
+    const actionCenterHref = buildActionCenterRouteOpenRedirect(id);
+    const { data: currentDeliveryRecord, error: loadError } = await admin
+      .from("campaign_delivery_records")
+      .select("id, lifecycle_stage, first_management_use_confirmed_at")
+      .eq("campaign_id", id)
+      .maybeSingle();
+
+    if (loadError || !currentDeliveryRecord) {
+      redirect(`/campaigns/${id}?bridge=open-unavailable`);
     }
 
-    if (!deliveryRecord) {
+    if (hasOpenedActionCenterRoute(currentDeliveryRecord)) {
+      redirect(actionCenterHref);
+    }
+
+    if (!canOpenActionCenterRoute(currentDeliveryRecord)) {
       redirect(`/campaigns/${id}?bridge=open-unavailable`);
     }
 
     const openedAt = new Date().toISOString();
-    const admin = createAdminClient();
-    const { error } = await admin
+    const { data: updatedRecord, error } = await admin
       .from("campaign_delivery_records")
       .update(buildActionCenterRouteOpenPatch(openedAt))
-      .eq("id", deliveryRecord.id);
+      .eq("id", currentDeliveryRecord.id)
+      .is("first_management_use_confirmed_at", null)
+      .in("lifecycle_stage", getActionCenterRouteOpenableStages())
+      .select("id")
+      .maybeSingle();
 
     if (error) {
       redirect(`/campaigns/${id}?bridge=open-unavailable`);
     }
 
-    redirect(buildActionCenterRouteOpenRedirect(id));
+    if (!updatedRecord) {
+      const { data: latestDeliveryRecord } = await admin
+        .from("campaign_delivery_records")
+        .select("id, lifecycle_stage, first_management_use_confirmed_at")
+        .eq("campaign_id", id)
+        .maybeSingle();
+
+      if (latestDeliveryRecord && hasOpenedActionCenterRoute(latestDeliveryRecord)) {
+        redirect(actionCenterHref);
+      }
+
+      redirect(`/campaigns/${id}?bridge=open-unavailable`);
+    }
+
+    redirect(actionCenterHref);
   }
   const actionCenterRouteAction =
     actionCenterBridge.presentation.ctaKind === "open" ? (

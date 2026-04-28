@@ -29,5 +29,6 @@ describe("action center landing shell", () => {
     expect(previewSource).toContain("RouteOutcomeCard");
     expect(previewSource).toContain("getReviewOutcomeMeta");
     expect(previewSource).toContain("getOwnerDisplayName");
+    expect(previewSource).toContain("initialItems.find((item) => item.id === initialSelectedItemId)");
   });
 });
