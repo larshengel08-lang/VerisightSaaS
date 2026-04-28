@@ -11,13 +11,13 @@ export default function PrivacyPage() {
   return (
     <LegalPageShell
       title="Privacybeleid"
-      description="Op deze pagina lees je hoe Verisight omgaat met persoonsgegevens van klantgebruikers en respondenten binnen ExitScan en RetentieScan. Voor de buyer-facing trustlaag in gewone taal kun je ook de trust & privacy-pagina bekijken."
+      description="Op deze pagina lees je hoe Verisight omgaat met persoonsgegevens van klantgebruikers en respondenten binnen ExitScan en RetentieScan. Voor een publieksvriendelijke samenvatting in gewone taal kun je ook de Trust & privacy-pagina bekijken."
       lastUpdated="9 april 2026"
     >
       <section>
         <h2>0. Publieke trustlaag</h2>
         <p>
-          Deze pagina geeft de juridische en operationele basis. Wil je eerst de buyer-facing samenvatting zien van
+          Deze pagina geeft de juridische en operationele basis. Wil je eerst een publieksvriendelijke samenvatting zien van
           methodiek, privacy, rapportlezing en DPA, bekijk dan ook{' '}
           <Link href="/vertrouwen">Trust & privacy</Link>.
         </p>
@@ -26,14 +26,14 @@ export default function PrivacyPage() {
       <section>
         <h2>1. Wie is Verisight?</h2>
         <p>
-          Verisight is een in Nederland gevestigde dienst voor begeleide HR-signalerings- en rapportageproducten.
+          Verisight is een in Nederland gevestigde dienst voor begeleide HR-signalering en rapportage.
           Verisight helpt HR-teams om vertrekredenen beter te begrijpen via ExitScan en om eerder te zien waar
           behoud onder druk staat via RetentieScan.
         </p>
         <p>
-          Privacy hoort daarbij niet als los juridisch blok, maar als onderdeel van de productopzet. ExitScan en
-          RetentieScan zijn daarom gebouwd voor groepsinzichten, managementduiding en expliciete interpretatiegrenzen
-          in plaats van individuele oordelen of black-box voorspellingen.
+          Privacy staat daarbij niet los als juridisch blok, maar hoort bij de manier waarop het product is ingericht.
+          ExitScan en RetentieScan zijn daarom ingericht voor groepsinzichten, managementsamenvatting en duidelijke
+          interpretatiegrenzen, niet voor individuele oordelen of black-box voorspellingen.
         </p>
         <p>
           Publieke bedrijfsgegevens, waaronder KvK-nummer en vestigingsadres, worden op deze pagina aangevuld zodra
@@ -50,11 +50,11 @@ export default function PrivacyPage() {
             <strong>HR-gebruikers en beheerders:</strong> naam, zakelijk e-mailadres en inloggegevens.
           </li>
           <li>
-            <strong>Respondenten:</strong> e-mailadres voor uitnodiging, surveyantwoorden en beperkte contextgegevens
+            <strong>Respondenten:</strong> e-mailadres voor uitnodiging, antwoorden op de vragenlijst en beperkte contextgegevens
             die de klant zelf aanlevert, zoals afdeling of functieniveau.
           </li>
           <li>
-            <strong>Technische gegevens:</strong> sessiegegevens, serverlogs en beveiligingsinformatie die nodig is
+            <strong>Technische gegevens:</strong> sessiegegevens, serverlogs en beveiligingsinformatie die nodig zijn
             om het platform veilig te laten werken.
           </li>
         </ul>
@@ -92,7 +92,7 @@ export default function PrivacyPage() {
       <section>
         <h2>6. Delen wij gegevens met derden?</h2>
         <p>
-          Verisight verkoopt geen persoonsgegevens en deelt deze niet voor marketingdoeleinden. Voor het leveren van
+          Verisight verkoopt geen persoonsgegevens en deelt die niet voor marketingdoeleinden. Voor het leveren van
           de dienst maken wij gebruik van verwerkers.
         </p>
         <ul>
@@ -117,7 +117,7 @@ export default function PrivacyPage() {
         <p>
           Verisight gebruikt versleutelde verbindingen, toegangsbeperking en database-afscherming per organisatie.
           Rapportages zijn bedoeld voor groepsinzichten. Waar nodig passen wij minimale groepsgroottes,
-          segmentonderdrukking, open-tekst-anonimisering en betrouwbaarheidsduiding toe om herleidbaarheid en
+          segmentonderdrukking, anonimisering van open tekst en betrouwbaarheidsduiding toe om herleidbaarheid en
           schijnprecisie te beperken.
         </p>
         <p>

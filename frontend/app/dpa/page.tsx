@@ -12,20 +12,20 @@ export default function DpaPage() {
   return (
     <LegalPageShell
       title="Verwerkersovereenkomst"
-      description="Onderstaande verwerkersovereenkomst is het standaardtemplate dat Verisight hanteert voor klantorganisaties. Het document is op verzoek beschikbaar als gepersonaliseerde, ondertekende versie. Neem hiervoor contact op via privacy@verisight.nl. Voor de buyer-facing samenvatting van trust en privacy kun je ook de trust & privacy-pagina bekijken."
+      description="Onderstaande verwerkersovereenkomst is het standaardtemplate dat Verisight gebruikt voor klantorganisaties. Het document is op verzoek beschikbaar als gepersonaliseerde, ondertekende versie. Neem hiervoor contact op via privacy@verisight.nl. Voor een publieksvriendelijke samenvatting van trust en privacy kun je ook de Trust & privacy-pagina bekijken."
       lastUpdated="13 april 2026"
     >
       <section>
         <h2>Publieke trustlaag</h2>
         <p>
           Deze DPA is de formele verwerkerslaag. Voor een compact publiek overzicht van methodiek, privacy,
-          rapportlezing en juridische support kun je ook naar{' '}
+          rapportlezing en juridische ondersteuning kun je ook naar{' '}
           <Link href="/vertrouwen">Trust & privacy</Link>.
         </p>
       </section>
 
       <div className="mb-2 rounded-lg border border-blue-200 bg-blue-50 px-6 py-4 text-sm text-blue-900">
-        <strong>Let op:</strong> Dit is een standaardtemplate. Velden aangeduid met{' '}
+        <strong>Let op:</strong> Dit is een standaardtemplate. Velden met{' '}
         <code className="rounded bg-blue-100 px-1 py-0.5 font-mono text-xs">[...]</code> worden ingevuld op basis van
         uw organisatiegegevens. Neem contact op via{' '}
         <a href="mailto:privacy@verisight.nl" className="underline">
@@ -45,14 +45,14 @@ export default function DpaPage() {
         </p>
         <p>en</p>
         <p>
-          <strong>Verwerker:</strong> Verisight, Nederlandse dienst voor begeleide HR-signalerings- en
-          rapportageproducten. Volledige bedrijfsgegevens worden opgenomen in de gepersonaliseerde en ondertekende
+          <strong>Verwerker:</strong> Verisight, Nederlandse dienst voor begeleide HR-signalering en
+          rapportage. Volledige bedrijfsgegevens worden opgenomen in de gepersonaliseerde en ondertekende
           versie van deze overeenkomst. Verisight is bereikbaar via{' '}
           <a href="mailto:privacy@verisight.nl">privacy@verisight.nl</a>, hierna te noemen
           &quot;Verwerker&quot;.
         </p>
         <p>
-          De dienst is ingericht voor gegroepeerde managementinzichten met expliciete privacy- en
+          De dienst is ingericht voor gegroepeerde managementinzichten met duidelijke privacy- en
           interpretatiegrenzen. Verwerker levert geen persoonsgerichte voorspel- of beoordelingsoutput.
         </p>
       </section>
@@ -119,7 +119,7 @@ export default function DpaPage() {
         <h2>5. Beveiliging</h2>
         <p>
           Verwerker treft passende technische en organisatorische maatregelen om persoonsgegevens te beveiligen
-          tegen verlies, onrechtmatige verwerking of ongeautoriseerde toegang. Deze maatregelen omvatten ten minste:
+          tegen verlies, onrechtmatige verwerking en ongeautoriseerde toegang. Deze maatregelen omvatten ten minste:
         </p>
         <ul>
           <li>versleuteling van gegevens tijdens transport via TLS/HTTPS;</li>
