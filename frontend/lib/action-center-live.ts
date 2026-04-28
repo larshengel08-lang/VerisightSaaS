@@ -124,6 +124,15 @@ function getRoleFallback(memberRole: MemberRole | null) {
   return ROLE_LABELS[memberRole]
 }
 
+function getReviewOwnerName(checkpoints: PilotLearningCheckpoint[], deliveryRecord: CampaignDeliveryRecord | null) {
+  const reviewOwner =
+    checkpoints.find((checkpoint) => checkpoint.checkpoint_key === 'follow_up_review')?.owner_label?.trim() ?? null
+  const managementOwner =
+    checkpoints.find((checkpoint) => checkpoint.checkpoint_key === 'first_management_use')?.owner_label?.trim() ?? null
+
+  return reviewOwner || managementOwner || deliveryRecord?.operator_owner || null
+}
+
 function buildOpenSignals(args: {
   status: ActionCenterPreviewStatus
   routeOwner: string | null
@@ -263,6 +272,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
       const avgSignal = context.stats?.avg_signal_score ?? context.stats?.avg_risk_score ?? null
       const fallbackAuthor = context.organizationName || 'Verisight'
       const reviewDate = route.reviewScheduledFor
+      const reviewOwnerName = getReviewOwnerName(context.learningCheckpoints, context.deliveryRecord)
       const status = route.routeStatus
       const openSignals = buildOpenSignals({
         status,
@@ -312,7 +322,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
           ? `Manager - ${context.scopeLabel}`
           : getRoleFallback(context.memberRole),
         ownerSubtitle: context.scopeLabel,
-        reviewOwnerName: route.owner,
+        reviewOwnerName,
         priority,
         status,
         reviewDate,
