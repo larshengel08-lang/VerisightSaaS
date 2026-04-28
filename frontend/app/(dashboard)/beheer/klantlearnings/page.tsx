@@ -16,6 +16,7 @@ import {
   DashboardPanel,
   DashboardSection,
 } from '@/components/dashboard/dashboard-primitives'
+import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import { createClient } from '@/lib/supabase/server'
 import type {
@@ -377,7 +378,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           `${checkpoint.checkpoint_key.replace(/_/g, ' ')} bijgewerkt in dossierbron.`,
       }))
 
-    return {
+    return finalizeActionCenterPreviewItem({
       id: dossier.id,
       code: `ACT-${1041 + index}`,
       title: dossier.title,
@@ -405,7 +406,6 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
         organization?.id && invitedCountByOrgId[organization.id]
           ? invitedCountByOrgId[organization.id]
           : campaignStats?.total_invited ?? estimateHeadcount(dossier.lead_employee_count),
-      openSignals: dossierSignals.map((signal) => signal.kind),
       updates:
         updates.length > 0
           ? updates
@@ -417,7 +417,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
                 note: summary,
               },
             ],
-    }
+    })
   })
   const ownerOptions = Array.from(
     new Set(previewItems.map((item) => item.ownerName).filter((value): value is string => Boolean(value))),

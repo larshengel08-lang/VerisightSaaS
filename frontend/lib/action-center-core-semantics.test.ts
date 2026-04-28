@@ -359,7 +359,7 @@ describe('action center core semantics', () => {
   it('collapses closeout semantics to lopend, afgerond, or gestopt only', () => {
     const ongoing = buildContext({
       deliveryRecord: buildDeliveryRecord({
-        exception_status: 'client_unresponsive',
+        exception_status: 'awaiting_client_input',
       }),
       dossier: buildDossier({
         first_action_taken: 'Wacht op de ontbrekende input van de klant.',
@@ -416,5 +416,29 @@ describe('action center core semantics', () => {
     expect(projectActionCenterCoreSemantics(context).resultLoop.whatWasDecided).toBe(
       'Breid de follow-through uit naar een tweede teamreview met operations.',
     )
+  })
+
+  it('uses the same latest visible update note as observation fallback when canonical observation truth is absent', () => {
+    const context = buildContext({
+      deliveryRecord: buildDeliveryRecord({
+        next_step: 'Plan het vervolggesprek met HR en operations.',
+        customer_handoff_note: null,
+        operator_notes: null,
+      }),
+      dossier: buildDossier({
+        expected_first_value: null,
+        first_action_taken: null,
+        adoption_outcome: null,
+        case_public_summary: null,
+      }),
+      learningCheckpoints: [],
+    })
+
+    expect(
+      projectActionCenterCoreSemantics({
+        ...context,
+        latestVisibleUpdateNote: 'Klant bevestigde dat de eerste managementread nu zichtbaar is.',
+      }).resultLoop.whatWeObserved,
+    ).toBe('Klant bevestigde dat de eerste managementread nu zichtbaar is.')
   })
 })

@@ -1,10 +1,13 @@
 import type {
   ActionCenterPreviewItem,
+  ActionCenterPreviewUpdate,
   ActionCenterPreviewPriority,
   ActionCenterPreviewStatus,
-  ActionCenterPreviewUpdate,
 } from '@/lib/action-center-preview-model'
-import { projectActionCenterCoreSemantics } from '@/lib/action-center-core-semantics'
+import {
+  projectActionCenterCoreSemantics,
+  projectActionCenterPreviewCoreSemantics,
+} from '@/lib/action-center-core-semantics'
 import { getScanDefinition } from '@/lib/scan-definitions'
 import type { MemberRole, ScanType } from '@/lib/types'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord, DeliveryExceptionStatus } from '@/lib/ops-delivery'
@@ -132,6 +135,11 @@ function buildOpenSignals(args: {
   return signals
 }
 
+type ActionCenterPreviewItemDraft = Omit<ActionCenterPreviewItem, 'coreSemantics' | 'openSignals'> & {
+  coreSemantics?: ActionCenterPreviewItem['coreSemantics']
+  openSignals?: string[]
+}
+
 function buildUpdates(args: {
   learningCheckpoints: PilotLearningCheckpoint[]
   deliveryCheckpoints: CampaignDeliveryCheckpoint[]
@@ -239,6 +247,54 @@ function getSortRank(status: ActionCenterPreviewStatus) {
   }
 }
 
+export function finalizeActionCenterPreviewItem(
+  item: ActionCenterPreviewItemDraft,
+  options: { recomputeCoreSemantics?: boolean } = {},
+): ActionCenterPreviewItem {
+  const latestVisibleUpdateNote = item.updates[0]?.note ?? null
+  const coreSemantics =
+    !options.recomputeCoreSemantics && item.coreSemantics
+      ? item.coreSemantics
+      :
+    projectActionCenterPreviewCoreSemantics({
+      id: item.id,
+      title: item.title,
+      status: item.status,
+      ownerName: item.ownerName,
+      reviewDate: item.reviewDate,
+      expectedEffect: item.expectedEffect,
+      reviewReason: item.reviewReason,
+      reviewOutcome: item.reviewOutcome,
+      reason: item.reason,
+      summary: item.summary,
+      signalBody: item.signalBody,
+      nextStep: item.nextStep,
+      latestVisibleUpdateNote,
+      route: item.coreSemantics?.route ?? null,
+    })
+
+  const reviewReason = coreSemantics.reviewSemantics.reviewReason
+  const nextStep = coreSemantics.actionFrame.firstStep
+  const expectedEffect = coreSemantics.actionFrame.expectedEffect
+  const signalBody = coreSemantics.resultLoop.whatWeObserved ?? item.signalBody
+
+  return {
+    ...item,
+    reason: reviewReason,
+    nextStep,
+    expectedEffect,
+    reviewReason: item.reviewReason ?? coreSemantics.route.reviewReason ?? reviewReason,
+    signalBody,
+    coreSemantics,
+    openSignals: buildOpenSignals({
+      status: item.status,
+      routeOwner: item.ownerName,
+      reviewDate: item.reviewDate,
+      intervention: nextStep,
+    }),
+  }
+}
+
 export function isLiveActionCenterScanType(scanType: ScanType) {
   return SUPPORTED_SCAN_TYPES.has(scanType)
 }
@@ -259,12 +315,6 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
       const reviewDate = route.reviewScheduledFor
       const reviewOwnerName = getReviewOwnerName(context.learningCheckpoints, context.deliveryRecord)
       const status = route.routeStatus
-      const openSignals = buildOpenSignals({
-        status,
-        routeOwner: route.owner,
-        reviewDate,
-        intervention: route.intervention,
-      })
       const updates = buildUpdates({
         learningCheckpoints: context.learningCheckpoints,
         deliveryCheckpoints: context.deliveryCheckpoints,
@@ -273,6 +323,11 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         fallbackAuthor,
       })
       const latestUpdate = updates[0]?.note ?? null
+      const coreSemantics = projectActionCenterCoreSemantics({
+        ...context,
+        route,
+        latestVisibleUpdateNote: latestUpdate,
+      })
       const priority = getPriorityFromSignals({
         exceptionStatus: context.deliveryRecord?.exception_status,
         avgSignal,
@@ -283,7 +338,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         context.deliveryRecord?.next_step ||
         getFallbackStep(context.campaign.scan_type, context.deliveryRecord?.lifecycle_stage)
 
-      return [{
+      return [finalizeActionCenterPreviewItem({
         id: context.campaign.id,
         code: `ACT-${1000 + index + 1}`,
         title:
@@ -293,9 +348,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
           context.deliveryRecord?.customer_handoff_note ||
           route.expectedEffect ||
           defaults.fallbackSummary,
-        reason:
-          route.reviewReason ||
-          defaults.managementQuestion,
+        reason: coreSemantics.reviewSemantics.reviewReason,
         sourceLabel: definition.productName,
         orgId: context.campaign.organization_id,
         scopeType: context.scopeType,
@@ -315,15 +368,14 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         reviewRhythm: defaults.fallbackRhythm,
         signalLabel: `${definition.productName} - ${context.campaign.name}`,
         signalBody: getSignalBody(context.campaign.scan_type, context.deliveryRecord, latestUpdate),
-        nextStep,
-        expectedEffect: route.expectedEffect,
-        reviewReason: route.reviewReason,
+        nextStep: coreSemantics.actionFrame.firstStep || nextStep,
+        expectedEffect: coreSemantics.actionFrame.expectedEffect,
+        reviewReason: coreSemantics.route.reviewReason,
         reviewOutcome: route.reviewOutcome,
         peopleCount: context.peopleCount,
-        coreSemantics: projectActionCenterCoreSemantics({ ...context, route }),
-        openSignals,
+        coreSemantics,
         updates,
-      } satisfies ActionCenterPreviewItem]
+      })]
     })
     .sort((left, right) => {
       const statusDelta = getSortRank(left.status) - getSortRank(right.status)

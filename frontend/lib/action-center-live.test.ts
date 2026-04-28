@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { buildActionCenterTelemetryEvents, buildLiveActionCenterItems, isLiveActionCenterScanType } from './action-center-live'
+import {
+  buildActionCenterTelemetryEvents,
+  buildLiveActionCenterItems,
+  finalizeActionCenterPreviewItem,
+  isLiveActionCenterScanType,
+} from './action-center-live'
 import { projectActionCenterRoute } from './action-center-route-contract'
 import type { Campaign, CampaignStats } from '@/lib/types'
 import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
@@ -255,8 +260,113 @@ describe('live action center builder', () => {
       reviewOutcome: route.reviewOutcome,
       nextStep: 'Plan eerste managementgesprek met HR en sponsor.',
     })
-    expect(items[0]?.openSignals).toContain('decision_due')
+    expect(items[0]?.openSignals).toEqual(['owner_missing'])
     expect(items.find((item) => item.id === 'campaign-pulse')).toBeUndefined()
+  })
+
+  it('realigns preview-facing fields with canonical semantics and latest visible update truth', () => {
+    const items = buildLiveActionCenterItems([
+      {
+        campaign: buildCampaign(),
+        stats: buildStats(),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue: 'operations',
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: null,
+        deliveryRecord: buildDeliveryRecord({
+          lifecycle_stage: 'first_management_use',
+          first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+          next_step: 'Plan het vervolggesprek met HR en operations.',
+          customer_handoff_note: null,
+          operator_notes: null,
+        }),
+        deliveryCheckpoints: [
+          {
+            id: 'delivery-checkpoint-1',
+            delivery_record_id: 'delivery-exit',
+            checkpoint_key: 'first_management_use',
+            status: 'confirmed',
+            confirmed_at: null,
+            confirmed_by: null,
+            exception_status: 'none',
+            last_auto_summary: null,
+            operator_note: 'Klant bevestigde dat de eerste managementread nu zichtbaar is.',
+            created_at: '2026-04-24T09:00:00.000Z',
+            updated_at: '2026-04-24T09:00:00.000Z',
+          },
+        ],
+        learningDossier: buildDossier({
+          first_management_value: null,
+          buyer_question: 'Waar moeten we als management nu als eerste op ingrijpen?',
+          expected_first_value: null,
+          first_action_taken: null,
+          adoption_outcome: null,
+          case_public_summary: null,
+        }),
+        learningCheckpoints: [],
+      },
+    ])
+
+    expect(items).toHaveLength(1)
+    expect(items[0]).toMatchObject({
+      reason: 'Waar moeten we als management nu als eerste op ingrijpen?',
+      signalBody: 'Klant bevestigde dat de eerste managementread nu zichtbaar is.',
+      coreSemantics: {
+        reviewSemantics: {
+          reviewReason: 'Waar moeten we als management nu als eerste op ingrijpen?',
+        },
+        resultLoop: {
+          whatWeObserved: 'Klant bevestigde dat de eerste managementread nu zichtbaar is.',
+        },
+      },
+    })
+  })
+
+  it('finalizes local preview items with derived core semantics and synchronized open signals', () => {
+    const item = finalizeActionCenterPreviewItem({
+      id: 'local-1',
+      code: 'ACT-2001',
+      title: 'Nieuwe follow-up',
+      summary: 'Nieuwe opvolgactie vanuit Action Center.',
+      reason: 'Nieuwe actie gekoppeld aan een bestaand dossier of signaal.',
+      sourceLabel: 'ExitScan',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerId: null,
+      ownerName: null,
+      ownerRole: 'Nog niet toegewezen',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: null,
+      priority: 'hoog',
+      status: 'te-bespreken',
+      reviewDate: null,
+      expectedEffect: null,
+      reviewReason: null,
+      reviewOutcome: 'geen-uitkomst',
+      reviewDateLabel: 'Nog niet gepland',
+      reviewRhythm: 'Tweewekelijks',
+      signalLabel: 'ExitScan - Operations',
+      signalBody: 'Nieuwe opvolgactie vanuit Action Center.',
+      nextStep: 'Eerste vervolgstap vastleggen en reviewdatum bevestigen.',
+      peopleCount: 38,
+      updates: [
+        {
+          id: 'update-1',
+          author: 'Admin',
+          dateLabel: '28 apr',
+          note: 'Actie handmatig toegevoegd in de preview-surface.',
+        },
+      ],
+    })
+
+    expect(item.coreSemantics.actionFrame.firstStep).toBe('Eerste vervolgstap vastleggen en reviewdatum bevestigen.')
+    expect(item.coreSemantics.actionFrame.owner).toBe('Nog niet toegewezen')
+    expect(item.reason).toBe(item.coreSemantics.reviewSemantics.reviewReason)
+    expect(item.nextStep).toBe(item.coreSemantics.actionFrame.firstStep)
+    expect(item.openSignals).toEqual(['owner_missing', 'review_due'])
   })
 
   it('derives bounded telemetry signals from lifecycle and review truth', () => {

@@ -1,9 +1,10 @@
+import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
 import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 
-describe('action center preview route fields', () => {
+describe('action center preview route fields render', () => {
   it('renders expected effect, review reason, and review outcome in the detail experience', () => {
     const item = finalizeActionCenterPreviewItem({
       id: 'route-1',
@@ -44,19 +45,19 @@ describe('action center preview route fields', () => {
     })
 
     const html = renderToStaticMarkup(
-      <ActionCenterPreview
-        initialItems={[item]}
-        initialView="actions"
-        fallbackOwnerName="Verisight gebruiker"
-        ownerOptions={['Manager Operations']}
-        workbenchHref="/dashboard"
-        readOnly
-      />,
+      React.createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialView: 'actions',
+        fallbackOwnerName: 'Verisight gebruiker',
+        ownerOptions: ['Manager Operations'],
+        workbenchHref: '/dashboard',
+        readOnly: true,
+      }),
     )
 
     expect(html).toContain('Verwacht effect')
     expect(html).toContain('Binnen twee weken moet het eerste teamgesprek zijn gevoerd.')
-    expect(html).toContain('Waarom reviewen we dit')
+    expect(html).toContain('Waarom we opnieuw kijken')
     expect(html).toContain('Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.')
     expect(html).toContain('Laatste reviewuitkomst')
     expect(html).toContain('Bijstellen')

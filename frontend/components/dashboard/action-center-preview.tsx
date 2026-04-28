@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import type { ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
+import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 import type {
   ActionCenterPreviewItem,
   ActionCenterPreviewManagerOption,
@@ -353,7 +354,7 @@ export function ActionCenterPreview({
 }: Props) {
   const initialSelectedItem =
     initialItems.find((item) => item.id === initialSelectedItemId) ?? initialItems[0] ?? null
-  const [items, setItems] = useState(initialItems)
+  const [items, setItems] = useState(() => initialItems.map((item) => finalizeActionCenterPreviewItem(item)))
   const [activeView, setActiveView] = useState<ActionCenterPreviewView>(initialView)
   const [selectedItemId, setSelectedItemId] = useState(initialSelectedItem?.id ?? null)
   const [selectedTeamId, setSelectedTeamId] = useState(initialSelectedItem?.teamId ?? initialItems[0]?.teamId ?? null)
@@ -450,7 +451,9 @@ export function ActionCenterPreview({
 
   function updateItem(itemId: string, updater: (item: ActionCenterPreviewItem) => ActionCenterPreviewItem) {
     setItems((currentItems) =>
-      currentItems.map((item) => (item.id === itemId ? updater(item) : item)),
+      currentItems.map((item) =>
+        item.id === itemId ? finalizeActionCenterPreviewItem(updater(item), { recomputeCoreSemantics: true }) : item,
+      ),
     )
   }
 
@@ -465,7 +468,7 @@ export function ActionCenterPreview({
 
     const team = teamRows.find((entry) => entry.id === createForm.teamId)
     const nextIndex = items.length + 1040
-    const newItem: ActionCenterPreviewItem = {
+    const newItem = finalizeActionCenterPreviewItem({
       id: `local-${nextIndex}`,
       code: `ACT-${nextIndex}`,
       title: createForm.title.trim(),
@@ -490,7 +493,6 @@ export function ActionCenterPreview({
       signalBody: createForm.summary.trim() || 'Handmatige follow-up zonder extra productkoppelingen.',
       nextStep: 'Eerste vervolgstap vastleggen en reviewdatum bevestigen.',
       peopleCount: team?.peopleCount ?? 0,
-      openSignals: ['review_due'],
       updates: [
         {
           id: `local-update-${nextIndex}`,
@@ -499,7 +501,7 @@ export function ActionCenterPreview({
           note: 'Actie handmatig toegevoegd in de preview-surface.',
         },
       ],
-    }
+    })
 
     setItems((current) => [newItem, ...current])
     setSelectedItemId(newItem.id)
@@ -518,14 +520,14 @@ export function ActionCenterPreview({
     setItems((currentItems) =>
       currentItems.map((item) =>
         item.teamId === teamId
-          ? {
+          ? finalizeActionCenterPreviewItem({
               ...item,
               ownerId: trimmedManagerValue || null,
               ownerName: managerLabel,
               ownerRole: managerLabel ? `Manager - ${item.teamLabel}` : 'Nog niet toegewezen',
               ownerSubtitle: item.teamLabel,
               reviewOwnerName: managerLabel || item.reviewOwnerName,
-            }
+            }, { recomputeCoreSemantics: true })
           : item,
       ),
     )
@@ -891,7 +893,7 @@ export function ActionCenterPreview({
                       {focusItem?.title ?? 'Action Center ritme staat klaar'}
                     </h2>
                     <p className="mt-4 text-[0.98rem] leading-8 text-white/72">
-                      {focusItem?.reason ??
+                      {focusItem?.coreSemantics.reviewSemantics.reviewReason ??
                         'Zodra live opvolging zichtbaar is, landt hier automatisch het belangrijkste gesprek voor deze week.'}
                     </p>
 
@@ -905,7 +907,8 @@ export function ActionCenterPreview({
                     <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-5">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Volgende stap</p>
                       <p className="mt-3 text-base leading-7 text-white/86">
-                        {focusItem?.nextStep ?? 'De eerste review en eigenaar worden automatisch zichtbaar zodra een dossier live staat.'}
+                        {focusItem?.coreSemantics.actionFrame.firstStep ??
+                          'De eerste review en eigenaar worden automatisch zichtbaar zodra een dossier live staat.'}
                       </p>
                     </div>
 
@@ -1144,7 +1147,9 @@ export function ActionCenterPreview({
                         <div className="mt-7 grid gap-4 lg:grid-cols-[minmax(0,1fr),minmax(0,0.92fr)]">
                           <div className="rounded-[24px] border border-[#eadfce] bg-white px-5 py-5">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Waarom dit nu speelt</p>
-                            <p className="mt-4 text-[1.05rem] leading-8 text-[#132033]">{selectedItem.reason}</p>
+                            <p className="mt-4 text-[1.05rem] leading-8 text-[#132033]">
+                              {selectedItem.coreSemantics.reviewSemantics.reviewReason}
+                            </p>
                           </div>
                           <div className="rounded-[24px] border border-[#eadfce] bg-white px-5 py-5">
                             <div className="flex items-start justify-between gap-4">
@@ -2120,10 +2125,13 @@ function EmptySection({ title, body }: { title: string; body: string }) {
   )
 }
 
-function CompactLandingSummary({ item }: { item: ActionCenterPreviewItem }) {
-  const summaryLines = [
-    { label: 'Signaal', value: item.coreSemantics.resultLoop.whatWeObserved },
+export function buildCompactLandingSummaryLines(item: ActionCenterPreviewItem) {
+  const outcomeLabel = getReviewOutcomeMeta(item.coreSemantics.reviewSemantics.reviewOutcomeVisible).label
+
+  return [
+    { label: 'Uitkomst', value: outcomeLabel },
     { label: 'Besluit', value: item.coreSemantics.resultLoop.whatWasDecided },
+    { label: 'Signaal', value: item.coreSemantics.resultLoop.whatWeObserved },
     { label: 'Stap', value: item.coreSemantics.resultLoop.whatWasTried },
   ].filter(
     (
@@ -2133,7 +2141,11 @@ function CompactLandingSummary({ item }: { item: ActionCenterPreviewItem }) {
     ): entry is { label: string; value: string } =>
       Boolean(entry.value) &&
       entries.findIndex((candidate) => candidate.value === entry.value) === index,
-  ).slice(0, 2)
+  ).slice(0, 3)
+}
+
+function CompactLandingSummary({ item }: { item: ActionCenterPreviewItem }) {
+  const summaryLines = buildCompactLandingSummaryLines(item)
 
   if (summaryLines.length === 0) {
     return null

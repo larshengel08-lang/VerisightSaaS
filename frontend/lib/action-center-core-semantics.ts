@@ -34,6 +34,24 @@ export type ActionCenterCoreSemanticsProjectionInput = Pick<
   'campaign' | 'assignedManager' | 'deliveryRecord' | 'learningDossier' | 'learningCheckpoints'
 > & {
   route: ActionCenterRouteContract
+  latestVisibleUpdateNote?: string | null
+}
+
+export interface ActionCenterPreviewCoreSemanticsProjectionInput {
+  id: string
+  title: string
+  status: ActionCenterRouteContract['routeStatus']
+  ownerName: string | null
+  reviewDate: string | null
+  expectedEffect: string | null
+  reviewReason: string | null
+  reviewOutcome: ActionCenterReviewOutcome
+  reason: string | null
+  summary: string | null
+  signalBody: string | null
+  nextStep: string | null
+  latestVisibleUpdateNote?: string | null
+  route?: ActionCenterRouteContract | null
 }
 
 const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
@@ -139,7 +157,134 @@ function getLatestObservation(context: ActionCenterCoreSemanticsProjectionInput,
     getCheckpoint(context, 'first_management_use')?.objective_signal_notes,
     context.learningDossier?.adoption_outcome,
     context.learningDossier?.case_public_summary,
+    context.latestVisibleUpdateNote,
   ])
+}
+
+function getReviewQuestionTemplateFromStatus(status: ActionCenterRouteContract['routeStatus']) {
+  switch (status) {
+    case 'geblokkeerd':
+      return 'Wat blokkeert deze route nu het meest?'
+    case 'in-uitvoering':
+      return 'Welke vervolgstap vraagt deze route nu als eerste review?'
+    case 'afgerond':
+      return 'Welke uitkomst van deze route verdient nu de eerste review?'
+    case 'gestopt':
+      return 'Welke stopreden vraagt nu de eerste review?'
+    case 'te-bespreken':
+    default:
+      return 'Welke vervolgstap vraagt deze route nu als eerste review?'
+  }
+}
+
+function getPreviewClosingStatus(status: ActionCenterRouteContract['routeStatus']): ActionCenterClosingStatus {
+  if (status === 'afgerond') return 'afgerond'
+  if (status === 'gestopt') return 'gestopt'
+  return 'lopend'
+}
+
+function buildPreviewRoute(input: ActionCenterPreviewCoreSemanticsProjectionInput): ActionCenterRouteContract {
+  const reviewReason = pickFirst([input.reviewReason, input.reason])
+  const nextStep = pickFirst([input.nextStep, input.summary])
+
+  return {
+    campaignId: input.route?.campaignId ?? input.id,
+    entryStage: input.route?.entryStage ?? 'active',
+    routeOpenedAt: input.route?.routeOpenedAt ?? null,
+    ownerAssignedAt: input.ownerName ? (input.route?.ownerAssignedAt ?? null) : null,
+    routeStatus: input.status,
+    reviewOutcome: input.reviewOutcome,
+    reviewCompletedAt: input.route?.reviewCompletedAt ?? null,
+    outcomeRecordedAt: input.route?.outcomeRecordedAt ?? null,
+    outcomeSummary: pickFirst([input.route?.outcomeSummary, input.summary]),
+    intervention: nextStep,
+    owner: input.ownerName,
+    expectedEffect: normalizeText(input.expectedEffect),
+    reviewScheduledFor: normalizeText(input.reviewDate),
+    reviewReason,
+    blockedBy: input.status === 'geblokkeerd' ? (input.route?.blockedBy ?? 'blocked') : null,
+  }
+}
+
+export function projectActionCenterPreviewCoreSemantics(
+  input: ActionCenterPreviewCoreSemanticsProjectionInput,
+): ActionCenterCoreSemantics {
+  const route = buildPreviewRoute(input)
+  const reviewOutcomeVisible = getVisibleReviewOutcome(route.reviewOutcome)
+  const primaryReason = pickFirst([
+    route.reviewReason,
+    input.reason,
+    input.summary,
+    input.signalBody,
+  ])
+  const nextStep = pickFirst([
+    route.intervention,
+    input.nextStep,
+    input.summary,
+  ])
+  const expectedEffectFromReason = joinReasonAndStep(primaryReason, nextStep)
+  const reviewReason = pickFirst([
+    route.reviewReason,
+    input.reason,
+    input.signalBody,
+    input.summary,
+    getReviewQuestionTemplateFromStatus(route.routeStatus),
+  ])
+  const reviewQuestion = pickFirst([
+    route.expectedEffect,
+    expectedEffectFromReason,
+    nextStep,
+    getReviewQuestionTemplateFromStatus(route.routeStatus),
+  ])
+  const whyNow = pickFirst([
+    primaryReason,
+    input.summary,
+    input.signalBody,
+    input.title,
+    reviewReason,
+  ])
+  const latestVisibleUpdateNote = normalizeText(input.latestVisibleUpdateNote)
+  const whatWeObserved = pickFirst([
+    latestVisibleUpdateNote,
+    input.signalBody,
+    input.summary,
+    route.expectedEffect,
+  ])
+  const whatWasDecided = pickFirst([
+    route.outcomeSummary,
+    getReviewOutcomeLabel(reviewOutcomeVisible),
+  ])
+
+  return {
+    route,
+    reviewSemantics: {
+      reviewReason: reviewReason ?? REVIEW_REASON_FALLBACK,
+      reviewQuestion: reviewQuestion ?? REVIEW_QUESTION_FALLBACK,
+      reviewOutcomeRaw: route.reviewOutcome,
+      reviewOutcomeVisible,
+    },
+    actionFrame: {
+      whyNow: whyNow ?? ACTION_FRAME_FALLBACK,
+      firstStep: nextStep ?? ACTION_FRAME_FALLBACK,
+      owner: input.ownerName ?? UNASSIGNED_OWNER_LABEL,
+      expectedEffect: pickFirst([
+        route.expectedEffect,
+        expectedEffectFromReason,
+        reviewQuestion,
+      ]) ?? ACTION_FRAME_FALLBACK,
+    },
+    resultLoop: {
+      whatWasTried: pickFirst([
+        nextStep,
+        latestVisibleUpdateNote,
+      ]),
+      whatWeObserved,
+      whatWasDecided,
+    },
+    closingSemantics: {
+      status: getPreviewClosingStatus(route.routeStatus),
+    },
+  }
 }
 
 export function projectActionCenterCoreSemantics(
