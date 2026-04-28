@@ -271,12 +271,41 @@ describe('action center core semantics', () => {
         reviewQuestion: 'Plan de eerste bounded opvolgstap met HR.',
       },
       actionFrame: {
-        whyNow: 'Exit follow-through voorjaar',
+        whyNow: 'De managementread staat klaar voor een eerste bounded follow-through.',
         firstStep: 'Plan de eerste bounded opvolgstap met HR.',
       },
       resultLoop: {
         whatWasTried: 'Plan de eerste bounded opvolgstap met HR.',
         whatWeObserved: null,
+      },
+    })
+  })
+
+  it('uses a deterministic route-shape template for reviewQuestion when no existing review or route truth remains', () => {
+    const context = buildContext({
+      deliveryRecord: buildDeliveryRecord({
+        next_step: null,
+        customer_handoff_note: null,
+      }),
+      dossier: buildDossier({
+        title: 'Exit follow-through voorjaar',
+        first_management_value: null,
+        buyer_question: null,
+        buying_reason: null,
+        trust_friction: null,
+        expected_first_value: null,
+        first_action_taken: null,
+        management_action_outcome: null,
+        case_public_summary: null,
+      }),
+    })
+
+    expect(projectActionCenterCoreSemantics(context)).toMatchObject({
+      reviewSemantics: {
+        reviewQuestion: 'Welke vervolgstap vraagt deze route nu als eerste review?',
+      },
+      actionFrame: {
+        whyNow: 'Exit follow-through voorjaar',
       },
     })
   })

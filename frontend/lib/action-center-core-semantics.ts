@@ -79,6 +79,29 @@ function getClosingStatus(context: LiveActionCenterCampaignContext, route: Actio
   return 'lopend'
 }
 
+function getRouteSummary(route: ActionCenterRouteContract, context: LiveActionCenterCampaignContext) {
+  return pickFirst([
+    route.outcomeSummary,
+    context.deliveryRecord?.customer_handoff_note,
+  ])
+}
+
+function getReviewQuestionTemplate(route: ActionCenterRouteContract) {
+  switch (route.routeStatus) {
+    case 'geblokkeerd':
+      return 'Wat blokkeert deze route nu het meest?'
+    case 'in-uitvoering':
+      return 'Welke vervolgstap vraagt deze route nu als eerste review?'
+    case 'afgerond':
+      return 'Welke uitkomst van deze route verdient nu de eerste review?'
+    case 'gestopt':
+      return 'Welke stopreden vraagt nu de eerste review?'
+    case 'te-bespreken':
+    default:
+      return 'Welke vervolgstap vraagt deze route nu als eerste review?'
+  }
+}
+
 function joinReasonAndStep(reason: string | null, step: string | null) {
   const values = [normalizeText(reason), normalizeText(step)].filter((value): value is string => Boolean(value))
   if (values.length === 0) return null
@@ -132,6 +155,7 @@ export function projectActionCenterCoreSemantics(
     context.learningDossier?.buying_reason,
     context.learningDossier?.trust_friction,
   ])
+  const routeSummary = getRouteSummary(route, context)
 
   const expectedEffectFromReason = joinReasonAndStep(primaryReason, nextStep)
 
@@ -141,13 +165,12 @@ export function projectActionCenterCoreSemantics(
     expectedEffectFromReason,
     nextStep,
     joinExpectedEffectAndStep(route.expectedEffect, nextStep),
-    context.learningDossier?.title,
-    context.campaign.name,
+    getReviewQuestionTemplate(route),
   ])
 
   const whyNow = pickFirst([
     primaryReason,
-    route.expectedEffect,
+    routeSummary,
     context.learningDossier?.title,
     context.campaign.name,
   ])
