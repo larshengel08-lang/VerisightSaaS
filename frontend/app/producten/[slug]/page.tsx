@@ -1346,14 +1346,14 @@ function CombinatiePage() {
       ctaHref={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_hero' })}
       heroIntro={
         <MarketingHeroIntro>
-          <p className="marketing-hero-eyebrow text-sky-700">Combinatie</p>
+          <p className="marketing-hero-eyebrow text-sky-700">Combinatieroute</p>
           <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
-            Gebruik ExitScan en RetentieScan als bewuste portfolioroute.
+            Gebruik ExitScan en RetentieScan als bewuste vervolgroute.
           </h1>
           <p className="marketing-hero-copy text-slate-600">
             De combinatie is logisch voor organisaties die zowel willen leren van uitstroom als eerder willen
-            signaleren waar behoud nu onder druk staat, zonder daarvan een bundel of standaardpakket te maken. Het is
-            geen derde kernproduct. Dashboard, rapport en Action Center komen daarna in dezelfde suite-omgeving samen.
+            signaleren waar behoud onder druk staat, zonder daar een standaardpakket van te maken. Het is geen derde
+            kernroute. Dashboard, rapport en Action Center komen daarna in dezelfde omgeving samen.
           </p>
           <div className="marketing-hero-actions">
             <div className="marketing-hero-cta-row">
@@ -1361,13 +1361,13 @@ function CombinatiePage() {
                 href={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_hero' })}
                 className="inline-flex items-center justify-center rounded-full bg-[#3C8D8A] px-6 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_rgba(60,141,138,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#2d6e6b]"
               >
-                Plan suite-demo
+                Plan een eerste route-inschatting
               </a>
               <Link
                 href="/producten"
                 className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:text-slate-950"
               >
-                Bekijk producten
+                Bekijk de routes
               </Link>
             </div>
           </div>
@@ -1376,19 +1376,20 @@ function CombinatiePage() {
       heroStage={
         <MarketingHeroStage>
           <div className="space-y-5">
-            <span className="marketing-stage-tag bg-[#3C8D8A]/10 text-[#DCEFEA]">Portfolioroute</span>
+            <span className="marketing-stage-tag bg-[#3C8D8A]/10 text-[#DCEFEA]">Vervolgroute</span>
             <h2 className="marketing-stage-title font-display text-white">
-              De combinatie is geen verplichte instap, maar een route voor twee echte managementvragen.
+              De combinatie is geen verplichte instap, maar een route voor twee concrete vragen.
             </h2>
             <p className="marketing-stage-copy text-slate-300">
-              Deze pagina moet duidelijk maken dat het portfolio pas sterker wordt zodra beide vragen bestaan en de
-              eerste route al scherp staat. Pas daarna verbindt dezelfde suite-omgeving dashboard, rapport en Action Center in één bounded managementlijn.
+              Deze pagina laat zien dat de combinatie pas sterker wordt zodra beide vragen bestaan en de eerste route
+              al scherp staat. Pas daarna verbinden dashboard, rapport en Action Center zich in één gedeelde
+              vervolglijn.
             </p>
             <div className="marketing-stage-list">
               {[
-                'Stap 1: duid vertrek met ExitScan.',
+                'Stap 1: begrijp vertrek met ExitScan.',
                 'Stap 2: signaleer behoud met RetentieScan.',
-                'Stap 3: stuur in een gedeelde managementtaal.',
+                'Stap 3: stuur vanuit een gedeelde vervolglijn.',
               ].map((item) => (
                 <div key={item} className="marketing-stage-list-item text-sm leading-7 text-slate-200">
                   {item}
@@ -1402,7 +1403,7 @@ function CombinatiePage() {
         <MarketingHeroSupport>
           <div className="marketing-support-note text-sm leading-7 text-slate-600">
             Combinatie betekent niet meer features, maar twee gerichte routes die pas logisch naast elkaar komen te
-            staan wanneer de eerste keuze al landt en dezelfde suite-omgeving daarna de follow-through kan dragen.
+            staan wanneer de eerste keuze al landt en dezelfde omgeving daarna de vervolgstap kan dragen.
           </div>
           <div className="marketing-link-grid">
             <Link
@@ -1425,13 +1426,14 @@ function CombinatiePage() {
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div>
             <div className="marketing-panel p-8">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Portfolio-proof</p>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-400">Vervolgroute</p>
               <h2 className="mt-4 text-3xl font-semibold text-slate-950">
-                Laat de gedeelde managementweergave pas na de keuze zien.
+                Laat de gedeelde managementweergave pas na de eerste keuze zien.
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-600">
-                De combinatie gebruikt dezelfde previewstructuur, maar de echte sample-output blijft via ExitScan en
-                RetentieScan publiek verifieerbaar. Daarna moeten dashboard, rapport en Action Center wel in dezelfde bounded lijn blijven lezen.
+                De combinatie gebruikt dezelfde previewstructuur, maar de echte voorbeeldoutput blijft via ExitScan en
+                RetentieScan publiek verifieerbaar. Daarna moeten dashboard, rapport en Action Center wel in dezelfde
+                vaste leeslijn blijven.
               </p>
               <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
                 <PreviewSlider variant="portfolio" />
@@ -1444,8 +1446,8 @@ function CombinatiePage() {
             {exitSampleAsset ? (
               <SampleShowcaseCard
                 eyebrow="ExitScan-proof"
-                title="ExitScan blijft de eerste sample-anchor."
-                body="Gebruik de ExitScan-showcase om de primaire wedge te bewijzen voordat de portfolio-aanpak in beeld komt."
+                title="ExitScan blijft het eerste publieke anker."
+                body="Gebruik ExitScan eerst om de primaire route te bewijzen voordat de combinatieroute in beeld komt."
                 asset={exitSampleAsset}
                 linkLabel="Open ExitScan-voorbeeldrapport"
               />
@@ -1453,8 +1455,8 @@ function CombinatiePage() {
             {retentionSampleAsset ? (
               <SampleShowcaseCard
                 eyebrow="RetentieScan-proof"
-                title="RetentieScan bevestigt de tweede route."
-                body="Gebruik de RetentieScan-showcase om te laten zien hoe vroegsignalering op behoud aansluit zodra de actieve behoudsvraag echt bestaat."
+                title="RetentieScan bevestigt de vervolgstap."
+                body="Gebruik RetentieScan om te laten zien hoe vroegsignalering op behoud aansluit zodra de actieve behoudsvraag echt speelt."
                 asset={retentionSampleAsset}
                 linkLabel="Open RetentieScan-voorbeeldrapport"
               />
@@ -1467,7 +1469,7 @@ function CombinatiePage() {
         <MarketingProofStrip
           items={[
             {
-              title: 'Stap 1: duid vertrek',
+              title: 'Stap 1: begrijp vertrek',
               body: 'Gebruik ExitScan om vertrekpatronen en terugkerende werkfactoren achteraf scherp te krijgen.',
             },
             {
@@ -1476,7 +1478,7 @@ function CombinatiePage() {
             },
             {
               title: 'Stap 3: stuur in een lijn',
-              body: 'Gebruik een gedeelde managementtaal voor prioritering, opvolging en herhaalmeting via dashboard, rapport en Action Center.',
+              body: 'Gebruik een gedeelde vervolglijn voor prioritering, opvolging en herhaalmeting via dashboard, rapport en Action Center.',
             },
           ]}
         />
@@ -1487,7 +1489,7 @@ function CombinatiePage() {
             rows={[
               ['Hoofdvraag', 'Hoe verbinden we vertrekduiding en vroegsignalering in dezelfde lijn?'],
               ['Leesrichting', 'Achteraf begrijpen en vooruit kijken'],
-              ['Managementoutput', 'Twee gerichte scans met dashboard, rapport en Action Center in een gedeeld portfolio'],
+              ['Managementoutput', 'Twee gerichte scans met dashboard, rapport en Action Center in een gedeelde vervolglijn'],
               ['Niet bedoeld als', 'Een algemene survey waar alles tegelijk in wordt gepropt'],
             ]}
           />
@@ -1499,7 +1501,7 @@ function CombinatiePage() {
               </h2>
               <p className="mt-5 text-base leading-8 text-slate-300">
                 De combinatie is geen verplichte instap. Het is een koopreden voor organisaties die beide vragen tegelijk
-                serieus willen adresseren in dezelfde managementtaal en uiteindelijk in dezelfde suite-omgeving willen laten landen.
+                serieus willen adresseren in dezelfde vervolglijn en uiteindelijk in dezelfde omgeving willen laten landen.
               </p>
             </div>
         </div>
@@ -1514,12 +1516,12 @@ function CombinatiePage() {
       <MarketingSection tone="plain">
         <MarketingCalloutBand
           eyebrow="Volgende stap"
-          title="Wil je bepalen of de combinatie logisch is?"
-          body="In een kort gesprek kijken we of jullie vooral met een product moeten starten of dat beide managementvragen pas na de eerste route genoeg onderbouwd zijn voor een portfolio-aanpak in dezelfde suite-omgeving."
+          title="Wilt u toetsen of de combinatie logisch is?"
+          body="In een kort gesprek kijken we of u vooral met een product moet starten of dat beide vragen pas na de eerste route genoeg onderbouwd zijn voor een combinatieroute in dezelfde omgeving."
           primaryHref={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_callout' })}
-          primaryLabel="Plan suite-demo"
+          primaryLabel="Plan een eerste route-inschatting"
           secondaryHref="/producten"
-          secondaryLabel="Bekijk producten"
+          secondaryLabel="Bekijk de routes"
         />
       </MarketingSection>
     </MarketingPageShell>
