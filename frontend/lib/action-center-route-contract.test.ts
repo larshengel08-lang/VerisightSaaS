@@ -277,7 +277,7 @@ describe('action center route contract', () => {
     })
   })
 
-  it('keeps reviewOutcome separate from routeStatus and only surfaces completion truth when explicit', () => {
+  it('keeps reviewOutcome separate from routeStatus when no stable completion timestamp exists in this slice', () => {
     const context = buildContext({
       assignedManager: {
         userId: 'manager-1',
@@ -299,13 +299,13 @@ describe('action center route contract', () => {
     expect(projectActionCenterRoute(context)).toMatchObject({
       routeStatus: 'in-uitvoering',
       reviewOutcome: 'stoppen',
-      reviewCompletedAt: '2026-04-24T10:00:00.000Z',
+      reviewCompletedAt: null,
       outcomeRecordedAt: null,
       outcomeSummary: null,
     })
   })
 
-  it('surfaces recorded outcome truth separately from review outcome and owner label presence', () => {
+  it('keeps recorded outcome timing null when only mutable dossier timestamps exist', () => {
     const candidateOwnerContext = buildContext({
       assignedManager: {
         userId: 'manager-1',
@@ -343,8 +343,8 @@ describe('action center route contract', () => {
 
     expect(projectActionCenterRoute(completedContext)).toMatchObject({
       ownerAssignedAt: '2026-04-21T08:00:00.000Z',
-      reviewCompletedAt: '2026-04-24T10:00:00.000Z',
-      outcomeRecordedAt: '2026-04-24T10:00:00.000Z',
+      reviewCompletedAt: null,
+      outcomeRecordedAt: null,
       outcomeSummary: 'Eerste managementreview is afgerond en omgezet naar een aangepaste vervolgactie.',
     })
   })

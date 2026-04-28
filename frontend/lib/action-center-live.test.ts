@@ -328,8 +328,6 @@ describe('live action center builder', () => {
       'action_center_review_scheduled',
       'action_center_route_opened',
       'action_center_owner_assigned',
-      'action_center_review_completed',
-      'action_center_outcome_recorded',
     ])
     expect(events.slice(3)).toMatchObject([
       {
@@ -343,21 +341,6 @@ describe('live action center builder', () => {
         eventType: 'action_center_owner_assigned',
         payload: {
           ownerLabel: 'Manager Operations',
-          routeStatus: 'te-bespreken',
-        },
-      },
-      {
-        eventType: 'action_center_review_completed',
-        payload: {
-          reviewOutcome: 'bijstellen',
-          routeStatus: 'te-bespreken',
-        },
-      },
-      {
-        eventType: 'action_center_outcome_recorded',
-        payload: {
-          outcomeSummary: 'Team koos een aangepaste follow-through na de eerste MT-review.',
-          reviewOutcome: 'bijstellen',
           routeStatus: 'te-bespreken',
         },
       },

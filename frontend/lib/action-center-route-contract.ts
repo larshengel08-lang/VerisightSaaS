@@ -125,10 +125,7 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
   const reviewScheduledFor = getReviewScheduledFor(context)
   const reviewReason = getReviewReason(context)
   const reviewOutcome = getReviewOutcome(context)
-  const reviewCompletedAt =
-    routeOpenedAt && reviewOutcome !== 'geen-uitkomst' ? normalizeText(context.learningDossier?.updated_at) : null
   const outcomeSummary = getOutcomeSummary(context)
-  const outcomeRecordedAt = routeOpenedAt && outcomeSummary ? normalizeText(context.learningDossier?.updated_at) : null
   const blockedBy =
     context.deliveryRecord?.exception_status && context.deliveryRecord.exception_status !== 'none'
       ? context.deliveryRecord.exception_status
@@ -157,8 +154,8 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
     ownerAssignedAt,
     routeStatus,
     reviewOutcome,
-    reviewCompletedAt,
-    outcomeRecordedAt,
+    reviewCompletedAt: null,
+    outcomeRecordedAt: null,
     outcomeSummary,
     intervention,
     owner,

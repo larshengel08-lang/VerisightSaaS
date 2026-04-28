@@ -233,7 +233,7 @@ export default async function ActionCenterPage() {
             ? {
                 userId: assignment.user_id,
                 displayName: assignment.display_name ?? assignment.login_email ?? null,
-                assignedAt: assignment.updated_at ?? assignment.created_at ?? null,
+                assignedAt: assignment.created_at ?? null,
               }
             : null,
           deliveryRecord,
