@@ -150,34 +150,6 @@ function Arrow() {
   )
 }
 
-function Tag({ children, tone = 'default' }: { children: React.ReactNode; tone?: 'default' | 'accent' }) {
-  const palette =
-    tone === 'accent'
-      ? { background: SURFACE.tealSoft, border: '#c5e0da', color: SURFACE.teal }
-      : { background: SURFACE.surface, border: SURFACE.borderSoft, color: SURFACE.text }
-
-  return (
-    <span
-      style={{
-        alignItems: 'center',
-        background: palette.background,
-        border: `1px solid ${palette.border}`,
-        borderRadius: 999,
-        color: palette.color,
-        display: 'inline-flex',
-        fontFamily: bodyFont,
-        fontSize: 11,
-        fontWeight: 700,
-        letterSpacing: '.12em',
-        padding: '6px 12px',
-        textTransform: 'uppercase',
-      }}
-    >
-      {children}
-    </span>
-  )
-}
-
 function OutputMetric({
   label,
   value,
@@ -759,7 +731,7 @@ function SuitePreviewSection() {
             <Reveal delay={0.08} from="right">
               <div className="suite-motion-shell">
               <div className="suite-phase-tabs" aria-label="Visual flow">
-                {['Zien', 'Prioriteren', 'Handelen'].map((phase, index) => (
+                {['Signalen', 'Prioriteit', 'Opvolging'].map((phase, index) => (
                   <span key={phase} className={`suite-phase-tab suite-phase-tab-${index + 1}`}>
                     {phase}
                   </span>
@@ -773,7 +745,7 @@ function SuitePreviewSection() {
                   <div className="suite-motion-frame-head">
                     <div>
                       <p className="suite-phase-eyebrow">Motion graphic</p>
-                      <p className="suite-motion-frame-title">Van zien naar eerste opvolging</p>
+                      <p className="suite-motion-frame-title">Van eerste signalen naar eerste actie</p>
                     </div>
 
                     <div className="suite-motion-progress" aria-hidden>
@@ -909,12 +881,9 @@ function SuitePreviewSection() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14, marginTop: 18 }}>
-                <Tag tone="accent">Dashboard</Tag>
-                <Tag>Samenvatting</Tag>
-                <Tag>Rapport</Tag>
-                <Tag>Action Center</Tag>
-              </div>
+              <p style={{ color: SURFACE.text, fontSize: 13.5, lineHeight: 1.65, marginBottom: 14, marginTop: 18 }}>
+                Eerst zie je wat terugkomt, daarna wat eerst telt, en tenslotte wie wat oppakt.
+              </p>
               <p style={{ color: SURFACE.subtle, fontSize: 12.5 }}>
                 Voorbeeldoutput is illustratief en gebaseerd op fictieve data.
               </p>
