@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Reveal } from '@/components/marketing/design-tokens'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const SURFACE = {
@@ -693,45 +694,52 @@ function SuitePreviewSection() {
     >
       <BackdropNumber value="02" />
       <div style={{ ...SHELL, paddingTop: 'clamp(54px, 6vw, 84px)', paddingBottom: 'clamp(62px, 7vw, 96px)', position: 'relative' }}>
-        <SectionLabel index="02" label="Van inzicht naar eerste opvolging" />
+        <Reveal>
+          <SectionLabel index="02" label="Van inzicht naar eerste opvolging" />
+        </Reveal>
 
         <div className="grid grid-cols-1 gap-12 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] xl:items-start">
           <div style={{ minWidth: 0 }}>
-            <h2
-              style={{
-                color: SURFACE.ink,
-                fontFamily: displayFont,
-                fontSize: 'clamp(3rem, 5vw, 4.9rem)',
-                fontWeight: 400,
-                letterSpacing: '-0.05em',
-                lineHeight: 0.95,
-                marginBottom: 22,
-                maxWidth: '11.5ch',
-                textWrap: 'pretty',
-              }}
-            >
-              Geen losse rapportage.
-              <br />
-              <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
-                Wel een helder besluitspoor.
-              </span>
-            </h2>
+            <Reveal delay={0.04}>
+              <h2
+                style={{
+                  color: SURFACE.ink,
+                  fontFamily: displayFont,
+                  fontSize: 'clamp(3rem, 5vw, 4.9rem)',
+                  fontWeight: 400,
+                  letterSpacing: '-0.05em',
+                  lineHeight: 0.95,
+                  marginBottom: 22,
+                  maxWidth: '11.5ch',
+                  textWrap: 'pretty',
+                }}
+              >
+                Geen losse rapportage.
+                <br />
+                <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
+                  Wel een helder besluitspoor.
+                </span>
+              </h2>
+            </Reveal>
 
-            <p
-              style={{
-                color: SURFACE.text,
-                fontSize: 16,
-                lineHeight: 1.78,
-                marginBottom: 34,
-                maxWidth: '33rem',
-              }}
-            >
-              Verisight brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie zichtbaar te maken.
-            </p>
+            <Reveal delay={0.1}>
+              <p
+                style={{
+                  color: SURFACE.text,
+                  fontSize: 16,
+                  lineHeight: 1.78,
+                  marginBottom: 34,
+                  maxWidth: '33rem',
+                }}
+              >
+                Verisight brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie zichtbaar te maken.
+              </p>
+            </Reveal>
 
             <div style={{ borderTop: `1px solid ${SURFACE.border}`, display: 'grid', gap: 0 }}>
-              {suiteFlowPoints.map((item) => (
-                <div
+              {suiteFlowPoints.map((item, index) => (
+                <Reveal key={item.index} delay={0.12 + index * 0.06}>
+                  <div
                   key={item.index}
                   style={{
                     borderBottom: `1px solid ${SURFACE.border}`,
@@ -740,19 +748,21 @@ function SuitePreviewSection() {
                     gridTemplateColumns: '44px 1fr',
                     padding: '20px 0',
                   }}
-                >
-                  <span style={{ color: SURFACE.subtle, fontSize: 13 }}>{item.index}</span>
-                  <div>
-                    <p style={{ color: SURFACE.ink, fontSize: 17, fontWeight: 600, marginBottom: 8 }}>{item.title}</p>
-                    <p style={{ color: SURFACE.text, fontSize: 14.5, lineHeight: 1.72 }}>{item.body}</p>
+                  >
+                    <span style={{ color: SURFACE.subtle, fontSize: 13 }}>{item.index}</span>
+                    <div>
+                      <p style={{ color: SURFACE.ink, fontSize: 17, fontWeight: 600, marginBottom: 8 }}>{item.title}</p>
+                      <p style={{ color: SURFACE.text, fontSize: 14.5, lineHeight: 1.72 }}>{item.body}</p>
+                    </div>
                   </div>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
 
           <div style={{ minWidth: 0 }}>
-            <div className="suite-motion-shell">
+            <Reveal delay={0.08} from="right">
+              <div className="suite-motion-shell">
               <div className="suite-phase-tabs" aria-label="Visual flow">
                 {['Zien', 'Prioriteren', 'Handelen'].map((phase, index) => (
                   <span key={phase} className={`suite-phase-tab suite-phase-tab-${index + 1}`}>
@@ -913,7 +923,8 @@ function SuitePreviewSection() {
               <p style={{ color: SURFACE.subtle, fontSize: 12.5 }}>
                 Voorbeeldoutput is illustratief en gebaseerd op fictieve data.
               </p>
-            </div>
+              </div>
+            </Reveal>
           </div>
         </div>
 
@@ -1474,37 +1485,44 @@ function RoutesSection() {
     >
       <BackdropNumber value="04" />
       <div style={{ ...SHELL, paddingTop: 'clamp(58px, 7vw, 92px)', paddingBottom: 'clamp(58px, 7vw, 92px)', position: 'relative' }}>
-        <SectionLabel index="04" label="Routes" />
+        <Reveal>
+          <SectionLabel index="04" label="Routes" />
+        </Reveal>
 
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.72fr)] xl:items-end">
           <div>
-            <h2
-              style={{
-                color: SURFACE.ink,
-                fontFamily: displayFont,
-                fontSize: 'clamp(3rem, 5vw, 4.85rem)',
-                fontWeight: 400,
-                letterSpacing: '-0.05em',
-                lineHeight: 0.95,
-                marginBottom: 14,
-                maxWidth: '11.5ch',
-              }}
-            >
-              Kies de route
-              <br />
-              <span style={{ color: SURFACE.amber, fontStyle: 'italic', fontWeight: 300 }}>
-                die past bij uw vraagstuk.
-              </span>
-            </h2>
+            <Reveal delay={0.04}>
+              <h2
+                style={{
+                  color: SURFACE.ink,
+                  fontFamily: displayFont,
+                  fontSize: 'clamp(3rem, 5vw, 4.85rem)',
+                  fontWeight: 400,
+                  letterSpacing: '-0.05em',
+                  lineHeight: 0.95,
+                  marginBottom: 14,
+                  maxWidth: '11.5ch',
+                }}
+              >
+                Kies de route
+                <br />
+                <span style={{ color: SURFACE.amber, fontStyle: 'italic', fontWeight: 300 }}>
+                  die past bij uw vraagstuk.
+                </span>
+              </h2>
+            </Reveal>
           </div>
-          <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.75, maxWidth: '26rem' }}>
-            Drie hoofdroutes. Aanvullende routes sluiten later aan. Zo blijft de eerste stap overzichtelijk en bestuurlijk logisch.
-          </p>
+          <Reveal delay={0.1}>
+            <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.75, maxWidth: '26rem' }}>
+              Drie hoofdroutes. Aanvullende routes sluiten later aan. Zo blijft de eerste stap overzichtelijk en bestuurlijk logisch.
+            </p>
+          </Reveal>
         </div>
 
         <div className="grid grid-cols-1 gap-10 xl:grid-cols-3" style={{ marginTop: 48 }}>
-          {routeCards.map((route) => (
-            <article
+          {routeCards.map((route, index) => (
+            <Reveal key={route.title} delay={0.12 + index * 0.08}>
+              <article
               key={route.title}
               style={{
                 borderBottom: `1px solid ${SURFACE.border}`,
@@ -1559,7 +1577,8 @@ function RoutesSection() {
                   <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.75, maxWidth: '18rem' }}>{route.body}</p>
                 </div>
               </div>
-            </article>
+              </article>
+            </Reveal>
           ))}
         </div>
 
@@ -1572,21 +1591,25 @@ function RoutesSection() {
           }}
         >
           <div>
-            <p
-              style={{
-                color: SURFACE.muted,
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: '.18em',
-                marginBottom: 12,
-                textTransform: 'uppercase',
-              }}
-            >
-              Vervolgvragen
-            </p>
-            <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.75, maxWidth: '38rem' }}>
-              Pulse voor compacte vervolgmetingen, Leadership Scan voor extra managementcontext en een combinatieroute wanneer meerdere vragen tegelijk spelen.
-            </p>
+            <Reveal delay={0.22}>
+              <p
+                style={{
+                  color: SURFACE.muted,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: '.18em',
+                  marginBottom: 12,
+                  textTransform: 'uppercase',
+                }}
+              >
+                Vervolgvragen
+              </p>
+            </Reveal>
+            <Reveal delay={0.26}>
+              <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.75, maxWidth: '38rem' }}>
+                Pulse voor compacte vervolgmetingen, Leadership Scan voor extra managementcontext en een combinatieroute wanneer meerdere vragen tegelijk spelen.
+              </p>
+            </Reveal>
           </div>
 
           <div className="flex flex-wrap gap-8 xl:justify-end">
@@ -1594,35 +1617,39 @@ function RoutesSection() {
               ['Pulse', SURFACE.tealSoft, SURFACE.teal],
               ['Leadership Scan', SURFACE.amberSoft, SURFACE.amber],
               ['Combinatie', '#ece7df', SURFACE.ink],
-            ].map(([label, bg, color]) => (
-              <div key={label} style={{ minWidth: 132 }}>
+            ].map(([label, bg, color], index) => (
+              <Reveal key={label} delay={0.28 + index * 0.05}>
+                <div style={{ minWidth: 132 }}>
                 <div style={{ background: String(bg), color: String(color), display: 'inline-block', fontFamily: bodyFont, fontSize: 11, fontWeight: 700, letterSpacing: '.14em', marginBottom: 10, padding: '5px 10px', textTransform: 'uppercase' }}>
                   {label}
                 </div>
-              </div>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
 
         <div style={{ marginTop: 34 }}>
-          <Link
-            href={primaryHref}
-            style={{
-              alignItems: 'center',
-              background: SURFACE.charcoal,
-              color: '#fff',
-              display: 'inline-flex',
-              fontFamily: bodyFont,
-              fontSize: 15,
-              fontWeight: 600,
-              gap: 10,
-              justifyContent: 'space-between',
-              padding: '16px 22px',
-              textDecoration: 'none',
-            }}
-          >
-            Bespreek de juiste eerste route <Arrow />
-          </Link>
+          <Reveal delay={0.34}>
+            <Link
+              href={primaryHref}
+              style={{
+                alignItems: 'center',
+                background: SURFACE.charcoal,
+                color: '#fff',
+                display: 'inline-flex',
+                fontFamily: bodyFont,
+                fontSize: 15,
+                fontWeight: 600,
+                gap: 10,
+                justifyContent: 'space-between',
+                padding: '16px 22px',
+                textDecoration: 'none',
+              }}
+            >
+              Bespreek de juiste eerste route <Arrow />
+            </Link>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -1641,37 +1668,44 @@ function TrustSection() {
     >
       <BackdropNumber value="05" tone="cool" />
       <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 88px)', paddingBottom: 'clamp(56px, 7vw, 88px)', position: 'relative' }}>
-        <SectionLabel index="05" label="Vertrouwen" />
+        <Reveal>
+          <SectionLabel index="05" label="Vertrouwen" />
+        </Reveal>
 
         <div className="grid grid-cols-1 gap-12 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] xl:items-start">
           <div style={{ minWidth: 0 }}>
-            <h2
-              style={{
-                color: SURFACE.ink,
-                fontFamily: displayFont,
-                fontSize: 'clamp(2.9rem, 4.8vw, 4.65rem)',
-                fontWeight: 400,
-                letterSpacing: '-0.05em',
-                lineHeight: 0.96,
-                marginBottom: 20,
-                maxWidth: '11ch',
-              }}
-            >
-              Zorgvuldig meten.
-              <br />
-              <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
-                Nuchter duiden.
-              </span>
-            </h2>
-            <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.8, maxWidth: '32rem' }}>
-              Verisight helpt patronen op groepsniveau zichtbaar maken. Niet om individuele medewerkers te beoordelen, wel om betere gesprekken en keuzes mogelijk te maken.
-            </p>
+            <Reveal delay={0.04}>
+              <h2
+                style={{
+                  color: SURFACE.ink,
+                  fontFamily: displayFont,
+                  fontSize: 'clamp(2.9rem, 4.8vw, 4.65rem)',
+                  fontWeight: 400,
+                  letterSpacing: '-0.05em',
+                  lineHeight: 0.96,
+                  marginBottom: 20,
+                  maxWidth: '11ch',
+                }}
+              >
+                Zorgvuldig meten.
+                <br />
+                <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
+                  Nuchter duiden.
+                </span>
+              </h2>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.8, maxWidth: '32rem' }}>
+                Verisight helpt patronen op groepsniveau zichtbaar maken. Niet om individuele medewerkers te beoordelen, wel om betere gesprekken en keuzes mogelijk te maken.
+              </p>
+            </Reveal>
           </div>
 
           <div style={{ minWidth: 0 }}>
             <div style={{ borderTop: `1px solid ${SURFACE.border}`, display: 'grid' }}>
               {trustPrinciples.map((item, index) => (
-                <div
+                <Reveal key={item} delay={0.12 + index * 0.06}>
+                  <div
                   key={item}
                   style={{
                     borderBottom: `1px solid ${SURFACE.border}`,
@@ -1680,46 +1714,49 @@ function TrustSection() {
                     gridTemplateColumns: '46px 1fr',
                     padding: '18px 0',
                   }}
-                >
-                  <span style={{ color: SURFACE.subtle, fontSize: 13 }}>{String(index + 1).padStart(2, '0')}</span>
-                  <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.78 }}>{item}</p>
-                </div>
+                  >
+                    <span style={{ color: SURFACE.subtle, fontSize: 13 }}>{String(index + 1).padStart(2, '0')}</span>
+                    <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.78 }}>{item}</p>
+                  </div>
+                </Reveal>
               ))}
             </div>
 
-            <div
-              style={{
-                background: SURFACE.paperSoft,
-                marginTop: 24,
-                padding: '20px 22px',
-              }}
-            >
-              <p
+            <Reveal delay={0.36}>
+              <div
                 style={{
-                  color: SURFACE.muted,
-                  fontFamily: bodyFont,
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '.18em',
-                  marginBottom: 10,
-                  textTransform: 'uppercase',
+                  background: SURFACE.paperSoft,
+                  marginTop: 24,
+                  padding: '20px 22px',
                 }}
               >
-                Onderregel
-              </p>
-              <p
-                style={{
-                  color: SURFACE.ink,
-                  fontFamily: displayFont,
-                  fontSize: 'clamp(1.8rem, 2.4vw, 2.35rem)',
-                  letterSpacing: '-0.03em',
-                  lineHeight: 1.08,
-                  maxWidth: '19ch',
-                }}
-              >
-                De score opent het gesprek, maar sluit het niet af.
-              </p>
-            </div>
+                <p
+                  style={{
+                    color: SURFACE.muted,
+                    fontFamily: bodyFont,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: '.18em',
+                    marginBottom: 10,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Onderregel
+                </p>
+                <p
+                  style={{
+                    color: SURFACE.ink,
+                    fontFamily: displayFont,
+                    fontSize: 'clamp(1.8rem, 2.4vw, 2.35rem)',
+                    letterSpacing: '-0.03em',
+                    lineHeight: 1.08,
+                    maxWidth: '19ch',
+                  }}
+                >
+                  De score opent het gesprek, maar sluit het niet af.
+                </p>
+              </div>
+            </Reveal>
           </div>
         </div>
       </div>
@@ -1741,55 +1778,63 @@ function ContactSection() {
     >
       <BackdropNumber value="06" />
       <div style={{ ...SHELL, position: 'relative' }}>
-        <SectionLabel index="06" label="Plan een kennismaking" />
+        <Reveal>
+          <SectionLabel index="06" label="Plan een kennismaking" />
+        </Reveal>
         <div
           className="grid grid-cols-1 gap-10 xl:grid-cols-[minmax(0,0.94fr)_minmax(0,0.78fr)] xl:items-end"
           style={{ minHeight: 320 }}
         >
           <div style={{ minWidth: 0 }}>
-            <h2
-              style={{
-                color: SURFACE.ink,
-                fontFamily: displayFont,
-                fontSize: 'clamp(3rem, 5vw, 4.9rem)',
-                fontWeight: 400,
-                letterSpacing: '-0.05em',
-                lineHeight: 0.95,
-                marginBottom: 18,
-                maxWidth: '10.5ch',
-              }}
-            >
-              Wilt u zien
-              <br />
-              <span style={{ color: SURFACE.amber, fontStyle: 'italic', fontWeight: 300 }}>
-                welke route nu het meest logisch is?
-              </span>
-            </h2>
+            <Reveal delay={0.04}>
+              <h2
+                style={{
+                  color: SURFACE.ink,
+                  fontFamily: displayFont,
+                  fontSize: 'clamp(3rem, 5vw, 4.9rem)',
+                  fontWeight: 400,
+                  letterSpacing: '-0.05em',
+                  lineHeight: 0.95,
+                  marginBottom: 18,
+                  maxWidth: '10.5ch',
+                }}
+              >
+                Wilt u zien
+                <br />
+                <span style={{ color: SURFACE.amber, fontStyle: 'italic', fontWeight: 300 }}>
+                  welke route nu het meest logisch is?
+                </span>
+              </h2>
+            </Reveal>
           </div>
 
           <div style={{ minWidth: 0, maxWidth: '31rem' }}>
-            <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.8, marginBottom: 28 }}>
-              Plan een korte kennismaking. Dan ziet u of Verisight past, welke eerste route logisch is en hoe de output er in uw situatie uit kan zien.
-            </p>
+            <Reveal delay={0.1}>
+              <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.8, marginBottom: 28 }}>
+                Plan een korte kennismaking. Dan ziet u of Verisight past, welke eerste route logisch is en hoe de output er in uw situatie uit kan zien.
+              </p>
+            </Reveal>
 
-            <Link
-              href={kennismakingHref}
-              style={{
-                alignItems: 'center',
-                background: SURFACE.charcoal,
-                color: '#fff',
-                display: 'inline-flex',
-                fontFamily: bodyFont,
-                fontSize: 15,
-                fontWeight: 600,
-                gap: 10,
-                justifyContent: 'space-between',
-                padding: '16px 22px',
-                textDecoration: 'none',
-              }}
-            >
-              Plan een kennismaking <Arrow />
-            </Link>
+            <Reveal delay={0.16}>
+              <Link
+                href={kennismakingHref}
+                style={{
+                  alignItems: 'center',
+                  background: SURFACE.charcoal,
+                  color: '#fff',
+                  display: 'inline-flex',
+                  fontFamily: bodyFont,
+                  fontSize: 15,
+                  fontWeight: 600,
+                  gap: 10,
+                  justifyContent: 'space-between',
+                  padding: '16px 22px',
+                  textDecoration: 'none',
+                }}
+              >
+                Plan een kennismaking <Arrow />
+              </Link>
+            </Reveal>
           </div>
         </div>
       </div>

@@ -7,13 +7,14 @@ import {
   MarketingHeroSupport,
 } from '@/components/marketing/marketing-hero'
 import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
+import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { PreviewEvidenceRail } from '@/components/marketing/preview-evidence-rail'
 import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { SampleShowcaseCard } from '@/components/marketing/sample-showcase-card'
 import { MarketingSection } from '@/components/marketing/marketing-section'
 import { SectionHeading } from '@/components/marketing/section-heading'
+import { buildContactHref } from '@/lib/contact-funnel'
 import { getMarketingProductBySlug } from '@/lib/marketing-products'
 import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
 import { SEO_SOLUTION_SLUGS, getSeoSolutionPageBySlug } from '@/lib/seo-solution-pages'
@@ -242,15 +243,14 @@ export default async function SolutionPage({ params }: Props) {
             </div>
           </MarketingSection>
 
-          <MarketingSection tone="plain">
-            <MarketingInlineContactPanel
-              eyebrow="Kennismaking"
-              title={solutionPage.contactTitle}
-              body={solutionPage.contactBody}
-              defaultRouteInterest={solutionPage.routeInterest}
-              defaultCtaSource={solutionPage.ctaSource}
-            />
-          </MarketingSection>
+          <MarketingClosingCta
+            href={buildContactHref({
+              routeInterest: solutionPage.routeInterest,
+              ctaSource: solutionPage.ctaSource,
+            })}
+            showSectionMark={false}
+            backdropNumber={null}
+          />
 
           <MarketingSection tone="plain">
             <MarketingCalloutBand

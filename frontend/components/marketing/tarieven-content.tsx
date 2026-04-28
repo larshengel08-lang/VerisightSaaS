@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { T, AC, FF, SHELL, Arrow, SectionMark } from '@/components/marketing/design-tokens'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
+import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const corePricing = [
@@ -195,19 +195,10 @@ function CtaBand() {
 
 // ── ⑤ Contact ─────────────────────────────────────────────────────
 function ContactSection() {
+  const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'pricing_redirect_cta' })
+
   return (
-    <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
-      <div style={{ ...SHELL, maxWidth: 1180 }}>
-        <MarketingInlineContactPanel
-          eyebrow="Plan een eerste route-inschatting"
-          title="Vertel kort welke managementvraag nu speelt."
-          body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy, prijs en hoe dashboard, rapport en Action Center daarna bounded samenkomen."
-          defaultRouteInterest="exitscan"
-          defaultCtaSource="pricing_form"
-          contactQuestionPlaceholder="Beschrijf kort wat u nu vooral wilt begrijpen van vertrek of behoud, waar besluitvorming nog vastloopt en welke eerste route nu het meest logisch lijkt."
-        />
-      </div>
-    </section>
+    <MarketingClosingCta href={kennismakingHref} sectionIndex="05" backdropNumber="05" />
   )
 }
 

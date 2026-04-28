@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { T, AC, FF, SHELL, Arrow, Reveal, SectionMark } from '@/components/marketing/design-tokens'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
+import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { buildContactHref } from '@/lib/contact-funnel'
 import { approachSteps, included } from '@/components/marketing/site-content'
 
@@ -204,18 +204,10 @@ function FirstValueSection() {
 
 // ── ⑤ Contact ─────────────────────────────────────────────────────
 function ContactSection() {
+  const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'approach_closing_cta' })
+
   return (
-    <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
-      <div style={{ ...SHELL, maxWidth: 1180 }}>
-        <MarketingInlineContactPanel
-          eyebrow="Plan een eerste route-inschatting"
-          title="Vertel kort welke managementvraag nu speelt."
-          body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy, prijs en hoe een eerste route-inschatting naar een bounded eerste route leidt."
-          defaultRouteInterest="exitscan"
-          defaultCtaSource="approach_form"
-        />
-      </div>
-    </section>
+    <MarketingClosingCta href={kennismakingHref} sectionIndex="05" backdropNumber="05" />
   )
 }
 
