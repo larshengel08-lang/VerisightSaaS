@@ -1,29 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { T, AC, FF, SHELL, Arrow, SectionMark } from '@/components/marketing/design-tokens'
+import { T, AC, FF, SHELL, Arrow, Reveal, SectionMark } from '@/components/marketing/design-tokens'
 import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { buildContactHref } from '@/lib/contact-funnel'
 import { approachSteps, included } from '@/components/marketing/site-content'
-
-function Reveal({
-  children,
-  delay = 0,
-  from = 'up' as 'up' | 'right' | 'none',
-}: {
-  children: React.ReactNode
-  delay?: number
-  from?: 'up' | 'right' | 'none'
-}) {
-  return (
-    <div
-      className={`aanpak-reveal aanpak-reveal-${from}`}
-      style={{ ['--aanpak-reveal-delay' as string]: `${delay}s` }}
-    >
-      {children}
-    </div>
-  )
-}
 
 // ── ① Hero ────────────────────────────────────────────────────────
 function HeroSection() {
@@ -246,51 +227,6 @@ export function AanpakContent() {
       <RolesSection />
       <FirstValueSection />
       <ContactSection />
-      <style>{`
-        .aanpak-reveal {
-          opacity: 1;
-          transform: none;
-        }
-
-        @supports (animation-timeline: view()) {
-          .aanpak-reveal {
-            opacity: 0;
-            animation-duration: .75s;
-            animation-delay: var(--aanpak-reveal-delay, 0s);
-            animation-fill-mode: both;
-            animation-timing-function: cubic-bezier(.16,1,.3,1);
-            animation-timeline: view();
-            animation-range: entry 10% cover 34%;
-          }
-
-          .aanpak-reveal-up {
-            animation-name: aanpakRevealUp;
-          }
-
-          .aanpak-reveal-right {
-            animation-name: aanpakRevealRight;
-          }
-
-          .aanpak-reveal-none {
-            animation-name: aanpakRevealFade;
-          }
-
-          @keyframes aanpakRevealUp {
-            from { opacity: 0; transform: translateY(22px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-
-          @keyframes aanpakRevealRight {
-            from { opacity: 0; transform: translateX(24px); }
-            to { opacity: 1; transform: translateX(0); }
-          }
-
-          @keyframes aanpakRevealFade {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-        }
-      `}</style>
     </div>
   )
 }
