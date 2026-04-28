@@ -22,8 +22,12 @@ export interface ActionCenterRouteContract {
   campaignId: string
   entryStage: ActionCenterEntryStage
   routeOpenedAt: string | null
+  ownerAssignedAt: string | null
   routeStatus: ActionCenterRouteStatus | null
   reviewOutcome: ActionCenterReviewOutcome
+  reviewCompletedAt: string | null
+  outcomeRecordedAt: string | null
+  outcomeSummary: string | null
   intervention: string | null
   owner: string | null
   expectedEffect: string | null
@@ -54,6 +58,11 @@ function getOwner(context: LiveActionCenterCampaignContext) {
   return normalizeText(context.assignedManager?.displayName)
 }
 
+function getOwnerAssignedAt(context: LiveActionCenterCampaignContext, routeOpenedAt: string | null, owner: string | null) {
+  if (!routeOpenedAt || !owner) return null
+  return normalizeText(context.assignedManager?.assignedAt)
+}
+
 function getIntervention(context: LiveActionCenterCampaignContext) {
   return normalizeText(context.learningDossier?.first_action_taken)
 }
@@ -68,6 +77,10 @@ function getReviewReason(context: LiveActionCenterCampaignContext) {
 
 function getReviewScheduledFor(context: LiveActionCenterCampaignContext) {
   return normalizeText(context.learningDossier?.review_moment)
+}
+
+function getOutcomeSummary(context: LiveActionCenterCampaignContext) {
+  return normalizeText(context.learningDossier?.case_public_summary) ?? normalizeText(context.learningDossier?.adoption_outcome)
 }
 
 function hasCandidateTruth(context: LiveActionCenterCampaignContext) {
@@ -107,9 +120,15 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
   const entryStage = classifyActionCenterEntryStage(context)
   const intervention = getIntervention(context)
   const owner = getOwner(context)
+  const ownerAssignedAt = getOwnerAssignedAt(context, routeOpenedAt, owner)
   const expectedEffect = getExpectedEffect(context)
   const reviewScheduledFor = getReviewScheduledFor(context)
   const reviewReason = getReviewReason(context)
+  const reviewOutcome = getReviewOutcome(context)
+  const reviewCompletedAt =
+    routeOpenedAt && reviewOutcome !== 'geen-uitkomst' ? normalizeText(context.learningDossier?.updated_at) : null
+  const outcomeSummary = getOutcomeSummary(context)
+  const outcomeRecordedAt = routeOpenedAt && outcomeSummary ? normalizeText(context.learningDossier?.updated_at) : null
   const blockedBy =
     context.deliveryRecord?.exception_status && context.deliveryRecord.exception_status !== 'none'
       ? context.deliveryRecord.exception_status
@@ -135,8 +154,12 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
     campaignId: context.campaign.id,
     entryStage,
     routeOpenedAt,
+    ownerAssignedAt,
     routeStatus,
-    reviewOutcome: getReviewOutcome(context),
+    reviewOutcome,
+    reviewCompletedAt,
+    outcomeRecordedAt,
+    outcomeSummary,
     intervention,
     owner,
     expectedEffect,

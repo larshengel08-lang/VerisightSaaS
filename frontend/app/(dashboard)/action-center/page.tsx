@@ -233,6 +233,7 @@ export default async function ActionCenterPage() {
             ? {
                 userId: assignment.user_id,
                 displayName: assignment.display_name ?? assignment.login_email ?? null,
+                assignedAt: assignment.updated_at ?? assignment.created_at ?? null,
               }
             : null,
           deliveryRecord,
@@ -263,8 +264,8 @@ export default async function ActionCenterPage() {
     : {}
   const workspaceSubtitle =
     summary.productCount > 0
-      ? `Live opvolging over ${summary.productCount} product${summary.productCount === 1 ? '' : 'en'} in deze omgeving`
-      : 'Live opvolging in deze omgeving'
+      ? `Live opvolging over ${summary.productCount} product${summary.productCount === 1 ? '' : 'en'}`
+      : 'Live opvolging'
 
   if (items.length === 0) {
     return (
@@ -277,7 +278,7 @@ export default async function ActionCenterPage() {
         </h1>
         <p className="mt-4 max-w-3xl text-[1rem] leading-8 text-[color:var(--dashboard-text)]">
           Zodra er actieve campagnes, open opvolging of bestaande dossiers voor jouw organisaties of
-          afdelingen zijn, opent deze module automatisch in dezelfde ingelogde omgeving.
+          afdelingen zijn, opent deze module automatisch.
         </p>
         <div className="mt-7 grid gap-4 border-t border-[color:var(--dashboard-frame-border)] pt-6 xl:grid-cols-[minmax(0,1.3fr),minmax(260px,0.7fr)]">
           <div>
@@ -294,7 +295,8 @@ export default async function ActionCenterPage() {
               Volgende stap
             </p>
             <p className="mt-3 text-sm leading-7 text-[color:var(--dashboard-text)]">
-              Wanneer de eerste opvolging live staat, verschijnt hier meteen je Action Center managementroute.
+              Wanneer de eerste opvolging live staat, zie je hier direct wat aandacht vraagt, wie eigenaar is
+              en wanneer review volgt.
             </p>
           </div>
         </div>
@@ -312,7 +314,7 @@ export default async function ActionCenterPage() {
       canAssignManagers={context.canManageActionCenterAssignments}
       managerAssignmentEndpoint="/api/action-center/workspace-members"
       workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
-      workbenchLabel={context.canViewInsights ? 'Open broncampaign' : 'Action Center blijft je werkruimte'}
+      workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}
       workspaceName={getDisplayName(user.email)}
       workspaceSubtitle={workspaceSubtitle}
       readOnly

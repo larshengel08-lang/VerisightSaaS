@@ -296,7 +296,8 @@ describe('live action center builder', () => {
       review_moment: '2026-05-12',
       triage_status: 'bevestigd',
       management_action_outcome: 'bijstellen',
-      case_public_summary: 'Team koos een aangepaste follow-through na de eerste MT-review.',
+      adoption_outcome: 'Team koos een aangepaste follow-through na de eerste MT-review.',
+      updated_at: '2026-04-24T10:00:00.000Z',
     } as PilotLearningDossier
 
     const events = buildActionCenterTelemetryEvents([
@@ -312,7 +313,8 @@ describe('live action center builder', () => {
         assignedManager: {
           userId: 'manager-1',
           displayName: 'Manager Operations',
-        },
+          assignedAt: '2026-04-21T08:00:00.000Z',
+        } as NonNullable<Parameters<typeof buildActionCenterTelemetryEvents>[0][number]['assignedManager']>,
         deliveryRecord,
         deliveryCheckpoints: [],
         learningDossier: dossier,
@@ -354,6 +356,7 @@ describe('live action center builder', () => {
       {
         eventType: 'action_center_outcome_recorded',
         payload: {
+          outcomeSummary: 'Team koos een aangepaste follow-through na de eerste MT-review.',
           reviewOutcome: 'bijstellen',
           routeStatus: 'te-bespreken',
         },

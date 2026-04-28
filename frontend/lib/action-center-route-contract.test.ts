@@ -252,7 +252,8 @@ describe('action center route contract', () => {
       assignedManager: {
         userId: 'manager-1',
         displayName: 'Manager Operations',
-      },
+        assignedAt: '2026-04-21T08:00:00.000Z',
+      } as NonNullable<LiveActionCenterCampaignContext['assignedManager']>,
       deliveryRecord: buildDeliveryRecord({
         first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
       }),
@@ -268,6 +269,7 @@ describe('action center route contract', () => {
       entryStage: 'active',
       routeStatus: 'in-uitvoering',
       owner: 'Manager Operations',
+      ownerAssignedAt: '2026-04-21T08:00:00.000Z',
       expectedEffect: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
       intervention: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
       reviewScheduledFor: '2026-05-12',
@@ -275,12 +277,13 @@ describe('action center route contract', () => {
     })
   })
 
-  it('keeps reviewOutcome separate from routeStatus', () => {
+  it('keeps reviewOutcome separate from routeStatus and only surfaces completion truth when explicit', () => {
     const context = buildContext({
       assignedManager: {
         userId: 'manager-1',
         displayName: 'Manager Operations',
-      },
+        assignedAt: '2026-04-21T08:00:00.000Z',
+      } as NonNullable<LiveActionCenterCampaignContext['assignedManager']>,
       deliveryRecord: buildDeliveryRecord({
         first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
       }),
@@ -296,6 +299,53 @@ describe('action center route contract', () => {
     expect(projectActionCenterRoute(context)).toMatchObject({
       routeStatus: 'in-uitvoering',
       reviewOutcome: 'stoppen',
+      reviewCompletedAt: '2026-04-24T10:00:00.000Z',
+      outcomeRecordedAt: null,
+      outcomeSummary: null,
+    })
+  })
+
+  it('surfaces recorded outcome truth separately from review outcome and owner label presence', () => {
+    const candidateOwnerContext = buildContext({
+      assignedManager: {
+        userId: 'manager-1',
+        displayName: 'Manager Operations',
+      },
+      dossier: buildDossier({
+        expected_first_value: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
+      }),
+    })
+
+    const completedContext = buildContext({
+      assignedManager: {
+        userId: 'manager-1',
+        displayName: 'Manager Operations',
+        assignedAt: '2026-04-21T08:00:00.000Z',
+      } as NonNullable<LiveActionCenterCampaignContext['assignedManager']>,
+      deliveryRecord: buildDeliveryRecord({
+        first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+      }),
+      dossier: buildDossier({
+        expected_first_value: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
+        first_management_value: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
+        first_action_taken: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
+        review_moment: '2026-05-12',
+        management_action_outcome: 'bijstellen',
+        adoption_outcome: 'Eerste managementreview is afgerond en omgezet naar een aangepaste vervolgactie.',
+      }),
+    })
+
+    expect(projectActionCenterRoute(candidateOwnerContext)).toMatchObject({
+      entryStage: 'candidate',
+      owner: 'Manager Operations',
+      ownerAssignedAt: null,
+    })
+
+    expect(projectActionCenterRoute(completedContext)).toMatchObject({
+      ownerAssignedAt: '2026-04-21T08:00:00.000Z',
+      reviewCompletedAt: '2026-04-24T10:00:00.000Z',
+      outcomeRecordedAt: '2026-04-24T10:00:00.000Z',
+      outcomeSummary: 'Eerste managementreview is afgerond en omgezet naar een aangepaste vervolgactie.',
     })
   })
 })

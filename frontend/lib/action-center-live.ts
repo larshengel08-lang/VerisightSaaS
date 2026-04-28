@@ -24,6 +24,7 @@ export interface LiveActionCenterCampaignContext {
   assignedManager: {
     userId: string
     displayName: string | null
+    assignedAt?: string | null
   } | null
   deliveryRecord: CampaignDeliveryRecord | null
   deliveryCheckpoints: CampaignDeliveryCheckpoint[]
@@ -97,11 +98,6 @@ function formatShortDate(value: string | null) {
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return value
   return DUTCH_SHORT_DATE.format(parsed).replace('.', '')
-}
-
-function normalizeTelemetryText(value: string | null | undefined) {
-  const trimmed = value?.trim() ?? ''
-  return trimmed.length > 0 ? trimmed : null
 }
 
 function getPriorityFromSignals(args: {
@@ -381,11 +377,6 @@ export function buildActionCenterTelemetryEvents(
     const lifecycleStage = context.deliveryRecord?.lifecycle_stage ?? null
     const route = projectActionCenterRoute(context)
     const routeStatus = route.routeStatus
-    const ownerLabel = route.owner
-    const reviewOutcome = route.reviewOutcome
-    const outcomeSummary =
-      normalizeTelemetryText(context.learningDossier?.case_public_summary) ??
-      normalizeTelemetryText(context.learningDossier?.adoption_outcome)
 
     if (
       lifecycleStage &&
@@ -444,7 +435,7 @@ export function buildActionCenterTelemetryEvents(
       )
     }
 
-    if (ownerLabel) {
+    if (route.ownerAssignedAt && route.owner) {
       events.push(
         buildSuiteTelemetryEvent('action_center_owner_assigned', {
           orgId,
@@ -453,13 +444,13 @@ export function buildActionCenterTelemetryEvents(
           payload: {
             scopeValue: context.scopeValue,
             routeStatus,
-            ownerLabel,
+            ownerLabel: route.owner,
           },
         }),
       )
     }
 
-    if (reviewOutcome !== 'geen-uitkomst') {
+    if (route.reviewCompletedAt) {
       events.push(
         buildSuiteTelemetryEvent('action_center_review_completed', {
           orgId,
@@ -468,13 +459,13 @@ export function buildActionCenterTelemetryEvents(
           payload: {
             scopeValue: context.scopeValue,
             routeStatus,
-            reviewOutcome,
+            reviewOutcome: route.reviewOutcome,
           },
         }),
       )
     }
 
-    if (outcomeSummary) {
+    if (route.outcomeRecordedAt && route.outcomeSummary) {
       events.push(
         buildSuiteTelemetryEvent('action_center_outcome_recorded', {
           orgId,
@@ -483,7 +474,8 @@ export function buildActionCenterTelemetryEvents(
           payload: {
             scopeValue: context.scopeValue,
             routeStatus,
-            reviewOutcome,
+            reviewOutcome: route.reviewOutcome,
+            outcomeSummary: route.outcomeSummary,
           },
         }),
       )
