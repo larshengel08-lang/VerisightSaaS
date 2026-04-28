@@ -291,12 +291,7 @@ function HeroSection() {
       <div style={{ ...SHELL, paddingTop: 'clamp(74px, 8vw, 120px)', paddingBottom: 'clamp(70px, 8vw, 104px)', position: 'relative' }}>
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_640px]">
           <div style={{ maxWidth: 560 }}>
-              <div
-                style={{
-                  animation: 'slideUpFade .78s cubic-bezier(.16,1,.3,1) .04s both',
-                  marginBottom: 18,
-                }}
-              >
+              <div className="marketing-home-hero-reveal-1" style={{ marginBottom: 18 }}>
               <p
                 style={{
                   color: SURFACE.muted,
@@ -329,8 +324,8 @@ function HeroSection() {
               </div>
 
               <p
+                className="marketing-home-hero-reveal-2"
                 style={{
-                  animation: 'slideUpFade .78s cubic-bezier(.16,1,.3,1) .12s both',
                   color: SURFACE.ink,
                   fontSize: 17,
                   lineHeight: 1.55,
@@ -342,8 +337,8 @@ function HeroSection() {
               </p>
 
               <p
+                className="marketing-home-hero-reveal-3"
                 style={{
-                  animation: 'slideUpFade .78s cubic-bezier(.16,1,.3,1) .18s both',
                   color: SURFACE.text,
                   fontSize: 17,
                   lineHeight: 1.6,
@@ -355,11 +350,8 @@ function HeroSection() {
               </p>
 
               <div
-                className="flex flex-wrap items-center gap-4"
-                style={{
-                  animation: 'slideUpFade .78s cubic-bezier(.16,1,.3,1) .24s both',
-                  marginBottom: 34,
-                }}
+                className="marketing-home-hero-reveal-4 flex flex-wrap items-center gap-4"
+                style={{ marginBottom: 34 }}
               >
               <Link
                 href={primaryHref}
@@ -397,8 +389,8 @@ function HeroSection() {
               </div>
 
               <div
+                className="marketing-home-hero-reveal-5"
                 style={{
-                  animation: 'slideUpFade .78s cubic-bezier(.16,1,.3,1) .3s both',
                   borderTop: `1px solid ${SURFACE.border}`,
                   display: 'flex',
                   flexWrap: 'wrap',
@@ -430,12 +422,7 @@ function HeroSection() {
               </div>
           </div>
 
-            <div
-              className="relative hidden h-[620px] select-none lg:block"
-              style={{
-                animation: 'slideRightFade .9s cubic-bezier(.16,1,.3,1) .18s both',
-              }}
-            >
+            <div className="marketing-home-hero-reveal-visual relative hidden h-[620px] select-none lg:block">
             <div
               style={{
                 background: SURFACE.surface,
