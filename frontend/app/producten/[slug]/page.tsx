@@ -7,7 +7,7 @@ import {
   MarketingHeroSupport,
 } from '@/components/marketing/marketing-hero'
 import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
+import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { MarketingComparisonTable } from '@/components/marketing/marketing-comparison-table'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
 import { MarketingProofStrip } from '@/components/marketing/marketing-proof-strip'
@@ -314,18 +314,11 @@ function ExitScanPage() {
           </div>
         </section>
 
-        {/* Contact form */}
-        <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
-          <div style={{ ...SH, maxWidth: 1180 }}>
-            <MarketingInlineContactPanel
-              eyebrow="Plan suite-demo"
-              title="Plan een gesprek over ExitScan"
-              body="Beschrijf kort welke vertrekvraag nu bestuurlijk aandacht vraagt. Dan toetsen we of ExitScan de juiste eerste stap is en hoe de aanpak eruitziet."
-              defaultRouteInterest="exitscan"
-              defaultCtaSource="product_exit_form"
-            />
-          </div>
-        </section>
+        <MarketingClosingCta
+          href={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_form' })}
+          showSectionMark={false}
+          backdropNumber={null}
+        />
       </main>
       <PublicFooter />
     </div>
@@ -475,18 +468,11 @@ function RetentionScanPage() {
           </div>
         </section>
 
-        {/* Contact form */}
-        <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
-          <div style={{ ...SH, maxWidth: 1180 }}>
-            <MarketingInlineContactPanel
-              eyebrow="Plan suite-demo"
-              title="Plan een gesprek over RetentieScan"
-              body="Beschrijf kort waar behoud nu onder druk staat. Dan toetsen we of RetentieScan de juiste eerste stap is en hoe de aanpak eruitziet."
-              defaultRouteInterest="retentiescan"
-              defaultCtaSource="product_retention_form"
-            />
-          </div>
-        </section>
+        <MarketingClosingCta
+          href={buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_form' })}
+          showSectionMark={false}
+          backdropNumber={null}
+        />
       </main>
       <PublicFooter />
     </div>
@@ -671,15 +657,11 @@ function PulsePage() {
         </div>
       </MarketingSection>
 
-      <MarketingSection tone="plain">
-        <MarketingInlineContactPanel
-          eyebrow="Plan suite-demo"
-          title="Toets of Pulse als vervolgroute nu echt logisch is."
-          body="Beschrijf kort welke eerste baseline, managementread of actie al loopt en wat je nu vooral wilt herchecken. Dan bepalen we of Pulse past of dat een bredere vervolgroute logischer is."
-          defaultRouteInterest="pulse"
-          defaultCtaSource="product_pulse_form"
-        />
-      </MarketingSection>
+      <MarketingClosingCta
+        href={buildContactHref({ routeInterest: 'pulse', ctaSource: 'product_pulse_form' })}
+        showSectionMark={false}
+        backdropNumber={null}
+      />
 
       <MarketingSection tone="plain">
         <MarketingCalloutBand
@@ -875,15 +857,11 @@ function TeamScanPage() {
         </div>
       </MarketingSection>
 
-      <MarketingSection tone="plain">
-        <MarketingInlineContactPanel
-          eyebrow="Plan suite-demo"
-          title="Toets of TeamScan als lokale vervolgronde nu echt logisch is."
-          body="Beschrijf kort welk bredere signaal al zichtbaar is en waar de lokale onzekerheid nu zit. Dan bepalen we of TeamScan past of dat een bredere route of add-on logischer blijft."
-          defaultRouteInterest="teamscan"
-          defaultCtaSource="product_team_form"
-        />
-      </MarketingSection>
+      <MarketingClosingCta
+        href={buildContactHref({ routeInterest: 'teamscan', ctaSource: 'product_team_form' })}
+        showSectionMark={false}
+        backdropNumber={null}
+      />
 
       <MarketingSection tone="plain">
         <MarketingCalloutBand
@@ -1084,15 +1062,11 @@ function OnboardingPage() {
         </div>
       </MarketingSection>
 
-      <MarketingSection tone="plain">
-        <MarketingInlineContactPanel
-          eyebrow="Plan suite-demo"
-          title="Toets of onboarding als lifecycle-vervolgronde nu echt logisch is."
-          body="Beschrijf kort welke vraag nu speelt rond nieuwe medewerkers en of het gaat om een vroeg checkpoint, een bredere retentievraag of juist client onboarding. Dan bepalen we welke route past."
-          defaultRouteInterest="onboarding"
-          defaultCtaSource="product_onboarding_form"
-        />
-      </MarketingSection>
+      <MarketingClosingCta
+        href={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_form' })}
+        showSectionMark={false}
+        backdropNumber={null}
+      />
 
       <MarketingSection tone="plain">
         <MarketingCalloutBand
@@ -1193,15 +1167,11 @@ function LeadershipScanPage() {
         </div>
       </MarketingSection>
 
-      <MarketingSection tone="plain">
-        <MarketingInlineContactPanel
-          eyebrow="Plan suite-demo"
-          title="Toets of Leadership Scan nu de logische vervolgronde is."
-          body="Beschrijf kort welk bestaand signaal nu speelt en waarom de vraag verschuift naar managementcontext. Dan bepalen we of Leadership Scan echt de juiste bounded follow-on route is."
-          defaultRouteInterest="leadership"
-          defaultCtaSource="product_leadership_form"
-        />
-      </MarketingSection>
+      <MarketingClosingCta
+        href={buildContactHref({ routeInterest: 'leadership', ctaSource: 'product_leadership_form' })}
+        showSectionMark={false}
+        backdropNumber={null}
+      />
     </MarketingPageShell>
   )
 }
@@ -1373,15 +1343,11 @@ function CombinatiePage() {
         </div>
       </MarketingSection>
 
-      <MarketingSection tone="plain">
-        <MarketingInlineContactPanel
-          eyebrow="Plan suite-demo"
-          title="Plan een gesprek over de combinatieroute"
-          body="Beschrijf kort of jullie vooral met een product willen starten of dat beide managementvragen nu al tegelijk spelen. Dan bepalen we welke route logisch is en wanneer dashboard, rapport en Action Center daarna in dezelfde suite-omgeving mogen samenkomen."
-          defaultRouteInterest="combinatie"
-          defaultCtaSource="product_combination_form"
-        />
-      </MarketingSection>
+      <MarketingClosingCta
+        href={buildContactHref({ routeInterest: 'combinatie', ctaSource: 'product_combination_form' })}
+        showSectionMark={false}
+        backdropNumber={null}
+      />
 
       <MarketingSection tone="plain">
         <MarketingCalloutBand
