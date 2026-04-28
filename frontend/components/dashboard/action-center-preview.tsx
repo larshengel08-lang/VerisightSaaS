@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import Link from 'next/link'
+import type { ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 
 export type ActionCenterPreviewView = 'overview' | 'actions' | 'reviews' | 'managers' | 'teams'
@@ -33,6 +34,9 @@ export interface ActionCenterPreviewItem {
   priority: ActionCenterPreviewPriority
   status: ActionCenterPreviewStatus
   reviewDate: string | null
+  expectedEffect?: string | null
+  reviewReason?: string | null
+  reviewOutcome?: ActionCenterReviewOutcome | null
   reviewDateLabel: string
   reviewRhythm: string
   signalLabel: string

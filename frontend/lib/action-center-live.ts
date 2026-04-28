@@ -9,6 +9,7 @@ import type { MemberRole, Campaign, CampaignStats, ScanType } from '@/lib/types'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord, DeliveryExceptionStatus } from '@/lib/ops-delivery'
 import { getDeliveryExceptionLabel } from '@/lib/ops-delivery'
 import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
+import { projectActionCenterRoute } from '@/lib/action-center-route-contract'
 import { buildSuiteTelemetryEvent, type SuiteTelemetryEvent } from '@/lib/telemetry/events'
 
 export interface LiveActionCenterCampaignContext {
@@ -118,28 +119,6 @@ function getPriorityFromSignals(args: {
   return typeof args.avgSignal === 'number' && args.avgSignal >= 4.5 ? 'midden' : 'laag'
 }
 
-function getStatus(args: {
-  learningDossier: PilotLearningDossier | null
-  deliveryRecord: CampaignDeliveryRecord | null
-  reviewDate: string | null
-  ownerName: string | null
-}): ActionCenterPreviewStatus {
-  const triageStatus = args.learningDossier?.triage_status ?? null
-  if (triageStatus === 'uitgevoerd' || args.deliveryRecord?.lifecycle_stage === 'learning_closed') {
-    return 'afgerond'
-  }
-  if (triageStatus === 'verworpen') {
-    return 'gestopt'
-  }
-  if (args.deliveryRecord?.exception_status && args.deliveryRecord.exception_status !== 'none') {
-    return 'geblokkeerd'
-  }
-  if (args.learningDossier?.first_action_taken || args.deliveryRecord?.next_step || args.ownerName || args.reviewDate) {
-    return 'in-uitvoering'
-  }
-  return 'te-bespreken'
-}
-
 function getRoleFallback(memberRole: MemberRole | null) {
   if (!memberRole) return 'Nog geen expliciete klantrol'
   return ROLE_LABELS[memberRole]
@@ -159,15 +138,15 @@ function getOwnerNames(checkpoints: PilotLearningCheckpoint[], deliveryRecord: C
 
 function buildOpenSignals(args: {
   status: ActionCenterPreviewStatus
-  ownerName: string | null
+  routeOwner: string | null
   reviewDate: string | null
-  deliveryRecord: CampaignDeliveryRecord | null
+  intervention: string | null
 }) {
   const signals: string[] = []
-  if (!args.ownerName) signals.push('owner_missing')
+  if (!args.routeOwner) signals.push('owner_missing')
   if (!args.reviewDate && args.status !== 'afgerond' && args.status !== 'gestopt') signals.push('review_due')
   if (args.status === 'geblokkeerd') signals.push('blocked_assignment')
-  if (!args.deliveryRecord?.next_step && args.status !== 'afgerond' && args.status !== 'gestopt') signals.push('decision_due')
+  if (!args.intervention && args.status !== 'afgerond' && args.status !== 'gestopt') signals.push('decision_due')
   return signals
 }
 
@@ -285,24 +264,24 @@ export function isLiveActionCenterScanType(scanType: ScanType) {
 export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignContext[]): ActionCenterPreviewItem[] {
   return contexts
     .filter((context) => isLiveActionCenterScanType(context.campaign.scan_type))
-    .map((context, index) => {
+    .flatMap((context, index) => {
+      const route = projectActionCenterRoute(context)
+      if (route.entryStage !== 'active' || !route.routeStatus) {
+        return []
+      }
+
       const definition = getScanDefinition(context.campaign.scan_type)
       const defaults = SCAN_DEFAULTS[context.campaign.scan_type]
       const avgSignal = context.stats?.avg_signal_score ?? context.stats?.avg_risk_score ?? null
       const fallbackAuthor = context.organizationName || 'Verisight'
-      const reviewDate = context.learningDossier?.review_moment ?? null
+      const reviewDate = route.reviewScheduledFor
       const { ownerName, reviewOwnerName } = getOwnerNames(context.learningCheckpoints, context.deliveryRecord)
-      const status = getStatus({
-        learningDossier: context.learningDossier,
-        deliveryRecord: context.deliveryRecord,
-        reviewDate,
-        ownerName,
-      })
+      const status = route.routeStatus
       const openSignals = buildOpenSignals({
         status,
-        ownerName,
+        routeOwner: route.owner,
         reviewDate,
-        deliveryRecord: context.deliveryRecord,
+        intervention: route.intervention,
       })
       const updates = buildUpdates({
         learningCheckpoints: context.learningCheckpoints,
@@ -318,11 +297,11 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         totalCompleted: context.stats?.total_completed ?? 0,
       })
       const nextStep =
-        context.learningDossier?.first_action_taken ||
+        route.intervention ||
         context.deliveryRecord?.next_step ||
         getFallbackStep(context.campaign.scan_type, context.deliveryRecord?.lifecycle_stage)
 
-      return {
+      return [{
         id: context.campaign.id,
         code: `ACT-${1000 + index + 1}`,
         title:
@@ -330,10 +309,10 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
           `${definition.productName}: ${context.campaign.name}`,
         summary:
           context.deliveryRecord?.customer_handoff_note ||
-          context.learningDossier?.expected_first_value ||
+          route.expectedEffect ||
           defaults.fallbackSummary,
         reason:
-          context.learningDossier?.first_management_value ||
+          route.reviewReason ||
           defaults.managementQuestion,
         sourceLabel: definition.productName,
         orgId: context.campaign.organization_id,
@@ -348,7 +327,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
             ? `Owner - ${context.organizationName}`
             : getRoleFallback(context.memberRole),
         ownerSubtitle: context.scopeLabel,
-        reviewOwnerName: reviewOwnerName ?? context.assignedManager?.displayName ?? null,
+        reviewOwnerName: reviewOwnerName ?? context.assignedManager?.displayName ?? route.owner ?? null,
         priority,
         status,
         reviewDate,
@@ -357,10 +336,13 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         signalLabel: `${definition.productName} - ${context.campaign.name}`,
         signalBody: getSignalBody(context.campaign.scan_type, context.deliveryRecord, latestUpdate),
         nextStep,
+        expectedEffect: route.expectedEffect,
+        reviewReason: route.reviewReason,
+        reviewOutcome: route.reviewOutcome,
         peopleCount: context.peopleCount,
         openSignals,
         updates,
-      } satisfies ActionCenterPreviewItem
+      } satisfies ActionCenterPreviewItem]
     })
     .sort((left, right) => {
       const statusDelta = getSortRank(left.status) - getSortRank(right.status)
