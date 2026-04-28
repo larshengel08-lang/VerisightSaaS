@@ -138,18 +138,48 @@ function buildContext(args: {
 }
 
 describe('action center route contract', () => {
+  it('treats only explicit open truth as an active route', () => {
+    const followUpOnly = buildContext({
+      deliveryRecord: buildDeliveryRecord({
+        follow_up_decided_at: '2026-04-20T09:00:00.000Z',
+      }),
+      dossier: buildDossier({
+        expected_first_value: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
+      }),
+    })
+
+    const closedOnly = buildContext({
+      deliveryRecord: buildDeliveryRecord({
+        learning_closed_at: '2026-04-21T09:00:00.000Z',
+      }),
+      dossier: buildDossier({
+        expected_first_value: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
+      }),
+    })
+
+    expect(classifyActionCenterEntryStage(followUpOnly)).toBe('candidate')
+    expect(projectActionCenterRoute(followUpOnly)).toMatchObject({
+      entryStage: 'candidate',
+      routeOpenedAt: null,
+      routeStatus: null,
+    })
+
+    expect(classifyActionCenterEntryStage(closedOnly)).toBe('candidate')
+    expect(projectActionCenterRoute(closedOnly)).toMatchObject({
+      entryStage: 'candidate',
+      routeOpenedAt: null,
+      routeStatus: null,
+    })
+  })
+
   it('keeps candidate entries outside route status until the route is explicitly opened', () => {
     const context = buildContext({
       assignedManager: {
         userId: 'manager-1',
         displayName: 'Manager Operations',
       },
-      deliveryRecord: buildDeliveryRecord({
-        next_step: 'Plan eerste managementgesprek met HR en sponsor.',
-      }),
       dossier: buildDossier({
         expected_first_value: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
-        first_management_value: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
         review_moment: '2026-05-12',
       }),
     })
@@ -178,6 +208,45 @@ describe('action center route contract', () => {
     })
   })
 
+  it('does not synthesize canonical owner or intervention from delivery-local fields', () => {
+    const context = buildContext({
+      deliveryRecord: buildDeliveryRecord({
+        first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+        operator_owner: 'Verisight delivery',
+        next_step: 'Plan eerste managementgesprek met HR en sponsor.',
+      }),
+      learningCheckpoints: [
+        {
+          id: 'checkpoint-owner',
+          dossier_id: 'dossier-exit',
+          checkpoint_key: 'first_management_use',
+          owner_label: 'HR lead',
+          status: 'bevestigd',
+          objective_signal_notes: null,
+          qualitative_notes: null,
+          interpreted_observation: null,
+          confirmed_lesson: null,
+          lesson_strength: 'terugkerend_patroon',
+          destination_areas: ['operations'],
+          updated_at: '2026-04-24T09:00:00.000Z',
+          created_at: '2026-04-15T10:00:00.000Z',
+        } as PilotLearningCheckpoint,
+      ],
+      dossier: buildDossier({
+        expected_first_value: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
+        first_management_value: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
+        review_moment: '2026-05-12',
+      }),
+    })
+
+    expect(projectActionCenterRoute(context)).toMatchObject({
+      entryStage: 'active',
+      owner: null,
+      intervention: null,
+      routeStatus: 'te-bespreken',
+    })
+  })
+
   it('projects an opened route to in-uitvoering when intervention, owner, expected effect, and review plan are complete', () => {
     const context = buildContext({
       assignedManager: {
@@ -186,7 +255,6 @@ describe('action center route contract', () => {
       },
       deliveryRecord: buildDeliveryRecord({
         first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
-        next_step: 'Plan eerste managementgesprek met HR en sponsor.',
       }),
       dossier: buildDossier({
         expected_first_value: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',

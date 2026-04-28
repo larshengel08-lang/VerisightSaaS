@@ -47,33 +47,15 @@ function normalizeText(value: string | null | undefined) {
 }
 
 function getRouteOpenedAt(context: LiveActionCenterCampaignContext) {
-  return (
-    normalizeText(context.deliveryRecord?.first_management_use_confirmed_at) ??
-    normalizeText(context.deliveryRecord?.follow_up_decided_at) ??
-    normalizeText(context.deliveryRecord?.learning_closed_at)
-  )
+  return normalizeText(context.deliveryRecord?.first_management_use_confirmed_at)
 }
 
 function getOwner(context: LiveActionCenterCampaignContext) {
-  const reviewCheckpointOwner =
-    context.learningCheckpoints.find((checkpoint) => checkpoint.checkpoint_key === 'follow_up_review')?.owner_label
-
-  const managementCheckpointOwner =
-    context.learningCheckpoints.find((checkpoint) => checkpoint.checkpoint_key === 'first_management_use')?.owner_label
-
-  return (
-    normalizeText(context.assignedManager?.displayName) ??
-    normalizeText(reviewCheckpointOwner) ??
-    normalizeText(managementCheckpointOwner) ??
-    normalizeText(context.deliveryRecord?.operator_owner)
-  )
+  return normalizeText(context.assignedManager?.displayName)
 }
 
 function getIntervention(context: LiveActionCenterCampaignContext) {
-  return (
-    normalizeText(context.learningDossier?.first_action_taken) ??
-    normalizeText(context.deliveryRecord?.next_step)
-  )
+  return normalizeText(context.learningDossier?.first_action_taken)
 }
 
 function getExpectedEffect(context: LiveActionCenterCampaignContext) {
@@ -88,17 +70,14 @@ function getReviewScheduledFor(context: LiveActionCenterCampaignContext) {
   return normalizeText(context.learningDossier?.review_moment)
 }
 
-function getReadableSignal(context: LiveActionCenterCampaignContext) {
-  return (
-    normalizeText(context.deliveryRecord?.customer_handoff_note) ??
-    getExpectedEffect(context) ??
-    getReviewReason(context) ??
-    normalizeText(context.learningDossier?.management_action_outcome)
+function hasCandidateTruth(context: LiveActionCenterCampaignContext) {
+  return Boolean(
+    getOwner(context) ??
+      getIntervention(context) ??
+      getExpectedEffect(context) ??
+      getReviewScheduledFor(context) ??
+      getReviewReason(context),
   )
-}
-
-function hasExplicitScope(context: LiveActionCenterCampaignContext) {
-  return Boolean(normalizeText(context.scopeValue) && normalizeText(context.scopeLabel))
 }
 
 function getReviewOutcome(context: LiveActionCenterCampaignContext): ActionCenterReviewOutcome {
@@ -116,13 +95,7 @@ export function classifyActionCenterEntryStage(context: LiveActionCenterCampaign
     return 'active'
   }
 
-  if (
-    getReadableSignal(context) &&
-    hasExplicitScope(context) &&
-    getIntervention(context) &&
-    getOwner(context) &&
-    getReviewReason(context)
-  ) {
+  if (hasCandidateTruth(context)) {
     return 'candidate'
   }
 
@@ -151,7 +124,7 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
       routeStatus = 'gestopt'
     } else if (blockedBy) {
       routeStatus = 'geblokkeerd'
-    } else if (intervention && owner && expectedEffect && reviewScheduledFor && reviewReason) {
+    } else if (intervention && owner && expectedEffect && reviewScheduledFor) {
       routeStatus = 'in-uitvoering'
     } else {
       routeStatus = 'te-bespreken'
