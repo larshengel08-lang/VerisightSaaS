@@ -485,17 +485,16 @@ function PulsePage() {
       theme="support"
       pageType="product"
       ctaHref={buildContactHref({ routeInterest: 'pulse', ctaSource: 'product_pulse_hero' })}
-      ctaLabel="Bespreek Pulse"
+      ctaLabel="Toets Pulse"
       heroIntro={
         <MarketingHeroIntro>
           <p className="marketing-hero-eyebrow text-amber-700">Pulse</p>
           <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
-            Houd na een eerste scan kort en gericht zicht op wat nu verschuift.
+            Zie kort wat nu verschuift na een eerste scan.
           </h1>
           <p className="marketing-hero-copy text-slate-600">
-            Pulse is een compacte vervolgroute na een eerste baseline, bestuurlijke read of eerste vervolgbespreking. Je gebruikt het product voor een
-            korte managementreview: wat laat de huidige snapshot zien, welk werkspoor vraagt nu bespreking en wanneer
-            is een volgende check logisch.
+            Pulse is de compacte hercheck na een eerste scan of managementgesprek. U ziet wat er nu verschuift, welk
+            werkspoor als eerste aandacht vraagt en wanneer een volgende check logisch is.
           </p>
           <div className="marketing-hero-actions">
             <div className="marketing-hero-cta-row">
@@ -503,7 +502,7 @@ function PulsePage() {
                 href={buildContactHref({ routeInterest: 'pulse', ctaSource: 'product_pulse_hero' })}
                 className="marketing-button-primary-warm"
               >
-                Bespreek Pulse
+                Toets Pulse
               </a>
               <Link href="/producten" className="marketing-button-secondary">
                 Bekijk producten
@@ -546,8 +545,7 @@ function PulsePage() {
       heroSupport={
         <MarketingHeroSupport>
           <div className="marketing-support-note text-sm leading-7 text-slate-600">
-            RetentieScan ritmeroute blijft de bredere herhaalvorm na baseline. Pulse is kleiner en wordt pas logisch als de
-            vraag vooral om een compacte reviewlaag vraagt.
+            Pulse is bedoeld voor een korte hercheck, niet voor een nieuwe brede meting.
           </div>
           <div className="marketing-link-grid">
             <Link
@@ -569,7 +567,7 @@ function PulsePage() {
       <MarketingSection tone="surface">
         <div className="grid gap-10 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)]">
           <div className="space-y-5">
-            <div className="marketing-divider-title">Waarom Pulse kleiner blijft</div>
+            <div className="marketing-divider-title">Waarom Pulse juist werkt als compacte hercheck</div>
             <h2 className="marketing-text-title-lg">Een korte reviewlaag na de eerste managementduiding.</h2>
             <p className="marketing-text-body-lg">
               Pulse laat op groepsniveau zien hoe de huidige werkbeleving en gekozen prioriteitsfactoren er nu voor
@@ -580,16 +578,12 @@ function PulsePage() {
           <div className="marketing-flow-stack">
             {[
               {
-                title: 'Compacte snapshot',
-                body: 'Pulse laat op groepsniveau zien hoe de huidige werkbeleving en gekozen prioriteitsfactoren er nu voor staan.',
+                title: 'Wanneer Pulse logisch is',
+                body: 'Gebruik Pulse na een eerste scan of managementgesprek wanneer u gericht wilt herchecken wat nu verschuift, zonder opnieuw breed te meten.',
               },
               {
-                title: 'Begrensde vergelijking',
-                body: 'Vergelijking blijft bewust beperkt tot de vorige vergelijkbare Pulse met voldoende data.',
-              },
-              {
-                title: 'Managementhandoff',
-                body: 'De output eindigt bij prioriteit nu, een eerste vervolgrichting en een expliciet afgesproken hercheckmoment.',
+                title: 'Wanneer Pulse niet de juiste route is',
+                body: 'Kies geen Pulse als de vraag nog een bredere eerste meting, extra duiding of een grotere vervolgroute nodig heeft.',
               },
             ].map((item, index) => (
               <div key={item.title} className="marketing-process-card">
@@ -603,19 +597,15 @@ function PulsePage() {
       </MarketingSection>
 
       <MarketingSection tone="plain">
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-2">
           {[
             {
-              title: 'Na een eerste baseline',
+              title: 'Wanneer Pulse logisch is',
               body: 'Pulse wordt logisch zodra management na ExitScan, RetentieScan of een eerste vervolgrichting niet opnieuw breed wil meten, maar wel gericht wil herchecken.',
             },
             {
-              title: 'Na eerste vervolgstappen',
-              body: 'Gebruik Pulse om zichtbaar te maken of een gekozen correctie, ontlasting of gesprek het beeld kort daarna anders maakt.',
-            },
-            {
-              title: 'Bij een smalle reviewvraag',
-              body: 'Pulse past wanneer de vraag vooral gaat over review, bijsturing en het volgende checkmoment, niet over een nieuwe brede eerste scan.',
+              title: 'Wanneer Pulse niet de juiste route is',
+              body: 'Gebruik Pulse niet als de vraag nog om een bredere eerste scan, extra duiding of een grotere vervolgroute vraagt.',
             },
           ].map((card, index) => (
             <div key={card.title} className="marketing-route-card">
@@ -631,7 +621,7 @@ function PulsePage() {
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div className="space-y-5">
             <div className="marketing-divider-title">Pulse naast ritmeroute</div>
-            <h2 className="marketing-text-title-md">Gebruik Pulse als compacte hercheck, niet als vervanger van RetentieScan.</h2>
+            <h2 className="marketing-text-title-md">Pulse en RetentieScan hebben niet dezelfde rol.</h2>
             <p className="marketing-text-body">
               Deze vergelijking laat dezelfde routegrens zien in de huidige stijl: Pulse blijft de smalle reviewlaag,
               terwijl RetentieScan de bredere herhaalvorm op behoud blijft dragen.
@@ -666,7 +656,7 @@ function PulsePage() {
           <div className="marketing-panel-dark p-8 md:p-10">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">Wat Pulse wel belooft</p>
             <h2 className="mt-4 font-display text-[clamp(2rem,3.7vw,3rem)] leading-[1.02] text-white">
-              Een bounded managementread, geen brede trendclaim.
+              Een compacte managementcheck, geen brede trendbelofte.
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
               Pulse verkoopt geen nieuwe brede eerste scan. Het product helpt vooral om na een eerste managementread sneller te
@@ -696,10 +686,10 @@ function PulsePage() {
       <MarketingSection tone="plain">
         <MarketingCalloutBand
           eyebrow="Portfoliohelderheid"
-          title="Twijfel je tussen Pulse en een bredere vervolgronde?"
+          title="Twijfel je of Pulse nu de juiste hercheck is?"
           body="We helpen je kiezen tussen een compacte Pulse-hercheck, RetentieScan ritmeroute of een andere vervolgroute. Zo blijft de volgende stap scherp in plaats van breder dan nodig."
           primaryHref={buildContactHref({ routeInterest: 'pulse', ctaSource: 'product_pulse_callout' })}
-          primaryLabel="Bespreek Pulse"
+          primaryLabel="Toets Pulse"
           secondaryHref="/tarieven"
           secondaryLabel="Bekijk tarieven"
         />
@@ -916,18 +906,17 @@ function OnboardingPage() {
       theme="support"
       pageType="product"
       ctaHref={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_hero' })}
-      ctaLabel="Bespreek onboarding"
+      ctaLabel="Toets onboarding"
       heroIntro={
         <MarketingHeroIntro>
           <p className="marketing-hero-eyebrow text-amber-700">Onboarding 30-60-90</p>
           <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
-            Toets vroeg hoe nieuwe medewerkers in een checkpoint landen.
+            Zie vroeg hoe nieuwe medewerkers landen.
           </h1>
           <p className="marketing-hero-copy text-slate-600">
-            Onboarding 30-60-90 is geen client onboarding-tool en geen brede journey-suite. Het is een bounded
-            lifecycle-route voor een assisted single-checkpoint managementread: hoe landen nieuwe medewerkers nu in rol,
-            leiding, team en werkcontext, wie trekt de eerste handoff en welke kleine borg- of correctiestap hoort daar
-            direct bij.
+            Onboarding 30-60-90 helpt vroeg zichtbaar maken hoe nieuwe medewerkers nu landen in rol, leiding, team en
+            werkcontext. U krijgt een compacte groepsread met een eerste vervolgrichting, eigenaar en hercheckmoment,
+            zonder daar meteen een brede onboarding-suite van te maken.
           </p>
           <div className="marketing-hero-actions">
             <div className="marketing-hero-cta-row">
@@ -935,7 +924,7 @@ function OnboardingPage() {
                 href={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_hero' })}
                 className="marketing-button-primary-warm"
               >
-                Bespreek onboarding
+                Toets onboarding
               </a>
               <Link href="/producten" className="marketing-button-secondary">
                 Bekijk producten
@@ -952,7 +941,7 @@ function OnboardingPage() {
               <div className="border-b border-[var(--border)] px-5 py-5 sm:px-6">
                 <span className="marketing-chip">Checkpoint-read</span>
                 <h2 className="mt-4 marketing-text-title-md">
-                  Toets vroege landingssignalen zonder daar meteen een volledige suite van te maken.
+                  Maak vroeg zichtbaar waar onboarding al goed landt en waar eerste frictie ontstaat.
                 </h2>
                 <p className="mt-4 marketing-text-body">
                   De route blijft bewust smal: precies een checkpoint per campaign, een assisted managementread,
@@ -978,8 +967,8 @@ function OnboardingPage() {
       heroSupport={
         <MarketingHeroSupport>
           <div className="marketing-support-note text-sm leading-7 text-slate-600">
-            In de huidige wave blijft onboarding assisted en single-checkpoint. Geen hire-date engine, geen cohortmodel
-            en geen brede client onboarding-layer.
+            Deze route blijft bewust compact: één meetmoment, groepsniveau en een eerste opvolgstap. Geen
+            journey-automation of individuele beoordeling.
           </div>
           <div className="marketing-link-grid">
             <Link
@@ -1001,7 +990,7 @@ function OnboardingPage() {
       <MarketingSection tone="surface">
         <div className="grid gap-10 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)]">
           <div className="space-y-5">
-            <div className="marketing-divider-title">Waarom deze route begrensd blijft</div>
+            <div className="marketing-divider-title">Waarom onboarding vroeg helpt</div>
             <h2 className="marketing-text-title-lg">Een vroege checkpoint-read voor nieuwe instroom.</h2>
             <p className="marketing-text-body-lg">
               Onboarding opent alleen als de vraag echt gaat over de eerste landing van nieuwe medewerkers in deze fase.
@@ -1012,16 +1001,16 @@ function OnboardingPage() {
           <div className="marketing-flow-stack">
             {[
               {
-                title: 'Vroeg checkpoint',
-                body: 'Onboarding opent alleen als de vraag echt gaat over de eerste landing van nieuwe medewerkers in deze fase, niet als brede people-suite.',
+                title: 'Vroege landing zichtbaar',
+                body: 'U ziet vroeg hoe nieuwe medewerkers landen in rol, leiding, team en werkcontext, zonder te wachten tot bredere uitval zichtbaar wordt.',
               },
               {
-                title: 'Assisted handoff',
-                body: 'De output eindigt bij een eerste vervolgrichting, eerste kleine vervolgstap en een expliciet hercheckmoment in plaats van een open eindeloze actielijst.',
+                title: 'Eerste eigenaar en gesprek',
+                body: 'De output helpt kiezen wie het eerste gesprek trekt en welke kleine borg- of correctiestap nu logisch is.',
               },
               {
-                title: 'Methodische grens',
-                body: 'De route blijft een groepsread van een enkel checkpoint en claimt geen latere retentie-uitkomst, manageroordeel of volledige journeyanalyse.',
+                title: 'Hercheck zonder brede rollout',
+                body: 'De route eindigt bij een compact hercheckmoment, niet bij een grote onboardingmachine of open actielijst.',
               },
             ].map((item, index) => (
               <div key={item.title} className="marketing-process-card">
@@ -1063,7 +1052,7 @@ function OnboardingPage() {
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div className="space-y-5">
             <div className="marketing-divider-title">Onboarding naast implementatie</div>
-            <h2 className="marketing-text-title-md">Maak het verschil zichtbaar tussen een people-checkpoint en client onboarding.</h2>
+            <h2 className="marketing-text-title-md">Verwar deze route niet met implementatiebegeleiding.</h2>
             <p className="marketing-text-body">
               Deze vergelijking houdt de route eerlijk. Onboarding 30-60-90 is een vroege managementread voor nieuwe
               medewerkers, niet dezelfde laag als implementatie, adoptie of deliverybegeleiding.
@@ -1098,7 +1087,7 @@ function OnboardingPage() {
           <div className="marketing-panel-dark p-8 md:p-10">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-300">Wat onboarding wel belooft</p>
             <h2 className="mt-4 font-display text-[clamp(2rem,3.7vw,3rem)] leading-[1.02] text-white">
-              Een vroege checkpoint-read met hercheck en eerste vervolgstap, geen brede onboardingmachine.
+              Een vroege onboardingread met een eerste vervolgstap, niet meer dan nodig.
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
               Onboarding 30-60-90 verkoopt geen volledige employee journey. Het product helpt vooral om vroeg te zien
@@ -1129,10 +1118,10 @@ function OnboardingPage() {
       <MarketingSection tone="plain">
         <MarketingCalloutBand
           eyebrow="Lifecyclegrens"
-          title="Twijfel je tussen onboarding, RetentieScan of client onboarding?"
+          title="Twijfel je of onboarding nu de juiste eerste route is?"
           body="We helpen je kiezen tussen een vroege onboardingcheck, een bredere retentie- of teamroute of terug naar implementatiebegeleiding. Zo blijft de vervolgstap kleiner en eerlijker dan nodig."
           primaryHref={buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_callout' })}
-          primaryLabel="Bespreek onboarding"
+          primaryLabel="Toets onboarding"
           secondaryHref="/tarieven"
           secondaryLabel="Bekijk tarieven"
         />
@@ -1147,16 +1136,16 @@ function LeadershipScanPage() {
       theme="support"
       pageType="product"
       ctaHref={buildContactHref({ routeInterest: 'leadership', ctaSource: 'product_leadership_hero' })}
-      ctaLabel="Bespreek Leadership Scan"
+      ctaLabel="Toets Leadership Scan"
       heroIntro={
         <MarketingHeroIntro>
           <p className="marketing-hero-eyebrow text-slate-700">Leadership Scan</p>
           <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-slate-950">
-            Begrensde managementread na een bestaand people-signaal.
+            Voeg managementcontext toe aan een bestaand people-signaal.
           </h1>
           <p className="marketing-hero-copy text-slate-600">
-            Leadership Scan helpt bepalen welke managementcontext nu als eerste duiding of verificatie vraagt, zonder
-            named leaders, 360-logica of performanceframing te openen.
+            Leadership Scan helpt zichtbaar maken welke managementcontext een bestaand signaal mee kleurt en waar eerst
+            gesprek of verificatie nodig is, zonder dit naar individuen te trekken.
           </p>
           <div className="marketing-hero-actions">
             <div className="marketing-hero-cta-row">
@@ -1164,7 +1153,7 @@ function LeadershipScanPage() {
                 href={buildContactHref({ routeInterest: 'leadership', ctaSource: 'product_leadership_hero' })}
                 className="marketing-button-primary"
               >
-                Bespreek Leadership Scan
+                Toets Leadership Scan
               </a>
               <Link href="/producten" className="marketing-button-secondary">
                 Bekijk producten
@@ -1181,7 +1170,7 @@ function LeadershipScanPage() {
               <div className="border-b border-[var(--border)] px-5 py-5 sm:px-6">
                 <span className="marketing-chip">Follow-on route</span>
                 <h2 className="mt-4 marketing-text-title-md">
-                  Gebruik Leadership Scan pas nadat een breder signaal al zichtbaar is.
+                  Lees eerst welke managementcontext het bestaande signaal mee kleurt.
                 </h2>
                 <p className="mt-4 marketing-text-body">
                   De waarde zit in een groepsniveau-managementread: welke context vraagt eerst gesprek, verificatie of
@@ -1207,7 +1196,7 @@ function LeadershipScanPage() {
       heroSupport={
         <MarketingHeroSupport>
           <div className="marketing-support-note text-sm leading-7 text-slate-600">
-            Deze route blijft group-level only: geen 360-tool, geen performance-instrument en geen oordeel over
+            Deze route blijft op groepsniveau: geen 360-tool, geen performance-instrument en geen oordeel over
             individuele leidinggevenden.
           </div>
           <div className="marketing-link-grid">
@@ -1230,10 +1219,10 @@ function LeadershipScanPage() {
       <MarketingSection tone="surface">
         <div className="grid gap-10 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)]">
           <div className="space-y-5">
-            <div className="marketing-divider-title">Wat deze route wel doet</div>
+            <div className="marketing-divider-title">Waar Leadership Scan echt voor bedoeld is</div>
             <h2 className="marketing-text-title-lg">Voeg managementcontext toe zonder het signaal op individuen te trekken.</h2>
             <p className="marketing-text-body-lg">
-              Leadership Scan helpt bepalen waar leidingcontext als eerste bounded verificatie vraagt na een bestaand
+              Leadership Scan helpt bepalen waar leidingcontext als eerste verificatie vraagt na een bestaand
               people-signaal. De route blijft een groepsread en eindigt bij een eerste managementcheck, een kleine
               vervolgrichting en een hercheckmoment.
             </p>
@@ -1242,7 +1231,7 @@ function LeadershipScanPage() {
             {[
               {
                 title: 'Managementcontext eerst',
-                body: 'De route helpt bepalen waar leidingcontext als eerste bounded verificatie vraagt na een bestaand people-signaal.',
+                body: 'De route helpt bepalen waar leidingcontext als eerste verificatie vraagt na een bestaand people-signaal.',
               },
               {
                 title: 'Groepsniveau blijft leidend',
@@ -1267,7 +1256,7 @@ function LeadershipScanPage() {
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div className="space-y-5">
             <div className="marketing-divider-title">Routegrens</div>
-            <h2 className="marketing-text-title-md">Leadership Scan is een beperkte vervolglaag na een bestaand signaal.</h2>
+            <h2 className="marketing-text-title-md">Gebruik Leadership Scan pas als de vraag echt over managementcontext gaat.</h2>
             <div className="grid gap-5">
               {[
                 {
@@ -1295,7 +1284,7 @@ function LeadershipScanPage() {
           <div className="marketing-panel-dark p-8 md:p-10">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#9AD0D0]">Wat Leadership Scan wel belooft</p>
             <h2 className="mt-4 font-display text-[clamp(2rem,3.7vw,3rem)] leading-[1.02] text-white">
-              Een begrensde managementread, geen named leader view.
+              Een compacte managementread, niet bedoeld voor beoordeling van individuele leiders.
             </h2>
             <p className="mt-5 text-base leading-8 text-slate-300">
               Leadership Scan helpt eerst duiden welke managementcontext een bestaand signaal mee kleurt. De route is
@@ -1326,10 +1315,10 @@ function LeadershipScanPage() {
       <MarketingSection tone="plain">
         <MarketingCalloutBand
           eyebrow="Vervolgroute"
-          title="Twijfel je tussen Leadership Scan en een bredere vervolgronde?"
+          title="Twijfel je of Leadership Scan nu de juiste vervolgstap is?"
           body="We helpen je kiezen tussen Leadership Scan, een kernroute of een andere bounded vervolglaag. Zo blijft de volgende stap kleiner en helderder dan nodig."
           primaryHref={buildContactHref({ routeInterest: 'leadership', ctaSource: 'product_leadership_callout' })}
-          primaryLabel="Bespreek Leadership Scan"
+          primaryLabel="Toets Leadership Scan"
           secondaryHref="/tarieven"
           secondaryLabel="Bekijk tarieven"
         />

@@ -38,7 +38,7 @@ describe('marketing flow defaults', () => {
 
     expect(contactFormSource).toContain('Plan een eerste route-inschatting')
     expect(contactFormSource).toContain('Route-inschatting wordt verstuurd...')
-    expect(contactFormSource).toContain('Suite-demo aangevraagd.')
+    expect(contactFormSource).toContain('Route-inschatting aangevraagd.')
     expect(solutionSource).toContain('Plan een suite-demo over verloopanalyse')
     expect(solutionSource).toContain('Plan een suite-demo over medewerkersbehoud analyseren')
   })

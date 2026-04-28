@@ -755,7 +755,6 @@ function SuitePreviewSection() {
                 <div className="suite-motion-frame">
                   <div className="suite-motion-frame-head">
                     <div>
-                      <p className="suite-phase-eyebrow">Motion graphic</p>
                       <p className="suite-motion-frame-title">Van eerste signalen naar eerste actie</p>
                     </div>
 
@@ -791,7 +790,7 @@ function SuitePreviewSection() {
                         </div>
 
                         <div className="suite-prioritize-intro">
-                          <p className="suite-priority-title">Van eerste signalen naar wat nu eerst telt.</p>
+                          <p className="suite-priority-title">Kies wat nu eerst telt.</p>
                           <p className="suite-priority-copy">
                             Dezelfde signalen worden teruggebracht tot een eerste, tweede en derde prioriteit.
                           </p>
@@ -988,6 +987,8 @@ function SuitePreviewSection() {
           .suite-motion-screen {
             background: linear-gradient(180deg, rgba(255, 251, 247, 0.98) 0%, rgba(247, 238, 231, 0.98) 100%);
             box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
             flex: 0 0 var(--suite-window-height);
             height: var(--suite-window-height);
             overflow: hidden;
@@ -1075,6 +1076,7 @@ function SuitePreviewSection() {
             gap: 8px;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             margin-bottom: 0;
+            margin-top: auto;
           }
 
           .suite-phase-list,
@@ -1082,6 +1084,10 @@ function SuitePreviewSection() {
           .suite-action-list {
             display: grid;
             gap: 8px;
+          }
+
+          .suite-priority-ladder {
+            margin-top: auto;
           }
 
           .suite-list-row,
@@ -1161,6 +1167,9 @@ function SuitePreviewSection() {
             border: 1px solid ${SURFACE.border};
             box-shadow: 0 24px 42px rgba(19, 32, 51, 0.06);
             box-sizing: border-box;
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
             height: 100%;
             padding: 20px 20px 22px;
           }
@@ -1176,6 +1185,10 @@ function SuitePreviewSection() {
             line-height: 1.68;
             margin-top: 10px;
             max-width: 31ch;
+          }
+
+          .suite-action-list {
+            margin-top: auto;
           }
 
           .suite-action-row {

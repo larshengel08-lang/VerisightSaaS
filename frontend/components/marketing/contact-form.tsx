@@ -200,7 +200,7 @@ export function ContactForm({
   const buttonClass = isLight
     ? 'bg-[#3C8D8A] hover:bg-[#2d6e6b]'
     : 'bg-[#3C8D8A] hover:bg-[#2d6e6b]'
-  const panelSpacingClass = isCompact ? 'mb-5 rounded-[1.35rem] px-4 py-4 leading-6 sm:px-5 sm:py-5 sm:leading-7' : 'mb-6 rounded-[1.5rem] px-5 py-5 leading-7'
+  const panelSpacingClass = isCompact ? 'mb-5 rounded-[1.35rem] px-4 py-4 leading-6 sm:px-5 sm:py-5 sm:leading-7' : 'mb-4 rounded-[1.2rem] px-0 py-0 leading-7'
   const fieldGridClass = isCompact ? 'grid gap-4 sm:grid-cols-2' : 'grid gap-5 sm:grid-cols-2'
   const fieldClass = `block min-w-0 w-full rounded-2xl border px-4 ${isCompact ? 'py-2.5 sm:py-3' : 'py-3'} text-sm outline-none transition focus:ring-2 ${inputClass}`
   const billingReadinessCopy = getBillingReadinessCopy({
@@ -210,23 +210,20 @@ export function ContactForm({
 
   return (
     <form onSubmit={handleSubmit} className={shellClass}>
-      <div
-        className={`${panelSpacingClass} border text-sm ${
-          isLight ? 'border-[#E5E0D6] bg-[#F7F5F1] text-slate-700' : 'border-white/10 bg-white/5 text-slate-200'
-        }`}
-      >
-        {isCompact
-          ? 'Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke eerste output daarna logisch is.'
-          : 'Gebruik dit formulier in de eerste plaats om te bepalen of ExitScan, RetentieScan of de combinatieroute nu de juiste eerste stap is. Tijdens de intake toetsen we ook wanneer vervolgroutes logisch worden en welke eerste output daarna past.'}
-        {!isCompact ? <span className={`mt-3 block text-xs ${helperClass}`}>{billingReadinessCopy}</span> : null}
+      <div className={panelSpacingClass}>
+        <p className={`text-sm ${isLight ? 'text-slate-700' : 'text-slate-200'} ${isCompact ? 'leading-6' : 'leading-7'}`}>
+          {isCompact
+            ? 'Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke eerste output daarna logisch is.'
+            : 'Gebruik dit formulier om te bepalen welke eerste route nu het best past en welke eerste output daarna logisch is.'}
+        </p>
       </div>
 
       {!isCompact ? (
-        <div className="mb-6 flex flex-wrap gap-2">
+        <div className="mb-6 grid gap-3 sm:grid-cols-3">
           {contactTrustSignals.map((signal) => (
             <span
               key={signal}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${isLight ? 'border border-[#E5E0D6] bg-white text-slate-600' : 'border border-white/10 bg-white/5 text-slate-200'}`}
+              className={`rounded-2xl px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.14em] ${isLight ? 'border border-[#E5E0D6] bg-[#fbf8f3] text-slate-600' : 'border border-white/10 bg-white/5 text-slate-200'}`}
             >
               {signal}
             </span>
@@ -301,7 +298,7 @@ export function ContactForm({
           </select>
         </div>
 
-        <div>
+        <div className={isCompact ? '' : 'sm:col-span-2'}>
           <label htmlFor="routeInterest" className={`mb-2 block text-sm font-medium ${labelClass}`}>
             {isCompact ? 'Primaire managementvraag' : 'Welke route lijkt nu het best te passen?'}
           </label>
@@ -321,7 +318,7 @@ export function ContactForm({
         </div>
 
         {!isCompact ? (
-          <div>
+          <div className="sm:col-span-2">
             <label htmlFor="desiredTiming" className={`mb-2 block text-sm font-medium ${labelClass}`}>
               Wanneer wil je de eerste stap zetten?
             </label>
@@ -356,7 +353,7 @@ export function ContactForm({
           placeholder={
             isCompact
               ? 'Optioneel: licht kort toe wat nu bestuurlijke aandacht vraagt.'
-              : (questionPlaceholder ?? 'Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar beeld voor management. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven.')
+              : (questionPlaceholder ?? 'Beschrijf kort wat u nu vooral wilt begrijpen of waar de vraag vastloopt.')
           }
         />
       </div>
@@ -375,7 +372,7 @@ export function ContactForm({
 
       {successState ? (
         <div className={`mt-5 rounded-[1.5rem] border px-5 py-5 text-sm ${successClass}`}>
-          <p className="font-semibold">Suite-demo aangevraagd.</p>
+          <p className="font-semibold">Route-inschatting aangevraagd.</p>
           <div className="mt-2 space-y-2 leading-7">
             <p>
               We reageren meestal binnen 1 werkdag met een eerste route-inschatting voor{' '}
@@ -383,7 +380,7 @@ export function ContactForm({
               <span className="font-semibold">{successState.firstStepLabel}</span> nu logisch is.
             </p>
             <p>
-              In de suite-demo toetsen we jullie managementvraag, gewenste timing (
+              In de intake toetsen we jullie managementvraag, gewenste timing (
               <span className="font-semibold">{successState.desiredTimingLabel}</span>) en welke intake of
               databasis nodig is om vlot naar dashboard, rapport, Action Center en eerste waarde te gaan.
             </p>
@@ -410,6 +407,7 @@ export function ContactForm({
         >
               {loading ? 'Route-inschatting wordt verstuurd...' : 'Plan een eerste route-inschatting'}
         </button>
+        {!isCompact ? <p className={`text-xs leading-6 ${helperClass}`}>{billingReadinessCopy}</p> : null}
       </div>
 
       <p className={`mt-4 text-[11px] leading-6 sm:text-xs ${helperClass}`}>
