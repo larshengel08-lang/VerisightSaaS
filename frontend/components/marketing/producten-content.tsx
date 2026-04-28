@@ -96,7 +96,7 @@ function HeroSection() {
             <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink, transition: 'all .18s cubic-bezier(.4,0,0,1)' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.background = AC.deep }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.background = T.ink }}>
-              Plan suite-demo <Arrow />
+                Plan een eerste route-inschatting <Arrow />
             </Link>
             <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 500, padding: '11px 27px', color: T.inkSoft, border: `1px solid ${T.rule}`, transition: 'all .18s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T.inkMuted }}
@@ -222,7 +222,7 @@ function ContactSection() {
     <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
       <div style={{ ...SHELL, maxWidth: 1180 }}>
         <MarketingInlineContactPanel
-          eyebrow="Plan suite-demo"
+          eyebrow="Plan een eerste route-inschatting"
           title="Twijfelt u tussen ExitScan, RetentieScan, onboarding of een vervolgronde?"
           body="In een eerste gesprek bepalen we welke route nu echt logisch is, hoe dashboard, rapport en Action Center daarna in dezelfde suite-omgeving landen en welke vervolgstap bewust kleiner moet blijven."
           defaultRouteInterest="exitscan"

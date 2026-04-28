@@ -31,12 +31,14 @@ describe('commercial homepage suite opening', () => {
       'utf8',
     )
 
-    expect(homepageSource).toContain('Voor HR, directie en managementteams')
+    expect(homepageSource).toContain('Voor organisaties die sneller willen zien wat nu echt aandacht vraagt.')
     expect(homepageSource).toContain('Zien.')
     expect(homepageSource).toContain('Prioriteren.')
     expect(homepageSource).toContain('Handelen.')
-    expect(homepageSource).toContain('Geen losse output.')
-    expect(homepageSource).toContain('Wel een duidelijke lijn.')
+    expect(homepageSource).toContain('Bespreek de juiste eerste route')
+    expect(homepageSource).toContain('Van eerste inzicht naar concrete opvolging in dezelfde leeslijn')
+    expect(homepageSource).toContain('Geen losse rapportage.')
+    expect(homepageSource).toContain('Wel een helder besluitspoor.')
     expect(homepageSource).toContain('Voorbeeldoutput is illustratief en gebaseerd op fictieve data.')
   })
 })

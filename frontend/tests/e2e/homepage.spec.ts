@@ -8,11 +8,11 @@ test('homepage shows the main hero, preview and final cta', async ({ page }) => 
   ).toBeVisible()
 
   await expect(
-    page.getByRole('heading', { name: /geen losse output\..*wel een duidelijke lijn\./i }),
+    page.getByRole('heading', { name: /geen losse rapportage\..*wel een helder besluitspoor\./i }),
   ).toBeVisible()
 
   await expect(
-    page.getByRole('heading', { name: /wilt u scherper zien.*wat nu aandacht vraagt/i }),
+    page.getByRole('heading', { name: /wilt u zien.*welke route nu het meest logisch is/i }),
   ).toBeVisible()
 
   await expect(page.getByRole('link', { name: /plan een kennismaking/i }).last()).toHaveAttribute(

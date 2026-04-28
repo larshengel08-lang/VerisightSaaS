@@ -406,7 +406,7 @@ export function ContactForm({
           disabled={loading}
           className={`inline-flex w-full items-center justify-center rounded-2xl px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 sm:ml-auto sm:min-w-[14rem] sm:w-auto ${buttonClass}`}
         >
-          {loading ? 'Suite-demo wordt verstuurd...' : isCompact ? 'Plan suite-demo' : 'Vraag suite-demo aan'}
+              {loading ? 'Route-inschatting wordt verstuurd...' : 'Plan een eerste route-inschatting'}
         </button>
       </div>
 
