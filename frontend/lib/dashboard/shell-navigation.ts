@@ -41,13 +41,13 @@ export type DashboardShellNavigation = {
 export type DashboardShellMode = 'full' | 'action_center_only'
 
 const MODULE_LABELS: Array<{ key: DashboardModuleKey; label: string; scanType?: ScanType }> = [
-  { key: 'overview', label: 'Overview' },
+  { key: 'overview', label: 'Dashboard' },
   { key: 'exit', label: 'ExitScan', scanType: 'exit' },
   { key: 'retention', label: 'RetentieScan', scanType: 'retention' },
   { key: 'onboarding', label: 'Onboarding 30-60-90', scanType: 'onboarding' },
   { key: 'pulse', label: 'Pulse', scanType: 'pulse' },
   { key: 'leadership', label: 'Leadership Scan', scanType: 'leadership' },
-  { key: 'reports', label: 'Reports' },
+  { key: 'reports', label: 'Rapporten' },
   { key: 'action_center', label: 'Action Center' },
 ]
 
@@ -185,19 +185,19 @@ export function buildDashboardShellNavigation({
     ? [
         {
           label: 'Setup',
-          detail: 'Organisaties, campaignsetup en launchdiscipline.',
+          detail: 'Organisaties, scans en startmomenten.',
           href: '/beheer',
           disabled: false,
         },
         {
           label: 'Leads',
-          detail: 'Sales-to-delivery context en contactaanvragen.',
+          detail: 'Contactaanvragen en overdracht.',
           href: '/beheer/contact-aanvragen',
           disabled: false,
         },
         {
           label: 'Action Center bron',
-          detail: 'Dossierbron, admin-first follow-through en bounded dossieropvolging.',
+          detail: 'Bron voor prioriteiten en opvolging.',
           href: '/beheer/klantlearnings',
           disabled: false,
         },
@@ -221,12 +221,12 @@ export const ACTION_CENTER_NAV = [
 export type ActionCenterNavItem = (typeof ACTION_CENTER_NAV)[number]
 
 export function getDashboardShellCurrentLabel(pathname: string) {
-  if (pathname.startsWith('/reports')) return 'Reports & exports'
+  if (pathname.startsWith('/reports')) return 'Rapporten'
   if (pathname.startsWith('/action-center')) return 'Action Center'
-  if (pathname.startsWith('/campaigns/')) return 'Campagneread'
-  if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
-  if (pathname.startsWith('/beheer/klantlearnings')) return 'Action Center'
-  if (pathname.startsWith('/beheer')) return 'Setup en beheer'
+  if (pathname.startsWith('/campaigns/')) return 'Scanoverzicht'
+  if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Contactaanvragen'
+  if (pathname.startsWith('/beheer/klantlearnings')) return 'Action Center bron'
+  if (pathname.startsWith('/beheer')) return 'Beheer'
 
   return 'Dashboardoverzicht'
 }

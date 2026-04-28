@@ -213,29 +213,29 @@ export default async function DashboardHomePage({
           className="text-[1.35rem] font-semibold tracking-[-0.02em]"
           style={{ color: 'var(--dashboard-ink)' }}
         >
-          {isAdmin ? 'Campagneoverzicht' : 'Overview'}
+          {isAdmin ? 'Campagneoverzicht' : 'Dashboardoverzicht'}
         </h1>
         <p className="mt-1 text-sm" style={{ color: 'var(--dashboard-muted)' }}>
           {isAdmin
-            ? `${campaigns.length} campagne${campaigns.length === 1 ? '' : 's'} · ${managementReadyCount} management-ready`
+            ? `${campaigns.length} scan${campaigns.length === 1 ? '' : 's'} · ${managementReadyCount} leesbaar`
             : primaryOverviewCampaign
               ? getOverviewHeadline({ campaign: primaryOverviewCampaign, stateMeta: primaryGuideStateMeta, isAdmin, avgSignal })
-              : 'Zodra de eerste campagne leesbaar wordt, opent hier automatisch de eerste managementread.'}
+              : 'Zodra de eerste scan leesbaar wordt, verschijnt hier automatisch het overzicht.'}
         </p>
       </div>
 
       {/* 4 stat cards */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SignalStatCard
-          label="Management-ready"
+          label="Leesbaar"
           value={`${managementReadyCount}`}
-          subline={`${fullCount} volledig · ${partialCount} deels`}
+          subline={`${fullCount} volledig · ${partialCount} compact`}
           band={managementReadyCount > 0 ? 'LAAG' : 'neutral'}
         />
         <SignalStatCard
           label="In uitvoering"
           value={`${activeExecutionCount}`}
-          subline={activeExecutionCount > 0 ? 'Setup, launch of running' : 'Geen actieve uitvoering'}
+          subline={activeExecutionCount > 0 ? 'Setup, live of eerste responses' : 'Geen actieve uitvoering'}
           band={activeExecutionCount > 0 ? 'MIDDEN' : 'neutral'}
         />
         <SignalStatCard
@@ -247,7 +247,7 @@ export default async function DashboardHomePage({
         <SignalStatCard
           label="Afgerond"
           value={`${closedCount}`}
-          subline={closedCount > 0 ? 'Rapport beschikbaar' : 'Geen gesloten campagnes'}
+          subline={closedCount > 0 ? 'Rapport en dashboard beschikbaar' : 'Geen afgeronde scans'}
           band="neutral"
         />
       </div>
@@ -264,7 +264,7 @@ export default async function DashboardHomePage({
           <div className="flex flex-wrap items-center justify-between gap-3 pb-4" style={{ borderBottom: '1px solid var(--dashboard-frame-border)' }}>
             <div>
               <p className="text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
-                Hoofdcampagne · {primaryGuideScanDefinition.productName}
+                Hoofdscan · {primaryGuideScanDefinition.productName}
               </p>
               <p className="mt-1 text-base font-semibold tracking-[-0.02em]" style={{ color: 'var(--dashboard-ink)' }}>
                 {primaryGuideCampaign.campaign_name}
@@ -279,7 +279,7 @@ export default async function DashboardHomePage({
             <CustomerLaunchControl
               campaignName={primaryGuideCampaign.campaign_name}
               campaignHref={`/campaigns/${primaryGuideCampaign.campaign_id}`}
-              campaignCtaLabel={primaryExecutionState.dashboardVisible ? 'Open campagne en dashboard' : 'Open uitvoerflow'}
+              campaignCtaLabel={primaryExecutionState.dashboardVisible ? 'Open scan' : 'Open uitvoering'}
               productName={primaryGuideScanDefinition.productName}
               productContext={primaryGuideScanDefinition.whatItIsText}
               state={primaryExecutionState}
@@ -297,10 +297,10 @@ export default async function DashboardHomePage({
         <div>
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm font-semibold" style={{ color: 'var(--dashboard-ink)' }}>
-              Portfolio
+              Scans
             </p>
             <span className="text-xs" style={{ color: 'var(--dashboard-muted)' }}>
-              {campaigns.length} campagne{campaigns.length === 1 ? '' : 's'}
+              {campaigns.length} scan{campaigns.length === 1 ? '' : 's'}
             </span>
           </div>
           <DashboardTabs tabs={portfolioTabs} defaultTabId={portfolioView} />
@@ -423,7 +423,7 @@ function StatCell({ label, value }: { label: string; value: string }) {
         : label === 'Ingevuld'
           ? 'Het aantal respondenten dat de survey volledig heeft afgerond.'
           : label === 'Uitgenodigd'
-            ? 'Het totale aantal respondenten dat aan deze campaign is gekoppeld.'
+            ? 'Het totale aantal respondenten dat aan deze scan is gekoppeld.'
             : null
 
   return (
@@ -515,7 +515,7 @@ function groupCampaigns(entries: CampaignHomeEntry[]): CampaignGroup[] {
 
 function buildPortfolioBuckets(groups: CampaignGroup[]): PortfolioBucket[] {
   const definitions: Array<{ key: DashboardPortfolioView; label: string; states: CampaignCompositionState[] }> = [
-    { key: 'ready', label: 'Management-ready', states: ['full', 'partial'] },
+    { key: 'ready', label: 'Leesbaar', states: ['full', 'partial'] },
     { key: 'building', label: 'In opbouw', states: ['sparse', 'running', 'ready_to_launch'] },
     { key: 'setup', label: 'Setup of launch', states: ['setup'] },
     { key: 'closed', label: 'Afgerond', states: ['closed'] },
@@ -538,19 +538,19 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       label: 'Nog niet live',
       tone: 'amber' as const,
       nextStepLabel: 'Setup eerst',
-      viewerCta: 'Open uitvoerflow',
+      viewerCta: 'Open uitvoering',
       sectionTitle: 'Setup / nog niet live',
       sectionDescription:
         'Campagnes zonder live uitnodigingen of zonder echte respondentlaag. Hier telt eerst setup en launchdiscipline.',
-      body: 'Deze campaign vraagt eerst respondentimport of launchcontrole voordat er een leesbaar dashboard kan openen.',
+      body: 'Deze scan vraagt eerst respondentimport of launchcontrole voordat er een leesbaar dashboard kan openen.',
       trust:
-        'Nog geen managementduiding. Eerst setup, daarna pas read en rapport.',
+        'Nog geen leesbaar overzicht. Eerst setup, daarna pas dashboard en rapport.',
     },
     ready_to_launch: {
       label: 'Launch klaar',
       tone: 'amber' as const,
       nextStepLabel: 'Invites versturen',
-      viewerCta: 'Open uitvoerflow',
+      viewerCta: 'Open uitvoering',
       sectionTitle: 'Ready to launch',
       sectionDescription:
         'Campagnes waar de respondentlaag klaarstaat, maar waar uitnodigingen nog niet volledig live zijn gezet.',
@@ -562,19 +562,19 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       label: 'Invites live',
       tone: 'amber' as const,
       nextStepLabel: 'Respons volgen',
-      viewerCta: 'Open uitvoerflow',
+      viewerCta: 'Open uitvoering',
       sectionTitle: 'Invites live / running',
       sectionDescription:
         'Campagnes waar uitnodigingen lopen, maar waar nog geen eerste veilige responslaag zichtbaar hoort te worden.',
       body: 'De inviteflow loopt, maar het beeld is nog te dun voor een eerste inhoudelijke read.',
       trust:
-        'Laat hier alleen voortgang zien. Dit is nog geen managementduiding.',
+        'Laat hier alleen voortgang zien. Dit is nog geen leesbaar overzicht.',
     },
     sparse: {
       label: 'Indicatief, nog dun',
       tone: 'amber' as const,
       nextStepLabel: 'Meer respons nodig',
-      viewerCta: 'Open uitvoerflow',
+      viewerCta: 'Open uitvoering',
       sectionTitle: 'Sparse / indicatief',
       sectionDescription:
         'Campagnes met eerste responses, maar nog onder de veilige dashboarddrempel voor een eerlijke managementduiding.',
@@ -583,11 +583,11 @@ function getHomeStateMeta(state: CampaignCompositionState) {
         'Gebruik dit als signaal dat uitvoering loopt, niet als conclusie.',
     },
     partial: {
-      label: 'Deels zichtbaar',
+      label: 'Compact zichtbaar',
       tone: 'amber' as const,
       nextStepLabel: 'Compacte read',
       viewerCta: 'Open compacte read',
-      sectionTitle: 'Deels zichtbaar',
+      sectionTitle: 'Compact zichtbaar',
       sectionDescription:
         'Campagnes waar de eerste veilige dashboardread open is, maar waar thresholds of privacy de verdiepingslaag nog begrenzen.',
       body: 'De eerste dashboardread is zichtbaar, maar verdiepende duiding blijft nog bewust compact.',
@@ -595,11 +595,11 @@ function getHomeStateMeta(state: CampaignCompositionState) {
         'Privacy- en thresholdgrenzen houden detail en claims nog deels dicht.',
     },
     full: {
-      label: 'Managementduiding gereed',
+      label: 'Leesbaar en volledig',
       tone: 'emerald' as const,
       nextStepLabel: 'Open dashboard',
       viewerCta: 'Open dashboard',
-      sectionTitle: 'Volledig / managementduiding gereed',
+      sectionTitle: 'Volledig / leesbaar',
       sectionDescription:
         'Campagnes met genoeg respons en voldoende zichtbaarheid om dashboard, aanbevelingen en rapport als managementinstrument te gebruiken.',
       body: 'Dashboard en rapport zijn nu stevig genoeg voor managementduiding, prioritering en eerste vervolgactie.',
@@ -614,7 +614,7 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Gesloten / rapport eerst',
       sectionDescription:
         'Gesloten campagnes waar de nadruk nu op rapportage, terugblik en bestuurlijke opvolging hoort te liggen.',
-      body: 'Deze campaign is gesloten. Gebruik rapport en dashboard nu voor terugblik en vervolggesprek.',
+      body: 'Deze scan is gesloten. Gebruik rapport en dashboard nu voor terugblik en opvolging.',
       trust:
         'Geen live uitvoersignalen meer, nu telt vooral rapportage, context en vervolgrichting.',
     },
@@ -647,7 +647,7 @@ function getOverviewHeadline({
   avgSignal: string | null
 }) {
   if (!campaign.is_active) {
-    return 'Deze campaign is gesloten. De hoofdread zit nu in rapportage, opvolging en vervolggesprek.'
+    return 'Deze scan is gesloten. Gebruik rapport en dashboard nu voor terugblik en opvolging.'
   }
 
   if (campaign.total_invited === 0) {
@@ -656,19 +656,19 @@ function getOverviewHeadline({
       : 'De eerstvolgende stap ligt nog in uitvoering voordat dashboard of rapport de hoofdroute wordt.'
   }
 
-  if (stateMeta?.label === 'Deels zichtbaar') {
-    return 'Er ligt al een eerste dashboardread, maar de verdiepingslaag blijft nog bewust compact.'
+  if (stateMeta?.label === 'Compact zichtbaar') {
+    return 'Er is al een eerste leesbare laag, maar de verdieping blijft nog bewust compact.'
   }
 
   if (campaign.total_completed < 5) {
     return avgSignal
-      ? `Het portfolio bouwt nog respons op. Het leesbare gemiddelde staat nu op ${avgSignal}/10, maar de managementread blijft nog voorzichtig.`
-      : 'Het portfolio bouwt nog respons op. Lees hier eerst richting en voortgang.'
+      ? `De respons bouwt nog op. Het gemiddelde staat nu op ${avgSignal}/10, maar het beeld blijft nog voorzichtig.`
+      : 'De respons bouwt nog op. Kijk hier eerst naar voortgang en eerste richting.'
   }
 
   return avgSignal
-    ? `Er ligt nu een leesbare managementread. Het gemiddelde groepssignaal in het portfolio staat op ${avgSignal}/10.`
-    : 'Er ligt nu een leesbare managementread. Gebruik home voor de hoofdlijn en open daarna de campaign voor verdieping.'
+    ? `Er ligt nu een leesbaar overzicht. Het gemiddelde groepssignaal in de scans staat op ${avgSignal}/10.`
+    : 'Er ligt nu een leesbaar overzicht. Gebruik deze pagina voor de hoofdlijn en open daarna de scan voor verdieping.'
 }
 
 function AdminEmptyState() {
@@ -676,12 +676,12 @@ function AdminEmptyState() {
     <DashboardSection
       eyebrow="Setup"
       title="Nog geen campagnes beschikbaar"
-      description="De cockpit wordt vanzelf gevuld zodra je een organisatie, campaign en respondentbestand hebt toegevoegd."
+      description="De cockpit wordt vanzelf gevuld zodra je een organisatie, scan en respondentbestand hebt toegevoegd."
     >
       <div className="grid gap-3 md:grid-cols-3">
         {[
           { step: '1', title: 'Organisatie', body: 'Maak eerst de klantorganisatie aan en leg het contactpunt vast.' },
-          { step: '2', title: 'Campaign', body: 'Kies ExitScan of RetentieScan en zet de campaign op met de juiste metadata.' },
+          { step: '2', title: 'Scan', body: 'Kies ExitScan of RetentieScan en zet de scan op met de juiste metadata.' },
           { step: '3', title: 'Respondenten', body: 'Importeer respondenten en stuur uitnodigingen, zodat de cockpit vanzelf in monitoring overgaat.' },
         ].map(({ step, title, body }) => (
           <div
@@ -712,7 +712,7 @@ function ViewerEmptyState() {
     <DashboardSection
       eyebrow="Wachten op livegang"
       title="Jouw dashboard wordt voorbereid"
-      description="Verisight zet de campaign op, controleert de import en activeert daarna automatisch dit overzicht."
+      description="Verisight zet de scan op, controleert de import en activeert daarna automatisch dit overzicht."
     >
       <div className="space-y-4">
         <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-5 text-sm leading-6 text-[color:var(--text)]">
@@ -720,7 +720,7 @@ function ViewerEmptyState() {
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {[
-            'Verisight beheert organisatie, campaign en respondentimport.',
+            'Verisight beheert organisatie, scan en respondentimport.',
             'Jij krijgt daarna toegang tot het juiste dashboard en rapport.',
             'De eerste managementwaarde zit in lezen, duiden en prioriteren, niet in technische setup.',
           ].map((item, index) => (

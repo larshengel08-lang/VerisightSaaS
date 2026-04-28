@@ -504,13 +504,13 @@ export default async function CampaignPage({ params }: Props) {
         'Er zijn eerste responses, maar het beeld is nog te dun voor een veilige dashboardread of aanbevelingslaag.',
     },
     partial: {
-      label: 'Deels zichtbaar',
+      label: 'Compact zichtbaar',
       tone: 'amber' as const,
       trust:
         'De eerste read is open, maar drivers, aanbevelingen en vervolgblokken blijven deels verborgen door thresholds of scorecompleetheid.',
     },
     full: {
-      label: 'Managementduiding gereed',
+      label: 'Leesbaar en volledig',
       tone: 'emerald' as const,
       trust:
         'Drivers, aanbevelingen en routeblokken mogen nu zichtbaar worden binnen de bestaande productgrenzen.',
@@ -670,7 +670,7 @@ export default async function CampaignPage({ params }: Props) {
           summaryContextTone: 'slate' as const,
           summaryLeadTitle: 'Eerste bestuurlijke leesrichting',
           summaryLeadDescription:
-            'Lees RetentieScan eerst als groepssignaal: waar staat behoud onder druk, wat vraagt eerst verificatie en welk managementspoor moet daarna in Wat nu als eerste route worden gekozen.',
+            "Bekijk eerst het retentiesignaal, de respons en de laagst scorende thema's.",
           summaryCardEyebrow: 'Behoudsspoor',
           promotedSummaryCards: 2,
           driverTitle: 'Signaalbeeld en behoudsdruk',
@@ -909,7 +909,7 @@ export default async function CampaignPage({ params }: Props) {
             driverDescription:
               'Start bij de scherpste werkfactoren en gebruik daarna pas signaalverdeling en aanvullende lagen om het vertrekbeeld verder te onderbouwen.',
             driverIntro:
-              'Begin met de factoren die het vertrekverhaal het meest kleuren. Gebruik signaalverdeling en SDT daarna om het managementgesprek scherper en concreter te maken.',
+              'Bekijk eerst welke factoren het laagst scoren en waar de grootste verschillen zichtbaar zijn.',
             driverAsideLabel: hasEnoughData ? 'Vertrekdrivers beschikbaar' : 'Wacht op meer data',
             driverAsideTone: hasEnoughData ? ('slate' as const) : ('amber' as const),
             driverTabOrder: ['factoren', 'signalen', 'aanvullend', 'trend'],
@@ -918,9 +918,9 @@ export default async function CampaignPage({ params }: Props) {
             signalTabDescription:
               'Laat zien hoe breed en hoe scherp de Frictiescore zich over de groep verdeelt, zodat je werkfrictie en vertrekduiding in context kunt lezen.',
             factorTabLabel: 'Vertrekdrivers',
-            factorTabTitle: 'Werkfactoren achter vertrek',
+            factorTabTitle: 'Laagste scores per werkfactor',
             factorTabDescription:
-              'Gebruik de scherpste werkfactoren als eerste managementspoor om te bepalen waar vertrek vooral beinvloedbare frictie raakt.',
+              'Deze lijst toont per werkfactor de score en relatieve zwaarte.',
             supplementalTabLabel: 'SDT-basis',
             supplementalTitle: 'Werkbeleving en SDT-basis',
             supplementalDescription:
@@ -932,9 +932,9 @@ export default async function CampaignPage({ params }: Props) {
             playbookTitle: 'Besluit- en eigenaarschapsroutes',
             playbookDescription:
               'Deze playbooks vormen de uitvoerlaag onder de gekozen managementroute. Ze helpen van vertrekduiding naar uitvoering te gaan zonder nieuwe prioriteiten buiten het gekozen spoor te openen.',
-            routeTitle: 'Van vertrekduiding naar managementroute',
+            routeTitle: 'Vervolgstappen',
             routeDescription:
-              'Deze laag bundelt de gekozen managementroute, eerste eigenaar, eerste stap en het logische reviewmoment zonder de kernflow bovenin te verstoren.',
+              'Gebruik dit blok alleen nadat het cijferbeeld helder is.',
             routeBadgeLabel: 'Kernroute',
             afterSessionTitle: 'Na de eerste managementsessie',
             afterSessionDescription:
@@ -1624,9 +1624,9 @@ export default async function CampaignPage({ params }: Props) {
       {showClientExecutionFlow ? (
         <DashboardSection
           id="uitvoering"
-          eyebrow="Begeleide uitvoering"
-          title="Begeleide uitvoerflow"
-          description="Verisight heeft de campagne ingericht. Vanaf hier lever jij deelnemers aan, start je de uitnodigingen veilig en volg je respons op zonder buiten de productgrenzen te hoeven treden."
+          eyebrow="Uitvoering"
+          title="Uitvoering"
+          description="Gebruik dit blok alleen voor uitvoeringsstappen rond uitnodigingen en import."
           aside={<DashboardChip label="Klantuitvoering" tone="slate" />}
         >
           <GuidedSelfServePanel
@@ -2086,13 +2086,13 @@ export default async function CampaignPage({ params }: Props) {
         <DashboardSection
           id="operatie"
           eyebrow={showClientExecutionFlow ? 'Uitvoering' : 'Utilitylaag'}
-          title={showClientExecutionFlow ? 'Responsmonitoring en begrensde uitvoerlaag' : 'Operatie, respondenten en delivery'}
+          title={showClientExecutionFlow ? 'Responsmonitoring en begrensde uitvoerlaag' : 'Operatie, respondenten en uitvoering'}
           description={
             showClientExecutionFlow
               ? 'Gebruik deze laag om deelnemers, uitnodigingen en respons netjes te volgen. Productsetup, campaignarchitectuur en deliveryrecords blijven bewust bij Verisight.'
               : 'Alles onder deze lijn ondersteunt uitvoering en beheer. De managementhoofdlijn blijft hierboven compact en bestuurlijk.'
           }
-          aside={<DashboardChip label={showClientExecutionFlow ? 'Begeleide uitvoering' : 'Admin en operations'} tone="slate" />}
+          aside={<DashboardChip label={showClientExecutionFlow ? 'Uitvoering' : 'Beheer en operatie'} tone="slate" />}
         >
           <div className="space-y-4">
             {canManageCampaign ? (
@@ -2180,7 +2180,7 @@ export default async function CampaignPage({ params }: Props) {
                   <p className="text-base font-semibold text-slate-900">Nog geen respondenten toegevoegd</p>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     {showClientExecutionFlow
-                      ? 'Gebruik de begeleide uitvoerflow hierboven om eerst het deelnemersbestand aan te leveren. Daarna verschijnen uitnodigingen, responsmonitoring en deze tabel automatisch.'
+                      ? 'Gebruik het uitvoerblok hierboven om eerst het deelnemersbestand aan te leveren. Daarna verschijnen uitnodigingen, responsmonitoring en deze tabel automatisch.'
                       : 'Voeg eerst respondenten toe via de setupflow. Daarna komen uitnodigingen, responsmonitoring en deze tabel automatisch beschikbaar.'}
                   </p>
                   {!showClientExecutionFlow && canManageCampaign ? (
@@ -2207,7 +2207,7 @@ export default async function CampaignPage({ params }: Props) {
               <DashboardDisclosure
                 defaultOpen={false}
                 title="Pilot- en early-customer-learning"
-                description="Gebruik de dossierbron om buyer-signalen, implementationlessen, eerste managementduiding en de gekozen repeat- of expansionrichting expliciet vast te leggen voor deze campaign."
+                description="Gebruik de dossierbron om buyer-signalen, implementatielessen, eerste managementduiding en de gekozen vervolgroute expliciet vast te leggen voor deze scan."
                 badge={
                   <DashboardChip
                     label={
@@ -2224,11 +2224,11 @@ export default async function CampaignPage({ params }: Props) {
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr),minmax(320px,0.9fr)]">
                   <DashboardPanel
                     eyebrow="Waarom nu"
-                    title={learningDossiers.length > 0 ? 'Campaign is al opgenomen in de learninglus' : 'Koppel deze campaign aan een learningdossier'}
+                    title={learningDossiers.length > 0 ? 'Deze scan is al opgenomen in de learninglus' : 'Koppel deze scan aan een learningdossier'}
                     body={
                       learningDossiers.length > 0
-                        ? 'Gebruik gekoppelde dossiers om implementationfrictie, launchsignalen, managementgebruik en gekozen vervolgroutes expliciet terug te laten landen in product, report, onboarding, sales en operations.'
-                        : 'Zodra deze campaign leerwaarde geeft, koppel je hem aan een dossier in de dossierbron. Zo blijven echte deliverylessen en vervolgkeuzes niet hangen in losse handover-notes.'
+                        ? 'Gebruik gekoppelde dossiers om implementatiefrictie, launchsignalen, managementgebruik en gekozen vervolgroutes expliciet terug te laten landen in product, rapport, onboarding, sales en operatie.'
+                        : 'Zodra deze scan leerwaarde geeft, koppel je hem aan een dossier in de dossierbron. Zo blijven echte uitvoeringslessen en vervolgkeuzes niet hangen in losse overdrachtsnotities.'
                     }
                     tone={learningDossiers.length > 0 ? 'slate' : 'amber'}
                   />
@@ -2254,7 +2254,7 @@ export default async function CampaignPage({ params }: Props) {
                     <p className="text-sm font-semibold text-slate-950">Gekoppelde dossiers</p>
                     {learningDossiers.length === 0 ? (
                       <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Er is nog geen dossier gekoppeld aan deze campaign.
+                        Er is nog geen dossier gekoppeld aan deze scan.
                       </p>
                     ) : (
                       <div className="mt-3 space-y-3">

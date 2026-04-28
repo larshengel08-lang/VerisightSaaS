@@ -42,7 +42,7 @@ export function CustomerLaunchControl({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
-              Uitvoerstatus
+              Huidige status
             </p>
             <h2 className="mt-1 text-base font-semibold tracking-[-0.02em]" style={{ color: 'var(--dashboard-ink)' }}>
               {state.headline}
@@ -65,14 +65,14 @@ export function CustomerLaunchControl({
       <div className="grid gap-4 lg:grid-cols-2">
         <div>
           <p className="text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
-            Product, {productName}
+            Scan, {productName}
           </p>
           <p className="mt-1.5 text-sm font-semibold" style={{ color: 'var(--dashboard-ink)' }}>{campaignName}</p>
           <p className="mt-1.5 text-sm leading-[1.65]" style={{ color: 'var(--dashboard-text)' }}>{productContext}</p>
         </div>
         <div>
           <p className="text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
-            Eerstvolgende stap
+            Wat nu eerst telt
           </p>
           <p className="mt-1.5 text-sm font-semibold" style={{ color: 'var(--dashboard-ink)' }}>{state.nextAction.title}</p>
           <p className="mt-1.5 text-sm leading-[1.65]" style={{ color: 'var(--dashboard-text)' }}>{state.nextAction.body}</p>
@@ -95,7 +95,7 @@ export function CustomerLaunchControl({
       {/* Stepper, flat list without extra card nesting */}
       <div>
         <p className="mb-3 text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
-          Uitvoerstappen
+          Wat nu gebeurt
         </p>
         <ol className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {state.statusBlocks.map((item, index) => (
@@ -123,7 +123,7 @@ export function CustomerLaunchControl({
       {state.blockers.length > 0 && (
         <div>
           <p className="mb-3 text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
-            Open blokkades
+            Wat nu nog blokkeert
           </p>
           <div className="space-y-2">
             {state.blockers.map((blocker) => (

@@ -50,7 +50,7 @@ export default async function ReportsPage({
     return (
       <SuiteAccessDenied
         title="Rapporten blijven bij HR en klant"
-        description="Jouw manager-login opent alleen het Action Center. Rapporten, survey-inzichten en campaignreads blijven bewust bij HR, klant owner en Verisight."
+        description="Jouw manager-login opent alleen het Action Center. Rapporten, survey-inzichten en scanoverzichten blijven bewust bij HR, klant owner en Verisight."
       />
     )
   }
@@ -72,15 +72,15 @@ export default async function ReportsPage({
   return (
     <div className="space-y-6">
       <DashboardHero
-        eyebrow="Reports & Exports"
-        title="Klaar voor het overleg."
-        description="Gebruik de rapportlaag als compacte managementread en handofflaag: eerst wat nu telt, daarna welke verificatie, eigenaar en opvolging logisch zijn. Geen ruwe data-dump, wel bestuurlijke output in dezelfde familie als dashboard en Action Center."
+        eyebrow="Rapporten"
+        title="Rapporten die klaarstaan."
+        description="Kies per scan het juiste rapport en open of download direct de versie die al beschikbaar is."
         tone="slate"
         meta={
           <>
             <DashboardChip label={`${reportModel.entries.length} rapport${reportModel.entries.length === 1 ? '' : 'en'} beschikbaar`} tone="emerald" />
             <DashboardChip label={averageSignal ? `${averageSignal}/10 gemiddeld signaal` : 'Respons bepaalt beschikbaarheid'} tone={averageSignal ? 'blue' : 'slate'} />
-            <DashboardChip label={reportModel.featured ? 'Boardroom-ready' : 'Nog geen MT-ready rapport'} tone={reportModel.featured ? 'emerald' : 'amber'} />
+                <DashboardChip label={reportModel.featured ? 'Rapport beschikbaar' : 'Nog geen rapport beschikbaar'} tone={reportModel.featured ? 'emerald' : 'amber'} />
           </>
         }
         actions={
@@ -95,7 +95,7 @@ export default async function ReportsPage({
                 href={`/campaigns/${reportModel.featured.campaignId}`}
                 className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
               >
-                Open in viewer
+                Open rapport
               </Link>
             </>
           ) : (
@@ -107,7 +107,7 @@ export default async function ReportsPage({
             <div className="space-y-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-accent-strong)]">
-                  Aanbevolen voor MT
+                  Aanbevolen rapport
                 </p>
                 <p className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
                   {reportModel.featured.title}
@@ -128,9 +128,9 @@ export default async function ReportsPage({
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">Wanneer de rapportlaag opent</p>
+              <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">Wanneer rapporten zichtbaar worden</p>
               <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
-                Rapporten verschijnen pas als een campaign genoeg respons en managementduiding heeft om een bounded handoff te dragen.
+                Rapporten verschijnen pas zodra een scan genoeg respons heeft voor een leesbare managementsamenvatting.
               </p>
             </div>
           )
@@ -139,8 +139,8 @@ export default async function ReportsPage({
 
       <DashboardSection
         eyebrow="Bibliotheek"
-        title="Beschikbare rapporten"
-        description="Open alleen rapporten die al een echte managementread dragen. De rapportlaag blijft gekoppeld aan echte campaigns en volgt dezelfde bounded taal als dashboard en Action Center."
+        title="Rapportbibliotheek"
+        description="Bekijk per scan welke rapporten beschikbaar zijn en open of download de juiste versie."
         aside={
           <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
             {CATEGORY_OPTIONS.map((option) => {
@@ -198,7 +198,7 @@ export default async function ReportsPage({
                       href={`/campaigns/${entry.campaignId}`}
                       className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:border-[#d6e4e8] hover:bg-white"
                     >
-                      Open ↗
+                      Open rapport
                     </Link>
                     <PdfDownloadButton campaignId={entry.campaignId} campaignName={entry.campaignName} scanType={entry.scanType} />
                   </div>
@@ -208,22 +208,22 @@ export default async function ReportsPage({
           </div>
         ) : (
           <div className="rounded-[24px] border border-dashed border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-8 text-sm leading-7 text-[color:var(--dashboard-text)]">
-            Er zijn in deze categorie nog geen rapporten met voldoende respons en managementduiding. Gebruik eerst dashboard en campaignroute om de eerste read te laten landen.
+            Er zijn in deze categorie nog geen rapporten met voldoende respons en duiding. Gebruik eerst het dashboard om de eerste leesbare laag op te bouwen.
           </div>
         )}
       </DashboardSection>
 
       <DashboardSection
         eyebrow="Handoff"
-        title="Van rapport naar opvolging"
-        description="De rapportlaag is geen eindpunt. Gebruik hem om managementduiding te bundelen en leg daarna in Action Center expliciet vast wie de eigenaar is, wat de eerste stap is en wanneer het reviewmoment terugkomt."
+        title="Na het rapport"
+        description="Gebruik dit pas nadat het rapport is gelezen en besproken."
         tone="blue"
       >
         <div className="grid gap-4 lg:grid-cols-3">
           {[
-            ['1. Managementread', 'Gebruik dashboard en rapport samen om te bepalen welk patroon nu bestuurlijk telt en welke claim bewust nog niet hoort.'],
-            ['2. Eerste stap', 'Leg de eerste eigenaar en eerste stap vast zodra het rapport een echt managementgesprek opent. Zo blijft de output niet hangen in alleen inzicht.'],
-            ['3. Reviewmoment', 'Koppel het rapport altijd aan een reviewmoment in Action Center. Dan wordt opvolging zichtbaar, bounded en controleerbaar.'],
+            ['1. Rapport gelezen', 'Leg vast welk beeld in het rapport het eerst besproken moet worden.'],
+            ['2. Eerste vervolg', 'Bepaal daarna wie de eerste stap trekt en wat eerst opgepakt wordt.'],
+            ['3. Opvolgmoment', 'Plan vervolgens wanneer je terugkijkt of de gekozen stap genoeg duidelijkheid geeft.'],
           ].map(([title, body]) => (
             <div
               key={title}

@@ -67,14 +67,14 @@ function getEntrySummary(campaign: CampaignStats, category: Exclude<ReportLibrar
   const signalText = signalDisplay !== null ? `${signalDisplay.toFixed(1)}/10 signaal` : 'signaal volgt na voldoende respons'
 
   if (category === 'management') {
-    return `${SCAN_TYPE_LABELS[campaign.scan_type]} voor eerste managementduiding, handoff en reviewmoment.`
+    return `${SCAN_TYPE_LABELS[campaign.scan_type]} als managementsamenvatting bij deze scan.`
   }
 
   if (category === 'cohort') {
-    return `${SCAN_TYPE_LABELS[campaign.scan_type]} als bounded cohortread, met nadruk op checkpointduiding en opvolging.`
+    return `${SCAN_TYPE_LABELS[campaign.scan_type]} als cohortrapport bij deze scan.`
   }
 
-  return `${SCAN_TYPE_LABELS[campaign.scan_type]} als verdiepende modulelaag, met ${signalText.toLowerCase()}.`
+  return `${SCAN_TYPE_LABELS[campaign.scan_type]} als verdiepingsrapport, met ${signalText.toLowerCase()}.`
 }
 
 function getEntryTitle(campaign: CampaignStats, category: Exclude<ReportLibraryCategory, 'all'>) {
@@ -127,7 +127,7 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
       categoryLabel: getCategoryLabel(category),
       title: getEntryTitle(campaign, category),
       summary: getEntrySummary(campaign, category),
-      metaLeft: `${campaign.total_completed} responses`,
+      metaLeft: `${campaign.total_completed} responsen`,
       metaRight: formatDutchDate(campaign.created_at),
       recommended: featuredCandidate?.campaign_id === campaign.campaign_id,
     }
@@ -142,8 +142,7 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
           featuredCandidate.campaign_name ||
           `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} ${formatDutchQuarter(featuredCandidate.created_at)}`,
         subtitle: `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} · ${formatDutchQuarter(featuredCandidate.created_at)}`,
-        description:
-          'Gebruik dit rapport als eerste boardroom-ready handoff: wat speelt nu, wat vraagt verificatie en welke eigenaar, eerste stap en reviewmoment moeten daarna expliciet worden vastgelegd.',
+        description: 'Gebruik dit rapport als eerste managementsamenvatting van de scan.',
         stats: [
           { label: 'Responses', value: String(featuredCandidate.total_completed) },
           {

@@ -751,10 +751,10 @@ export function FocusPanel({
     <aside className="hidden w-[300px] shrink-0 self-start rounded-[18px] bg-[#132033] p-6 xl:sticky xl:top-[88px] xl:block">
       <div className="mb-4 flex items-center gap-2">
         <div className="h-4 w-[2px] rounded-full bg-[#2E7C6D]" />
-        <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-white/55">Aanbevolen focus</p>
-      </div>
+          <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-white/55">Eerste aandachtspunten</p>
+        </div>
 
-      <p className="mb-5 text-[1.2rem] font-semibold leading-snug text-white">Waar nu aandacht naartoe gaat</p>
+      <p className="mb-5 text-[1.2rem] font-semibold leading-snug text-white">Wat nu opvalt</p>
 
       <ol className="space-y-4">
         {items.map((item, index) => (

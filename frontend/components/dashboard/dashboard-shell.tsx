@@ -73,7 +73,7 @@ export function DashboardShellFrame({
                 <span className="block">
                   <span className="block font-serif text-[1.1rem] leading-5 text-[#f5f2eb]">Verisight</span>
                   <span className="mt-0.5 block text-[0.72rem] uppercase tracking-[0.24em] text-[#8fa1b3]">
-                    People Suite
+                    Dashboard
                   </span>
                 </span>
               </Link>
@@ -234,8 +234,8 @@ export function DashboardShellFrame({
 
           <footer className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 text-xs text-[color:var(--dashboard-muted)] sm:px-6">
             {shellMode === 'action_center_only'
-              ? 'Verisight Action Center, manager-only workspace binnen dezelfde suite-shell'
-              : 'Verisight suite, dashboard en Action Center binnen dezelfde routeomgeving'}
+              ? 'Verisight Action Center voor toegewezen opvolging'
+              : 'Verisight dashboard en Action Center in dezelfde werkomgeving'}
           </footer>
         </div>
       </div>

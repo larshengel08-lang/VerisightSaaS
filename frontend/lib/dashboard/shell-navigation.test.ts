@@ -44,7 +44,7 @@ describe('dashboard shell navigation', () => {
     },
   ] as const
 
-  it('maps the shared suite rail onto real overview, campaign and report-layer routes', () => {
+  it('maps the shared dashboard rail onto real overview, campaign and report routes', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: false,
       currentCampaignPath: '/campaigns/campaign-123',
@@ -60,7 +60,7 @@ describe('dashboard shell navigation', () => {
     expect(navigation.modules).toEqual([
       {
         key: 'overview',
-        label: 'Overview',
+        label: 'Dashboard',
         href: '/dashboard',
         disabled: false,
       },
@@ -96,7 +96,7 @@ describe('dashboard shell navigation', () => {
       },
       {
         key: 'reports',
-        label: 'Reports',
+        label: 'Rapporten',
         href: '/reports',
         disabled: false,
       },

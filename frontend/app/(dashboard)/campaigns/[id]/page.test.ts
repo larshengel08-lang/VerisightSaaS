@@ -9,12 +9,14 @@ describe('campaign detail review guardrails', () => {
       'utf8',
     )
 
-    expect(source).toContain('Begeleide uitvoerflow')
+    expect(source).toContain('title="Uitvoering"')
     expect(source).toContain('activationState.heroActionLabel')
     expect(source).toContain('showManagementOutput &&')
     expect(source).toContain('showDeeperInsights')
     expect(source).toContain('Compacte read zichtbaar, aanbevelingen nog begrensd')
-    expect(source).toContain('Begeleide uitvoering')
+    expect(source).toContain(
+      'aside={<DashboardChip label={showClientExecutionFlow ? \'Uitvoering\' : \'Beheer en operatie\'} tone="slate" />}',
+    )
     expect(source).toContain("createAdminClient()")
     expect(source).toContain(".eq('checkpoint_key', 'import_qa')")
     expect(guidedPanelSource).toContain('Start uitnodigingen')
@@ -52,11 +54,17 @@ describe('campaign detail review guardrails', () => {
 
   it('keeps owner guidance and the first next step visible above the fold', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const guidedPanelSource = readFileSync(
+      new URL('../../../../components/dashboard/guided-self-serve-panel.tsx', import.meta.url),
+      'utf8',
+    )
 
-    expect(source).toContain('Jouw rol')
-    expect(source).toContain('Eerste volgende stap')
-    expect(source).toContain('Deze vervolgstap wordt bevestigd door de klant owner')
-    expect(source).toContain('defaultOpen={!hasEnoughData || (canManageCampaign && !readinessState.launchReady)}')
+    expect(guidedPanelSource).toContain('Jouw rol en kritieke acties')
+    expect(guidedPanelSource).toContain('Maak de eerste stap expliciet')
+    expect(guidedPanelSource).toContain(
+      'Deze lokale controle toont direct of de importpreview nog herstel nodig heeft',
+    )
+    expect(source).toContain('defaultOpen={!hasEnoughData}')
   })
 
   it('keeps module hierarchy differentiated by role, evidence order and trust placement', () => {
@@ -90,7 +98,9 @@ describe('campaign detail review guardrails', () => {
     expect(pageSource).toContain("tone: averageRiskScore !== null ? 'slate' : 'amber'")
     expect(pageSource).toContain("tone: hasEnoughData ? 'slate' : 'amber'")
     expect(pageSource).toContain('aside={<DashboardChip label={focusBadgeLabel} tone="slate" />}')
-    expect(pageSource).toContain('aside={<DashboardChip label={productExperience.routeBadgeLabel} tone="slate" />}')
+    expect(pageSource).toContain(
+      'aside={<DashboardChip label={productExperience.routeBadgeLabel} tone="slate" />}',
+    )
     expect(pageSource).toContain("return tone === 'blue' ? 'slate' : tone")
     expect(pageSource).toContain("'border-slate-200 bg-slate-50'")
     expect(chartSource).toContain('<Bar dataKey="count" fill="#94A3B8" radius={[2, 2, 0, 0]} />')
@@ -98,15 +108,22 @@ describe('campaign detail review guardrails', () => {
 
   it('keeps deeper operational copy in Dutch so management and admin layers read consistently', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+    const preflightSource = readFileSync(
+      new URL('../../../../components/dashboard/preflight-checklist.tsx', import.meta.url),
+      'utf8',
+    )
 
-    expect(source).toContain('← Terug naar dashboardoverzicht')
+    expect(source).toContain('Terug naar dashboardoverzicht')
     expect(source).toContain('Operatie, respondenten en uitvoering')
     expect(source).toContain('Beheer en operatie')
-    expect(source).toContain('leerwerkbank')
     expect(source).toContain('responsen')
+    expect(preflightSource).toContain('leerwerkbank')
+    expect(preflightSource).toContain('Uitvoeringswaarschuwingen')
+    expect(preflightSource).toContain('Persistente uitvoeringscheckpoints')
     expect(source).not.toContain('Terug naar campaignoverzicht')
     expect(source).not.toContain('Admin en operations')
-    expect(source).not.toContain('learning-workbench')
+    expect(preflightSource).not.toContain('learning-workbench')
     expect(source).not.toContain('Campaign is al opgenomen in de learninglus')
+    expect(source).toContain('Deze scan is al opgenomen in de learninglus')
   })
 })
