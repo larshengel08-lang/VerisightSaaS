@@ -55,7 +55,7 @@ The core change is not a new module or a broad redesign. It is a stronger shared
 
 4. An explicit `Open in Action Center` action for `route-kandidaat`
    - strongest and primary on campaign detail
-   - secondary bridge action in reports, but not the primary path
+   - not available in reports
    - light directional path on overview
 
 5. Consistent active-route back-reference from overview, reports, and campaign detail into Action Center
@@ -82,6 +82,70 @@ The core change is not a new module or a broad redesign. It is a stronger shared
 ## 4. Canonical Status Model
 
 This phase uses one product status layer above the existing route contract.
+
+That status layer cannot come from Action Center route truth alone, because `route-kandidaat` exists before an explicit route is opened.
+
+This phase therefore requires one canonical pre-route input layer: **bridge assessment truth**.
+
+The shared HR bridge helper may only consume:
+
+1. canonical Action Center route truth, when a route already exists
+2. canonical bridge assessment truth, when no route exists yet
+
+It may not derive `route-kandidaat` from local UI conditions or screen-specific heuristics.
+
+### Bridge assessment truth
+
+Before a route exists, the system must expose one shared assessment object per relevant source signal.
+
+Recommended minimum shape:
+
+```ts
+type BridgeAssessmentTruth = {
+  sourceType: 'campaign' | 'report'
+  sourceId: string
+  assessmentState: 'attention' | 'candidate'
+  signalReadable: boolean
+  managementMeaningClear: boolean
+  plausibleFollowUpExists: boolean
+  assessedAt: string
+}
+```
+
+This is not a second Action Center route model.
+
+It is a pre-route product truth used only to determine whether HR is still looking at `alleen aandacht` or has reached `route-kandidaat`.
+
+### Canonical input rules
+
+The shared helper must resolve HR bridge state in this order:
+
+1. if an explicit Action Center route exists for the source, project `actieve opvolging`
+2. else if canonical bridge assessment truth says `candidate`, project `route-kandidaat`
+3. else project `alleen aandacht`
+
+### Allowed non-route inputs before route creation
+
+Before an Action Center route exists, the helper may use only fields from canonical bridge assessment truth, specifically:
+
+- `assessmentState`
+- `signalReadable`
+- `managementMeaningClear`
+- `plausibleFollowUpExists`
+- source identity needed to join the assessment back to the campaign or report
+
+It may not use:
+
+- local screen composition
+- presence or absence of ad hoc UI blocks
+- one-off report rendering conditions
+- copy-level interpretation in overview, reports, or campaign detail
+
+### Why this matters
+
+This prevents overview, reports, and campaign detail from inventing their own candidate logic.
+
+The screens may project the same state differently in visual weight, but they must read one shared product truth for whether something is still `alleen aandacht` or has become `route-kandidaat`.
 
 ### `alleen aandacht`
 
@@ -182,11 +246,12 @@ Behavior:
 
 - bridge between meaning and action
 - stronger than overview, but not the primary route-open screen
+- must not become a second decision screen
 
 CTA policy:
 
 - `alleen aandacht` -> `Lees campagne`
-- `route-kandidaat` -> primary `Ga naar campaign detail`, optional secondary `Open in Action Center`
+- `route-kandidaat` -> `Ga naar campaign detail`
 - `actieve opvolging` -> `Open in Action Center`
 
 ### Campaign detail
@@ -250,7 +315,7 @@ This should feel like one product action from the HR point of view.
 
 ## 8. Shared Projection Layer
 
-This phase should use one shared helper to map canonical route truth into HR-facing semantics.
+This phase should use one shared helper to map canonical route truth and canonical bridge assessment truth into HR-facing semantics.
 
 Recommended output shape:
 
@@ -273,6 +338,7 @@ Important rule:
 
 - this helper must be the shared source of HR-facing semantic state
 - surfaces may vary in presentation weight, but not in meaning
+- `route-kandidaat` must come from shared bridge assessment truth, not from UI inference
 
 ## 9. CTA Strategy by Surface
 
@@ -287,6 +353,8 @@ The suite should use one semantic status layer but different CTA weights.
 
 - stronger bridge
 - interprets toward follow-up
+- routes HR into campaign detail for candidate decisions
+- links directly to Action Center only for active follow-up
 
 ### Campaign detail
 
