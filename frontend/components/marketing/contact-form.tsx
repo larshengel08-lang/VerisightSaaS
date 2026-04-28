@@ -35,6 +35,7 @@ interface ContactFormProps {
   defaultRouteInterest?: ContactRouteInterest
   defaultCtaSource?: string
   mode?: 'full' | 'compact'
+  questionPlaceholder?: string
 }
 
 interface SuccessState {
@@ -60,6 +61,7 @@ export function ContactForm({
   defaultRouteInterest = 'exitscan',
   defaultCtaSource = 'website_contact_form',
   mode = 'full',
+  questionPlaceholder,
 }: ContactFormProps) {
   const searchParams = useSearchParams()
   const [form, setForm] = useState<FormState>({
@@ -354,7 +356,7 @@ export function ContactForm({
           placeholder={
             isCompact
               ? 'Optioneel: licht kort toe wat nu bestuurlijke aandacht vraagt.'
-              : 'Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar managementbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven.'
+              : (questionPlaceholder ?? 'Bijvoorbeeld: we doen al exitgesprekken, maar missen een vergelijkbaar managementbeeld. Of: we willen eerder zien waar behoud in specifieke teams begint te schuiven.')
           }
         />
       </div>
