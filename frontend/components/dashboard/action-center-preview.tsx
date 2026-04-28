@@ -2127,21 +2127,26 @@ function EmptySection({ title, body }: { title: string; body: string }) {
 
 export function buildCompactLandingSummaryLines(item: ActionCenterPreviewItem) {
   const outcomeLabel = getReviewOutcomeMeta(item.coreSemantics.reviewSemantics.reviewOutcomeVisible).label
+  const supportingValue =
+    item.coreSemantics.resultLoop.whatWasDecided ??
+    item.coreSemantics.resultLoop.whatWeObserved ??
+    item.coreSemantics.resultLoop.whatWasTried
+  const supportingLabel =
+    item.coreSemantics.resultLoop.whatWasDecided
+      ? 'Besluit'
+      : item.coreSemantics.resultLoop.whatWeObserved
+        ? 'Signaal'
+        : item.coreSemantics.resultLoop.whatWasTried
+          ? 'Stap'
+          : null
 
   return [
     { label: 'Uitkomst', value: outcomeLabel },
-    { label: 'Besluit', value: item.coreSemantics.resultLoop.whatWasDecided },
-    { label: 'Signaal', value: item.coreSemantics.resultLoop.whatWeObserved },
-    { label: 'Stap', value: item.coreSemantics.resultLoop.whatWasTried },
-  ].filter(
-    (
-      entry,
-      index,
-      entries,
-    ): entry is { label: string; value: string } =>
-      Boolean(entry.value) &&
-      entries.findIndex((candidate) => candidate.value === entry.value) === index,
-  ).slice(0, 3)
+    supportingLabel ? { label: supportingLabel, value: supportingValue } : null,
+  ]
+    .filter((entry): entry is { label: string; value: string } => Boolean(entry?.value))
+    .filter((entry, index, entries) => entries.findIndex((candidate) => candidate.value === entry.value) === index)
+    .slice(0, 2)
 }
 
 function CompactLandingSummary({ item }: { item: ActionCenterPreviewItem }) {

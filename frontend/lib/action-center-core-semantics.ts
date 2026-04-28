@@ -184,8 +184,8 @@ function getPreviewClosingStatus(status: ActionCenterRouteContract['routeStatus'
 }
 
 function buildPreviewRoute(input: ActionCenterPreviewCoreSemanticsProjectionInput): ActionCenterRouteContract {
-  const reviewReason = pickFirst([input.reviewReason, input.reason])
-  const nextStep = pickFirst([input.nextStep, input.summary])
+  const reviewReason = pickFirst([input.reviewReason, input.route?.reviewReason])
+  const nextStep = pickFirst([input.nextStep, input.route?.intervention])
 
   return {
     campaignId: input.route?.campaignId ?? input.id,
@@ -196,7 +196,7 @@ function buildPreviewRoute(input: ActionCenterPreviewCoreSemanticsProjectionInpu
     reviewOutcome: input.reviewOutcome,
     reviewCompletedAt: input.route?.reviewCompletedAt ?? null,
     outcomeRecordedAt: input.route?.outcomeRecordedAt ?? null,
-    outcomeSummary: pickFirst([input.route?.outcomeSummary, input.summary]),
+    outcomeSummary: input.route?.outcomeSummary ?? null,
     intervention: nextStep,
     owner: input.ownerName,
     expectedEffect: normalizeText(input.expectedEffect),
@@ -214,15 +214,14 @@ export function projectActionCenterPreviewCoreSemantics(
   const primaryReason = pickFirst([
     route.reviewReason,
     input.reason,
-    input.summary,
     input.signalBody,
   ])
   const nextStep = pickFirst([
     route.intervention,
     input.nextStep,
-    input.summary,
   ])
   const expectedEffectFromReason = joinReasonAndStep(primaryReason, nextStep)
+  const firstStep = nextStep ?? ACTION_FRAME_FALLBACK
   const reviewReason = pickFirst([
     route.reviewReason,
     input.reason,
@@ -238,8 +237,8 @@ export function projectActionCenterPreviewCoreSemantics(
   ])
   const whyNow = pickFirst([
     primaryReason,
-    input.summary,
     input.signalBody,
+    input.summary,
     input.title,
     reviewReason,
   ])
@@ -247,7 +246,6 @@ export function projectActionCenterPreviewCoreSemantics(
   const whatWeObserved = pickFirst([
     latestVisibleUpdateNote,
     input.signalBody,
-    input.summary,
     route.expectedEffect,
   ])
   const whatWasDecided = pickFirst([
@@ -265,7 +263,7 @@ export function projectActionCenterPreviewCoreSemantics(
     },
     actionFrame: {
       whyNow: whyNow ?? ACTION_FRAME_FALLBACK,
-      firstStep: nextStep ?? ACTION_FRAME_FALLBACK,
+      firstStep,
       owner: input.ownerName ?? UNASSIGNED_OWNER_LABEL,
       expectedEffect: pickFirst([
         route.expectedEffect,
@@ -275,8 +273,9 @@ export function projectActionCenterPreviewCoreSemantics(
     },
     resultLoop: {
       whatWasTried: pickFirst([
-        nextStep,
         latestVisibleUpdateNote,
+        input.nextStep,
+        nextStep,
       ]),
       whatWeObserved,
       whatWasDecided,

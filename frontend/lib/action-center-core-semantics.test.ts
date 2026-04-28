@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { projectActionCenterCoreSemantics, type ActionCenterCoreSemanticsProjectionInput } from './action-center-core-semantics'
+import {
+  projectActionCenterCoreSemantics,
+  projectActionCenterPreviewCoreSemantics,
+  type ActionCenterCoreSemanticsProjectionInput,
+} from './action-center-core-semantics'
 import { projectActionCenterRoute } from './action-center-route-contract'
 import type { Campaign, CampaignStats } from '@/lib/types'
 import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
@@ -440,5 +444,81 @@ describe('action center core semantics', () => {
         latestVisibleUpdateNote: 'Klant bevestigde dat de eerste managementread nu zichtbaar is.',
       }).resultLoop.whatWeObserved,
     ).toBe('Klant bevestigde dat de eerste managementread nu zichtbaar is.')
+  })
+
+  it('keeps preview-only summary copy out of canonical first-step and decision truth', () => {
+    const semantics = projectActionCenterPreviewCoreSemantics({
+      id: 'preview-1',
+      title: 'Exit preview',
+      status: 'te-bespreken',
+      ownerName: null,
+      reviewDate: null,
+      expectedEffect: null,
+      reviewReason: null,
+      reviewOutcome: 'geen-uitkomst',
+      reason: 'Waarom deze route nu aandacht vraagt.',
+      summary: 'Dit is alleen een UI-samenvatting en geen canonieke routewaarheid.',
+      signalBody: 'Dit zagen we terug in de laatste zichtbare update.',
+      nextStep: null,
+      route: {
+        campaignId: 'campaign-exit',
+        entryStage: 'active',
+        routeOpenedAt: '2026-04-20T09:00:00.000Z',
+        ownerAssignedAt: null,
+        routeStatus: 'te-bespreken',
+        reviewOutcome: 'geen-uitkomst',
+        reviewCompletedAt: null,
+        outcomeRecordedAt: null,
+        outcomeSummary: null,
+        intervention: 'Bestaande canonieke vervolgstap.',
+        owner: null,
+        expectedEffect: null,
+        reviewScheduledFor: null,
+        reviewReason: null,
+        blockedBy: null,
+      },
+    })
+
+    expect(semantics.route.intervention).toBe('Bestaande canonieke vervolgstap.')
+    expect(semantics.actionFrame.firstStep).toBe('Bestaande canonieke vervolgstap.')
+    expect(semantics.route.outcomeSummary).toBeNull()
+    expect(semantics.resultLoop.whatWasDecided).toBeNull()
+  })
+
+  it('prefers the latest explicit preview update before nextStep in whatWasTried', () => {
+    const semantics = projectActionCenterPreviewCoreSemantics({
+      id: 'preview-2',
+      title: 'Exit preview',
+      status: 'in-uitvoering',
+      ownerName: 'Manager Operations',
+      reviewDate: '2026-05-12',
+      expectedEffect: null,
+      reviewReason: 'Waarom reviewen we dit nu opnieuw?',
+      reviewOutcome: 'bijstellen',
+      reason: 'Waarom reviewen we dit nu opnieuw?',
+      summary: 'Samenvatting voor de lijstweergave.',
+      signalBody: 'Het team zag dezelfde frictie terug.',
+      nextStep: 'Plan het vervolggesprek met HR en operations.',
+      latestVisibleUpdateNote: 'Update: eigenaar en eerste correctie zijn al bevestigd.',
+      route: {
+        campaignId: 'campaign-exit',
+        entryStage: 'active',
+        routeOpenedAt: '2026-04-20T09:00:00.000Z',
+        ownerAssignedAt: '2026-04-21T08:00:00.000Z',
+        routeStatus: 'in-uitvoering',
+        reviewOutcome: 'bijstellen',
+        reviewCompletedAt: null,
+        outcomeRecordedAt: null,
+        outcomeSummary: null,
+        intervention: 'Canonieke vorige stap.',
+        owner: 'Manager Operations',
+        expectedEffect: null,
+        reviewScheduledFor: '2026-05-12',
+        reviewReason: 'Waarom reviewen we dit nu opnieuw?',
+        blockedBy: null,
+      },
+    })
+
+    expect(semantics.resultLoop.whatWasTried).toBe('Update: eigenaar en eerste correctie zijn al bevestigd.')
   })
 })

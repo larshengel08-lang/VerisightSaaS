@@ -87,7 +87,6 @@ describe('action center preview display helpers', () => {
     expect(buildCompactLandingSummaryLines(item)).toEqual([
       { label: 'Uitkomst', value: 'Bijstellen' },
       { label: 'Signaal', value: 'MT kiest een eerste leiderschapsspoor.' },
-      { label: 'Stap', value: 'Leg eigenaar en eerste correctie in het MT-overleg vast.' },
     ])
   })
 })
