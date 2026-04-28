@@ -9,6 +9,7 @@ import type { MemberRole, Campaign, CampaignStats, ScanType } from '@/lib/types'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord, DeliveryExceptionStatus } from '@/lib/ops-delivery'
 import { getDeliveryExceptionLabel } from '@/lib/ops-delivery'
 import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
+import { projectActionCenterRoute } from '@/lib/action-center-route-contract'
 
 export interface LiveActionCenterCampaignContext {
   campaign: Campaign
@@ -285,6 +286,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
   return contexts
     .filter((context) => isLiveActionCenterScanType(context.campaign.scan_type))
     .map((context, index) => {
+      const route = projectActionCenterRoute(context)
       const definition = getScanDefinition(context.campaign.scan_type)
       const defaults = SCAN_DEFAULTS[context.campaign.scan_type]
       const avgSignal = context.stats?.avg_signal_score ?? context.stats?.avg_risk_score ?? null
@@ -348,6 +350,9 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
             : getRoleFallback(context.memberRole),
         ownerSubtitle: context.scopeLabel,
         reviewOwnerName: reviewOwnerName ?? context.assignedManager?.displayName ?? null,
+        expectedEffect: route.expectedEffect,
+        reviewReason: route.reviewReason,
+        reviewOutcome: route.reviewOutcome,
         priority,
         status,
         reviewDate,
