@@ -9,13 +9,13 @@ export interface ActionCenterCoreSemantics {
   route: ActionCenterRouteContract
   reviewSemantics: {
     reviewQuestion: string | null
-    whyNow: string | null
     reviewOutcomeRaw: ActionCenterReviewOutcome
     reviewOutcomeVisible: ActionCenterVisibleReviewOutcome
   }
   actionFrame: {
+    whyNow: string | null
     firstStep: string | null
-    owner: string | null
+    owner: string
     expectedEffect: string | null
   }
   resultLoop: {
@@ -27,6 +27,8 @@ export interface ActionCenterCoreSemantics {
     status: ActionCenterClosingStatus
   }
 }
+
+const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
 
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
@@ -77,6 +79,35 @@ function getClosingStatus(context: LiveActionCenterCampaignContext, route: Actio
   return 'lopend'
 }
 
+function joinReasonAndStep(reason: string | null, step: string | null) {
+  const values = [normalizeText(reason), normalizeText(step)].filter((value): value is string => Boolean(value))
+  if (values.length === 0) return null
+  return values.join(' ')
+}
+
+function getLatestActionUpdate(context: LiveActionCenterCampaignContext) {
+  return pickFirst([
+    context.learningDossier?.first_action_taken,
+    context.deliveryRecord?.operator_notes,
+  ])
+}
+
+function getLatestObservation(context: LiveActionCenterCampaignContext, route: ActionCenterRouteContract) {
+  return pickFirst([
+    route.outcomeSummary,
+    getCheckpoint(context, 'follow_up_review')?.confirmed_lesson,
+    getCheckpoint(context, 'follow_up_review')?.interpreted_observation,
+    getCheckpoint(context, 'follow_up_review')?.qualitative_notes,
+    getCheckpoint(context, 'follow_up_review')?.objective_signal_notes,
+    getCheckpoint(context, 'first_management_use')?.confirmed_lesson,
+    getCheckpoint(context, 'first_management_use')?.interpreted_observation,
+    getCheckpoint(context, 'first_management_use')?.qualitative_notes,
+    getCheckpoint(context, 'first_management_use')?.objective_signal_notes,
+    context.learningDossier?.adoption_outcome,
+    context.learningDossier?.case_public_summary,
+  ])
+}
+
 export function projectActionCenterCoreSemantics(
   context: LiveActionCenterCampaignContext,
 ): ActionCenterCoreSemantics {
@@ -84,83 +115,97 @@ export function projectActionCenterCoreSemantics(
   const reviewCheckpoint = getCheckpoint(context, 'follow_up_review')
   const managementCheckpoint = getCheckpoint(context, 'first_management_use')
   const reviewOutcomeVisible = getVisibleReviewOutcome(route.reviewOutcome)
+  const nextStep = pickFirst([
+    context.deliveryRecord?.next_step,
+    route.intervention,
+  ])
+
+  const reviewQuestion = pickFirst([
+    route.reviewReason,
+    context.learningDossier?.buyer_question,
+    context.learningDossier?.buying_reason,
+    context.learningDossier?.trust_friction,
+    route.outcomeSummary,
+    context.learningDossier?.title,
+    context.campaign.name,
+  ])
 
   const whyNow = pickFirst([
     route.reviewReason,
     context.learningDossier?.buyer_question,
     context.learningDossier?.buying_reason,
     context.learningDossier?.trust_friction,
-    route.expectedEffect,
+    route.outcomeSummary,
     context.deliveryRecord?.customer_handoff_note,
+    context.learningDossier?.title,
+    context.campaign.name,
   ])
 
   const owner = pickFirst([
     route.owner,
     reviewCheckpoint?.owner_label,
     managementCheckpoint?.owner_label,
-    context.deliveryRecord?.operator_owner,
-  ])
-
-  const expectedEffect = pickFirst([
-    route.expectedEffect,
-    route.reviewReason,
-    context.learningDossier?.buyer_question,
-    context.learningDossier?.buying_reason,
-    context.deliveryRecord?.customer_handoff_note,
-    context.learningDossier?.implementation_risk,
+    context.assignedManager?.displayName,
   ])
 
   const firstStep = pickFirst([
+    nextStep,
     route.intervention,
-    context.deliveryRecord?.next_step,
-    route.reviewReason,
-    route.expectedEffect,
-  ])
-
-  const whatWeObserved = pickFirst([
+    context.learningDossier?.first_action_taken,
     route.outcomeSummary,
-    reviewCheckpoint?.confirmed_lesson,
-    reviewCheckpoint?.interpreted_observation,
-    reviewCheckpoint?.qualitative_notes,
-    reviewCheckpoint?.objective_signal_notes,
-    managementCheckpoint?.confirmed_lesson,
-    managementCheckpoint?.interpreted_observation,
-    managementCheckpoint?.qualitative_notes,
-    managementCheckpoint?.objective_signal_notes,
-    context.learningDossier?.management_action_outcome,
-    context.learningDossier?.implementation_risk,
     context.deliveryRecord?.customer_handoff_note,
+    context.learningDossier?.title,
   ])
 
-  const whatWasDecided = pickFirst([
-    route.outcomeSummary,
-    context.learningDossier?.stop_reason,
-    context.learningDossier?.next_route,
-    getReviewOutcomeLabel(reviewOutcomeVisible),
+  const derivedExpectedEffect = joinReasonAndStep(
+    pickFirst([
+      route.reviewReason,
+      context.learningDossier?.buyer_question,
+      context.learningDossier?.buying_reason,
+      context.learningDossier?.trust_friction,
+    ]),
+    nextStep,
+  )
+
+  const expectedEffect = pickFirst([
+    route.expectedEffect,
+    derivedExpectedEffect,
   ])
+
+  const latestObservation = getLatestObservation(context, route)
+  const latestActionUpdate = getLatestActionUpdate(context)
 
   return {
     route,
     reviewSemantics: {
-      reviewQuestion: whyNow,
-      whyNow,
+      reviewQuestion,
       reviewOutcomeRaw: route.reviewOutcome,
       reviewOutcomeVisible,
     },
     actionFrame: {
+      whyNow,
       firstStep,
-      owner,
+      owner: owner ?? UNASSIGNED_OWNER_LABEL,
       expectedEffect,
     },
     resultLoop: {
       whatWasTried: pickFirst([
-        route.intervention,
-        context.deliveryRecord?.next_step,
-        expectedEffect,
-        whyNow,
+        latestActionUpdate,
+        nextStep,
+        firstStep,
       ]),
-      whatWeObserved,
-      whatWasDecided,
+      whatWeObserved: pickFirst([
+        latestObservation,
+        expectedEffect,
+        context.learningDossier?.expected_first_value,
+      ]),
+      whatWasDecided: pickFirst([
+        getReviewOutcomeLabel(reviewOutcomeVisible),
+        normalizeText(context.learningDossier?.management_action_outcome),
+        route.outcomeSummary,
+        context.learningDossier?.next_route,
+        context.learningDossier?.stop_reason,
+      ]),
     },
     closingSemantics: {
       status: getClosingStatus(context, route),

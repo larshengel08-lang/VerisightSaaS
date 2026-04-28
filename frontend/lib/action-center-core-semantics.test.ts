@@ -153,7 +153,7 @@ function buildContext(args: {
 }
 
 describe('action center core semantics', () => {
-  it('derives review, action, result-loop, and closing semantics from the active route truth', () => {
+  it('keeps reviewQuestion separate from actionFrame.whyNow and preserves the visible outcome mapping', () => {
     const context = buildContext({
       assignedManager: {
         userId: 'manager-1',
@@ -173,11 +173,11 @@ describe('action center core semantics', () => {
     expect(projectActionCenterCoreSemantics(context)).toMatchObject({
       reviewSemantics: {
         reviewQuestion: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
-        whyNow: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
         reviewOutcomeRaw: 'opschalen',
         reviewOutcomeVisible: 'bijstellen',
       },
       actionFrame: {
+        whyNow: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
         firstStep: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
         owner: 'Manager Operations',
         expectedEffect: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
@@ -185,7 +185,7 @@ describe('action center core semantics', () => {
       resultLoop: {
         whatWasTried: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
         whatWeObserved: 'De eerste review liet zien dat dezelfde frictie in twee teams terugkomt.',
-        whatWasDecided: 'De eerste review liet zien dat dezelfde frictie in twee teams terugkomt.',
+        whatWasDecided: 'Bijstellen',
       },
       closingSemantics: {
         status: 'lopend',
@@ -193,7 +193,7 @@ describe('action center core semantics', () => {
     })
   })
 
-  it('encodes explicit fallback order for the canonical presentation fields', () => {
+  it('uses the approved fallback order across the action frame and result loop fields', () => {
     const context = buildContext({
       deliveryRecord: buildDeliveryRecord({
         next_step: 'Plan het bijgestelde reviewgesprek met HR en operations.',
@@ -229,19 +229,84 @@ describe('action center core semantics', () => {
     expect(projectActionCenterCoreSemantics(context)).toMatchObject({
       reviewSemantics: {
         reviewQuestion: 'Waar moeten we als management nu als eerste op ingrijpen?',
-        whyNow: 'Waar moeten we als management nu als eerste op ingrijpen?',
         reviewOutcomeRaw: 'opschalen',
         reviewOutcomeVisible: 'bijstellen',
       },
       actionFrame: {
+        whyNow: 'Waar moeten we als management nu als eerste op ingrijpen?',
         firstStep: 'Plan het bijgestelde reviewgesprek met HR en operations.',
         owner: 'People lead',
-        expectedEffect: 'Waar moeten we als management nu als eerste op ingrijpen?',
+        expectedEffect:
+          'Waar moeten we als management nu als eerste op ingrijpen? Plan het bijgestelde reviewgesprek met HR en operations.',
       },
       resultLoop: {
         whatWasTried: 'Plan het bijgestelde reviewgesprek met HR en operations.',
         whatWeObserved: 'De frictie bleef terugkomen in elk vervolggesprek.',
-        whatWasDecided: 'Vervolg met een bounded teamreview in operations.',
+        whatWasDecided: 'Bijstellen',
+      },
+    })
+  })
+
+  it('falls back from primary reason truth to existing route context for actionFrame.whyNow and summary-style firstStep', () => {
+    const context = buildContext({
+      deliveryRecord: buildDeliveryRecord({
+        next_step: null,
+        customer_handoff_note: 'De managementread staat klaar voor een eerste bounded follow-through.',
+      }),
+      dossier: buildDossier({
+        title: 'Exit follow-through voorjaar',
+        first_management_value: null,
+        buyer_question: null,
+        buying_reason: null,
+        trust_friction: null,
+        expected_first_value: null,
+        first_action_taken: null,
+        management_action_outcome: null,
+        case_public_summary: null,
+      }),
+    })
+
+    expect(projectActionCenterCoreSemantics(context)).toMatchObject({
+      reviewSemantics: {
+        reviewQuestion: 'Exit follow-through voorjaar',
+      },
+      actionFrame: {
+        whyNow: 'De managementread staat klaar voor een eerste bounded follow-through.',
+        firstStep: 'De managementread staat klaar voor een eerste bounded follow-through.',
+      },
+      resultLoop: {
+        whatWasTried: 'De managementread staat klaar voor een eerste bounded follow-through.',
+        whatWeObserved: null,
+      },
+    })
+  })
+
+  it('falls back to explicit unassigned owner label and reason-plus-nextStep expected effect when canonical truth is absent', () => {
+    const context = buildContext({
+      assignedManager: null,
+      deliveryRecord: buildDeliveryRecord({
+        next_step: 'Plan een eerste bounded follow-up met de teamlead.',
+        operator_owner: null,
+      }),
+      dossier: buildDossier({
+        first_management_value: null,
+        buyer_question: 'Waar moeten we als management nu als eerste op ingrijpen?',
+        expected_first_value: null,
+        first_action_taken: null,
+      }),
+      learningCheckpoints: [],
+    })
+
+    expect(projectActionCenterCoreSemantics(context)).toMatchObject({
+      actionFrame: {
+        owner: 'Nog niet toegewezen',
+        expectedEffect:
+          'Waar moeten we als management nu als eerste op ingrijpen? Plan een eerste bounded follow-up met de teamlead.',
+      },
+      resultLoop: {
+        whatWasTried: 'Plan een eerste bounded follow-up met de teamlead.',
+        whatWeObserved:
+          'Waar moeten we als management nu als eerste op ingrijpen? Plan een eerste bounded follow-up met de teamlead.',
       },
     })
   })
