@@ -163,7 +163,7 @@ function buildContext(args: {
 }
 
 describe('action center core semantics', () => {
-  it('keeps reviewQuestion separate from actionFrame.whyNow and preserves the visible outcome mapping', () => {
+  it('keeps reviewReason and reviewQuestion distinct while preserving the visible outcome mapping', () => {
     const context = buildContext({
       assignedManager: {
         userId: 'manager-1',
@@ -182,8 +182,8 @@ describe('action center core semantics', () => {
 
     expect(projectActionCenterCoreSemantics(context)).toMatchObject({
       reviewSemantics: {
-        reviewQuestion: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
-        reviewFocus: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
+        reviewReason: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
+        reviewQuestion: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
         reviewOutcomeRaw: 'opschalen',
         reviewOutcomeVisible: 'bijstellen',
       },
@@ -239,8 +239,8 @@ describe('action center core semantics', () => {
 
     expect(projectActionCenterCoreSemantics(context)).toMatchObject({
       reviewSemantics: {
-        reviewQuestion: 'Waar moeten we als management nu als eerste op ingrijpen?',
-        reviewFocus:
+        reviewReason: 'Waar moeten we als management nu als eerste op ingrijpen?',
+        reviewQuestion:
           'Waar moeten we als management nu als eerste op ingrijpen? Plan het bijgestelde reviewgesprek met HR en operations.',
         reviewOutcomeRaw: 'opschalen',
         reviewOutcomeVisible: 'bijstellen',
@@ -281,8 +281,8 @@ describe('action center core semantics', () => {
 
     expect(projectActionCenterCoreSemantics(context)).toMatchObject({
       reviewSemantics: {
+        reviewReason: 'Plan de eerste bounded opvolgstap met HR.',
         reviewQuestion: 'Plan de eerste bounded opvolgstap met HR.',
-        reviewFocus: 'Plan de eerste bounded opvolgstap met HR.',
       },
       actionFrame: {
         whyNow: 'De managementread staat klaar voor een eerste bounded follow-through.',
@@ -316,8 +316,8 @@ describe('action center core semantics', () => {
 
     expect(projectActionCenterCoreSemantics(context)).toMatchObject({
       reviewSemantics: {
+        reviewReason: 'Welke vervolgstap vraagt deze route nu als eerste review?',
         reviewQuestion: 'Welke vervolgstap vraagt deze route nu als eerste review?',
-        reviewFocus: null,
       },
       actionFrame: {
         whyNow: 'Exit follow-through voorjaar',
@@ -346,6 +346,8 @@ describe('action center core semantics', () => {
         owner: 'Nog niet toegewezen',
         expectedEffect:
           'Waar moeten we als management nu als eerste op ingrijpen? Plan een eerste bounded follow-up met de teamlead.',
+        whyNow: 'Waar moeten we als management nu als eerste op ingrijpen?',
+        firstStep: 'Plan een eerste bounded follow-up met de teamlead.',
       },
       resultLoop: {
         whatWasTried: 'Plan een eerste bounded follow-up met de teamlead.',

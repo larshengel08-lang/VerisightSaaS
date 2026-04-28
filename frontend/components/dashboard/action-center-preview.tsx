@@ -9,7 +9,7 @@ import type {
   ActionCenterPreviewStatus,
   ActionCenterPreviewView,
 } from '@/lib/action-center-preview-model'
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import React, { useDeferredValue, useEffect, useMemo, useState } from 'react'
 
 interface Props {
   initialItems: ActionCenterPreviewItem[]
@@ -1220,11 +1220,11 @@ export function ActionCenterPreview({
                             <div className="mt-3 grid gap-3 md:grid-cols-3">
                               <RouteFieldCard
                                 label="Waarom we opnieuw kijken"
-                                value={selectedItem.coreSemantics.reviewSemantics.reviewQuestion}
+                                value={selectedItem.coreSemantics.reviewSemantics.reviewReason}
                               />
                               <RouteFieldCard
                                 label="Wat we dan toetsen"
-                                value={selectedItem.coreSemantics.reviewSemantics.reviewFocus}
+                                value={selectedItem.coreSemantics.reviewSemantics.reviewQuestion}
                               />
                               <RouteOutcomeCard outcome={selectedItem.coreSemantics.reviewSemantics.reviewOutcomeVisible} />
                             </div>
@@ -2073,7 +2073,7 @@ function EmptySection({ title, body }: { title: string; body: string }) {
   )
 }
 
-function RouteFieldCard({ label, value }: { label: string; value: string | null }) {
+function RouteFieldCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[18px] border border-[#eadfce] bg-[#fcfaf6] px-4 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>

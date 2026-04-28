@@ -8,16 +8,16 @@ export type ActionCenterClosingStatus = 'lopend' | 'afgerond' | 'gestopt'
 export interface ActionCenterCoreSemantics {
   route: ActionCenterRouteContract
   reviewSemantics: {
-    reviewQuestion: string | null
-    reviewFocus: string | null
+    reviewReason: string
+    reviewQuestion: string
     reviewOutcomeRaw: ActionCenterReviewOutcome
     reviewOutcomeVisible: ActionCenterVisibleReviewOutcome
   }
   actionFrame: {
-    whyNow: string | null
-    firstStep: string | null
+    whyNow: string
+    firstStep: string
     owner: string
-    expectedEffect: string | null
+    expectedEffect: string
   }
   resultLoop: {
     whatWasTried: string | null
@@ -37,6 +37,9 @@ export type ActionCenterCoreSemanticsProjectionInput = Pick<
 }
 
 const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
+const REVIEW_REASON_FALLBACK = 'Welke vervolgstap vraagt deze route nu als eerste review?'
+const REVIEW_QUESTION_FALLBACK = 'Welke vervolgstap vraagt deze route nu als eerste review?'
+const ACTION_FRAME_FALLBACK = 'Nog te bepalen in review'
 
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
@@ -161,16 +164,17 @@ export function projectActionCenterCoreSemantics(
 
   const expectedEffectFromReason = joinReasonAndStep(primaryReason, nextStep)
 
-  const reviewQuestion = pickFirst([
+  const reviewReason = pickFirst([
     primaryReason,
     route.expectedEffect,
     nextStep,
     getReviewQuestionTemplate(route),
   ])
-  const reviewFocus = pickFirst([
+  const reviewQuestion = pickFirst([
     route.expectedEffect,
     expectedEffectFromReason,
     nextStep,
+    getReviewQuestionTemplate(route),
   ])
 
   const whyNow = pickFirst([
@@ -178,6 +182,7 @@ export function projectActionCenterCoreSemantics(
     routeSummary,
     context.learningDossier?.title,
     context.campaign.name,
+    reviewReason,
   ])
 
   const owner = pickFirst([
@@ -201,6 +206,7 @@ export function projectActionCenterCoreSemantics(
   const expectedEffect = pickFirst([
     route.expectedEffect,
     derivedExpectedEffect,
+    reviewQuestion,
   ])
   const observationFallback = pickFirst([
     route.expectedEffect,
@@ -213,16 +219,16 @@ export function projectActionCenterCoreSemantics(
   return {
     route,
     reviewSemantics: {
-      reviewQuestion,
-      reviewFocus,
+      reviewReason: reviewReason ?? REVIEW_REASON_FALLBACK,
+      reviewQuestion: reviewQuestion ?? REVIEW_QUESTION_FALLBACK,
       reviewOutcomeRaw: route.reviewOutcome,
       reviewOutcomeVisible,
     },
     actionFrame: {
-      whyNow,
-      firstStep,
+      whyNow: whyNow ?? ACTION_FRAME_FALLBACK,
+      firstStep: firstStep ?? ACTION_FRAME_FALLBACK,
       owner: owner ?? UNASSIGNED_OWNER_LABEL,
-      expectedEffect,
+      expectedEffect: expectedEffect ?? ACTION_FRAME_FALLBACK,
     },
     resultLoop: {
       whatWasTried: pickFirst([

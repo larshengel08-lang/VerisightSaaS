@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { ActionCenterPreview } from "@/components/dashboard/action-center-preview";
 import { describe, expect, it } from "vitest";
 import { projectActionCenterCoreSemantics } from "@/lib/action-center-core-semantics";
 import { buildLiveActionCenterItems } from "@/lib/action-center-live";
@@ -7,6 +8,8 @@ import { projectActionCenterRoute } from "@/lib/action-center-route-contract";
 import type { Campaign, CampaignStats } from "@/lib/types";
 import type { CampaignDeliveryRecord } from "@/lib/ops-delivery";
 import type { PilotLearningDossier } from "@/lib/pilot-learning";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 function buildCampaign(overrides: Partial<Campaign> = {}): Campaign {
   return {
@@ -167,24 +170,36 @@ describe("action center landing shell", () => {
   });
 
   it("renders detail-first review meaning and action frame from grouped core semantics", () => {
-    const previewSource = readFileSync(
-      new URL("../../../components/dashboard/action-center-preview.tsx", import.meta.url),
-      "utf8",
+    const context = buildLiveContext();
+    const [item] = buildLiveActionCenterItems([context]);
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
     );
 
-    expect(previewSource).toContain('label="Waarom we opnieuw kijken"');
-    expect(previewSource).toContain("value={selectedItem.coreSemantics.reviewSemantics.reviewQuestion}");
-    expect(previewSource).toContain('label="Wat we dan toetsen"');
-    expect(previewSource).toContain("value={selectedItem.coreSemantics.reviewSemantics.reviewFocus}");
-    expect(previewSource).toContain("outcome={selectedItem.coreSemantics.reviewSemantics.reviewOutcomeVisible}");
-    expect(previewSource).toContain('label="Waarom nu"');
-    expect(previewSource).toContain("value={selectedItem.coreSemantics.actionFrame.whyNow}");
-    expect(previewSource).toContain('label="Eerste stap"');
-    expect(previewSource).toContain("value={selectedItem.coreSemantics.actionFrame.firstStep}");
-    expect(previewSource).toContain('label="Eigenaar"');
-    expect(previewSource).toContain("value={selectedItem.coreSemantics.actionFrame.owner}");
-    expect(previewSource).toContain('label="Verwacht effect"');
-    expect(previewSource).not.toContain("value ?? 'Nog niet vastgelegd'");
+    expect(markup).toContain("Waarom we opnieuw kijken");
+    expect(markup).toContain(item.coreSemantics.reviewSemantics.reviewReason);
+    expect(markup).toContain("Wat we dan toetsen");
+    expect(markup).toContain(item.coreSemantics.reviewSemantics.reviewQuestion);
+    expect(markup).toContain("Laatste reviewuitkomst");
+    expect(markup).toContain("Bijstellen");
+    expect(markup).toContain("Waarom nu");
+    expect(markup).toContain(item.coreSemantics.actionFrame.whyNow);
+    expect(markup).toContain("Eerste stap");
+    expect(markup).toContain(item.coreSemantics.actionFrame.firstStep);
+    expect(markup).toContain("Eigenaar");
+    expect(markup).toContain(item.coreSemantics.actionFrame.owner);
+    expect(markup).toContain("Verwacht effect");
+    expect(markup).toContain(item.coreSemantics.actionFrame.expectedEffect);
   });
 
   it("requires preview items to carry canonical core semantics as one grouped field", () => {
@@ -208,9 +223,10 @@ describe("action center landing shell", () => {
         reviewOutcome: item.reviewOutcome,
       },
       reviewSemantics: {
+        reviewReason: item.reviewReason ?? item.reason,
         reviewOutcomeRaw: item.reviewOutcome,
         reviewOutcomeVisible: "bijstellen",
-        reviewFocus: item.expectedEffect,
+        reviewQuestion: item.expectedEffect ?? item.nextStep,
       },
       actionFrame: {
         owner: item.ownerName,
