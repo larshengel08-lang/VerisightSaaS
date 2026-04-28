@@ -541,12 +541,14 @@ export default async function DashboardHomePage({
               >
                 {isAdmin ? 'Open rapporten' : 'Open campagne'}
               </Link>
-              <Link
-                href={isAdmin ? '/beheer' : '/action-center'}
-                className="inline-flex rounded-full border border-[#83d0bf]/30 px-4 py-2 text-sm font-semibold text-[#83d0bf] transition-colors hover:bg-[#83d0bf]/10"
-              >
-                {isAdmin ? 'Open beheer' : 'Open Action Center'}
-              </Link>
+              {isAdmin ? (
+                <Link
+                  href="/beheer"
+                  className="inline-flex rounded-full border border-[#83d0bf]/30 px-4 py-2 text-sm font-semibold text-[#83d0bf] transition-colors hover:bg-[#83d0bf]/10"
+                >
+                  Open beheer
+                </Link>
+              ) : null}
             </div>
           </aside>
         </section>

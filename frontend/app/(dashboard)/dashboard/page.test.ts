@@ -52,6 +52,8 @@ describe('dashboard home UX guardrails', () => {
     expect(source).toContain('first_management_use_confirmed_at')
     expect(source).toContain('leadCampaign.campaign_id')
     expect(source).not.toContain('routeEntryStage: null')
+    expect(source).not.toContain('Open Action Center')
+    expect(source).not.toContain("href={isAdmin ? '/beheer' : '/action-center'}")
     expect(source).not.toContain('Open in Action Center</button>')
   })
 })
