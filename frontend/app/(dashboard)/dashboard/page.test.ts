@@ -43,4 +43,12 @@ describe('dashboard home UX guardrails', () => {
     expect(source).not.toContain('Boardroom-ready')
     expect(source).not.toContain('Open de preview-adoptie van het Action Center voor ExitScan')
   })
+
+  it('shows hr bridge status without turning overview into a route-open screen', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('Beoordeel opvolging')
+    expect(source).toContain('Actieve opvolging')
+    expect(source).not.toContain('Open in Action Center</button>')
+  })
 })

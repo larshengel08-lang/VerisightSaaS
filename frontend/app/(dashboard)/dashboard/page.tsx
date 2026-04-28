@@ -13,8 +13,15 @@ import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download
 import {
   getCampaignCompositionState,
   HOME_STATE_ORDER,
+  isManagementVisibleState,
+  isRecommendationReadyState,
   type CampaignCompositionState,
 } from '@/lib/dashboard/dashboard-state-composition'
+import {
+  buildBridgeAssessmentTruth,
+  getHrBridgePresentation,
+  resolveHrBridgeState,
+} from '@/lib/dashboard/hr-bridge-state'
 import {
   normalizeDashboardPortfolioView,
   type DashboardPortfolioView,
@@ -163,7 +170,39 @@ export default async function DashboardHomePage({
   const primaryOverviewEntry = primaryOverviewCampaign
     ? campaignEntries.find((entry) => entry.campaign.campaign_id === primaryOverviewCampaign.campaign_id) ?? null
     : null
+  const primaryOverviewCompositionState = primaryOverviewEntry?.state ?? null
   const primaryOverviewStateMeta = primaryOverviewEntry ? getHomeStateMeta(primaryOverviewEntry.state) : null
+  const overviewBridgeAssessment =
+    primaryOverviewCampaign && primaryOverviewCompositionState
+      ? buildBridgeAssessmentTruth({
+          sourceType: 'campaign',
+          sourceId: primaryOverviewCampaign.campaign_id,
+          signalReadable: isManagementVisibleState(primaryOverviewCompositionState),
+          managementMeaningClear: isRecommendationReadyState(primaryOverviewCompositionState),
+          plausibleFollowUpExists: isRecommendationReadyState(primaryOverviewCompositionState),
+          assessedAt: primaryOverviewCampaign.created_at,
+        })
+      : null
+  const overviewBridgeState = overviewBridgeAssessment
+    ? resolveHrBridgeState({
+        routeEntryStage: null,
+        assessment: overviewBridgeAssessment,
+      })
+    : null
+  const overviewBridgePresentation = overviewBridgeState
+    ? getHrBridgePresentation({
+        bridgeState: overviewBridgeState,
+        surface: 'overview',
+      })
+    : null
+  const overviewBridgeStatusLabel =
+    overviewBridgePresentation?.label === 'Actieve opvolging'
+      ? 'Actieve opvolging'
+      : overviewBridgePresentation?.label ?? null
+  const overviewBridgeCtaLabel =
+    overviewBridgePresentation?.ctaLabel === 'Beoordeel opvolging'
+      ? 'Beoordeel opvolging'
+      : overviewBridgePresentation?.ctaLabel ?? null
   const leadCampaign = primaryGuideCampaign ?? primaryOverviewCampaign
   const leadCampaignScanDefinition = leadCampaign ? getScanDefinition(leadCampaign.scan_type) : null
   const leadCampaignStateMeta = primaryGuideCampaign ? primaryGuideStateMeta : primaryOverviewStateMeta
@@ -263,6 +302,21 @@ export default async function DashboardHomePage({
                   leadCampaignStateMeta
                     ? `${leadCampaignStateMeta.nextStepLabel}. ${leadCampaignStateMeta.trust}`
                     : 'Het eerste overzicht verschijnt hier zodra er genoeg respons is om eerlijk te kunnen lezen.'
+                }
+                footer={
+                  primaryOverviewCampaign &&
+                  overviewBridgeState &&
+                  overviewBridgeStatusLabel &&
+                  overviewBridgeCtaLabel ? (
+                    <div className="mt-3 flex items-center gap-3 text-sm text-[#5e6b78]">
+                      <span className="rounded-full border border-[#ddd3c7] bg-[#fbf8f4] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b7d6b]">
+                        {overviewBridgeStatusLabel}
+                      </span>
+                      <Link href={overviewBridgeState === 'active' ? '/action-center' : `/campaigns/${primaryOverviewCampaign.campaign_id}`}>
+                        {overviewBridgeCtaLabel}
+                      </Link>
+                    </div>
+                  ) : null
                 }
               />
             </div>
@@ -555,16 +609,19 @@ function OverviewSummaryNote({
   label,
   value,
   body,
+  footer,
 }: {
   label: string
   value: string
   body: string
+  footer?: JSX.Element | null
 }) {
   return (
     <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_12px_28px_rgba(19,32,51,0.05)]">
       <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">{label}</p>
       <p className="mt-2 text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">{value}</p>
       <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{body}</p>
+      {footer}
     </div>
   )
 }
