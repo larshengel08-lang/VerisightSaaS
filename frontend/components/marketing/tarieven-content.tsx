@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { T, AC, FF, SHELL, useInView, Reveal, Arrow, SectionMark } from '@/components/marketing/design-tokens'
+import { T, AC, FF, SHELL, Arrow, SectionMark } from '@/components/marketing/design-tokens'
 import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { buildContactHref } from '@/lib/contact-funnel'
 
@@ -52,25 +52,19 @@ function HeroSection() {
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
       <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`, pointerEvents: 'none' }} />
       <div style={{ ...SHELL, position: 'relative' }}>
-        <div style={{ animation: 'slideDownFade .55s cubic-bezier(.16,1,.3,1) .05s both' }}>
-          <SectionMark num="--" label="Tarieven" inView />
-        </div>
+        <SectionMark num="--" label="Tarieven" inView />
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] lg:gap-16 items-start">
           <div>
-            <div style={{ animation: 'slideUpFade .9s cubic-bezier(.16,1,.3,1) .15s both' }}>
-              <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink }}>
-                Transparante prijs.<br />
-                <em className="shimmer-text" style={{ fontStyle: 'italic' }}>Heldere eerste stap.</em>
-              </h1>
-            </div>
-            <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
-              <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 0' }}>
-                U koopt geen licentie, maar een gerichte eerste route met vaste output. Dashboard, rapport en Action Center horen
-                daarbij, zodat prijs niet stopt bij inzicht maar doorloopt naar eerste prioriteit en opvolging.
-              </p>
-            </div>
+            <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink }}>
+              Transparante prijs.<br />
+              <em className="shimmer-text" style={{ fontStyle: 'italic' }}>Heldere eerste stap.</em>
+            </h1>
+            <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 0' }}>
+              U koopt geen licentie, maar een gerichte eerste route met vaste output. Dashboard, rapport en Action Center horen
+              daarbij, zodat prijs niet stopt bij inzicht maar doorloopt naar eerste prioriteit en opvolging.
+            </p>
           </div>
-          <div style={{ animation: 'slideRightFade .8s cubic-bezier(.16,1,.3,1) .28s both' }}>
+          <div>
             <div style={{ display: 'grid', gap: 10 }}>
               {corePricing.map((item, i) => (
                 <div key={i} style={{ padding: '18px 20px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
@@ -89,13 +83,11 @@ function HeroSection() {
 
 // ── ② Core products ────────────────────────────────────────────────
 function CorePricingSection() {
-  const [sRef, sInView] = useInView(.08)
   return (
     <section style={{ background: T.paperSoft, padding: 'clamp(56px,7vw,88px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: FF, fontSize: 260, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: .4 }}>02</div>
-      <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
-        <SectionMark num="02" label="Kernproducten" inView={sInView} />
-        <Reveal delay={.05}>
+      <div style={{ ...SHELL, position: 'relative' }}>
+        <SectionMark num="02" label="Kernproducten" inView />
           <h2 style={{ fontFamily: FF, fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 400, letterSpacing: '-.026em', color: T.ink, marginBottom: 14, lineHeight: 1.06 }}>
             De eerste koop blijft eenvoudig.
           </h2>
@@ -103,11 +95,9 @@ function CorePricingSection() {
             ExitScan en RetentieScan zijn de twee kernproducten. De prijsopbouw houdt de eerste keuze eenvoudig,
             terwijl dashboard, rapport en Action Center daarna in dezelfde outputlijn blijven meebewegen.
           </p>
-        </Reveal>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {corePricing.map((item, i) => (
-            <Reveal key={i} delay={.08 + i * .1}>
-              <div style={{ background: T.white, border: `1px solid ${T.rule}`, padding: '36px', boxShadow: `0 2px 8px rgba(0,0,0,.04), 0 0 0 1px ${item.accentFaint}`, position: 'relative', overflow: 'hidden' }}>
+          {corePricing.map((item) => (
+              <div key={item.label} style={{ background: T.white, border: `1px solid ${T.rule}`, padding: '36px', boxShadow: `0 2px 8px rgba(0,0,0,.04), 0 0 0 1px ${item.accentFaint}`, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: item.accent }} />
                 <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: item.accent, marginBottom: 12 }}>{item.label}</div>
                 <div style={{ fontFamily: FF, fontSize: 'clamp(2rem,4vw,3rem)', fontWeight: 400, letterSpacing: '-.03em', color: T.ink, marginBottom: 14, lineHeight: 1 }}>{item.price}</div>
@@ -126,7 +116,6 @@ function CorePricingSection() {
                   Meer over deze route <Arrow />
                 </Link>
               </div>
-            </Reveal>
           ))}
         </div>
       </div>
@@ -136,21 +125,17 @@ function CorePricingSection() {
 
 // ── ③ Follow-on table ──────────────────────────────────────────────
 function FollowOnSection() {
-  const [sRef, sInView] = useInView(.08)
   return (
     <section style={{ background: T.white, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: FF, fontSize: 260, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: .4 }}>03</div>
-      <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
-        <SectionMark num="03" label="Peer, vervolg en add-ons" inView={sInView} />
-        <Reveal delay={.05}>
+      <div style={{ ...SHELL, position: 'relative' }}>
+        <SectionMark num="03" label="Peer, vervolg en add-ons" inView />
           <h2 style={{ fontFamily: FF, fontSize: 'clamp(26px,3vw,38px)', fontWeight: 400, letterSpacing: '-.022em', color: T.ink, marginBottom: 14, lineHeight: 1.1 }}>
             Kleinere routes rond de eerste kernroute.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 40, maxWidth: '52ch' }}>
             Onboarding blijft een bounded peer. Pulse en Leadership Scan blijven bewust klein als vervolg. De prijslaag blijft zo logisch in verhouding tot de eerste managementvraag, terwijl de suite-output daarna wel dezelfde leeslijn houdt.
           </p>
-        </Reveal>
-        <Reveal delay={.1}>
           <div style={{ border: `1px solid ${T.rule}`, overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '220px 120px 1fr', background: T.paperSoft, borderBottom: `1px solid ${T.rule}` }}>
               {['Route', 'Prijsanker', 'Wanneer logisch'].map((h, i) => (
@@ -167,7 +152,6 @@ function FollowOnSection() {
               </div>
             ))}
           </div>
-        </Reveal>
       </div>
     </section>
   )
@@ -179,7 +163,6 @@ function CtaBand() {
   return (
     <section style={{ background: T.paperBlush, padding: 'clamp(48px,5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
       <div style={{ ...SHELL }}>
-        <Reveal delay={.05}>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto] items-center">
             <div>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 12 }}>Prijs in context</div>
@@ -205,7 +188,6 @@ function CtaBand() {
               </Link>
             </div>
           </div>
-        </Reveal>
       </div>
     </section>
   )
