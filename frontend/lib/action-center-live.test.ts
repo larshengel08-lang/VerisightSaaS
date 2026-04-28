@@ -369,6 +369,108 @@ describe('live action center builder', () => {
     expect(item.openSignals).toEqual(['owner_missing', 'review_due'])
   })
 
+  it('recompute keeps existing canonical preview route truth instead of re-promoting projected display fields', () => {
+    const seeded = finalizeActionCenterPreviewItem({
+      id: 'local-2',
+      code: 'ACT-2002',
+      title: 'Bestaande follow-up',
+      summary: 'Lijstsamenvatting voor de preview.',
+      reason: 'Afgeleide reviewcopy uit de vorige render.',
+      sourceLabel: 'ExitScan',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerId: null,
+      ownerName: null,
+      ownerRole: 'Nog niet toegewezen',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: null,
+      priority: 'hoog',
+      status: 'te-bespreken',
+      reviewDate: null,
+      expectedEffect: 'Afgeleid verwacht effect.',
+      reviewReason: 'Afgeleide reviewreden.',
+      reviewOutcome: 'geen-uitkomst',
+      reviewDateLabel: 'Nog niet gepland',
+      reviewRhythm: 'Tweewekelijks',
+      signalLabel: 'ExitScan - Operations',
+      signalBody: 'Zichtbaar signaal voor de kaart.',
+      nextStep: 'Afgeleide eerste stap uit de vorige render.',
+      peopleCount: 38,
+      updates: [],
+      coreSemantics: {
+        route: {
+          campaignId: 'local-2',
+          entryStage: 'active',
+          routeOpenedAt: null,
+          ownerAssignedAt: null,
+          routeStatus: 'te-bespreken',
+          reviewOutcome: 'geen-uitkomst',
+          reviewCompletedAt: null,
+          outcomeRecordedAt: null,
+          outcomeSummary: null,
+          intervention: 'Canonieke previewstap.',
+          owner: null,
+          expectedEffect: 'Canoniek previeweffect.',
+          reviewScheduledFor: null,
+          reviewReason: 'Canonieke previewreviewreden.',
+          blockedBy: null,
+        },
+        reviewSemantics: {
+          reviewReason: 'Canonieke previewreviewreden.',
+          reviewQuestion: 'Canoniek previeweffect.',
+          reviewOutcomeRaw: 'geen-uitkomst',
+          reviewOutcomeVisible: 'geen-uitkomst',
+        },
+        actionFrame: {
+          whyNow: 'Canonieke previewreviewreden.',
+          firstStep: 'Canonieke previewstap.',
+          owner: 'Nog niet toegewezen',
+          expectedEffect: 'Canoniek previeweffect.',
+        },
+        resultLoop: {
+          whatWasTried: 'Canonieke previewstap.',
+          whatWeObserved: 'Zichtbaar signaal voor de kaart.',
+          whatWasDecided: null,
+        },
+        closingSemantics: {
+          status: 'lopend',
+        },
+      },
+    })
+
+    const recomputed = finalizeActionCenterPreviewItem({
+      ...seeded,
+      ownerName: 'Manager Operations',
+      reviewDate: '2026-05-12',
+      reviewDateLabel: '12 mei',
+      status: 'in-uitvoering',
+      nextStep: 'Afgeleide eerste stap die niet terug de route in mag.',
+      expectedEffect: 'Afgeleid effect dat niet terug de route in mag.',
+      reviewReason: 'Afgeleide reviewreden die niet terug de route in mag.',
+      reason: 'Afgeleide why-now copy die niet terug de route in mag.',
+      updates: [
+        {
+          id: 'update-2',
+          author: 'Admin',
+          dateLabel: '28 apr',
+          note: 'Update: eigenaar bevestigd en review opnieuw ingepland.',
+        },
+      ],
+    }, { recomputeCoreSemantics: true })
+
+    expect(recomputed.coreSemantics.route).toMatchObject({
+      intervention: 'Canonieke previewstap.',
+      expectedEffect: 'Canoniek previeweffect.',
+      reviewReason: 'Canonieke previewreviewreden.',
+      owner: 'Manager Operations',
+      reviewScheduledFor: '2026-05-12',
+      routeStatus: 'in-uitvoering',
+    })
+    expect(recomputed.coreSemantics.resultLoop.whatWasTried).toBe(
+      'Update: eigenaar bevestigd en review opnieuw ingepland.',
+    )
+  })
+
   it('derives bounded telemetry signals from lifecycle and review truth', () => {
     const campaign: Campaign = {
       id: 'campaign-exit',

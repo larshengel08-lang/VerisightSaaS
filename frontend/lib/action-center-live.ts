@@ -252,6 +252,8 @@ export function finalizeActionCenterPreviewItem(
   options: { recomputeCoreSemantics?: boolean } = {},
 ): ActionCenterPreviewItem {
   const latestVisibleUpdateNote = item.updates[0]?.note ?? null
+  const existingRoute = item.coreSemantics?.route ?? null
+  const reuseExistingRouteTruth = Boolean(existingRoute)
   const coreSemantics =
     !options.recomputeCoreSemantics && item.coreSemantics
       ? item.coreSemantics
@@ -262,15 +264,15 @@ export function finalizeActionCenterPreviewItem(
       status: item.status,
       ownerName: item.ownerName,
       reviewDate: item.reviewDate,
-      expectedEffect: item.expectedEffect,
-      reviewReason: item.reviewReason,
+      expectedEffect: reuseExistingRouteTruth ? (existingRoute?.expectedEffect ?? null) : item.expectedEffect,
+      reviewReason: reuseExistingRouteTruth ? (existingRoute?.reviewReason ?? null) : item.reviewReason,
       reviewOutcome: item.reviewOutcome,
       reason: item.reason,
       summary: item.summary,
       signalBody: item.signalBody,
-      nextStep: item.nextStep,
+      nextStep: reuseExistingRouteTruth ? (existingRoute?.intervention ?? null) : item.nextStep,
       latestVisibleUpdateNote,
-      route: item.coreSemantics?.route ?? null,
+      route: existingRoute,
     })
 
   const reviewReason = coreSemantics.reviewSemantics.reviewReason
