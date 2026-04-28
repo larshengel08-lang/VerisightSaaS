@@ -9,11 +9,11 @@ describe('dashboard home UX guardrails', () => {
       'utf8',
     )
 
-    expect(pageSource).toContain('Overview')
+    expect(pageSource).toContain('Overzicht')
     expect(pageSource).toContain('CustomerLaunchControl')
     expect(pageSource).toContain('SignalStatCard')
     expect(pageSource).toContain('DashboardTabs tabs={portfolioTabs}')
-    expect(pageSource).toContain('Management-ready')
+    expect(pageSource).toContain('Klaar voor bespreking')
     expect(pageSource).toContain('In uitvoering')
     expect(pageSource).toContain('Gem. groepssignaal')
     expect(pageSource).toContain('Afgerond')
@@ -38,7 +38,7 @@ describe('dashboard home UX guardrails', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
     expect(source).toContain('een leesbaar dashboard kan openen')
-    expect(source).toContain('Nog geen managementduiding')
+    expect(source).toContain('Nog geen duiding')
     expect(source).toContain('Geen live uitvoersignalen meer')
     expect(source).not.toContain('Boardroom-ready')
     expect(source).not.toContain('Open de preview-adoptie van het Action Center voor ExitScan')

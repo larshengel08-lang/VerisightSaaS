@@ -263,22 +263,41 @@ export default async function ActionCenterPage() {
     : {}
   const workspaceSubtitle =
     summary.productCount > 0
-      ? `Live opvolging over ${summary.productCount} product${summary.productCount === 1 ? '' : 'en'} in dezelfde suite-shell`
-      : 'Live opvolging binnen dezelfde suite-shell'
+      ? `Live opvolging over ${summary.productCount} product${summary.productCount === 1 ? '' : 'en'} in deze omgeving`
+      : 'Live opvolging in deze omgeving'
 
   if (items.length === 0) {
     return (
-      <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-6 py-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+      <div className="rounded-[30px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-7 py-8 shadow-[0_18px_48px_rgba(19,32,51,0.08)]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
           Action Center
         </p>
-        <h1 className="mt-2 text-[1.8rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+        <h1 className="mt-3 text-[2.2rem] font-semibold tracking-[-0.055em] text-[color:var(--dashboard-ink)]">
           Nog geen live opvolging zichtbaar
         </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--dashboard-text)]">
-          Zodra er actieve campaigns, bounded deliverycontext of bestaande follow-through dossiers voor jouw organisaties of afdelingen
-          staan, opent deze module automatisch in dezelfde ingelogde suite-shell.
+        <p className="mt-4 max-w-3xl text-[1rem] leading-8 text-[color:var(--dashboard-text)]">
+          Zodra er actieve campagnes, open opvolging of bestaande dossiers voor jouw organisaties of
+          afdelingen zijn, opent deze module automatisch in dezelfde ingelogde omgeving.
         </p>
+        <div className="mt-7 grid gap-4 border-t border-[color:var(--dashboard-frame-border)] pt-6 xl:grid-cols-[minmax(0,1.3fr),minmax(260px,0.7fr)]">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+              Wat hier straks landt
+            </p>
+            <p className="mt-3 text-sm leading-7 text-[color:var(--dashboard-text)]">
+              Samenvatting, reviewritme en eigenaarschap verschijnen hier pas als er echt iets op te volgen is.
+              Daardoor blijft Action Center rustig en direct bruikbaar.
+            </p>
+          </div>
+          <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-muted-surface)] px-5 py-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+              Volgende stap
+            </p>
+            <p className="mt-3 text-sm leading-7 text-[color:var(--dashboard-text)]">
+              Wanneer de eerste opvolging live staat, verschijnt hier meteen je Action Center managementroute.
+            </p>
+          </div>
+        </div>
       </div>
     )
   }

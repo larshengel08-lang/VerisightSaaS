@@ -23,8 +23,8 @@ export function DashboardTabs({
   if (tabs.length === 0) return null
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
+    <div className="space-y-5">
+      <div className="flex flex-wrap gap-2.5 border-b border-[color:var(--dashboard-frame-border)]/80 pb-3">
         {tabs.map((tab) => {
           const active = tab.id === activeTab
           return (
@@ -32,10 +32,10 @@ export function DashboardTabs({
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`rounded-full border px-3 py-2 text-xs font-semibold transition-colors ${
+              className={`min-h-11 rounded-full border px-4 py-2.5 text-[0.82rem] font-semibold tracking-[-0.01em] transition-colors ${
                 active
-                  ? 'border-[#d6e4e8] bg-[#f3f8f8] text-[#234B57]'
-                  : 'border-[color:var(--border)] bg-[color:var(--surface)] text-[color:var(--text)] hover:border-[#d6e4e8] hover:text-[color:var(--ink)]'
+                  ? 'border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] text-[color:var(--dashboard-accent-strong)]'
+                  : 'border-transparent bg-transparent text-[color:var(--dashboard-muted)] hover:border-[color:var(--dashboard-frame-border)] hover:bg-[color:var(--dashboard-soft)] hover:text-[color:var(--dashboard-ink)]'
               }`}
             >
               {tab.label}

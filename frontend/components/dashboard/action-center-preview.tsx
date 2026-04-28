@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
@@ -223,7 +223,7 @@ function getViewCopy(view: ActionCenterPreviewView, selectedTitle: string | null
       return {
         eyebrow: 'Action Center',
         title: 'Acties',
-        description: 'Concrete vervolgacties op echte ExitScan-dossiers. Dossier-first, admin-first en zonder losse cockpitverbreding.',
+        description: 'Concrete vervolgacties op echte ExitScan-dossiers. Rustig, direct en gekoppeld aan echte dossiers.',
       }
     case 'reviews':
       return {
@@ -235,21 +235,21 @@ function getViewCopy(view: ActionCenterPreviewView, selectedTitle: string | null
       return {
         eyebrow: 'Action Center',
         title: 'Managers toewijzen',
-        description: 'Eigenaarschap blijft expliciet. Koppel per team een verantwoordelijke manager zonder de shared core open te breken.',
+        description: 'Eigenaarschap blijft expliciet. Koppel per team een verantwoordelijke manager zonder extra lagen toe te voegen.',
       }
     case 'teams':
       return {
         eyebrow: 'Action Center',
         title: 'Mijn teams',
-        description: 'Inspirationele teamweergave op basis van dezelfde opvolgingslaag, zonder consumerverbreding.',
+        description: 'Compact teamoverzicht op basis van dezelfde opvolgingslaag.',
       }
     default:
       return {
-        eyebrow: 'Werkruimte',
+        eyebrow: 'Action Center',
         title: selectedTitle ? selectedTitle : 'Action Center',
         description: selectedTitle
-          ? 'Eén actie geopend in de bounded adminroute: waarom dit dossier aandacht vraagt, wie eigenaar is en wanneer de review terugkomt.'
-          : 'Van inzicht naar opvolging. Houd zicht op wat aandacht vraagt, wie het oppakt en wanneer het terug op tafel ligt.',
+          ? 'Eén actie geopend: waarom dit dossier aandacht vraagt, wie eigenaar is en wanneer de review terugkomt.'
+          : 'Van signaal naar opvolging. Zie rustig wat nu besproken moet worden, waar reviews terugkomen en waar eigenaarschap nog expliciet gemaakt moet worden.',
       }
   }
 }
@@ -406,18 +406,22 @@ export function ActionCenterPreview({
   const thisWeekReviews = items.filter((item) => getReviewBucket(item.reviewDate, today) === 'deze-week')
   const nextWeekReviews = items.filter((item) => getReviewBucket(item.reviewDate, today) === 'volgende-week')
   const quarterReviews = items.filter((item) => getReviewBucket(item.reviewDate, today) === 'kwartaal')
+  const visibleItems = filteredItems.length > 0 ? filteredItems : items
+  const visibleDueItems = visibleItems.filter((item) => item.status === 'geblokkeerd' || item.status === 'te-bespreken')
   const upcomingReviews = [...items]
     .filter((item) => item.reviewDate)
     .sort((left, right) => compareReviewDate(left.reviewDate, right.reviewDate))
     .slice(0, 4)
   const earliestReview = upcomingReviews[0]?.reviewDateLabel ?? 'Nog niet gepland'
   const missingManagerCount = teamRows.filter((team) => !team.currentManagerName).length
+  const ownerCoverageCount = teamRows.length - missingManagerCount
   const selectedTeamItems = items.filter((item) => item.teamId === selectedTeam?.id)
   const teamOpenItems = selectedTeamItems.filter((item) => item.status !== 'afgerond' && item.status !== 'gestopt')
   const teamReviewItems = selectedTeamItems
     .filter((item) => item.reviewDate)
     .sort((left, right) => compareReviewDate(left.reviewDate, right.reviewDate))
     .slice(0, 3)
+  const focusItem = visibleDueItems[0] ?? visibleItems[0] ?? null
   const viewCopy = getViewCopy(activeView, activeView === 'overview' && selectedItem ? null : activeView === 'overview' ? null : selectedItem?.title ?? null)
 
   function updateItem(itemId: string, updater: (item: ActionCenterPreviewItem) => ActionCenterPreviewItem) {
@@ -437,7 +441,7 @@ export function ActionCenterPreview({
       id: `local-${nextIndex}`,
       code: `ACT-${nextIndex}`,
       title: createForm.title.trim(),
-      summary: createForm.summary.trim() || 'Nieuwe adminfollow-up vanuit de bounded Action Center-surface.',
+      summary: createForm.summary.trim() || 'Nieuwe opvolgactie vanuit Action Center.',
       reason: createForm.summary.trim() || 'Nieuwe actie gekoppeld aan een bestaand dossier of signaal.',
       sourceLabel: createForm.sourceLabel,
       teamId: createForm.teamId,
@@ -693,12 +697,13 @@ export function ActionCenterPreview({
         </aside>
 
         <div className="min-w-0 flex-1">
-          <div className={`border-b border-[#e4d9cb] px-6 py-5 ${hideSidebar ? 'bg-white' : 'bg-[#f7f2ea]'}`}>
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className={`border-b border-[#e6ddd2] px-6 py-6 ${hideSidebar ? 'bg-[#fcfaf7]' : 'bg-[#f7f2ea]'}`}>
+            <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
               <div>
-                <p className="text-sm text-[#8b8174]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8b8174]">{viewCopy.eyebrow}</p>
+                <p className="mt-3 text-sm text-[#8b8174]">
                   {activeView === 'overview'
-                    ? 'Werkruimte / Action Center'
+                    ? 'Suite / Action Center'
                     : activeView === 'actions'
                       ? 'Action Center / Acties'
                       : activeView === 'reviews'
@@ -708,14 +713,14 @@ export function ActionCenterPreview({
                           : 'Action Center / Mijn teams'}
                   {activeView === 'actions' && selectedItem ? ` / ${selectedItem.code}` : ''}
                 </p>
-                <h1 className="mt-3 text-[2.3rem] font-semibold tracking-[-0.05em] text-[#132033]">
+                <h1 className="mt-3 text-[2.6rem] font-semibold tracking-[-0.055em] text-[#132033]">
                   {viewCopy.title}
                 </h1>
-                <p className="mt-3 max-w-3xl text-lg leading-8 text-[#42556b]">{viewCopy.description}</p>
+                <p className="mt-4 max-w-3xl text-[1.02rem] leading-8 text-[#42556b]">{viewCopy.description}</p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <label className="flex min-w-[320px] items-center gap-3 rounded-2xl border border-[#ddd3c7] bg-white px-4 py-3 text-sm text-[#6a6258] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                <label className="flex min-w-[320px] items-center gap-3 rounded-full border border-[#ddd3c7] bg-white px-4 py-3 text-sm text-[#6a6258] shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
                   <SearchIcon />
                   <input
                     value={searchQuery}
@@ -737,15 +742,15 @@ export function ActionCenterPreview({
               </div>
             </div>
             {hideSidebar ? (
-              <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[#eee6da] pt-4">
+              <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-[#eee6da] pt-4">
                 {headerTabs.map((item) => (
                   <button
                     key={item.key}
                     type="button"
-                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                    className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4.5 py-2.5 text-sm font-semibold transition ${
                       item.active
                         ? 'border-[#1a2533] bg-[#1a2533] text-white'
-                        : 'border-[#ddd3c7] bg-[#fbf8f4] text-[#5f564a] hover:border-[#bfb2a3] hover:text-[#132033]'
+                        : 'border-[#e4d9cb] bg-[#f8f3ed] text-[#5f564a] hover:border-[#c5b8a8] hover:text-[#132033]'
                     }`}
                     onClick={item.onClick}
                   >
@@ -767,55 +772,79 @@ export function ActionCenterPreview({
 
           <div className="px-6 py-6">
             {activeView === 'overview' ? (
-              <div className="space-y-6">
-                <div className="grid gap-4 xl:grid-cols-5">
-                  <MetricCard label="Acties open" value={`${openItems.length}`} subcopy={`${dueItems.length} vraagt aandacht`} accent="slate" />
-                  <MetricCard label="Te bespreken" value={`${items.filter((item) => item.status === 'te-bespreken').length}`} subcopy="nu zichtbaar" accent="amber" />
-                  <MetricCard label="Geblokkeerd" value={`${items.filter((item) => item.status === 'geblokkeerd').length}`} subcopy="vraagt interventie" accent="red" />
-                  <MetricCard label="Afdelingen met aandacht" value={`${teamRows.filter((team) => team.openActions > 0).length}`} subcopy={`van ${teamRows.length}`} accent="teal" />
-                  <MetricCard label="Afgerond" value={`${items.filter((item) => item.status === 'afgerond').length}`} subcopy="bounded afgesloten" accent="green" />
-                </div>
+              <div className="space-y-8">
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr),minmax(320px,0.95fr)]">
+                  <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                    <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
+                      <div className="max-w-2xl">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Managementritme</p>
+                        <h2 className="mt-3 text-[2rem] font-semibold tracking-[-0.05em] text-[#132033]">Wat moet nu gelezen en opgepakt worden?</h2>
+                        <p className="mt-4 max-w-xl text-[1rem] leading-8 text-[#4f6175]">
+                          Action Center bundelt live opvolging uit campagnes en dossiers tot een eerste overzicht van wat nu aandacht vraagt.
+                        </p>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-3 xl:max-w-[34rem] xl:flex-1">
+                        <OverviewStat
+                          label="Nu bespreken"
+                          value={`${dueItems.length}`}
+                          detail={`${items.filter((item) => item.status === 'te-bespreken').length} klaar voor gesprek`}
+                          accent="amber"
+                        />
+                        <OverviewStat
+                          label="Review < 14 dagen"
+                          value={`${overdueReviews.length + thisWeekReviews.length + nextWeekReviews.length}`}
+                          detail={`${overdueReviews.length} achterstallig`}
+                          accent="red"
+                        />
+                        <OverviewStat
+                          label="Eigenaarschap gedekt"
+                          value={`${ownerCoverageCount}`}
+                          detail={teamRows.length > 0 ? `van ${teamRows.length} teams expliciet gekoppeld` : 'nog geen teams zichtbaar'}
+                          accent="teal"
+                        />
+                      </div>
+                    </div>
 
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr),minmax(320px,0.9fr)]">
-                  <section className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="mt-8 flex items-center justify-between gap-3 border-t border-[#ece4d8] pt-6">
                       <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Vandaag</p>
-                        <h2 className="mt-2 text-[1.55rem] font-semibold tracking-[-0.03em] text-[#132033]">Wat vraagt nu aandacht?</h2>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Nu in beeld</p>
+                        <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">Eerste managementflow</h3>
                       </div>
                       <button
                         type="button"
                         className="text-sm font-semibold text-[#4a5f74] transition hover:text-[#132033]"
                         onClick={() => setActiveView('actions')}
                       >
-                        Volledige lijst
+                        Open alle acties
                       </button>
                     </div>
-                    <div className="mt-6 divide-y divide-[#efe7dc]">
-                      {(filteredItems.length > 0 ? filteredItems : items).slice(0, 3).map((item) => (
+                    <div className="mt-2 divide-y divide-[#ece4d8]">
+                      {visibleItems.slice(0, 4).map((item) => (
                         <button
                           key={item.id}
                           type="button"
-                          className="flex w-full flex-col gap-4 py-5 text-left transition hover:bg-[#fbf8f3]"
+                          className="flex w-full flex-col gap-4 py-5 text-left transition hover:bg-[#f8f2eb]"
                           onClick={() => {
                             setSelectedItemId(item.id)
                             setActiveView('actions')
                           }}
                         >
-                          <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+                          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d6458]">
                                 <MiniTag>{item.sourceLabel}</MiniTag>
                                 <span>{item.teamLabel}</span>
+                                <span className="text-[#b2a496]">/</span>
+                                <span>{item.ownerName ?? fallbackOwnerName}</span>
                               </div>
                               <h3 className="mt-3 text-[1.15rem] font-semibold tracking-[-0.02em] text-[#132033]">{item.title}</h3>
-                              <p className="mt-2 text-[0.98rem] leading-7 text-[#4f6175]">{item.summary}</p>
+                              <p className="mt-2 max-w-[44rem] text-[0.98rem] leading-7 text-[#4f6175]">{item.summary}</p>
                             </div>
-                            <div className="flex items-start gap-3">
+                            <div className="flex shrink-0 items-start gap-3 xl:min-w-[198px] xl:justify-end">
                               <StatusPill status={item.status} />
                               <div className="text-right">
-                                <AvatarBadge label={item.ownerName} />
-                                <p className="mt-2 text-sm text-[#8b8174]">review {item.reviewDateLabel}</p>
+                                <p className="text-sm font-semibold text-[#132033]">review {item.reviewDateLabel}</p>
+                                <p className="mt-1 text-sm text-[#8b8174]">Ritme {item.reviewRhythm}</p>
                               </div>
                             </div>
                           </div>
@@ -824,67 +853,169 @@ export function ActionCenterPreview({
                     </div>
                   </section>
 
-                  <section className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Deze week</p>
-                      <h2 className="mt-2 text-[1.55rem] font-semibold tracking-[-0.03em] text-[#132033]">Komende reviews</h2>
+                  <aside className="rounded-[30px] bg-[#182231] px-7 py-7 text-white shadow-[0_22px_56px_rgba(19,32,51,0.18)]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Aanbevolen focus</p>
+                    <h2 className="mt-3 text-[1.8rem] font-semibold tracking-[-0.045em]">
+                      {focusItem?.title ?? 'Action Center ritme staat klaar'}
+                    </h2>
+                    <p className="mt-4 text-[0.98rem] leading-8 text-white/72">
+                      {focusItem?.reason ??
+                        'Zodra live opvolging zichtbaar is, landt hier automatisch het belangrijkste gesprek voor deze week.'}
+                    </p>
+
+                    <div className="mt-6 space-y-4 border-t border-white/10 pt-6">
+                      <FocusSummaryRow label="Afdeling" value={focusItem?.teamLabel ?? 'Nog niet zichtbaar'} />
+                      <FocusSummaryRow label="Eigenaar" value={focusItem?.ownerName ?? fallbackOwnerName} />
+                      <FocusSummaryRow label="Bron" value={focusItem?.sourceLabel ?? 'Action Center'} />
+                      <FocusSummaryRow label="Volgende review" value={focusItem?.reviewDateLabel ?? earliestReview} />
                     </div>
-                    <div className="mt-5 space-y-5">
+
+                    <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Volgende stap</p>
+                      <p className="mt-3 text-base leading-7 text-white/86">
+                        {focusItem?.nextStep ?? 'De eerste review en eigenaar worden automatisch zichtbaar zodra een dossier live staat.'}
+                      </p>
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        className="inline-flex min-h-11 items-center rounded-full bg-[#ff9b4a] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
+                        onClick={() => {
+                          if (focusItem) {
+                            setSelectedItemId(focusItem.id)
+                            setActiveView('actions')
+                          } else {
+                            setActiveView('actions')
+                          }
+                        }}
+                      >
+                        Open focusactie
+                      </button>
+                      <Link
+                        href={focusItem ? (itemHrefs[focusItem.id] ?? workbenchHref) : workbenchHref}
+                        className="inline-flex min-h-11 items-center rounded-full border border-white/12 px-4.5 py-2.5 text-sm font-semibold text-white/82 transition hover:bg-white/[0.06]"
+                      >
+                        {workbenchLabel}
+                      </Link>
+                    </div>
+                  </aside>
+                </div>
+
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr),minmax(320px,0.9fr)]">
+                  <section className="rounded-[28px] border border-[#e4d9cb] bg-white px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                    <div className="flex flex-col gap-5 border-b border-[#ece4d8] pb-6 lg:flex-row lg:items-end lg:justify-between">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Reviewvenster</p>
+                        <h2 className="mt-2 text-[1.5rem] font-semibold tracking-[-0.04em] text-[#132033]">Komende 14 dagen</h2>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <ReviewWindowStat label="Achterstallig" value={`${overdueReviews.length}`} tone="red" />
+                        <ReviewWindowStat label="Deze week" value={`${thisWeekReviews.length}`} tone="amber" />
+                        <ReviewWindowStat label="Volgende week" value={`${nextWeekReviews.length}`} tone="slate" />
+                      </div>
+                    </div>
+
+                    <div className="mt-6 space-y-4">
                       {upcomingReviews.length === 0 ? (
-                        <EmptyBlock text="Zodra reviewmomenten gepland zijn, komen ze hier automatisch in de bounded adminlaag." />
+                        <EmptyBlock text="Zodra reviewmomenten gepland zijn, komen ze hier automatisch in Action Center." />
                       ) : (
                         upcomingReviews.map((item) => (
                           <button
                             key={item.id}
                             type="button"
-                            className="flex w-full items-start gap-4 text-left transition hover:text-[#132033]"
+                            className="flex w-full items-start gap-4 rounded-[22px] border border-transparent px-1 py-2 text-left transition hover:border-[#ece4d8] hover:bg-[#fcfaf7]"
                             onClick={() => {
                               setSelectedItemId(item.id)
                               setActiveView('reviews')
                             }}
                           >
-                            <div className="min-w-[64px] rounded-[18px] bg-[#fbf3ef] px-3 py-3 text-center text-[#d2574b]">
+                            <div className="min-w-[72px] rounded-[18px] bg-[#fbf3ef] px-3 py-3 text-center text-[#d2574b]">
                               <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Review</p>
                               <p className="mt-1 text-xl font-semibold">{item.reviewDateLabel}</p>
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="text-[1.02rem] font-semibold leading-7 text-[#132033]">{item.title}</p>
                               <p className="mt-1 text-sm text-[#6d6458]">
-                                {item.ownerName ?? fallbackOwnerName} - {item.reviewRhythm}
+                                {item.ownerName ?? fallbackOwnerName} / {item.reviewRhythm}
                               </p>
+                            </div>
+                            <div className="hidden text-right text-sm text-[#8b8174] xl:block">
+                              <p>{item.teamLabel}</p>
+                              <p className="mt-1">{item.sourceLabel}</p>
                             </div>
                           </button>
                         ))
                       )}
                     </div>
                   </section>
+
+                  <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Modulewaarheid</p>
+                    <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#132033]">
+                      Action Center blijft een eigen suite-module
+                    </h2>
+                    <p className="mt-4 text-sm leading-8 text-[#4f6175]">
+                      {readOnly
+                        ? 'Deze landing leest rustig mee met campagnes, uitvoering en bestaande dossiers. Bewerkbare opvolging openen we alleen waar je rol dat al toelaat.'
+                        : 'Voor echte wijzigingen blijft het onderliggende dossier leidend. Deze preview laat dezelfde werkwijze zien zonder extra routes toe te voegen.'}
+                    </p>
+
+                    <div className="mt-6 space-y-3">
+                      <SignalRow label="Broncampagnes" value={`${allSources.length} actief in deze selectie`} />
+                      <SignalRow label="Omgeving" value={workspaceSubtitle} />
+                      <SignalRow
+                        label="Eigenaarschap"
+                        value={
+                          missingManagerCount > 0
+                            ? `${missingManagerCount} team${missingManagerCount === 1 ? '' : 's'} vragen nog expliciete toewijzing`
+                            : 'Alle zichtbare teams hebben een expliciete manager'
+                        }
+                      />
+                    </div>
+
+                    <Link
+                      href={workbenchHref}
+                      className="mt-6 inline-flex rounded-full border border-[#ded3c6] bg-white px-4 py-2 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
+                    >
+                      {workbenchLabel}
+                    </Link>
+                  </section>
                 </div>
 
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr),minmax(320px,0.8fr)]">
-                  <section className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Eigenaarschap</p>
-                        <h2 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">Managers en toewijzing</h2>
-                      </div>
+                <section className="rounded-[28px] border border-[#e4d9cb] bg-white shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                  <div className="flex flex-col gap-4 border-b border-[#ece4d8] px-7 py-6 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Eigenaarschap</p>
+                      <h2 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#132033]">Managers en toewijzing</h2>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="inline-flex min-h-11 rounded-full border border-[#ded3c6] bg-[#fcfaf7] px-4.5 py-2.5 text-sm font-semibold text-[#5f564a]">
+                        {ownerCoverageCount} van {teamRows.length} teams expliciet gekoppeld
+                      </span>
                       <button
                         type="button"
-                        className="rounded-2xl border border-[#ded3c6] px-4 py-2 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
+                        className="min-h-11 rounded-full border border-[#ded3c6] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
                         onClick={() => setActiveView('managers')}
                       >
                         Open managers
                       </button>
                     </div>
+                  </div>
 
-                    <div className="mt-5 overflow-hidden rounded-[20px] border border-[#ebe1d5]">
-                      <div className="grid grid-cols-[minmax(0,1.6fr),minmax(0,1.4fr),110px,120px] gap-4 border-b border-[#ebe1d5] bg-[#faf6f0] px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+                  <div className="grid gap-6 px-7 py-6 xl:grid-cols-[minmax(0,1.45fr),minmax(320px,0.75fr)]">
+                    <div className="overflow-hidden rounded-[22px] border border-[#ebe1d5]">
+                      <div className="grid grid-cols-[minmax(0,1.7fr),minmax(0,1.35fr),96px,112px] gap-4 border-b border-[#ebe1d5] bg-[#faf6f0] px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
                         <span>Afdeling / team</span>
                         <span>Toegewezen manager</span>
                         <span>Mensen</span>
-                        <span>Open acties</span>
+                        <span>Open</span>
                       </div>
                       {teamRows.slice(0, 5).map((team) => (
-                        <div key={team.id} className="grid grid-cols-[minmax(0,1.6fr),minmax(0,1.4fr),110px,120px] gap-4 px-5 py-4 text-sm text-[#132033]">
+                        <div
+                          key={team.id}
+                          className="grid grid-cols-[minmax(0,1.7fr),minmax(0,1.35fr),96px,112px] gap-4 border-b border-[#f2eadf] px-5 py-4 text-sm text-[#132033] last:border-b-0"
+                        >
                           <div>
                             <p className="font-semibold">{team.label}</p>
                             <p className="mt-1 text-[#7c7368]">Team</p>
@@ -894,8 +1025,8 @@ export function ActionCenterPreview({
                             <p className="mt-1 text-[#7c7368]">
                               {readOnly
                                 ? team.currentManagerName
-                                  ? 'Leest live mee vanuit de bronlaag'
-                                  : 'Nog geen expliciete eigenaar in de bronlaag'
+                                  ? 'Leest live mee vanuit het dossier'
+                                  : 'Nog geen expliciete eigenaar in het dossier'
                                 : team.currentManagerName
                                   ? 'Wijzigbaar in preview'
                                   : 'Valt terug op admin'}
@@ -903,17 +1034,15 @@ export function ActionCenterPreview({
                           </div>
                           <p>{team.peopleCount}</p>
                           <div>
-                            <span className="inline-flex min-w-[46px] items-center justify-center rounded-xl border border-[#eadfce] bg-[#fbf7f1] px-3 py-2 text-sm font-semibold">
+                            <span className="inline-flex min-w-[46px] items-center justify-center rounded-full border border-[#eadfce] bg-[#fbf7f1] px-3 py-2 text-sm font-semibold">
                               {team.openActions}
                             </span>
                           </div>
                         </div>
                       ))}
                     </div>
-                  </section>
 
-                  <section className="space-y-6">
-                    <div className="rounded-[24px] bg-[#182231] px-6 py-6 text-white shadow-[0_18px_50px_rgba(19,32,51,0.18)]">
+                    <div className="rounded-[28px] bg-[#182231] px-6 py-6 text-white shadow-[0_22px_54px_rgba(19,32,51,0.2)]">
                       <div className="flex items-center gap-4">
                         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/8 text-xl font-semibold">
                           {getInitials(selectedTeam?.currentManagerName ?? fallbackOwnerName)}
@@ -925,38 +1054,25 @@ export function ActionCenterPreview({
                       </div>
                       <div className="mt-6 grid grid-cols-3 gap-4">
                         <DarkMetric label="Open" value={`${selectedTeam ? teamOpenItems.length : 0}`} accent="text-white" />
-                        <DarkMetric label="Review &lt;7d" value={`${selectedTeam?.reviewSoonCount ?? 0}`} accent="text-[#ffb16e]" />
+                        <DarkMetric label="Review <7d" value={`${selectedTeam?.reviewSoonCount ?? 0}`} accent="text-[#ffb16e]" />
                         <DarkMetric label="Geblokkeerd" value={`${selectedTeamItems.filter((item) => item.status === 'geblokkeerd').length}`} accent="text-white" />
                       </div>
-                    </div>
-
-                    <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Dossier-first</p>
-                      <h2 className="mt-2 text-[1.25rem] font-semibold tracking-[-0.03em] text-[#132033]">Dossierbron blijft leidend</h2>
-                      <p className="mt-3 text-sm leading-7 text-[#4f6175]">
-                        {readOnly
-                          ? 'Deze live surface leest direct mee met campaigns, delivery en bestaande dossiers. Bewerkbare opvolging openen we alleen waar rol, bronlaag en bounded productwaarheid dat al veilig dragen.'
-                          : 'Voor echte wijzigingen blijft de dossierbron onder deze surface de waarheid. Deze preview houdt de adminlaag dicht bij het referentiebeeld, maar opent geen extra carriers of consumerflows.'}
+                      <p className="mt-6 text-sm leading-7 text-white/72">
+                        Deze managerrail blijft onderdeel van dezelfde omgeving. Action Center voelt als een echte module en blijft tegelijk dicht bij het onderliggende dossier.
                       </p>
-                      <Link
-                        href={workbenchHref}
-                        className="mt-4 inline-flex rounded-2xl border border-[#ded3c6] bg-[#faf6f0] px-4 py-2 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
-                      >
-                        {workbenchLabel}
-                      </Link>
                     </div>
-                  </section>
-                </div>
+                  </div>
+                </section>
               </div>
             ) : null}
 
             {activeView === 'actions' ? (
               selectedItem ? (
-                <div className="space-y-6">
+                <div className="space-y-8">
                   <div className="flex flex-wrap items-center gap-3">
                     <button
                       type="button"
-                      className="inline-flex items-center rounded-full border border-[#ded3c6] bg-white px-4 py-2 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
+                      className="inline-flex min-h-11 items-center rounded-full border border-[#ded3c6] bg-[#fcfaf7] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
                       onClick={() => setActiveView('overview')}
                     >
                       Terug naar overzicht
@@ -965,14 +1081,14 @@ export function ActionCenterPreview({
                       <>
                         <button
                           type="button"
-                          className="inline-flex items-center rounded-full border border-[#ded3c6] bg-white px-4 py-2 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
+                          className="inline-flex min-h-11 items-center rounded-full border border-[#ded3c6] bg-[#fcfaf7] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
                           onClick={() => handleStatusChange(selectedItem.status === 'in-uitvoering' ? 'te-bespreken' : 'in-uitvoering')}
                         >
                           Status wijzigen
                         </button>
                         <button
                           type="button"
-                          className="inline-flex items-center rounded-full bg-[#ff9b4a] px-4 py-2 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
+                          className="inline-flex min-h-11 items-center rounded-full bg-[#ff9b4a] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
                           onClick={() => handleReviewPlanChange(selectedItem.reviewDate ?? new Date().toISOString(), selectedItem.reviewRhythm)}
                         >
                           Review plannen
@@ -981,43 +1097,52 @@ export function ActionCenterPreview({
                     ) : null}
                   </div>
 
-                  <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr),minmax(320px,0.85fr)]">
+                  <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr),minmax(320px,0.82fr)]">
                     <section className="space-y-6">
-                      <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
+                      <div className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                         <div className="flex flex-wrap items-center gap-3 text-sm text-[#736b60]">
                           <MiniTag>{selectedItem.sourceLabel}</MiniTag>
                           <PriorityInline priority={selectedItem.priority} />
                           <StatusPill status={selectedItem.status} />
                           <span className="ml-auto font-semibold text-[#5a7088]">{selectedItem.code}</span>
                         </div>
-                        <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Waarom deze actie?</p>
-                        <p className="mt-4 text-[1.15rem] leading-9 text-[#132033]">{selectedItem.reason}</p>
+                        <h2 className="mt-5 text-[2rem] font-semibold tracking-[-0.05em] text-[#132033]">{selectedItem.title}</h2>
+                        <p className="mt-4 max-w-3xl text-[1rem] leading-8 text-[#4f6175]">{selectedItem.summary}</p>
 
-                        <div className="mt-6 rounded-[20px] border border-[#eadfce] bg-[#fbf7f1] px-5 py-5">
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Gekoppeld signaal</p>
-                              <p className="mt-3 text-lg font-semibold tracking-[-0.02em] text-[#132033]">{selectedItem.signalLabel}</p>
-                              <p className="mt-2 text-sm leading-7 text-[#4f6175]">{selectedItem.signalBody}</p>
+                        <div className="mt-7 grid gap-4 lg:grid-cols-[minmax(0,1fr),minmax(0,0.92fr)]">
+                          <div className="rounded-[24px] border border-[#eadfce] bg-white px-5 py-5">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Waarom dit nu speelt</p>
+                            <p className="mt-4 text-[1.05rem] leading-8 text-[#132033]">{selectedItem.reason}</p>
+                          </div>
+                          <div className="rounded-[24px] border border-[#eadfce] bg-white px-5 py-5">
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Gekoppeld signaal</p>
+                                <p className="mt-3 text-lg font-semibold tracking-[-0.02em] text-[#132033]">{selectedItem.signalLabel}</p>
+                                <p className="mt-2 text-sm leading-7 text-[#4f6175]">{selectedItem.signalBody}</p>
+                              </div>
+                              <Link href={selectedItemHref} className="text-sm font-semibold text-[#5a7088] transition hover:text-[#132033]">
+                                {workbenchLabel}
+                              </Link>
                             </div>
-                            <Link href={selectedItemHref} className="text-sm font-semibold text-[#5a7088] transition hover:text-[#132033]">
-                              {workbenchLabel}
-                            </Link>
                           </div>
                         </div>
                       </div>
 
-                      <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                        <div className="flex items-center justify-between gap-3">
-                          <h2 className="text-[1.4rem] font-semibold tracking-[-0.03em] text-[#132033]">Reviewlogboek</h2>
-                          <p className="text-sm text-[#736b60]">Cadens: {selectedItem.reviewRhythm}</p>
+                      <div className="rounded-[28px] border border-[#e4d9cb] bg-white px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                        <div className="flex items-center justify-between gap-3 border-b border-[#ece4d8] pb-5">
+                          <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Reviewlogboek</p>
+                            <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">Wat is al besproken of vastgelegd?</h3>
+                          </div>
+                          <p className="text-sm text-[#736b60]">Ritme: {selectedItem.reviewRhythm}</p>
                         </div>
-                        <div className="mt-5 space-y-5">
+                        <div className="mt-6 space-y-5">
                           {selectedItem.updates.length === 0 ? (
                             <EmptyBlock text="Nog geen updates toegevoegd in deze preview." />
                           ) : (
                             selectedItem.updates.map((update) => (
-                              <div key={update.id} className="flex gap-3">
+                              <div key={update.id} className="flex gap-4 rounded-[22px] border border-[#efe7dc] bg-[#fcfaf7] px-5 py-5">
                                 <div className="mt-2 h-3 w-3 shrink-0 rounded-full bg-[#ff9b4a]" />
                                 <div className="min-w-0">
                                   <p className="font-semibold text-[#132033]">
@@ -1038,11 +1163,11 @@ export function ActionCenterPreview({
                               value={updateDraft}
                               onChange={(event) => setUpdateDraft(event.target.value)}
                               placeholder="Korte voortgang of besluit..."
-                              className="mt-4 min-h-[138px] w-full rounded-[20px] border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-4 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                              className="mt-4 min-h-[138px] w-full rounded-[22px] border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-4 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
                             />
                             <button
                               type="button"
-                              className="mt-4 inline-flex rounded-2xl bg-[#ff9b4a] px-4 py-2 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
+                              className="mt-4 inline-flex min-h-11 rounded-full bg-[#ff9b4a] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
                               onClick={handleAddUpdate}
                             >
                               Update opslaan
@@ -1053,47 +1178,68 @@ export function ActionCenterPreview({
                     </section>
 
                     <section className="space-y-6">
-                      <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Eigenaarschap</p>
+                      <div className="rounded-[30px] bg-[#182231] px-7 py-7 text-white shadow-[0_22px_56px_rgba(19,32,51,0.18)]">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Behandelroute</p>
                         <div className="mt-5 flex items-center gap-4">
-                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#182231] text-xl font-semibold text-white">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/8 text-xl font-semibold">
                             {getInitials(selectedItem.ownerName ?? fallbackOwnerName)}
                           </div>
                           <div>
-                            <p className="text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">
+                            <p className="text-[1.45rem] font-semibold tracking-[-0.03em]">
                               {selectedItem.ownerName ?? fallbackOwnerName}
                             </p>
-                            <p className="mt-1 text-sm text-[#5d6f84]">{selectedItem.ownerRole}</p>
+                            <p className="mt-1 text-sm text-white/58">{selectedItem.ownerRole}</p>
                           </div>
                         </div>
 
-                        <dl className="mt-6 grid grid-cols-[minmax(0,1fr),minmax(0,1fr)] gap-y-4 text-sm">
-                          <LabelValue label="Afdeling" value={selectedItem.teamLabel} />
-                          <LabelValue label="Bron" value={selectedItem.sourceLabel} />
-                          <LabelValue label="Prioriteit" value={getPriorityMeta(selectedItem.priority).label} />
-                          <LabelValue label="Streefdatum" value={selectedItem.reviewDateLabel} />
-                          <LabelValue label="Volgende review" value={formatLongDate(selectedItem.reviewDate)} />
-                          <LabelValue label="Reviewritme" value={selectedItem.reviewRhythm} />
-                        </dl>
-                      </div>
+                        <div className="mt-6 grid grid-cols-3 gap-4">
+                          <DarkMetric label="Mensen" value={`${selectedItem.peopleCount}`} accent="text-white" />
+                          <DarkMetric label="Review" value={selectedItem.reviewDateLabel} accent="text-[#ffb16e]" />
+                          <DarkMetric label="Prioriteit" value={getPriorityMeta(selectedItem.priority).label} accent="text-white" />
+                        </div>
 
-                      <div className="rounded-[24px] bg-[#182231] px-6 py-6 text-white shadow-[0_18px_50px_rgba(19,32,51,0.18)]">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Voorbereiding bespreking</p>
-                        <p className="mt-4 text-lg leading-8">
-                          Sluit aan bij het overleg van <span className="font-semibold text-[#ffb16e]">{selectedItem.reviewDateLabel}</span>. Neem mee:
-                          laatste update, open signalen en de eerstvolgende stap.
-                        </p>
+                        <div className="mt-6 rounded-[22px] border border-white/10 bg-white/[0.04] px-5 py-5">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Volgende stap</p>
+                          <p className="mt-3 text-base leading-7 text-white/86">{selectedItem.nextStep}</p>
+                        </div>
+
                         <div className="mt-5 space-y-3">
                           {selectedItem.openSignals.map((signal) => (
-                            <div key={signal} className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm">
+                            <div key={signal} className="rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/82">
                               {signal.replace(/_/g, ' ')}
                             </div>
                           ))}
                         </div>
                       </div>
 
+                      <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Eigenaarschap en context</p>
+                        <dl className="mt-5 grid grid-cols-[minmax(0,1fr),minmax(0,1fr)] gap-y-4 text-sm">
+                          <LabelValue label="Afdeling" value={selectedItem.teamLabel} />
+                          <LabelValue label="Bron" value={selectedItem.sourceLabel} />
+                          <LabelValue label="Streefdatum" value={selectedItem.reviewDateLabel} />
+                          <LabelValue label="Volgende review" value={formatLongDate(selectedItem.reviewDate)} />
+                          <LabelValue label="Reviewritme" value={selectedItem.reviewRhythm} />
+                          <LabelValue label="Review-eigenaar" value={selectedItem.reviewOwnerName ?? fallbackOwnerName} />
+                        </dl>
+                      </div>
+
+                      <div className="rounded-[24px] border border-[#e4d9cb] bg-[#fcfaf7] px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Bespreekvoorbereiding</p>
+                        <p className="mt-3 text-sm leading-8 text-[#4f6175]">
+                          Sluit aan bij het overleg van <span className="font-semibold text-[#132033]">{selectedItem.reviewDateLabel}</span>.
+                          Neem de laatste update, open signalen en de eerstvolgende stap mee.
+                        </p>
+                        <Link
+                          href={selectedItemHref}
+                          className="mt-5 inline-flex min-h-11 rounded-full border border-[#ded3c6] bg-white px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
+                        >
+                          {workbenchLabel}
+                        </Link>
+                      </div>
+
                       {!readOnly ? (
-                        <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
+                        <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Review plannen</p>
                           <div className="mt-4 grid gap-4">
                             <input
@@ -1127,236 +1273,382 @@ export function ActionCenterPreview({
               ) : (
                 <EmptySection
                   title="Nog geen acties beschikbaar"
-                  body="Zodra er bounded ExitScan-dossiers zichtbaar zijn, toont deze view automatisch de open opvolging."
+                  body="Zodra er zichtbare ExitScan-dossiers zijn, toont deze view automatisch de open opvolging."
                 />
               )
             ) : null}
 
             {activeView === 'reviews' ? (
-              <div className="space-y-6">
-                <div className="grid gap-4 xl:grid-cols-4">
-                  <MetricCard label="Achterstallig" value={`${overdueReviews.length}`} subcopy="voor vandaag" accent="red" />
-                  <MetricCard label="Deze week" value={`${thisWeekReviews.length}`} subcopy="te bespreken" accent="amber" />
-                  <MetricCard label="Volgende week" value={`${nextWeekReviews.length}`} subcopy="in queue" accent="slate" />
-                  <MetricCard label="Komend kwartaal" value={`${quarterReviews.length}`} subcopy="gepland" accent="slate" />
+              <div className="space-y-8">
+                <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                  <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="max-w-2xl">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Reviewritme</p>
+                      <h2 className="mt-3 text-[1.9rem] font-semibold tracking-[-0.05em] text-[#132033]">Welke gesprekken komen wanneer terug?</h2>
+                      <p className="mt-4 text-[1rem] leading-8 text-[#4f6175]">
+                        Deze view maakt het reviewritme rustiger leesbaar: eerst wat over tijd is, daarna wat deze en volgende week opnieuw bestuurd moet worden.
+                      </p>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-4">
+                      <ReviewWindowStat label="Achterstallig" value={`${overdueReviews.length}`} tone="red" />
+                      <ReviewWindowStat label="Deze week" value={`${thisWeekReviews.length}`} tone="amber" />
+                      <ReviewWindowStat label="Volgende week" value={`${nextWeekReviews.length}`} tone="slate" />
+                      <ReviewWindowStat label="Kwartaal" value={`${quarterReviews.length}`} tone="slate" />
+                    </div>
+                  </div>
+                </section>
+
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr),minmax(320px,0.82fr)]">
+                  <section className="space-y-6">
+                    <ReviewLane
+                      title="Achterstallig"
+                      items={overdueReviews}
+                      emptyText="Geen achterstallige reviews meer zichtbaar."
+                      onOpen={(item) => {
+                        setSelectedItemId(item.id)
+                        setActiveView('actions')
+                      }}
+                    />
+                    <ReviewLane
+                      title="Deze week"
+                      items={thisWeekReviews}
+                      emptyText="Niets meer voor deze week."
+                      onOpen={(item) => {
+                        setSelectedItemId(item.id)
+                        setActiveView('actions')
+                      }}
+                    />
+                    <ReviewLane
+                      title="Volgende week"
+                      items={nextWeekReviews}
+                      emptyText="Nog geen follow-up voor volgende week."
+                      onOpen={(item) => {
+                        setSelectedItemId(item.id)
+                        setActiveView('actions')
+                      }}
+                    />
+                  </section>
+
+                  <section className="space-y-6">
+                    <div className="rounded-[30px] bg-[#182231] px-7 py-7 text-white shadow-[0_22px_56px_rgba(19,32,51,0.18)]">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Reviewfocus</p>
+                      <h2 className="mt-3 text-[1.7rem] font-semibold tracking-[-0.04em]">
+                        {upcomingReviews[0]?.title ?? 'Nog geen reviewmoment zichtbaar'}
+                      </h2>
+                      <p className="mt-4 text-[0.98rem] leading-8 text-white/72">
+                        {upcomingReviews[0]
+                          ? `Het eerstvolgende gesprek valt op ${upcomingReviews[0].reviewDateLabel} en blijft gekoppeld aan hetzelfde dossier en dezelfde eigenaar.`
+                          : 'Zodra er reviewdata live staan, verschijnt hier automatisch het eerstvolgende gesprek.'}
+                      </p>
+
+                      <div className="mt-6 space-y-4 border-t border-white/10 pt-6">
+                        <FocusSummaryRow label="Eerstvolgend" value={earliestReview} />
+                        <FocusSummaryRow label="Review < 14 dagen" value={`${overdueReviews.length + thisWeekReviews.length + nextWeekReviews.length}`} />
+                        <FocusSummaryRow label="Komend kwartaal" value={`${quarterReviews.length}`} />
+                        <FocusSummaryRow
+                          label="Zonder eigenaar"
+                          value={missingManagerCount > 0 ? `${missingManagerCount} team${missingManagerCount === 1 ? '' : 's'}` : 'Geen'}
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        className="mt-6 inline-flex min-h-11 rounded-full bg-[#ff9b4a] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98]"
+                        onClick={() => {
+                          if (upcomingReviews[0]) {
+                            setSelectedItemId(upcomingReviews[0].id)
+                            setActiveView('actions')
+                          }
+                        }}
+                      >
+                        Open eerstvolgende review
+                      </button>
+                    </div>
+
+                    <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Reviewvenster</p>
+                      <div className="mt-5 space-y-4">
+                        <SummaryRow label="Achterstallig voor vandaag" value={`${overdueReviews.length}`} />
+                        <SummaryRow label="Te bespreken deze week" value={`${thisWeekReviews.length}`} />
+                        <SummaryRow label="Al ingepland volgende week" value={`${nextWeekReviews.length}`} />
+                        <SummaryRow label="Later in het kwartaal" value={`${quarterReviews.length}`} />
+                      </div>
+                      <p className="mt-5 text-sm leading-7 text-[#4f6175]">
+                        Reviews blijven hier bewust gekoppeld aan echte acties. Vanuit deze view open je dus steeds dezelfde detailstaat.
+                      </p>
+                    </div>
+                  </section>
                 </div>
-                <ReviewLane
-                  title="Achterstallig"
-                  items={overdueReviews}
-                  emptyText="Geen achterstallige reviews meer zichtbaar."
-                  onOpen={(item) => {
-                    setSelectedItemId(item.id)
-                    setActiveView('actions')
-                  }}
-                />
-                <ReviewLane
-                  title="Deze week"
-                  items={thisWeekReviews}
-                  emptyText="Niets meer voor deze week."
-                  onOpen={(item) => {
-                    setSelectedItemId(item.id)
-                    setActiveView('actions')
-                  }}
-                />
-                <ReviewLane
-                  title="Volgende week"
-                  items={nextWeekReviews}
-                  emptyText="Nog geen follow-up voor volgende week."
-                  onOpen={(item) => {
-                    setSelectedItemId(item.id)
-                    setActiveView('actions')
-                  }}
-                />
               </div>
             ) : null}
 
             {activeView === 'managers' ? (
-              <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr),minmax(320px,0.75fr)]">
-                <section className="rounded-[24px] border border-[#e4d9cb] bg-white shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                  <div className="grid grid-cols-[minmax(0,1.4fr),minmax(0,1.2fr),110px,120px] gap-4 border-b border-[#ebe1d5] bg-[#faf6f0] px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
-                    <span>Afdeling / team</span>
-                    <span>Toegewezen manager</span>
-                    <span>Mensen</span>
-                    <span>Open acties</span>
-                  </div>
-                  <div>
-                    {teamRows.map((team) => (
-                      <div key={team.id} className="grid grid-cols-[minmax(0,1.4fr),minmax(0,1.2fr),110px,120px] gap-4 border-b border-[#f1e8dd] px-6 py-5 text-sm text-[#132033] last:border-b-0">
-                        <div>
-                          <button
-                            type="button"
-                            className="text-left"
-                            onClick={() => {
-                              setSelectedTeamId(team.id)
-                              setActiveView('teams')
-                            }}
-                          >
-                            <p className="font-semibold">{team.label}</p>
-                            <p className="mt-1 text-[#7c7368]">Team</p>
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#182231] text-sm font-semibold text-white">
-                              {getInitials(team.currentManagerName)}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="truncate font-semibold">{team.currentManagerName ?? 'Nog niet toegewezen'}</p>
-                              <p className="truncate text-[#7c7368]">
-                                {canAssignManagers ? 'Live toewijzing binnen dezelfde suite-shell' : 'Leest live mee vanuit de bronlaag'}
-                              </p>
-                            </div>
-                          </div>
-                          {canAssignManagers ? (
-                            <select
-                              value={team.currentManagerId ?? ''}
-                              onChange={(event) => void handleManagerChange(team.id, event.target.value)}
-                              disabled={assignmentPendingTeamId === team.id}
-                              className="w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-2.5 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
-                            >
-                              <option value="">Manager toewijzen</option>
-                              {assignmentOptions.map((option) => (
-                                <option key={`${team.id}-${option.value}`} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          ) : null}
-                        </div>
-                        <p className="pt-2">{team.peopleCount}</p>
-                        <div className="pt-1">
-                          <span className="inline-flex min-w-[46px] items-center justify-center rounded-xl border border-[#eadfce] bg-[#fbf7f1] px-3 py-2 text-sm font-semibold">
-                            {team.openActions}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="space-y-6">
-                  {assignmentError ? (
-                    <div className="rounded-[24px] border border-[#f3c0bc] bg-[#fff1ef] px-6 py-5 text-sm leading-7 text-[#9c3f36] shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                      {assignmentError}
+              <div className="space-y-8">
+                <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                  <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="max-w-2xl">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Eigenaarschap</p>
+                      <h2 className="mt-3 text-[1.9rem] font-semibold tracking-[-0.05em] text-[#132033]">Waar eigenaarschap expliciet moet landen</h2>
+                      <p className="mt-4 text-[1rem] leading-8 text-[#4f6175]">
+                        Deze subview houdt manager-toewijzing rustig en controleerbaar. We tonen alleen echte teamcontext en echte managers.
+                      </p>
                     </div>
-                  ) : null}
-                  <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Fallback-eigenaar</p>
-                    <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.03em] text-[#132033]">{fallbackOwnerName}</h2>
-                    <p className="mt-3 text-sm leading-7 text-[#4f6175]">
-                      Als geen manager is toegewezen, blijft eigenaarschap in deze bounded adminlaag terugvallen op Verisight beheer.
-                    </p>
-                  </div>
-
-                  <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Status van toewijzing</p>
-                    <div className="mt-5 space-y-4 text-sm text-[#132033]">
-                      <SummaryRow label="Toegewezen" value={`${teamRows.length - missingManagerCount} van ${teamRows.length}`} />
-                      <SummaryRow label="Zonder eigenaar" value={`${missingManagerCount}`} />
-                      <SummaryRow
-                        label="Gemiddeld open per team"
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <OverviewStat label="Toegewezen" value={`${ownerCoverageCount}`} detail={`van ${teamRows.length} teams expliciet gekoppeld`} accent="teal" />
+                      <OverviewStat
+                        label="Zonder eigenaar"
+                        value={`${missingManagerCount}`}
+                        detail={missingManagerCount > 0 ? 'vragen nog een manager' : 'geen open gaten zichtbaar'}
+                        accent="red"
+                      />
+                      <OverviewStat
+                        label="Gemiddeld open"
                         value={
                           teamRows.length > 0
                             ? (teamRows.reduce((sum, team) => sum + team.openActions, 0) / teamRows.length).toFixed(1)
                             : '0.0'
                         }
+                        detail="acties per team"
+                        accent="amber"
                       />
                     </div>
                   </div>
                 </section>
+
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr),minmax(320px,0.78fr)]">
+                  <section className="rounded-[28px] border border-[#e4d9cb] bg-white shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                    <div className="flex flex-col gap-4 border-b border-[#ebe1d5] px-7 py-6 lg:flex-row lg:items-end lg:justify-between">
+                      <div>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Managers per team</p>
+                        <h3 className="mt-2 text-[1.4rem] font-semibold tracking-[-0.03em] text-[#132033]">Koppel eigenaarschap zonder extra omweg</h3>
+                      </div>
+                      <p className="text-sm text-[#6d6458]">
+                        {canAssignManagers ? 'Live toewijzing in deze omgeving' : 'Alleen lezen vanuit het dossier'}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-[minmax(0,1.35fr),minmax(0,1.3fr),96px,112px] gap-4 border-b border-[#ebe1d5] bg-[#faf6f0] px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+                      <span>Afdeling / team</span>
+                      <span>Toegewezen manager</span>
+                      <span>Mensen</span>
+                      <span>Open</span>
+                    </div>
+                    <div>
+                      {teamRows.map((team) => (
+                        <div
+                          key={team.id}
+                          className={`grid grid-cols-[minmax(0,1.35fr),minmax(0,1.3fr),96px,112px] gap-4 border-b border-[#f1e8dd] px-7 py-5 text-sm text-[#132033] last:border-b-0 ${
+                            selectedTeam?.id === team.id ? 'bg-[#fcfaf7]' : 'bg-white'
+                          }`}
+                        >
+                          <div>
+                            <button
+                              type="button"
+                              className="text-left"
+                              onClick={() => {
+                                setSelectedTeamId(team.id)
+                                setActiveView('teams')
+                              }}
+                            >
+                              <p className="font-semibold">{team.label}</p>
+                              <p className="mt-1 text-[#7c7368]">Open teamread</p>
+                            </button>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#182231] text-sm font-semibold text-white">
+                                {getInitials(team.currentManagerName)}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate font-semibold">{team.currentManagerName ?? 'Nog niet toegewezen'}</p>
+                                <p className="truncate text-[#7c7368]">
+                                  {canAssignManagers ? 'Koppeling blijft live zichtbaar in deze module' : 'Leest live mee vanuit het dossier'}
+                                </p>
+                              </div>
+                            </div>
+                            {canAssignManagers ? (
+                              <select
+                                value={team.currentManagerId ?? ''}
+                                onChange={(event) => void handleManagerChange(team.id, event.target.value)}
+                                disabled={assignmentPendingTeamId === team.id}
+                                className="w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-2.5 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                              >
+                                <option value="">Manager toewijzen</option>
+                                {assignmentOptions.map((option) => (
+                                  <option key={`${team.id}-${option.value}`} value={option.value}>
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : null}
+                          </div>
+                          <p className="pt-2">{team.peopleCount}</p>
+                          <div className="pt-1">
+                            <span className="inline-flex min-w-[46px] items-center justify-center rounded-full border border-[#eadfce] bg-[#fbf7f1] px-3 py-2 text-sm font-semibold">
+                              {team.openActions}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="space-y-6">
+                    {assignmentError ? (
+                      <div className="rounded-[24px] border border-[#f3c0bc] bg-[#fff1ef] px-6 py-5 text-sm leading-7 text-[#9c3f36] shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                        {assignmentError}
+                      </div>
+                    ) : null}
+
+                    <div className="rounded-[30px] bg-[#182231] px-7 py-7 text-white shadow-[0_22px_56px_rgba(19,32,51,0.18)]">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Toewijzingsfocus</p>
+                      <h2 className="mt-3 text-[1.7rem] font-semibold tracking-[-0.04em]">
+                        {selectedTeam?.label ?? 'Geen team geselecteerd'}
+                      </h2>
+                      <p className="mt-4 text-[0.98rem] leading-8 text-white/72">
+                        {selectedTeam
+                          ? `Voor ${selectedTeam.label} blijft ${selectedTeam.currentManagerName ?? fallbackOwnerName} nu de belangrijkste eigenaar in beeld.`
+                          : 'Kies een team om de ownership-context te lezen.'}
+                      </p>
+
+                      <div className="mt-6 space-y-4 border-t border-white/10 pt-6">
+                        <FocusSummaryRow label="Manager" value={selectedTeam?.currentManagerName ?? fallbackOwnerName} />
+                        <FocusSummaryRow label="Open acties" value={`${selectedTeam?.openActions ?? 0}`} />
+                        <FocusSummaryRow label="Reviews < 7 dagen" value={`${selectedTeam?.reviewSoonCount ?? 0}`} />
+                        <FocusSummaryRow label="Mensen" value={`${selectedTeam?.peopleCount ?? 0}`} />
+                      </div>
+                    </div>
+
+                    <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Fallback-eigenaar</p>
+                      <h3 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">{fallbackOwnerName}</h3>
+                      <p className="mt-3 text-sm leading-7 text-[#4f6175]">
+                        Als geen manager is toegewezen, valt eigenaarschap hier terug op Verisight beheer.
+                      </p>
+                      <div className="mt-5 space-y-4">
+                        <SummaryRow label="Toegewezen" value={`${ownerCoverageCount} van ${teamRows.length}`} />
+                        <SummaryRow label="Zonder eigenaar" value={`${missingManagerCount}`} />
+                      </div>
+                    </div>
+                  </section>
+                </div>
               </div>
             ) : null}
 
             {activeView === 'teams' ? (
               selectedTeam ? (
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr),minmax(320px,0.75fr)]">
-                  <section className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Mijn open acties</p>
-                        <h2 className="mt-2 text-[1.45rem] font-semibold tracking-[-0.03em] text-[#132033]">{selectedTeam.label}</h2>
+                <div className="space-y-8">
+                  <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                      <div className="max-w-2xl">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Teamcontext</p>
+                        <h2 className="mt-3 text-[1.9rem] font-semibold tracking-[-0.05em] text-[#132033]">{selectedTeam.label}</h2>
+                        <p className="mt-4 text-[1rem] leading-8 text-[#4f6175]">
+                          Deze teamread houdt de managementflow compact: wat staat nog open, welke reviews komen eraan en wie is hier de expliciete eigenaar?
+                        </p>
                       </div>
-                      <p className="text-sm text-[#736b60]">{teamOpenItems.length} actief</p>
-                    </div>
-                    <div className="mt-6 space-y-4">
-                      {teamOpenItems.length === 0 ? (
-                        <EmptyBlock text="Voor dit team staan nu geen open opvolgacties meer zichtbaar." />
-                      ) : (
-                        teamOpenItems.slice(0, 3).map((item) => (
-                          <button
-                            key={item.id}
-                            type="button"
-                            className="flex w-full items-center justify-between gap-4 rounded-[22px] border border-[#ebe1d5] bg-[#fffdfa] px-5 py-5 text-left transition hover:border-[#d7cab9]"
-                            onClick={() => {
-                              setSelectedItemId(item.id)
-                              setActiveView('actions')
-                            }}
-                          >
-                            <div className="min-w-0">
-                              <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d6458]">
-                                <MiniTag>{item.sourceLabel}</MiniTag>
-                                <span>{getPriorityMeta(item.priority).label}</span>
-                              </div>
-                              <p className="mt-3 text-[1.08rem] font-semibold tracking-[-0.02em] text-[#132033]">{item.title}</p>
-                              <p className="mt-2 text-sm text-[#5d6f84]">
-                                Review {item.reviewDateLabel} - Cadens {item.reviewRhythm}
-                              </p>
-                            </div>
-                            <StatusPill status={item.status} />
-                          </button>
-                        ))
-                      )}
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <OverviewStat label="Open acties" value={`${teamOpenItems.length}`} detail="zichtbaar in deze teamcontext" accent="amber" />
+                        <OverviewStat label="Review < 7 dagen" value={`${selectedTeam.reviewSoonCount}`} detail="vragen snel gesprek" accent="red" />
+                        <OverviewStat label="Mensen" value={`${selectedTeam.peopleCount}`} detail="in deze scope" accent="teal" />
+                      </div>
                     </div>
                   </section>
 
-                  <section className="space-y-6">
-                    <div className="rounded-[24px] bg-[#182231] px-6 py-6 text-white shadow-[0_18px_50px_rgba(19,32,51,0.18)]">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/8 text-xl font-semibold">
-                          {getInitials(selectedTeam.currentManagerName ?? fallbackOwnerName)}
-                        </div>
+                  <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr),minmax(320px,0.78fr)]">
+                    <section className="rounded-[28px] border border-[#e4d9cb] bg-white px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                      <div className="flex items-center justify-between gap-3 border-b border-[#ece4d8] pb-5">
                         <div>
-                          <p className="text-[1.4rem] font-semibold tracking-[-0.03em]">
-                            {selectedTeam.currentManagerName ?? fallbackOwnerName}
-                          </p>
-                          <p className="mt-1 text-sm text-white/58">Manager - {selectedTeam.label}</p>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Open teamacties</p>
+                          <h3 className="mt-2 text-[1.4rem] font-semibold tracking-[-0.03em] text-[#132033]">Wat ligt nu nog op tafel?</h3>
                         </div>
+                        <p className="text-sm text-[#736b60]">{teamOpenItems.length} actief</p>
                       </div>
-                      <div className="mt-6 grid grid-cols-3 gap-4">
-                        <DarkMetric label="Open" value={`${teamOpenItems.length}`} accent="text-white" />
-                        <DarkMetric label="Review&lt;7d" value={`${selectedTeam.reviewSoonCount}`} accent="text-[#ffb16e]" />
-                        <DarkMetric
-                          label="Geblokkeerd"
-                          value={`${teamOpenItems.filter((item) => item.status === 'geblokkeerd').length}`}
-                          accent="text-white"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Te bespreken deze week</p>
-                      <div className="mt-4 space-y-4">
-                        {teamReviewItems.length === 0 ? (
-                          <EmptyBlock text="Geen reviews meer gepland voor dit team in de huidige selectie." />
+                      <div className="mt-6 space-y-4">
+                        {teamOpenItems.length === 0 ? (
+                          <EmptyBlock text="Voor dit team staan nu geen open opvolgacties meer zichtbaar." />
                         ) : (
-                          teamReviewItems.map((item) => (
+                          teamOpenItems.map((item) => (
                             <button
                               key={item.id}
                               type="button"
-                              className="w-full text-left"
+                              className="flex w-full items-start justify-between gap-4 rounded-[22px] border border-[#ebe1d5] bg-[#fcfaf7] px-5 py-5 text-left transition hover:border-[#d7cab9]"
                               onClick={() => {
                                 setSelectedItemId(item.id)
                                 setActiveView('actions')
                               }}
                             >
-                              <p className="font-semibold text-[#132033]">{item.title}</p>
-                              <p className="mt-1 text-sm text-[#5d6f84]">Volgende bespreking {item.reviewDateLabel}</p>
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d6458]">
+                                  <MiniTag>{item.sourceLabel}</MiniTag>
+                                  <span>{getPriorityMeta(item.priority).label}</span>
+                                  <span className="text-[#b2a496]">/</span>
+                                  <span>{item.ownerName ?? fallbackOwnerName}</span>
+                                </div>
+                                <p className="mt-3 text-[1.08rem] font-semibold tracking-[-0.02em] text-[#132033]">{item.title}</p>
+                                <p className="mt-2 text-sm text-[#5d6f84]">
+                                  Review {item.reviewDateLabel}, ritme {item.reviewRhythm}
+                                </p>
+                              </div>
+                              <StatusPill status={item.status} />
                             </button>
                           ))
                         )}
                       </div>
-                    </div>
-                  </section>
+                    </section>
+
+                    <section className="space-y-6">
+                      <div className="rounded-[30px] bg-[#182231] px-7 py-7 text-white shadow-[0_22px_56px_rgba(19,32,51,0.18)]">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Teamverantwoordelijke</p>
+                        <div className="mt-5 flex items-center gap-4">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/8 text-xl font-semibold">
+                            {getInitials(selectedTeam.currentManagerName ?? fallbackOwnerName)}
+                          </div>
+                          <div>
+                            <p className="text-[1.4rem] font-semibold tracking-[-0.03em]">
+                              {selectedTeam.currentManagerName ?? fallbackOwnerName}
+                            </p>
+                            <p className="mt-1 text-sm text-white/58">Manager - {selectedTeam.label}</p>
+                          </div>
+                        </div>
+                        <div className="mt-6 grid grid-cols-3 gap-4">
+                          <DarkMetric label="Open" value={`${teamOpenItems.length}`} accent="text-white" />
+                          <DarkMetric label="Review < 7d" value={`${selectedTeam.reviewSoonCount}`} accent="text-[#ffb16e]" />
+                          <DarkMetric
+                            label="Geblokkeerd"
+                            value={`${teamOpenItems.filter((item) => item.status === 'geblokkeerd').length}`}
+                            accent="text-white"
+                          />
+                        </div>
+                        <p className="mt-6 text-sm leading-7 text-white/72">
+                          Deze teamrail blijft onderdeel van dezelfde omgeving en leest dus altijd mee met eigenaarschap en reviewplanning.
+                        </p>
+                      </div>
+
+                      <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Te bespreken deze week</p>
+                        <div className="mt-4 space-y-4">
+                          {teamReviewItems.length === 0 ? (
+                            <EmptyBlock text="Geen reviews meer gepland voor dit team in de huidige selectie." />
+                          ) : (
+                            teamReviewItems.map((item) => (
+                              <button
+                                key={item.id}
+                                type="button"
+                                className="w-full rounded-[18px] border border-[#efe7dc] bg-[#fcfaf7] px-4 py-4 text-left transition hover:border-[#d7cab9]"
+                                onClick={() => {
+                                  setSelectedItemId(item.id)
+                                  setActiveView('actions')
+                                }}
+                              >
+                                <p className="font-semibold text-[#132033]">{item.title}</p>
+                                <p className="mt-1 text-sm text-[#5d6f84]">Volgende bespreking {item.reviewDateLabel}</p>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </section>
+                  </div>
                 </div>
               ) : (
                 <EmptySection
@@ -1377,7 +1669,7 @@ export function ActionCenterPreview({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Nieuwe actie</p>
                 <h2 className="mt-2 text-[2rem] font-semibold tracking-[-0.05em] text-[#132033]">Actie aanmaken</h2>
                 <p className="mt-3 text-base leading-8 text-[#4f6175]">
-                  Koppel een concrete vervolgstap aan een Verisight-signaal of bestaand dossier binnen de bounded adminlaag.
+                  Koppel een concrete vervolgstap aan een Verisight-signaal of bestaand dossier in Action Center.
                 </p>
               </div>
               <button
@@ -1551,36 +1843,48 @@ function SidebarGroup({
   )
 }
 
-function MetricCard({
+function OverviewStat({
   label,
   value,
-  subcopy,
+  detail,
   accent,
 }: {
   label: string
   value: string
-  subcopy: string
-  accent: 'slate' | 'amber' | 'red' | 'teal' | 'green'
+  detail: string
+  accent: 'amber' | 'red' | 'teal'
 }) {
   const accentClass =
-    accent === 'amber'
-      ? 'bg-[#ff9b4a]'
-      : accent === 'red'
-        ? 'bg-[#ef6e64]'
-        : accent === 'teal'
-          ? 'bg-[#70b7aa]'
-          : accent === 'green'
-            ? 'bg-[#77b78d]'
-            : 'bg-[#d6cdc2]'
+    accent === 'amber' ? 'bg-[#ff9b4a]' : accent === 'red' ? 'bg-[#ef6e64]' : 'bg-[#70b7aa]'
 
   return (
-    <div className="rounded-[20px] border border-[#e4d9cb] bg-white px-5 py-5 shadow-[0_10px_28px_rgba(19,32,51,0.06)]">
+    <div className="rounded-[22px] border border-[#e6ddd2] bg-white px-4 py-4">
       <div className="flex items-center gap-2">
         <span className={`h-2.5 w-2.5 rounded-full ${accentClass}`} />
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7d7368]">{label}</p>
       </div>
-      <p className="dash-number mt-3 text-[2.15rem] font-semibold tracking-[-0.05em] text-[#132033]">{value}</p>
-      <p className="mt-1 text-sm text-[#6d6458]">{subcopy}</p>
+      <p className="dash-number mt-3 text-[1.95rem] font-semibold tracking-[-0.05em] text-[#132033]">{value}</p>
+      <p className="mt-1 text-sm text-[#6d6458]">{detail}</p>
+    </div>
+  )
+}
+
+function ReviewWindowStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string
+  value: string
+  tone: 'red' | 'amber' | 'slate'
+}) {
+  const textClass =
+    tone === 'red' ? 'text-[#d2574b]' : tone === 'amber' ? 'text-[#bd6a16]' : 'text-[#42556b]'
+
+  return (
+    <div className="rounded-[18px] border border-[#ece4d8] bg-[#fcfaf7] px-4 py-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
+      <p className={`mt-2 text-[1.4rem] font-semibold tracking-[-0.04em] ${textClass}`}>{value}</p>
     </div>
   )
 }
@@ -1597,7 +1901,7 @@ function ReviewLane({
   onOpen: (item: ActionCenterPreviewItem) => void
 }) {
   return (
-    <section className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
+    <section className="rounded-[28px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-[1.45rem] font-semibold tracking-[-0.03em] text-[#132033]">{title}</h2>
         <p className="text-sm text-[#736b60]">{items.length} besprekingen</p>
@@ -1613,7 +1917,7 @@ function ReviewLane({
               className="flex w-full items-start gap-4 rounded-[22px] border border-[#ebe1d5] bg-[#fffdfa] px-5 py-5 text-left transition hover:border-[#d7cab9]"
               onClick={() => onOpen(item)}
             >
-              <div className="min-w-[70px] rounded-[18px] bg-[#fbf3ef] px-3 py-3 text-center text-[#d2574b]">
+              <div className="min-w-[70px] rounded-[20px] bg-[#fbf3ef] px-3 py-3 text-center text-[#d2574b]">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Review</p>
                 <p className="mt-1 text-xl font-semibold">{item.reviewDateLabel}</p>
               </div>
@@ -1657,14 +1961,6 @@ function MiniTag({ children }: { children: React.ReactNode }) {
   )
 }
 
-function AvatarBadge({ label }: { label: string | null }) {
-  return (
-    <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#182231] text-xs font-semibold text-white">
-      {getInitials(label)}
-    </div>
-  )
-}
-
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 border-b border-[#f1e8dd] pb-4 last:border-b-0 last:pb-0">
@@ -1692,9 +1988,27 @@ function DarkMetric({ label, value, accent }: { label: string; value: string; ac
   )
 }
 
+function FocusSummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 text-sm">
+      <span className="text-white/48">{label}</span>
+      <span className="text-right font-semibold text-white/86">{value}</span>
+    </div>
+  )
+}
+
+function SignalRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[18px] border border-[#e6ddd2] bg-white px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
+      <p className="mt-2 text-sm leading-7 text-[#42556b]">{value}</p>
+    </div>
+  )
+}
+
 function EmptyBlock({ text }: { text: string }) {
   return (
-    <div className="rounded-[20px] border border-dashed border-[#ddd3c7] bg-[#fbf8f4] px-5 py-5 text-sm leading-7 text-[#5d6f84]">
+    <div className="rounded-[22px] border border-dashed border-[#ddd3c7] bg-[#fbf8f4] px-5 py-5 text-sm leading-7 text-[#5d6f84]">
       {text}
     </div>
   )
@@ -1702,7 +2016,7 @@ function EmptyBlock({ text }: { text: string }) {
 
 function EmptySection({ title, body }: { title: string; body: string }) {
   return (
-    <section className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-10 text-center shadow-[0_12px_40px_rgba(19,32,51,0.08)]">
+    <section className="rounded-[28px] border border-[#e4d9cb] bg-white px-6 py-10 text-center shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
       <h2 className="text-[1.45rem] font-semibold tracking-[-0.03em] text-[#132033]">{title}</h2>
       <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-[#5d6f84]">{body}</p>
     </section>
