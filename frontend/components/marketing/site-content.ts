@@ -41,8 +41,8 @@ export const marketingLegalLinks = [
 export const homepageProductRoutes = [
   {
     name: 'ExitScan',
-    title: 'Breng vertrekduiding scherp in beeld',
-    body: 'Terugkijkende vertrekduiding op groepsniveau, met bestuurlijke handoff en een heldere eerste managementroute.',
+    title: 'Breng scherp in beeld waarom medewerkers vertrekken',
+    body: 'Terugkijkende analyse van vertrek op groepsniveau, met een eerste handoff voor opvolging en een heldere eerste route.',
     href: '/producten/exitscan',
     accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
     chip: 'Kernroute',
@@ -128,7 +128,7 @@ export const homepageUtilityLinks = [
   },
   {
     href: '/tarieven',
-    title: 'Bekijk de prijsankers',
+    title: 'Bekijk tarieven',
     body: 'Zie hoe eerste trajecten, vervolgvormen en combinatie commercieel zijn opgebouwd.',
   },
   {
