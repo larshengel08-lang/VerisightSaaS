@@ -99,6 +99,11 @@ function formatShortDate(value: string | null) {
   return DUTCH_SHORT_DATE.format(parsed).replace('.', '')
 }
 
+function normalizeTelemetryText(value: string | null | undefined) {
+  const trimmed = value?.trim() ?? ''
+  return trimmed.length > 0 ? trimmed : null
+}
+
 function getPriorityFromSignals(args: {
   exceptionStatus: DeliveryExceptionStatus | null | undefined
   avgSignal: number | null
@@ -374,6 +379,13 @@ export function buildActionCenterTelemetryEvents(
     const orgId = context.campaign.organization_id
     const campaignId = context.campaign.id
     const lifecycleStage = context.deliveryRecord?.lifecycle_stage ?? null
+    const route = projectActionCenterRoute(context)
+    const routeStatus = route.routeStatus
+    const ownerLabel = route.owner
+    const reviewOutcome = route.reviewOutcome
+    const outcomeSummary =
+      normalizeTelemetryText(context.learningDossier?.case_public_summary) ??
+      normalizeTelemetryText(context.learningDossier?.adoption_outcome)
 
     if (
       lifecycleStage &&
@@ -403,15 +415,75 @@ export function buildActionCenterTelemetryEvents(
       )
     }
 
-    if (context.learningDossier?.review_moment) {
+    if (route.reviewScheduledFor) {
       events.push(
         buildSuiteTelemetryEvent('action_center_review_scheduled', {
           orgId,
           campaignId,
           actorId: actorId ?? null,
           payload: {
-            reviewMoment: context.learningDossier.review_moment,
+            reviewMoment: route.reviewScheduledFor,
             scopeValue: context.scopeValue,
+            routeStatus,
+          },
+        }),
+      )
+    }
+
+    if (route.routeOpenedAt) {
+      events.push(
+        buildSuiteTelemetryEvent('action_center_route_opened', {
+          orgId,
+          campaignId,
+          actorId: actorId ?? null,
+          payload: {
+            scopeValue: context.scopeValue,
+            routeStatus,
+          },
+        }),
+      )
+    }
+
+    if (ownerLabel) {
+      events.push(
+        buildSuiteTelemetryEvent('action_center_owner_assigned', {
+          orgId,
+          campaignId,
+          actorId: actorId ?? null,
+          payload: {
+            scopeValue: context.scopeValue,
+            routeStatus,
+            ownerLabel,
+          },
+        }),
+      )
+    }
+
+    if (reviewOutcome !== 'geen-uitkomst') {
+      events.push(
+        buildSuiteTelemetryEvent('action_center_review_completed', {
+          orgId,
+          campaignId,
+          actorId: actorId ?? null,
+          payload: {
+            scopeValue: context.scopeValue,
+            routeStatus,
+            reviewOutcome,
+          },
+        }),
+      )
+    }
+
+    if (outcomeSummary) {
+      events.push(
+        buildSuiteTelemetryEvent('action_center_outcome_recorded', {
+          orgId,
+          campaignId,
+          actorId: actorId ?? null,
+          payload: {
+            scopeValue: context.scopeValue,
+            routeStatus,
+            reviewOutcome,
           },
         }),
       )

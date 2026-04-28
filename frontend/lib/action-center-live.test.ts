@@ -286,7 +286,7 @@ describe('live action center builder', () => {
       launch_confirmed_at: null,
       participant_comms_config: null,
       reminder_config: null,
-      first_management_use_confirmed_at: null,
+      first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
       follow_up_decided_at: null,
       learning_closed_at: null,
       created_at: '2026-04-15T10:00:00.000Z',
@@ -295,6 +295,8 @@ describe('live action center builder', () => {
     const dossier = {
       review_moment: '2026-05-12',
       triage_status: 'bevestigd',
+      management_action_outcome: 'bijstellen',
+      case_public_summary: 'Team koos een aangepaste follow-through na de eerste MT-review.',
     } as PilotLearningDossier
 
     const events = buildActionCenterTelemetryEvents([
@@ -307,7 +309,10 @@ describe('live action center builder', () => {
         scopeValue: 'operations',
         scopeLabel: 'Operations',
         peopleCount: 12,
-        assignedManager: null,
+        assignedManager: {
+          userId: 'manager-1',
+          displayName: 'Manager Operations',
+        },
         deliveryRecord,
         deliveryCheckpoints: [],
         learningDossier: dossier,
@@ -319,6 +324,40 @@ describe('live action center builder', () => {
       'first_value_confirmed',
       'first_management_use_confirmed',
       'action_center_review_scheduled',
+      'action_center_route_opened',
+      'action_center_owner_assigned',
+      'action_center_review_completed',
+      'action_center_outcome_recorded',
+    ])
+    expect(events.slice(3)).toMatchObject([
+      {
+        eventType: 'action_center_route_opened',
+        payload: {
+          scopeValue: 'operations',
+          routeStatus: 'te-bespreken',
+        },
+      },
+      {
+        eventType: 'action_center_owner_assigned',
+        payload: {
+          ownerLabel: 'Manager Operations',
+          routeStatus: 'te-bespreken',
+        },
+      },
+      {
+        eventType: 'action_center_review_completed',
+        payload: {
+          reviewOutcome: 'bijstellen',
+          routeStatus: 'te-bespreken',
+        },
+      },
+      {
+        eventType: 'action_center_outcome_recorded',
+        payload: {
+          reviewOutcome: 'bijstellen',
+          routeStatus: 'te-bespreken',
+        },
+      },
     ])
   })
 })
