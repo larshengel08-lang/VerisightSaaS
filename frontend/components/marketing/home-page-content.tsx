@@ -326,19 +326,6 @@ function HeroSection() {
               <p
                 className="marketing-home-hero-reveal-2"
                 style={{
-                  color: SURFACE.ink,
-                  fontSize: 17,
-                  lineHeight: 1.55,
-                  marginBottom: 14,
-                  maxWidth: '32rem',
-                }}
-              >
-                Zie waar vertrek, behoud of vroege uitval aandacht vraagt. U krijgt geen losse data, maar een helder dashboard, een managementsamenvatting en een eerste actieroute.
-              </p>
-
-              <p
-                className="marketing-home-hero-reveal-3"
-                style={{
                   color: SURFACE.text,
                   fontSize: 17,
                   lineHeight: 1.6,
@@ -346,7 +333,7 @@ function HeroSection() {
                   maxWidth: '32rem',
                 }}
               >
-                Verisight laat zien waar vertrek, behoud of vroege uitval echt aandacht vraagt. Geen losse surveydata, maar een scherp dashboard, een korte managementsamenvatting en een eerste route voor opvolging.
+                Zie waar vertrek, behoud of vroege uitval echt aandacht vraagt. Geen losse surveydata, maar een scherp dashboard, een korte managementsamenvatting en een eerste route voor opvolging.
               </p>
 
               <div
@@ -367,7 +354,7 @@ function HeroSection() {
                   textDecoration: 'none',
                 }}
               >
-                Bespreek de juiste eerste route
+                Toets uw eerste route
               </Link>
               <Link
                 href="/#suite"
@@ -432,7 +419,7 @@ function HeroSection() {
                 height: 286,
                 padding: '24px 28px',
                 position: 'absolute',
-                right: 18,
+                right: -6,
                 top: 0,
                 width: 452,
                 zIndex: 10,
@@ -484,7 +471,7 @@ function HeroSection() {
                 overflow: 'hidden',
                 padding: '30px 32px',
                 position: 'absolute',
-                left: 6,
+                left: 30,
                 top: 118,
                 width: 438,
                 zIndex: 20,

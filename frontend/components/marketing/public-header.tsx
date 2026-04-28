@@ -64,7 +64,7 @@ export function PublicHeader({
             <Link href="/login" prefetch={false} className="marketing-topbar-link">
               Inloggen
             </Link>
-            <Link href={ctaHref} className="marketing-button-primary">
+            <Link href={ctaHref} className="marketing-button-primary-warm">
               {ctaLabel}
             </Link>
           </div>
@@ -122,7 +122,7 @@ export function PublicHeader({
               <Link href="/login" prefetch={false} onClick={closeMenu} className="marketing-mobile-nav-link">
                 Inloggen
               </Link>
-              <Link href={ctaHref} onClick={closeMenu} className="marketing-button-primary mt-3 w-full">
+              <Link href={ctaHref} onClick={closeMenu} className="marketing-button-primary-warm mt-3 w-full">
                 {ctaLabel}
               </Link>
             </div>

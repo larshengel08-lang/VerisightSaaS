@@ -6,12 +6,12 @@ import { PublicHeader } from '@/components/marketing/public-header'
 export const metadata: Metadata = {
   title: 'Kennismaking',
   description:
-    'Plan een korte kennismaking om te bepalen welke Verisight-route het best past en hoe dashboard, samenvatting, rapport en opvolging logisch samenkomen.',
+    'Plan een korte intake om te bepalen welke eerste route het best past en welke eerste output daarna logisch is.',
   alternates: { canonical: '/kennismaking' },
   openGraph: {
     title: 'Kennismaking | Verisight',
     description:
-      'Plan een korte kennismaking om te bepalen welke Verisight-route het best past en hoe dashboard, samenvatting, rapport en opvolging logisch samenkomen.',
+      'Plan een korte intake om te bepalen welke eerste route het best past en welke eerste output daarna logisch is.',
     url: 'https://www.verisight.nl/kennismaking',
     images: ['/opengraph-image'],
   },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Kennismaking | Verisight',
     description:
-      'Plan een korte kennismaking om te bepalen welke Verisight-route het best past en hoe dashboard, samenvatting, rapport en opvolging logisch samenkomen.',
+      'Plan een korte intake om te bepalen welke eerste route het best past en welke eerste output daarna logisch is.',
     images: ['/opengraph-image'],
   },
 }
@@ -35,7 +35,7 @@ const displayFont = 'var(--font-fraunces), Georgia, serif'
 export default function KennismakingPage() {
   return (
     <div className="min-h-screen bg-[#f7eee7]">
-      <PublicHeader ctaHref="#kennismaking" ctaLabel="Plan een kennismaking" />
+      <PublicHeader ctaHref="#kennismaking" ctaLabel="Plan een eerste route-inschatting" />
       <main id="hoofdinhoud">
         <section
           style={{
@@ -46,8 +46,8 @@ export default function KennismakingPage() {
             position: 'relative',
           }}
         >
-          <div style={{ ...shellStyle, paddingTop: 'clamp(72px, 8vw, 120px)', paddingBottom: 'clamp(60px, 7vw, 90px)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 26 }}>
+          <div style={{ ...shellStyle, paddingTop: 'clamp(58px, 6.5vw, 92px)', paddingBottom: 'clamp(48px, 6vw, 70px)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 22 }}>
               <span style={{ color: '#97a0ab', fontSize: 11 }}>01</span>
               <span
                 style={{
@@ -59,44 +59,44 @@ export default function KennismakingPage() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                Plan een kennismaking
+                Eerste intake
               </span>
               <div style={{ flex: 1, height: 1, background: '#d9cebf' }} />
             </div>
 
-            <div style={{ minWidth: 0 }}>
+            <div style={{ maxWidth: 760, minWidth: 0 }}>
               <h1
                 style={{
                   color: '#162238',
                   fontFamily: displayFont,
-                  fontSize: 'clamp(3rem, 5vw, 5rem)',
+                  fontSize: 'clamp(2.8rem, 4.8vw, 4.7rem)',
                   fontWeight: 400,
                   letterSpacing: '-0.05em',
                   lineHeight: 0.92,
-                  marginBottom: 18,
-                  maxWidth: '8.6ch',
+                  marginBottom: 16,
+                  maxWidth: '8.8ch',
                 }}
               >
                 Vertel kort
                 <br />
                 <span style={{ color: '#b9571f', fontStyle: 'italic', fontWeight: 300 }}>
-                  welke managementvraag
+                  toets welke eerste route
                 </span>
                 <br />
-                nu speelt.
+                nu past.
               </h1>
               <p style={{ color: '#4e5d6f', fontSize: 16, lineHeight: 1.8, maxWidth: '33rem' }}>
-                In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy, prijs en hoe dashboard, samenvatting, rapport en Action Center daarna samen werken.
+                In circa 20 minuten krijgt u helderheid over de juiste route, timing, privacy, prijs en de eerste output die daarbij past.
               </p>
             </div>
 
-            <div style={{ marginTop: 40, maxWidth: 1140 }}>
+            <div style={{ marginTop: 30, maxWidth: 1140 }}>
               <MarketingInlineContactPanel
                 badge={null}
-                body="Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke Verisight-output daarna logisch wordt."
+                body="Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke eerste output daarna logisch is."
                 defaultCtaSource="kennismaking_page_form"
                 defaultRouteInterest="exitscan"
-                eyebrow="Kennismaking"
+                eyebrow="Eerste intake"
                 id="kennismaking"
                 title="Plan een korte intake."
               />
