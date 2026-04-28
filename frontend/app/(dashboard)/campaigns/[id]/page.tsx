@@ -1,5 +1,10 @@
 ﻿import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { isLiveActionCenterScanType } from "@/lib/action-center-live";
+import {
+  buildActionCenterRouteOpenPatch,
+  buildActionCenterRouteOpenRedirect,
+} from "@/lib/dashboard/open-action-center-route";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { CampaignActions } from "./campaign-actions";
@@ -40,6 +45,7 @@ import {
 } from "@/lib/dashboard/dashboard-state-composition";
 import {
   ActionPlaybookList,
+  buildCampaignDetailActionCenterBridge,
   buildDecisionPanels,
   buildHeroDescription,
   buildInsightWarnings,
@@ -545,6 +551,15 @@ export default async function CampaignPage({ params }: Props) {
   const showDetailedManagementOutput = showDeeperInsights;
   const showPartialManagementOutput = compositionState === "partial";
   const prefersReportFirst = compositionState === "closed";
+  const actionCenterBridge = buildCampaignDetailActionCenterBridge({
+    campaignId: id,
+    routeEntryStage: deliveryRecord?.first_management_use_confirmed_at
+      ? "active"
+      : null,
+    canOpenRoute:
+      showManagementOutput && isLiveActionCenterScanType(stats.scan_type),
+    assessedAt: deliveryRecord?.updated_at ?? stats.created_at,
+  });
   const compositionStateMeta = {
     setup: {
       label: "Nog niet live",
@@ -1687,6 +1702,96 @@ export default async function CampaignPage({ params }: Props) {
         },
       ]
     : [];
+  async function openActionCenterRoute() {
+    "use server";
+
+    if (actionCenterBridge.bridgeState !== "candidate") {
+      redirect(buildActionCenterRouteOpenRedirect(id));
+    }
+
+    if (!deliveryRecord) {
+      redirect(`/campaigns/${id}?bridge=open-unavailable`);
+    }
+
+    const openedAt = new Date().toISOString();
+    const admin = createAdminClient();
+    const { error } = await admin
+      .from("campaign_delivery_records")
+      .update(buildActionCenterRouteOpenPatch(openedAt))
+      .eq("id", deliveryRecord.id);
+
+    if (error) {
+      redirect(`/campaigns/${id}?bridge=open-unavailable`);
+    }
+
+    redirect(buildActionCenterRouteOpenRedirect(id));
+  }
+  const actionCenterRouteAction =
+    actionCenterBridge.presentation.ctaKind === "open" ? (
+      actionCenterBridge.bridgeState === "candidate" ? (
+        <form action={openActionCenterRoute}>
+          <button
+            type="submit"
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+          >
+            Open in Action Center
+          </button>
+        </form>
+      ) : (
+        <Link
+          href={buildActionCenterRouteOpenRedirect(id)}
+          className="inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+        >
+          Open in Action Center
+        </Link>
+      )
+    ) : null;
+  const summaryActions = (
+    <>
+      {actionCenterRouteAction}
+      {!showManagementOutput ? (
+        <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
+          {activationState.heroActionLabel}
+        </div>
+      ) : showPartialManagementOutput ? (
+        <>
+          <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
+            Aanbevelingen blijven nog begrensd
+          </div>
+          <PdfDownloadButton
+            campaignId={id}
+            campaignName={stats.campaign_name}
+            scanType={stats.scan_type}
+          />
+        </>
+      ) : prefersReportFirst ? (
+        <PdfDownloadButton
+          campaignId={id}
+          campaignName={stats.campaign_name}
+          scanType={stats.scan_type}
+        />
+      ) : stats.scan_type === "pulse" ||
+        stats.scan_type === "team" ||
+        stats.scan_type === "onboarding" ||
+        stats.scan_type === "leadership" ? (
+        <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700">
+          {stats.scan_type === "pulse"
+            ? "Pulse: eerste vervolgstap live"
+            : stats.scan_type === "team"
+              ? "TeamScan: lokale read live"
+              : stats.scan_type === "onboarding"
+                ? "Onboarding: checkpoint read live"
+                : "Leadership Scan: management read live"}
+        </div>
+      ) : (
+        <PdfDownloadButton
+          campaignId={id}
+          campaignName={stats.campaign_name}
+          scanType={stats.scan_type}
+        />
+      )}
+    </>
+  );
 
   return (
     <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr),320px] xl:items-start">
@@ -1927,49 +2032,7 @@ export default async function CampaignPage({ params }: Props) {
           items={summaryItems}
           anchors={sectionAnchors}
           variant="quiet"
-          actions={
-            !showManagementOutput ? (
-              <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
-                {activationState.heroActionLabel}
-              </div>
-            ) : showPartialManagementOutput ? (
-              <>
-                <div className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
-                  Aanbevelingen blijven nog begrensd
-                </div>
-                <PdfDownloadButton
-                  campaignId={id}
-                  campaignName={stats.campaign_name}
-                  scanType={stats.scan_type}
-                />
-              </>
-            ) : prefersReportFirst ? (
-              <PdfDownloadButton
-                campaignId={id}
-                campaignName={stats.campaign_name}
-                scanType={stats.scan_type}
-              />
-            ) : stats.scan_type === "pulse" ||
-              stats.scan_type === "team" ||
-              stats.scan_type === "onboarding" ||
-              stats.scan_type === "leadership" ? (
-              <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700">
-                {stats.scan_type === "pulse"
-                  ? "Pulse: eerste vervolgstap live"
-                  : stats.scan_type === "team"
-                    ? "TeamScan: lokale read live"
-                    : stats.scan_type === "onboarding"
-                      ? "Onboarding: checkpoint read live"
-                      : "Leadership Scan: management read live"}
-              </div>
-            ) : (
-              <PdfDownloadButton
-                campaignId={id}
-                campaignName={stats.campaign_name}
-                scanType={stats.scan_type}
-              />
-            )
-          }
+          actions={summaryActions}
         />
 
         {showClientExecutionFlow ? (

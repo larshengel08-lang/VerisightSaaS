@@ -13,6 +13,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 
 interface Props {
   initialItems: ActionCenterPreviewItem[]
+  initialSelectedItemId?: string | null
   initialView?: ActionCenterPreviewView
   fallbackOwnerName: string
   ownerOptions: string[]
@@ -324,6 +325,7 @@ function buildTeamRows(items: ActionCenterPreviewItem[]) {
 
 export function ActionCenterPreview({
   initialItems,
+  initialSelectedItemId = null,
   initialView = 'overview',
   fallbackOwnerName,
   ownerOptions,
@@ -338,10 +340,12 @@ export function ActionCenterPreview({
   itemHrefs = {},
   hideSidebar = false,
 }: Props) {
+  const initialSelectedItem =
+    initialItems.find((item) => item.id === initialSelectedItemId) ?? initialItems[0] ?? null
   const [items, setItems] = useState(initialItems)
   const [activeView, setActiveView] = useState<ActionCenterPreviewView>(initialView)
-  const [selectedItemId, setSelectedItemId] = useState(initialItems[0]?.id ?? null)
-  const [selectedTeamId, setSelectedTeamId] = useState(initialItems[0]?.teamId ?? null)
+  const [selectedItemId, setSelectedItemId] = useState(initialSelectedItem?.id ?? null)
+  const [selectedTeamId, setSelectedTeamId] = useState(initialSelectedItem?.teamId ?? initialItems[0]?.teamId ?? null)
   const [searchQuery, setSearchQuery] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createForm, setCreateForm] = useState<CreateActionFormState>(() => getCreateDefaults(initialItems))

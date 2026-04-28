@@ -55,7 +55,13 @@ function getManagerAssignment(
   )
 }
 
-export default async function ActionCenterPage() {
+export default async function ActionCenterPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ focus?: string }>
+}) {
+  const params = (await searchParams) ?? {}
+  const focusItemId = typeof params.focus === 'string' ? params.focus : null
   const supabase = await createClient()
   const {
     data: { user },
@@ -307,6 +313,7 @@ export default async function ActionCenterPage() {
   return (
     <ActionCenterPreview
       initialItems={items}
+      initialSelectedItemId={focusItemId}
       initialView="overview"
       fallbackOwnerName={getDisplayName(user.email)}
       ownerOptions={ownerOptions}

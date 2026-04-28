@@ -11,6 +11,14 @@ describe("action center landing shell", () => {
     expect(pageSource).toContain("hideSidebar");
   });
 
+  it("passes a focused campaign id from the route shell into the preview", () => {
+    const pageSource = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).toContain("searchParams");
+    expect(pageSource).toContain("focusItemId");
+    expect(pageSource).toContain("initialSelectedItemId={focusItemId}");
+  });
+
   it("keeps route detail rendering delegated to preview helpers", () => {
     const previewSource = readFileSync(
       new URL("../../../components/dashboard/action-center-preview.tsx", import.meta.url),
