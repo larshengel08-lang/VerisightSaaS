@@ -641,6 +641,61 @@ describe('live action center builder', () => {
     ])
   })
 
+  it('records review completion and outcome telemetry only when follow-up review completion truth exists', () => {
+    const campaign = buildCampaign()
+    const deliveryRecord = buildDeliveryRecord({
+      lifecycle_stage: 'follow_up_decided',
+      first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+    })
+    const dossier = buildDossier({
+      review_moment: '2026-05-12',
+      triage_status: 'bevestigd',
+      management_action_outcome: 'bijstellen',
+      adoption_outcome: 'Team koos een aangepaste follow-through na de eerste MT-review.',
+    })
+
+    const events = buildActionCenterTelemetryEvents([
+      {
+        campaign,
+        stats: null,
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue: 'operations',
+        scopeLabel: 'Operations',
+        peopleCount: 12,
+        assignedManager: {
+          userId: 'manager-1',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-21T08:00:00.000Z',
+        } as NonNullable<Parameters<typeof buildActionCenterTelemetryEvents>[0][number]['assignedManager']>,
+        deliveryRecord,
+        deliveryCheckpoints: [],
+        learningDossier: dossier,
+        learningCheckpoints: [
+          {
+            id: 'checkpoint-review',
+            dossier_id: 'dossier-exit',
+            checkpoint_key: 'follow_up_review',
+            owner_label: 'HR lead',
+            status: 'uitgevoerd',
+            objective_signal_notes: null,
+            qualitative_notes: null,
+            interpreted_observation: null,
+            confirmed_lesson: 'De eerste review liet zien dat dezelfde frictie in twee teams terugkomt.',
+            lesson_strength: 'terugkerend_patroon',
+            destination_areas: ['operations'],
+            updated_at: '2026-04-26T10:15:00.000Z',
+            created_at: '2026-04-15T10:00:00.000Z',
+          } as PilotLearningCheckpoint,
+        ],
+      },
+    ])
+
+    expect(events.map((event) => event.eventType)).toContain('action_center_review_completed')
+    expect(events.map((event) => event.eventType)).toContain('action_center_outcome_recorded')
+  })
+
   it('records closeout telemetry for intentionally stopped routes too', () => {
     const events = buildActionCenterTelemetryEvents([
       {
@@ -682,5 +737,66 @@ describe('live action center builder', () => {
         }),
       ]),
     )
+  })
+
+  it('projects latest decision and shared action progress into live items', () => {
+    const items = buildLiveActionCenterItems([
+      {
+        campaign: buildCampaign(),
+        stats: buildStats(),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue: 'operations',
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-1',
+          displayName: 'Sanne de Vries',
+          assignedAt: '2026-04-21T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          lifecycle_stage: 'first_management_use',
+          first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+          next_step: 'Plan de vervolgcheck met HR en operations.',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          expected_first_value: 'Maak zichtbaar of de werkdruk lokaal daalt.',
+          first_action_taken: 'Plan een gerichte teamreview met de manager.',
+          review_moment: '2026-05-12',
+          management_action_outcome: 'bijstellen',
+        }),
+        learningCheckpoints: [
+          {
+            id: 'checkpoint-review',
+            dossier_id: 'dossier-exit',
+            checkpoint_key: 'follow_up_review',
+            owner_label: 'HR lead',
+            status: 'uitgevoerd',
+            objective_signal_notes: null,
+            qualitative_notes: null,
+            interpreted_observation: null,
+            confirmed_lesson: 'De eerste review liet zien dat de werkdruk nog niet daalt.',
+            lesson_strength: 'terugkerend_patroon',
+            destination_areas: ['operations'],
+            updated_at: '2026-04-26T10:15:00.000Z',
+            created_at: '2026-04-15T10:00:00.000Z',
+          } as PilotLearningCheckpoint,
+        ],
+      },
+    ])
+
+    expect(items).toHaveLength(1)
+    expect(items[0]?.coreSemantics.latestDecision).toMatchObject({
+      decision: 'bijstellen',
+      decisionReason: 'Maak zichtbaar of de werkdruk lokaal daalt.',
+      nextCheck: 'Maak zichtbaar of de werkdruk lokaal daalt.',
+    })
+    expect(items[0]?.coreSemantics.actionProgress).toMatchObject({
+      currentStep: 'Plan een gerichte teamreview met de manager.',
+      nextStep: 'Plan de vervolgcheck met HR en operations.',
+      expectedEffect: 'Maak zichtbaar of de werkdruk lokaal daalt.',
+    })
   })
 })
