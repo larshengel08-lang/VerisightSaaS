@@ -1,6 +1,3 @@
-import { existsSync, readFileSync } from 'node:fs'
-import path from 'node:path'
-
 export interface HrDemoPilotArtifact {
   campaignId: string
   routeContext: {
@@ -10,6 +7,26 @@ export interface HrDemoPilotArtifact {
     campaignDetailUrl: string
     actionCenterUrl: string
     actionCenterFocusUrl: string
+  }
+}
+
+function getNodeBuiltin<T>(specifier: string): T | null {
+  const runtimeProcess = globalThis.process as
+    | (NodeJS.Process & { getBuiltinModule?: (id: string) => T })
+    | undefined
+
+  if (!runtimeProcess?.versions?.node) {
+    return null
+  }
+
+  if (typeof runtimeProcess.getBuiltinModule === 'function') {
+    return runtimeProcess.getBuiltinModule(specifier)
+  }
+
+  try {
+    return Function('id', 'return require(id)')(specifier) as T
+  } catch {
+    return null
   }
 }
 
@@ -48,13 +65,24 @@ export function loadHrDemoPilotArtifactFromSource(source: string): HrDemoPilotAr
   }
 }
 
-export function loadHrDemoPilotArtifact(rootDir = process.cwd()): HrDemoPilotArtifact | null {
-  const artifactPath = path.join(rootDir, 'tests', 'e2e', '.action-center-pilot.json')
-  if (!existsSync(artifactPath)) {
+export function loadHrDemoPilotArtifact(rootDir?: string): HrDemoPilotArtifact | null {
+  const runtimeProcess = globalThis.process
+  if (!runtimeProcess?.versions?.node) {
     return null
   }
 
-  return loadHrDemoPilotArtifactFromSource(readFileSync(artifactPath, 'utf8'))
+  const fs = getNodeBuiltin<typeof import('node:fs')>('node:fs')
+  const path = getNodeBuiltin<typeof import('node:path')>('node:path')
+  if (!fs || !path) {
+    return null
+  }
+
+  const artifactPath = path.join(rootDir ?? runtimeProcess.cwd(), 'tests', 'e2e', '.action-center-pilot.json')
+  if (!fs.existsSync(artifactPath)) {
+    return null
+  }
+
+  return loadHrDemoPilotArtifactFromSource(fs.readFileSync(artifactPath, 'utf8'))
 }
 
 export function prioritizeHrDemoCampaigns<T extends { campaignId: string }>(
