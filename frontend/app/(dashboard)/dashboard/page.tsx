@@ -768,8 +768,6 @@ function CampaignRow({
             <DashboardChip label={stateMeta.label} tone={stateMeta.tone} />
           </div>
           <h2 className="mt-3 text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">{campaign.campaign_name}</h2>
-          <p className="mt-2 text-sm leading-[1.75] text-[color:var(--dashboard-text)]">{stateMeta.body}</p>
-          <p className="mt-3 text-sm leading-7 text-[color:var(--dashboard-muted)]">{stateMeta.trust}</p>
         </div>
 
         <div className="grid gap-3 rounded-[22px] bg-[color:var(--dashboard-soft)]/72 px-4 py-4 sm:grid-cols-2 xl:min-w-[380px] xl:grid-cols-2 2xl:min-w-[520px] 2xl:grid-cols-4">
@@ -781,6 +779,11 @@ function CampaignRow({
             value={campaign.avg_risk_score !== null ? `${campaign.avg_risk_score.toFixed(1)}/10` : '—'}
           />
         </div>
+      </div>
+
+      <div className="mt-4 max-w-none space-y-3 border-t border-[color:var(--dashboard-frame-border)]/55 pt-4">
+        <p className="text-sm leading-[1.85] text-[color:var(--dashboard-text)]">{stateMeta.body}</p>
+        <p className="text-sm leading-[1.85] text-[color:var(--dashboard-muted)]">{stateMeta.trust}</p>
       </div>
 
       <div className="mt-5 flex flex-col gap-3 border-t border-[color:var(--dashboard-frame-border)]/85 pt-4 lg:flex-row lg:items-center lg:justify-between">
