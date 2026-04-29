@@ -1159,15 +1159,12 @@ function SuitePreviewSection() {
           }
 
           .suite-action-panel {
-            background: rgba(255, 252, 249, 0.9);
-            border: 1px solid ${SURFACE.border};
-            box-shadow: 0 24px 42px rgba(19, 32, 51, 0.06);
             box-sizing: border-box;
             display: flex;
             flex: 1 1 auto;
             flex-direction: column;
             height: 100%;
-            padding: 14px 14px 16px;
+            padding: 0;
           }
 
           .suite-action-title {
