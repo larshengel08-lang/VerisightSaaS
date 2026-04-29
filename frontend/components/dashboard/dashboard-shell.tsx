@@ -67,7 +67,7 @@ export function DashboardShellFrame({
           <div className="sticky top-0 flex h-screen w-full flex-col px-4 py-5">
             <div className="px-3 pb-7">
               <Link href="/dashboard" className="flex items-start gap-4">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-[#71c8b5] text-sm font-semibold text-[#101418]">
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-[#d4956a] text-sm font-semibold text-[#101418]">
                   V
                 </span>
                 <span className="block">
@@ -261,7 +261,7 @@ function ActionCenterSidebarNav({ activeHref }: { activeHref: string }) {
               }`}
             >
               <span className="font-medium">{item.label}</span>
-              {isActive && <span className="h-2.5 w-2.5 rounded-full bg-[#71c8b5]" />}
+              {isActive && <span className="h-2.5 w-2.5 rounded-full bg-[#d4956a]" />}
             </Link>
           )
         })}
@@ -318,7 +318,7 @@ function SidebarSection({
             }`}
           >
             <span className="font-medium">{item.label}</span>
-            <span className={`h-2.5 w-2.5 rounded-full ${isActive ? 'bg-[#71c8b5]' : 'bg-transparent'}`} />
+            <span className={`h-2.5 w-2.5 rounded-full ${isActive ? 'bg-[#d4956a]' : 'bg-transparent'}`} />
           </Link>
         )
       })}

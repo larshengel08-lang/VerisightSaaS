@@ -176,7 +176,7 @@ export default async function ReportsPage({
               />
               <Link
                 href={featuredReportBridge?.href ?? `/campaigns/${reportModel.featured.campaignId}`}
-                className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
+                className="inline-flex rounded-[6px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0f1e30]"
               >
                 {featuredReportBridge?.bridge.ctaLabel ?? "Open campagnedetail"}
               </Link>
@@ -205,7 +205,7 @@ export default async function ReportsPage({
                   {reportModel.featured.description}
                 </p>
               </div>
-              <div className="space-y-2 rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-white/70 px-4 py-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+              <div className="space-y-2 rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white/70 px-4 py-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
                 {reportModel.featured.stats.map((stat) => (
                   <div
                     key={stat.label}
@@ -251,10 +251,10 @@ export default async function ReportsPage({
                       ? "/reports"
                       : `/reports?kind=${option.key}`
                   }
-                  className={`inline-flex rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`inline-flex rounded-[4px] border px-4 py-2 text-sm font-semibold transition-colors ${
                     active
                       ? "border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] text-white"
-                      : "border-transparent bg-[color:var(--dashboard-soft)] text-[color:var(--dashboard-ink)] hover:border-[color:var(--dashboard-frame-border)] hover:bg-white hover:text-[#234B57]"
+                      : "border-transparent bg-[color:var(--dashboard-soft)] text-[color:var(--dashboard-ink)] hover:border-[color:var(--dashboard-frame-border)] hover:bg-white hover:text-[color:var(--dashboard-accent-strong)]"
                   }`}
                 >
                   {option.label}
@@ -270,10 +270,10 @@ export default async function ReportsPage({
               {reportCards.map(({ entry, bridge, href }) => (
                 <article
                   key={entry.campaignId}
-                  className={`rounded-[28px] border px-4 py-4 shadow-[0_12px_28px_rgba(17,24,39,0.05)] sm:px-5 sm:py-5 ${
+                  className={`rounded-xl border px-4 py-4 shadow-[0_1px_3px_rgba(10,25,47,0.04)] sm:px-5 sm:py-5 ${
                     entry.recommended
-                      ? "border-[color:var(--dashboard-accent-soft-border)] bg-[linear-gradient(180deg,rgba(230,245,240,0.9),rgba(244,250,247,0.96))]"
-                      : "border-[color:var(--dashboard-frame-border)] bg-white/82"
+                      ? "border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)]"
+                      : "border-[color:var(--dashboard-frame-border)] bg-white"
                   }`}
                 >
                   <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr),160px,auto] xl:items-start">
@@ -311,7 +311,7 @@ export default async function ReportsPage({
                     <div className="flex flex-wrap items-center gap-2 xl:self-start xl:justify-end">
                       <Link
                         href={href}
-                        className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:border-[#d6e4e8] hover:bg-white"
+                        className="inline-flex rounded-[6px] border border-[color:var(--dashboard-frame-border)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:bg-white"
                       >
                         {bridge.ctaLabel}
                       </Link>
@@ -326,7 +326,7 @@ export default async function ReportsPage({
               ))}
             </div>
 
-            <aside className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[linear-gradient(180deg,rgba(248,247,243,0.96),rgba(243,240,235,0.82))] px-5 py-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+            <aside className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[linear-gradient(180deg,rgba(248,247,243,0.96),rgba(243,240,235,0.82))] px-5 py-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
                 Toegang en ritme
               </p>
@@ -350,7 +350,7 @@ export default async function ReportsPage({
             </aside>
           </div>
         ) : (
-          <div className="rounded-[28px] border border-dashed border-[color:var(--dashboard-frame-border)] bg-white/80 px-5 py-8 text-sm leading-7 text-[color:var(--dashboard-text)]">
+          <div className="rounded-xl border border-dashed border-[color:var(--dashboard-frame-border)] bg-white/80 px-5 py-8 text-sm leading-7 text-[color:var(--dashboard-text)]">
             Er zijn in deze categorie nog geen rapporten met voldoende respons
             en duiding. Gebruik eerst dashboard en campagnedetail om het eerste
             overzicht stevig te krijgen.
@@ -365,7 +365,7 @@ export default async function ReportsPage({
         variant="quiet"
       >
         <div className="grid gap-6 xl:grid-cols-[minmax(280px,0.7fr),minmax(0,1fr)]">
-          <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[linear-gradient(180deg,rgba(240,246,245,0.96),rgba(232,241,238,0.78))] px-5 py-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+          <div className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[linear-gradient(180deg,rgba(240,246,245,0.96),rgba(232,241,238,0.78))] px-5 py-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-accent-strong)]">
               Rapportdoel
             </p>
@@ -379,7 +379,7 @@ export default async function ReportsPage({
             </p>
           </div>
 
-          <ol className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-white/82 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
+          <ol className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white/82 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
             {REPORT_FLOW_STEPS.map((step, index) => (
               <li
                 key={step.title}

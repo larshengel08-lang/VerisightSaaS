@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { IBM_Plex_Sans, Fraunces } from 'next/font/google'
+import { IBM_Plex_Sans, Fraunces, Newsreader } from 'next/font/google'
 import './globals.css'
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -16,6 +16,15 @@ const fraunces = Fraunces({
   axes: ['opsz'],
   display: 'swap',
   variable: '--font-fraunces',
+})
+
+const newsreader = Newsreader({
+  subsets: ['latin'],
+  weight: 'variable',
+  style: ['normal', 'italic'],
+  axes: ['opsz'],
+  display: 'swap',
+  variable: '--font-newsreader',
 })
 
 export const metadata: Metadata = {
@@ -81,7 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="nl">
-      <body className={`${ibmPlexSans.variable} ${fraunces.variable} font-[family-name:var(--font-ibm-plex-sans)] bg-[--bg] antialiased`}>
+      <body className={`${ibmPlexSans.variable} ${fraunces.variable} ${newsreader.variable} font-[family-name:var(--font-ibm-plex-sans)] bg-[--bg] antialiased`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

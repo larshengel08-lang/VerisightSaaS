@@ -40,9 +40,9 @@ const OPS_TONE_LABELS: Record<Tone, string> = {
   amber: "text-[#8C6B1F]",
 };
 
-const CARD_SHADOW = "shadow-[0_16px_36px_rgba(17,24,39,0.06)]";
+const CARD_SHADOW = "shadow-[0_2px_8px_rgba(17,24,39,0.035)]";
 const PANEL_GLOW =
-  "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/72";
+  "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/55";
 
 function joinClasses(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -156,8 +156,8 @@ export function DashboardHero({
           ? "relative overflow-visible border-b border-[color:var(--dashboard-frame-border)] px-0 pb-8 pt-1"
           : "",
         surface === "ops"
-          ? "overflow-visible rounded-[20px] border p-5 shadow-[0_8px_22px_rgba(19,32,51,0.04)] sm:p-6"
-          : "relative overflow-hidden rounded-[24px] border px-6 py-6 sm:px-7 sm:py-7",
+          ? "overflow-visible rounded-lg border p-5 shadow-[0_1px_4px_rgba(10,25,47,0.04)] sm:p-6"
+          : "relative overflow-hidden rounded-xl border px-6 py-6 sm:px-7 sm:py-7",
         surface === "default" && variant === "default" && CARD_SHADOW,
         surface === "default" && variant === "default" && PANEL_GLOW,
         isEditorial
@@ -243,7 +243,7 @@ export function DashboardHero({
             className={joinClasses(
               surface === "ops"
                 ? "rounded-[18px] border border-slate-200 bg-white p-4 shadow-[0_6px_18px_rgba(19,32,51,0.03)]"
-                : "rounded-[20px] border border-white/75 bg-white/84 p-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)] backdrop-blur",
+                : "rounded-[18px] border border-white/70 bg-white/72 p-4 backdrop-blur-sm",
               isEditorial &&
                 "rounded-[24px] border-[color:var(--dashboard-frame-border)] bg-[linear-gradient(180deg,rgba(249,247,244,0.96),rgba(244,240,234,0.78))] p-5 shadow-[0_14px_32px_rgba(15,23,42,0.05)] backdrop-blur-none",
             )}
@@ -285,11 +285,11 @@ export function DashboardSection({
       data-dashboard-primitive="section"
       className={joinClasses(
         isQuiet
-          ? "rounded-[28px] border-[color:var(--dashboard-frame-border)] bg-[#fcfaf7] shadow-[0_12px_32px_rgba(17,24,39,0.05)]"
+          ? "rounded-xl border-[color:var(--dashboard-frame-border)] bg-[#fcfaf7] shadow-[0_1px_4px_rgba(10,25,47,0.04)]"
           : "",
         surface === "ops"
-          ? "scroll-mt-36 rounded-[20px] border p-5 shadow-[0_8px_22px_rgba(19,32,51,0.04)]"
-          : "relative scroll-mt-40 overflow-hidden rounded-[22px] border px-5 py-5 sm:px-6 sm:py-6",
+          ? "scroll-mt-36 rounded-lg border p-5 shadow-[0_1px_4px_rgba(10,25,47,0.04)]"
+          : "relative scroll-mt-40 overflow-hidden rounded-xl border px-5 py-5 sm:px-6 sm:py-6",
         surface === "default" && variant === "default" && CARD_SHADOW,
         surface === "default" && variant === "default" && PANEL_GLOW,
         !isQuiet && getToneSurface(tone, surface),
@@ -307,7 +307,7 @@ export function DashboardSection({
         className={joinClasses(
           surface === "ops"
             ? "mt-5 border-t border-[color:var(--border)]/80 pt-5"
-            : "mt-5 border-t border-white/72 pt-5",
+            : "mt-5 border-t border-[color:var(--dashboard-frame-border)] pt-5",
           isQuiet && "border-[color:var(--dashboard-frame-border)]/70",
         )}
       >
@@ -337,8 +337,8 @@ export function DashboardDisclosure({
       open={defaultOpen}
       className={joinClasses(
         surface === "ops"
-          ? "group scroll-mt-36 rounded-[18px] border border-[color:var(--border)] bg-white shadow-[0_6px_18px_rgba(19,32,51,0.03)]"
-          : "group scroll-mt-40 overflow-hidden rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)]",
+          ? "group scroll-mt-36 rounded-lg border border-[color:var(--border)] bg-white shadow-[0_1px_3px_rgba(10,25,47,0.03)]"
+          : "group scroll-mt-40 overflow-hidden rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)]",
         surface === "default" && CARD_SHADOW,
       )}
     >
@@ -378,7 +378,7 @@ export function DashboardDisclosure({
             className={joinClasses(
               surface === "ops"
                 ? "rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-3 py-1 text-xs font-medium text-[color:var(--text)]"
-                : "rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-3 py-1.5 text-xs font-semibold text-[color:var(--dashboard-text)]",
+                : "rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-3 py-1.5 text-xs font-semibold text-[color:var(--dashboard-text)]",
             )}
           >
             <span className="group-open:hidden">
@@ -424,8 +424,8 @@ export function DashboardStatCard({
       data-dashboard-primitive="stat-card"
       className={joinClasses(
         surface === "ops"
-          ? "rounded-[18px] border p-4 shadow-[0_5px_14px_rgba(19,32,51,0.03)] sm:p-5"
-          : "relative overflow-hidden rounded-[18px] border px-4 py-4 sm:px-5 sm:py-5",
+          ? "rounded-lg border p-4 shadow-[0_1px_3px_rgba(10,25,47,0.03)] sm:p-5"
+          : "relative overflow-hidden rounded-lg border px-4 py-4 sm:px-5 sm:py-5",
         surface === "default" && CARD_SHADOW,
         surface === "default" && PANEL_GLOW,
         getToneSurface(tone, surface),
@@ -624,7 +624,7 @@ export function DashboardChip({
     <span
       className={joinClasses(
         surface === "ops" ? "px-3 py-1 text-[11px]" : "px-3.5 py-1.5 text-[11px]",
-        "inline-flex items-center rounded-full border font-semibold uppercase tracking-[0.16em]",
+        "inline-flex items-center rounded-[4px] border font-semibold uppercase tracking-[0.16em]",
         getToneSurface(tone, surface),
         getToneLabel(tone, surface),
       )}
@@ -660,7 +660,7 @@ export function DashboardKeyValue({
         surface === "ops"
           ? "rounded-[16px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-3"
           : !isQuiet
-            ? "rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-3"
+            ? "rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-3"
             : "",
       )}
     >
@@ -839,7 +839,7 @@ export function DashboardTimeline({
       className={joinClasses(
         surface === "ops"
           ? "rounded-[18px] border border-[color:var(--border)] bg-[color:var(--bg)] p-4 sm:p-5"
-          : "rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] p-4 sm:p-5",
+          : "rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] p-4 sm:p-5",
       )}
     >
       {title ? (
@@ -965,10 +965,10 @@ export function SignalStatCard({
     band && band !== "neutral" ? RISK_ACCENT_COLORS[band] : "#8A7D6E";
 
   return (
-    <div className="rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <div className="rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(10,25,47,0.04)]">
       <div className="flex items-center gap-2">
         <span
-          className="inline-flex h-2.5 w-2.5 rounded-full"
+          className="inline-flex h-2 w-2 rounded-full"
           style={{ backgroundColor: accentColor }}
         />
         <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
@@ -997,9 +997,9 @@ export function InsightStatCard({
   subline?: string;
 }) {
   return (
-    <div className="rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+    <div className="rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(10,25,47,0.04)]">
       <div className="flex items-center gap-2">
-        <span className="inline-flex h-2.5 w-2.5 rounded-full bg-[#8A7D6E]" />
+        <span className="inline-flex h-2 w-2 rounded-full bg-[#8A7D6E]" />
         <p className="text-[0.65rem] font-medium uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
           {label}
         </p>

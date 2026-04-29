@@ -340,8 +340,8 @@ export default async function DashboardHomePage({
                   leadBridgeState &&
                   leadBridgeStatusLabel &&
                   leadBridgeCtaLabel ? (
-                    <div className="mt-3 flex items-center gap-3 text-sm text-[#5e6b78]">
-                      <span className="rounded-full border border-[#ddd3c7] bg-[#fbf8f4] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b7d6b]">
+                    <div className="mt-3 flex items-center gap-3 text-sm text-[color:var(--dashboard-text)]">
+                      <span className="rounded-[4px] border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-accent-strong)]">
                         {leadBridgeStatusLabel}
                       </span>
                       <Link href={leadBridgeState === 'active' ? '/action-center' : `/campaigns/${leadCampaign.campaign_id}`}>
@@ -443,7 +443,7 @@ export default async function DashboardHomePage({
 
       {leadCampaign && leadCampaignScanDefinition ? (
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.62fr),minmax(320px,0.82fr)]">
-          <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-6 py-6 shadow-[0_20px_48px_rgba(19,32,51,0.06)] sm:px-7 sm:py-7">
+          <div className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-6 py-6 shadow-[0_2px_8px_rgba(10,25,47,0.05)] sm:px-7 sm:py-7">
             <div className="grid gap-7 xl:grid-cols-[minmax(0,1.18fr),minmax(250px,0.82fr)] xl:items-start">
               <div>
                 <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
@@ -468,7 +468,7 @@ export default async function DashboardHomePage({
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/72 px-4 py-4 sm:px-5">
+              <div className="rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/72 px-4 py-4 sm:px-5">
                 <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
                   Snapshot
                 </p>
@@ -513,19 +513,19 @@ export default async function DashboardHomePage({
               <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-[color:var(--dashboard-frame-border)] pt-6">
                 <Link
                   href={`/campaigns/${leadCampaign.campaign_id}`}
-                  className="inline-flex rounded-full border border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
+                  className="inline-flex rounded-[6px] border border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0f1e30]"
                 >
                   Open campagne
                 </Link>
                 <Link
                   href="/reports"
-                  className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
+                  className="inline-flex rounded-[6px] border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
                 >
                   Open rapportlijst
                 </Link>
                 <Link
                   href="/beheer"
-                  className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-text)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+                  className="inline-flex rounded-[6px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-text)] transition-colors hover:text-[color:var(--dashboard-ink)]"
                 >
                   Beheer en setup
                 </Link>
@@ -533,8 +533,8 @@ export default async function DashboardHomePage({
             ) : null}
           </div>
 
-          <aside className="rounded-[28px] bg-[#121822] px-6 py-6 text-[#f6f0e8] shadow-[0_24px_54px_rgba(18,24,34,0.24)] sm:px-7 sm:py-7">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[#83d0bf]">
+          <aside className="rounded-xl bg-[#0a192f] px-6 py-6 text-[#f6f0e8] shadow-[0_4px_16px_rgba(10,25,47,0.14)] sm:px-7 sm:py-7">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[#d4956a]">
               Aanbevolen focus
             </p>
             <h2 className="mt-4 max-w-[12ch] font-display text-[clamp(2rem,4vw,3.1rem)] leading-[0.98] text-[#f8f3ec]">
@@ -546,7 +546,7 @@ export default async function DashboardHomePage({
                   key={item.title}
                   className={index === 0 ? 'space-y-2' : 'space-y-2 border-t border-white/10 pt-5'}
                 >
-                  <p className="dash-number text-[2rem] leading-none text-[#83d0bf]">
+                  <p className="dash-number text-[2rem] leading-none text-[#d4956a]">
                     {String(index + 1).padStart(2, '0')}
                   </p>
                   <p className="text-[1.06rem] font-semibold tracking-[-0.02em] text-[#f8f3ec]">{item.title}</p>
@@ -557,14 +557,14 @@ export default async function DashboardHomePage({
             <div className="mt-7 flex flex-wrap gap-2.5">
               <Link
                 href={isAdmin ? '/reports' : `/campaigns/${leadCampaign.campaign_id}`}
-                className="inline-flex rounded-full border border-white/14 bg-white/8 px-4 py-2 text-sm font-semibold text-[#f8f3ec] transition-colors hover:bg-white/12"
+                className="inline-flex rounded-[6px] border border-white/14 bg-white/8 px-4 py-2 text-sm font-semibold text-[#f8f3ec] transition-colors hover:bg-white/12"
               >
                 {isAdmin ? 'Open rapporten' : 'Open campagne'}
               </Link>
               {isAdmin ? (
                 <Link
                   href="/beheer"
-                  className="inline-flex rounded-full border border-[#83d0bf]/30 px-4 py-2 text-sm font-semibold text-[#83d0bf] transition-colors hover:bg-[#83d0bf]/10"
+                  className="inline-flex rounded-[6px] border border-[#d4956a]/30 px-4 py-2 text-sm font-semibold text-[#d4956a] transition-colors hover:bg-[#d4956a]/10"
                 >
                   Open beheer
                 </Link>
@@ -595,7 +595,7 @@ export default async function DashboardHomePage({
               De tabs behouden de echte productstructuur, maar de read begint nu met helder ritme, minder card-op-card en een duidelijkere eerste managementflow.
             </p>
           </div>
-          <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_16px_36px_rgba(19,32,51,0.06)] sm:px-6 sm:py-6">
+          <div className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_4px_rgba(10,25,47,0.05)] sm:px-6 sm:py-6">
             <div className="mb-5 flex items-center justify-between">
               <p className="text-sm font-semibold" style={{ color: 'var(--dashboard-ink)' }}>
                 Portfolio
@@ -613,7 +613,7 @@ export default async function DashboardHomePage({
         <div className="flex flex-wrap gap-3">
           <Link
             href="/beheer"
-            className="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+            className="rounded-[6px] px-4 py-2 text-sm font-medium transition-colors"
             style={{
               background: 'var(--dashboard-surface)',
               border: '1px solid var(--dashboard-frame-border)',
@@ -624,7 +624,7 @@ export default async function DashboardHomePage({
           </Link>
           <Link
             href="/beheer/contact-aanvragen"
-            className="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+            className="rounded-[6px] px-4 py-2 text-sm font-medium transition-colors"
             style={{
               background: 'var(--dashboard-surface)',
               border: '1px solid var(--dashboard-frame-border)',
@@ -651,7 +651,7 @@ function OverviewSummaryNote({
   footer?: ReactNode
 }) {
   return (
-    <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_12px_28px_rgba(19,32,51,0.05)]">
+    <div className="rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_1px_3px_rgba(10,25,47,0.04)]">
       <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">{label}</p>
       <p className="mt-2 text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">{value}</p>
       <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{body}</p>
@@ -759,7 +759,7 @@ function CampaignRow({
   const ctaLabel = isAdmin && state === 'setup' ? 'Naar setup' : stateMeta.viewerCta
 
   return (
-    <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.88),var(--dashboard-surface))] px-5 py-5 shadow-[0_14px_32px_rgba(19,32,51,0.05)] transition-shadow hover:shadow-[0_18px_38px_rgba(19,32,51,0.08)] sm:px-6">
+    <div className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(10,25,47,0.04)] sm:px-6">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between xl:gap-6">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -770,7 +770,7 @@ function CampaignRow({
           <h2 className="mt-3 text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">{campaign.campaign_name}</h2>
         </div>
 
-        <div className="grid gap-3 rounded-[22px] bg-[color:var(--dashboard-soft)]/72 px-4 py-4 sm:grid-cols-2 xl:min-w-[380px] xl:grid-cols-2 2xl:min-w-[520px] 2xl:grid-cols-4">
+        <div className="grid gap-3 rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-4 sm:grid-cols-2 xl:min-w-[380px] xl:grid-cols-2 2xl:min-w-[520px] 2xl:grid-cols-4">
           <StatCell label="Respons" value={`${campaign.completion_rate_pct ?? 0}%`} />
           <StatCell label="Ingevuld" value={`${campaign.total_completed}`} />
           <StatCell label="Uitgenodigd" value={`${campaign.total_invited}`} />
@@ -788,7 +788,7 @@ function CampaignRow({
 
       <div className="mt-5 flex flex-col gap-3 border-t border-[color:var(--dashboard-frame-border)]/85 pt-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2 text-xs text-[color:var(--dashboard-text)]">
-          <span className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-2.5 py-1 font-semibold text-[color:var(--dashboard-muted)]">
+            <span className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-2.5 py-1 font-semibold text-[color:var(--dashboard-muted)]">
             {stateMeta.nextStepLabel}
           </span>
           <span className="text-[color:var(--dashboard-muted)] select-none">·</span>
@@ -800,7 +800,7 @@ function CampaignRow({
           {isAdmin && state === 'setup' ? (
             <Link
               href="/beheer"
-              className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-1.5 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
+              className="inline-flex rounded-[6px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-1.5 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
             >
               Naar setup
             </Link>
@@ -809,7 +809,7 @@ function CampaignRow({
             {showOnboarding ? <OnboardingBalloon step={1} label="Open je campagne" align="left" /> : null}
             <Link
               href={`/campaigns/${campaign.campaign_id}`}
-              className="inline-flex rounded-full border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-4 py-1.5 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:brightness-[0.97]"
+              className="inline-flex rounded-[6px] border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-4 py-1.5 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:brightness-[0.97]"
             >
               {ctaLabel}
             </Link>
