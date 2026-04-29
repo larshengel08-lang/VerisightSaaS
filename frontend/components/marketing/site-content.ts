@@ -1,8 +1,6 @@
 import { buildContactHref } from '@/lib/contact-funnel'
 
 export const marketingNavLinks = [
-  { href: '/', label: 'Home' },
-  { href: '/#suite', label: 'Suite' },
   { href: '/producten', label: 'Producten' },
   { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
@@ -11,7 +9,7 @@ export const marketingNavLinks = [
 
 export const marketingPrimaryCta = {
   href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-  label: 'Plan suite-demo',
+  label: 'Plan een eerste route-inschatting',
 } as const
 
 export const marketingSecondaryCta = {
@@ -41,8 +39,8 @@ export const marketingLegalLinks = [
 export const homepageProductRoutes = [
   {
     name: 'ExitScan',
-    title: 'Breng vertrekduiding scherp in beeld',
-    body: 'Terugkijkende vertrekduiding op groepsniveau, met bestuurlijke handoff en een heldere eerste managementroute.',
+    title: 'Breng scherp in beeld waarom medewerkers vertrekken',
+    body: 'Terugkijkende analyse van vertrek op groepsniveau, met een eerste handoff voor opvolging en een heldere eerste route.',
     href: '/producten/exitscan',
     accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
     chip: 'Kernroute',
@@ -128,7 +126,7 @@ export const homepageUtilityLinks = [
   },
   {
     href: '/tarieven',
-    title: 'Bekijk de prijsankers',
+    title: 'Bekijk tarieven',
     body: 'Zie hoe eerste trajecten, vervolgvormen en combinatie commercieel zijn opgebouwd.',
   },
   {
@@ -210,27 +208,27 @@ export const trustQuickLinks = [
 export const trustSignalHighlights = [
   {
     title: 'Methodische duidelijkheid',
-    body: 'ExitScan en RetentieScan worden buyer-facing uitgelegd als managementinstrumenten met heldere claimsgrenzen, niet als diagnose of black-box voorspeller.',
+    body: 'ExitScan en RetentieScan worden helder uitgelegd als managementinstrumenten met duidelijke grenzen, niet als diagnose of black-box voorspeller.',
   },
   {
     title: 'Privacy op groepsniveau',
-    body: 'De publieke trustlaag benoemt minimale n-grenzen, segmentonderdrukking en geanonimiseerde open tekst in gewone taal.',
+    body: 'De publieke trustlaag legt minimale n-grenzen, segmentonderdrukking en geanonimiseerde open tekst uit in gewone taal.',
   },
   {
     title: 'Output die klopt met de propositie',
-    body: 'Dashboard, rapport en preview volgen dezelfde bestuurlijke leeslijn, zodat de site niet rijker verkoopt dan het product werkelijk levert.',
+    body: 'Dashboard, rapport en preview volgen dezelfde vaste leeslijn, zodat de site niet meer belooft dan het product werkelijk levert.',
   },
   {
     title: 'Manager-scope blijft bounded',
-    body: 'HR kan managers per afdeling toewijzen. Zij loggen in via dezelfde suite, maar zien alleen Action Center en geen dashboard- of rapportinzichten.',
+    body: 'HR kan managers per afdeling toewijzen. Zij loggen in via dezelfde omgeving, maar zien alleen Action Center en geen dashboard- of rapportinzichten.',
   },
   {
     title: 'Core proof blijft expliciet',
-    body: 'Publieke deliverable-proof blijft bewust anchored op ExitScan en RetentieScan. Bounded follow-on routes zijn wel formeel, maar krijgen publiek vooral bewijs via productpagina en trustlaag.',
+    body: 'Publiek bewijs blijft bewust gekoppeld aan ExitScan en RetentieScan. Vervolgroutes zijn formeel uitgewerkt, maar krijgen publiek vooral bewijs via productpagina en trustlaag.',
   },
   {
     title: 'Begeleide productvorm',
-    body: 'Verisight verkoopt een strakke productvorm met intake, uitvoering, rapportage en begeleide vervolgstappen in plaats van losse surveysoftware of open consultancy.',
+    body: 'Verisight biedt een strakke productvorm met intake, uitvoering, rapportage en begeleide vervolgstappen, in plaats van losse surveysoftware of open consultancy.',
   },
   {
     title: 'Publiek verifieerbare basis',
@@ -241,7 +239,7 @@ export const trustSignalHighlights = [
 export const trustVerificationCards = [
   {
     title: 'Wat je nu publiek kunt verifieren',
-    body: 'Verisight laat publiek zien hoe productkeuze, privacy, rapportlezing en begeleide delivery zijn ingericht voordat je een demo of gesprek plant.',
+    body: 'Verisight laat publiek zien hoe productkeuze, privacy, rapportlezing en begeleiding zijn ingericht voordat je een demo of gesprek plant.',
   },
   {
     title: 'Waar sample-proof bewust stopt',
@@ -249,11 +247,11 @@ export const trustVerificationCards = [
   },
   {
     title: 'Wat management wel ziet',
-    body: 'Geaggregeerde bestuurlijke read, bestuurlijke handoff, topfactoren, hypotheses, prioriteiten en vervolgrichtingen in een vaste executive leeslijn.',
+    body: 'Een geaggregeerde managementsamenvatting met handoff, topfactoren, hypotheses, prioriteiten en vervolgrichtingen in een vaste leeslijn.',
   },
   {
     title: 'Hoe manager-toegang werkt',
-    body: 'HR kan managers per afdeling toewijzen. Zij loggen in via dezelfde suite, maar zien alleen Action Center en geen dashboard- of rapportinzichten.',
+    body: 'HR kan managers per afdeling toewijzen. Zij loggen in via dezelfde omgeving, maar zien alleen Action Center en geen dashboard- of rapportinzichten.',
   },
   {
     title: 'Wat we bewust niet claimen',
@@ -276,11 +274,11 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Hoe lees je de output?',
-    body: 'Verisight gebruikt signalen, hypotheses en bestuurlijke reads als gespreksinput. De output ondersteunt verificatie en prioritering, niet causaliteitsclaims of harde diagnoses.',
+    body: 'Verisight gebruikt signalen, hypotheses en managementsamenvattingen als gespreksinput. De output ondersteunt verificatie en prioritering, niet causaliteitsclaims of harde diagnoses.',
   },
   {
     title: 'Hoe werkt manager-toegang?',
-    body: 'HR kan managers per afdeling toewijzen. Zij loggen in via dezelfde suite, maar zien alleen Action Center en geen dashboard- of rapportinzichten.',
+    body: 'HR kan managers per afdeling toewijzen. Zij loggen in via dezelfde omgeving, maar zien alleen Action Center en geen dashboard- of rapportinzichten.',
   },
   {
     title: 'Welke juridische basis is publiek beschikbaar?',
@@ -292,7 +290,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Heeft elke route een publiek voorbeeldrapport?',
-    body: 'Nee. Publieke deliverable-proof blijft bewust core-first op ExitScan en RetentieScan. Bounded follow-on routes zijn buyer-facing volwassen, maar worden publiek vooral via productpagina, trustlaag en formele routegrenzen uitgelegd.',
+    body: 'Nee. Publiek bewijs blijft bewust gekoppeld aan ExitScan en RetentieScan. Vervolgroutes zijn formeel uitgewerkt, maar worden publiek vooral via productpagina, trustlaag en routegrenzen uitgelegd.',
   },
 ] as const
 
@@ -304,7 +302,7 @@ export const trustReadingRows = [
   ],
   [
     'Wat management ziet',
-    'Dashboard, bestuurlijke read, bestuurlijke handoff, topfactoren, hypotheses en vervolgstappen',
+    'Een geaggregeerde managementsamenvatting met handoff, topfactoren, hypotheses, prioriteiten en vervolgrichtingen in een vaste leeslijn',
     'Niet elke ruwe response, geen persoonsprofielen en geen verborgen black-box score',
   ],
   [
@@ -314,7 +312,7 @@ export const trustReadingRows = [
   ],
   [
     'Bewijsstatus',
-    'Methodisch onderbouwd, intern consistent en testmatig beschermd',
+    'Methodisch onderbouwd, intern consistent en zorgvuldig beschermd',
     'Niet verkopen als extern gevalideerd diagnostisch instrument of bewezen predictor',
   ],
 ] as const
@@ -423,15 +421,15 @@ export const included = [
 export const approachSteps = [
   {
     title: '1. Kennismaking',
-    body: 'We bepalen welke managementvraag nu eerst telt en of ExitScan, RetentieScan of een gefaseerde combinatie logisch is.',
+    body: 'We bepalen welke vraag nu het eerst duidelijkheid vraagt en welke route daarvoor het meest logisch is: ExitScan, RetentieScan of een gefaseerde combinatie.',
   },
   {
     title: '2. Intake en databasis',
-    body: 'We spreken af welke respondentdata, segmentinformatie en timing nodig zijn om dashboard en rapport leesbaar en privacyveilig te maken.',
+    body: 'We stemmen af welke input nodig is om dashboard en rapport snel leesbaar en zorgvuldig ingericht te krijgen, zonder extra complexiteit voor je team.',
   },
   {
     title: '3. Campaign setup',
-    body: 'Verisight richt de campaign in, helpt met respondentimport en zet uitnodigingen en herinneringen klaar zonder extra toolbeheer voor HR.',
+    body: 'Verisight richt de campagne in, helpt met respondentimport en zet uitnodigingen en herinneringen klaar, zonder extra toolbeheer voor HR.',
   },
   {
     title: '4. Eerste responses',

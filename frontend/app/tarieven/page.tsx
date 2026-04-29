@@ -46,7 +46,7 @@ export default function TarievenPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <div className="min-h-screen">
-      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan suite-demo" />
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
         <main id="hoofdinhoud">
           <section className="border-b border-[#e7dfd2] bg-[#f7f4ee] px-6 py-4 text-sm text-slate-700 sm:px-10">
             <div className="mx-auto max-w-6xl">

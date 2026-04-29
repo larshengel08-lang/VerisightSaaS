@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getCanonicalHostRedirectUrl } from '@/lib/canonical-host'
+import { shouldBypassSupabaseForRequest } from '@/lib/middleware-auth'
 import {
   isPublicApiRoutePath,
   isPublicRoutePath,
@@ -72,6 +73,10 @@ export async function middleware(request: NextRequest) {
         },
       })
     }
+  }
+
+  if (shouldBypassSupabaseForRequest(pathname)) {
+    return NextResponse.next({ request })
   }
 
   let supabaseResponse = NextResponse.next({ request })

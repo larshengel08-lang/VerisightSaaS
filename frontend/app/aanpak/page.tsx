@@ -41,7 +41,7 @@ export default function AanpakPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <div className="min-h-screen">
-      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan suite-demo" />
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
         <main id="hoofdinhoud">
           <AanpakContent />
         </main>

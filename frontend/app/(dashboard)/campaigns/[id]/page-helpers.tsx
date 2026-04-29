@@ -1252,7 +1252,7 @@ export function ActionPlaybookList({
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <CardColumn title="Eerste besluit" tone="slate">
+            <CardColumn title="Aandachtspunt voor verificatie" tone="slate">
               <p className="text-sm leading-6 text-slate-700">{item.playbook?.decision}</p>
             </CardColumn>
             <CardColumn title="Eerste eigenaar" tone="slate">
@@ -1261,10 +1261,10 @@ export function ActionPlaybookList({
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <CardColumn title="Eerst valideren" tone="slate">
+            <CardColumn title="Eerst toetsen" tone="slate">
               <p className="text-sm leading-6 text-slate-700">{item.playbook?.validate}</p>
             </CardColumn>
-            <CardColumn title="Logische acties" tone="slate">
+            <CardColumn title="Mogelijke vervolgstappen" tone="slate">
               <ul className="space-y-2">
                 {item.playbook?.actions.map((action) => (
                   <li key={action} className="flex gap-2 text-sm leading-6 text-slate-700">
@@ -1274,7 +1274,7 @@ export function ActionPlaybookList({
                 ))}
               </ul>
             </CardColumn>
-            <CardColumn title="Niet overhaasten" tone="amber">
+            <CardColumn title="Let op" tone="amber">
               <p className="text-sm leading-6 text-slate-700">{item.playbook?.caution}</p>
             </CardColumn>
           </div>
@@ -1328,7 +1328,7 @@ export function SegmentPlaybookList({ segments }: { segments: SegmentPlaybookEnt
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <CardColumn title="Eerste besluit" tone="slate">
+            <CardColumn title="Aandachtspunt voor verificatie" tone="slate">
               <p className="text-sm leading-6 text-slate-700">{segment.decision}</p>
             </CardColumn>
             <CardColumn title="Eerste eigenaar" tone="slate">
@@ -1337,10 +1337,10 @@ export function SegmentPlaybookList({ segments }: { segments: SegmentPlaybookEnt
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <CardColumn title="Eerst valideren" tone="slate">
+            <CardColumn title="Eerst toetsen" tone="slate">
               <p className="text-sm leading-6 text-slate-700">{segment.validate}</p>
             </CardColumn>
-            <CardColumn title="Logische acties" tone="slate">
+            <CardColumn title="Mogelijke vervolgstappen" tone="slate">
               <ul className="space-y-2">
                 {segment.actions.map((action) => (
                   <li key={action} className="flex gap-2 text-sm leading-6 text-slate-700">
@@ -1350,7 +1350,7 @@ export function SegmentPlaybookList({ segments }: { segments: SegmentPlaybookEnt
                 ))}
               </ul>
             </CardColumn>
-            <CardColumn title="Niet overhaasten" tone="amber">
+            <CardColumn title="Let op" tone="amber">
               <p className="text-sm leading-6 text-slate-700">{segment.caution}</p>
             </CardColumn>
           </div>

@@ -24,7 +24,7 @@ describe('marketing flow defaults', () => {
   it('keeps the primary and secondary CTA labels aligned with the redesign', () => {
     expect(marketingPrimaryCta).toEqual({
       href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-      label: 'Plan suite-demo',
+      label: 'Plan een eerste route-inschatting',
     })
     expect(marketingSecondaryCta).toEqual({
       href: '/#suite',
@@ -32,21 +32,19 @@ describe('marketing flow defaults', () => {
     })
   })
 
-  it('keeps the contact flow framed as a suite demo instead of a generic message send', () => {
+  it('keeps the contact flow framed as a route-inschatting instead of a generic message send', () => {
     const contactFormSource = fs.readFileSync(path.join(process.cwd(), 'components', 'marketing', 'contact-form.tsx'), 'utf8')
     const solutionSource = fs.readFileSync(path.join(process.cwd(), 'lib', 'seo-solution-pages.ts'), 'utf8')
 
-    expect(contactFormSource).toContain('Vraag suite-demo aan')
-    expect(contactFormSource).toContain('Plan suite-demo')
-    expect(contactFormSource).toContain('Suite-demo aangevraagd.')
+    expect(contactFormSource).toContain('Plan een eerste route-inschatting')
+    expect(contactFormSource).toContain('Route-inschatting wordt verstuurd...')
+    expect(contactFormSource).toContain('Route-inschatting aangevraagd.')
     expect(solutionSource).toContain('Plan een suite-demo over verloopanalyse')
     expect(solutionSource).toContain('Plan een suite-demo over medewerkersbehoud analyseren')
   })
 
   it('keeps the top navigation focused on products, process, pricing and trust', () => {
     expect(marketingNavLinks).toEqual([
-      { href: '/', label: 'Home' },
-      { href: '/#suite', label: 'Suite' },
       { href: '/producten', label: 'Producten' },
       { href: '/aanpak', label: 'Aanpak' },
       { href: '/tarieven', label: 'Tarieven' },

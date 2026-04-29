@@ -472,7 +472,7 @@ export function PreflightChecklist({
                   disabled={recordBusy}
                   className="inline-flex items-center justify-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {recordBusy ? 'Opslaan...' : 'Deliveryrecord opslaan'}
+                  {recordBusy ? 'Opslaan...' : 'Uitvoering opslaan'}
                 </button>
                 <Link
                   href="/beheer/contact-aanvragen"
@@ -484,7 +484,7 @@ export function PreflightChecklist({
                   href={`/beheer/klantlearnings?campaign=${campaignId}`}
                   className="inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:text-blue-700"
                 >
-                  Open learning-workbench
+                  Open leerwerkbank
                 </Link>
               </div>
             ) : null}
@@ -513,16 +513,16 @@ export function PreflightChecklist({
                 <p className="mt-3 text-sm leading-6 text-amber-700">{leadLoadError}</p>
               ) : (
                 <p className="mt-3 text-sm leading-6 text-slate-600">
-                  Koppel hier de lead zodat routekwalificatie, overdracht en deliverycontext niet in losse notities blijven hangen.
+                  Koppel hier de lead zodat routekwalificatie, overdracht en uitvoeringscontext niet in losse notities blijven hangen.
                 </p>
               )}
             </div>
 
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-semibold text-slate-950">Ops-warnings</p>
+              <p className="text-sm font-semibold text-slate-950">Uitvoeringswaarschuwingen</p>
               {opsWarnings.length === 0 ? (
                 <p className="mt-3 text-sm leading-6 text-slate-600">
-                  Geen directe warnings. Delivery kan nu vooral op lifecycle, first value en follow-up worden gestuurd.
+                  Geen directe waarschuwingen. De uitvoering kan nu vooral op voortgang, eerste waarde en opvolging worden gestuurd.
                 </p>
               ) : (
                 <ul className="mt-3 space-y-2">
@@ -586,9 +586,9 @@ export function PreflightChecklist({
             </div>
 
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-              <p className="text-sm font-semibold text-slate-950">Operating discipline</p>
+              <p className="text-sm font-semibold text-slate-950">Uitvoeringsdiscipline</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Deze laag maakt de delivery-control overdraagbaar: wie bewaakt de route, wat telt als management use en welke bounded vervolguitkomsten canoniek zijn.
+                Deze laag maakt de uitvoeringscontrole overdraagbaar: wie bewaakt de route, wat telt als managementgebruik en welke vervolguitkomsten vastliggen.
               </p>
               <div className="mt-4 grid gap-4 xl:grid-cols-2">
                 <div className="rounded-2xl border border-white bg-white px-4 py-4">
@@ -612,7 +612,7 @@ export function PreflightChecklist({
                 </div>
 
                 <div className="rounded-2xl border border-white bg-white px-4 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Management use contract</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Managementgebruik</p>
                   <div className="mt-3 space-y-3">
                     {operatingGuide.managementUseSteps.map((step) => (
                       <div key={step.title} className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
@@ -649,7 +649,7 @@ export function PreflightChecklist({
                       </div>
                     ))}
                     <div className="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-3">
-                      <p className="text-sm font-semibold text-slate-950">Weekly delivery review</p>
+                      <p className="text-sm font-semibold text-slate-950">Wekelijkse uitvoeringsreview</p>
                       <ul className="mt-2 space-y-2">
                         {operatingGuide.weeklyReviewRules.map((rule) => (
                           <li key={rule.title} className="text-sm leading-6 text-slate-700">
@@ -697,7 +697,7 @@ export function PreflightChecklist({
             <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
               <p className="font-semibold text-slate-950">Belangrijke gates</p>
               <p className="mt-2">Launch readiness is pas rond als intake, import-QA en klantactivatie expliciet bevestigd zijn.</p>
-              <p className="mt-2">First value telt pas echt als output veilig leesbaar is en report delivery handmatig is bevestigd.</p>
+              <p className="mt-2">Eerste waarde telt pas echt als output veilig leesbaar is en rapportoplevering handmatig is bevestigd.</p>
               <p className="mt-2">Eerste managementgebruik blijft bewust handmatig bevestigd totdat er een stevigere adoption-bewijslaag is.</p>
             </div>
           </div>
@@ -707,9 +707,9 @@ export function PreflightChecklist({
       <details className="group rounded-[22px] border border-slate-200 bg-white" open>
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4">
           <div>
-            <p className="text-sm font-semibold text-slate-900">Persistente delivery checkpoints</p>
+            <p className="text-sm font-semibold text-slate-900">Persistente uitvoeringscheckpoints</p>
             <p className="mt-1 text-sm text-slate-500">
-              Auto-signalen en handmatige bevestigingen leven hier samen, zodat launch, activatie en eerste managementgebruik overdraagbaar blijven.
+              Auto-signalen en handmatige bevestigingen komen hier samen, zodat start, activatie en eerste managementgebruik overdraagbaar blijven.
             </p>
           </div>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">

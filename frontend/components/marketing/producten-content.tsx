@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { T, AC, FF, SHELL, useInView, Reveal, Arrow, SectionMark } from '@/components/marketing/design-tokens'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
+import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const mainRoutes = [
@@ -13,8 +13,8 @@ const mainRoutes = [
     accent: AC.deep,
     accentMid: AC.mid,
     accentFaint: AC.faint,
-    desc: 'Begrijp waarom medewerkers vertrekken en waar gerichte actie het meeste effect heeft. Terugkijkende vertrekduiding op groepsniveau.',
-    bullets: ['Vertrekredenen op themaniveau', 'Patronen per team of afdeling', 'Bestuurlijke handoff inbegrepen'],
+    desc: 'Begrijp waarom medewerkers vertrekken en waar gerichte actie het meeste effect heeft. Terugkijkende analyse van vertrek op groepsniveau.',
+    bullets: ['Vertrekredenen op themaniveau', 'Patronen per team of afdeling', 'Eerste handoff voor opvolging inbegrepen'],
     href: '/producten/exitscan',
     chip: 'Kernroute',
   },
@@ -25,7 +25,7 @@ const mainRoutes = [
     accent: 'oklch(0.50 0.12 188)' as string,
     accentMid: 'oklch(0.62 0.10 185)' as string,
     accentFaint: 'oklch(0.972 0.018 185)' as string,
-    desc: 'Zie eerder waar behoud onder druk staat en welke signalen nu aandacht vragen. Vroegsignalering op groeps- en segmentniveau.',
+    desc: 'Zie eerder waar behoud onder druk staat en welke signalen nu eerst aandacht vragen. Vroegsignalering op groeps- en segmentniveau.',
     bullets: ['Risicozones per team', 'Stay-intent en vertrekintentie', 'Geen individuele signalen'],
     href: '/producten/retentiescan',
     chip: 'Kernroute',
@@ -37,8 +37,8 @@ const mainRoutes = [
     accent: 'oklch(0.46 0.12 220)' as string,
     accentMid: 'oklch(0.62 0.10 220)' as string,
     accentFaint: 'oklch(0.972 0.012 220)' as string,
-    desc: 'Verbind vertrekduiding en vroegsignalering in een gedeelde managementtaal. Voor organisaties met beide vraagstukken.',
-    bullets: ['ExitScan + RetentieScan', 'Gedeelde managementlijn', 'Geen derde kernproduct'],
+    desc: 'Verbind vertrekpatronen en vroegsignalering in een gedeelde leeslijn. Voor organisaties met beide vraagstukken.',
+    bullets: ['ExitScan + RetentieScan', 'Gedeelde leeslijn', 'Geen derde kernproduct'],
     href: '/producten/combinatie',
     chip: 'Portfolioroute',
   },
@@ -47,7 +47,7 @@ const mainRoutes = [
 const boundedPeerRoute = {
   title: 'Onboarding 30-60-90',
   label: 'Bounded peer',
-  desc: 'Vroege checkpoint-read voor nieuwe medewerkers op 30, 60 en 90 dagen. Kleiner dan een hoofdproduct, maar ook niet zomaar een gewone vervolgronde.',
+  desc: 'Vroege check voor nieuwe medewerkers op 30, 60 en 90 dagen. Kleiner dan een hoofdroute, maar concreter dan een gewone vervolgronde.',
   href: '/producten/onboarding-30-60-90',
   color: 'oklch(.46 .14 72)',
 } as const
@@ -56,14 +56,14 @@ const followOnRoutes = [
   {
     title: 'Pulse',
     label: 'Vervolgroute',
-    desc: 'Compacte reviewlaag na een eerste baseline. Kort en gericht zicht op wat nu verschuift.',
+    desc: 'Compacte review na een eerste baseline. Kort en gericht zicht op wat nu verschuift.',
     href: '/producten/pulse',
     color: AC.mid,
   },
   {
     title: 'Leadership Scan',
     label: 'Managementcontext',
-    desc: 'Begrensde managementread nadat een bestaand people-signaal duiding vraagt.',
+    desc: 'Begrensde managementsamenvatting wanneer een bestaand people-signaal extra duiding vraagt.',
     href: '/producten/leadership-scan',
     color: 'oklch(.42 .12 290)',
   },
@@ -83,25 +83,25 @@ function HeroSection() {
           <div style={{ animation: 'slideUpFade .9s cubic-bezier(.16,1,.3,1) .15s both' }}>
             <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink }}>
               Kies de route die past<br />
-              <em className="shimmer-text" style={{ fontStyle: 'italic' }}>bij de managementvraag.</em>
+              <em className="shimmer-text" style={{ fontStyle: 'italic' }}>bij de vraag die nu speelt.</em>
             </h1>
           </div>
           <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
             <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, margin: '28px 0 36px' }}>
-              ExitScan en RetentieScan zijn de twee hoofdinstappen. Daarna landen dashboard, rapport en Action Center in
-              dezelfde suite-omgeving, zodat u niet alleen inzicht krijgt maar ook kunt prioriteren, toewijzen en opvolgen.
+              ExitScan en RetentieScan zijn de twee hoofdroutes. Daarna komen dashboard, rapport en Action Center in
+              dezelfde omgeving samen, zodat u niet alleen inzicht krijgt, maar ook kunt prioriteren, toewijzen en opvolgen.
             </p>
           </div>
           <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink, transition: 'all .18s cubic-bezier(.4,0,0,1)' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.background = AC.deep }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.background = T.ink }}>
-              Plan suite-demo <Arrow />
+                Plan een eerste route-inschatting <Arrow />
             </Link>
             <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 500, padding: '11px 27px', color: T.inkSoft, border: `1px solid ${T.rule}`, transition: 'all .18s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T.inkMuted }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = T.rule }}>
-              Bekijk de prijsankers
+              Bekijk tarieven
             </Link>
           </div>
         </div>
@@ -165,7 +165,7 @@ function FollowOnSection() {
             Eerst een bounded peer, daarna pas kleiner vervolg.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 40, maxWidth: '52ch' }}>
-            Onboarding 30-60-90 staat buyer-facing naast de kernroutes als bounded peer. Pulse en Leadership Scan blijven daarna bewust kleiner als vervolgroutes. De gedeelde suite-omgeving blijft wel hetzelfde: eerst inzicht, daarna bounded follow-through.
+            Onboarding 30-60-90 staat publiek naast de kernroutes als bounded peer. Pulse en Leadership Scan blijven daarna bewust kleiner als vervolgroutes. De gedeelde omgeving blijft wel hetzelfde: eerst inzicht, daarna gerichte opvolging.
           </p>
         </Reveal>
         <Reveal delay={.08}>
@@ -203,8 +203,8 @@ function FollowOnSection() {
           <Reveal delay={.1}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
               <p style={{ fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
-                Buyer-facing blijft Verisight draaien om twee kernproducten, een kleine portfolioroute en een bewust begrensde
-                vervolglaag binnen dezelfde suite-omgeving.
+                Publiek draait Verisight om twee kernroutes, een kleine portfolioroute en een bewust begrensde
+                vervolgstap binnen dezelfde omgeving.
               </p>
               <Link href="/vertrouwen" style={{ fontSize: 13, fontWeight: 600, color: T.teal, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                 Meer over trust en privacy <Arrow />
@@ -218,18 +218,10 @@ function FollowOnSection() {
 }
 
 function ContactSection() {
+  const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'products_closing_cta' })
+
   return (
-    <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
-      <div style={{ ...SHELL, maxWidth: 1180 }}>
-        <MarketingInlineContactPanel
-          eyebrow="Plan suite-demo"
-          title="Twijfelt u tussen ExitScan, RetentieScan, onboarding of een vervolgronde?"
-          body="In een eerste gesprek bepalen we welke route nu echt logisch is, hoe dashboard, rapport en Action Center daarna in dezelfde suite-omgeving landen en welke vervolgstap bewust kleiner moet blijven."
-          defaultRouteInterest="exitscan"
-          defaultCtaSource="products_form"
-        />
-      </div>
-    </section>
+    <MarketingClosingCta href={kennismakingHref} sectionIndex="04" backdropNumber="04" />
   )
 }
 

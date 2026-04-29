@@ -237,13 +237,13 @@ export function buildExitDashboardViewModel(args: {
         tone: hasBroadWorkSignal ? 'amber' : 'blue',
       },
       {
-        title: 'Waarom telt dit nu',
+        title: 'Huidige score',
         value: strongSignalRate !== null ? `${strongSignalRate}% werksignaal` : 'Bestuurlijke relevantie',
         body: boardroomRelevance,
         tone: 'blue',
       },
       {
-        title: 'Eerste besluit',
+        title: 'Aandachtspunt voor verificatie',
         value: topFactorLabel,
         body: firstDecision,
         tone: 'amber',

@@ -8,7 +8,7 @@ const distDir =
     : configuredDistDir && configuredDistDir !== '.next'
       ? configuredDistDir
       : undefined
-const isDevelopment = process.env.NODE_ENV !== 'production'
+const isProduction = process.env.NODE_ENV === 'production'
 
 const securityHeaders = [
   {
@@ -37,8 +37,8 @@ const securityHeaders = [
       "default-src 'self'",
       // Supabase API + auth
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verisight-production.up.railway.app",
-      // Next.js inline scripts + Google Fonts
-      `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''}`,
+      // Next.js dev runtime needs unsafe-eval for fast refresh and client hydration.
+      `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob:",

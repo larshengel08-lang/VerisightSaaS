@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { T, FF, SHELL, useInView, Reveal, Arrow, SectionMark } from '@/components/marketing/design-tokens'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
+import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
+import { buildContactHref } from '@/lib/contact-funnel'
 import {
   trustItems,
   trustSignalHighlights,
@@ -26,12 +27,12 @@ function HeroSection() {
             <div style={{ animation: 'slideUpFade .9s cubic-bezier(.16,1,.3,1) .15s both' }}>
               <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink }}>
                 Methodiek, privacy<br />
-                <em style={{ fontStyle: 'italic', color: T.teal }}>en suitegrenzen.</em>
+                <em style={{ fontStyle: 'italic', color: T.teal }}>en duidelijke grenzen.</em>
               </h1>
             </div>
             <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
               <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 0' }}>
-                Verisight laat publiek zien hoe methodiek, privacy, dashboard, rapport en Action Center samenhangen — en waar die suite-output bewust begrensd blijft voordat een traject start.
+                Verisight laat publiek zien hoe methodiek, privacy, dashboard, rapport en Action Center samenhangen, en waar die output bewust begrensd blijft voordat een traject start.
               </p>
             </div>
           </div>
@@ -62,11 +63,11 @@ function TrustSignalsSection() {
         <SectionMark num="02" label="Waar vertrouwen vandaan komt" inView={sInView} />
         <Reveal delay={.05}>
           <h2 style={{ fontFamily: FF, fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 400, letterSpacing: '-.026em', color: T.ink, marginBottom: 14, lineHeight: 1.06 }}>
-            De trustlaag moet hetzelfde vertellen<br />
-            <em style={{ fontStyle: 'italic', color: T.teal }}>als het product werkelijk levert.</em>
+            De trustlaag moet precies vertellen<br />
+            <em style={{ fontStyle: 'italic', color: T.teal }}>wat het product werkelijk levert.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 44, maxWidth: '50ch' }}>
-            Deze pagina maakt expliciet wat Verisight wel en niet claimt, hoe privacy is ingebouwd en hoe management dashboard, rapport en Action Center in dezelfde bounded leeslijn moet lezen.
+            Deze pagina laat precies zien wat Verisight wel en niet claimt, hoe privacy is ingebouwd en hoe dashboard, rapport en Action Center in dezelfde vaste leeslijn samenkomen.
           </p>
         </Reveal>
         <div className="grid grid-cols-1 gap-0 md:grid-cols-2 xl:grid-cols-3">
@@ -120,7 +121,7 @@ function VerificationSection() {
                 <em style={{ fontStyle: 'italic', fontWeight: 300, color: 'oklch(.62 .10 185)' }}>zonder schijnzekerheid.</em>
               </h3>
               <p style={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(247,245,241,.65)', marginBottom: 24 }}>
-                Verisight werkt met geaggregeerde uitkomsten en benoemt bewust wat wel en niet geconcludeerd kan worden, ook wanneer follow-through via Action Center wordt toegevoegd.
+                Verisight werkt met geaggregeerde uitkomsten en maakt duidelijk wat wel en niet geconcludeerd kan worden, ook wanneer Action Center als vervolgstap wordt toegevoegd.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {trustItems.map((item, i) => (
@@ -143,9 +144,9 @@ function ReadingGuideSection() {
   const [sRef, sInView] = useInView(.08)
   const rows = [
     ['Intended use', 'Managementduiding, prioritering en gesprek op groepsniveau', 'Niet als diagnose, individuele voorspelling of performance-oordeel'],
-    ['Wat management ziet', 'Dashboard, bestuurlijke read, handoff, topfactoren, hypotheses en vervolgstappen', 'Niet elk signaal heeft dezelfde betrouwbaarheid of causaliteitswaarde'],
+    ['Wat management ziet', 'Dashboard, managementsamenvatting, handoff, topfactoren, hypotheses en vervolgstappen', 'Niet elk signaal heeft dezelfde betrouwbaarheid of causaliteitswaarde'],
     ['Privacygrens', 'Minimale n-grenzen, segmentonderdrukking en geanonimiseerde open tekst', 'Niet doen alsof kleine groepen of open tekst zonder terughoudendheid veilig te lezen zijn'],
-    ['Bewijsstatus', 'Methodisch onderbouwd, intern consistent en testmatig beschermd', 'Niet verkopen als extern gevalideerd diagnostisch instrument of bewezen predictor'],
+    ['Bewijsstatus', 'Methodisch onderbouwd, intern consistent en zorgvuldig beschermd', 'Niet verkopen als extern gevalideerd diagnostisch instrument of bewezen predictor'],
   ] as const
   return (
     <section style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
@@ -195,7 +196,7 @@ function PrivacySection() {
         <Reveal delay={.05}>
           <h2 style={{ fontFamily: FF, fontSize: 'clamp(26px,3vw,38px)', fontWeight: 400, letterSpacing: '-.022em', color: T.ink, marginBottom: 14, lineHeight: 1.1 }}>
             Snelle antwoorden op<br />
-            <em style={{ fontStyle: 'italic', color: T.teal }}>voorspelbare vragen.</em>
+            <em style={{ fontStyle: 'italic', color: T.teal }}>de vragen die vooraf tellen.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 40, maxWidth: '50ch' }}>
             Zo kan een buyer de basis toetsen voordat er een gesprek plaatsvindt.
@@ -232,18 +233,10 @@ function PrivacySection() {
 
 // ── ⑥ Contact ─────────────────────────────────────────────────────
 function ContactSection() {
+  const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'trust_closing_cta' })
+
   return (
-    <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
-      <div style={{ ...SHELL, maxWidth: 1180 }}>
-        <MarketingInlineContactPanel
-          eyebrow="Plan suite-demo"
-          title="Vertel kort welke managementvraag nu speelt."
-          body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy, prijs en hoe dashboard, rapport en Action Center bounded samenhangen."
-          defaultRouteInterest="exitscan"
-          defaultCtaSource="trust_form"
-        />
-      </div>
-    </section>
+    <MarketingClosingCta href={kennismakingHref} sectionIndex="06" backdropNumber="06" />
   )
 }
 

@@ -328,7 +328,7 @@ export function buildRetentionDashboardViewModel(args: {
         tone: 'blue',
       },
       {
-        title: 'Waarom telt dit nu',
+        title: 'Huidige score',
         value:
           args.turnoverIntention !== null && args.turnoverIntention >= 5.5
             ? `${args.turnoverIntention.toFixed(1)}/10 vertrekintentie`
@@ -343,7 +343,7 @@ export function buildRetentionDashboardViewModel(args: {
         tone: signalProfile === 'scherp_aandachtssignaal' ? 'amber' : 'blue',
       },
       {
-        title: 'Eerste besluit',
+        title: 'Aandachtspunt voor verificatie',
         value: topFactorLabels[0] ?? 'Nog geen topfactor',
         body: firstDecision,
         tone: 'amber',

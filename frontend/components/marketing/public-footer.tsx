@@ -24,16 +24,16 @@ export function PublicFooter() {
         <div>
           <Wordmark size="sm" showTagline={false} light />
           <p className="mt-2 text-[8px] font-bold tracking-[0.18em] uppercase text-[rgba(247,245,241,0.32)]">
-            People • Priorities • Follow-through
+            People • Priorities • Action
           </p>
           <p className="marketing-footer-copy mt-4 max-w-sm text-sm leading-7">
-            Verisight helpt HR en management zien wat speelt, bepalen wat eerst telt en opvolging organiseren in
+            Verisight helpt HR en management zien wat speelt, bepalen wat eerst telt en eerste opvolging organiseren in
             dashboard, rapport en Action Center.
           </p>
           <p className="mt-5 text-xs uppercase tracking-[0.12em] text-[rgba(247,245,241,0.5)]">
             Voor organisaties met 200+ medewerkers
           </p>
-          <div className="marketing-footer-chip mt-6">Een suite voor insight, prioriteit en opvolging</div>
+          <div className="marketing-footer-chip mt-6">Een omgeving voor inzicht, prioriteit en opvolging</div>
         </div>
 
         <div>
@@ -78,7 +78,7 @@ export function PublicFooter() {
       <div className="border-t border-[rgba(247,245,241,0.08)]">
         <div className="marketing-shell flex flex-col gap-2 py-5 text-xs text-[rgba(247,245,241,0.5)] sm:flex-row sm:items-center sm:justify-between">
           <p>&copy; {new Date().getFullYear()} Verisight. Alle rechten voorbehouden.</p>
-          <p>Geen trackingcookies op de marketing-site.</p>
+          <p>Geen trackingcookies op de marketingsite.</p>
         </div>
       </div>
     </footer>

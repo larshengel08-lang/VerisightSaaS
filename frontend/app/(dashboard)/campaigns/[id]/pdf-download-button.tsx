@@ -62,7 +62,7 @@ export function PdfDownloadButton({ campaignId, campaignName, scanType }: Props)
         disabled={loading}
         className="inline-flex rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? 'Rapport genereren...' : 'PDF-rapport'}
+        {loading ? 'Rapport ophalen...' : 'Rapport downloaden'}
       </button>
       {error ? <p className="max-w-48 text-xs text-red-600 sm:text-right">{error}</p> : null}
     </div>

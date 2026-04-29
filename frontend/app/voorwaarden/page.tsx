@@ -11,14 +11,14 @@ export default function VoorwaardenPage() {
   return (
     <LegalPageShell
       title="Algemene voorwaarden"
-      description="Op deze pagina lees je de basisvoorwaarden voor het gebruik van Verisight, ExitScan en RetentieScan. Voor de buyer-facing trustsamenvatting kun je ook de trust & privacy-pagina bekijken."
+      description="Op deze pagina lees je de basisvoorwaarden voor het gebruik van Verisight, ExitScan en RetentieScan. Voor een publieksvriendelijke trustsamenvatting kun je ook de Trust & privacy-pagina bekijken."
       lastUpdated="9 april 2026"
     >
       <section>
         <h2>0. Trust & privacy in gewone taal</h2>
         <p>
-          Deze voorwaarden vormen de formele contractlaag. Wil je eerst de publieke samenvatting zien van methodiek,
-          privacy, rapportlezing en juridische support, bekijk dan ook{' '}
+          Deze voorwaarden vormen de formele contractlaag. Wil je eerst een publieke samenvatting zien van methodiek,
+          privacy, rapportlezing en juridische ondersteuning, bekijk dan ook{' '}
           <Link href="/vertrouwen">Trust & privacy</Link>.
         </p>
       </section>
@@ -27,7 +27,7 @@ export default function VoorwaardenPage() {
         <h2>1. Definities</h2>
         <ul>
           <li>
-            <strong>Verisight:</strong> de dienst en software voor ExitScan, RetentieScan, rapportage en gerelateerde begeleiding.
+            <strong>Verisight:</strong> de dienst en software voor ExitScan, RetentieScan, rapportage en bijbehorende begeleiding.
           </li>
           <li>
             <strong>Klant:</strong> de organisatie die een of meer Verisight-producten afneemt.
@@ -45,7 +45,7 @@ export default function VoorwaardenPage() {
         <h2>2. Waarop zijn deze voorwaarden van toepassing?</h2>
         <p>
           Deze voorwaarden gelden voor iedere overeenkomst tussen Verisight en de klantorganisatie, tenzij schriftelijk
-          iets anders is afgesproken. Door gebruik te maken van de dienst accepteert de klant deze voorwaarden.
+          iets anders is afgesproken. Door de dienst te gebruiken accepteert de klant deze voorwaarden.
         </p>
       </section>
 
@@ -63,8 +63,8 @@ export default function VoorwaardenPage() {
           <li>persoonlijke toelichting op de uitkomsten.</li>
         </ul>
         <p>
-          De standaarddienst is organisatiegebonden en assisted van opzet. Verisight levert op dit moment geen
-          publiek self-serve checkout-, seat- of usageabonnement tenzij schriftelijk anders overeengekomen.
+          De standaarddienst is organisatiegebonden en begeleid van opzet. Verisight biedt op dit moment geen
+          publieke self-service checkout, seat- of usageabonnementen, tenzij schriftelijk anders overeengekomen.
         </p>
       </section>
 
@@ -103,7 +103,7 @@ export default function VoorwaardenPage() {
       <section>
         <h2>7. Vertrouwelijkheid</h2>
         <p>
-          Verisight en de klant behandelen vertrouwelijke informatie zorgvuldig en delen deze alleen als dat nodig is
+          Verisight en de klant behandelen vertrouwelijke informatie zorgvuldig en delen die alleen als dat nodig is
           voor uitvoering van de overeenkomst of als de wet dat vereist.
         </p>
       </section>
@@ -111,7 +111,7 @@ export default function VoorwaardenPage() {
       <section>
         <h2>8. Beschikbaarheid en ondersteuning</h2>
         <p>
-          Verisight streeft naar een betrouwbare dienstverlening en communiceert gepland onderhoud waar mogelijk vooraf.
+          Verisight streeft naar betrouwbare dienstverlening en communiceert gepland onderhoud waar mogelijk vooraf.
           Omdat het om software en externe infrastructuur gaat, kan volledige ononderbroken beschikbaarheid niet worden
           gegarandeerd.
         </p>
@@ -190,8 +190,8 @@ export default function VoorwaardenPage() {
         <h2>15. Contact</h2>
         <p>
           Voor vragen over deze voorwaarden kun je mailen naar{' '}
-          <a href="mailto:hallo@verisight.nl">hallo@verisight.nl</a>. Bekijk ook het{' '}
-          <Link href="/vertrouwen">trust & privacy-overzicht</Link>, het{' '}
+          <a href="mailto:hallo@verisight.nl">hallo@verisight.nl</a>. Bekijk ook{' '}
+          <Link href="/vertrouwen">Trust & privacy</Link>, het{' '}
           <Link href="/privacy">privacybeleid</Link> en de{' '}
           <Link href="/dpa">verwerkersovereenkomst</Link>.
         </p>

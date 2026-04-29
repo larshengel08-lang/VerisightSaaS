@@ -64,10 +64,10 @@ describe('dashboard home UX guardrails', () => {
     expect(pageSource).toContain('Rapport eerst')
     expect(pageSource).not.toContain('TeamScan')
 
-    expect(launchControlSource).toContain('Uitvoerstatus')
-    expect(launchControlSource).toContain('Eerstvolgende stap')
-    expect(launchControlSource).toContain('Uitvoerstappen')
-    expect(launchControlSource).toContain('Open blokkades')
+    expect(launchControlSource).toContain('Huidige status')
+    expect(launchControlSource).toContain('Wat nu eerst telt')
+    expect(launchControlSource).toContain('Wat nu gebeurt')
+    expect(launchControlSource).toContain('Wat nu nog blokkeert')
     expect(launchControlSource).toContain('Dashboard actief')
   })
 

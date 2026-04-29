@@ -1,70 +1,155 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
 import Link from 'next/link'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
-import { PreviewSlider } from '@/components/marketing/preview-slider'
+import { Reveal } from '@/components/marketing/design-tokens'
 import { buildContactHref } from '@/lib/contact-funnel'
 
-void PreviewSlider
-
-// Tokens used by HeroSection (De Rapporteur palette)
-const T = {
-  paper: 'oklch(0.978 0.01 62)',
-  paperSoft: 'oklch(0.956 0.018 60)',
-  white: '#FFFCF8',
-  ink: 'oklch(0.16 0.012 250)',
-  inkSoft: 'oklch(0.32 0.01 250)',
-  inkMuted: 'oklch(0.52 0.008 250)',
-  inkFaint: 'oklch(0.7 0.006 250)',
-  rule: 'oklch(0.875 0.012 62)',
-  teal: 'oklch(0.5 0.12 188)',
-  tealMid: 'oklch(0.62 0.1 185)',
-  tealFaint: 'oklch(0.972 0.018 185)',
+const SURFACE = {
+  paper: '#f4e8df',
+  paperSoft: '#f7eee7',
+  surface: '#fffdf9',
+  surfaceSoft: '#fbf7f2',
+  border: '#d9cebf',
+  borderSoft: '#e8ddd0',
+  ink: '#162238',
+  text: '#4e5d6f',
+  muted: '#78818a',
+  subtle: '#97a0ab',
+  teal: '#1f958a',
+  tealSoft: '#dff2ef',
+  amber: '#b9571f',
+  amberSoft: '#f4ddd0',
+  amberGlow: '#e39a63',
+  charcoal: '#0d1118',
+  charcoalSoft: '#181e27',
 } as const
-const AC = {
-  deep: 'oklch(0.45 0.18 50)',
-  mid: 'oklch(0.76 0.14 53)',
-  light: 'oklch(0.86 0.10 55)',
-  soft: 'oklch(0.95 0.045 50)',
-  faint: 'oklch(0.976 0.018 50)',
-} as const
-const FF = 'var(--font-fraunces), serif'
 
-function useInView(threshold = 0.12) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [inView, setInView] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) { setInView(true); observer.disconnect() } }, { threshold })
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [threshold])
-  return [ref, inView] as const
+const SHELL = {
+  margin: '0 auto',
+  maxWidth: 1240,
+  padding: '0 clamp(20px, 4vw, 48px)',
+} as const
+
+const displayFont = 'var(--font-fraunces), Georgia, serif'
+const bodyFont = 'var(--font-ibm-plex-sans), system-ui, sans-serif'
+
+const heroTrustItems = [
+  'Op groepsniveau',
+  'Geen individuele voorspellingen',
+  'Dashboard, samenvatting en eerste opvolging',
+]
+
+const marqueeLine = 'Van eerste inzicht naar concrete opvolging in dezelfde leeslijn'
+
+const suiteFlowPoints = [
+  {
+    index: '01',
+    title: 'Zie wat opvalt',
+    body: 'Patronen en verschillen worden snel zichtbaar.',
+  },
+  {
+    index: '02',
+    title: 'Begrijp wat eerst telt',
+    body: 'Niet alles tegelijk, maar focus op wat nu aandacht vraagt.',
+  },
+  {
+    index: '03',
+    title: 'Maak opvolging concreet',
+    body: 'Leg vast wie iets oppakt en wat de eerste stap is.',
+  },
+  {
+    index: '04',
+    title: 'Plan het reviewmoment',
+    body: 'Zo blijft inzicht niet hangen in rapportage.',
+  },
+]
+
+const suiteSignalMetrics = [
+  ['Vertreksignaal', '12%', '+1.4 pp'],
+  ['Betrokkenheid', '7,4', 'Stabiel'],
+  ['Behoudssignaal 12 mnd', '+3,1', 'Positieve richting'],
+] as const
+
+const suitePriorityRows = [
+  ['01', 'Groei en ontwikkeling blijft achter', 'Operations en Finance', 'Direct', SURFACE.amberSoft, SURFACE.amber],
+  ['02', 'Werkdruk loopt op', 'Piekperiode in Operations', 'Verhoogd', '#f1dfcf', '#9a5b19'],
+  ['03', 'Loopbaanperspectief blijft achter', 'Organisatiebreed signaal', 'Aandacht', SURFACE.tealSoft, SURFACE.teal],
+] as const
+
+const routeCards = [
+  {
+    index: '01',
+    eyebrow: 'Vertrek & uitstroom',
+    title: 'ExitScan',
+    body: 'Begrijp waarom medewerkers vertrekken en welke patronen terugkomen. Helder beeld in weken, niet maanden.',
+    accent: SURFACE.amber,
+  },
+  {
+    index: '02',
+    eyebrow: 'Behoud & vroegsignalering',
+    title: 'RetentieScan',
+    body: 'Zie waar behoud onder druk staat voordat het te laat is. Vroege signalering op groepsniveau.',
+    accent: SURFACE.teal,
+  },
+  {
+    index: '03',
+    eyebrow: 'Onboarding',
+    title: 'Onboarding 30-60-90',
+    body: 'Zie vroeg hoe nieuwe medewerkers landen en waar uitval kan ontstaan.',
+    accent: '#9b5f1e',
+  },
+]
+
+const trustPrinciples = [
+  'Verisight helpt patronen op groepsniveau zichtbaar maken, niet om individuele medewerkers te beoordelen.',
+  'Dashboard, samenvatting en eerste opvolging dragen dezelfde managementlijn, zonder dat elk detail overal terug hoeft te komen.',
+  'Methodologische zorgvuldigheid blijft zichtbaar in de output: patronen, geen grote causaliteitsclaims.',
+  'Opvolging wordt concreet gemaakt, maar blijft een begeleid gesprek in plaats van een automatisch oordeel.',
+]
+
+function SectionLabel({ index, label }: { index: string; label: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 26 }}>
+      <span style={{ color: SURFACE.subtle, fontSize: 11 }}>{index}</span>
+      <span
+        style={{
+          color: SURFACE.muted,
+          fontFamily: bodyFont,
+          fontSize: 10,
+          fontWeight: 700,
+          letterSpacing: '.18em',
+          textTransform: 'uppercase',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {label}
+      </span>
+      <div style={{ flex: 1, height: 1, background: SURFACE.border }} />
+    </div>
+  )
 }
 
-function Reveal({
-  children,
-  delay = 0,
-  from = 'bottom',
-}: {
-  children: ReactNode
-  delay?: number
-  from?: 'bottom' | 'right'
-}) {
-  const [ref, inView] = useInView(0.08)
-  const hiddenTransform = from === 'right' ? 'translateX(16px)' : 'translateY(16px)'
+function BackdropNumber({ value, tone = 'warm' }: { value: string; tone?: 'warm' | 'cool' }) {
+  const color = tone === 'cool' ? 'rgba(22, 34, 56, 0.04)' : 'rgba(185, 87, 31, 0.07)'
+
   return (
     <div
-      ref={ref}
+      aria-hidden
       style={{
-        opacity: inView ? 1 : 0,
-        transform: inView ? 'none' : hiddenTransform,
-        transition: `opacity .65s ease ${delay}s, transform .65s cubic-bezier(.16,1,.3,1) ${delay}s`,
+        color,
+        fontFamily: displayFont,
+        fontSize: 'clamp(12rem, 22vw, 24rem)',
+        fontWeight: 300,
+        letterSpacing: '-0.08em',
+        lineHeight: 0.8,
+        pointerEvents: 'none',
+        position: 'absolute',
+        right: '-2vw',
+        top: '20%',
+        userSelect: 'none',
       }}
     >
-      {children}
+      {value}
     </div>
   )
 }
@@ -77,78 +162,7 @@ function Arrow() {
   )
 }
 
-const SURFACE = {
-  paper: '#f5f0e8',
-  surface: '#fffdf9',
-  soft: '#f2ece2',
-  border: '#ddd6ca',
-  ink: '#132033',
-  text: '#4d5a66',
-  muted: '#7d887f',
-  navy: '#162534',
-  teal: '#3a7f7d',
-  tealSoft: '#e7f0ec',
-  amber: '#b95b1f',
-  amberSoft: '#f6e4d8',
-} as const
-
-const SHELL = {
-  maxWidth: 1220,
-  margin: '0 auto',
-  padding: '0 clamp(20px, 4vw, 44px)',
-} as const
-
-const displayFont = 'var(--font-fraunces), Georgia, serif'
-
-function SectionLabel({ index, label }: { index: string; label: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
-      <span style={{ fontSize: 11, color: SURFACE.muted }}>{index}</span>
-      <span
-        style={{
-          fontSize: 10,
-          fontWeight: 700,
-          letterSpacing: '.18em',
-          textTransform: 'uppercase',
-          color: SURFACE.muted,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {label}
-      </span>
-      <div style={{ flex: 1, height: 1, background: SURFACE.border }} />
-    </div>
-  )
-}
-
-function Tag({ children, tone = 'default' }: { children: React.ReactNode; tone?: 'default' | 'accent' }) {
-  const palette =
-    tone === 'accent'
-      ? { background: SURFACE.tealSoft, border: '#c7ddd7', color: SURFACE.teal }
-      : { background: SURFACE.surface, border: SURFACE.border, color: SURFACE.text }
-
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        borderRadius: 999,
-        border: `1px solid ${palette.border}`,
-        background: palette.background,
-        color: palette.color,
-        padding: '6px 11px',
-        fontSize: 11,
-        fontWeight: 600,
-        letterSpacing: '.08em',
-        textTransform: 'uppercase',
-      }}
-    >
-      {children}
-    </span>
-  )
-}
-
-function PreviewMetric({
+function OutputMetric({
   label,
   value,
   body,
@@ -160,20 +174,20 @@ function PreviewMetric({
   return (
     <div
       style={{
+        background: SURFACE.surfaceSoft,
         border: `1px solid ${SURFACE.border}`,
-        borderRadius: 14,
-        background: SURFACE.surface,
-        padding: '16px 18px',
+        padding: '12px 12px 14px',
       }}
     >
       <p
         style={{
+          color: SURFACE.muted,
+          fontFamily: bodyFont,
           fontSize: 10,
           fontWeight: 700,
           letterSpacing: '.16em',
-          textTransform: 'uppercase',
-          color: SURFACE.muted,
           marginBottom: 8,
+          textTransform: 'uppercase',
         }}
       >
         {label}
@@ -181,509 +195,465 @@ function PreviewMetric({
       <p
         className="dash-number"
         style={{
-          fontSize: 30,
-          lineHeight: 1,
           color: SURFACE.ink,
-          marginBottom: 8,
+          fontSize: 24,
+          lineHeight: 1,
+          marginBottom: 6,
         }}
       >
         {value}
       </p>
-      <p style={{ fontSize: 13, lineHeight: 1.6, color: SURFACE.text }}>{body}</p>
+      <p style={{ color: SURFACE.text, fontSize: 12.5, lineHeight: 1.45 }}>{body}</p>
     </div>
   )
 }
 
-function DashboardSuitePreview() {
+function MarqueeBand() {
   return (
-    <div
+    <section
+      aria-label="Suite-leeslijn"
       style={{
-        border: `1px solid ${SURFACE.border}`,
-        borderRadius: 18,
-        background: SURFACE.surface,
+        background: SURFACE.charcoal,
+        borderBottom: `1px solid ${SURFACE.charcoalSoft}`,
         overflow: 'hidden',
-        boxShadow: '0 16px 38px rgba(19, 32, 51, 0.06)',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '12px 16px',
-          background: SURFACE.soft,
-          borderBottom: `1px solid ${SURFACE.border}`,
-        }}
-      >
-        <Tag>Overview</Tag>
-        <Tag>ExitScan</Tag>
-        <Tag>Reports</Tag>
-        <div style={{ marginLeft: 'auto', fontSize: 12, color: SURFACE.muted }}>Shared suite shell</div>
-      </div>
-      <div style={{ padding: '20px 22px 22px' }}>
-        <p
-          style={{
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: '.18em',
-            textTransform: 'uppercase',
-            color: SURFACE.muted,
-            marginBottom: 10,
-          }}
-        >
-          Dashboard
-        </p>
-        <h3
-          style={{
-            fontFamily: displayFont,
-            fontSize: 28,
-            lineHeight: 1,
-            letterSpacing: '-.03em',
-            color: SURFACE.ink,
-            marginBottom: 12,
-          }}
-        >
-          Zie wat aandacht vraagt.
-        </h3>
-        <p style={{ fontSize: 15, lineHeight: 1.75, color: SURFACE.text, maxWidth: 540, marginBottom: 18 }}>
-          Start met een rustige first read: welk product of welke campaign nu het belangrijkst is, welk signaal eerst telt en
-          wat de eerstvolgende managementstap is.
-        </p>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <PreviewMetric label="Vertrekdruk" value="6.4" body="Drie teams vragen nadere duiding." />
-          <PreviewMetric label="Behoudsdruk" value="3.1" body="Stabiel, nog geen extra route nodig." />
-          <PreviewMetric label="Respons" value="86%" body="Breed genoeg voor een managementread." />
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
+      <div style={{ ...SHELL, paddingTop: 16, paddingBottom: 16 }}>
+        <Reveal>
           <div
             style={{
-              border: `1px solid ${SURFACE.border}`,
-              borderRadius: 14,
-              background: SURFACE.surface,
-              padding: '16px 18px',
+              alignItems: 'center',
+              color: '#efe5d8',
+              display: 'flex',
+              fontFamily: bodyFont,
+              fontSize: 12,
+              fontWeight: 700,
+              justifyContent: 'center',
+              letterSpacing: '.22em',
+              textAlign: 'center',
+              textTransform: 'uppercase',
             }}
           >
-            <p
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: '.16em',
-                textTransform: 'uppercase',
-                color: SURFACE.muted,
-                marginBottom: 8,
-              }}
-            >
-              Hoofdread
-            </p>
-            <p style={{ fontSize: 20, fontWeight: 600, lineHeight: 1.3, color: SURFACE.ink, marginBottom: 8 }}>
-              Operations laat de duidelijkste stijging in werkdruk en vertrekfrictie zien.
-            </p>
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: SURFACE.text }}>
-              Gebruik dashboard en rapport als gedeelde managementread. Daarna volgt de werkafspraak in Action Center.
-            </p>
+            <span>{marqueeLine}</span>
           </div>
-          <div
-            style={{
-              border: `1px solid ${SURFACE.border}`,
-              borderRadius: 14,
-              background: SURFACE.soft,
-              padding: '16px 18px',
-            }}
-          >
-            <p
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: '.16em',
-                textTransform: 'uppercase',
-                color: SURFACE.muted,
-                marginBottom: 8,
-              }}
-            >
-              Rapport
-            </p>
-            <p style={{ fontSize: 18, fontWeight: 600, color: SURFACE.ink, marginBottom: 8 }}>Klaar voor MT-overleg</p>
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: SURFACE.text }}>
-              Eenzelfde waarheid, compacter verpakt voor besluitvorming en handoff.
-            </p>
-          </div>
-        </div>
+        </Reveal>
       </div>
-    </div>
-  )
-}
-
-void DashboardSuitePreview
-
-function ActionCenterSuitePreview() {
-  return (
-    <div
-      style={{
-        border: `1px solid ${SURFACE.border}`,
-        borderRadius: 18,
-        background: SURFACE.surface,
-        overflow: 'hidden',
-        boxShadow: '0 16px 38px rgba(19, 32, 51, 0.06)',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '12px 16px',
-          background: SURFACE.soft,
-          borderBottom: `1px solid ${SURFACE.border}`,
-        }}
-      >
-        <Tag tone="accent">Action Center</Tag>
-        <Tag>Acties</Tag>
-        <Tag>Managers</Tag>
-        <Tag>Reviewmomenten</Tag>
-        <div style={{ marginLeft: 'auto', fontSize: 12, color: SURFACE.muted }}>Top-level suite module</div>
-      </div>
-      <div style={{ padding: '20px 22px 22px' }}>
-        <p
-          style={{
-            fontSize: 10,
-            fontWeight: 700,
-            letterSpacing: '.18em',
-            textTransform: 'uppercase',
-            color: SURFACE.muted,
-            marginBottom: 10,
-          }}
-        >
-          Action Center
-        </p>
-        <h3
-          style={{
-            fontFamily: displayFont,
-            fontSize: 28,
-            lineHeight: 1,
-            letterSpacing: '-.03em',
-            color: SURFACE.ink,
-            marginBottom: 12,
-          }}
-        >
-          Organiseer wat er nu moet gebeuren.
-        </h3>
-        <p style={{ fontSize: 15, lineHeight: 1.75, color: SURFACE.text, maxWidth: 540, marginBottom: 18 }}>
-          Maak acties expliciet, wijs managers toe per afdeling en bewaak vervolg zonder de surveylaag te verwarren met de
-          opvolglaag.
-        </p>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <PreviewMetric label="Open acties" value="23" body="Nog in beweging." />
-          <PreviewMetric label="Te bespreken" value="6" body="Moet deze week op tafel." />
-          <PreviewMetric label="Managers" value="10" body="Toegekend per afdeling." />
-          <PreviewMetric label="Reviews" value="4" body="Komende zeven dagen." />
-        </div>
-
-        <div
-          style={{
-            marginTop: 16,
-            border: `1px solid ${SURFACE.border}`,
-            borderRadius: 14,
-            background: SURFACE.surface,
-            overflow: 'hidden',
-          }}
-        >
-          {[
-            ['ExitScan', 'Customer Care', 'Bespreek werkdrukpatroon Customer Care in MT', 'Te bespreken'],
-            ['RetentieScan', 'Field Service', 'Start roosterpilot en leg eerste reviewmoment vast', 'In uitvoering'],
-          ].map(([route, team, title, status], index) => (
-            <div
-              key={title}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(0,1fr) auto',
-                gap: 16,
-                padding: '16px 18px',
-                borderTop: index === 0 ? 'none' : `1px solid ${SURFACE.border}`,
-              }}
-            >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
-                  <Tag>{route}</Tag>
-                  <span style={{ fontSize: 13, color: SURFACE.muted }}>{team}</span>
-                </div>
-                <p style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.35, color: SURFACE.ink, marginBottom: 4 }}>
-                  {title}
-                </p>
-                <p style={{ fontSize: 13.5, lineHeight: 1.65, color: SURFACE.text }}>
-                  Eigenaar en reviewdatum horen hier samen zichtbaar te blijven.
-                </p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'start' }}>
-                <Tag tone="accent">{status}</Tag>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Interactive report preview ───────────────────────────────────
-type TabId = 'samenvatting' | 'themas' | 'rapportage'
-
-function SamenvattingTab() {
-  const [ready, setReady] = useState(false)
-  useEffect(() => { const t = setTimeout(() => setReady(true), 120); return () => clearTimeout(t) }, [])
-  const rows = [
-    { label: 'Groei en ontwikkeling', tag: 'Hoog',     tagBg: AC.faint,                  tagColor: AC.deep,             delay: 0 },
-    { label: 'Werkdruk in operatie',  tag: 'Verhoogd', tagBg: 'oklch(.88 .06 75 / .32)', tagColor: 'oklch(.40 .12 65)', delay: .07 },
-    { label: 'Loopbaanperspectief',   tag: 'Aandacht', tagBg: T.tealFaint,               tagColor: T.teal,              delay: .14 },
-  ]
-  const kpis = [
-    { label: 'Vertrekrisico',  disp: '12%',  sub: '+1.4 pp',          subColor: T.inkMuted },
-    { label: 'Engagement',     disp: '7,4',  sub: 'Stabiel',          subColor: T.inkMuted },
-    { label: 'Behoud +12 mnd', disp: '+3,1', sub: 'Positief signaal', subColor: AC.deep },
-  ]
-  return (
-    <div>
-      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 5 }}>Voorbeeldoutput · Q2 2025</div>
-      <div style={{ fontFamily: FF, fontSize: 17, fontWeight: 400, color: T.ink, marginBottom: 22, lineHeight: 1.25 }}>
-        Managementsamenvatting. Topprioriteiten, trend en eerste actie.
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 22 }}>
-        {rows.map((item, i) => (
-          <div key={i} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '10px 13px', background: T.paperSoft, fontSize: 13,
-            opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateX(-8px)',
-            transition: `opacity .5s ease ${item.delay}s, transform .5s cubic-bezier(.16,1,.3,1) ${item.delay}s`,
-          }}>
-            <span style={{ color: T.ink, fontWeight: 500 }}>{item.label}</span>
-            <span style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', padding: '2px 8px', background: item.tagBg, color: item.tagColor }}>{item.tag}</span>
-          </div>
-        ))}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 20 }}>
-        {kpis.map((k, i) => (
-          <div key={i} style={{
-            padding: '12px 14px', background: T.paperSoft,
-            opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateY(8px)',
-            transition: `opacity .5s ease ${.25 + i * .07}s, transform .5s cubic-bezier(.16,1,.3,1) ${.25 + i * .07}s`,
-          }}>
-            <div style={{ fontSize: 9.5, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.1em', color: T.inkMuted, marginBottom: 5 }}>{k.label}</div>
-            <div style={{ fontFamily: FF, fontSize: 24, color: T.ink, lineHeight: 1, letterSpacing: '-.02em' }}>{k.disp}</div>
-            <div style={{ fontSize: 9.5, color: k.subColor, marginTop: 3 }}>{k.sub}</div>
-          </div>
-        ))}
-      </div>
-      <div>
-        <div style={{ fontSize: 9.5, color: T.inkMuted, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 7 }}>Trend afgelopen 4 kwartalen</div>
-        <div style={{ height: 52, background: T.paperSoft, display: 'flex', alignItems: 'flex-end', padding: '8px 12px', gap: 6, overflow: 'hidden' }}>
-          {[42, 55, 50, 63, 78].map((h, i) => (
-            <div key={i} style={{ flex: 1, background: AC.mid, height: ready ? `${h}%` : '0%', opacity: .28 + i * .18, transition: `height .7s cubic-bezier(.4,0,0,1) ${.35 + i * .06}s` }} />
-          ))}
-        </div>
-        <div style={{ fontSize: 9.5, color: T.inkMuted, marginTop: 6, fontStyle: 'italic' }}>Resultaten op groepsniveau · n ≥ 8 per categorie</div>
-      </div>
-    </div>
-  )
-}
-
-function ThemasTab() {
-  const [ready, setReady] = useState(false)
-  useEffect(() => { const t = setTimeout(() => setReady(true), 100); return () => clearTimeout(t) }, [])
-  const themes = [
-    { label: 'Groei & ontwikkeling', pct: 68, color: AC.deep },
-    { label: 'Werkdruk',             pct: 54, color: 'oklch(.60 .12 65)' },
-    { label: 'Loopbaan',             pct: 47, color: T.tealMid },
-    { label: 'Samenwerking',         pct: 32, color: T.inkFaint },
-    { label: 'Leiderschap',          pct: 28, color: T.inkFaint },
-  ]
-  return (
-    <div>
-      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 5 }}>Thema-analyse · ExitScan</div>
-      <div style={{ fontFamily: FF, fontSize: 17, fontWeight: 400, color: T.ink, marginBottom: 24, lineHeight: 1.25 }}>{"Vertrekthema's op frequentie."}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {themes.map((th, i) => (
-          <div key={i} style={{ opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateY(6px)', transition: `opacity .5s ease ${i * .07}s, transform .5s cubic-bezier(.16,1,.3,1) ${i * .07}s` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13 }}>
-              <span style={{ color: T.ink, fontWeight: 500 }}>{th.label}</span>
-              <span style={{ color: T.inkMuted, fontVariantNumeric: 'tabular-nums' }}>{th.pct}%</span>
-            </div>
-            <div style={{ height: 5, background: T.paperSoft, overflow: 'hidden' }}>
-              <div style={{ height: '100%', background: th.color, width: ready ? `${th.pct}%` : '0%', transition: `width .8s cubic-bezier(.4,0,0,1) ${.1 + i * .08}s` }} />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div style={{ marginTop: 22, padding: '13px 15px', background: T.tealFaint, borderLeft: `2px solid ${T.teal}`, opacity: ready ? 1 : 0, transition: 'opacity .5s ease .5s' }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: T.teal, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 6 }}>Eerste prioriteit</div>
-        <div style={{ fontSize: 13, color: T.ink, lineHeight: 1.62 }}>Verifieer werkdruk-patroon Operations. Groei en ontwikkeling vraagt in drie teams tegelijkertijd aandacht.</div>
-      </div>
-      <div style={{ fontSize: 9.5, color: T.inkMuted, marginTop: 12, fontStyle: 'italic' }}>Groepsdata · n ≥ 8 · geen individuele herleidbaarheid</div>
-    </div>
-  )
-}
-
-function RapportageTab() {
-  const [ready, setReady] = useState(false)
-  useEffect(() => { const t = setTimeout(() => setReady(true), 80); return () => clearTimeout(t) }, [])
-  return (
-    <div>
-      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 5 }}>Rapportage-output</div>
-      <div style={{ fontFamily: FF, fontSize: 17, fontWeight: 400, color: T.ink, marginBottom: 22, lineHeight: 1.25 }}>Leesbaar, gegroepeerd en direct bruikbaar.</div>
-      <div style={{ background: T.paperSoft, padding: 16, border: `1px solid ${T.rule}`, opacity: ready ? 1 : 0, transform: ready ? 'none' : 'translateY(10px)', transition: 'opacity .5s ease, transform .5s cubic-bezier(.16,1,.3,1)' }}>
-        <div style={{ background: T.ink, padding: '16px 18px', marginBottom: 12 }}>
-          <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: AC.soft, marginBottom: 10 }}>Verisight · ExitScan · Q2 2025</div>
-          <div style={{ fontFamily: FF, fontSize: 18, fontWeight: 400, color: '#fff', lineHeight: 1.2, letterSpacing: '-.015em' }}>
-            Managementrapport.<br />
-            <em style={{ fontStyle: 'italic', fontWeight: 300, color: AC.light, opacity: .85 }}>Eerste beeld en prioriteiten.</em>
-          </div>
-        </div>
-        {['Executive samenvatting', 'Thema-analyse', 'Teamoverzicht', 'Eerste acties'].map((s, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: i < 3 ? `1px solid ${T.rule}` : 'none', opacity: ready ? 1 : 0, transition: `opacity .4s ease ${.15 + i * .07}s` }}>
-            <div style={{ width: 18, height: 18, background: i === 0 ? AC.mid : T.rule, flexShrink: 0 }} />
-            <span style={{ fontSize: 12.5, color: T.ink }}>{s}</span>
-            <span style={{ marginLeft: 'auto', fontSize: 10.5, color: T.inkMuted, fontVariantNumeric: 'tabular-nums' }}>p.{i + 2}</span>
-          </div>
-        ))}
-      </div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-        {[
-          { label: 'PDF-rapport', bg: T.paperSoft, color: T.inkSoft, bold: false },
-          { label: 'Dashboard',   bg: AC.faint,    color: AC.deep,   bold: true },
-          { label: 'Presentatie', bg: T.paperSoft, color: T.inkSoft, bold: false },
-        ].map((b, i) => (
-          <div key={i} style={{ flex: 1, padding: '9px 12px', background: b.bg, fontSize: 12, color: b.color, fontWeight: b.bold ? 600 : 400, opacity: ready ? 1 : 0, transition: `opacity .4s ease ${.45 + i * .06}s` }}>{b.label}</div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-void ActionCenterSuitePreview
-
-function DashboardPreview() {
-  const [tab, setTab] = useState<TabId>('samenvatting')
-  const tabs: { id: TabId; label: string }[] = [
-    { id: 'samenvatting', label: 'Samenvatting' },
-    { id: 'themas',       label: "Thema's" },
-    { id: 'rapportage',   label: 'Rapportage' },
-  ]
-  return (
-    <div style={{ background: T.white, border: `1px solid ${T.rule}`, borderRadius: 14, overflow: 'hidden', boxShadow: `0 2px 4px rgba(0,0,0,.04),0 32px 72px -16px rgba(20,14,10,.22),0 0 0 1px ${AC.soft}` }}>
-      <div style={{ display: 'flex', gap: 2, padding: '10px 14px', background: T.paperSoft, borderBottom: `1px solid ${T.rule}` }}>
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            fontSize: 12, fontWeight: t.id === tab ? 600 : 400, padding: '6px 14px',
-            border: 'none', cursor: 'pointer', borderRadius: 5,
-            background: t.id === tab ? T.white : 'transparent',
-            color: t.id === tab ? T.ink : T.inkMuted,
-            boxShadow: t.id === tab ? '0 1px 3px rgba(0,0,0,.08)' : 'none',
-            transition: 'all .12s',
-          }}>{t.label}</button>
-        ))}
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: AC.mid, boxShadow: `0 0 0 3px ${AC.soft}` }} />
-          <span style={{ fontSize: 10.5, color: T.inkMuted, fontWeight: 500 }}>ExitScan · Q2</span>
-        </div>
-      </div>
-      <div key={tab} style={{ padding: '26px 28px', animation: 'scaleIn .3s ease both' }}>
-        {tab === 'samenvatting' && <SamenvattingTab />}
-        {tab === 'themas'       && <ThemasTab />}
-        {tab === 'rapportage'   && <RapportageTab />}
-      </div>
-    </div>
+    </section>
   )
 }
 
 function HeroSection() {
-  const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero_primary' })
+  const primaryHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero_primary' })
+  const dashboardBars = [
+    { height: '45%', color: '#f8e7dc' },
+    { height: '62%', color: '#f3ba8e' },
+    { height: '54%', color: '#ef944f' },
+    { height: '84%', color: SURFACE.teal },
+    { height: '100%', color: SURFACE.amber },
+    { height: '88%', color: '#327f79' },
+    { height: '70%', color: '#f6a55f' },
+  ]
+  const reportRows = [
+    ['Groei en ontwikkeling', '82%', SURFACE.amber],
+    ['Werkdruk in operatie', '54%', SURFACE.teal],
+    ['Loopbaanperspectief', '28%', SURFACE.border],
+  ] as const
+  const actionItems = [
+    ['Herzie mentorshipprogramma', 'Gevolg van: lage onboarding-score', 'Critical', '#d45a51', '#ffdad6'],
+    ['Verifieer werkdruk in Operations', 'Besluit: eerste teamreview', 'Deze week', SURFACE.teal, '#dff2ef'],
+  ] as const
 
   return (
-    <section style={{ background: T.white, position: 'relative', overflow: 'hidden', borderBottom: `1px solid ${T.rule}` }}>
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}50 1px,transparent 1px),linear-gradient(90deg,${T.rule}50 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: 0.28 }} />
-      <div style={{ position: 'absolute', top: -120, right: -80, width: 600, height: 600, background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`, pointerEvents: 'none', animation: 'ctaPulse 6s ease-in-out infinite' }} />
-
-      <div style={{ ...SHELL, position: 'relative', paddingTop: 'clamp(56px,7vw,88px)', paddingBottom: 'clamp(56px,7vw,88px)' }}>
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_520px] lg:gap-16 xl:grid-cols-[1fr_560px] xl:gap-20 items-start">
-
-          {/* ── Left: text ───────────────────────────────── */}
-          <div>
-            <Reveal delay={0.02}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 36 }}>
-                <span style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.22em', textTransform: 'uppercase', color: T.inkFaint }}>Verisight</span>
-                <span style={{ fontSize: 9.5, color: T.rule }}>—</span>
-                <span style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint }}>People suite</span>
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.07}>
-              <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(44px,6.2vw,84px)', lineHeight: 0.95, letterSpacing: '-.034em', color: T.ink, marginBottom: 20 }}>
-                Van people insights
-                <br />
-                <em className="shimmer-text" style={{ fontStyle: 'italic' }}>naar prioriteit,</em>
-                <br />
-                actie en opvolging.
-              </h1>
-            </Reveal>
-
-            <Reveal delay={0.14}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28, flexWrap: 'wrap' }}>
-                {['Inzicht', 'Prioriteit', 'Actie', 'Toewijzing', 'Opvolging'].map((step, i, arr) => (
-                  <span key={step} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: i === 0 ? AC.deep : i === arr.length - 1 ? T.teal : T.inkFaint }}>
-                      {step}
-                    </span>
-                    {i < arr.length - 1 && <span style={{ fontSize: 10, color: T.rule, lineHeight: 1 }}>→</span>}
-                  </span>
-                ))}
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.2}>
-              <p style={{ fontSize: 16, lineHeight: 1.76, color: T.inkSoft, maxWidth: '44ch', marginBottom: 32 }}>
-                Verisight helpt HR en management zien wat speelt, bepalen wat eerst telt en opvolging daadwerkelijk organiseren. Dashboard, rapport en Action Center — van eerste inzicht tot aantoonbare actie.
+    <section
+      style={{
+        background: `radial-gradient(circle at top right, rgba(244, 221, 208, 0.42) 0%, rgba(244, 221, 208, 0) 34%), linear-gradient(180deg, ${SURFACE.surface} 0%, ${SURFACE.paperSoft} 100%)`,
+        borderBottom: `1px solid ${SURFACE.border}`,
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      <div style={{ ...SHELL, paddingTop: 'clamp(74px, 8vw, 120px)', paddingBottom: 'clamp(70px, 8vw, 104px)', position: 'relative' }}>
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_640px]">
+          <div style={{ maxWidth: 560 }}>
+              <div className="marketing-home-hero-reveal-1" style={{ marginBottom: 18 }}>
+              <p
+                style={{
+                  color: SURFACE.muted,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: '.16em',
+                  marginBottom: 20,
+                  textTransform: 'uppercase',
+                }}
+              >
+                Voor organisaties die sneller willen zien wat nu echt aandacht vraagt.
               </p>
-            </Reveal>
-
-            <Reveal delay={0.26}>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 32 }}>
-                <Link href={ctaHref}
-                  style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '13px 30px', color: '#fff', background: T.ink, transition: 'background .18s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = AC.deep }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.ink }}>
-                  Plan suite-demo <Arrow />
-                </Link>
-                <Link href="/#suite"
-                  style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 500, padding: '12px 28px', color: T.inkSoft, border: `1px solid ${T.rule}`, transition: 'border-color .18s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T.inkMuted }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = T.rule }}>
-                  Bekijk de suite
-                </Link>
+              <h1
+                style={{
+                  color: SURFACE.ink,
+                  fontFamily: displayFont,
+                  fontSize: 'clamp(3.4rem, 5.2vw, 5.9rem)',
+                  fontWeight: 400,
+                  letterSpacing: '-0.045em',
+                  lineHeight: 0.98,
+                  marginBottom: 0,
+                }}
+              >
+                Zien.
+                <br />
+                <span style={{ color: SURFACE.amber, fontStyle: 'italic', fontWeight: 400 }}>Prioriteren.</span>
+                <br />
+                Handelen.
+              </h1>
               </div>
-            </Reveal>
 
-            <Reveal delay={0.32}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap', paddingTop: 22, borderTop: `1px solid ${T.rule}` }}>
-                {[
-                  { label: 'Eén suite-login', dot: T.tealMid },
-                  { label: 'Action Center inbegrepen', dot: AC.mid },
-                  { label: 'AVG-conform op groepsniveau', dot: T.tealMid },
-                ].map(({ label, dot }) => (
-                  <span key={label} style={{ fontSize: 11.5, color: T.inkFaint, display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <span style={{ width: 3, height: 3, borderRadius: '50%', background: dot, display: 'inline-block', flexShrink: 0 }} />
-                    {label}
-                  </span>
+              <p
+                className="marketing-home-hero-reveal-2"
+                style={{
+                  color: SURFACE.text,
+                  fontSize: 17,
+                  lineHeight: 1.6,
+                  marginBottom: 28,
+                  maxWidth: '32rem',
+                }}
+              >
+                Zie waar vertrek, behoud of vroege uitval echt aandacht vraagt. Geen losse surveydata, maar een scherp dashboard, een korte managementsamenvatting en een eerste route voor opvolging.
+              </p>
+
+              <div
+                className="marketing-home-hero-reveal-4 flex flex-wrap items-center gap-4"
+                style={{ marginBottom: 34 }}
+              >
+              <Link
+                href={primaryHref}
+                style={{
+                  background: SURFACE.amber,
+                  borderRadius: 2,
+                  color: '#fff',
+                  display: 'inline-flex',
+                  fontFamily: bodyFont,
+                  fontSize: 15,
+                  fontWeight: 600,
+                  padding: '16px 28px',
+                  textDecoration: 'none',
+                }}
+              >
+                Toets uw eerste route
+              </Link>
+              <Link
+                href="/#suite"
+                style={{
+                  background: SURFACE.surface,
+                  border: `1px solid ${SURFACE.border}`,
+                  borderRadius: 2,
+                  color: SURFACE.ink,
+                  display: 'inline-flex',
+                  fontFamily: bodyFont,
+                  fontSize: 15,
+                  fontWeight: 600,
+                  padding: '16px 28px',
+                  textDecoration: 'none',
+                }}
+              >
+                Bekijk voorbeeldoutput
+              </Link>
+              </div>
+
+              <div
+                className="marketing-home-hero-reveal-5"
+                style={{
+                  borderTop: `1px solid ${SURFACE.border}`,
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '14px 28px',
+                  paddingTop: 22,
+                }}
+              >
+                {heroTrustItems.map((item, index) => (
+                  <div
+                    key={item}
+                    style={{
+                      alignItems: 'center',
+                      color: SURFACE.muted,
+                      display: 'flex',
+                      fontFamily: bodyFont,
+                      fontSize: 13,
+                      fontWeight: 500,
+                      gap: 10,
+                    }}
+                  >
+                    {index === 1 ? (
+                      <span style={{ color: SURFACE.teal, fontSize: 15, lineHeight: 1 }}>○</span>
+                    ) : (
+                      <span style={{ background: index === 0 ? '#d45a51' : SURFACE.amber, borderRadius: 999, height: 4, width: 4 }} />
+                    )}
+                    <span>{item}</span>
+                  </div>
                 ))}
               </div>
-            </Reveal>
           </div>
 
-          {/* ── Right: interactive preview ───────────────── */}
-          <Reveal delay={0.36} from="right">
-            <DashboardPreview />
-          </Reveal>
+            <div className="marketing-home-hero-reveal-visual relative hidden h-[620px] select-none lg:block">
+            <div
+              style={{
+                background: SURFACE.surface,
+                border: `1px solid ${SURFACE.borderSoft}`,
+                borderRadius: 8,
+                boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+                height: 286,
+                padding: '24px 28px',
+                position: 'absolute',
+                right: -6,
+                top: 0,
+                width: 452,
+                zIndex: 10,
+              }}
+            >
+              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 28 }}>
+                <span />
+                <span
+                  style={{
+                    background: SURFACE.tealSoft,
+                    borderRadius: 4,
+                    color: SURFACE.teal,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '3px 8px',
+                  }}
+                >
+                  +12%
+                </span>
+              </div>
 
+              <div style={{ alignItems: 'flex-end', display: 'flex', gap: 10, height: 132, marginBottom: 28 }}>
+                {dashboardBars.map((bar) => (
+                  <div
+                    key={`${bar.height}-${bar.color}`}
+                    style={{
+                      background: bar.color,
+                      borderRadius: '2px 2px 0 0',
+                      flex: 1,
+                      height: bar.height,
+                    }}
+                  />
+                ))}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div style={{ background: SURFACE.paperSoft, borderRadius: 999, height: 10, width: '100%' }} />
+                <div style={{ background: SURFACE.paperSoft, borderRadius: 999, height: 10, width: '68%' }} />
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: '#fef8f1',
+                border: `1px solid ${SURFACE.borderSoft}`,
+                borderRadius: 4,
+                boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+                height: 360,
+                overflow: 'hidden',
+                padding: '30px 32px',
+                position: 'absolute',
+                left: 30,
+                top: 118,
+                width: 438,
+                zIndex: 20,
+              }}
+            >
+              <div style={{ borderBottom: `1px solid ${SURFACE.border}`, marginBottom: 22, paddingBottom: 14 }}>
+                <h3
+                  style={{
+                    color: SURFACE.ink,
+                    fontFamily: displayFont,
+                    fontSize: 'clamp(2.2rem, 2.7vw, 3rem)',
+                    fontWeight: 600,
+                    letterSpacing: '-0.035em',
+                    lineHeight: 0.98,
+                    marginBottom: 6,
+                    textWrap: 'balance',
+                  }}
+                >
+                  Exit-analyse Q3
+                </h3>
+                <p style={{ color: SURFACE.muted, fontSize: 12.5, lineHeight: 1.5 }}>
+                  Redenen van Vertrek - Senior Staff
+                </p>
+              </div>
+
+              <div style={{ display: 'grid', gap: 14 }}>
+                {reportRows.map(([label, value, color]) => (
+                  <div key={label} style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: 'minmax(0,1fr) 132px' }}>
+                    <span style={{ color: SURFACE.ink, fontSize: 14, fontWeight: 500 }}>{label}</span>
+                    <div style={{ background: color === SURFACE.border ? SURFACE.borderSoft : `${color}20`, borderRadius: 999, height: 4, overflow: 'hidden' }}>
+                      <div style={{ background: color, borderRadius: 999, height: '100%', width: value }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p
+                style={{
+                  borderLeft: `2px solid ${SURFACE.amber}`,
+                  color: SURFACE.ink,
+                  fontFamily: displayFont,
+                  fontSize: 18,
+                  fontStyle: 'italic',
+                  lineHeight: 1.65,
+                  marginTop: 32,
+                  paddingLeft: 16,
+                }}
+              >
+                &ldquo;Op groepsniveau wordt zichtbaar wat nu prioriteit vraagt, zodat opvolging bestuurlijk eenvoudiger wordt.&rdquo;
+              </p>
+            </div>
+
+            <div
+              style={{
+                background: SURFACE.charcoal,
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 18,
+                boxShadow: '0 14px 34px rgba(13, 17, 24, 0.18)',
+                color: '#fff',
+                left: -28,
+                padding: '24px 28px 22px',
+                position: 'absolute',
+                top: 346,
+                width: 470,
+                zIndex: 30,
+              }}
+            >
+              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+                <div style={{ alignItems: 'center', display: 'flex', gap: 14 }}>
+                  <div
+                    style={{
+                      alignItems: 'center',
+                      background: SURFACE.amber,
+                      borderRadius: 10,
+                      boxShadow: '0 10px 22px rgba(185, 87, 31, 0.18)',
+                      display: 'flex',
+                      height: 40,
+                      justifyContent: 'center',
+                      width: 40,
+                    }}
+                  >
+                    <span style={{ color: '#fff', fontSize: 20, lineHeight: 1 }}>⚡</span>
+                  </div>
+                  <div>
+                    <h4 style={{ color: '#fff', fontSize: 15, fontWeight: 700, letterSpacing: '.02em', marginBottom: 2, textTransform: 'uppercase' }}>
+                      Action Center
+                    </h4>
+                    <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+                      Prioriteit-gestuurde opvolging
+                    </p>
+                  </div>
+                </div>
+                <span
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 6,
+                    color: '#fff',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    padding: '4px 8px',
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  3 taken
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gap: 2, marginBottom: 18 }}>
+                {actionItems.map(([title, body, badge, dotColor, badgeBg]) => (
+                  <div
+                    key={title}
+                    style={{
+                      alignItems: 'center',
+                      borderBottom: '1px solid rgba(255,255,255,0.08)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '14px 0',
+                    }}
+                  >
+                    <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+                      <span style={{ background: dotColor, borderRadius: 999, flexShrink: 0, height: 6, width: 6 }} />
+                      <div>
+                        <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{title}</p>
+                        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>{body}</p>
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        background: 'rgba(255,255,255,0.08)',
+                        border: `1px solid ${badgeBg}30`,
+                        borderRadius: 6,
+                        color: badgeBg,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        padding: '4px 8px',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {badge}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', paddingTop: 4 }}>
+                <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+                  <div
+                    style={{
+                      alignItems: 'center',
+                      background: SURFACE.teal,
+                      borderRadius: 999,
+                      color: '#fff',
+                      display: 'flex',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      height: 28,
+                      justifyContent: 'center',
+                      width: 28,
+                    }}
+                  >
+                    JD
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 12 }}>
+                    J. de Wit <span style={{ color: 'rgba(255,255,255,0.38)' }}>· VP Talent</span>
+                  </p>
+                </div>
+                <div
+                  style={{
+                    background: '#fff',
+                    borderRadius: 8,
+                    color: SURFACE.ink,
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    padding: '10px 16px',
+                  }}
+                >
+                  Beheer opvolging
+                </div>
+              </div>
+            </div>
+
+            <div
+              aria-hidden
+              style={{
+                background: 'rgba(245, 232, 220, 0.6)',
+                borderRadius: '999px',
+                filter: 'blur(100px)',
+                height: '120%',
+                left: '50%',
+                position: 'absolute',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '120%',
+                zIndex: 0,
+              }}
+            />
+            </div>
         </div>
       </div>
     </section>
@@ -692,86 +662,692 @@ function HeroSection() {
 
 function SuitePreviewSection() {
   return (
-    <section id="suite" style={{ background: SURFACE.paper, borderBottom: `1px solid ${SURFACE.border}` }}>
-      <div style={{ ...SHELL, paddingTop: 'clamp(32px, 4vw, 48px)', paddingBottom: 'clamp(52px, 6vw, 78px)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
-          <SectionLabel index="02" label="Dashboard, rapport en Action Center" />
-        </div>
-        <DashboardPreview />
-      </div>
-    </section>
-  )
-}
+    <section
+      id="suite"
+      style={{
+        background: `linear-gradient(180deg, ${SURFACE.paperSoft} 0%, ${SURFACE.paper} 100%)`,
+        borderBottom: `1px solid ${SURFACE.border}`,
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      <BackdropNumber value="02" />
+      <div style={{ ...SHELL, paddingTop: 'clamp(54px, 6vw, 84px)', paddingBottom: 'clamp(62px, 7vw, 96px)', position: 'relative' }}>
+        <Reveal>
+          <SectionLabel index="02" label="Van inzicht naar eerste opvolging" />
+        </Reveal>
 
-function ValueSection() {
-  const pillars = [
-    {
-      title: 'Dashboard',
-      body: 'Begin met een first read van signalen, metrics en eerstvolgende focus. Niet alles tegelijk, wel genoeg om te sturen.',
-    },
-    {
-      title: 'Rapport',
-      body: 'Gebruik dezelfde waarheid compact in MT, directie of handoff. Minder ruis, meer besluitkracht.',
-    },
-    {
-      title: 'Action Center',
-      body: 'Maak acties expliciet, wijs verantwoordelijken toe en bewaak reviewmomenten zonder dat managers de volledige insightlaag hoeven te zien.',
-    },
-  ]
-
-  return (
-    <section style={{ background: SURFACE.surface, borderBottom: `1px solid ${SURFACE.border}` }}>
-      <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 84px)', paddingBottom: 'clamp(56px, 7vw, 84px)' }}>
-        <SectionLabel index="03" label="Een suite, drie lagen" />
-        <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <div>
-            <h2
-              style={{
-                fontFamily: displayFont,
-                fontSize: 'clamp(34px, 4.4vw, 50px)',
-                lineHeight: 1.02,
-                letterSpacing: '-.03em',
-                color: SURFACE.ink,
-                marginBottom: 18,
-                maxWidth: 460,
-              }}
-            >
-              Niet alleen insight, maar ook prioriteit en opvolging.
-            </h2>
-            <p style={{ fontSize: 16, lineHeight: 1.8, color: SURFACE.text, maxWidth: 540 }}>
-              De waarde van Verisight zit in de samenhang. Eerst zie je wat speelt. Daarna bepaal je wat eerst telt. Dan
-              wordt dezelfde managementlijn doorgezet in rapport en Action Center.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {pillars.map((pillar) => (
-              <div
-                key={pillar.title}
+        <div className="grid grid-cols-1 gap-12 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] xl:items-start">
+          <div style={{ minWidth: 0 }}>
+            <Reveal delay={0.04}>
+              <h2
                 style={{
-                  border: `1px solid ${SURFACE.border}`,
-                  borderRadius: 16,
-                  background: SURFACE.surface,
-                  padding: '18px 18px 20px',
+                  color: SURFACE.ink,
+                  fontFamily: displayFont,
+                  fontSize: 'clamp(3rem, 5vw, 4.9rem)',
+                  fontWeight: 400,
+                  letterSpacing: '-0.05em',
+                  lineHeight: 0.95,
+                  marginBottom: 22,
+                  maxWidth: '11.5ch',
+                  textWrap: 'pretty',
                 }}
               >
-                <p
+                Geen losse output.
+                <br />
+                <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
+                  Wel een helder besluitspoor.
+                </span>
+              </h2>
+            </Reveal>
+
+            <Reveal delay={0.1}>
+              <p
+                style={{
+                  color: SURFACE.text,
+                  fontSize: 16,
+                  lineHeight: 1.78,
+                  marginBottom: 34,
+                  maxWidth: '33rem',
+                }}
+              >
+                Verisight brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie vast te leggen.
+              </p>
+            </Reveal>
+
+            <div style={{ borderTop: `1px solid ${SURFACE.border}`, display: 'grid', gap: 0 }}>
+              {suiteFlowPoints.map((item, index) => (
+                <Reveal key={item.index} delay={0.12 + index * 0.06}>
+                  <div
                   style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: '.16em',
-                    textTransform: 'uppercase',
-                    color: pillar.title === 'Action Center' ? SURFACE.amber : SURFACE.muted,
-                    marginBottom: 10,
+                    borderBottom: `1px solid ${SURFACE.border}`,
+                    display: 'grid',
+                    gap: 12,
+                    gridTemplateColumns: '44px 1fr',
+                    padding: '20px 0',
                   }}
-                >
-                  {pillar.title}
-                </p>
-                <p style={{ fontSize: 20, fontWeight: 600, color: SURFACE.ink, marginBottom: 10 }}>{pillar.title}</p>
-                <p style={{ fontSize: 14, lineHeight: 1.7, color: SURFACE.text }}>{pillar.body}</p>
+                  >
+                    <span style={{ color: SURFACE.subtle, fontSize: 13 }}>{item.index}</span>
+                    <div>
+                      <p style={{ color: SURFACE.ink, fontSize: 17, fontWeight: 600, marginBottom: 8 }}>{item.title}</p>
+                      <p style={{ color: SURFACE.text, fontSize: 14.5, lineHeight: 1.72 }}>{item.body}</p>
+                    </div>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ minWidth: 0 }}>
+            <Reveal delay={0.08} from="right">
+              <div className="suite-motion-shell">
+              <div className="suite-phase-tabs" aria-label="Visual flow">
+                {['Zien', 'Prioriteren', 'Handelen'].map((phase, index) => (
+                  <span key={phase} className={`suite-phase-tab suite-phase-tab-${index + 1}`}>
+                    {phase}
+                  </span>
+                ))}
               </div>
-            ))}
+
+              <div className="suite-motion-stage">
+                <div className="suite-motion-aura" aria-hidden />
+
+                <div className="suite-motion-frame">
+                  <div className="suite-motion-frame-head">
+                    <div>
+                      <p className="suite-motion-frame-title">Van eerste signalen naar eerste actie</p>
+                    </div>
+
+                    <div className="suite-motion-progress" aria-hidden>
+                      <span className="suite-motion-progress-fill" />
+                    </div>
+                  </div>
+
+                  <div className="suite-motion-window">
+                    <div className="suite-motion-track">
+                      <section className="suite-motion-screen suite-motion-screen-see">
+                        <div className="suite-screen-head">
+                          <p className="suite-phase-eyebrow">Eerste signalen</p>
+                        </div>
+
+                        <div className="suite-phase-title">
+                          <p>Signalen eerst</p>
+                          <p className="suite-phase-title-accent">in beeld.</p>
+                        </div>
+
+                        <div className="suite-metrics-grid">
+                          {suiteSignalMetrics.map(([label, value, body]) => (
+                            <OutputMetric key={label} label={label} value={value} body={body} />
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="suite-motion-screen suite-motion-screen-prioritize">
+                        <div className="suite-screen-head">
+                          <p className="suite-phase-eyebrow">Eerste prioriteiten</p>
+                        </div>
+
+                        <div className="suite-prioritize-intro">
+                          <div className="suite-priority-title">
+                            <p>Kies</p>
+                            <p className="suite-phase-title-accent">wat nu eerst telt.</p>
+                          </div>
+                        </div>
+
+                        <div className="suite-priority-ladder">
+                          {suitePriorityRows.slice(0, 2).map(([index, title, body, badge, bg, color]) => (
+                            <div key={`${index}-${title}`} className={`suite-ladder-row ${index === '01' ? 'suite-ladder-row-active' : ''}`}>
+                              <span className="suite-list-index">{index}</span>
+                              <div>
+                                <p className="suite-list-title">{title}</p>
+                                <p className="suite-list-body">{body}</p>
+                              </div>
+                              <span className="suite-list-badge" style={{ background: String(bg), color: String(color) }}>
+                                {badge}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="suite-motion-screen suite-motion-screen-act">
+                        <div className="suite-action-panel">
+                          <div className="suite-screen-head">
+                            <p className="suite-phase-eyebrow">Action Center</p>
+                          </div>
+
+                          <div className="suite-action-head">
+                            <div>
+                              <p className="suite-action-title">Niet alleen zien.</p>
+                              <p className="suite-action-accent">Ook handelen.</p>
+                            </div>
+                          </div>
+
+                          <div className="suite-action-list">
+                            {[
+                              ['Prioriteit', 'Ontwikkelkansen blijven achter, Finance', 'Bevestigd'],
+                              ['Eerste actie', 'Bespreken in teamoverleg, daarna verdiepend gesprek', 'Deze week'],
+                            ].map(([label, body, badge]) => (
+                              <div key={label} className={`suite-action-row ${label === 'Prioriteit' ? 'suite-action-row-primary' : ''}`}>
+                                <div>
+                                  <p className="suite-action-label">{label}</p>
+                                  <p className="suite-action-body">{body}</p>
+                                </div>
+                                <span className={`suite-action-badge ${badge === 'Deze week' ? 'suite-action-badge-urgent' : ''}`}>{badge}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </section>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              </div>
+            </Reveal>
           </div>
         </div>
+
+        <style>{`
+          .suite-motion-shell {
+            --suite-window-height: 308px;
+            --suite-cycle-duration: 9s;
+            position: relative;
+          }
+
+          .suite-phase-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+          }
+
+          .suite-phase-tab {
+            border: 1px solid ${SURFACE.border};
+            border-radius: 999px;
+            color: ${SURFACE.text};
+            font-family: ${bodyFont};
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            padding: 6px 10px;
+            text-transform: uppercase;
+          }
+
+          .suite-phase-tab-1 {
+            animation: suite-pill-see var(--suite-cycle-duration) infinite both;
+            animation-timing-function: cubic-bezier(.65, 0, .35, 1);
+          }
+
+          .suite-phase-tab-2 {
+            animation: suite-pill-prioritize var(--suite-cycle-duration) infinite both;
+            animation-timing-function: cubic-bezier(.65, 0, .35, 1);
+          }
+
+          .suite-phase-tab-3 {
+            animation: suite-pill-act var(--suite-cycle-duration) infinite both;
+            animation-timing-function: cubic-bezier(.65, 0, .35, 1);
+          }
+
+          .suite-motion-stage {
+            position: relative;
+          }
+
+          .suite-motion-aura {
+            background: rgba(244, 221, 208, 0.56);
+            border-radius: 999px;
+            filter: blur(84px);
+            height: 72%;
+            position: absolute;
+            right: 6%;
+            top: 10%;
+            width: 72%;
+            z-index: 0;
+          }
+
+          .suite-motion-frame {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 251, 247, 0.72);
+            border: 1px solid ${SURFACE.borderSoft};
+            box-shadow: 0 34px 78px rgba(19, 32, 51, 0.08);
+            padding: 12px;
+            position: relative;
+            z-index: 1;
+          }
+
+          .suite-motion-frame-head {
+            align-items: flex-end;
+            display: flex;
+            gap: 16px;
+            justify-content: space-between;
+            margin-bottom: 10px;
+          }
+
+          .suite-motion-frame-title {
+            color: ${SURFACE.ink};
+            font-family: ${displayFont};
+            font-size: clamp(1.05rem, 1.45vw, 1.35rem);
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin-top: 2px;
+          }
+
+          .suite-motion-progress {
+            background: ${SURFACE.surface};
+            border: 1px solid ${SURFACE.border};
+            border-radius: 999px;
+            flex-shrink: 0;
+            height: 8px;
+            overflow: hidden;
+            position: relative;
+            width: 136px;
+          }
+
+          .suite-motion-progress-fill {
+            animation: suite-progress-flow var(--suite-cycle-duration) infinite both;
+            animation-timing-function: cubic-bezier(.65, 0, .35, 1);
+            background: linear-gradient(90deg, ${SURFACE.amber} 0%, ${SURFACE.teal} 100%);
+            border-radius: inherit;
+            height: 100%;
+            left: 0;
+            position: absolute;
+            top: 0;
+            width: 40px;
+          }
+
+          .suite-motion-window {
+            background: ${SURFACE.surface};
+            border: 1px solid ${SURFACE.border};
+            height: var(--suite-window-height);
+            overflow: hidden;
+            position: relative;
+          }
+
+          .suite-motion-track {
+            animation: suite-track-flow var(--suite-cycle-duration) infinite both;
+            animation-timing-function: cubic-bezier(.65, 0, .35, 1);
+            display: flex;
+            flex-direction: column;
+            will-change: transform;
+          }
+
+          .suite-motion-screen {
+            background: linear-gradient(180deg, rgba(255, 251, 247, 0.98) 0%, rgba(247, 238, 231, 0.98) 100%);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            flex: 0 0 var(--suite-window-height);
+            height: var(--suite-window-height);
+            overflow: hidden;
+            padding: 14px 16px 16px;
+          }
+
+          .suite-motion-screen-prioritize {
+            background: linear-gradient(180deg, rgba(255, 250, 245, 0.98) 0%, rgba(247, 238, 231, 0.98) 100%);
+          }
+
+          .suite-motion-screen-act {
+            background: linear-gradient(180deg, rgba(255, 250, 245, 0.98) 0%, rgba(246, 238, 231, 0.98) 100%);
+          }
+
+          .suite-screen-head,
+          .suite-action-head {
+            align-items: center;
+            display: flex;
+            gap: 14px;
+            justify-content: space-between;
+          }
+
+          .suite-action-head {
+            margin-bottom: 12px;
+          }
+
+          .suite-phase-eyebrow {
+            color: ${SURFACE.muted};
+            font-family: ${bodyFont};
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            margin-bottom: 0;
+            text-transform: uppercase;
+          }
+
+          .suite-phase-chip {
+            border-radius: 999px;
+            font-family: ${bodyFont};
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            padding: 5px 9px;
+            text-transform: uppercase;
+            white-space: nowrap;
+          }
+
+          .suite-phase-chip-amber {
+            background: ${SURFACE.amberSoft};
+            color: ${SURFACE.amber};
+          }
+
+          .suite-phase-chip-teal {
+            background: ${SURFACE.tealSoft};
+            color: ${SURFACE.teal};
+          }
+
+          .suite-phase-chip-dark {
+            background: rgba(22, 34, 56, 0.08);
+            color: ${SURFACE.ink};
+          }
+
+          .suite-phase-title {
+            margin: 10px 0 12px;
+          }
+
+          .suite-phase-title p,
+          .suite-action-title,
+          .suite-action-accent {
+            font-family: ${displayFont};
+            font-size: clamp(1.55rem, 2.15vw, 2rem);
+            letter-spacing: -0.04em;
+            line-height: 0.98;
+          }
+
+          .suite-phase-title-accent,
+          .suite-action-accent {
+            color: ${SURFACE.amberGlow};
+            font-style: italic;
+            font-weight: 300;
+          }
+
+          .suite-metrics-grid {
+            display: grid;
+            gap: 6px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            margin-bottom: 0;
+            margin-top: auto;
+          }
+
+          .suite-motion-screen-see .suite-metrics-grid {
+            margin-top: 34px;
+          }
+
+          .suite-phase-list,
+          .suite-priority-ladder,
+          .suite-action-list {
+            display: grid;
+            gap: 6px;
+          }
+
+          .suite-priority-ladder {
+            margin-top: 18px;
+          }
+
+          .suite-list-row,
+          .suite-ladder-row {
+            align-items: center;
+            background: ${SURFACE.surfaceSoft};
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 30px minmax(0, 1fr) auto;
+            padding: 10px 12px;
+          }
+
+          .suite-ladder-row {
+            background: rgba(255, 255, 255, 0.58);
+            border: 1px solid ${SURFACE.borderSoft};
+          }
+
+          .suite-ladder-row-active {
+            background: rgba(255, 248, 241, 0.96);
+            border-color: rgba(191, 148, 110, 0.38);
+            box-shadow: inset 0 0 0 1px rgba(185, 87, 31, 0.11);
+          }
+
+          .suite-list-index {
+            color: ${SURFACE.subtle};
+            font-size: 12px;
+          }
+
+          .suite-list-title {
+            color: ${SURFACE.ink};
+            font-family: ${bodyFont};
+            font-size: 13.5px;
+            font-weight: 600;
+            margin-bottom: 2px;
+          }
+
+          .suite-list-body {
+            color: ${SURFACE.text};
+            font-family: ${bodyFont};
+            font-size: 12.5px;
+            line-height: 1.42;
+          }
+
+          .suite-list-badge {
+            font-family: ${bodyFont};
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            padding: 4px 8px;
+            text-transform: uppercase;
+          }
+
+          .suite-priority-title {
+            color: ${SURFACE.ink};
+            font-family: ${displayFont};
+            font-size: clamp(1.45rem, 1.95vw, 1.7rem);
+            letter-spacing: -0.04em;
+            line-height: 0.98;
+            margin-bottom: 0;
+            max-width: 11ch;
+          }
+
+          .suite-priority-title p {
+            margin: 0;
+          }
+
+          .suite-priority-copy {
+            color: ${SURFACE.text};
+            font-family: ${bodyFont};
+            font-size: 14px;
+            line-height: 1.66;
+            max-width: 34ch;
+          }
+
+          .suite-prioritize-intro {
+            margin: 8px 0 0;
+          }
+
+          .suite-action-panel {
+            box-sizing: border-box;
+            display: flex;
+            flex: 1 1 auto;
+            flex-direction: column;
+            height: 100%;
+            padding: 0;
+          }
+
+          .suite-action-title {
+            color: ${SURFACE.ink};
+          }
+
+          .suite-action-list {
+            margin-top: 18px;
+          }
+
+          .suite-action-row {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px solid ${SURFACE.borderSoft};
+            display: grid;
+            gap: 10px;
+            grid-template-columns: minmax(0, 1fr) auto;
+            padding: 10px 12px;
+          }
+
+          .suite-action-row-primary {
+            background: rgba(255, 248, 241, 0.96);
+            border-color: rgba(191, 148, 110, 0.38);
+            box-shadow: inset 0 0 0 1px rgba(185, 87, 31, 0.11);
+          }
+
+          .suite-action-label {
+            color: ${SURFACE.muted};
+            font-family: ${bodyFont};
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+          }
+
+          .suite-action-body {
+            color: ${SURFACE.ink};
+            font-family: ${bodyFont};
+            font-size: 12.5px;
+            line-height: 1.4;
+          }
+
+          .suite-action-badge {
+            background: rgba(22, 34, 56, 0.1);
+            border: 1px solid rgba(22, 34, 56, 0.12);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+            color: ${SURFACE.ink};
+            font-family: ${bodyFont};
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            padding: 5px 8px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            white-space: nowrap;
+          }
+
+          .suite-action-badge-urgent {
+            background: rgba(244, 221, 208, 0.92);
+            border-color: rgba(185, 87, 31, 0.2);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
+            color: ${SURFACE.amber};
+          }
+
+          @keyframes suite-track-flow {
+            0%, 33.2% {
+              transform: translateY(0);
+            }
+            33.34%, 66.5% {
+              transform: translateY(calc(var(--suite-window-height) * -1));
+            }
+            66.67%, 99.9% {
+              transform: translateY(calc(var(--suite-window-height) * -2));
+            }
+            100% {
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes suite-pill-see {
+            0%, 33.2% {
+              background: ${SURFACE.amberSoft};
+              border-color: ${SURFACE.amberSoft};
+              color: ${SURFACE.amber};
+            }
+            33.34%, 100% {
+              background: transparent;
+              border-color: ${SURFACE.border};
+              color: ${SURFACE.text};
+            }
+          }
+
+          @keyframes suite-pill-prioritize {
+            0%, 33.2%,
+            66.67%, 100% {
+              background: transparent;
+              border-color: ${SURFACE.border};
+              color: ${SURFACE.text};
+            }
+            33.34%, 66.5% {
+              background: ${SURFACE.tealSoft};
+              border-color: #cbe7e2;
+              color: ${SURFACE.teal};
+            }
+          }
+
+          @keyframes suite-pill-act {
+            0%, 66.5% {
+              background: transparent;
+              border-color: ${SURFACE.border};
+              color: ${SURFACE.text};
+            }
+            66.67%, 99.9% {
+              background: ${SURFACE.ink};
+              border-color: ${SURFACE.ink};
+              color: #fff7ef;
+            }
+            100% {
+              background: transparent;
+              border-color: ${SURFACE.border};
+              color: ${SURFACE.text};
+            }
+          }
+
+          @keyframes suite-progress-flow {
+            0%, 33.2% {
+              transform: translateX(0);
+            }
+            33.34%, 66.5% {
+              transform: translateX(50px);
+            }
+            66.67%, 99.9% {
+              transform: translateX(102px);
+            }
+            100% {
+              transform: translateX(0);
+            }
+          }
+
+          @media (max-width: 1180px) {
+            .suite-motion-shell {
+              --suite-window-height: 332px;
+            }
+          }
+
+          @media (max-width: 820px) {
+            .suite-motion-shell {
+              --suite-window-height: 408px;
+            }
+
+            .suite-metrics-grid {
+              grid-template-columns: 1fr;
+            }
+
+            .suite-screen-head,
+            .suite-action-head,
+            .suite-motion-frame-head {
+              align-items: flex-start;
+              flex-direction: column;
+            }
+
+            .suite-motion-progress {
+              width: 100%;
+            }
+
+            .suite-ladder-row,
+            .suite-list-row,
+            .suite-action-row {
+              grid-template-columns: 1fr;
+            }
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            .suite-phase-tab-1,
+            .suite-phase-tab-2,
+            .suite-phase-tab-3,
+            .suite-motion-track,
+            .suite-motion-progress-fill {
+              animation: none;
+            }
+          }
+        `}</style>
       </div>
     </section>
   )
@@ -781,87 +1357,181 @@ function RoutesSection() {
   const primaryHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_routes_primary' })
 
   return (
-    <section style={{ background: SURFACE.paper, borderBottom: `1px solid ${SURFACE.border}` }}>
-      <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 84px)', paddingBottom: 'clamp(56px, 7vw, 84px)' }}>
-        <SectionLabel index="04" label="Eerste routes" />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {[
-            {
-              name: 'ExitScan',
-              body: 'Voor vertrekduiding op groepsniveau. Zie waar werkfrictie en vertrekdruk samenkomen, en organiseer daarna bounded opvolging.',
-            },
-            {
-              name: 'RetentieScan',
-              body: 'Voor vroegsignalering op behoud. Zie waar behoud onder druk staat, bepaal de eerste prioriteit en leg vervolg direct vast in dezelfde suite.',
-            },
-          ].map((route) => (
-            <div
-              key={route.name}
-              style={{
-                border: `1px solid ${SURFACE.border}`,
-                borderRadius: 18,
-                background: SURFACE.surface,
-                padding: '22px 22px 24px',
-              }}
-            >
-              <Tag>{route.name}</Tag>
-              <h3
+    <section
+      style={{
+        background: SURFACE.paperSoft,
+        borderBottom: `1px solid ${SURFACE.border}`,
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      <BackdropNumber value="04" />
+      <div style={{ ...SHELL, paddingTop: 'clamp(58px, 7vw, 92px)', paddingBottom: 'clamp(58px, 7vw, 92px)', position: 'relative' }}>
+        <Reveal>
+          <SectionLabel index="04" label="Routes" />
+        </Reveal>
+
+        <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.72fr)] xl:items-end">
+          <div>
+            <Reveal delay={0.04}>
+              <h2
                 style={{
-                  fontFamily: displayFont,
-                  fontSize: 34,
-                  lineHeight: 1.02,
-                  letterSpacing: '-.03em',
                   color: SURFACE.ink,
-                  marginTop: 16,
-                  marginBottom: 12,
+                  fontFamily: displayFont,
+                  fontSize: 'clamp(3rem, 5vw, 4.85rem)',
+                  fontWeight: 400,
+                  letterSpacing: '-0.05em',
+                  lineHeight: 0.95,
+                  marginBottom: 14,
+                  maxWidth: '11.5ch',
                 }}
               >
-                {route.name}
-              </h3>
-              <p style={{ fontSize: 15, lineHeight: 1.8, color: SURFACE.text }}>{route.body}</p>
-            </div>
-          ))}
+                Kies de route
+                <br />
+                <span style={{ color: SURFACE.amber, fontStyle: 'italic', fontWeight: 300 }}>
+                  die past bij uw vraagstuk.
+                </span>
+              </h2>
+            </Reveal>
+          </div>
+          <Reveal delay={0.1}>
+            <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.75, maxWidth: '26rem' }}>
+              Drie hoofdroutes. Aanvullende routes sluiten later aan. Zo blijft de eerste stap overzichtelijk en bestuurlijk logisch.
+            </p>
+          </Reveal>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          {[
-            ['Onboarding 30-60-90', 'Bounded peer route naast de kernroutes.'],
-            ['Combinatie', 'Pas logisch als twee managementvragen tegelijk actief zijn.'],
-            ['Pulse en Leadership', 'Compacte vervolgroutes na de eerste hoofdread.'],
-          ].map(([title, body]) => (
-            <div
-              key={title}
+        <div className="grid grid-cols-1 gap-10 xl:grid-cols-3" style={{ marginTop: 48 }}>
+          {routeCards.map((route, index) => (
+            <Reveal key={route.title} delay={0.12 + index * 0.08}>
+              <article
+              key={route.title}
               style={{
-                border: `1px solid ${SURFACE.border}`,
-                borderRadius: 14,
-                background: SURFACE.surface,
-                padding: '16px 18px',
+                borderBottom: `1px solid ${SURFACE.border}`,
+                minWidth: 0,
+                paddingBottom: 20,
               }}
             >
-              <p style={{ fontSize: 18, fontWeight: 600, color: SURFACE.ink, marginBottom: 8 }}>{title}</p>
-              <p style={{ fontSize: 14, lineHeight: 1.65, color: SURFACE.text }}>{body}</p>
-            </div>
+              <div
+                style={{
+                  alignItems: 'center',
+              color: route.accent,
+              display: 'flex',
+              fontFamily: bodyFont,
+              fontSize: 11,
+              fontWeight: 700,
+                  gap: 12,
+                  letterSpacing: '.16em',
+                  marginBottom: 18,
+                  textTransform: 'uppercase',
+                }}
+              >
+                <span style={{ color: SURFACE.subtle }}>{route.index}</span>
+                <span>{route.eyebrow}</span>
+              </div>
+
+              <div style={{ alignItems: 'flex-start', display: 'flex', gap: 18 }}>
+                <span
+                  aria-hidden
+                  style={{
+                    background: route.accent,
+                    display: 'block',
+                    flexShrink: 0,
+                    height: 146,
+                    marginTop: 6,
+                    opacity: 0.96,
+                    width: 3,
+                  }}
+                />
+                <div style={{ minWidth: 0 }}>
+                  <h3
+                    style={{
+                      color: SURFACE.ink,
+                      fontFamily: displayFont,
+                      fontSize: 'clamp(2rem, 3vw, 3rem)',
+                      letterSpacing: '-0.04em',
+                      lineHeight: 0.98,
+                      marginBottom: 14,
+                    }}
+                  >
+                    {route.title}
+                  </h3>
+                  <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.75, maxWidth: '18rem' }}>{route.body}</p>
+                </div>
+              </div>
+              </article>
+            </Reveal>
           ))}
         </div>
 
-        <div style={{ marginTop: 24 }}>
-          <Link
-            href={primaryHref}
-            style={{
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 999,
-              padding: '14px 24px',
-              background: SURFACE.ink,
-              color: '#fff',
-              fontSize: 15,
-              fontWeight: 600,
-            }}
-          >
-            Bespreek de juiste eerste route
-          </Link>
+        <div
+          className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,0.88fr)] xl:items-center"
+          style={{
+            borderTop: `1px solid ${SURFACE.border}`,
+            marginTop: 40,
+            paddingTop: 26,
+          }}
+        >
+          <div>
+            <Reveal delay={0.22}>
+              <p
+                style={{
+                  color: SURFACE.muted,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: '.18em',
+                  marginBottom: 12,
+                  textTransform: 'uppercase',
+                }}
+              >
+                Vervolgvragen
+              </p>
+            </Reveal>
+            <Reveal delay={0.26}>
+              <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.75, maxWidth: '38rem' }}>
+                Pulse voor compacte vervolgmetingen, Leadership Scan voor extra managementcontext en een combinatieroute wanneer meerdere vragen tegelijk spelen.
+              </p>
+            </Reveal>
+          </div>
+
+          <div className="flex flex-wrap gap-8 xl:justify-end">
+            {[
+              ['Pulse', SURFACE.tealSoft, SURFACE.teal],
+              ['Leadership Scan', SURFACE.amberSoft, SURFACE.amber],
+              ['Combinatie', '#ece7df', SURFACE.ink],
+            ].map(([label, bg, color], index) => (
+              <Reveal key={label} delay={0.28 + index * 0.05}>
+                <div style={{ minWidth: 132 }}>
+                <div style={{ background: String(bg), color: String(color), display: 'inline-block', fontFamily: bodyFont, fontSize: 11, fontWeight: 700, letterSpacing: '.14em', marginBottom: 10, padding: '5px 10px', textTransform: 'uppercase' }}>
+                  {label}
+                </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginTop: 34 }}>
+          <Reveal delay={0.34}>
+            <Link
+              href={primaryHref}
+              style={{
+                alignItems: 'center',
+                background: SURFACE.charcoal,
+                color: '#fff',
+                display: 'inline-flex',
+                fontFamily: bodyFont,
+                fontSize: 15,
+                fontWeight: 600,
+                gap: 10,
+                justifyContent: 'space-between',
+                padding: '16px 22px',
+                textDecoration: 'none',
+              }}
+            >
+              Bespreek de juiste eerste route <Arrow />
+            </Link>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -870,31 +1540,106 @@ function RoutesSection() {
 
 function TrustSection() {
   return (
-    <section style={{ background: SURFACE.surface, borderBottom: `1px solid ${SURFACE.border}` }}>
-      <div style={{ ...SHELL, paddingTop: 'clamp(52px, 6vw, 76px)', paddingBottom: 'clamp(52px, 6vw, 76px)' }}>
-        <SectionLabel index="05" label="Waarom dit geloofwaardig blijft" />
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {[
-            'Groepsniveau en expliciete privacygrenzen blijven leidend.',
-            'Managers zien alleen de opvolglaag, niet automatisch de volledige insightlaag.',
-            'Dashboard, rapport en Action Center dragen dezelfde bounded waarheid.',
-            'Action Center is geen generiek workflowplatform, maar een gerichte follow-through laag.',
-          ].map((item) => (
-            <div
-              key={item}
-              style={{
-                border: `1px solid ${SURFACE.border}`,
-                borderRadius: 14,
-                background: SURFACE.paper,
-                padding: '16px 18px',
-                fontSize: 14.5,
-                lineHeight: 1.7,
-                color: SURFACE.text,
-              }}
-            >
-              {item}
+    <section
+      style={{
+        background: SURFACE.surface,
+        borderBottom: `1px solid ${SURFACE.border}`,
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      <BackdropNumber value="05" tone="cool" />
+      <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 88px)', paddingBottom: 'clamp(56px, 7vw, 88px)', position: 'relative' }}>
+        <Reveal>
+          <SectionLabel index="05" label="Vertrouwen" />
+        </Reveal>
+
+        <div className="grid grid-cols-1 gap-12 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] xl:items-start">
+          <div style={{ minWidth: 0 }}>
+            <Reveal delay={0.04}>
+              <h2
+                style={{
+                  color: SURFACE.ink,
+                  fontFamily: displayFont,
+                  fontSize: 'clamp(2.9rem, 4.8vw, 4.65rem)',
+                  fontWeight: 400,
+                  letterSpacing: '-0.05em',
+                  lineHeight: 0.96,
+                  marginBottom: 20,
+                  maxWidth: '11ch',
+                }}
+              >
+                Zorgvuldig meten.
+                <br />
+                <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
+                  Nuchter duiden.
+                </span>
+              </h2>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.8, maxWidth: '32rem' }}>
+                Verisight helpt patronen op groepsniveau zichtbaar maken. Niet om individuele medewerkers te beoordelen, wel om betere gesprekken en keuzes mogelijk te maken.
+              </p>
+            </Reveal>
+          </div>
+
+          <div style={{ minWidth: 0 }}>
+            <div style={{ borderTop: `1px solid ${SURFACE.border}`, display: 'grid' }}>
+              {trustPrinciples.map((item, index) => (
+                <Reveal key={item} delay={0.12 + index * 0.06}>
+                  <div
+                  key={item}
+                  style={{
+                    borderBottom: `1px solid ${SURFACE.border}`,
+                    display: 'grid',
+                    gap: 12,
+                    gridTemplateColumns: '46px 1fr',
+                    padding: '18px 0',
+                  }}
+                  >
+                    <span style={{ color: SURFACE.subtle, fontSize: 13 }}>{String(index + 1).padStart(2, '0')}</span>
+                    <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.78 }}>{item}</p>
+                  </div>
+                </Reveal>
+              ))}
             </div>
-          ))}
+
+            <Reveal delay={0.36}>
+              <div
+                style={{
+                  background: SURFACE.paperSoft,
+                  marginTop: 24,
+                  padding: '20px 22px',
+                }}
+              >
+                <p
+                  style={{
+                    color: SURFACE.muted,
+                    fontFamily: bodyFont,
+                    fontSize: 10,
+                    fontWeight: 700,
+                    letterSpacing: '.18em',
+                    marginBottom: 10,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Onderregel
+                </p>
+                <p
+                  style={{
+                    color: SURFACE.ink,
+                    fontFamily: displayFont,
+                    fontSize: 'clamp(1.8rem, 2.4vw, 2.35rem)',
+                    letterSpacing: '-0.03em',
+                    lineHeight: 1.08,
+                    maxWidth: '19ch',
+                  }}
+                >
+                  De score opent het gesprek, maar sluit het niet af.
+                </p>
+              </div>
+            </Reveal>
+          </div>
         </div>
       </div>
     </section>
@@ -902,16 +1647,78 @@ function TrustSection() {
 }
 
 function ContactSection() {
+  const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_final_cta' })
+
   return (
-    <section style={{ background: SURFACE.paper, padding: 'clamp(52px, 6vw, 76px) 0' }}>
-      <div style={{ ...SHELL }}>
-        <MarketingInlineContactPanel
-          eyebrow="Plan suite-demo"
-          title="Vertel kort welke managementvraag nu speelt."
-          body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy, prijs en hoe dashboard, rapport en Action Center daarna samen werken."
-          defaultRouteInterest="exitscan"
-          defaultCtaSource="homepage_form"
-        />
+    <section
+      style={{
+        background: `linear-gradient(180deg, ${SURFACE.paper} 0%, ${SURFACE.paperSoft} 100%)`,
+        overflow: 'hidden',
+        padding: 'clamp(56px, 7vw, 92px) 0',
+        position: 'relative',
+      }}
+    >
+      <BackdropNumber value="06" />
+      <div style={{ ...SHELL, position: 'relative' }}>
+        <Reveal>
+          <SectionLabel index="06" label="Plan een kennismaking" />
+        </Reveal>
+        <div
+          className="grid grid-cols-1 gap-10 xl:grid-cols-[minmax(0,0.94fr)_minmax(0,0.78fr)] xl:items-end"
+          style={{ minHeight: 320 }}
+        >
+          <div style={{ minWidth: 0 }}>
+            <Reveal delay={0.04}>
+              <h2
+                style={{
+                  color: SURFACE.ink,
+                  fontFamily: displayFont,
+                  fontSize: 'clamp(3rem, 5vw, 4.9rem)',
+                  fontWeight: 400,
+                  letterSpacing: '-0.05em',
+                  lineHeight: 0.95,
+                  marginBottom: 18,
+                  maxWidth: '10.5ch',
+                }}
+              >
+                Wilt u zien
+                <br />
+                <span style={{ color: SURFACE.amber, fontStyle: 'italic', fontWeight: 300 }}>
+                  welke route nu het meest logisch is?
+                </span>
+              </h2>
+            </Reveal>
+          </div>
+
+          <div style={{ minWidth: 0, maxWidth: '31rem' }}>
+            <Reveal delay={0.1}>
+              <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.8, marginBottom: 28 }}>
+                Plan een korte kennismaking. Dan ziet u of Verisight past, welke eerste route logisch is en hoe de output er in uw situatie uit kan zien.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.16}>
+              <Link
+                href={kennismakingHref}
+                style={{
+                  alignItems: 'center',
+                  background: SURFACE.charcoal,
+                  color: '#fff',
+                  display: 'inline-flex',
+                  fontFamily: bodyFont,
+                  fontSize: 15,
+                  fontWeight: 600,
+                  gap: 10,
+                  justifyContent: 'space-between',
+                  padding: '16px 22px',
+                  textDecoration: 'none',
+                }}
+              >
+                Plan een kennismaking <Arrow />
+              </Link>
+            </Reveal>
+          </div>
+        </div>
       </div>
     </section>
   )
@@ -921,8 +1728,8 @@ export function HomePageContent() {
   return (
     <div style={{ background: SURFACE.paper, color: SURFACE.ink }}>
       <HeroSection />
+      <MarqueeBand />
       <SuitePreviewSection />
-      <ValueSection />
       <RoutesSection />
       <TrustSection />
       <ContactSection />
