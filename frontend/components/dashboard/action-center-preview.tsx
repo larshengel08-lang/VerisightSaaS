@@ -458,10 +458,9 @@ export function ActionCenterPreview({
     )
   }
 
-  const closingLabel = selectedItem
-    ? getClosingStatusLabel(selectedItem.coreSemantics.closingSemantics.status)
-    : null
-  const closingSummary = selectedItem?.coreSemantics.closingSemantics.summary ?? null
+  const closing = selectedItem?.coreSemantics.closingSemantics ?? null
+  const hasClosingPanel =
+    closing !== null && (closing.status !== 'lopend' || Boolean(closing.historicalSummary ?? closing.summary))
 
   function handleCreateAction() {
     if (!createForm.title.trim() || !createForm.teamId) {
@@ -1300,13 +1299,21 @@ export function ActionCenterPreview({
                           </div>
                         </div>
 
-                        {closingLabel ? (
+                        {hasClosingPanel && closing ? (
                           <div className="mt-5 rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Afronding</p>
-                            <p className="mt-2 text-sm font-semibold text-white/86">{closingLabel}</p>
-                            {closingSummary ? (
-                              <p className="mt-2 text-sm leading-7 text-white/72">{closingSummary}</p>
-                            ) : null}
+                            <p className="mt-2 text-sm font-semibold text-white/86">
+                              {closing.status === 'lopend'
+                                ? 'Eerder afgerond in deze route'
+                                : closing.status === 'afgerond'
+                                  ? 'Afgerond voor nu'
+                                  : 'Bewust gestopt'}
+                            </p>
+                            <p className="mt-2 text-sm leading-7 text-white/72">
+                              {closing.historicalSummary ??
+                                closing.summary ??
+                                'Deze route draagt een expliciet afsluitsignaal.'}
+                            </p>
                           </div>
                         ) : null}
 

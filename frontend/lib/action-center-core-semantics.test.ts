@@ -204,6 +204,7 @@ describe('action center core semantics', () => {
       },
       closingSemantics: {
         status: 'lopend',
+        historicalSummary: null,
       },
     })
   })
@@ -439,14 +440,17 @@ describe('action center core semantics', () => {
     expect(projectActionCenterCoreSemantics(ongoing).closingSemantics).toEqual({
       status: 'lopend',
       summary: null,
+      historicalSummary: null,
     })
     expect(projectActionCenterCoreSemantics(completed).closingSemantics).toEqual({
       status: 'afgerond',
       summary: 'De route is afgerond na de laatste teamreview.',
+      historicalSummary: null,
     })
     expect(projectActionCenterCoreSemantics(stopped).closingSemantics).toEqual({
       status: 'gestopt',
       summary: 'De route stopt omdat er nu geen draagvlak is voor opvolging.',
+      historicalSummary: null,
     })
   })
 
@@ -668,6 +672,7 @@ describe('action center core semantics', () => {
     expect(semantics.closingSemantics).toEqual({
       status: 'afgerond',
       summary: 'De route is afgerond na de laatste teamreview.',
+      historicalSummary: null,
     })
   })
 
@@ -685,6 +690,7 @@ describe('action center core semantics', () => {
     expect(semantics.closingSemantics).toEqual({
       status: 'afgerond',
       summary: 'Vervolg via het reguliere HR-overleg, zonder aparte action-center route.',
+      historicalSummary: null,
     })
   })
 
@@ -724,7 +730,43 @@ describe('action center core semantics', () => {
     expect(semantics.closingSemantics).toEqual({
       status: 'gestopt',
       summary: 'De route is bewust gestopt.',
+      historicalSummary: null,
     })
+  })
+
+  it('keeps the route active while projecting a historical closeout summary from follow-up checkpoint truth', () => {
+    const base = buildContext()
+
+    const semantics = projectActionCenterCoreSemantics({
+      ...base,
+      route: {
+        ...base.route,
+        routeStatus: 'in-uitvoering',
+        reviewOutcome: 'bijstellen',
+      },
+      learningCheckpoints: [
+        ...base.learningCheckpoints,
+        buildCheckpoint({
+          id: 'cp-follow-up-review',
+          checkpoint_key: 'follow_up_review',
+          owner_label: 'HR',
+          status: 'bevestigd',
+          objective_signal_notes: 'Drie werkafspraken zijn opnieuw bevestigd.',
+          qualitative_notes:
+            'De eerdere cyclus kon worden afgerond; deze route bewaakt alleen de borging.',
+          interpreted_observation: 'De eerste interventie heeft rust gebracht in het teamoverleg.',
+          confirmed_lesson:
+            'De vorige stap is afgerond; borg nu of de afspraken in de komende twee weken standhouden.',
+          lesson_strength: 'terugkerend_patroon',
+          destination_areas: ['report'],
+          created_at: '2026-04-20T09:00:00.000Z',
+          updated_at: '2026-04-20T09:00:00.000Z',
+        }),
+      ],
+    })
+
+    expect(semantics.closingSemantics.status).toBe('lopend')
+    expect(semantics.closingSemantics.historicalSummary).toContain('vorige stap is afgerond')
   })
 
   it('prefers the latest explicit preview update before nextStep in whatWasTried', () => {

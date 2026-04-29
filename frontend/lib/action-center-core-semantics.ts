@@ -27,6 +27,7 @@ export interface ActionCenterCoreSemantics {
   closingSemantics: {
     status: ActionCenterClosingStatus
     summary: string | null
+    historicalSummary: string | null
   }
 }
 
@@ -194,6 +195,18 @@ function getRouteSummary(route: ActionCenterRouteContract, context: ActionCenter
   return pickFirst([
     route.outcomeSummary,
     context.deliveryRecord?.customer_handoff_note,
+  ])
+}
+
+function getHistoricalCloseoutSummary(context: ActionCenterCoreSemanticsProjectionInput) {
+  const followUpReview = getCheckpoint(context, 'follow_up_review')
+
+  return pickFirst([
+    followUpReview?.confirmed_lesson,
+    followUpReview?.qualitative_notes,
+    followUpReview?.interpreted_observation,
+    context.learningDossier?.next_route,
+    context.learningDossier?.stop_reason,
   ])
 }
 
@@ -394,6 +407,7 @@ export function projectActionCenterPreviewCoreSemantics(
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getPreviewClosingSummaryValues(route, closingStatus)),
+      historicalSummary: null,
     },
   }
 }
@@ -514,6 +528,7 @@ export function projectActionCenterCoreSemantics(
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getLiveClosingSummaryValues(context, route, closingStatus)),
+      historicalSummary: closingStatus === 'lopend' ? getHistoricalCloseoutSummary(context) : null,
     },
   }
 }

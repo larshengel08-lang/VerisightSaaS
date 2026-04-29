@@ -220,6 +220,7 @@ describe("action center landing shell", () => {
         closingSemantics: {
           status: "afgerond" as const,
           summary: "De route is afgerond na de laatste teamreview.",
+          historicalSummary: null,
         },
       },
     };
@@ -230,6 +231,7 @@ describe("action center landing shell", () => {
         closingSemantics: {
           status: "gestopt" as const,
           summary: "De route stopt omdat er nu geen draagvlak is voor opvolging.",
+          historicalSummary: null,
         },
       },
     };
@@ -279,6 +281,16 @@ describe("action center landing shell", () => {
     expect(completedMarkup).toContain("De route is afgerond na de laatste teamreview.");
     expect(stoppedMarkup).toContain("Bewust gestopt");
     expect(stoppedMarkup).toContain("De route stopt omdat er nu geen draagvlak is voor opvolging.");
+  });
+
+  it("renders historical closeout meaning on route detail without forcing the route into a closed status", () => {
+    const source = readFileSync(
+      new URL("../../../components/dashboard/action-center-preview.tsx", import.meta.url),
+      "utf8",
+    );
+
+    expect(source).toContain("Eerder afgerond in deze route");
+    expect(source).toContain("historicalSummary");
   });
 
   it("keeps the landing summary compact with a last route-read instead of full detail semantics", () => {
