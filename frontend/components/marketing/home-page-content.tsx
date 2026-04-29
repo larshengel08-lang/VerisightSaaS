@@ -788,7 +788,10 @@ function SuitePreviewSection() {
                         </div>
 
                         <div className="suite-prioritize-intro">
-                          <p className="suite-priority-title">Kies wat nu eerst telt.</p>
+                          <div className="suite-priority-title">
+                            <p>Kies</p>
+                            <p className="suite-phase-title-accent">wat nu eerst telt.</p>
+                          </div>
                         </div>
 
                         <div className="suite-priority-ladder">
@@ -1076,7 +1079,7 @@ function SuitePreviewSection() {
           }
 
           .suite-priority-ladder {
-            margin-top: auto;
+            margin-top: 18px;
           }
 
           .suite-list-row,
@@ -1139,6 +1142,10 @@ function SuitePreviewSection() {
             max-width: 11ch;
           }
 
+          .suite-priority-title p {
+            margin: 0;
+          }
+
           .suite-priority-copy {
             color: ${SURFACE.text};
             font-family: ${bodyFont};
@@ -1148,7 +1155,7 @@ function SuitePreviewSection() {
           }
 
           .suite-prioritize-intro {
-            margin: 8px 0 10px;
+            margin: 8px 0 0;
           }
 
           .suite-action-panel {
@@ -1168,7 +1175,7 @@ function SuitePreviewSection() {
           }
 
           .suite-action-list {
-            margin-top: auto;
+            margin-top: 18px;
           }
 
           .suite-action-row {
