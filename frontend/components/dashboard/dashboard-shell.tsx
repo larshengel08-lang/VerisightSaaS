@@ -7,7 +7,6 @@ import { LogoutButton } from '@/components/ui/logout-button'
 import {
   buildDashboardShellNavigation,
   getActiveModuleFromPathname,
-  getDashboardShellCurrentLabel,
   ACTION_CENTER_NAV,
   type DashboardModuleKey,
   type DashboardModuleNavItem,
@@ -51,7 +50,6 @@ export function DashboardShellFrame({
     [campaigns, currentCampaignPath, isAdmin, portfolioCounts, shellMode],
   )
   const isActionCenter = pathname.startsWith('/action-center')
-  const currentLabel = getDashboardShellCurrentLabel(pathname)
   const accountLabel = userEmail.split('@')[1]?.split('.')[0] ?? 'Verisight'
   const accountName = accountLabel.charAt(0).toUpperCase() + accountLabel.slice(1)
   const mobileItems = isActionCenter ? ACTION_CENTER_NAV : [...navigation.modules, ...navigation.admin]
@@ -151,7 +149,6 @@ export function DashboardShellFrame({
                     {accountName}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-[color:var(--dashboard-text)]">{currentLabel}</p>
               </div>
 
               <div className="hidden items-center gap-2 lg:flex">

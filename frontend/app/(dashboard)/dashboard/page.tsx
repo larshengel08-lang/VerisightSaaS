@@ -178,24 +178,7 @@ export default async function DashboardHomePage({
         <ViewerEmptyState />
       ) : (
         <>
-          <section className="space-y-3">
-            <h1 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
-              Overzicht
-            </h1>
-            <p className="max-w-[52rem] text-[0.98rem] leading-[1.85] text-[color:var(--dashboard-text)]">
-              Wat nu leesbaar is, wat blokkeert en waar opvolging open staat.
-            </p>
-          </section>
-
           <section className="space-y-4">
-            <div>
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
-                Portfolio samenvatting
-              </p>
-              <p className="mt-2 text-sm leading-7 text-[color:var(--dashboard-text)]">
-                Aantallen per statusgroep.
-              </p>
-            </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
               <SignalStatCard
                 label="Leesbaar"
@@ -225,14 +208,6 @@ export default async function DashboardHomePage({
           </section>
 
           <section className="space-y-4">
-            <div>
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
-                Wat nu leesbaar is
-              </p>
-              <p className="mt-2 text-sm leading-7 text-[color:var(--dashboard-text)]">
-                Wat al open kan en wat nog in opbouw zit.
-              </p>
-            </div>
             <div className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_4px_rgba(10,25,47,0.05)] sm:px-6 sm:py-6">
               <DashboardTabs tabs={portfolioTabs} defaultTabId={portfolioView} />
             </div>
