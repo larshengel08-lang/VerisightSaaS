@@ -75,7 +75,8 @@ export function projectLegacyDecisionRecord(args: {
   const decision = coerceDecision(args.reviewOutcome, args.managementActionOutcome)
   if (!decision) return null
 
-  const reviewCompletedAt = args.reviewCompletedAt ?? new Date(0).toISOString()
+  const reviewCompletedAt = normalizeText(args.reviewCompletedAt)
+  if (!reviewCompletedAt) return null
 
   return {
     decisionEntryId: buildLegacyDecisionEntryId({

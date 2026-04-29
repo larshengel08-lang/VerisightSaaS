@@ -1,5 +1,6 @@
 import type { DeliveryExceptionStatus } from '@/lib/ops-delivery'
 import type { LiveActionCenterCampaignContext } from './action-center-live'
+import type { PilotLearningCheckpoint } from './pilot-learning'
 
 export type ActionCenterEntryStage = 'attention' | 'candidate' | 'active'
 
@@ -101,6 +102,20 @@ function getOutcomeSummary(context: LiveActionCenterCampaignContext) {
   return normalizeText(context.learningDossier?.case_public_summary) ?? normalizeText(context.learningDossier?.adoption_outcome)
 }
 
+function getLearningCheckpoint(context: LiveActionCenterCampaignContext, key: PilotLearningCheckpoint['checkpoint_key']) {
+  return context.learningCheckpoints.find((checkpoint) => checkpoint.checkpoint_key === key) ?? null
+}
+
+function isCompletedReviewCheckpoint(checkpoint: PilotLearningCheckpoint | null) {
+  if (!checkpoint) return false
+
+  return (
+    checkpoint.status === 'bevestigd' ||
+    checkpoint.status === 'uitgevoerd' ||
+    checkpoint.status === 'verworpen'
+  )
+}
+
 function hasCandidateTruth(context: LiveActionCenterCampaignContext) {
   return Boolean(
     getOwner(context) ??
@@ -143,7 +158,13 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
   const reviewScheduledFor = getReviewScheduledFor(context)
   const reviewReason = getReviewReason(context)
   const reviewOutcome = getReviewOutcome(context)
+  const followUpReviewCheckpoint = getLearningCheckpoint(context, 'follow_up_review')
+  const reviewCompletedAt =
+    reviewOutcome !== 'geen-uitkomst' && isCompletedReviewCheckpoint(followUpReviewCheckpoint)
+      ? normalizeText(followUpReviewCheckpoint?.updated_at)
+      : null
   const outcomeSummary = getOutcomeSummary(context)
+  const outcomeRecordedAt = reviewCompletedAt && outcomeSummary ? reviewCompletedAt : null
   const blockedBy =
     context.deliveryRecord?.exception_status && context.deliveryRecord.exception_status !== 'none'
       ? context.deliveryRecord.exception_status
@@ -172,8 +193,8 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
     ownerAssignedAt,
     routeStatus,
     reviewOutcome,
-    reviewCompletedAt: null,
-    outcomeRecordedAt: null,
+    reviewCompletedAt,
+    outcomeRecordedAt,
     outcomeSummary,
     intervention,
     owner,

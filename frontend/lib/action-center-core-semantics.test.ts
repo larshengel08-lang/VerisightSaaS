@@ -241,6 +241,71 @@ describe('action center core semantics', () => {
       expect(semantics.latestDecision?.nextCheck).toBeTruthy()
       expect(semantics.decisionHistory).toHaveLength(1)
     })
+
+    it('does not synthesize a legacy decision history when completion truth is missing', () => {
+      const semantics = projectActionCenterCoreSemantics({
+        campaign: { id: 'campaign-1', name: 'ExitScan april' } as never,
+        assignedManager: { displayName: 'Sanne de Vries' } as never,
+        deliveryRecord: { next_step: null } as never,
+        learningDossier: {
+          management_action_outcome: 'bijstellen',
+          first_action_taken: 'Plan een gerichte teamreview met de manager.',
+          expected_first_value: 'Werkdruktrend moet dalen.',
+        } as never,
+        learningCheckpoints: [],
+        route: {
+          ...baseRoute,
+          reviewCompletedAt: null,
+        },
+        latestVisibleUpdateNote: 'De manager bevestigde dat de frictie nog niet daalt.',
+        decisionRecords: [],
+      })
+
+      expect(semantics.latestDecision).toBeNull()
+      expect(semantics.decisionHistory).toEqual([])
+    })
+  })
+
+  it('derives route completion truth from a completed follow-up review checkpoint', () => {
+    const route = projectActionCenterRoute({
+      campaign: buildCampaign(),
+      stats: buildStats(),
+      organizationName: 'Acme BV',
+      memberRole: 'owner',
+      scopeType: 'department',
+      scopeValue: 'operations',
+      scopeLabel: 'Operations',
+      peopleCount: 38,
+      assignedManager: {
+        userId: 'manager-1',
+        displayName: 'Manager Operations',
+        assignedAt: '2026-04-21T08:00:00.000Z',
+      },
+      deliveryRecord: buildDeliveryRecord({
+        first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+      }),
+      deliveryCheckpoints: [],
+      learningDossier: buildDossier({
+        first_management_value: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
+        expected_first_value: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
+        first_action_taken: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
+        review_moment: '2026-05-12',
+        management_action_outcome: 'bijstellen',
+        adoption_outcome: 'De eerste review liet zien dat dezelfde frictie in twee teams terugkomt.',
+      }),
+      learningCheckpoints: [
+        buildCheckpoint({
+          id: 'checkpoint-review',
+          checkpoint_key: 'follow_up_review',
+          status: 'uitgevoerd',
+          updated_at: '2026-04-26T10:15:00.000Z',
+          confirmed_lesson: 'De frictie bleef terugkomen in elk vervolggesprek.',
+        }),
+      ],
+    })
+
+    expect(route.reviewCompletedAt).toBe('2026-04-26T10:15:00.000Z')
+    expect(route.outcomeRecordedAt).toBe('2026-04-26T10:15:00.000Z')
   })
 
   it('keeps reviewReason and reviewQuestion distinct while preserving the visible outcome mapping', () => {

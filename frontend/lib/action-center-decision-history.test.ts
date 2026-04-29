@@ -60,4 +60,18 @@ describe('action-center decision history contract', () => {
       decisionRecordedAt: '2026-04-25T10:00:00.000Z',
     })
   })
+
+  it('does not project a legacy decision record without a real review completion timestamp', () => {
+    const record = projectLegacyDecisionRecord({
+      sourceRouteId: 'route-1',
+      reviewOutcome: 'bijstellen',
+      reviewCompletedAt: null,
+      reviewReason: 'De eerste stap gaf nog geen stabiele verbetering.',
+      reviewQuestion: 'Moet de vervolgstap worden aangescherpt?',
+      managementActionOutcome: null,
+      latestObservation: 'Werkdruk bleef zichtbaar in hetzelfde team.',
+    })
+
+    expect(record).toBeNull()
+  })
 })
