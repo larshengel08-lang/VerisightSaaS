@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import Link from 'next/link'
-import type { ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
+import type { ActionCenterDecision, ActionCenterDecisionRecord, ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
 import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 import type {
   ActionCenterPreviewItem,
@@ -191,14 +191,18 @@ function getReviewOutcomeMeta(outcome: ActionCenterReviewOutcome) {
   }
 }
 
-function getClosingStatusLabel(status: 'lopend' | 'afgerond' | 'gestopt') {
-  switch (status) {
-    case 'afgerond':
-      return 'Afgerond voor nu'
-    case 'gestopt':
-      return 'Bewust gestopt'
+function getDecisionLabel(decision: ActionCenterDecision) {
+  switch (decision) {
+    case 'doorgaan':
+      return 'Doorgaan'
+    case 'bijstellen':
+      return 'Bijstellen'
+    case 'afronden':
+      return 'Afronden'
+    case 'stoppen':
+      return 'Stoppen'
     default:
-      return null
+      return decision
   }
 }
 
@@ -1238,39 +1242,51 @@ export function ActionCenterPreview({
 
                         <div className="mt-6 space-y-5">
                           <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Reviewbetekenis</p>
-                            <div className="mt-3 grid gap-3 md:grid-cols-3">
-                              <RouteFieldCard
-                                label="Waarom we opnieuw kijken"
-                                value={selectedItem.coreSemantics.reviewSemantics.reviewReason}
-                              />
-                              <RouteFieldCard
-                                label="Wat we dan toetsen"
-                                value={selectedItem.coreSemantics.reviewSemantics.reviewQuestion}
-                              />
-                              <RouteOutcomeCard outcome={selectedItem.coreSemantics.reviewSemantics.reviewOutcomeVisible} />
-                            </div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Beslissing</p>
+                            {selectedItem.coreSemantics.latestDecision ? (
+                              <div className="mt-3 grid gap-3 md:grid-cols-3">
+                                <DecisionOutcomeCard decision={selectedItem.coreSemantics.latestDecision.decision} />
+                                {selectedItem.coreSemantics.latestDecision.decisionReason ? (
+                                  <RouteFieldCard
+                                    label="Waarom dit besluit"
+                                    value={selectedItem.coreSemantics.latestDecision.decisionReason}
+                                  />
+                                ) : null}
+                                {selectedItem.coreSemantics.latestDecision.nextCheck ? (
+                                  <RouteFieldCard
+                                    label="Volgende toets"
+                                    value={selectedItem.coreSemantics.latestDecision.nextCheck}
+                                  />
+                                ) : null}
+                              </div>
+                            ) : (
+                              <div className="mt-3">
+                                <EmptyBlock text="Nog geen expliciete reviewbeslissing vastgelegd in deze route." />
+                              </div>
+                            )}
                           </div>
 
                           <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Actiekader</p>
-                            <div className="mt-3 grid gap-3 md:grid-cols-2">
-                              <RouteFieldCard
-                                label="Waarom nu"
-                                value={selectedItem.coreSemantics.actionFrame.whyNow}
-                              />
-                              <RouteFieldCard
-                                label="Eerste stap"
-                                value={selectedItem.coreSemantics.actionFrame.firstStep}
-                              />
-                              <RouteFieldCard
-                                label="Eigenaar"
-                                value={selectedItem.coreSemantics.actionFrame.owner}
-                              />
-                              <RouteFieldCard
-                                label="Verwacht effect"
-                                value={selectedItem.coreSemantics.actionFrame.expectedEffect}
-                              />
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Actievoortgang</p>
+                            <div className="mt-3 grid gap-3 md:grid-cols-3">
+                              {selectedItem.coreSemantics.actionProgress.currentStep ? (
+                                <RouteFieldCard
+                                  label="Huidige stap"
+                                  value={selectedItem.coreSemantics.actionProgress.currentStep}
+                                />
+                              ) : null}
+                              {selectedItem.coreSemantics.actionProgress.nextStep ? (
+                                <RouteFieldCard
+                                  label="Hierna"
+                                  value={selectedItem.coreSemantics.actionProgress.nextStep}
+                                />
+                              ) : null}
+                              {selectedItem.coreSemantics.actionProgress.expectedEffect ? (
+                                <RouteFieldCard
+                                  label="Verwacht effect"
+                                  value={selectedItem.coreSemantics.actionProgress.expectedEffect}
+                                />
+                              ) : null}
                             </div>
                           </div>
 
@@ -1295,6 +1311,19 @@ export function ActionCenterPreview({
                                   value={selectedItem.coreSemantics.resultLoop.whatWasDecided}
                                 />
                               ) : null}
+                            </div>
+                          </div>
+
+                          <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Beslisgeschiedenis</p>
+                            <div className="mt-3 space-y-3">
+                              {selectedItem.coreSemantics.decisionHistory.length === 0 ? (
+                                <EmptyBlock text="Nog geen expliciete beslismomenten zichtbaar in deze route." />
+                              ) : (
+                                selectedItem.coreSemantics.decisionHistory.map((entry) => (
+                                  <DecisionHistoryEntry key={entry.decisionEntryId} entry={entry} />
+                                ))
+                              )}
                             </div>
                           </div>
                         </div>
@@ -2142,7 +2171,7 @@ export function buildCompactLandingSummaryLines(item: ActionCenterPreviewItem) {
   const currentStep = item.coreSemantics.actionProgress.currentStep
 
   return [
-    latestDecision ? { label: 'Besluit', value: latestDecision.decision } : null,
+    latestDecision ? { label: 'Besluit', value: getDecisionLabel(latestDecision.decision) } : null,
     currentStep ? { label: 'Stap', value: currentStep } : null,
   ]
     .filter((entry): entry is { label: string; value: string } => Boolean(entry?.value))
@@ -2181,17 +2210,54 @@ function RouteFieldCard({ label, value }: { label: string; value: string }) {
   )
 }
 
-function RouteOutcomeCard({ outcome }: { outcome: ActionCenterReviewOutcome }) {
-  const meta = getReviewOutcomeMeta(outcome)
+function DecisionOutcomeCard({ decision }: { decision: ActionCenterDecision }) {
+  const label = getDecisionLabel(decision)
+  const meta = getReviewOutcomeMeta(decision)
 
   return (
     <div className="rounded-[18px] border border-[#eadfce] bg-[#fcfaf6] px-4 py-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Laatste reviewuitkomst</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Laatste beslissing</p>
       <div className="mt-3">
         <span className={`inline-flex items-center rounded-xl border px-3 py-2 text-sm font-semibold ${meta.className}`}>
-          {meta.label}
+          {label}
         </span>
       </div>
+    </div>
+  )
+}
+
+function DecisionHistoryEntry({ entry }: { entry: ActionCenterDecisionRecord }) {
+  const summaryBits = [
+    entry.currentStepSnapshot ? { label: 'Stap', value: entry.currentStepSnapshot } : null,
+    entry.observationSnapshot ? { label: 'Gezien', value: entry.observationSnapshot } : null,
+    entry.nextCheck ? { label: 'Hierna toetsen', value: entry.nextCheck } : null,
+  ].filter((bit): bit is { label: string; value: string } => Boolean(bit))
+
+  return (
+    <div className="rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="inline-flex items-center rounded-xl border border-white/10 bg-white/[0.06] px-3 py-1.5 text-sm font-semibold text-white/88">
+          {getDecisionLabel(entry.decision)}
+        </span>
+        <span className="text-xs uppercase tracking-[0.16em] text-white/40">
+          {formatLongDate(entry.reviewCompletedAt ?? entry.decisionRecordedAt)}
+        </span>
+      </div>
+
+      {entry.decisionReason ? (
+        <p className="mt-3 text-sm leading-7 text-white/78">{entry.decisionReason}</p>
+      ) : null}
+
+      {summaryBits.length > 0 ? (
+        <div className="mt-4 space-y-2.5">
+          {summaryBits.map((bit) => (
+            <div key={`${entry.decisionEntryId}-${bit.label}`} className="flex items-start justify-between gap-3 text-sm">
+              <span className="shrink-0 font-semibold text-white/46">{bit.label}</span>
+              <span className="text-right leading-6 text-white/82">{bit.value}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }

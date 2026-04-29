@@ -5,7 +5,7 @@ import { ActionCenterPreview, buildCompactLandingSummaryLines } from '@/componen
 import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 
 describe('action center preview route fields render', () => {
-  it('renders expected effect, review reason, and review outcome in the detail experience', () => {
+  it('renders decision-first review meaning and action progression in the detail experience', () => {
     const item = finalizeActionCenterPreviewItem({
       id: 'route-1',
       code: 'ACT-1001',
@@ -55,12 +55,16 @@ describe('action center preview route fields render', () => {
       }),
     )
 
-    expect(html).toContain('Verwacht effect')
-    expect(html).toContain('Binnen twee weken moet het eerste teamgesprek zijn gevoerd.')
-    expect(html).toContain('Waarom we opnieuw kijken')
-    expect(html).toContain('Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.')
-    expect(html).toContain('Laatste reviewuitkomst')
+    expect(html).toContain('Laatste beslissing')
     expect(html).toContain('Bijstellen')
+    expect(html).toContain('Waarom dit besluit')
+    expect(html).toContain('Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.')
+    expect(html).toContain('Volgende toets')
+    expect(html).toContain('Binnen twee weken moet het eerste teamgesprek zijn gevoerd.')
+    expect(html).toContain('Huidige stap')
+    expect(html).toContain('Leg eigenaar en eerste correctie in het MT-overleg vast.')
+    expect(html).toContain('Hierna')
+    expect(html).toContain('Verwacht effect')
   })
 
   it('builds compact landing summary lines from latest decision and current step', () => {
@@ -131,7 +135,7 @@ describe('action center preview route fields render', () => {
     })
 
     expect(buildCompactLandingSummaryLines(item)).toEqual([
-      { label: 'Besluit', value: 'bijstellen' },
+      { label: 'Besluit', value: 'Bijstellen' },
       { label: 'Stap', value: 'Plan een gerichte teamreview met de manager.' },
     ])
   })

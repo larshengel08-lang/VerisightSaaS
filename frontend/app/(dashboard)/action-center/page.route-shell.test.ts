@@ -95,7 +95,7 @@ function buildDossier(overrides: Partial<PilotLearningDossier> = {}): PilotLearn
     first_action_taken: "Leg eigenaar en eerste correctie in het MT-overleg vast.",
     review_moment: "2026-05-12",
     adoption_outcome: null,
-    management_action_outcome: "opschalen",
+    management_action_outcome: "bijstellen",
     next_route: null,
     stop_reason: null,
     case_evidence_closure_status: "lesson_only",
@@ -188,20 +188,84 @@ describe("action center landing shell", () => {
       }),
     );
 
-    expect(markup).toContain("Waarom we opnieuw kijken");
-    expect(markup).toContain(item.coreSemantics.reviewSemantics.reviewReason);
-    expect(markup).toContain("Wat we dan toetsen");
-    expect(markup).toContain(item.coreSemantics.reviewSemantics.reviewQuestion);
-    expect(markup).toContain("Laatste reviewuitkomst");
+    expect(markup).toContain("Laatste beslissing");
     expect(markup).toContain("Bijstellen");
-    expect(markup).toContain("Waarom nu");
-    expect(markup).toContain(item.coreSemantics.actionFrame.whyNow);
-    expect(markup).toContain("Eerste stap");
-    expect(markup).toContain(item.coreSemantics.actionFrame.firstStep);
-    expect(markup).toContain("Eigenaar");
-    expect(markup).toContain(item.coreSemantics.actionFrame.owner);
+    expect(markup).toContain("Waarom dit besluit");
+    expect(markup).toContain(item.coreSemantics.latestDecision?.decisionReason ?? "");
+    expect(markup).toContain("Volgende toets");
+    expect(markup).toContain(item.coreSemantics.latestDecision?.nextCheck ?? "");
+    expect(markup).toContain("Huidige stap");
+    expect(markup).toContain(item.coreSemantics.actionProgress.currentStep ?? "");
+    expect(markup).toContain("Hierna");
+    expect(markup).toContain(item.coreSemantics.actionProgress.nextStep ?? "");
     expect(markup).toContain("Verwacht effect");
-    expect(markup).toContain(item.coreSemantics.actionFrame.expectedEffect);
+    expect(markup).toContain(item.coreSemantics.actionProgress.expectedEffect ?? "");
+  });
+
+  it("renders compact decision history from shared semantics on route detail", () => {
+    const context = buildLiveContext();
+    const [baseItem] = buildLiveActionCenterItems([context]);
+    const item = {
+      ...baseItem,
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        latestDecision: {
+          decisionEntryId: "decision-latest",
+          sourceRouteId: baseItem.id,
+          decision: "bijstellen" as const,
+          decisionReason: "De eerste teamread gaf genoeg richting om de route kleiner en concreter te maken.",
+          nextCheck: "Toets of de managercheck het knelpunt binnen twee weken specifieker maakt.",
+          decisionRecordedAt: "2026-04-23T10:00:00.000Z",
+          reviewCompletedAt: "2026-04-23T10:00:00.000Z",
+          currentStepSnapshot: "Voer de managercheck met operations deze week uit.",
+          observationSnapshot: "Dezelfde frictie kwam in twee teams terug.",
+        },
+        decisionHistory: [
+          {
+            decisionEntryId: "decision-latest",
+            sourceRouteId: baseItem.id,
+            decision: "bijstellen" as const,
+            decisionReason: "De eerste teamread gaf genoeg richting om de route kleiner en concreter te maken.",
+            nextCheck: "Toets of de managercheck het knelpunt binnen twee weken specifieker maakt.",
+            decisionRecordedAt: "2026-04-23T10:00:00.000Z",
+            reviewCompletedAt: "2026-04-23T10:00:00.000Z",
+            currentStepSnapshot: "Voer de managercheck met operations deze week uit.",
+            observationSnapshot: "Dezelfde frictie kwam in twee teams terug.",
+          },
+          {
+            decisionEntryId: "decision-earlier",
+            sourceRouteId: baseItem.id,
+            decision: "doorgaan" as const,
+            decisionReason: "De eerste signalen waren sterk genoeg voor een bounded vervolgstap.",
+            nextCheck: "Kijk of het eerste teamgesprek daadwerkelijk gepland is.",
+            decisionRecordedAt: "2026-04-18T10:00:00.000Z",
+            reviewCompletedAt: "2026-04-18T10:00:00.000Z",
+            currentStepSnapshot: "Plan een eerste teamgesprek met operations.",
+            observationSnapshot: "Het patroon werd in meerdere exits bevestigd.",
+          },
+        ],
+      },
+    };
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+
+    expect(markup).toContain("Beslisgeschiedenis");
+    expect(markup).toContain("De eerste teamread gaf genoeg richting om de route kleiner en concreter te maken.");
+    expect(markup).toContain("Toets of de managercheck het knelpunt binnen twee weken specifieker maakt.");
+    expect(markup).toContain("Voer de managercheck met operations deze week uit.");
+    expect(markup).toContain("Dezelfde frictie kwam in twee teams terug.");
+    expect(markup).toContain("Plan een eerste teamgesprek met operations.");
   });
 
   it("renders the compact result loop on route detail from grouped result semantics", () => {
@@ -428,19 +492,19 @@ describe("action center landing shell", () => {
     );
 
     expect(markup).toContain("Laatste route-read");
-    expect(markup).toContain("Uitkomst");
+    expect(markup).toContain("Besluit");
     expect(markup).toContain("Bijstellen");
     expect(markup).toContain("Stap");
-    expect(markup).toContain(item.coreSemantics.actionFrame.firstStep);
-    expect(markup).not.toContain("Besluit");
+    expect(markup).toContain(item.coreSemantics.actionProgress.currentStep ?? "");
+    expect(markup).not.toContain("Laatste beslissing");
+    expect(markup).not.toContain("Waarom dit besluit");
+    expect(markup).not.toContain("Volgende toets");
     expect(markup).not.toContain("Signaal");
-    expect(markup).not.toContain("Waarom we opnieuw kijken");
-    expect(markup).not.toContain("Wat we dan toetsen");
-    expect(markup).not.toContain("Wat is geprobeerd");
-    expect(markup).not.toContain("Wat zagen we terug");
-    expect(markup).not.toContain("Wat is besloten");
+    expect(markup).not.toContain("Huidige stap");
+    expect(markup).not.toContain("Hierna");
+    expect(markup).not.toContain("Beslisgeschiedenis");
     expect((markup.match(/>Stap</g) ?? []).length).toBe(1);
-    expect((markup.match(/>Uitkomst</g) ?? []).length).toBe(1);
+    expect((markup.match(/>Besluit</g) ?? []).length).toBe(1);
   });
 
   it("shows team Review < 7 dagen for upcoming reviews within the next week", () => {
