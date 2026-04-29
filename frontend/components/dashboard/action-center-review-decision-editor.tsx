@@ -8,6 +8,11 @@ import {
   toIsoDateTimeString,
   type ActionCenterReviewDecisionFormState,
 } from '@/lib/action-center-review-decision-editor-state'
+import {
+  getActionCenterActionGuidance,
+  getActionCenterDecisionGuidance,
+  getActionCenterDecisionProfile,
+} from '@/lib/action-center-review-decisions'
 import type {
   ActionCenterReviewDecision,
   AuthoredActionCenterDecision,
@@ -97,6 +102,13 @@ export function ActionCenterReviewDecisionEditor({ dossier, checkpoint, decision
   }, [checkpoint, decision, dossier])
 
   const routeUnavailable = !form.route_source_id
+  const decisionProfile = getActionCenterDecisionProfile(form.decision)
+  const decisionGuidance = getActionCenterDecisionGuidance(form.decision)
+  const actionGuidance = getActionCenterActionGuidance({
+    currentStep: form.current_step,
+    nextStep: form.next_step,
+    expectedEffect: form.expected_effect,
+  })
 
   async function handleSave() {
     setError(null)
@@ -136,7 +148,7 @@ export function ActionCenterReviewDecisionEditor({ dossier, checkpoint, decision
         <div>
           <p className="text-sm font-semibold text-slate-950">Action Center review decision</p>
           <p className="mt-1 text-xs leading-5 text-slate-600">
-            Gebruik deze authored laag om de canonieke reviewbeslissing, actuele stap en volgende toets expliciet vast te leggen zonder managers extra invoer te geven.
+            {decisionGuidance}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -212,6 +224,8 @@ export function ActionCenterReviewDecisionEditor({ dossier, checkpoint, decision
           id={`next-check-${checkpoint.id}`}
           value={form.next_check}
           onChange={(value) => setForm((current) => ({ ...current, next_check: value }))}
+          disabled={decisionProfile.hidesNextCheck}
+          placeholder={decisionProfile.hidesNextCheck ? 'Niet van toepassing bij een afsluitend besluit.' : undefined}
         />
         <TextAreaField
           label="Huidige stap"
@@ -224,6 +238,8 @@ export function ActionCenterReviewDecisionEditor({ dossier, checkpoint, decision
           id={`next-step-${checkpoint.id}`}
           value={form.next_step}
           onChange={(value) => setForm((current) => ({ ...current, next_step: value }))}
+          disabled={decisionProfile.hidesNextStep}
+          placeholder={decisionProfile.hidesNextStep ? 'Laat leeg bij een afsluitend besluit.' : undefined}
         />
         <TextAreaField
           label="Verwacht effect"
@@ -237,6 +253,10 @@ export function ActionCenterReviewDecisionEditor({ dossier, checkpoint, decision
           value={form.observation_snapshot}
           onChange={(value) => setForm((current) => ({ ...current, observation_snapshot: value }))}
         />
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-white/80 bg-white/80 px-4 py-3 text-sm text-slate-700">
+        <span className="font-semibold text-slate-900">Actiekwaliteit:</span> {actionGuidance}
       </div>
 
       {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
@@ -259,11 +279,15 @@ function TextAreaField({
   label,
   value,
   onChange,
+  disabled = false,
+  placeholder,
 }: {
   id: string
   label: string
   value: string
   onChange: (value: string) => void
+  disabled?: boolean
+  placeholder?: string
 }) {
   return (
     <div>
@@ -272,6 +296,8 @@ function TextAreaField({
         id={id}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+        placeholder={placeholder}
         rows={4}
         className={`${FIELD_CLASS} min-h-[112px]`}
       />

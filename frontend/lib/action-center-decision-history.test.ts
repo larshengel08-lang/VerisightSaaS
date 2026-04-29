@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildLegacyDecisionEntryId,
   compareDecisionHistoryEntries,
+  projectResultProgression,
   projectLegacyDecisionRecord,
   type ActionCenterDecisionRecord,
 } from './action-center-decision-history'
@@ -73,5 +74,52 @@ describe('action-center decision history contract', () => {
     })
 
     expect(record).toBeNull()
+  })
+
+  it('projects compact result progression entries in chronological order with bounded follow-through fallback', () => {
+    const entries: ActionCenterDecisionRecord[] = [
+      {
+        decisionEntryId: 'decision-2',
+        sourceRouteId: 'route-1',
+        decision: 'bijstellen',
+        decisionReason: 'De eerste stap vroeg een koerscorrectie.',
+        nextCheck: 'Toets volgende week of de aangepaste route tractie geeft.',
+        decisionRecordedAt: '2026-04-28T09:00:00.000Z',
+        reviewCompletedAt: '2026-04-28T08:00:00.000Z',
+        currentStepSnapshot: 'Plan een tweede teamreview met de manager.',
+        nextStepSnapshot: 'Leg de bijgestelde route vast in het MT-overleg.',
+        observationSnapshot: 'Dezelfde frictie bleef in twee teams zichtbaar.',
+      },
+      {
+        decisionEntryId: 'decision-1',
+        sourceRouteId: 'route-1',
+        decision: 'doorgaan',
+        decisionReason: 'De eerste stap liep nog.',
+        nextCheck: 'Toets volgende week of de frictie daalt.',
+        decisionRecordedAt: '2026-04-25T09:00:00.000Z',
+        reviewCompletedAt: '2026-04-25T08:00:00.000Z',
+        currentStepSnapshot: 'Plan een eerste teamreview met de manager.',
+        expectedEffectSnapshot: 'Binnen twee weken moet zichtbaar zijn of de eerste review de frictie smaller maakt.',
+      },
+    ]
+
+    expect(projectResultProgression(entries)).toEqual([
+      {
+        resultEntryId: 'decision-1',
+        recordedAt: '2026-04-25T08:00:00.000Z',
+        currentStep: 'Plan een eerste teamreview met de manager.',
+        observation: null,
+        decision: 'doorgaan',
+        followThrough: 'Toets volgende week of de frictie daalt.',
+      },
+      {
+        resultEntryId: 'decision-2',
+        recordedAt: '2026-04-28T08:00:00.000Z',
+        currentStep: 'Plan een tweede teamreview met de manager.',
+        observation: 'Dezelfde frictie bleef in twee teams zichtbaar.',
+        decision: 'bijstellen',
+        followThrough: 'Leg de bijgestelde route vast in het MT-overleg.',
+      },
+    ])
   })
 })

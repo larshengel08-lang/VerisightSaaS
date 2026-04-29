@@ -92,6 +92,16 @@ describe('action center preview display helpers', () => {
           whatWeObserved: 'MT kiest een eerste leiderschapsspoor.',
           whatWasDecided: null,
         },
+        resultProgression: [
+          {
+            resultEntryId: 'decision-1',
+            recordedAt: '2026-04-22T09:00:00.000Z',
+            currentStep: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
+            observation: 'MT kiest een eerste leiderschapsspoor.',
+            decision: 'bijstellen',
+            followThrough: 'Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.',
+          },
+        ],
         decisionHistory: [
           {
             decisionEntryId: 'decision-1',

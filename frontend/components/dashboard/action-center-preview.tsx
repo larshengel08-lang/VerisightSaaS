@@ -1324,6 +1324,19 @@ export function ActionCenterPreview({
                           </div>
 
                           <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Resultaat over tijd</p>
+                            <div className="mt-3 space-y-3">
+                              {selectedItem.coreSemantics.resultProgression.length === 0 ? (
+                                <EmptyBlock text="Nog geen opeenvolgende resultaatmomenten zichtbaar in deze route." />
+                              ) : (
+                                selectedItem.coreSemantics.resultProgression.map((entry) => (
+                                  <ResultProgressionEntry key={entry.resultEntryId} entry={entry} />
+                                ))
+                              )}
+                            </div>
+                          </div>
+
+                          <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Beslisgeschiedenis</p>
                             <div className="mt-3 space-y-3">
                               {selectedItem.coreSemantics.decisionHistory.length === 0 ? (
@@ -2267,6 +2280,39 @@ function DecisionHistoryEntry({ entry }: { entry: ActionCenterDecisionRecord }) 
           ))}
         </div>
       ) : null}
+    </div>
+  )
+}
+
+function ResultProgressionEntry({
+  entry,
+}: {
+  entry: ActionCenterPreviewItem['coreSemantics']['resultProgression'][number]
+}) {
+  const rows = [
+    entry.currentStep ? { label: 'Liep', value: entry.currentStep } : null,
+    entry.observation ? { label: 'Teruggezien', value: entry.observation } : null,
+    { label: 'Besloten', value: getDecisionLabel(entry.decision) },
+    entry.followThrough ? { label: 'Volgde daarna', value: entry.followThrough } : null,
+  ].filter((row): row is { label: string; value: string } => Boolean(row))
+
+  return (
+    <div className="rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="inline-flex items-center rounded-xl border border-white/10 bg-white/[0.06] px-3 py-1.5 text-sm font-semibold text-white/88">
+          {formatLongDate(entry.recordedAt)}
+        </span>
+        <span className="text-xs uppercase tracking-[0.16em] text-white/40">Resultaatmoment</span>
+      </div>
+
+      <div className="mt-4 space-y-2.5">
+        {rows.map((row) => (
+          <div key={`${entry.resultEntryId}-${row.label}`} className="flex items-start justify-between gap-3 text-sm">
+            <span className="shrink-0 font-semibold text-white/46">{row.label}</span>
+            <span className="text-right leading-6 text-white/82">{row.value}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
