@@ -110,6 +110,23 @@ The route must carry:
 
 These must be real route/checkpoint-backed values, not local display placeholders.
 
+#### Canonical source order for review semantics
+
+For this phase, the demo route must project review semantics through one fixed source order:
+
+- `reviewReason`
+  primary: route-level review reason truth
+  fallback: latest review checkpoint reason truth
+- `reviewQuestion`
+  primary: latest review checkpoint question truth when explicitly present
+  fallback: projector-derived question from route-level review reason truth
+  no fallback to ad hoc component copy or one-off seed labels
+- `reviewOutcome`
+  primary: latest review checkpoint outcome truth
+  fallback: route-level review outcome truth when checkpoint truth is absent
+
+This keeps `reviewQuestion` semantics-first in this phase without inventing a new input flow. It may still be a projected presentation field, but its projection rule must stay global and shared.
+
 ### Action layer
 
 The route must carry:
@@ -131,14 +148,47 @@ The route must carry:
 
 These values must be grounded in explicit route, checkpoint, dossier, or update truth already supported by the semantics projector.
 
+#### Canonical source order for action and result semantics
+
+For this phase, every visible semantic field must resolve through one deterministic source order:
+
+- `whyNow`
+  primary: route-level reason truth
+  fallback: route summary only when the reason layer is empty
+- `firstStep`
+  primary: route-level next-step or intervention truth
+  fallback: latest action-oriented update truth when no canonical next step exists
+- `owner`
+  primary: route owner truth
+  fallback: assigned manager truth already used by the route projector
+- `expectedEffect`
+  primary: route-level expected effect truth
+  fallback: first-value or outcome expectation truth already consumed by the semantics projector
+- `whatWasTried`
+  primary: latest action-oriented update truth
+  fallback: latest explicit intervention checkpoint truth
+- `whatWeObserved`
+  primary: latest observation-oriented update truth
+  fallback: latest review checkpoint observation truth
+- `whatWasDecided`
+  primary: latest explicit decision truth from review or closeout checkpoint
+  fallback: route-level review outcome summary truth
+
+Seed content may enrich these sources, but it may not bypass them. The demo must look rich because the projector has rich truth, not because individual surfaces inject favorable copy.
+
 ### Closeout layer
 
 The route must visibly support:
 
-- a closed state when applicable
 - a compact closeout summary
+- a historically visible closeout signal within the same campaign path
 
-The route does not have to be fully closed in the main visible state, but the seeded truth must be rich enough that closeout semantics are live-demonstrable within the same campaign path.
+This phase does not require the canonical visible route to be fully closed. The chosen demo shape is:
+
+- one canonically active route as the main live path
+- one historically visible closeout signal tied to that same campaign path through real route, checkpoint, or closeout truth
+
+That keeps the main demo route active while still making "how something closes" live-demonstrable without inventing a second primary route.
 
 ## 6. Suite Visibility Contract
 
@@ -216,6 +266,16 @@ The campaign must have:
 - sufficient readiness/report-read truth
 - stable visibility in overview and reports
 
+#### Deterministic surfacing rule
+
+The demo campaign may not rely on accidental ranking. In this phase it must be deterministically surfaced through one explicit rule shared by browser-QA and product review:
+
+- overview must expose the campaign through a fixed featured or focus slot, or through an equally deterministic selection rule already supported by the page
+- reports must expose the campaign through a fixed featured or first-class visible report card, or through a stable deeplinkable selection rule
+- if a deterministic featured slot is not available, the QA path must use a fixed direct URL from overview or reports into the canonical campaign detail page
+
+The important constraint is that reviewers should not need to search, scroll unpredictably, or depend on changing sort order to find the seeded campaign.
+
 ### Route truth
 
 The route must be truly active and visible in Action Center.
@@ -229,6 +289,8 @@ It must have:
 - review semantics inputs
 - intervention/step truth
 - expected effect truth
+- result/update truth
+- closeout-capable truth that can render a historical closeout signal without making the main route inactive
 
 ### Checkpoint and update truth
 
@@ -402,4 +464,3 @@ That order is intentional:
 
 1. first make the current product convincingly visible
 2. then deepen the product
-
