@@ -146,7 +146,7 @@ describe('dashboard shell navigation', () => {
     expect(getActiveModuleFromPathname('/beheer', [...campaigns])).toBe('overview')
   })
 
-  it('disables module slots that do not have a real campaign route yet', () => {
+  it('hides module slots that do not have a real campaign route yet', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: false,
       shellMode: 'full',
@@ -160,26 +160,26 @@ describe('dashboard shell navigation', () => {
       },
     })
 
-    expect(navigation.modules[1]).toMatchObject({
-      key: 'exit',
-      href: null,
-      disabled: true,
-    })
-    expect(navigation.modules[4]).toMatchObject({
-      key: 'pulse',
-      href: null,
-      disabled: true,
-    })
-    expect(navigation.modules[6]).toMatchObject({
-      key: 'reports',
-      href: '/reports',
-      disabled: false,
-    })
-    expect(navigation.modules[7]).toMatchObject({
-      key: 'action_center',
-      href: '/action-center',
-      disabled: false,
-    })
+    expect(navigation.modules).toEqual([
+      {
+        key: 'overview',
+        label: 'Overzicht',
+        href: '/dashboard',
+        disabled: false,
+      },
+      {
+        key: 'reports',
+        label: 'Rapporten',
+        href: '/reports',
+        disabled: false,
+      },
+      {
+        key: 'action_center',
+        label: 'Action Center',
+        href: '/action-center',
+        disabled: false,
+      },
+    ])
   })
 
   it('reduces the shared shell to action center only for manager assignees', () => {

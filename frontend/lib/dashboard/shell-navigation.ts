@@ -142,43 +142,55 @@ export function buildDashboardShellNavigation({
     }
   }
 
-  const modules = MODULE_LABELS.map((item) => {
+  const modules = MODULE_LABELS.flatMap((item) => {
     if (item.key === 'overview') {
-      return {
-        key: item.key,
-        label: item.label,
-        href: '/dashboard',
-        disabled: false,
-      }
+      return [
+        {
+          key: item.key,
+          label: item.label,
+          href: '/dashboard',
+          disabled: false,
+        },
+      ]
     }
 
     if (item.key === 'reports') {
-      return {
-        key: item.key,
-        label: item.label,
-        href: '/reports',
-        disabled: false,
-      }
+      return [
+        {
+          key: item.key,
+          label: item.label,
+          href: '/reports',
+          disabled: false,
+        },
+      ]
     }
 
     if (item.key === 'action_center') {
-      return {
-        key: item.key,
-        label: item.label,
-        href: '/action-center',
-        disabled: false,
-      }
+      return [
+        {
+          key: item.key,
+          label: item.label,
+          href: '/action-center',
+          disabled: false,
+        },
+      ]
     }
 
     const campaign = item.scanType ? pickRepresentativeCampaign(campaigns, item.scanType) : null
     const href = getCampaignHref(campaign)
 
-    return {
-      key: item.key,
-      label: item.label,
-      href,
-      disabled: href === null,
+    if (href === null) {
+      return []
     }
+
+    return [
+      {
+        key: item.key,
+        label: item.label,
+        href,
+        disabled: false,
+      },
+    ]
   })
 
   const admin: DashboardShellNavItem[] = isAdmin
