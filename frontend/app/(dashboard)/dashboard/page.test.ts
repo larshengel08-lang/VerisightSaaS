@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { selectPrimaryOverviewCampaign } from '@/lib/dashboard/overview-focus'
+import { selectLeadOverviewCampaign, selectPrimaryOverviewCampaign } from '@/lib/dashboard/overview-focus'
 import type { CampaignStats } from '@/lib/types'
 
 const campaigns: CampaignStats[] = [
@@ -116,5 +116,14 @@ describe('dashboard home UX guardrails', () => {
     })
 
     expect(selected?.campaign_id).toBe('guide-1')
+  })
+
+  it('keeps the demo-driven overview campaign as the lead route when it exists', () => {
+    const selected = selectLeadOverviewCampaign({
+      primaryOverviewCampaign: campaigns[1],
+      primaryGuideCampaign: campaigns[0],
+    })
+
+    expect(selected?.campaign_id).toBe('demo-1')
   })
 })

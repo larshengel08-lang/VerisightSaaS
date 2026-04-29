@@ -32,7 +32,7 @@ import {
   type DashboardPortfolioView,
 } from '@/lib/dashboard/shell-navigation'
 import { loadHrDemoPilotArtifact } from '@/lib/dashboard/hr-demo-pilot-artifact'
-import { selectPrimaryOverviewCampaign } from '@/lib/dashboard/overview-focus'
+import { selectLeadOverviewCampaign, selectPrimaryOverviewCampaign } from '@/lib/dashboard/overview-focus'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
 import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
@@ -184,7 +184,10 @@ export default async function DashboardHomePage({
     ? campaignEntries.find((entry) => entry.campaign.campaign_id === primaryOverviewCampaign.campaign_id) ?? null
     : null
   const primaryOverviewStateMeta = primaryOverviewEntry ? getHomeStateMeta(primaryOverviewEntry.state) : null
-  const leadCampaign = primaryOverviewCampaign ?? primaryGuideCampaign
+  const leadCampaign = selectLeadOverviewCampaign({
+    primaryOverviewCampaign,
+    primaryGuideCampaign,
+  })
   const leadCampaignEntry = leadCampaign
     ? campaignEntries.find((entry) => entry.campaign.campaign_id === leadCampaign.campaign_id) ?? null
     : null

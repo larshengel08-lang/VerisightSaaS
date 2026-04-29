@@ -12,3 +12,10 @@ export function selectPrimaryOverviewCampaign(args: {
 
   return demoCampaign ?? args.primaryFirstNextStepCampaign ?? args.primaryGuideCampaign
 }
+
+export function selectLeadOverviewCampaign(args: {
+  primaryOverviewCampaign: CampaignStats | null
+  primaryGuideCampaign: CampaignStats | null
+}) {
+  return args.primaryOverviewCampaign ?? args.primaryGuideCampaign
+}
