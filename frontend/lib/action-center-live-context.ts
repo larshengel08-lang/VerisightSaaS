@@ -1,6 +1,10 @@
 import type { Campaign, CampaignStats, MemberRole } from '@/lib/types'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
-import type { PilotLearningCheckpoint, PilotLearningDossier } from './pilot-learning'
+import type {
+  ActionCenterReviewDecision,
+  PilotLearningCheckpoint,
+  PilotLearningDossier,
+} from './pilot-learning'
 
 export interface LiveActionCenterCampaignContext {
   campaign: Campaign
@@ -20,4 +24,5 @@ export interface LiveActionCenterCampaignContext {
   deliveryCheckpoints: CampaignDeliveryCheckpoint[]
   learningDossier: PilotLearningDossier | null
   learningCheckpoints: PilotLearningCheckpoint[]
+  reviewDecisions?: ActionCenterReviewDecision[]
 }

@@ -4,8 +4,12 @@ import type {
   ActionCenterRouteContract,
 } from './action-center-route-contract'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
-import type { PilotLearningCheckpoint } from './pilot-learning'
-import { compareDecisionHistoryEntries, projectLegacyDecisionRecord } from './action-center-decision-history'
+import type { ActionCenterReviewDecision, PilotLearningCheckpoint } from './pilot-learning'
+import {
+  compareDecisionHistoryEntries,
+  projectAuthoredDecisionHistory,
+  projectLegacyDecisionRecord,
+} from './action-center-decision-history'
 
 export type ActionCenterVisibleReviewOutcome = Exclude<ActionCenterReviewOutcome, 'opschalen'>
 export type ActionCenterClosingStatus = 'lopend' | 'afgerond' | 'gestopt'
@@ -45,7 +49,7 @@ export interface ActionCenterCoreSemantics {
 
 export type ActionCenterCoreSemanticsProjectionInput = Pick<
   LiveActionCenterCampaignContext,
-  'campaign' | 'assignedManager' | 'deliveryRecord' | 'learningDossier' | 'learningCheckpoints'
+  'campaign' | 'assignedManager' | 'deliveryRecord' | 'learningDossier' | 'learningCheckpoints' | 'reviewDecisions'
 > & {
   route: ActionCenterRouteContract
   latestVisibleUpdateNote?: string | null
@@ -284,8 +288,18 @@ function buildDecisionHistory(args: {
   latestObservation: string | null
   reviewReason?: string | null
   managementActionOutcome?: string | null
+  reviewDecisions?: ActionCenterReviewDecision[] | null
   decisionRecords?: ActionCenterDecisionRecord[]
 }) {
+  const authored = projectAuthoredDecisionHistory({
+    routeId: args.route.campaignId,
+    reviewDecisions: args.reviewDecisions,
+  })
+
+  if (authored.length > 0) {
+    return authored
+  }
+
   const canonical = [...(args.decisionRecords ?? [])]
     .filter((record) => record.sourceRouteId === args.route.campaignId)
     .sort(compareDecisionHistoryEntries)
@@ -587,15 +601,16 @@ export function projectActionCenterCoreSemantics(
     latestObservation,
     reviewReason,
     managementActionOutcome: context.learningDossier?.management_action_outcome,
+    reviewDecisions: context.reviewDecisions,
     decisionRecords: context.decisionRecords,
   })
   const latestDecision = decisionHistory[0] ?? null
   const actionProgress = projectActionProgress({
     route,
-    deliveryNextStep: context.deliveryRecord?.next_step,
-    firstActionTaken: context.learningDossier?.first_action_taken,
+    deliveryNextStep: latestDecision?.nextStepSnapshot ?? context.deliveryRecord?.next_step,
+    firstActionTaken: latestDecision?.currentStepSnapshot ?? context.learningDossier?.first_action_taken,
     reviewQuestion,
-    expectedEffectFallback: derivedExpectedEffect,
+    expectedEffectFallback: latestDecision?.expectedEffectSnapshot ?? derivedExpectedEffect,
   })
 
   return {
@@ -616,6 +631,7 @@ export function projectActionCenterCoreSemantics(
     },
     resultLoop: {
       whatWasTried: pickFirst([
+        latestDecision?.currentStepSnapshot,
         normalizeAttemptText(context.latestVisibleUpdateNote),
         latestActionUpdate,
         nextStep,

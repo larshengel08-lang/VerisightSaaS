@@ -34,6 +34,8 @@ export interface ActionCenterDecisionRecord {
   decisionRecordedAt: string
   reviewCompletedAt: string | null
   currentStepSnapshot?: string | null
+  nextStepSnapshot?: string | null
+  expectedEffectSnapshot?: string | null
   observationSnapshot?: string | null
 }
 

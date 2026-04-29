@@ -3,6 +3,7 @@ import type {
   ActionCenterDecisionRecord,
   ActionCenterReviewOutcome,
 } from './action-center-route-contract'
+import type { ActionCenterReviewDecision } from './pilot-learning'
 
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
@@ -61,6 +62,32 @@ export function compareDecisionHistoryEntries(left: ActionCenterDecisionRecord, 
   }
 
   return left.decisionEntryId.localeCompare(right.decisionEntryId)
+}
+
+export function projectAuthoredDecisionRecord(record: ActionCenterReviewDecision): ActionCenterDecisionRecord {
+  return {
+    decisionEntryId: record.id,
+    sourceRouteId: record.route_source_id,
+    decision: record.decision,
+    decisionReason: normalizeText(record.decision_reason),
+    nextCheck: normalizeText(record.next_check),
+    decisionRecordedAt: record.decision_recorded_at,
+    reviewCompletedAt: record.review_completed_at,
+    currentStepSnapshot: normalizeText(record.current_step),
+    nextStepSnapshot: normalizeText(record.next_step),
+    expectedEffectSnapshot: normalizeText(record.expected_effect),
+    observationSnapshot: normalizeText(record.observation_snapshot),
+  }
+}
+
+export function projectAuthoredDecisionHistory(args: {
+  routeId: string
+  reviewDecisions?: ActionCenterReviewDecision[] | null
+}) {
+  return (args.reviewDecisions ?? [])
+    .filter((record) => record.route_source_id === args.routeId)
+    .map(projectAuthoredDecisionRecord)
+    .sort(compareDecisionHistoryEntries)
 }
 
 export function projectLegacyDecisionRecord(args: {

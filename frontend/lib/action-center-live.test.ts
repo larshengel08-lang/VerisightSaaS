@@ -8,7 +8,11 @@ import {
 import { projectActionCenterRoute } from './action-center-route-contract'
 import type { Campaign, CampaignStats } from '@/lib/types'
 import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
-import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
+import type {
+  ActionCenterReviewDecision,
+  PilotLearningCheckpoint,
+  PilotLearningDossier,
+} from '@/lib/pilot-learning'
 
 function buildCampaign(overrides: Partial<Campaign> = {}): Campaign {
   return {
@@ -193,6 +197,7 @@ describe('live action center builder', () => {
       deliveryCheckpoints: [],
       learningDossier: exitDossier,
       learningCheckpoints: exitLearningCheckpoints,
+      reviewDecisions: [] as ActionCenterReviewDecision[],
     }
     const candidateContext = {
       campaign: pulseCampaign,
@@ -225,6 +230,7 @@ describe('live action center builder', () => {
         review_moment: '2026-05-19',
       }),
       learningCheckpoints: [],
+      reviewDecisions: [] as ActionCenterReviewDecision[],
     }
     const route = projectActionCenterRoute(activeContext)
 
@@ -798,5 +804,84 @@ describe('live action center builder', () => {
       nextStep: 'Plan de vervolgcheck met HR en operations.',
       expectedEffect: 'Maak zichtbaar of de werkdruk lokaal daalt.',
     })
+  })
+
+  it('uses authored review decisions as the only visible history once they exist on a route', () => {
+    const context = {
+      campaign: buildCampaign(),
+      stats: buildStats(),
+      organizationName: 'Acme BV',
+      memberRole: 'owner' as const,
+      scopeType: 'department' as const,
+      scopeValue: 'operations',
+      scopeLabel: 'Operations',
+      peopleCount: 38,
+      assignedManager: {
+        userId: 'manager-1',
+        displayName: 'Manager Operations',
+        assignedAt: '2026-04-21T08:00:00.000Z',
+      },
+      deliveryRecord: buildDeliveryRecord({
+        lifecycle_stage: 'first_management_use',
+        first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+        next_step: 'Legacy vervolgstap die niet meer zichtbaar mag zijn.',
+      }),
+      deliveryCheckpoints: [],
+      learningDossier: buildDossier({
+        expected_first_value: 'Legacy effect dat niet meer zichtbaar mag zijn.',
+        first_management_value: 'Legacy reviewreden die niet meer zichtbaar mag zijn.',
+        first_action_taken: 'Legacy stap die niet meer zichtbaar mag zijn.',
+        management_action_outcome: 'stoppen',
+      }),
+      learningCheckpoints: [
+        {
+          id: 'checkpoint-follow-up-review',
+          dossier_id: 'dossier-exit',
+          checkpoint_key: 'follow_up_review',
+          owner_label: 'HR lead',
+          status: 'uitgevoerd',
+          objective_signal_notes: null,
+          qualitative_notes: null,
+          interpreted_observation: null,
+          confirmed_lesson: 'Legacy checkpointobservatie.',
+          lesson_strength: 'terugkerend_patroon',
+          destination_areas: ['operations'],
+          updated_at: '2026-04-24T09:00:00.000Z',
+          created_at: '2026-04-15T10:00:00.000Z',
+        } as PilotLearningCheckpoint,
+      ],
+      reviewDecisions: [
+        {
+          id: 'authored-decision-1',
+          route_source_type: 'campaign',
+          route_source_id: 'campaign-exit',
+          checkpoint_id: 'checkpoint-follow-up-review',
+          decision: 'bijstellen',
+          decision_reason: 'Authored review decision bepaalt nu de zichtbare besluitrichting.',
+          next_check: 'Toets volgende week of de managercheck de frictie smaller maakt.',
+          current_step: 'Voer deze week een gerichte managercheck uit.',
+          next_step: 'Bevestig in review of de frictie specifieker is geworden.',
+          expected_effect: 'Maak zichtbaar of de managercheck het knelpunt versmalt.',
+          observation_snapshot: 'Dezelfde frictie bleef zichtbaar in twee teams.',
+          decision_recorded_at: '2026-04-28T09:00:00.000Z',
+          review_completed_at: '2026-04-28T08:30:00.000Z',
+          created_by: null,
+          updated_by: null,
+          created_at: '2026-04-28T09:00:00.000Z',
+          updated_at: '2026-04-28T09:00:00.000Z',
+        },
+      ] satisfies ActionCenterReviewDecision[],
+    }
+
+    const [item] = buildLiveActionCenterItems([context])
+
+    expect(item?.coreSemantics.latestDecision?.decisionReason).toBe(
+      'Authored review decision bepaalt nu de zichtbare besluitrichting.',
+    )
+    expect(item?.coreSemantics.actionProgress.currentStep).toBe(
+      'Voer deze week een gerichte managercheck uit.',
+    )
+    expect(item?.coreSemantics.decisionHistory).toHaveLength(1)
+    expect(item?.coreSemantics.decisionHistory[0]?.decisionEntryId).toBe('authored-decision-1')
   })
 })
