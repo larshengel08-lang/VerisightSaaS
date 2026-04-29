@@ -18,6 +18,7 @@ import {
   normalizeDashboardPortfolioView,
   type DashboardPortfolioView,
 } from '@/lib/dashboard/shell-navigation'
+import { buildReportLibraryEntries } from '@/lib/dashboard/report-library'
 import { createClient } from '@/lib/supabase/server'
 import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import { FIRST_INSIGHT_THRESHOLD } from '@/lib/response-activation'
@@ -206,6 +207,17 @@ export default async function DashboardHomePage({
     primaryGuideCampaign && primaryGuideScanDefinition
       ? getBuyerSafeCampaignName(primaryGuideCampaign.campaign_name, primaryGuideScanDefinition.productName)
       : null
+  const reportModel = buildReportLibraryEntries(campaigns)
+  const relevantOverviewEntries = getRelevantOverviewEntries(campaignEntries)
+  const recentFormalOutputEntries = reportModel.entries
+    .filter((entry) => entry.scanType === 'exit' || entry.scanType === 'retention')
+    .slice(0, 4)
+  const overviewFollowThroughRows = buildOverviewFollowThroughRows({
+    primaryGuideCampaign,
+    primaryGuideScanDefinition,
+    primaryExecutionState,
+    relevantEntries: relevantOverviewEntries,
+  })
 
   return (
     <div className="space-y-7">
@@ -262,64 +274,98 @@ export default async function DashboardHomePage({
       {!isAdmin && primaryGuideCampaign && primaryExecutionState && primaryGuideScanDefinition ? (
         <div className="space-y-5">
           <DashboardSection
-            eyebrow="Voortgang"
-            title="Volledige voortgang"
-            description="Dit blijft de volledige route onder de hoofdlijn. Gebruik hem pas nadat duidelijk is waar jullie nu staan en wat eerst moet gebeuren."
+            eyebrow="Actieve routes"
+            title="Wat nu relevant is"
+            description="Alleen routes die nu iets leesbaars of iets urgents te doen hebben."
           >
-            <ol className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              {primaryExecutionState.statusBlocks.map((item, index) => (
-                <li
-                  key={item.key}
-                  className="flex items-center justify-between rounded-[10px] px-3 py-2.5"
-                  style={{
-                    background: item.status === 'current' ? 'var(--dashboard-accent-soft)' : 'var(--dashboard-soft)',
-                    border: `1px solid ${item.status === 'current' ? 'var(--dashboard-accent-soft-border)' : 'var(--dashboard-frame-border)'}`,
-                  }}
-                >
-                  <p className="text-sm" style={{ color: 'var(--dashboard-ink)' }}>
-                    {index + 1}. {item.label}
-                  </p>
-                  <DashboardChip
-                    label={item.status === 'done' ? 'Rond' : item.status === 'current' ? 'Actief' : 'Geblokkeerd'}
-                    tone={item.status === 'done' ? 'emerald' : item.status === 'current' ? 'blue' : 'slate'}
-                  />
-                </li>
+            <div className="grid gap-4 xl:grid-cols-2">
+              {relevantOverviewEntries.map((entry) => (
+                <OverviewRouteCard key={entry.campaign.campaign_id} entry={entry} />
               ))}
-            </ol>
-          </DashboardSection>
-
-          <DashboardSection
-            eyebrow="Over deze scan"
-            title={primaryGuideScanDefinition.productName}
-            description={primaryGuideScanDefinition.whatItIsText}
-          >
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <SignalStatCard
-                label="Leesbaar"
-                value={`${managementReadyCount}`}
-                subline={`${fullCount} volledig · ${partialCount} compact`}
-                band={managementReadyCount > 0 ? 'LAAG' : 'neutral'}
-              />
-              <SignalStatCard
-                label="In uitvoering"
-                value={`${activeExecutionCount}`}
-                subline={activeExecutionCount > 0 ? 'Setup, live of eerste responses' : 'Geen actieve uitvoering'}
-                band={activeExecutionCount > 0 ? 'MIDDEN' : 'neutral'}
-              />
-              <SignalStatCard
-                label="Gem. groepssignaal"
-                value={avgSignal ? `${avgSignal}/10` : '—'}
-                subline={avgSignal ? `Gem. respons ${avgResponse}%` : 'Nog geen leesbaar signaal'}
-                band={avgSignal ? (parseFloat(avgSignal) >= 6 ? 'HOOG' : parseFloat(avgSignal) >= 4 ? 'MIDDEN' : 'LAAG') : 'neutral'}
-              />
-              <SignalStatCard
-                label="Afgerond"
-                value={`${closedCount}`}
-                subline={closedCount > 0 ? 'Rapport en dashboard beschikbaar' : 'Geen afgeronde scans'}
-                band="neutral"
-              />
             </div>
           </DashboardSection>
+
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)]">
+            <DashboardSection
+              eyebrow="Opvolging nu"
+              title="Wat direct opvolging vraagt"
+              description="Maximaal drie regels, geen mini-Action Center."
+            >
+              <div className="space-y-3">
+                {overviewFollowThroughRows.map((row) => (
+                  <div
+                    key={row.label}
+                    className="flex items-start justify-between gap-4 rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-3.5"
+                  >
+                    <div>
+                      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+                        {row.label}
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-[color:var(--dashboard-ink)]">{row.value}</p>
+                    </div>
+                    {row.tone ? <DashboardChip label={row.tone} tone={row.toneVariant} /> : null}
+                  </div>
+                ))}
+                <div className="pt-1">
+                  <Link
+                    href="/action-center"
+                    className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
+                  >
+                    Naar Action Center
+                  </Link>
+                </div>
+              </div>
+            </DashboardSection>
+
+            <DashboardSection
+              eyebrow="Recente formele output"
+              title="Rapporten en samenvattingen"
+              description="Kernoutput eerst. Bounded reads blijven secundair."
+            >
+              {recentFormalOutputEntries.length > 0 ? (
+                <div className="space-y-3">
+                  {recentFormalOutputEntries.map((entry) => (
+                    <div
+                      key={`${entry.campaignId}-${entry.title}`}
+                      className="flex items-start justify-between gap-4 rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+                          {entry.scanType === 'exit' ? 'ExitScan' : 'RetentieScan'}
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-[color:var(--dashboard-ink)]">{entry.title}</p>
+                        <p className="mt-1 text-sm leading-6 text-[color:var(--dashboard-text)]">{entry.summary}</p>
+                        <p className="mt-2 text-xs text-[color:var(--dashboard-muted)]">
+                          {entry.metaLeft} · {entry.metaRight}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-col gap-2">
+                        <Link
+                          href={`/campaigns/${entry.campaignId}`}
+                          className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-3 py-1.5 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
+                        >
+                          Open
+                        </Link>
+                        <PdfDownloadButton campaignId={entry.campaignId} campaignName={entry.campaignName} scanType={entry.scanType} />
+                      </div>
+                    </div>
+                  ))}
+                  <div className="pt-1">
+                    <Link
+                      href="/reports"
+                      className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
+                    >
+                      Naar Rapporten
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-[18px] border border-dashed border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-5 text-sm leading-7 text-[color:var(--dashboard-text)]">
+                  Zodra een ExitScan of RetentieScan leesbaar is, verschijnt hier de meest recente managementoutput.
+                </div>
+              )}
+            </DashboardSection>
+          </div>
         </div>
       ) : !isAdmin ? null : (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -357,7 +403,7 @@ export default async function DashboardHomePage({
         <div>
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm font-semibold" style={{ color: 'var(--dashboard-ink)' }}>
-              Scans
+              {isAdmin ? 'Scans' : 'Volledige scanlijst'}
             </p>
             <span className="text-xs" style={{ color: 'var(--dashboard-muted)' }}>
               {campaigns.length} scan{campaigns.length === 1 ? '' : 's'}
@@ -493,6 +539,69 @@ function StatCell({ label, value }: { label: string; value: string }) {
         {helpText ? <InfoTooltip text={helpText} /> : null}
       </div>
       <p className="dash-number mt-2 text-[1.5rem] text-[color:var(--dashboard-ink)]">{value}</p>
+    </div>
+  )
+}
+
+function OverviewRouteCard({ entry }: { entry: CampaignHomeEntry }) {
+  const { campaign, state } = entry
+  const scanDefinition = getScanDefinition(campaign.scan_type)
+  const stateMeta = getHomeStateMeta(state)
+  const buyerSafeName = getBuyerSafeCampaignName(campaign.campaign_name, scanDefinition.productName)
+  const statusSummary =
+    state === 'full' || state === 'closed'
+      ? 'Stevig genoeg voor dashboard en rapport.'
+      : state === 'partial'
+        ? 'Eerste compacte read is zichtbaar.'
+        : state === 'sparse'
+          ? 'Er zijn eerste signalen, maar nog geen stevig beeld.'
+          : state === 'ready_to_launch'
+            ? 'Respondenten staan klaar, invites nog niet volledig live.'
+            : state === 'running'
+              ? 'Invites lopen, maar de eerste veilige read is er nog niet.'
+              : 'Deze route vraagt eerst setup en launchcontrole.'
+  const readableLabel =
+    state === 'full' || state === 'closed'
+      ? 'Dashboard en rapport leesbaar'
+      : state === 'partial'
+        ? 'Compacte read leesbaar'
+        : state === 'sparse'
+          ? 'Eerste signalen, nog indicatief'
+          : 'Nog geen inhoudelijke read'
+
+  return (
+    <div className="rounded-[var(--dashboard-radius-card)] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[var(--dashboard-shadow-soft)]">
+      <div className="flex flex-wrap items-center gap-2">
+        <DashboardChip label={scanDefinition.productName} tone="slate" />
+        <DashboardChip label={stateMeta.label} tone={stateMeta.tone} />
+      </div>
+      <h3 className="mt-3 text-[1.05rem] font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+        {buyerSafeName}
+      </h3>
+      <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{statusSummary}</p>
+      <div className="mt-4 grid gap-3 border-t border-[color:var(--dashboard-frame-border)] pt-4 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-end">
+        <div>
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">Nu leesbaar</p>
+          <p className="mt-1.5 text-sm leading-6 text-[color:var(--dashboard-ink)]">{readableLabel}</p>
+        </div>
+        <div>
+          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">Volgende stap</p>
+          <p className="mt-1.5 text-sm leading-6 text-[color:var(--dashboard-ink)]">{stateMeta.nextStepLabel}</p>
+        </div>
+        <div className="flex justify-start sm:justify-end">
+          <Link
+            href={`/campaigns/${campaign.campaign_id}`}
+            className="inline-flex rounded-full border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-4 py-1.5 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:brightness-[0.97]"
+          >
+            Naar route
+          </Link>
+        </div>
+      </div>
+      <div className="mt-4 border-t border-[color:var(--dashboard-frame-border)] pt-4">
+        <p className="text-xs text-[color:var(--dashboard-muted)]">
+          {campaign.total_completed}/{campaign.total_invited} respons · {campaign.avg_risk_score !== null ? `${campaign.avg_risk_score.toFixed(1)}/10` : 'nog geen score'}
+        </p>
+      </div>
     </div>
   )
 }
@@ -735,6 +844,72 @@ function getPrimaryFirstNextStepCampaign(
 
     return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
   })[0] ?? null
+}
+
+function getRelevantOverviewEntries(entries: CampaignHomeEntry[]) {
+  const statePriority: Record<CampaignCompositionState, number> = {
+    setup: 0,
+    ready_to_launch: 1,
+    running: 2,
+    sparse: 3,
+    partial: 4,
+    full: 5,
+    closed: 6,
+  }
+
+  return entries
+    .filter((entry) => entry.campaign.is_active || entry.state === 'partial' || entry.state === 'full')
+    .sort((left, right) => {
+      const stateDelta = statePriority[left.state] - statePriority[right.state]
+      if (stateDelta !== 0) return stateDelta
+      return new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime()
+    })
+    .slice(0, 3)
+}
+
+function buildOverviewFollowThroughRows({
+  primaryGuideCampaign,
+  primaryGuideScanDefinition,
+  primaryExecutionState,
+  relevantEntries,
+}: {
+  primaryGuideCampaign: CampaignStats | null
+  primaryGuideScanDefinition: ReturnType<typeof getScanDefinition> | null
+  primaryExecutionState: ReturnType<typeof buildGuidedSelfServeState> | null
+  relevantEntries: CampaignHomeEntry[]
+}) {
+  const firstReadableEntry = relevantEntries.find((entry) => entry.state === 'partial' || entry.state === 'full' || entry.state === 'closed') ?? null
+  const firstBlockedEntry = relevantEntries.find((entry) =>
+    entry.state === 'setup' || entry.state === 'ready_to_launch' || entry.state === 'running' || entry.state === 'sparse',
+  ) ?? null
+
+  return [
+    {
+      label: 'Open prioriteit',
+      value:
+        primaryGuideCampaign && primaryGuideScanDefinition && primaryExecutionState
+          ? `${primaryGuideScanDefinition.productName}: ${primaryExecutionState.nextAction.title}`
+          : 'Nog geen open prioriteit zichtbaar',
+      tone: 'Nu',
+      toneVariant: 'amber' as const,
+    },
+    {
+      label: 'Reviewmoment',
+      value: firstReadableEntry
+        ? `${getScanDefinition(firstReadableEntry.campaign.scan_type).productName}: open de read en bepaal daar het eerste reviewmoment.`
+        : 'Reviewmoment volgt zodra de eerste leesbare route openstaat.',
+      tone: 'Check',
+      toneVariant: 'blue' as const,
+    },
+    {
+      label: 'Nog onbevestigd',
+      value: firstBlockedEntry
+        ? `${getScanDefinition(firstBlockedEntry.campaign.scan_type).productName}: ${getHomeStateMeta(firstBlockedEntry.state).nextStepLabel.toLowerCase()}.`
+        : 'Geen open eigenaar- of bevestigingsgat zichtbaar.',
+      tone: 'Open',
+      toneVariant: 'slate' as const,
+    },
+  ]
 }
 
 function groupCampaigns(entries: CampaignHomeEntry[]): CampaignGroup[] {

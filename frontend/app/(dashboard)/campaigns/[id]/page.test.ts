@@ -126,4 +126,17 @@ describe('campaign detail review guardrails', () => {
     expect(source).not.toContain('Campaign is al opgenomen in de learninglus')
     expect(source).toContain('Deze scan is al opgenomen in de learninglus')
   })
+
+  it('keeps ExitScan and RetentieScan aligned to the IA wireframe before deeper analysis opens', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain("const isWorkbookCoreRoute = stats.scan_type === 'exit' || stats.scan_type === 'retention'")
+    expect(source).toContain("eyebrow={stats.scan_type === 'retention' ? 'Behoud nu' : 'Kernread nu'}")
+    expect(source).toContain("eyebrow={stats.scan_type === 'retention' ? 'Top behoudsfactoren' : 'Top vertrekfactoren'}")
+    expect(source).toContain("eyebrow={stats.scan_type === 'retention' ? 'Waar eerst kijken' : 'Context / waar zichtbaar'}")
+    expect(source).toContain('Open Action Center')
+    expect(source).toContain('title="Laatste rapport en managementsamenvatting"')
+    expect(source).toContain('title="Verdieping en onderbouwing"')
+    expect(source).not.toContain('← Terug naar campaignoverzicht')
+  })
 })

@@ -59,6 +59,8 @@ export default async function ReportsPage({
   const campaigns = stats ?? []
   const reportModel = buildReportLibraryEntries(campaigns)
   const filteredEntries = filterReportLibraryEntries(reportModel.entries, category)
+  const coreEntries = filteredEntries.filter((entry) => entry.scanType === 'exit' || entry.scanType === 'retention')
+  const boundedEntries = filteredEntries.filter((entry) => entry.scanType !== 'exit' && entry.scanType !== 'retention')
   const averageSignal =
     reportModel.entries.length > 0
       ? (
@@ -74,7 +76,7 @@ export default async function ReportsPage({
       <DashboardHero
         eyebrow="Rapporten"
         title="Rapporten die klaarstaan."
-        description="Kies per scan het juiste rapport en open of download direct de versie die al beschikbaar is."
+        description="Gebruik dit scherm eerst als bibliotheek: welk document hoort bij welke route, en wat kun je nu openen."
         tone="slate"
         meta={
           <>
@@ -138,9 +140,9 @@ export default async function ReportsPage({
       />
 
       <DashboardSection
-        eyebrow="Bibliotheek"
-        title="Rapportbibliotheek"
-        description="Bekijk per scan welke rapporten beschikbaar zijn en open of download de juiste versie."
+        eyebrow="Kernoutput eerst"
+        title="ExitScan en RetentieScan"
+        description="De kernrapporten en managementsamenvattingen staan hier eerst. Bounded reads blijven secundair."
         aside={
           <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
             {CATEGORY_OPTIONS.map((option) => {
@@ -162,9 +164,9 @@ export default async function ReportsPage({
           </div>
         }
       >
-        {filteredEntries.length > 0 ? (
+        {coreEntries.length > 0 ? (
           <div className="grid gap-4 xl:grid-cols-2">
-            {filteredEntries.map((entry) => (
+            {coreEntries.map((entry) => (
               <div
                 key={entry.campaignId}
                 className={`relative overflow-hidden rounded-[28px] border px-4 py-4 shadow-[0_18px_40px_rgba(17,24,39,0.07)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/72 sm:px-5 sm:py-5 ${
@@ -208,32 +210,92 @@ export default async function ReportsPage({
           </div>
         ) : (
           <div className="rounded-[24px] border border-dashed border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-8 text-sm leading-7 text-[color:var(--dashboard-text)]">
-            Er zijn in deze categorie nog geen rapporten met voldoende respons en duiding. Gebruik eerst het dashboard om de eerste leesbare laag op te bouwen.
+            Er zijn in deze selectie nog geen ExitScan- of RetentieScan-rapporten met voldoende respons en duiding.
           </div>
         )}
       </DashboardSection>
 
       <DashboardSection
-        eyebrow="Handoff"
-        title="Na het rapport"
-        description="Gebruik dit pas nadat het rapport is gelezen en besproken."
+        eyebrow="Bounded reads secundair"
+        title="Onboarding, Pulse en Leadership"
+        description="Deze documenten blijven kleiner en lichter in beeld, omdat ze geen kernrapportdragers zijn."
         tone="blue"
       >
-        <div className="grid gap-4 lg:grid-cols-3">
-          {[
-            ['1. Rapport gelezen', 'Leg vast welk beeld in het rapport het eerst besproken moet worden.'],
-            ['2. Eerste vervolg', 'Bepaal daarna wie de eerste stap trekt en wat eerst opgepakt wordt.'],
-            ['3. Opvolgmoment', 'Plan vervolgens wanneer je terugkijkt of de gekozen stap genoeg duidelijkheid geeft.'],
-          ].map(([title, body]) => (
+        {boundedEntries.length > 0 ? (
+          <div className="grid gap-4 xl:grid-cols-2">
+            {boundedEntries.map((entry) => (
             <div
-              key={title}
+              key={entry.campaignId}
               className="relative overflow-hidden rounded-[28px] border border-[#c8d7df] bg-[color:var(--dashboard-blue-soft)] px-4 py-4 shadow-[0_18px_40px_rgba(17,24,39,0.07)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-white/72 sm:px-5 sm:py-5"
             >
-              <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">{title}</p>
-              <p className="mt-3 text-sm leading-7 text-[color:var(--dashboard-text)]">{body}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+                {entry.categoryLabel}
+              </p>
+              <p className="mt-2 text-[1.1rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+                {entry.title}
+              </p>
+              <p className="mt-3 text-sm leading-7 text-[color:var(--dashboard-text)]">{entry.summary}</p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <Link
+                  href={`/campaigns/${entry.campaignId}`}
+                  className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[#d6e4e8] hover:text-[#234B57]"
+                >
+                  Open
+                </Link>
+                <PdfDownloadButton campaignId={entry.campaignId} campaignName={entry.campaignName} scanType={entry.scanType} />
+              </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-[24px] border border-dashed border-[#c8d7df] bg-[color:var(--dashboard-blue-soft)] px-5 py-8 text-sm leading-7 text-[color:var(--dashboard-text)]">
+            In deze selectie staan nog geen bounded reads klaar.
+          </div>
+        )}
+      </DashboardSection>
+
+      <DashboardSection
+        eyebrow="Bibliotheeklijst"
+        title="Alle documenten"
+        description="Dichte lijst voor openen en downloaden, zonder showroomopzet."
+      >
+        {filteredEntries.length > 0 ? (
+          <div className="overflow-hidden rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)]">
+            <div className="grid grid-cols-[minmax(0,2.2fr)_1fr_1fr_1fr_auto] gap-3 border-b border-[color:var(--dashboard-frame-border)] px-4 py-3 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+              <span>Naam</span>
+              <span>Route</span>
+              <span>Type</span>
+              <span>Datum</span>
+              <span>Actie</span>
+            </div>
+            {filteredEntries.map((entry) => (
+              <div
+                key={`${entry.campaignId}-dense`}
+                className="grid grid-cols-[minmax(0,2.2fr)_1fr_1fr_1fr_auto] items-center gap-3 border-b border-[color:var(--dashboard-frame-border)] px-4 py-3 last:border-b-0"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-[color:var(--dashboard-ink)]">{entry.title}</p>
+                  <p className="truncate text-xs text-[color:var(--dashboard-muted)]">{entry.summary}</p>
+                </div>
+                <span className="text-sm text-[color:var(--dashboard-text)]">{entry.scanType === 'exit' ? 'ExitScan' : entry.scanType === 'retention' ? 'RetentieScan' : entry.scanType === 'onboarding' ? 'Onboarding' : entry.scanType === 'leadership' ? 'Leadership' : 'Pulse'}</span>
+                <span className="text-sm text-[color:var(--dashboard-text)]">{entry.categoryLabel}</span>
+                <span className="text-sm text-[color:var(--dashboard-text)]">{entry.metaRight}</span>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/campaigns/${entry.campaignId}`}
+                    className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] px-3 py-1.5 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[#d6e4e8] hover:text-[#234B57]"
+                  >
+                    Open
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-[24px] border border-dashed border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-8 text-sm leading-7 text-[color:var(--dashboard-text)]">
+            Er zijn nog geen documenten beschikbaar in deze selectie.
+          </div>
+        )}
       </DashboardSection>
     </div>
   )

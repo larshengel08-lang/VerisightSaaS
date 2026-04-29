@@ -1,6 +1,6 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
-import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
+import { buildLiveActionCenterItems } from '@/lib/action-center-live'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   isScopeVisibleToActionCenterContext,
@@ -15,16 +15,6 @@ import type { Campaign, CampaignStats, Organization } from '@/lib/types'
 type RespondentDepartmentRow = {
   campaign_id: string
   department: string | null
-}
-
-function getDisplayName(email: string | null | undefined) {
-  if (!email) return 'Verisight gebruiker'
-  const localPart = email.split('@')[0] ?? 'verisight-gebruiker'
-  return localPart
-    .split(/[._-]/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
 }
 
 function normalizeDepartmentLabel(value: string | null | undefined) {
@@ -244,27 +234,12 @@ export default async function ActionCenterPage() {
   })
 
   const items = buildLiveActionCenterItems(liveContexts)
-  const summary = getLiveActionCenterSummary(items)
-  const ownerOptions = [...new Set(items.map((item) => item.ownerName).filter((value): value is string => Boolean(value)))]
-    .sort((left, right) => left.localeCompare(right))
-  const managerOptions = [...new Map(
-    managerWorkspaceRows
-      .filter((row) => row.access_role === 'manager_assignee')
-      .map((row) => [
-        row.user_id,
-        {
-          value: row.user_id,
-          label: row.display_name ?? row.login_email ?? 'Manager',
-        },
-      ]),
-  ).values()].sort((left, right) => left.label.localeCompare(right.label))
-  const itemHrefs = context.canViewInsights
-    ? Object.fromEntries(campaigns.map((campaign) => [campaign.id, `/campaigns/${campaign.id}`]))
-    : {}
-  const workspaceSubtitle =
-    summary.productCount > 0
-      ? `Live opvolging over ${summary.productCount} product${summary.productCount === 1 ? '' : 'en'} in dezelfde suite-shell`
-      : 'Live opvolging binnen dezelfde suite-shell'
+  const itemHrefFor = (id: string) => (context.canViewInsights ? `/campaigns/${id}` : '/action-center')
+  const openItems = items.filter((item) => item.status !== 'afgerond' && item.status !== 'gestopt')
+  const primaryOpenItems = openItems.slice(0, 6)
+  const overflowOpenItems = openItems.slice(6)
+  const reviewItems = items.filter((item) => item.reviewDate).slice(0, 8)
+  const ownerGapItems = items.filter((item) => !item.ownerName || item.status === 'te-bespreken').slice(0, 8)
 
   if (items.length === 0) {
     return (
@@ -276,29 +251,208 @@ export default async function ActionCenterPage() {
           Nog geen live opvolging zichtbaar
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--dashboard-text)]">
-          Zodra er actieve campaigns, bounded deliverycontext of bestaande follow-through dossiers voor jouw organisaties of afdelingen
-          staan, opent deze module automatisch in dezelfde ingelogde suite-shell.
+          Zodra er open acties, reviewmomenten of nog onbevestigde opvolging zichtbaar wordt, opent deze pagina automatisch
+          met de eerstvolgende werkvoorraad.
         </p>
       </div>
     )
   }
 
   return (
-    <ActionCenterPreview
-      initialItems={items}
-      initialView="overview"
-      fallbackOwnerName={getDisplayName(user.email)}
-      ownerOptions={ownerOptions}
-      managerOptions={managerOptions}
-      canAssignManagers={context.canManageActionCenterAssignments}
-      managerAssignmentEndpoint="/api/action-center/workspace-members"
-      workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
-      workbenchLabel={context.canViewInsights ? 'Open broncampaign' : 'Action Center blijft je werkruimte'}
-      workspaceName={getDisplayName(user.email)}
-      workspaceSubtitle={workspaceSubtitle}
-      readOnly
-      itemHrefs={itemHrefs}
-      hideSidebar
-    />
+    <div className="space-y-6">
+      <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-6 py-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+          Action Center
+        </p>
+        <h1 className="mt-2 text-[1.8rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+          Open acties nu
+        </h1>
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--dashboard-text)]">
+          Werk vanuit de open actielijst. Reviewmomenten en items zonder bevestiging staan lager en secundair.
+        </p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <ActionCenterMetric label="Open acties" value={`${openItems.length}`} />
+          <ActionCenterMetric label="Reviewmomenten" value={`${reviewItems.length}`} />
+          <ActionCenterMetric label="Zonder eigenaar / bevestiging" value={`${ownerGapItems.length}`} />
+        </div>
+      </div>
+
+      <section className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+              Werklijst
+            </p>
+            <h2 className="mt-2 text-[1.3rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+              Wat nu openstaat
+            </h2>
+          </div>
+          <p className="text-sm text-[color:var(--dashboard-muted)]">
+            {primaryOpenItems.length} van {openItems.length} actie{openItems.length === 1 ? '' : 's'}
+          </p>
+        </div>
+        <div className="space-y-3">
+          {primaryOpenItems.map((item, index) => (
+            <ActionCenterListRow
+              key={`open-${item.id}-${item.sourceLabel}-${item.teamLabel}-${index}`}
+              item={item}
+              href={itemHrefFor(item.id)}
+            />
+          ))}
+        </div>
+        {overflowOpenItems.length > 0 ? (
+          <details className="mt-4 rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-3">
+            <summary className="cursor-pointer text-sm font-semibold text-[color:var(--dashboard-ink)]">
+              Toon {overflowOpenItems.length} extra open actie{overflowOpenItems.length === 1 ? '' : 's'}
+            </summary>
+            <div className="mt-4 space-y-3">
+              {overflowOpenItems.map((item, index) => (
+                <ActionCenterListRow
+                  key={`overflow-${item.id}-${item.sourceLabel}-${item.teamLabel}-${index}`}
+                  item={item}
+                  href={itemHrefFor(item.id)}
+                  compact
+                />
+              ))}
+            </div>
+          </details>
+        ) : null}
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <section className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5">
+          <div className="mb-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+              Reviewmomenten
+            </p>
+            <h2 className="mt-2 text-[1.2rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+              Wat terug op tafel komt
+            </h2>
+          </div>
+          <div className="space-y-3">
+            {reviewItems.length > 0 ? reviewItems.map((item, index) => (
+              <ActionCenterReviewRow
+                key={`review-${item.id}-${item.sourceLabel}-${item.teamLabel}-${index}`}
+                item={item}
+                href={itemHrefFor(item.id)}
+              />
+            )) : (
+              <EmptyListState text="Nog geen reviewmomenten zichtbaar." />
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5">
+          <div className="mb-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+              Wacht op bevestiging
+            </p>
+            <h2 className="mt-2 text-[1.2rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+              Waar eigenaarschap nog open is
+            </h2>
+          </div>
+          <div className="space-y-3">
+            {ownerGapItems.length > 0 ? ownerGapItems.map((item, index) => (
+              <ActionCenterOwnerGapRow
+                key={`owner-${item.id}-${item.sourceLabel}-${item.teamLabel}-${index}`}
+                item={item}
+                href={itemHrefFor(item.id)}
+              />
+            )) : (
+              <EmptyListState text="Geen open eigenaar- of bevestigingsgaten zichtbaar." />
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  )
+}
+
+function ActionCenterMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">{label}</p>
+      <p className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">{value}</p>
+    </div>
+  )
+}
+
+function ActionCenterListRow({
+  item,
+  href,
+  compact = false,
+}: {
+  item: ReturnType<typeof buildLiveActionCenterItems>[number]
+  href: string
+  compact?: boolean
+}) {
+  return (
+    <div
+      className={`rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] ${
+        compact ? 'px-4 py-3' : 'px-4 py-3.5'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">{item.sourceLabel}</span>
+            <span className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--dashboard-muted)]">{item.teamLabel}</span>
+          </div>
+          <p className={`mt-2 font-semibold text-[color:var(--dashboard-ink)] ${compact ? 'text-sm' : 'text-[0.98rem]'}`}>{item.title}</p>
+          <p className={`mt-1 leading-6 text-[color:var(--dashboard-text)] ${compact ? 'text-xs' : 'text-[0.92rem]'}`}>{item.nextStep}</p>
+          <p className="mt-2 text-xs text-[color:var(--dashboard-muted)]">
+            {item.ownerName ? `Eigenaar: ${item.ownerName}` : 'Nog geen eigenaar bevestigd'} · Status: {item.status.replace(/-/g, ' ')}
+          </p>
+        </div>
+        <Link
+          href={href}
+          className={`inline-flex shrink-0 rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)] ${
+            compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'
+          }`}
+        >
+          Open
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+function ActionCenterReviewRow({ item, href }: { item: ReturnType<typeof buildLiveActionCenterItems>[number]; href: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-4">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">{item.title}</p>
+        <p className="mt-1 text-sm leading-6 text-[color:var(--dashboard-text)]">
+          {item.reviewDateLabel} · {item.sourceLabel} · {item.teamLabel}
+        </p>
+      </div>
+      <Link href={href} className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)]">
+        Open
+      </Link>
+    </div>
+  )
+}
+
+function ActionCenterOwnerGapRow({ item, href }: { item: ReturnType<typeof buildLiveActionCenterItems>[number]; href: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-4">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">{item.title}</p>
+        <p className="mt-1 text-sm leading-6 text-[color:var(--dashboard-text)]">
+          {item.ownerName ? 'Actie wacht nog op bevestiging.' : 'Nog geen eigenaar bevestigd.'} · {item.sourceLabel} · {item.teamLabel}
+        </p>
+      </div>
+      <Link href={href} className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)]">
+        Open
+      </Link>
+    </div>
+  )
+}
+
+function EmptyListState({ text }: { text: string }) {
+  return (
+    <div className="rounded-[18px] border border-dashed border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-5 text-sm leading-7 text-[color:var(--dashboard-text)]">
+      {text}
+    </div>
   )
 }
