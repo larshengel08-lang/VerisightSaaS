@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  isActionCenterDecisionCheckpointKey,
   normalizeActionCenterReviewDecision,
+  validateActionCenterReviewDecisionWriteInput,
   shouldUseLegacyDecisionFallback,
   sortActionCenterReviewDecisions,
   type ActionCenterReviewDecision,
@@ -76,5 +78,62 @@ describe('action center review decisions', () => {
         },
       ]),
     ).toBe(false)
+  })
+
+  it('allows authored review decisions only on supported review checkpoints', () => {
+    expect(isActionCenterDecisionCheckpointKey('first_management_use')).toBe(true)
+    expect(isActionCenterDecisionCheckpointKey('follow_up_review')).toBe(true)
+    expect(isActionCenterDecisionCheckpointKey('launch_output')).toBe(false)
+  })
+
+  it('validates and normalizes authored review decision write input', () => {
+    const parsed = validateActionCenterReviewDecisionWriteInput({
+      route_source_type: 'campaign',
+      route_source_id: 'campaign-1',
+      checkpoint_id: 'checkpoint-1',
+      decision: ' bijstellen ',
+      decision_reason: ' De eerste stap gaf nog geen stabiele verbetering. ',
+      next_check: ' Toets volgende week of de frictie daalt. ',
+      current_step: ' Plan een eerste teamgesprek. ',
+      next_step: ' Check of het teamgesprek plaatsvond. ',
+      expected_effect: ' Maak zichtbaar of de eerste stap tractie geeft. ',
+      observation_snapshot: ' Werkdruk bleef zichtbaar in hetzelfde team. ',
+      decision_recorded_at: '2026-04-25T09:00:00.000Z',
+      review_completed_at: '2026-04-25T08:30:00.000Z',
+    })
+
+    expect(parsed).toEqual({
+      route_source_type: 'campaign',
+      route_source_id: 'campaign-1',
+      checkpoint_id: 'checkpoint-1',
+      decision: 'bijstellen',
+      decision_reason: 'De eerste stap gaf nog geen stabiele verbetering.',
+      next_check: 'Toets volgende week of de frictie daalt.',
+      current_step: 'Plan een eerste teamgesprek.',
+      next_step: 'Check of het teamgesprek plaatsvond.',
+      expected_effect: 'Maak zichtbaar of de eerste stap tractie geeft.',
+      observation_snapshot: 'Werkdruk bleef zichtbaar in hetzelfde team.',
+      decision_recorded_at: '2026-04-25T09:00:00.000Z',
+      review_completed_at: '2026-04-25T08:30:00.000Z',
+    })
+  })
+
+  it('rejects authored review decision input when required fields or decision values are invalid', () => {
+    expect(() =>
+      validateActionCenterReviewDecisionWriteInput({
+        route_source_type: 'campaign',
+        route_source_id: 'campaign-1',
+        checkpoint_id: 'checkpoint-1',
+        decision: 'opschalen',
+        decision_reason: '',
+        next_check: '',
+        current_step: '',
+        next_step: null,
+        expected_effect: null,
+        observation_snapshot: null,
+        decision_recorded_at: 'not-a-date',
+        review_completed_at: '',
+      }),
+    ).toThrowError('Ongeldige authored review decision input.')
   })
 })
