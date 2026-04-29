@@ -23,7 +23,10 @@ async function login(page: import('@playwright/test').Page, email: string, passw
   await page.goto('/login')
   await page.getByLabel('E-mailadres').fill(email)
   await page.getByLabel('Wachtwoord').fill(password)
-  await page.getByRole('button', { name: 'Inloggen' }).click()
+  await Promise.all([
+    page.waitForURL(/\/(dashboard|action-center)(?:\?.*)?$/),
+    page.getByRole('button', { name: 'Inloggen' }).click(),
+  ])
 }
 
 test.describe('action center hr happy path', () => {
@@ -35,32 +38,32 @@ test.describe('action center hr happy path', () => {
     page,
   }) => {
     await login(page, pilot.hrOwner.email, pilot.hrOwner.password)
-
-    await page.goto(pilot.routeContext.overviewUrl)
-    await page.waitForURL(/\/dashboard(?:\?.*)?$/)
+    await expect(page).toHaveURL(/\/dashboard(?:\?.*)?$/)
 
     await expect(page.getByRole('heading', { name: /overzicht/i })).toBeVisible()
     await expect(page.getByText('Actieve opvolging').first()).toBeVisible()
     await expect(page.locator(`a[href="${pilot.routeContext.campaignDetailUrl}"]`).first()).toBeVisible()
 
     await page.goto(pilot.routeContext.reportsUrl)
-    await expect(page.getByRole('heading', { name: /reports/i })).toBeVisible()
+    await expect(page.getByText('Rapportbibliotheek')).toBeVisible()
     await expect(page.locator(`a[href="${pilot.routeContext.actionCenterUrl}"]`).first()).toBeVisible()
 
     await page.goto(pilot.routeContext.campaignDetailUrl)
     await expect(page).toHaveURL(new RegExp(`${pilot.campaignId}$`))
-    await expect(page.getByText('Actieve opvolging').first()).toBeVisible()
+    await expect(page.locator(`a[href="${pilot.routeContext.actionCenterFocusUrl}"]`).first()).toBeVisible()
     await expect(page.getByRole('link', { name: /open in action center/i }).first()).toBeVisible()
 
     await page.goto(pilot.routeContext.actionCenterFocusUrl)
     await expect(page).toHaveURL(new RegExp(`focus=${pilot.campaignId}$`))
-    await expect(page.getByRole('heading', { name: /action center/i })).toBeVisible()
-    await expect(page.getByText(/waarom reviewen we/i)).toBeVisible()
-    await expect(page.getByText(/wat toetsen we/i)).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Action Center', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Open focusactie' }).click()
+    await expect(page.getByText(/waarom we opnieuw kijken/i)).toBeVisible()
+    await expect(page.getByText(/wat we dan toetsen/i)).toBeVisible()
     await expect(page.getByText(/eerste stap/i)).toBeVisible()
     await expect(page.getByText(/wat is geprobeerd/i)).toBeVisible()
+    await expect(page.getByText(/wat zagen we terug/i)).toBeVisible()
     await expect(page.getByText(/wat is besloten/i)).toBeVisible()
     await expect(page.getByText(/eerder afgerond in deze route|afgerond voor nu|bewust gestopt/i)).toBeVisible()
-    await expect(page.locator(`a[href="${pilot.routeContext.campaignDetailUrl}"]`).first()).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Open broncampagne' }).last()).toBeVisible()
   })
 })

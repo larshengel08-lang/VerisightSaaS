@@ -229,35 +229,56 @@ if (deliveryRecordError || !deliveryRecord) {
   throw deliveryRecordError ?? new Error('Kon delivery record niet opslaan.')
 }
 
-const { data: dossier, error: dossierError } = await admin
+const dossierPayload = {
+  organization_id: pilotOrg.orgId,
+  campaign_id: canonicalCampaign.id,
+  title: `HR demo route - ${canonicalCampaign.name}`,
+  route_interest:
+    canonicalCampaign.scan_type === 'exit'
+      ? 'exitscan'
+      : canonicalCampaign.scan_type === 'retention'
+        ? 'retentiescan'
+        : 'nog-onzeker',
+  scan_type: canonicalCampaign.scan_type,
+  triage_status: 'bevestigd',
+  expected_first_value: 'Binnen twee weken moet de rolduidelijkheid merkbaar toenemen in het teamoverleg.',
+  first_management_value:
+    'We reviewen omdat HR wil toetsen of het eerste teamgesprek echt tot heldere werkafspraken leidde.',
+  first_action_taken: 'Plan een teamsessie van 30 minuten en leg drie concrete werkafspraken vast.',
+  review_moment: reviewMoment,
+  adoption_outcome: 'De eerste reactie is positiever, maar borging in het teamritme is nog nodig.',
+  management_action_outcome: 'bijstellen',
+  next_route: 'Borg de afspraken in het volgende teamoverleg en bevestig opnieuw wie eigenaar blijft.',
+  case_public_summary: 'De vorige stap is afgerond; deze actieve route bewaakt nu alleen de borging en bijsturing.',
+}
+
+const { data: existingDossier, error: existingDossierError } = await admin
   .from('pilot_learning_dossiers')
-  .upsert(
-    {
-      organization_id: pilotOrg.orgId,
-      campaign_id: canonicalCampaign.id,
-      title: `HR demo route - ${canonicalCampaign.name}`,
-      route_interest:
-        canonicalCampaign.scan_type === 'exit'
-          ? 'exitscan'
-          : canonicalCampaign.scan_type === 'retention'
-            ? 'retentiescan'
-            : 'nog-onzeker',
-      scan_type: canonicalCampaign.scan_type,
-      triage_status: 'bevestigd',
-      expected_first_value: 'Binnen twee weken moet de rolduidelijkheid merkbaar toenemen in het teamoverleg.',
-      first_management_value:
-        'We reviewen omdat HR wil toetsen of het eerste teamgesprek echt tot heldere werkafspraken leidde.',
-      first_action_taken: 'Plan een teamsessie van 30 minuten en leg drie concrete werkafspraken vast.',
-      review_moment: reviewMoment,
-      adoption_outcome: 'De eerste reactie is positiever, maar borging in het teamritme is nog nodig.',
-      management_action_outcome: 'bijstellen',
-      next_route: 'Borg de afspraken in het volgende teamoverleg en bevestig opnieuw wie eigenaar blijft.',
-      case_public_summary: 'De vorige stap is afgerond; deze actieve route bewaakt nu alleen de borging en bijsturing.',
-    },
-    { onConflict: 'campaign_id' },
-  )
   .select('id')
-  .single()
+  .eq('campaign_id', canonicalCampaign.id)
+  .order('created_at', { ascending: false })
+  .limit(1)
+  .maybeSingle()
+
+if (existingDossierError) {
+  throw existingDossierError
+}
+
+const { data: dossier, error: dossierError } = existingDossier
+  ? await admin
+      .from('pilot_learning_dossiers')
+      .update({
+        ...dossierPayload,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existingDossier.id)
+      .select('id')
+      .single()
+  : await admin
+      .from('pilot_learning_dossiers')
+      .insert(dossierPayload)
+      .select('id')
+      .single()
 
 if (dossierError || !dossier) {
   throw dossierError ?? new Error('Kon learning dossier niet opslaan.')

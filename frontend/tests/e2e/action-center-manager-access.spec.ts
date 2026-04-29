@@ -24,7 +24,10 @@ async function login(page: import('@playwright/test').Page, email: string, passw
   await page.goto('/login')
   await page.getByLabel('E-mailadres').fill(email)
   await page.getByLabel('Wachtwoord').fill(password)
-  await page.getByRole('button', { name: 'Inloggen' }).click()
+  await Promise.all([
+    page.waitForURL(/\/(dashboard|action-center)(?:\?.*)?$/),
+    page.getByRole('button', { name: 'Inloggen' }).click(),
+  ])
 }
 
   test('hr owner keeps both modules inside one shared shell', async ({ page }) => {
@@ -32,13 +35,13 @@ async function login(page: import('@playwright/test').Page, email: string, passw
     await page.waitForURL(/\/dashboard$/)
 
     await expect(page.getByRole('navigation').getByRole('link', { name: 'Action Center' })).toBeVisible()
-    await expect(page.getByRole('banner').getByRole('link', { name: 'Reports' })).toBeVisible()
+    await expect(page.getByRole('banner').getByRole('link', { name: 'Rapporten' })).toBeVisible()
 
     await page.goto('/action-center')
-    await expect(page.getByText('Action Center is hier een aparte module binnen dezelfde ingelogde suite-shell.')).toBeVisible()
-    await page.getByRole('button', { name: 'Managers', exact: true }).click()
-    await expect(page.getByText('Managers toewijzen')).toBeVisible()
-    await expect(page.locator('select').first()).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Action Center', exact: true })).toBeVisible()
+    await expect(page.getByRole('navigation').getByRole('link', { name: 'Managers', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Managers en toewijzing' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Open managers' })).toBeVisible()
   })
 
   test('manager assignee lands on action center only and gets denied on insights routes', async ({ page }) => {
@@ -52,9 +55,9 @@ async function login(page: import('@playwright/test').Page, email: string, passw
     await expect(page.getByText(manager.scopeLabel, { exact: true }).first()).toBeVisible()
 
     await page.goto('/reports')
-    await expect(page.getByText('Rapporten blijven bij HR en klant')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Je ziet hier geen rapporten' })).toBeVisible()
 
     await page.goto(`/campaigns/${pilot.campaignId}`)
-    await expect(page.getByText('Campaigninzichten blijven buiten je manager-scope')).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Je ziet hier geen campagnedetail' })).toBeVisible()
   })
 })
