@@ -9,6 +9,7 @@ import type { Campaign, CampaignStats } from '@/lib/types'
 import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
+import type { ActionCenterRouteContract } from './action-center-route-contract'
 
 function buildCampaign(overrides: Partial<Campaign> = {}): Campaign {
   return {
@@ -167,6 +168,81 @@ function buildContext(args: {
 }
 
 describe('action center core semantics', () => {
+  describe('decision-first projection', () => {
+    const baseRoute: ActionCenterRouteContract = {
+      campaignId: 'campaign-1',
+      entryStage: 'active',
+      routeOpenedAt: '2026-04-20T10:00:00.000Z',
+      ownerAssignedAt: '2026-04-20T11:00:00.000Z',
+      routeStatus: 'in-uitvoering',
+      reviewOutcome: 'bijstellen',
+      reviewCompletedAt: '2026-04-25T10:00:00.000Z',
+      outcomeRecordedAt: null,
+      outcomeSummary: 'Werkdruk bleef zichtbaar in hetzelfde team.',
+      intervention: 'Plan een gerichte teamreview met de manager.',
+      owner: 'Sanne de Vries',
+      expectedEffect: 'Zichtbaar maken of de werkdruk lokaal afneemt.',
+      reviewScheduledFor: '2026-05-02',
+      reviewReason: 'De eerste stap gaf nog geen stabiele verbetering.',
+      blockedBy: null,
+    }
+
+    it('prefers canonical decision truth over legacy review outcome when both exist', () => {
+      const semantics = projectActionCenterCoreSemantics({
+        campaign: { id: 'campaign-1', name: 'ExitScan april' } as never,
+        assignedManager: { displayName: 'Sanne de Vries' } as never,
+        deliveryRecord: { next_step: 'Herplan de teamreview voor volgende week.' } as never,
+        learningDossier: {
+          management_action_outcome: 'doorgaan',
+          first_action_taken: 'Plan een gerichte teamreview met de manager.',
+          expected_first_value: 'Werkdruktrend moet dalen.',
+        } as never,
+        learningCheckpoints: [],
+        route: baseRoute,
+        latestVisibleUpdateNote: 'De manager bevestigde dat de frictie nog niet daalt.',
+        decisionRecords: [
+          {
+            decisionEntryId: 'decision-1',
+            sourceRouteId: 'campaign-1',
+            decision: 'bijstellen',
+            decisionReason: 'De eerste teamreview gaf nog geen stabiele verbetering.',
+            nextCheck: 'Toets over een week of de teamdruk zichtbaar daalt.',
+            decisionRecordedAt: '2026-04-25T10:00:00.000Z',
+            reviewCompletedAt: '2026-04-25T09:30:00.000Z',
+          },
+        ],
+      })
+
+      expect(semantics.latestDecision?.decision).toBe('bijstellen')
+      expect(semantics.latestDecision?.decisionReason).toBe(
+        'De eerste teamreview gaf nog geen stabiele verbetering.',
+      )
+      expect(semantics.actionProgress.currentStep).toBe('Plan een gerichte teamreview met de manager.')
+      expect(semantics.actionProgress.nextStep).toBe('Herplan de teamreview voor volgende week.')
+    })
+
+    it('falls back to legacy truth when no canonical decision records exist', () => {
+      const semantics = projectActionCenterCoreSemantics({
+        campaign: { id: 'campaign-1', name: 'ExitScan april' } as never,
+        assignedManager: { displayName: 'Sanne de Vries' } as never,
+        deliveryRecord: { next_step: null } as never,
+        learningDossier: {
+          management_action_outcome: null,
+          first_action_taken: 'Plan een gerichte teamreview met de manager.',
+          expected_first_value: 'Werkdruktrend moet dalen.',
+        } as never,
+        learningCheckpoints: [],
+        route: baseRoute,
+        latestVisibleUpdateNote: 'De manager bevestigde dat de frictie nog niet daalt.',
+        decisionRecords: [],
+      })
+
+      expect(semantics.latestDecision?.decision).toBe('bijstellen')
+      expect(semantics.latestDecision?.nextCheck).toBeTruthy()
+      expect(semantics.decisionHistory).toHaveLength(1)
+    })
+  })
+
   it('keeps reviewReason and reviewQuestion distinct while preserving the visible outcome mapping', () => {
     const context = buildContext({
       assignedManager: {
