@@ -8,7 +8,11 @@ import {
   toIsoDateTimeString,
   type ActionCenterReviewDecisionFormState,
 } from '@/lib/action-center-review-decision-editor-state'
-import { getActionCenterDecisionGuidance, getActionCenterDecisionProfile } from '@/lib/action-center-review-decisions'
+import {
+  getActionCenterActionGuidance,
+  getActionCenterDecisionGuidance,
+  getActionCenterDecisionProfile,
+} from '@/lib/action-center-review-decisions'
 import type {
   ActionCenterReviewDecision,
   AuthoredActionCenterDecision,
@@ -100,6 +104,11 @@ export function ActionCenterReviewDecisionEditor({ dossier, checkpoint, decision
   const routeUnavailable = !form.route_source_id
   const decisionProfile = getActionCenterDecisionProfile(form.decision)
   const decisionGuidance = getActionCenterDecisionGuidance(form.decision)
+  const actionGuidance = getActionCenterActionGuidance({
+    currentStep: form.current_step,
+    nextStep: form.next_step,
+    expectedEffect: form.expected_effect,
+  })
 
   async function handleSave() {
     setError(null)
@@ -244,6 +253,10 @@ export function ActionCenterReviewDecisionEditor({ dossier, checkpoint, decision
           value={form.observation_snapshot}
           onChange={(value) => setForm((current) => ({ ...current, observation_snapshot: value }))}
         />
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-white/80 bg-white/80 px-4 py-3 text-sm text-slate-700">
+        <span className="font-semibold text-slate-900">Actiekwaliteit:</span> {actionGuidance}
       </div>
 
       {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}

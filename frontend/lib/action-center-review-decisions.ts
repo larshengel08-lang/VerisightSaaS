@@ -11,6 +11,34 @@ const AUTHORED_DECISION_VALUES = new Set<AuthoredActionCenterDecision>([
   'afronden',
   'stoppen',
 ])
+const ACTION_STEP_PREFIXES = new Set([
+  'plan',
+  'leg',
+  'bevestig',
+  'kies',
+  'maak',
+  'zet',
+  'start',
+  'bespreek',
+  'neem',
+  'stem',
+  'deel',
+  'werk',
+  'rond',
+  'stop',
+  'onderzoek',
+  'borg',
+  'vraag',
+  'mail',
+  'bel',
+  'organiseer',
+  'herplan',
+  'corrigeer',
+  'check',
+  'koppel',
+  'vervolg',
+  'voer',
+])
 
 const ACTION_CENTER_DECISION_CHECKPOINT_KEYS = new Set<LearningCheckpointKey>([
   'first_management_use',
@@ -125,6 +153,56 @@ export function getActionCenterDecisionGuidance(decision: AuthoredActionCenterDe
   }
 }
 
+export function looksLikeActionCenterStep(value: string | null | undefined) {
+  const normalized = normalizeText(value)
+  if (!normalized) return false
+
+  const lower = normalized.toLocaleLowerCase('nl-NL')
+  if (lower.endsWith('?')) return false
+
+  const firstWord = lower.split(/\s+/, 1)[0] ?? ''
+  return ACTION_STEP_PREFIXES.has(firstWord)
+}
+
+export function looksLikeActionCenterExpectedEffect(value: string | null | undefined) {
+  const normalized = normalizeText(value)
+  if (!normalized) return false
+
+  const lower = normalized.toLocaleLowerCase('nl-NL')
+  if (looksLikeActionCenterStep(lower)) return false
+
+  return (
+    lower.includes('moet ') ||
+    lower.includes('zichtbaar') ||
+    lower.includes('duidelijk') ||
+    lower.includes('blijken') ||
+    lower.includes('bevestigd') ||
+    lower.includes('effect') ||
+    lower.includes('toename') ||
+    lower.includes('afname')
+  )
+}
+
+export function getActionCenterActionGuidance(args: {
+  currentStep: string | null | undefined
+  nextStep: string | null | undefined
+  expectedEffect: string | null | undefined
+}) {
+  if (!looksLikeActionCenterStep(args.currentStep)) {
+    return 'De huidige stap leest nog niet als concrete managementhandeling. Maak hem actiever en bounded.'
+  }
+
+  if (normalizeText(args.nextStep) && !looksLikeActionCenterStep(args.nextStep)) {
+    return 'De volgende stap leest nog niet als echte vervolghandeling. Scherp hem aan als bounded interventie.'
+  }
+
+  if (!looksLikeActionCenterExpectedEffect(args.expectedEffect)) {
+    return 'Het verwacht effect leest nog te veel als taakzin. Beschrijf wat de stap zichtbaar of duidelijker moet maken.'
+  }
+
+  return 'De actie-opbouw is scherp genoeg: huidige stap, vervolgstap en verwacht effect vormen samen een geloofwaardige voortgangslijn.'
+}
+
 export function isActionCenterDecisionCheckpointKey(
   value: LearningCheckpointKey | string | null | undefined,
 ): value is 'first_management_use' | 'follow_up_review' {
@@ -178,6 +256,20 @@ export function validateActionCenterReviewDecisionWriteInput(
 
   if (decisionProfile?.hidesNextStep && nextStep) {
     throw new Error('Ongeldige authored review decision input.')
+  }
+
+  if (!decisionProfile?.isClosing) {
+    if (!expectedEffect || !looksLikeActionCenterExpectedEffect(expectedEffect)) {
+      throw new Error('Ongeldige authored review decision input.')
+    }
+
+    if (!looksLikeActionCenterStep(currentStep)) {
+      throw new Error('Ongeldige authored review decision input.')
+    }
+
+    if (nextStep && !looksLikeActionCenterStep(nextStep)) {
+      throw new Error('Ongeldige authored review decision input.')
+    }
   }
 
   return {

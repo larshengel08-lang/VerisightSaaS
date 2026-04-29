@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  getActionCenterActionGuidance,
   getActionCenterDecisionGuidance,
   getActionCenterDecisionProfile,
   isActionCenterDecisionCheckpointKey,
+  looksLikeActionCenterExpectedEffect,
+  looksLikeActionCenterStep,
   normalizeActionCenterReviewDecision,
   validateActionCenterReviewDecisionWriteInput,
   shouldUseLegacyDecisionFallback,
@@ -98,7 +101,7 @@ describe('action center review decisions', () => {
       next_check: ' Toets volgende week of de frictie daalt. ',
       current_step: ' Plan een eerste teamgesprek. ',
       next_step: ' Check of het teamgesprek plaatsvond. ',
-      expected_effect: ' Maak zichtbaar of de eerste stap tractie geeft. ',
+      expected_effect: ' Binnen twee weken moet zichtbaar zijn of de eerste stap tractie geeft. ',
       observation_snapshot: ' Werkdruk bleef zichtbaar in hetzelfde team. ',
       decision_recorded_at: '2026-04-25T09:00:00.000Z',
       review_completed_at: '2026-04-25T08:30:00.000Z',
@@ -113,7 +116,7 @@ describe('action center review decisions', () => {
       next_check: 'Toets volgende week of de frictie daalt.',
       current_step: 'Plan een eerste teamgesprek.',
       next_step: 'Check of het teamgesprek plaatsvond.',
-      expected_effect: 'Maak zichtbaar of de eerste stap tractie geeft.',
+      expected_effect: 'Binnen twee weken moet zichtbaar zijn of de eerste stap tractie geeft.',
       observation_snapshot: 'Werkdruk bleef zichtbaar in hetzelfde team.',
       decision_recorded_at: '2026-04-25T09:00:00.000Z',
       review_completed_at: '2026-04-25T08:30:00.000Z',
@@ -206,5 +209,41 @@ describe('action center review decisions', () => {
   it('returns decision-specific guidance for the internal write surface', () => {
     expect(getActionCenterDecisionGuidance('bijstellen')).toContain('koerscorrectie')
     expect(getActionCenterDecisionGuidance('stoppen')).toContain('stopreden')
+  })
+
+  it('recognizes action-like steps and effect-like expected effects as separate semantics', () => {
+    expect(looksLikeActionCenterStep('Plan een eerste teamgesprek met de manager.')).toBe(true)
+    expect(looksLikeActionCenterStep('Werkdruk bleef zichtbaar in hetzelfde team.')).toBe(false)
+    expect(looksLikeActionCenterExpectedEffect('Binnen twee weken moet duidelijk zijn of de frictie daalt.')).toBe(true)
+    expect(looksLikeActionCenterExpectedEffect('Plan een eerste teamgesprek met de manager.')).toBe(false)
+  })
+
+  it('rejects open decisions when the current step is not action-like or the expected effect is task-like', () => {
+    expect(() =>
+      validateActionCenterReviewDecisionWriteInput({
+        route_source_type: 'campaign',
+        route_source_id: 'campaign-1',
+        checkpoint_id: 'checkpoint-1',
+        decision: 'doorgaan',
+        decision_reason: 'De eerste stap loopt nog.',
+        next_check: 'Toets volgende week of de frictie daalt.',
+        current_step: 'Werkdruk bleef zichtbaar in hetzelfde team.',
+        next_step: 'Plan een eerste teamgesprek met de manager.',
+        expected_effect: 'Plan een eerste teamgesprek met de manager.',
+        observation_snapshot: 'Werkdruk bleef zichtbaar in hetzelfde team.',
+        decision_recorded_at: '2026-04-25T09:00:00.000Z',
+        review_completed_at: '2026-04-25T08:30:00.000Z',
+      }),
+    ).toThrowError('Ongeldige authored review decision input.')
+  })
+
+  it('returns action guidance that points out weak step or effect phrasing', () => {
+    expect(
+      getActionCenterActionGuidance({
+        currentStep: 'Werkdruk bleef zichtbaar in hetzelfde team.',
+        nextStep: 'Plan een eerste teamgesprek met de manager.',
+        expectedEffect: 'Plan een eerste teamgesprek met de manager.',
+      }),
+    ).toContain('huidige stap')
   })
 })
