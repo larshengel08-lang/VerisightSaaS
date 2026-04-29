@@ -2,7 +2,7 @@
 
 Date: 2026-04-29
 Scope: Ingelogde Verisight suite, volgende schone verdiepingsslag binnen Action Center na Route Contract, HR Bridge, Core V1 en HR demo hardening
-Status: Draft spec based on approved direction in conversation
+Status: Revised draft spec after review hardening
 
 ## 1. Doel
 
@@ -125,7 +125,49 @@ Niet in deze fase:
 - actor-specifieke subbesluiten
 - brede escalatie- of borgtypes
 
-### 5.4 Relatie met bestaande reviewOutcome
+### 5.4 Canoniek source model
+
+Deze fase kiest nu expliciet één source model.
+
+Voor nieuwe reviewbeslissingen geldt:
+- `decision`, `decisionReason` en `nextCheck` worden geschreven naar één interne HR-/Verisight-managed decision layer
+- die decision layer is de enige canonieke write-path voor nieuwe besluitmomenten
+- managers schrijven hier in deze fase niet naar
+
+Dus niet:
+- soms authored decision truth
+- soms alleen afgeleide componentcopy
+- of per route een andere write-source
+
+### 5.5 Legacy migratieregel
+
+Voor routes die deze nieuwe decision layer nog niet dragen, geldt één expliciete migratieregel:
+1. projecteer tijdelijk uit legacy review truth
+2. toon dat resultaat exact alsof het uit de decision layer komt
+3. schrijf niet terug naar component-state of losse routepresentatie
+
+De migratievolgorde is:
+
+`decision`
+1. primair uit bestaande `reviewOutcome`
+2. anders uit bestaande `management_action_outcome`
+
+`decisionReason`
+1. primair uit bestaande review-/update-truth die al een expliciete besluitreden draagt
+2. anders uit bestaande review reason + kernobservatie via één gedeelde templatemap
+3. anders leeg laten in plaats van vrije reason-copy genereren
+
+`nextCheck`
+1. primair uit bestaande review question of equivalent
+2. anders uit bestaande expected-effect truth
+3. anders uit gedeelde Core V1 review-question projectie
+
+Dus:
+- één canonieke write-source voor nieuwe decisions
+- één canonieke migratieprojectie voor legacy-routes
+- geen gemengd model per route of per surface
+
+### 5.6 Relatie met bestaande reviewOutcome
 
 `reviewOutcome` verdwijnt niet direct.
 
@@ -135,7 +177,7 @@ De rolverdeling in deze fase wordt:
 
 Vaak zullen die dicht bij elkaar liggen, maar ze mogen productmatig niet langer alles in één veld proberen te dragen.
 
-### 5.5 Zichtbaarheid
+### 5.7 Zichtbaarheid
 
 Op route-detail:
 - volledig zichtbaar
@@ -180,14 +222,40 @@ Er is per route steeds:
 - één volgende stap
 - één verwacht effect
 
-### 6.4 Relatie met bestaande waarheid
+### 6.4 Truth versus projectie
 
-Deze laag moet voortbouwen op bestaande route- en reviewwaarheid, niet los ernaast ontstaan.
+Deze fase kiest dit nu expliciet:
+- `currentStep`, `nextStep` en `expectedEffect` worden in deze fase geen nieuwe authored datastorevelden
+- ze zijn één gedeelde canonieke projectielaag bovenop bestaande route-, review- en update-truth
+- elke surface moet exact dezelfde projectie gebruiken
 
-De richting in deze fase is:
-- bestaande actievelden blijven input
-- `currentStep` en `nextStep` worden nieuwe canonieke route-progressie truth of gedeelde projectie
-- `firstStep` uit Core V1 mag opgaan in `currentStep` / `nextStep` en hoeft niet het dominante oppervlak te blijven
+Dus niet:
+- één routepad waar deze velden al als nieuwe truth bestaan
+- en een tweede routepad waar dezelfde velden lokaal uit presentatie worden afgeleid
+
+Wel:
+- één gedeelde projector die voor elke route tot dezelfde actieprogressie leidt
+
+### 6.5 Projectievolgorde
+
+De inputvolgorde voor deze gedeelde projectie wordt:
+
+`currentStep`
+1. primair uit de meest recente open of actuele interventiestap in bestaande route/update-truth
+2. anders uit bestaande interventie- of `nextStep`-truth van de huidige route
+3. anders uit Core V1 `firstStep`-projectie
+
+`nextStep`
+1. primair uit de eerstvolgende expliciete vervolgstap in bestaande route/review-truth
+2. anders uit `nextCheck` als die al een concrete vervolgstap impliceert
+3. anders leeg laten in plaats van vrije UI-copy genereren
+
+`expectedEffect`
+1. primair uit bestaande canonieke expected-effect truth
+2. anders uit de bestaande route-reviewvraag of verwachte toets
+3. anders uit de gedeelde Core V1 expected-effect projectie
+
+`firstStep` uit Core V1 mag dus opgaan in `currentStep`, maar alleen via deze gedeelde projector en niet via lokale componentlogica.
 
 ## 7. Decision History en Resultaatlus Over Tijd
 
@@ -234,6 +302,26 @@ Niet in deze fase:
 
 Alleen de betekenisvolle beslismomenten worden zichtbaar gemaakt.
 
+### 7.5 Identity en ordering contract
+
+De decision history krijgt één expliciet identity- en ordering-contract.
+
+Elke history-entry wordt canoniek geïdentificeerd door:
+- één `decisionEntryId` uit de nieuwe decision layer
+- anders één stabiele migratie-id afgeleid uit het legacy reviewmoment dat de entry voortbrengt
+
+De orderingregel is:
+1. primair `decisionRecordedAt`
+2. anders `reviewCompletedAt`
+3. anders het canonieke checkpoint-/update-timestamp van hetzelfde reviewmoment
+
+De zichtbare history wordt aflopend gesorteerd op die canonieke orderingbron, zodat detail, landing, tests en browser-QA steeds dezelfde volgorde zien.
+
+Niet toegestaan:
+- array-volgorde uit een API-response als impliciete truth
+- vrije sortering op tekst
+- verschillende fallback-timestamps per surface
+
 ## 8. Rollen en Grenzen
 
 ### 8.1 Managers blijven read-only
@@ -255,10 +343,14 @@ Managers doen in deze fase nog niet:
 
 De nieuwe decision-truth en het sterkere actiecontract mogen in deze fase wel productmatig bestaan, maar worden nog niet manager-gedreven.
 
-De waarheid wordt in deze stap primair:
+De decision layer is:
 - intern
-- HR-/Verisight-gedragen
-- of afgeleid uit bestaande waarheid plus beperkte beheerde invoer
+- HR-/Verisight-managed
+- de enige write-source voor nieuwe reviewbeslissingen
+
+De action progression layer is:
+- niet authored
+- maar wel één gedeelde canonieke projectie
 
 ### 8.3 Geen brede reviewworkflow
 
@@ -325,15 +417,10 @@ Niet toegestaan:
 
 ### 11.2 Truth versus projectie
 
-Deze fase moet expliciet kiezen:
-- wat canonieke truth is
-- wat afgeleide presentatielaag is
-- wat tijdelijke fallback is
-
-De richting is:
-- `decision`, `decisionReason`, `nextCheck` worden kleine canonieke truth
-- `currentStep`, `nextStep`, `expectedEffect` worden canonieke route-progressie truth of gedeelde projectie, afhankelijk van de bestaande waarheidslaag
-- decision history wordt canoniek opgebouwd uit review-/decision-truth, niet uit willekeurige updates
+Deze fase kiest nu expliciet:
+- `decision`, `decisionReason`, `nextCheck` worden kleine canonieke truth met één interne HR-/Verisight-managed write-path
+- `currentStep`, `nextStep`, `expectedEffect` worden in deze fase geen nieuwe authored truth, maar één gedeelde canonieke projectie
+- decision history wordt canoniek opgebouwd uit decision-truth plus de expliciete orderingbron, niet uit willekeurige updates
 
 ### 11.3 Gevolg voor bestaande Core V1-semantiek
 
@@ -347,6 +434,26 @@ De bestaande Core V1-semantiek blijft relevant, maar wordt in deze fase opnieuw 
 Dus:
 - geen parallelle dubbele semantische lagen laten bestaan als ze hetzelfde proberen te zeggen
 - wel een gecontroleerde migratie van Core V1-presentatie naar een rijkere decision-first structuur
+
+### 11.4 Beslisrecord contract
+
+Voor implementatie geldt het volgende minimale contract per decision-history-entry:
+- `decisionEntryId`
+- `decision`
+- `decisionReason`
+- `nextCheck`
+- `decisionRecordedAt`
+- `sourceRouteId`
+
+Optioneel, maar toegestaan als de bestaande truth dit al netjes draagt:
+- `reviewCompletedAt`
+- `currentStepSnapshot`
+- `observationSnapshot`
+
+Dit contract hoeft in deze fase nog geen brede workflow of multi-actor auditstructuur te worden, maar moet wel stabiel genoeg zijn om:
+- browsermatig dezelfde progression te tonen
+- tests op vaste ordering te kunnen schrijven
+- latere managerinteractie niet opnieuw te laten herontwerpen
 
 ## 12. Surface-verdeling
 
