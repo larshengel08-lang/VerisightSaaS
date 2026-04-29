@@ -1614,19 +1614,6 @@ function TrustSection() {
               >
                 <p
                   style={{
-                    color: SURFACE.muted,
-                    fontFamily: bodyFont,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    letterSpacing: '.18em',
-                    marginBottom: 10,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  Onderregel
-                </p>
-                <p
-                  style={{
                     color: SURFACE.ink,
                     fontFamily: displayFont,
                     fontSize: 'clamp(1.8rem, 2.4vw, 2.35rem)',
