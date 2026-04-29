@@ -18,6 +18,24 @@ export type ActionCenterReviewOutcome =
   | 'afronden'
   | 'stoppen'
 
+export type ActionCenterDecision =
+  | 'doorgaan'
+  | 'bijstellen'
+  | 'afronden'
+  | 'stoppen'
+
+export interface ActionCenterDecisionRecord {
+  decisionEntryId: string
+  sourceRouteId: string
+  decision: ActionCenterDecision
+  decisionReason: string | null
+  nextCheck: string | null
+  decisionRecordedAt: string
+  reviewCompletedAt: string | null
+  currentStepSnapshot?: string | null
+  observationSnapshot?: string | null
+}
+
 export interface ActionCenterRouteContract {
   campaignId: string
   entryStage: ActionCenterEntryStage
