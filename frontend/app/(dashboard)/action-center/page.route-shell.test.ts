@@ -153,7 +153,16 @@ function buildLiveContext(): LiveActionCenterCampaignContext {
     deliveryRecord: buildDeliveryRecord(),
     deliveryCheckpoints: [],
     learningDossier: buildDossier(),
-    learningCheckpoints: [],
+    learningCheckpoints: [
+      buildCheckpoint({
+        id: "checkpoint-follow-up-review",
+        checkpoint_key: "follow_up_review",
+        owner_label: "HR lead",
+        status: "uitgevoerd",
+        confirmed_lesson: "De eerste review liet zien dat dezelfde frictie in twee teams terugkomt.",
+        updated_at: "2026-04-24T09:00:00.000Z",
+      }),
+    ],
   };
 }
 
@@ -547,7 +556,7 @@ describe("action center landing shell", () => {
       deliveryRecord: context.deliveryRecord,
       learningDossier: context.learningDossier,
       learningCheckpoints: context.learningCheckpoints,
-      latestVisibleUpdateNote: null,
+      latestVisibleUpdateNote: item.updates[0]?.note ?? null,
       route,
     }));
     expect(item.coreSemantics).toMatchObject({
@@ -567,7 +576,7 @@ describe("action center landing shell", () => {
         expectedEffect: item.expectedEffect,
       },
       resultLoop: {
-        whatWasTried: "Leg eigenaar en eerste correctie in het MT-overleg vast.",
+        whatWasTried: item.updates[0]?.note ?? null,
       },
       closingSemantics: {
         status: "lopend",

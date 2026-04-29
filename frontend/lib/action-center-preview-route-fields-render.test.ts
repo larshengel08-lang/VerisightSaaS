@@ -42,6 +42,72 @@ describe('action center preview route fields render', () => {
           note: 'MT kiest een eerste leiderschapsspoor.',
         },
       ],
+      coreSemantics: {
+        route: {
+          campaignId: 'campaign-exit',
+          entryStage: 'active',
+          routeOpenedAt: '2026-04-20T09:00:00.000Z',
+          ownerAssignedAt: '2026-04-21T08:00:00.000Z',
+          routeStatus: 'in-uitvoering',
+          reviewOutcome: 'bijstellen',
+          reviewCompletedAt: '2026-04-24T09:00:00.000Z',
+          outcomeRecordedAt: '2026-04-24T09:00:00.000Z',
+          outcomeSummary: 'De eerste review liet zien dat dezelfde frictie in twee teams terugkomt.',
+          intervention: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
+          owner: 'Manager Operations',
+          expectedEffect: 'Binnen twee weken moet het eerste teamgesprek zijn gevoerd.',
+          reviewScheduledFor: '2026-05-12',
+          reviewReason: 'Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.',
+          blockedBy: null,
+        },
+        latestDecision: {
+          decisionEntryId: 'decision-1',
+          sourceRouteId: 'campaign-exit',
+          decision: 'bijstellen',
+          decisionReason: 'Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.',
+          nextCheck: 'Binnen twee weken moet het eerste teamgesprek zijn gevoerd.',
+          decisionRecordedAt: '2026-04-24T09:00:00.000Z',
+          reviewCompletedAt: '2026-04-24T09:00:00.000Z',
+        },
+        actionProgress: {
+          currentStep: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
+          nextStep: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
+          expectedEffect: 'Binnen twee weken moet het eerste teamgesprek zijn gevoerd.',
+        },
+        reviewSemantics: {
+          reviewReason: 'Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.',
+          reviewQuestion: 'Binnen twee weken moet het eerste teamgesprek zijn gevoerd.',
+          reviewOutcomeRaw: 'bijstellen',
+          reviewOutcomeVisible: 'bijstellen',
+        },
+        actionFrame: {
+          whyNow: 'Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.',
+          firstStep: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
+          owner: 'Manager Operations',
+          expectedEffect: 'Binnen twee weken moet het eerste teamgesprek zijn gevoerd.',
+        },
+        resultLoop: {
+          whatWasTried: 'MT kiest een eerste leiderschapsspoor.',
+          whatWeObserved: 'MT kiest een eerste leiderschapsspoor.',
+          whatWasDecided: 'Bijstellen',
+        },
+        decisionHistory: [
+          {
+            decisionEntryId: 'decision-1',
+            sourceRouteId: 'campaign-exit',
+            decision: 'bijstellen',
+            decisionReason: 'Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.',
+            nextCheck: 'Binnen twee weken moet het eerste teamgesprek zijn gevoerd.',
+            decisionRecordedAt: '2026-04-24T09:00:00.000Z',
+            reviewCompletedAt: '2026-04-24T09:00:00.000Z',
+          },
+        ],
+        closingSemantics: {
+          status: 'lopend',
+          summary: null,
+          historicalSummary: null,
+        },
+      },
     })
 
     const html = renderToStaticMarkup(
