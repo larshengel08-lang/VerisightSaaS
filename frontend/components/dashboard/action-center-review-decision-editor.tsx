@@ -8,6 +8,7 @@ import {
   toIsoDateTimeString,
   type ActionCenterReviewDecisionFormState,
 } from '@/lib/action-center-review-decision-editor-state'
+import { getActionCenterDecisionGuidance, getActionCenterDecisionProfile } from '@/lib/action-center-review-decisions'
 import type {
   ActionCenterReviewDecision,
   AuthoredActionCenterDecision,
@@ -97,6 +98,8 @@ export function ActionCenterReviewDecisionEditor({ dossier, checkpoint, decision
   }, [checkpoint, decision, dossier])
 
   const routeUnavailable = !form.route_source_id
+  const decisionProfile = getActionCenterDecisionProfile(form.decision)
+  const decisionGuidance = getActionCenterDecisionGuidance(form.decision)
 
   async function handleSave() {
     setError(null)
@@ -136,7 +139,7 @@ export function ActionCenterReviewDecisionEditor({ dossier, checkpoint, decision
         <div>
           <p className="text-sm font-semibold text-slate-950">Action Center review decision</p>
           <p className="mt-1 text-xs leading-5 text-slate-600">
-            Gebruik deze authored laag om de canonieke reviewbeslissing, actuele stap en volgende toets expliciet vast te leggen zonder managers extra invoer te geven.
+            {decisionGuidance}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -212,6 +215,8 @@ export function ActionCenterReviewDecisionEditor({ dossier, checkpoint, decision
           id={`next-check-${checkpoint.id}`}
           value={form.next_check}
           onChange={(value) => setForm((current) => ({ ...current, next_check: value }))}
+          disabled={decisionProfile.hidesNextCheck}
+          placeholder={decisionProfile.hidesNextCheck ? 'Niet van toepassing bij een afsluitend besluit.' : undefined}
         />
         <TextAreaField
           label="Huidige stap"
@@ -224,6 +229,8 @@ export function ActionCenterReviewDecisionEditor({ dossier, checkpoint, decision
           id={`next-step-${checkpoint.id}`}
           value={form.next_step}
           onChange={(value) => setForm((current) => ({ ...current, next_step: value }))}
+          disabled={decisionProfile.hidesNextStep}
+          placeholder={decisionProfile.hidesNextStep ? 'Laat leeg bij een afsluitend besluit.' : undefined}
         />
         <TextAreaField
           label="Verwacht effect"
@@ -259,11 +266,15 @@ function TextAreaField({
   label,
   value,
   onChange,
+  disabled = false,
+  placeholder,
 }: {
   id: string
   label: string
   value: string
   onChange: (value: string) => void
+  disabled?: boolean
+  placeholder?: string
 }) {
   return (
     <div>
@@ -272,6 +283,8 @@ function TextAreaField({
         id={id}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+        placeholder={placeholder}
         rows={4}
         className={`${FIELD_CLASS} min-h-[112px]`}
       />

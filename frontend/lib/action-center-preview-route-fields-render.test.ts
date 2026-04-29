@@ -205,4 +205,119 @@ describe('action center preview route fields render', () => {
       { label: 'Stap', value: 'Plan een gerichte teamreview met de manager.' },
     ])
   })
+
+  it('hides next-check and next-step detail blocks for closing decisions', () => {
+    const item = finalizeActionCenterPreviewItem({
+      id: 'route-2',
+      code: 'ACT-1002',
+      title: 'Exit follow-through sluit af',
+      summary: 'De route kan inhoudelijk sluiten.',
+      reason: 'Het effect bleef zichtbaar na de laatste check.',
+      sourceLabel: 'ExitScan',
+      orgId: 'org-1',
+      scopeType: 'department',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerId: 'manager-1',
+      ownerName: 'Manager Operations',
+      ownerRole: 'Manager - Operations',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: 'HR lead',
+      priority: 'laag',
+      status: 'afgerond',
+      reviewDate: null,
+      expectedEffect: 'Borging is bevestigd.',
+      reviewReason: 'Het effect bleef zichtbaar na de laatste check.',
+      reviewOutcome: 'afronden',
+      reviewDateLabel: 'Nog niet gepland',
+      reviewRhythm: 'Maandelijks',
+      signalLabel: 'ExitScan - Exit voorjaar',
+      signalBody: 'De lokale correctie hield zichtbaar stand.',
+      nextStep: 'Nog niet van toepassing',
+      peopleCount: 38,
+      updates: [],
+      coreSemantics: {
+        route: {
+          campaignId: 'campaign-exit',
+          entryStage: 'active',
+          routeOpenedAt: '2026-04-20T09:00:00.000Z',
+          ownerAssignedAt: '2026-04-21T08:00:00.000Z',
+          routeStatus: 'afgerond',
+          reviewOutcome: 'afronden',
+          reviewCompletedAt: '2026-04-28T09:00:00.000Z',
+          outcomeRecordedAt: '2026-04-28T09:00:00.000Z',
+          outcomeSummary: 'De lokale correctie hield zichtbaar stand.',
+          intervention: 'Rond de route af en borg de les.',
+          owner: 'Manager Operations',
+          expectedEffect: 'Borging is bevestigd.',
+          reviewScheduledFor: null,
+          reviewReason: 'Het effect bleef zichtbaar na de laatste check.',
+          blockedBy: null,
+        },
+        latestDecision: {
+          decisionEntryId: 'decision-2',
+          sourceRouteId: 'campaign-exit',
+          decision: 'afronden',
+          decisionReason: 'Het effect bleef zichtbaar na de laatste check.',
+          nextCheck: null,
+          decisionRecordedAt: '2026-04-28T09:00:00.000Z',
+          reviewCompletedAt: '2026-04-28T09:00:00.000Z',
+        },
+        actionProgress: {
+          currentStep: 'Rond de route af en borg de les.',
+          nextStep: null,
+          expectedEffect: 'Borging is bevestigd.',
+        },
+        reviewSemantics: {
+          reviewReason: 'Het effect bleef zichtbaar na de laatste check.',
+          reviewQuestion: 'Welke uitkomst van deze route verdient nu de eerste review?',
+          reviewOutcomeRaw: 'afronden',
+          reviewOutcomeVisible: 'afronden',
+        },
+        actionFrame: {
+          whyNow: 'Het effect bleef zichtbaar na de laatste check.',
+          firstStep: 'Rond de route af en borg de les.',
+          owner: 'Manager Operations',
+          expectedEffect: 'Borging is bevestigd.',
+        },
+        resultLoop: {
+          whatWasTried: 'Rond de route af en borg de les.',
+          whatWeObserved: 'De lokale correctie hield zichtbaar stand.',
+          whatWasDecided: 'Afronden',
+        },
+        decisionHistory: [
+          {
+            decisionEntryId: 'decision-2',
+            sourceRouteId: 'campaign-exit',
+            decision: 'afronden',
+            decisionReason: 'Het effect bleef zichtbaar na de laatste check.',
+            nextCheck: null,
+            decisionRecordedAt: '2026-04-28T09:00:00.000Z',
+            reviewCompletedAt: '2026-04-28T09:00:00.000Z',
+          },
+        ],
+        closingSemantics: {
+          status: 'afgerond',
+          summary: 'De lokale correctie hield zichtbaar stand.',
+          historicalSummary: null,
+        },
+      },
+    })
+
+    const html = renderToStaticMarkup(
+      React.createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialView: 'actions',
+        fallbackOwnerName: 'Verisight gebruiker',
+        ownerOptions: ['Manager Operations'],
+        workbenchHref: '/dashboard',
+        readOnly: true,
+      }),
+    )
+
+    expect(html).toContain('Laatste beslissing')
+    expect(html).toContain('Afronden')
+    expect(html).not.toContain('Volgende toets')
+    expect(html).not.toContain('Hierna')
+  })
 })

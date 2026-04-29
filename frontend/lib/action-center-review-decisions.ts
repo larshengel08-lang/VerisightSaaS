@@ -38,6 +38,14 @@ export interface ActionCenterReviewDecisionWriteInput {
   review_completed_at: string
 }
 
+export interface ActionCenterDecisionProfile {
+  isClosing: boolean
+  requiresDistinctNextStep: boolean
+  requiresObservationSnapshot: boolean
+  hidesNextCheck: boolean
+  hidesNextStep: boolean
+}
+
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
   return trimmed.length > 0 ? trimmed : null
@@ -66,6 +74,57 @@ function isIsoTimestamp(value: string | null | undefined) {
   return parseTimestamp(value) !== Number.NEGATIVE_INFINITY
 }
 
+function areSameStep(left: string | null | undefined, right: string | null | undefined) {
+  const normalizedLeft = normalizeText(left)?.toLocaleLowerCase('nl-NL') ?? null
+  const normalizedRight = normalizeText(right)?.toLocaleLowerCase('nl-NL') ?? null
+  return Boolean(normalizedLeft && normalizedRight && normalizedLeft === normalizedRight)
+}
+
+export function getActionCenterDecisionProfile(decision: AuthoredActionCenterDecision): ActionCenterDecisionProfile {
+  switch (decision) {
+    case 'bijstellen':
+      return {
+        isClosing: false,
+        requiresDistinctNextStep: true,
+        requiresObservationSnapshot: true,
+        hidesNextCheck: false,
+        hidesNextStep: false,
+      }
+    case 'afronden':
+    case 'stoppen':
+      return {
+        isClosing: true,
+        requiresDistinctNextStep: false,
+        requiresObservationSnapshot: false,
+        hidesNextCheck: true,
+        hidesNextStep: true,
+      }
+    case 'doorgaan':
+    default:
+      return {
+        isClosing: false,
+        requiresDistinctNextStep: false,
+        requiresObservationSnapshot: false,
+        hidesNextCheck: false,
+        hidesNextStep: false,
+      }
+  }
+}
+
+export function getActionCenterDecisionGuidance(decision: AuthoredActionCenterDecision) {
+  switch (decision) {
+    case 'bijstellen':
+      return 'Bijstellen vraagt een zichtbare koerscorrectie: leg vast wat je zag, welke volgende stap nu verandert en wat je daarna opnieuw wilt toetsen.'
+    case 'afronden':
+      return 'Afronden sluit de route inhoudelijk: beschrijf waarom deze route klaar is en laat vervolgvelden leeg zodat geen open follow-through zichtbaar blijft.'
+    case 'stoppen':
+      return 'Stoppen vraagt een expliciete stopreden: leg uit waarom vervolg niet zinvol is en laat open volgende stappen of toetsen leeg.'
+    case 'doorgaan':
+    default:
+      return 'Doorgaan bevestigt het huidige spoor: houd de huidige stap en volgende toets scherp zodat de route bounded reviewbaar blijft.'
+  }
+}
+
 export function isActionCenterDecisionCheckpointKey(
   value: LearningCheckpointKey | string | null | undefined,
 ): value is 'first_management_use' | 'follow_up_review' {
@@ -87,6 +146,7 @@ export function validateActionCenterReviewDecisionWriteInput(
   const observationSnapshot = normalizeText(input?.observation_snapshot)
   const decisionRecordedAt = normalizeText(input?.decision_recorded_at)
   const reviewCompletedAt = normalizeText(input?.review_completed_at)
+  const decisionProfile = decision ? getActionCenterDecisionProfile(decision) : null
 
   if (
     routeSourceType !== 'campaign' ||
@@ -101,6 +161,22 @@ export function validateActionCenterReviewDecisionWriteInput(
     !isIsoTimestamp(decisionRecordedAt) ||
     !isIsoTimestamp(reviewCompletedAt)
   ) {
+    throw new Error('Ongeldige authored review decision input.')
+  }
+
+  if (decisionProfile?.requiresDistinctNextStep && (!nextStep || areSameStep(currentStep, nextStep))) {
+    throw new Error('Ongeldige authored review decision input.')
+  }
+
+  if (decisionProfile?.requiresObservationSnapshot && !observationSnapshot) {
+    throw new Error('Ongeldige authored review decision input.')
+  }
+
+  if (decisionProfile?.hidesNextCheck && nextCheck) {
+    throw new Error('Ongeldige authored review decision input.')
+  }
+
+  if (decisionProfile?.hidesNextStep && nextStep) {
     throw new Error('Ongeldige authored review decision input.')
   }
 

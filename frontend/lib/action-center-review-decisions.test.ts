@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  getActionCenterDecisionGuidance,
+  getActionCenterDecisionProfile,
   isActionCenterDecisionCheckpointKey,
   normalizeActionCenterReviewDecision,
   validateActionCenterReviewDecisionWriteInput,
@@ -135,5 +137,74 @@ describe('action center review decisions', () => {
         review_completed_at: '',
       }),
     ).toThrowError('Ongeldige authored review decision input.')
+  })
+
+  it('requires a distinct next step and observation snapshot for bijstellen decisions', () => {
+    expect(() =>
+      validateActionCenterReviewDecisionWriteInput({
+        route_source_type: 'campaign',
+        route_source_id: 'campaign-1',
+        checkpoint_id: 'checkpoint-1',
+        decision: 'bijstellen',
+        decision_reason: 'De eerste stap gaf nog geen stabiele verbetering.',
+        next_check: 'Toets volgende week of de frictie daalt.',
+        current_step: 'Plan een eerste teamgesprek.',
+        next_step: 'Plan een eerste teamgesprek.',
+        expected_effect: 'Maak zichtbaar of de eerste stap tractie geeft.',
+        observation_snapshot: null,
+        decision_recorded_at: '2026-04-25T09:00:00.000Z',
+        review_completed_at: '2026-04-25T08:30:00.000Z',
+      }),
+    ).toThrowError('Ongeldige authored review decision input.')
+  })
+
+  it('rejects closing decisions that still carry open follow-up fields', () => {
+    expect(() =>
+      validateActionCenterReviewDecisionWriteInput({
+        route_source_type: 'campaign',
+        route_source_id: 'campaign-1',
+        checkpoint_id: 'checkpoint-1',
+        decision: 'afronden',
+        decision_reason: 'Het effect is bevestigd.',
+        next_check: 'Toets volgende maand of dit stabiel blijft.',
+        current_step: 'Rond het traject af.',
+        next_step: 'Plan een extra review.',
+        expected_effect: 'Borging aantonen.',
+        observation_snapshot: 'De verbetering hield drie weken stand.',
+        decision_recorded_at: '2026-04-25T09:00:00.000Z',
+        review_completed_at: '2026-04-25T08:30:00.000Z',
+      }),
+    ).toThrowError('Ongeldige authored review decision input.')
+  })
+
+  it('classifies open versus closing decisions into one shared profile', () => {
+    expect(getActionCenterDecisionProfile('doorgaan')).toEqual({
+      isClosing: false,
+      requiresDistinctNextStep: false,
+      requiresObservationSnapshot: false,
+      hidesNextCheck: false,
+      hidesNextStep: false,
+    })
+
+    expect(getActionCenterDecisionProfile('bijstellen')).toEqual({
+      isClosing: false,
+      requiresDistinctNextStep: true,
+      requiresObservationSnapshot: true,
+      hidesNextCheck: false,
+      hidesNextStep: false,
+    })
+
+    expect(getActionCenterDecisionProfile('afronden')).toEqual({
+      isClosing: true,
+      requiresDistinctNextStep: false,
+      requiresObservationSnapshot: false,
+      hidesNextCheck: true,
+      hidesNextStep: true,
+    })
+  })
+
+  it('returns decision-specific guidance for the internal write surface', () => {
+    expect(getActionCenterDecisionGuidance('bijstellen')).toContain('koerscorrectie')
+    expect(getActionCenterDecisionGuidance('stoppen')).toContain('stopreden')
   })
 })

@@ -10,6 +10,7 @@ import {
   projectAuthoredDecisionHistory,
   projectLegacyDecisionRecord,
 } from './action-center-decision-history'
+import { getActionCenterDecisionProfile } from './action-center-review-decisions'
 
 export type ActionCenterVisibleReviewOutcome = Exclude<ActionCenterReviewOutcome, 'opschalen'>
 export type ActionCenterClosingStatus = 'lopend' | 'afgerond' | 'gestopt'
@@ -327,9 +328,12 @@ function projectActionProgress(args: {
   firstActionTaken: string | null | undefined
   reviewQuestion: string | null
   expectedEffectFallback: string | null
+  suppressNextStepFallback?: boolean
 }) {
   const currentStep = pickFirst([args.firstActionTaken, args.route.intervention])
-  const nextStep = pickFirst([args.deliveryNextStep, args.reviewQuestion])
+  const nextStep = args.suppressNextStepFallback
+    ? normalizeText(args.deliveryNextStep)
+    : pickFirst([args.deliveryNextStep, args.reviewQuestion])
   const expectedEffect = pickFirst([
     args.route.expectedEffect,
     args.expectedEffectFallback,
@@ -464,12 +468,14 @@ export function projectActionCenterPreviewCoreSemantics(
     managementActionOutcome: input.reviewOutcome,
   })
   const latestDecision = decisionHistory[0] ?? null
+  const latestDecisionProfile = latestDecision ? getActionCenterDecisionProfile(latestDecision.decision) : null
   const actionProgress = projectActionProgress({
     route,
     deliveryNextStep: input.nextStep,
     firstActionTaken: route.intervention,
     reviewQuestion,
     expectedEffectFallback: expectedEffectFromReason,
+    suppressNextStepFallback: latestDecisionProfile?.hidesNextStep ?? false,
   })
   const whatWasDecided = getDecisionText({
     reviewOutcomeVisible,
@@ -605,12 +611,14 @@ export function projectActionCenterCoreSemantics(
     decisionRecords: context.decisionRecords,
   })
   const latestDecision = decisionHistory[0] ?? null
+  const latestDecisionProfile = latestDecision ? getActionCenterDecisionProfile(latestDecision.decision) : null
   const actionProgress = projectActionProgress({
     route,
     deliveryNextStep: latestDecision?.nextStepSnapshot ?? context.deliveryRecord?.next_step,
     firstActionTaken: latestDecision?.currentStepSnapshot ?? context.learningDossier?.first_action_taken,
     reviewQuestion,
     expectedEffectFallback: latestDecision?.expectedEffectSnapshot ?? derivedExpectedEffect,
+    suppressNextStepFallback: latestDecisionProfile?.hidesNextStep ?? false,
   })
 
   return {
