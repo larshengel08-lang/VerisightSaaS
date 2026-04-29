@@ -179,14 +179,11 @@ export default async function DashboardHomePage({
       ) : (
         <>
           <section className="space-y-3">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
-              Overzicht
-            </p>
             <h1 className="text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
               Overzicht
             </h1>
             <p className="max-w-[52rem] text-[0.98rem] leading-[1.85] text-[color:var(--dashboard-text)]">
-              Hier zie je wat actief is, wat leesbaar is, wat blokkeert en waar opvolging open staat.
+              Wat nu leesbaar is, wat blokkeert en waar opvolging open staat.
             </p>
           </section>
 
@@ -196,26 +193,26 @@ export default async function DashboardHomePage({
                 Portfolio samenvatting
               </p>
               <p className="mt-2 text-sm leading-7 text-[color:var(--dashboard-text)]">
-                Aantallen per statusgroep, zodat direct zichtbaar is wat klaar is voor bespreking en wat nog in opbouw zit.
+                Aantallen per statusgroep.
               </p>
             </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
               <SignalStatCard
-                label="Klaar voor bespreking"
+                label="Leesbaar"
                 value={`${managementReadyCount}`}
                 subline={`${fullCount} volledig · ${partialCount} deels`}
                 band={managementReadyCount > 0 ? 'LAAG' : 'neutral'}
               />
               <SignalStatCard
-                label="In opbouw"
+                label="Nog in opbouw"
                 value={`${campaignEntries.filter((entry) => ['running', 'sparse'].includes(entry.state)).length}`}
-                subline="Running of eerste responses"
+                subline="Running of eerste read"
                 band={campaignEntries.some((entry) => ['running', 'sparse'].includes(entry.state)) ? 'MIDDEN' : 'neutral'}
               />
               <SignalStatCard
-                label="Setup / launch"
+                label="Nog niet live"
                 value={`${campaignEntries.filter((entry) => ['setup', 'ready_to_launch'].includes(entry.state)).length}`}
-                subline="Nog niet volledig live"
+                subline="Setup of launch"
                 band={campaignEntries.some((entry) => ['setup', 'ready_to_launch'].includes(entry.state)) ? 'MIDDEN' : 'neutral'}
               />
               <SignalStatCard
@@ -233,7 +230,7 @@ export default async function DashboardHomePage({
                 Wat nu leesbaar is
               </p>
               <p className="mt-2 text-sm leading-7 text-[color:var(--dashboard-text)]">
-                Per route is zichtbaar wat al gelezen kan worden en wat nog in uitvoering of opbouw zit.
+                Wat al open kan en wat nog in opbouw zit.
               </p>
             </div>
             <div className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_4px_rgba(10,25,47,0.05)] sm:px-6 sm:py-6">
@@ -247,7 +244,7 @@ export default async function DashboardHomePage({
                 Wat blokkeert
               </p>
               <p className="mt-2 text-sm leading-7 text-[color:var(--dashboard-text)]">
-                Alleen de concrete randvoorwaarden die nog voorkomen dat een route leesbaar of volledig live wordt.
+                Wat nog voorkomt dat een route open of volledig live is.
               </p>
             </div>
             {blockerEntries.length > 0 ? (
@@ -255,7 +252,7 @@ export default async function DashboardHomePage({
                 {blockerEntries.map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_1px_3px_rgba(10,25,47,0.04)]"
+                    className="rounded-lg border border-[color:var(--dashboard-frame-border)]/85 bg-transparent px-4 py-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -292,9 +289,6 @@ export default async function DashboardHomePage({
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
                     Opvolging preview
                   </p>
-                  <p className="mt-2 text-sm leading-7 text-[color:var(--dashboard-text)]">
-                    Een lichte preview van wat nu open staat, zonder mini-Action-Center te worden.
-                  </p>
                 </div>
                 <Link
                   href="/action-center"
@@ -315,7 +309,9 @@ export default async function DashboardHomePage({
                     <p className="mt-2 text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
                       {item.value}
                     </p>
-                    <p className="mt-1.5 text-sm leading-7 text-[color:var(--dashboard-text)]">{item.body}</p>
+                    {item.body ? (
+                      <p className="mt-1.5 text-sm leading-7 text-[color:var(--dashboard-text)]">{item.body}</p>
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -327,9 +323,6 @@ export default async function DashboardHomePage({
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
                     Recente output
                   </p>
-                  <p className="mt-2 text-sm leading-7 text-[color:var(--dashboard-text)]">
-                    Laatste rapporten en samenvattingen, compact terugvindbaar als utilitylaag.
-                  </p>
                 </div>
                 <Link
                   href="/reports"
@@ -340,7 +333,6 @@ export default async function DashboardHomePage({
               </div>
               <div className="mt-4 space-y-0">
                 {recentOutputEntries.map((entry) => {
-                  const stateMeta = getHomeStateMeta(entry.state)
                   const scanDefinition = getScanDefinition(entry.campaign.scan_type)
 
                   return (
@@ -350,13 +342,10 @@ export default async function DashboardHomePage({
                     >
                       <div className="min-w-0">
                         <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-                          {scanDefinition.productName}
+                          {scanDefinition.productName} · {entry.state === 'partial' ? 'Begrensde read' : 'Kernoutput'}
                         </p>
                         <p className="mt-2 text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
                           {entry.campaign.campaign_name}
-                        </p>
-                        <p className="mt-1.5 text-sm leading-7 text-[color:var(--dashboard-text)]">
-                          {stateMeta.label}
                         </p>
                       </div>
                       <Link
@@ -425,29 +414,24 @@ function buildOverviewFollowUpPreview({
   const items: Array<{ label: string; value: string; body: string }> = []
 
   if (leadEntry) {
-    const stateMeta = getHomeStateMeta(leadEntry.state)
     items.push({
       label: 'Open prioriteit',
       value: leadEntry.campaign.campaign_name,
-      body: `${stateMeta.label}. ${stateMeta.nextStepLabel}.`,
+      body: '',
     })
   }
 
   items.push({
     label: 'Reviewmoment',
     value: routeActive ? 'Opvolging staat open' : routeOpenable ? 'Klaar om te openen' : 'Nog niet bevestigd',
-    body: routeActive
-      ? 'Deze route heeft al een zichtbare opvolglijn in Action Center.'
-      : routeOpenable
-        ? 'De opvolglijn kan nu worden geopend zodra je eigenaarschap en reviewmoment wilt vastleggen.'
-        : 'Er staat nog geen actieve opvolglijn open in deze overview.',
+    body: '',
   })
 
   if (blockerEntries[0]) {
     items.push({
       label: 'Zonder bevestiging',
       value: blockerEntries[0].campaignName,
-      body: blockerEntries[0].title,
+      body: '',
     })
   }
 
@@ -457,10 +441,13 @@ function buildOverviewFollowUpPreview({
 function buildRecentOutputEntries(entries: CampaignHomeEntry[]) {
   return [...entries]
     .filter((entry) => ['partial', 'full', 'closed'].includes(entry.state))
-    .sort(
-      (left, right) =>
-        new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime(),
-    )
+    .sort((left, right) => {
+      const stateWeight = (entry: CampaignHomeEntry) =>
+        entry.state === 'partial' ? 1 : entry.state === 'closed' ? 2 : 3
+      const weightDelta = stateWeight(right) - stateWeight(left)
+      if (weightDelta !== 0) return weightDelta
+      return new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime()
+    })
 }
 
 function CampaignRow({
@@ -489,7 +476,7 @@ function CampaignRow({
           <h2 className="mt-3 text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">{campaign.campaign_name}</h2>
         </div>
 
-        <div className="grid gap-3 rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-4 sm:grid-cols-2 xl:min-w-[380px] xl:grid-cols-2 2xl:min-w-[520px] 2xl:grid-cols-4">
+        <div className="grid gap-4 border-b border-[color:var(--dashboard-frame-border)]/75 pb-4 sm:grid-cols-2 xl:min-w-[380px] xl:grid-cols-2 2xl:min-w-[520px] 2xl:grid-cols-4">
           <StatCell label="Respons" value={`${campaign.completion_rate_pct ?? 0}%`} />
           <StatCell label="Ingevuld" value={`${campaign.total_completed}`} />
           <StatCell label="Uitgenodigd" value={`${campaign.total_invited}`} />
@@ -500,9 +487,11 @@ function CampaignRow({
         </div>
       </div>
 
-      <div className="mt-4 max-w-none space-y-3 border-t border-[color:var(--dashboard-frame-border)]/55 pt-4">
+      <div className="mt-4 max-w-none space-y-2">
         <p className="text-sm leading-[1.85] text-[color:var(--dashboard-text)]">{stateMeta.body}</p>
-        <p className="text-sm leading-[1.85] text-[color:var(--dashboard-muted)]">{stateMeta.trust}</p>
+        {stateMeta.trust ? (
+          <p className="text-sm leading-[1.85] text-[color:var(--dashboard-muted)]">{stateMeta.trust}</p>
+        ) : null}
       </div>
 
       <div className="mt-5 flex flex-col gap-3 border-t border-[color:var(--dashboard-frame-border)]/85 pt-4 lg:flex-row lg:items-center lg:justify-between">
@@ -603,9 +592,9 @@ function groupCampaigns(entries: CampaignHomeEntry[]): CampaignGroup[] {
 
 function buildPortfolioBuckets(groups: CampaignGroup[]): PortfolioBucket[] {
   const definitions: Array<{ key: DashboardPortfolioView; label: string; states: CampaignCompositionState[] }> = [
-    { key: 'ready', label: 'Klaar voor bespreking', states: ['full', 'partial'] },
-    { key: 'building', label: 'In opbouw', states: ['sparse', 'running', 'ready_to_launch'] },
-    { key: 'setup', label: 'Setup of launch', states: ['setup'] },
+    { key: 'ready', label: 'Leesbaar', states: ['full', 'partial'] },
+    { key: 'building', label: 'Nog in opbouw', states: ['sparse', 'running', 'ready_to_launch'] },
+    { key: 'setup', label: 'Nog niet live', states: ['setup'] },
     { key: 'closed', label: 'Afgerond', states: ['closed'] },
   ]
 
@@ -623,32 +612,32 @@ function buildPortfolioBuckets(groups: CampaignGroup[]): PortfolioBucket[] {
 function getOverviewBlockerCopy(state: CampaignCompositionState) {
   const copy: Record<CampaignCompositionState, { title: string; body: string }> = {
     setup: {
-      title: 'Respondentimport of launchcontrole ontbreekt nog.',
-      body: 'Zonder deze setupstap opent er nog geen leesbaar dashboard of rapport.',
+      title: 'Blocker: respondentimport of launchcontrole ontbreekt.',
+      body: 'Volgende stap: maak de route eerst live.',
     },
     ready_to_launch: {
-      title: 'Uitnodigingen zijn nog niet volledig live.',
-      body: 'De respondentlaag staat klaar, maar de inviteflow moet eerst echt starten.',
+      title: 'Blocker: uitnodigingen zijn nog niet volledig live.',
+      body: 'Volgende stap: start eerst de inviteflow.',
     },
     running: {
-      title: 'Er is nog geen veilige responslaag.',
-      body: 'De inviteflow loopt, maar het beeld is nog te dun voor een eerste inhoudelijke read.',
+      title: 'Blocker: er is nog geen veilige responslaag.',
+      body: 'Volgende stap: wacht op meer responses.',
     },
     sparse: {
-      title: 'Meer respons is nodig voor een eerlijke eerste read.',
-      body: 'Er zijn eerste responses binnen, maar nog niet genoeg voor een stevige dashboardread.',
+      title: 'Blocker: de eerste read blijft nog te dun.',
+      body: 'Volgende stap: wacht op meer responses.',
     },
     partial: {
-      title: 'Verdieping is nog begrensd.',
-      body: 'De eerste laag is zichtbaar, maar thresholds houden verdere duiding nog compact.',
+      title: 'Blocker: detail blijft nog begrensd.',
+      body: 'Volgende stap: wacht op meer leesbare output.',
     },
     full: {
       title: 'Geen blocker meer op leesbaarheid.',
-      body: 'Dashboard en rapport zijn nu stevig genoeg voor duiding en eerste opvolging.',
+      body: 'Dashboard en rapport zijn nu beschikbaar voor eerste lezing.',
     },
     closed: {
       title: 'Geen live blocker meer.',
-      body: 'Deze route zit nu vooral in rapportage en vervolggesprek.',
+      body: 'Route is afgerond. Rapport blijft beschikbaar.',
     },
   }
 
@@ -665,45 +654,41 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Setup / nog niet live',
       sectionDescription:
         'Campagnes zonder live uitnodigingen of zonder echte respondentlaag. Hier telt eerst setup en launchdiscipline.',
-      body: 'Deze campagne vraagt eerst respondentimport of launchcontrole voordat er een leesbaar dashboard kan openen.',
-      trust:
-        'Nog geen duiding. Eerst setup, daarna pas overzicht en rapport.',
+      body: 'Blocker: respondentimport of launchcontrole ontbreekt. Volgende stap: maak de route eerst live.',
+      trust: '',
     },
     ready_to_launch: {
-      label: 'Launch klaar',
+      label: 'Nog in opbouw',
       tone: 'amber' as const,
       nextStepLabel: 'Invites versturen',
       viewerCta: 'Open uitvoerflow',
       sectionTitle: 'Ready to launch',
       sectionDescription:
         'Campagnes waar de respondentlaag klaarstaat, maar waar uitnodigingen nog niet volledig live zijn gezet.',
-      body: 'Respondenten staan klaar, maar de inviteflow is nog niet volledig gestart.',
-      trust:
-        'Dashboard en rapport blijven dicht tot de eerste veilige responslaag echt opbouwt.',
+      body: 'Blocker: uitnodigingen zijn nog niet volledig live. Volgende stap: start eerst de inviteflow.',
+      trust: '',
     },
     running: {
-      label: 'Invites live',
+      label: 'Nog in opbouw',
       tone: 'amber' as const,
       nextStepLabel: 'Respons volgen',
       viewerCta: 'Open uitvoerflow',
       sectionTitle: 'Invites live / running',
       sectionDescription:
         'Campagnes waar uitnodigingen lopen, maar waar nog geen eerste veilige responslaag zichtbaar hoort te worden.',
-      body: 'De inviteflow loopt, maar het beeld is nog te dun voor een eerste inhoudelijke read.',
-      trust:
-        'Laat hier vooral voortgang zien. Dit is nog geen stevige duiding.',
+      body: 'Blocker: er is nog geen veilige responslaag. Volgende stap: wacht op meer responses.',
+      trust: '',
     },
     sparse: {
-      label: 'Indicatief, nog dun',
+      label: 'Nog in opbouw',
       tone: 'amber' as const,
       nextStepLabel: 'Meer respons nodig',
       viewerCta: 'Open uitvoerflow',
       sectionTitle: 'Sparse / indicatief',
       sectionDescription:
         'Campagnes met eerste responses, maar nog onder de veilige dashboarddrempel voor een eerlijke eerste duiding.',
-      body: 'Er zijn eerste responses binnen, maar het beeld is nog te dun voor een stevige dashboardread.',
-      trust:
-        'Gebruik dit als signaal dat uitvoering loopt, niet als conclusie.',
+      body: 'Eerste read beschikbaar, detail blijft nog beperkt.',
+      trust: '',
     },
     partial: {
       label: 'Deels zichtbaar',
@@ -713,9 +698,8 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Deels zichtbaar',
       sectionDescription:
         'Campagnes waar de eerste veilige dashboardlaag open is, maar waar thresholds of privacy de verdiepingslaag nog begrenzen.',
-      body: 'De eerste dashboardread is zichtbaar, maar verdiepende duiding blijft nog bewust compact.',
-      trust:
-        'Privacy- en thresholdgrenzen houden detail en claims nog deels dicht.',
+      body: 'Eerste read beschikbaar, detail blijft nog beperkt.',
+      trust: '',
     },
     full: {
       label: 'Duiding gereed',
@@ -725,9 +709,8 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Volledig / klaar voor bespreking',
       sectionDescription:
         'Campagnes met genoeg respons en voldoende zichtbaarheid om dashboard, aanbevelingen en rapport als managementinstrument te gebruiken.',
-      body: 'Dashboard en rapport zijn nu stevig genoeg voor duiding, prioritering en een eerste vervolgactie.',
-      trust:
-        'Nu kun je ook de vervolgstap en het rapport meenemen in het gesprek.',
+      body: 'Dashboard en rapport zijn nu beschikbaar voor eerste lezing.',
+      trust: '',
     },
     closed: {
       label: 'Rapport eerst',
@@ -737,9 +720,8 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Gesloten / rapport eerst',
       sectionDescription:
         'Gesloten campagnes waar de nadruk nu op rapportage, terugblik en bestuurlijke opvolging hoort te liggen.',
-      body: 'Deze campagne is gesloten. Gebruik rapport en dashboard nu voor terugblik en vervolggesprek.',
-      trust:
-        'Geen live uitvoersignalen meer, nu telt vooral rapportage, context en vervolgrichting.',
+      body: 'Route is afgerond. Rapport en dashboard blijven beschikbaar.',
+      trust: '',
     },
   } satisfies Record<
     CampaignCompositionState,
