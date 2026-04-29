@@ -769,6 +769,43 @@ describe('action center core semantics', () => {
     expect(semantics.closingSemantics.historicalSummary).toContain('vorige stap is afgerond')
   })
 
+  it('does not project a historical closeout summary from ordinary follow-up notes or dossier routing text', () => {
+    const base = buildContext({
+      dossier: buildDossier({
+        next_route: 'Borg de afspraken in het volgende teamoverleg.',
+        stop_reason: 'Stop alleen als de eigenaar later afhaakt.',
+      }),
+    })
+
+    const semantics = projectActionCenterCoreSemantics({
+      ...base,
+      route: {
+        ...base.route,
+        routeStatus: 'in-uitvoering',
+        reviewOutcome: 'bijstellen',
+      },
+      learningCheckpoints: [
+        buildCheckpoint({
+          id: 'cp-follow-up-review',
+          checkpoint_key: 'follow_up_review',
+          owner_label: 'HR',
+          status: 'bevestigd',
+          objective_signal_notes: 'Drie werkafspraken zijn opnieuw bevestigd.',
+          qualitative_notes: 'De afspraken blijven nog twee weken onder review.',
+          interpreted_observation: 'Het teamoverleg voelt rustiger, maar we blijven volgen.',
+          confirmed_lesson: 'Blijf de afspraken de komende twee weken actief volgen.',
+          lesson_strength: 'terugkerend_patroon',
+          destination_areas: ['report'],
+          created_at: '2026-04-20T09:00:00.000Z',
+          updated_at: '2026-04-20T09:00:00.000Z',
+        }),
+      ],
+    })
+
+    expect(semantics.closingSemantics.status).toBe('lopend')
+    expect(semantics.closingSemantics.historicalSummary).toBeNull()
+  })
+
   it('prefers the latest explicit preview update before nextStep in whatWasTried', () => {
     const semantics = projectActionCenterPreviewCoreSemantics({
       id: 'preview-2',

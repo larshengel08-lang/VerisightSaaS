@@ -7,7 +7,7 @@ import type { LiveActionCenterCampaignContext } from "@/lib/action-center-live-c
 import { projectActionCenterRoute } from "@/lib/action-center-route-contract";
 import type { Campaign, CampaignStats } from "@/lib/types";
 import type { CampaignDeliveryRecord } from "@/lib/ops-delivery";
-import type { PilotLearningDossier } from "@/lib/pilot-learning";
+import type { PilotLearningCheckpoint, PilotLearningDossier } from "@/lib/pilot-learning";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -114,6 +114,25 @@ function buildDossier(overrides: Partial<PilotLearningDossier> = {}): PilotLearn
     updated_at: "2026-04-24T10:00:00.000Z",
     ...overrides,
   } as PilotLearningDossier;
+}
+
+function buildCheckpoint(overrides: Partial<PilotLearningCheckpoint> = {}): PilotLearningCheckpoint {
+  return {
+    id: "checkpoint",
+    dossier_id: "dossier-exit",
+    checkpoint_key: "first_management_use",
+    owner_label: "HR lead",
+    status: "bevestigd",
+    objective_signal_notes: null,
+    qualitative_notes: null,
+    interpreted_observation: null,
+    confirmed_lesson: null,
+    lesson_strength: "terugkerend_patroon",
+    destination_areas: ["operations"],
+    updated_at: "2026-04-24T09:00:00.000Z",
+    created_at: "2026-04-15T10:00:00.000Z",
+    ...overrides,
+  } as PilotLearningCheckpoint;
 }
 
 function buildLiveContext(): LiveActionCenterCampaignContext {
@@ -283,14 +302,71 @@ describe("action center landing shell", () => {
     expect(stoppedMarkup).toContain("De route stopt omdat er nu geen draagvlak is voor opvolging.");
   });
 
-  it("renders historical closeout meaning on route detail without forcing the route into a closed status", () => {
-    const source = readFileSync(
-      new URL("../../../components/dashboard/action-center-preview.tsx", import.meta.url),
-      "utf8",
+  it("renders historical closeout meaning only when an active route carries real historical closeout truth", () => {
+    const activeHistoricalContext = {
+      ...buildLiveContext(),
+      learningCheckpoints: [
+        buildCheckpoint({
+          id: "cp-follow-up-review",
+          checkpoint_key: "follow_up_review",
+          owner_label: "HR",
+          confirmed_lesson:
+            "De vorige stap is afgerond; borg nu of de afspraken in de komende twee weken standhouden.",
+          qualitative_notes: "De eerdere cyclus kon worden afgerond; deze route bewaakt alleen de borging.",
+        }),
+      ],
+    };
+    const activeOrdinaryContext = {
+      ...buildLiveContext(),
+      learningCheckpoints: [
+        buildCheckpoint({
+          id: "cp-follow-up-review",
+          checkpoint_key: "follow_up_review",
+          owner_label: "HR",
+          confirmed_lesson: "Blijf de afspraken de komende twee weken actief volgen.",
+          qualitative_notes: "Het teamoverleg blijft nog onder review.",
+          interpreted_observation: "De eerste interventie geeft rust, maar we blijven volgen.",
+        }),
+      ],
+    };
+    const [historicalItem] = buildLiveActionCenterItems([activeHistoricalContext]);
+    const [ordinaryItem] = buildLiveActionCenterItems([activeOrdinaryContext]);
+
+    const historicalMarkup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [historicalItem],
+        initialSelectedItemId: historicalItem.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+    const ordinaryMarkup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [ordinaryItem],
+        initialSelectedItemId: ordinaryItem.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
     );
 
-    expect(source).toContain("Eerder afgerond in deze route");
-    expect(source).toContain("historicalSummary");
+    expect(historicalItem.coreSemantics.closingSemantics.status).toBe("lopend");
+    expect(historicalItem.coreSemantics.closingSemantics.historicalSummary).toContain("vorige stap is afgerond");
+    expect(historicalMarkup).toContain("Eerder afgerond in deze route");
+    expect(historicalMarkup).toContain(
+      "De vorige stap is afgerond; borg nu of de afspraken in de komende twee weken standhouden.",
+    );
+
+    expect(ordinaryItem.coreSemantics.closingSemantics.status).toBe("lopend");
+    expect(ordinaryItem.coreSemantics.closingSemantics.historicalSummary).toBeNull();
+    expect(ordinaryMarkup).not.toContain("Eerder afgerond in deze route");
   });
 
   it("keeps the landing summary compact with a last route-read instead of full detail semantics", () => {

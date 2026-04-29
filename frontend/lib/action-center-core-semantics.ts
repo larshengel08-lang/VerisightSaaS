@@ -94,6 +94,16 @@ const ACTION_STEP_PREFIXES = new Set([
   'koppel',
   'vervolg',
 ])
+const HISTORICAL_CLOSEOUT_SIGNAL_PATTERNS = [
+  /\bafgerond\b/i,
+  /\bafgesloten\b/i,
+  /\bvorige stap\b/i,
+  /\beerdere cyclus\b/i,
+  /\beerste cyclus\b/i,
+  /\breeds afgerond\b/i,
+  /\bal afgerond\b/i,
+  /\bkon worden afgerond\b/i,
+]
 
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
@@ -200,14 +210,15 @@ function getRouteSummary(route: ActionCenterRouteContract, context: ActionCenter
 
 function getHistoricalCloseoutSummary(context: ActionCenterCoreSemanticsProjectionInput) {
   const followUpReview = getCheckpoint(context, 'follow_up_review')
+  const confirmedLesson = normalizeText(followUpReview?.confirmed_lesson)
 
-  return pickFirst([
-    followUpReview?.confirmed_lesson,
-    followUpReview?.qualitative_notes,
-    followUpReview?.interpreted_observation,
-    context.learningDossier?.next_route,
-    context.learningDossier?.stop_reason,
-  ])
+  if (!confirmedLesson) {
+    return null
+  }
+
+  return HISTORICAL_CLOSEOUT_SIGNAL_PATTERNS.some((pattern) => pattern.test(confirmedLesson))
+    ? confirmedLesson
+    : null
 }
 
 function getReviewQuestionTemplateForStatus(status: ActionCenterRouteContract['routeStatus']) {
