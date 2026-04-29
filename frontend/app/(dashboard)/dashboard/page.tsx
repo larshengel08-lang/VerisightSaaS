@@ -460,7 +460,7 @@ function CampaignRow({
 
   return (
     <div className="rounded-[var(--dashboard-radius-card)] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[var(--dashboard-shadow-soft)] transition-shadow hover:shadow-[var(--dashboard-shadow-strong)]">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between xl:gap-6">
+      <div className="flex flex-col gap-4">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <DashboardChip label={scanDefinition.productName} tone="slate" />
@@ -468,11 +468,9 @@ function CampaignRow({
             <DashboardChip label={stateMeta.label} tone={stateMeta.tone} />
           </div>
           <h2 className="mt-3 text-base font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">{campaign.campaign_name}</h2>
-          <p className="mt-1.5 text-sm leading-[1.65] text-[color:var(--dashboard-text)]">{stateMeta.body}</p>
-          <p className="mt-1 text-xs leading-5 text-[color:var(--dashboard-muted)]">{stateMeta.trust}</p>
         </div>
 
-        <div className="grid gap-2.5 sm:grid-cols-2 xl:min-w-[380px] xl:grid-cols-2 2xl:min-w-[520px] 2xl:grid-cols-4">
+        <div className="w-full grid gap-2.5 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
           <StatCell label="Respons" value={`${campaign.completion_rate_pct ?? 0}%`} />
           <StatCell label="Ingevuld" value={`${campaign.total_completed}`} />
           <StatCell label="Uitgenodigd" value={`${campaign.total_invited}`} />
@@ -480,6 +478,10 @@ function CampaignRow({
             label={`Gem. ${scanDefinition.signalLabelLower}`}
             value={campaign.avg_risk_score !== null ? `${campaign.avg_risk_score.toFixed(1)}/10` : '—'}
           />
+        </div>
+        <div className="w-full">
+          <p className="text-sm leading-[1.75] text-[color:var(--dashboard-text)]">{stateMeta.body}</p>
+          <p className="mt-2 text-sm leading-[1.75] text-[color:var(--dashboard-muted)]">{stateMeta.trust}</p>
         </div>
       </div>
 
