@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildReportLibraryEntries, filterReportLibraryEntries } from './report-library'
+import { buildReportLibraryEntries, filterReportLibraryEntries, getReportEntryBridge } from './report-library'
 import type { CampaignStats } from '@/lib/types'
 
 const campaigns: CampaignStats[] = [
@@ -81,12 +81,89 @@ describe('report library', () => {
     expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.recommended).toBe(true)
   })
 
+  it('formats the featured subtitle without encoding artifacts', () => {
+    const model = buildReportLibraryEntries(campaigns)
+
+    expect(model.featured?.subtitle).toContain('·')
+    expect(model.featured?.subtitle).not.toContain('Â·')
+  })
+
   it('maps management, module and cohort categories in a bounded way', () => {
     const model = buildReportLibraryEntries(campaigns)
 
     expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.category).toBe('management')
     expect(model.entries.find((entry) => entry.campaignId === 'pulse-1')?.category).toBe('module')
     expect(model.entries.find((entry) => entry.campaignId === 'onboarding-1')?.category).toBe('cohort')
+  })
+
+  it('marks report-ready entries with shared bridge assessment truth', () => {
+    const model = buildReportLibraryEntries(campaigns, {
+      routeOpenableByCampaignId: {
+        'exit-1': true,
+      },
+    })
+
+    expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.bridgeState).toBe('candidate')
+  })
+
+  it('keeps report-ready entries on attention until canonical route-openable truth exists', () => {
+    const model = buildReportLibraryEntries(campaigns)
+
+    expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.bridgeState).toBe('attention')
+  })
+
+  it('allows report entries to become active when real route truth is available', () => {
+    const model = buildReportLibraryEntries(campaigns, {
+      routeEntryStageByCampaignId: {
+        'exit-1': 'active',
+      },
+    })
+
+    expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.bridgeState).toBe('active')
+  })
+
+  it('keeps the featured report on the same bridge policy as regular entries', () => {
+    const model = buildReportLibraryEntries(campaigns, {
+      routeEntryStageByCampaignId: {
+        'exit-1': 'active',
+      },
+    })
+
+    expect(model.featured?.bridgeState).toBe('active')
+    expect(getReportEntryBridge(model.featured!)).toMatchObject({
+      href: '/action-center',
+      bridge: {
+        ctaLabel: 'Open in Action Center',
+      },
+    })
+  })
+
+  it('keeps candidate and active report destinations aligned with reports bridge policy', () => {
+    const candidateEntry = buildReportLibraryEntries(campaigns, {
+      routeOpenableByCampaignId: {
+        'exit-1': true,
+      },
+    }).entries.find((entry) => entry.campaignId === 'exit-1')
+    const activeEntry = buildReportLibraryEntries(campaigns, {
+      routeEntryStageByCampaignId: {
+        'exit-1': 'active',
+      },
+    }).entries.find((entry) => entry.campaignId === 'exit-1')
+
+    expect(candidateEntry).toBeDefined()
+    expect(activeEntry).toBeDefined()
+    expect(getReportEntryBridge(candidateEntry!)).toMatchObject({
+      href: '/campaigns/exit-1',
+      bridge: {
+        ctaLabel: 'Ga naar campaign detail',
+      },
+    })
+    expect(getReportEntryBridge(activeEntry!)).toMatchObject({
+      href: '/action-center',
+      bridge: {
+        ctaLabel: 'Open in Action Center',
+      },
+    })
   })
 
   it('filters cards per category without inventing an all-in-one export layer', () => {
@@ -96,6 +173,21 @@ describe('report library', () => {
     expect(filterReportLibraryEntries(model.entries, 'management').map((entry) => entry.campaignId)).toEqual(['exit-1'])
     expect(filterReportLibraryEntries(model.entries, 'module').map((entry) => entry.campaignId)).toEqual(['pulse-1'])
     expect(filterReportLibraryEntries(model.entries, 'cohort').map((entry) => entry.campaignId)).toEqual(['onboarding-1'])
+  })
+
+  it('prioritizes the seeded HR demo campaign in featured report selection when an artifact is present', () => {
+    const model = buildReportLibraryEntries(campaigns, {
+      hrDemoArtifact: {
+        campaignId: 'pulse-1',
+      },
+    })
+
+    expect(model.featured).toMatchObject({
+      campaignId: 'pulse-1',
+      scanType: 'pulse',
+    })
+    expect(model.entries.find((entry) => entry.campaignId === 'pulse-1')?.recommended).toBe(true)
+    expect(model.entries.find((entry) => entry.campaignId === 'exit-1')?.recommended).toBe(false)
   })
 })
 

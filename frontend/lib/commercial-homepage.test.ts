@@ -41,6 +41,6 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource).toContain('Van eerste inzicht naar concrete opvolging in dezelfde leeslijn')
     expect(homepageSource).toContain('Geen losse output.')
     expect(homepageSource).toContain('Wel een helder besluitspoor.')
-    expect(homepageSource).toContain('Voorbeeldoutput is illustratief en gebaseerd op fictieve data.')
+    expect(homepageSource).toContain('Zie waar vertrek, behoud of vroege uitval echt aandacht vraagt.')
   })
 })

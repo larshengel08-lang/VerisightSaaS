@@ -14,14 +14,14 @@ export function SuiteAccessDenied({
 }) {
   return (
     <DashboardHero
-      eyebrow="Toegang begrensd"
+      eyebrow="Beperkte toegang"
       title={title}
       description={description}
       tone="slate"
       meta={
         <>
-          <DashboardChip label="Manager-only scope" tone="amber" />
-          <DashboardChip label="Insights bewust gesloten" tone="slate" />
+          <DashboardChip label="Alleen Action Center" tone="amber" />
+          <DashboardChip label="Rapporten en inzichten gesloten" tone="slate" />
         </>
       }
       actions={
@@ -36,8 +36,8 @@ export function SuiteAccessDenied({
         <div className="space-y-3">
           <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">Waarom je dit ziet</p>
           <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
-            Managers gebruiken dezelfde suite-login, maar alleen binnen de follow-through laag. Survey-inzichten,
-            campaigndetail en rapportage blijven bewust gesloten voor manager-only toegang.
+            Managers gebruiken dezelfde login, maar werken alleen in Action Center. Rapporten,
+            campagnedetails en survey-inzichten blijven daarom gesloten.
           </p>
         </div>
       }

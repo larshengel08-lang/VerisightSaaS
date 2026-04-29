@@ -41,7 +41,7 @@ export type DashboardShellNavigation = {
 export type DashboardShellMode = 'full' | 'action_center_only'
 
 const MODULE_LABELS: Array<{ key: DashboardModuleKey; label: string; scanType?: ScanType }> = [
-  { key: 'overview', label: 'Dashboard' },
+  { key: 'overview', label: 'Overzicht' },
   { key: 'exit', label: 'ExitScan', scanType: 'exit' },
   { key: 'retention', label: 'RetentieScan', scanType: 'retention' },
   { key: 'onboarding', label: 'Onboarding 30-60-90', scanType: 'onboarding' },
@@ -185,19 +185,19 @@ export function buildDashboardShellNavigation({
     ? [
         {
           label: 'Setup',
-          detail: 'Organisaties, scans en startmomenten.',
+          detail: 'Organisaties, campaignsetup en launchdiscipline.',
           href: '/beheer',
           disabled: false,
         },
         {
           label: 'Leads',
-          detail: 'Contactaanvragen en overdracht.',
+          detail: 'Sales-to-delivery context en contactaanvragen.',
           href: '/beheer/contact-aanvragen',
           disabled: false,
         },
         {
           label: 'Action Center bron',
-          detail: 'Bron voor prioriteiten en opvolging.',
+          detail: 'Broncampagnes en opvolging beheren.',
           href: '/beheer/klantlearnings',
           disabled: false,
         },
@@ -223,10 +223,10 @@ export type ActionCenterNavItem = (typeof ACTION_CENTER_NAV)[number]
 export function getDashboardShellCurrentLabel(pathname: string) {
   if (pathname.startsWith('/reports')) return 'Rapporten'
   if (pathname.startsWith('/action-center')) return 'Action Center'
-  if (pathname.startsWith('/campaigns/')) return 'Scanoverzicht'
-  if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Contactaanvragen'
-  if (pathname.startsWith('/beheer/klantlearnings')) return 'Action Center bron'
-  if (pathname.startsWith('/beheer')) return 'Beheer'
+  if (pathname.startsWith('/campaigns/')) return 'Campagnedetail'
+  if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
+  if (pathname.startsWith('/beheer/klantlearnings')) return 'Action Center'
+  if (pathname.startsWith('/beheer')) return 'Setup en beheer'
 
-  return 'Dashboardoverzicht'
+  return 'Overzicht'
 }

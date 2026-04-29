@@ -66,7 +66,7 @@ export default function CompleteAccountPage() {
       return
     }
 
-    setSuccess('Account geactiveerd en vrijgegeven voor je eerste read. Je wordt doorgestuurd naar het dashboard...')
+    setSuccess('Account geactiveerd. Je wordt doorgestuurd naar het dashboard...')
     setTimeout(() => router.push('/dashboard'), 1200)
   }
 
@@ -88,7 +88,7 @@ export default function CompleteAccountPage() {
           <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
             {checking ? (
               <div className="text-center">
-                <h1 className="mb-2 text-lg font-semibold text-gray-900">Activatielink verifiÃ«ren...</h1>
+                <h1 className="mb-2 text-lg font-semibold text-gray-900">Activatielink verifiëren...</h1>
                 <p className="text-sm text-gray-500">Even geduld. We ronden je dashboardtoegang af.</p>
               </div>
             ) : (
@@ -96,8 +96,8 @@ export default function CompleteAccountPage() {
                 <h1 className="mb-2 text-xl font-semibold text-gray-900">Kies direct een wachtwoord</h1>
                 <p className="mb-6 text-sm text-gray-500">
                   Je bent ingelogd via de activatiemail voor {email ?? 'jouw account'}. Stel nu meteen een wachtwoord in,
-                  zodat je later gewoon via de inlogpagina kunt terugkomen. Na deze stap is je account vrijgegeven voor
-                  het juiste dashboard en de juiste campaign voor je eerste read.
+                  zodat je later gewoon via de inlogpagina kunt terugkomen. Na deze stap is je account klaar voor
+                  het juiste dashboard en de juiste campagne.
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -125,7 +125,7 @@ export default function CompleteAccountPage() {
                       required
                       value={password2}
                       onChange={(e) => setPassword2(e.target.value)}
-                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                      placeholder="••••••••"
                       className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -173,10 +173,10 @@ export default function CompleteAccountPage() {
           <div className="space-y-6">
             <ActivationJourneyPanel />
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Assisted onboarding</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">Begeleide inrichting</p>
               <p className="mt-3 text-sm leading-6 text-gray-600">
-                Verisight verkoopt geen self-service surveytool. Dit account is het handoff-moment naar jouw dashboard en
-                rapport, nadat de campaign en respondentflow al voor je zijn voorbereid en bewust voor jouw eerste read zijn vrijgegeven.
+                Je account gaat pas open als het dashboard, de campagne en de respondentgroep voor je klaarstaan.
+                Daardoor kom je niet in een lege omgeving terecht, maar meteen in de juiste werkomgeving.
               </p>
             </div>
           </div>

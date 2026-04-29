@@ -60,7 +60,7 @@ describe('dashboard shell navigation', () => {
     expect(navigation.modules).toEqual([
       {
         key: 'overview',
-        label: 'Dashboard',
+        label: 'Overzicht',
         href: '/dashboard',
         disabled: false,
       },

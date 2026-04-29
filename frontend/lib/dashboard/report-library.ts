@@ -1,4 +1,12 @@
+import type { ActionCenterEntryStage } from '@/lib/action-center-route-contract'
+import {
+  type HrDemoPilotArtifact,
+  loadHrDemoPilotArtifact,
+  prioritizeHrDemoCampaigns,
+} from '@/lib/dashboard/hr-demo-pilot-artifact'
+import { getHrBridgePresentation } from '@/lib/dashboard/hr-bridge-state'
 import { FIRST_DASHBOARD_THRESHOLD } from '@/lib/response-activation'
+import { buildBridgeAssessmentTruth, resolveHrBridgeState } from '@/lib/dashboard/hr-bridge-state'
 import { SCAN_TYPE_LABELS, getCampaignAverageSignalScore, type CampaignStats, type ScanType } from '@/lib/types'
 
 export type ReportLibraryCategory = 'all' | 'management' | 'module' | 'cohort'
@@ -14,16 +22,24 @@ export interface ReportLibraryEntry {
   metaLeft: string
   metaRight: string
   recommended: boolean
+  bridgeState: 'attention' | 'candidate' | 'active'
 }
 
 export interface FeaturedReportEntry {
   campaignId: string
   campaignName: string
   scanType: ScanType
+  bridgeState: 'attention' | 'candidate' | 'active'
   title: string
   subtitle: string
   description: string
   stats: Array<{ label: string; value: string }>
+}
+
+export interface BuildReportLibraryEntriesOptions {
+  routeEntryStageByCampaignId?: Partial<Record<string, ActionCenterEntryStage | null>>
+  routeOpenableByCampaignId?: Partial<Record<string, boolean>>
+  hrDemoArtifact?: Pick<HrDemoPilotArtifact, 'campaignId'> | null
 }
 
 const MANAGEMENT_SCAN_TYPES: ScanType[] = ['exit', 'retention', 'leadership']
@@ -67,14 +83,14 @@ function getEntrySummary(campaign: CampaignStats, category: Exclude<ReportLibrar
   const signalText = signalDisplay !== null ? `${signalDisplay.toFixed(1)}/10 signaal` : 'signaal volgt na voldoende respons'
 
   if (category === 'management') {
-    return `${SCAN_TYPE_LABELS[campaign.scan_type]} als managementsamenvatting bij deze scan.`
+    return `${SCAN_TYPE_LABELS[campaign.scan_type]} voor eerste samenvatting, vervolgstap en reviewmoment.`
   }
 
   if (category === 'cohort') {
-    return `${SCAN_TYPE_LABELS[campaign.scan_type]} als cohortrapport bij deze scan.`
+    return `${SCAN_TYPE_LABELS[campaign.scan_type]} als cohortoverzicht, met nadruk op checkpoint en opvolging.`
   }
 
-  return `${SCAN_TYPE_LABELS[campaign.scan_type]} als verdiepingsrapport, met ${signalText.toLowerCase()}.`
+  return `${SCAN_TYPE_LABELS[campaign.scan_type]} als verdiepende modulelaag, met ${signalText.toLowerCase()}.`
 }
 
 function getEntryTitle(campaign: CampaignStats, category: Exclude<ReportLibraryCategory, 'all'>) {
@@ -102,7 +118,41 @@ function getPriority(campaign: CampaignStats) {
   return base * 1000 + campaign.total_completed
 }
 
-export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
+function getReportBridgeState(args: {
+  campaign: CampaignStats
+  routeEntryStage: ActionCenterEntryStage | null
+  routeOpenable: boolean
+}): ReportLibraryEntry['bridgeState'] {
+  const { campaign, routeEntryStage, routeOpenable } = args
+  const isReportReady = campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD
+  const assessment = buildBridgeAssessmentTruth({
+    sourceType: 'report',
+    sourceId: campaign.campaign_id,
+    signalReadable: isReportReady,
+    managementMeaningClear: isReportReady,
+    plausibleFollowUpExists: isReportReady && routeOpenable,
+    assessedAt: campaign.created_at,
+  })
+
+  return resolveHrBridgeState({
+    routeEntryStage,
+    assessment,
+  })
+}
+
+export function getReportEntryBridge(entry: Pick<ReportLibraryEntry, 'campaignId' | 'bridgeState'>) {
+  const bridge = getHrBridgePresentation({
+    bridgeState: entry.bridgeState,
+    surface: 'reports',
+  })
+
+  return {
+    bridge,
+    href: bridge.ctaKind === 'open' ? '/action-center' : `/campaigns/${entry.campaignId}`,
+  }
+}
+
+export function buildReportLibraryEntries(campaigns: CampaignStats[], options: BuildReportLibraryEntriesOptions = {}) {
   const readyCampaigns = campaigns
     .filter((campaign) => campaign.total_completed >= FIRST_DASHBOARD_THRESHOLD)
     .sort((left, right) => {
@@ -111,10 +161,19 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
       return right.total_completed - left.total_completed
     })
 
-  const featuredCandidate =
+  const demoArtifact = options.hrDemoArtifact ?? loadHrDemoPilotArtifact()
+  const prioritizedReadyCampaigns = prioritizeHrDemoCampaigns(
     [...readyCampaigns]
       .filter((campaign) => campaign.total_completed >= 10)
-      .sort((left, right) => getPriority(right) - getPriority(left))[0] ?? null
+      .sort((left, right) => getPriority(right) - getPriority(left))
+      .map((campaign) => ({
+        campaignId: campaign.campaign_id,
+        campaign,
+      })),
+    demoArtifact ? { campaignId: demoArtifact.campaignId } : null,
+  )
+
+  const featuredCandidate = prioritizedReadyCampaigns[0]?.campaign ?? null
 
   const entries: ReportLibraryEntry[] = readyCampaigns.map((campaign) => {
     const category = getCategory(campaign.scan_type)
@@ -127,9 +186,14 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
       categoryLabel: getCategoryLabel(category),
       title: getEntryTitle(campaign, category),
       summary: getEntrySummary(campaign, category),
-      metaLeft: `${campaign.total_completed} responsen`,
+      metaLeft: `${campaign.total_completed} responses`,
       metaRight: formatDutchDate(campaign.created_at),
       recommended: featuredCandidate?.campaign_id === campaign.campaign_id,
+      bridgeState: getReportBridgeState({
+        campaign,
+        routeEntryStage: options.routeEntryStageByCampaignId?.[campaign.campaign_id] ?? null,
+        routeOpenable: options.routeOpenableByCampaignId?.[campaign.campaign_id] === true,
+      }),
     }
   })
 
@@ -138,11 +202,17 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[]) {
         campaignId: featuredCandidate.campaign_id,
         campaignName: featuredCandidate.campaign_name,
         scanType: featuredCandidate.scan_type,
+        bridgeState: getReportBridgeState({
+          campaign: featuredCandidate,
+          routeEntryStage: options.routeEntryStageByCampaignId?.[featuredCandidate.campaign_id] ?? null,
+          routeOpenable: options.routeOpenableByCampaignId?.[featuredCandidate.campaign_id] === true,
+        }),
         title:
           featuredCandidate.campaign_name ||
           `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} ${formatDutchQuarter(featuredCandidate.created_at)}`,
         subtitle: `${SCAN_TYPE_LABELS[featuredCandidate.scan_type]} · ${formatDutchQuarter(featuredCandidate.created_at)}`,
-        description: 'Gebruik dit rapport als eerste managementsamenvatting van de scan.',
+        description:
+          'Gebruik dit rapport als eerste samenvatting: wat speelt nu, wat vraagt verificatie en welke eigenaar, eerste stap en reviewmoment horen daarna vastgelegd te worden.',
         stats: [
           { label: 'Responses', value: String(featuredCandidate.total_completed) },
           {

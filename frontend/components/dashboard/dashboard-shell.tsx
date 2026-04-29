@@ -73,7 +73,7 @@ export function DashboardShellFrame({
                 <span className="block">
                   <span className="block font-serif text-[1.1rem] leading-5 text-[#f5f2eb]">Verisight</span>
                   <span className="mt-0.5 block text-[0.72rem] uppercase tracking-[0.24em] text-[#8fa1b3]">
-                    Dashboard
+                    People Suite
                   </span>
                 </span>
               </Link>
@@ -234,8 +234,8 @@ export function DashboardShellFrame({
 
           <footer className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 text-xs text-[color:var(--dashboard-muted)] sm:px-6">
             {shellMode === 'action_center_only'
-              ? 'Verisight Action Center voor toegewezen opvolging'
-              : 'Verisight dashboard en Action Center in dezelfde werkomgeving'}
+              ? 'Verisight Action Center voor managers in dezelfde omgeving'
+              : 'Verisight dashboard, rapporten en Action Center in één omgeving'}
           </footer>
         </div>
       </div>
@@ -268,10 +268,10 @@ function ActionCenterSidebarNav({ activeHref }: { activeHref: string }) {
       </div>
       <div className="border-t border-white/8 pt-4">
         <Link
-          href="/dashboard"
+          href="/action-center"
           className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-[#94a3b8] transition-colors hover:bg-white/[0.04] hover:text-[#f5f2eb]"
         >
-          Terug naar dashboard
+          Naar Action Center-overzicht
         </Link>
       </div>
     </div>

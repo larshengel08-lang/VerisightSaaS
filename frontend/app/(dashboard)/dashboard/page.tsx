@@ -1,5 +1,7 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import type { ReactNode } from 'react'
+import { CustomerLaunchControl } from '@/components/dashboard/customer-launch-control'
 import { OnboardingBalloon } from '@/components/dashboard/onboarding-balloon'
 import {
   DashboardChip,
@@ -12,13 +14,26 @@ import { PdfDownloadButton } from '@/app/(dashboard)/campaigns/[id]/pdf-download
 import {
   getCampaignCompositionState,
   HOME_STATE_ORDER,
+  isManagementVisibleState,
+  isRecommendationReadyState,
   type CampaignCompositionState,
 } from '@/lib/dashboard/dashboard-state-composition'
+import {
+  buildBridgeAssessmentTruth,
+  getHrBridgePresentation,
+  resolveHrBridgeState,
+} from '@/lib/dashboard/hr-bridge-state'
+import {
+  canOpenActionCenterRoute,
+  hasOpenedActionCenterRoute,
+} from '@/lib/dashboard/open-action-center-route'
 import {
   normalizeDashboardPortfolioView,
   type DashboardPortfolioView,
 } from '@/lib/dashboard/shell-navigation'
-import { buildReportLibraryEntries } from '@/lib/dashboard/report-library'
+import { loadHrDemoPilotArtifact } from '@/lib/dashboard/hr-demo-pilot-artifact'
+import { selectLeadOverviewCampaign, selectPrimaryOverviewCampaign } from '@/lib/dashboard/overview-focus'
+import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
 import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
 import { FIRST_INSIGHT_THRESHOLD } from '@/lib/response-activation'
@@ -60,17 +75,15 @@ export default async function DashboardHomePage({
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('is_verisight_admin')
-    .eq('id', user.id)
-    .single()
+  const { context, profile } = await loadSuiteAccessContext(supabase, user.id)
+  if (context.managerOnly) redirect('/action-center')
 
   const isAdmin = profile?.is_verisight_admin === true
 
   const { data: stats } = await supabase.from('campaign_stats').select('*').order('created_at', { ascending: false })
 
   const campaigns = (stats ?? []) as CampaignStats[]
+  const hrDemoArtifact = loadHrDemoPilotArtifact()
   const activeCampaigns = campaigns.filter((campaign) => campaign.is_active)
   const campaignIds = campaigns.map((campaign) => campaign.campaign_id)
   const { data: respondentStateRowsRaw } =
@@ -104,11 +117,12 @@ export default async function DashboardHomePage({
   const primaryGuideEntry = getPrimaryGuideCampaign(campaignEntries)
   const primaryGuideCampaign = primaryGuideEntry?.campaign ?? null
   const primaryGuideInvitesNotSent = primaryGuideEntry?.invitesNotSent ?? 0
+  const primaryGuideStateMeta = primaryGuideEntry ? getHomeStateMeta(primaryGuideEntry.state) : null
   const primaryFirstNextStepCampaign = getPrimaryFirstNextStepCampaign(activeCampaigns, campaigns)
   const { data: primaryGuideDeliveryRecord } = primaryGuideCampaign
     ? await supabase
         .from('campaign_delivery_records')
-        .select('id')
+        .select('id, lifecycle_stage, first_management_use_confirmed_at')
         .eq('campaign_id', primaryGuideCampaign.campaign_id)
         .maybeSingle()
     : { data: null }
@@ -160,7 +174,80 @@ export default async function DashboardHomePage({
       })
     : null
   const primaryGuideScanDefinition = primaryGuideCampaign ? getScanDefinition(primaryGuideCampaign.scan_type) : null
-  const primaryOverviewCampaign = primaryFirstNextStepCampaign ?? primaryGuideCampaign
+  const primaryOverviewCampaign = selectPrimaryOverviewCampaign({
+    campaigns,
+    hrDemoCampaignId: hrDemoArtifact?.campaignId ?? null,
+    primaryFirstNextStepCampaign,
+    primaryGuideCampaign,
+  })
+  const primaryOverviewEntry = primaryOverviewCampaign
+    ? campaignEntries.find((entry) => entry.campaign.campaign_id === primaryOverviewCampaign.campaign_id) ?? null
+    : null
+  const primaryOverviewStateMeta = primaryOverviewEntry ? getHomeStateMeta(primaryOverviewEntry.state) : null
+  const leadCampaign = selectLeadOverviewCampaign({
+    primaryOverviewCampaign,
+    primaryGuideCampaign,
+  })
+  const leadCampaignEntry = leadCampaign
+    ? campaignEntries.find((entry) => entry.campaign.campaign_id === leadCampaign.campaign_id) ?? null
+    : null
+  const leadCampaignCompositionState = leadCampaignEntry?.state ?? null
+  const leadCampaignStateMeta = leadCampaignEntry ? getHomeStateMeta(leadCampaignEntry.state) : null
+  const { data: leadCampaignDeliveryRecord } =
+    leadCampaign && leadCampaign.campaign_id !== primaryGuideCampaign?.campaign_id
+      ? await supabase
+          .from('campaign_delivery_records')
+          .select('id, lifecycle_stage, first_management_use_confirmed_at')
+          .eq('campaign_id', leadCampaign.campaign_id)
+          .maybeSingle()
+      : { data: primaryGuideDeliveryRecord ?? null }
+  const leadCampaignRouteEntryStage =
+    leadCampaignDeliveryRecord && hasOpenedActionCenterRoute(leadCampaignDeliveryRecord) ? 'active' : null
+  const leadCampaignRouteOpenable =
+    leadCampaignDeliveryRecord ? canOpenActionCenterRoute(leadCampaignDeliveryRecord) : false
+  const leadCampaignBridgeAssessment =
+    leadCampaign && leadCampaignCompositionState
+      ? buildBridgeAssessmentTruth({
+          sourceType: 'campaign',
+          sourceId: leadCampaign.campaign_id,
+          signalReadable: isManagementVisibleState(leadCampaignCompositionState),
+          managementMeaningClear: isRecommendationReadyState(leadCampaignCompositionState),
+          plausibleFollowUpExists:
+            isRecommendationReadyState(leadCampaignCompositionState) && leadCampaignRouteOpenable,
+          assessedAt: leadCampaign.created_at,
+        })
+      : null
+  const leadBridgeState = leadCampaignBridgeAssessment
+    ? resolveHrBridgeState({
+        routeEntryStage: leadCampaignRouteEntryStage,
+        assessment: leadCampaignBridgeAssessment,
+      })
+    : null
+  const leadBridgePresentation = leadBridgeState
+    ? getHrBridgePresentation({
+        bridgeState: leadBridgeState,
+        surface: 'overview',
+      })
+    : null
+  const leadBridgeStatusLabel =
+    leadBridgePresentation?.label === 'Actieve opvolging'
+      ? 'Actieve opvolging'
+      : leadBridgePresentation?.label ?? null
+  const leadBridgeCtaLabel =
+    leadBridgePresentation?.ctaLabel === 'Beoordeel opvolging'
+      ? 'Beoordeel opvolging'
+      : leadBridgePresentation?.ctaLabel ?? null
+  const leadCampaignScanDefinition = leadCampaign ? getScanDefinition(leadCampaign.scan_type) : null
+  const overviewFocusItems = buildOverviewFocusItems({
+    isAdmin,
+    primaryOverviewCampaign,
+    primaryOverviewStateMeta,
+    primaryGuideCampaign,
+    primaryExecutionState,
+    managementReadyCount,
+    activeExecutionCount,
+    closedCount,
+  })
   const portfolioTabs = portfolioBuckets
     .filter((bucket) => bucket.entries.length > 0)
     .map((bucket) => {
@@ -170,18 +257,16 @@ export default async function DashboardHomePage({
         id: bucket.key,
         label: bucket.label,
         content: (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {bucket.groups.map((group) => (
               <section key={group.key} className="space-y-3">
                 {bucket.groups.length > 1 ? (
-                  <div className="rounded-[var(--dashboard-radius-card)] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-3.5">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold tracking-[-0.01em] text-[color:var(--dashboard-ink)]">{group.title}</p>
-                        <p className="mt-1.5 text-sm leading-[1.65] text-[color:var(--dashboard-text)]">{group.description}</p>
-                      </div>
-                      <DashboardChip label={getHomeStateMeta(group.key).label} tone={getHomeStateMeta(group.key).tone} />
+                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[color:var(--dashboard-frame-border)]/75 pb-3">
+                    <div>
+                      <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">{group.title}</p>
+                      <p className="mt-1.5 max-w-3xl text-sm leading-[1.7] text-[color:var(--dashboard-text)]">{group.description}</p>
                     </div>
+                    <DashboardChip label={getHomeStateMeta(group.key).label} tone={getHomeStateMeta(group.key).tone} />
                   </div>
                 ) : null}
                 <div className="space-y-3">
@@ -203,66 +288,150 @@ export default async function DashboardHomePage({
   const portfolioView = portfolioTabs.some((tab) => tab.id === requestedPortfolioView)
     ? requestedPortfolioView
     : portfolioTabs[0]?.id ?? 'ready'
-  const primaryGuideBuyerSafeName =
-    primaryGuideCampaign && primaryGuideScanDefinition
-      ? getBuyerSafeCampaignName(primaryGuideCampaign.campaign_name, primaryGuideScanDefinition.productName)
-      : null
-  const reportModel = buildReportLibraryEntries(campaigns)
-  const relevantOverviewEntries = getRelevantOverviewEntries(campaignEntries)
-  const recentFormalOutputEntries = reportModel.entries
-    .filter((entry) => entry.scanType === 'exit' || entry.scanType === 'retention')
-    .slice(0, 4)
-  const overviewFollowThroughRows = buildOverviewFollowThroughRows({
-    primaryGuideCampaign,
-    primaryGuideScanDefinition,
-    primaryExecutionState,
-    relevantEntries: relevantOverviewEntries,
-  })
 
   return (
-    <div className="space-y-7">
-      {/* Page header */}
-      <div>
+    <div className="space-y-10">
+      <section className="space-y-6">
+        <div className="max-w-[72rem]">
+          <div className="flex flex-wrap items-center gap-3 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
+            <span>{isAdmin ? 'Campagneoverzicht' : 'Overzicht'}</span>
+            <span className="h-1 w-1 rounded-full bg-[color:var(--dashboard-accent-soft-border)]" />
+            <span>{leadCampaignScanDefinition?.productName ?? 'Dashboard'}</span>
+            {leadCampaignStateMeta ? <DashboardChip label={leadCampaignStateMeta.label} tone={leadCampaignStateMeta.tone} /> : null}
+          </div>
+          <div className="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1.22fr),minmax(270px,0.78fr)] xl:items-end">
+            <div>
+              <h1 className="max-w-[14ch] font-display text-[clamp(2.65rem,5vw,4.5rem)] leading-[0.96] text-[color:var(--dashboard-ink)]">
+                {isAdmin
+                  ? 'Wat nu als eerste bestuurlijke aandacht vraagt.'
+                  : managementReadyCount > 0
+                    ? 'Wat nu het managementgesprek opent.'
+                    : 'Wat nu eerst aandacht vraagt in de uitvoering.'}
+              </h1>
+              <p className="mt-5 max-w-[48rem] text-[1.02rem] leading-[1.9] text-[color:var(--dashboard-text)]">
+                {isAdmin
+                  ? `${campaigns.length} campagne${campaigns.length === 1 ? '' : 's'}, geordend op leesbaarheid, uitvoering en rapportmoment.`
+                  : primaryOverviewCampaign
+                    ? getOverviewHeadline({
+                        campaign: primaryOverviewCampaign,
+                        stateMeta: primaryOverviewStateMeta,
+                        isAdmin,
+                        avgSignal,
+                      })
+                    : 'Zodra de eerste campagne leesbaar wordt, opent hier automatisch het eerste overzicht.'}
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <OverviewSummaryNote
+                label="Portfolio"
+                value={`${campaigns.length} campagne${campaigns.length === 1 ? '' : 's'}`}
+                body={`${managementReadyCount} klaar voor bespreking, ${activeExecutionCount} in uitvoering.`}
+              />
+              <OverviewSummaryNote
+                label="Eerste overzicht"
+                value={leadCampaign ? leadCampaign.campaign_name : 'Nog in opbouw'}
+                body={
+                  leadCampaignStateMeta
+                    ? `${leadCampaignStateMeta.nextStepLabel}. ${leadCampaignStateMeta.trust}`
+                    : 'Het eerste overzicht verschijnt hier zodra er genoeg respons is om eerlijk te kunnen lezen.'
+                }
+                footer={
+                  leadCampaign &&
+                  leadBridgeState &&
+                  leadBridgeStatusLabel &&
+                  leadBridgeCtaLabel ? (
+                    <div className="mt-3 flex items-center gap-3 text-sm text-[#5e6b78]">
+                      <span className="rounded-full border border-[#ddd3c7] bg-[#fbf8f4] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8b7d6b]">
+                        {leadBridgeStatusLabel}
+                      </span>
+                      <Link href={leadBridgeState === 'active' ? '/action-center' : `/campaigns/${leadCampaign.campaign_id}`}>
+                        {leadBridgeCtaLabel}
+                      </Link>
+                    </div>
+                  ) : null
+                }
+              />
+            </div>
+          </div>
+        </div>
+        <div className="h-px bg-[color:var(--dashboard-frame-border)]/85" />
+      </section>
+
+      {/* Legacy header kept for guardrail copy, visually hidden */}
+      <div className="sr-only">
         <h1
           className="text-[1.35rem] font-semibold tracking-[-0.02em]"
           style={{ color: 'var(--dashboard-ink)' }}
         >
-          {isAdmin ? 'Campagneoverzicht' : 'Dashboardoverzicht'}
+          {isAdmin ? 'Campagneoverzicht' : 'Overzicht'}
         </h1>
         <p className="mt-1 text-sm" style={{ color: 'var(--dashboard-muted)' }}>
           {isAdmin
-            ? `${campaigns.length} scan${campaigns.length === 1 ? '' : 's'} · ${managementReadyCount} leesbaar`
+            ? `${campaigns.length} campagne${campaigns.length === 1 ? '' : 's'} · ${managementReadyCount} klaar voor bespreking`
             : primaryOverviewCampaign
-              ? 'De hoofdscan hieronder laat zien waar jullie nu staan en wat eerst nodig is.'
-              : 'Zodra de eerste scan klaarstaat, verschijnt hier automatisch de hoofdlijn.'}
+              ? getOverviewHeadline({ campaign: primaryOverviewCampaign, stateMeta: primaryGuideStateMeta, isAdmin, avgSignal })
+              : 'Zodra de eerste campagne leesbaar wordt, opent hier automatisch het eerste overzicht.'}
         </p>
       </div>
 
-      {/* Primary campaign + execution state */}
+      {/* 4 stat cards */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <SignalStatCard
+          label="Klaar voor bespreking"
+          value={`${managementReadyCount}`}
+          subline={`${fullCount} volledig · ${partialCount} deels`}
+          band={managementReadyCount > 0 ? 'LAAG' : 'neutral'}
+        />
+        <SignalStatCard
+          label="In uitvoering"
+          value={`${activeExecutionCount}`}
+          subline={activeExecutionCount > 0 ? 'Setup, launch of running' : 'Geen actieve uitvoering'}
+          band={activeExecutionCount > 0 ? 'MIDDEN' : 'neutral'}
+        />
+        <SignalStatCard
+          label="Gem. groepssignaal"
+          value={avgSignal ? `${avgSignal}/10` : 'â€”'}
+          subline={avgSignal ? `Gem. respons ${avgResponse}%` : 'Nog geen leesbaar signaal'}
+          band={avgSignal ? (parseFloat(avgSignal) >= 6 ? 'HOOG' : parseFloat(avgSignal) >= 4 ? 'MIDDEN' : 'LAAG') : 'neutral'}
+        />
+        <SignalStatCard
+          label="Afgerond"
+          value={`${closedCount}`}
+          subline={closedCount > 0 ? 'Rapport beschikbaar' : 'Geen gesloten campagnes'}
+          band="neutral"
+        />
+      </div>
+
+      <div className="hidden">
       {!isAdmin && primaryGuideCampaign && primaryExecutionState && primaryGuideScanDefinition ? (
         <div
-          className="rounded-[var(--dashboard-radius-card)] p-5"
+          className="hidden rounded-[var(--dashboard-radius-card)] p-5"
           style={{
             background: 'var(--dashboard-surface)',
             border: '1px solid var(--dashboard-frame-border)',
           }}
         >
-          <div className="pb-4" style={{ borderBottom: '1px solid var(--dashboard-frame-border)' }}>
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-4" style={{ borderBottom: '1px solid var(--dashboard-frame-border)' }}>
             <div>
               <p className="text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
-                Hoofdscan · {primaryGuideScanDefinition.productName}
+                Hoofdcampagne Â· {primaryGuideScanDefinition.productName}
               </p>
-              {primaryGuideBuyerSafeName &&
-              primaryGuideBuyerSafeName !== primaryGuideScanDefinition.productName ? (
-                <p className="mt-1 text-sm leading-6" style={{ color: 'var(--dashboard-text)' }}>
-                  {primaryGuideBuyerSafeName}
-                </p>
-              ) : null}
+              <p className="mt-1 text-base font-semibold tracking-[-0.02em]" style={{ color: 'var(--dashboard-ink)' }}>
+                {primaryGuideCampaign.campaign_name}
+              </p>
             </div>
+            <DashboardChip
+              label={primaryGuideStateMeta?.label ?? primaryExecutionState.currentStateLabel}
+              tone={primaryGuideStateMeta?.tone ?? (primaryExecutionState.dashboardVisible ? 'emerald' : 'amber')}
+            />
           </div>
           <div className="pt-4">
-            <DashboardHomePrimaryPanel
+            <CustomerLaunchControl
+              campaignName={primaryGuideCampaign.campaign_name}
               campaignHref={`/campaigns/${primaryGuideCampaign.campaign_id}`}
+              campaignCtaLabel={primaryExecutionState.dashboardVisible ? 'Open campagne en dashboard' : 'Open uitvoerflow'}
+              productName={primaryGuideScanDefinition.productName}
+              productContext={primaryGuideScanDefinition.whatItIsText}
               state={primaryExecutionState}
             />
           </div>
@@ -270,151 +439,177 @@ export default async function DashboardHomePage({
       ) : !isAdmin && !primaryGuideCampaign ? (
         <ViewerEmptyState />
       ) : null}
+      </div>
 
-      {!isAdmin && primaryGuideCampaign && primaryExecutionState && primaryGuideScanDefinition ? (
-        <div className="space-y-5">
-          <DashboardSection
-            eyebrow="Actieve routes"
-            title="Wat nu relevant is"
-            description="Alleen routes die nu iets leesbaars of iets urgents te doen hebben."
-          >
-            <div className="grid gap-4 xl:grid-cols-2">
-              {relevantOverviewEntries.map((entry) => (
-                <OverviewRouteCard key={entry.campaign.campaign_id} entry={entry} />
-              ))}
-            </div>
-          </DashboardSection>
-
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)]">
-            <DashboardSection
-              eyebrow="Opvolging nu"
-              title="Wat direct opvolging vraagt"
-              description="Maximaal drie regels, geen mini-Action Center."
-            >
-              <div className="space-y-3">
-                {overviewFollowThroughRows.map((row) => (
-                  <div
-                    key={row.label}
-                    className="flex items-start justify-between gap-4 rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-3.5"
-                  >
-                    <div>
-                      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
-                        {row.label}
-                      </p>
-                      <p className="mt-2 text-sm font-semibold text-[color:var(--dashboard-ink)]">{row.value}</p>
-                    </div>
-                    {row.tone ? <DashboardChip label={row.tone} tone={row.toneVariant} /> : null}
-                  </div>
-                ))}
-                <div className="pt-1">
-                  <Link
-                    href="/action-center"
-                    className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
-                  >
-                    Naar Action Center
-                  </Link>
+      {leadCampaign && leadCampaignScanDefinition ? (
+        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.62fr),minmax(320px,0.82fr)]">
+          <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-6 py-6 shadow-[0_20px_48px_rgba(19,32,51,0.06)] sm:px-7 sm:py-7">
+            <div className="grid gap-7 xl:grid-cols-[minmax(0,1.18fr),minmax(250px,0.82fr)] xl:items-start">
+              <div>
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
+                  {isAdmin ? 'Centrale leesroute' : 'Hoofdroute'}
+                </p>
+                <h2 className="mt-3 max-w-[16ch] font-display text-[clamp(2.1rem,4vw,3.35rem)] leading-[0.98] text-[color:var(--dashboard-ink)]">
+                  {leadCampaign.campaign_name}
+                </h2>
+                <p className="mt-3 max-w-[44rem] text-[0.98rem] leading-[1.85] text-[color:var(--dashboard-text)]">
+                  {leadCampaignStateMeta?.body ??
+                    'Gebruik deze route als eerste overzicht, zodat je snel ziet wat nu speelt en wat de logische vervolgstap is.'}
+                </p>
+                <div className="mt-5 flex flex-wrap items-center gap-2.5">
+                  <DashboardChip label={leadCampaignScanDefinition.productName} tone="slate" />
+                  <DashboardChip
+                    label={leadCampaign.is_active ? 'Actief portfolio-item' : 'Gesloten portfolio-item'}
+                    tone={leadCampaign.is_active ? 'emerald' : 'slate'}
+                  />
+                  {leadCampaignStateMeta ? (
+                    <DashboardChip label={leadCampaignStateMeta.nextStepLabel} tone={leadCampaignStateMeta.tone} />
+                  ) : null}
                 </div>
               </div>
-            </DashboardSection>
 
-            <DashboardSection
-              eyebrow="Recente formele output"
-              title="Rapporten en samenvattingen"
-              description="Kernoutput eerst. Bounded reads blijven secundair."
-            >
-              {recentFormalOutputEntries.length > 0 ? (
-                <div className="space-y-3">
-                  {recentFormalOutputEntries.map((entry) => (
-                    <div
-                      key={`${entry.campaignId}-${entry.title}`}
-                      className="flex items-start justify-between gap-4 rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
-                          {entry.scanType === 'exit' ? 'ExitScan' : 'RetentieScan'}
-                        </p>
-                        <p className="mt-2 text-sm font-semibold text-[color:var(--dashboard-ink)]">{entry.title}</p>
-                        <p className="mt-1 text-sm leading-6 text-[color:var(--dashboard-text)]">{entry.summary}</p>
-                        <p className="mt-2 text-xs text-[color:var(--dashboard-muted)]">
-                          {entry.metaLeft} · {entry.metaRight}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 flex-col gap-2">
-                        <Link
-                          href={`/campaigns/${entry.campaignId}`}
-                          className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-3 py-1.5 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
-                        >
-                          Open
-                        </Link>
-                        <PdfDownloadButton campaignId={entry.campaignId} campaignName={entry.campaignName} scanType={entry.scanType} />
-                      </div>
-                    </div>
-                  ))}
-                  <div className="pt-1">
-                    <Link
-                      href="/reports"
-                      className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
-                    >
-                      Naar Rapporten
-                    </Link>
-                  </div>
+              <div className="rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/72 px-4 py-4 sm:px-5">
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+                  Snapshot
+                </p>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+                  <OverviewSnapshotMetric
+                    label="Respons"
+                    value={`${leadCampaign.completion_rate_pct ?? 0}%`}
+                    body={`${leadCampaign.total_completed} ingevuld`}
+                  />
+                  <OverviewSnapshotMetric
+                    label={`Gem. ${leadCampaignScanDefinition.signalLabelLower}`}
+                    value={leadCampaign.avg_risk_score !== null ? `${leadCampaign.avg_risk_score.toFixed(1)}/10` : '-'}
+                    body={leadCampaign.is_active ? 'Live campagne' : 'Rapportfase'}
+                  />
+                  <OverviewSnapshotMetric
+                    label="Uitgenodigd"
+                    value={`${leadCampaign.total_invited}`}
+                    body={
+                      leadCampaignStateMeta
+                        ? leadCampaignStateMeta.label
+                        : leadCampaign.is_active
+                          ? 'Actief'
+                          : 'Gesloten'
+                    }
+                  />
                 </div>
-              ) : (
-                <div className="rounded-[18px] border border-dashed border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-5 text-sm leading-7 text-[color:var(--dashboard-text)]">
-                  Zodra een ExitScan of RetentieScan leesbaar is, verschijnt hier de meest recente managementoutput.
-                </div>
-              )}
-            </DashboardSection>
+              </div>
+            </div>
+
+            {!isAdmin && primaryGuideCampaign && primaryExecutionState && primaryGuideScanDefinition ? (
+              <div className="mt-7 border-t border-[color:var(--dashboard-frame-border)] pt-6">
+                <CustomerLaunchControl
+                  campaignName={primaryGuideCampaign.campaign_name}
+                  campaignHref={`/campaigns/${primaryGuideCampaign.campaign_id}`}
+                  campaignCtaLabel={primaryExecutionState.dashboardVisible ? 'Open campagne en dashboard' : 'Open uitvoerflow'}
+                  productName={primaryGuideScanDefinition.productName}
+                  productContext={primaryGuideScanDefinition.whatItIsText}
+                  state={primaryExecutionState}
+                />
+              </div>
+            ) : isAdmin ? (
+              <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-[color:var(--dashboard-frame-border)] pt-6">
+                <Link
+                  href={`/campaigns/${leadCampaign.campaign_id}`}
+                  className="inline-flex rounded-full border border-[color:var(--dashboard-ink)] bg-[color:var(--dashboard-ink)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1B2E45]"
+                >
+                  Open campagne
+                </Link>
+                <Link
+                  href="/reports"
+                  className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
+                >
+                  Open rapportlijst
+                </Link>
+                <Link
+                  href="/beheer"
+                  className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-text)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+                >
+                  Beheer en setup
+                </Link>
+              </div>
+            ) : null}
           </div>
-        </div>
-      ) : !isAdmin ? null : (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <SignalStatCard
-            label="Leesbaar"
-            value={`${managementReadyCount}`}
-            subline={`${fullCount} volledig · ${partialCount} compact`}
-            band={managementReadyCount > 0 ? 'LAAG' : 'neutral'}
-          />
-          <SignalStatCard
-            label="In uitvoering"
-            value={`${activeExecutionCount}`}
-            subline={activeExecutionCount > 0 ? 'Setup, live of eerste responses' : 'Geen actieve uitvoering'}
-            band={activeExecutionCount > 0 ? 'MIDDEN' : 'neutral'}
-          />
-          <SignalStatCard
-            label="Gem. groepssignaal"
-            value={avgSignal ? `${avgSignal}/10` : '—'}
-            subline={avgSignal ? `Gem. respons ${avgResponse}%` : 'Nog geen leesbaar signaal'}
-            band={avgSignal ? (parseFloat(avgSignal) >= 6 ? 'HOOG' : parseFloat(avgSignal) >= 4 ? 'MIDDEN' : 'LAAG') : 'neutral'}
-          />
-          <SignalStatCard
-            label="Afgerond"
-            value={`${closedCount}`}
-            subline={closedCount > 0 ? 'Rapport en dashboard beschikbaar' : 'Geen afgeronde scans'}
-            band="neutral"
-          />
-        </div>
-      )}
 
-      {/* Portfolio */}
-      {campaigns.length === 0 && isAdmin ? (
-        <AdminEmptyState />
-      ) : campaigns.length > 0 ? (
-        <div>
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm font-semibold" style={{ color: 'var(--dashboard-ink)' }}>
-              {isAdmin ? 'Scans' : 'Volledige scanlijst'}
+          <aside className="rounded-[28px] bg-[#121822] px-6 py-6 text-[#f6f0e8] shadow-[0_24px_54px_rgba(18,24,34,0.24)] sm:px-7 sm:py-7">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[#83d0bf]">
+              Aanbevolen focus
             </p>
-            <span className="text-xs" style={{ color: 'var(--dashboard-muted)' }}>
-              {campaigns.length} scan{campaigns.length === 1 ? '' : 's'}
-            </span>
-          </div>
-          <DashboardTabs tabs={portfolioTabs} defaultTabId={portfolioView} />
-        </div>
+            <h2 className="mt-4 max-w-[12ch] font-display text-[clamp(2rem,4vw,3.1rem)] leading-[0.98] text-[#f8f3ec]">
+              {isAdmin ? 'Waar de suite nu het eerst om vraagt.' : 'Welke route nu het eerst logisch is.'}
+            </h2>
+            <div className="mt-7 space-y-5">
+              {overviewFocusItems.map((item, index) => (
+                <div
+                  key={item.title}
+                  className={index === 0 ? 'space-y-2' : 'space-y-2 border-t border-white/10 pt-5'}
+                >
+                  <p className="dash-number text-[2rem] leading-none text-[#83d0bf]">
+                    {String(index + 1).padStart(2, '0')}
+                  </p>
+                  <p className="text-[1.06rem] font-semibold tracking-[-0.02em] text-[#f8f3ec]">{item.title}</p>
+                  <p className="text-sm leading-7 text-[#b9c3cf]">{item.body}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-7 flex flex-wrap gap-2.5">
+              <Link
+                href={isAdmin ? '/reports' : `/campaigns/${leadCampaign.campaign_id}`}
+                className="inline-flex rounded-full border border-white/14 bg-white/8 px-4 py-2 text-sm font-semibold text-[#f8f3ec] transition-colors hover:bg-white/12"
+              >
+                {isAdmin ? 'Open rapporten' : 'Open campagne'}
+              </Link>
+              {isAdmin ? (
+                <Link
+                  href="/beheer"
+                  className="inline-flex rounded-full border border-[#83d0bf]/30 px-4 py-2 text-sm font-semibold text-[#83d0bf] transition-colors hover:bg-[#83d0bf]/10"
+                >
+                  Open beheer
+                </Link>
+              ) : null}
+            </div>
+          </aside>
+        </section>
+      ) : !isAdmin && !primaryGuideCampaign ? (
+        <ViewerEmptyState />
+      ) : campaigns.length === 0 && isAdmin ? (
+        <AdminEmptyState />
       ) : null}
 
-      {/* Admin quick links */}
-      {isAdmin && (
+      {campaigns.length === 0 && isAdmin ? (
+        null
+      ) : campaigns.length > 0 ? (
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
+                Portfolio
+              </p>
+              <p className="mt-2 text-[1.65rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
+                Rustige scan van alle campagnes.
+              </p>
+            </div>
+            <p className="max-w-[24rem] text-sm leading-7 text-[color:var(--dashboard-text)]">
+              De tabs behouden de echte productstructuur, maar de read begint nu met helder ritme, minder card-op-card en een duidelijkere eerste managementflow.
+            </p>
+          </div>
+          <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_16px_36px_rgba(19,32,51,0.06)] sm:px-6 sm:py-6">
+            <div className="mb-5 flex items-center justify-between">
+              <p className="text-sm font-semibold" style={{ color: 'var(--dashboard-ink)' }}>
+                Portfolio
+              </p>
+              <span className="text-xs" style={{ color: 'var(--dashboard-muted)' }}>
+                {campaigns.length} campagne{campaigns.length === 1 ? '' : 's'}
+              </span>
+            </div>
+            <DashboardTabs tabs={portfolioTabs} defaultTabId={portfolioView} />
+          </div>
+        </section>
+      ) : null}
+
+      {isAdmin && campaigns.length > 0 ? (
         <div className="flex flex-wrap gap-3">
           <Link
             href="/beheer"
@@ -439,9 +634,114 @@ export default async function DashboardHomePage({
             Contactaanvragen
           </Link>
         </div>
-      )}
+      ) : null}
     </div>
   )
+}
+
+function OverviewSummaryNote({
+  label,
+  value,
+  body,
+  footer,
+}: {
+  label: string
+  value: string
+  body: string
+  footer?: ReactNode
+}) {
+  return (
+    <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_12px_28px_rgba(19,32,51,0.05)]">
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">{label}</p>
+      <p className="mt-2 text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">{value}</p>
+      <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{body}</p>
+      {footer}
+    </div>
+  )
+}
+
+function OverviewSnapshotMetric({
+  label,
+  value,
+  body,
+}: {
+  label: string
+  value: string
+  body: string
+}) {
+  return (
+    <div className="space-y-1.5 border-b border-[color:var(--dashboard-frame-border)]/75 pb-3 last:border-b-0 last:pb-0">
+      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">{label}</p>
+      <p className="dash-number text-[1.95rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
+      <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">{body}</p>
+    </div>
+  )
+}
+
+function buildOverviewFocusItems({
+  isAdmin,
+  primaryOverviewCampaign,
+  primaryOverviewStateMeta,
+  primaryGuideCampaign,
+  primaryExecutionState,
+  managementReadyCount,
+  activeExecutionCount,
+  closedCount,
+}: {
+  isAdmin: boolean
+  primaryOverviewCampaign: CampaignStats | null
+  primaryOverviewStateMeta: ReturnType<typeof getHomeStateMeta> | null
+  primaryGuideCampaign: CampaignStats | null
+  primaryExecutionState: ReturnType<typeof buildGuidedSelfServeState> | null
+  managementReadyCount: number
+  activeExecutionCount: number
+  closedCount: number
+}) {
+  if (isAdmin) {
+    return [
+      {
+        title: 'Lees eerst wat klaar is voor bespreking.',
+        body:
+          managementReadyCount > 0
+            ? `${managementReadyCount} campagne${managementReadyCount === 1 ? '' : 's'} kan nu als eerste overzicht dienen.`
+            : 'Er is nog geen campagne klaar voor bespreking. Gebruik overzicht voorlopig vooral voor ritme, voortgang en launchdiscipline.',
+      },
+      {
+        title: 'Houd uitvoering en launch compact in beeld.',
+        body: `${activeExecutionCount} campagne${activeExecutionCount === 1 ? '' : 's'} zit nog in setup, launch of vroege responsopbouw. Die status blijft bewust functioneel in plaats van bestuurlijk opgeblazen.`,
+      },
+      {
+        title: 'Verplaats afgesloten werk naar rapportage.',
+        body:
+          closedCount > 0
+            ? `${closedCount} gesloten campagne${closedCount === 1 ? '' : 's'} hoort nu vooral in rapportlijst en opvolggesprek thuis, niet meer als live operatiepaneel.`
+            : 'Er is nog geen afgeronde campagne. Zodra rapporten ontstaan, blijft overzicht vooral de toegangspoort naar die laag.',
+      },
+    ]
+  }
+
+  const readTarget = primaryOverviewCampaign
+    ? `${primaryOverviewCampaign.campaign_name} is nu de eerste logische managementroute.`
+    : 'De eerste hoofdroute opent hier zodra er genoeg respons is om eerlijk gelezen te worden.'
+  const executionTarget =
+    primaryGuideCampaign && primaryExecutionState
+      ? `${primaryExecutionState.nextAction.title}. ${primaryExecutionState.nextAction.body}`
+      : 'De uitvoerlaag blijft hier compact zichtbaar totdat dashboard of rapport veilig open kunnen.'
+
+  return [
+    {
+      title: 'Leesroute eerst, niet meer schermen erbij.',
+      body: primaryOverviewStateMeta ? `${readTarget} ${primaryOverviewStateMeta.body}` : readTarget,
+    },
+    {
+      title: 'Uitvoering blijft bewust concreet.',
+      body: executionTarget,
+    },
+    {
+      title: 'Behoud het overzicht.',
+      body: `${managementReadyCount} klaar voor bespreking, ${activeExecutionCount} in uitvoering en ${closedCount} afgerond. Overzicht houdt die volgorde duidelijk bij elkaar.`,
+    },
+  ]
 }
 
 function CampaignRow({
@@ -459,18 +759,20 @@ function CampaignRow({
   const ctaLabel = isAdmin && state === 'setup' ? 'Naar setup' : stateMeta.viewerCta
 
   return (
-    <div className="rounded-[var(--dashboard-radius-card)] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[var(--dashboard-shadow-soft)] transition-shadow hover:shadow-[var(--dashboard-shadow-strong)]">
-      <div className="space-y-4">
-        <div>
-          <div className="flex flex-wrap items-center gap-1.5">
+    <div className="rounded-[28px] border border-[color:var(--dashboard-frame-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.88),var(--dashboard-surface))] px-5 py-5 shadow-[0_14px_32px_rgba(19,32,51,0.05)] transition-shadow hover:shadow-[0_18px_38px_rgba(19,32,51,0.08)] sm:px-6">
+      <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between xl:gap-6">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
             <DashboardChip label={scanDefinition.productName} tone="slate" />
             <DashboardChip label={campaign.is_active ? 'Actief' : 'Gesloten'} tone={campaign.is_active ? 'emerald' : 'slate'} />
             <DashboardChip label={stateMeta.label} tone={stateMeta.tone} />
           </div>
-          <h2 className="mt-3 text-base font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">{campaign.campaign_name}</h2>
+          <h2 className="mt-3 text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">{campaign.campaign_name}</h2>
+          <p className="mt-2 text-sm leading-[1.75] text-[color:var(--dashboard-text)]">{stateMeta.body}</p>
+          <p className="mt-3 text-sm leading-7 text-[color:var(--dashboard-muted)]">{stateMeta.trust}</p>
         </div>
 
-        <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4">
+        <div className="grid gap-3 rounded-[22px] bg-[color:var(--dashboard-soft)]/72 px-4 py-4 sm:grid-cols-2 xl:min-w-[380px] xl:grid-cols-2 2xl:min-w-[520px] 2xl:grid-cols-4">
           <StatCell label="Respons" value={`${campaign.completion_rate_pct ?? 0}%`} />
           <StatCell label="Ingevuld" value={`${campaign.total_completed}`} />
           <StatCell label="Uitgenodigd" value={`${campaign.total_invited}`} />
@@ -479,13 +781,9 @@ function CampaignRow({
             value={campaign.avg_risk_score !== null ? `${campaign.avg_risk_score.toFixed(1)}/10` : '—'}
           />
         </div>
-        <div className="max-w-none">
-          <p className="text-sm leading-[1.75] text-[color:var(--dashboard-text)]">{stateMeta.body}</p>
-          <p className="mt-2 text-sm leading-[1.75] text-[color:var(--dashboard-muted)]">{stateMeta.trust}</p>
-        </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 border-t border-[color:var(--dashboard-frame-border)] pt-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mt-5 flex flex-col gap-3 border-t border-[color:var(--dashboard-frame-border)]/85 pt-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2 text-xs text-[color:var(--dashboard-text)]">
           <span className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-2.5 py-1 font-semibold text-[color:var(--dashboard-muted)]">
             {stateMeta.nextStepLabel}
@@ -531,257 +829,18 @@ function StatCell({ label, value }: { label: string; value: string }) {
         : label === 'Ingevuld'
           ? 'Het aantal respondenten dat de survey volledig heeft afgerond.'
           : label === 'Uitgenodigd'
-            ? 'Het totale aantal respondenten dat aan deze scan is gekoppeld.'
+            ? 'Het totale aantal respondenten dat aan deze campaign is gekoppeld.'
             : null
 
   return (
-    <div className="rounded-[var(--dashboard-radius-card)] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-3.5">
+    <div className="space-y-2">
       <div className="flex items-center gap-1.5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">{label}</p>
         {helpText ? <InfoTooltip text={helpText} /> : null}
       </div>
-      <p className="dash-number mt-2 text-[1.5rem] text-[color:var(--dashboard-ink)]">{value}</p>
+      <p className="dash-number text-[1.45rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
     </div>
   )
-}
-
-function OverviewRouteCard({ entry }: { entry: CampaignHomeEntry }) {
-  const { campaign, state } = entry
-  const scanDefinition = getScanDefinition(campaign.scan_type)
-  const stateMeta = getHomeStateMeta(state)
-  const buyerSafeName = getBuyerSafeCampaignName(campaign.campaign_name, scanDefinition.productName)
-  const statusSummary =
-    state === 'full' || state === 'closed'
-      ? 'Stevig genoeg voor dashboard en rapport.'
-      : state === 'partial'
-        ? 'Eerste compacte read is zichtbaar.'
-        : state === 'sparse'
-          ? 'Er zijn eerste signalen, maar nog geen stevig beeld.'
-          : state === 'ready_to_launch'
-            ? 'Respondenten staan klaar, invites nog niet volledig live.'
-            : state === 'running'
-              ? 'Invites lopen, maar de eerste veilige read is er nog niet.'
-              : 'Deze route vraagt eerst setup en launchcontrole.'
-  const readableLabel =
-    state === 'full' || state === 'closed'
-      ? 'Dashboard en rapport leesbaar'
-      : state === 'partial'
-        ? 'Compacte read leesbaar'
-        : state === 'sparse'
-          ? 'Eerste signalen, nog indicatief'
-          : 'Nog geen inhoudelijke read'
-
-  return (
-    <div className="rounded-[var(--dashboard-radius-card)] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[var(--dashboard-shadow-soft)]">
-      <div className="flex flex-wrap items-center gap-2">
-        <DashboardChip label={scanDefinition.productName} tone="slate" />
-        <DashboardChip label={stateMeta.label} tone={stateMeta.tone} />
-      </div>
-      <h3 className="mt-3 text-[1.05rem] font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
-        {buyerSafeName}
-      </h3>
-      <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{statusSummary}</p>
-      <div className="mt-4 grid gap-3 border-t border-[color:var(--dashboard-frame-border)] pt-4 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] sm:items-end">
-        <div>
-          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">Nu leesbaar</p>
-          <p className="mt-1.5 text-sm leading-6 text-[color:var(--dashboard-ink)]">{readableLabel}</p>
-        </div>
-        <div>
-          <p className="text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--dashboard-muted)]">Volgende stap</p>
-          <p className="mt-1.5 text-sm leading-6 text-[color:var(--dashboard-ink)]">{stateMeta.nextStepLabel}</p>
-        </div>
-        <div className="flex justify-start sm:justify-end">
-          <Link
-            href={`/campaigns/${campaign.campaign_id}`}
-            className="inline-flex rounded-full border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-4 py-1.5 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:brightness-[0.97]"
-          >
-            Naar route
-          </Link>
-        </div>
-      </div>
-      <div className="mt-4 border-t border-[color:var(--dashboard-frame-border)] pt-4">
-        <p className="text-xs text-[color:var(--dashboard-muted)]">
-          {campaign.total_completed}/{campaign.total_invited} respons · {campaign.avg_risk_score !== null ? `${campaign.avg_risk_score.toFixed(1)}/10` : 'nog geen score'}
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function DashboardHomePrimaryPanel({
-  campaignHref,
-  state,
-}: {
-  campaignHref: string
-  state: ReturnType<typeof buildGuidedSelfServeState>
-}) {
-  const primaryActionLabel = getDashboardHomePrimaryActionLabel(state)
-  const phaseSummary = getDashboardHomePhaseSummary(state)
-  const currentCount = state.statusBlocks.filter((item) => item.status === 'current').length
-  const blockedCount = state.statusBlocks.filter((item) => item.status === 'blocked').length
-
-  return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.5fr),minmax(240px,0.5fr)] xl:items-start">
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-[1.6rem] font-semibold tracking-[-0.05em]" style={{ color: 'var(--dashboard-ink)' }}>
-            {getDashboardHomeStatusTitle(state)}
-          </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-[1.75]" style={{ color: 'var(--dashboard-text)' }}>
-            {getDashboardHomeStatusDetail(state)}
-          </p>
-        </div>
-
-        <div
-          className="rounded-[16px] px-4 py-4"
-          style={{ background: 'var(--dashboard-soft)', border: '1px solid var(--dashboard-frame-border)' }}
-        >
-          <p className="text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
-            Wat nu eerst telt
-          </p>
-          <p className="mt-2 text-sm font-semibold" style={{ color: 'var(--dashboard-ink)' }}>
-            {state.nextAction.title}
-          </p>
-          <p className="mt-1.5 text-sm leading-[1.7]" style={{ color: 'var(--dashboard-text)' }}>
-            {getDashboardHomeNextStepBody(state)}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href={`${campaignHref}#uitvoering`}
-            className="inline-flex rounded-full px-4 py-2 text-sm font-semibold transition-colors"
-            style={{
-              background: 'var(--dashboard-ink)',
-              border: '1px solid var(--dashboard-ink)',
-              color: 'white',
-            }}
-          >
-            {primaryActionLabel}
-          </Link>
-          <Link
-            href={`${campaignHref}#uitvoering`}
-            className="inline-flex rounded-full px-4 py-2 text-sm font-semibold transition-colors"
-            style={{
-              background: 'var(--dashboard-soft)',
-              border: '1px solid var(--dashboard-frame-border)',
-              color: 'var(--dashboard-ink)',
-            }}
-          >
-            Open uitvoering
-          </Link>
-        </div>
-      </div>
-
-      <div
-        className="rounded-[18px] px-4 py-4"
-        style={{ background: 'var(--dashboard-soft)', border: '1px solid var(--dashboard-frame-border)' }}
-      >
-        <p className="text-[0.65rem] font-medium uppercase" style={{ color: 'var(--dashboard-muted)', letterSpacing: '0.18em' }}>
-          Compacte voortgang
-        </p>
-        <div className="mt-3 space-y-3">
-          <CompactProgressRow label="Fase" value={phaseSummary} />
-          <CompactProgressRow label="Actief" value={`${currentCount} actieve ${currentCount === 1 ? 'stap' : 'stappen'}`} />
-          <CompactProgressRow label="Geblokkeerd" value={`${blockedCount} geblokkeerd`} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function CompactProgressRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--dashboard-muted)' }}>
-        {label}
-      </span>
-      <span className="text-sm font-semibold" style={{ color: 'var(--dashboard-ink)' }}>
-        {value}
-      </span>
-    </div>
-  )
-}
-
-function getDashboardHomePrimaryActionLabel(state: ReturnType<typeof buildGuidedSelfServeState>) {
-  switch (state.phase) {
-    case 'participant_data_required':
-      return 'Upload deelnemersbestand'
-    case 'import_validation_required':
-      return 'Controleer importpreview'
-    case 'launch_date_required':
-      return 'Bevestig launchmoment'
-    case 'communication_ready':
-      return 'Bevestig communicatie'
-    case 'ready_to_invite':
-      return 'Start uitnodigingen'
-    case 'survey_running':
-      return 'Volg respons'
-    case 'dashboard_active':
-      return 'Lees compacte output'
-    case 'first_next_step_available':
-      return 'Leg eerste stap vast'
-    case 'closed':
-      return 'Open rapport en dashboard'
-    default:
-      return state.nextAction.title
-  }
-}
-
-function getDashboardHomePhaseSummary(state: ReturnType<typeof buildGuidedSelfServeState>) {
-  switch (state.phase) {
-    case 'participant_data_required':
-    case 'import_validation_required':
-    case 'launch_date_required':
-    case 'communication_ready':
-    case 'ready_to_invite':
-      return 'Setup'
-    case 'survey_running':
-      return 'Respons'
-    case 'dashboard_active':
-      return 'Dashboard'
-    case 'first_next_step_available':
-      return 'Eerste opvolging'
-    case 'closed':
-      return 'Afgerond'
-    default:
-      return state.currentStateLabel
-  }
-}
-
-function getDashboardHomeStatusTitle(state: ReturnType<typeof buildGuidedSelfServeState>) {
-  if (state.phase === 'participant_data_required') {
-    return 'Deelnemersbestand ontbreekt nog'
-  }
-
-  return state.headline
-}
-
-function getDashboardHomeStatusDetail(state: ReturnType<typeof buildGuidedSelfServeState>) {
-  if (state.phase === 'participant_data_required') {
-    return 'Zonder deelnemersbestand blijft deze scan in setup. Dashboard en rapport komen daarna pas vrij.'
-  }
-
-  return state.detail
-}
-
-function getDashboardHomeNextStepBody(state: ReturnType<typeof buildGuidedSelfServeState>) {
-  if (state.phase === 'participant_data_required') {
-    return 'Upload nu een CSV- of Excel-bestand met minimaal e-mailadressen. Daarna kan de route pas door naar importcontrole en launch.'
-  }
-
-  return state.nextAction.body
-}
-
-function getBuyerSafeCampaignName(campaignName: string, fallbackName: string) {
-  const normalized = campaignName.replace(/\s+/g, ' ').trim()
-  const looksLikeSeedName = /(live test|empty|demo|seed)/i.test(normalized)
-
-  if (looksLikeSeedName) {
-    return fallbackName
-  }
-
-  return normalized
 }
 
 function buildInvitesNotSentByCampaign(
@@ -848,72 +907,6 @@ function getPrimaryFirstNextStepCampaign(
   })[0] ?? null
 }
 
-function getRelevantOverviewEntries(entries: CampaignHomeEntry[]) {
-  const statePriority: Record<CampaignCompositionState, number> = {
-    setup: 0,
-    ready_to_launch: 1,
-    running: 2,
-    sparse: 3,
-    partial: 4,
-    full: 5,
-    closed: 6,
-  }
-
-  return entries
-    .filter((entry) => entry.campaign.is_active || entry.state === 'partial' || entry.state === 'full')
-    .sort((left, right) => {
-      const stateDelta = statePriority[left.state] - statePriority[right.state]
-      if (stateDelta !== 0) return stateDelta
-      return new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime()
-    })
-    .slice(0, 3)
-}
-
-function buildOverviewFollowThroughRows({
-  primaryGuideCampaign,
-  primaryGuideScanDefinition,
-  primaryExecutionState,
-  relevantEntries,
-}: {
-  primaryGuideCampaign: CampaignStats | null
-  primaryGuideScanDefinition: ReturnType<typeof getScanDefinition> | null
-  primaryExecutionState: ReturnType<typeof buildGuidedSelfServeState> | null
-  relevantEntries: CampaignHomeEntry[]
-}) {
-  const firstReadableEntry = relevantEntries.find((entry) => entry.state === 'partial' || entry.state === 'full' || entry.state === 'closed') ?? null
-  const firstBlockedEntry = relevantEntries.find((entry) =>
-    entry.state === 'setup' || entry.state === 'ready_to_launch' || entry.state === 'running' || entry.state === 'sparse',
-  ) ?? null
-
-  return [
-    {
-      label: 'Open prioriteit',
-      value:
-        primaryGuideCampaign && primaryGuideScanDefinition && primaryExecutionState
-          ? `${primaryGuideScanDefinition.productName}: ${primaryExecutionState.nextAction.title}`
-          : 'Nog geen open prioriteit zichtbaar',
-      tone: 'Nu',
-      toneVariant: 'amber' as const,
-    },
-    {
-      label: 'Reviewmoment',
-      value: firstReadableEntry
-        ? `${getScanDefinition(firstReadableEntry.campaign.scan_type).productName}: open de read en bepaal daar het eerste reviewmoment.`
-        : 'Reviewmoment volgt zodra de eerste leesbare route openstaat.',
-      tone: 'Check',
-      toneVariant: 'blue' as const,
-    },
-    {
-      label: 'Nog onbevestigd',
-      value: firstBlockedEntry
-        ? `${getScanDefinition(firstBlockedEntry.campaign.scan_type).productName}: ${getHomeStateMeta(firstBlockedEntry.state).nextStepLabel.toLowerCase()}.`
-        : 'Geen open eigenaar- of bevestigingsgat zichtbaar.',
-      tone: 'Open',
-      toneVariant: 'slate' as const,
-    },
-  ]
-}
-
 function groupCampaigns(entries: CampaignHomeEntry[]): CampaignGroup[] {
   return HOME_STATE_ORDER.map((state) => {
     const meta = getHomeStateMeta(state)
@@ -928,7 +921,7 @@ function groupCampaigns(entries: CampaignHomeEntry[]): CampaignGroup[] {
 
 function buildPortfolioBuckets(groups: CampaignGroup[]): PortfolioBucket[] {
   const definitions: Array<{ key: DashboardPortfolioView; label: string; states: CampaignCompositionState[] }> = [
-    { key: 'ready', label: 'Leesbaar', states: ['full', 'partial'] },
+    { key: 'ready', label: 'Klaar voor bespreking', states: ['full', 'partial'] },
     { key: 'building', label: 'In opbouw', states: ['sparse', 'running', 'ready_to_launch'] },
     { key: 'setup', label: 'Setup of launch', states: ['setup'] },
     { key: 'closed', label: 'Afgerond', states: ['closed'] },
@@ -951,19 +944,19 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       label: 'Nog niet live',
       tone: 'amber' as const,
       nextStepLabel: 'Setup eerst',
-      viewerCta: 'Open uitvoering',
+      viewerCta: 'Open uitvoerflow',
       sectionTitle: 'Setup / nog niet live',
       sectionDescription:
         'Campagnes zonder live uitnodigingen of zonder echte respondentlaag. Hier telt eerst setup en launchdiscipline.',
-      body: 'Deze scan vraagt eerst respondentimport of launchcontrole voordat er een leesbaar dashboard kan openen.',
+      body: 'Deze campagne vraagt eerst respondentimport of launchcontrole voordat er een leesbaar dashboard kan openen.',
       trust:
-        'Nog geen leesbaar overzicht. Eerst setup, daarna pas dashboard en rapport.',
+        'Nog geen duiding. Eerst setup, daarna pas overzicht en rapport.',
     },
     ready_to_launch: {
       label: 'Launch klaar',
       tone: 'amber' as const,
       nextStepLabel: 'Invites versturen',
-      viewerCta: 'Open uitvoering',
+      viewerCta: 'Open uitvoerflow',
       sectionTitle: 'Ready to launch',
       sectionDescription:
         'Campagnes waar de respondentlaag klaarstaat, maar waar uitnodigingen nog niet volledig live zijn gezet.',
@@ -975,49 +968,49 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       label: 'Invites live',
       tone: 'amber' as const,
       nextStepLabel: 'Respons volgen',
-      viewerCta: 'Open uitvoering',
+      viewerCta: 'Open uitvoerflow',
       sectionTitle: 'Invites live / running',
       sectionDescription:
         'Campagnes waar uitnodigingen lopen, maar waar nog geen eerste veilige responslaag zichtbaar hoort te worden.',
       body: 'De inviteflow loopt, maar het beeld is nog te dun voor een eerste inhoudelijke read.',
       trust:
-        'Laat hier alleen voortgang zien. Dit is nog geen leesbaar overzicht.',
+        'Laat hier vooral voortgang zien. Dit is nog geen stevige duiding.',
     },
     sparse: {
       label: 'Indicatief, nog dun',
       tone: 'amber' as const,
       nextStepLabel: 'Meer respons nodig',
-      viewerCta: 'Open uitvoering',
+      viewerCta: 'Open uitvoerflow',
       sectionTitle: 'Sparse / indicatief',
       sectionDescription:
-        'Campagnes met eerste responses, maar nog onder de veilige dashboarddrempel voor een eerlijke managementduiding.',
+        'Campagnes met eerste responses, maar nog onder de veilige dashboarddrempel voor een eerlijke eerste duiding.',
       body: 'Er zijn eerste responses binnen, maar het beeld is nog te dun voor een stevige dashboardread.',
       trust:
         'Gebruik dit als signaal dat uitvoering loopt, niet als conclusie.',
     },
     partial: {
-      label: 'Compact zichtbaar',
+      label: 'Deels zichtbaar',
       tone: 'amber' as const,
       nextStepLabel: 'Compacte read',
       viewerCta: 'Open compacte read',
-      sectionTitle: 'Compact zichtbaar',
+      sectionTitle: 'Deels zichtbaar',
       sectionDescription:
-        'Campagnes waar de eerste veilige dashboardread open is, maar waar thresholds of privacy de verdiepingslaag nog begrenzen.',
+        'Campagnes waar de eerste veilige dashboardlaag open is, maar waar thresholds of privacy de verdiepingslaag nog begrenzen.',
       body: 'De eerste dashboardread is zichtbaar, maar verdiepende duiding blijft nog bewust compact.',
       trust:
         'Privacy- en thresholdgrenzen houden detail en claims nog deels dicht.',
     },
     full: {
-      label: 'Leesbaar en volledig',
+      label: 'Duiding gereed',
       tone: 'emerald' as const,
       nextStepLabel: 'Open dashboard',
       viewerCta: 'Open dashboard',
-      sectionTitle: 'Volledig / leesbaar',
+      sectionTitle: 'Volledig / klaar voor bespreking',
       sectionDescription:
         'Campagnes met genoeg respons en voldoende zichtbaarheid om dashboard, aanbevelingen en rapport als managementinstrument te gebruiken.',
-      body: 'Dashboard en rapport zijn nu stevig genoeg voor managementduiding, prioritering en eerste vervolgactie.',
+      body: 'Dashboard en rapport zijn nu stevig genoeg voor duiding, prioritering en een eerste vervolgactie.',
       trust:
-        'Nu mag ook de vervolglijn in beeld komen, binnen dezelfde bounded producttaal.',
+        'Nu kun je ook de vervolgstap en het rapport meenemen in het gesprek.',
     },
     closed: {
       label: 'Rapport eerst',
@@ -1027,7 +1020,7 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Gesloten / rapport eerst',
       sectionDescription:
         'Gesloten campagnes waar de nadruk nu op rapportage, terugblik en bestuurlijke opvolging hoort te liggen.',
-      body: 'Deze scan is gesloten. Gebruik rapport en dashboard nu voor terugblik en opvolging.',
+      body: 'Deze campagne is gesloten. Gebruik rapport en dashboard nu voor terugblik en vervolggesprek.',
       trust:
         'Geen live uitvoersignalen meer, nu telt vooral rapportage, context en vervolgrichting.',
     },
@@ -1048,18 +1041,54 @@ function getHomeStateMeta(state: CampaignCompositionState) {
   return meta[state]
 }
 
+function getOverviewHeadline({
+  campaign,
+  stateMeta,
+  isAdmin,
+  avgSignal,
+}: {
+  campaign: CampaignStats
+  stateMeta: ReturnType<typeof getHomeStateMeta> | null
+  isAdmin: boolean
+  avgSignal: string | null
+}) {
+  if (!campaign.is_active) {
+    return 'Deze campagne is gesloten. De hoofdlijn zit nu in rapportage, opvolging en vervolggesprek.'
+  }
+
+  if (campaign.total_invited === 0) {
+    return isAdmin
+      ? 'De eerstvolgende stap ligt nog in setup of launchdiscipline voordat managementwaarde zichtbaar wordt.'
+      : 'De eerstvolgende stap ligt nog in uitvoering voordat dashboard of rapport de hoofdroute wordt.'
+  }
+
+  if (stateMeta?.label === 'Deels zichtbaar') {
+    return 'Er ligt al een eerste dashboardread, maar de verdiepingslaag blijft nog bewust compact.'
+  }
+
+  if (campaign.total_completed < 5) {
+    return avgSignal
+      ? `Het portfolio bouwt nog respons op. Het leesbare gemiddelde staat nu op ${avgSignal}/10, maar het overzicht blijft nog voorzichtig.`
+      : 'Het portfolio bouwt nog respons op. Lees hier eerst richting en voortgang.'
+  }
+
+  return avgSignal
+    ? `Er ligt nu een leesbaar overzicht. Het gemiddelde groepssignaal in het portfolio staat op ${avgSignal}/10.`
+    : 'Er ligt nu een leesbaar overzicht. Gebruik home voor de hoofdlijn en open daarna de campagne voor verdieping.'
+}
+
 function AdminEmptyState() {
   return (
     <DashboardSection
       eyebrow="Setup"
       title="Nog geen campagnes beschikbaar"
-      description="De cockpit wordt vanzelf gevuld zodra je een organisatie, scan en respondentbestand hebt toegevoegd."
+            description="Dit overzicht wordt vanzelf gevuld zodra je een organisatie, campagne en respondentbestand hebt toegevoegd."
     >
       <div className="grid gap-3 md:grid-cols-3">
         {[
           { step: '1', title: 'Organisatie', body: 'Maak eerst de klantorganisatie aan en leg het contactpunt vast.' },
-          { step: '2', title: 'Scan', body: 'Kies ExitScan of RetentieScan en zet de scan op met de juiste metadata.' },
-          { step: '3', title: 'Respondenten', body: 'Importeer respondenten en stuur uitnodigingen, zodat de cockpit vanzelf in monitoring overgaat.' },
+              { step: '2', title: 'Campagne', body: 'Kies ExitScan of RetentieScan en zet de campagne op met de juiste metadata.' },
+          { step: '3', title: 'Respondenten', body: 'Importeer respondenten en stuur uitnodigingen, zodat dit overzicht vanzelf in monitoring overgaat.' },
         ].map(({ step, title, body }) => (
           <div
             key={step}
@@ -1089,7 +1118,7 @@ function ViewerEmptyState() {
     <DashboardSection
       eyebrow="Wachten op livegang"
       title="Jouw dashboard wordt voorbereid"
-      description="Verisight zet de scan op, controleert de import en activeert daarna automatisch dit overzicht."
+      description="Verisight zet de campaign op, controleert de import en activeert daarna automatisch dit overzicht."
     >
       <div className="space-y-4">
         <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-5 text-sm leading-6 text-[color:var(--text)]">
@@ -1097,7 +1126,7 @@ function ViewerEmptyState() {
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {[
-            'Verisight beheert organisatie, scan en respondentimport.',
+              'Verisight beheert organisatie, campagne en respondentimport.',
             'Jij krijgt daarna toegang tot het juiste dashboard en rapport.',
             'De eerste managementwaarde zit in lezen, duiden en prioriteren, niet in technische setup.',
           ].map((item, index) => (

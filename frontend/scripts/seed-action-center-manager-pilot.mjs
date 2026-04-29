@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
@@ -78,7 +78,24 @@ async function ensureUser(admin, email, password) {
   return data.user
 }
 
-function choosePilotOrg(campaigns, respondents) {
+function getScanPriority(scanType) {
+  switch (scanType) {
+    case 'exit':
+      return 6
+    case 'retention':
+      return 5
+    case 'leadership':
+      return 4
+    case 'pulse':
+      return 3
+    case 'onboarding':
+      return 2
+    default:
+      return 1
+  }
+}
+
+function choosePilotOrg(campaigns, respondents, statsByCampaignId) {
   const departmentsByCampaign = respondents.reduce((acc, respondent) => {
     const label = respondent.department?.trim()
     if (!label) return acc
@@ -93,8 +110,13 @@ function choosePilotOrg(campaigns, respondents) {
       orgId: campaign.organization_id,
       campaigns: [],
       departments: new Set(),
+      reportReadyCampaignCount: 0,
     }
     orgEntry.campaigns.push(campaign)
+    const stats = statsByCampaignId.get(campaign.id)
+    if (stats?.is_active && stats.total_completed >= 10) {
+      orgEntry.reportReadyCampaignCount += 1
+    }
     for (const department of departmentsByCampaign[campaign.id] ?? []) {
       orgEntry.departments.add(department)
     }
@@ -103,6 +125,9 @@ function choosePilotOrg(campaigns, respondents) {
 
   return [...byOrg.values()]
     .sort((left, right) => {
+      if (right.reportReadyCampaignCount !== left.reportReadyCampaignCount) {
+        return right.reportReadyCampaignCount - left.reportReadyCampaignCount
+      }
       if (right.departments.size !== left.departments.size) {
         return right.departments.size - left.departments.size
       }
@@ -116,6 +141,10 @@ const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !serviceRoleKey) {
   throw new Error('NEXT_PUBLIC_SUPABASE_URL of SUPABASE_SERVICE_ROLE_KEY ontbreekt.')
+}
+
+if (existsSync(artifactPath)) {
+  rmSync(artifactPath, { force: true })
 }
 
 const admin = createClient(supabaseUrl, serviceRoleKey, {
@@ -135,6 +164,13 @@ if (campaignError) throw campaignError
 if (!campaigns || campaigns.length === 0) throw new Error('Geen geschikte campaigns gevonden voor de pilot.')
 
 const campaignIds = campaigns.map((campaign) => campaign.id)
+const { data: campaignStats, error: campaignStatsError } = await admin
+  .from('campaign_stats')
+  .select('campaign_id, is_active, total_completed, created_at, scan_type')
+  .in('campaign_id', campaignIds)
+
+if (campaignStatsError) throw campaignStatsError
+
 const { data: respondents, error: respondentError } = await admin
   .from('respondents')
   .select('campaign_id, department')
@@ -142,11 +178,147 @@ const { data: respondents, error: respondentError } = await admin
 
 if (respondentError) throw respondentError
 
-const pilotOrg = choosePilotOrg(campaigns, respondents ?? [])
+const statsByCampaignId = new Map((campaignStats ?? []).map((campaign) => [campaign.campaign_id, campaign]))
+const pilotOrg = choosePilotOrg(campaigns, respondents ?? [], statsByCampaignId)
 if (!pilotOrg) throw new Error('Kon geen pilotorganisatie kiezen.')
 
 const chosenDepartments = [...pilotOrg.departments].slice(0, 2)
-const fallbackCampaign = pilotOrg.campaigns[0]
+const canonicalCampaign =
+  [...pilotOrg.campaigns]
+    .filter((campaign) => {
+      const stats = statsByCampaignId.get(campaign.id)
+      return stats?.is_active === true && (stats.total_completed ?? 0) >= 10
+    })
+    .sort((left, right) => {
+      const leftStats = statsByCampaignId.get(left.id)
+      const rightStats = statsByCampaignId.get(right.id)
+      const priorityDelta = getScanPriority(right.scan_type) - getScanPriority(left.scan_type)
+      if (priorityDelta !== 0) return priorityDelta
+      const completionDelta = (rightStats?.total_completed ?? 0) - (leftStats?.total_completed ?? 0)
+      if (completionDelta !== 0) return completionDelta
+      return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+    })[0] ?? null
+
+if (!canonicalCampaign) {
+  throw new Error('Kon geen canonieke report-ready demo campaign vinden voor de HR pilotseed.')
+}
+
+const firstManagementUseAt = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString()
+const reviewMoment = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+
+const { data: deliveryRecord, error: deliveryRecordError } = await admin
+  .from('campaign_delivery_records')
+  .upsert(
+    {
+      organization_id: pilotOrg.orgId,
+      campaign_id: canonicalCampaign.id,
+      lifecycle_stage: 'first_management_use',
+      exception_status: 'none',
+      operator_owner: 'Verisight',
+      next_step: 'Volg de werkafspraken en toets ze opnieuw in de eerstvolgende review.',
+      operator_notes: 'HR demo route voor Action Center.',
+      customer_handoff_note: 'HR gebruikt deze campagne als vaste demo-route voor opvolging en review.',
+      first_management_use_confirmed_at: firstManagementUseAt,
+    },
+    { onConflict: 'campaign_id' },
+  )
+  .select('id')
+  .single()
+
+if (deliveryRecordError || !deliveryRecord) {
+  throw deliveryRecordError ?? new Error('Kon delivery record niet opslaan.')
+}
+
+const dossierPayload = {
+  organization_id: pilotOrg.orgId,
+  campaign_id: canonicalCampaign.id,
+  title: `HR demo route - ${canonicalCampaign.name}`,
+  route_interest:
+    canonicalCampaign.scan_type === 'exit'
+      ? 'exitscan'
+      : canonicalCampaign.scan_type === 'retention'
+        ? 'retentiescan'
+        : 'nog-onzeker',
+  scan_type: canonicalCampaign.scan_type,
+  triage_status: 'bevestigd',
+  expected_first_value: 'Binnen twee weken moet de rolduidelijkheid merkbaar toenemen in het teamoverleg.',
+  first_management_value:
+    'We reviewen omdat HR wil toetsen of het eerste teamgesprek echt tot heldere werkafspraken leidde.',
+  first_action_taken: 'Plan een teamsessie van 30 minuten en leg drie concrete werkafspraken vast.',
+  review_moment: reviewMoment,
+  adoption_outcome: 'De eerste reactie is positiever, maar borging in het teamritme is nog nodig.',
+  management_action_outcome: 'bijstellen',
+  next_route: 'Borg de afspraken in het volgende teamoverleg en bevestig opnieuw wie eigenaar blijft.',
+  case_public_summary: 'De vorige stap is afgerond; deze actieve route bewaakt nu alleen de borging en bijsturing.',
+}
+
+const { data: existingDossier, error: existingDossierError } = await admin
+  .from('pilot_learning_dossiers')
+  .select('id')
+  .eq('campaign_id', canonicalCampaign.id)
+  .order('created_at', { ascending: false })
+  .limit(1)
+  .maybeSingle()
+
+if (existingDossierError) {
+  throw existingDossierError
+}
+
+const { data: dossier, error: dossierError } = existingDossier
+  ? await admin
+      .from('pilot_learning_dossiers')
+      .update({
+        ...dossierPayload,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existingDossier.id)
+      .select('id')
+      .single()
+  : await admin
+      .from('pilot_learning_dossiers')
+      .insert(dossierPayload)
+      .select('id')
+      .single()
+
+if (dossierError || !dossier) {
+  throw dossierError ?? new Error('Kon learning dossier niet opslaan.')
+}
+
+const checkpointRows = [
+  {
+    dossier_id: dossier.id,
+    checkpoint_key: 'first_management_use',
+    owner_label: 'HR',
+    status: 'bevestigd',
+    objective_signal_notes: 'Drie werkafspraken zijn expliciet gemaakt.',
+    qualitative_notes: 'Het eerste gesprek gaf rust, maar opvolging moet nog worden geborgd.',
+    interpreted_observation: 'Het teamoverleg werd concreter en minder diffuus.',
+    confirmed_lesson: 'De eerste cyclus kon worden afgerond; de huidige route bewaakt of de afspraken blijven staan.',
+    lesson_strength: 'direct_uitvoerbare_verbetering',
+    destination_areas: ['report', 'operations'],
+  },
+  {
+    dossier_id: dossier.id,
+    checkpoint_key: 'follow_up_review',
+    owner_label: 'HR',
+    status: 'bevestigd',
+    objective_signal_notes: 'Managers melden rustiger weekstarts en minder rolverwarring.',
+    qualitative_notes: 'De eerste interventie lijkt te werken, maar borging in het vaste ritme is nodig.',
+    interpreted_observation: 'De vorige stap is afgerond; nu toetsen we vooral of het effect standhoudt.',
+    confirmed_lesson:
+      'De vorige stap is afgerond; deze actieve route kijkt nu alleen nog naar borging en eventuele bijsturing.',
+    lesson_strength: 'terugkerend_patroon',
+    destination_areas: ['report', 'product'],
+  },
+]
+
+const { error: checkpointError } = await admin
+  .from('pilot_learning_checkpoints')
+  .upsert(checkpointRows, { onConflict: 'dossier_id,checkpoint_key' })
+
+if (checkpointError) {
+  throw checkpointError
+}
 
 const hrOwner = await ensureUser(admin, HR_EMAIL, PILOT_PASSWORD)
 const managers = await Promise.all(MANAGER_EMAILS.map((email) => ensureUser(admin, email, PILOT_PASSWORD)))
@@ -201,7 +373,7 @@ const workspaceRows = [
     scope_type: chosenDepartments[index] ? 'department' : 'item',
     scope_value: chosenDepartments[index]
       ? buildDepartmentScopeValue(pilotOrg.orgId, chosenDepartments[index])
-      : `${pilotOrg.orgId}::campaign::${fallbackCampaign.id}`,
+      : `${pilotOrg.orgId}::campaign::${canonicalCampaign.id}`,
     can_view: true,
     can_update: true,
     can_assign: false,
@@ -220,19 +392,27 @@ mkdirSync(path.dirname(artifactPath), { recursive: true })
 const artifact = {
   seededAt: new Date().toISOString(),
   orgId: pilotOrg.orgId,
-  campaignId: fallbackCampaign.id,
+  campaignId: canonicalCampaign.id,
   hrOwner: {
     email: HR_EMAIL,
     password: PILOT_PASSWORD,
+  },
+  routeContext: {
+    focusItemId: canonicalCampaign.id,
+    overviewUrl: '/dashboard',
+    reportsUrl: '/reports',
+    campaignDetailUrl: `/campaigns/${canonicalCampaign.id}`,
+    actionCenterUrl: '/action-center',
+    actionCenterFocusUrl: `/action-center?focus=${canonicalCampaign.id}`,
   },
   managers: managers.map((manager, index) => ({
     email: manager.email,
     password: PILOT_PASSWORD,
     scopeType: chosenDepartments[index] ? 'department' : 'item',
-    scopeLabel: chosenDepartments[index] ?? fallbackCampaign.name,
+    scopeLabel: chosenDepartments[index] ?? canonicalCampaign.name,
     scopeValue: chosenDepartments[index]
       ? buildDepartmentScopeValue(pilotOrg.orgId, chosenDepartments[index])
-      : `${pilotOrg.orgId}::campaign::${fallbackCampaign.id}`,
+      : `${pilotOrg.orgId}::campaign::${canonicalCampaign.id}`,
   })),
   departmentLabels: chosenDepartments,
 }

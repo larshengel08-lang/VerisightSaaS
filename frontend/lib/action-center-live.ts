@@ -1,34 +1,23 @@
 import type {
   ActionCenterPreviewItem,
+  ActionCenterPreviewUpdate,
   ActionCenterPreviewPriority,
   ActionCenterPreviewStatus,
-  ActionCenterPreviewUpdate,
-} from '@/components/dashboard/action-center-preview'
+} from '@/lib/action-center-preview-model'
+import {
+  projectActionCenterCoreSemantics,
+  projectActionCenterPreviewCoreSemantics,
+} from '@/lib/action-center-core-semantics'
 import { getScanDefinition } from '@/lib/scan-definitions'
-import type { MemberRole, Campaign, CampaignStats, ScanType } from '@/lib/types'
+import type { MemberRole, ScanType } from '@/lib/types'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord, DeliveryExceptionStatus } from '@/lib/ops-delivery'
 import { getDeliveryExceptionLabel } from '@/lib/ops-delivery'
 import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
+import { projectActionCenterRoute } from '@/lib/action-center-route-contract'
 import { buildSuiteTelemetryEvent, type SuiteTelemetryEvent } from '@/lib/telemetry/events'
+import type { LiveActionCenterCampaignContext } from './action-center-live-context'
 
-export interface LiveActionCenterCampaignContext {
-  campaign: Campaign
-  stats: CampaignStats | null
-  organizationName: string
-  memberRole: MemberRole | null
-  scopeType: 'department' | 'item'
-  scopeValue: string
-  scopeLabel: string
-  peopleCount: number
-  assignedManager: {
-    userId: string
-    displayName: string | null
-  } | null
-  deliveryRecord: CampaignDeliveryRecord | null
-  deliveryCheckpoints: CampaignDeliveryCheckpoint[]
-  learningDossier: PilotLearningDossier | null
-  learningCheckpoints: PilotLearningCheckpoint[]
-}
+export type { LiveActionCenterCampaignContext } from './action-center-live-context'
 
 const DUTCH_SHORT_DATE = new Intl.DateTimeFormat('nl-NL', {
   day: 'numeric',
@@ -118,57 +107,46 @@ function getPriorityFromSignals(args: {
   return typeof args.avgSignal === 'number' && args.avgSignal >= 4.5 ? 'midden' : 'laag'
 }
 
-function getStatus(args: {
-  learningDossier: PilotLearningDossier | null
-  deliveryRecord: CampaignDeliveryRecord | null
-  reviewDate: string | null
-  ownerName: string | null
-}): ActionCenterPreviewStatus {
-  const triageStatus = args.learningDossier?.triage_status ?? null
-  if (triageStatus === 'uitgevoerd' || args.deliveryRecord?.lifecycle_stage === 'learning_closed') {
-    return 'afgerond'
-  }
-  if (triageStatus === 'verworpen') {
-    return 'gestopt'
-  }
-  if (args.deliveryRecord?.exception_status && args.deliveryRecord.exception_status !== 'none') {
-    return 'geblokkeerd'
-  }
-  if (args.learningDossier?.first_action_taken || args.deliveryRecord?.next_step || args.ownerName || args.reviewDate) {
-    return 'in-uitvoering'
-  }
-  return 'te-bespreken'
-}
-
 function getRoleFallback(memberRole: MemberRole | null) {
   if (!memberRole) return 'Nog geen expliciete klantrol'
   return ROLE_LABELS[memberRole]
 }
 
-function getOwnerNames(checkpoints: PilotLearningCheckpoint[], deliveryRecord: CampaignDeliveryRecord | null) {
-  const managementOwner =
-    checkpoints.find((checkpoint) => checkpoint.checkpoint_key === 'first_management_use')?.owner_label?.trim() ?? null
+function getReviewOwnerName(checkpoints: PilotLearningCheckpoint[], deliveryRecord: CampaignDeliveryRecord | null) {
   const reviewOwner =
     checkpoints.find((checkpoint) => checkpoint.checkpoint_key === 'follow_up_review')?.owner_label?.trim() ?? null
+  const managementOwner =
+    checkpoints.find((checkpoint) => checkpoint.checkpoint_key === 'first_management_use')?.owner_label?.trim() ?? null
 
-  return {
-    ownerName: managementOwner || reviewOwner || deliveryRecord?.operator_owner || null,
-    reviewOwnerName: reviewOwner || managementOwner || deliveryRecord?.operator_owner || null,
-  }
+  return reviewOwner || managementOwner || deliveryRecord?.operator_owner || null
 }
 
 function buildOpenSignals(args: {
   status: ActionCenterPreviewStatus
-  ownerName: string | null
+  routeOwner: string | null
   reviewDate: string | null
-  deliveryRecord: CampaignDeliveryRecord | null
+  intervention: string | null
 }) {
   const signals: string[] = []
-  if (!args.ownerName) signals.push('owner_missing')
+  if (!args.routeOwner) signals.push('owner_missing')
   if (!args.reviewDate && args.status !== 'afgerond' && args.status !== 'gestopt') signals.push('review_due')
   if (args.status === 'geblokkeerd') signals.push('blocked_assignment')
-  if (!args.deliveryRecord?.next_step && args.status !== 'afgerond' && args.status !== 'gestopt') signals.push('decision_due')
+  if (!args.intervention && args.status !== 'afgerond' && args.status !== 'gestopt') signals.push('decision_due')
   return signals
+}
+
+function getInterventionTruth(value: string | null | undefined) {
+  const normalized = value?.trim() ?? ''
+  if (!normalized || normalized === 'Nog te bepalen in review') {
+    return null
+  }
+
+  return normalized
+}
+
+type ActionCenterPreviewItemDraft = Omit<ActionCenterPreviewItem, 'coreSemantics' | 'openSignals'> & {
+  coreSemantics?: ActionCenterPreviewItem['coreSemantics']
+  openSignals?: string[]
 }
 
 function buildUpdates(args: {
@@ -216,7 +194,8 @@ function buildUpdates(args: {
   }
 
   const fallbackNote =
-    args.learningDossier?.management_action_outcome ||
+    args.learningDossier?.case_public_summary ||
+    args.learningDossier?.adoption_outcome ||
     args.learningDossier?.expected_first_value ||
     args.deliveryRecord?.customer_handoff_note ||
     'Nog geen expliciete review-update uit campaign of dossierbron.'
@@ -278,6 +257,56 @@ function getSortRank(status: ActionCenterPreviewStatus) {
   }
 }
 
+export function finalizeActionCenterPreviewItem(
+  item: ActionCenterPreviewItemDraft,
+  options: { recomputeCoreSemantics?: boolean } = {},
+): ActionCenterPreviewItem {
+  const latestVisibleUpdateNote = item.updates[0]?.note ?? null
+  const existingRoute = item.coreSemantics?.route ?? null
+  const reuseExistingRouteTruth = Boolean(existingRoute)
+  const coreSemantics =
+    !options.recomputeCoreSemantics && item.coreSemantics
+      ? item.coreSemantics
+      :
+    projectActionCenterPreviewCoreSemantics({
+      id: item.id,
+      title: item.title,
+      status: item.status,
+      ownerName: item.ownerName,
+      reviewDate: item.reviewDate,
+      expectedEffect: reuseExistingRouteTruth ? (existingRoute?.expectedEffect ?? null) : item.expectedEffect,
+      reviewReason: reuseExistingRouteTruth ? (existingRoute?.reviewReason ?? null) : item.reviewReason,
+      reviewOutcome: item.reviewOutcome,
+      reason: item.reason,
+      summary: item.summary,
+      signalBody: item.signalBody,
+      nextStep: reuseExistingRouteTruth ? (existingRoute?.intervention ?? null) : item.nextStep,
+      latestVisibleUpdateNote,
+      route: existingRoute,
+    })
+
+  const reviewReason = coreSemantics.reviewSemantics.reviewReason
+  const nextStep = coreSemantics.actionFrame.firstStep
+  const expectedEffect = coreSemantics.actionFrame.expectedEffect
+  const signalBody = coreSemantics.resultLoop.whatWeObserved ?? item.signalBody
+
+  return {
+    ...item,
+    reason: reviewReason,
+    nextStep,
+    expectedEffect,
+    reviewReason: item.reviewReason ?? coreSemantics.route.reviewReason ?? reviewReason,
+    signalBody,
+    coreSemantics,
+    openSignals: buildOpenSignals({
+      status: item.status,
+      routeOwner: item.ownerName,
+      reviewDate: item.reviewDate,
+      intervention: getInterventionTruth(coreSemantics.route.intervention ?? item.nextStep),
+    }),
+  }
+}
+
 export function isLiveActionCenterScanType(scanType: ScanType) {
   return SUPPORTED_SCAN_TYPES.has(scanType)
 }
@@ -285,25 +314,19 @@ export function isLiveActionCenterScanType(scanType: ScanType) {
 export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignContext[]): ActionCenterPreviewItem[] {
   return contexts
     .filter((context) => isLiveActionCenterScanType(context.campaign.scan_type))
-    .map((context, index) => {
+    .flatMap((context, index) => {
+      const route = projectActionCenterRoute(context)
+      if (route.entryStage !== 'active' || !route.routeStatus) {
+        return []
+      }
+
       const definition = getScanDefinition(context.campaign.scan_type)
       const defaults = SCAN_DEFAULTS[context.campaign.scan_type]
       const avgSignal = context.stats?.avg_signal_score ?? context.stats?.avg_risk_score ?? null
       const fallbackAuthor = context.organizationName || 'Verisight'
-      const reviewDate = context.learningDossier?.review_moment ?? null
-      const { ownerName, reviewOwnerName } = getOwnerNames(context.learningCheckpoints, context.deliveryRecord)
-      const status = getStatus({
-        learningDossier: context.learningDossier,
-        deliveryRecord: context.deliveryRecord,
-        reviewDate,
-        ownerName,
-      })
-      const openSignals = buildOpenSignals({
-        status,
-        ownerName,
-        reviewDate,
-        deliveryRecord: context.deliveryRecord,
-      })
+      const reviewDate = route.reviewScheduledFor
+      const reviewOwnerName = getReviewOwnerName(context.learningCheckpoints, context.deliveryRecord)
+      const status = route.routeStatus
       const updates = buildUpdates({
         learningCheckpoints: context.learningCheckpoints,
         deliveryCheckpoints: context.deliveryCheckpoints,
@@ -311,18 +334,24 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         deliveryRecord: context.deliveryRecord,
         fallbackAuthor,
       })
-      const latestUpdate = updates[0]?.note ?? null
+      const hasExplicitUpdates = context.learningCheckpoints.length > 0 || context.deliveryCheckpoints.length > 0
+      const latestUpdate = hasExplicitUpdates ? (updates[0]?.note ?? null) : null
+      const coreSemantics = projectActionCenterCoreSemantics({
+        ...context,
+        route,
+        latestVisibleUpdateNote: latestUpdate,
+      })
       const priority = getPriorityFromSignals({
         exceptionStatus: context.deliveryRecord?.exception_status,
         avgSignal,
         totalCompleted: context.stats?.total_completed ?? 0,
       })
       const nextStep =
-        context.learningDossier?.first_action_taken ||
+        route.intervention ||
         context.deliveryRecord?.next_step ||
         getFallbackStep(context.campaign.scan_type, context.deliveryRecord?.lifecycle_stage)
 
-      return {
+      return [finalizeActionCenterPreviewItem({
         id: context.campaign.id,
         code: `ACT-${1000 + index + 1}`,
         title:
@@ -330,37 +359,36 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
           `${definition.productName}: ${context.campaign.name}`,
         summary:
           context.deliveryRecord?.customer_handoff_note ||
-          context.learningDossier?.expected_first_value ||
+          route.expectedEffect ||
           defaults.fallbackSummary,
-        reason:
-          context.learningDossier?.first_management_value ||
-          defaults.managementQuestion,
+        reason: coreSemantics.reviewSemantics.reviewReason,
         sourceLabel: definition.productName,
         orgId: context.campaign.organization_id,
         scopeType: context.scopeType,
         teamId: context.scopeValue,
         teamLabel: context.scopeLabel,
         ownerId: context.assignedManager?.userId ?? null,
-        ownerName: context.assignedManager?.displayName ?? ownerName,
+        ownerName: route.owner,
         ownerRole: context.assignedManager?.displayName
           ? `Manager - ${context.scopeLabel}`
-          : ownerName
-            ? `Owner - ${context.organizationName}`
-            : getRoleFallback(context.memberRole),
+          : getRoleFallback(context.memberRole),
         ownerSubtitle: context.scopeLabel,
-        reviewOwnerName: reviewOwnerName ?? context.assignedManager?.displayName ?? null,
+        reviewOwnerName,
         priority,
         status,
         reviewDate,
         reviewDateLabel: formatShortDate(reviewDate),
-        reviewRhythm: reviewDate ? defaults.fallbackRhythm : defaults.fallbackRhythm,
+        reviewRhythm: defaults.fallbackRhythm,
         signalLabel: `${definition.productName} - ${context.campaign.name}`,
         signalBody: getSignalBody(context.campaign.scan_type, context.deliveryRecord, latestUpdate),
         nextStep,
+        expectedEffect: coreSemantics.actionFrame.expectedEffect,
+        reviewReason: coreSemantics.route.reviewReason,
+        reviewOutcome: route.reviewOutcome,
         peopleCount: context.peopleCount,
-        openSignals,
+        coreSemantics,
         updates,
-      } satisfies ActionCenterPreviewItem
+      })]
     })
     .sort((left, right) => {
       const statusDelta = getSortRank(left.status) - getSortRank(right.status)
@@ -397,6 +425,8 @@ export function buildActionCenterTelemetryEvents(
     const orgId = context.campaign.organization_id
     const campaignId = context.campaign.id
     const lifecycleStage = context.deliveryRecord?.lifecycle_stage ?? null
+    const route = projectActionCenterRoute(context)
+    const routeStatus = route.routeStatus
 
     if (
       lifecycleStage &&
@@ -426,30 +456,89 @@ export function buildActionCenterTelemetryEvents(
       )
     }
 
-    if (context.learningDossier?.review_moment) {
+    if (route.reviewScheduledFor) {
       events.push(
         buildSuiteTelemetryEvent('action_center_review_scheduled', {
           orgId,
           campaignId,
           actorId: actorId ?? null,
           payload: {
-            reviewMoment: context.learningDossier.review_moment,
+            reviewMoment: route.reviewScheduledFor,
             scopeValue: context.scopeValue,
+            routeStatus,
           },
         }),
       )
     }
 
-    if (
-      context.learningDossier?.triage_status === 'uitgevoerd' ||
-      lifecycleStage === 'learning_closed'
-    ) {
+    if (route.routeOpenedAt) {
+      events.push(
+        buildSuiteTelemetryEvent('action_center_route_opened', {
+          orgId,
+          campaignId,
+          actorId: actorId ?? null,
+          payload: {
+            scopeValue: context.scopeValue,
+            routeStatus,
+          },
+        }),
+      )
+    }
+
+    if (route.ownerAssignedAt && route.owner) {
+      events.push(
+        buildSuiteTelemetryEvent('action_center_owner_assigned', {
+          orgId,
+          campaignId,
+          actorId: actorId ?? null,
+          payload: {
+            scopeValue: context.scopeValue,
+            routeStatus,
+            ownerLabel: route.owner,
+          },
+        }),
+      )
+    }
+
+    if (route.reviewCompletedAt) {
+      events.push(
+        buildSuiteTelemetryEvent('action_center_review_completed', {
+          orgId,
+          campaignId,
+          actorId: actorId ?? null,
+          payload: {
+            scopeValue: context.scopeValue,
+            routeStatus,
+            reviewOutcome: route.reviewOutcome,
+          },
+        }),
+      )
+    }
+
+    if (route.outcomeRecordedAt && route.outcomeSummary) {
+      events.push(
+        buildSuiteTelemetryEvent('action_center_outcome_recorded', {
+          orgId,
+          campaignId,
+          actorId: actorId ?? null,
+          payload: {
+            scopeValue: context.scopeValue,
+            routeStatus,
+            reviewOutcome: route.reviewOutcome,
+            outcomeSummary: route.outcomeSummary,
+          },
+        }),
+      )
+    }
+
+    if (routeStatus === 'afgerond' || routeStatus === 'gestopt' || lifecycleStage === 'learning_closed') {
       events.push(
         buildSuiteTelemetryEvent('action_center_closeout_recorded', {
           orgId,
           campaignId,
           actorId: actorId ?? null,
           payload: {
+            routeStatus,
             triageStatus: context.learningDossier?.triage_status ?? null,
             lifecycleStage,
           },

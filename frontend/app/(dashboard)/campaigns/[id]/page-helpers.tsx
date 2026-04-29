@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import type { ActionCenterEntryStage } from '@/lib/action-center-route-contract'
+import { buildBridgeAssessmentTruth, getHrBridgePresentation, resolveHrBridgeState } from '@/lib/dashboard/hr-bridge-state'
 import { getProductModule } from '@/lib/products/shared/registry'
 import type { SegmentPlaybookEntry, SignalTrendCard } from '@/lib/products/shared/types'
 import { buildFactorPresentation, getManagementBandLabel } from '@/lib/management-language'
@@ -71,6 +73,34 @@ export type InsightNotice = {
   title: string
   body: string
   tone: 'slate' | 'amber' | 'red'
+}
+
+export function buildCampaignDetailActionCenterBridge(args: {
+  campaignId: string
+  routeEntryStage: ActionCenterEntryStage | null
+  canOpenRoute: boolean
+  assessedAt: string
+}) {
+  const assessment = buildBridgeAssessmentTruth({
+    sourceType: 'campaign',
+    sourceId: args.campaignId,
+    signalReadable: args.canOpenRoute,
+    managementMeaningClear: args.canOpenRoute,
+    plausibleFollowUpExists: args.canOpenRoute,
+    assessedAt: args.assessedAt,
+  })
+  const bridgeState = resolveHrBridgeState({
+    routeEntryStage: args.routeEntryStage,
+    assessment,
+  })
+
+  return {
+    bridgeState,
+    presentation: getHrBridgePresentation({
+      bridgeState,
+      surface: 'campaign-detail',
+    }),
+  }
 }
 
 function normalizeInformationalTone(tone: 'slate' | 'blue' | 'emerald' | 'amber') {

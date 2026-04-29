@@ -11,9 +11,10 @@ describe('suite access route guardrails', () => {
 
     expect(dashboardSource).toContain("if (context.managerOnly) redirect('/action-center')")
     expect(reportsSource).toContain('SuiteAccessDenied')
-    expect(reportsSource).toContain('manager-login opent alleen het Action Center')
-    expect(campaignSource).toContain('Campaigninzichten blijven buiten je manager-scope')
-    expect(actionCenterSource).toContain('manager-assignees landen alleen op deze module')
+    expect(reportsSource).toContain('Jouw login opent alleen Action Center.')
+    expect(campaignSource).toContain('Jouw login opent alleen Action Center voor toegewezen teams.')
+    expect(actionCenterSource).toContain('if (!context.canViewActionCenter)')
+    expect(actionCenterSource).toContain("workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}")
     expect(actionCenterSource).toContain('managerAssignmentEndpoint="/api/action-center/workspace-members"')
     expect(actionCenterSource).toContain('isScopeVisibleToActionCenterContext')
     expect(previewSource).toContain('orgId: team.orgId')
