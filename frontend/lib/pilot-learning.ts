@@ -35,6 +35,8 @@ export type LearningStrength =
   | 'incidentele_observatie'
   | 'terugkerend_patroon'
   | 'direct_uitvoerbare_verbetering'
+export type ActionCenterRouteSourceType = 'campaign'
+export type AuthoredActionCenterDecision = 'doorgaan' | 'bijstellen' | 'afronden' | 'stoppen'
 
 export interface ContactRequestRecord {
   id: string
@@ -124,6 +126,26 @@ export interface PilotLearningCheckpoint {
   confirmed_lesson: string | null
   lesson_strength: LearningStrength
   destination_areas: LearningDestinationArea[]
+  created_at: string
+  updated_at: string
+}
+
+export interface ActionCenterReviewDecision {
+  id: string
+  route_source_type: ActionCenterRouteSourceType
+  route_source_id: string
+  checkpoint_id: string
+  decision: AuthoredActionCenterDecision
+  decision_reason: string
+  next_check: string
+  current_step: string
+  next_step: string | null
+  expected_effect: string | null
+  observation_snapshot: string | null
+  decision_recorded_at: string
+  review_completed_at: string
+  created_by: string | null
+  updated_by: string | null
   created_at: string
   updated_at: string
 }
