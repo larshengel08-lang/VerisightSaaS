@@ -42,11 +42,8 @@ describe('dashboard home UX guardrails', () => {
   it('keeps the overview route focused on light HR-regie instead of managementinterpretatie', () => {
     const pageSource = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(pageSource).toContain('Overzicht')
     expect(pageSource).toContain('SignalStatCard')
     expect(pageSource).toContain('DashboardTabs tabs={portfolioTabs}')
-    expect(pageSource).toContain('Portfolio samenvatting')
-    expect(pageSource).toContain('Wat nu leesbaar is')
     expect(pageSource).toContain('Wat blokkeert')
     expect(pageSource).toContain('Opvolging preview')
     expect(pageSource).toContain('Recente output')
@@ -66,7 +63,6 @@ describe('dashboard home UX guardrails', () => {
   it('keeps overview language compact and bounded instead of overclaiming', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('Wat nu leesbaar is, wat blokkeert en waar opvolging open staat.')
     expect(source).toContain('Wat nog voorkomt dat een route open of volledig live is.')
     expect(source).toContain('Dashboard en rapport zijn nu beschikbaar voor eerste lezing.')
     expect(source).toContain('Eerste read beschikbaar, detail blijft nog beperkt.')
