@@ -271,6 +271,80 @@ describe('action center core semantics', () => {
       expect(semantics.decisionHistory[0]?.decisionEntryId).toBe('authored-decision-1')
     })
 
+    it('projects a chronological result progression from multiple authored decision moments', () => {
+      const semantics = projectActionCenterCoreSemantics({
+        ...buildContext({
+          dossier: buildDossier({
+            management_action_outcome: 'bijstellen',
+            first_action_taken: 'Voer deze week een gerichte managercheck uit.',
+            expected_first_value: 'Binnen twee weken moet zichtbaar zijn of de correctie smaller werkt.',
+          }),
+          reviewDecisions: [
+            {
+              id: 'authored-decision-2',
+              route_source_type: 'campaign',
+              route_source_id: 'campaign-1',
+              checkpoint_id: 'checkpoint-2',
+              decision: 'bijstellen',
+              decision_reason: 'Dezelfde frictie bleef in twee teams zichtbaar.',
+              next_check: 'Toets volgende week of de bijgestelde stap tractie geeft.',
+              current_step: 'Voer deze week een gerichte managercheck uit.',
+              next_step: 'Leg de bijgestelde route vast in het MT-overleg.',
+              expected_effect: 'Binnen twee weken moet zichtbaar zijn of de correctie smaller werkt.',
+              observation_snapshot: 'Dezelfde frictie bleef in twee teams zichtbaar.',
+              decision_recorded_at: '2026-04-28T09:00:00.000Z',
+              review_completed_at: '2026-04-28T08:30:00.000Z',
+              created_by: null,
+              updated_by: null,
+              created_at: '2026-04-28T09:00:00.000Z',
+              updated_at: '2026-04-28T09:00:00.000Z',
+            },
+            {
+              id: 'authored-decision-1',
+              route_source_type: 'campaign',
+              route_source_id: 'campaign-1',
+              checkpoint_id: 'checkpoint-1',
+              decision: 'doorgaan',
+              decision_reason: 'De eerste stap liep nog binnen de afgesproken termijn.',
+              next_check: 'Toets over een week of de eerste stap tractie geeft.',
+              current_step: 'Plan een eerste teamreview met de manager.',
+              next_step: 'Bevestig de route in het MT-overleg.',
+              expected_effect: 'Binnen twee weken moet zichtbaar zijn of de eerste review de frictie smaller maakt.',
+              observation_snapshot: 'De eerste signalen bleven nog breed verdeeld.',
+              decision_recorded_at: '2026-04-25T09:00:00.000Z',
+              review_completed_at: '2026-04-25T08:30:00.000Z',
+              created_by: null,
+              updated_by: null,
+              created_at: '2026-04-25T09:00:00.000Z',
+              updated_at: '2026-04-25T09:00:00.000Z',
+            },
+          ],
+        }),
+        campaign: { id: 'campaign-1', name: 'ExitScan april' } as never,
+        route: baseRoute,
+      })
+
+      expect(semantics.resultProgression).toEqual([
+        {
+          resultEntryId: 'authored-decision-1',
+          recordedAt: '2026-04-25T08:30:00.000Z',
+          currentStep: 'Plan een eerste teamreview met de manager.',
+          observation: 'De eerste signalen bleven nog breed verdeeld.',
+          decision: 'doorgaan',
+          followThrough: 'Bevestig de route in het MT-overleg.',
+        },
+        {
+          resultEntryId: 'authored-decision-2',
+          recordedAt: '2026-04-28T08:30:00.000Z',
+          currentStep: 'Voer deze week een gerichte managercheck uit.',
+          observation: 'Dezelfde frictie bleef in twee teams zichtbaar.',
+          decision: 'bijstellen',
+          followThrough: 'Leg de bijgestelde route vast in het MT-overleg.',
+        },
+      ])
+      expect(semantics.latestDecision?.decisionEntryId).toBe('authored-decision-2')
+    })
+
     it('falls back to legacy truth when no canonical decision records exist', () => {
       const semantics = projectActionCenterCoreSemantics({
         campaign: { id: 'campaign-1', name: 'ExitScan april' } as never,

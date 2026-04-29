@@ -6,6 +6,15 @@ import type {
 import type { ActionCenterReviewDecision } from './pilot-learning'
 import { getActionCenterDecisionProfile } from './action-center-review-decisions'
 
+export interface ActionCenterResultProgressEntry {
+  resultEntryId: string
+  recordedAt: string
+  currentStep: string | null
+  observation: string | null
+  decision: ActionCenterDecision
+  followThrough: string | null
+}
+
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
   return trimmed.length > 0 ? trimmed : null
@@ -120,4 +129,21 @@ export function projectLegacyDecisionRecord(args: {
     decisionRecordedAt: reviewCompletedAt,
     reviewCompletedAt: args.reviewCompletedAt,
   }
+}
+
+export function projectResultProgression(decisionHistory: ActionCenterDecisionRecord[]) {
+  return [...decisionHistory]
+    .sort(compareDecisionHistoryEntries)
+    .reverse()
+    .map<ActionCenterResultProgressEntry>((entry) => ({
+      resultEntryId: entry.decisionEntryId,
+      recordedAt: entry.reviewCompletedAt ?? entry.decisionRecordedAt,
+      currentStep: normalizeText(entry.currentStepSnapshot),
+      observation: normalizeText(entry.observationSnapshot),
+      decision: entry.decision,
+      followThrough:
+        normalizeText(entry.nextStepSnapshot) ??
+        normalizeText(entry.nextCheck) ??
+        normalizeText(entry.expectedEffectSnapshot),
+    }))
 }

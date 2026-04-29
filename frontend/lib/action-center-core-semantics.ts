@@ -7,8 +7,10 @@ import type { LiveActionCenterCampaignContext } from './action-center-live-conte
 import type { ActionCenterReviewDecision, PilotLearningCheckpoint } from './pilot-learning'
 import {
   compareDecisionHistoryEntries,
+  projectResultProgression,
   projectAuthoredDecisionHistory,
   projectLegacyDecisionRecord,
+  type ActionCenterResultProgressEntry,
 } from './action-center-decision-history'
 import { getActionCenterDecisionProfile } from './action-center-review-decisions'
 
@@ -40,6 +42,7 @@ export interface ActionCenterCoreSemantics {
     whatWeObserved: string | null
     whatWasDecided: string | null
   }
+  resultProgression: ActionCenterResultProgressEntry[]
   decisionHistory: ActionCenterDecisionRecord[]
   closingSemantics: {
     status: ActionCenterClosingStatus
@@ -468,6 +471,7 @@ export function projectActionCenterPreviewCoreSemantics(
     managementActionOutcome: input.reviewOutcome,
   })
   const latestDecision = decisionHistory[0] ?? null
+  const resultProgression = projectResultProgression(decisionHistory)
   const latestDecisionProfile = latestDecision ? getActionCenterDecisionProfile(latestDecision.decision) : null
   const actionProgress = projectActionProgress({
     route,
@@ -514,6 +518,7 @@ export function projectActionCenterPreviewCoreSemantics(
       whatWeObserved,
       whatWasDecided,
     },
+    resultProgression,
     decisionHistory,
     closingSemantics: {
       status: closingStatus,
@@ -611,6 +616,7 @@ export function projectActionCenterCoreSemantics(
     decisionRecords: context.decisionRecords,
   })
   const latestDecision = decisionHistory[0] ?? null
+  const resultProgression = projectResultProgression(decisionHistory)
   const latestDecisionProfile = latestDecision ? getActionCenterDecisionProfile(latestDecision.decision) : null
   const actionProgress = projectActionProgress({
     route,
@@ -658,6 +664,7 @@ export function projectActionCenterCoreSemantics(
         latestVisibleUpdateNote: normalizeText(context.latestVisibleUpdateNote),
       }),
     },
+    resultProgression,
     decisionHistory,
     closingSemantics: {
       status: closingStatus,

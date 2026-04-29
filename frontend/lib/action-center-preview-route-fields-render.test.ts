@@ -91,6 +91,24 @@ describe('action center preview route fields render', () => {
           whatWeObserved: 'MT kiest een eerste leiderschapsspoor.',
           whatWasDecided: 'Bijstellen',
         },
+        resultProgression: [
+          {
+            resultEntryId: 'decision-0',
+            recordedAt: '2026-04-21T09:00:00.000Z',
+            currentStep: 'Plan een eerste teamgesprek met de manager.',
+            observation: 'De eerste signalen bleven breed verdeeld.',
+            decision: 'doorgaan',
+            followThrough: 'Bevestig de route in het MT-overleg.',
+          },
+          {
+            resultEntryId: 'decision-1',
+            recordedAt: '2026-04-24T09:00:00.000Z',
+            currentStep: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
+            observation: 'MT kiest een eerste leiderschapsspoor.',
+            decision: 'bijstellen',
+            followThrough: 'Binnen twee weken moet het eerste teamgesprek zijn gevoerd.',
+          },
+        ],
         decisionHistory: [
           {
             decisionEntryId: 'decision-1',
@@ -131,6 +149,9 @@ describe('action center preview route fields render', () => {
     expect(html).toContain('Leg eigenaar en eerste correctie in het MT-overleg vast.')
     expect(html).toContain('Hierna')
     expect(html).toContain('Verwacht effect')
+    expect(html).toContain('Resultaat over tijd')
+    expect(html).toContain('Plan een eerste teamgesprek met de manager.')
+    expect(html).toContain('MT kiest een eerste leiderschapsspoor.')
   })
 
   it('builds compact landing summary lines from latest decision and current step', () => {
@@ -191,6 +212,7 @@ describe('action center preview route fields render', () => {
           whatWeObserved: 'Werkdruk bleef zichtbaar in hetzelfde team.',
           whatWasDecided: 'Bijstellen',
         },
+        resultProgression: [],
         decisionHistory: [],
         closingSemantics: {
           status: 'lopend',
@@ -285,6 +307,16 @@ describe('action center preview route fields render', () => {
           whatWeObserved: 'De lokale correctie hield zichtbaar stand.',
           whatWasDecided: 'Afronden',
         },
+        resultProgression: [
+          {
+            resultEntryId: 'decision-2',
+            recordedAt: '2026-04-28T09:00:00.000Z',
+            currentStep: 'Rond de route af en borg de les.',
+            observation: 'De lokale correctie hield zichtbaar stand.',
+            decision: 'afronden',
+            followThrough: null,
+          },
+        ],
         decisionHistory: [
           {
             decisionEntryId: 'decision-2',
