@@ -19,6 +19,8 @@ import {
 import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import { createClient } from '@/lib/supabase/server'
+import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
+import type { ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
 import type {
   ContactRequestRecord,
   PilotLearningCheckpoint,
@@ -108,6 +110,19 @@ function inferPreviewRhythm(reviewMoment: string | null) {
 function estimateHeadcount(value: string | null) {
   const match = value?.match(/\d+/)
   return match ? Number.parseInt(match[0], 10) : 0
+}
+
+function normalizePreviewReviewOutcome(value: string | null | undefined): ActionCenterReviewOutcome {
+  switch (value?.trim()) {
+    case 'doorgaan':
+    case 'bijstellen':
+    case 'opschalen':
+    case 'afronden':
+    case 'stoppen':
+      return value.trim() as ActionCenterReviewOutcome
+    default:
+      return 'geen-uitkomst'
+  }
 }
 
 export default async function KlantLearningsPage({ searchParams }: Props) {
@@ -384,6 +399,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
       title: dossier.title,
       summary,
       reason,
+      orgId: organization?.id ?? dossier.organization_id ?? campaign?.organization_id ?? null,
       sourceLabel,
       teamId: organization?.id ?? campaign?.organization_id ?? `team-${dossier.id}`,
       teamLabel,
@@ -397,6 +413,9 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
       priority,
       status,
       reviewDate: reviewMoment?.state === 'scheduled' ? reviewMoment.scheduledFor : null,
+      expectedEffect: dossier.expected_first_value ?? null,
+      reviewReason: reason,
+      reviewOutcome: normalizePreviewReviewOutcome(dossier.management_action_outcome),
       reviewDateLabel: formatPreviewDate(reviewMoment?.state === 'scheduled' ? reviewMoment.scheduledFor : null),
       reviewRhythm: inferPreviewRhythm(reviewMoment?.state === 'scheduled' ? reviewMoment.scheduledFor : null),
       signalLabel: `${sourceLabel} - ${teamLabel}`,
