@@ -20,7 +20,7 @@ function getNodeBuiltin<T>(specifier: string): T | null {
   }
 
   if (typeof runtimeProcess.getBuiltinModule === 'function') {
-    return runtimeProcess.getBuiltinModule(specifier)
+    return (runtimeProcess.getBuiltinModule(specifier) as T | undefined) ?? null
   }
 
   try {

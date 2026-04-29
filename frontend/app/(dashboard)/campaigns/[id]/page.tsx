@@ -554,6 +554,9 @@ export default async function CampaignPage({ params }: Props) {
   const showDetailedManagementOutput = showDeeperInsights;
   const showPartialManagementOutput = compositionState === "partial";
   const prefersReportFirst = compositionState === "closed";
+  const canOpenActionCenterFromDeliveryRecord = deliveryRecord
+    ? canOpenActionCenterRoute(deliveryRecord)
+    : false;
   const actionCenterBridge = buildCampaignDetailActionCenterBridge({
     campaignId: id,
     routeEntryStage:
@@ -563,8 +566,7 @@ export default async function CampaignPage({ params }: Props) {
     canOpenRoute:
       showManagementOutput &&
       isLiveActionCenterScanType(stats.scan_type) &&
-      Boolean(deliveryRecord) &&
-      canOpenActionCenterRoute(deliveryRecord),
+      canOpenActionCenterFromDeliveryRecord,
     assessedAt: deliveryRecord?.updated_at ?? stats.created_at,
   });
   const compositionStateMeta = {

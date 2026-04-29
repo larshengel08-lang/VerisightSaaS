@@ -6,6 +6,8 @@ import { MarketingInlineContactPanel } from '@/components/marketing/marketing-in
 import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { buildContactHref } from '@/lib/contact-funnel'
 
+void PreviewSlider
+
 // Tokens used by HeroSection (De Rapporteur palette)
 const T = {
   paper: 'oklch(0.978 0.01 62)',
@@ -42,10 +44,26 @@ function useInView(threshold = 0.12) {
   return [ref, inView] as const
 }
 
-function Reveal({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
+function Reveal({
+  children,
+  delay = 0,
+  from = 'bottom',
+}: {
+  children: ReactNode
+  delay?: number
+  from?: 'bottom' | 'right'
+}) {
   const [ref, inView] = useInView(0.08)
+  const hiddenTransform = from === 'right' ? 'translateX(16px)' : 'translateY(16px)'
   return (
-    <div ref={ref} style={{ opacity: inView ? 1 : 0, transform: inView ? 'none' : 'translateY(16px)', transition: `opacity .65s ease ${delay}s, transform .65s cubic-bezier(.16,1,.3,1) ${delay}s` }}>
+    <div
+      ref={ref}
+      style={{
+        opacity: inView ? 1 : 0,
+        transform: inView ? 'none' : hiddenTransform,
+        transition: `opacity .65s ease ${delay}s, transform .65s cubic-bezier(.16,1,.3,1) ${delay}s`,
+      }}
+    >
       {children}
     </div>
   )
@@ -297,6 +315,8 @@ function DashboardSuitePreview() {
   )
 }
 
+void DashboardSuitePreview
+
 function ActionCenterSuitePreview() {
   return (
     <div
@@ -539,6 +559,8 @@ function RapportageTab() {
     </div>
   )
 }
+
+void ActionCenterSuitePreview
 
 function DashboardPreview() {
   const [tab, setTab] = useState<TabId>('samenvatting')

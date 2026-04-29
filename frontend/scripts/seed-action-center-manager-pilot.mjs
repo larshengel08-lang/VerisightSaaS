@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
@@ -40,10 +40,6 @@ function buildDepartmentScopeValue(orgId, departmentLabel) {
   return `${orgId}::department::${departmentLabel.toLowerCase()}`
 }
 
-function isSchemaCacheWriteError(error, tableName) {
-  return error?.code === 'PGRST205' && error?.message?.includes(tableName)
-}
-
 async function findUserByEmail(admin, email) {
   let page = 1
   const perPage = 200
@@ -82,7 +78,24 @@ async function ensureUser(admin, email, password) {
   return data.user
 }
 
-function choosePilotOrg(campaigns, respondents) {
+function getScanPriority(scanType) {
+  switch (scanType) {
+    case 'exit':
+      return 6
+    case 'retention':
+      return 5
+    case 'leadership':
+      return 4
+    case 'pulse':
+      return 3
+    case 'onboarding':
+      return 2
+    default:
+      return 1
+  }
+}
+
+function choosePilotOrg(campaigns, respondents, statsByCampaignId) {
   const departmentsByCampaign = respondents.reduce((acc, respondent) => {
     const label = respondent.department?.trim()
     if (!label) return acc
@@ -97,8 +110,13 @@ function choosePilotOrg(campaigns, respondents) {
       orgId: campaign.organization_id,
       campaigns: [],
       departments: new Set(),
+      reportReadyCampaignCount: 0,
     }
     orgEntry.campaigns.push(campaign)
+    const stats = statsByCampaignId.get(campaign.id)
+    if (stats?.is_active && stats.total_completed >= 10) {
+      orgEntry.reportReadyCampaignCount += 1
+    }
     for (const department of departmentsByCampaign[campaign.id] ?? []) {
       orgEntry.departments.add(department)
     }
@@ -107,6 +125,9 @@ function choosePilotOrg(campaigns, respondents) {
 
   return [...byOrg.values()]
     .sort((left, right) => {
+      if (right.reportReadyCampaignCount !== left.reportReadyCampaignCount) {
+        return right.reportReadyCampaignCount - left.reportReadyCampaignCount
+      }
       if (right.departments.size !== left.departments.size) {
         return right.departments.size - left.departments.size
       }
@@ -120,6 +141,10 @@ const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl || !serviceRoleKey) {
   throw new Error('NEXT_PUBLIC_SUPABASE_URL of SUPABASE_SERVICE_ROLE_KEY ontbreekt.')
+}
+
+if (existsSync(artifactPath)) {
+  rmSync(artifactPath, { force: true })
 }
 
 const admin = createClient(supabaseUrl, serviceRoleKey, {
@@ -139,6 +164,13 @@ if (campaignError) throw campaignError
 if (!campaigns || campaigns.length === 0) throw new Error('Geen geschikte campaigns gevonden voor de pilot.')
 
 const campaignIds = campaigns.map((campaign) => campaign.id)
+const { data: campaignStats, error: campaignStatsError } = await admin
+  .from('campaign_stats')
+  .select('campaign_id, is_active, total_completed, created_at, scan_type')
+  .in('campaign_id', campaignIds)
+
+if (campaignStatsError) throw campaignStatsError
+
 const { data: respondents, error: respondentError } = await admin
   .from('respondents')
   .select('campaign_id, department')
@@ -146,11 +178,31 @@ const { data: respondents, error: respondentError } = await admin
 
 if (respondentError) throw respondentError
 
-const pilotOrg = choosePilotOrg(campaigns, respondents ?? [])
+const statsByCampaignId = new Map((campaignStats ?? []).map((campaign) => [campaign.campaign_id, campaign]))
+const pilotOrg = choosePilotOrg(campaigns, respondents ?? [], statsByCampaignId)
 if (!pilotOrg) throw new Error('Kon geen pilotorganisatie kiezen.')
 
 const chosenDepartments = [...pilotOrg.departments].slice(0, 2)
-const fallbackCampaign = pilotOrg.campaigns[0]
+const canonicalCampaign =
+  [...pilotOrg.campaigns]
+    .filter((campaign) => {
+      const stats = statsByCampaignId.get(campaign.id)
+      return stats?.is_active === true && (stats.total_completed ?? 0) >= 10
+    })
+    .sort((left, right) => {
+      const leftStats = statsByCampaignId.get(left.id)
+      const rightStats = statsByCampaignId.get(right.id)
+      const priorityDelta = getScanPriority(right.scan_type) - getScanPriority(left.scan_type)
+      if (priorityDelta !== 0) return priorityDelta
+      const completionDelta = (rightStats?.total_completed ?? 0) - (leftStats?.total_completed ?? 0)
+      if (completionDelta !== 0) return completionDelta
+      return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+    })[0] ?? null
+
+if (!canonicalCampaign) {
+  throw new Error('Kon geen canonieke report-ready demo campaign vinden voor de HR pilotseed.')
+}
+
 const firstManagementUseAt = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString()
 const reviewMoment = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
 
@@ -159,7 +211,7 @@ const { data: deliveryRecord, error: deliveryRecordError } = await admin
   .upsert(
     {
       organization_id: pilotOrg.orgId,
-      campaign_id: fallbackCampaign.id,
+      campaign_id: canonicalCampaign.id,
       lifecycle_stage: 'first_management_use',
       exception_status: 'none',
       operator_owner: 'Verisight',
@@ -173,9 +225,7 @@ const { data: deliveryRecord, error: deliveryRecordError } = await admin
   .select('id')
   .single()
 
-if (deliveryRecordError && isSchemaCacheWriteError(deliveryRecordError, 'campaign_delivery_records')) {
-  console.warn('[seed-action-center-manager-pilot] Overslaan van campaign_delivery_records write: remote schema cache laat geen writes toe.')
-} else if (deliveryRecordError || !deliveryRecord) {
+if (deliveryRecordError || !deliveryRecord) {
   throw deliveryRecordError ?? new Error('Kon delivery record niet opslaan.')
 }
 
@@ -184,15 +234,15 @@ const { data: dossier, error: dossierError } = await admin
   .upsert(
     {
       organization_id: pilotOrg.orgId,
-      campaign_id: fallbackCampaign.id,
-      title: `HR demo route - ${fallbackCampaign.name}`,
+      campaign_id: canonicalCampaign.id,
+      title: `HR demo route - ${canonicalCampaign.name}`,
       route_interest:
-        fallbackCampaign.scan_type === 'exit'
+        canonicalCampaign.scan_type === 'exit'
           ? 'exitscan'
-          : fallbackCampaign.scan_type === 'retention'
+          : canonicalCampaign.scan_type === 'retention'
             ? 'retentiescan'
             : 'nog-onzeker',
-      scan_type: fallbackCampaign.scan_type,
+      scan_type: canonicalCampaign.scan_type,
       triage_status: 'bevestigd',
       expected_first_value: 'Binnen twee weken moet de rolduidelijkheid merkbaar toenemen in het teamoverleg.',
       first_management_value:
@@ -209,50 +259,44 @@ const { data: dossier, error: dossierError } = await admin
   .select('id')
   .single()
 
-if (dossierError && isSchemaCacheWriteError(dossierError, 'pilot_learning_dossiers')) {
-  console.warn('[seed-action-center-manager-pilot] Overslaan van pilot_learning_dossiers write: remote schema cache laat geen writes toe.')
-} else if (dossierError || !dossier) {
+if (dossierError || !dossier) {
   throw dossierError ?? new Error('Kon learning dossier niet opslaan.')
 }
 
-if (dossier) {
-  const checkpointRows = [
-    {
-      dossier_id: dossier.id,
-      checkpoint_key: 'first_management_use',
-      owner_label: 'HR',
-      status: 'bevestigd',
-      objective_signal_notes: 'Drie werkafspraken zijn expliciet gemaakt.',
-      qualitative_notes: 'Het eerste gesprek gaf rust, maar opvolging moet nog worden geborgd.',
-      interpreted_observation: 'Het teamoverleg werd concreter en minder diffuus.',
-      confirmed_lesson: 'De eerste cyclus kon worden afgerond; de huidige route bewaakt of de afspraken blijven staan.',
-      lesson_strength: 'direct_uitvoerbare_verbetering',
-      destination_areas: ['report', 'operations'],
-    },
-    {
-      dossier_id: dossier.id,
-      checkpoint_key: 'follow_up_review',
-      owner_label: 'HR',
-      status: 'bevestigd',
-      objective_signal_notes: 'Managers melden rustiger weekstarts en minder rolverwarring.',
-      qualitative_notes: 'De eerste interventie lijkt te werken, maar borging in het vaste ritme is nodig.',
-      interpreted_observation: 'De vorige stap is afgerond; nu toetsen we vooral of het effect standhoudt.',
-      confirmed_lesson:
-        'De vorige stap is afgerond; deze actieve route kijkt nu alleen nog naar borging en eventuele bijsturing.',
-      lesson_strength: 'terugkerend_patroon',
-      destination_areas: ['report', 'product'],
-    },
-  ]
+const checkpointRows = [
+  {
+    dossier_id: dossier.id,
+    checkpoint_key: 'first_management_use',
+    owner_label: 'HR',
+    status: 'bevestigd',
+    objective_signal_notes: 'Drie werkafspraken zijn expliciet gemaakt.',
+    qualitative_notes: 'Het eerste gesprek gaf rust, maar opvolging moet nog worden geborgd.',
+    interpreted_observation: 'Het teamoverleg werd concreter en minder diffuus.',
+    confirmed_lesson: 'De eerste cyclus kon worden afgerond; de huidige route bewaakt of de afspraken blijven staan.',
+    lesson_strength: 'direct_uitvoerbare_verbetering',
+    destination_areas: ['report', 'operations'],
+  },
+  {
+    dossier_id: dossier.id,
+    checkpoint_key: 'follow_up_review',
+    owner_label: 'HR',
+    status: 'bevestigd',
+    objective_signal_notes: 'Managers melden rustiger weekstarts en minder rolverwarring.',
+    qualitative_notes: 'De eerste interventie lijkt te werken, maar borging in het vaste ritme is nodig.',
+    interpreted_observation: 'De vorige stap is afgerond; nu toetsen we vooral of het effect standhoudt.',
+    confirmed_lesson:
+      'De vorige stap is afgerond; deze actieve route kijkt nu alleen nog naar borging en eventuele bijsturing.',
+    lesson_strength: 'terugkerend_patroon',
+    destination_areas: ['report', 'product'],
+  },
+]
 
-  const { error: checkpointError } = await admin
-    .from('pilot_learning_checkpoints')
-    .upsert(checkpointRows, { onConflict: 'dossier_id,checkpoint_key' })
+const { error: checkpointError } = await admin
+  .from('pilot_learning_checkpoints')
+  .upsert(checkpointRows, { onConflict: 'dossier_id,checkpoint_key' })
 
-  if (checkpointError && isSchemaCacheWriteError(checkpointError, 'pilot_learning_checkpoints')) {
-    console.warn('[seed-action-center-manager-pilot] Overslaan van pilot_learning_checkpoints write: remote schema cache laat geen writes toe.')
-  } else if (checkpointError) {
-    throw checkpointError
-  }
+if (checkpointError) {
+  throw checkpointError
 }
 
 const hrOwner = await ensureUser(admin, HR_EMAIL, PILOT_PASSWORD)
@@ -308,7 +352,7 @@ const workspaceRows = [
     scope_type: chosenDepartments[index] ? 'department' : 'item',
     scope_value: chosenDepartments[index]
       ? buildDepartmentScopeValue(pilotOrg.orgId, chosenDepartments[index])
-      : `${pilotOrg.orgId}::campaign::${fallbackCampaign.id}`,
+      : `${pilotOrg.orgId}::campaign::${canonicalCampaign.id}`,
     can_view: true,
     can_update: true,
     can_assign: false,
@@ -327,27 +371,27 @@ mkdirSync(path.dirname(artifactPath), { recursive: true })
 const artifact = {
   seededAt: new Date().toISOString(),
   orgId: pilotOrg.orgId,
-  campaignId: fallbackCampaign.id,
+  campaignId: canonicalCampaign.id,
   hrOwner: {
     email: HR_EMAIL,
     password: PILOT_PASSWORD,
   },
   routeContext: {
-    focusItemId: fallbackCampaign.id,
+    focusItemId: canonicalCampaign.id,
     overviewUrl: '/dashboard',
     reportsUrl: '/reports',
-    campaignDetailUrl: `/campaigns/${fallbackCampaign.id}`,
+    campaignDetailUrl: `/campaigns/${canonicalCampaign.id}`,
     actionCenterUrl: '/action-center',
-    actionCenterFocusUrl: `/action-center?focus=${fallbackCampaign.id}`,
+    actionCenterFocusUrl: `/action-center?focus=${canonicalCampaign.id}`,
   },
   managers: managers.map((manager, index) => ({
     email: manager.email,
     password: PILOT_PASSWORD,
     scopeType: chosenDepartments[index] ? 'department' : 'item',
-    scopeLabel: chosenDepartments[index] ?? fallbackCampaign.name,
+    scopeLabel: chosenDepartments[index] ?? canonicalCampaign.name,
     scopeValue: chosenDepartments[index]
       ? buildDepartmentScopeValue(pilotOrg.orgId, chosenDepartments[index])
-      : `${pilotOrg.orgId}::campaign::${fallbackCampaign.id}`,
+      : `${pilotOrg.orgId}::campaign::${canonicalCampaign.id}`,
   })),
   departmentLabels: chosenDepartments,
 }

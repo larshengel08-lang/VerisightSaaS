@@ -1,5 +1,6 @@
 import type { ActionCenterEntryStage } from '@/lib/action-center-route-contract'
 import {
+  type HrDemoPilotArtifact,
   loadHrDemoPilotArtifact,
   prioritizeHrDemoCampaigns,
 } from '@/lib/dashboard/hr-demo-pilot-artifact'
@@ -38,6 +39,7 @@ export interface FeaturedReportEntry {
 export interface BuildReportLibraryEntriesOptions {
   routeEntryStageByCampaignId?: Partial<Record<string, ActionCenterEntryStage | null>>
   routeOpenableByCampaignId?: Partial<Record<string, boolean>>
+  hrDemoArtifact?: Pick<HrDemoPilotArtifact, 'campaignId'> | null
 }
 
 const MANAGEMENT_SCAN_TYPES: ScanType[] = ['exit', 'retention', 'leadership']
@@ -159,7 +161,7 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[], options: B
       return right.total_completed - left.total_completed
     })
 
-  const demoArtifact = loadHrDemoPilotArtifact()
+  const demoArtifact = options.hrDemoArtifact ?? loadHrDemoPilotArtifact()
   const prioritizedReadyCampaigns = prioritizeHrDemoCampaigns(
     [...readyCampaigns]
       .filter((campaign) => campaign.total_completed >= 10)
