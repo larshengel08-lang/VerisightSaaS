@@ -768,7 +768,6 @@ function SuitePreviewSection() {
                       <section className="suite-motion-screen suite-motion-screen-see">
                         <div className="suite-screen-head">
                           <p className="suite-phase-eyebrow">Eerste signalen</p>
-                          <span className="suite-phase-chip suite-phase-chip-amber">Zien</span>
                         </div>
 
                         <div className="suite-phase-title">
@@ -786,7 +785,6 @@ function SuitePreviewSection() {
                       <section className="suite-motion-screen suite-motion-screen-prioritize">
                         <div className="suite-screen-head">
                           <p className="suite-phase-eyebrow">Eerste prioriteiten</p>
-                          <span className="suite-phase-chip suite-phase-chip-teal">Prioriteren</span>
                         </div>
 
                         <div className="suite-prioritize-intro">
@@ -794,7 +792,7 @@ function SuitePreviewSection() {
                         </div>
 
                         <div className="suite-priority-ladder">
-                          {suitePriorityRows.map(([index, title, body, badge, bg, color]) => (
+                          {suitePriorityRows.slice(0, 2).map(([index, title, body, badge, bg, color]) => (
                             <div key={`${index}-${title}`} className={`suite-ladder-row ${index === '01' ? 'suite-ladder-row-active' : ''}`}>
                               <span className="suite-list-index">{index}</span>
                               <div>
@@ -813,7 +811,6 @@ function SuitePreviewSection() {
                         <div className="suite-action-panel">
                           <div className="suite-screen-head">
                             <p className="suite-phase-eyebrow">Action Center</p>
-                            <span className="suite-phase-chip suite-phase-chip-dark">Handelen</span>
                           </div>
 
                           <div className="suite-action-head">
@@ -826,9 +823,7 @@ function SuitePreviewSection() {
                           <div className="suite-action-list">
                             {[
                               ['Prioriteit', 'Ontwikkelkansen blijven achter, Finance', 'Bevestigd'],
-                              ['Eigenaar', 'HRBP Finance', 'Toegewezen'],
                               ['Eerste actie', 'Bespreken in teamoverleg, daarna verdiepend gesprek', 'Deze week'],
-                              ['Reviewmoment', 'Hercheck over 21 dagen', 'Ingepland'],
                             ].map(([label, body, badge]) => (
                               <div key={label} className={`suite-action-row ${label === 'Prioriteit' ? 'suite-action-row-primary' : ''}`}>
                                 <div>
@@ -846,12 +841,6 @@ function SuitePreviewSection() {
                 </div>
               </div>
 
-              <p style={{ color: SURFACE.text, fontSize: 13.5, lineHeight: 1.65, marginBottom: 14, marginTop: 18 }}>
-                Eerst zie je wat terugkomt, daarna wat eerst telt, en tenslotte wie wat oppakt.
-              </p>
-              <p style={{ color: SURFACE.subtle, fontSize: 12.5 }}>
-                Voorbeeldoutput is illustratief en gebaseerd op fictieve data.
-              </p>
               </div>
             </Reveal>
           </div>
@@ -1073,6 +1062,10 @@ function SuitePreviewSection() {
             grid-template-columns: repeat(3, minmax(0, 1fr));
             margin-bottom: 0;
             margin-top: auto;
+          }
+
+          .suite-motion-screen-see .suite-metrics-grid {
+            margin-top: 34px;
           }
 
           .suite-phase-list,
