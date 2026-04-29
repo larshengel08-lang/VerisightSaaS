@@ -340,6 +340,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         ...context,
         route,
         latestVisibleUpdateNote: latestUpdate,
+        decisionRecords: [],
       })
       const priority = getPriorityFromSignals({
         exceptionStatus: context.deliveryRecord?.exception_status,

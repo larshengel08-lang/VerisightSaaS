@@ -2138,13 +2138,12 @@ function EmptySection({ title, body }: { title: string; body: string }) {
 }
 
 export function buildCompactLandingSummaryLines(item: ActionCenterPreviewItem) {
-  const outcomeLabel = getReviewOutcomeMeta(item.coreSemantics.reviewSemantics.reviewOutcomeVisible).label
-  const supportingLine =
-    { label: 'Stap', value: item.coreSemantics.actionFrame.firstStep }
+  const latestDecision = item.coreSemantics.latestDecision
+  const currentStep = item.coreSemantics.actionProgress.currentStep
 
   return [
-    { label: 'Uitkomst', value: outcomeLabel },
-    supportingLine,
+    latestDecision ? { label: 'Besluit', value: latestDecision.decision } : null,
+    currentStep ? { label: 'Stap', value: currentStep } : null,
   ]
     .filter((entry): entry is { label: string; value: string } => Boolean(entry?.value))
     .filter((entry, index, entries) => entries.findIndex((candidate) => candidate.value === entry.value) === index)

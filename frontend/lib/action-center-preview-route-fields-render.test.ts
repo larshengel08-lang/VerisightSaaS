@@ -1,7 +1,7 @@
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
+import { ActionCenterPreview, buildCompactLandingSummaryLines } from '@/components/dashboard/action-center-preview'
 import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 
 describe('action center preview route fields render', () => {
@@ -61,5 +61,78 @@ describe('action center preview route fields render', () => {
     expect(html).toContain('Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.')
     expect(html).toContain('Laatste reviewuitkomst')
     expect(html).toContain('Bijstellen')
+  })
+
+  it('builds compact landing summary lines from latest decision and current step', () => {
+    const item = finalizeActionCenterPreviewItem({
+      id: 'route-1',
+      code: 'ACT-1001',
+      title: 'Werkdruk blijft hoog in Operations',
+      summary: 'De route vraagt een nieuwe lokale stap.',
+      reason: 'Werkdruk bleef zichtbaar na de eerste interventie.',
+      sourceLabel: 'ExitScan',
+      orgId: 'org-1',
+      scopeType: 'department',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerId: 'manager-1',
+      ownerName: 'Sanne de Vries',
+      ownerRole: 'Manager - Operations',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: 'Sanne de Vries',
+      priority: 'hoog',
+      status: 'in-uitvoering',
+      reviewDate: '2026-05-02',
+      expectedEffect: 'Zichtbaar maken of de werkdruk lokaal afneemt.',
+      reviewReason: 'De eerste teamreview gaf nog geen stabiele verbetering.',
+      reviewOutcome: 'bijstellen',
+      reviewDateLabel: '2 mei',
+      reviewRhythm: 'Wekelijks',
+      signalLabel: 'ExitScan - Operations',
+      signalBody: 'Werkdruk bleef zichtbaar in hetzelfde team.',
+      nextStep: 'Herplan de teamreview voor volgende week.',
+      peopleCount: 14,
+      updates: [],
+      coreSemantics: {
+        route: {} as never,
+        reviewSemantics: {} as never,
+        latestDecision: {
+          decisionEntryId: 'decision-1',
+          sourceRouteId: 'route-1',
+          decision: 'bijstellen',
+          decisionReason: 'De eerste teamreview gaf nog geen stabiele verbetering.',
+          nextCheck: 'Toets over een week of de teamdruk zichtbaar daalt.',
+          decisionRecordedAt: '2026-04-25T10:00:00.000Z',
+          reviewCompletedAt: '2026-04-25T09:30:00.000Z',
+        },
+        actionProgress: {
+          currentStep: 'Plan een gerichte teamreview met de manager.',
+          nextStep: 'Herplan de teamreview voor volgende week.',
+          expectedEffect: 'Zichtbaar maken of de werkdruk lokaal afneemt.',
+        },
+        actionFrame: {
+          whyNow: 'Werkdruk bleef zichtbaar na de eerste interventie.',
+          firstStep: 'Plan een gerichte teamreview met de manager.',
+          owner: 'Sanne de Vries',
+          expectedEffect: 'Zichtbaar maken of de werkdruk lokaal afneemt.',
+        },
+        resultLoop: {
+          whatWasTried: 'Plan een gerichte teamreview met de manager.',
+          whatWeObserved: 'Werkdruk bleef zichtbaar in hetzelfde team.',
+          whatWasDecided: 'Bijstellen',
+        },
+        decisionHistory: [],
+        closingSemantics: {
+          status: 'lopend',
+          summary: null,
+          historicalSummary: null,
+        },
+      },
+    })
+
+    expect(buildCompactLandingSummaryLines(item)).toEqual([
+      { label: 'Besluit', value: 'bijstellen' },
+      { label: 'Stap', value: 'Plan een gerichte teamreview met de manager.' },
+    ])
   })
 })

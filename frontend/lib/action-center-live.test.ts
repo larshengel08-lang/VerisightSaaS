@@ -683,4 +683,49 @@ describe('live action center builder', () => {
       ]),
     )
   })
+
+  it('projects latest decision and shared action progress into live items', () => {
+    const items = buildLiveActionCenterItems([
+      {
+        campaign: buildCampaign(),
+        stats: buildStats(),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue: 'operations',
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-1',
+          displayName: 'Sanne de Vries',
+          assignedAt: '2026-04-21T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          lifecycle_stage: 'first_management_use',
+          first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+          next_step: 'Plan de vervolgcheck met HR en operations.',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          expected_first_value: 'Maak zichtbaar of de werkdruk lokaal daalt.',
+          first_action_taken: 'Plan een gerichte teamreview met de manager.',
+          review_moment: '2026-05-12',
+          management_action_outcome: 'bijstellen',
+        }),
+        learningCheckpoints: [],
+      },
+    ])
+
+    expect(items).toHaveLength(1)
+    expect(items[0]?.coreSemantics.latestDecision).toMatchObject({
+      decision: 'bijstellen',
+      decisionReason: 'Maak zichtbaar of de werkdruk lokaal daalt.',
+      nextCheck: 'Maak zichtbaar of de werkdruk lokaal daalt.',
+    })
+    expect(items[0]?.coreSemantics.actionProgress).toMatchObject({
+      currentStep: 'Plan een gerichte teamreview met de manager.',
+      nextStep: 'Plan de vervolgcheck met HR en operations.',
+      expectedEffect: 'Maak zichtbaar of de werkdruk lokaal daalt.',
+    })
+  })
 })
