@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { buildReportLibraryEntries, filterReportLibraryEntries, getReportEntryBridge } from './report-library'
 import type { CampaignStats } from '@/lib/types'
@@ -173,6 +174,13 @@ describe('report library', () => {
     expect(filterReportLibraryEntries(model.entries, 'management').map((entry) => entry.campaignId)).toEqual(['exit-1'])
     expect(filterReportLibraryEntries(model.entries, 'module').map((entry) => entry.campaignId)).toEqual(['pulse-1'])
     expect(filterReportLibraryEntries(model.entries, 'cohort').map((entry) => entry.campaignId)).toEqual(['onboarding-1'])
+  })
+
+  it('prioritizes the seeded HR demo campaign in featured report selection when an artifact is present', () => {
+    const source = readFileSync(new URL('./report-library.ts', import.meta.url), 'utf8')
+
+    expect(source).toContain('loadHrDemoPilotArtifact')
+    expect(source).toContain('prioritizeHrDemoCampaigns')
   })
 })
 

@@ -40,6 +40,10 @@ function buildDepartmentScopeValue(orgId, departmentLabel) {
   return `${orgId}::department::${departmentLabel.toLowerCase()}`
 }
 
+function isSchemaCacheWriteError(error, tableName) {
+  return error?.code === 'PGRST205' && error?.message?.includes(tableName)
+}
+
 async function findUserByEmail(admin, email) {
   let page = 1
   const perPage = 200
@@ -147,6 +151,109 @@ if (!pilotOrg) throw new Error('Kon geen pilotorganisatie kiezen.')
 
 const chosenDepartments = [...pilotOrg.departments].slice(0, 2)
 const fallbackCampaign = pilotOrg.campaigns[0]
+const firstManagementUseAt = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString()
+const reviewMoment = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+
+const { data: deliveryRecord, error: deliveryRecordError } = await admin
+  .from('campaign_delivery_records')
+  .upsert(
+    {
+      organization_id: pilotOrg.orgId,
+      campaign_id: fallbackCampaign.id,
+      lifecycle_stage: 'first_management_use',
+      exception_status: 'none',
+      operator_owner: 'Verisight',
+      next_step: 'Volg de werkafspraken en toets ze opnieuw in de eerstvolgende review.',
+      operator_notes: 'HR demo route voor Action Center.',
+      customer_handoff_note: 'HR gebruikt deze campagne als vaste demo-route voor opvolging en review.',
+      first_management_use_confirmed_at: firstManagementUseAt,
+    },
+    { onConflict: 'campaign_id' },
+  )
+  .select('id')
+  .single()
+
+if (deliveryRecordError && isSchemaCacheWriteError(deliveryRecordError, 'campaign_delivery_records')) {
+  console.warn('[seed-action-center-manager-pilot] Overslaan van campaign_delivery_records write: remote schema cache laat geen writes toe.')
+} else if (deliveryRecordError || !deliveryRecord) {
+  throw deliveryRecordError ?? new Error('Kon delivery record niet opslaan.')
+}
+
+const { data: dossier, error: dossierError } = await admin
+  .from('pilot_learning_dossiers')
+  .upsert(
+    {
+      organization_id: pilotOrg.orgId,
+      campaign_id: fallbackCampaign.id,
+      title: `HR demo route - ${fallbackCampaign.name}`,
+      route_interest:
+        fallbackCampaign.scan_type === 'exit'
+          ? 'exitscan'
+          : fallbackCampaign.scan_type === 'retention'
+            ? 'retentiescan'
+            : 'nog-onzeker',
+      scan_type: fallbackCampaign.scan_type,
+      triage_status: 'bevestigd',
+      expected_first_value: 'Binnen twee weken moet de rolduidelijkheid merkbaar toenemen in het teamoverleg.',
+      first_management_value:
+        'We reviewen omdat HR wil toetsen of het eerste teamgesprek echt tot heldere werkafspraken leidde.',
+      first_action_taken: 'Plan een teamsessie van 30 minuten en leg drie concrete werkafspraken vast.',
+      review_moment: reviewMoment,
+      adoption_outcome: 'De eerste reactie is positiever, maar borging in het teamritme is nog nodig.',
+      management_action_outcome: 'bijstellen',
+      next_route: 'Borg de afspraken in het volgende teamoverleg en bevestig opnieuw wie eigenaar blijft.',
+      case_public_summary: 'De vorige stap is afgerond; deze actieve route bewaakt nu alleen de borging en bijsturing.',
+    },
+    { onConflict: 'campaign_id' },
+  )
+  .select('id')
+  .single()
+
+if (dossierError && isSchemaCacheWriteError(dossierError, 'pilot_learning_dossiers')) {
+  console.warn('[seed-action-center-manager-pilot] Overslaan van pilot_learning_dossiers write: remote schema cache laat geen writes toe.')
+} else if (dossierError || !dossier) {
+  throw dossierError ?? new Error('Kon learning dossier niet opslaan.')
+}
+
+if (dossier) {
+  const checkpointRows = [
+    {
+      dossier_id: dossier.id,
+      checkpoint_key: 'first_management_use',
+      owner_label: 'HR',
+      status: 'bevestigd',
+      objective_signal_notes: 'Drie werkafspraken zijn expliciet gemaakt.',
+      qualitative_notes: 'Het eerste gesprek gaf rust, maar opvolging moet nog worden geborgd.',
+      interpreted_observation: 'Het teamoverleg werd concreter en minder diffuus.',
+      confirmed_lesson: 'De eerste cyclus kon worden afgerond; de huidige route bewaakt of de afspraken blijven staan.',
+      lesson_strength: 'direct_uitvoerbare_verbetering',
+      destination_areas: ['report', 'operations'],
+    },
+    {
+      dossier_id: dossier.id,
+      checkpoint_key: 'follow_up_review',
+      owner_label: 'HR',
+      status: 'bevestigd',
+      objective_signal_notes: 'Managers melden rustiger weekstarts en minder rolverwarring.',
+      qualitative_notes: 'De eerste interventie lijkt te werken, maar borging in het vaste ritme is nodig.',
+      interpreted_observation: 'De vorige stap is afgerond; nu toetsen we vooral of het effect standhoudt.',
+      confirmed_lesson:
+        'De vorige stap is afgerond; deze actieve route kijkt nu alleen nog naar borging en eventuele bijsturing.',
+      lesson_strength: 'terugkerend_patroon',
+      destination_areas: ['report', 'product'],
+    },
+  ]
+
+  const { error: checkpointError } = await admin
+    .from('pilot_learning_checkpoints')
+    .upsert(checkpointRows, { onConflict: 'dossier_id,checkpoint_key' })
+
+  if (checkpointError && isSchemaCacheWriteError(checkpointError, 'pilot_learning_checkpoints')) {
+    console.warn('[seed-action-center-manager-pilot] Overslaan van pilot_learning_checkpoints write: remote schema cache laat geen writes toe.')
+  } else if (checkpointError) {
+    throw checkpointError
+  }
+}
 
 const hrOwner = await ensureUser(admin, HR_EMAIL, PILOT_PASSWORD)
 const managers = await Promise.all(MANAGER_EMAILS.map((email) => ensureUser(admin, email, PILOT_PASSWORD)))
@@ -224,6 +331,14 @@ const artifact = {
   hrOwner: {
     email: HR_EMAIL,
     password: PILOT_PASSWORD,
+  },
+  routeContext: {
+    focusItemId: fallbackCampaign.id,
+    overviewUrl: '/dashboard',
+    reportsUrl: '/reports',
+    campaignDetailUrl: `/campaigns/${fallbackCampaign.id}`,
+    actionCenterUrl: '/action-center',
+    actionCenterFocusUrl: `/action-center?focus=${fallbackCampaign.id}`,
   },
   managers: managers.map((manager, index) => ({
     email: manager.email,

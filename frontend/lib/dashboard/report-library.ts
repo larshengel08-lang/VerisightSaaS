@@ -1,4 +1,8 @@
 import type { ActionCenterEntryStage } from '@/lib/action-center-route-contract'
+import {
+  loadHrDemoPilotArtifact,
+  prioritizeHrDemoCampaigns,
+} from '@/lib/dashboard/hr-demo-pilot-artifact'
 import { getHrBridgePresentation } from '@/lib/dashboard/hr-bridge-state'
 import { FIRST_DASHBOARD_THRESHOLD } from '@/lib/response-activation'
 import { buildBridgeAssessmentTruth, resolveHrBridgeState } from '@/lib/dashboard/hr-bridge-state'
@@ -155,10 +159,19 @@ export function buildReportLibraryEntries(campaigns: CampaignStats[], options: B
       return right.total_completed - left.total_completed
     })
 
-  const featuredCandidate =
+  const demoArtifact = loadHrDemoPilotArtifact()
+  const prioritizedReadyCampaigns = prioritizeHrDemoCampaigns(
     [...readyCampaigns]
       .filter((campaign) => campaign.total_completed >= 10)
-      .sort((left, right) => getPriority(right) - getPriority(left))[0] ?? null
+      .sort((left, right) => getPriority(right) - getPriority(left))
+      .map((campaign) => ({
+        campaignId: campaign.campaign_id,
+        campaign,
+      })),
+    demoArtifact ? { campaignId: demoArtifact.campaignId } : null,
+  )
+
+  const featuredCandidate = prioritizedReadyCampaigns[0]?.campaign ?? null
 
   const entries: ReportLibraryEntry[] = readyCampaigns.map((campaign) => {
     const category = getCategory(campaign.scan_type)

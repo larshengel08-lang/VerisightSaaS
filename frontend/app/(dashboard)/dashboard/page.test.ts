@@ -58,4 +58,11 @@ describe('dashboard home UX guardrails', () => {
     expect(source).not.toContain("href={isAdmin ? '/beheer' : '/action-center'}")
     expect(source).not.toContain('Open in Action Center</button>')
   })
+
+  it('allows the seeded HR demo campaign to override the default overview focus route', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('loadHrDemoPilotArtifact')
+    expect(source).toContain('demoCampaign ??')
+  })
 })

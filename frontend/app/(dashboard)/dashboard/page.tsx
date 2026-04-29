@@ -30,6 +30,7 @@ import {
   normalizeDashboardPortfolioView,
   type DashboardPortfolioView,
 } from '@/lib/dashboard/shell-navigation'
+import { loadHrDemoPilotArtifact } from '@/lib/dashboard/hr-demo-pilot-artifact'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
 import { buildGuidedSelfServeState, deriveGuidedSelfServeDiscipline } from '@/lib/guided-self-serve'
@@ -80,7 +81,12 @@ export default async function DashboardHomePage({
   const { data: stats } = await supabase.from('campaign_stats').select('*').order('created_at', { ascending: false })
 
   const campaigns = (stats ?? []) as CampaignStats[]
+  const hrDemoArtifact = loadHrDemoPilotArtifact()
   const activeCampaigns = campaigns.filter((campaign) => campaign.is_active)
+  const demoCampaign =
+    hrDemoArtifact
+      ? campaigns.find((campaign) => campaign.campaign_id === hrDemoArtifact.campaignId) ?? null
+      : null
   const campaignIds = campaigns.map((campaign) => campaign.campaign_id)
   const { data: respondentStateRowsRaw } =
     campaignIds.length > 0
@@ -170,7 +176,7 @@ export default async function DashboardHomePage({
       })
     : null
   const primaryGuideScanDefinition = primaryGuideCampaign ? getScanDefinition(primaryGuideCampaign.scan_type) : null
-  const primaryOverviewCampaign = primaryFirstNextStepCampaign ?? primaryGuideCampaign
+  const primaryOverviewCampaign = demoCampaign ?? primaryFirstNextStepCampaign ?? primaryGuideCampaign
   const primaryOverviewEntry = primaryOverviewCampaign
     ? campaignEntries.find((entry) => entry.campaign.campaign_id === primaryOverviewCampaign.campaign_id) ?? null
     : null
