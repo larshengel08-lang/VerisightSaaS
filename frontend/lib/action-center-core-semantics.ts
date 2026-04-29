@@ -95,14 +95,12 @@ const ACTION_STEP_PREFIXES = new Set([
   'vervolg',
 ])
 const HISTORICAL_CLOSEOUT_SIGNAL_PATTERNS = [
-  /\bafgerond\b/i,
-  /\bafgesloten\b/i,
-  /\bvorige stap\b/i,
-  /\beerdere cyclus\b/i,
-  /\beerste cyclus\b/i,
-  /\breeds afgerond\b/i,
-  /\bal afgerond\b/i,
-  /\bkon worden afgerond\b/i,
+  /\bvorige stap\s+(?:is|was|werd)\s+(?:al\s+|reeds\s+)?(?:definitief\s+)?afgerond\b/i,
+  /\bvorige stap\s+(?:is|was|werd)\s+(?:al\s+|reeds\s+)?(?:definitief\s+)?afgesloten\b/i,
+  /\b(?:de\s+)?(?:eerdere|eerste|vorige)\s+cyclus\s+(?:is|was|werd)\s+(?:al\s+|reeds\s+)?(?:definitief\s+)?afgerond\b/i,
+  /\b(?:de\s+)?(?:eerdere|eerste|vorige)\s+cyclus\s+(?:is|was|werd)\s+(?:al\s+|reeds\s+)?(?:definitief\s+)?afgesloten\b/i,
+  /\b(?:de\s+)?(?:eerdere|eerste|vorige)\s+cyclus\s+kon\s+worden\s+afgerond\b/i,
+  /\b(?:de\s+)?(?:eerdere|eerste|vorige)\s+cyclus\s+kon\s+worden\s+afgesloten\b/i,
 ]
 
 function normalizeText(value: string | null | undefined) {

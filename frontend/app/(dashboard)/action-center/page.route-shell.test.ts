@@ -369,6 +369,47 @@ describe("action center landing shell", () => {
     expect(ordinaryMarkup).not.toContain("Eerder afgerond in deze route");
   });
 
+  it("does not render the historical closeout panel for negated or not-finished-yet closeout phrasing", () => {
+    const notFinishedLessons = [
+      "De vorige stap is niet afgerond; we moeten eerst de afspraken opnieuw toetsen.",
+      "Deze cyclus is nog niet afgesloten en blijft actief onder review.",
+    ];
+
+    for (const confirmedLesson of notFinishedLessons) {
+      const [item] = buildLiveActionCenterItems([
+        {
+          ...buildLiveContext(),
+          learningCheckpoints: [
+            buildCheckpoint({
+              id: `cp-follow-up-review-${confirmedLesson}`,
+              checkpoint_key: "follow_up_review",
+              owner_label: "HR",
+              confirmed_lesson: confirmedLesson,
+              qualitative_notes: "De route blijft actief en vraagt nog opvolging.",
+            }),
+          ],
+        },
+      ]);
+
+      const markup = renderToStaticMarkup(
+        createElement(ActionCenterPreview, {
+          initialItems: [item],
+          initialSelectedItemId: item.id,
+          initialView: "actions",
+          fallbackOwnerName: "Admin",
+          ownerOptions: ["Manager Operations"],
+          workbenchHref: "/action-center/dossier",
+          hideSidebar: true,
+          readOnly: true,
+        }),
+      );
+
+      expect(item.coreSemantics.closingSemantics.status).toBe("lopend");
+      expect(item.coreSemantics.closingSemantics.historicalSummary).toBeNull();
+      expect(markup).not.toContain("Eerder afgerond in deze route");
+    }
+  });
+
   it("keeps the landing summary compact with a last route-read instead of full detail semantics", () => {
     const context = buildLiveContext();
     const [item] = buildLiveActionCenterItems([context]);

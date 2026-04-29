@@ -806,6 +806,43 @@ describe('action center core semantics', () => {
     expect(semantics.closingSemantics.historicalSummary).toBeNull()
   })
 
+  it('does not project a historical closeout summary from negated or not-finished-yet closeout phrasing', () => {
+    const base = buildContext()
+
+    const notFinishedCases = [
+      'De vorige stap is niet afgerond; we moeten eerst de afspraken opnieuw toetsen.',
+      'Deze cyclus is nog niet afgesloten en blijft actief onder review.',
+    ]
+
+    for (const confirmedLesson of notFinishedCases) {
+      const semantics = projectActionCenterCoreSemantics({
+        ...base,
+        route: {
+          ...base.route,
+          routeStatus: 'in-uitvoering',
+          reviewOutcome: 'bijstellen',
+        },
+        learningCheckpoints: [
+          buildCheckpoint({
+            id: `cp-follow-up-review-${confirmedLesson}`,
+            checkpoint_key: 'follow_up_review',
+            owner_label: 'HR',
+            status: 'bevestigd',
+            confirmed_lesson: confirmedLesson,
+            qualitative_notes: 'De route blijft actief en vraagt nog opvolging.',
+            lesson_strength: 'terugkerend_patroon',
+            destination_areas: ['report'],
+            created_at: '2026-04-20T09:00:00.000Z',
+            updated_at: '2026-04-20T09:00:00.000Z',
+          }),
+        ],
+      })
+
+      expect(semantics.closingSemantics.status).toBe('lopend')
+      expect(semantics.closingSemantics.historicalSummary).toBeNull()
+    }
+  })
+
   it('prefers the latest explicit preview update before nextStep in whatWasTried', () => {
     const semantics = projectActionCenterPreviewCoreSemantics({
       id: 'preview-2',
