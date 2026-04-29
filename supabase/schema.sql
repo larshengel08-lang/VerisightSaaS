@@ -627,6 +627,28 @@ create table if not exists public.pilot_learning_checkpoints (
   unique (dossier_id, checkpoint_key)
 );
 
+create table if not exists public.action_center_review_decisions (
+  id uuid primary key default gen_random_uuid(),
+  route_source_type text not null
+    check (route_source_type in ('campaign')),
+  route_source_id uuid references public.campaigns(id) on delete cascade not null,
+  checkpoint_id uuid references public.pilot_learning_checkpoints(id) on delete cascade not null,
+  decision text not null
+    check (decision in ('doorgaan', 'bijstellen', 'afronden', 'stoppen')),
+  decision_reason text not null,
+  next_check text not null,
+  current_step text not null,
+  next_step text,
+  expected_effect text,
+  observation_snapshot text,
+  decision_recorded_at timestamptz not null,
+  review_completed_at timestamptz not null,
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- ============================================================
 -- INDEXES
 -- ============================================================
@@ -645,6 +667,9 @@ create index if not exists idx_learning_dossiers_org on public.pilot_learning_do
 create index if not exists idx_learning_dossiers_campaign on public.pilot_learning_dossiers(campaign_id);
 create index if not exists idx_learning_dossiers_contact_request on public.pilot_learning_dossiers(contact_request_id);
 create index if not exists idx_learning_checkpoints_dossier on public.pilot_learning_checkpoints(dossier_id);
+create index if not exists idx_action_center_review_decisions_route on public.action_center_review_decisions(route_source_type, route_source_id);
+create index if not exists idx_action_center_review_decisions_checkpoint on public.action_center_review_decisions(checkpoint_id);
+create index if not exists idx_action_center_review_decisions_recorded_at on public.action_center_review_decisions(decision_recorded_at desc);
 create index if not exists idx_delivery_records_org on public.campaign_delivery_records(organization_id);
 create index if not exists idx_delivery_records_contact_request on public.campaign_delivery_records(contact_request_id);
 create index if not exists idx_delivery_records_lifecycle on public.campaign_delivery_records(lifecycle_stage);
@@ -666,6 +691,7 @@ alter table public.campaign_delivery_records enable row level security;
 alter table public.campaign_delivery_checkpoints enable row level security;
 alter table public.pilot_learning_dossiers enable row level security;
 alter table public.pilot_learning_checkpoints enable row level security;
+alter table public.action_center_review_decisions enable row level security;
 
 -- ── Hulpfuncties ─────────────────────────────────────────────────────────────
 
@@ -1036,6 +1062,23 @@ create policy "verisight_admins_can_update_learning_checkpoints"
         and public.is_verisight_admin_user()
     )
   );
+
+drop policy if exists "verisight_admins_can_select_action_center_review_decisions" on public.action_center_review_decisions;
+drop policy if exists "verisight_admins_can_insert_action_center_review_decisions" on public.action_center_review_decisions;
+drop policy if exists "verisight_admins_can_update_action_center_review_decisions" on public.action_center_review_decisions;
+
+create policy "verisight_admins_can_select_action_center_review_decisions"
+  on public.action_center_review_decisions for select
+  using (public.is_verisight_admin_user());
+
+create policy "verisight_admins_can_insert_action_center_review_decisions"
+  on public.action_center_review_decisions for insert
+  with check (public.is_verisight_admin_user());
+
+create policy "verisight_admins_can_update_action_center_review_decisions"
+  on public.action_center_review_decisions for update
+  using (public.is_verisight_admin_user())
+  with check (public.is_verisight_admin_user());
 
 -- ============================================================
 -- PROFILES: is_verisight_admin per gebruiker

@@ -7,7 +7,11 @@ import {
 import { projectActionCenterRoute } from './action-center-route-contract'
 import type { Campaign, CampaignStats } from '@/lib/types'
 import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
-import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
+import type {
+  ActionCenterReviewDecision,
+  PilotLearningCheckpoint,
+  PilotLearningDossier,
+} from '@/lib/pilot-learning'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
 import type { ActionCenterRouteContract } from './action-center-route-contract'
 
@@ -140,6 +144,7 @@ function buildContext(args: {
   deliveryRecord?: CampaignDeliveryRecord | null
   assignedManager?: LiveActionCenterCampaignContext['assignedManager']
   learningCheckpoints?: PilotLearningCheckpoint[]
+  reviewDecisions?: ActionCenterReviewDecision[]
 } = {}): ActionCenterCoreSemanticsProjectionInput {
   const liveContext: LiveActionCenterCampaignContext = {
     campaign: buildCampaign(),
@@ -155,6 +160,7 @@ function buildContext(args: {
     deliveryCheckpoints: [],
     learningDossier: args.dossier ?? buildDossier(),
     learningCheckpoints: args.learningCheckpoints ?? [],
+    reviewDecisions: args.reviewDecisions ?? [],
   }
 
   return {
@@ -163,6 +169,7 @@ function buildContext(args: {
     deliveryRecord: liveContext.deliveryRecord,
     learningDossier: liveContext.learningDossier,
     learningCheckpoints: liveContext.learningCheckpoints,
+    reviewDecisions: liveContext.reviewDecisions,
     route: projectActionCenterRoute(liveContext),
   }
 }
@@ -219,6 +226,49 @@ describe('action center core semantics', () => {
       )
       expect(semantics.actionProgress.currentStep).toBe('Plan een gerichte teamreview met de manager.')
       expect(semantics.actionProgress.nextStep).toBe('Herplan de teamreview voor volgende week.')
+    })
+
+    it('cuts over fully to authored review decisions once any authored decision exists', () => {
+      const semantics = projectActionCenterCoreSemantics({
+        ...buildContext({
+          dossier: buildDossier({
+            management_action_outcome: 'stoppen',
+            first_action_taken: 'Legacy route stap die niet meer zichtbaar mag zijn.',
+            expected_first_value: 'Legacy effect dat niet meer zichtbaar mag zijn.',
+          }),
+          reviewDecisions: [
+            {
+              id: 'authored-decision-1',
+              route_source_type: 'campaign',
+              route_source_id: 'campaign-1',
+              checkpoint_id: 'checkpoint-1',
+              decision: 'bijstellen',
+              decision_reason: 'Authored decision wint volledig zodra hij bestaat.',
+              next_check: 'Toets volgende week of de bijgestelde stap tractie geeft.',
+              current_step: 'Voer deze week een gerichte managercheck uit.',
+              next_step: 'Bevestig in review of de frictie specifieker is geworden.',
+              expected_effect: 'Maak zichtbaar of de managercheck de frictie smaller maakt.',
+              observation_snapshot: 'Dezelfde frictie bleef in twee teams zichtbaar.',
+              decision_recorded_at: '2026-04-28T09:00:00.000Z',
+              review_completed_at: '2026-04-28T08:30:00.000Z',
+              created_by: null,
+              updated_by: null,
+              created_at: '2026-04-28T09:00:00.000Z',
+              updated_at: '2026-04-28T09:00:00.000Z',
+            },
+          ],
+        }),
+        campaign: { id: 'campaign-1', name: 'ExitScan april' } as never,
+        route: baseRoute,
+      })
+
+      expect(semantics.latestDecision?.decisionReason).toBe(
+        'Authored decision wint volledig zodra hij bestaat.',
+      )
+      expect(semantics.actionProgress.currentStep).toBe('Voer deze week een gerichte managercheck uit.')
+      expect(semantics.resultLoop.whatWasDecided).toBe('Bijstellen')
+      expect(semantics.decisionHistory).toHaveLength(1)
+      expect(semantics.decisionHistory[0]?.decisionEntryId).toBe('authored-decision-1')
     })
 
     it('falls back to legacy truth when no canonical decision records exist', () => {

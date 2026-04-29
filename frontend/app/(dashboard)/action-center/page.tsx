@@ -9,7 +9,11 @@ import {
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { createClient } from '@/lib/supabase/server'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
-import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
+import type {
+  ActionCenterReviewDecision,
+  PilotLearningCheckpoint,
+  PilotLearningDossier,
+} from '@/lib/pilot-learning'
 import type { Campaign, CampaignStats, Organization } from '@/lib/types'
 
 type RespondentDepartmentRow = {
@@ -143,7 +147,7 @@ export default async function ActionCenterPage({
 
   const respondentsWithDepartments = (respondentsWithDepartmentsRaw ?? []) as RespondentDepartmentRow[]
 
-  const [{ data: deliveryCheckpointsRaw }, { data: learningCheckpointsRaw }] = await Promise.all([
+  const [{ data: deliveryCheckpointsRaw }, { data: learningCheckpointsRaw }, { data: reviewDecisionsRaw }] = await Promise.all([
     deliveryRecords.length > 0
       ? dataClient
           .from('campaign_delivery_checkpoints')
@@ -162,10 +166,18 @@ export default async function ActionCenterPage({
             dossiers.map((dossier) => dossier.id),
           )
       : Promise.resolve({ data: [] }),
+    campaignIds.length > 0
+      ? dataClient
+          .from('action_center_review_decisions')
+          .select('*')
+          .eq('route_source_type', 'campaign')
+          .in('route_source_id', campaignIds)
+      : Promise.resolve({ data: [] }),
   ])
 
   const deliveryCheckpoints = (deliveryCheckpointsRaw ?? []) as CampaignDeliveryCheckpoint[]
   const learningCheckpoints = (learningCheckpointsRaw ?? []) as PilotLearningCheckpoint[]
+  const reviewDecisions = (reviewDecisionsRaw ?? []) as ActionCenterReviewDecision[]
 
   const organizationById = new Map(organizations.map((organization) => [organization.id, organization]))
   const roleByOrgId = orgMemberships.reduce<Record<string, 'owner' | 'member' | 'viewer'>>((acc, membership) => {
@@ -185,6 +197,11 @@ export default async function ActionCenterPage({
   const learningCheckpointMap = learningCheckpoints.reduce<Record<string, PilotLearningCheckpoint[]>>((acc, checkpoint) => {
     acc[checkpoint.dossier_id] ??= []
     acc[checkpoint.dossier_id].push(checkpoint)
+    return acc
+  }, {})
+  const reviewDecisionMap = reviewDecisions.reduce<Record<string, ActionCenterReviewDecision[]>>((acc, record) => {
+    acc[record.route_source_id] ??= []
+    acc[record.route_source_id].push(record)
     return acc
   }, {})
   const respondentDepartmentsByCampaign = respondentsWithDepartments.reduce<Record<string, string[]>>((acc, row) => {
@@ -246,6 +263,7 @@ export default async function ActionCenterPage({
           deliveryCheckpoints: deliveryRecord ? (deliveryCheckpointMap[deliveryRecord.id] ?? []) : [],
           learningDossier,
           learningCheckpoints: learningDossier ? (learningCheckpointMap[learningDossier.id] ?? []) : [],
+          reviewDecisions: reviewDecisionMap[campaign.id] ?? [],
         }
       })
   })

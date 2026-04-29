@@ -3,6 +3,7 @@ import type { ActionCenterReviewOutcome } from '@/lib/action-center-route-contra
 import {
   ActionCenterPreview,
 } from '@/components/dashboard/action-center-preview'
+import { projectActionCenterCoreSemantics } from '@/lib/action-center-core-semantics'
 import type {
   ActionCenterPreviewItem,
   ActionCenterPreviewView,
@@ -20,6 +21,7 @@ import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 import { getContactRequestsForAdmin } from '@/lib/contact-requests'
 import { createClient } from '@/lib/supabase/server'
 import type {
+  ActionCenterReviewDecision,
   ContactRequestRecord,
   PilotLearningCheckpoint,
   PilotLearningDossier,
@@ -148,6 +150,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
     { data: campaignStatsRaw },
     { data: dossiersRaw },
     { data: checkpointsRaw },
+    { data: reviewDecisionsRaw },
     { data: clientAccessRaw },
     { data: pendingInvitesRaw },
   ] = await Promise.all([
@@ -173,6 +176,11 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
       .from('pilot_learning_checkpoints')
       .select('*')
       .order('updated_at', { ascending: false }),
+    supabase
+      .from('action_center_review_decisions')
+      .select('*')
+      .eq('route_source_type', 'campaign')
+      .order('decision_recorded_at', { ascending: false }),
     orgIds.length
       ? supabase
           .from('org_members')
@@ -193,6 +201,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
   const campaignStats = (campaignStatsRaw ?? []) as CampaignStats[]
   const dossiers = (dossiersRaw ?? []) as PilotLearningDossier[]
   const checkpoints = (checkpointsRaw ?? []) as PilotLearningCheckpoint[]
+  const reviewDecisions = (reviewDecisionsRaw ?? []) as ActionCenterReviewDecision[]
   const activeClientAccessByOrg = (clientAccessRaw ?? []).reduce<Record<string, number>>((acc, membership) => {
     acc[membership.org_id] = (acc[membership.org_id] ?? 0) + 1
     return acc
@@ -255,6 +264,11 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
   const exitCampaignStatsById = new Map(exitCampaignStats.map((stats) => [stats.campaign_id, stats]))
   const exitLeadById = new Map(exitLeads.map((lead) => [lead.id, lead]))
   const exitOrgById = new Map(exitOrgs.map((org) => [org.id, org]))
+  const reviewDecisionsByRouteId = reviewDecisions.reduce<Record<string, ActionCenterReviewDecision[]>>((acc, decision) => {
+    acc[decision.route_source_id] ??= []
+    acc[decision.route_source_id].push(decision)
+    return acc
+  }, {})
   const invitedCountByOrgId = exitCampaignStats.reduce<Record<string, number>>((acc, stats) => {
     acc[stats.organization_id] = (acc[stats.organization_id] ?? 0) + stats.total_invited
     return acc
@@ -377,7 +391,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           `${checkpoint.checkpoint_key.replace(/_/g, ' ')} bijgewerkt in dossierbron.`,
       }))
 
-    return finalizeActionCenterPreviewItem({
+    const previewItem = finalizeActionCenterPreviewItem({
       id: dossier.id,
       code: `ACT-${1041 + index}`,
       title: dossier.title,
@@ -418,6 +432,39 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
               },
             ],
     })
+
+    if (!campaign) {
+      return previewItem
+    }
+
+    const authoredReviewDecisions = reviewDecisionsByRouteId[campaign.id] ?? []
+    if (authoredReviewDecisions.length === 0) {
+      return previewItem
+    }
+
+    const coreSemantics = projectActionCenterCoreSemantics({
+      campaign,
+      assignedManager: null,
+      deliveryRecord: null,
+      learningDossier: dossier,
+      learningCheckpoints: dossierCheckpoints,
+      reviewDecisions: authoredReviewDecisions,
+      route: {
+        ...previewItem.coreSemantics.route,
+        campaignId: campaign.id,
+      },
+      latestVisibleUpdateNote: previewItem.updates[0]?.note ?? null,
+      decisionRecords: [],
+    })
+
+    return finalizeActionCenterPreviewItem(
+      {
+        ...previewItem,
+        reviewOutcome: coreSemantics.route.reviewOutcome,
+        coreSemantics,
+      },
+      { recomputeCoreSemantics: false },
+    )
   })
   const ownerOptions = Array.from(
     new Set(previewItems.map((item) => item.ownerName).filter((value): value is string => Boolean(value))),
@@ -471,6 +518,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
           leads={exitLeads as ContactRequestRecord[]}
           dossiers={exitDossiers}
           checkpoints={exitCheckpoints}
+          reviewDecisions={reviewDecisions}
           activeClientAccessByOrg={exitActiveClientAccessByOrg}
           pendingClientInvitesByOrg={exitPendingClientInvitesByOrg}
           initialLeadId={initialExitLeadId}
