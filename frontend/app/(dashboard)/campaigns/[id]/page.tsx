@@ -1093,9 +1093,9 @@ export default async function CampaignPage({ params }: Props) {
                   signalTabDescription:
                     "Laat zien hoe breed en hoe scherp de Frictiescore zich over de groep verdeelt, zodat je werkfrictie en vertrekduiding in context kunt lezen.",
                   factorTabLabel: "Vertrekdrivers",
-                  factorTabTitle: "Werkfactoren achter vertrek",
+                  factorTabTitle: "Laagste scores per werkfactor",
                   factorTabDescription:
-                    "Gebruik de scherpste werkfactoren als eerste managementspoor om te bepalen waar vertrek vooral beinvloedbare frictie raakt.",
+                    "Deze lijst toont per werkfactor de score en relatieve zwaarte.",
                   supplementalTabLabel: "SDT-basis",
                   supplementalTitle: "Werkbeleving en SDT-basis",
                   supplementalDescription:
@@ -1981,7 +1981,7 @@ export default async function CampaignPage({ params }: Props) {
                     />
                   ))}
                 </div>
-                <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-white/78 px-4 py-4">
+                <div className="border-t border-[color:var(--dashboard-frame-border)] pt-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
                     Campagnestatus
                   </p>
@@ -2076,9 +2076,9 @@ export default async function CampaignPage({ params }: Props) {
         {showClientExecutionFlow ? (
           <DashboardSection
             id="uitvoering"
-            eyebrow="Begeleide uitvoering"
-            title="Begeleide uitvoerflow"
-            description="Verisight heeft de campagne ingericht. Vanaf hier lever jij deelnemers aan, start je de uitnodigingen veilig en volg je respons op zonder buiten de productgrenzen te hoeven treden."
+            eyebrow="Uitvoering"
+            title="Uitvoering"
+            description="Gebruik dit blok alleen voor uitvoeringsstappen rond uitnodigingen en import."
             aside={<DashboardChip label="Klantuitvoering" tone="slate" />}
             variant="quiet"
           >
@@ -2895,7 +2895,9 @@ export default async function CampaignPage({ params }: Props) {
         ) : null}
       </div>
       {focusPanelItems.length > 0 ? (
-        <FocusPanel items={focusPanelItems} variant="campaign-detail" />
+        <div className="xl:pt-[360px]">
+          <FocusPanel items={focusPanelItems} variant="campaign-detail" />
+        </div>
       ) : null}
     </div>
   );

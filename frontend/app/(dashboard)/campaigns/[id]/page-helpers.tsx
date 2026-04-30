@@ -131,7 +131,7 @@ export function buildHeroDescription({
   }
 
   if (scanType === 'retention') {
-    return `Deze RetentieScan laat zien waar behoud onder druk staat op groepsniveau. Gebruik het beslisoverzicht eerst om te bepalen waar verificatie nodig is, en ga daarna pas de verdieping in. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10 als samenvattend groepssignaal.`
+    return `Bekijk eerst het retentiesignaal, de respons en de laagst scorende thema's.`
   }
 
   if (scanType === 'pulse') {
@@ -150,7 +150,7 @@ export function buildHeroDescription({
     return `Deze Leadership Scan laat een begrensde support-read zien op groepsniveau. Gebruik de uitkomst om te bepalen welke managementcontext het bestaande people-signaal nu mee kleurt, zonder dit te lezen als named leader view, 360-output of performance-oordeel. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
   }
 
-  return `Deze ExitScan opent met de Frictiescore als managementsamenvatting van het vertrekbeeld. Gebruik werkfrictie daarna als verklarende laag om te bepalen waar teams, factoren en vervolgacties het meest beinvloedbaar lijken.`
+  return `Bekijk eerst welke factoren het laagst scoren en waar de grootste verschillen zichtbaar zijn.`
 }
 
 export function getTopFactorLabel(factorAverages: Record<string, number>) {

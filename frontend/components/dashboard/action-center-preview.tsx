@@ -1972,7 +1972,7 @@ function OverviewStat({
     accent === 'amber' ? 'bg-[#ff9b4a]' : accent === 'red' ? 'bg-[#ef6e64]' : 'bg-[#70b7aa]'
 
   return (
-    <div className="rounded-[22px] border border-[#e6ddd2] bg-white px-4 py-4">
+    <div className="rounded-[18px] border border-[#e6ddd2] bg-white px-4 py-3.5">
       <div className="flex items-center gap-2">
         <span className={`h-2.5 w-2.5 rounded-full ${accentClass}`} />
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7d7368]">{label}</p>
@@ -1996,7 +1996,7 @@ function ReviewWindowStat({
     tone === 'red' ? 'text-[#d2574b]' : tone === 'amber' ? 'text-[#bd6a16]' : 'text-[#42556b]'
 
   return (
-    <div className="rounded-[18px] border border-[#ece4d8] bg-[#fcfaf7] px-4 py-3">
+    <div className="rounded-[16px] border border-[#ece4d8] bg-white px-4 py-3">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
       <p className={`mt-2 text-[1.4rem] font-semibold tracking-[-0.04em] ${textClass}`}>{value}</p>
     </div>
@@ -2015,12 +2015,12 @@ function ReviewLane({
   onOpen: (item: ActionCenterPreviewItem) => void
 }) {
   return (
-    <section className="rounded-[28px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+    <section className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_4px_12px_rgba(19,32,51,0.035)]">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-[1.45rem] font-semibold tracking-[-0.03em] text-[#132033]">{title}</h2>
         <p className="text-sm text-[#736b60]">{items.length} besprekingen</p>
       </div>
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+      <div className="mt-5 space-y-0">
         {items.length === 0 ? (
           <EmptyBlock text={emptyText} />
         ) : (
@@ -2028,10 +2028,10 @@ function ReviewLane({
             <button
               key={item.id}
               type="button"
-              className="flex w-full items-start gap-4 rounded-[22px] border border-[#ebe1d5] bg-[#fffdfa] px-5 py-5 text-left transition hover:border-[#d7cab9]"
+              className="flex w-full items-start gap-4 border-b border-[#ebe1d5] px-0 py-4 text-left transition hover:bg-[#fffdfa] last:border-b-0"
               onClick={() => onOpen(item)}
             >
-              <div className="min-w-[70px] rounded-[20px] bg-[#fbf3ef] px-3 py-3 text-center text-[#d2574b]">
+              <div className="min-w-[70px] rounded-[16px] bg-[#fbf3ef] px-3 py-3 text-center text-[#d2574b]">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Review</p>
                 <p className="mt-1 text-xl font-semibold">{item.reviewDateLabel}</p>
               </div>
@@ -2122,7 +2122,7 @@ function SignalRow({ label, value }: { label: string; value: string }) {
 
 function EmptyBlock({ text }: { text: string }) {
   return (
-    <div className="rounded-[22px] border border-dashed border-[#ddd3c7] bg-[#fbf8f4] px-5 py-5 text-sm leading-7 text-[#5d6f84]">
+    <div className="rounded-[18px] border border-dashed border-[#ddd3c7] bg-[#fbf8f4] px-5 py-5 text-sm leading-7 text-[#5d6f84]">
       {text}
     </div>
   )

@@ -142,7 +142,7 @@ export function buildDashboardShellNavigation({
     }
   }
 
-  const modules = MODULE_LABELS.flatMap((item) => {
+  const modules = MODULE_LABELS.flatMap<DashboardModuleNavItem>((item) => {
     if (item.key === 'overview') {
       return [
         {

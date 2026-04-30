@@ -103,6 +103,9 @@ export default async function DashboardHomePage({
   const partialCount = campaignEntries.filter((entry) => entry.state === 'partial').length
   const closedCount = campaignEntries.filter((entry) => entry.state === 'closed').length
   const managementReadyCount = fullCount + partialCount
+  const notReadableCount = campaignEntries.filter((entry) =>
+    ['setup', 'ready_to_launch', 'running', 'sparse'].includes(entry.state),
+  ).length
   const readableEntries = [...campaignEntries]
     .filter((entry) => ['full', 'partial', 'closed'].includes(entry.state))
     .sort(
@@ -131,7 +134,7 @@ export default async function DashboardHomePage({
     routeOpenable: leadReadableRouteOpenable,
     blockerEntries,
   })
-  const recentOutputEntries = buildRecentOutputEntries(campaignEntries).slice(0, 4)
+  const recentOutputEntries = buildRecentOutputEntries(campaignEntries).slice(0, 3)
   const portfolioTabs = portfolioBuckets
     .filter((bucket) => bucket.entries.length > 0)
     .map((bucket) => {
@@ -141,27 +144,25 @@ export default async function DashboardHomePage({
         id: bucket.key,
         label: `${bucket.label} (${bucket.entries.length})`,
         content: (
-          <div className="space-y-5">
-            {bucket.groups.map((group) => (
-              <section key={group.key} className="space-y-3">
-                {bucket.groups.length > 1 ? (
-                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[color:var(--dashboard-frame-border)]/75 pb-3">
-                    <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">{group.title}</p>
-                    <DashboardChip label={getHomeStateMeta(group.key).label} tone={getHomeStateMeta(group.key).tone} />
-                  </div>
-                ) : null}
-                <div className="space-y-3">
-                  {group.entries.map((entry) => (
-                    <CampaignRow
-                      key={entry.campaign.campaign_id}
-                      entry={entry}
-                      showOnboarding={!isAdmin && bucket.key === 'ready' && entry.campaign.campaign_id === firstEntryId}
-                      isAdmin={isAdmin}
-                    />
-                  ))}
-                </div>
-              </section>
-            ))}
+          <div className="space-y-3">
+            {bucket.entries.map((entry, index) => {
+              if (bucket.key === 'ready') {
+                return index === 0 ? (
+                  <CampaignRow
+                    key={entry.campaign.campaign_id}
+                    entry={entry}
+                    showOnboarding={!isAdmin && entry.campaign.campaign_id === firstEntryId}
+                    isAdmin={isAdmin}
+                  />
+                ) : (
+                  <CompactReadableRow key={entry.campaign.campaign_id} entry={entry} />
+                )
+              }
+              if (bucket.key === 'building') {
+                return <BlockerRouteRow key={entry.campaign.campaign_id} entry={entry} isAdmin={isAdmin} />
+              }
+              return <CompactReadableRow key={entry.campaign.campaign_id} entry={entry} />
+            })}
           </div>
         ),
       }
@@ -178,8 +179,15 @@ export default async function DashboardHomePage({
         <ViewerEmptyState />
       ) : (
         <>
+          <div>
+            <h1 className="text-[1.35rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">Overzicht</h1>
+            <p className="mt-1 text-sm leading-[1.7] text-[color:var(--dashboard-text)]">
+              Wat nu leesbaar is, wat blokkeert en waar opvolging openstaat.
+            </p>
+          </div>
+
           <section className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               <SignalStatCard
                 label="Leesbaar"
                 value={`${managementReadyCount}`}
@@ -187,16 +195,10 @@ export default async function DashboardHomePage({
                 band={managementReadyCount > 0 ? 'LAAG' : 'neutral'}
               />
               <SignalStatCard
-                label="Nog in opbouw"
-                value={`${campaignEntries.filter((entry) => ['running', 'sparse'].includes(entry.state)).length}`}
-                subline="Running of eerste read"
-                band={campaignEntries.some((entry) => ['running', 'sparse'].includes(entry.state)) ? 'MIDDEN' : 'neutral'}
-              />
-              <SignalStatCard
-                label="Nog niet live"
-                value={`${campaignEntries.filter((entry) => ['setup', 'ready_to_launch'].includes(entry.state)).length}`}
-                subline="Setup of launch"
-                band={campaignEntries.some((entry) => ['setup', 'ready_to_launch'].includes(entry.state)) ? 'MIDDEN' : 'neutral'}
+                label="Nog niet leesbaar"
+                value={`${notReadableCount}`}
+                subline="Setup, launch of opbouw"
+                band={notReadableCount > 0 ? 'MIDDEN' : 'neutral'}
               />
               <SignalStatCard
                 label="Afgerond"
@@ -441,7 +443,7 @@ function CampaignRow({
 
   return (
     <div className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-5 shadow-[0_1px_3px_rgba(10,25,47,0.04)] sm:px-6">
-      <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between xl:gap-6">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(380px,520px)] xl:gap-x-6">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <DashboardChip label={scanDefinition.productName} tone="slate" />
@@ -460,46 +462,47 @@ function CampaignRow({
             value={campaign.avg_risk_score !== null ? `${campaign.avg_risk_score.toFixed(1)}/10` : '—'}
           />
         </div>
-      </div>
 
-      <div className="mt-4 max-w-none space-y-2">
-        <p className="text-sm leading-[1.85] text-[color:var(--dashboard-text)]">{stateMeta.body}</p>
-        {stateMeta.trust ? (
-          <p className="text-sm leading-[1.85] text-[color:var(--dashboard-muted)]">{stateMeta.trust}</p>
-        ) : null}
-      </div>
-
-      <div className="mt-5 flex flex-col gap-3 border-t border-[color:var(--dashboard-frame-border)]/85 pt-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2 text-xs text-[color:var(--dashboard-text)]">
-            <span className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-2.5 py-1 font-semibold text-[color:var(--dashboard-muted)]">
-            {stateMeta.nextStepLabel}
-          </span>
-          <span className="text-[color:var(--dashboard-muted)] select-none">·</span>
-          <span>
-            {campaign.total_invited} uitnodigingen · {campaign.band_high}/{campaign.band_medium}/{campaign.band_low} hoog/midden/laag
-          </span>
+        <div className="space-y-2 xl:col-span-2">
+          <p className="max-w-none text-sm leading-[1.85] text-[color:var(--dashboard-text)]">{stateMeta.body}</p>
+          {stateMeta.trust ? (
+            <p className="max-w-none text-sm leading-[1.85] text-[color:var(--dashboard-muted)]">{stateMeta.trust}</p>
+          ) : null}
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          {isAdmin && state === 'setup' ? (
-            <Link
-              href="/beheer"
-              className="inline-flex rounded-[6px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-1.5 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
-            >
-              Naar setup
-            </Link>
-          ) : null}
-          <div className="relative">
-            {showOnboarding ? <OnboardingBalloon step={1} label="Open je campagne" align="left" /> : null}
-            <Link
-              href={`/campaigns/${campaign.campaign_id}`}
-              className="inline-flex rounded-[6px] border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-4 py-1.5 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:brightness-[0.97]"
-            >
-              {ctaLabel}
-            </Link>
+
+        <div className="flex flex-col gap-3 border-t border-[color:var(--dashboard-frame-border)]/85 pt-4 lg:flex-row lg:items-center lg:justify-between xl:col-span-2">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-[color:var(--dashboard-text)]">
+            <span className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-2.5 py-1 font-semibold text-[color:var(--dashboard-muted)]">
+              {stateMeta.nextStepLabel}
+            </span>
+            <span className="text-[color:var(--dashboard-muted)] select-none">·</span>
+            <span>
+              {campaign.total_invited} uitnodigingen · {campaign.band_high}/{campaign.band_medium}/{campaign.band_low} hoog/midden/laag
+            </span>
           </div>
-          {isAdmin || state === 'full' || state === 'closed' ? (
-            <PdfDownloadButton campaignId={campaign.campaign_id} campaignName={campaign.campaign_name} />
-          ) : null}
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            {isAdmin && state === 'setup' ? (
+              <Link
+                href="/beheer"
+                className="inline-flex rounded-[6px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-1.5 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
+              >
+                Naar setup
+              </Link>
+            ) : null}
+            <div className="relative">
+              {showOnboarding ? <OnboardingBalloon step={1} label="Open je campagne" align="left" /> : null}
+              <Link
+                href={`/campaigns/${campaign.campaign_id}`}
+                className="inline-flex rounded-[6px] border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-4 py-1.5 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:brightness-[0.97]"
+              >
+                {ctaLabel}
+              </Link>
+            </div>
+            {isAdmin || state === 'full' || state === 'closed' ? (
+              <PdfDownloadButton campaignId={campaign.campaign_id} campaignName={campaign.campaign_name} />
+            ) : null}
+          </div>
         </div>
       </div>
     </div>
@@ -568,8 +571,7 @@ function groupCampaigns(entries: CampaignHomeEntry[]): CampaignGroup[] {
 function buildPortfolioBuckets(groups: CampaignGroup[]): PortfolioBucket[] {
   const definitions: Array<{ key: DashboardPortfolioView; label: string; states: CampaignCompositionState[] }> = [
     { key: 'ready', label: 'Leesbaar', states: ['full', 'partial'] },
-    { key: 'building', label: 'Nog in opbouw', states: ['sparse', 'running', 'ready_to_launch'] },
-    { key: 'setup', label: 'Nog niet live', states: ['setup'] },
+    { key: 'building', label: 'Nog niet leesbaar', states: ['sparse', 'running', 'ready_to_launch', 'setup'] },
     { key: 'closed', label: 'Afgerond', states: ['closed'] },
   ]
 
@@ -587,31 +589,31 @@ function buildPortfolioBuckets(groups: CampaignGroup[]): PortfolioBucket[] {
 function getOverviewBlockerCopy(state: CampaignCompositionState) {
   const copy: Record<CampaignCompositionState, { title: string; body: string }> = {
     setup: {
-      title: 'Blocker: respondentimport of launchcontrole ontbreekt.',
-      body: 'Volgende stap: maak de route eerst live.',
+      title: 'Respondentimport ontbreekt',
+      body: 'Route is nog niet live gezet.',
     },
     ready_to_launch: {
-      title: 'Blocker: uitnodigingen zijn nog niet volledig live.',
-      body: 'Volgende stap: start eerst de inviteflow.',
+      title: 'Uitnodigingen nog niet live',
+      body: 'Inviteflow is nog niet gestart.',
     },
     running: {
-      title: 'Blocker: er is nog geen veilige responslaag.',
-      body: 'Volgende stap: wacht op meer responses.',
+      title: 'Respons nog onder drempel',
+      body: 'Wacht op meer responses.',
     },
     sparse: {
-      title: 'Blocker: de eerste read blijft nog te dun.',
-      body: 'Volgende stap: wacht op meer responses.',
+      title: 'Eerste read te dun',
+      body: 'Wacht op meer responses.',
     },
     partial: {
-      title: 'Blocker: detail blijft nog begrensd.',
-      body: 'Volgende stap: wacht op meer leesbare output.',
+      title: 'Detail nog begrensd',
+      body: 'Wacht op meer leesbare output.',
     },
     full: {
-      title: 'Geen blocker meer op leesbaarheid.',
-      body: 'Dashboard en rapport zijn nu beschikbaar voor eerste lezing.',
+      title: 'Leesbaar',
+      body: 'Dashboard en rapport beschikbaar.',
     },
     closed: {
-      title: 'Geen live blocker meer.',
+      title: 'Afgerond',
       body: 'Route is afgerond. Rapport blijft beschikbaar.',
     },
   }
@@ -677,7 +679,7 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       trust: '',
     },
     full: {
-      label: 'Duiding gereed',
+      label: 'Leesbaar',
       tone: 'emerald' as const,
       nextStepLabel: 'Open dashboard',
       viewerCta: 'Open dashboard',
@@ -688,9 +690,9 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       trust: '',
     },
     closed: {
-      label: 'Rapport eerst',
+      label: 'Afgerond',
       tone: 'slate' as const,
-      nextStepLabel: 'Rapport eerst',
+      nextStepLabel: 'Rapport beschikbaar',
       viewerCta: 'Open rapport en dashboard',
       sectionTitle: 'Gesloten / rapport eerst',
       sectionDescription:
@@ -713,6 +715,60 @@ function getHomeStateMeta(state: CampaignCompositionState) {
   >
 
   return meta[state]
+}
+
+function CompactReadableRow({ entry }: { entry: CampaignHomeEntry }) {
+  const { campaign, state } = entry
+  const scanDefinition = getScanDefinition(campaign.scan_type)
+  const stateMeta = getHomeStateMeta(state)
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-3.5">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <DashboardChip label={scanDefinition.productName} tone="slate" />
+        <DashboardChip label={stateMeta.label} tone={stateMeta.tone} />
+        <span className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+          {campaign.campaign_name}
+        </span>
+      </div>
+      <Link
+        href={`/campaigns/${campaign.campaign_id}`}
+        className="shrink-0 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+      >
+        {stateMeta.viewerCta}
+      </Link>
+    </div>
+  )
+}
+
+function BlockerRouteRow({ entry, isAdmin }: { entry: CampaignHomeEntry; isAdmin: boolean }) {
+  const { campaign, state } = entry
+  const scanDefinition = getScanDefinition(campaign.scan_type)
+  const stateMeta = getHomeStateMeta(state)
+  const blockerCopy = getOverviewBlockerCopy(state)
+  const href = isAdmin && state === 'setup' ? '/beheer' : `/campaigns/${campaign.campaign_id}`
+  const ctaLabel = isAdmin && state === 'setup' ? 'Naar setup' : 'Open route'
+
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-[color:var(--dashboard-frame-border)]/85 bg-transparent px-4 py-3.5">
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <DashboardChip label={scanDefinition.productName} tone="slate" />
+          <DashboardChip label={stateMeta.label} tone="amber" />
+        </div>
+        <p className="mt-2 text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+          {campaign.campaign_name}
+        </p>
+        <p className="mt-1 text-sm text-[color:var(--dashboard-text)]">{blockerCopy.title}</p>
+      </div>
+      <Link
+        href={href}
+        className="shrink-0 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+      >
+        {ctaLabel}
+      </Link>
+    </div>
+  )
 }
 
 function AdminEmptyState() {
