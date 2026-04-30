@@ -265,30 +265,24 @@ export default async function DashboardHomePage({
               </p>
             </div>
             {blockerEntries.length > 0 ? (
-              <div className="grid gap-3 xl:grid-cols-3">
+              <div className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-4 shadow-[0_1px_3px_rgba(10,25,47,0.04)] sm:px-6">
                 {blockerEntries.map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-lg border border-[color:var(--dashboard-frame-border)]/85 bg-transparent px-4 py-4"
+                    className="flex flex-wrap items-start justify-between gap-3 border-b border-[color:var(--dashboard-frame-border)]/75 py-4 first:pt-1 last:border-b-0 last:pb-1"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-                          {item.statusLabel}
-                        </p>
-                        <p className="mt-2 text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
-                          {item.campaignName}
-                        </p>
-                      </div>
-                      <Link
-                        href={item.href}
-                        className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
-                      >
-                        {item.ctaLabel}
-                      </Link>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+                        {item.campaignName}
+                      </p>
+                      <p className="mt-1 text-sm leading-7 text-[color:var(--dashboard-text)]">{item.title}</p>
                     </div>
-                    <p className="mt-4 text-sm font-semibold text-[color:var(--dashboard-ink)]">{item.title}</p>
-                    <p className="mt-1.5 text-sm leading-7 text-[color:var(--dashboard-text)]">{item.body}</p>
+                    <Link
+                      href={item.href}
+                      className="shrink-0 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+                    >
+                      {item.ctaLabel}
+                    </Link>
                   </div>
                 ))}
               </div>
@@ -326,9 +320,6 @@ export default async function DashboardHomePage({
                     <p className="mt-2 text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
                       {item.value}
                     </p>
-                    {item.body ? (
-                      <p className="mt-1.5 text-sm leading-7 text-[color:var(--dashboard-text)]">{item.body}</p>
-                    ) : null}
                   </div>
                 ))}
               </div>
@@ -369,7 +360,7 @@ export default async function DashboardHomePage({
                         href={`/campaigns/${entry.campaign.campaign_id}`}
                         className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
                       >
-                        Open route
+                        {entry.state === 'closed' ? 'Open rapport' : 'Open route'}
                       </Link>
                     </div>
                   )
@@ -402,15 +393,12 @@ function buildOverviewBlockers(entries: CampaignHomeEntry[], isAdmin: boolean) {
       return new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime()
     })
     .map((entry) => {
-      const stateMeta = getHomeStateMeta(entry.state)
       const blockerCopy = getOverviewBlockerCopy(entry.state)
 
       return {
         id: entry.campaign.campaign_id,
         campaignName: entry.campaign.campaign_name,
-        statusLabel: stateMeta.label,
         title: blockerCopy.title,
-        body: blockerCopy.body,
         href: isAdmin && entry.state === 'setup' ? '/beheer' : `/campaigns/${entry.campaign.campaign_id}`,
         ctaLabel: isAdmin && entry.state === 'setup' ? 'Open setup' : 'Open route',
       }
@@ -428,27 +416,24 @@ function buildOverviewFollowUpPreview({
   routeOpenable: boolean
   blockerEntries: Array<{ campaignName: string; title: string }>
 }) {
-  const items: Array<{ label: string; value: string; body: string }> = []
+  const items: Array<{ label: string; value: string }> = []
 
   if (leadEntry) {
     items.push({
       label: 'Open prioriteit',
       value: leadEntry.campaign.campaign_name,
-      body: '',
     })
   }
 
   items.push({
     label: 'Reviewmoment',
     value: routeActive ? 'Opvolging staat open' : routeOpenable ? 'Klaar om te openen' : 'Nog niet bevestigd',
-    body: '',
   })
 
   if (blockerEntries[0]) {
     items.push({
       label: 'Zonder bevestiging',
       value: blockerEntries[0].campaignName,
-      body: '',
     })
   }
 
@@ -461,8 +446,12 @@ function buildRecentOutputEntries(entries: CampaignHomeEntry[]) {
     .sort((left, right) => {
       const stateWeight = (entry: CampaignHomeEntry) =>
         entry.state === 'partial' ? 1 : entry.state === 'closed' ? 2 : 3
+      const scanWeight = (entry: CampaignHomeEntry) =>
+        entry.campaign.scan_type === 'exit' || entry.campaign.scan_type === 'retention' ? 2 : 1
       const weightDelta = stateWeight(right) - stateWeight(left)
       if (weightDelta !== 0) return weightDelta
+      const scanDelta = scanWeight(right) - scanWeight(left)
+      if (scanDelta !== 0) return scanDelta
       return new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime()
     })
 }
@@ -629,19 +618,19 @@ function buildPortfolioBuckets(groups: CampaignGroup[]): PortfolioBucket[] {
 function getOverviewBlockerCopy(state: CampaignCompositionState) {
   const copy: Record<CampaignCompositionState, { title: string; body: string }> = {
     setup: {
-      title: 'Respondentimport ontbreekt',
+      title: 'Respondentimport ontbreekt nog',
       body: 'Route is nog niet live gezet.',
     },
     ready_to_launch: {
-      title: 'Uitnodigingen nog niet live',
+      title: 'Uitnodigingen zijn nog niet live',
       body: 'Inviteflow is nog niet gestart.',
     },
     running: {
-      title: 'Respons nog onder drempel',
+      title: 'Respons ligt nog onder de drempel',
       body: 'Wacht op meer responses.',
     },
     sparse: {
-      title: 'Eerste read te dun',
+      title: 'Eerste read blijft nog te dun',
       body: 'Wacht op meer responses.',
     },
     partial: {
