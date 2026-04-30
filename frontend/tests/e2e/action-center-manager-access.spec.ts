@@ -52,7 +52,15 @@ async function login(page: import('@playwright/test').Page, email: string, passw
     await expect(page.getByRole('navigation').getByRole('link', { name: 'Action Center' })).toBeVisible()
     await expect(page.getByRole('banner').getByRole('link', { name: 'Reports' })).toHaveCount(0)
     await expect(page.locator('aside').getByText('Overview')).toHaveCount(0)
-    await expect(page.getByText(manager.scopeLabel, { exact: true }).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Open focusactie' })).toBeVisible()
+    await expect(page.locator('main').getByText(manager.scopeLabel, { exact: true }).first()).toBeVisible()
+
+    await page.getByRole('button', { name: 'Open focusactie' }).click()
+    await expect(page.getByRole('heading', { name: /route staat klaar voor eerste reactie|eerste lokale follow-through/i })).toBeVisible()
+    await expect(page.getByText('Bevestigen', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('Aanscherpen', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('Inplannen', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('Begrenzen / volgen', { exact: true }).first()).toBeVisible()
 
     await page.goto('/reports')
     await expect(page.getByRole('heading', { name: 'Je ziet hier geen rapporten' })).toBeVisible()

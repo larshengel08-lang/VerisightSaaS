@@ -5,13 +5,6 @@ import { expect, test } from '@playwright/test'
 type HrPilotArtifact = {
   campaignId: string
   hrOwner: { email: string; password: string }
-  routeContext: {
-    overviewUrl: string
-    reportsUrl: string
-    campaignDetailUrl: string
-    actionCenterUrl: string
-    actionCenterFocusUrl: string
-  }
 }
 
 const artifactPath = path.join(process.cwd(), 'tests', 'e2e', '.action-center-pilot.json')
@@ -37,32 +30,39 @@ test.describe('action center hr happy path', () => {
   test('shows one canonical HR route across overview, reports, campaign detail, and Action Center detail', async ({
     page,
   }) => {
+    const routeContext = {
+      reportsUrl: '/reports',
+      campaignDetailUrl: `/campaigns/${pilot.campaignId}`,
+      actionCenterUrl: '/action-center',
+      actionCenterFocusUrl: `/action-center?focus=${pilot.campaignId}`,
+    }
+
     await login(page, pilot.hrOwner.email, pilot.hrOwner.password)
     await expect(page).toHaveURL(/\/dashboard(?:\?.*)?$/)
 
     await expect(page.getByRole('heading', { name: /overzicht/i })).toBeVisible()
-    await expect(page.getByText('Actieve opvolging').first()).toBeVisible()
-    await expect(page.locator(`a[href="${pilot.routeContext.campaignDetailUrl}"]`).first()).toBeVisible()
+    await expect(page.getByText('Wat nu leesbaar is')).toBeVisible()
+    await expect(page.locator(`a[href="${routeContext.campaignDetailUrl}"]`).first()).toBeVisible()
 
-    await page.goto(pilot.routeContext.reportsUrl)
+    await page.goto(routeContext.reportsUrl)
     await expect(page.getByText('Rapportbibliotheek')).toBeVisible()
-    await expect(page.locator(`a[href="${pilot.routeContext.actionCenterUrl}"]`).first()).toBeVisible()
+    await expect(page.locator(`a[href="${routeContext.actionCenterUrl}"]`).first()).toBeVisible()
 
-    await page.goto(pilot.routeContext.campaignDetailUrl)
+    await page.goto(routeContext.campaignDetailUrl)
     await expect(page).toHaveURL(new RegExp(`${pilot.campaignId}$`))
-    await expect(page.locator(`a[href="${pilot.routeContext.actionCenterFocusUrl}"]`).first()).toBeVisible()
+    await expect(page.locator(`a[href="${routeContext.actionCenterFocusUrl}"]`).first()).toBeVisible()
     await expect(page.getByRole('link', { name: /open in action center/i }).first()).toBeVisible()
 
-    await page.goto(pilot.routeContext.actionCenterFocusUrl)
+    await page.goto(routeContext.actionCenterFocusUrl)
     await expect(page).toHaveURL(new RegExp(`focus=${pilot.campaignId}$`))
     await expect(page.getByRole('heading', { name: 'Action Center', exact: true })).toBeVisible()
     await page.getByRole('button', { name: 'Open focusactie' }).click()
-    await expect(page.getByText(/waarom we opnieuw kijken/i)).toBeVisible()
-    await expect(page.getByText(/wat we dan toetsen/i)).toBeVisible()
-    await expect(page.getByText(/eerste stap/i)).toBeVisible()
-    await expect(page.getByText(/wat is geprobeerd/i)).toBeVisible()
-    await expect(page.getByText(/wat zagen we terug/i)).toBeVisible()
-    await expect(page.getByText(/wat is besloten/i)).toBeVisible()
+    await expect(page.getByText(/waarom dit nu speelt/i)).toBeVisible()
+    await expect(page.getByText(/laatste beslissing|nog geen expliciete reviewbeslissing/i)).toBeVisible()
+    await expect(page.getByText(/huidige stap/i)).toBeVisible()
+    await expect(page.getByText(/wat is geprobeerd|nog geen opeenvolgende resultaatmomenten zichtbaar/i)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /route staat klaar voor eerste reactie|eerste lokale follow-through/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Managerreactie opslaan' })).toHaveCount(0)
     await expect(page.getByText(/eerder afgerond in deze route|afgerond voor nu|bewust gestopt/i)).toBeVisible()
     await expect(page.getByRole('link', { name: 'Open broncampagne' }).last()).toBeVisible()
   })

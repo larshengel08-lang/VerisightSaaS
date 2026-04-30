@@ -8,6 +8,7 @@ import { projectActionCenterRoute } from './action-center-route-contract'
 import type { Campaign, CampaignStats } from '@/lib/types'
 import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import type {
+  ActionCenterManagerResponse,
   ActionCenterReviewDecision,
   PilotLearningCheckpoint,
   PilotLearningDossier,
@@ -145,6 +146,7 @@ function buildContext(args: {
   assignedManager?: LiveActionCenterCampaignContext['assignedManager']
   learningCheckpoints?: PilotLearningCheckpoint[]
   reviewDecisions?: ActionCenterReviewDecision[]
+  managerResponse?: ActionCenterManagerResponse | null
 } = {}): ActionCenterCoreSemanticsProjectionInput {
   const liveContext: LiveActionCenterCampaignContext = {
     campaign: buildCampaign(),
@@ -161,6 +163,7 @@ function buildContext(args: {
     learningDossier: args.dossier ?? buildDossier(),
     learningCheckpoints: args.learningCheckpoints ?? [],
     reviewDecisions: args.reviewDecisions ?? [],
+    managerResponse: args.managerResponse ?? null,
   }
 
   return {
@@ -170,6 +173,7 @@ function buildContext(args: {
     learningDossier: liveContext.learningDossier,
     learningCheckpoints: liveContext.learningCheckpoints,
     reviewDecisions: liveContext.reviewDecisions,
+    managerResponse: liveContext.managerResponse,
     route: projectActionCenterRoute(liveContext),
   }
 }
@@ -177,6 +181,7 @@ function buildContext(args: {
 describe('action center core semantics', () => {
   describe('decision-first projection', () => {
     const baseRoute: ActionCenterRouteContract = {
+      routeId: 'campaign-1::operations',
       campaignId: 'campaign-1',
       entryStage: 'active',
       routeOpenedAt: '2026-04-20T10:00:00.000Z',
@@ -191,6 +196,10 @@ describe('action center core semantics', () => {
       expectedEffect: 'Zichtbaar maken of de werkdruk lokaal afneemt.',
       reviewScheduledFor: '2026-05-02',
       reviewReason: 'De eerste stap gaf nog geen stabiele verbetering.',
+      managerResponseType: null,
+      managerResponseNote: null,
+      primaryActionThemeKey: null,
+      followThroughMode: 'legacy_action',
       blockedBy: null,
     }
 
@@ -426,10 +435,103 @@ describe('action center core semantics', () => {
           confirmed_lesson: 'De frictie bleef terugkomen in elk vervolggesprek.',
         }),
       ],
+      managerResponse: null,
     })
 
     expect(route.reviewCompletedAt).toBe('2026-04-26T10:15:00.000Z')
     expect(route.outcomeRecordedAt).toBe('2026-04-26T10:15:00.000Z')
+  })
+
+  it('treats a bounded manager response as meaningful follow-through without requiring a primary action', () => {
+    const semantics = projectActionCenterCoreSemantics(buildContext({
+      assignedManager: {
+        userId: 'manager-1',
+        displayName: 'Manager Operations',
+        assignedAt: '2026-04-21T08:00:00.000Z',
+      },
+      deliveryRecord: buildDeliveryRecord({
+        first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+      }),
+      dossier: buildDossier({
+        first_management_value: 'Welke lokale follow-through past nu het best bij dit signaal?',
+        expected_first_value: 'Maak zichtbaar of het teamoverleg eerst genoeg context oplevert.',
+        first_action_taken: null,
+        review_moment: null,
+      }),
+      managerResponse: {
+        id: 'response-1',
+        campaign_id: 'campaign-exit',
+        org_id: 'org-1',
+        route_scope_type: 'department',
+        route_scope_value: 'operations',
+        manager_user_id: 'manager-1',
+        response_type: 'watch',
+        response_note: 'Eerst volgen in het bestaande teamoverleg voordat we een lokale interventie kiezen.',
+        review_scheduled_for: '2026-05-12',
+        primary_action_theme_key: null,
+        primary_action_text: null,
+        primary_action_expected_effect: null,
+        primary_action_status: null,
+        created_by: 'manager-1',
+        updated_by: 'manager-1',
+        created_at: '2026-04-21T09:00:00.000Z',
+        updated_at: '2026-04-21T09:00:00.000Z',
+      },
+    }))
+
+    expect(semantics.route.routeStatus).toBe('te-bespreken')
+    expect(semantics.actionProgress.currentStep).toBeNull()
+    expect(semantics.resultLoop.whatWasTried).toBe(
+      'Eerst volgen in het bestaande teamoverleg voordat we een lokale interventie kiezen.',
+    )
+    expect(semantics.reviewSemantics.reviewQuestion).toContain('teamoverleg')
+  })
+
+  it('lets one primary manager action become the leading intervention source for action progress', () => {
+    const semantics = projectActionCenterCoreSemantics(buildContext({
+      assignedManager: {
+        userId: 'manager-1',
+        displayName: 'Manager Operations',
+        assignedAt: '2026-04-21T08:00:00.000Z',
+      },
+      deliveryRecord: buildDeliveryRecord({
+        first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+      }),
+      dossier: buildDossier({
+        first_management_value: 'Welke lokale follow-through past nu het best bij dit signaal?',
+        expected_first_value: 'Maak zichtbaar of het feedbackritme in het team duidelijker wordt.',
+        first_action_taken: null,
+        review_moment: null,
+      }),
+      managerResponse: {
+        id: 'response-2',
+        campaign_id: 'campaign-exit',
+        org_id: 'org-1',
+        route_scope_type: 'department',
+        route_scope_value: 'operations',
+        manager_user_id: 'manager-1',
+        response_type: 'confirm',
+        response_note: 'We zetten dit om naar een eerste lokale managementstap.',
+        review_scheduled_for: '2026-05-12',
+        primary_action_theme_key: 'leadership',
+        primary_action_text: 'Plan deze week een teamgesprek met de leidinggevende over feedbackritme.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet zichtbaar zijn of de feedbackafspraken in het team duidelijker worden.',
+        primary_action_status: 'active',
+        created_by: 'manager-1',
+        updated_by: 'manager-1',
+        created_at: '2026-04-21T09:00:00.000Z',
+        updated_at: '2026-04-21T09:00:00.000Z',
+      },
+    }))
+
+    expect(semantics.route.routeStatus).toBe('in-uitvoering')
+    expect(semantics.actionProgress.currentStep).toBe(
+      'Plan deze week een teamgesprek met de leidinggevende over feedbackritme.',
+    )
+    expect(semantics.actionProgress.expectedEffect).toBe(
+      'Binnen twee weken moet zichtbaar zijn of de feedbackafspraken in het team duidelijker worden.',
+    )
   })
 
   it('keeps reviewReason and reviewQuestion distinct while preserving the visible outcome mapping', () => {

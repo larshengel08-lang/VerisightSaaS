@@ -250,7 +250,7 @@ describe('live action center builder', () => {
 
     expect(items).toHaveLength(1)
     expect(items[0]).toMatchObject({
-      id: 'campaign-exit',
+      id: route.routeId,
       sourceLabel: 'ExitScan',
       orgId: 'org-1',
       scopeType: 'department',
@@ -267,7 +267,7 @@ describe('live action center builder', () => {
       nextStep: 'Plan eerste managementgesprek met HR en sponsor.',
     })
     expect(items[0]?.openSignals).toEqual(['owner_missing'])
-    expect(items.find((item) => item.id === 'campaign-pulse')).toBeUndefined()
+    expect(items.find((item) => item.id === 'campaign-pulse::engineering')).toBeUndefined()
   })
 
   it('realigns preview-facing fields with canonical semantics and latest visible update truth', () => {

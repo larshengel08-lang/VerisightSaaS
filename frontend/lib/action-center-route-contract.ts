@@ -1,10 +1,13 @@
 import type { DeliveryExceptionStatus } from '@/lib/ops-delivery'
 import type { LiveActionCenterCampaignContext } from './action-center-live'
 import type { PilotLearningCheckpoint } from './pilot-learning'
+import { hasPrimaryManagerAction } from './action-center-manager-responses'
+import type { ActionCenterManagerResponseType, ActionCenterManagerActionThemeKey } from './pilot-learning'
 
 export type ActionCenterEntryStage = 'attention' | 'candidate' | 'active'
 
 export type ActionCenterRouteStatus =
+  | 'open-verzoek'
   | 'te-bespreken'
   | 'in-uitvoering'
   | 'geblokkeerd'
@@ -40,6 +43,7 @@ export interface ActionCenterDecisionRecord {
 }
 
 export interface ActionCenterRouteContract {
+  routeId: string
   campaignId: string
   entryStage: ActionCenterEntryStage
   routeOpenedAt: string | null
@@ -54,6 +58,10 @@ export interface ActionCenterRouteContract {
   expectedEffect: string | null
   reviewScheduledFor: string | null
   reviewReason: string | null
+  managerResponseType: ActionCenterManagerResponseType | null
+  managerResponseNote: string | null
+  primaryActionThemeKey: ActionCenterManagerActionThemeKey | null
+  followThroughMode: 'open_request' | 'bounded_response' | 'primary_action' | 'legacy_action' | 'none'
   blockedBy: Exclude<DeliveryExceptionStatus, 'none'> | null
 }
 
@@ -71,6 +79,10 @@ function normalizeText(value: string | null | undefined) {
   return trimmed.length > 0 ? trimmed : null
 }
 
+export function buildActionCenterRouteId(campaignId: string, scopeValue: string) {
+  return `${campaignId}::${scopeValue}`
+}
+
 function getRouteOpenedAt(context: LiveActionCenterCampaignContext) {
   return normalizeText(context.deliveryRecord?.first_management_use_confirmed_at)
 }
@@ -85,11 +97,14 @@ function getOwnerAssignedAt(context: LiveActionCenterCampaignContext, routeOpene
 }
 
 function getIntervention(context: LiveActionCenterCampaignContext) {
-  return normalizeText(context.learningDossier?.first_action_taken)
+  return normalizeText(context.managerResponse?.primary_action_text) ?? normalizeText(context.learningDossier?.first_action_taken)
 }
 
 function getExpectedEffect(context: LiveActionCenterCampaignContext) {
-  return normalizeText(context.learningDossier?.expected_first_value)
+  return (
+    normalizeText(context.managerResponse?.primary_action_expected_effect) ??
+    normalizeText(context.learningDossier?.expected_first_value)
+  )
 }
 
 function getReviewReason(context: LiveActionCenterCampaignContext) {
@@ -97,7 +112,7 @@ function getReviewReason(context: LiveActionCenterCampaignContext) {
 }
 
 function getReviewScheduledFor(context: LiveActionCenterCampaignContext) {
-  return normalizeText(context.learningDossier?.review_moment)
+  return normalizeText(context.managerResponse?.review_scheduled_for) ?? normalizeText(context.learningDossier?.review_moment)
 }
 
 function getOutcomeSummary(context: LiveActionCenterCampaignContext) {
@@ -121,11 +136,49 @@ function isCompletedReviewCheckpoint(checkpoint: PilotLearningCheckpoint | null)
 function hasCandidateTruth(context: LiveActionCenterCampaignContext) {
   return Boolean(
     getOwner(context) ??
+      normalizeText(context.managerResponse?.response_note) ??
       getIntervention(context) ??
       getExpectedEffect(context) ??
       getReviewScheduledFor(context) ??
       getReviewReason(context),
   )
+}
+
+function getManagerResponseType(context: LiveActionCenterCampaignContext) {
+  return context.managerResponse?.response_type ?? null
+}
+
+function getManagerResponseNote(context: LiveActionCenterCampaignContext) {
+  return normalizeText(context.managerResponse?.response_note)
+}
+
+function getPrimaryActionThemeKey(context: LiveActionCenterCampaignContext) {
+  return context.managerResponse?.primary_action_theme_key ?? null
+}
+
+function getFollowThroughMode(context: LiveActionCenterCampaignContext) {
+  if (hasPrimaryManagerAction(context.managerResponse)) {
+    return 'primary_action' as const
+  }
+
+  if (context.managerResponse) {
+    return 'bounded_response' as const
+  }
+
+  if (
+    normalizeText(context.learningDossier?.first_action_taken) ||
+    normalizeText(context.learningDossier?.expected_first_value) ||
+    normalizeText(context.learningDossier?.review_moment) ||
+    normalizeText(context.learningDossier?.first_management_value)
+  ) {
+    return 'legacy_action' as const
+  }
+
+  if (getOwner(context)) {
+    return 'open_request' as const
+  }
+
+  return 'none' as const
 }
 
 function getReviewOutcome(context: LiveActionCenterCampaignContext): ActionCenterReviewOutcome {
@@ -151,6 +204,7 @@ export function classifyActionCenterEntryStage(context: LiveActionCenterCampaign
 }
 
 export function projectActionCenterRoute(context: LiveActionCenterCampaignContext): ActionCenterRouteContract {
+  const routeId = buildActionCenterRouteId(context.campaign.id, context.scopeValue)
   const routeOpenedAt = getRouteOpenedAt(context)
   const entryStage = classifyActionCenterEntryStage(context)
   const intervention = getIntervention(context)
@@ -160,6 +214,10 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
   const reviewScheduledFor = getReviewScheduledFor(context)
   const reviewReason = getReviewReason(context)
   const reviewOutcome = getReviewOutcome(context)
+  const managerResponseType = getManagerResponseType(context)
+  const managerResponseNote = getManagerResponseNote(context)
+  const primaryActionThemeKey = getPrimaryActionThemeKey(context)
+  const followThroughMode = getFollowThroughMode(context)
   const followUpReviewCheckpoint = getLearningCheckpoint(context, 'follow_up_review')
   const reviewCompletedAt =
     reviewOutcome !== 'geen-uitkomst' && isCompletedReviewCheckpoint(followUpReviewCheckpoint)
@@ -181,6 +239,8 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
       routeStatus = 'gestopt'
     } else if (blockedBy) {
       routeStatus = 'geblokkeerd'
+    } else if (followThroughMode === 'open_request') {
+      routeStatus = 'open-verzoek'
     } else if (intervention && owner && expectedEffect && reviewScheduledFor) {
       routeStatus = 'in-uitvoering'
     } else {
@@ -189,6 +249,7 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
   }
 
   return {
+    routeId,
     campaignId: context.campaign.id,
     entryStage,
     routeOpenedAt,
@@ -203,6 +264,10 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
     expectedEffect,
     reviewScheduledFor,
     reviewReason,
+    managerResponseType,
+    managerResponseNote,
+    primaryActionThemeKey,
+    followThroughMode,
     blockedBy,
   }
 }

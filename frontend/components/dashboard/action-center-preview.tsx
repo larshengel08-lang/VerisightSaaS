@@ -1,7 +1,17 @@
 ﻿'use client'
 
 import Link from 'next/link'
-import type { ActionCenterDecision, ActionCenterDecisionRecord, ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
+import type {
+  ActionCenterDecision,
+  ActionCenterDecisionRecord,
+  ActionCenterReviewOutcome,
+  ActionCenterRouteContract,
+} from '@/lib/action-center-route-contract'
+import {
+  ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS,
+  getActionCenterManagerResponseLabel,
+  hasPrimaryManagerAction,
+} from '@/lib/action-center-manager-responses'
 import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 import type {
   ActionCenterPreviewItem,
@@ -10,6 +20,11 @@ import type {
   ActionCenterPreviewStatus,
   ActionCenterPreviewView,
 } from '@/lib/action-center-preview-model'
+import type {
+  ActionCenterManagerActionThemeKey,
+  ActionCenterManagerResponse,
+  ActionCenterManagerResponseType,
+} from '@/lib/pilot-learning'
 import React, { useDeferredValue, useEffect, useMemo, useState } from 'react'
 
 export type {
@@ -30,6 +45,9 @@ interface Props {
   managerOptions?: ActionCenterPreviewManagerOption[]
   canAssignManagers?: boolean
   managerAssignmentEndpoint?: string
+  canRespondToRequests?: boolean
+  managerResponseEndpoint?: string
+  currentUserId?: string | null
   workbenchHref: string
   workbenchLabel?: string
   workspaceName?: string
@@ -48,6 +66,16 @@ interface CreateActionFormState {
   priority: ActionCenterPreviewPriority
   reviewDate: string
   reviewRhythm: string
+}
+
+interface ManagerResponseFormState {
+  responseType: ActionCenterManagerResponseType
+  responseNote: string
+  reviewScheduledFor: string
+  includePrimaryAction: boolean
+  primaryActionThemeKey: ActionCenterManagerActionThemeKey | ''
+  primaryActionText: string
+  primaryActionExpectedEffect: string
 }
 
 const SIDEBAR_ITEMS: Array<{ key: ActionCenterPreviewView; label: string }> = [
@@ -137,6 +165,11 @@ function getPriorityMeta(priority: ActionCenterPreviewPriority) {
 
 function getStatusMeta(status: ActionCenterPreviewStatus) {
   switch (status) {
+    case 'open-verzoek':
+      return {
+        label: 'Open verzoek',
+        pillClass: 'border-[#d5e6fb] bg-[#edf5ff] text-[#335f9c]',
+      }
     case 'in-uitvoering':
       return {
         label: 'In uitvoering',
@@ -255,13 +288,86 @@ function getCreateDefaults(items: ActionCenterPreviewItem[]) {
   }
 }
 
+function buildManagerResponseDefaults(item: ActionCenterPreviewItem | null): ManagerResponseFormState {
+  const response = item?.managerResponse ?? null
+  const hasPrimaryAction = Boolean(
+    response?.primary_action_theme_key &&
+      response.primary_action_text &&
+      response.primary_action_expected_effect,
+  )
+
+  return {
+    responseType: response?.response_type ?? 'confirm',
+    responseNote:
+      response?.response_note ??
+      (item?.status === 'open-verzoek'
+        ? 'We pakken dit op via een eerste bounded follow-through in het team.'
+        : ''),
+    reviewScheduledFor: response?.review_scheduled_for ?? item?.reviewDate ?? '',
+    includePrimaryAction: hasPrimaryAction,
+    primaryActionThemeKey: response?.primary_action_theme_key ?? '',
+    primaryActionText: response?.primary_action_text ?? '',
+    primaryActionExpectedEffect: response?.primary_action_expected_effect ?? '',
+  }
+}
+
+function supportsManagerResponseFlow(item: ActionCenterPreviewItem | null) {
+  return item?.scopeType === 'department' || item?.scopeType === 'item'
+}
+
+function isOpenAttentionStatus(status: ActionCenterPreviewStatus) {
+  return status === 'open-verzoek' || status === 'te-bespreken' || status === 'geblokkeerd'
+}
+
+function getManagerResponseProjectedStatus(
+  currentStatus: ActionCenterPreviewStatus,
+  response: ActionCenterManagerResponse,
+): ActionCenterPreviewStatus {
+  if (currentStatus === 'afgerond' || currentStatus === 'gestopt' || currentStatus === 'geblokkeerd') {
+    return currentStatus
+  }
+
+  return hasPrimaryManagerAction(response) ? 'in-uitvoering' : 'te-bespreken'
+}
+
+function applyManagerResponseToItem(
+  item: ActionCenterPreviewItem,
+  response: ActionCenterManagerResponse,
+): ActionCenterPreviewItem {
+  const nextStatus = getManagerResponseProjectedStatus(item.status, response)
+  const followThroughMode = hasPrimaryManagerAction(response) ? 'primary_action' : 'bounded_response'
+  const nextRoute: ActionCenterRouteContract = {
+    ...item.coreSemantics.route,
+    routeStatus: nextStatus,
+    intervention: response.primary_action_text ?? null,
+    expectedEffect: response.primary_action_expected_effect ?? null,
+    reviewScheduledFor: response.review_scheduled_for,
+    managerResponseType: response.response_type,
+    managerResponseNote: response.response_note,
+    primaryActionThemeKey: response.primary_action_theme_key ?? null,
+    followThroughMode,
+  }
+
+  return {
+    ...item,
+    status: nextStatus,
+    reviewDate: response.review_scheduled_for,
+    reviewDateLabel: formatShortDate(response.review_scheduled_for),
+    managerResponse: response,
+    coreSemantics: {
+      ...item.coreSemantics,
+      route: nextRoute,
+    },
+  }
+}
+
 function getViewCopy(view: ActionCenterPreviewView, selectedTitle: string | null) {
   switch (view) {
     case 'actions':
       return {
         eyebrow: 'Action Center',
         title: 'Acties',
-        description: 'Concrete vervolgacties op echte ExitScan-dossiers. Rustig, direct en gekoppeld aan echte dossiers.',
+        description: 'Open verzoeken, bounded reacties en waar nodig een eerste concrete lokale stap, steeds gekoppeld aan echte dossiers.',
       }
     case 'reviews':
       return {
@@ -286,7 +392,7 @@ function getViewCopy(view: ActionCenterPreviewView, selectedTitle: string | null
         eyebrow: 'Action Center',
         title: selectedTitle ? selectedTitle : 'Action Center',
         description: selectedTitle
-          ? 'Eén actie geopend: waarom dit dossier aandacht vraagt, wie eigenaar is en wanneer de review terugkomt.'
+          ? 'Eén route geopend: waarom dit dossier aandacht vraagt, wie eigenaar is en wanneer de review terugkomt.'
           : 'Van signaal naar opvolging. Zie rustig wat nu besproken moet worden, waar reviews terugkomen en waar eigenaarschap nog expliciet gemaakt moet worden.',
       }
   }
@@ -358,6 +464,9 @@ export function ActionCenterPreview({
   managerOptions = [],
   canAssignManagers = false,
   managerAssignmentEndpoint,
+  canRespondToRequests = false,
+  managerResponseEndpoint,
+  currentUserId = null,
   workbenchHref,
   workbenchLabel = 'Open dossierbron',
   workspaceName,
@@ -376,6 +485,11 @@ export function ActionCenterPreview({
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createForm, setCreateForm] = useState<CreateActionFormState>(() => getCreateDefaults(initialItems))
   const [updateDraft, setUpdateDraft] = useState('')
+  const [managerResponseForm, setManagerResponseForm] = useState<ManagerResponseFormState>(() =>
+    buildManagerResponseDefaults(initialSelectedItem),
+  )
+  const [managerResponsePending, setManagerResponsePending] = useState(false)
+  const [managerResponseError, setManagerResponseError] = useState<string | null>(null)
   const [assignmentError, setAssignmentError] = useState<string | null>(null)
   const [assignmentPendingTeamId, setAssignmentPendingTeamId] = useState<string | null>(null)
   const deferredSearchQuery = useDeferredValue(searchQuery)
@@ -408,10 +522,11 @@ export function ActionCenterPreview({
       if (left.status !== right.status) {
         const rank: Record<ActionCenterPreviewStatus, number> = {
           'geblokkeerd': 0,
-          'te-bespreken': 1,
-          'in-uitvoering': 2,
-          'afgerond': 3,
-          'gestopt': 4,
+          'open-verzoek': 1,
+          'te-bespreken': 2,
+          'in-uitvoering': 3,
+          'afgerond': 4,
+          'gestopt': 5,
         }
         return rank[left.status] - rank[right.status]
       }
@@ -420,6 +535,11 @@ export function ActionCenterPreview({
     })
 
   const selectedItem = filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? filteredItems[0] ?? items[0] ?? null
+  useEffect(() => {
+    setManagerResponseForm(buildManagerResponseDefaults(selectedItem))
+    setManagerResponseError(null)
+  }, [selectedItem])
+
   const selectedItemHref = selectedItem ? (itemHrefs[selectedItem.id] ?? workbenchHref) : workbenchHref
   const assignmentOptions = useMemo<ActionCenterPreviewManagerOption[]>(
     () =>
@@ -439,14 +559,14 @@ export function ActionCenterPreview({
   const selectedTeam = teamRows.find((team) => team.id === selectedTeamId) ?? teamRows[0] ?? null
   const allSources = [...new Set(items.map((item) => item.sourceLabel))]
   const today = new Date()
-  const dueItems = items.filter((item) => item.status === 'geblokkeerd' || item.status === 'te-bespreken')
+  const dueItems = items.filter((item) => isOpenAttentionStatus(item.status))
   const openItems = items.filter((item) => item.status !== 'afgerond' && item.status !== 'gestopt')
   const overdueReviews = items.filter((item) => getReviewBucket(item.reviewDate, today) === 'achterstallig')
   const thisWeekReviews = items.filter((item) => getReviewBucket(item.reviewDate, today) === 'deze-week')
   const nextWeekReviews = items.filter((item) => getReviewBucket(item.reviewDate, today) === 'volgende-week')
   const quarterReviews = items.filter((item) => getReviewBucket(item.reviewDate, today) === 'kwartaal')
   const visibleItems = filteredItems.length > 0 ? filteredItems : items
-  const visibleDueItems = visibleItems.filter((item) => item.status === 'geblokkeerd' || item.status === 'te-bespreken')
+  const visibleDueItems = visibleItems.filter((item) => isOpenAttentionStatus(item.status))
   const upcomingReviews = [...items]
     .filter((item) => item.reviewDate)
     .sort((left, right) => compareReviewDate(left.reviewDate, right.reviewDate))
@@ -462,6 +582,17 @@ export function ActionCenterPreview({
     .slice(0, 3)
   const focusItem = visibleDueItems[0] ?? visibleItems[0] ?? null
   const viewCopy = getViewCopy(activeView, activeView === 'overview' && selectedItem ? null : activeView === 'overview' ? null : selectedItem?.title ?? null)
+  const allowLocalDraftEditing = !readOnly && !managerResponseEndpoint
+  const canUseManagerResponseFlow =
+    Boolean(
+      canRespondToRequests &&
+        managerResponseEndpoint &&
+        selectedItem?.orgId &&
+        supportsManagerResponseFlow(selectedItem) &&
+        selectedItem?.ownerId &&
+        currentUserId &&
+        selectedItem.ownerId === currentUserId,
+    )
 
   function updateItem(itemId: string, updater: (item: ActionCenterPreviewItem) => ActionCenterPreviewItem) {
     setItems((currentItems) =>
@@ -573,6 +704,78 @@ export function ActionCenterPreview({
       setAssignmentError(error instanceof Error ? error.message : 'Managerassignment kon niet worden opgeslagen.')
     } finally {
       setAssignmentPendingTeamId(null)
+    }
+  }
+
+  async function handleManagerResponseSave() {
+    if (!selectedItem || !selectedItem.orgId || !supportsManagerResponseFlow(selectedItem) || !managerResponseEndpoint) {
+      return
+    }
+
+    setManagerResponsePending(true)
+    setManagerResponseError(null)
+
+    const payload = {
+      campaign_id: selectedItem.coreSemantics.route.campaignId,
+      org_id: selectedItem.orgId,
+      route_scope_type: selectedItem.scopeType,
+      route_scope_value: selectedItem.teamId,
+      manager_user_id: selectedItem.ownerId ?? '',
+      response_type: managerResponseForm.responseType,
+      response_note: managerResponseForm.responseNote,
+      review_scheduled_for: managerResponseForm.reviewScheduledFor,
+      primary_action_theme_key:
+        managerResponseForm.includePrimaryAction && managerResponseForm.primaryActionThemeKey
+          ? managerResponseForm.primaryActionThemeKey
+          : null,
+      primary_action_text:
+        managerResponseForm.includePrimaryAction && managerResponseForm.primaryActionText.trim()
+          ? managerResponseForm.primaryActionText
+          : null,
+      primary_action_expected_effect:
+        managerResponseForm.includePrimaryAction && managerResponseForm.primaryActionExpectedEffect.trim()
+          ? managerResponseForm.primaryActionExpectedEffect
+          : null,
+      primary_action_status: managerResponseForm.includePrimaryAction ? 'active' : null,
+    }
+
+    try {
+      const response = await fetch(managerResponseEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+      const result = (await response.json().catch(() => null)) as
+        | { response?: ActionCenterManagerResponse; detail?: string }
+        | null
+
+      if (!response.ok || !result?.response) {
+        throw new Error(result?.detail ?? 'Managerreactie kon niet worden opgeslagen.')
+      }
+
+      const savedResponse = result.response
+      const nextItem = finalizeActionCenterPreviewItem(applyManagerResponseToItem(selectedItem, savedResponse), {
+        recomputeCoreSemantics: true,
+      })
+
+      setItems((currentItems) =>
+        currentItems.map((item) =>
+          item.id === selectedItem.id
+            ? finalizeActionCenterPreviewItem(applyManagerResponseToItem(item, savedResponse), {
+                recomputeCoreSemantics: true,
+              })
+            : item,
+        ),
+      )
+      setManagerResponseForm(buildManagerResponseDefaults(nextItem))
+    } catch (error) {
+      setManagerResponseError(
+        error instanceof Error ? error.message : 'Managerreactie kon niet worden opgeslagen.',
+      )
+    } finally {
+      setManagerResponsePending(false)
     }
   }
 
@@ -776,7 +979,7 @@ export function ActionCenterPreview({
                     className="w-full bg-transparent text-[0.97rem] text-[#2a3442] outline-none placeholder:text-[#9a9084]"
                   />
                 </label>
-                {!readOnly ? (
+                {allowLocalDraftEditing ? (
                   <button
                     type="button"
                     className="inline-flex items-center justify-center rounded-2xl bg-[#1a2533] px-5 py-3 text-[0.97rem] font-semibold text-white transition hover:bg-[#223247]"
@@ -1126,7 +1329,7 @@ export function ActionCenterPreview({
                     >
                       Terug naar overzicht
                     </button>
-                    {!readOnly ? (
+                    {allowLocalDraftEditing ? (
                       <>
                         <button
                           type="button"
@@ -1207,7 +1410,7 @@ export function ActionCenterPreview({
                           )}
                         </div>
 
-                        {!readOnly ? (
+                        {allowLocalDraftEditing ? (
                           <div className="mt-8 border-t border-[#efe7dc] pt-6">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Update toevoegen</p>
                             <textarea
@@ -1389,6 +1592,198 @@ export function ActionCenterPreview({
                         </dl>
                       </div>
 
+                      {supportsManagerResponseFlow(selectedItem) ? (
+                        <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+                            {selectedItem.status === 'open-verzoek' && !selectedItem.managerResponse
+                              ? 'Open verzoek'
+                              : 'Managerreactie'}
+                          </p>
+                          <h3 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">
+                            {selectedItem.status === 'open-verzoek' && !selectedItem.managerResponse
+                              ? 'Route staat klaar voor eerste reactie'
+                              : 'Eerste lokale follow-through'}
+                          </h3>
+                          <p className="mt-3 text-sm leading-7 text-[#4f6175]">
+                            {selectedItem.status === 'open-verzoek' && !selectedItem.managerResponse
+                              ? 'HR heeft deze route lokaal geopend. De manager hoeft niet opnieuw te bewijzen dat dit thema speelt, maar reageert klein: bevestigen, aanscherpen, inplannen of begrenzen.'
+                              : 'Deze route draagt al een eerste managerreactie. Alleen als een echte lokale interventie nodig is, hangt daar in deze fase maximaal één primaire actie aan.'}
+                          </p>
+
+                          {canUseManagerResponseFlow ? (
+                            <div className="mt-5 space-y-5">
+                              <FormField label="Eerste reactie">
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                  {(['confirm', 'sharpen', 'schedule', 'watch'] as ActionCenterManagerResponseType[]).map((option) => (
+                                    <button
+                                      key={option}
+                                      type="button"
+                                      className={`rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition ${
+                                        managerResponseForm.responseType === option
+                                          ? 'border-[#ff9b4a] bg-[#fff3e8] text-[#132033]'
+                                          : 'border-[#ddd3c7] bg-[#fbf8f4] text-[#5f564a]'
+                                      }`}
+                                      onClick={() =>
+                                        setManagerResponseForm((current) => ({
+                                          ...current,
+                                          responseType: option,
+                                        }))
+                                      }
+                                    >
+                                      {getActionCenterManagerResponseLabel(option)}
+                                    </button>
+                                  ))}
+                                </div>
+                              </FormField>
+
+                              <FormField label="Wat is nu de bounded reactie?">
+                                <textarea
+                                  value={managerResponseForm.responseNote}
+                                  onChange={(event) =>
+                                    setManagerResponseForm((current) => ({
+                                      ...current,
+                                      responseNote: event.target.value,
+                                    }))
+                                  }
+                                  placeholder="Bijv. eerst bespreken in het weekoverleg, of gericht aanscherpen wat de eerstvolgende stap moet zijn."
+                                  className="min-h-[110px] w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                                />
+                              </FormField>
+
+                              <FormField label="Wanneer reviewen we dit?">
+                                <input
+                                  type="date"
+                                  value={managerResponseForm.reviewScheduledFor}
+                                  onChange={(event) =>
+                                    setManagerResponseForm((current) => ({
+                                      ...current,
+                                      reviewScheduledFor: event.target.value,
+                                    }))
+                                  }
+                                  className="w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                                />
+                              </FormField>
+
+                              <label className="flex items-start gap-3 rounded-[18px] border border-[#ece4d8] bg-[#fcfaf7] px-4 py-4 text-sm text-[#42556b]">
+                                <input
+                                  type="checkbox"
+                                  checked={managerResponseForm.includePrimaryAction}
+                                  onChange={(event) =>
+                                    setManagerResponseForm((current) => ({
+                                      ...current,
+                                      includePrimaryAction: event.target.checked,
+                                    }))
+                                  }
+                                  className="mt-1 h-4 w-4 rounded border-[#d6cbbb] text-[#132033]"
+                                />
+                                <span className="leading-7">
+                                  Voeg alleen als nodig één primaire lokale stap toe. Zonder deze stap blijft de route bewust klein en reviewbaar.
+                                </span>
+                              </label>
+
+                              {managerResponseForm.includePrimaryAction ? (
+                                <div className="space-y-4 rounded-[20px] border border-[#ece4d8] bg-[#fcfaf7] px-4 py-4">
+                                  <FormField label="Thema">
+                                    <select
+                                      value={managerResponseForm.primaryActionThemeKey}
+                                      onChange={(event) =>
+                                        setManagerResponseForm((current) => ({
+                                          ...current,
+                                          primaryActionThemeKey: event.target.value as ActionCenterManagerActionThemeKey | '',
+                                        }))
+                                      }
+                                      className="w-full rounded-2xl border border-[#ddd3c7] bg-white px-4 py-3 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                                    >
+                                      <option value="">Kies productthema</option>
+                                      {ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                          {option.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </FormField>
+
+                                  <FormField label="Wat ga je concreet doen?">
+                                    <textarea
+                                      value={managerResponseForm.primaryActionText}
+                                      onChange={(event) =>
+                                        setManagerResponseForm((current) => ({
+                                          ...current,
+                                          primaryActionText: event.target.value,
+                                        }))
+                                      }
+                                      placeholder="Bijv. plan deze week een kort teamgesprek over feedbackritme en spreek daar één vaste terugkoppeling af."
+                                      className="min-h-[105px] w-full rounded-2xl border border-[#ddd3c7] bg-white px-4 py-3 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                                    />
+                                  </FormField>
+
+                                  <FormField label="Wat moet dit zichtbaar maken?">
+                                    <textarea
+                                      value={managerResponseForm.primaryActionExpectedEffect}
+                                      onChange={(event) =>
+                                        setManagerResponseForm((current) => ({
+                                          ...current,
+                                          primaryActionExpectedEffect: event.target.value,
+                                        }))
+                                      }
+                                      placeholder="Bijv. binnen twee weken moet duidelijk worden of feedbackafspraken consistenter terugkomen in het team."
+                                      className="min-h-[105px] w-full rounded-2xl border border-[#ddd3c7] bg-white px-4 py-3 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                                    />
+                                  </FormField>
+                                </div>
+                              ) : null}
+
+                              {managerResponseError ? (
+                                <div className="rounded-[18px] border border-[#f3c0bc] bg-[#fff1ef] px-4 py-4 text-sm leading-7 text-[#9c3f36]">
+                                  {managerResponseError}
+                                </div>
+                              ) : null}
+
+                              <button
+                                type="button"
+                                className="inline-flex min-h-11 items-center rounded-full bg-[#ff9b4a] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                                disabled={managerResponsePending}
+                                onClick={() => void handleManagerResponseSave()}
+                              >
+                                {managerResponsePending ? 'Opslaan...' : 'Managerreactie opslaan'}
+                              </button>
+                            </div>
+                          ) : selectedItem.managerResponse ? (
+                            <div className="mt-5 space-y-3">
+                              <SummaryRow
+                                label="Reactie"
+                                value={getActionCenterManagerResponseLabel(selectedItem.managerResponse.response_type)}
+                              />
+                              <SummaryRow
+                                label="Review"
+                                value={formatLongDate(selectedItem.managerResponse.review_scheduled_for)}
+                              />
+                              <SignalRow label="Toelichting" value={selectedItem.managerResponse.response_note} />
+                              {selectedItem.managerResponse.primary_action_theme_key ? (
+                                <SignalRow
+                                  label="Thema"
+                                  value={
+                                    ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS.find(
+                                      (option) => option.value === selectedItem.managerResponse?.primary_action_theme_key,
+                                    )?.label ?? selectedItem.managerResponse.primary_action_theme_key
+                                  }
+                                />
+                              ) : null}
+                              {selectedItem.managerResponse.primary_action_text ? (
+                                <SignalRow
+                                  label="Primaire stap"
+                                  value={selectedItem.managerResponse.primary_action_text}
+                                />
+                              ) : null}
+                            </div>
+                          ) : (
+                            <div className="mt-5">
+                              <EmptyBlock text="Deze route wacht nog op de eerste lichte managerreactie." />
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
+
                       <div className="rounded-[24px] border border-[#e4d9cb] bg-[#fcfaf7] px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Bespreekvoorbereiding</p>
                         <p className="mt-3 text-sm leading-8 text-[#4f6175]">
@@ -1403,7 +1798,7 @@ export function ActionCenterPreview({
                         </Link>
                       </div>
 
-                      {!readOnly ? (
+                      {allowLocalDraftEditing ? (
                         <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Review plannen</p>
                           <div className="mt-4 grid gap-4">
@@ -1539,7 +1934,7 @@ export function ActionCenterPreview({
                         <SummaryRow label="Later in het kwartaal" value={`${quarterReviews.length}`} />
                       </div>
                       <p className="mt-5 text-sm leading-7 text-[#4f6175]">
-                        Reviews blijven hier bewust gekoppeld aan echte acties. Vanuit deze view open je dus steeds dezelfde detailstaat.
+                        Reviews blijven hier bewust gekoppeld aan echte follow-through. Dat kan een primaire stap zijn, maar ook een begrensde reactie of geplande hercheck.
                       </p>
                     </div>
                   </section>
@@ -2191,8 +2586,15 @@ function EmptySection({ title, body }: { title: string; body: string }) {
 export function buildCompactLandingSummaryLines(item: ActionCenterPreviewItem) {
   const latestDecision = item.coreSemantics.latestDecision
   const currentStep = item.coreSemantics.actionProgress.currentStep
+  const managerResponse = item.managerResponse
 
   return [
+    !latestDecision && item.status === 'open-verzoek'
+      ? { label: 'Verzoek', value: 'Wacht op eerste managerreactie' }
+      : null,
+    !latestDecision && managerResponse
+      ? { label: 'Reactie', value: getActionCenterManagerResponseLabel(managerResponse.response_type) }
+      : null,
     latestDecision ? { label: 'Besluit', value: getDecisionLabel(latestDecision.decision) } : null,
     currentStep ? { label: 'Stap', value: currentStep } : null,
   ]

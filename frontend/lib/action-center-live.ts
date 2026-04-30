@@ -17,7 +17,7 @@ import type {
   PilotLearningCheckpoint,
   PilotLearningDossier,
 } from '@/lib/pilot-learning'
-import { projectActionCenterRoute } from '@/lib/action-center-route-contract'
+import { buildActionCenterRouteId, projectActionCenterRoute } from '@/lib/action-center-route-contract'
 import { buildSuiteTelemetryEvent, type SuiteTelemetryEvent } from '@/lib/telemetry/events'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
 
@@ -249,15 +249,17 @@ function getSortRank(status: ActionCenterPreviewStatus) {
   switch (status) {
     case 'geblokkeerd':
       return 0
-    case 'te-bespreken':
+    case 'open-verzoek':
       return 1
-    case 'in-uitvoering':
+    case 'te-bespreken':
       return 2
-    case 'afgerond':
+    case 'in-uitvoering':
       return 3
+    case 'afgerond':
+      return 4
     case 'gestopt':
     default:
-      return 4
+      return 5
   }
 }
 
@@ -287,6 +289,7 @@ export function finalizeActionCenterPreviewItem(
       nextStep: reuseExistingRouteTruth ? (existingRoute?.intervention ?? null) : item.nextStep,
       latestVisibleUpdateNote,
       route: existingRoute,
+      managerResponse: item.managerResponse ?? null,
     })
 
   const reviewReason = coreSemantics.reviewSemantics.reviewReason
@@ -358,7 +361,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         getFallbackStep(context.campaign.scan_type, context.deliveryRecord?.lifecycle_stage)
 
       return [finalizeActionCenterPreviewItem({
-        id: context.campaign.id,
+        id: route.routeId ?? buildActionCenterRouteId(context.campaign.id, context.scopeValue),
         code: `ACT-${1000 + index + 1}`,
         title:
           context.learningDossier?.title ||
@@ -391,6 +394,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         expectedEffect: coreSemantics.actionFrame.expectedEffect,
         reviewReason: coreSemantics.route.reviewReason,
         reviewOutcome: route.reviewOutcome,
+        managerResponse: context.managerResponse ?? null,
         peopleCount: context.peopleCount,
         coreSemantics,
         updates,

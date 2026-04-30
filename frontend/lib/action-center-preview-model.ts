@@ -1,8 +1,15 @@
 import type { ActionCenterReviewOutcome } from '@/lib/action-center-route-contract'
 import type { ActionCenterCoreSemantics } from '@/lib/action-center-core-semantics'
+import type { ActionCenterManagerResponse } from '@/lib/pilot-learning'
 
 export type ActionCenterPreviewView = 'overview' | 'actions' | 'reviews' | 'managers' | 'teams'
-export type ActionCenterPreviewStatus = 'te-bespreken' | 'in-uitvoering' | 'geblokkeerd' | 'afgerond' | 'gestopt'
+export type ActionCenterPreviewStatus =
+  | 'open-verzoek'
+  | 'te-bespreken'
+  | 'in-uitvoering'
+  | 'geblokkeerd'
+  | 'afgerond'
+  | 'gestopt'
 export type ActionCenterPreviewPriority = 'hoog' | 'midden' | 'laag'
 
 export interface ActionCenterPreviewUpdate {
@@ -34,6 +41,7 @@ export interface ActionCenterPreviewItem {
   expectedEffect: string | null
   reviewReason: string | null
   reviewOutcome: ActionCenterReviewOutcome
+  managerResponse?: ActionCenterManagerResponse | null
   reviewDateLabel: string
   reviewRhythm: string
   signalLabel: string
