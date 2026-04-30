@@ -150,6 +150,11 @@ describe('dashboard shell navigation', () => {
     expect(getActiveModuleFromLocation('/beheer', null, [...campaigns])).toBe('overview')
   })
 
+  it('keeps module nav active on detail routes instead of treating the item itself as a rail destination', () => {
+    expect(getActiveModuleFromLocation('/campaigns/exit-1', 'retention', [...campaigns])).toBe('exit')
+    expect(getActiveModuleFromLocation('/campaigns/retention-1', 'exit', [...campaigns])).toBe('retention')
+  })
+
   it('hides product rail items that do not have any campaign yet', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: false,

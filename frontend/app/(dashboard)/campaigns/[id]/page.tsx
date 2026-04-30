@@ -111,6 +111,11 @@ import {
 import { getProductModule } from "@/lib/products/shared/registry";
 import { buildResponseActivationState } from "@/lib/response-activation";
 import { getScanDefinition } from "@/lib/scan-definitions";
+import {
+  getDashboardModuleHref,
+  getDashboardModuleKeyForScanType,
+  getDashboardModuleLabel,
+} from "@/lib/dashboard/shell-navigation";
 import { loadSuiteAccessContext } from "@/lib/suite-access-server";
 import { FACTOR_LABELS, hasCampaignAddOn } from "@/lib/types";
 import type { CampaignStats, Respondent, SurveyResponse } from "@/lib/types";
@@ -387,6 +392,15 @@ function buildRetentionNarratives(args: {
   }
 
   return items.slice(0, 3)
+}
+
+function getDashboardModuleBackLinkLabel(scanType: CampaignStats["scan_type"]) {
+  if (scanType === "exit") return "Terug naar alle ExitScans"
+  if (scanType === "retention") return "Terug naar alle RetentieScans"
+  if (scanType === "onboarding") return "Terug naar alle Onboarding 30-60-90-routes"
+  if (scanType === "pulse") return "Terug naar alle Pulse-routes"
+  if (scanType === "leadership") return "Terug naar alle Leadership Scans"
+  return "Terug naar overzicht"
 }
 
 function buildFactorPriorityRows(factorAverages: Record<string, number>) {
@@ -2104,6 +2118,11 @@ export default async function CampaignPage({ params }: Props) {
   const organizationName = organization?.name ?? "Organisatie"
   const routePeriodLabel = formatRoutePeriodLabel(stats.campaign_name, stats.created_at)
   const scopeLabel = deriveScopeLabel(respondents)
+  const moduleKey =
+    stats.scan_type === "team" ? null : getDashboardModuleKeyForScanType(stats.scan_type)
+  const moduleLabel = moduleKey ? getDashboardModuleLabel(moduleKey) : scanDefinition.productName
+  const moduleHref = moduleKey ? getDashboardModuleHref(moduleKey) : "/dashboard"
+  const moduleBackLinkLabel = getDashboardModuleBackLinkLabel(stats.scan_type)
   const factorPriorityRows = buildFactorPriorityRows(factorData.orgAverages)
   const sdtRows = buildSdtRows(factorData.sdtAverages)
 
@@ -2134,12 +2153,22 @@ export default async function CampaignPage({ params }: Props) {
 
       return (
         <div className="space-y-8">
-          <div className="border-b border-slate-200/80 pb-4">
+          <div className="space-y-3 border-b border-slate-200/80 pb-4">
+            <p className="text-[0.78rem] font-medium tracking-[0.01em] text-slate-500">
+              <Link href="/dashboard" className="transition-colors hover:text-slate-700">
+                Overzicht
+              </Link>{" "}
+              /{" "}
+              <Link href={moduleHref} className="transition-colors hover:text-slate-700">
+                {moduleLabel}
+              </Link>{" "}
+              / <span className="text-slate-700">{stats.campaign_name}</span>
+            </p>
             <Link
-              href="/dashboard"
+              href={moduleHref}
               className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
             >
-              Terug naar dashboardoverzicht
+              ← {moduleBackLinkLabel}
             </Link>
           </div>
 
@@ -2259,12 +2288,22 @@ export default async function CampaignPage({ params }: Props) {
 
     return (
       <div className="space-y-8">
-        <div className="border-b border-slate-200/80 pb-4">
+        <div className="space-y-3 border-b border-slate-200/80 pb-4">
+          <p className="text-[0.78rem] font-medium tracking-[0.01em] text-slate-500">
+            <Link href="/dashboard" className="transition-colors hover:text-slate-700">
+              Overzicht
+            </Link>{" "}
+            /{" "}
+            <Link href={moduleHref} className="transition-colors hover:text-slate-700">
+              {moduleLabel}
+            </Link>{" "}
+            / <span className="text-slate-700">{stats.campaign_name}</span>
+          </p>
           <Link
-            href="/dashboard"
+            href={moduleHref}
             className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
           >
-            Terug naar dashboardoverzicht
+            ← {moduleBackLinkLabel}
           </Link>
         </div>
 
@@ -2356,13 +2395,25 @@ export default async function CampaignPage({ params }: Props) {
     <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr),320px] xl:items-start">
       <div className="min-w-0 space-y-7">
         <div className="border-b border-slate-200/80 pb-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
-            >
-              Terug naar dashboardoverzicht
-            </Link>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="space-y-3">
+              <p className="text-[0.78rem] font-medium tracking-[0.01em] text-slate-500">
+                <Link href="/dashboard" className="transition-colors hover:text-slate-700">
+                  Overzicht
+                </Link>{" "}
+                /{" "}
+                <Link href={moduleHref} className="transition-colors hover:text-slate-700">
+                  {moduleLabel}
+                </Link>{" "}
+                / <span className="text-slate-700">{stats.campaign_name}</span>
+              </p>
+              <Link
+                href={moduleHref}
+                className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
+              >
+                ← {moduleBackLinkLabel}
+              </Link>
+            </div>
             <p className="max-w-2xl text-sm leading-6 text-slate-500 lg:text-right">
               Campagnedetail brengt samenvatting, uitvoering en vervolgstap
               bij elkaar zonder onnodige omwegen.
