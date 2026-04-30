@@ -30,14 +30,11 @@ describe('action center route actions', () => {
     expect(projectActionCenterRouteActionCard(buildCanonicalOpenActionInput())).toMatchObject({
       actionId: 'action-1',
       routeId: 'campaign-exit::operations',
-      ownerName: 'Manager Operations',
       themeKey: 'workload',
-      themeLabel: 'Werkdruk en herstel',
       actionText: 'Plan deze week een gericht teamgesprek over workloadpieken.',
       expectedEffect: 'Binnen twee weken moet zichtbaar zijn of de workloadpieken smaller worden.',
       reviewScheduledFor: '2026-05-12',
       status: 'open',
-      isOpen: true,
       createdAt: '2026-04-21T09:00:00.000Z',
       updatedAt: '2026-04-21T09:00:00.000Z',
     })

@@ -14,6 +14,13 @@ export type ActionCenterRouteStatus =
   | 'afgerond'
   | 'gestopt'
 
+export type ActionCenterAggregatedRouteStatus =
+  | 'open-verzoek'
+  | 'in-uitvoering'
+  | 'reviewbaar'
+  | 'afgerond'
+  | 'gestopt'
+
 export type ActionCenterReviewOutcome =
   | 'geen-uitkomst'
   | 'doorgaan'
@@ -65,6 +72,12 @@ export interface ActionCenterRouteContract {
   blockedBy: Exclude<DeliveryExceptionStatus, 'none'> | null
 }
 
+interface ActionCenterRouteActionSummaryInput {
+  actionId: string
+  status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
+  reviewScheduledFor: string | null
+}
+
 const REVIEW_OUTCOMES = new Set<ActionCenterReviewOutcome>([
   'geen-uitkomst',
   'doorgaan',
@@ -77,6 +90,10 @@ const REVIEW_OUTCOMES = new Set<ActionCenterReviewOutcome>([
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
   return trimmed.length > 0 ? trimmed : null
+}
+
+function getTodayIsoDate() {
+  return new Date().toISOString().slice(0, 10)
 }
 
 export function buildActionCenterRouteId(campaignId: string, scopeValue: string) {
@@ -272,5 +289,67 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
     primaryActionThemeKey,
     followThroughMode,
     blockedBy,
+  }
+}
+
+export function summarizeActionCenterRouteActions(
+  actions: ActionCenterRouteActionSummaryInput[],
+  today = getTodayIsoDate(),
+): {
+  routeStatus: ActionCenterAggregatedRouteStatus
+  openActionCount: number
+  nextReviewScheduledFor: string | null
+} {
+  const openActions = actions.filter((action) => action.status === 'open' || action.status === 'in_review')
+  const nextReviewScheduledFor =
+    openActions
+      .map((action) => normalizeText(action.reviewScheduledFor))
+      .filter((reviewScheduledFor): reviewScheduledFor is string => Boolean(reviewScheduledFor))
+      .sort((left, right) => left.localeCompare(right))[0] ?? null
+
+  if (actions.length === 0) {
+    return {
+      routeStatus: 'open-verzoek',
+      openActionCount: 0,
+      nextReviewScheduledFor: null,
+    }
+  }
+
+  const hasReviewPressure = actions.some(
+    (action) =>
+      action.status === 'in_review' ||
+      (action.status === 'open' &&
+        Boolean(action.reviewScheduledFor) &&
+        action.reviewScheduledFor <= today),
+  )
+
+  if (hasReviewPressure) {
+    return {
+      routeStatus: 'reviewbaar',
+      openActionCount: openActions.length,
+      nextReviewScheduledFor,
+    }
+  }
+
+  if (openActions.length > 0) {
+    return {
+      routeStatus: 'in-uitvoering',
+      openActionCount: openActions.length,
+      nextReviewScheduledFor,
+    }
+  }
+
+  if (actions.some((action) => action.status === 'afgerond')) {
+    return {
+      routeStatus: 'afgerond',
+      openActionCount: 0,
+      nextReviewScheduledFor: null,
+    }
+  }
+
+  return {
+    routeStatus: 'gestopt',
+    openActionCount: 0,
+    nextReviewScheduledFor: null,
   }
 }

@@ -6,7 +6,7 @@ function buildActionReviewInput(overrides: Record<string, unknown> = {}) {
     action_id: 'action-1',
     reviewed_at: '2026-05-12T09:30:00.000Z',
     observation: 'Dezelfde werkdrukfrictie bleef zichtbaar in twee teams.',
-    action_outcome: 'bijstellen',
+    action_outcome: 'bijsturen-nodig',
     follow_up_note: 'Plan volgende week een kleiner teamgesprek met concrete workload-afspraken.',
     ...overrides,
   }
@@ -23,7 +23,7 @@ describe('action center action reviews', () => {
       actionId: 'action-1',
       reviewedAt: '2026-05-12T09:30:00.000Z',
       observation: 'Dezelfde werkdrukfrictie bleef zichtbaar in twee teams.',
-      actionOutcome: 'bijstellen',
+      actionOutcome: 'bijsturen-nodig',
       followUpNote: 'Plan volgende week een kleiner teamgesprek met concrete workload-afspraken.',
     })
   })
@@ -34,7 +34,7 @@ describe('action center action reviews', () => {
     }
 
     expect(buildCompactActionOutcome(buildActionReviewInput())).toBe(
-      'Bijstellen: Plan volgende week een kleiner teamgesprek met concrete workload-afspraken.',
+      'Bijsturen nodig: Plan volgende week een kleiner teamgesprek met concrete workload-afspraken.',
     )
   })
 })
