@@ -279,11 +279,36 @@ De kern blijft:
 De route houdt een bovenliggende status die geen simpele kopie van een actie is.
 
 Mogelijke route-statussen:
-- `open verzoek` als er nog geen acties zijn
-- `in uitvoering` als er open acties lopen
-- `reviewbaar` als een of meer acties op review wachten
-- `afgerond` als alle relevante acties netjes gesloten zijn
-- `gestopt` als de route bewust zonder verdere follow-through eindigt
+- `open verzoek`
+- `in uitvoering`
+- `reviewbaar`
+- `afgerond`
+- `gestopt`
+
+Deze route-status moet niet los per surface worden geinterpreteerd, maar via een vaste aggregatievolgorde uit dezelfde actie-truth volgen.
+
+Vaste prioriteitsvolgorde:
+1. `gestopt`
+2. `reviewbaar`
+3. `in uitvoering`
+4. `afgerond`
+5. `open verzoek`
+
+Betekenis per status:
+- `open verzoek`: er bestaan nog geen acties binnen de route
+- `in uitvoering`: er bestaat minstens een open actie en er is geen hogere reviewdruk die de route al `reviewbaar` maakt
+- `reviewbaar`: er bestaat minstens een actie in `in_review`, of een open actie waarvan `reviewScheduledFor` vandaag of eerder is
+- `afgerond`: er zijn geen open of reviewbare acties meer, er bestaat minstens een afgeronde actie, en alle overige acties zijn ook gesloten
+- `gestopt`: de route is bewust zonder verdere follow-through beeindigd, of alle acties zijn gesloten als `gestopt` zonder resterende open of reviewbare actie
+
+Gemengde situaties moeten dus expliciet naar de hoogste toepasselijke status vallen:
+- een actie `in_review` en een andere nog `open` -> `reviewbaar`
+- een open actie en een review die vandaag vervalt -> `reviewbaar`
+- een afgeronde actie, een gestopte actie en een nieuwe open actie -> `in uitvoering`
+- alleen afgeronde en gestopte acties, met minstens een afgeronde -> `afgerond`
+- alleen gestopte acties -> `gestopt`
+
+Overview en detail moeten dezelfde canonieke aggregatiefunctie gebruiken. Er mag geen lokale interpretatielaag per component ontstaan.
 
 ### Architectuur, Truth en Samenvattingslogica
 De architectuur moet twee expliciete lagen hebben:
@@ -325,26 +350,43 @@ Per actie moet canoniek bestaan:
 #### Actiegebonden review-truth
 Review moet niet meer vooral routebreed zijn, maar primair aan een actie hangen.
 
-De minimale review-laag per actie draagt:
+In deze fase is een actie-review nog geen tweede bestuurlijke decision-line naast de al bestaande routebrede decision-richting.
+
+Dus:
+- de actie-review legt vast wat de actie teruggeeft
+- de route houdt de bestuurlijke samenvatting op hoger niveau
+- we vermijden dat een afdelingstraject tegelijk vele kleine actie-besluiten en een aparte routebesluitlijn moet uitleggen
+
+De minimale review-laag per actie draagt daarom:
 - `actionReviewId`
 - `actionId`
 - `reviewedAt`
 - `observation`
-- `decision`
-- `decisionReason`
-- `nextStep` of `nextCheck`
+- `actionOutcome`
+- `followUpNote`
+
+Betekenis:
+- `observation`: wat zagen we concreet terug op deze actie
+- `actionOutcome`: compacte actie-uitkomst, bijvoorbeeld `effect-zichtbaar`, `bijsturen-nodig`, `nog-te-vroeg`, `stoppen`
+- `followUpNote`: korte vervolgregel op actieniveau, geen tweede volledige decision- of historylaag
 
 Nog steeds klein, maar wel expliciet.
+
+Routebrede bestuurlijke uitkomst blijft buiten de actie-reviewlaag:
+- die leeft in de route-status en routebrede samenvatting
+- en kan later weer op een bestaande route-/decisionlaag landen
+- maar wordt in deze fase niet per actie volledig gedupliceerd als `decision`, `decisionReason` en `nextCheck`
 
 #### Route-status als aggregatie
 De route-status wordt niet handmatig los beheerd als dat vermijdbaar is.
 
 Aanbevolen aggregatieregels:
+- gebruik altijd de vaste prioriteitsvolgorde uit de route-statussectie
 - geen acties -> `open verzoek`
-- minstens een open actie -> `in uitvoering`
-- acties met reviewdruk -> `reviewbaar`
-- alle relevante acties afgerond -> `afgerond`
-- route bewust beeindigd -> `gestopt`
+- reviewdruk wint altijd van open uitvoering
+- open uitvoering wint altijd van gesloten eindsituaties
+- `afgerond` betekent: minstens een afgeronde actie en verder geen open of reviewbare acties
+- `gestopt` betekent: geen open of reviewbare acties en geen afgeronde hoofduitkomst meer leidend
 
 Dus:
 - de route-status blijft echt
