@@ -308,6 +308,7 @@ function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
 
   for (const item of items) {
     const routeKey = getSummaryRouteKey(item)
+    const routeActionCards = item.coreSemantics?.routeActionCards ?? []
     const current = routeBuckets.get(routeKey) ?? {
       sourceLabel: item.sourceLabel,
       ownerSubtitle: item.ownerSubtitle,
@@ -319,14 +320,21 @@ function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
       sourceLabel: current.sourceLabel,
       ownerSubtitle: current.ownerSubtitle,
       hasBlockedAction: current.hasBlockedAction || item.status === 'geblokkeerd',
-      actions: [
-        ...current.actions,
-        {
-          actionId: item.id,
-          status: getSummaryRouteActionStatus(item.status),
-          reviewScheduledFor: item.reviewDate,
-        },
-      ],
+      actions:
+        routeActionCards.length > 0
+          ? routeActionCards.map((action) => ({
+              actionId: action.actionId,
+              status: action.status,
+              reviewScheduledFor: action.reviewScheduledFor,
+            }))
+          : [
+              ...current.actions,
+              {
+                actionId: item.id,
+                status: getSummaryRouteActionStatus(item.status),
+                reviewScheduledFor: item.reviewDate,
+              },
+            ],
     })
   }
 
@@ -360,6 +368,20 @@ function buildRouteActionSummaryText(args: {
   }
 
   return parts.join(' - ')
+}
+
+function countRouteActionsNeedingReview(
+  routeActions: Array<{
+    status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
+    reviewScheduledFor: string
+  }>,
+  today = new Date().toISOString().slice(0, 10),
+) {
+  return routeActions.filter(
+    (action) =>
+      action.status === 'in_review' ||
+      (action.status === 'open' && action.reviewScheduledFor <= today),
+  ).length
 }
 
 export function finalizeActionCenterPreviewItem(
@@ -479,7 +501,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         avgSignal,
         totalCompleted: context.stats?.total_completed ?? 0,
       })
-      const reviewableActionCount = routeActions.filter((action) => action.status === 'in_review').length
+      const reviewableActionCount = countRouteActionsNeedingReview(routeActions)
       const completedActionCount = routeActions.filter((action) => action.status === 'afgerond').length
       const nextStep =
         route.intervention ||
