@@ -3,6 +3,7 @@ import {
   buildActionCenterTelemetryEvents,
   buildLiveActionCenterItems,
   finalizeActionCenterPreviewItem,
+  getLiveActionCenterSummary,
   isLiveActionCenterScanType,
 } from './action-center-live'
 import { projectActionCenterRoute } from './action-center-route-contract'
@@ -917,5 +918,29 @@ describe('live action center builder', () => {
     )
     expect(item?.coreSemantics.decisionHistory).toHaveLength(1)
     expect(item?.coreSemantics.decisionHistory[0]?.decisionEntryId).toBe('authored-decision-1')
+  })
+
+  it('surfaces a route-facing summary with multiple actions and the next review date', () => {
+    const summary = getLiveActionCenterSummary([
+      {
+        id: 'campaign-exit::operations::action-1',
+        sourceLabel: 'ExitScan',
+        ownerSubtitle: 'Operations',
+        status: 'in-uitvoering',
+        reviewDate: '2026-05-19',
+      },
+      {
+        id: 'campaign-exit::operations::action-2',
+        sourceLabel: 'ExitScan',
+        ownerSubtitle: 'Operations',
+        status: 'te-bespreken',
+        reviewDate: '2026-05-05',
+      },
+    ] as Parameters<typeof getLiveActionCenterSummary>[0])
+
+    expect(summary).toMatchObject({
+      actionCount: 2,
+      nextReviewDate: '2026-05-05',
+    })
   })
 })
