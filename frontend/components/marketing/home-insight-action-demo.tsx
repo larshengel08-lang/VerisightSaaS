@@ -612,7 +612,7 @@ export function HomeInsightActionDemo() {
           gap: 16, justifyContent: 'space-between',
           marginBottom: 28,
         }}>
-          <div>
+          <div style={{ minHeight: 52 }}>
             <Label>
               {isAction ? 'Action Center' : 'Dashboard'} · Verisight suite
             </Label>
