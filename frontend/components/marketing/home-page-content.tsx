@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Reveal } from '@/components/marketing/design-tokens'
+import { HomeInsightActionDemo, SHOW_HOME_INSIGHT_ACTION_DEMO } from '@/components/marketing/home-insight-action-demo'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const SURFACE = {
@@ -38,8 +39,6 @@ const heroTrustItems = [
   'Geen individuele voorspellingen',
   'Dashboard, samenvatting en eerste opvolging',
 ]
-
-const marqueeLine = 'Van eerste inzicht naar concrete opvolging in dezelfde leeslijn'
 
 const suiteFlowPoints = [
   {
@@ -209,37 +208,7 @@ function OutputMetric({
 }
 
 function MarqueeBand() {
-  return (
-    <section
-      aria-label="Suite-leeslijn"
-      style={{
-        background: SURFACE.charcoal,
-        borderBottom: `1px solid ${SURFACE.charcoalSoft}`,
-        overflow: 'hidden',
-      }}
-    >
-      <div style={{ ...SHELL, paddingTop: 16, paddingBottom: 16 }}>
-        <Reveal>
-          <div
-            style={{
-              alignItems: 'center',
-              color: '#efe5d8',
-              display: 'flex',
-              fontFamily: bodyFont,
-              fontSize: 12,
-              fontWeight: 700,
-              justifyContent: 'center',
-              letterSpacing: '.22em',
-              textAlign: 'center',
-              textTransform: 'uppercase',
-            }}
-          >
-            <span>{marqueeLine}</span>
-          </div>
-        </Reveal>
-      </div>
-    </section>
-  )
+  return null
 }
 
 function HeroSection() {
@@ -1715,8 +1684,14 @@ export function HomePageContent() {
   return (
     <div style={{ background: SURFACE.paper, color: SURFACE.ink }}>
       <HeroSection />
-      <MarqueeBand />
-      <SuitePreviewSection />
+      {SHOW_HOME_INSIGHT_ACTION_DEMO ? (
+        <HomeInsightActionDemo />
+      ) : (
+        <>
+          <MarqueeBand />
+          <SuitePreviewSection />
+        </>
+      )}
       <RoutesSection />
       <TrustSection />
       <ContactSection />
