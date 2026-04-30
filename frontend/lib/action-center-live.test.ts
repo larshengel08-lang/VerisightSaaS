@@ -3,6 +3,7 @@ import {
   buildActionCenterTelemetryEvents,
   buildLiveActionCenterItems,
   finalizeActionCenterPreviewItem,
+  getLiveActionCenterSummary,
   isLiveActionCenterScanType,
 } from './action-center-live'
 import { projectActionCenterRoute } from './action-center-route-contract'
@@ -917,5 +918,65 @@ describe('live action center builder', () => {
     )
     expect(item?.coreSemantics.decisionHistory).toHaveLength(1)
     expect(item?.coreSemantics.decisionHistory[0]?.decisionEntryId).toBe('authored-decision-1')
+  })
+
+  it('surfaces a route-facing summary with multiple actions and the next review date', () => {
+    const summary = getLiveActionCenterSummary([
+      {
+        id: 'campaign-exit::operations',
+        sourceLabel: 'ExitScan',
+        ownerSubtitle: 'Operations',
+        status: 'in-uitvoering',
+        reviewDate: '2026-05-19',
+        coreSemantics: {
+          routeActionCards: [
+            {
+              actionId: 'action-1',
+              themeKey: 'leadership',
+              actionText: 'Plan twee teamgesprekken.',
+              reviewScheduledFor: '2026-05-19',
+              expectedEffect: 'Maak zichtbaar of leiderschap het primaire knelpunt is.',
+              status: 'open',
+              latestReview: null,
+            },
+            {
+              actionId: 'action-2',
+              themeKey: 'workload',
+              actionText: 'Leg een bounded herverdeling van piekwerk vast.',
+              reviewScheduledFor: '2026-05-05',
+              expectedEffect: 'Maak zichtbaar of de piekbelasting daalt.',
+              status: 'in_review',
+              latestReview: null,
+            },
+          ],
+        },
+      },
+    ] as Parameters<typeof getLiveActionCenterSummary>[0])
+
+    expect(summary).toMatchObject({
+      actionCount: 2,
+      nextReviewDate: '2026-05-05',
+    })
+  })
+
+  it('does not count an open request route as a synthetic action when no route action cards exist yet', () => {
+    const summary = getLiveActionCenterSummary([
+      {
+        id: 'campaign-exit::operations',
+        sourceLabel: 'ExitScan',
+        ownerSubtitle: 'Operations',
+        status: 'open-verzoek',
+        reviewDate: null,
+        coreSemantics: {
+          routeActionCards: [],
+        },
+      },
+    ] as Parameters<typeof getLiveActionCenterSummary>[0])
+
+    expect(summary).toMatchObject({
+      routeCount: 1,
+      actionCount: 0,
+      nextReviewDate: null,
+    })
   })
 })

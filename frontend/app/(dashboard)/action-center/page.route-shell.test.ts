@@ -277,6 +277,68 @@ describe("action center landing shell", () => {
     expect(markup).toContain("Plan een eerste teamgesprek met operations.");
   });
 
+  it("renders route action cards on detail when a route carries multiple concrete actions", () => {
+    const context = {
+      ...buildLiveContext(),
+      routeActions: [
+        {
+          actionId: "action-1",
+          routeId: "campaign-exit::org-1::department::operations",
+          themeKey: "leadership" as const,
+          actionText: "Plan twee teamgesprekken over leiderschap en werkdruk.",
+          expectedEffect: "Maak zichtbaar of leiderschap de werkdrukfrictie versterkt.",
+          reviewScheduledFor: "2026-05-12",
+          status: "open" as const,
+          createdAt: "2026-04-30T09:00:00.000Z",
+          updatedAt: "2026-04-30T09:00:00.000Z",
+        },
+        {
+          actionId: "action-2",
+          routeId: "campaign-exit::org-1::department::operations",
+          themeKey: "workload" as const,
+          actionText: "Leg een bounded herverdeling van piekwerk vast.",
+          expectedEffect: "Maak zichtbaar of de piekbelasting in twee weken lager voelt.",
+          reviewScheduledFor: "2026-05-19",
+          status: "in_review" as const,
+          createdAt: "2026-04-30T09:00:00.000Z",
+          updatedAt: "2026-05-10T09:00:00.000Z",
+        },
+      ],
+      actionReviews: [
+        {
+          actionReviewId: "review-2",
+          actionId: "action-2",
+          reviewedAt: "2026-05-10T09:00:00.000Z",
+          observation: "De werkdruk daalt nog niet zichtbaar in beide teams.",
+          actionOutcome: "bijsturen-nodig" as const,
+          followUpNote: "Herverdeel ook de piekoverdracht in de vroege dienst.",
+        },
+      ],
+    };
+    const [item] = buildLiveActionCenterItems([context]);
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+
+    expect(markup).toContain("Acties in deze route");
+    expect(markup).toContain("Leiderschap");
+    expect(markup).toContain("Plan twee teamgesprekken over leiderschap en werkdruk.");
+    expect(markup).toContain("Werkdruk");
+    expect(markup).toContain("Leg een bounded herverdeling van piekwerk vast.");
+    expect(markup).toContain("Laatste review (Bijsturen nodig)");
+    expect(markup).toContain("De werkdruk daalt nog niet zichtbaar in beide teams.");
+  });
+
   it("renders the compact result loop on route detail from grouped result semantics", () => {
     const context = buildLiveContext();
     const [item] = buildLiveActionCenterItems([context]);

@@ -6,6 +6,7 @@ export type ActionCenterPreviewView = 'overview' | 'actions' | 'reviews' | 'mana
 export type ActionCenterPreviewStatus =
   | 'open-verzoek'
   | 'te-bespreken'
+  | 'reviewbaar'
   | 'in-uitvoering'
   | 'geblokkeerd'
   | 'afgerond'

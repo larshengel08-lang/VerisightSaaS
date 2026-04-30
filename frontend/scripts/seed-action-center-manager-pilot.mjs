@@ -40,6 +40,10 @@ function buildDepartmentScopeValue(orgId, departmentLabel) {
   return `${orgId}::department::${departmentLabel.toLowerCase()}`
 }
 
+function buildActionCenterRouteId(campaignId, scopeValue) {
+  return `${campaignId}::${scopeValue}`
+}
+
 async function findUserByEmail(admin, email) {
   let page = 1
   const perPage = 200
@@ -398,12 +402,22 @@ const artifact = {
     password: PILOT_PASSWORD,
   },
   routeContext: {
-    focusItemId: canonicalCampaign.id,
+    focusItemId: buildActionCenterRouteId(
+      canonicalCampaign.id,
+      chosenDepartments[0]
+        ? buildDepartmentScopeValue(pilotOrg.orgId, chosenDepartments[0])
+        : `${pilotOrg.orgId}::campaign::${canonicalCampaign.id}`,
+    ),
     overviewUrl: '/dashboard',
     reportsUrl: '/reports',
     campaignDetailUrl: `/campaigns/${canonicalCampaign.id}`,
     actionCenterUrl: '/action-center',
-    actionCenterFocusUrl: `/action-center?focus=${canonicalCampaign.id}`,
+    actionCenterFocusUrl: `/action-center?focus=${buildActionCenterRouteId(
+      canonicalCampaign.id,
+      chosenDepartments[0]
+        ? buildDepartmentScopeValue(pilotOrg.orgId, chosenDepartments[0])
+        : `${pilotOrg.orgId}::campaign::${canonicalCampaign.id}`,
+    )}`,
   },
   managers: managers.map((manager, index) => ({
     email: manager.email,

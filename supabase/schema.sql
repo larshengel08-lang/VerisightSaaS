@@ -674,6 +674,97 @@ create table if not exists public.action_center_manager_responses (
   unique (campaign_id, route_scope_type, route_scope_value)
 );
 
+create table if not exists public.action_center_route_actions (
+  id uuid primary key default gen_random_uuid(),
+  manager_response_id uuid references public.action_center_manager_responses(id) on delete cascade not null,
+  route_id text not null,
+  campaign_id uuid references public.campaigns(id) on delete cascade not null,
+  org_id uuid references public.organizations(id) on delete cascade not null,
+  route_scope_type text not null
+    check (route_scope_type in ('department', 'item')),
+  route_scope_value text not null,
+  manager_user_id uuid references auth.users(id) on delete cascade not null,
+  owner_name text not null,
+  owner_assigned_at timestamptz not null,
+  primary_action_theme_key text not null
+    check (primary_action_theme_key in ('leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity')),
+  primary_action_text text not null,
+  primary_action_expected_effect text not null,
+  primary_action_status text not null default 'open'
+    check (primary_action_status in ('open', 'in_review', 'afgerond', 'gestopt')),
+  review_scheduled_for date not null,
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.action_center_action_reviews (
+  id uuid primary key default gen_random_uuid(),
+  action_id uuid references public.action_center_route_actions(id) on delete cascade not null,
+  reviewed_at timestamptz not null,
+  observation text not null,
+  action_outcome text not null
+    check (action_outcome in ('effect-zichtbaar', 'bijsturen-nodig', 'nog-te-vroeg', 'stoppen')),
+  follow_up_note text,
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+do $$ begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'action_center_route_actions'
+  ) and not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'action_center_route_actions'
+      and column_name = 'manager_response_id'
+  ) then
+    alter table public.action_center_route_actions
+      add column manager_response_id uuid;
+  end if;
+exception when others then null;
+end $$;
+
+do $$ begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'action_center_route_actions'
+      and column_name = 'manager_response_id'
+  ) then
+    update public.action_center_route_actions actions
+    set manager_response_id = responses.id
+    from public.action_center_manager_responses responses
+    where actions.manager_response_id is null
+      and responses.campaign_id = actions.campaign_id
+      and responses.route_scope_type = actions.route_scope_type
+      and responses.route_scope_value = actions.route_scope_value;
+
+    alter table public.action_center_route_actions
+      drop constraint if exists action_center_route_actions_manager_response_id_fkey;
+
+    alter table public.action_center_route_actions
+      add constraint action_center_route_actions_manager_response_id_fkey
+      foreign key (manager_response_id)
+      references public.action_center_manager_responses(id)
+      on delete cascade;
+
+    if not exists (
+      select 1
+      from public.action_center_route_actions
+      where manager_response_id is null
+    ) then
+      alter table public.action_center_route_actions
+        alter column manager_response_id set not null;
+    end if;
+  end if;
+exception when duplicate_object then null;
+end $$;
+
 -- ============================================================
 -- INDEXES
 -- ============================================================
@@ -697,6 +788,11 @@ create index if not exists idx_action_center_review_decisions_checkpoint on publ
 create index if not exists idx_action_center_review_decisions_recorded_at on public.action_center_review_decisions(decision_recorded_at desc);
 create index if not exists idx_action_center_manager_responses_route on public.action_center_manager_responses(campaign_id, route_scope_type, route_scope_value);
 create index if not exists idx_action_center_manager_responses_manager on public.action_center_manager_responses(manager_user_id);
+create index if not exists idx_action_center_route_actions_manager_response on public.action_center_route_actions(manager_response_id);
+create index if not exists idx_action_center_route_actions_route on public.action_center_route_actions(route_id);
+create index if not exists idx_action_center_route_actions_scope on public.action_center_route_actions(campaign_id, route_scope_type, route_scope_value);
+create index if not exists idx_action_center_route_actions_manager on public.action_center_route_actions(manager_user_id);
+create index if not exists idx_action_center_action_reviews_action on public.action_center_action_reviews(action_id, reviewed_at desc);
 create index if not exists idx_delivery_records_org on public.campaign_delivery_records(organization_id);
 create index if not exists idx_delivery_records_contact_request on public.campaign_delivery_records(contact_request_id);
 create index if not exists idx_delivery_records_lifecycle on public.campaign_delivery_records(lifecycle_stage);
@@ -720,6 +816,8 @@ alter table public.pilot_learning_dossiers enable row level security;
 alter table public.pilot_learning_checkpoints enable row level security;
 alter table public.action_center_review_decisions enable row level security;
 alter table public.action_center_manager_responses enable row level security;
+alter table public.action_center_route_actions enable row level security;
+alter table public.action_center_action_reviews enable row level security;
 
 -- ── Hulpfuncties ─────────────────────────────────────────────────────────────
 
@@ -1170,6 +1268,180 @@ create policy "managers_can_update_action_center_manager_responses"
         and m.access_role = 'manager_assignee'
         and m.scope_type = action_center_manager_responses.route_scope_type
         and m.scope_value = action_center_manager_responses.route_scope_value
+        and m.can_update
+    )
+  );
+
+drop policy if exists "managers_can_select_action_center_route_actions" on public.action_center_route_actions;
+drop policy if exists "managers_can_insert_action_center_route_actions" on public.action_center_route_actions;
+drop policy if exists "managers_can_update_action_center_route_actions" on public.action_center_route_actions;
+
+create policy "managers_can_select_action_center_route_actions"
+  on public.action_center_route_actions for select
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_manager_responses r
+      join public.action_center_workspace_members m
+        on m.org_id = action_center_route_actions.org_id
+       and m.user_id = auth.uid()
+       and m.access_role = 'manager_assignee'
+       and m.scope_type = action_center_route_actions.route_scope_type
+       and m.scope_value = action_center_route_actions.route_scope_value
+      where r.id = action_center_route_actions.manager_response_id
+        and r.manager_user_id = auth.uid()
+        and r.manager_user_id = action_center_route_actions.manager_user_id
+        and r.campaign_id = action_center_route_actions.campaign_id
+        and r.org_id = action_center_route_actions.org_id
+        and r.route_scope_type = action_center_route_actions.route_scope_type
+        and r.route_scope_value = action_center_route_actions.route_scope_value
+        and m.can_view
+    )
+  );
+
+create policy "managers_can_insert_action_center_route_actions"
+  on public.action_center_route_actions for insert
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_manager_responses r
+      join public.action_center_workspace_members m
+        on m.org_id = action_center_route_actions.org_id
+       and m.user_id = auth.uid()
+       and m.access_role = 'manager_assignee'
+       and m.scope_type = action_center_route_actions.route_scope_type
+       and m.scope_value = action_center_route_actions.route_scope_value
+      where r.id = action_center_route_actions.manager_response_id
+        and r.manager_user_id = auth.uid()
+        and r.manager_user_id = action_center_route_actions.manager_user_id
+        and r.campaign_id = action_center_route_actions.campaign_id
+        and r.org_id = action_center_route_actions.org_id
+        and r.route_scope_type = action_center_route_actions.route_scope_type
+        and r.route_scope_value = action_center_route_actions.route_scope_value
+        and m.can_update
+    )
+  );
+
+create policy "managers_can_update_action_center_route_actions"
+  on public.action_center_route_actions for update
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_manager_responses r
+      join public.action_center_workspace_members m
+        on m.org_id = action_center_route_actions.org_id
+       and m.user_id = auth.uid()
+       and m.access_role = 'manager_assignee'
+       and m.scope_type = action_center_route_actions.route_scope_type
+       and m.scope_value = action_center_route_actions.route_scope_value
+      where r.id = action_center_route_actions.manager_response_id
+        and r.manager_user_id = auth.uid()
+        and r.manager_user_id = action_center_route_actions.manager_user_id
+        and r.campaign_id = action_center_route_actions.campaign_id
+        and r.org_id = action_center_route_actions.org_id
+        and r.route_scope_type = action_center_route_actions.route_scope_type
+        and r.route_scope_value = action_center_route_actions.route_scope_value
+        and m.can_update
+    )
+  )
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_manager_responses r
+      join public.action_center_workspace_members m
+        on m.org_id = action_center_route_actions.org_id
+       and m.user_id = auth.uid()
+       and m.access_role = 'manager_assignee'
+       and m.scope_type = action_center_route_actions.route_scope_type
+       and m.scope_value = action_center_route_actions.route_scope_value
+      where r.id = action_center_route_actions.manager_response_id
+        and r.manager_user_id = auth.uid()
+        and r.manager_user_id = action_center_route_actions.manager_user_id
+        and r.campaign_id = action_center_route_actions.campaign_id
+        and r.org_id = action_center_route_actions.org_id
+        and r.route_scope_type = action_center_route_actions.route_scope_type
+        and r.route_scope_value = action_center_route_actions.route_scope_value
+        and m.can_update
+    )
+  );
+
+drop policy if exists "managers_can_select_action_center_action_reviews" on public.action_center_action_reviews;
+drop policy if exists "managers_can_insert_action_center_action_reviews" on public.action_center_action_reviews;
+drop policy if exists "managers_can_update_action_center_action_reviews" on public.action_center_action_reviews;
+
+create policy "managers_can_select_action_center_action_reviews"
+  on public.action_center_action_reviews for select
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_route_actions a
+      join public.action_center_workspace_members m
+        on m.org_id = a.org_id
+       and m.scope_type = a.route_scope_type
+       and m.scope_value = a.route_scope_value
+      where a.id = action_center_action_reviews.action_id
+        and a.manager_user_id = auth.uid()
+        and m.user_id = auth.uid()
+        and m.access_role = 'manager_assignee'
+        and m.can_view
+    )
+  );
+
+create policy "managers_can_insert_action_center_action_reviews"
+  on public.action_center_action_reviews for insert
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_route_actions a
+      join public.action_center_workspace_members m
+        on m.org_id = a.org_id
+       and m.scope_type = a.route_scope_type
+       and m.scope_value = a.route_scope_value
+      where a.id = action_center_action_reviews.action_id
+        and a.manager_user_id = auth.uid()
+        and m.user_id = auth.uid()
+        and m.access_role = 'manager_assignee'
+        and m.can_update
+    )
+  );
+
+create policy "managers_can_update_action_center_action_reviews"
+  on public.action_center_action_reviews for update
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_route_actions a
+      join public.action_center_workspace_members m
+        on m.org_id = a.org_id
+       and m.scope_type = a.route_scope_type
+       and m.scope_value = a.route_scope_value
+      where a.id = action_center_action_reviews.action_id
+        and a.manager_user_id = auth.uid()
+        and m.user_id = auth.uid()
+        and m.access_role = 'manager_assignee'
+        and m.can_update
+    )
+  )
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_route_actions a
+      join public.action_center_workspace_members m
+        on m.org_id = a.org_id
+       and m.scope_type = a.route_scope_type
+       and m.scope_value = a.route_scope_value
+      where a.id = action_center_action_reviews.action_id
+        and a.manager_user_id = auth.uid()
+        and m.user_id = auth.uid()
+        and m.access_role = 'manager_assignee'
         and m.can_update
     )
   );

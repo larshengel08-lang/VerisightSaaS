@@ -8,11 +8,11 @@ describe('action center preview shell', () => {
       'utf8',
     )
 
-    expect(source).toContain('Wat vraagt nu aandacht?')
-    expect(source).toContain('Komende reviews')
+    expect(source).toContain('Reviewmomenten')
     expect(source).toContain('Managers toewijzen')
-    expect(source).toContain('Mijn open acties')
+    expect(source).toContain('Mijn teams')
     expect(source).toContain('Actie aanmaken')
     expect(source).toContain('Open dossierbron')
+    expect(source).toContain('Volgende reviewsessie')
   })
 })

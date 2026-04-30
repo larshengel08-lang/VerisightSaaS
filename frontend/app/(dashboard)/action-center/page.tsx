@@ -1,7 +1,15 @@
 import { redirect } from 'next/navigation'
 import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
 import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
+import {
+  projectActionCenterActionReview,
+  type ActionCenterActionReviewWriteInput,
+} from '@/lib/action-center-action-reviews'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
+import {
+  projectActionCenterRouteActionCard,
+  type ActionCenterRouteActionWriteInput,
+} from '@/lib/action-center-route-actions'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   isScopeVisibleToActionCenterContext,
@@ -22,6 +30,11 @@ type RespondentDepartmentRow = {
   campaign_id: string
   department: string | null
 }
+
+const DUTCH_SHORT_DATE = new Intl.DateTimeFormat('nl-NL', {
+  day: 'numeric',
+  month: 'short',
+})
 
 function getDisplayName(email: string | null | undefined) {
   if (!email) return 'Verisight gebruiker'
@@ -59,6 +72,14 @@ function getManagerAssignment(
         row.can_view,
     ) ?? null
   )
+}
+
+function formatWorkspaceSummaryDate(value: string | null) {
+  if (!value) return null
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return value
+  return DUTCH_SHORT_DATE.format(parsed).replace('.', '')
 }
 
 export default async function ActionCenterPage({
@@ -154,6 +175,7 @@ export default async function ActionCenterPage({
     { data: learningCheckpointsRaw },
     { data: reviewDecisionsRaw },
     { data: managerResponsesRaw },
+    { data: routeActionsRaw },
   ] = await Promise.all([
     deliveryRecords.length > 0
       ? dataClient
@@ -186,12 +208,54 @@ export default async function ActionCenterPage({
           .select('*')
           .in('campaign_id', campaignIds)
       : Promise.resolve({ data: [] }),
+    campaignIds.length > 0
+      ? dataClient
+          .from('action_center_route_actions')
+          .select('*')
+          .in('campaign_id', campaignIds)
+      : Promise.resolve({ data: [] }),
   ])
 
   const deliveryCheckpoints = (deliveryCheckpointsRaw ?? []) as CampaignDeliveryCheckpoint[]
   const learningCheckpoints = (learningCheckpointsRaw ?? []) as PilotLearningCheckpoint[]
   const reviewDecisions = (reviewDecisionsRaw ?? []) as ActionCenterReviewDecision[]
   const managerResponses = (managerResponsesRaw ?? []) as ActionCenterManagerResponse[]
+  const routeActions = (routeActionsRaw ?? [])
+    .map((row) => {
+      try {
+        return projectActionCenterRouteActionCard(row as Partial<ActionCenterRouteActionWriteInput>)
+      } catch {
+        return null
+      }
+    })
+    .filter((row): row is ReturnType<typeof projectActionCenterRouteActionCard> => Boolean(row))
+  const { data: actionReviewsRaw } =
+    routeActions.length > 0
+      ? await dataClient
+          .from('action_center_action_reviews')
+          .select('*')
+          .in(
+            'action_id',
+            routeActions.map((action) => action.actionId),
+          )
+      : { data: [] }
+
+  const actionReviews = (actionReviewsRaw ?? [])
+    .map((row) => {
+      try {
+        return projectActionCenterActionReview({
+          action_review_id: row.id,
+          action_id: row.action_id,
+          reviewed_at: row.reviewed_at,
+          observation: row.observation,
+          action_outcome: row.action_outcome,
+          follow_up_note: row.follow_up_note,
+        } satisfies Partial<ActionCenterActionReviewWriteInput>)
+      } catch {
+        return null
+      }
+    })
+    .filter((row): row is ReturnType<typeof projectActionCenterActionReview> => Boolean(row))
 
   const organizationById = new Map(organizations.map((organization) => [organization.id, organization]))
   const roleByOrgId = orgMemberships.reduce<Record<string, 'owner' | 'member' | 'viewer'>>((acc, membership) => {
@@ -229,6 +293,16 @@ export default async function ActionCenterPage({
     if (!departmentLabel) return acc
     acc[row.campaign_id] ??= []
     acc[row.campaign_id].push(departmentLabel)
+    return acc
+  }, {})
+  const routeActionsByRouteId = routeActions.reduce<Record<string, typeof routeActions>>((acc, action) => {
+    acc[action.routeId] ??= []
+    acc[action.routeId].push(action)
+    return acc
+  }, {})
+  const actionReviewsByActionId = actionReviews.reduce<Record<string, typeof actionReviews>>((acc, review) => {
+    acc[review.actionId] ??= []
+    acc[review.actionId].push(review)
     return acc
   }, {})
 
@@ -286,6 +360,10 @@ export default async function ActionCenterPage({
           learningCheckpoints: learningDossier ? (learningCheckpointMap[learningDossier.id] ?? []) : [],
           managerResponse: managerResponseByRouteId.get(routeId) ?? null,
           reviewDecisions: reviewDecisionMap[campaign.id] ?? [],
+          routeActions: routeActionsByRouteId[routeId] ?? [],
+          actionReviews: (routeActionsByRouteId[routeId] ?? []).flatMap(
+            (action) => actionReviewsByActionId[action.actionId] ?? [],
+          ),
         }
       })
   })
@@ -314,9 +392,14 @@ export default async function ActionCenterPage({
         items.find((item) => item.coreSemantics.route.campaignId === focusItemId)?.id ??
         null)
       : null
+  const nextReviewLabel = formatWorkspaceSummaryDate(summary.nextReviewDate)
   const workspaceSubtitle =
     summary.productCount > 0
-      ? `Live opvolging over ${summary.productCount} product${summary.productCount === 1 ? '' : 'en'}`
+      ? [
+          `Live opvolging over ${summary.productCount} product${summary.productCount === 1 ? '' : 'en'}`,
+          `${summary.actionCount} actie${summary.actionCount === 1 ? '' : 's'}`,
+          nextReviewLabel ? `eerstvolgende review ${nextReviewLabel}` : null,
+        ].filter((part): part is string => Boolean(part)).join(' | ')
       : 'Live opvolging'
 
   if (items.length === 0) {
@@ -368,11 +451,15 @@ export default async function ActionCenterPage({
       managerAssignmentEndpoint="/api/action-center/workspace-members"
       canRespondToRequests={context.canUpdateActionCenter}
       managerResponseEndpoint="/api/action-center-manager-responses"
-      currentUserId={user.id}
-      workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
-      workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}
+        routeActionEndpoint="/api/action-center-route-actions"
+        actionReviewEndpoint="/api/action-center-action-reviews"
+        currentUserId={user.id}
+        managerOnly={context.managerOnly}
+        workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
+        workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}
       workspaceName={getDisplayName(user.email)}
       workspaceSubtitle={workspaceSubtitle}
+      overviewSummary={summary}
       readOnly
       itemHrefs={itemHrefs}
       hideSidebar

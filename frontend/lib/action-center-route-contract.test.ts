@@ -466,4 +466,66 @@ describe('action center route contract', () => {
       outcomeSummary: 'Eerste managementreview is afgerond en omgezet naar een aangepaste vervolgactie.',
     })
   })
+
+  it('lets reviewbaar outrank in-uitvoering when multiple action cards fold back into one route summary', async () => {
+    const { summarizeActionCenterRouteActions } = await import('./action-center-route-contract') as {
+      summarizeActionCenterRouteActions: (
+        actions: Array<{
+          actionId: string
+          status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
+          reviewScheduledFor: string | null
+        }>,
+      ) => Record<string, unknown>
+    }
+
+    expect(
+      summarizeActionCenterRouteActions([
+        {
+          actionId: 'action-1',
+          status: 'open',
+          reviewScheduledFor: '2026-05-19',
+        },
+        {
+          actionId: 'action-2',
+          status: 'in_review',
+          reviewScheduledFor: '2026-05-05',
+        },
+      ]),
+    ).toMatchObject({
+      routeStatus: 'reviewbaar',
+      openActionCount: 2,
+      nextReviewScheduledFor: '2026-05-05',
+    })
+  })
+
+  it('still aggregates completed plus stopped actions to afgerond once no open action remains', async () => {
+    const { summarizeActionCenterRouteActions } = await import('./action-center-route-contract') as {
+      summarizeActionCenterRouteActions: (
+        actions: Array<{
+          actionId: string
+          status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
+          reviewScheduledFor: string | null
+        }>,
+      ) => Record<string, unknown>
+    }
+
+    expect(
+      summarizeActionCenterRouteActions([
+        {
+          actionId: 'action-1',
+          status: 'afgerond',
+          reviewScheduledFor: null,
+        },
+        {
+          actionId: 'action-2',
+          status: 'gestopt',
+          reviewScheduledFor: null,
+        },
+      ]),
+    ).toMatchObject({
+      routeStatus: 'afgerond',
+      openActionCount: 0,
+      nextReviewScheduledFor: null,
+    })
+  })
 })
