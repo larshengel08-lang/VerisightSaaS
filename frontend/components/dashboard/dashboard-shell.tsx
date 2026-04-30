@@ -291,11 +291,17 @@ function SidebarSection({
     <div className="space-y-2 px-2">
       <p className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#66758a]">{label}</p>
       {items.map((item) => {
+        const isActionCenterEntry = item.key === 'action_center'
+
         if (!item.href || item.disabled) {
           return (
             <div
               key={item.key}
-            className="rounded-xl border border-dashed border-white/8 px-4 py-3 text-sm text-[#66758a]"
+              className={`text-sm text-[#66758a] ${
+                isActionCenterEntry
+                  ? 'mt-4 rounded-2xl border border-dashed border-[#d4956a]/25 bg-white/[0.02] px-4 py-3'
+                  : 'rounded-xl border border-dashed border-white/8 px-4 py-3'
+              }`}
             >
               {item.label}
             </div>
@@ -305,19 +311,43 @@ function SidebarSection({
         const isActive = item.key === activeModule
 
         return (
-          <Link
+          <div
             key={item.key}
-            href={item.href}
-            onClick={onNavigate}
-            className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm transition-colors ${
-              isActive
-                ? 'bg-white/[0.08] text-[#f5f2eb]'
-                : 'text-[#c8d2dd] hover:bg-white/[0.04] hover:text-[#f5f2eb]'
-            }`}
+            className={isActionCenterEntry ? 'mt-4 border-t border-white/8 pt-4' : undefined}
           >
-            <span className="font-medium">{item.label}</span>
-            <span className={`h-2.5 w-2.5 rounded-full ${isActive ? 'bg-[#d4956a]' : 'bg-transparent'}`} />
-          </Link>
+            <Link
+              href={item.href}
+              onClick={onNavigate}
+              className={`flex items-center justify-between text-sm transition-colors ${
+                isActionCenterEntry
+                  ? isActive
+                    ? 'rounded-2xl border border-[#d4956a]/45 bg-[#d4956a]/12 px-4 py-3.5 text-[#f5f2eb] shadow-[0_0_0_1px_rgba(212,149,106,0.06)]'
+                    : 'rounded-2xl border border-white/12 bg-white/[0.02] px-4 py-3.5 text-[#e6ded2] hover:border-[#d4956a]/35 hover:bg-white/[0.04] hover:text-[#f5f2eb]'
+                  : isActive
+                    ? 'rounded-xl bg-white/[0.08] px-4 py-3 text-[#f5f2eb]'
+                    : 'rounded-xl px-4 py-3 text-[#c8d2dd] hover:bg-white/[0.04] hover:text-[#f5f2eb]'
+              }`}
+            >
+              <span className="font-medium">{item.label}</span>
+              <span
+                className={`${
+                  isActionCenterEntry
+                    ? 'inline-flex h-7 min-w-7 items-center justify-center rounded-full border text-[0.72rem] font-semibold'
+                    : 'h-2.5 w-2.5 rounded-full'
+                } ${
+                  isActionCenterEntry
+                    ? isActive
+                      ? 'border-[#d4956a]/55 bg-[#d4956a]/14 text-[#f0b387]'
+                      : 'border-white/12 bg-white/[0.03] text-[#8fa1b3]'
+                    : isActive
+                      ? 'bg-[#d4956a]'
+                      : 'bg-transparent'
+                }`}
+              >
+                {isActionCenterEntry ? '→' : null}
+              </span>
+            </Link>
+          </div>
         )
       })}
     </div>
