@@ -36,6 +36,14 @@ export interface ActionCenterRouteActionRecord {
   updatedAt: string
 }
 
+export interface ActionCenterRouteActionDraftInput {
+  primary_action_theme_key: ActionCenterManagerActionThemeKey
+  primary_action_text: string
+  primary_action_expected_effect: string
+  primary_action_status: ActionCenterRouteActionStatus
+  review_scheduled_for: string
+}
+
 const ACTION_STATUSES = new Set<ActionCenterRouteActionStatus>(['open', 'in_review', 'afgerond', 'gestopt'])
 const ACTION_SCOPE_TYPES = new Set<ActionCenterRouteActionWriteInput['route_scope_type']>(['department', 'item'])
 const THEME_LABELS = new Map(
@@ -56,7 +64,7 @@ function isIsoTimestamp(value: string | null | undefined) {
   const normalized = normalizeText(value)
   if (!normalized) return false
 
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})$/.test(normalized)) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(normalized)) {
     return false
   }
 
@@ -123,6 +131,39 @@ export function validateActionCenterRouteActionWriteInput(
     review_scheduled_for: reviewScheduledFor,
     created_at: createdAt,
     updated_at: updatedAt,
+  }
+}
+
+export function validateActionCenterRouteActionDraftInput(
+  input: Partial<ActionCenterRouteActionDraftInput> | null | undefined,
+): ActionCenterRouteActionDraftInput {
+  const themeKey = normalizeText(input?.primary_action_theme_key) as ActionCenterManagerActionThemeKey | null
+  const actionText = normalizeText(input?.primary_action_text)
+  const expectedEffect = normalizeText(input?.primary_action_expected_effect)
+  const status = normalizeText(input?.primary_action_status) as ActionCenterRouteActionStatus | null
+  const reviewScheduledFor = normalizeText(input?.review_scheduled_for)
+
+  if (
+    !themeKey ||
+    !THEME_LABELS.has(themeKey) ||
+    !actionText ||
+    !looksLikeActionCenterStep(actionText) ||
+    !expectedEffect ||
+    !looksLikeActionCenterExpectedEffect(expectedEffect) ||
+    !status ||
+    !ACTION_STATUSES.has(status) ||
+    !reviewScheduledFor ||
+    !isIsoDate(reviewScheduledFor)
+  ) {
+    throw new Error('Ongeldige route action input.')
+  }
+
+  return {
+    primary_action_theme_key: themeKey,
+    primary_action_text: actionText,
+    primary_action_expected_effect: expectedEffect,
+    primary_action_status: status,
+    review_scheduled_for: reviewScheduledFor,
   }
 }
 

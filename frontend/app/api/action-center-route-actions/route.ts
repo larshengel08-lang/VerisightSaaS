@@ -2,8 +2,12 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
-import { validateActionCenterRouteActionWriteInput } from '@/lib/action-center-route-actions'
+import {
+  validateActionCenterRouteActionDraftInput,
+  type ActionCenterRouteActionStatus,
+} from '@/lib/action-center-route-actions'
 import { resolveRouteActionWriteIdentity } from '@/lib/action-center-route-write-access'
+import type { ActionCenterManagerActionThemeKey } from '@/lib/pilot-learning'
 import type { ActionCenterWorkspaceMember } from '@/lib/suite-access'
 
 type RespondentDepartmentRow = {
@@ -37,11 +41,12 @@ function parseRouteActionRequestInput(input: RouteActionRequestBody | null) {
   const routeScopeType = input?.route_scope_type
   const routeScopeValue = normalizeText(input?.route_scope_value)
   const managerUserId = normalizeText(input?.manager_user_id)
-  const themeKey = normalizeText(input?.primary_action_theme_key)
+  const themeKey = normalizeText(input?.primary_action_theme_key) as ActionCenterManagerActionThemeKey | null
   const actionText = normalizeText(input?.primary_action_text)
   const expectedEffect = normalizeText(input?.primary_action_expected_effect)
   const reviewScheduledFor = normalizeText(input?.review_scheduled_for)
-  const status = normalizeText(input?.primary_action_status) ?? 'open'
+  const status =
+    (normalizeText(input?.primary_action_status) as ActionCenterRouteActionStatus | null) ?? 'open'
 
   if (
     !campaignId ||
@@ -175,6 +180,13 @@ export async function POST(request: Request) {
   let parsed
   try {
     parsed = parseRouteActionRequestInput(body)
+    validateActionCenterRouteActionDraftInput({
+      primary_action_theme_key: parsed.primary_action_theme_key,
+      primary_action_text: parsed.primary_action_text,
+      primary_action_expected_effect: parsed.primary_action_expected_effect,
+      primary_action_status: parsed.primary_action_status,
+      review_scheduled_for: parsed.review_scheduled_for,
+    })
   } catch {
     return NextResponse.json({ detail: 'Ongeldige route action input.' }, { status: 400 })
   }
@@ -243,29 +255,6 @@ export async function POST(request: Request) {
         ? 403
         : 400
     return NextResponse.json({ detail }, { status })
-  }
-
-  const now = new Date().toISOString()
-
-  try {
-    validateActionCenterRouteActionWriteInput({
-      id: '00000000-0000-0000-0000-000000000000',
-      route_id: identity.route_id,
-      campaign_id: identity.campaign_id,
-      route_scope_type: identity.route_scope_type,
-      route_scope_value: identity.route_scope_value,
-      owner_name: identity.owner_name,
-      owner_assigned_at: identity.owner_assigned_at,
-      primary_action_theme_key: parsed.primary_action_theme_key,
-      primary_action_text: parsed.primary_action_text,
-      primary_action_expected_effect: parsed.primary_action_expected_effect,
-      primary_action_status: parsed.primary_action_status,
-      review_scheduled_for: parsed.review_scheduled_for,
-      created_at: now,
-      updated_at: now,
-    })
-  } catch {
-    return NextResponse.json({ detail: 'Ongeldige route action input.' }, { status: 400 })
   }
 
   const adminClient = createAdminClient()

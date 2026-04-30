@@ -316,11 +316,13 @@ export function summarizeActionCenterRouteActions(
   }
 
   const hasReviewPressure = actions.some(
-    (action) =>
-      action.status === 'in_review' ||
-      (action.status === 'open' &&
-        Boolean(action.reviewScheduledFor) &&
-        action.reviewScheduledFor <= today),
+    (action) => {
+      const reviewScheduledFor = normalizeText(action.reviewScheduledFor)
+      return (
+        action.status === 'in_review' ||
+        (action.status === 'open' && reviewScheduledFor !== null && reviewScheduledFor <= today)
+      )
+    },
   )
 
   if (hasReviewPressure) {

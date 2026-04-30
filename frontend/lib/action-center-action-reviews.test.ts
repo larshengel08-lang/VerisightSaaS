@@ -28,6 +28,22 @@ describe('action center action reviews', () => {
     })
   })
 
+  it('accepts postgres microsecond timestamps from persisted action reviews', async () => {
+    const { projectActionCenterActionReview } = await import('./action-center-action-reviews') as {
+      projectActionCenterActionReview: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      projectActionCenterActionReview(
+        buildActionReviewInput({
+          reviewed_at: '2026-05-12T09:30:00.654321+00:00',
+        }),
+      ),
+    ).toMatchObject({
+      reviewedAt: '2026-05-12T09:30:00.654321+00:00',
+    })
+  })
+
   it('builds a compact action outcome from action outcome plus follow-up note', async () => {
     const { buildCompactActionOutcome } = await import('./action-center-action-reviews') as {
       buildCompactActionOutcome: (input: Record<string, unknown>) => string

@@ -38,7 +38,7 @@ function isIsoTimestamp(value: string | null | undefined) {
   const normalized = normalizeText(value)
   if (!normalized) return false
 
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(?:Z|[+-]\d{2}:\d{2})$/.test(normalized)) {
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$/.test(normalized)) {
     return false
   }
 

@@ -22,6 +22,7 @@ import {
   projectActionCenterRoute,
   summarizeActionCenterRouteActions,
 } from '@/lib/action-center-route-contract'
+import type { ActionCenterRouteContract } from '@/lib/action-center-route-contract'
 import { buildSuiteTelemetryEvent, type SuiteTelemetryEvent } from '@/lib/telemetry/events'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
 
@@ -368,6 +369,10 @@ function countRouteActionsNeedingReview(
   ).length
 }
 
+function getPreviewCoreRouteStatus(status: ActionCenterPreviewStatus): ActionCenterRouteContract['routeStatus'] {
+  return status === 'reviewbaar' ? 'in-uitvoering' : status
+}
+
 export function finalizeActionCenterPreviewItem(
   item: ActionCenterPreviewItemDraft,
   options: { recomputeCoreSemantics?: boolean } = {},
@@ -382,7 +387,7 @@ export function finalizeActionCenterPreviewItem(
     projectActionCenterPreviewCoreSemantics({
       id: item.id,
       title: item.title,
-      status: item.status,
+      status: getPreviewCoreRouteStatus(item.status),
       ownerName: item.ownerName,
       reviewDate: item.reviewDate,
       expectedEffect: reuseExistingRouteTruth ? (existingRoute?.expectedEffect ?? null) : item.expectedEffect,

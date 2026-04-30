@@ -2,7 +2,10 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
-import { validateActionCenterActionReviewInput } from '@/lib/action-center-action-reviews'
+import {
+  validateActionCenterActionReviewInput,
+  type ActionCenterActionOutcome,
+} from '@/lib/action-center-action-reviews'
 import { resolveActionReviewWriteIdentity } from '@/lib/action-center-route-write-access'
 import type { ActionCenterWorkspaceMember } from '@/lib/suite-access'
 
@@ -23,7 +26,7 @@ function parseActionReviewRequestInput(input: ActionReviewRequestBody | null) {
   const actionId = normalizeText(input?.action_id)
   const reviewedAt = normalizeText(input?.reviewed_at)
   const observation = normalizeText(input?.observation)
-  const actionOutcome = normalizeText(input?.action_outcome)
+  const actionOutcome = normalizeText(input?.action_outcome) as ActionCenterActionOutcome | null
   const followUpNote = normalizeText(input?.follow_up_note)
 
   if (!actionId || !reviewedAt || !observation || !actionOutcome) {
@@ -60,6 +63,19 @@ function findWritableMembership(
         membership.can_update,
     ) ?? null
   )
+}
+
+function getPersistedActionStatusFromOutcome(outcome: string) {
+  switch (outcome) {
+    case 'effect-zichtbaar':
+      return 'afgerond'
+    case 'stoppen':
+      return 'gestopt'
+    case 'bijsturen-nodig':
+    case 'nog-te-vroeg':
+    default:
+      return 'in_review'
+  }
 }
 
 export async function POST(request: Request) {
@@ -142,6 +158,19 @@ export async function POST(request: Request) {
 
   if (error || !data) {
     return NextResponse.json({ detail: error?.message ?? 'Route action review opslaan mislukt.' }, { status: 500 })
+  }
+
+  const { error: updateError } = await adminClient
+    .from('action_center_route_actions')
+    .update({
+      primary_action_status: getPersistedActionStatusFromOutcome(parsed.action_outcome),
+      updated_by: user.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', parsed.action_id)
+
+  if (updateError) {
+    return NextResponse.json({ detail: updateError.message }, { status: 500 })
   }
 
   return NextResponse.json({ review: data }, { status: 200 })

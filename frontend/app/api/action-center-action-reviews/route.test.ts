@@ -49,6 +49,13 @@ function createInsertQuery(result: { data: unknown; error: unknown }) {
   }
 }
 
+function createUpdateQuery(result: { error: unknown }) {
+  return {
+    update: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockResolvedValue(result),
+  }
+}
+
 describe('action center action reviews route', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -198,19 +205,26 @@ describe('action center action reviews route', () => {
       },
       error: null,
     })
+    const updateQuery = createUpdateQuery({ error: null })
+    let actionLookupCount = 0
 
     mockAdminFrom.mockImplementation((table: string) => {
       if (table === 'action_center_route_actions') {
-        return createActionQuery({
-          data: {
-            id: 'action-1',
-            org_id: 'org-1',
-            route_scope_type: 'department',
-            route_scope_value: 'org-1::department::operations',
-            manager_user_id: 'manager-1',
-          },
-          error: null,
-        })
+        actionLookupCount += 1
+        if (actionLookupCount === 1) {
+          return createActionQuery({
+            data: {
+              id: 'action-1',
+              org_id: 'org-1',
+              route_scope_type: 'department',
+              route_scope_value: 'org-1::department::operations',
+              manager_user_id: 'manager-1',
+            },
+            error: null,
+          })
+        }
+
+        return updateQuery
       }
 
       if (table === 'action_center_action_reviews') {
@@ -244,6 +258,13 @@ describe('action center action reviews route', () => {
       created_by: 'manager-1',
       updated_by: 'manager-1',
     })
+    expect(updateQuery.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        primary_action_status: 'in_review',
+        updated_by: 'manager-1',
+      }),
+    )
+    expect(updateQuery.eq).toHaveBeenCalledWith('id', 'action-1')
 
     const payload = await response.json()
     expect(payload.review).toMatchObject({

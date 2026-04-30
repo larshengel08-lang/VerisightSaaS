@@ -40,6 +40,47 @@ describe('action center route actions', () => {
     })
   })
 
+  it('accepts postgres microsecond timestamps from persisted manager assignments and action rows', async () => {
+    const { validateActionCenterRouteActionWriteInput } = await import('./action-center-route-actions') as {
+      validateActionCenterRouteActionWriteInput: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      validateActionCenterRouteActionWriteInput(
+        buildCanonicalOpenActionInput({
+          owner_assigned_at: '2026-04-21T08:00:00.860788+00:00',
+          created_at: '2026-04-21T09:00:00.123456+00:00',
+          updated_at: '2026-04-21T09:00:00.123456+00:00',
+        }),
+      ),
+    ).toMatchObject({
+      owner_assigned_at: '2026-04-21T08:00:00.860788+00:00',
+      created_at: '2026-04-21T09:00:00.123456+00:00',
+      updated_at: '2026-04-21T09:00:00.123456+00:00',
+    })
+  })
+
+  it('accepts a bounded route action draft without requiring server-derived identity fields', async () => {
+    const { validateActionCenterRouteActionDraftInput } = await import('./action-center-route-actions') as {
+      validateActionCenterRouteActionDraftInput: (input: Record<string, unknown>) => Record<string, unknown>
+    }
+
+    expect(
+      validateActionCenterRouteActionDraftInput({
+        primary_action_theme_key: 'leadership',
+        primary_action_text: 'Plan deze week een gericht teamgesprek over leiderschapsfeedback.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet zichtbaar zijn of leiderschapsfrictie kleiner wordt in dit team.',
+        primary_action_status: 'open',
+        review_scheduled_for: '2026-05-15',
+      }),
+    ).toMatchObject({
+      primary_action_theme_key: 'leadership',
+      primary_action_status: 'open',
+      review_scheduled_for: '2026-05-15',
+    })
+  })
+
   it.each([
     {
       label: 'the primary action theme is missing',

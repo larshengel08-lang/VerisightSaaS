@@ -256,7 +256,7 @@ describe('action center route actions route', () => {
     const insertQuery = createInsertQuery({
       data: {
         id: 'action-1',
-        route_id: 'campaign-1::department::org-1::department::operations',
+        route_id: 'campaign-1::org-1::department::operations',
         campaign_id: 'campaign-1',
         org_id: 'org-1',
         route_scope_type: 'department',
@@ -335,7 +335,7 @@ describe('action center route actions route', () => {
         manager_response_id: 'response-1',
         campaign_id: 'campaign-1',
         org_id: 'org-1',
-        route_id: 'campaign-1::department::org-1::department::operations',
+        route_id: 'campaign-1::org-1::department::operations',
         route_scope_type: 'department',
         route_scope_value: 'org-1::department::operations',
         manager_user_id: 'manager-1',
@@ -350,7 +350,7 @@ describe('action center route actions route', () => {
     const payload = await response.json()
     expect(payload.action).toMatchObject({
       org_id: 'org-1',
-      route_id: 'campaign-1::department::org-1::department::operations',
+      route_id: 'campaign-1::org-1::department::operations',
       owner_name: 'Manager Operations',
       owner_assigned_at: '2026-04-01T08:00:00.000Z',
     })
@@ -371,7 +371,7 @@ describe('action center route actions route', () => {
       data: {
         id: 'action-2',
         manager_response_id: 'response-2',
-        route_id: 'campaign-1::department::org-1::department::operations',
+        route_id: 'campaign-1::org-1::department::operations',
         campaign_id: 'campaign-1',
         org_id: 'org-1',
         route_scope_type: 'department',

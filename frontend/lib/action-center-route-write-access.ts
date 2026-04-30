@@ -2,6 +2,7 @@ import {
   buildCampaignItemScopeValue,
   buildDepartmentScopeValue,
 } from './action-center-manager-responses'
+import { buildActionCenterRouteId as buildCanonicalActionCenterRouteId } from './action-center-route-contract'
 import type { ActionCenterWorkspaceMember } from './suite-access'
 
 export type ActionCenterWritableRouteScopeType = 'department' | 'item'
@@ -99,14 +100,6 @@ function isWritableManagerAssignment(
   )
 }
 
-export function buildActionCenterRouteId(
-  campaignId: string,
-  routeScopeType: ActionCenterWritableRouteScopeType,
-  routeScopeValue: string,
-) {
-  return `${campaignId}::${routeScopeType}::${routeScopeValue}`
-}
-
 export function resolveRouteActionWriteIdentity(args: {
   submitted: SubmittedRouteIdentity
   routeContainer: RouteContainerTruth | null
@@ -182,7 +175,11 @@ export function resolveRouteActionWriteIdentity(args: {
     throw new Error('Alleen de toegewezen manager kan acties voor deze route schrijven.')
   }
 
-  const ownerAssignedAt = normalizeText(assignment?.created_at)
+  if (!assignment) {
+    throw new Error('Geen geldige manager-toewijzing gevonden voor deze route.')
+  }
+
+  const ownerAssignedAt = normalizeText(assignment.created_at)
   if (!ownerAssignedAt) {
     throw new Error('Manager-toewijzing mist een bewezen assignment-tijdstip.')
   }
@@ -191,11 +188,7 @@ export function resolveRouteActionWriteIdentity(args: {
     manager_response_id: args.routeContainer.id,
     campaign_id: submittedCampaignId,
     org_id: args.campaignOrgId,
-    route_id: buildActionCenterRouteId(
-      submittedCampaignId,
-      args.submitted.route_scope_type,
-      submittedScopeValue,
-    ),
+    route_id: buildCanonicalActionCenterRouteId(submittedCampaignId, submittedScopeValue),
     route_scope_type: args.submitted.route_scope_type,
     route_scope_value: submittedScopeValue,
     manager_user_id: persistedManagerUserId,

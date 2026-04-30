@@ -451,9 +451,12 @@ export default async function ActionCenterPage({
       managerAssignmentEndpoint="/api/action-center/workspace-members"
       canRespondToRequests={context.canUpdateActionCenter}
       managerResponseEndpoint="/api/action-center-manager-responses"
-      currentUserId={user.id}
-      workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
-      workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}
+        routeActionEndpoint="/api/action-center-route-actions"
+        actionReviewEndpoint="/api/action-center-action-reviews"
+        currentUserId={user.id}
+        managerOnly={context.managerOnly}
+        workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
+        workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}
       workspaceName={getDisplayName(user.email)}
       workspaceSubtitle={workspaceSubtitle}
       overviewSummary={summary}
