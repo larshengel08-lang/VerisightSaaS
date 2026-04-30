@@ -318,7 +318,7 @@ function State2({ goTo }: { goTo: (v: DemoView) => void }) {
   return (
     <div style={{ animation: 'slideRightFade 250ms cubic-bezier(.16,1,.3,1)' }}>
       <div style={{
-        background: C.paperWarm,
+        background: C.paper,
         border: `1px solid ${C.rule}`,
         borderLeft: `6px solid ${C.amber}`,
         borderRadius: CARD_RADIUS,
@@ -338,8 +338,7 @@ function State2({ goTo }: { goTo: (v: DemoView) => void }) {
                   <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
                     <span style={{
                       color: C.ink, fontFamily: FN,
-                      fontSize: isGreen ? 15 : 13,
-                      fontWeight: isGreen ? 700 : 500,
+                      fontSize: 14, fontWeight: 600,
                     }}>{f.label}</span>
                     <span style={{
                       color: isGreen ? C.teal : C.amber,
@@ -347,7 +346,7 @@ function State2({ goTo }: { goTo: (v: DemoView) => void }) {
                       fontVariantNumeric: 'tabular-nums',
                     }}>{f.pct}%</span>
                   </div>
-                  <div style={{ background: C.ruleSoft, borderRadius: 99, height: isGreen ? 8 : 5, overflow: 'hidden' }}>
+                  <div style={{ background: C.ruleSoft, borderRadius: 99, height: 6, overflow: 'hidden' }}>
                     <div style={{
                       background: isGreen
                         ? `linear-gradient(90deg, ${C.tealDeep} 0%, ${C.teal} 100%)`
@@ -442,30 +441,20 @@ function State3({ goTo }: { goTo: (v: DemoView) => void }) {
   )
 }
 
-// ─── State 4: Review — zelfde kaartgrootte als State 3 ───────────────────────
+// ─── State 4: Review — dashboard review-actie checklist ──────────────────────
 function State4({ goTo }: { goTo: (v: DemoView) => void }) {
-  const items: { n: string; title: string; body: string }[] = [
-    {
-      n: '01', title: 'Aanleiding',
-      body: 'Patroon na maand zes — te consistent voor toeval, stevig genoeg voor bestuurlijke toetsing.',
-    },
-    {
-      n: '02', title: 'Vraagstelling',
-      body: 'Of groeiperspectief de terugkerende factor is in Operations — niet incidenteel.',
-    },
-    {
-      n: '03', title: 'Eerste stap',
-      body: 'Drie vertrekcases naast actuele teamfeedback. Suzanne Meijer en Bas van Dijk.',
-    },
-    {
-      n: '04', title: 'Volgende check',
-      body: 'Binnen zeven dagen. Kort MT-moment, daarna besluit over vervolgstap.',
-    },
+  const items: { done: boolean; title: string; body: string }[] = [
+    { done: true,  title: 'Exitdata geanalyseerd',       body: 'Patroon na maand zes bevestigd in Q2-data Operations.' },
+    { done: true,  title: 'Gesprekken beoordeeld',        body: 'Drie vertrekcases sluiten aan op bevinding groeipad.' },
+    { done: true,  title: 'MT-toelichting voorbereid',    body: 'Suzanne Meijer — bespreking Do 09:30 MT Operations.' },
+    { done: false, title: 'Besluit vastleggen',           body: 'Vervolgstap bepalen en toewijzen aan eigenaar.' },
   ]
+  const doneCount = items.filter(i => i.done).length
+
   return (
     <div style={{ animation: 'scaleIn 250ms cubic-bezier(.16,1,.3,1)' }}>
       <div style={{
-        background: C.paperWarm,
+        background: C.paper,
         border: `1px solid ${C.rule}`,
         borderLeft: `6px solid ${C.teal}`,
         borderRadius: CARD_RADIUS,
@@ -491,28 +480,77 @@ function State4({ goTo }: { goTo: (v: DemoView) => void }) {
           </span>
         </div>
 
-        {/* Numbered checklist */}
         <div style={{ padding: PAD }}>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {items.map((item, i) => (
-              <div key={item.n} style={{
-                borderBottom: i < items.length - 1 ? `1px solid ${C.rule}` : 'none',
-                display: 'grid', gap: 16,
-                gridTemplateColumns: 'auto minmax(0,1fr)',
-                padding: '17px 0',
-              }}>
-                <span style={{
-                  color: C.teal, fontFamily: FF, fontSize: '1.65rem',
-                  fontWeight: 400, letterSpacing: '-.04em', lineHeight: 1,
-                  opacity: .65, paddingTop: 2,
-                }}>{item.n}</span>
-                <div>
-                  <p style={{ color: C.ink, fontFamily: FN, fontSize: 13.5, fontWeight: 700, lineHeight: 1.3, margin: '0 0 5px' }}>{item.title}</p>
-                  <p style={{ color: C.text, fontFamily: FN, fontSize: 13, lineHeight: 1.65, margin: 0 }}>{item.body}</p>
-                </div>
-              </div>
-            ))}
+
+          {/* Progress bar */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
+              <Label>Voortgang review</Label>
+              <span style={{ color: C.teal, fontFamily: FN, fontSize: 11, fontWeight: 700 }}>
+                {doneCount}/{items.length} stappen
+              </span>
+            </div>
+            <div style={{ background: C.ruleSoft, borderRadius: 99, height: 6, overflow: 'hidden' }}>
+              <div style={{
+                background: `linear-gradient(90deg, ${C.tealDeep} 0%, ${C.teal} 100%)`,
+                borderRadius: 99, height: '100%',
+                width: `${(doneCount / items.length) * 100}%`,
+                animation: 'scaleXIn .85s cubic-bezier(.4,0,0,1) both',
+                transformOrigin: 'left',
+              }} />
+            </div>
           </div>
+
+          {/* Checklist */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {items.map((item, i) => {
+              const isOpen = !item.done
+              return (
+                <div key={item.title} style={{
+                  alignItems: 'flex-start',
+                  background: isOpen ? C.tealSoft : 'transparent',
+                  border: isOpen ? `1px solid ${C.tealLine}` : 'none',
+                  borderBottom: !isOpen && i < items.length - 1 ? `1px solid ${C.ruleSoft}` : undefined,
+                  borderRadius: isOpen ? INSET_RADIUS : 0,
+                  display: 'flex', gap: 12,
+                  marginBottom: isOpen ? 0 : undefined,
+                  marginTop: isOpen ? 4 : 0,
+                  padding: isOpen ? '12px 14px' : '10px 0',
+                }}>
+                  {/* Checkbox */}
+                  <div style={{
+                    alignItems: 'center',
+                    background: item.done ? C.teal : 'transparent',
+                    border: `2px solid ${item.done ? C.teal : C.rule}`,
+                    borderRadius: 5, display: 'flex', flexShrink: 0,
+                    height: 18, justifyContent: 'center',
+                    marginTop: 1, width: 18,
+                  }}>
+                    {item.done && (
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
+                        <path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                  {/* Text */}
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{
+                      color: item.done ? C.muted : C.ink,
+                      fontFamily: FN, fontSize: 13.5, fontWeight: item.done ? 400 : 700,
+                      lineHeight: 1.3, margin: '0 0 3px',
+                      textDecoration: item.done ? 'line-through' : 'none',
+                      textDecorationColor: C.rule,
+                    }}>{item.title}</p>
+                    <p style={{
+                      color: item.done ? C.muted : C.text,
+                      fontFamily: FN, fontSize: 12.5, lineHeight: 1.55, margin: 0,
+                    }}>{item.body}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
         </div>
       </div>
     </div>
