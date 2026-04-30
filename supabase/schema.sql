@@ -649,6 +649,31 @@ create table if not exists public.action_center_review_decisions (
   updated_at timestamptz default now()
 );
 
+create table if not exists public.action_center_manager_responses (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid references public.campaigns(id) on delete cascade not null,
+  org_id uuid references public.organizations(id) on delete cascade not null,
+  route_scope_type text not null
+    check (route_scope_type in ('department', 'item')),
+  route_scope_value text not null,
+  manager_user_id uuid references auth.users(id) on delete cascade not null,
+  response_type text not null
+    check (response_type in ('confirm', 'sharpen', 'schedule', 'watch')),
+  response_note text not null,
+  review_scheduled_for date not null,
+  primary_action_theme_key text
+    check (primary_action_theme_key is null or primary_action_theme_key in ('leadership', 'culture', 'growth', 'compensation', 'workload', 'role_clarity')),
+  primary_action_text text,
+  primary_action_expected_effect text,
+  primary_action_status text
+    check (primary_action_status is null or primary_action_status in ('active', 'completed', 'abandoned')),
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique (campaign_id, route_scope_type, route_scope_value)
+);
+
 -- ============================================================
 -- INDEXES
 -- ============================================================
@@ -670,6 +695,8 @@ create index if not exists idx_learning_checkpoints_dossier on public.pilot_lear
 create index if not exists idx_action_center_review_decisions_route on public.action_center_review_decisions(route_source_type, route_source_id);
 create index if not exists idx_action_center_review_decisions_checkpoint on public.action_center_review_decisions(checkpoint_id);
 create index if not exists idx_action_center_review_decisions_recorded_at on public.action_center_review_decisions(decision_recorded_at desc);
+create index if not exists idx_action_center_manager_responses_route on public.action_center_manager_responses(campaign_id, route_scope_type, route_scope_value);
+create index if not exists idx_action_center_manager_responses_manager on public.action_center_manager_responses(manager_user_id);
 create index if not exists idx_delivery_records_org on public.campaign_delivery_records(organization_id);
 create index if not exists idx_delivery_records_contact_request on public.campaign_delivery_records(contact_request_id);
 create index if not exists idx_delivery_records_lifecycle on public.campaign_delivery_records(lifecycle_stage);
@@ -692,6 +719,7 @@ alter table public.campaign_delivery_checkpoints enable row level security;
 alter table public.pilot_learning_dossiers enable row level security;
 alter table public.pilot_learning_checkpoints enable row level security;
 alter table public.action_center_review_decisions enable row level security;
+alter table public.action_center_manager_responses enable row level security;
 
 -- ── Hulpfuncties ─────────────────────────────────────────────────────────────
 
@@ -1079,6 +1107,72 @@ create policy "verisight_admins_can_update_action_center_review_decisions"
   on public.action_center_review_decisions for update
   using (public.is_verisight_admin_user())
   with check (public.is_verisight_admin_user());
+
+drop policy if exists "managers_can_select_action_center_manager_responses" on public.action_center_manager_responses;
+drop policy if exists "managers_can_insert_action_center_manager_responses" on public.action_center_manager_responses;
+drop policy if exists "managers_can_update_action_center_manager_responses" on public.action_center_manager_responses;
+drop policy if exists "admins_can_select_action_center_manager_responses" on public.action_center_manager_responses;
+
+create policy "managers_can_select_action_center_manager_responses"
+  on public.action_center_manager_responses for select
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_manager_responses.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_manager_responses.route_scope_type
+        and m.scope_value = action_center_manager_responses.route_scope_value
+        and m.can_view
+    )
+  );
+
+create policy "managers_can_insert_action_center_manager_responses"
+  on public.action_center_manager_responses for insert
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_manager_responses.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_manager_responses.route_scope_type
+        and m.scope_value = action_center_manager_responses.route_scope_value
+        and m.can_update
+    )
+  );
+
+create policy "managers_can_update_action_center_manager_responses"
+  on public.action_center_manager_responses for update
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_manager_responses.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_manager_responses.route_scope_type
+        and m.scope_value = action_center_manager_responses.route_scope_value
+        and m.can_update
+    )
+  )
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_manager_responses.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_manager_responses.route_scope_type
+        and m.scope_value = action_center_manager_responses.route_scope_value
+        and m.can_update
+    )
+  );
 
 -- ============================================================
 -- PROFILES: is_verisight_admin per gebruiker

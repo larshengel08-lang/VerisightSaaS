@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
 import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
+import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   isScopeVisibleToActionCenterContext,
@@ -11,6 +12,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import type {
   ActionCenterReviewDecision,
+  ActionCenterManagerResponse,
   PilotLearningCheckpoint,
   PilotLearningDossier,
 } from '@/lib/pilot-learning'
@@ -147,7 +149,12 @@ export default async function ActionCenterPage({
 
   const respondentsWithDepartments = (respondentsWithDepartmentsRaw ?? []) as RespondentDepartmentRow[]
 
-  const [{ data: deliveryCheckpointsRaw }, { data: learningCheckpointsRaw }, { data: reviewDecisionsRaw }] = await Promise.all([
+  const [
+    { data: deliveryCheckpointsRaw },
+    { data: learningCheckpointsRaw },
+    { data: reviewDecisionsRaw },
+    { data: managerResponsesRaw },
+  ] = await Promise.all([
     deliveryRecords.length > 0
       ? dataClient
           .from('campaign_delivery_checkpoints')
@@ -173,11 +180,18 @@ export default async function ActionCenterPage({
           .eq('route_source_type', 'campaign')
           .in('route_source_id', campaignIds)
       : Promise.resolve({ data: [] }),
+    campaignIds.length > 0
+      ? dataClient
+          .from('action_center_manager_responses')
+          .select('*')
+          .in('campaign_id', campaignIds)
+      : Promise.resolve({ data: [] }),
   ])
 
   const deliveryCheckpoints = (deliveryCheckpointsRaw ?? []) as CampaignDeliveryCheckpoint[]
   const learningCheckpoints = (learningCheckpointsRaw ?? []) as PilotLearningCheckpoint[]
   const reviewDecisions = (reviewDecisionsRaw ?? []) as ActionCenterReviewDecision[]
+  const managerResponses = (managerResponsesRaw ?? []) as ActionCenterManagerResponse[]
 
   const organizationById = new Map(organizations.map((organization) => [organization.id, organization]))
   const roleByOrgId = orgMemberships.reduce<Record<string, 'owner' | 'member' | 'viewer'>>((acc, membership) => {
@@ -204,6 +218,12 @@ export default async function ActionCenterPage({
     acc[record.route_source_id].push(record)
     return acc
   }, {})
+  const managerResponseByRouteId = new Map(
+    managerResponses.map((response) => [
+      buildActionCenterRouteId(response.campaign_id, response.route_scope_value),
+      response,
+    ]),
+  )
   const respondentDepartmentsByCampaign = respondentsWithDepartments.reduce<Record<string, string[]>>((acc, row) => {
     const departmentLabel = normalizeDepartmentLabel(row.department)
     if (!departmentLabel) return acc
@@ -242,6 +262,7 @@ export default async function ActionCenterPage({
         const deliveryRecord = deliveryRecordByCampaignId.get(campaign.id) ?? null
         const learningDossier = learningDossierByCampaignId.get(campaign.id) ?? null
         const assignment = getManagerAssignment(managerWorkspaceRows, campaign.organization_id, scope.scopeValue)
+        const routeId = buildActionCenterRouteId(campaign.id, scope.scopeValue)
 
         return {
           campaign,
@@ -263,6 +284,7 @@ export default async function ActionCenterPage({
           deliveryCheckpoints: deliveryRecord ? (deliveryCheckpointMap[deliveryRecord.id] ?? []) : [],
           learningDossier,
           learningCheckpoints: learningDossier ? (learningCheckpointMap[learningDossier.id] ?? []) : [],
+          managerResponse: managerResponseByRouteId.get(routeId) ?? null,
           reviewDecisions: reviewDecisionMap[campaign.id] ?? [],
         }
       })
@@ -284,8 +306,14 @@ export default async function ActionCenterPage({
       ]),
   ).values()].sort((left, right) => left.label.localeCompare(right.label))
   const itemHrefs = context.canViewInsights
-    ? Object.fromEntries(campaigns.map((campaign) => [campaign.id, `/campaigns/${campaign.id}`]))
+    ? Object.fromEntries(items.map((item) => [item.id, `/campaigns/${item.coreSemantics.route.campaignId}`]))
     : {}
+  const initialSelectedItemId =
+    focusItemId
+      ? (items.find((item) => item.id === focusItemId)?.id ??
+        items.find((item) => item.coreSemantics.route.campaignId === focusItemId)?.id ??
+        null)
+      : null
   const workspaceSubtitle =
     summary.productCount > 0
       ? `Live opvolging over ${summary.productCount} product${summary.productCount === 1 ? '' : 'en'}`
@@ -331,13 +359,16 @@ export default async function ActionCenterPage({
   return (
     <ActionCenterPreview
       initialItems={items}
-      initialSelectedItemId={focusItemId}
+      initialSelectedItemId={initialSelectedItemId}
       initialView="overview"
       fallbackOwnerName={getDisplayName(user.email)}
       ownerOptions={ownerOptions}
       managerOptions={managerOptions}
       canAssignManagers={context.canManageActionCenterAssignments}
       managerAssignmentEndpoint="/api/action-center/workspace-members"
+      canRespondToRequests={context.canUpdateActionCenter}
+      managerResponseEndpoint="/api/action-center-manager-responses"
+      currentUserId={user.id}
       workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
       workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}
       workspaceName={getDisplayName(user.email)}

@@ -6,7 +6,11 @@ import {
 import type { LiveActionCenterCampaignContext } from './action-center-live'
 import type { Campaign, CampaignStats } from '@/lib/types'
 import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
-import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
+import type {
+  ActionCenterManagerResponse,
+  PilotLearningCheckpoint,
+  PilotLearningDossier,
+} from '@/lib/pilot-learning'
 
 function buildCampaign(overrides: Partial<Campaign> = {}): Campaign {
   return {
@@ -119,6 +123,7 @@ function buildContext(args: {
   stats?: CampaignStats | null
   assignedManager?: LiveActionCenterCampaignContext['assignedManager']
   learningCheckpoints?: PilotLearningCheckpoint[]
+  managerResponse?: ActionCenterManagerResponse | null
 } = {}): LiveActionCenterCampaignContext {
   return {
     campaign: buildCampaign(),
@@ -134,6 +139,7 @@ function buildContext(args: {
     deliveryCheckpoints: [],
     learningDossier: args.dossier ?? buildDossier(),
     learningCheckpoints: args.learningCheckpoints ?? [],
+    managerResponse: args.managerResponse ?? null,
   }
 }
 
@@ -205,6 +211,118 @@ describe('action center route contract', () => {
       entryStage: 'active',
       routeOpenedAt: '2026-04-20T09:00:00.000Z',
       routeStatus: 'te-bespreken',
+    })
+  })
+
+  it('projects an HR-opened route from assignment-only truth as open-verzoek', () => {
+    const context = buildContext({
+      assignedManager: {
+        userId: 'manager-1',
+        displayName: 'Manager Operations',
+        assignedAt: '2026-04-21T08:00:00.000Z',
+      },
+      dossier: buildDossier({
+        first_action_taken: null,
+        expected_first_value: null,
+        review_moment: null,
+      }),
+    })
+
+    expect(projectActionCenterRoute(context)).toMatchObject({
+      entryStage: 'active',
+      routeOpenedAt: '2026-04-21T08:00:00.000Z',
+      owner: 'Manager Operations',
+      ownerAssignedAt: '2026-04-21T08:00:00.000Z',
+      routeStatus: 'open-verzoek',
+      reviewScheduledFor: null,
+      intervention: null,
+    })
+  })
+
+  it('uses a bounded manager response as follow-through truth before any primary action exists', () => {
+    const context = buildContext({
+      assignedManager: {
+        userId: 'manager-1',
+        displayName: 'Manager Operations',
+        assignedAt: '2026-04-21T08:00:00.000Z',
+      },
+      deliveryRecord: buildDeliveryRecord({
+        first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+      }),
+      dossier: buildDossier({
+        first_action_taken: null,
+        expected_first_value: null,
+        review_moment: null,
+      }),
+      managerResponse: {
+        id: 'response-1',
+        campaign_id: 'campaign-exit',
+        org_id: 'org-1',
+        route_scope_type: 'department',
+        route_scope_value: 'operations',
+        manager_user_id: 'manager-1',
+        response_type: 'watch',
+        response_note: 'Eerst volgen in het bestaande teamoverleg voordat we een lokale interventie kiezen.',
+        review_scheduled_for: '2026-05-12',
+        primary_action_theme_key: null,
+        primary_action_text: null,
+        primary_action_expected_effect: null,
+        primary_action_status: null,
+        created_by: 'manager-1',
+        updated_by: 'manager-1',
+        created_at: '2026-04-21T09:00:00.000Z',
+        updated_at: '2026-04-21T09:00:00.000Z',
+      },
+    })
+
+    expect(projectActionCenterRoute(context)).toMatchObject({
+      routeStatus: 'te-bespreken',
+      reviewScheduledFor: '2026-05-12',
+      intervention: null,
+      expectedEffect: null,
+    })
+  })
+
+  it('lets one primary manager action activate the route into in-uitvoering', () => {
+    const context = buildContext({
+      assignedManager: {
+        userId: 'manager-1',
+        displayName: 'Manager Operations',
+        assignedAt: '2026-04-21T08:00:00.000Z',
+      },
+      dossier: buildDossier({
+        first_action_taken: null,
+        expected_first_value: null,
+        review_moment: null,
+      }),
+      managerResponse: {
+        id: 'response-2',
+        campaign_id: 'campaign-exit',
+        org_id: 'org-1',
+        route_scope_type: 'department',
+        route_scope_value: 'operations',
+        manager_user_id: 'manager-1',
+        response_type: 'confirm',
+        response_note: 'We zetten dit om naar een eerste lokale managementstap.',
+        review_scheduled_for: '2026-05-12',
+        primary_action_theme_key: 'leadership',
+        primary_action_text: 'Plan deze week een teamgesprek met de leidinggevende over feedbackritme.',
+        primary_action_expected_effect:
+          'Binnen twee weken moet zichtbaar zijn of de feedbackafspraken in het team duidelijker worden.',
+        primary_action_status: 'active',
+        created_by: 'manager-1',
+        updated_by: 'manager-1',
+        created_at: '2026-04-21T09:00:00.000Z',
+        updated_at: '2026-04-21T09:00:00.000Z',
+      },
+    })
+
+    expect(projectActionCenterRoute(context)).toMatchObject({
+      routeStatus: 'in-uitvoering',
+      intervention: 'Plan deze week een teamgesprek met de leidinggevende over feedbackritme.',
+      expectedEffect:
+        'Binnen twee weken moet zichtbaar zijn of de feedbackafspraken in het team duidelijker worden.',
+      reviewScheduledFor: '2026-05-12',
     })
   })
 

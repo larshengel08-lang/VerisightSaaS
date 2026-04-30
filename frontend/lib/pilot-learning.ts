@@ -37,6 +37,16 @@ export type LearningStrength =
   | 'direct_uitvoerbare_verbetering'
 export type ActionCenterRouteSourceType = 'campaign'
 export type AuthoredActionCenterDecision = 'doorgaan' | 'bijstellen' | 'afronden' | 'stoppen'
+export type ActionCenterManagerResponseType = 'confirm' | 'sharpen' | 'schedule' | 'watch'
+export type ActionCenterManagerResponseScopeType = 'department' | 'item'
+export type ActionCenterManagerActionStatus = 'active' | 'completed' | 'abandoned'
+export type ActionCenterManagerActionThemeKey =
+  | 'leadership'
+  | 'culture'
+  | 'growth'
+  | 'compensation'
+  | 'workload'
+  | 'role_clarity'
 
 export interface ContactRequestRecord {
   id: string
@@ -144,6 +154,26 @@ export interface ActionCenterReviewDecision {
   observation_snapshot: string | null
   decision_recorded_at: string
   review_completed_at: string
+  created_by: string | null
+  updated_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ActionCenterManagerResponse {
+  id: string
+  campaign_id: string
+  org_id: string
+  route_scope_type: ActionCenterManagerResponseScopeType
+  route_scope_value: string
+  manager_user_id: string
+  response_type: ActionCenterManagerResponseType
+  response_note: string
+  review_scheduled_for: string
+  primary_action_theme_key: ActionCenterManagerActionThemeKey | null
+  primary_action_text: string | null
+  primary_action_expected_effect: string | null
+  primary_action_status: ActionCenterManagerActionStatus | null
   created_by: string | null
   updated_by: string | null
   created_at: string

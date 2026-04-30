@@ -4,7 +4,11 @@ import type {
   ActionCenterRouteContract,
 } from './action-center-route-contract'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
-import type { ActionCenterReviewDecision, PilotLearningCheckpoint } from './pilot-learning'
+import type {
+  ActionCenterManagerResponse,
+  ActionCenterReviewDecision,
+  PilotLearningCheckpoint,
+} from './pilot-learning'
 import {
   compareDecisionHistoryEntries,
   projectResultProgression,
@@ -53,7 +57,13 @@ export interface ActionCenterCoreSemantics {
 
 export type ActionCenterCoreSemanticsProjectionInput = Pick<
   LiveActionCenterCampaignContext,
-  'campaign' | 'assignedManager' | 'deliveryRecord' | 'learningDossier' | 'learningCheckpoints' | 'reviewDecisions'
+  | 'campaign'
+  | 'assignedManager'
+  | 'deliveryRecord'
+  | 'learningDossier'
+  | 'learningCheckpoints'
+  | 'reviewDecisions'
+  | 'managerResponse'
 > & {
   route: ActionCenterRouteContract
   latestVisibleUpdateNote?: string | null
@@ -75,6 +85,7 @@ export interface ActionCenterPreviewCoreSemanticsProjectionInput {
   nextStep: string | null
   latestVisibleUpdateNote?: string | null
   route?: ActionCenterRouteContract | null
+  managerResponse?: ActionCenterManagerResponse | null
 }
 
 const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
@@ -264,6 +275,7 @@ function joinReasonAndStep(reason: string | null, step: string | null) {
 
 function getLatestActionUpdate(context: ActionCenterCoreSemanticsProjectionInput) {
   return pickFirst([
+    context.managerResponse?.response_note,
     context.learningDossier?.first_action_taken,
     context.deliveryRecord?.operator_notes,
   ])
@@ -399,24 +411,52 @@ function getLiveClosingSummaryValues(
 
 function buildPreviewRoute(input: ActionCenterPreviewCoreSemanticsProjectionInput): ActionCenterRouteContract {
   const reviewReason = pickFirst([input.reviewReason, input.route?.reviewReason])
-  const nextStep = pickFirst([input.nextStep, input.route?.intervention])
+  const nextStep = pickFirst([input.managerResponse?.primary_action_text, input.nextStep, input.route?.intervention])
+  const managerResponse = input.managerResponse ?? null
+  const reviewScheduledFor =
+    normalizeText(managerResponse?.review_scheduled_for) ?? normalizeText(input.reviewDate)
+  const expectedEffect =
+    normalizeText(managerResponse?.primary_action_expected_effect) ?? normalizeText(input.expectedEffect)
+  const hasPrimaryAction = Boolean(
+    managerResponse?.primary_action_theme_key &&
+      managerResponse?.primary_action_text &&
+      managerResponse?.primary_action_expected_effect,
+  )
+  const preservedStatus = input.route?.routeStatus
+  const routeStatus =
+    preservedStatus === 'afgerond' || preservedStatus === 'gestopt' || preservedStatus === 'geblokkeerd'
+      ? preservedStatus
+      : hasPrimaryAction && input.ownerName && expectedEffect && reviewScheduledFor
+        ? 'in-uitvoering'
+        : managerResponse
+          ? 'te-bespreken'
+          : input.status
 
   return {
+    routeId: input.route?.routeId ?? input.id,
     campaignId: input.route?.campaignId ?? input.id,
     entryStage: input.route?.entryStage ?? 'active',
     routeOpenedAt: input.route?.routeOpenedAt ?? null,
     ownerAssignedAt: input.ownerName ? (input.route?.ownerAssignedAt ?? null) : null,
-    routeStatus: input.status,
+    routeStatus,
     reviewOutcome: input.reviewOutcome,
     reviewCompletedAt: input.route?.reviewCompletedAt ?? null,
     outcomeRecordedAt: input.route?.outcomeRecordedAt ?? null,
     outcomeSummary: input.route?.outcomeSummary ?? null,
     intervention: nextStep,
     owner: input.ownerName,
-    expectedEffect: normalizeText(input.expectedEffect),
-    reviewScheduledFor: normalizeText(input.reviewDate),
+    expectedEffect,
+    reviewScheduledFor,
     reviewReason,
-    blockedBy: input.status === 'geblokkeerd' ? (input.route?.blockedBy ?? 'blocked') : null,
+    managerResponseType: managerResponse?.response_type ?? input.route?.managerResponseType ?? null,
+    managerResponseNote: managerResponse?.response_note ?? input.route?.managerResponseNote ?? null,
+    primaryActionThemeKey: managerResponse?.primary_action_theme_key ?? input.route?.primaryActionThemeKey ?? null,
+    followThroughMode: hasPrimaryAction
+      ? 'primary_action'
+      : managerResponse
+        ? 'bounded_response'
+        : input.route?.followThroughMode ?? 'legacy_action',
+    blockedBy: routeStatus === 'geblokkeerd' ? (input.route?.blockedBy ?? 'blocked') : null,
   }
 }
 
@@ -438,6 +478,7 @@ export function projectActionCenterPreviewCoreSemantics(
   const firstStep = nextStep ?? ACTION_FRAME_FALLBACK
   const reviewReason = pickFirst([
     route.reviewReason,
+    route.managerResponseNote,
     input.reason,
     input.signalBody,
     input.summary,
@@ -445,6 +486,7 @@ export function projectActionCenterPreviewCoreSemantics(
   ])
   const reviewQuestion = pickFirst([
     route.expectedEffect,
+    route.managerResponseNote,
     expectedEffectFromReason,
     nextStep,
     route.reviewReason,
@@ -511,6 +553,7 @@ export function projectActionCenterPreviewCoreSemantics(
     },
     resultLoop: {
       whatWasTried: pickFirst([
+        route.managerResponseNote,
         normalizeAttemptText(latestVisibleUpdateNote),
         input.nextStep,
         nextStep,
@@ -542,6 +585,7 @@ export function projectActionCenterCoreSemantics(
 
   const primaryReason = pickFirst([
     route.reviewReason,
+    route.managerResponseNote,
     context.learningDossier?.buyer_question,
     context.learningDossier?.buying_reason,
     context.learningDossier?.trust_friction,
@@ -558,6 +602,7 @@ export function projectActionCenterCoreSemantics(
   ])
   const reviewQuestion = pickFirst([
     route.expectedEffect,
+    route.managerResponseNote,
     expectedEffectFromReason,
     nextStep,
     route.reviewReason,
@@ -621,9 +666,15 @@ export function projectActionCenterCoreSemantics(
   const actionProgress = projectActionProgress({
     route,
     deliveryNextStep: latestDecision?.nextStepSnapshot ?? context.deliveryRecord?.next_step,
-    firstActionTaken: latestDecision?.currentStepSnapshot ?? context.learningDossier?.first_action_taken,
+    firstActionTaken:
+      latestDecision?.currentStepSnapshot ??
+      context.managerResponse?.primary_action_text ??
+      context.learningDossier?.first_action_taken,
     reviewQuestion,
-    expectedEffectFallback: latestDecision?.expectedEffectSnapshot ?? derivedExpectedEffect,
+    expectedEffectFallback:
+      latestDecision?.expectedEffectSnapshot ??
+      context.managerResponse?.primary_action_expected_effect ??
+      derivedExpectedEffect,
     suppressNextStepFallback: latestDecisionProfile?.hidesNextStep ?? false,
   })
 
@@ -647,6 +698,7 @@ export function projectActionCenterCoreSemantics(
       whatWasTried: pickFirst([
         latestDecision?.currentStepSnapshot,
         normalizeAttemptText(context.latestVisibleUpdateNote),
+        context.managerResponse?.response_note,
         latestActionUpdate,
         nextStep,
         firstStep,
