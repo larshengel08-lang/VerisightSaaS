@@ -273,24 +273,6 @@ function getSummaryRouteKey(item: ActionCenterPreviewItem) {
   return item.id.replace(/::action-[^:]+$/, '')
 }
 
-function getSummaryRouteActionStatus(
-  status: ActionCenterPreviewStatus,
-): 'open' | 'in_review' | 'afgerond' | 'gestopt' {
-  switch (status) {
-    case 'te-bespreken':
-    case 'geblokkeerd':
-      return 'in_review'
-    case 'afgerond':
-      return 'afgerond'
-    case 'gestopt':
-      return 'gestopt'
-    case 'open-verzoek':
-    case 'in-uitvoering':
-    default:
-      return 'open'
-  }
-}
-
 function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
   const routeBuckets = new Map<
     string,
@@ -298,6 +280,8 @@ function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
       sourceLabel: string
       ownerSubtitle: string
       hasBlockedAction: boolean
+      routeStatus: ActionCenterPreviewStatus
+      fallbackReviewDate: string | null
       actions: Array<{
         actionId: string
         status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
@@ -313,6 +297,8 @@ function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
       sourceLabel: item.sourceLabel,
       ownerSubtitle: item.ownerSubtitle,
       hasBlockedAction: false,
+      routeStatus: item.status,
+      fallbackReviewDate: item.reviewDate,
       actions: [],
     }
 
@@ -320,6 +306,8 @@ function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
       sourceLabel: current.sourceLabel,
       ownerSubtitle: current.ownerSubtitle,
       hasBlockedAction: current.hasBlockedAction || item.status === 'geblokkeerd',
+      routeStatus: current.routeStatus,
+      fallbackReviewDate: current.fallbackReviewDate,
       actions:
         routeActionCards.length > 0
           ? routeActionCards.map((action) => ({
@@ -327,27 +315,23 @@ function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
               status: action.status,
               reviewScheduledFor: action.reviewScheduledFor,
             }))
-          : [
-              ...current.actions,
-              {
-                actionId: item.id,
-                status: getSummaryRouteActionStatus(item.status),
-                reviewScheduledFor: item.reviewDate,
-              },
-            ],
+          : current.actions,
     })
   }
 
   return [...routeBuckets.values()].map((route) => {
-    const routeSummary = summarizeActionCenterRouteActions(route.actions)
+    const routeSummary =
+      route.actions.length > 0
+        ? summarizeActionCenterRouteActions(route.actions)
+        : null
 
     return {
       sourceLabel: route.sourceLabel,
       ownerSubtitle: route.ownerSubtitle,
       actionCount: route.actions.length,
       hasBlockedAction: route.hasBlockedAction,
-      routeStatus: routeSummary.routeStatus,
-      nextReviewDate: routeSummary.nextReviewScheduledFor,
+      routeStatus: routeSummary?.routeStatus ?? route.routeStatus,
+      nextReviewDate: routeSummary?.nextReviewScheduledFor ?? route.fallbackReviewDate,
     }
   })
 }

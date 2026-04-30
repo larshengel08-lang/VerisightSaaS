@@ -12,6 +12,7 @@ import {
   getActionCenterManagerResponseLabel,
   hasPrimaryManagerAction,
 } from '@/lib/action-center-manager-responses'
+import type { ActionCenterActionOutcome } from '@/lib/action-center-action-reviews'
 import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 import type {
   ActionCenterPreviewItem,
@@ -106,6 +107,9 @@ const DUTCH_LONG_DATE = new Intl.DateTimeFormat('nl-NL', {
 })
 
 const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
+const ROUTE_ACTION_THEME_LABELS = new Map(
+  ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS.map((option) => [option.value, option.label] as const),
+)
 
 function formatShortDate(value: string | null) {
   if (!value) return 'Nog niet gepland'
@@ -328,6 +332,38 @@ function supportsManagerResponseFlow(item: ActionCenterPreviewItem | null) {
 
 function isOpenAttentionStatus(status: ActionCenterPreviewStatus) {
   return status === 'open-verzoek' || status === 'te-bespreken' || status === 'reviewbaar' || status === 'geblokkeerd'
+}
+
+function getRouteActionThemeLabel(themeKey: string) {
+  return ROUTE_ACTION_THEME_LABELS.get(themeKey) ?? themeKey
+}
+
+function getRouteActionStatusLabel(status: 'open' | 'in_review' | 'afgerond' | 'gestopt') {
+  switch (status) {
+    case 'open':
+      return 'Open'
+    case 'in_review':
+      return 'In review'
+    case 'afgerond':
+      return 'Afgerond'
+    case 'gestopt':
+    default:
+      return 'Gestopt'
+  }
+}
+
+function getRouteActionOutcomeLabel(outcome: ActionCenterActionOutcome) {
+  switch (outcome) {
+    case 'effect-zichtbaar':
+      return 'Effect zichtbaar'
+    case 'bijsturen-nodig':
+      return 'Bijsturen nodig'
+    case 'nog-te-vroeg':
+      return 'Nog te vroeg'
+    case 'stoppen':
+    default:
+      return 'Stoppen'
+  }
 }
 
 function getManagerResponseProjectedStatus(
@@ -618,6 +654,7 @@ export function ActionCenterPreview({
   const closing = selectedItem?.coreSemantics.closingSemantics ?? null
   const hasClosingPanel =
     closing !== null && (closing.status !== 'lopend' || Boolean(closing.historicalSummary ?? closing.summary))
+  const routeActionCards = selectedItem?.coreSemantics.routeActionCards ?? []
 
   function handleCreateAction() {
     if (!createForm.title.trim() || !createForm.teamId) {
@@ -1522,6 +1559,65 @@ export function ActionCenterPreview({
                               ) : null}
                             </div>
                           </div>
+
+                          {routeActionCards.length > 0 ? (
+                            <div>
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">
+                                  Acties in deze route
+                                </p>
+                                <p className="text-sm text-white/46">
+                                  {routeActionCards.length} {routeActionCards.length === 1 ? 'actie' : 'acties'}
+                                </p>
+                              </div>
+                              <div className="mt-3 space-y-3">
+                                {routeActionCards.map((action) => (
+                                  <div
+                                    key={action.actionId}
+                                    className="rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4"
+                                  >
+                                    <div className="flex flex-wrap items-start justify-between gap-3">
+                                      <div>
+                                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                                          {getRouteActionThemeLabel(action.themeKey)}
+                                        </p>
+                                        <p className="mt-2 text-base font-semibold text-white/92">
+                                          {action.actionText}
+                                        </p>
+                                        <p className="mt-2 text-sm text-white/58">
+                                          Review {formatLongDate(action.reviewScheduledFor)}
+                                        </p>
+                                      </div>
+                                      <span className="inline-flex items-center rounded-full border border-white/12 bg-white/[0.06] px-3 py-1.5 text-sm font-semibold text-white/76">
+                                        {getRouteActionStatusLabel(action.status)}
+                                      </span>
+                                    </div>
+
+                                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                      <RouteFieldCard
+                                        label="Verwacht effect"
+                                        value={action.expectedEffect}
+                                      />
+                                      {action.latestReview ? (
+                                        <RouteFieldCard
+                                          label={`Laatste review (${getRouteActionOutcomeLabel(action.latestReview.actionOutcome)})`}
+                                          value={[
+                                            action.latestReview.observation,
+                                            action.latestReview.followUpNote,
+                                          ].filter(Boolean).join(' ')}
+                                        />
+                                      ) : (
+                                        <RouteFieldCard
+                                          label="Laatste review"
+                                          value="Nog geen review vastgelegd voor deze actie."
+                                        />
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
 
                           <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Resultaatlus</p>
