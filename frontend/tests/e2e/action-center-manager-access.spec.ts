@@ -68,4 +68,44 @@ async function login(page: import('@playwright/test').Page, email: string, passw
     await page.goto(`/campaigns/${pilot.campaignId}`)
     await expect(page.getByRole('heading', { name: 'Je ziet hier geen campagnedetail' })).toBeVisible()
   })
+
+  test('manager can save a bounded first response and see the route transition persist', async ({ page }) => {
+    const manager = pilot.managers[0]
+    await login(page, manager.email, manager.password)
+    await page.waitForURL(/\/action-center$/)
+
+    await page.getByRole('button', { name: 'Open focusactie' }).click()
+    await expect(page.getByRole('heading', { name: /route staat klaar voor eerste reactie|eerste lokale follow-through/i })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Inplannen', exact: true }).click()
+    await page.getByLabel('Wat is nu de bounded reactie?').fill('We bespreken dit maandag in het teamoverleg en scherpen daarna de eerstvolgende stap aan.')
+    await page.getByLabel('Wanneer reviewen we dit?').fill('2026-05-18')
+    await page.getByRole('checkbox').check()
+    await page.getByLabel('Thema').selectOption('leadership')
+    await page.getByLabel('Wat ga je concreet doen?').fill('Plan een kort teamgesprek over feedbackritme en leg een vaste terugkoppeling vast.')
+    await page.getByLabel('Wat moet dit zichtbaar maken?').fill('Binnen twee weken moet duidelijk worden of feedbackafspraken consistenter terugkomen in het team.')
+
+    await page.getByRole('button', { name: 'Managerreactie opslaan' }).click()
+
+    await expect(page.getByRole('heading', { name: 'Eerste lokale follow-through' })).toBeVisible()
+    await expect(page.getByText('Inplannen', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('18 mei 2026')).toBeVisible()
+    await expect(page.getByLabel('Thema')).toHaveValue('leadership')
+    await expect(page.getByLabel('Wat ga je concreet doen?')).toHaveValue(
+      'Plan een kort teamgesprek over feedbackritme en leg een vaste terugkoppeling vast.',
+    )
+    await expect(page.getByLabel('Wat moet dit zichtbaar maken?')).toHaveValue(
+      'Binnen twee weken moet duidelijk worden of feedbackafspraken consistenter terugkomen in het team.',
+    )
+
+    await page.reload()
+    await page.getByRole('button', { name: 'Open focusactie' }).click()
+    await expect(page.getByRole('heading', { name: 'Eerste lokale follow-through' })).toBeVisible()
+    await expect(page.getByText('Inplannen', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('18 mei 2026')).toBeVisible()
+    await expect(page.getByLabel('Thema')).toHaveValue('leadership')
+    await expect(page.getByLabel('Wat ga je concreet doen?')).toHaveValue(
+      'Plan een kort teamgesprek over feedbackritme en leg een vaste terugkoppeling vast.',
+    )
+  })
 })
