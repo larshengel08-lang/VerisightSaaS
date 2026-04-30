@@ -17,7 +17,11 @@ import type {
   PilotLearningCheckpoint,
   PilotLearningDossier,
 } from '@/lib/pilot-learning'
-import { buildActionCenterRouteId, projectActionCenterRoute } from '@/lib/action-center-route-contract'
+import {
+  buildActionCenterRouteId,
+  projectActionCenterRoute,
+  summarizeActionCenterRouteActions,
+} from '@/lib/action-center-route-contract'
 import { buildSuiteTelemetryEvent, type SuiteTelemetryEvent } from '@/lib/telemetry/events'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
 
@@ -249,18 +253,113 @@ function getSortRank(status: ActionCenterPreviewStatus) {
   switch (status) {
     case 'geblokkeerd':
       return 0
-    case 'open-verzoek':
+    case 'reviewbaar':
       return 1
-    case 'te-bespreken':
+    case 'open-verzoek':
       return 2
-    case 'in-uitvoering':
+    case 'te-bespreken':
       return 3
-    case 'afgerond':
+    case 'in-uitvoering':
       return 4
+    case 'afgerond':
+      return 5
     case 'gestopt':
     default:
-      return 5
+      return 6
   }
+}
+
+function getSummaryRouteKey(item: ActionCenterPreviewItem) {
+  return item.id.replace(/::action-[^:]+$/, '')
+}
+
+function getSummaryRouteActionStatus(
+  status: ActionCenterPreviewStatus,
+): 'open' | 'in_review' | 'afgerond' | 'gestopt' {
+  switch (status) {
+    case 'te-bespreken':
+    case 'geblokkeerd':
+      return 'in_review'
+    case 'afgerond':
+      return 'afgerond'
+    case 'gestopt':
+      return 'gestopt'
+    case 'open-verzoek':
+    case 'in-uitvoering':
+    default:
+      return 'open'
+  }
+}
+
+function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
+  const routeBuckets = new Map<
+    string,
+    {
+      sourceLabel: string
+      ownerSubtitle: string
+      hasBlockedAction: boolean
+      actions: Array<{
+        actionId: string
+        status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
+        reviewScheduledFor: string | null
+      }>
+    }
+  >()
+
+  for (const item of items) {
+    const routeKey = getSummaryRouteKey(item)
+    const current = routeBuckets.get(routeKey) ?? {
+      sourceLabel: item.sourceLabel,
+      ownerSubtitle: item.ownerSubtitle,
+      hasBlockedAction: false,
+      actions: [],
+    }
+
+    routeBuckets.set(routeKey, {
+      sourceLabel: current.sourceLabel,
+      ownerSubtitle: current.ownerSubtitle,
+      hasBlockedAction: current.hasBlockedAction || item.status === 'geblokkeerd',
+      actions: [
+        ...current.actions,
+        {
+          actionId: item.id,
+          status: getSummaryRouteActionStatus(item.status),
+          reviewScheduledFor: item.reviewDate,
+        },
+      ],
+    })
+  }
+
+  return [...routeBuckets.values()].map((route) => {
+    const routeSummary = summarizeActionCenterRouteActions(route.actions)
+
+    return {
+      sourceLabel: route.sourceLabel,
+      ownerSubtitle: route.ownerSubtitle,
+      actionCount: route.actions.length,
+      hasBlockedAction: route.hasBlockedAction,
+      routeStatus: routeSummary.routeStatus,
+      nextReviewDate: routeSummary.nextReviewScheduledFor,
+    }
+  })
+}
+
+function buildRouteActionSummaryText(args: {
+  actionCount: number
+  reviewableCount: number
+  completedCount: number
+}) {
+  const parts = [`${args.actionCount} ${args.actionCount === 1 ? 'actie' : 'acties'}`]
+
+  if (args.reviewableCount > 0) {
+    parts.push(`${args.reviewableCount} reviewbaar`)
+  } else if (args.completedCount > 0) {
+    parts.push(`${args.completedCount} afgerond`)
+  } else {
+    parts.push('actief in deze route')
+  }
+
+  return parts.join(' - ')
 }
 
 export function finalizeActionCenterPreviewItem(
@@ -331,9 +430,32 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
       const defaults = SCAN_DEFAULTS[context.campaign.scan_type]
       const avgSignal = context.stats?.avg_signal_score ?? context.stats?.avg_risk_score ?? null
       const fallbackAuthor = context.organizationName || 'Verisight'
-      const reviewDate = route.reviewScheduledFor
+      const routeActions = context.routeActions ?? []
+      const actionReviews = context.actionReviews ?? []
+      const actionAggregation =
+        routeActions.length > 0
+          ? summarizeActionCenterRouteActions(
+              routeActions.map((action) => ({
+                actionId: action.actionId,
+                status: action.status,
+                reviewScheduledFor: action.reviewScheduledFor,
+              })),
+            )
+          : null
+      const reviewDate = actionAggregation?.nextReviewScheduledFor ?? route.reviewScheduledFor
       const reviewOwnerName = getReviewOwnerName(context.learningCheckpoints, context.deliveryRecord)
-      const status = route.routeStatus
+      const status =
+        route.blockedBy && routeActions.length === 0
+          ? route.routeStatus
+          : actionAggregation?.routeStatus === 'reviewbaar'
+            ? 'reviewbaar'
+            : actionAggregation?.routeStatus === 'in-uitvoering'
+              ? 'in-uitvoering'
+              : actionAggregation?.routeStatus === 'afgerond'
+                ? 'afgerond'
+                : actionAggregation?.routeStatus === 'gestopt'
+                  ? 'gestopt'
+                  : route.routeStatus
       const updates = buildUpdates({
         learningCheckpoints: context.learningCheckpoints,
         deliveryCheckpoints: context.deliveryCheckpoints,
@@ -349,12 +471,16 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         latestVisibleUpdateNote: latestUpdate,
         reviewDecisions: context.reviewDecisions ?? ([] as ActionCenterReviewDecision[]),
         decisionRecords: [],
+        routeActions,
+        actionReviews,
       })
       const priority = getPriorityFromSignals({
         exceptionStatus: context.deliveryRecord?.exception_status,
         avgSignal,
         totalCompleted: context.stats?.total_completed ?? 0,
       })
+      const reviewableActionCount = routeActions.filter((action) => action.status === 'in_review').length
+      const completedActionCount = routeActions.filter((action) => action.status === 'afgerond').length
       const nextStep =
         route.intervention ||
         context.deliveryRecord?.next_step ||
@@ -367,9 +493,15 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
           context.learningDossier?.title ||
           `${definition.productName}: ${context.campaign.name}`,
         summary:
-          context.deliveryRecord?.customer_handoff_note ||
-          route.expectedEffect ||
-          defaults.fallbackSummary,
+          routeActions.length > 0
+            ? buildRouteActionSummaryText({
+                actionCount: routeActions.length,
+                reviewableCount: reviewableActionCount,
+                completedCount: completedActionCount,
+              })
+            : context.deliveryRecord?.customer_handoff_note ||
+              route.expectedEffect ||
+              defaults.fallbackSummary,
         reason: coreSemantics.reviewSemantics.reviewReason,
         sourceLabel: definition.productName,
         orgId: context.campaign.organization_id,
@@ -413,15 +545,23 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
 }
 
 export function getLiveActionCenterSummary(items: ActionCenterPreviewItem[]) {
-  const productLabels = new Set(items.map((item) => item.sourceLabel))
-  const organizations = new Set(items.map((item) => item.ownerSubtitle))
+  const routeSummaries = summarizeLiveActionCenterRoutes(items)
+  const productLabels = new Set(routeSummaries.map((item) => item.sourceLabel))
+  const organizations = new Set(routeSummaries.map((item) => item.ownerSubtitle))
+  const nextReviewDate =
+    routeSummaries
+      .map((route) => route.nextReviewDate)
+      .filter((reviewDate): reviewDate is string => Boolean(reviewDate))
+      .sort((left, right) => left.localeCompare(right))[0] ?? null
 
   return {
+    routeCount: routeSummaries.length,
     productCount: productLabels.size,
     organizationCount: organizations.size,
-    actionCount: items.length,
-    blockedCount: items.filter((item) => item.status === 'geblokkeerd').length,
-    reviewCount: items.filter((item) => item.reviewDate).length,
+    actionCount: routeSummaries.reduce((sum, route) => sum + route.actionCount, 0),
+    blockedCount: routeSummaries.filter((route) => route.hasBlockedAction).length,
+    reviewCount: routeSummaries.filter((route) => route.nextReviewDate).length,
+    nextReviewDate,
   }
 }
 

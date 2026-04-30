@@ -52,6 +52,12 @@ interface Props {
   workbenchLabel?: string
   workspaceName?: string
   workspaceSubtitle?: string
+  overviewSummary?: {
+    routeCount: number
+    actionCount: number
+    reviewCount: number
+    nextReviewDate: string | null
+  }
   readOnly?: boolean
   itemHrefs?: Record<string, string>
   hideSidebar?: boolean
@@ -169,6 +175,11 @@ function getStatusMeta(status: ActionCenterPreviewStatus) {
       return {
         label: 'Open verzoek',
         pillClass: 'border-[#d5e6fb] bg-[#edf5ff] text-[#335f9c]',
+      }
+    case 'reviewbaar':
+      return {
+        label: 'Reviewbaar',
+        pillClass: 'border-[#ffd9c4] bg-[#fff0e7] text-[#b35a1d]',
       }
     case 'in-uitvoering':
       return {
@@ -316,7 +327,7 @@ function supportsManagerResponseFlow(item: ActionCenterPreviewItem | null) {
 }
 
 function isOpenAttentionStatus(status: ActionCenterPreviewStatus) {
-  return status === 'open-verzoek' || status === 'te-bespreken' || status === 'geblokkeerd'
+  return status === 'open-verzoek' || status === 'te-bespreken' || status === 'reviewbaar' || status === 'geblokkeerd'
 }
 
 function getManagerResponseProjectedStatus(
@@ -471,6 +482,7 @@ export function ActionCenterPreview({
   workbenchLabel = 'Open dossierbron',
   workspaceName,
   workspaceSubtitle = 'Admin-first opvolging',
+  overviewSummary,
   readOnly = false,
   itemHrefs = {},
   hideSidebar = false,
@@ -522,11 +534,12 @@ export function ActionCenterPreview({
       if (left.status !== right.status) {
         const rank: Record<ActionCenterPreviewStatus, number> = {
           'geblokkeerd': 0,
-          'open-verzoek': 1,
-          'te-bespreken': 2,
-          'in-uitvoering': 3,
-          'afgerond': 4,
-          'gestopt': 5,
+          'reviewbaar': 1,
+          'open-verzoek': 2,
+          'te-bespreken': 3,
+          'in-uitvoering': 4,
+          'afgerond': 5,
+          'gestopt': 6,
         }
         return rank[left.status] - rank[right.status]
       }
@@ -1032,6 +1045,14 @@ export function ActionCenterPreview({
                         <p className="mt-4 max-w-xl text-[1rem] leading-8 text-[#4f6175]">
                           Action Center bundelt live opvolging uit campagnes en dossiers tot een eerste overzicht van wat nu aandacht vraagt.
                         </p>
+                        {overviewSummary ? (
+                          <p className="mt-4 text-sm text-[#6d6458]">
+                            {`${overviewSummary.actionCount} actie${overviewSummary.actionCount === 1 ? '' : 's'} binnen ${overviewSummary.routeCount} route${overviewSummary.routeCount === 1 ? '' : 's'}`}
+                            {overviewSummary.nextReviewDate
+                              ? `, eerstvolgende review ${formatShortDate(overviewSummary.nextReviewDate)}.`
+                              : '.'}
+                          </p>
+                        ) : null}
                       </div>
                       <div className="grid gap-3 sm:grid-cols-3 xl:max-w-[34rem] xl:flex-1">
                         <OverviewStat

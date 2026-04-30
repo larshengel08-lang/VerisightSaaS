@@ -9,6 +9,8 @@ import type {
   ActionCenterReviewDecision,
   PilotLearningCheckpoint,
 } from './pilot-learning'
+import type { ActionCenterRouteActionRecord } from './action-center-route-actions'
+import type { ActionCenterActionReviewRecord } from './action-center-action-reviews'
 import {
   compareDecisionHistoryEntries,
   projectResultProgression,
@@ -48,6 +50,20 @@ export interface ActionCenterCoreSemantics {
   }
   resultProgression: ActionCenterResultProgressEntry[]
   decisionHistory: ActionCenterDecisionRecord[]
+  routeActionCards: Array<{
+    actionId: string
+    themeKey: ActionCenterRouteActionRecord['themeKey']
+    actionText: string
+    reviewScheduledFor: string
+    expectedEffect: string
+    status: ActionCenterRouteActionRecord['status']
+    latestReview: {
+      reviewedAt: string
+      observation: string
+      actionOutcome: ActionCenterActionReviewRecord['actionOutcome']
+      followUpNote: string | null
+    } | null
+  }>
   closingSemantics: {
     status: ActionCenterClosingStatus
     summary: string | null
@@ -64,6 +80,8 @@ export type ActionCenterCoreSemanticsProjectionInput = Pick<
   | 'learningCheckpoints'
   | 'reviewDecisions'
   | 'managerResponse'
+  | 'routeActions'
+  | 'actionReviews'
 > & {
   route: ActionCenterRouteContract
   latestVisibleUpdateNote?: string | null
@@ -368,6 +386,42 @@ function getPreviewClosingStatus(status: ActionCenterRouteContract['routeStatus'
   return 'lopend'
 }
 
+function buildRouteActionCards(context: ActionCenterCoreSemanticsProjectionInput) {
+  const routeActions = context.routeActions ?? []
+  const actionReviews = context.actionReviews ?? []
+
+  return [...routeActions]
+    .map((action) => {
+      const latestReview =
+        [...actionReviews]
+          .filter((review) => review.actionId === action.actionId)
+          .sort((left, right) => new Date(right.reviewedAt).getTime() - new Date(left.reviewedAt).getTime())[0] ?? null
+
+      return {
+        actionId: action.actionId,
+        themeKey: action.themeKey,
+        actionText: action.actionText,
+        reviewScheduledFor: action.reviewScheduledFor,
+        expectedEffect: action.expectedEffect,
+        status: action.status,
+        latestReview: latestReview
+          ? {
+              reviewedAt: latestReview.reviewedAt,
+              observation: latestReview.observation,
+              actionOutcome: latestReview.actionOutcome,
+              followUpNote: latestReview.followUpNote,
+            }
+          : null,
+      }
+    })
+    .sort((left, right) => {
+      const rank = { in_review: 0, open: 1, afgerond: 2, gestopt: 3 } as const
+      const statusDelta = rank[left.status] - rank[right.status]
+      if (statusDelta !== 0) return statusDelta
+      return left.reviewScheduledFor.localeCompare(right.reviewScheduledFor)
+    })
+}
+
 function getClosingSummary(status: ActionCenterClosingStatus, values: Array<string | null | undefined>) {
   if (status === 'lopend') {
     return null
@@ -563,6 +617,7 @@ export function projectActionCenterPreviewCoreSemantics(
     },
     resultProgression,
     decisionHistory,
+    routeActionCards: [],
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getPreviewClosingSummaryValues(route, closingStatus)),
@@ -651,6 +706,7 @@ export function projectActionCenterCoreSemantics(
   const latestObservation = getLatestObservation(context, route)
   const latestActionUpdate = getLatestActionUpdate(context)
   const closingStatus = getClosingStatus(context, route)
+  const routeActionCards = buildRouteActionCards(context)
   const decisionHistory = buildDecisionHistory({
     route,
     reviewQuestion,
@@ -718,6 +774,7 @@ export function projectActionCenterCoreSemantics(
     },
     resultProgression,
     decisionHistory,
+    routeActionCards,
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getLiveClosingSummaryValues(context, route, closingStatus)),
