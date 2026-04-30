@@ -33,6 +33,8 @@ const PAD          = 'clamp(22px, 3.5vw, 32px)'
 const CTA_PAD      = '12px 22px'
 const CTA_FONT     = 12.5
 const HEADER_PAD   = '13px clamp(22px, 3.5vw, 32px)'
+// All 4 card states share this minimum height so they stay visually identical
+const CARD_MIN_H   = 420
 
 export const SHOW_HOME_INSIGHT_ACTION_DEMO = true
 
@@ -231,6 +233,7 @@ function State1({ goTo }: { goTo: (v: DemoView) => void }) {
         border: `1px solid ${C.rule}`,
         borderLeft: `6px solid ${C.amber}`,
         borderRadius: CARD_RADIUS,
+        minHeight: CARD_MIN_H,
         overflow: 'hidden',
       }}>
         <ModuleHeader module="Dashboard" sub="ExitScan · Q2 2025" status="Nu eerst" tone="amber" />
@@ -310,6 +313,7 @@ function State2({ goTo }: { goTo: (v: DemoView) => void }) {
     { label: 'Groei en ontwikkeling', pct: 72, tone: 'green' as const },
     { label: 'Werkdruk',              pct: 48, tone: 'risk'  as const },
     { label: 'Loopbaanperspectief',   pct: 34, tone: 'risk'  as const },
+    { label: 'Rolhelderheid',         pct: 81, tone: 'green' as const },
   ]
   return (
     <div style={{ animation: 'slideRightFade 250ms cubic-bezier(.16,1,.3,1)' }}>
@@ -318,12 +322,15 @@ function State2({ goTo }: { goTo: (v: DemoView) => void }) {
         border: `1px solid ${C.rule}`,
         borderLeft: `6px solid ${C.amber}`,
         borderRadius: CARD_RADIUS,
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: CARD_MIN_H,
         overflow: 'hidden',
       }}>
         <ModuleHeader module="Dashboard" sub="Topfactor · ExitScan Operations" status="Route open" tone="amber" />
 
-        <div style={{ padding: `${PAD} ${PAD} 20px` }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 13, marginBottom: 24 }}>
+        <div style={{ flex: 1, padding: PAD }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {factors.map((f, i) => {
               const isGreen = f.tone === 'green'
               return (
@@ -354,32 +361,19 @@ function State2({ goTo }: { goTo: (v: DemoView) => void }) {
               )
             })}
           </div>
-
-          <p style={{
-            background: `${C.amber}10`,
-            border: `1px solid ${C.amber}28`,
-            borderLeft: `3px solid ${C.amber}`,
-            borderRadius: INSET_RADIUS,
-            color: C.text,
-            fontFamily: FN, fontSize: 14, lineHeight: 1.65,
-            margin: 0, padding: '13px 16px',
-          }}>
-            Patroon concentreert zich <strong style={{ color: C.ink }}>na maand zes</strong>. Gericht behoudsvraagstuk in Operations, geen breed tevredenheidssignaal.
-          </p>
         </div>
 
-        {/* Handoff strip */}
+        {/* Handoff strip — light, matching card background */}
         <div style={{
           alignItems: 'center',
-          background: C.ink,
-          borderTop: `1px solid rgba(255,255,255,.06)`,
+          borderTop: `1px solid ${C.rule}`,
           display: 'flex', flexWrap: 'wrap', gap: 14,
           justifyContent: 'space-between',
           padding: `17px ${PAD}`,
         }}>
           <div>
-            <Label dark>Doorleggen</Label>
-            <p style={{ color: '#fff8f2', fontFamily: FN, fontSize: 14, fontWeight: 600, margin: '4px 0 0' }}>
+            <Label>Doorleggen</Label>
+            <p style={{ color: C.ink, fontFamily: FN, fontSize: 14, fontWeight: 600, margin: '4px 0 0' }}>
               Zet door naar Action Center
             </p>
           </div>
@@ -407,6 +401,7 @@ function State3({ goTo }: { goTo: (v: DemoView) => void }) {
         border: `1px solid ${C.rule}`,
         borderLeft: `6px solid ${C.teal}`,
         borderRadius: CARD_RADIUS,
+        minHeight: CARD_MIN_H,
         overflow: 'hidden',
       }}>
         <ModuleHeader module="Action Center" sub="Opvolging gestart" status="1 actief" tone="teal" />
@@ -474,6 +469,7 @@ function State4({ goTo }: { goTo: (v: DemoView) => void }) {
         border: `1px solid ${C.rule}`,
         borderLeft: `6px solid ${C.teal}`,
         borderRadius: CARD_RADIUS,
+        minHeight: CARD_MIN_H,
         overflow: 'hidden',
       }}>
         {/* Module header */}
