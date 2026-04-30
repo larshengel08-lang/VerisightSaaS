@@ -42,14 +42,15 @@ describe('dashboard home UX guardrails', () => {
   it('keeps the overview route focused on HR regie with one dominant lead line and lighter supporting sections', () => {
     const pageSource = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(pageSource).toContain('Nu eerst')
+    expect(pageSource).toContain('highlightLabel={index === 0 ? \'Nu eerst\' : undefined}')
     expect(pageSource).toContain('Ook aandacht')
     expect(pageSource).toContain('Actieve routes')
-    expect(pageSource).toContain('Overige actieve routes')
     expect(pageSource).toContain('Wat nu leesbaar is')
-    expect(pageSource).toContain('Action Center')
-    expect(pageSource).toContain('OverviewLeadCard')
+    expect(pageSource).toContain('Wat blokkeert')
+    expect(pageSource).toContain('Opvolging preview')
     expect(pageSource).toContain('OverviewRouteRow')
+    expect(pageSource).not.toContain('OverviewLeadCard')
+    expect(pageSource).not.toContain('Overige actieve routes')
     expect(pageSource).not.toContain('Portfolio samenvatting')
     expect(pageSource).not.toContain('Aanbevolen focus')
   })
@@ -57,23 +58,22 @@ describe('dashboard home UX guardrails', () => {
   it('keeps overview language compact and bounded instead of turning the page into a mini action surface', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('Wat nu aandacht vraagt, welke route daarbij hoort en wat je als eerste wilt openen.')
-    expect(source).toContain('Dashboard en rapport zijn nu beschikbaar voor eerste lezing.')
-    expect(source).toContain('Eerste read beschikbaar, detail blijft nog beperkt.')
-    expect(source).toContain('Opvolging blijft compact tot een route stevig genoeg leesbaar is.')
-    expect(source).not.toContain('Open prioriteit')
-    expect(source).not.toContain('Reviewmoment')
+    expect(source).toContain('Wat nu leesbaar is, wat blokkeert en waar opvolging openstaat.')
+    expect(source).toContain('Dashboard beschikbaar.')
+    expect(source).toContain('Eerste read beschikbaar.')
+    expect(source).toContain('Nog geen open opvolging.')
     expect(source).not.toContain('Welke route nu het eerst logisch is.')
   })
 
   it('keeps action center as a light bridge instead of reintroducing commitment structure on overview', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('compactActionCenterNote')
+    expect(source).toContain('Opvolging preview')
     expect(source).toContain('canOpenActionCenterRoute')
     expect(source).toContain('first_management_use_confirmed_at')
     expect(source).toContain('Open Action Center')
-    expect(source).not.toContain("href={isAdmin ? '/beheer' : '/action-center'}")
+    expect(source).toContain('Open prioriteit')
+    expect(source).toContain('Zonder bevestiging')
     expect(source).not.toContain('Actieve opvolging')
   })
 

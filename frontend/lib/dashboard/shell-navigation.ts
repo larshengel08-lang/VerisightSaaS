@@ -111,8 +111,10 @@ function getModuleKeyForScanType(scanType: ScanType): DashboardModuleKey {
   return moduleKeyByScanType[scanType]
 }
 
-export function getDashboardModuleKeyForScanType(scanType: ScanType): DashboardModuleKey {
-  return getModuleKeyForScanType(scanType)
+export function getDashboardModuleKeyForScanType(
+  scanType: Exclude<ScanType, 'team'>,
+): DashboardCategoryModuleKey {
+  return getModuleKeyForScanType(scanType) as DashboardCategoryModuleKey
 }
 
 export function normalizeDashboardModuleFilter(

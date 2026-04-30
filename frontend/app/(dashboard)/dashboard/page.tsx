@@ -1,14 +1,12 @@
 ﻿import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import {
-  DashboardChip,
-  DashboardSection,
-} from '@/components/dashboard/dashboard-primitives'
+import { DashboardSection } from '@/components/dashboard/dashboard-primitives'
 import {
   getCampaignCompositionState,
   type CampaignCompositionState,
 } from '@/lib/dashboard/dashboard-state-composition'
 import {
+  type ActionCenterRouteOpenRecord,
   canOpenActionCenterRoute,
   hasOpenedActionCenterRoute,
 } from '@/lib/dashboard/open-action-center-route'
@@ -33,6 +31,7 @@ type OverviewRouteTone = 'emerald' | 'amber' | 'slate'
 type OverviewRouteItem = {
   entry: CampaignHomeEntry
   routeLabel: string
+  contextLabel: string
   stateLabel: string
   stateTone: OverviewRouteTone
   summary: string
@@ -41,6 +40,7 @@ type OverviewRouteItem = {
   secondaryMetricLabel?: string
   secondaryMetricValue?: string
   ctaLabel: string
+  bounded: boolean
 }
 
 export default async function DashboardHomePage({
@@ -82,6 +82,19 @@ export default async function DashboardHomePage({
     sent_at: string | null
     completed: boolean
   }>
+  const { data: deliveryRecordsRaw } =
+    campaignIds.length > 0
+      ? await supabase
+          .from('campaign_delivery_records')
+          .select('campaign_id, lifecycle_stage, first_management_use_confirmed_at')
+          .in('campaign_id', campaignIds)
+      : { data: [] }
+  const deliveryRecords = (deliveryRecordsRaw ?? []) as Array<
+    { campaign_id: string } & ActionCenterRouteOpenRecord
+  >
+  const deliveryRecordByCampaign = new Map(
+    deliveryRecords.map((record) => [record.campaign_id, record] as const),
+  )
   const invitesNotSentByCampaign = buildInvitesNotSentByCampaign(campaigns, respondentStateRows)
   const campaignEntries = campaigns.map((campaign) => ({
     campaign,
@@ -110,26 +123,11 @@ export default async function DashboardHomePage({
       (left, right) =>
         new Date(right.campaign.created_at).getTime() - new Date(left.campaign.created_at).getTime(),
     )
-  const leadReadableEntry = readableEntries[0] ?? null
-  const leadReadableCampaign = leadReadableEntry?.campaign ?? null
-  const { data: leadReadableDeliveryRecord } = leadReadableCampaign
-    ? await supabase
-        .from('campaign_delivery_records')
-        .select('id, lifecycle_stage, first_management_use_confirmed_at')
-        .eq('campaign_id', leadReadableCampaign.campaign_id)
-        .maybeSingle()
-    : { data: null }
-  const leadReadableRouteActive = leadReadableDeliveryRecord
-    ? hasOpenedActionCenterRoute(leadReadableDeliveryRecord)
-    : false
-  const leadReadableRouteOpenable = leadReadableDeliveryRecord
-    ? canOpenActionCenterRoute(leadReadableDeliveryRecord)
-    : false
   const recentOutputEntries = buildRecentOutputEntries(campaignEntries).slice(0, 3)
   const moduleLabel = requestedModuleFilter ? getDashboardModuleLabel(requestedModuleFilter) : null
   const moduleIntro = moduleLabel
-    ? `Alle ${moduleLabel}-routes op één plek. Zo zie je direct welke campaign nu leesbaar is en welke route nog aandacht vraagt.`
-    : 'Wat nu aandacht vraagt, welke route daarbij hoort en wat je als eerste wilt openen.'
+    ? `Wat nu leesbaar is, wat blokkeert en waar opvolging openstaat.`
+    : 'Wat nu leesbaar is, wat blokkeert en waar opvolging openstaat.'
   const activeEntries = campaignEntries.filter((entry) => entry.campaign.is_active)
   const primaryActiveEntries = activeEntries.filter((entry) =>
     ['exit', 'retention'].includes(entry.campaign.scan_type),
@@ -146,13 +144,39 @@ export default async function DashboardHomePage({
     .sort(compareOverviewEntries)
     .map(buildOverviewRouteItem)
   const boundedItems = boundedActiveEntries.sort(compareOverviewEntries).map(buildOverviewRouteItem)
+  const activeRouteItems = [
+    ...(primaryLeadItem ? [primaryLeadItem] : []),
+    ...primaryRouteItems,
+    ...(!requestedModuleFilter ? boundedItems : []),
+  ]
   const attentionItems = buildOverviewAttentionItems(campaignEntries, primaryLeadEntry).slice(0, 3)
-  const compactActionCenterNote =
-    leadReadableRouteActive
-      ? 'Er staat al opvolging open in Action Center.'
-      : leadReadableRouteOpenable
-        ? 'Als vervolglogica nodig is, open je die in Action Center.'
-        : 'Opvolging blijft compact tot een route stevig genoeg leesbaar is.'
+  const blockerItems = buildOverviewBlockerItems(campaignEntries).slice(0, 3)
+  const openFollowUpItems = readableEntries.filter((entry) => {
+    const record = deliveryRecordByCampaign.get(entry.campaign.campaign_id)
+    return record ? canOpenActionCenterRoute(record) : false
+  })
+  const activeFollowUpItems = readableEntries.filter((entry) => {
+    const record = deliveryRecordByCampaign.get(entry.campaign.campaign_id)
+    return record ? hasOpenedActionCenterRoute(record) : false
+  })
+  const unconfirmedFollowUpCount = openFollowUpItems.filter((entry) => {
+    const record = deliveryRecordByCampaign.get(entry.campaign.campaign_id)
+    return record ? !record.first_management_use_confirmed_at : false
+  }).length
+  const followUpPreviewRows = [
+    openFollowUpItems[0]
+      ? { label: 'Open prioriteit', value: openFollowUpItems[0].campaign.campaign_name }
+      : null,
+    activeFollowUpItems[0]
+      ? { label: 'Reviewmoment', value: 'Open in Action Center' }
+      : null,
+    unconfirmedFollowUpCount > 0
+      ? {
+          label: 'Zonder bevestiging',
+          value: `${unconfirmedFollowUpCount} ${unconfirmedFollowUpCount === 1 ? 'route' : 'routes'}`,
+        }
+      : null,
+  ].filter(Boolean) as Array<{ label: string; value: string }>
 
   return (
     <div className="space-y-8">
@@ -192,31 +216,19 @@ export default async function DashboardHomePage({
               <h1 className="font-serif text-[2.2rem] leading-[0.95] tracking-[-0.05em] text-[color:var(--dashboard-ink)] sm:text-[2.7rem]">
                 {moduleLabel ?? 'Overzicht'}
               </h1>
-              <p className="max-w-3xl text-[0.98rem] leading-7 text-[color:var(--dashboard-text)]">
+              <p className="max-w-2xl text-[0.98rem] leading-7 text-[color:var(--dashboard-text)]">
                 {moduleIntro}
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2.5 border-t border-[color:var(--dashboard-frame-border)] pt-4">
-              <DashboardChip label={`${activeEntries.length} actieve routes`} tone="slate" />
-              <DashboardChip label={`${managementReadyCount} leesbaar`} tone="emerald" />
-              <DashboardChip label={`${notReadableCount} nog niet leesbaar`} tone="amber" />
-              {closedCount > 0 ? (
-                <DashboardChip label={`${closedCount} afgerond`} tone="slate" />
-              ) : null}
+            <div className="grid gap-3 border-t border-[color:var(--dashboard-frame-border)] pt-4 md:grid-cols-3 xl:grid-cols-4">
+              <OverviewSummaryCard label="Leesbaar" value={managementReadyCount} />
+              <OverviewSummaryCard label="Nog niet leesbaar" value={notReadableCount} />
+              <OverviewSummaryCard label="Afgerond" value={closedCount} />
               {openFollowUpCount > 0 ? (
-                <DashboardChip label={`${openFollowUpCount} routes met vervolgleeslijn`} tone="slate" />
+                <OverviewSummaryCard label="Opvolging open" value={openFollowUpCount} />
               ) : null}
             </div>
           </div>
-
-          {primaryLeadItem ? (
-            <section className="space-y-4">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
-                Nu eerst
-              </p>
-              <OverviewLeadCard item={primaryLeadItem} />
-            </section>
-          ) : null}
 
           {attentionItems.length > 0 ? (
             <section className="space-y-3">
@@ -267,85 +279,117 @@ export default async function DashboardHomePage({
                 <p className="text-sm text-[color:var(--dashboard-muted)]">{moduleLabel}</p>
               ) : null}
             </div>
-            <div className="space-y-3">
-              {primaryRouteItems.map((item) => (
-                <OverviewRouteRow key={item.entry.campaign.campaign_id} item={item} />
+            <div className="rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-2 shadow-[0_1px_3px_rgba(10,25,47,0.03)] sm:px-5">
+              {activeRouteItems.map((item, index) => (
+                <OverviewRouteRow
+                  key={item.entry.campaign.campaign_id}
+                  item={item}
+                  highlightLabel={index === 0 ? 'Nu eerst' : undefined}
+                />
               ))}
             </div>
           </section>
 
-          {!requestedModuleFilter && boundedItems.length > 0 ? (
+          {blockerItems.length > 0 ? (
             <section className="space-y-4">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
-                Overige actieve routes
-              </p>
+              <div className="space-y-1.5">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
+                  Wat blokkeert
+                </p>
+                <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  Wat nog voorkomt dat een route open of volledig live is.
+                </p>
+              </div>
               <div className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-2 shadow-[0_1px_3px_rgba(10,25,47,0.03)] sm:px-5">
-                {boundedItems.map((item) => (
-                  <CompactOverviewRouteRow key={item.entry.campaign.campaign_id} item={item} />
+                {blockerItems.map((item) => (
+                  <Link
+                    key={item.entry.campaign.campaign_id}
+                    href={`/campaigns/${item.entry.campaign.campaign_id}`}
+                    className="grid gap-2 border-b border-[color:var(--dashboard-frame-border)]/75 py-3.5 last:border-b-0 sm:grid-cols-[minmax(0,1.3fr),minmax(0,1fr),auto] sm:items-center sm:gap-4"
+                  >
+                    <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+                      {item.entry.campaign.campaign_name}
+                    </p>
+                    <p className="text-sm text-[color:var(--dashboard-text)]">{item.blocker}</p>
+                    <span className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)]">
+                      Open route
+                    </span>
+                  </Link>
                 ))}
               </div>
             </section>
           ) : null}
 
-          <section className="space-y-4">
-            <div className="flex items-end justify-between gap-3">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
-                Wat nu leesbaar is
-              </p>
-              <Link
-                href="/reports"
-                className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
-              >
-                Open rapporten
-              </Link>
-            </div>
-            <div className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-2 shadow-[0_1px_3px_rgba(10,25,47,0.03)] sm:px-5">
-              {recentOutputEntries.map((entry) => {
-                const scanDefinition = getScanDefinition(entry.campaign.scan_type)
-
-                return (
-                  <div
-                    key={entry.campaign.campaign_id}
-                    className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--dashboard-frame-border)]/75 py-3.5 last:border-b-0"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-                        {scanDefinition.productName} · {entry.state === 'partial' ? 'Begrensde read' : 'Kernoutput'}
-                      </p>
-                      <p className="mt-1.5 text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
-                        {entry.campaign.campaign_name}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/campaigns/${entry.campaign.campaign_id}`}
-                      className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
-                    >
-                      {entry.state === 'closed' ? 'Open rapport' : 'Open route'}
-                    </Link>
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/72 px-5 py-4 shadow-[0_1px_3px_rgba(10,25,47,0.03)] sm:px-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr),minmax(0,1.08fr)]">
+            <section className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/58 px-5 py-4 shadow-[0_1px_3px_rgba(10,25,47,0.03)] sm:px-6">
+              <div className="flex items-center justify-between gap-3">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
-                  Action Center
+                  Opvolging preview
                 </p>
-                <p className="mt-1.5 text-sm leading-6 text-[color:var(--dashboard-text)]">
-                  {compactActionCenterNote}
-                </p>
+                <Link
+                  href="/action-center"
+                  className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+                >
+                  Open Action Center
+                </Link>
               </div>
-              <Link
-                href="/action-center"
-                className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
-              >
-                Open Action Center
-              </Link>
-            </div>
-          </section>
+              <div className="mt-3 space-y-2.5">
+                {followUpPreviewRows.length > 0 ? (
+                  followUpPreviewRows.map((row) => (
+                    <div key={row.label} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="text-[color:var(--dashboard-muted)]">{row.label}</span>
+                      <span className="font-semibold text-[color:var(--dashboard-ink)]">{row.value}</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    Nog geen open opvolging.
+                  </p>
+                )}
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <div className="flex items-end justify-between gap-3">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
+                  Wat nu leesbaar is
+                </p>
+                <Link
+                  href="/reports"
+                  className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+                >
+                  Open rapporten
+                </Link>
+              </div>
+              <div className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-2 shadow-[0_1px_3px_rgba(10,25,47,0.03)] sm:px-5">
+                {recentOutputEntries.map((entry) => {
+                  const scanDefinition = getScanDefinition(entry.campaign.scan_type)
+
+                  return (
+                    <div
+                      key={entry.campaign.campaign_id}
+                      className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--dashboard-frame-border)]/75 py-3.5 last:border-b-0"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                          {scanDefinition.productName} · {entry.state === 'partial' ? 'Begrensde read' : 'Kernoutput'}
+                        </p>
+                        <p className="mt-1.5 text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+                          {entry.campaign.campaign_name}
+                        </p>
+                      </div>
+                      <Link
+                        href={`/campaigns/${entry.campaign.campaign_id}`}
+                        className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+                      >
+                        {entry.state === 'closed' ? 'Open rapport' : 'Open route'}
+                      </Link>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          </div>
         </>
       )}
     </div>
@@ -435,7 +479,7 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Sparse / indicatief',
       sectionDescription:
         'Campagnes met eerste responses, maar nog onder de veilige dashboarddrempel voor een eerlijke eerste duiding.',
-      body: 'Eerste read beschikbaar, detail blijft nog beperkt.',
+      body: 'Eerste read beschikbaar.',
       trust: '',
     },
     partial: {
@@ -446,7 +490,7 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Deels zichtbaar',
       sectionDescription:
         'Campagnes waar de eerste veilige dashboardlaag open is, maar waar thresholds of privacy de verdiepingslaag nog begrenzen.',
-      body: 'Eerste read beschikbaar, detail blijft nog beperkt.',
+      body: 'Eerste read beschikbaar.',
       trust: '',
     },
     full: {
@@ -457,7 +501,7 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Volledig / klaar voor bespreking',
       sectionDescription:
         'Campagnes met genoeg respons en voldoende zichtbaarheid om dashboard, aanbevelingen en rapport als managementinstrument te gebruiken.',
-      body: 'Dashboard en rapport zijn nu beschikbaar voor eerste lezing.',
+      body: 'Dashboard beschikbaar.',
       trust: '',
     },
     closed: {
@@ -468,7 +512,7 @@ function getHomeStateMeta(state: CampaignCompositionState) {
       sectionTitle: 'Gesloten / rapport eerst',
       sectionDescription:
         'Gesloten campagnes waar de nadruk nu op rapportage, terugblik en bestuurlijke opvolging hoort te liggen.',
-      body: 'Route is afgerond. Rapport en dashboard blijven beschikbaar.',
+      body: 'Rapport beschikbaar.',
       trust: '',
     },
   } satisfies Record<
@@ -537,6 +581,7 @@ function buildOverviewRouteItem(entry: CampaignHomeEntry): OverviewRouteItem {
   return {
     entry,
     routeLabel: scanDefinition.productName,
+    contextLabel: `${formatCampaignPeriod(entry.campaign)} · ${scanDefinition.productName}`,
     stateLabel: stateMeta.label,
     stateTone: stateMeta.tone,
     summary: stateMeta.body,
@@ -550,6 +595,7 @@ function buildOverviewRouteItem(entry: CampaignHomeEntry): OverviewRouteItem {
         : entry.state === 'partial'
           ? 'Open compacte read'
           : stateMeta.viewerCta,
+    bounded: !['exit', 'retention'].includes(entry.campaign.scan_type),
   }
 }
 
@@ -585,141 +631,71 @@ function getOverviewToneClasses(tone: OverviewRouteTone) {
   }
 }
 
-function OverviewLeadCard({ item }: { item: OverviewRouteItem }) {
-  const tone = getOverviewToneClasses(item.stateTone)
-
+function OverviewSummaryCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-[26px] border border-[color:var(--dashboard-frame-border)] bg-[linear-gradient(180deg,rgba(252,250,247,0.98),rgba(244,240,234,0.92))] px-6 py-6 shadow-[0_10px_28px_rgba(15,23,42,0.04)] sm:px-7">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr),minmax(360px,0.85fr)] xl:items-start">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <DashboardChip label={item.routeLabel} tone="slate" />
-            <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.78rem] font-semibold ${tone.chip}`}>
-              <span className={`inline-flex h-2 w-2 rounded-full ${tone.dot}`} />
-              {item.stateLabel}
-            </span>
-          </div>
-          <h2 className="mt-4 text-[1.55rem] font-semibold tracking-[-0.04em] text-[color:var(--dashboard-ink)] sm:text-[1.8rem]">
-            {item.entry.campaign.campaign_name}
-          </h2>
-          <p className="mt-3 max-w-2xl text-[0.98rem] leading-7 text-[color:var(--dashboard-text)]">
-            {item.summary}
-          </p>
-          <div className="mt-5">
-            <Link
-              href={`/campaigns/${item.entry.campaign.campaign_id}`}
-              className="inline-flex rounded-full bg-[color:var(--dashboard-ink)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#17314A]"
-            >
-              {item.ctaLabel}
-            </Link>
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <OverviewMetricCard
-            label={item.metricLabel}
-            value={item.metricValue}
-            hint={`${item.entry.campaign.total_completed} ingevuld`}
-          />
-          <OverviewMetricCard
-            label="Uitgenodigd"
-            value={`${item.entry.campaign.total_invited}`}
-            hint={`${item.entry.campaign.band_high}/${item.entry.campaign.band_medium}/${item.entry.campaign.band_low} hoog/midden/laag`}
-          />
-          <OverviewMetricCard
-            label={item.secondaryMetricLabel ?? 'Signaal'}
-            value={item.secondaryMetricValue ?? 'Nog niet vrij'}
-            hint={item.entry.state === 'partial' ? 'Begrensde managementread' : 'Managementread beschikbaar'}
-          />
-          <OverviewMetricCard
-            label="Periode"
-            value={formatCampaignPeriod(item.entry.campaign)}
-            hint={item.routeLabel}
-          />
-        </div>
+    <div className="rounded-[18px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
+      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+        {label}
+      </p>
+      <div className="mt-2 flex items-end justify-between gap-3">
+        <p className="dash-number text-[1.45rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
+        <p className="text-sm text-[color:var(--dashboard-text)]">
+          {value} {value === 1 ? 'route' : 'routes'}
+        </p>
       </div>
     </div>
   )
 }
 
-function OverviewMetricCard({
-  label,
-  value,
-  hint,
+function OverviewRouteRow({
+  item,
+  highlightLabel,
 }: {
-  label: string
-  value: string
-  hint?: string
+  item: OverviewRouteItem
+  highlightLabel?: string
 }) {
-  return (
-    <div className="rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-white/82 px-4 py-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)]">
-      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
-        {label}
-      </p>
-      <p className="dash-number mt-3 text-[1.65rem] leading-none text-[color:var(--dashboard-ink)]">
-        {value}
-      </p>
-      {hint ? <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">{hint}</p> : null}
-    </div>
-  )
-}
-
-function OverviewRouteRow({ item }: { item: OverviewRouteItem }) {
   const tone = getOverviewToneClasses(item.stateTone)
 
   return (
     <Link
       href={`/campaigns/${item.entry.campaign.campaign_id}`}
-      className="group block rounded-[22px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-5 py-4 shadow-[0_1px_3px_rgba(10,25,47,0.03)] transition-colors hover:bg-[#fcfaf7] sm:px-6"
+      className={`group block border-b border-[color:var(--dashboard-frame-border)]/75 py-4 last:border-b-0 ${
+        item.bounded ? 'opacity-90' : ''
+      }`}
     >
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <DashboardChip label={item.routeLabel} tone="slate" />
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_128px_128px_auto] xl:items-center xl:gap-5">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            {highlightLabel ? (
+              <span className="inline-flex rounded-full border border-[color:var(--dashboard-accent-soft-border)] bg-[color:var(--dashboard-accent-soft)] px-2.5 py-1 text-[0.74rem] font-semibold text-[color:var(--dashboard-accent-strong)]">
+                {highlightLabel}
+              </span>
+            ) : null}
+            <span className="text-[0.78rem] font-semibold tracking-[0.04em] text-[color:var(--dashboard-muted)]">
+              {item.contextLabel}
+            </span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2.5">
+            <h3 className="text-[1.03rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+              {item.entry.campaign.campaign_name}
+            </h3>
             <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[0.78rem] font-semibold ${tone.chip}`}>
               <span className={`inline-flex h-2 w-2 rounded-full ${tone.dot}`} />
               {item.stateLabel}
             </span>
           </div>
-          <h3 className="mt-3 text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
-            {item.entry.campaign.campaign_name}
-          </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[color:var(--dashboard-text)]">{item.summary}</p>
+          <p className="mt-1.5 text-sm leading-6 text-[color:var(--dashboard-text)]">{item.summary}</p>
         </div>
 
-        <div className="grid min-w-[240px] gap-3 sm:grid-cols-2 xl:min-w-[320px]">
-          <OverviewInlineMetric label={item.metricLabel} value={item.metricValue} />
-          <OverviewInlineMetric label={item.secondaryMetricLabel ?? 'Signaal'} value={item.secondaryMetricValue ?? 'Nog niet vrij'} />
-        </div>
-      </div>
-      <div className="mt-4 flex items-center justify-between border-t border-[color:var(--dashboard-frame-border)]/75 pt-4">
-        <span className="text-sm text-[color:var(--dashboard-muted)]">{formatCampaignPeriod(item.entry.campaign)}</span>
-        <span className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors group-hover:text-[color:var(--dashboard-ink)]">
+        <OverviewInlineMetric label={item.metricLabel} value={item.metricValue} />
+        <OverviewInlineMetric
+          label={item.secondaryMetricLabel ?? 'Signaal'}
+          value={item.secondaryMetricValue ?? 'Nog niet vrij'}
+        />
+        <span className="justify-self-start text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors group-hover:text-[color:var(--dashboard-ink)] xl:justify-self-end">
           {item.ctaLabel}
         </span>
       </div>
-    </Link>
-  )
-}
-
-function CompactOverviewRouteRow({ item }: { item: OverviewRouteItem }) {
-  return (
-    <Link
-      href={`/campaigns/${item.entry.campaign.campaign_id}`}
-      className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--dashboard-frame-border)]/75 py-3.5 last:border-b-0"
-    >
-      <div className="min-w-0">
-        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-          {item.routeLabel}
-        </p>
-        <p className="mt-1.5 truncate text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
-          {item.entry.campaign.campaign_name}
-        </p>
-        <p className="mt-1 text-sm text-[color:var(--dashboard-text)]">{item.summary}</p>
-      </div>
-      <span className="shrink-0 text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]">
-        {item.ctaLabel}
-      </span>
     </Link>
   )
 }
@@ -732,13 +708,30 @@ function OverviewInlineMetric({
   value: string
 }) {
   return (
-    <div className="rounded-[16px] border border-[color:var(--dashboard-frame-border)] bg-white/72 px-3.5 py-3">
-      <p className="text-[0.64rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+    <div className="min-w-0">
+      <p className="text-[0.64rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
         {label}
       </p>
-      <p className="dash-number mt-2 text-[1.15rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
+      <p className="dash-number mt-1.5 text-[1.08rem] leading-none text-[color:var(--dashboard-ink)]">{value}</p>
     </div>
   )
+}
+
+function buildOverviewBlockerItems(entries: CampaignHomeEntry[]) {
+  return [...entries]
+    .filter((entry) => ['setup', 'ready_to_launch', 'running', 'sparse'].includes(entry.state))
+    .sort(compareOverviewEntries)
+    .map((entry) => ({
+      entry,
+      blocker: getOverviewBlockerCopy(entry),
+    }))
+}
+
+function getOverviewBlockerCopy(entry: CampaignHomeEntry) {
+  if (entry.state === 'setup') return 'Respondentimport ontbreekt nog.'
+  if (entry.state === 'ready_to_launch') return 'Uitnodigingen zijn nog niet live.'
+  if (entry.state === 'running') return 'Er is nog geen veilige responslaag.'
+  return 'Meer respons nodig voor een eerste read.'
 }
 
 function formatCampaignPeriod(campaign: CampaignStats) {
