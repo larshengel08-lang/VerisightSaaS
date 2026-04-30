@@ -1,12 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { LogoutButton } from '@/components/ui/logout-button'
 import {
   buildDashboardShellNavigation,
-  getActiveModuleFromPathname,
+  getActiveModuleFromLocation,
   ACTION_CENTER_NAV,
   type DashboardModuleKey,
   type DashboardModuleNavItem,
@@ -35,9 +35,10 @@ export function DashboardShellFrame({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const currentCampaignPath = pathname.startsWith('/campaigns/') ? pathname : null
-  const activeModule = getActiveModuleFromPathname(pathname, campaigns)
+  const activeModule = getActiveModuleFromLocation(pathname, searchParams.get('module'), campaigns)
   const navigation = useMemo(
     () =>
       buildDashboardShellNavigation({

@@ -21,6 +21,11 @@ export type DashboardModuleKey =
   | 'reports'
   | 'action_center'
 
+export type DashboardCategoryModuleKey = Exclude<
+  DashboardModuleKey,
+  'overview' | 'reports' | 'action_center'
+>
+
 export type DashboardModuleNavItem = {
   key: DashboardModuleKey
   label: string
@@ -59,23 +64,32 @@ export function normalizeDashboardPortfolioView(view: string | undefined): Dashb
   return 'ready'
 }
 
-function pickRepresentativeCampaign(
-  campaigns: DashboardShellCampaignRef[],
-  scanType: ScanType,
-): DashboardShellCampaignRef | null {
-  const matches = campaigns.filter((campaign) => campaign.scan_type === scanType)
-  if (matches.length === 0) return null
-
-  return [...matches].sort((left, right) => {
-    if (left.is_active !== right.is_active) return left.is_active ? -1 : 1
-    const completionDelta = (right.total_completed ?? 0) - (left.total_completed ?? 0)
-    if (completionDelta !== 0) return completionDelta
-    return new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
-  })[0] ?? null
+const DASHBOARD_MODULE_SCAN_TYPES: Record<DashboardCategoryModuleKey, ScanType> = {
+  exit: 'exit',
+  retention: 'retention',
+  onboarding: 'onboarding',
+  pulse: 'pulse',
+  leadership: 'leadership',
 }
 
-function getCampaignHref(campaign: DashboardShellCampaignRef | null) {
-  return campaign ? `/campaigns/${campaign.campaign_id}` : null
+const DASHBOARD_MODULE_LABELS: Record<DashboardCategoryModuleKey, string> = {
+  exit: 'ExitScan',
+  retention: 'RetentieScan',
+  onboarding: 'Onboarding 30-60-90',
+  pulse: 'Pulse',
+  leadership: 'Leadership Scan',
+}
+
+export function getScanTypeForDashboardModule(moduleKey: DashboardCategoryModuleKey): ScanType {
+  return DASHBOARD_MODULE_SCAN_TYPES[moduleKey]
+}
+
+export function getDashboardModuleHref(moduleKey: DashboardCategoryModuleKey) {
+  return `/dashboard?module=${moduleKey}`
+}
+
+export function getDashboardModuleLabel(moduleKey: DashboardCategoryModuleKey) {
+  return DASHBOARD_MODULE_LABELS[moduleKey]
 }
 
 function getModuleKeyForScanType(scanType: ScanType): DashboardModuleKey {
@@ -97,13 +111,32 @@ function getModuleKeyForScanType(scanType: ScanType): DashboardModuleKey {
   return moduleKeyByScanType[scanType]
 }
 
-export function getActiveModuleFromPathname(
+export function normalizeDashboardModuleFilter(
+  value: string | undefined,
+): DashboardCategoryModuleKey | null {
+  if (
+    value === 'exit' ||
+    value === 'retention' ||
+    value === 'onboarding' ||
+    value === 'pulse' ||
+    value === 'leadership'
+  ) {
+    return value
+  }
+
+  return null
+}
+
+export function getActiveModuleFromLocation(
   pathname: string,
+  moduleFilter: string | null,
   campaigns: DashboardShellCampaignRef[],
 ): DashboardModuleKey {
   if (pathname.startsWith('/reports')) return 'reports'
   if (pathname.startsWith('/action-center')) return 'action_center'
-  if (!pathname.startsWith('/campaigns/')) return 'overview'
+  if (!pathname.startsWith('/campaigns/')) {
+    return normalizeDashboardModuleFilter(moduleFilter ?? undefined) ?? 'overview'
+  }
 
   const [, , campaignId] = pathname.split('/')
   if (!campaignId) return 'overview'
@@ -176,10 +209,11 @@ export function buildDashboardShellNavigation({
       ]
     }
 
-    const campaign = item.scanType ? pickRepresentativeCampaign(campaigns, item.scanType) : null
-    const href = getCampaignHref(campaign)
+    const hasAnyCampaignForScanType = item.scanType
+      ? campaigns.some((campaign) => campaign.scan_type === item.scanType)
+      : false
 
-    if (href === null) {
+    if (!hasAnyCampaignForScanType || !item.scanType) {
       return []
     }
 
@@ -187,7 +221,7 @@ export function buildDashboardShellNavigation({
       {
         key: item.key,
         label: item.label,
-        href,
+        href: getDashboardModuleHref(item.key as DashboardCategoryModuleKey),
         disabled: false,
       },
     ]

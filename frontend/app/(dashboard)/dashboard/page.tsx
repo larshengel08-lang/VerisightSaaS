@@ -19,6 +19,9 @@ import {
   hasOpenedActionCenterRoute,
 } from '@/lib/dashboard/open-action-center-route'
 import {
+  getDashboardModuleLabel,
+  getScanTypeForDashboardModule,
+  normalizeDashboardModuleFilter,
   normalizeDashboardPortfolioView,
   type DashboardPortfolioView,
 } from '@/lib/dashboard/shell-navigation'
@@ -56,6 +59,9 @@ export default async function DashboardHomePage({
   const requestedPortfolioView = normalizeDashboardPortfolioView(
     typeof resolvedSearchParams?.view === 'string' ? resolvedSearchParams.view : undefined,
   )
+  const requestedModuleFilter = normalizeDashboardModuleFilter(
+    typeof resolvedSearchParams?.module === 'string' ? resolvedSearchParams.module : undefined,
+  )
   const supabase = await createClient()
   const {
     data: { user },
@@ -69,7 +75,10 @@ export default async function DashboardHomePage({
 
   const { data: stats } = await supabase.from('campaign_stats').select('*').order('created_at', { ascending: false })
 
-  const campaigns = (stats ?? []) as CampaignStats[]
+  const allCampaigns = (stats ?? []) as CampaignStats[]
+  const campaigns = requestedModuleFilter
+    ? allCampaigns.filter((campaign) => campaign.scan_type === getScanTypeForDashboardModule(requestedModuleFilter))
+    : allCampaigns
   const campaignIds = campaigns.map((campaign) => campaign.campaign_id)
   const { data: respondentStateRowsRaw } =
     campaignIds.length > 0
@@ -170,19 +179,50 @@ export default async function DashboardHomePage({
   const portfolioView = portfolioTabs.some((tab) => tab.id === requestedPortfolioView)
     ? requestedPortfolioView
     : portfolioTabs[0]?.id ?? 'ready'
+  const moduleLabel = requestedModuleFilter ? getDashboardModuleLabel(requestedModuleFilter) : null
+  const moduleIntro = moduleLabel
+    ? `Alle ${moduleLabel}-routes op één plek. Kies welke campagne je nu wilt lezen, openen of opvolgen.`
+    : 'Wat nu leesbaar is, wat blokkeert en waar opvolging openstaat.'
 
   return (
     <div className="space-y-8">
       {campaigns.length === 0 && isAdmin ? (
         <AdminEmptyState />
       ) : campaigns.length === 0 ? (
-        <ViewerEmptyState />
+        requestedModuleFilter ? (
+          <DashboardSection
+            eyebrow={moduleLabel ?? 'Route'}
+            title="Nog geen campagnes voor deze route"
+            description="Zodra deze route live staat, verschijnt hier automatisch het volledige overzicht."
+          >
+            <div className="pt-1">
+              <Link
+                href="/dashboard"
+                className="inline-flex rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] hover:text-[color:var(--dashboard-accent-strong)]"
+              >
+                Terug naar alle routes
+              </Link>
+            </div>
+          </DashboardSection>
+        ) : (
+          <ViewerEmptyState />
+        )
       ) : (
         <>
           <div>
-            <h1 className="text-[1.35rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">Overzicht</h1>
+            {requestedModuleFilter ? (
+              <Link
+                href="/dashboard"
+                className="inline-flex text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+              >
+                Terug naar alle routes
+              </Link>
+            ) : null}
+            <h1 className="text-[1.35rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+              {moduleLabel ?? 'Overzicht'}
+            </h1>
             <p className="mt-1 text-sm leading-[1.7] text-[color:var(--dashboard-text)]">
-              Wat nu leesbaar is, wat blokkeert en waar opvolging openstaat.
+              {moduleIntro}
             </p>
           </div>
 

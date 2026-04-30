@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildDashboardShellNavigation,
-  getActiveModuleFromPathname,
+  getActiveModuleFromLocation,
+  getDashboardModuleHref,
+  normalizeDashboardModuleFilter,
   normalizeDashboardPortfolioView,
 } from './shell-navigation'
 
@@ -44,7 +46,7 @@ describe('dashboard shell navigation', () => {
     },
   ] as const
 
-  it('maps the shared dashboard rail onto real overview, campaign and report routes', () => {
+  it('maps product rail items onto category overview routes instead of a single campaign detail', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: false,
       currentCampaignPath: '/campaigns/campaign-123',
@@ -67,31 +69,31 @@ describe('dashboard shell navigation', () => {
       {
         key: 'exit',
         label: 'ExitScan',
-        href: '/campaigns/exit-1',
+        href: '/dashboard?module=exit',
         disabled: false,
       },
       {
         key: 'retention',
         label: 'RetentieScan',
-        href: '/campaigns/retention-1',
+        href: '/dashboard?module=retention',
         disabled: false,
       },
       {
         key: 'onboarding',
         label: 'Onboarding 30-60-90',
-        href: '/campaigns/onboarding-1',
+        href: '/dashboard?module=onboarding',
         disabled: false,
       },
       {
         key: 'pulse',
         label: 'Pulse',
-        href: '/campaigns/pulse-1',
+        href: '/dashboard?module=pulse',
         disabled: false,
       },
       {
         key: 'leadership',
         label: 'Leadership Scan',
-        href: '/campaigns/leadership-1',
+        href: '/dashboard?module=leadership',
         disabled: false,
       },
       {
@@ -131,22 +133,24 @@ describe('dashboard shell navigation', () => {
     expect(navigation.admin.map((item) => item.label)).toEqual(['Setup', 'Leads', 'Action Center bron'])
     expect(navigation.modules[3]).toMatchObject({
       key: 'onboarding',
-      href: '/campaigns/onboarding-1',
+      href: '/dashboard?module=onboarding',
     })
   })
 
-  it('derives the active preview module from real campaign routes', () => {
-    expect(getActiveModuleFromPathname('/dashboard', [...campaigns])).toBe('overview')
-    expect(getActiveModuleFromPathname('/campaigns/retention-1', [...campaigns])).toBe('retention')
-    expect(getActiveModuleFromPathname('/campaigns/pulse-1', [...campaigns])).toBe('pulse')
-    expect(getActiveModuleFromPathname('/campaigns/leadership-1', [...campaigns])).toBe('leadership')
-    expect(getActiveModuleFromPathname('/campaigns/unknown', [...campaigns])).toBe('overview')
-    expect(getActiveModuleFromPathname('/reports', [...campaigns])).toBe('reports')
-    expect(getActiveModuleFromPathname('/action-center', [...campaigns])).toBe('action_center')
-    expect(getActiveModuleFromPathname('/beheer', [...campaigns])).toBe('overview')
+  it('derives the active module from category filters and real campaign routes', () => {
+    expect(getActiveModuleFromLocation('/dashboard', null, [...campaigns])).toBe('overview')
+    expect(getActiveModuleFromLocation('/dashboard', 'exit', [...campaigns])).toBe('exit')
+    expect(getActiveModuleFromLocation('/dashboard', 'retention', [...campaigns])).toBe('retention')
+    expect(getActiveModuleFromLocation('/campaigns/retention-1', null, [...campaigns])).toBe('retention')
+    expect(getActiveModuleFromLocation('/campaigns/pulse-1', null, [...campaigns])).toBe('pulse')
+    expect(getActiveModuleFromLocation('/campaigns/leadership-1', null, [...campaigns])).toBe('leadership')
+    expect(getActiveModuleFromLocation('/campaigns/unknown', null, [...campaigns])).toBe('overview')
+    expect(getActiveModuleFromLocation('/reports', null, [...campaigns])).toBe('reports')
+    expect(getActiveModuleFromLocation('/action-center', null, [...campaigns])).toBe('action_center')
+    expect(getActiveModuleFromLocation('/beheer', null, [...campaigns])).toBe('overview')
   })
 
-  it('hides module slots that do not have a real campaign route yet', () => {
+  it('hides product rail items that do not have any campaign yet', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: false,
       shellMode: 'full',
@@ -212,5 +216,14 @@ describe('dashboard shell navigation', () => {
     expect(normalizeDashboardPortfolioView('closed')).toBe('closed')
     expect(normalizeDashboardPortfolioView('unknown')).toBe('ready')
     expect(normalizeDashboardPortfolioView(undefined)).toBe('ready')
+  })
+
+  it('normalizes dashboard module filters and exposes stable category hrefs', () => {
+    expect(normalizeDashboardModuleFilter('exit')).toBe('exit')
+    expect(normalizeDashboardModuleFilter('leadership')).toBe('leadership')
+    expect(normalizeDashboardModuleFilter('unknown')).toBeNull()
+    expect(normalizeDashboardModuleFilter(undefined)).toBeNull()
+    expect(getDashboardModuleHref('exit')).toBe('/dashboard?module=exit')
+    expect(getDashboardModuleHref('retention')).toBe('/dashboard?module=retention')
   })
 })
