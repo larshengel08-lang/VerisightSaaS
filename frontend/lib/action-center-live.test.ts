@@ -129,7 +129,7 @@ describe('live action center builder', () => {
     expect(isLiveActionCenterScanType('team')).toBe(false)
   })
 
-  it('builds preview items only for active routes and carries canonical route fields downstream', () => {
+  it('builds preview items for legacy active routes and assignment-open requests, while keeping non-open candidates out', () => {
     const exitCampaign = buildCampaign()
     const pulseCampaign = buildCampaign({
       id: 'campaign-pulse',
@@ -232,10 +232,30 @@ describe('live action center builder', () => {
       learningCheckpoints: [],
       reviewDecisions: [] as ActionCenterReviewDecision[],
     }
+    const openRequestContext = {
+      ...candidateContext,
+      assignedManager: {
+        userId: 'manager-2',
+        displayName: 'Manager People',
+        assignedAt: '2026-04-22T08:00:00.000Z',
+      },
+      learningDossier: buildDossier({
+        id: 'dossier-pulse-open-request',
+        campaign_id: 'campaign-pulse',
+        title: 'Pulse review april',
+        scan_type: 'pulse',
+        delivery_mode: 'baseline',
+        expected_first_value: null,
+        first_management_value: null,
+        first_action_taken: null,
+        review_moment: null,
+      }),
+    }
     const route = projectActionCenterRoute(activeContext)
 
     const items = buildLiveActionCenterItems([
       activeContext,
+      openRequestContext,
       candidateContext,
     ])
 
@@ -247,9 +267,23 @@ describe('live action center builder', () => {
       reviewOutcome: 'stoppen',
     })
     expect(projectActionCenterRoute(candidateContext).entryStage).toBe('candidate')
+    expect(projectActionCenterRoute(openRequestContext)).toMatchObject({
+      entryStage: 'active',
+      routeOpenedAt: '2026-04-22T08:00:00.000Z',
+      routeStatus: 'open-verzoek',
+    })
 
-    expect(items).toHaveLength(1)
+    expect(items).toHaveLength(2)
     expect(items[0]).toMatchObject({
+      sourceLabel: 'Pulse',
+      orgId: 'org-1',
+      scopeType: 'department',
+      ownerId: 'manager-2',
+      ownerName: 'Manager People',
+      status: 'open-verzoek',
+      teamLabel: 'People Experience',
+    })
+    expect(items[1]).toMatchObject({
       id: route.routeId,
       sourceLabel: 'ExitScan',
       orgId: 'org-1',
@@ -266,7 +300,7 @@ describe('live action center builder', () => {
       reviewOutcome: route.reviewOutcome,
       nextStep: 'Plan eerste managementgesprek met HR en sponsor.',
     })
-    expect(items[0]?.openSignals).toEqual(['owner_missing'])
+    expect(items[1]?.openSignals).toEqual(['owner_missing'])
     expect(items.find((item) => item.id === 'campaign-pulse::engineering')).toBeUndefined()
   })
 
@@ -586,7 +620,7 @@ describe('live action center builder', () => {
       launch_confirmed_at: null,
       participant_comms_config: null,
       reminder_config: null,
-      first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+      first_management_use_confirmed_at: null,
       follow_up_decided_at: null,
       learning_closed_at: null,
       created_at: '2026-04-15T10:00:00.000Z',

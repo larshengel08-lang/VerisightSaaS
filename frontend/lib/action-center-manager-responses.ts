@@ -2,6 +2,7 @@ import {
   looksLikeActionCenterExpectedEffect,
   looksLikeActionCenterStep,
 } from './action-center-review-decisions'
+import type { ActionCenterWorkspaceMember } from './suite-access'
 import type {
   ActionCenterManagerActionStatus,
   ActionCenterManagerActionThemeKey,
@@ -49,15 +50,142 @@ export interface ActionCenterManagerResponseWriteInput {
   primary_action_status: ActionCenterManagerActionStatus | null
 }
 
+export interface ActionCenterManagerResponseSubmittedIdentity {
+  campaign_id: string
+  org_id?: string | null
+  route_scope_type: ActionCenterManagerResponseScopeType
+  route_scope_value: string
+  manager_user_id?: string | null
+}
+
+type ManagerAssignmentTruth = Pick<
+  ActionCenterWorkspaceMember,
+  'org_id' | 'user_id' | 'access_role' | 'scope_type' | 'scope_value' | 'can_view' | 'can_update'
+>
+
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
   return trimmed.length > 0 ? trimmed : null
+}
+
+function normalizeDepartmentLabel(value: string | null | undefined) {
+  const normalized = normalizeText(value)
+  return normalized ? normalized.toLocaleLowerCase('nl-NL') : null
 }
 
 function isIsoDate(value: string | null | undefined) {
   const normalized = normalizeText(value)
   if (!normalized) return false
   return /^\d{4}-\d{2}-\d{2}$/.test(normalized)
+}
+
+export function buildDepartmentScopeValue(orgId: string, departmentLabel: string) {
+  return `${orgId}::department::${normalizeDepartmentLabel(departmentLabel) ?? ''}`
+}
+
+export function buildCampaignItemScopeValue(orgId: string, campaignId: string) {
+  return `${orgId}::campaign::${campaignId}`
+}
+
+function isCanonicalRouteScopeForCampaign(args: {
+  campaignId: string
+  campaignOrgId: string
+  routeScopeType: ActionCenterManagerResponseScopeType
+  routeScopeValue: string
+  visibleDepartmentLabels: string[]
+}) {
+  if (args.routeScopeType === 'item') {
+    return args.routeScopeValue === buildCampaignItemScopeValue(args.campaignOrgId, args.campaignId)
+  }
+
+  return args.visibleDepartmentLabels.some(
+    (label) => buildDepartmentScopeValue(args.campaignOrgId, label) === args.routeScopeValue,
+  )
+}
+
+export function resolveManagerResponseWriteIdentity(args: {
+  submitted: ActionCenterManagerResponseSubmittedIdentity
+  currentUserId: string
+  campaignOrgId: string
+  visibleDepartmentLabels: string[]
+  membership: ManagerAssignmentTruth | null
+  isVerisightAdmin: boolean
+}) {
+  const submittedCampaignId = normalizeText(args.submitted.campaign_id)
+  const submittedOrgId = normalizeText(args.submitted.org_id)
+  const submittedScopeValue = normalizeText(args.submitted.route_scope_value)
+  const submittedManagerUserId = normalizeText(args.submitted.manager_user_id)
+
+  if (
+    !submittedCampaignId ||
+    !submittedScopeValue ||
+    !RESPONSE_SCOPE_TYPES.has(args.submitted.route_scope_type as ActionCenterManagerResponseScopeType)
+  ) {
+    throw new Error('Ongeldige manager response route-identiteit.')
+  }
+
+  if (
+    submittedManagerUserId &&
+    submittedManagerUserId !== args.currentUserId
+  ) {
+    throw new Error('Ongeldige manager response route-identiteit.')
+  }
+
+  if (
+    submittedOrgId &&
+    submittedOrgId !== args.campaignOrgId
+  ) {
+    throw new Error('Manager response route bestaat niet voor deze campagne.')
+  }
+
+  if (
+    !isCanonicalRouteScopeForCampaign({
+      campaignId: submittedCampaignId,
+      campaignOrgId: args.campaignOrgId,
+      routeScopeType: args.submitted.route_scope_type,
+      routeScopeValue: submittedScopeValue,
+      visibleDepartmentLabels: args.visibleDepartmentLabels,
+    })
+  ) {
+    throw new Error('Manager response route bestaat niet voor deze campagne.')
+  }
+
+  if (args.isVerisightAdmin) {
+    return {
+      campaign_id: submittedCampaignId,
+      org_id: args.campaignOrgId,
+      route_scope_type: args.submitted.route_scope_type,
+      route_scope_value: submittedScopeValue,
+      manager_user_id: args.currentUserId,
+    } satisfies ActionCenterManagerResponseSubmittedIdentity & {
+      org_id: string
+      manager_user_id: string
+    }
+  }
+
+  if (
+    !args.membership ||
+    args.membership.access_role !== 'manager_assignee' ||
+    !args.membership.can_view ||
+    !args.membership.can_update ||
+    args.membership.user_id !== args.currentUserId ||
+    args.membership.org_id !== args.campaignOrgId ||
+    args.membership.scope_type !== args.submitted.route_scope_type ||
+    args.membership.scope_value !== submittedScopeValue
+  ) {
+    throw new Error('Ongeldige manager response route-identiteit.')
+  }
+
+  return {
+    campaign_id: submittedCampaignId,
+    org_id: args.membership.org_id,
+    route_scope_type: args.membership.scope_type,
+    route_scope_value: args.membership.scope_value,
+    manager_user_id: args.currentUserId,
+  } satisfies ActionCenterManagerResponseSubmittedIdentity & {
+    org_id: string
+    manager_user_id: string
+  }
 }
 
 export function getActionCenterManagerResponseLabel(value: ActionCenterManagerResponseType) {

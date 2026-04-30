@@ -214,16 +214,13 @@ describe('action center route contract', () => {
     })
   })
 
-  it('projects a manager-assigned active route without response as open-verzoek', () => {
+  it('projects an HR-opened route from assignment-only truth as open-verzoek', () => {
     const context = buildContext({
       assignedManager: {
         userId: 'manager-1',
         displayName: 'Manager Operations',
         assignedAt: '2026-04-21T08:00:00.000Z',
       },
-      deliveryRecord: buildDeliveryRecord({
-        first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
-      }),
       dossier: buildDossier({
         first_action_taken: null,
         expected_first_value: null,
@@ -233,7 +230,9 @@ describe('action center route contract', () => {
 
     expect(projectActionCenterRoute(context)).toMatchObject({
       entryStage: 'active',
+      routeOpenedAt: '2026-04-21T08:00:00.000Z',
       owner: 'Manager Operations',
+      ownerAssignedAt: '2026-04-21T08:00:00.000Z',
       routeStatus: 'open-verzoek',
       reviewScheduledFor: null,
       intervention: null,
@@ -291,9 +290,6 @@ describe('action center route contract', () => {
         displayName: 'Manager Operations',
         assignedAt: '2026-04-21T08:00:00.000Z',
       },
-      deliveryRecord: buildDeliveryRecord({
-        first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
-      }),
       dossier: buildDossier({
         first_action_taken: null,
         expected_first_value: null,

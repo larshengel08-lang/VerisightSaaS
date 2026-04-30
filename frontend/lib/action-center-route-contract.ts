@@ -84,7 +84,10 @@ export function buildActionCenterRouteId(campaignId: string, scopeValue: string)
 }
 
 function getRouteOpenedAt(context: LiveActionCenterCampaignContext) {
-  return normalizeText(context.deliveryRecord?.first_management_use_confirmed_at)
+  return (
+    normalizeText(context.assignedManager?.assignedAt) ??
+    normalizeText(context.deliveryRecord?.first_management_use_confirmed_at)
+  )
 }
 
 function getOwner(context: LiveActionCenterCampaignContext) {
@@ -93,7 +96,7 @@ function getOwner(context: LiveActionCenterCampaignContext) {
 
 function getOwnerAssignedAt(context: LiveActionCenterCampaignContext, routeOpenedAt: string | null, owner: string | null) {
   if (!routeOpenedAt || !owner) return null
-  return normalizeText(context.assignedManager?.assignedAt)
+  return normalizeText(context.assignedManager?.assignedAt) ?? routeOpenedAt
 }
 
 function getIntervention(context: LiveActionCenterCampaignContext) {

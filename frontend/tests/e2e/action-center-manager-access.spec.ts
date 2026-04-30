@@ -11,6 +11,10 @@ const artifact = existsSync(artifactPath)
     })
   : null
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 test.describe('action center manager access', () => {
   test.skip(!artifact, 'Seeded pilot artifact ontbreekt. Draai eerst scripts/seed-action-center-manager-pilot.mjs.')
 
@@ -71,9 +75,12 @@ async function login(page: import('@playwright/test').Page, email: string, passw
 
   test('manager can save a bounded first response and see the route transition persist', async ({ page }) => {
     const manager = pilot.managers[0]
+    const focusUrl = `/action-center?focus=${pilot.campaignId}`
     await login(page, manager.email, manager.password)
     await page.waitForURL(/\/action-center$/)
 
+    await page.goto(focusUrl)
+    await expect(page).toHaveURL(new RegExp(`focus=${pilot.campaignId}$`))
     await page.getByRole('button', { name: 'Open focusactie' }).click()
     await expect(page.getByRole('heading', { name: /route staat klaar voor eerste reactie|eerste lokale follow-through/i })).toBeVisible()
 
@@ -97,9 +104,14 @@ async function login(page: import('@playwright/test').Page, email: string, passw
     await expect(page.getByLabel('Wat moet dit zichtbaar maken?')).toHaveValue(
       'Binnen twee weken moet duidelijk worden of feedbackafspraken consistenter terugkomen in het team.',
     )
+    const savedRouteTitle = (await page.getByRole('heading', { level: 2 }).textContent())?.trim() ?? ''
 
-    await page.reload()
-    await page.getByRole('button', { name: 'Open focusactie' }).click()
+    await page.goto(focusUrl)
+    await expect(page).toHaveURL(new RegExp(`focus=${pilot.campaignId}$`))
+    await page
+      .getByRole('button', { name: new RegExp(escapeRegExp(savedRouteTitle), 'i') })
+      .first()
+      .click()
     await expect(page.getByRole('heading', { name: 'Eerste lokale follow-through' })).toBeVisible()
     await expect(page.getByText('Inplannen', { exact: true }).first()).toBeVisible()
     await expect(page.getByText('18 mei 2026')).toBeVisible()
