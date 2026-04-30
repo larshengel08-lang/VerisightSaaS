@@ -27,6 +27,16 @@ import {
   InsightStatCard,
   SignalStatCard,
 } from "@/components/dashboard/dashboard-primitives";
+import {
+  ManagementReadBridge,
+  ManagementReadDistribution,
+  ManagementReadFactorTable,
+  ManagementReadHeader,
+  ManagementReadInfoGrid,
+  ManagementReadNarratives,
+  ManagementReadSection,
+  ManagementReadStrip,
+} from "@/components/dashboard/management-read-primitives";
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
 import { FactorTable } from "@/components/dashboard/factor-table";
 import { GuidedSelfServePanel } from "@/components/dashboard/guided-self-serve-panel";
@@ -85,7 +95,11 @@ import {
 import { getFirstNextStepGuidance } from "@/lib/client-onboarding";
 import { type CampaignAuditEventRecord } from "@/lib/campaign-audit";
 import { getCustomerActionPermission } from "@/lib/customer-permissions";
-import { getRiskBandFromScore } from "@/lib/management-language";
+import {
+  buildFactorPresentation,
+  getManagementBandLabel,
+  getRiskBandFromScore,
+} from "@/lib/management-language";
 import type {
   CampaignDeliveryCheckpoint,
   CampaignDeliveryRecord,
@@ -217,6 +231,256 @@ function normalizeInformationalTone(
   return tone === "blue" ? "slate" : tone;
 }
 
+function formatRoutePeriodLabel(campaignName: string, createdAt: string) {
+  const quarterMatch = campaignName.match(/Q[1-4]\s?\d{4}/i)
+  if (quarterMatch) return quarterMatch[0].replace(/\s+/, " ")
+
+  return new Intl.DateTimeFormat("nl-NL", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(createdAt))
+}
+
+function deriveScopeLabel(respondents: Respondent[]) {
+  const departments = Array.from(
+    new Set(respondents.map((respondent) => respondent.department).filter(Boolean)),
+  ) as string[]
+
+  if (departments.length === 0) return "Scope binnen deze route"
+  if (departments.length === 1) return departments[0]
+  if (departments.length === 2) return `${departments[0]} & ${departments[1]}`
+  return `${departments[0]}, ${departments[1]} + ${departments.length - 2} meer`
+}
+
+function buildResponseContextNote(totalCompleted: number, completionRate: number) {
+  if (totalCompleted >= MIN_N_PATTERNS) {
+    return `Responsbasis van ${completionRate}% is stevig genoeg voor een bestuurlijke eerste lezing. Lees verschillen nog steeds in samenhang met scope en banding.`
+  }
+
+  return `Eerste read is zichtbaar, maar detail blijft nog begrensd. Gebruik de responsbasis van ${completionRate}% vooral om richting te bepalen, niet om al te ver te concluderen.`
+}
+
+function buildExitPictureDistribution(responses: SurveyResponse[]) {
+  const counts = {
+    work: 0,
+    pull: 0,
+    situational: 0,
+  }
+
+  for (const response of responses) {
+    const code = response.exit_reason_code
+    if (!code) continue
+    if (code.startsWith("PL")) counts.pull += 1
+    else if (code.startsWith("S")) counts.situational += 1
+    else counts.work += 1
+  }
+
+  const total = counts.work + counts.pull + counts.situational
+  const toPercent = (value: number) => (total > 0 ? Math.round((value / total) * 100) : 0)
+
+  return {
+    total,
+    workPercent: toPercent(counts.work),
+    pullPercent: toPercent(counts.pull),
+    situationalPercent: toPercent(counts.situational),
+    segments: [
+      { label: "Werkfrictie zichtbaar", value: `${toPercent(counts.work)}%`, percent: toPercent(counts.work) },
+      { label: "Andere trekfactoren zichtbaar", value: `${toPercent(counts.pull)}%`, percent: toPercent(counts.pull) },
+      { label: "Situationele context zichtbaar", value: `${toPercent(counts.situational)}%`, percent: toPercent(counts.situational) },
+    ],
+  }
+}
+
+function buildExitNarratives(args: {
+  topFactorLabel: string | null
+  secondFactorLabel: string | null
+  topExitReasonLabel: string | null
+  topContributingReasonLabel: string | null
+  strongWorkSignalRate: number | null
+  distribution: ReturnType<typeof buildExitPictureDistribution>
+}) {
+  const items = []
+
+  if (args.topFactorLabel) {
+    items.push({
+      title: `${args.topFactorLabel} zet de eerste leesrichting`,
+      tag: "Primair signaal",
+      body: `${args.topFactorLabel} ligt het scherpst onder de organisatiefactoren en hoort daarom de eerste bestuurlijke leeslaag te openen.`,
+    })
+  }
+
+  if (args.secondFactorLabel) {
+    items.push({
+      title: `${args.secondFactorLabel} versterkt het vertrekbeeld`,
+      tag: "Samenhang",
+      body: `${args.secondFactorLabel} komt niet losstaand terug, maar kleurt het patroon mee naast de eerste driver.`,
+    })
+  }
+
+  if (args.topExitReasonLabel || args.topContributingReasonLabel) {
+    items.push({
+      title: "Vertrekredenen en context wijzen dezelfde kant op",
+      tag: "Rapportlezing",
+      body: `${args.topExitReasonLabel ?? "De dominante vertrekreden"} en ${args.topContributingReasonLabel ?? "de contextcodes"} versterken samen het beeld dat vooral intern werkgerelateerde frictie zichtbaar is.`,
+    })
+  }
+
+  if (args.strongWorkSignalRate !== null) {
+    items.push({
+      title: "Beïnvloedbare werkcontext blijft bestuurlijk relevant",
+      tag: "Werkbaarheid",
+      body: `${args.strongWorkSignalRate}% van de leesbare responses valt in sterk werksignaal. Daardoor blijft deze route bestuurlijk vooral een intern werkvraagstuk, niet alleen een marktvraagstuk.`,
+    })
+  }
+
+  if (items.length < 3) {
+    items.push({
+      title: "Werkfrictie blijft de dominante lezing",
+      tag: "Vertrekbeeld",
+      body: `${args.distribution.workPercent}% van het vertrekbeeld valt in werkfrictie. Andere trekfactoren en situationele context blijven zichtbaar, maar dragen minder hard de eerste managementread.`,
+    })
+  }
+
+  return items.slice(0, 3)
+}
+
+function buildRetentionNarratives(args: {
+  topFactorLabel: string | null
+  secondFactorLabel: string | null
+  retentionThemes: Array<{ title: string; implication: string; sample: string }>
+  averageRiskScore: number | null
+  turnoverIntention: number | null
+  engagement: number | null
+}) {
+  const items = []
+
+  if (args.topFactorLabel) {
+    items.push({
+      title: `${args.topFactorLabel} draagt de eerste behoudsdruk`,
+      tag: "Hoofdpatroon",
+      body: `${args.topFactorLabel} ligt het scherpst onder de organisatiefactoren en hoort daarom de eerste bestuurlijke leesrichting te bepalen.`,
+    })
+  }
+
+  if (args.secondFactorLabel) {
+    items.push({
+      title: `${args.secondFactorLabel} versterkt het risico`,
+      tag: "Samenhang",
+      body: `${args.secondFactorLabel} staat niet los, maar vergroot de kans dat behoudsdruk harder voelbaar wordt naast de eerste driver.`,
+    })
+  }
+
+  if (args.retentionThemes[0]) {
+    items.push({
+      title: args.retentionThemes[0].title,
+      tag: "Open signalen",
+      body: args.retentionThemes[0].implication,
+    })
+  }
+
+  if (items.length < 3 && args.averageRiskScore !== null && args.turnoverIntention !== null) {
+    items.push({
+      title: "Retentiesignaal, vertrekintentie en bevlogenheid moeten samen gelezen worden",
+      tag: "Leesdiscipline",
+      body: `Met een retentiesignaal van ${args.averageRiskScore.toFixed(1)}/10, vertrekintentie op ${args.turnoverIntention.toFixed(1)}/10 en bevlogenheid op ${args.engagement?.toFixed(1) ?? "-"}/10 ontstaat de bestuurlijke kern in de verhouding tussen blijven, twijfelen en actief willen vertrekken.`,
+    })
+  }
+
+  return items.slice(0, 3)
+}
+
+function buildFactorPriorityRows(factorAverages: Record<string, number>) {
+  return Object.entries(factorAverages)
+    .map(([factor, score]) => {
+      const signalScore = 11 - score
+      const presentation = buildFactorPresentation({
+        score,
+        signalScore,
+        managementLabel: getManagementBandLabel(signalScore),
+        showSignal: true,
+      })
+
+      return {
+        factor: FACTOR_LABELS[factor] ?? factor,
+        score: presentation.scoreDisplay,
+        signal: presentation.signalDisplay,
+        band: presentation.managementLabel,
+        note:
+          signalScore >= 7
+            ? "Direct prioriteren in de eerste managementread."
+            : signalScore >= 4.5
+              ? "Eerst bestuurlijk toetsen voordat de route zwaarder wordt."
+              : "Volgen, maar niet als eerste stuurpunt openen.",
+        signalValue: signalScore,
+      }
+    })
+    .sort((left, right) => right.signalValue - left.signalValue)
+}
+
+function buildSdtRows(sdtAverages: {
+  autonomy?: number
+  competence?: number
+  relatedness?: number
+}) {
+  return [
+    { key: "autonomy", label: "Autonomie", value: sdtAverages.autonomy },
+    { key: "competence", label: "Competentie & groei", value: sdtAverages.competence },
+    { key: "relatedness", label: "Verbondenheid", value: sdtAverages.relatedness },
+  ]
+    .filter((item) => typeof item.value === "number")
+    .map((item) => {
+      const signalScore = 11 - Number(item.value)
+      return {
+        factor: item.label,
+        score: `${Number(item.value).toFixed(1)}/10`,
+        signal: `${signalScore.toFixed(1)}/10`,
+        band: getManagementBandLabel(signalScore),
+        note:
+          signalScore >= 7
+            ? "Draagt zelfstandig aan de bestuurlijke leesrichting bij."
+            : signalScore >= 4.5
+              ? "Relevant als verdiepingslaag naast de primaire organisatiefactoren."
+              : "Ondersteunend, maar niet de eerste driver van dit beeld.",
+      }
+    })
+}
+
+function buildRetentionSignalSegments(riskDistribution: {
+  HOOG: number
+  MIDDEN: number
+  LAAG: number
+}) {
+  const total = riskDistribution.HOOG + riskDistribution.MIDDEN + riskDistribution.LAAG
+  const toPercent = (value: number) => (total > 0 ? Math.round((value / total) * 100) : 0)
+
+  return [
+    { label: "Actief vertrekdenkend", value: `${toPercent(riskDistribution.HOOG)}%`, percent: toPercent(riskDistribution.HOOG) },
+    { label: "Latent risico", value: `${toPercent(riskDistribution.MIDDEN)}%`, percent: toPercent(riskDistribution.MIDDEN) },
+    { label: "Stabiel", value: `${toPercent(riskDistribution.LAAG)}%`, percent: toPercent(riskDistribution.LAAG) },
+  ]
+}
+
+function buildEngagementSegments(responses: SurveyResponse[]) {
+  const counts = { high: 0, mid: 0, low: 0 }
+
+  for (const response of responses) {
+    const value = response.uwes_score
+    if (typeof value !== "number") continue
+    if (value >= 7) counts.high += 1
+    else if (value >= 5) counts.mid += 1
+    else counts.low += 1
+  }
+
+  const total = counts.high + counts.mid + counts.low
+  const toPercent = (value: number) => (total > 0 ? Math.round((value / total) * 100) : 0)
+
+  return [
+    { label: "Bevlogen", value: `${toPercent(counts.high)}%`, percent: toPercent(counts.high) },
+    { label: "Wisselend", value: `${toPercent(counts.mid)}%`, percent: toPercent(counts.mid) },
+    { label: "Laag bevlogen", value: `${toPercent(counts.low)}%`, percent: toPercent(counts.low) },
+  ]
+}
+
 export default async function CampaignPage({ params }: Props) {
   const { id } = await params;
   const supabase = await createClient();
@@ -262,6 +526,7 @@ export default async function CampaignPage({ params }: Props) {
   const [
     { data: profile },
     { data: membership },
+    { data: organization },
     { data: campaignMeta },
     { count: activeClientAccessCount },
     { count: pendingClientInviteCount },
@@ -281,6 +546,11 @@ export default async function CampaignPage({ params }: Props) {
           .eq("user_id", user.id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase
+      .from("organizations")
+      .select("name")
+      .eq("id", stats.organization_id)
+      .maybeSingle(),
     supabase
       .from("campaigns")
       .select("enabled_modules, delivery_mode")
@@ -1830,6 +2100,257 @@ export default async function CampaignPage({ params }: Props) {
       )}
     </>
   );
+
+  const organizationName = organization?.name ?? "Organisatie"
+  const routePeriodLabel = formatRoutePeriodLabel(stats.campaign_name, stats.created_at)
+  const scopeLabel = deriveScopeLabel(respondents)
+  const factorPriorityRows = buildFactorPriorityRows(factorData.orgAverages)
+  const sdtRows = buildSdtRows(factorData.sdtAverages)
+
+  if (
+    showManagementOutput &&
+    (stats.scan_type === "exit" || stats.scan_type === "retention")
+  ) {
+    const topFactor = factorPriorityRows[0]?.factor ?? null
+    const secondFactor = factorPriorityRows[1]?.factor ?? null
+    const headerActions = (
+      <PdfDownloadButton
+        campaignId={id}
+        campaignName={stats.campaign_name}
+        scanType={stats.scan_type}
+      />
+    )
+
+    if (stats.scan_type === "exit") {
+      const exitDistribution = buildExitPictureDistribution(responses)
+      const exitNarratives = buildExitNarratives({
+        topFactorLabel: topFactor,
+        secondFactorLabel: secondFactor,
+        topExitReasonLabel,
+        topContributingReasonLabel,
+        strongWorkSignalRate,
+        distribution: exitDistribution,
+      })
+
+      return (
+        <div className="space-y-8">
+          <div className="border-b border-slate-200/80 pb-4">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
+            >
+              Terug naar dashboardoverzicht
+            </Link>
+          </div>
+
+          <ManagementReadHeader
+            tone="exit"
+            productLabel="ExitScan"
+            title={stats.campaign_name}
+            orgLabel={organizationName}
+            periodLabel={routePeriodLabel}
+            scopeLabel={scopeLabel}
+            statusLabel={compositionStateMeta.label}
+            contextLine={`${topFactor ?? "De route"} draagt de eerste bestuurlijke leesrichting. ${strongWorkSignalRate ?? 0}% van de leesbare responses valt in sterk werksignaal, waardoor deze route vooral een intern werkvraagstuk blijft.`}
+            actions={headerActions}
+          />
+
+          <ManagementReadSection eyebrow="Bestuurlijke handoff" title="Wat dit vertrekbeeld nu eerst zegt">
+            <div className="space-y-5">
+              <p className="max-w-4xl text-[1rem] leading-7 text-[color:var(--dashboard-text)]">
+                Het vertrekbeeld vraagt eerst een bestuurlijke lezing van de samenhang tussen {topFactor?.toLowerCase() ?? "de scherpste driver"} en {secondFactor?.toLowerCase() ?? "de tweede laag"}. Deze route duidt en prioriteert, maar vult nog geen eigenaar, reviewmoment of eerste actie voor je in.
+              </p>
+              <ManagementReadInfoGrid
+                items={[
+                  { label: "Sterkste driver", value: topFactor ?? "Nog niet vrij" },
+                  { label: "Dominante vertrekreden", value: topExitReasonLabel ?? "Nog niet vrij" },
+                  { label: "Werkfrictie zichtbaar", value: `${exitDistribution.workPercent}%` },
+                  { label: "Bestuurlijke status", value: compositionStateMeta.label },
+                ]}
+              />
+            </div>
+          </ManagementReadSection>
+
+          <ManagementReadSection
+            eyebrow="Respons en context"
+            title="Responsbasis en leesdiscipline"
+            note={`n = ${responses.length}. Lees de route altijd in samenhang met de responsbasis en de verdeling van het vertrekbeeld.`}
+          >
+            <ManagementReadStrip
+              items={[
+                { label: "Uitgenodigd", value: `${stats.total_invited}` },
+                { label: "Ingevuld", value: `${stats.total_completed}` },
+                { label: "Respons", value: `${stats.completion_rate_pct ?? 0}%` },
+              ]}
+              note={buildResponseContextNote(stats.total_completed, stats.completion_rate_pct ?? 0)}
+            />
+          </ManagementReadSection>
+
+          <ManagementReadSection
+            eyebrow="Frictiescore"
+            title="Frictiescore en verdeling van het vertrekbeeld"
+          >
+            <div className="grid gap-4 xl:grid-cols-2">
+              <ManagementReadDistribution
+                tone="exit"
+                label="Frictiescore"
+                value={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet vrij"}
+                narrative={`De banding blijft bestuurlijk relevant: ${stats.band_high} responses vallen in Direct prioriteren, ${stats.band_medium} in Eerst toetsen en ${stats.band_low} in Volgen.`}
+                segments={[
+                  { label: "Direct prioriteren", value: `${stats.band_high}`, percent: stats.total_completed > 0 ? Math.round((stats.band_high / stats.total_completed) * 100) : 0 },
+                  { label: "Eerst toetsen", value: `${stats.band_medium}`, percent: stats.total_completed > 0 ? Math.round((stats.band_medium / stats.total_completed) * 100) : 0 },
+                  { label: "Volgen", value: `${stats.band_low}`, percent: stats.total_completed > 0 ? Math.round((stats.band_low / stats.total_completed) * 100) : 0 },
+                ]}
+              />
+              <ManagementReadDistribution
+                tone="exit"
+                label="Vertrekbeeld"
+                value={`${exitDistribution.workPercent}% werkfrictie`}
+                narrative="Deze verdeling geeft de eerste contextlaag onder het vertrekbeeld. Werkfrictie, andere trekfactoren en situationele context blijven daarom apart bestuurlijk relevant."
+                segments={exitDistribution.segments}
+              />
+            </div>
+          </ManagementReadSection>
+
+          <ManagementReadSection
+            eyebrow="Synthese"
+            title="Signalen in samenhang"
+            note="De synthese blijft een leeslaag. Zij vervangt geen rapportwaarheid en introduceert geen nieuwe commitmentstructuur."
+          >
+            <ManagementReadNarratives items={exitNarratives} />
+          </ManagementReadSection>
+
+          <ManagementReadSection
+            eyebrow="Drivers"
+            title="Drivers en prioriteitenbeeld"
+            note={`Belevingsscore en aparte signaalwaarde blijven zichtbaar. Banding blijft bestuurlijk relevant als snelle managementlezing.`}
+          >
+            <ManagementReadFactorTable rows={factorPriorityRows} />
+          </ManagementReadSection>
+
+          <ManagementReadSection
+            eyebrow="Verdieping"
+            title="SDT en organisatiefactoren"
+            note="SDT blijft een verdiepende leeslaag naast de organisatiefactoren. Daardoor blijft zichtbaar wat structureel wringt en wat vooral relationeel of motivationeel speelt."
+          >
+            <ManagementReadFactorTable rows={sdtRows} />
+          </ManagementReadSection>
+
+          <ManagementReadBridge
+            tone="exit"
+            title="Van routelezing naar mogelijke vervolgrichting"
+            body="Pas als de bestuurlijke leesrichting stevig genoeg is, hoort commitment thuis in Action Center. Deze routepagina stopt dus bij duiding, prioritering en een lichte brug."
+            action={actionCenterRouteAction}
+          />
+        </div>
+      )
+    }
+
+    const retentionNarratives = buildRetentionNarratives({
+      topFactorLabel: topFactor,
+      secondFactorLabel: secondFactor,
+      retentionThemes,
+      averageRiskScore,
+      turnoverIntention: retentionSupplemental.turnoverIntention,
+      engagement: retentionSupplemental.engagement,
+    })
+    const retentionSegments = buildRetentionSignalSegments(riskDistribution)
+    const engagementSegments = buildEngagementSegments(responses)
+
+    return (
+      <div className="space-y-8">
+        <div className="border-b border-slate-200/80 pb-4">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition-colors hover:text-slate-700"
+          >
+            Terug naar dashboardoverzicht
+          </Link>
+        </div>
+
+        <ManagementReadHeader
+          tone="retention"
+          productLabel="RetentieScan"
+          title={stats.campaign_name}
+          orgLabel={organizationName}
+          periodLabel={routePeriodLabel}
+          scopeLabel={scopeLabel}
+          statusLabel={compositionStateMeta.label}
+          contextLine={`${topFactor ?? "De route"} opent het eerste behoudsbeeld. Behoudsdruk moet hier eerst gelezen worden, niet direct vertaald naar eigenaarschap of actieontwerp.`}
+          actions={headerActions}
+        />
+
+        <ManagementReadSection eyebrow="Bestuurlijke handoff" title="Behoudsdruk en responsbeeld">
+          <div className="space-y-5">
+            <p className="max-w-4xl text-[1rem] leading-7 text-[color:var(--dashboard-text)]">
+              Deze route laat eerst zien waar behoud onder druk staat en welke samenhang daaronder ligt. De pagina bewaakt bewust de grens tussen bestuurlijke duiding en commitment: ze opent de routelezing, maar schuift vervolgstructuur door naar Action Center.
+            </p>
+            <ManagementReadInfoGrid
+              items={[
+                { label: "Retentiesignaal", value: averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet vrij" },
+                { label: "Vertrekintentie", value: retentionSupplemental.turnoverIntention !== null ? `${retentionSupplemental.turnoverIntention.toFixed(1)}/10` : "Nog niet vrij" },
+                { label: "Bevlogenheid", value: retentionSupplemental.engagement !== null ? `${retentionSupplemental.engagement.toFixed(1)}/10` : "Nog niet vrij" },
+                { label: "Respons", value: `${stats.completion_rate_pct ?? 0}%` },
+              ]}
+            />
+          </div>
+        </ManagementReadSection>
+
+        <ManagementReadSection
+          eyebrow="Drivers"
+          title="Drivers en prioriteitenbeeld"
+          note={`Driverbeeld op basis van n = ${responses.length}. Groei, belasting, leiderschap en context blijven afzonderlijk bestuurlijk leesbaar.`}
+        >
+          <ManagementReadFactorTable rows={factorPriorityRows} />
+        </ManagementReadSection>
+
+        <ManagementReadSection
+          eyebrow="Synthese"
+          title="Kernsignalen in samenhang"
+          note="Kernsignalen blijven samengevat, maar niet opgeblazen tot actieontwerp. Het rapport blijft de inhoudelijke waarheid."
+        >
+          <ManagementReadNarratives items={retentionNarratives} />
+        </ManagementReadSection>
+
+        <ManagementReadSection
+          eyebrow="Retentiebeeld"
+          title="Retentiesignaal, vertrekintentie en bevlogenheidsverhouding"
+        >
+          <div className="grid gap-4 xl:grid-cols-2">
+            <ManagementReadDistribution
+              tone="retention"
+              label="Retentiesignaal"
+              value={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet vrij"}
+              narrative="De verdeling tussen actief vertrekdenkend, latent risico en stabiel blijft bestuurlijk belangrijk. Juist de middengroep is vaak het eerst relevant voor een managementread."
+              segments={retentionSegments}
+            />
+            <ManagementReadDistribution
+              tone="retention"
+              label="Bevlogenheidsverhouding"
+              value={retentionSupplemental.engagement !== null ? `${retentionSupplemental.engagement.toFixed(1)}/10` : "Nog niet vrij"}
+              narrative="Bevlogenheid leest hier niet los, maar in verhouding tot behoudsdruk en vertrekintentie. Daardoor blijft de route behoudsdruk-first in plaats van actie-first."
+              segments={engagementSegments}
+            />
+          </div>
+        </ManagementReadSection>
+
+        <ManagementReadSection
+          eyebrow="Verdieping"
+          title="SDT en organisatiefactoren"
+          note="Ook hier blijft de verdiepingslaag rapporttrouw: SDT verklaart niet los, maar helpt de primaire organisatiefactoren bestuurlijk scherper te lezen."
+        >
+          <ManagementReadFactorTable rows={sdtRows} />
+        </ManagementReadSection>
+
+        <ManagementReadBridge
+          tone="retention"
+          title="Van behoudsdruk naar mogelijke vervolgrichting"
+          body="De routepagina toont wat bestuurlijk als eerste gelezen moet worden. Eventuele eigenaarschap-, actie- en reviewstructuur hoort pas in Action Center thuis."
+          action={actionCenterRouteAction}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr),320px] xl:items-start">

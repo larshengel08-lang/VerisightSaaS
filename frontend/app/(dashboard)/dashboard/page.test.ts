@@ -39,55 +39,42 @@ const campaigns: CampaignStats[] = [
 ]
 
 describe('dashboard home UX guardrails', () => {
-  it('keeps the overview route focused on light HR-regie instead of managementinterpretatie', () => {
+  it('keeps the overview route focused on HR regie with one dominant lead line and lighter supporting sections', () => {
     const pageSource = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(pageSource).toContain('SignalStatCard')
-    expect(pageSource).toContain('DashboardTabs tabs={portfolioTabs}')
-    expect(pageSource).toContain('Wat blokkeert')
-    expect(pageSource).toContain('Opvolging preview')
-    expect(pageSource).toContain('Recente output')
-    expect(pageSource).toContain('Leesbaar')
-    expect(pageSource).toContain('Nog in opbouw')
-    expect(pageSource).toContain('Nog niet live')
-    expect(pageSource).toContain('Afgerond')
-    expect(pageSource).toContain('Deels zichtbaar')
-    expect(pageSource).toContain('requestedModuleFilter')
-    expect(pageSource).toContain('Terug naar alle routes')
-    expect(pageSource).toContain('Alle ${moduleLabel}-routes op één plek.')
-    expect(pageSource).toContain('Open rapport en dashboard')
-    expect(pageSource).not.toContain('CustomerLaunchControl')
+    expect(pageSource).toContain('Nu eerst')
+    expect(pageSource).toContain('Ook aandacht')
+    expect(pageSource).toContain('Actieve routes')
+    expect(pageSource).toContain('Overige actieve routes')
+    expect(pageSource).toContain('Wat nu leesbaar is')
+    expect(pageSource).toContain('Action Center')
+    expect(pageSource).toContain('OverviewLeadCard')
+    expect(pageSource).toContain('OverviewRouteRow')
+    expect(pageSource).not.toContain('Portfolio samenvatting')
     expect(pageSource).not.toContain('Aanbevolen focus')
-    expect(pageSource).not.toContain('Wat nu het managementgesprek opent.')
-    expect(pageSource).not.toContain('TeamScan')
   })
 
-  it('keeps overview language compact and bounded instead of overclaiming', () => {
+  it('keeps overview language compact and bounded instead of turning the page into a mini action surface', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('Wat nog voorkomt dat een route open of volledig live is.')
+    expect(source).toContain('Wat nu aandacht vraagt, welke route daarbij hoort en wat je als eerste wilt openen.')
     expect(source).toContain('Dashboard en rapport zijn nu beschikbaar voor eerste lezing.')
     expect(source).toContain('Eerste read beschikbaar, detail blijft nog beperkt.')
-    expect(source).toContain('Blocker: uitnodigingen zijn nog niet volledig live. Volgende stap: start eerst de inviteflow.')
-    expect(source).not.toContain('Boardroom-ready')
-    expect(source).not.toContain('Open de preview-adoptie van het Action Center voor ExitScan')
+    expect(source).toContain('Opvolging blijft compact tot een route stevig genoeg leesbaar is.')
+    expect(source).not.toContain('Open prioriteit')
+    expect(source).not.toContain('Reviewmoment')
     expect(source).not.toContain('Welke route nu het eerst logisch is.')
   })
 
-  it('keeps opvolging as a light preview instead of a route recommendation block', () => {
+  it('keeps action center as a light bridge instead of reintroducing commitment structure on overview', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('Open Action Center')
-    expect(source).toContain('Open prioriteit')
-    expect(source).toContain('Reviewmoment')
-    expect(source).toContain('lifecycle_stage')
+    expect(source).toContain('compactActionCenterNote')
     expect(source).toContain('canOpenActionCenterRoute')
     expect(source).toContain('first_management_use_confirmed_at')
-    expect(source).toContain('leadReadableCampaign.campaign_id')
-    expect(source).not.toContain('Beoordeel opvolging')
-    expect(source).not.toContain('Actieve opvolging')
+    expect(source).toContain('Open Action Center')
     expect(source).not.toContain("href={isAdmin ? '/beheer' : '/action-center'}")
-    expect(source).not.toContain('Open in Action Center</button>')
+    expect(source).not.toContain('Actieve opvolging')
   })
 
   it('allows the seeded HR demo campaign to override the default overview focus route', () => {
