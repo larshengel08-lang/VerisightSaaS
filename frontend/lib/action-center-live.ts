@@ -12,7 +12,11 @@ import { getScanDefinition } from '@/lib/scan-definitions'
 import type { MemberRole, ScanType } from '@/lib/types'
 import type { CampaignDeliveryCheckpoint, CampaignDeliveryRecord, DeliveryExceptionStatus } from '@/lib/ops-delivery'
 import { getDeliveryExceptionLabel } from '@/lib/ops-delivery'
-import type { PilotLearningCheckpoint, PilotLearningDossier } from '@/lib/pilot-learning'
+import type {
+  ActionCenterReviewDecision,
+  PilotLearningCheckpoint,
+  PilotLearningDossier,
+} from '@/lib/pilot-learning'
 import { projectActionCenterRoute } from '@/lib/action-center-route-contract'
 import { buildSuiteTelemetryEvent, type SuiteTelemetryEvent } from '@/lib/telemetry/events'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
@@ -340,6 +344,8 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         ...context,
         route,
         latestVisibleUpdateNote: latestUpdate,
+        reviewDecisions: context.reviewDecisions ?? ([] as ActionCenterReviewDecision[]),
+        decisionRecords: [],
       })
       const priority = getPriorityFromSignals({
         exceptionStatus: context.deliveryRecord?.exception_status,

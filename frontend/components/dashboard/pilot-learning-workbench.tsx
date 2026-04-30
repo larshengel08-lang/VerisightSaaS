@@ -32,6 +32,7 @@ import {
   LEARNING_ROUTE_OPTIONS,
   LEARNING_STRENGTH_OPTIONS,
   LEARNING_TRIAGE_STATUS_OPTIONS,
+  type ActionCenterReviewDecision,
   type ContactRequestRecord,
   type LearningCheckpointKey,
   type LearningDestinationArea,
@@ -41,6 +42,8 @@ import {
   type PilotLearningDossier,
 } from '@/lib/pilot-learning'
 import type { Campaign, CampaignStats, Organization } from '@/lib/types'
+import { isActionCenterDecisionCheckpointKey } from '@/lib/action-center-review-decisions'
+import { ActionCenterReviewDecisionEditor } from '@/components/dashboard/action-center-review-decision-editor'
 
 type DossierDraft = Pick<
   PilotLearningDossier,
@@ -114,6 +117,7 @@ interface Props {
   leads: ContactRequestRecord[]
   dossiers: PilotLearningDossier[]
   checkpoints: PilotLearningCheckpoint[]
+  reviewDecisions: ActionCenterReviewDecision[]
   activeClientAccessByOrg: Record<string, number>
   pendingClientInvitesByOrg: Record<string, number>
   initialLeadId?: string | null
@@ -250,6 +254,7 @@ export function PilotLearningWorkbench({
   leads,
   dossiers,
   checkpoints,
+  reviewDecisions,
   activeClientAccessByOrg,
   pendingClientInvitesByOrg,
   initialLeadId = null,
@@ -268,6 +273,10 @@ export function PilotLearningWorkbench({
     }
     return grouped
   }, [checkpoints])
+  const reviewDecisionByCheckpointId = useMemo(
+    () => Object.fromEntries(reviewDecisions.map((decision) => [decision.checkpoint_id, decision])),
+    [reviewDecisions],
+  ) as Record<string, ActionCenterReviewDecision>
 
   const [selectedLeadId, setSelectedLeadId] = useState(initialLeadId ?? '')
   const [selectedCampaignId, setSelectedCampaignId] = useState(initialCampaignId ?? '')
@@ -824,6 +833,7 @@ export function PilotLearningWorkbench({
                   <div className="space-y-4">
                     {dossierCheckpoints.map((checkpoint) => {
                       const checkpointDraft = checkpointDrafts[checkpoint.id]
+                      const authoredDecision = reviewDecisionByCheckpointId[checkpoint.id] ?? null
                       const definition = getCheckpointDefinition(checkpoint.checkpoint_key)
                       const objectiveSignals = buildLearningObjectiveSignals({
                         checkpointKey: checkpoint.checkpoint_key,
@@ -939,6 +949,14 @@ export function PilotLearningWorkbench({
                             </button>
                             <span className="text-xs text-slate-500">Laatst bijgewerkt op {formatAmsterdamDate(checkpoint.updated_at)}.</span>
                           </div>
+
+                          {isActionCenterDecisionCheckpointKey(checkpoint.checkpoint_key) ? (
+                            <ActionCenterReviewDecisionEditor
+                              dossier={dossier}
+                              checkpoint={checkpoint}
+                              decision={authoredDecision}
+                            />
+                          ) : null}
                         </div>
                       )
                     })}

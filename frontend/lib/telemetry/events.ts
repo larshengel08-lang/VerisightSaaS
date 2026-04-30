@@ -3,9 +3,9 @@ export type SuiteTelemetryEventType =
   | 'first_value_confirmed'
   | 'first_management_use_confirmed'
   | 'manager_denied_insights'
-  | 'action_center_review_scheduled'
   | 'action_center_route_opened'
   | 'action_center_owner_assigned'
+  | 'action_center_review_scheduled'
   | 'action_center_review_completed'
   | 'action_center_outcome_recorded'
   | 'action_center_closeout_recorded'
@@ -34,9 +34,9 @@ export function isSuiteTelemetryEventType(value: string): value is SuiteTelemetr
     value === 'first_value_confirmed' ||
     value === 'first_management_use_confirmed' ||
     value === 'manager_denied_insights' ||
-    value === 'action_center_review_scheduled' ||
     value === 'action_center_route_opened' ||
     value === 'action_center_owner_assigned' ||
+    value === 'action_center_review_scheduled' ||
     value === 'action_center_review_completed' ||
     value === 'action_center_outcome_recorded' ||
     value === 'action_center_closeout_recorded'
@@ -67,9 +67,9 @@ export function countSuiteTelemetryEvents(events: SuiteTelemetryEvent[]) {
       first_value_confirmed: 0,
       first_management_use_confirmed: 0,
       manager_denied_insights: 0,
-      action_center_review_scheduled: 0,
       action_center_route_opened: 0,
       action_center_owner_assigned: 0,
+      action_center_review_scheduled: 0,
       action_center_review_completed: 0,
       action_center_outcome_recorded: 0,
       action_center_closeout_recorded: 0,
@@ -91,12 +91,12 @@ export function getSuiteTelemetryEventLabel(eventType: SuiteTelemetryEventType) 
       return 'First management use confirmed'
     case 'manager_denied_insights':
       return 'Manager denied insights'
-    case 'action_center_review_scheduled':
-      return 'Action Center review scheduled'
     case 'action_center_route_opened':
       return 'Action Center route opened'
     case 'action_center_owner_assigned':
       return 'Action Center owner assigned'
+    case 'action_center_review_scheduled':
+      return 'Action Center review scheduled'
     case 'action_center_review_completed':
       return 'Action Center review completed'
     case 'action_center_outcome_recorded':

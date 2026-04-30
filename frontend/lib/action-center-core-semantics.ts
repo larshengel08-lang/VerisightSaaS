@@ -1,6 +1,18 @@
-import type { ActionCenterReviewOutcome, ActionCenterRouteContract } from './action-center-route-contract'
+import type {
+  ActionCenterDecisionRecord,
+  ActionCenterReviewOutcome,
+  ActionCenterRouteContract,
+} from './action-center-route-contract'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
-import type { PilotLearningCheckpoint } from './pilot-learning'
+import type { ActionCenterReviewDecision, PilotLearningCheckpoint } from './pilot-learning'
+import {
+  compareDecisionHistoryEntries,
+  projectResultProgression,
+  projectAuthoredDecisionHistory,
+  projectLegacyDecisionRecord,
+  type ActionCenterResultProgressEntry,
+} from './action-center-decision-history'
+import { getActionCenterDecisionProfile } from './action-center-review-decisions'
 
 export type ActionCenterVisibleReviewOutcome = Exclude<ActionCenterReviewOutcome, 'opschalen'>
 export type ActionCenterClosingStatus = 'lopend' | 'afgerond' | 'gestopt'
@@ -13,6 +25,12 @@ export interface ActionCenterCoreSemantics {
     reviewOutcomeRaw: ActionCenterReviewOutcome
     reviewOutcomeVisible: ActionCenterVisibleReviewOutcome
   }
+  latestDecision: ActionCenterDecisionRecord | null
+  actionProgress: {
+    currentStep: string | null
+    nextStep: string | null
+    expectedEffect: string | null
+  }
   actionFrame: {
     whyNow: string
     firstStep: string
@@ -24,6 +42,8 @@ export interface ActionCenterCoreSemantics {
     whatWeObserved: string | null
     whatWasDecided: string | null
   }
+  resultProgression: ActionCenterResultProgressEntry[]
+  decisionHistory: ActionCenterDecisionRecord[]
   closingSemantics: {
     status: ActionCenterClosingStatus
     summary: string | null
@@ -33,10 +53,11 @@ export interface ActionCenterCoreSemantics {
 
 export type ActionCenterCoreSemanticsProjectionInput = Pick<
   LiveActionCenterCampaignContext,
-  'campaign' | 'assignedManager' | 'deliveryRecord' | 'learningDossier' | 'learningCheckpoints'
+  'campaign' | 'assignedManager' | 'deliveryRecord' | 'learningDossier' | 'learningCheckpoints' | 'reviewDecisions'
 > & {
   route: ActionCenterRouteContract
   latestVisibleUpdateNote?: string | null
+  decisionRecords?: ActionCenterDecisionRecord[]
 }
 
 export interface ActionCenterPreviewCoreSemanticsProjectionInput {
@@ -265,6 +286,70 @@ function getLatestObservation(context: ActionCenterCoreSemanticsProjectionInput,
   ])
 }
 
+function buildDecisionHistory(args: {
+  route: ActionCenterRouteContract
+  reviewQuestion: string | null
+  latestObservation: string | null
+  reviewReason?: string | null
+  managementActionOutcome?: string | null
+  reviewDecisions?: ActionCenterReviewDecision[] | null
+  decisionRecords?: ActionCenterDecisionRecord[]
+}) {
+  const authored = projectAuthoredDecisionHistory({
+    routeId: args.route.campaignId,
+    reviewDecisions: args.reviewDecisions,
+  })
+
+  if (authored.length > 0) {
+    return authored
+  }
+
+  const canonical = [...(args.decisionRecords ?? [])]
+    .filter((record) => record.sourceRouteId === args.route.campaignId)
+    .sort(compareDecisionHistoryEntries)
+
+  if (canonical.length > 0) {
+    return canonical
+  }
+
+  const legacy = projectLegacyDecisionRecord({
+    sourceRouteId: args.route.campaignId,
+    reviewOutcome: args.route.reviewOutcome,
+    reviewCompletedAt: args.route.reviewCompletedAt,
+    reviewReason: args.reviewReason ?? args.route.reviewReason,
+    reviewQuestion: args.reviewQuestion,
+    managementActionOutcome: args.managementActionOutcome,
+    latestObservation: args.latestObservation,
+  })
+
+  return legacy ? [legacy] : []
+}
+
+function projectActionProgress(args: {
+  route: ActionCenterRouteContract
+  deliveryNextStep: string | null | undefined
+  firstActionTaken: string | null | undefined
+  reviewQuestion: string | null
+  expectedEffectFallback: string | null
+  suppressNextStepFallback?: boolean
+}) {
+  const currentStep = pickFirst([args.firstActionTaken, args.route.intervention])
+  const nextStep = args.suppressNextStepFallback
+    ? normalizeText(args.deliveryNextStep)
+    : pickFirst([args.deliveryNextStep, args.reviewQuestion])
+  const expectedEffect = pickFirst([
+    args.route.expectedEffect,
+    args.expectedEffectFallback,
+    args.reviewQuestion,
+  ])
+
+  return {
+    currentStep,
+    nextStep,
+    expectedEffect,
+  }
+}
+
 function getPreviewClosingStatus(status: ActionCenterRouteContract['routeStatus']): ActionCenterClosingStatus {
   if (status === 'afgerond') return 'afgerond'
   if (status === 'gestopt') return 'gestopt'
@@ -378,6 +463,24 @@ export function projectActionCenterPreviewCoreSemantics(
     input.signalBody,
     route.expectedEffect,
   ])
+  const decisionHistory = buildDecisionHistory({
+    route,
+    reviewQuestion,
+    latestObservation: whatWeObserved,
+    reviewReason,
+    managementActionOutcome: input.reviewOutcome,
+  })
+  const latestDecision = decisionHistory[0] ?? null
+  const resultProgression = projectResultProgression(decisionHistory)
+  const latestDecisionProfile = latestDecision ? getActionCenterDecisionProfile(latestDecision.decision) : null
+  const actionProgress = projectActionProgress({
+    route,
+    deliveryNextStep: input.nextStep,
+    firstActionTaken: route.intervention,
+    reviewQuestion,
+    expectedEffectFallback: expectedEffectFromReason,
+    suppressNextStepFallback: latestDecisionProfile?.hidesNextStep ?? false,
+  })
   const whatWasDecided = getDecisionText({
     reviewOutcomeVisible,
     managementActionOutcomeText: getRawManagementActionOutcomeText(input.reviewOutcome),
@@ -394,6 +497,8 @@ export function projectActionCenterPreviewCoreSemantics(
       reviewOutcomeRaw: route.reviewOutcome,
       reviewOutcomeVisible,
     },
+    latestDecision,
+    actionProgress,
     actionFrame: {
       whyNow: whyNow ?? ACTION_FRAME_FALLBACK,
       firstStep,
@@ -413,6 +518,8 @@ export function projectActionCenterPreviewCoreSemantics(
       whatWeObserved,
       whatWasDecided,
     },
+    resultProgression,
+    decisionHistory,
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getPreviewClosingSummaryValues(route, closingStatus)),
@@ -499,6 +606,26 @@ export function projectActionCenterCoreSemantics(
   const latestObservation = getLatestObservation(context, route)
   const latestActionUpdate = getLatestActionUpdate(context)
   const closingStatus = getClosingStatus(context, route)
+  const decisionHistory = buildDecisionHistory({
+    route,
+    reviewQuestion,
+    latestObservation,
+    reviewReason,
+    managementActionOutcome: context.learningDossier?.management_action_outcome,
+    reviewDecisions: context.reviewDecisions,
+    decisionRecords: context.decisionRecords,
+  })
+  const latestDecision = decisionHistory[0] ?? null
+  const resultProgression = projectResultProgression(decisionHistory)
+  const latestDecisionProfile = latestDecision ? getActionCenterDecisionProfile(latestDecision.decision) : null
+  const actionProgress = projectActionProgress({
+    route,
+    deliveryNextStep: latestDecision?.nextStepSnapshot ?? context.deliveryRecord?.next_step,
+    firstActionTaken: latestDecision?.currentStepSnapshot ?? context.learningDossier?.first_action_taken,
+    reviewQuestion,
+    expectedEffectFallback: latestDecision?.expectedEffectSnapshot ?? derivedExpectedEffect,
+    suppressNextStepFallback: latestDecisionProfile?.hidesNextStep ?? false,
+  })
 
   return {
     route,
@@ -508,6 +635,8 @@ export function projectActionCenterCoreSemantics(
       reviewOutcomeRaw: route.reviewOutcome,
       reviewOutcomeVisible,
     },
+    latestDecision,
+    actionProgress,
     actionFrame: {
       whyNow: whyNow ?? ACTION_FRAME_FALLBACK,
       firstStep: firstStep ?? ACTION_FRAME_FALLBACK,
@@ -516,6 +645,7 @@ export function projectActionCenterCoreSemantics(
     },
     resultLoop: {
       whatWasTried: pickFirst([
+        latestDecision?.currentStepSnapshot,
         normalizeAttemptText(context.latestVisibleUpdateNote),
         latestActionUpdate,
         nextStep,
@@ -534,6 +664,8 @@ export function projectActionCenterCoreSemantics(
         latestVisibleUpdateNote: normalizeText(context.latestVisibleUpdateNote),
       }),
     },
+    resultProgression,
+    decisionHistory,
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getLiveClosingSummaryValues(context, route, closingStatus)),

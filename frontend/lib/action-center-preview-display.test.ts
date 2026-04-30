@@ -61,6 +61,20 @@ describe('action center preview display helpers', () => {
           reviewReason: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
           blockedBy: null,
         },
+        latestDecision: {
+          decisionEntryId: 'decision-1',
+          sourceRouteId: 'campaign-exit',
+          decision: 'bijstellen',
+          decisionReason: 'Binnen twee weken moet het eerste teamgesprek zijn gevoerd.',
+          nextCheck: 'Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.',
+          decisionRecordedAt: '2026-04-22T09:00:00.000Z',
+          reviewCompletedAt: '2026-04-22T09:00:00.000Z',
+        },
+        actionProgress: {
+          currentStep: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
+          nextStep: 'Plan het vervolggesprek met HR en operations.',
+          expectedEffect: 'Binnen twee weken moet het eerste teamgesprek zijn gevoerd.',
+        },
         reviewSemantics: {
           reviewReason: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
           reviewQuestion: 'Binnen twee weken moet het eerste teamgesprek zijn gevoerd.',
@@ -78,15 +92,37 @@ describe('action center preview display helpers', () => {
           whatWeObserved: 'MT kiest een eerste leiderschapsspoor.',
           whatWasDecided: null,
         },
+        resultProgression: [
+          {
+            resultEntryId: 'decision-1',
+            recordedAt: '2026-04-22T09:00:00.000Z',
+            currentStep: 'Leg eigenaar en eerste correctie in het MT-overleg vast.',
+            observation: 'MT kiest een eerste leiderschapsspoor.',
+            decision: 'bijstellen',
+            followThrough: 'Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.',
+          },
+        ],
+        decisionHistory: [
+          {
+            decisionEntryId: 'decision-1',
+            sourceRouteId: 'campaign-exit',
+            decision: 'bijstellen',
+            decisionReason: 'Binnen twee weken moet het eerste teamgesprek zijn gevoerd.',
+            nextCheck: 'Toets of het eerste gesprek is gevoerd en of het knelpunt specifieker is geworden.',
+            decisionRecordedAt: '2026-04-22T09:00:00.000Z',
+            reviewCompletedAt: '2026-04-22T09:00:00.000Z',
+          },
+        ],
         closingSemantics: {
           status: 'lopend',
           summary: null,
+          historicalSummary: null,
         },
       },
     } satisfies ActionCenterPreviewItem
 
     expect(buildCompactLandingSummaryLines(item)).toEqual([
-      { label: 'Uitkomst', value: 'Bijstellen' },
+      { label: 'Besluit', value: 'Bijstellen' },
       { label: 'Stap', value: 'Leg eigenaar en eerste correctie in het MT-overleg vast.' },
     ])
   })
