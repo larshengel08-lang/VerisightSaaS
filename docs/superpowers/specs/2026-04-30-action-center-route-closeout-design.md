@@ -72,12 +72,14 @@ Niet groot, niet workflowachtig, maar expliciet genoeg om een bestuurlijk einde 
 Minimaal:
 - `routeId`
 - `closeoutStatus`
+- `closeoutReason`
 - `closeoutNote`
 - `closedAt`
 - `closedByRole`
 
 Dat is genoeg om te weten:
 - hoe deze route is geeindigd
+- vanuit welke bestuurlijke grond
 - waarom ongeveer
 - wanneer
 - op welk niveau dat besluit viel
@@ -104,6 +106,29 @@ Niet nodig in deze fase:
 - `uitgesteld`
 - `geescaleerd`
 - `overgedragen`
+
+### CloseoutReason
+Naast de brede eindstatus is een kleine canonieke redenlaag nodig, zodat closeout niet volledig op vrije notitie leunt.
+
+De redenlaag blijft bewust klein.
+
+Bij `afgerond`:
+- `voldoende-opgepakt`
+- `effect-voldoende-zichtbaar`
+- `geen-verdere-opvolging-nodig`
+
+Bij `gestopt`:
+- `geen-lokale-vervolgstap-nodig`
+- `bewust-niet-voortzetten`
+- `elders-opgepakt`
+
+Productregel:
+- `closeoutReason` is verplicht
+- `closeoutNote` blijft optionele of compacte toelichting
+
+Dus:
+- `closeoutReason` draagt de stabiele betekenis
+- `closeoutNote` geeft korte nuance
 
 ### CloseoutNote
 `closeoutNote` blijft compact.
@@ -223,6 +248,7 @@ Route zonder closeout:
 
 Aanbevolen uitkomst:
 - nog steeds niet automatisch `afgerond`
+- route wordt wel `klaar-voor-closeout`
 
 De route blijft bestuurlijk open tot closeout expliciet gebeurt.
 
@@ -239,6 +265,32 @@ Canonieke uitkomst:
 
 Acties blijven historisch zichtbaar, maar route-closeout wint.
 
+### Klaar voor closeout
+Om te voorkomen dat routes bestuurlijk open blijven hangen terwijl ze inhoudelijk klaar voelen, krijgt deze fase een lichte attentionregel:
+- `klaar-voor-closeout`
+
+Dit is geen extra route-status en ook geen aparte workflowstap.
+Het is een routebrede attentiesignalering die alleen zichtbaar wordt op open routes.
+
+Mijn aanbeveling:
+- een open route is `klaar-voor-closeout` zodra alle bestaande acties `afgerond` of `gestopt` zijn
+- en er geen actie meer `open` of `in_review` is
+- en er geen reviewmoment meer vandaag of te laat openstaat
+
+Dus:
+- route blijft formeel open
+- maar overview en detail mogen duidelijk laten zien dat bestuurlijke afsluiting logisch is
+
+Deze signalering moet licht blijven:
+- een badge
+- een compacte prompt
+- of een samenvattende callout voor HR
+
+Niet:
+- een extra wizard
+- een verplichte workflowstap
+- een escalatielaag
+
 ## Overzicht en Detail met Route-Closeout
 
 ### Overview blijft compact
@@ -254,6 +306,11 @@ Dus op overview wil je vooral:
 - eventueel laatste reviewmoment
 - compacte actie- en reviewsamenvatting
 - en bij gesloten routes een helder eindlabel
+
+Voor open routes die inhoudelijk klaar zijn maar nog niet gesloten:
+- toon een lichte `klaar voor closeout`-aanduiding
+- vooral voor HR-view
+- zonder dat de kaart al als `afgerond` leest
 
 ### Gesloten routes moeten direct anders aanvoelen
 Een route met closeout moet visueel en semantisch direct anders lezen dan een open route.
@@ -306,6 +363,10 @@ Hooguit impliciet:
 - nog reviewbaar
 - nog in uitvoering
 
+Uitzondering:
+- als de route `klaar-voor-closeout` is, mag een lichte samenvattende prompt zichtbaar zijn
+- bijvoorbeeld dat deze route inhoudelijk klaar lijkt voor bestuurlijke afsluiting
+
 Dus:
 - geen lege closeoutpanelen
 - geen "nog niet afgesloten"-ruis
@@ -327,6 +388,7 @@ Er moet een kleine canonieke route-closeout truth komen.
 Minimaal:
 - `routeId`
 - `closeoutStatus`
+- `closeoutReason`
 - `closeoutNote`
 - `closedAt`
 - `closedByRole`
@@ -367,6 +429,7 @@ De read-path wordt simpel:
 #### Open route
 - geen closeout-record
 - status komt uit actie-aggregatie
+- aandachtssignalering kan wel `klaar-voor-closeout` tonen
 
 #### Gesloten route
 - closeout-record aanwezig
@@ -379,6 +442,7 @@ Projectie moet altijd zijn:
 1. check closeout-truth
 2. als aanwezig: toon closeout-status
 3. anders: toon geaggregeerde open status uit acties
+4. toon daarnaast optioneel `klaar-voor-closeout` als attentielaag op open routes
 
 Dat geldt voor:
 - overview
@@ -392,6 +456,7 @@ Closeout zelf is geen vervanging van actie- en reviewhistorie.
 Dus:
 - actie- en reviewdata blijven hun eigen truth
 - closeout voegt alleen het bestuurlijke einde toe
+- `klaar-voor-closeout` blijft afgeleide attentielaag, geen nieuwe canonieke eindstatus
 
 Dat voorkomt dat de closeout-laag opnieuw te veel wil vertellen.
 
@@ -399,9 +464,11 @@ Dat voorkomt dat de closeout-laag opnieuw te veel wil vertellen.
 Deze fase is geslaagd als:
 - een route expliciet kan worden afgesloten
 - die afsluiting canoniek en gedeeld is
+- de bestuurlijke grond van closeout niet alleen in vrije notitie zit
 - overview en detail dezelfde sluitwaarheid tonen
 - actiehistorie intact blijft
 - open routes nog steeds puur uit actie-aggregatie leven
+- inhoudelijk afgeronde open routes zichtbaar `klaar voor closeout` kunnen zijn zonder extra workflowzwaarte
 
 ## Niet Nu
 Bewust nog niet in deze fase:
