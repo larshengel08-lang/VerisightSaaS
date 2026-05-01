@@ -1,3 +1,21 @@
+import type { ActionCenterRouteCloseoutRecord } from './action-center-route-closeout'
+
+export type ActionCenterRouteReopenRole = 'hr' | 'manager' | 'verisight'
+
+export type ActionCenterRouteReopenReason =
+  | 'te-vroeg-afgesloten'
+  | 'nieuw-signaal'
+  | 'herbeoordeling'
+  | 'vervolg-nodig'
+  | (string & {})
+
+export interface ActionCenterRouteReopenRecord {
+  routeId: string
+  reopenedAt: string
+  reopenedByRole: ActionCenterRouteReopenRole
+  reopenReason: ActionCenterRouteReopenReason
+}
+
 export type ActionCenterRouteFollowUpTriggerReason =
   | 'nieuw-campaign-signaal'
   | 'nieuw-segment-signaal'
@@ -37,6 +55,7 @@ const FOLLOW_UP_TRIGGER_REASONS = new Set<ActionCenterRouteFollowUpTriggerReason
   'nieuw-segment-signaal',
   'hernieuwde-hr-beoordeling',
 ])
+const REOPEN_ROLES = new Set<ActionCenterRouteReopenRole>(['hr', 'manager', 'verisight'])
 
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
@@ -45,6 +64,23 @@ function normalizeText(value: string | null | undefined) {
 
 function isValidIsoTimestamp(value: string) {
   return !Number.isNaN(Date.parse(value))
+}
+
+function readCanonicalUnknownText(
+  input: Record<string, unknown> | null | undefined,
+  snakeKey: string,
+  camelKey: string,
+) {
+  const snakeValue = input?.[snakeKey]
+  const camelValue = input?.[camelKey]
+
+  return normalizeText(
+    typeof snakeValue === 'string'
+      ? snakeValue
+      : typeof camelValue === 'string'
+        ? camelValue
+        : null,
+  )
 }
 
 function readCanonicalText(input: ActionCenterRouteFollowUpRelationInput, snakeKey: keyof ActionCenterRouteFollowUpRelationInput, camelKey: keyof ActionCenterRouteFollowUpRelationInput) {
@@ -102,6 +138,82 @@ export function projectActionCenterRouteFollowUpRelation(
     recordedAt,
     recordedByRole,
     endedAt: readCanonicalText(input, 'ended_at', 'endedAt'),
+  }
+}
+
+export function projectActionCenterRouteReopen(
+  input: Record<string, unknown> | null | undefined,
+): ActionCenterRouteReopenRecord {
+  const routeId = readCanonicalUnknownText(input, 'route_id', 'routeId')
+  const reopenedAt = readCanonicalUnknownText(input, 'reopened_at', 'reopenedAt')
+  const reopenedByRole = readCanonicalUnknownText(
+    input,
+    'reopened_by_role',
+    'reopenedByRole',
+  ) as ActionCenterRouteReopenRole | null
+  const reopenReason = readCanonicalUnknownText(
+    input,
+    'reopen_reason',
+    'reopenReason',
+  ) as ActionCenterRouteReopenReason | null
+
+  if (!routeId || !reopenedAt || !isValidIsoTimestamp(reopenedAt) || !reopenedByRole || !REOPEN_ROLES.has(reopenedByRole) || !reopenReason) {
+    throw new Error(
+      'Ongeldige action center route reopen input: route_id, reopened_at, reopened_by_role en reopen_reason zijn verplicht.',
+    )
+  }
+
+  return {
+    routeId,
+    reopenedAt,
+    reopenedByRole,
+    reopenReason,
+  }
+}
+
+export function projectActionCenterRouteLifecycle(args: {
+  routeCloseout?: ActionCenterRouteCloseoutRecord | null
+  routeReopens?: ActionCenterRouteReopenRecord[]
+  followUpFromRelation?: ActionCenterRouteFollowUpRelationRecord | null
+  followUpTargetRelation?: ActionCenterRouteFollowUpRelationRecord | null
+}) {
+  const latestReopen =
+    [...(args.routeReopens ?? [])]
+      .sort((left, right) => Date.parse(right.reopenedAt) - Date.parse(left.reopenedAt))[0] ?? null
+
+  const closeoutIsActive = Boolean(
+    args.routeCloseout &&
+      (!latestReopen || Date.parse(args.routeCloseout.closedAt) >= Date.parse(latestReopen.reopenedAt)),
+  )
+
+  const activeCloseout = closeoutIsActive ? (args.routeCloseout ?? null) : null
+  const isCurrentlyReopened = Boolean(latestReopen && !activeCloseout)
+
+  const activeFollowUpFromRelation =
+    args.followUpFromRelation && !normalizeText(args.followUpFromRelation.endedAt)
+      ? args.followUpFromRelation
+      : null
+  const activeFollowUpTargetRelation =
+    args.followUpTargetRelation && !normalizeText(args.followUpTargetRelation.endedAt)
+      ? args.followUpTargetRelation
+      : null
+
+  const followUpFromRouteId = activeFollowUpFromRelation?.sourceRouteId ?? null
+  const followUpTargetRouteId = activeFollowUpTargetRelation?.targetRouteId ?? null
+  const hasFollowUpTarget = Boolean(followUpTargetRouteId)
+
+  return {
+    activeCloseout,
+    latestReopen,
+    isCurrentlyReopened,
+    followUpFromRouteId,
+    followUpTargetRouteId,
+    hasFollowUpTarget,
+    lineageLabel: isCurrentlyReopened
+      ? ('Heropend traject' as const)
+      : followUpFromRouteId
+        ? ('Vervolg op eerdere route' as const)
+        : null,
   }
 }
 

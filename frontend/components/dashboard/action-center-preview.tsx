@@ -6,6 +6,7 @@ import type {
   ActionCenterDecisionRecord,
   ActionCenterReviewOutcome,
   ActionCenterRouteContract,
+  ActionCenterRouteStatus,
 } from '@/lib/action-center-route-contract'
 import {
   ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS,
@@ -346,7 +347,7 @@ function isOpenAttentionStatus(status: ActionCenterPreviewStatus) {
 function getManagerResponseProjectedStatus(
   currentStatus: ActionCenterPreviewStatus,
   response: ActionCenterManagerResponse,
-): ActionCenterPreviewStatus {
+): ActionCenterRouteStatus {
   if (currentStatus === 'afgerond' || currentStatus === 'gestopt' || currentStatus === 'geblokkeerd') {
     return currentStatus
   }
@@ -663,9 +664,10 @@ export function ActionCenterPreview({
           'geblokkeerd': 0,
           'open-verzoek': 1,
           'te-bespreken': 2,
-          'in-uitvoering': 3,
-          'afgerond': 4,
-          'gestopt': 5,
+          'reviewbaar': 3,
+          'in-uitvoering': 4,
+          'afgerond': 5,
+          'gestopt': 6,
         }
         return rank[left.status] - rank[right.status]
       }

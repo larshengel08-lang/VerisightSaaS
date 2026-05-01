@@ -4,11 +4,13 @@ import type {
   ActionCenterRouteContract,
 } from './action-center-route-contract'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
+import type { ActionCenterActionReviewRecord } from './action-center-action-reviews'
 import {
   getActionCenterFollowUpTriggerReasonLabel,
   type ActionCenterRouteFollowUpRelationRecord,
   type ActionCenterRouteFollowUpTriggerReason,
 } from './action-center-route-reopen'
+import type { ActionCenterRouteActionRecord } from './action-center-route-actions'
 import type {
   ActionCenterManagerResponse,
   ActionCenterReviewDecision,
@@ -53,6 +55,15 @@ export interface ActionCenterCoreSemantics {
   }
   resultProgression: ActionCenterResultProgressEntry[]
   decisionHistory: ActionCenterDecisionRecord[]
+  routeActionCards: Array<{
+    actionId: string
+    themeKey: ActionCenterRouteActionRecord['themeKey']
+    actionText: string
+    reviewScheduledFor: string
+    expectedEffect: string
+    status: ActionCenterRouteActionRecord['status']
+    latestReview: ActionCenterActionReviewRecord | null
+  }>
   followUpSemantics?: ActionCenterProjectedFollowUpSemantics
   closingSemantics: {
     status: ActionCenterClosingStatus
@@ -78,6 +89,8 @@ export type ActionCenterCoreSemanticsProjectionInput = Pick<
   | 'learningCheckpoints'
   | 'reviewDecisions'
   | 'managerResponse'
+  | 'routeActions'
+  | 'actionReviews'
   | 'routeFollowUpRelations'
 > & {
   route: ActionCenterRouteContract
@@ -336,6 +349,30 @@ function getLatestActionUpdate(context: ActionCenterCoreSemanticsProjectionInput
   ])
 }
 
+function buildRouteActionCards(args: {
+  routeActions?: ActionCenterRouteActionRecord[]
+  actionReviews?: ActionCenterActionReviewRecord[]
+}) {
+  const latestReviewsByActionId = new Map<string, ActionCenterActionReviewRecord>()
+
+  for (const review of args.actionReviews ?? []) {
+    const current = latestReviewsByActionId.get(review.actionId)
+    if (!current || Date.parse(review.reviewedAt) > Date.parse(current.reviewedAt)) {
+      latestReviewsByActionId.set(review.actionId, review)
+    }
+  }
+
+  return (args.routeActions ?? []).map((action) => ({
+    actionId: action.actionId,
+    themeKey: action.themeKey,
+    actionText: action.actionText,
+    reviewScheduledFor: action.reviewScheduledFor,
+    expectedEffect: action.expectedEffect,
+    status: action.status,
+    latestReview: latestReviewsByActionId.get(action.actionId) ?? null,
+  }))
+}
+
 function getLatestObservation(context: ActionCenterCoreSemanticsProjectionInput, route: ActionCenterRouteContract) {
   return pickFirst([
     route.outcomeSummary,
@@ -512,6 +549,14 @@ function buildPreviewRoute(input: ActionCenterPreviewCoreSemanticsProjectionInpu
         ? 'bounded_response'
         : input.route?.followThroughMode ?? 'legacy_action',
     blockedBy: routeStatus === 'geblokkeerd' ? (input.route?.blockedBy ?? 'blocked') : null,
+    reopenedAt: input.route?.reopenedAt ?? null,
+    reopenedByRole: input.route?.reopenedByRole ?? null,
+    reopenReason: input.route?.reopenReason ?? null,
+    isReopened: input.route?.isReopened ?? false,
+    followUpFromRouteId: input.route?.followUpFromRouteId ?? null,
+    followUpTargetRouteId: input.route?.followUpTargetRouteId ?? null,
+    hasFollowUpTarget: input.route?.hasFollowUpTarget ?? false,
+    lineageLabel: input.route?.lineageLabel ?? null,
   }
 }
 
@@ -619,6 +664,7 @@ export function projectActionCenterPreviewCoreSemantics(
     },
     resultProgression,
     decisionHistory,
+    routeActionCards: [],
     followUpSemantics,
     closingSemantics: {
       status: closingStatus,
@@ -776,6 +822,10 @@ export function projectActionCenterCoreSemantics(
     },
     resultProgression,
     decisionHistory,
+    routeActionCards: buildRouteActionCards({
+      routeActions: context.routeActions,
+      actionReviews: context.actionReviews,
+    }),
     followUpSemantics,
     closingSemantics: {
       status: closingStatus,
