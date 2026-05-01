@@ -498,7 +498,7 @@ describe('action center route contract', () => {
     })
   })
 
-  it('still aggregates completed plus stopped actions to afgerond once no open action remains', async () => {
+  it('keeps all-finished action sets bestuurlijk open until explicit closeout happens', async () => {
     const { summarizeActionCenterRouteActions } = await import('./action-center-route-contract') as {
       summarizeActionCenterRouteActions: (
         actions: Array<{
@@ -523,9 +523,97 @@ describe('action center route contract', () => {
         },
       ]),
     ).toMatchObject({
-      routeStatus: 'afgerond',
+      routeStatus: 'in-uitvoering',
       openActionCount: 0,
       nextReviewScheduledFor: null,
+      readyForCloseout: true,
     })
+  })
+
+  it('marks a route ready for closeout when all actions are completed or stopped', async () => {
+    const { summarizeActionCenterRouteActions } = await import('./action-center-route-contract') as {
+      summarizeActionCenterRouteActions: (
+        actions: Array<{
+          actionId: string
+          status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
+          reviewScheduledFor: string | null
+        }>,
+        today?: string,
+      ) => Record<string, unknown>
+    }
+
+    const summary = summarizeActionCenterRouteActions(
+      [
+        { actionId: 'a-1', status: 'afgerond', reviewScheduledFor: '2026-05-10' },
+        { actionId: 'a-2', status: 'gestopt', reviewScheduledFor: '2026-05-12' },
+      ],
+      '2026-05-20',
+    ) as { routeStatus?: string; readyForCloseout?: boolean }
+
+    expect(summary.routeStatus).toBe('in-uitvoering')
+    expect(summary.readyForCloseout).toBe(true)
+  })
+
+  it('does not mark ready for closeout while any action is still open or in review', async () => {
+    const { summarizeActionCenterRouteActions } = await import('./action-center-route-contract') as {
+      summarizeActionCenterRouteActions: (
+        actions: Array<{
+          actionId: string
+          status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
+          reviewScheduledFor: string | null
+        }>,
+        today?: string,
+      ) => Record<string, unknown>
+    }
+
+    const summary = summarizeActionCenterRouteActions(
+      [
+        { actionId: 'a-1', status: 'afgerond', reviewScheduledFor: '2026-05-10' },
+        { actionId: 'a-2', status: 'open', reviewScheduledFor: '2026-05-22' },
+      ],
+      '2026-05-20',
+    ) as { readyForCloseout?: boolean }
+
+    expect(summary.readyForCloseout).toBe(false)
+  })
+
+  it('lets explicit route closeout override action aggregation', () => {
+    const route = projectActionCenterRoute({
+      ...buildContext({
+        assignedManager: {
+          userId: 'manager-1',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-21T08:00:00.000Z',
+        },
+        dossier: buildDossier({
+          first_action_taken: null,
+          expected_first_value: null,
+          review_moment: null,
+        }),
+      }),
+      routeActions: [
+        {
+          actionId: 'a-1',
+          routeId: 'campaign-exit::operations',
+          themeKey: 'leadership',
+          actionText: 'Plan twee gerichte teamgesprekken over vertrekredenen.',
+          reviewScheduledFor: '2026-05-25',
+          expectedEffect: 'Maak zichtbaar of leiderschap de primaire frictie is.',
+          status: 'open',
+          createdAt: '2026-04-30T09:00:00.000Z',
+          updatedAt: '2026-04-30T09:00:00.000Z',
+        },
+      ],
+      routeCloseout: {
+        routeId: 'campaign-exit::operations',
+        closeoutStatus: 'afgerond',
+        closeoutReason: 'voldoende-opgepakt',
+        closeoutNote: 'Bestuurlijk klaar voor nu.',
+        closedAt: '2026-05-20T09:00:00.000Z',
+        closedByRole: 'hr',
+      },
+    } as LiveActionCenterCampaignContext)
+
+    expect(route.routeStatus).toBe('afgerond')
   })
 })

@@ -392,6 +392,163 @@ const { error: workspaceError } = await admin
 
 if (workspaceError) throw workspaceError
 
+const primaryRouteScopeValue = chosenDepartments[0]
+  ? buildDepartmentScopeValue(pilotOrg.orgId, chosenDepartments[0])
+  : `${pilotOrg.orgId}::campaign::${canonicalCampaign.id}`
+const closeoutRouteScopeValue = chosenDepartments[1]
+  ? buildDepartmentScopeValue(pilotOrg.orgId, chosenDepartments[1])
+  : `${pilotOrg.orgId}::campaign::${canonicalCampaign.id}`
+const primaryRouteId = buildActionCenterRouteId(canonicalCampaign.id, primaryRouteScopeValue)
+const closeoutRouteId = buildActionCenterRouteId(canonicalCampaign.id, closeoutRouteScopeValue)
+const closeoutManager = managers[1] ?? managers[0]
+const closeoutManagerLabel = closeoutManager.user_metadata?.full_name ?? toDisplayName(closeoutManager.email ?? 'manager')
+const closeoutAssignedAt = new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString()
+const finishedReviewDate = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+
+const { data: existingPrimaryResponse, error: existingPrimaryResponseError } = await admin
+  .from('action_center_manager_responses')
+  .select('id')
+  .eq('campaign_id', canonicalCampaign.id)
+  .eq('route_scope_type', chosenDepartments[0] ? 'department' : 'item')
+  .eq('route_scope_value', primaryRouteScopeValue)
+  .maybeSingle()
+
+if (existingPrimaryResponseError) throw existingPrimaryResponseError
+
+if (existingPrimaryResponse?.id) {
+  const { error: cleanupPrimaryResponseError } = await admin
+    .from('action_center_manager_responses')
+    .delete()
+    .eq('id', existingPrimaryResponse.id)
+
+  if (cleanupPrimaryResponseError) throw cleanupPrimaryResponseError
+}
+
+const { error: cleanupPrimaryCloseoutError } = await admin
+  .from('action_center_route_closeouts')
+  .delete()
+  .eq('route_id', primaryRouteId)
+
+if (cleanupPrimaryCloseoutError) throw cleanupPrimaryCloseoutError
+
+const { data: existingCloseoutResponse, error: existingCloseoutResponseError } = await admin
+  .from('action_center_manager_responses')
+  .select('id')
+  .eq('campaign_id', canonicalCampaign.id)
+  .eq('route_scope_type', chosenDepartments[1] ? 'department' : 'item')
+  .eq('route_scope_value', closeoutRouteScopeValue)
+  .maybeSingle()
+
+if (existingCloseoutResponseError) throw existingCloseoutResponseError
+
+if (existingCloseoutResponse?.id) {
+  const { error: cleanupCloseoutResponseError } = await admin
+    .from('action_center_manager_responses')
+    .delete()
+    .eq('id', existingCloseoutResponse.id)
+
+  if (cleanupCloseoutResponseError) throw cleanupCloseoutResponseError
+}
+
+const { error: cleanupCloseoutRecordError } = await admin
+  .from('action_center_route_closeouts')
+  .delete()
+  .eq('route_id', closeoutRouteId)
+
+if (cleanupCloseoutRecordError) throw cleanupCloseoutRecordError
+
+const { data: closeoutResponse, error: closeoutResponseError } = await admin
+  .from('action_center_manager_responses')
+  .insert({
+    campaign_id: canonicalCampaign.id,
+    org_id: pilotOrg.orgId,
+    route_scope_type: chosenDepartments[1] ? 'department' : 'item',
+    route_scope_value: closeoutRouteScopeValue,
+    manager_user_id: closeoutManager.id,
+    response_type: 'schedule',
+    response_note: 'Deze route is lokaal opgepakt en is inhoudelijk bijna klaar voor bestuurlijke afsluiting.',
+    review_scheduled_for: finishedReviewDate,
+    created_by: hrOwner.id,
+    updated_by: hrOwner.id,
+  })
+  .select('id')
+  .single()
+
+if (closeoutResponseError || !closeoutResponse) {
+  throw closeoutResponseError ?? new Error('Kon demo manager response voor closeout niet opslaan.')
+}
+
+const { data: closeoutActions, error: closeoutActionsError } = await admin
+  .from('action_center_route_actions')
+  .insert([
+    {
+      manager_response_id: closeoutResponse.id,
+      route_id: closeoutRouteId,
+      campaign_id: canonicalCampaign.id,
+      org_id: pilotOrg.orgId,
+      route_scope_type: chosenDepartments[1] ? 'department' : 'item',
+      route_scope_value: closeoutRouteScopeValue,
+      manager_user_id: closeoutManager.id,
+      owner_name: closeoutManagerLabel,
+      owner_assigned_at: closeoutAssignedAt,
+      primary_action_theme_key: 'leadership',
+      primary_action_text: 'Borg de nieuwe teamafspraak in de vaste weekstart.',
+      primary_action_expected_effect: 'Iedereen noemt dezelfde afspraak nu consequent in de check-in.',
+      primary_action_status: 'afgerond',
+      review_scheduled_for: finishedReviewDate,
+      created_by: closeoutManager.id,
+      updated_by: closeoutManager.id,
+    },
+    {
+      manager_response_id: closeoutResponse.id,
+      route_id: closeoutRouteId,
+      campaign_id: canonicalCampaign.id,
+      org_id: pilotOrg.orgId,
+      route_scope_type: chosenDepartments[1] ? 'department' : 'item',
+      route_scope_value: closeoutRouteScopeValue,
+      manager_user_id: closeoutManager.id,
+      owner_name: closeoutManagerLabel,
+      owner_assigned_at: closeoutAssignedAt,
+      primary_action_theme_key: 'growth',
+      primary_action_text: 'Rond het extra groeigesprek af en leg de vervolgafspraak vast.',
+      primary_action_expected_effect: 'Het team weet nu welk groeipunt lokaal wel en niet verder wordt opgepakt.',
+      primary_action_status: 'gestopt',
+      review_scheduled_for: finishedReviewDate,
+      created_by: closeoutManager.id,
+      updated_by: closeoutManager.id,
+    },
+  ])
+  .select('id, primary_action_text')
+
+if (closeoutActionsError || !closeoutActions) {
+  throw closeoutActionsError ?? new Error('Kon demo route actions voor closeout niet opslaan.')
+}
+
+const { error: closeoutReviewsError } = await admin
+  .from('action_center_action_reviews')
+  .insert([
+    {
+      action_id: closeoutActions[0].id,
+      reviewed_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      observation: 'De teamafspraak komt nu vanzelf terug in de weekstart.',
+      action_outcome: 'effect-zichtbaar',
+      follow_up_note: 'Geen extra lokale opvolgstap nodig als dit ritme standhoudt.',
+      created_by: hrOwner.id,
+      updated_by: hrOwner.id,
+    },
+    {
+      action_id: closeoutActions[1].id,
+      reviewed_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      observation: 'Het extra groeigesprek hoefde lokaal niet verder te lopen.',
+      action_outcome: 'stoppen',
+      follow_up_note: 'Het resterende deel wordt elders opgepakt.',
+      created_by: hrOwner.id,
+      updated_by: hrOwner.id,
+    },
+  ])
+
+if (closeoutReviewsError) throw closeoutReviewsError
+
 mkdirSync(path.dirname(artifactPath), { recursive: true })
 const artifact = {
   seededAt: new Date().toISOString(),
@@ -402,22 +559,16 @@ const artifact = {
     password: PILOT_PASSWORD,
   },
   routeContext: {
-    focusItemId: buildActionCenterRouteId(
-      canonicalCampaign.id,
-      chosenDepartments[0]
-        ? buildDepartmentScopeValue(pilotOrg.orgId, chosenDepartments[0])
-        : `${pilotOrg.orgId}::campaign::${canonicalCampaign.id}`,
-    ),
+    focusItemId: primaryRouteId,
     overviewUrl: '/dashboard',
     reportsUrl: '/reports',
     campaignDetailUrl: `/campaigns/${canonicalCampaign.id}`,
     actionCenterUrl: '/action-center',
-    actionCenterFocusUrl: `/action-center?focus=${buildActionCenterRouteId(
-      canonicalCampaign.id,
-      chosenDepartments[0]
-        ? buildDepartmentScopeValue(pilotOrg.orgId, chosenDepartments[0])
-        : `${pilotOrg.orgId}::campaign::${canonicalCampaign.id}`,
-    )}`,
+    actionCenterFocusUrl: `/action-center?focus=${primaryRouteId}`,
+  },
+  closeoutRouteContext: {
+    focusItemId: closeoutRouteId,
+    actionCenterFocusUrl: `/action-center?focus=${closeoutRouteId}`,
   },
   managers: managers.map((manager, index) => ({
     email: manager.email,

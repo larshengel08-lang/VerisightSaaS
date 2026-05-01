@@ -979,4 +979,54 @@ describe('live action center builder', () => {
       nextReviewDate: null,
     })
   })
+
+  it('shows a ready-for-closeout hint on open routes whose actions are all completed', () => {
+    const items = buildLiveActionCenterItems([
+      {
+        campaign: buildCampaign(),
+        stats: buildStats(),
+        organizationName: 'Acme BV',
+        memberRole: 'owner' as const,
+        scopeType: 'department' as const,
+        scopeValue: 'operations',
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-1',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-21T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          first_action_taken: null,
+          expected_first_value: null,
+          first_management_value: null,
+          review_moment: null,
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [] as ActionCenterReviewDecision[],
+        routeActions: [
+          {
+            actionId: 'action-1',
+            routeId: 'campaign-exit::org-1::department::operations',
+            themeKey: 'leadership' as const,
+            actionText: 'Plan twee teamgesprekken over leiderschap en werkdruk.',
+            expectedEffect: 'Maak zichtbaar of leiderschap de werkdrukfrictie versterkt.',
+            reviewScheduledFor: '2026-05-10',
+            status: 'afgerond' as const,
+            createdAt: '2026-04-30T09:00:00.000Z',
+            updatedAt: '2026-05-10T09:00:00.000Z',
+          },
+        ],
+      },
+    ])
+
+    const routeCloseout = (items[0] as { coreSemantics?: { routeCloseout?: { readyForCloseout?: boolean } } } | undefined)
+      ?.coreSemantics?.routeCloseout
+
+    expect(routeCloseout?.readyForCloseout).toBe(true)
+  })
 })

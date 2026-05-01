@@ -3,6 +3,10 @@ import type {
   ActionCenterReviewOutcome,
   ActionCenterRouteContract,
 } from './action-center-route-contract'
+import {
+  projectActionCenterRouteCloseoutState,
+  type ActionCenterRouteCloseoutProjection,
+} from './action-center-route-closeout'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
 import type {
   ActionCenterManagerResponse,
@@ -64,6 +68,7 @@ export interface ActionCenterCoreSemantics {
       followUpNote: string | null
     } | null
   }>
+  routeCloseout: ActionCenterRouteCloseoutProjection
   closingSemantics: {
     status: ActionCenterClosingStatus
     summary: string | null
@@ -82,6 +87,7 @@ export type ActionCenterCoreSemanticsProjectionInput = Pick<
   | 'managerResponse'
   | 'routeActions'
   | 'actionReviews'
+  | 'routeCloseout'
 > & {
   route: ActionCenterRouteContract
   latestVisibleUpdateNote?: string | null
@@ -104,6 +110,7 @@ export interface ActionCenterPreviewCoreSemanticsProjectionInput {
   latestVisibleUpdateNote?: string | null
   route?: ActionCenterRouteContract | null
   managerResponse?: ActionCenterManagerResponse | null
+  routeCloseout?: ActionCenterRouteCloseoutProjection | null
 }
 
 const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
@@ -584,6 +591,7 @@ export function projectActionCenterPreviewCoreSemantics(
     latestVisibleUpdateNote,
   })
   const closingStatus = getPreviewClosingStatus(route.routeStatus)
+  const routeCloseout = input.routeCloseout ?? projectActionCenterRouteCloseoutState({ readyForCloseout: false })
 
   return {
     route,
@@ -618,6 +626,7 @@ export function projectActionCenterPreviewCoreSemantics(
     resultProgression,
     decisionHistory,
     routeActionCards: [],
+    routeCloseout,
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getPreviewClosingSummaryValues(route, closingStatus)),
@@ -733,6 +742,12 @@ export function projectActionCenterCoreSemantics(
       derivedExpectedEffect,
     suppressNextStepFallback: latestDecisionProfile?.hidesNextStep ?? false,
   })
+  const allActionsFinished =
+    routeActionCards.length > 0 && routeActionCards.every((action) => action.status === 'afgerond' || action.status === 'gestopt')
+  const routeCloseout = projectActionCenterRouteCloseoutState({
+    record: context.routeCloseout ?? null,
+    readyForCloseout: allActionsFinished,
+  })
 
   return {
     route,
@@ -775,6 +790,7 @@ export function projectActionCenterCoreSemantics(
     resultProgression,
     decisionHistory,
     routeActionCards,
+    routeCloseout,
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getLiveClosingSummaryValues(context, route, closingStatus)),

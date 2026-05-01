@@ -545,6 +545,101 @@ describe("action center landing shell", () => {
     }
   });
 
+  it("shows explicit closeout metadata in the route shell when present", () => {
+    const context = buildLiveContext();
+    const [baseItem] = buildLiveActionCenterItems([context]);
+    const item = {
+      ...baseItem,
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        routeCloseout: {
+          closeoutStatus: "gestopt",
+          closeoutReason: "bewust-niet-voortzetten",
+          closeoutNote: "Route bewust beeindigd na lokaal overleg.",
+          closedAt: "2026-05-20T09:00:00.000Z",
+          closedByRole: "hr",
+          readyForCloseout: false,
+        },
+      },
+    };
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+
+    expect(markup).toContain("Route afgesloten");
+    expect(markup).toContain("Bewust niet voortzetten");
+  });
+
+  it("shows a compact ready-for-closeout hint for routes whose actions are finished but not yet explicitly closed", () => {
+    const context = buildLiveContext();
+    const [baseItem] = buildLiveActionCenterItems([context]);
+    const item = {
+      ...baseItem,
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        routeActionCards: [
+          {
+            actionId: "action-1",
+            routeId: baseItem.id,
+            managerResponseId: "response-1",
+            campaignId: context.campaign.id,
+            orgId: context.campaign.organization_id,
+            routeScopeType: "department" as const,
+            routeScopeValue: context.scopeValue,
+            managerUserId: context.assignedManager?.userId ?? "manager-1",
+            ownerName: context.assignedManager?.displayName ?? "Manager Operations",
+            ownerAssignedAt: context.assignedManager?.assignedAt ?? "2026-04-21T08:00:00.000Z",
+            themeKey: "leadership" as const,
+            actionText: "Borg de nieuwe feedbackafspraak in het teamritme.",
+            expectedEffect: "Het team benoemt de afspraak nu consistent in weekstarts.",
+            reviewScheduledFor: "2026-05-14",
+            status: "afgerond" as const,
+            latestReview: null,
+            createdAt: "2026-05-01T09:00:00.000Z",
+            updatedAt: "2026-05-05T09:00:00.000Z",
+          },
+        ],
+        routeCloseout: {
+          closeoutStatus: null,
+          closeoutReason: null,
+          closeoutNote: null,
+          closedAt: null,
+          closedByRole: null,
+          readyForCloseout: true,
+        },
+      },
+    };
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        canCloseRoutes: true,
+        routeCloseoutEndpoint: "/api/action-center-route-closeouts",
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: false,
+      }),
+    );
+
+    expect(markup).toContain("Klaar voor closeout");
+    expect(markup).toContain("Route afsluiten");
+    expect(markup).not.toContain("Route afgesloten");
+  });
+
   it("keeps the landing summary compact with a last route-read instead of full detail semantics", () => {
     const context = buildLiveContext();
     const [item] = buildLiveActionCenterItems([context]);

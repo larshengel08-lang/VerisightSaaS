@@ -23,6 +23,12 @@ import {
   projectActionCenterRouteActionCard,
   type ActionCenterRouteActionWriteInput,
 } from '@/lib/action-center-route-actions'
+import {
+  projectActionCenterRouteCloseout,
+  projectActionCenterRouteCloseoutState,
+  type ActionCenterRouteCloseoutReason,
+  type ActionCenterRouteCloseoutStatus,
+} from '@/lib/action-center-route-closeout'
 import type {
   ActionCenterPreviewItem,
   ActionCenterPreviewManagerOption,
@@ -68,6 +74,8 @@ interface Props {
   managerResponseEndpoint?: string
   routeActionEndpoint?: string
   actionReviewEndpoint?: string
+  canCloseRoutes?: boolean
+  routeCloseoutEndpoint?: string
   currentUserId?: string | null
   managerOnly?: boolean
   workbenchHref: string
@@ -104,6 +112,12 @@ interface ManagerResponseFormState {
   primaryActionThemeKey: ActionCenterManagerActionThemeKey | ''
   primaryActionText: string
   primaryActionExpectedEffect: string
+}
+
+interface RouteCloseoutFormState {
+  closeoutStatus: ActionCenterRouteCloseoutStatus
+  closeoutReason: ActionCenterRouteCloseoutReason
+  closeoutNote: string
 }
 
 const SIDEBAR_ITEMS: Array<{ key: ActionCenterPreviewView; label: string }> = [
@@ -284,6 +298,29 @@ function getDecisionLabel(decision: ActionCenterDecision) {
   }
 }
 
+function getRouteCloseoutStatusLabel(status: 'afgerond' | 'gestopt') {
+  return status === 'afgerond' ? 'Afgerond voor nu' : 'Bewust gestopt'
+}
+
+function getRouteCloseoutReasonLabel(reason: string) {
+  switch (reason) {
+    case 'voldoende-opgepakt':
+      return 'Voldoende opgepakt'
+    case 'effect-voldoende-zichtbaar':
+      return 'Effect voldoende zichtbaar'
+    case 'geen-verdere-opvolging-nodig':
+      return 'Geen verdere opvolging nodig'
+    case 'geen-lokale-vervolgstap-nodig':
+      return 'Geen lokale vervolgstap nodig'
+    case 'bewust-niet-voortzetten':
+      return 'Bewust niet voortzetten'
+    case 'elders-opgepakt':
+      return 'Elders opgepakt'
+    default:
+      return reason.replace(/-/g, ' ')
+  }
+}
+
 function compareReviewDate(left: string | null, right: string | null) {
   if (!left && !right) return 0
   if (!left) return 1
@@ -344,6 +381,16 @@ function buildManagerResponseDefaults(item: ActionCenterPreviewItem | null): Man
     primaryActionThemeKey: response?.primary_action_theme_key ?? '',
     primaryActionText: response?.primary_action_text ?? '',
     primaryActionExpectedEffect: response?.primary_action_expected_effect ?? '',
+  }
+}
+
+function buildRouteCloseoutDefaults(item: ActionCenterPreviewItem | null): RouteCloseoutFormState {
+  const closeout = item?.coreSemantics.routeCloseout
+
+  return {
+    closeoutStatus: closeout?.closeoutStatus ?? 'afgerond',
+    closeoutReason: closeout?.closeoutReason ?? 'voldoende-opgepakt',
+    closeoutNote: closeout?.closeoutNote ?? '',
   }
 }
 
@@ -559,6 +606,32 @@ function applyRouteActionCardsToItem(
   )
 }
 
+function applyRouteCloseoutToItem(
+  item: ActionCenterPreviewItem,
+  closeout: ReturnType<typeof projectActionCenterRouteCloseout>,
+) {
+  return finalizeActionCenterPreviewItem(
+    {
+      ...item,
+      status: closeout.closeoutStatus,
+      coreSemantics: {
+        ...item.coreSemantics,
+        route: {
+          ...item.coreSemantics.route,
+          routeStatus: closeout.closeoutStatus,
+        },
+        routeCloseout: projectActionCenterRouteCloseoutState({ record: closeout }),
+        closingSemantics: {
+          ...item.coreSemantics.closingSemantics,
+          status: closeout.closeoutStatus,
+          summary: closeout.closeoutNote ?? getRouteCloseoutReasonLabel(closeout.closeoutReason),
+        },
+      },
+    },
+    { recomputeCoreSemantics: false },
+  )
+}
+
 function getViewCopy(view: ActionCenterPreviewView, selectedTitle: string | null) {
   switch (view) {
     case 'actions':
@@ -666,6 +739,8 @@ export function ActionCenterPreview({
   managerResponseEndpoint,
   routeActionEndpoint,
   actionReviewEndpoint,
+  canCloseRoutes = false,
+  routeCloseoutEndpoint,
   currentUserId = null,
   managerOnly = false,
   workbenchHref,
@@ -695,6 +770,12 @@ export function ActionCenterPreview({
   const [routeActionPending, setRouteActionPending] = useState(false)
   const [routeActionError, setRouteActionError] = useState<string | null>(null)
   const [showRouteActionEditor, setShowRouteActionEditor] = useState(false)
+  const [showRouteCloseoutEditor, setShowRouteCloseoutEditor] = useState(false)
+  const [routeCloseoutForm, setRouteCloseoutForm] = useState<RouteCloseoutFormState>(() =>
+    buildRouteCloseoutDefaults(initialSelectedItem),
+  )
+  const [routeCloseoutPending, setRouteCloseoutPending] = useState(false)
+  const [routeCloseoutError, setRouteCloseoutError] = useState<string | null>(null)
   const [reviewPendingActionId, setReviewPendingActionId] = useState<string | null>(null)
   const [reviewErrorState, setReviewErrorState] = useState<{ actionId: string; message: string } | null>(null)
   const [expandedReviewActionId, setExpandedReviewActionId] = useState<string | null>(null)
@@ -745,10 +826,13 @@ export function ActionCenterPreview({
 
   const selectedItem = filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? filteredItems[0] ?? items[0] ?? null
   useEffect(() => {
-    setManagerResponseForm(buildManagerResponseDefaults(selectedItem))
-    setManagerResponseError(null)
-    setRouteActionError(null)
-    setReviewErrorState(null)
+      setManagerResponseForm(buildManagerResponseDefaults(selectedItem))
+      setManagerResponseError(null)
+      setRouteActionError(null)
+      setRouteCloseoutForm(buildRouteCloseoutDefaults(selectedItem))
+      setRouteCloseoutError(null)
+      setShowRouteCloseoutEditor(false)
+      setReviewErrorState(null)
     setShowRouteActionEditor(false)
     setExpandedReviewActionId(null)
   }, [selectedItem])
@@ -815,6 +899,19 @@ export function ActionCenterPreview({
         (selectedItem?.ownerId === currentUserId || managerOnly),
     )
   const canUseActionReviewFlow = Boolean(canUseRouteActionFlow && actionReviewEndpoint)
+  const closing = selectedItem?.coreSemantics.closingSemantics ?? null
+  const routeCloseout = selectedItem?.coreSemantics.routeCloseout ?? null
+  const canUseRouteCloseoutFlow =
+    Boolean(
+      canCloseRoutes &&
+        routeCloseoutEndpoint &&
+        selectedItem?.orgId &&
+        selectedItem.scopeType &&
+        !routeCloseout?.closeoutStatus,
+    )
+  const showReadyForCloseoutHint = Boolean(
+    routeCloseout?.readyForCloseout && routeCloseout.closeoutStatus === null,
+  )
 
   function updateItem(
     itemId: string,
@@ -832,9 +929,8 @@ export function ActionCenterPreview({
     )
   }
 
-  const closing = selectedItem?.coreSemantics.closingSemantics ?? null
   const hasClosingPanel =
-    closing !== null && (closing.status !== 'lopend' || Boolean(closing.historicalSummary ?? closing.summary))
+      closing !== null && (closing.status !== 'lopend' || Boolean(closing.historicalSummary ?? closing.summary))
   const routeActionCards = selectedItem?.coreSemantics.routeActionCards ?? []
 
   function handleCreateAction() {
@@ -1131,6 +1227,56 @@ export function ActionCenterPreview({
       })
     } finally {
       setReviewPendingActionId(null)
+    }
+  }
+
+  async function handleRouteCloseoutSave() {
+    if (
+      !selectedItem ||
+      !selectedItem.orgId ||
+      !selectedItem.scopeType ||
+      !routeCloseoutEndpoint
+    ) {
+      return
+    }
+
+    setRouteCloseoutPending(true)
+    setRouteCloseoutError(null)
+
+    try {
+      const response = await fetch(routeCloseoutEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          campaign_id: selectedItem.coreSemantics.route.campaignId,
+          route_scope_type: selectedItem.scopeType,
+          route_scope_value: selectedItem.teamId,
+          closeout_status: routeCloseoutForm.closeoutStatus,
+          closeout_reason: routeCloseoutForm.closeoutReason,
+          closeout_note: routeCloseoutForm.closeoutNote.trim() || null,
+        }),
+      })
+      const result = (await response.json().catch(() => null)) as
+        | { closeout?: Record<string, unknown>; detail?: string }
+        | null
+
+      if (!response.ok || !result?.closeout) {
+        throw new Error(result?.detail ?? 'Route closeout opslaan mislukt.')
+      }
+
+      const savedCloseout = projectActionCenterRouteCloseout(result.closeout)
+      setItems((currentItems) =>
+        currentItems.map((item) =>
+          item.id === selectedItem.id ? applyRouteCloseoutToItem(item, savedCloseout) : item,
+        ),
+      )
+      setShowRouteCloseoutEditor(false)
+    } catch (error) {
+      setRouteCloseoutError(error instanceof Error ? error.message : 'Route closeout opslaan mislukt.')
+    } finally {
+      setRouteCloseoutPending(false)
     }
   }
 
@@ -2039,6 +2185,145 @@ export function ActionCenterPreview({
                             </div>
                           </div>
                         </div>
+
+                        {routeCloseout?.closeoutStatus ? (
+                          <div className="mt-5 rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Route afgesloten</p>
+                            <p className="mt-2 text-sm font-semibold text-white/86">
+                              {getRouteCloseoutStatusLabel(routeCloseout.closeoutStatus)}
+                            </p>
+                            <p className="mt-2 text-sm leading-7 text-white/72">
+                              {getRouteCloseoutReasonLabel(routeCloseout.closeoutReason ?? '')}
+                            </p>
+                            {routeCloseout.closeoutNote ? (
+                              <p className="mt-2 text-sm leading-7 text-white/72">{routeCloseout.closeoutNote}</p>
+                            ) : null}
+                            <p className="mt-3 text-xs uppercase tracking-[0.16em] text-white/40">
+                              {formatLongDate(routeCloseout.closedAt)} · {routeCloseout.closedByRole}
+                            </p>
+                          </div>
+                        ) : null}
+
+                        {showReadyForCloseoutHint ? (
+                          <div className="mt-5 rounded-[18px] border border-[#ffd7a8] bg-[#fff3e3] px-4 py-4 text-[#132033]">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9a6a2d]">Klaar voor closeout</p>
+                            <p className="mt-2 text-sm leading-7 text-[#6b4b1f]">
+                              Deze route voelt inhoudelijk afgerond: de onderliggende acties zijn gesloten, maar HR kan nog expliciet vastleggen of dit traject voor nu is afgerond of bewust wordt gestopt.
+                            </p>
+                            {canUseRouteCloseoutFlow ? (
+                              <div className="mt-4 flex flex-wrap gap-3">
+                                <button
+                                  type="button"
+                                  className="inline-flex min-h-11 items-center rounded-full bg-[#132033] px-4.5 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.04]"
+                                  onClick={() => setShowRouteCloseoutEditor((current) => !current)}
+                                >
+                                  {showRouteCloseoutEditor ? 'Closeout verbergen' : 'Route afsluiten'}
+                                </button>
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
+
+                        {!showReadyForCloseoutHint && canUseRouteCloseoutFlow ? (
+                          <div className="mt-5 rounded-[18px] border border-[#e5d8c8] bg-white/95 px-4 py-4 text-[#132033]">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Bestuurlijke afsluiting</p>
+                            <p className="mt-2 text-sm leading-7 text-[#4f6175]">
+                              HR kan deze route expliciet afsluiten zodra het traject bestuurlijk klaar voelt, ook als de onderliggende actielezing nog niet als aparte closeout-attentie is gemarkeerd.
+                            </p>
+                            <div className="mt-4 flex flex-wrap gap-3">
+                              <button
+                                type="button"
+                                className="inline-flex min-h-11 items-center rounded-full bg-[#132033] px-4.5 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.04]"
+                                onClick={() => setShowRouteCloseoutEditor((current) => !current)}
+                              >
+                                {showRouteCloseoutEditor ? 'Closeout verbergen' : 'Route afsluiten'}
+                              </button>
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {showRouteCloseoutEditor && canUseRouteCloseoutFlow ? (
+                          <div className="mt-5 space-y-4 rounded-[18px] border border-[#e5d8c8] bg-white px-4 py-4 text-[#132033]">
+                            <FormField label="Afsluitstatus">
+                              <select
+                                value={routeCloseoutForm.closeoutStatus}
+                                onChange={(event) =>
+                                  setRouteCloseoutForm((current) => ({
+                                    ...current,
+                                    closeoutStatus: event.target.value as ActionCenterRouteCloseoutStatus,
+                                  }))
+                                }
+                                className="w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                              >
+                                <option value="afgerond">Afgerond voor nu</option>
+                                <option value="gestopt">Bewust gestopt</option>
+                              </select>
+                            </FormField>
+
+                            <FormField label="Afsluitreden">
+                              <select
+                                value={routeCloseoutForm.closeoutReason}
+                                onChange={(event) =>
+                                  setRouteCloseoutForm((current) => ({
+                                    ...current,
+                                    closeoutReason: event.target.value as ActionCenterRouteCloseoutReason,
+                                  }))
+                                }
+                                className="w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                              >
+                                <option value="voldoende-opgepakt">Voldoende opgepakt</option>
+                                <option value="effect-voldoende-zichtbaar">Effect voldoende zichtbaar</option>
+                                <option value="geen-verdere-opvolging-nodig">Geen verdere opvolging nodig</option>
+                                <option value="geen-lokale-vervolgstap-nodig">Geen lokale vervolgstap nodig</option>
+                                <option value="bewust-niet-voortzetten">Bewust niet voortzetten</option>
+                                <option value="elders-opgepakt">Elders opgepakt</option>
+                              </select>
+                            </FormField>
+
+                            <FormField label="Toelichting">
+                              <textarea
+                                value={routeCloseoutForm.closeoutNote}
+                                onChange={(event) =>
+                                  setRouteCloseoutForm((current) => ({
+                                    ...current,
+                                    closeoutNote: event.target.value,
+                                  }))
+                                }
+                                placeholder="Korte bestuurlijke toelichting op het sluiten van deze route."
+                                className="min-h-[100px] w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                              />
+                            </FormField>
+
+                            {routeCloseoutError ? (
+                              <div className="rounded-[18px] border border-[#f3c0bc] bg-[#fff1ef] px-4 py-4 text-sm leading-7 text-[#9c3f36]">
+                                {routeCloseoutError}
+                              </div>
+                            ) : null}
+
+                            <div className="flex flex-wrap gap-3">
+                              <button
+                                type="button"
+                                className="inline-flex min-h-11 items-center rounded-full bg-[#132033] px-4.5 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-60"
+                                disabled={routeCloseoutPending}
+                                onClick={() => void handleRouteCloseoutSave()}
+                              >
+                                {routeCloseoutPending ? 'Opslaan...' : 'Closeout opslaan'}
+                              </button>
+                              <button
+                                type="button"
+                                className="inline-flex min-h-11 items-center rounded-full border border-[#ddd3c7] bg-[#fbf8f4] px-4.5 py-2.5 text-sm font-semibold text-[#5f564a] transition hover:border-[#132033] hover:text-[#132033]"
+                                disabled={routeCloseoutPending}
+                                onClick={() => {
+                                  setShowRouteCloseoutEditor(false)
+                                  setRouteCloseoutError(null)
+                                  setRouteCloseoutForm(buildRouteCloseoutDefaults(selectedItem))
+                                }}
+                              >
+                                Annuleren
+                              </button>
+                            </div>
+                          </div>
+                        ) : null}
 
                         {hasClosingPanel && closing ? (
                           <div className="mt-5 rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4">

@@ -456,7 +456,9 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
       const reviewDate = actionAggregation?.nextReviewScheduledFor ?? route.reviewScheduledFor
       const reviewOwnerName = getReviewOwnerName(context.learningCheckpoints, context.deliveryRecord)
       const status =
-        route.blockedBy && routeActions.length === 0
+        route.routeStatus === 'afgerond' || route.routeStatus === 'gestopt'
+          ? route.routeStatus
+          : route.blockedBy && routeActions.length === 0
           ? route.routeStatus
           : actionAggregation?.routeStatus === 'reviewbaar'
             ? 'reviewbaar'

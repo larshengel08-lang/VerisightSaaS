@@ -9,6 +9,9 @@ const distDir =
       ? configuredDistDir
       : undefined
 const isProduction = process.env.NODE_ENV === 'production'
+const localSupabaseConnectSources = isProduction
+  ? []
+  : ['http://127.0.0.1:54321', 'http://localhost:54321', 'ws://127.0.0.1:54321', 'ws://localhost:54321']
 
 const securityHeaders = [
   {
@@ -36,7 +39,7 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Supabase API + auth
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verisight-production.up.railway.app",
+      `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://verisight-production.up.railway.app ${localSupabaseConnectSources.join(' ')}`.trim(),
       // Next.js dev runtime needs unsafe-eval for fast refresh and client hydration.
       `script-src 'self' 'unsafe-inline'${isProduction ? '' : " 'unsafe-eval'"}`,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",

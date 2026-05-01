@@ -6,6 +6,7 @@ import {
   type ActionCenterActionReviewWriteInput,
 } from '@/lib/action-center-action-reviews'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
+import { projectActionCenterRouteCloseout } from '@/lib/action-center-route-closeout'
 import {
   projectActionCenterRouteActionCard,
   type ActionCenterRouteActionWriteInput,
@@ -176,6 +177,7 @@ export default async function ActionCenterPage({
     { data: reviewDecisionsRaw },
     { data: managerResponsesRaw },
     { data: routeActionsRaw },
+    { data: routeCloseoutsRaw },
   ] = await Promise.all([
     deliveryRecords.length > 0
       ? dataClient
@@ -214,6 +216,12 @@ export default async function ActionCenterPage({
           .select('*')
           .in('campaign_id', campaignIds)
       : Promise.resolve({ data: [] }),
+    campaignIds.length > 0
+      ? dataClient
+          .from('action_center_route_closeouts')
+          .select('*')
+          .in('campaign_id', campaignIds)
+      : Promise.resolve({ data: [] }),
   ])
 
   const deliveryCheckpoints = (deliveryCheckpointsRaw ?? []) as CampaignDeliveryCheckpoint[]
@@ -229,6 +237,15 @@ export default async function ActionCenterPage({
       }
     })
     .filter((row): row is ReturnType<typeof projectActionCenterRouteActionCard> => Boolean(row))
+  const routeCloseouts = (routeCloseoutsRaw ?? [])
+    .map((row) => {
+      try {
+        return projectActionCenterRouteCloseout(row as Record<string, unknown>)
+      } catch {
+        return null
+      }
+    })
+    .filter((row): row is ReturnType<typeof projectActionCenterRouteCloseout> => Boolean(row))
   const { data: actionReviewsRaw } =
     routeActions.length > 0
       ? await dataClient
@@ -300,6 +317,7 @@ export default async function ActionCenterPage({
     acc[action.routeId].push(action)
     return acc
   }, {})
+  const routeCloseoutByRouteId = new Map(routeCloseouts.map((closeout) => [closeout.routeId, closeout]))
   const actionReviewsByActionId = actionReviews.reduce<Record<string, typeof actionReviews>>((acc, review) => {
     acc[review.actionId] ??= []
     acc[review.actionId].push(review)
@@ -364,6 +382,7 @@ export default async function ActionCenterPage({
           actionReviews: (routeActionsByRouteId[routeId] ?? []).flatMap(
             (action) => actionReviewsByActionId[action.actionId] ?? [],
           ),
+          routeCloseout: routeCloseoutByRouteId.get(routeId) ?? null,
         }
       })
   })
@@ -451,12 +470,14 @@ export default async function ActionCenterPage({
       managerAssignmentEndpoint="/api/action-center/workspace-members"
       canRespondToRequests={context.canUpdateActionCenter}
       managerResponseEndpoint="/api/action-center-manager-responses"
-        routeActionEndpoint="/api/action-center-route-actions"
-        actionReviewEndpoint="/api/action-center-action-reviews"
-        currentUserId={user.id}
-        managerOnly={context.managerOnly}
-        workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
-        workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}
+      routeActionEndpoint="/api/action-center-route-actions"
+      actionReviewEndpoint="/api/action-center-action-reviews"
+      canCloseRoutes={context.canManageActionCenterAssignments}
+      routeCloseoutEndpoint="/api/action-center-route-closeouts"
+      currentUserId={user.id}
+      managerOnly={context.managerOnly}
+      workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
+      workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}
       workspaceName={getDisplayName(user.email)}
       workspaceSubtitle={workspaceSubtitle}
       overviewSummary={summary}

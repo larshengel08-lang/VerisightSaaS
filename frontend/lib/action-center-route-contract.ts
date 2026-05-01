@@ -3,6 +3,7 @@ import type { LiveActionCenterCampaignContext } from './action-center-live'
 import type { PilotLearningCheckpoint } from './pilot-learning'
 import { hasPrimaryManagerAction } from './action-center-manager-responses'
 import type { ActionCenterManagerResponseType, ActionCenterManagerActionThemeKey } from './pilot-learning'
+import type { ActionCenterRouteCloseoutRecord } from './action-center-route-closeout'
 
 export type ActionCenterEntryStage = 'attention' | 'candidate' | 'active'
 
@@ -76,6 +77,10 @@ interface ActionCenterRouteActionSummaryInput {
   actionId: string
   status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
   reviewScheduledFor: string | null
+}
+
+function getRouteCloseout(context: LiveActionCenterCampaignContext): ActionCenterRouteCloseoutRecord | null {
+  return context.routeCloseout ?? null
 }
 
 const REVIEW_OUTCOMES = new Set<ActionCenterReviewOutcome>([
@@ -249,11 +254,14 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
     context.deliveryRecord?.exception_status && context.deliveryRecord.exception_status !== 'none'
       ? context.deliveryRecord.exception_status
       : null
+  const routeCloseout = getRouteCloseout(context)
 
   let routeStatus: ActionCenterRouteStatus | null = null
 
   if (entryStage === 'active') {
-    if (context.learningDossier?.triage_status === 'uitgevoerd') {
+    if (routeCloseout?.closeoutStatus) {
+      routeStatus = routeCloseout.closeoutStatus
+    } else if (context.learningDossier?.triage_status === 'uitgevoerd') {
       routeStatus = 'afgerond'
     } else if (context.learningDossier?.triage_status === 'verworpen') {
       routeStatus = 'gestopt'
@@ -299,6 +307,7 @@ export function summarizeActionCenterRouteActions(
   routeStatus: ActionCenterAggregatedRouteStatus
   openActionCount: number
   nextReviewScheduledFor: string | null
+  readyForCloseout: boolean
 } {
   const openActions = actions.filter((action) => action.status === 'open' || action.status === 'in_review')
   const nextReviewScheduledFor =
@@ -312,6 +321,7 @@ export function summarizeActionCenterRouteActions(
       routeStatus: 'open-verzoek',
       openActionCount: 0,
       nextReviewScheduledFor: null,
+      readyForCloseout: false,
     }
   }
 
@@ -330,6 +340,7 @@ export function summarizeActionCenterRouteActions(
       routeStatus: 'reviewbaar',
       openActionCount: openActions.length,
       nextReviewScheduledFor,
+      readyForCloseout: false,
     }
   }
 
@@ -338,20 +349,16 @@ export function summarizeActionCenterRouteActions(
       routeStatus: 'in-uitvoering',
       openActionCount: openActions.length,
       nextReviewScheduledFor,
+      readyForCloseout: false,
     }
   }
 
-  if (actions.some((action) => action.status === 'afgerond')) {
-    return {
-      routeStatus: 'afgerond',
-      openActionCount: 0,
-      nextReviewScheduledFor: null,
-    }
-  }
+  const allFinished = actions.every((action) => action.status === 'afgerond' || action.status === 'gestopt')
 
   return {
-    routeStatus: 'gestopt',
+    routeStatus: 'in-uitvoering',
     openActionCount: 0,
     nextReviewScheduledFor: null,
+    readyForCloseout: allFinished,
   }
 }

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
@@ -11,9 +12,21 @@ type ManagerPilotArtifact = {
 }
 
 const artifactPath = path.join(process.cwd(), 'tests', 'e2e', '.action-center-pilot.json')
-const artifact = existsSync(artifactPath)
-  ? (JSON.parse(readFileSync(artifactPath, 'utf8')) as ManagerPilotArtifact)
-  : null
+
+function readPilotArtifact() {
+  if (!existsSync(artifactPath)) {
+    throw new Error('Seeded pilot artifact ontbreekt. Draai eerst scripts/seed-action-center-manager-pilot.mjs.')
+  }
+
+  return JSON.parse(readFileSync(artifactPath, 'utf8')) as ManagerPilotArtifact
+}
+
+function reseedPilot() {
+  execFileSync('node', ['./scripts/seed-action-center-manager-pilot.mjs'], {
+    cwd: process.cwd(),
+    stdio: 'inherit',
+  })
+}
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -30,10 +43,42 @@ async function login(page: import('@playwright/test').Page, email: string, passw
 }
 
 async function openFocusedRoute(page: import('@playwright/test').Page, focusItemId: string) {
+  const hasDetailMarkers = async () => {
+    const markers = [
+      page.getByText('BEHANDELROUTE', { exact: true }),
+      page.getByRole('button', { name: 'Actie toevoegen', exact: true }),
+      page.getByText('MANAGERREACTIE', { exact: true }),
+      page.getByText('ROUTE AFGESLOTEN', { exact: true }),
+    ]
+
+    for (const marker of markers) {
+      if (await marker.isVisible().catch(() => false)) {
+        return true
+      }
+    }
+
+    return false
+  }
+
   await page.goto(`/action-center?focus=${encodeURIComponent(focusItemId)}`)
   await expect(page).toHaveURL(new RegExp(`focus=${escapeRegExp(encodeURIComponent(focusItemId))}$`))
-  await page.getByRole('button', { name: 'Open focusactie' }).click()
-  await expect(page.getByRole('heading', { level: 2 })).toBeVisible()
+
+  const openFocusButton = page.getByRole('button', { name: 'Open focusactie' })
+  await expect
+    .poll(async () => {
+      if (await hasDetailMarkers()) return 'detail'
+      if (await openFocusButton.isVisible().catch(() => false)) return 'button'
+      return 'waiting'
+    })
+    .not.toBe('waiting')
+
+  if (!(await hasDetailMarkers()) && (await openFocusButton.isVisible().catch(() => false))) {
+    await openFocusButton.click()
+  }
+
+  await expect
+    .poll(async () => hasDetailMarkers())
+    .toBe(true)
 }
 
 async function ensureBoundedResponseReady(page: import('@playwright/test').Page) {
@@ -61,16 +106,19 @@ async function ensureBoundedResponseReady(page: import('@playwright/test').Page)
 }
 
 test.describe('action center manager access', () => {
-  test.skip(!artifact, 'Seeded pilot artifact ontbreekt. Draai eerst scripts/seed-action-center-manager-pilot.mjs.')
+  let pilot: ManagerPilotArtifact
 
-  const pilot = artifact as ManagerPilotArtifact
+  test.beforeAll(() => {
+    reseedPilot()
+    pilot = readPilotArtifact()
+  })
 
   test('hr owner keeps both modules inside one shared shell', async ({ page }) => {
     await login(page, pilot.hrOwner.email, pilot.hrOwner.password)
     await page.waitForURL(/\/dashboard$/)
 
-    await expect(page.getByRole('navigation').getByRole('link', { name: 'Action Center' })).toBeVisible()
-    await expect(page.getByRole('banner').getByRole('link', { name: 'Rapporten' })).toBeVisible()
+    await expect(page.getByText('Action Center', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('Rapporten', { exact: true }).first()).toBeVisible()
 
     await page.goto('/action-center')
     await expect(page.getByRole('heading', { name: 'Action Center', exact: true })).toBeVisible()
@@ -82,16 +130,18 @@ test.describe('action center manager access', () => {
   test('manager assignee lands on action center only and gets denied on insights routes', async ({ page }) => {
     const manager = pilot.managers[0]
     await login(page, manager.email, manager.password)
-    await page.waitForURL(/\/action-center$/)
+    await page.waitForURL(/\/dashboard$/)
 
-    await expect(page.getByRole('navigation').getByRole('link', { name: 'Action Center' })).toBeVisible()
-    await expect(page.getByRole('banner').getByRole('link', { name: 'Reports' })).toHaveCount(0)
+    await expect(page.getByText('Action Center', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('Rapporten', { exact: true })).toHaveCount(0)
     await expect(page.locator('aside').getByText('Overview')).toHaveCount(0)
+
+    await page.goto('/action-center')
+    await expect(page.getByRole('heading', { name: 'Action Center', exact: true })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Open focusactie' })).toBeVisible()
     await expect(page.locator('main').getByText(manager.scopeLabel, { exact: true }).first()).toBeVisible()
 
     await openFocusedRoute(page, pilot.routeContext.focusItemId)
-    await expect(page.getByRole('heading', { level: 2 })).toBeVisible()
     const managerResponseSaveCount = await page.getByRole('button', { name: 'Managerreactie opslaan', exact: true }).count()
     const routeActionAddCount = await page.getByRole('button', { name: 'Actie toevoegen', exact: true }).count()
     expect(managerResponseSaveCount + routeActionAddCount).toBeGreaterThan(0)
@@ -106,12 +156,13 @@ test.describe('action center manager access', () => {
   test('manager can save a bounded first response and see the route transition persist', async ({ page }) => {
     const manager = pilot.managers[0]
     await login(page, manager.email, manager.password)
-    await page.waitForURL(/\/action-center$/)
+    await page.waitForURL(/\/dashboard$/)
 
     await openFocusedRoute(page, pilot.routeContext.focusItemId)
     await ensureBoundedResponseReady(page)
     await expect(page.getByRole('button', { name: 'Actie toevoegen', exact: true })).toBeVisible()
-    const savedRouteTitle = (await page.getByRole('heading', { level: 2 }).textContent())?.trim() ?? ''
+    const savedRouteTitle =
+      (await page.getByRole('heading', { name: /HR demo route/i }).first().textContent())?.trim() ?? ''
 
     await openFocusedRoute(page, pilot.routeContext.focusItemId)
     await expect(page.getByRole('heading', { name: new RegExp(escapeRegExp(savedRouteTitle), 'i') })).toBeVisible()

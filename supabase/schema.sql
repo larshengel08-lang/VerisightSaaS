@@ -713,6 +713,37 @@ create table if not exists public.action_center_action_reviews (
   updated_at timestamptz default now()
 );
 
+create table if not exists public.action_center_route_closeouts (
+  id uuid primary key default gen_random_uuid(),
+  route_id text not null unique,
+  campaign_id uuid references public.campaigns(id) on delete cascade not null,
+  org_id uuid references public.organizations(id) on delete cascade not null,
+  route_scope_type text not null
+    check (route_scope_type in ('department', 'item')),
+  route_scope_value text not null,
+  closeout_status text not null
+    check (closeout_status in ('afgerond', 'gestopt')),
+  closeout_reason text not null
+    check (
+      closeout_reason in (
+        'voldoende-opgepakt',
+        'effect-voldoende-zichtbaar',
+        'geen-verdere-opvolging-nodig',
+        'geen-lokale-vervolgstap-nodig',
+        'bewust-niet-voortzetten',
+        'elders-opgepakt'
+      )
+    ),
+  closeout_note text,
+  closed_at timestamptz not null,
+  closed_by_role text not null
+    check (closed_by_role in ('hr', 'manager')),
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 do $$ begin
   if exists (
     select 1 from information_schema.tables
@@ -793,6 +824,7 @@ create index if not exists idx_action_center_route_actions_route on public.actio
 create index if not exists idx_action_center_route_actions_scope on public.action_center_route_actions(campaign_id, route_scope_type, route_scope_value);
 create index if not exists idx_action_center_route_actions_manager on public.action_center_route_actions(manager_user_id);
 create index if not exists idx_action_center_action_reviews_action on public.action_center_action_reviews(action_id, reviewed_at desc);
+create index if not exists idx_action_center_route_closeouts_campaign on public.action_center_route_closeouts(campaign_id, route_scope_type, route_scope_value);
 create index if not exists idx_delivery_records_org on public.campaign_delivery_records(organization_id);
 create index if not exists idx_delivery_records_contact_request on public.campaign_delivery_records(contact_request_id);
 create index if not exists idx_delivery_records_lifecycle on public.campaign_delivery_records(lifecycle_stage);
@@ -818,6 +850,7 @@ alter table public.action_center_review_decisions enable row level security;
 alter table public.action_center_manager_responses enable row level security;
 alter table public.action_center_route_actions enable row level security;
 alter table public.action_center_action_reviews enable row level security;
+alter table public.action_center_route_closeouts enable row level security;
 
 -- ── Hulpfuncties ─────────────────────────────────────────────────────────────
 
@@ -1443,6 +1476,63 @@ create policy "managers_can_update_action_center_action_reviews"
         and m.user_id = auth.uid()
         and m.access_role = 'manager_assignee'
         and m.can_update
+    )
+  );
+
+drop policy if exists "route_closeouts_select_visible_to_route_viewers" on public.action_center_route_closeouts;
+drop policy if exists "route_closeouts_insert_visible_to_hr" on public.action_center_route_closeouts;
+drop policy if exists "route_closeouts_update_visible_to_hr" on public.action_center_route_closeouts;
+
+create policy "route_closeouts_select_visible_to_route_viewers"
+  on public.action_center_route_closeouts for select
+  using (
+    public.is_verisight_admin_user()
+    or public.is_org_member(org_id)
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_closeouts.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_type = action_center_route_closeouts.route_scope_type
+        and m.scope_value = action_center_route_closeouts.route_scope_value
+        and m.can_view
+    )
+  );
+
+create policy "route_closeouts_insert_visible_to_hr"
+  on public.action_center_route_closeouts for insert
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.org_members members
+      where members.user_id = auth.uid()
+        and members.org_id = action_center_route_closeouts.org_id
+        and members.role = 'owner'
+    )
+  );
+
+create policy "route_closeouts_update_visible_to_hr"
+  on public.action_center_route_closeouts for update
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.org_members members
+      where members.user_id = auth.uid()
+        and members.org_id = action_center_route_closeouts.org_id
+        and members.role = 'owner'
+    )
+  )
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.org_members members
+      where members.user_id = auth.uid()
+        and members.org_id = action_center_route_closeouts.org_id
+        and members.role = 'owner'
     )
   );
 
