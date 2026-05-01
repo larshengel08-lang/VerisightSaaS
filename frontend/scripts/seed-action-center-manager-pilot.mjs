@@ -563,6 +563,28 @@ const { error: closeoutReviewsError } = await admin
 
 if (closeoutReviewsError) throw closeoutReviewsError
 
+const { error: closeoutRecordError } = await admin
+  .from('action_center_route_closeouts')
+  .upsert(
+    {
+      route_id: closeoutRouteId,
+      campaign_id: canonicalCampaign.id,
+      org_id: pilotOrg.orgId,
+      route_scope_type: chosenDepartments[1] ? 'department' : 'item',
+      route_scope_value: closeoutRouteScopeValue,
+      closeout_status: 'afgerond',
+      closeout_reason: 'effect-voldoende-zichtbaar',
+      closeout_note: 'Deze route is bestuurlijk gesloten en klaar om later bewust te worden heropend.',
+      closed_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      closed_by_role: 'hr',
+      created_by: hrOwner.id,
+      updated_by: hrOwner.id,
+    },
+    { onConflict: 'route_id' },
+  )
+
+if (closeoutRecordError) throw closeoutRecordError
+
 const { error: followUpRelationError } = await admin
   .from('action_center_route_relations')
   .upsert(
