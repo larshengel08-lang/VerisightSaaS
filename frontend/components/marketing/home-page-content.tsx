@@ -98,6 +98,24 @@ const routeCards = [
   },
 ]
 
+const problemSignalPoints = [
+  {
+    title: 'Verspreide signalen',
+    body: 'Signalen rond vertrek, behoud en onboarding zijn er — maar verspreid over gesprekken, systemen en momenten. Geen helder totaalbeeld.',
+    accent: SURFACE.amber,
+  },
+  {
+    title: 'Onduidelijke prioriteit',
+    body: 'Zonder duidelijke vertaalslag blijft onduidelijk welk signaal eerst geverifieerd, besproken of opgepakt moet worden.',
+    accent: SURFACE.teal,
+  },
+  {
+    title: 'Opvolging blijft te los',
+    body: 'Opvolging wordt daardoor ad hoc, breed of ongericht — terwijl management juist scherpe keuzes en gedeeld eigenaarschap nodig heeft.',
+    accent: '#98a4b3',
+  },
+]
+
 const trustPrinciples = [
   'Verisight helpt patronen op groepsniveau zichtbaar maken, niet om individuele medewerkers te beoordelen.',
   'Dashboard, samenvatting en eerste opvolging dragen dezelfde managementlijn, zonder dat elk detail overal terug hoeft te komen.',
@@ -208,6 +226,137 @@ function OutputMetric({
 
 function MarqueeBand() {
   return null
+}
+
+function ProblemSection() {
+  return (
+    <section
+      style={{
+        background: SURFACE.surface,
+        borderBottom: `1px solid ${SURFACE.border}`,
+      }}
+    >
+      <div
+        style={{
+          ...SHELL,
+          paddingBottom: 'clamp(56px, 7vw, 88px)',
+          paddingTop: 'clamp(56px, 7vw, 88px)',
+        }}
+      >
+        <div style={{ maxWidth: 1100 }}>
+          <Reveal>
+            <h2
+              style={{
+                color: SURFACE.ink,
+                fontFamily: displayFont,
+                fontSize: 'clamp(3rem, 5vw, 5.45rem)',
+                fontWeight: 400,
+                letterSpacing: '-0.055em',
+                lineHeight: 0.93,
+                marginBottom: 28,
+                maxWidth: '12.5ch',
+                textWrap: 'balance',
+              }}
+            >
+              Veel signalen. Nog geen scherp beeld van wat eerst telt.
+            </h2>
+          </Reveal>
+
+          <Reveal delay={0.06}>
+            <p
+              style={{
+                color: SURFACE.text,
+                fontSize: 17,
+                lineHeight: 1.72,
+                marginBottom: 56,
+                maxWidth: '54rem',
+              }}
+            >
+              Organisaties zien signalen — rond uitstroom, behoud of vroege landing — maar missen de vertaalslag naar
+              een heldere managementprioriteit en concrete opvolging.
+            </p>
+          </Reveal>
+        </div>
+
+        <div
+          className="problem-signal-grid"
+          style={{
+            borderTop: `1px solid ${SURFACE.borderSoft}`,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+          }}
+        >
+          {problemSignalPoints.map((item, index) => (
+            <Reveal key={item.title} delay={0.1 + index * 0.05}>
+              <div
+                style={{
+                  borderRight: index < problemSignalPoints.length - 1 ? `1px solid ${SURFACE.borderSoft}` : 'none',
+                  minHeight: 272,
+                  padding: '36px 44px 18px 0',
+                  paddingLeft: index > 0 ? 44 : 0,
+                }}
+              >
+                <span
+                  aria-hidden
+                  style={{
+                    background: item.accent,
+                    borderRadius: 999,
+                    display: 'block',
+                    height: 4,
+                    marginBottom: 28,
+                    width: 26,
+                  }}
+                />
+                <h3
+                  style={{
+                    color: SURFACE.ink,
+                    fontFamily: bodyFont,
+                    fontSize: 17,
+                    fontWeight: 700,
+                    letterSpacing: '-0.01em',
+                    lineHeight: 1.35,
+                    marginBottom: 16,
+                  }}
+                >
+                  {item.title}
+                </h3>
+                <p
+                  style={{
+                    color: SURFACE.text,
+                    fontSize: 15.5,
+                    lineHeight: 1.95,
+                    maxWidth: '21rem',
+                  }}
+                >
+                  {item.body}
+                </p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+
+      <style>{`
+        @media (max-width: 980px) {
+          .problem-signal-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .problem-signal-grid > div {
+            border-right: none !important;
+            border-bottom: 1px solid ${SURFACE.borderSoft};
+            min-height: unset !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+          }
+
+          .problem-signal-grid > div:last-child {
+            border-bottom: none !important;
+          }
+        }
+      `}</style>
+    </section>
+  )
 }
 
 function HeroSection() {
@@ -1674,6 +1823,7 @@ export function HomePageContent() {
   return (
     <div style={{ background: SURFACE.paper, color: SURFACE.ink }}>
       <HeroSection />
+      <ProblemSection />
       {SHOW_HOME_INSIGHT_ACTION_DEMO ? (
         <HomeInsightActionDemo />
       ) : (
