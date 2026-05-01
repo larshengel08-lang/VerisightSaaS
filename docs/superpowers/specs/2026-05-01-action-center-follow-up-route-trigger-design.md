@@ -13,11 +13,28 @@ Het doel is:
 - zonder de betekenis van de gesloten route kapot te maken
 - en zonder HR in een zware workflow te trekken
 
+## 1.1 Canonieke aanleiding
+`Start vervolgroute` is niet bedoeld als losse admin-knop, maar als een begrensde vervolgtrigger op een gesloten route.
+
+In V1 mag HR deze trigger alleen gebruiken als er naast de gesloten route ook een canonieke aanleiding is voor hernieuwde opvolging.
+
+Die aanleiding moet in deze fase altijd in een kleine gestructureerde triggerlaag landen:
+- `nieuw-campaign-signaal`
+- `nieuw-segment-signaal`
+- `hernieuwde-hr-beoordeling`
+
+Dus:
+- niet alleen `route is gesloten`
+- maar `route is gesloten` plus `er is een expliciet vastgelegde aanleiding voor vervolg`
+
+De trigger blijft klein, maar niet betekenisloos.
+
 ## 2. Productgrens
 Wel in scope:
 - alleen op gesloten routes
 - kleine HR-trigger: `Start vervolgroute`
 - HR kiest alleen de manager
+- HR kiest ook een kleine canonieke `triggerReason`
 - afdeling of scope blijft gelijk aan de gesloten route
 - nieuwe route krijgt een expliciete relatie met de oude route
 - daarna ligt de volgende stap weer bij de manager
@@ -25,7 +42,7 @@ Wel in scope:
 Niet in scope:
 - oude route heropenen in deze flow
 - afdeling wijzigen
-- extra contextvelden
+- vrije contextvelden
 - extra closeout- of herverdeelwizard
 - inhoudelijke actiecreatie door HR
 
@@ -45,7 +62,30 @@ Die blijft historisch gesloten.
 HR gebruikt op die gesloten route:
 - `Start vervolgroute`
 
-En kiest alleen:
+En kiest:
+- `manager`
+- `triggerReason`
+
+### 3.2.1 TriggerReason in V1
+De triggerReason is verplicht, maar klein en gestructureerd.
+
+De set is:
+- `nieuw-campaign-signaal`
+- `nieuw-segment-signaal`
+- `hernieuwde-hr-beoordeling`
+
+Dus geen vrije notitie, maar wel een canonieke redenlaag die later leesbaarheid en filtering stabiel houdt.
+
+### 3.2.2 Triggercriterium
+De route mag alleen via deze flow worden vervolgd als:
+- de bronroute gesloten is
+- de gebruiker HR/Verisight is
+- er nog geen actieve directe vervolgroute op deze bronroute bestaat
+- en er een gekozen `triggerReason` wordt vastgelegd
+
+Daarmee blijft de handeling bestuurlijk begrensd.
+
+En kiest HR niet meer dan:
 - welke manager de nieuwe route krijgt
 
 ### 3.3 Nieuwe vervolgroute ontstaat
@@ -84,7 +124,8 @@ De HR-handeling blijft in deze fase zo klein mogelijk.
 Dus:
 1. klik `Start vervolgroute`
 2. kies `manager`
-3. bevestig
+3. kies `triggerReason`
+4. bevestig
 
 Geen extra stappen zoals:
 - thema kiezen
@@ -111,18 +152,17 @@ Dus:
 - scope blijft vast
 - eigenaarschap mag opnieuw gekozen worden
 
-### 4.5 Geen verplichte contextregel
-In deze eerste versie is geen extra toelichting nodig.
+### 4.5 Geen vrije contextregel, wel een canonieke triggerReason
+In deze eerste versie is geen vrije toelichting nodig.
 
 Dus:
-- geen `waarom vervolg?`
+- geen open tekstveld `waarom vervolg?`
 - geen verplichte notitie
-- geen extra redenveld
 
-De betekenis zit in de handeling zelf:
-- gesloten route
-- nieuw vervolg
-- nieuwe manager
+Maar wel:
+- een verplichte kleine `triggerReason`
+
+Zo blijft de flow klein, terwijl later nog steeds leesbaar is waarom het vervolgtraject is gestart.
 
 ## 5. Truth en Write-Path
 ### 5.1 Oude route blijft onaangetast
@@ -153,11 +193,24 @@ Naast die nieuwe route-truth komt één kleine relationele waarheid:
 - `targetRouteId = nieuwe vervolgroute`
 - `recordedAt`
 - `recordedByRole = hr`
+- `triggerReason`
 
 Dat is genoeg om:
 - afkomst te tonen
 - detail en overview te verbinden
 - latere lineage en rapportage te begrijpen
+
+### 5.3.1 Single-successor-regel in V1
+In deze fase krijgt een gesloten bronroute maximaal één directe actieve vervolgroute via deze trigger.
+
+Dus:
+- één gesloten route
+- hoogstens één directe `follow-up-from` successor tegelijk
+
+Gevolg:
+- overview en detail hoeven niet te raden welke vervolgroute de actuele opvolger is
+- de relationele truth blijft klein
+- een tweede vervolgtraject start later vanuit de dan meest recente gesloten route, niet opnieuw vanaf dezelfde bronroute
 
 ### 5.4 Write-path blijft HR-only
 In deze fase blijft deze handeling expliciet bij HR of Verisight.
@@ -179,6 +232,7 @@ Nieuwe route met:
 Relationele koppeling van:
 - oude gesloten route
 - naar nieuwe vervolgroute
+- met de gekozen `triggerReason`
 
 Dus:
 - nieuw traject
@@ -190,6 +244,18 @@ De HR-trigger maakt nog geen manageractie aan.
 Dus na creatie:
 - er is alleen een nieuwe open route
 - manager moet daarna zelf de eerste actie starten
+
+### 5.7 Loskoppeling van zwaardere manager-actielogica
+Deze fase moet niet afhankelijk zijn van een rijke of nog veranderlijke actiecard-flow.
+
+Daarom is het canonieke succes van deze trigger alleen:
+- nieuwe route aangemaakt
+- manager toegewezen
+- lineage vastgelegd
+
+De vervolgroute start dus als manager-handoff, niet als al ingevulde interventie.
+
+Of de manager daarna via een lichte eerste reactie, een primaire actie of een latere verfijnde actielogica werkt, is een vervolgstap buiten deze triggerfase.
 
 ## 6. Overview en Detail
 ### 6.1 Oude route blijft historisch
@@ -207,7 +273,7 @@ Dus niet:
 De nieuwe route moet in overview gewoon lezen als:
 - een nieuwe open route
 - met een toegewezen manager
-- klaar om inhoudelijk te starten
+- klaar om door de manager inhoudelijk te worden gestart
 
 Dus de nadruk ligt op:
 - wat loopt nu
@@ -257,7 +323,7 @@ Dus:
 De nieuwe vervolgroute begint canoniek als:
 - open
 - toegewezen aan de gekozen manager
-- nog zonder manageractie
+- nog zonder manageractie of inhoudelijke interventie
 
 Dus qua live status valt hij direct terug in de bestaande open-route-semantiek.
 
@@ -276,9 +342,10 @@ De flow voor HR is:
 1. open een gesloten route
 2. klik `Start vervolgroute`
 3. kies manager
-4. bevestig
-5. systeem maakt nieuwe vervolgroute
-6. gebruiker komt uit op die nieuwe route of krijgt een directe link ernaartoe
+4. kies `triggerReason`
+5. bevestig
+6. systeem maakt nieuwe vervolgroute
+7. gebruiker komt uit op die nieuwe route of krijgt een directe link ernaartoe
 
 ### 7.5 Bevestiging na creatie
 Na succesvolle aanmaak moet de UI helder teruggeven:
@@ -290,7 +357,9 @@ Geen lange succeswizard, alleen een duidelijke bevestiging en door.
 ### 7.6 Foutgevallen
 Alleen de belangrijkste foutgevallen hoeven in V1 goed afgevangen te worden:
 - route is niet meer gesloten
+- bronroute heeft al een actieve directe vervolgroute
 - managerkeuze ongeldig
+- triggerReason ongeldig
 - route bestaat niet meer
 - aanmaak mislukt
 
@@ -299,9 +368,10 @@ Dan volgt een compacte foutmelding, zonder complexe herstelstappen.
 ## 8. Succescriteria
 Deze fase is geslaagd als:
 - HR op een gesloten route met één kleine handeling een vervolgroute kan starten
-- HR daarbij alleen de manager hoeft te kiezen
+- HR daarbij alleen manager en `triggerReason` hoeft te kiezen
 - de oude route gesloten blijft
 - de nieuwe route als zelfstandig open traject ontstaat
+- per gesloten bronroute hoogstens één directe actieve vervolgroute tegelijk ontstaat
 - de manager daarna weer aan zet is om inhoudelijk te starten
 - overview en detail duidelijk laten zien wat oud traject is en wat nieuwe vervolgroute is
 
