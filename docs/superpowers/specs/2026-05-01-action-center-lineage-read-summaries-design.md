@@ -86,6 +86,28 @@ Bijvoorbeeld:
 - `Vervolg op eerdere route` met link naar de vorige route
 - `Later opgevolgd` met link naar de opvolger
 
+### 4.3.1 Route met zowel terug- als vooruitcontext
+Een route kan tegelijk:
+- `Vervolg op eerdere route` zijn
+- en later `Later opgevolgd` krijgen
+
+In dat geval geldt een vaste projectieregel:
+- overview toont alleen de teruglezing
+- detail toont beide lezingen
+
+Dus:
+- overview kiest de lezing die helpt begrijpen wat deze route nu is
+- detail mag daarnaast ook laten zien dat deze route later weer een directe opvolger kreeg
+
+De volgorde op detail is:
+1. directe voorganger of `Heropend traject`
+2. directe opvolger of `Later opgevolgd`
+
+Daarmee blijven overview en detail consistent:
+- overview is compacter
+- detail is rijker
+- maar beide gebruiken dezelfde canonieke prioriteit
+
 ### 4.4 Geen losse lineage-sectie
 In deze fase komt er geen apart `Lineage` blok onderaan de pagina.
 
@@ -102,6 +124,16 @@ Dus:
 - geen nieuwe tabellen
 - geen nieuwe lineage-state
 - geen aparte read cache in V1
+
+### 5.1.1 Reopen-bron is al vastgelegd
+Deze fase leunt bewust op de eerdere reopen-richting waarin `reopen` canoniek als dedicated route-event is gekozen.
+
+Dus voor deze leeslaag geldt expliciet:
+- `reopen` wordt niet gelezen uit een relationeel record
+- `reopen` wordt niet afgeleid uit statusmutatie
+- `reopen` komt alleen uit de bestaande reopen event truth
+
+Als die reopen event truth op een route niet aanwezig of niet betrouwbaar uitleesbaar is, projecteert deze fase ook geen `Heropend traject` label.
 
 ### 5.2 Een stap terug
 Voor een gegeven route leest de summary maximaal een directe voorganger.
@@ -131,6 +163,23 @@ Deze fase rust op de al gekozen begrenzing:
 - geen multigeneratie-projectie
 
 Daardoor hoeft de UI niet te kiezen uit meerdere buren.
+
+### 5.4.1 Defensieve fallback bij inconsistente data
+Als upstream data de single-neighbor-invariant toch schendt, blijft de projector deterministisch.
+
+De fallback is:
+- kies de meest recente directe buurroute op basis van canonieke event- of relationele tijd
+- onderdruk overige concurrerende buurlezingen
+- toon geen extra inconsistentiemelding in V1
+
+Concreet:
+- bij meerdere reopen events wint de meest recente `reopenedAt`
+- bij meerdere `follow-up-from` voorgangers of opvolgers wint de meest recente `recordedAt`
+
+Dus:
+- de UI blijft stabiel leesbaar
+- detail en overview blijven dezelfde buurroute kiezen
+- en we introduceren in deze fase geen extra error-surface voor datakwaliteit
 
 ### 5.5 Geen statusverrijking
 De projector leest alleen:
