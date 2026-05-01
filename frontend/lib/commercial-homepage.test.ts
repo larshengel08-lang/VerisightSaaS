@@ -27,13 +27,12 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource).toContain('Action Center')
   })
 
-  it('uses the quieter hero and unified suite-flow copy for the public homepage opening', () => {
+  it('uses the quieter hero and expanded problem-to-flow copy for the public homepage opening', () => {
     const homepageSource = fs.readFileSync(
       path.join(process.cwd(), 'components', 'marketing', 'home-page-content.tsx'),
       'utf8',
     )
 
-    expect(homepageSource).toContain('Voor organisaties die sneller willen zien wat nu echt aandacht vraagt.')
     expect(homepageSource).toContain('Zie sneller waar vertrek, behoud of onboarding aandacht vragen')
     expect(homepageSource).toContain('Verisight helpt HR en leiding signalen zichtbaar maken, prioriteren wat eerst telt en opvolging organiseren in het Action Center.')
     expect(homepageSource).toContain('Plan een kennismaking')
@@ -41,13 +40,16 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource).toContain('Dashboard voor inzicht')
     expect(homepageSource).toContain('Managementrapport voor duiding')
     expect(homepageSource).toContain('Action Center voor opvolging')
-    expect(homepageSource).toContain('AVG-bewust')
-    expect(homepageSource).toContain('Veel signalen. Nog geen scherp beeld van wat eerst telt.')
+    expect(homepageSource).not.toContain('Voor organisaties die sneller willen zien wat nu echt aandacht vraagt.')
+    expect(homepageSource).not.toContain('AVG-bewust')
+
+    expect(homepageSource).toContain('Veel signalen. Te weinig scherpte in wat eerst aandacht vraagt.')
     expect(homepageSource).toContain('Organisaties zien signalen — rond uitstroom, behoud of vroege landing — maar missen de vertaalslag naar')
     expect(homepageSource).toContain('een heldere managementprioriteit en concrete opvolging.')
     expect(homepageSource).toContain('Verspreide signalen')
     expect(homepageSource).toContain('Onduidelijke prioriteit')
     expect(homepageSource).toContain('Opvolging blijft te los')
+
     expect(homepageSource).toContain('Eerst inzicht. Dan duiding. Dan opvolging.')
     expect(homepageSource).toContain('Verisight brengt analyse en vervolg samen in één heldere managementflow.')
     expect(homepageSource).toContain('Begrijpen')
@@ -55,8 +57,20 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource).toContain('Managementrapport')
     expect(homepageSource).toContain('Action Center')
     expect(homepageSource).toContain('<ManagementFlowSection />')
+
+    expect(homepageSource).toContain('Als vertrek de vraag is')
+    expect(homepageSource).toContain('Als behoud in actieve teams de vraag is')
+    expect(homepageSource).toContain('Als vroege landing aandacht vraagt')
+    expect(homepageSource).toContain('Wat u als eerste krijgt')
+    expect(homepageSource).toContain('Een dashboard met hoofdbeeld en prioriteiten')
+    expect(homepageSource).toContain('Een managementrapport met duiding en vervolgrichting')
+    expect(homepageSource).toContain('Een gerichte bespreking van wat eerst telt')
+    expect(homepageSource).toContain('Een Action Center voor georganiseerde opvolging')
+    expect(homepageSource).toContain('<FirstDeliverySection />')
+
     expect(homepageSource).toContain('Geen losse output.')
     expect(homepageSource).toContain('Wel een helder besluitspoor.')
     expect(homepageSource).toContain('<ProblemSection />')
+    expect(homepageSource).not.toContain('<HomeInsightActionDemo />')
   })
 })

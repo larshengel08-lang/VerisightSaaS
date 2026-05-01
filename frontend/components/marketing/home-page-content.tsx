@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { Reveal } from '@/components/marketing/design-tokens'
-import { HomeInsightActionDemo, SHOW_HOME_INSIGHT_ACTION_DEMO } from '@/components/marketing/home-insight-action-demo'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const SURFACE = {
@@ -36,7 +35,6 @@ const bodyFont = 'var(--font-ibm-plex-sans), system-ui, sans-serif'
 
 const heroTrustItems = [
   'Dashboard voor inzicht \u2022 Managementrapport voor duiding \u2022 Action Center voor opvolging',
-  '\\u2022 AVG-bewust',
 ]
 
 const suiteFlowPoints = [
@@ -77,21 +75,21 @@ const suitePriorityRows = [
 const routeCards = [
   {
     index: '01',
-    eyebrow: 'Vertrek & uitstroom',
+    eyebrow: 'Als vertrek de vraag is',
     title: 'ExitScan',
     body: 'Begrijp waarom medewerkers vertrekken en welke patronen terugkomen. Helder beeld in weken, niet maanden.',
     accent: SURFACE.amber,
   },
   {
     index: '02',
-    eyebrow: 'Behoud & vroegsignalering',
+    eyebrow: 'Als behoud in actieve teams de vraag is',
     title: 'RetentieScan',
     body: 'Zie waar behoud onder druk staat voordat het te laat is. Vroege signalering op groepsniveau.',
     accent: SURFACE.teal,
   },
   {
     index: '03',
-    eyebrow: 'Onboarding',
+    eyebrow: 'Als vroege landing aandacht vraagt',
     title: 'Onboarding 30-60-90',
     body: 'Zie vroeg hoe nieuwe medewerkers landen en waar uitval kan ontstaan.',
     accent: '#9b5f1e',
@@ -134,6 +132,29 @@ const managementFlowSteps = [
     label: 'Handelen',
     title: 'Action Center',
     body: 'Maakt opvolging concreet zodra HR of leiding besluit dat een echte vervolgstap nodig is — van toewijzing aan een manager tot het openen en volgen van acties.',
+  },
+] as const
+
+const firstDeliveryItems = [
+  {
+    index: '01',
+    title: 'Een dashboard met hoofdbeeld en prioriteiten',
+    body: 'Zodat direct zichtbaar wordt waar signalen terugkomen en wat bestuurlijk aandacht vraagt.',
+  },
+  {
+    index: '02',
+    title: 'Een managementrapport met duiding en vervolgrichting',
+    body: 'Zodat management sneller begrijpt wat de kern is en welke eerste vraag of keuze voorligt.',
+  },
+  {
+    index: '03',
+    title: 'Een gerichte bespreking van wat eerst telt',
+    body: 'Zodat signalen niet blijven hangen in interpretatie, maar leiden tot scherpere weging en besluitvorming.',
+  },
+  {
+    index: '04',
+    title: 'Een Action Center voor georganiseerde opvolging',
+    body: 'Zodat vervolg niet in losse afspraken verdwijnt, maar zichtbaar, toegewezen en concreet wordt.',
   },
 ] as const
 
@@ -275,11 +296,11 @@ function ProblemSection() {
                 letterSpacing: '-0.055em',
                 lineHeight: 0.93,
                 marginBottom: 28,
-                maxWidth: '12.5ch',
+                maxWidth: '15.25ch',
                 textWrap: 'balance',
               }}
             >
-              Veel signalen. Nog geen scherp beeld van wat eerst telt.
+              Veel signalen. Te weinig scherpte in wat eerst aandacht vraagt.
             </h2>
           </Reveal>
 
@@ -753,18 +774,6 @@ function HeroSection() {
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_640px]">
           <div style={{ maxWidth: 560 }}>
               <div className="marketing-home-hero-reveal-1" style={{ marginBottom: 18 }}>
-              <p
-                style={{
-                  color: SURFACE.muted,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  letterSpacing: '.16em',
-                  marginBottom: 20,
-                  textTransform: 'uppercase',
-                }}
-              >
-                Voor organisaties die sneller willen zien wat nu echt aandacht vraagt.
-              </p>
               <h1
                 style={{
                   color: SURFACE.ink,
@@ -861,7 +870,7 @@ function HeroSection() {
               </div>
           </div>
 
-            <div className="marketing-home-hero-reveal-visual relative hidden h-[620px] select-none lg:block">
+            <div className="marketing-home-hero-reveal-visual relative hidden h-[620px] translate-x-[42px] select-none lg:block">
             <div
               style={{
                 background: SURFACE.surface,
@@ -2006,6 +2015,91 @@ function RoutesSection() {
   )
 }
 
+function FirstDeliverySection() {
+  return (
+    <section
+      style={{
+        background: SURFACE.surface,
+        borderBottom: `1px solid ${SURFACE.border}`,
+      }}
+    >
+      <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 90px)', paddingBottom: 'clamp(56px, 7vw, 92px)' }}>
+        <div style={{ maxWidth: 1040 }}>
+          <Reveal>
+            <h2
+              style={{
+                color: SURFACE.ink,
+                fontFamily: displayFont,
+                fontSize: 'clamp(2.8rem, 4.7vw, 4.55rem)',
+                fontWeight: 400,
+                letterSpacing: '-0.05em',
+                lineHeight: 0.95,
+                marginBottom: 22,
+                maxWidth: '11.5ch',
+              }}
+            >
+              Wat u als eerste krijgt
+            </h2>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.78, marginBottom: 40, maxWidth: '58rem' }}>
+              Verisight geeft u geen losse analyse zonder vervolg, maar een eerste managementflow die helpt om sneller
+              te begrijpen wat speelt, te bepalen wat eerst telt en gerichte opvolging op gang te brengen.
+            </p>
+          </Reveal>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+          {firstDeliveryItems.map((item, index) => (
+            <Reveal key={item.title} delay={0.08 + index * 0.04}>
+              <article
+                style={{
+                  background: SURFACE.surface,
+                  border: `1px solid ${SURFACE.borderSoft}`,
+                  borderRadius: 28,
+                  boxShadow: '0 10px 24px rgba(22, 34, 56, 0.06), 0 2px 5px rgba(22, 34, 56, 0.04)',
+                  minHeight: 132,
+                  padding: '28px 28px 26px',
+                }}
+              >
+                <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '56px minmax(0, 1fr)' }}>
+                  <span
+                    style={{
+                      color: SURFACE.subtle,
+                      fontFamily: displayFont,
+                      fontSize: 24,
+                      letterSpacing: '-0.03em',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {item.index}
+                  </span>
+                  <div>
+                    <h3
+                      style={{
+                        color: SURFACE.ink,
+                        fontFamily: displayFont,
+                        fontSize: 'clamp(1.7rem, 2.1vw, 2.2rem)',
+                        fontWeight: 400,
+                        letterSpacing: '-0.035em',
+                        lineHeight: 1.08,
+                        marginBottom: 10,
+                      }}
+                    >
+                      {item.title}
+                    </h3>
+                    <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.72, maxWidth: '34rem' }}>{item.body}</p>
+                  </div>
+                </div>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function TrustSection() {
   return (
     <section
@@ -2185,15 +2279,12 @@ export function HomePageContent() {
       <HeroSection />
       <ProblemSection />
       <ManagementFlowSection />
-      {SHOW_HOME_INSIGHT_ACTION_DEMO ? (
-        <HomeInsightActionDemo />
-      ) : (
-        <>
-          <MarqueeBand />
-          <SuitePreviewSection />
-        </>
-      )}
+      <>
+        <MarqueeBand />
+        <SuitePreviewSection />
+      </>
       <RoutesSection />
+      <FirstDeliverySection />
       <TrustSection />
       <ContactSection />
     </div>
