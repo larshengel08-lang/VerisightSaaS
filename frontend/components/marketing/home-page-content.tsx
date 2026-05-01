@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { Reveal } from '@/components/marketing/design-tokens'
@@ -35,9 +35,8 @@ const displayFont = 'var(--font-fraunces), Georgia, serif'
 const bodyFont = 'var(--font-ibm-plex-sans), system-ui, sans-serif'
 
 const heroTrustItems = [
-  'Op groepsniveau',
-  'Geen individuele voorspellingen',
-  'Dashboard, samenvatting en eerste opvolging',
+  'Dashboard voor inzicht \u2022 Managementrapport voor duiding \u2022 Action Center voor opvolging',
+  '\\u2022 AVG-bewust',
 ]
 
 const suiteFlowPoints = [
@@ -261,18 +260,16 @@ function HeroSection() {
                 style={{
                   color: SURFACE.ink,
                   fontFamily: displayFont,
-                  fontSize: 'clamp(3.4rem, 5.2vw, 5.9rem)',
+                  fontSize: 'clamp(3rem, 4.8vw, 5.2rem)',
                   fontWeight: 400,
                   letterSpacing: '-0.045em',
                   lineHeight: 0.98,
                   marginBottom: 0,
+                  maxWidth: '12ch',
+                  textWrap: 'balance',
                 }}
               >
-                Zien.
-                <br />
-                <span style={{ color: SURFACE.amber, fontStyle: 'italic', fontWeight: 400 }}>Prioriteren.</span>
-                <br />
-                Handelen.
+                Zie sneller waar vertrek, behoud of onboarding aandacht vragen
               </h1>
               </div>
 
@@ -286,7 +283,7 @@ function HeroSection() {
                   maxWidth: '32rem',
                 }}
               >
-                Zie waar vertrek, behoud of vroege uitval echt aandacht vraagt. Geen losse surveydata, maar een scherp dashboard, een korte managementsamenvatting en een eerste route voor opvolging.
+                Verisight helpt HR en leiding signalen zichtbaar maken, prioriteren wat eerst telt en opvolging organiseren in het Action Center.
               </p>
 
               <div
@@ -307,7 +304,7 @@ function HeroSection() {
                   textDecoration: 'none',
                 }}
               >
-                Toets uw eerste route
+                Plan een kennismaking
               </Link>
               <Link
                 href="/#suite"
@@ -332,30 +329,23 @@ function HeroSection() {
                 className="marketing-home-hero-reveal-5"
                 style={{
                   borderTop: `1px solid ${SURFACE.border}`,
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '14px 28px',
+                  display: 'grid',
+                  gap: 10,
                   paddingTop: 22,
                 }}
               >
-                {heroTrustItems.map((item, index) => (
+                {heroTrustItems.map((item) => (
                   <div
                     key={item}
                     style={{
-                      alignItems: 'center',
                       color: SURFACE.muted,
-                      display: 'flex',
+                      display: 'block',
                       fontFamily: bodyFont,
                       fontSize: 13,
                       fontWeight: 500,
-                      gap: 10,
+                      lineHeight: 1.7,
                     }}
                   >
-                    {index === 1 ? (
-                      <span style={{ color: SURFACE.teal, fontSize: 15, lineHeight: 1 }}>○</span>
-                    ) : (
-                      <span style={{ background: index === 0 ? '#d45a51' : SURFACE.amber, borderRadius: 999, height: 4, width: 4 }} />
-                    )}
                     <span>{item}</span>
                   </div>
                 ))}
@@ -506,7 +496,7 @@ function HeroSection() {
                       width: 40,
                     }}
                   >
-                    <span style={{ color: '#fff', fontSize: 20, lineHeight: 1 }}>⚡</span>
+                    <span style={{ color: '#fff', fontSize: 20, lineHeight: 1 }}>âš¡</span>
                   </div>
                   <div>
                     <h4 style={{ color: '#fff', fontSize: 15, fontWeight: 700, letterSpacing: '.02em', marginBottom: 2, textTransform: 'uppercase' }}>
@@ -589,7 +579,7 @@ function HeroSection() {
                     JD
                   </div>
                   <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 12 }}>
-                    J. de Wit <span style={{ color: 'rgba(255,255,255,0.38)' }}>· VP Talent</span>
+                    J. de Wit <span style={{ color: 'rgba(255,255,255,0.38)' }}>Â· VP Talent</span>
                   </p>
                 </div>
                 <div
@@ -1698,3 +1688,5 @@ export function HomePageContent() {
     </div>
   )
 }
+
+
