@@ -1822,3 +1822,124 @@ from public.campaigns c
 left join public.respondents      r  on r.campaign_id   = c.id
 left join public.survey_responses sr on sr.respondent_id = r.id
 group by c.id, c.name, c.scan_type, c.organization_id, c.is_active, c.created_at;
+
+create table if not exists public.action_center_route_reopens (
+  id uuid primary key default gen_random_uuid(),
+  route_id text not null,
+  campaign_id uuid references public.campaigns(id) on delete cascade not null,
+  org_id uuid references public.organizations(id) on delete cascade not null,
+  route_scope_type text not null check (route_scope_type in ('department', 'item')),
+  route_scope_value text not null,
+  reopen_reason text not null
+    check (reopen_reason in ('te-vroeg-afgesloten', 'zelfde-traject-loopt-door', 'nieuwe-informatie')),
+  reopened_at timestamptz not null,
+  reopened_by_role text not null check (reopened_by_role in ('hr', 'manager')),
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists idx_action_center_route_reopens_route
+  on public.action_center_route_reopens(route_id, reopened_at desc);
+
+create table if not exists public.action_center_route_relations (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid references public.campaigns(id) on delete cascade not null,
+  org_id uuid references public.organizations(id) on delete cascade not null,
+  route_relation_type text not null check (route_relation_type in ('follow-up-from')),
+  source_route_id text not null,
+  target_route_id text not null,
+  recorded_at timestamptz not null,
+  recorded_by_role text not null check (recorded_by_role in ('hr', 'manager')),
+  created_by uuid references auth.users(id) on delete set null,
+  updated_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique (source_route_id, target_route_id, route_relation_type)
+);
+
+create index if not exists idx_action_center_route_relations_source
+  on public.action_center_route_relations(source_route_id, recorded_at desc);
+
+create index if not exists idx_action_center_route_relations_target
+  on public.action_center_route_relations(target_route_id, recorded_at desc);
+
+alter table public.action_center_route_reopens enable row level security;
+alter table public.action_center_route_relations enable row level security;
+
+drop policy if exists "route_reopens_select_visible_to_route_viewers"
+  on public.action_center_route_reopens;
+drop policy if exists "route_reopens_insert_visible_to_hr"
+  on public.action_center_route_reopens;
+drop policy if exists "route_relations_select_visible_to_route_viewers"
+  on public.action_center_route_relations;
+drop policy if exists "route_relations_insert_visible_to_hr"
+  on public.action_center_route_relations;
+
+create policy "route_reopens_select_visible_to_route_viewers"
+  on public.action_center_route_reopens for select
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.org_id = action_center_route_reopens.org_id
+        and m.user_id = auth.uid()
+        and (
+          (m.access_role = 'hr_owner' and m.scope_type = 'org' and m.can_view)
+          or (
+            m.access_role = 'manager_assignee'
+            and m.scope_type = action_center_route_reopens.route_scope_type
+            and m.scope_value = action_center_route_reopens.route_scope_value
+            and m.can_view
+          )
+        )
+    )
+  );
+
+create policy "route_reopens_insert_visible_to_hr"
+  on public.action_center_route_reopens for insert
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.org_id = action_center_route_reopens.org_id
+        and m.user_id = auth.uid()
+        and m.access_role = 'hr_owner'
+        and m.scope_type = 'org'
+        and m.can_update
+    )
+  );
+
+create policy "route_relations_select_visible_to_route_viewers"
+  on public.action_center_route_relations for select
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.org_id = action_center_route_relations.org_id
+        and m.user_id = auth.uid()
+        and (
+          (m.access_role = 'hr_owner' and m.scope_type = 'org' and m.can_view)
+          or (m.access_role = 'manager_assignee' and m.can_view)
+        )
+    )
+  );
+
+create policy "route_relations_insert_visible_to_hr"
+  on public.action_center_route_relations for insert
+  with check (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.org_id = action_center_route_relations.org_id
+        and m.user_id = auth.uid()
+        and m.access_role = 'hr_owner'
+        and m.scope_type = 'org'
+        and m.can_update
+    )
+  );

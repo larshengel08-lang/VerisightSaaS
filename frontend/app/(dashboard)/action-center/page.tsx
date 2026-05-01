@@ -8,6 +8,11 @@ import {
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import { projectActionCenterRouteCloseout } from '@/lib/action-center-route-closeout'
 import {
+  projectActionCenterRouteFollowUpRelation,
+  projectActionCenterRouteReopen,
+  type ActionCenterRouteFollowUpRelationRecord,
+} from '@/lib/action-center-route-reopen'
+import {
   projectActionCenterRouteActionCard,
   type ActionCenterRouteActionWriteInput,
 } from '@/lib/action-center-route-actions'
@@ -178,6 +183,8 @@ export default async function ActionCenterPage({
     { data: managerResponsesRaw },
     { data: routeActionsRaw },
     { data: routeCloseoutsRaw },
+    { data: routeReopensRaw },
+    { data: routeFollowUpsRaw },
   ] = await Promise.all([
     deliveryRecords.length > 0
       ? dataClient
@@ -222,6 +229,18 @@ export default async function ActionCenterPage({
           .select('*')
           .in('campaign_id', campaignIds)
       : Promise.resolve({ data: [] }),
+    campaignIds.length > 0
+      ? dataClient
+          .from('action_center_route_reopens')
+          .select('*')
+          .in('campaign_id', campaignIds)
+      : Promise.resolve({ data: [] }),
+    campaignIds.length > 0
+      ? dataClient
+          .from('action_center_route_relations')
+          .select('*')
+          .in('campaign_id', campaignIds)
+      : Promise.resolve({ data: [] }),
   ])
 
   const deliveryCheckpoints = (deliveryCheckpointsRaw ?? []) as CampaignDeliveryCheckpoint[]
@@ -246,6 +265,24 @@ export default async function ActionCenterPage({
       }
     })
     .filter((row): row is ReturnType<typeof projectActionCenterRouteCloseout> => Boolean(row))
+  const routeReopens = (routeReopensRaw ?? [])
+    .map((row) => {
+      try {
+        return projectActionCenterRouteReopen(row as Record<string, unknown>)
+      } catch {
+        return null
+      }
+    })
+    .filter((row): row is ReturnType<typeof projectActionCenterRouteReopen> => Boolean(row))
+  const routeFollowUpRelations = (routeFollowUpsRaw ?? [])
+    .map((row) => {
+      try {
+        return projectActionCenterRouteFollowUpRelation(row as Record<string, unknown>)
+      } catch {
+        return null
+      }
+    })
+    .filter((row): row is ActionCenterRouteFollowUpRelationRecord => Boolean(row))
   const { data: actionReviewsRaw } =
     routeActions.length > 0
       ? await dataClient
@@ -318,6 +355,13 @@ export default async function ActionCenterPage({
     return acc
   }, {})
   const routeCloseoutByRouteId = new Map(routeCloseouts.map((closeout) => [closeout.routeId, closeout]))
+  const routeReopensByRouteId = routeReopens.reduce<Record<string, typeof routeReopens>>((acc, reopen) => {
+    acc[reopen.routeId] ??= []
+    acc[reopen.routeId].push(reopen)
+    return acc
+  }, {})
+  const routeFollowUpBySourceRouteId = new Map(routeFollowUpRelations.map((relation) => [relation.sourceRouteId, relation]))
+  const routeFollowUpByTargetRouteId = new Map(routeFollowUpRelations.map((relation) => [relation.targetRouteId, relation]))
   const actionReviewsByActionId = actionReviews.reduce<Record<string, typeof actionReviews>>((acc, review) => {
     acc[review.actionId] ??= []
     acc[review.actionId].push(review)
@@ -383,6 +427,9 @@ export default async function ActionCenterPage({
             (action) => actionReviewsByActionId[action.actionId] ?? [],
           ),
           routeCloseout: routeCloseoutByRouteId.get(routeId) ?? null,
+          routeReopens: routeReopensByRouteId[routeId] ?? [],
+          followUpFromRelation: routeFollowUpByTargetRouteId.get(routeId) ?? null,
+          followUpTargetRelation: routeFollowUpBySourceRouteId.get(routeId) ?? null,
         }
       })
   })
@@ -474,6 +521,8 @@ export default async function ActionCenterPage({
       actionReviewEndpoint="/api/action-center-action-reviews"
       canCloseRoutes={context.canManageActionCenterAssignments}
       routeCloseoutEndpoint="/api/action-center-route-closeouts"
+      routeReopenEndpoint="/api/action-center-route-reopens"
+      routeFollowUpEndpoint="/api/action-center-route-follow-ups"
       currentUserId={user.id}
       managerOnly={context.managerOnly}
       workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}

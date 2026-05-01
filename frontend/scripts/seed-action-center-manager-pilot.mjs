@@ -457,6 +457,20 @@ const { error: cleanupCloseoutRecordError } = await admin
 
 if (cleanupCloseoutRecordError) throw cleanupCloseoutRecordError
 
+const { error: cleanupRouteReopensError } = await admin
+  .from('action_center_route_reopens')
+  .delete()
+  .in('route_id', [primaryRouteId, closeoutRouteId])
+
+if (cleanupRouteReopensError) throw cleanupRouteReopensError
+
+const { error: cleanupRouteRelationsError } = await admin
+  .from('action_center_route_relations')
+  .delete()
+  .or(`source_route_id.eq.${closeoutRouteId},target_route_id.eq.${primaryRouteId}`)
+
+if (cleanupRouteRelationsError) throw cleanupRouteRelationsError
+
 const { data: closeoutResponse, error: closeoutResponseError } = await admin
   .from('action_center_manager_responses')
   .insert({
@@ -549,6 +563,25 @@ const { error: closeoutReviewsError } = await admin
 
 if (closeoutReviewsError) throw closeoutReviewsError
 
+const { error: followUpRelationError } = await admin
+  .from('action_center_route_relations')
+  .upsert(
+    {
+      campaign_id: canonicalCampaign.id,
+      org_id: pilotOrg.orgId,
+      route_relation_type: 'follow-up-from',
+      source_route_id: closeoutRouteId,
+      target_route_id: primaryRouteId,
+      recorded_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      recorded_by_role: 'hr',
+      created_by: hrOwner.id,
+      updated_by: hrOwner.id,
+    },
+    { onConflict: 'source_route_id,target_route_id,route_relation_type' },
+  )
+
+if (followUpRelationError) throw followUpRelationError
+
 mkdirSync(path.dirname(artifactPath), { recursive: true })
 const artifact = {
   seededAt: new Date().toISOString(),
@@ -569,6 +602,11 @@ const artifact = {
   closeoutRouteContext: {
     focusItemId: closeoutRouteId,
     actionCenterFocusUrl: `/action-center?focus=${closeoutRouteId}`,
+  },
+  followUpRouteContext: {
+    sourceFocusItemId: closeoutRouteId,
+    targetFocusItemId: primaryRouteId,
+    targetActionCenterFocusUrl: `/action-center?focus=${primaryRouteId}`,
   },
   managers: managers.map((manager, index) => ({
     email: manager.email,

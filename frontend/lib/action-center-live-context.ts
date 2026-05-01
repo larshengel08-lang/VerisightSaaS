@@ -9,6 +9,10 @@ import type {
 import type { ActionCenterRouteActionRecord } from './action-center-route-actions'
 import type { ActionCenterActionReviewRecord } from './action-center-action-reviews'
 import type { ActionCenterRouteCloseoutRecord } from './action-center-route-closeout'
+import type {
+  ActionCenterRouteFollowUpRelationRecord,
+  ActionCenterRouteReopenRecord,
+} from './action-center-route-reopen'
 
 export interface LiveActionCenterCampaignContext {
   campaign: Campaign
@@ -33,4 +37,7 @@ export interface LiveActionCenterCampaignContext {
   routeActions?: ActionCenterRouteActionRecord[]
   actionReviews?: ActionCenterActionReviewRecord[]
   routeCloseout?: ActionCenterRouteCloseoutRecord | null
+  routeReopens?: ActionCenterRouteReopenRecord[]
+  followUpFromRelation?: ActionCenterRouteFollowUpRelationRecord | null
+  followUpTargetRelation?: ActionCenterRouteFollowUpRelationRecord | null
 }

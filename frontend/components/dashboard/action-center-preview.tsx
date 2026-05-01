@@ -29,6 +29,10 @@ import {
   type ActionCenterRouteCloseoutReason,
   type ActionCenterRouteCloseoutStatus,
 } from '@/lib/action-center-route-closeout'
+import {
+  getActionCenterRouteReopenReasonLabel,
+  projectActionCenterRouteReopen,
+} from '@/lib/action-center-route-reopen'
 import type {
   ActionCenterPreviewItem,
   ActionCenterPreviewManagerOption,
@@ -76,6 +80,8 @@ interface Props {
   actionReviewEndpoint?: string
   canCloseRoutes?: boolean
   routeCloseoutEndpoint?: string
+  routeReopenEndpoint?: string
+  routeFollowUpEndpoint?: string
   currentUserId?: string | null
   managerOnly?: boolean
   workbenchHref: string
@@ -632,6 +638,58 @@ function applyRouteCloseoutToItem(
   )
 }
 
+function applyRouteReopenToItem(
+  item: ActionCenterPreviewItem,
+  reopen: ReturnType<typeof projectActionCenterRouteReopen>,
+) {
+  const routeActionCards = item.coreSemantics.routeActionCards
+  const aggregation =
+    routeActionCards.length > 0
+      ? summarizeActionCenterRouteActions(
+          routeActionCards.map((action) => ({
+            actionId: action.actionId,
+            status: action.status,
+            reviewScheduledFor: action.reviewScheduledFor,
+          })),
+        )
+      : null
+  const nextStatus: ActionCenterPreviewStatus =
+    aggregation?.routeStatus === 'reviewbaar'
+      ? 'reviewbaar'
+      : aggregation?.routeStatus === 'in-uitvoering'
+        ? 'in-uitvoering'
+        : item.coreSemantics.route.followThroughMode === 'open_request'
+          ? 'open-verzoek'
+          : item.coreSemantics.route.followThroughMode === 'none'
+            ? 'te-bespreken'
+            : 'te-bespreken'
+
+  return finalizeActionCenterPreviewItem(
+    {
+      ...item,
+      status: nextStatus,
+      coreSemantics: {
+        ...item.coreSemantics,
+        route: {
+          ...item.coreSemantics.route,
+          routeStatus: getContractRouteStatusFromPreviewStatus(nextStatus),
+          reopenedAt: reopen.reopenedAt,
+          reopenedByRole: reopen.reopenedByRole,
+          reopenReason: reopen.reopenReason,
+          isReopened: true,
+          lineageLabel: 'Heropend traject',
+        },
+        lineageSemantics: {
+          ...item.coreSemantics.lineageSemantics,
+          label: 'Heropend traject',
+          summary: `${getActionCenterRouteReopenReasonLabel(reopen.reopenReason)} na eerdere afsluiting`,
+        },
+      },
+    },
+    { recomputeCoreSemantics: true },
+  )
+}
+
 function getViewCopy(view: ActionCenterPreviewView, selectedTitle: string | null) {
   switch (view) {
     case 'actions':
@@ -741,6 +799,7 @@ export function ActionCenterPreview({
   actionReviewEndpoint,
   canCloseRoutes = false,
   routeCloseoutEndpoint,
+  routeReopenEndpoint,
   currentUserId = null,
   managerOnly = false,
   workbenchHref,
@@ -776,6 +835,8 @@ export function ActionCenterPreview({
   )
   const [routeCloseoutPending, setRouteCloseoutPending] = useState(false)
   const [routeCloseoutError, setRouteCloseoutError] = useState<string | null>(null)
+  const [routeReopenPending, setRouteReopenPending] = useState(false)
+  const [routeReopenError, setRouteReopenError] = useState<string | null>(null)
   const [reviewPendingActionId, setReviewPendingActionId] = useState<string | null>(null)
   const [reviewErrorState, setReviewErrorState] = useState<{ actionId: string; message: string } | null>(null)
   const [expandedReviewActionId, setExpandedReviewActionId] = useState<string | null>(null)
@@ -832,6 +893,7 @@ export function ActionCenterPreview({
       setRouteCloseoutForm(buildRouteCloseoutDefaults(selectedItem))
       setRouteCloseoutError(null)
       setShowRouteCloseoutEditor(false)
+      setRouteReopenError(null)
       setReviewErrorState(null)
     setShowRouteActionEditor(false)
     setExpandedReviewActionId(null)
@@ -901,6 +963,7 @@ export function ActionCenterPreview({
   const canUseActionReviewFlow = Boolean(canUseRouteActionFlow && actionReviewEndpoint)
   const closing = selectedItem?.coreSemantics.closingSemantics ?? null
   const routeCloseout = selectedItem?.coreSemantics.routeCloseout ?? null
+  const lineage = selectedItem?.coreSemantics.lineageSemantics ?? null
   const canUseRouteCloseoutFlow =
     Boolean(
       canCloseRoutes &&
@@ -911,6 +974,13 @@ export function ActionCenterPreview({
     )
   const showReadyForCloseoutHint = Boolean(
     routeCloseout?.readyForCloseout && routeCloseout.closeoutStatus === null,
+  )
+  const canUseRouteReopenFlow = Boolean(
+    canCloseRoutes &&
+      routeReopenEndpoint &&
+      selectedItem?.orgId &&
+      selectedItem.scopeType &&
+      routeCloseout?.closeoutStatus,
   )
 
   function updateItem(
@@ -1277,6 +1347,47 @@ export function ActionCenterPreview({
       setRouteCloseoutError(error instanceof Error ? error.message : 'Route closeout opslaan mislukt.')
     } finally {
       setRouteCloseoutPending(false)
+    }
+  }
+
+  async function handleRouteReopenSave() {
+    if (!selectedItem || !selectedItem.orgId || !selectedItem.scopeType || !routeReopenEndpoint) {
+      return
+    }
+
+    setRouteReopenPending(true)
+    setRouteReopenError(null)
+
+    try {
+      const response = await fetch(routeReopenEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          route_id: selectedItem.id,
+          campaign_id: selectedItem.coreSemantics.route.campaignId,
+          route_scope_type: selectedItem.scopeType,
+          route_scope_value: selectedItem.teamId,
+          reopen_reason: 'te-vroeg-afgesloten',
+        }),
+      })
+      const result = (await response.json().catch(() => null)) as
+        | { reopen?: Record<string, unknown>; detail?: string }
+        | null
+
+      if (!response.ok || !result?.reopen) {
+        throw new Error(result?.detail ?? 'Route heropenen mislukt.')
+      }
+
+      const savedReopen = projectActionCenterRouteReopen(result.reopen)
+      setItems((currentItems) =>
+        currentItems.map((item) => (item.id === selectedItem.id ? applyRouteReopenToItem(item, savedReopen) : item)),
+      )
+    } catch (error) {
+      setRouteReopenError(error instanceof Error ? error.message : 'Route heropenen mislukt.')
+    } finally {
+      setRouteReopenPending(false)
     }
   }
 
@@ -2186,6 +2297,17 @@ export function ActionCenterPreview({
                           </div>
                         </div>
 
+                        {lineage?.label ? (
+                          <div className="mt-5 rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">
+                              {lineage.label}
+                            </p>
+                            {lineage.summary ? (
+                              <p className="mt-2 text-sm leading-7 text-white/72">{lineage.summary}</p>
+                            ) : null}
+                          </div>
+                        ) : null}
+
                         {routeCloseout?.closeoutStatus ? (
                           <div className="mt-5 rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Route afgesloten</p>
@@ -2201,6 +2323,21 @@ export function ActionCenterPreview({
                             <p className="mt-3 text-xs uppercase tracking-[0.16em] text-white/40">
                               {formatLongDate(routeCloseout.closedAt)} · {routeCloseout.closedByRole}
                             </p>
+                            {canUseRouteReopenFlow ? (
+                              <div className="mt-4 flex flex-wrap gap-3">
+                                <button
+                                  type="button"
+                                  className="inline-flex min-h-11 items-center rounded-full bg-white/10 px-4.5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
+                                  disabled={routeReopenPending}
+                                  onClick={() => void handleRouteReopenSave()}
+                                >
+                                  {routeReopenPending ? 'Heropenen...' : 'Heropen traject'}
+                                </button>
+                              </div>
+                            ) : null}
+                            {routeReopenError ? (
+                              <p className="mt-3 text-sm leading-7 text-[#ffcac2]">{routeReopenError}</p>
+                            ) : null}
                           </div>
                         ) : null}
 

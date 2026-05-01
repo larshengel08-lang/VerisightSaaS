@@ -1029,4 +1029,66 @@ describe('live action center builder', () => {
 
     expect(routeCloseout?.readyForCloseout).toBe(true)
   })
+
+  it('keeps a source route closed while surfacing a follow-up route as the active successor', () => {
+    const sourceContext = {
+      campaign: buildCampaign(),
+      stats: buildStats(),
+      organizationName: 'Acme BV',
+      memberRole: 'owner' as const,
+      scopeType: 'department' as const,
+      scopeValue: 'operations-closed',
+      scopeLabel: 'Operations gesloten',
+      peopleCount: 38,
+      assignedManager: {
+        userId: 'manager-1',
+        displayName: 'Manager Operations',
+        assignedAt: '2026-04-21T08:00:00.000Z',
+      },
+      deliveryRecord: buildDeliveryRecord({
+        first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+      }),
+      deliveryCheckpoints: [],
+      learningDossier: buildDossier({
+        first_action_taken: null,
+        expected_first_value: null,
+        review_moment: null,
+      }),
+      learningCheckpoints: [],
+      routeCloseout: {
+        routeId: 'campaign-exit::operations-closed',
+        closeoutStatus: 'afgerond' as const,
+        closeoutReason: 'voldoende-opgepakt' as const,
+        closeoutNote: 'Afgerond voor nu.',
+        closedAt: '2026-05-10T09:00:00.000Z',
+        closedByRole: 'hr' as const,
+      },
+    }
+    const targetContext = {
+      ...sourceContext,
+      scopeValue: 'operations-follow-up',
+      scopeLabel: 'Operations vervolg',
+      assignedManager: {
+        userId: 'manager-1',
+        displayName: 'Manager Operations',
+        assignedAt: '2026-05-11T08:00:00.000Z',
+      },
+      followUpFromRelation: {
+        routeRelationType: 'follow-up-from' as const,
+        sourceRouteId: 'campaign-exit::operations-closed',
+        targetRouteId: 'campaign-exit::operations-follow-up',
+        recordedAt: '2026-05-11T08:30:00.000Z',
+        recordedByRole: 'hr' as const,
+      },
+      routeCloseout: null,
+    }
+
+    const items = buildLiveActionCenterItems([sourceContext, targetContext])
+    const sourceItem = items.find((item) => item.id === 'campaign-exit::operations-closed')
+    const targetItem = items.find((item) => item.id === 'campaign-exit::operations-follow-up')
+
+    expect(sourceItem?.status).toBe('afgerond')
+    expect(targetItem?.status).toBe('open-verzoek')
+    expect(targetItem?.coreSemantics.lineageSemantics.label).toBe('Vervolg op eerdere route')
+  })
 })

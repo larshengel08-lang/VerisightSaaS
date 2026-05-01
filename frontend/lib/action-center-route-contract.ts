@@ -4,6 +4,13 @@ import type { PilotLearningCheckpoint } from './pilot-learning'
 import { hasPrimaryManagerAction } from './action-center-manager-responses'
 import type { ActionCenterManagerResponseType, ActionCenterManagerActionThemeKey } from './pilot-learning'
 import type { ActionCenterRouteCloseoutRecord } from './action-center-route-closeout'
+import {
+  projectActionCenterRouteLifecycle,
+  type ActionCenterRouteFollowUpRelationRecord,
+  type ActionCenterRouteReopenReason,
+  type ActionCenterRouteReopenRecord,
+  type ActionCenterRouteReopenRole,
+} from './action-center-route-reopen'
 
 export type ActionCenterEntryStage = 'attention' | 'candidate' | 'active'
 
@@ -71,6 +78,14 @@ export interface ActionCenterRouteContract {
   primaryActionThemeKey: ActionCenterManagerActionThemeKey | null
   followThroughMode: 'open_request' | 'bounded_response' | 'primary_action' | 'legacy_action' | 'none'
   blockedBy: Exclude<DeliveryExceptionStatus, 'none'> | null
+  reopenedAt: string | null
+  reopenedByRole: ActionCenterRouteReopenRole | null
+  reopenReason: ActionCenterRouteReopenReason | null
+  isReopened: boolean
+  followUpFromRouteId: string | null
+  followUpTargetRouteId: string | null
+  hasFollowUpTarget: boolean
+  lineageLabel: 'Heropend traject' | 'Vervolg op eerdere route' | null
 }
 
 interface ActionCenterRouteActionSummaryInput {
@@ -81,6 +96,18 @@ interface ActionCenterRouteActionSummaryInput {
 
 function getRouteCloseout(context: LiveActionCenterCampaignContext): ActionCenterRouteCloseoutRecord | null {
   return context.routeCloseout ?? null
+}
+
+function getRouteReopens(context: LiveActionCenterCampaignContext): ActionCenterRouteReopenRecord[] {
+  return context.routeReopens ?? []
+}
+
+function getFollowUpFromRelation(context: LiveActionCenterCampaignContext): ActionCenterRouteFollowUpRelationRecord | null {
+  return context.followUpFromRelation ?? null
+}
+
+function getFollowUpTargetRelation(context: LiveActionCenterCampaignContext): ActionCenterRouteFollowUpRelationRecord | null {
+  return context.followUpTargetRelation ?? null
 }
 
 const REVIEW_OUTCOMES = new Set<ActionCenterReviewOutcome>([
@@ -254,16 +281,21 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
     context.deliveryRecord?.exception_status && context.deliveryRecord.exception_status !== 'none'
       ? context.deliveryRecord.exception_status
       : null
-  const routeCloseout = getRouteCloseout(context)
+  const routeLifecycle = projectActionCenterRouteLifecycle({
+    routeCloseout: getRouteCloseout(context),
+    routeReopens: getRouteReopens(context),
+    followUpFromRelation: getFollowUpFromRelation(context),
+    followUpTargetRelation: getFollowUpTargetRelation(context),
+  })
 
   let routeStatus: ActionCenterRouteStatus | null = null
 
   if (entryStage === 'active') {
-    if (routeCloseout?.closeoutStatus) {
-      routeStatus = routeCloseout.closeoutStatus
-    } else if (context.learningDossier?.triage_status === 'uitgevoerd') {
+    if (routeLifecycle.activeCloseout?.closeoutStatus) {
+      routeStatus = routeLifecycle.activeCloseout.closeoutStatus
+    } else if (!routeLifecycle.isCurrentlyReopened && context.learningDossier?.triage_status === 'uitgevoerd') {
       routeStatus = 'afgerond'
-    } else if (context.learningDossier?.triage_status === 'verworpen') {
+    } else if (!routeLifecycle.isCurrentlyReopened && context.learningDossier?.triage_status === 'verworpen') {
       routeStatus = 'gestopt'
     } else if (blockedBy) {
       routeStatus = 'geblokkeerd'
@@ -297,6 +329,14 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
     primaryActionThemeKey,
     followThroughMode,
     blockedBy,
+    reopenedAt: routeLifecycle.latestReopen?.reopenedAt ?? null,
+    reopenedByRole: routeLifecycle.latestReopen?.reopenedByRole ?? null,
+    reopenReason: routeLifecycle.latestReopen?.reopenReason ?? null,
+    isReopened: routeLifecycle.isCurrentlyReopened,
+    followUpFromRouteId: routeLifecycle.followUpFromRouteId,
+    followUpTargetRouteId: routeLifecycle.followUpTargetRouteId,
+    hasFollowUpTarget: routeLifecycle.hasFollowUpTarget,
+    lineageLabel: routeLifecycle.lineageLabel,
   }
 }
 

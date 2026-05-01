@@ -580,6 +580,75 @@ describe("action center landing shell", () => {
     expect(markup).toContain("Bewust niet voortzetten");
   });
 
+  it("renders compact lineage labels for reopened and follow-up routes", () => {
+    const context = buildLiveContext();
+    const [baseItem] = buildLiveActionCenterItems([context]);
+    const reopenedItem = {
+      ...baseItem,
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        route: {
+          ...baseItem.coreSemantics.route,
+          isReopened: true,
+          reopenedAt: "2026-05-21T09:00:00.000Z",
+          reopenReason: "te-vroeg-afgesloten" as const,
+          lineageLabel: "Heropend traject" as const,
+        },
+        lineageSemantics: {
+          label: "Heropend traject" as const,
+          summary: "Te vroeg afgesloten na eerdere afsluiting",
+          followUpFromRouteId: null,
+          followUpTargetRouteId: null,
+        },
+      },
+    };
+    const followUpItem = {
+      ...baseItem,
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        route: {
+          ...baseItem.coreSemantics.route,
+          followUpFromRouteId: "route-older",
+          lineageLabel: "Vervolg op eerdere route" as const,
+        },
+        lineageSemantics: {
+          label: "Vervolg op eerdere route" as const,
+          summary: "Nieuw traject na eerdere routeafsluiting",
+          followUpFromRouteId: "route-older",
+          followUpTargetRouteId: null,
+        },
+      },
+    };
+
+    const reopenedMarkup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [reopenedItem],
+        initialSelectedItemId: reopenedItem.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+    const followUpMarkup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [followUpItem],
+        initialSelectedItemId: followUpItem.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+
+    expect(reopenedMarkup).toContain("Heropend traject");
+    expect(followUpMarkup).toContain("Vervolg op eerdere route");
+  });
+
   it("shows a compact ready-for-closeout hint for routes whose actions are finished but not yet explicitly closed", () => {
     const context = buildLiveContext();
     const [baseItem] = buildLiveActionCenterItems([context]);
