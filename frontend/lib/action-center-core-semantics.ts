@@ -3,12 +3,18 @@ import type {
   ActionCenterReviewOutcome,
   ActionCenterRouteContract,
 } from './action-center-route-contract'
+import {
+  projectActionCenterRouteCloseoutState,
+  type ActionCenterRouteCloseoutProjection,
+} from './action-center-route-closeout'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
 import type {
   ActionCenterManagerResponse,
   ActionCenterReviewDecision,
   PilotLearningCheckpoint,
 } from './pilot-learning'
+import type { ActionCenterRouteActionRecord } from './action-center-route-actions'
+import type { ActionCenterActionReviewRecord } from './action-center-action-reviews'
 import {
   compareDecisionHistoryEntries,
   projectResultProgression,
@@ -48,6 +54,21 @@ export interface ActionCenterCoreSemantics {
   }
   resultProgression: ActionCenterResultProgressEntry[]
   decisionHistory: ActionCenterDecisionRecord[]
+  routeActionCards: Array<{
+    actionId: string
+    themeKey: ActionCenterRouteActionRecord['themeKey']
+    actionText: string
+    reviewScheduledFor: string
+    expectedEffect: string
+    status: ActionCenterRouteActionRecord['status']
+    latestReview: {
+      reviewedAt: string
+      observation: string
+      actionOutcome: ActionCenterActionReviewRecord['actionOutcome']
+      followUpNote: string | null
+    } | null
+  }>
+  routeCloseout: ActionCenterRouteCloseoutProjection
   closingSemantics: {
     status: ActionCenterClosingStatus
     summary: string | null
@@ -64,6 +85,9 @@ export type ActionCenterCoreSemanticsProjectionInput = Pick<
   | 'learningCheckpoints'
   | 'reviewDecisions'
   | 'managerResponse'
+  | 'routeActions'
+  | 'actionReviews'
+  | 'routeCloseout'
 > & {
   route: ActionCenterRouteContract
   latestVisibleUpdateNote?: string | null
@@ -86,6 +110,7 @@ export interface ActionCenterPreviewCoreSemanticsProjectionInput {
   latestVisibleUpdateNote?: string | null
   route?: ActionCenterRouteContract | null
   managerResponse?: ActionCenterManagerResponse | null
+  routeCloseout?: ActionCenterRouteCloseoutProjection | null
 }
 
 const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
@@ -368,6 +393,42 @@ function getPreviewClosingStatus(status: ActionCenterRouteContract['routeStatus'
   return 'lopend'
 }
 
+function buildRouteActionCards(context: ActionCenterCoreSemanticsProjectionInput) {
+  const routeActions = context.routeActions ?? []
+  const actionReviews = context.actionReviews ?? []
+
+  return [...routeActions]
+    .map((action) => {
+      const latestReview =
+        [...actionReviews]
+          .filter((review) => review.actionId === action.actionId)
+          .sort((left, right) => new Date(right.reviewedAt).getTime() - new Date(left.reviewedAt).getTime())[0] ?? null
+
+      return {
+        actionId: action.actionId,
+        themeKey: action.themeKey,
+        actionText: action.actionText,
+        reviewScheduledFor: action.reviewScheduledFor,
+        expectedEffect: action.expectedEffect,
+        status: action.status,
+        latestReview: latestReview
+          ? {
+              reviewedAt: latestReview.reviewedAt,
+              observation: latestReview.observation,
+              actionOutcome: latestReview.actionOutcome,
+              followUpNote: latestReview.followUpNote,
+            }
+          : null,
+      }
+    })
+    .sort((left, right) => {
+      const rank = { in_review: 0, open: 1, afgerond: 2, gestopt: 3 } as const
+      const statusDelta = rank[left.status] - rank[right.status]
+      if (statusDelta !== 0) return statusDelta
+      return left.reviewScheduledFor.localeCompare(right.reviewScheduledFor)
+    })
+}
+
 function getClosingSummary(status: ActionCenterClosingStatus, values: Array<string | null | undefined>) {
   if (status === 'lopend') {
     return null
@@ -530,6 +591,7 @@ export function projectActionCenterPreviewCoreSemantics(
     latestVisibleUpdateNote,
   })
   const closingStatus = getPreviewClosingStatus(route.routeStatus)
+  const routeCloseout = input.routeCloseout ?? projectActionCenterRouteCloseoutState({ readyForCloseout: false })
 
   return {
     route,
@@ -563,6 +625,8 @@ export function projectActionCenterPreviewCoreSemantics(
     },
     resultProgression,
     decisionHistory,
+    routeActionCards: [],
+    routeCloseout,
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getPreviewClosingSummaryValues(route, closingStatus)),
@@ -651,6 +715,7 @@ export function projectActionCenterCoreSemantics(
   const latestObservation = getLatestObservation(context, route)
   const latestActionUpdate = getLatestActionUpdate(context)
   const closingStatus = getClosingStatus(context, route)
+  const routeActionCards = buildRouteActionCards(context)
   const decisionHistory = buildDecisionHistory({
     route,
     reviewQuestion,
@@ -676,6 +741,12 @@ export function projectActionCenterCoreSemantics(
       context.managerResponse?.primary_action_expected_effect ??
       derivedExpectedEffect,
     suppressNextStepFallback: latestDecisionProfile?.hidesNextStep ?? false,
+  })
+  const allActionsFinished =
+    routeActionCards.length > 0 && routeActionCards.every((action) => action.status === 'afgerond' || action.status === 'gestopt')
+  const routeCloseout = projectActionCenterRouteCloseoutState({
+    record: context.routeCloseout ?? null,
+    readyForCloseout: allActionsFinished,
   })
 
   return {
@@ -718,6 +789,8 @@ export function projectActionCenterCoreSemantics(
     },
     resultProgression,
     decisionHistory,
+    routeActionCards,
+    routeCloseout,
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getLiveClosingSummaryValues(context, route, closingStatus)),

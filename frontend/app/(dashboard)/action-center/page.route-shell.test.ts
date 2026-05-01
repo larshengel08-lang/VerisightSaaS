@@ -277,6 +277,68 @@ describe("action center landing shell", () => {
     expect(markup).toContain("Plan een eerste teamgesprek met operations.");
   });
 
+  it("renders route action cards on detail when a route carries multiple concrete actions", () => {
+    const context = {
+      ...buildLiveContext(),
+      routeActions: [
+        {
+          actionId: "action-1",
+          routeId: "campaign-exit::org-1::department::operations",
+          themeKey: "leadership" as const,
+          actionText: "Plan twee teamgesprekken over leiderschap en werkdruk.",
+          expectedEffect: "Maak zichtbaar of leiderschap de werkdrukfrictie versterkt.",
+          reviewScheduledFor: "2026-05-12",
+          status: "open" as const,
+          createdAt: "2026-04-30T09:00:00.000Z",
+          updatedAt: "2026-04-30T09:00:00.000Z",
+        },
+        {
+          actionId: "action-2",
+          routeId: "campaign-exit::org-1::department::operations",
+          themeKey: "workload" as const,
+          actionText: "Leg een bounded herverdeling van piekwerk vast.",
+          expectedEffect: "Maak zichtbaar of de piekbelasting in twee weken lager voelt.",
+          reviewScheduledFor: "2026-05-19",
+          status: "in_review" as const,
+          createdAt: "2026-04-30T09:00:00.000Z",
+          updatedAt: "2026-05-10T09:00:00.000Z",
+        },
+      ],
+      actionReviews: [
+        {
+          actionReviewId: "review-2",
+          actionId: "action-2",
+          reviewedAt: "2026-05-10T09:00:00.000Z",
+          observation: "De werkdruk daalt nog niet zichtbaar in beide teams.",
+          actionOutcome: "bijsturen-nodig" as const,
+          followUpNote: "Herverdeel ook de piekoverdracht in de vroege dienst.",
+        },
+      ],
+    };
+    const [item] = buildLiveActionCenterItems([context]);
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+
+    expect(markup).toContain("Acties in deze route");
+    expect(markup).toContain("Leiderschap");
+    expect(markup).toContain("Plan twee teamgesprekken over leiderschap en werkdruk.");
+    expect(markup).toContain("Werkdruk");
+    expect(markup).toContain("Leg een bounded herverdeling van piekwerk vast.");
+    expect(markup).toContain("Laatste review (Bijsturen nodig)");
+    expect(markup).toContain("De werkdruk daalt nog niet zichtbaar in beide teams.");
+  });
+
   it("renders the compact result loop on route detail from grouped result semantics", () => {
     const context = buildLiveContext();
     const [item] = buildLiveActionCenterItems([context]);
@@ -481,6 +543,101 @@ describe("action center landing shell", () => {
       expect(item.coreSemantics.closingSemantics.historicalSummary).toBeNull();
       expect(markup).not.toContain("Eerder afgerond in deze route");
     }
+  });
+
+  it("shows explicit closeout metadata in the route shell when present", () => {
+    const context = buildLiveContext();
+    const [baseItem] = buildLiveActionCenterItems([context]);
+    const item = {
+      ...baseItem,
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        routeCloseout: {
+          closeoutStatus: "gestopt",
+          closeoutReason: "bewust-niet-voortzetten",
+          closeoutNote: "Route bewust beeindigd na lokaal overleg.",
+          closedAt: "2026-05-20T09:00:00.000Z",
+          closedByRole: "hr",
+          readyForCloseout: false,
+        },
+      },
+    };
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+
+    expect(markup).toContain("Route afgesloten");
+    expect(markup).toContain("Bewust niet voortzetten");
+  });
+
+  it("shows a compact ready-for-closeout hint for routes whose actions are finished but not yet explicitly closed", () => {
+    const context = buildLiveContext();
+    const [baseItem] = buildLiveActionCenterItems([context]);
+    const item = {
+      ...baseItem,
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        routeActionCards: [
+          {
+            actionId: "action-1",
+            routeId: baseItem.id,
+            managerResponseId: "response-1",
+            campaignId: context.campaign.id,
+            orgId: context.campaign.organization_id,
+            routeScopeType: "department" as const,
+            routeScopeValue: context.scopeValue,
+            managerUserId: context.assignedManager?.userId ?? "manager-1",
+            ownerName: context.assignedManager?.displayName ?? "Manager Operations",
+            ownerAssignedAt: context.assignedManager?.assignedAt ?? "2026-04-21T08:00:00.000Z",
+            themeKey: "leadership" as const,
+            actionText: "Borg de nieuwe feedbackafspraak in het teamritme.",
+            expectedEffect: "Het team benoemt de afspraak nu consistent in weekstarts.",
+            reviewScheduledFor: "2026-05-14",
+            status: "afgerond" as const,
+            latestReview: null,
+            createdAt: "2026-05-01T09:00:00.000Z",
+            updatedAt: "2026-05-05T09:00:00.000Z",
+          },
+        ],
+        routeCloseout: {
+          closeoutStatus: null,
+          closeoutReason: null,
+          closeoutNote: null,
+          closedAt: null,
+          closedByRole: null,
+          readyForCloseout: true,
+        },
+      },
+    };
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        canCloseRoutes: true,
+        routeCloseoutEndpoint: "/api/action-center-route-closeouts",
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: false,
+      }),
+    );
+
+    expect(markup).toContain("Klaar voor closeout");
+    expect(markup).toContain("Route afsluiten");
+    expect(markup).not.toContain("Route afgesloten");
   });
 
   it("keeps the landing summary compact with a last route-read instead of full detail semantics", () => {

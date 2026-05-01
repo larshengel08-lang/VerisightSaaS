@@ -3,6 +3,7 @@ import type { LiveActionCenterCampaignContext } from './action-center-live'
 import type { PilotLearningCheckpoint } from './pilot-learning'
 import { hasPrimaryManagerAction } from './action-center-manager-responses'
 import type { ActionCenterManagerResponseType, ActionCenterManagerActionThemeKey } from './pilot-learning'
+import type { ActionCenterRouteCloseoutRecord } from './action-center-route-closeout'
 
 export type ActionCenterEntryStage = 'attention' | 'candidate' | 'active'
 
@@ -11,6 +12,13 @@ export type ActionCenterRouteStatus =
   | 'te-bespreken'
   | 'in-uitvoering'
   | 'geblokkeerd'
+  | 'afgerond'
+  | 'gestopt'
+
+export type ActionCenterAggregatedRouteStatus =
+  | 'open-verzoek'
+  | 'in-uitvoering'
+  | 'reviewbaar'
   | 'afgerond'
   | 'gestopt'
 
@@ -65,6 +73,16 @@ export interface ActionCenterRouteContract {
   blockedBy: Exclude<DeliveryExceptionStatus, 'none'> | null
 }
 
+interface ActionCenterRouteActionSummaryInput {
+  actionId: string
+  status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
+  reviewScheduledFor: string | null
+}
+
+function getRouteCloseout(context: LiveActionCenterCampaignContext): ActionCenterRouteCloseoutRecord | null {
+  return context.routeCloseout ?? null
+}
+
 const REVIEW_OUTCOMES = new Set<ActionCenterReviewOutcome>([
   'geen-uitkomst',
   'doorgaan',
@@ -77,6 +95,10 @@ const REVIEW_OUTCOMES = new Set<ActionCenterReviewOutcome>([
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
   return trimmed.length > 0 ? trimmed : null
+}
+
+function getTodayIsoDate() {
+  return new Date().toISOString().slice(0, 10)
 }
 
 export function buildActionCenterRouteId(campaignId: string, scopeValue: string) {
@@ -232,11 +254,14 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
     context.deliveryRecord?.exception_status && context.deliveryRecord.exception_status !== 'none'
       ? context.deliveryRecord.exception_status
       : null
+  const routeCloseout = getRouteCloseout(context)
 
   let routeStatus: ActionCenterRouteStatus | null = null
 
   if (entryStage === 'active') {
-    if (context.learningDossier?.triage_status === 'uitgevoerd') {
+    if (routeCloseout?.closeoutStatus) {
+      routeStatus = routeCloseout.closeoutStatus
+    } else if (context.learningDossier?.triage_status === 'uitgevoerd') {
       routeStatus = 'afgerond'
     } else if (context.learningDossier?.triage_status === 'verworpen') {
       routeStatus = 'gestopt'
@@ -272,5 +297,68 @@ export function projectActionCenterRoute(context: LiveActionCenterCampaignContex
     primaryActionThemeKey,
     followThroughMode,
     blockedBy,
+  }
+}
+
+export function summarizeActionCenterRouteActions(
+  actions: ActionCenterRouteActionSummaryInput[],
+  today = getTodayIsoDate(),
+): {
+  routeStatus: ActionCenterAggregatedRouteStatus
+  openActionCount: number
+  nextReviewScheduledFor: string | null
+  readyForCloseout: boolean
+} {
+  const openActions = actions.filter((action) => action.status === 'open' || action.status === 'in_review')
+  const nextReviewScheduledFor =
+    openActions
+      .map((action) => normalizeText(action.reviewScheduledFor))
+      .filter((reviewScheduledFor): reviewScheduledFor is string => Boolean(reviewScheduledFor))
+      .sort((left, right) => left.localeCompare(right))[0] ?? null
+
+  if (actions.length === 0) {
+    return {
+      routeStatus: 'open-verzoek',
+      openActionCount: 0,
+      nextReviewScheduledFor: null,
+      readyForCloseout: false,
+    }
+  }
+
+  const hasReviewPressure = actions.some(
+    (action) => {
+      const reviewScheduledFor = normalizeText(action.reviewScheduledFor)
+      return (
+        action.status === 'in_review' ||
+        (action.status === 'open' && reviewScheduledFor !== null && reviewScheduledFor <= today)
+      )
+    },
+  )
+
+  if (hasReviewPressure) {
+    return {
+      routeStatus: 'reviewbaar',
+      openActionCount: openActions.length,
+      nextReviewScheduledFor,
+      readyForCloseout: false,
+    }
+  }
+
+  if (openActions.length > 0) {
+    return {
+      routeStatus: 'in-uitvoering',
+      openActionCount: openActions.length,
+      nextReviewScheduledFor,
+      readyForCloseout: false,
+    }
+  }
+
+  const allFinished = actions.every((action) => action.status === 'afgerond' || action.status === 'gestopt')
+
+  return {
+    routeStatus: 'in-uitvoering',
+    openActionCount: 0,
+    nextReviewScheduledFor: null,
+    readyForCloseout: allFinished,
   }
 }

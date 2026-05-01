@@ -6,6 +6,9 @@ import type {
   PilotLearningCheckpoint,
   PilotLearningDossier,
 } from './pilot-learning'
+import type { ActionCenterRouteActionRecord } from './action-center-route-actions'
+import type { ActionCenterActionReviewRecord } from './action-center-action-reviews'
+import type { ActionCenterRouteCloseoutRecord } from './action-center-route-closeout'
 
 export interface LiveActionCenterCampaignContext {
   campaign: Campaign
@@ -27,4 +30,7 @@ export interface LiveActionCenterCampaignContext {
   learningCheckpoints: PilotLearningCheckpoint[]
   managerResponse?: ActionCenterManagerResponse | null
   reviewDecisions?: ActionCenterReviewDecision[]
+  routeActions?: ActionCenterRouteActionRecord[]
+  actionReviews?: ActionCenterActionReviewRecord[]
+  routeCloseout?: ActionCenterRouteCloseoutRecord | null
 }
