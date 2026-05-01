@@ -7,6 +7,7 @@ import {
   projectActionCenterRouteCloseoutState,
   type ActionCenterRouteCloseoutProjection,
 } from './action-center-route-closeout'
+import { getActionCenterRouteReopenReasonLabel } from './action-center-route-reopen'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
 import type {
   ActionCenterManagerResponse,
@@ -69,6 +70,12 @@ export interface ActionCenterCoreSemantics {
     } | null
   }>
   routeCloseout: ActionCenterRouteCloseoutProjection
+  lineageSemantics: {
+    label: 'Heropend traject' | 'Vervolg op eerdere route' | null
+    summary: string | null
+    followUpFromRouteId: string | null
+    followUpTargetRouteId: string | null
+  }
   closingSemantics: {
     status: ActionCenterClosingStatus
     summary: string | null
@@ -448,6 +455,25 @@ function getPreviewClosingSummaryValues(route: ActionCenterRouteContract, status
   return []
 }
 
+function getLineageSummary(route: ActionCenterRouteContract, routeCloseout: ActionCenterRouteCloseoutProjection) {
+  if (route.isReopened && route.reopenedAt && route.reopenReason) {
+    const historicalCloseoutLabel =
+      routeCloseout.closeoutStatus === 'afgerond'
+        ? 'na eerdere afronding'
+        : routeCloseout.closeoutStatus === 'gestopt'
+          ? 'na eerdere stop'
+          : 'na eerdere afsluiting'
+
+    return `${getActionCenterRouteReopenReasonLabel(route.reopenReason)} ${historicalCloseoutLabel}`
+  }
+
+  if (route.followUpFromRouteId) {
+    return 'Nieuw traject na eerdere routeafsluiting'
+  }
+
+  return null
+}
+
 function getLiveClosingSummaryValues(
   context: ActionCenterCoreSemanticsProjectionInput,
   route: ActionCenterRouteContract,
@@ -518,6 +544,14 @@ function buildPreviewRoute(input: ActionCenterPreviewCoreSemanticsProjectionInpu
         ? 'bounded_response'
         : input.route?.followThroughMode ?? 'legacy_action',
     blockedBy: routeStatus === 'geblokkeerd' ? (input.route?.blockedBy ?? 'blocked') : null,
+    reopenedAt: input.route?.reopenedAt ?? null,
+    reopenedByRole: input.route?.reopenedByRole ?? null,
+    reopenReason: input.route?.reopenReason ?? null,
+    isReopened: input.route?.isReopened ?? false,
+    followUpFromRouteId: input.route?.followUpFromRouteId ?? null,
+    followUpTargetRouteId: input.route?.followUpTargetRouteId ?? null,
+    hasFollowUpTarget: input.route?.hasFollowUpTarget ?? false,
+    lineageLabel: input.route?.lineageLabel ?? null,
   }
 }
 
@@ -627,6 +661,12 @@ export function projectActionCenterPreviewCoreSemantics(
     decisionHistory,
     routeActionCards: [],
     routeCloseout,
+    lineageSemantics: {
+      label: route.lineageLabel,
+      summary: getLineageSummary(route, routeCloseout),
+      followUpFromRouteId: route.followUpFromRouteId,
+      followUpTargetRouteId: route.followUpTargetRouteId,
+    },
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getPreviewClosingSummaryValues(route, closingStatus)),
@@ -791,6 +831,12 @@ export function projectActionCenterCoreSemantics(
     decisionHistory,
     routeActionCards,
     routeCloseout,
+    lineageSemantics: {
+      label: route.lineageLabel,
+      summary: getLineageSummary(route, routeCloseout),
+      followUpFromRouteId: route.followUpFromRouteId,
+      followUpTargetRouteId: route.followUpTargetRouteId,
+    },
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getLiveClosingSummaryValues(context, route, closingStatus)),

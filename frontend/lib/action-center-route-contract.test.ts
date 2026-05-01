@@ -616,4 +616,69 @@ describe('action center route contract', () => {
 
     expect(route.routeStatus).toBe('afgerond')
   })
+
+  it('treats a later reopen event as stronger than an older closeout on the same route', () => {
+    const route = projectActionCenterRoute({
+      ...buildContext({
+        assignedManager: {
+          userId: 'manager-1',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-21T08:00:00.000Z',
+        },
+        dossier: buildDossier({
+          first_action_taken: null,
+          expected_first_value: null,
+          review_moment: null,
+        }),
+      }),
+      routeCloseout: {
+        routeId: 'campaign-exit::operations',
+        closeoutStatus: 'afgerond',
+        closeoutReason: 'voldoende-opgepakt',
+        closeoutNote: 'Voor nu gesloten.',
+        closedAt: '2026-05-10T09:00:00.000Z',
+        closedByRole: 'hr',
+      },
+      routeReopens: [
+        {
+          routeId: 'campaign-exit::operations',
+          reopenedAt: '2026-05-11T09:00:00.000Z',
+          reopenedByRole: 'hr',
+          reopenReason: 'te-vroeg-afgesloten',
+        },
+      ],
+    } as LiveActionCenterCampaignContext)
+
+    expect(route.routeStatus).toBe('open-verzoek')
+    expect(route.isReopened).toBe(true)
+    expect(route.lineageLabel).toBe('Heropend traject')
+  })
+
+  it('projects a follow-up route as a new active route with lineage back to the earlier route', () => {
+    const route = projectActionCenterRoute({
+      ...buildContext({
+        assignedManager: {
+          userId: 'manager-1',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-05-11T08:00:00.000Z',
+        },
+        dossier: buildDossier({
+          first_action_taken: null,
+          expected_first_value: null,
+          review_moment: null,
+        }),
+      }),
+      followUpFromRelation: {
+        routeRelationType: 'follow-up-from',
+        sourceRouteId: 'campaign-exit::operations::previous',
+        targetRouteId: 'campaign-exit::operations',
+        recordedAt: '2026-05-11T08:30:00.000Z',
+        recordedByRole: 'hr',
+      },
+    } as LiveActionCenterCampaignContext)
+
+    expect(route.routeStatus).toBe('open-verzoek')
+    expect(route.followUpFromRouteId).toBe('campaign-exit::operations::previous')
+    expect(route.lineageLabel).toBe('Vervolg op eerdere route')
+  })
 })
