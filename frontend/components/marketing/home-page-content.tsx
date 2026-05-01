@@ -158,13 +158,6 @@ const firstDeliveryItems = [
   },
 ] as const
 
-const trustPrinciples = [
-  'Verisight helpt patronen op groepsniveau zichtbaar maken, niet om individuele medewerkers te beoordelen.',
-  'Dashboard, samenvatting en eerste opvolging dragen dezelfde managementlijn, zonder dat elk detail overal terug hoeft te komen.',
-  'Methodologische zorgvuldigheid blijft zichtbaar in de output: patronen, geen grote causaliteitsclaims.',
-  'Opvolging wordt concreet gemaakt, maar blijft een begeleid gesprek in plaats van een automatisch oordeel.',
-]
-
 function SectionLabel({ index, label }: { index: string; label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 26 }}>
@@ -294,8 +287,7 @@ function ProblemSection() {
                 marginBottom: 28,
                 marginLeft: 'auto',
                 marginRight: 'auto',
-                maxWidth: '18.5ch',
-                textWrap: 'balance',
+                maxWidth: '24ch',
               }}
             >
               Veel signalen. Te weinig scherpte
@@ -553,7 +545,11 @@ function ManagementFlowSection() {
                       background: '#f2efe8',
                       border: `1px solid ${SURFACE.borderSoft}`,
                       borderRadius: 22,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
                       marginTop: 'auto',
+                      minHeight: 116,
                       padding: '18px 16px 16px',
                     }}
                   >
@@ -611,7 +607,11 @@ function ManagementFlowSection() {
                       background: '#f2efe8',
                       border: `1px solid ${SURFACE.borderSoft}`,
                       borderRadius: 22,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
                       marginTop: 'auto',
+                      minHeight: 116,
                       padding: '16px 18px',
                     }}
                   >
@@ -665,7 +665,11 @@ function ManagementFlowSection() {
                       background: '#f2efe8',
                       border: `1px solid ${SURFACE.borderSoft}`,
                       borderRadius: 22,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
                       marginTop: 'auto',
+                      minHeight: 116,
                       padding: '14px 14px 16px',
                     }}
                   >
@@ -767,7 +771,7 @@ function HeroSection() {
   return (
     <section
       style={{
-        background: `radial-gradient(circle at top right, rgba(244, 221, 208, 0.42) 0%, rgba(244, 221, 208, 0) 34%), linear-gradient(180deg, ${SURFACE.surface} 0%, ${SURFACE.paperSoft} 100%)`,
+        background: SURFACE.surface,
         borderBottom: `1px solid ${SURFACE.border}`,
         overflow: 'hidden',
         position: 'relative',
@@ -1852,12 +1856,7 @@ function RoutesSection() {
         position: 'relative',
       }}
     >
-      <BackdropNumber value="04" />
       <div style={{ ...SHELL, paddingTop: 'clamp(58px, 7vw, 92px)', paddingBottom: 'clamp(58px, 7vw, 92px)', position: 'relative' }}>
-        <Reveal>
-          <SectionLabel index="04" label="Routes" />
-        </Reveal>
-
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.72fr)] xl:items-end">
           <div>
             <Reveal delay={0.04}>
@@ -1875,9 +1874,7 @@ function RoutesSection() {
               >
                 Kies de route
                 <br />
-                <span style={{ color: SURFACE.amber, fontStyle: 'italic', fontWeight: 300 }}>
-                  die past bij uw vraagstuk.
-                </span>
+                die past bij uw vraagstuk.
               </h2>
             </Reveal>
           </div>
@@ -2111,103 +2108,9 @@ function FirstDeliverySection() {
   )
 }
 
-function TrustSection() {
-  return (
-    <section
-      style={{
-        background: SURFACE.surface,
-        borderBottom: `1px solid ${SURFACE.border}`,
-        overflow: 'hidden',
-        position: 'relative',
-      }}
-    >
-      <BackdropNumber value="05" tone="cool" />
-      <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 88px)', paddingBottom: 'clamp(56px, 7vw, 88px)', position: 'relative' }}>
-        <Reveal>
-          <SectionLabel index="05" label="Vertrouwen" />
-        </Reveal>
-
-        <div className="grid grid-cols-1 gap-12 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] xl:items-start">
-          <div style={{ minWidth: 0 }}>
-            <Reveal delay={0.04}>
-              <h2
-                style={{
-                  color: SURFACE.ink,
-                  fontFamily: displayFont,
-                  fontSize: 'clamp(2.9rem, 4.8vw, 4.65rem)',
-                  fontWeight: 400,
-                  letterSpacing: '-0.05em',
-                  lineHeight: 0.96,
-                  marginBottom: 20,
-                  maxWidth: '11ch',
-                }}
-              >
-                Zorgvuldig meten.
-                <br />
-                <span style={{ color: SURFACE.amberGlow, fontStyle: 'italic', fontWeight: 300 }}>
-                  Nuchter duiden.
-                </span>
-              </h2>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.8, maxWidth: '32rem' }}>
-                Verisight helpt patronen op groepsniveau zichtbaar maken. Niet om individuele medewerkers te beoordelen, wel om betere gesprekken en keuzes mogelijk te maken.
-              </p>
-            </Reveal>
-          </div>
-
-          <div style={{ minWidth: 0 }}>
-            <div style={{ borderTop: `1px solid ${SURFACE.border}`, display: 'grid' }}>
-              {trustPrinciples.map((item, index) => (
-                <Reveal key={item} delay={0.12 + index * 0.06}>
-                  <div
-                  key={item}
-                  style={{
-                    borderBottom: `1px solid ${SURFACE.border}`,
-                    display: 'grid',
-                    gap: 12,
-                    gridTemplateColumns: '46px 1fr',
-                    padding: '18px 0',
-                  }}
-                  >
-                    <span style={{ color: SURFACE.subtle, fontSize: 13 }}>{String(index + 1).padStart(2, '0')}</span>
-                    <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.78 }}>{item}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-
-            <Reveal delay={0.36}>
-              <div
-                style={{
-                  background: SURFACE.surfaceSoft,
-                  marginTop: 24,
-                  padding: '20px 22px',
-                }}
-              >
-                <p
-                  style={{
-                    color: SURFACE.ink,
-                    fontFamily: displayFont,
-                    fontSize: 'clamp(1.8rem, 2.4vw, 2.35rem)',
-                    letterSpacing: '-0.03em',
-                    lineHeight: 1.08,
-                    maxWidth: '19ch',
-                  }}
-                >
-                  De score opent het gesprek, maar sluit het niet af.
-                </p>
-              </div>
-            </Reveal>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 function ContactSection() {
   const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_final_cta' })
+  const exampleHref = '/#first-delivery'
 
   return (
     <section
@@ -2218,67 +2121,95 @@ function ContactSection() {
         position: 'relative',
       }}
     >
-      <BackdropNumber value="06" />
       <div style={{ ...SHELL, position: 'relative' }}>
         <Reveal>
-          <SectionLabel index="06" label="Plan een kennismaking" />
-        </Reveal>
-        <div
-          className="grid grid-cols-1 gap-10 xl:grid-cols-[minmax(0,0.94fr)_minmax(0,0.78fr)] xl:items-end"
-          style={{ minHeight: 320 }}
-        >
-          <div style={{ minWidth: 0 }}>
-            <Reveal delay={0.04}>
-              <h2
-                style={{
-                  color: SURFACE.ink,
-                  fontFamily: displayFont,
-                  fontSize: 'clamp(3rem, 5vw, 4.9rem)',
-                  fontWeight: 400,
-                  letterSpacing: '-0.05em',
-                  lineHeight: 0.95,
-                  marginBottom: 18,
-                  maxWidth: '10.5ch',
-                }}
-              >
-                Wilt u zien
-                <br />
-                <span style={{ color: SURFACE.amber, fontStyle: 'italic', fontWeight: 300 }}>
-                  welke route nu het meest logisch is?
-                </span>
-              </h2>
-            </Reveal>
-          </div>
+          <div
+            style={{
+              background:
+                'radial-gradient(circle at left bottom, rgba(21, 101, 88, 0.34) 0%, rgba(21, 101, 88, 0) 28%), linear-gradient(135deg, #0d1724 0%, #122133 56%, #162634 100%)',
+              borderRadius: 38,
+              boxShadow: '0 22px 48px rgba(13, 23, 36, 0.16)',
+              margin: '0 auto',
+              maxWidth: 1200,
+              padding: 'clamp(40px, 6vw, 72px) clamp(26px, 5vw, 64px)',
+              textAlign: 'center',
+            }}
+          >
+            <h2
+              style={{
+                color: '#fffdf8',
+                fontFamily: displayFont,
+                fontSize: 'clamp(3rem, 5vw, 4.8rem)',
+                fontWeight: 400,
+                letterSpacing: '-0.05em',
+                lineHeight: 1.02,
+                margin: '0 auto 22px',
+                maxWidth: '14.2ch',
+                textWrap: 'balance',
+              }}
+            >
+              Wilt u scherper zien wat aandacht vraagt — en opvolging beter organiseren?
+            </h2>
 
-          <div style={{ minWidth: 0, maxWidth: '31rem' }}>
-            <Reveal delay={0.1}>
-              <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.8, marginBottom: 28 }}>
-                Plan een korte kennismaking. Dan ziet u of Verisight past, welke eerste route logisch is en hoe de output er in uw situatie uit kan zien.
-              </p>
-            </Reveal>
+            <p
+              style={{
+                color: 'rgba(255, 250, 242, 0.86)',
+                fontSize: 16.5,
+                lineHeight: 1.8,
+                margin: '0 auto 34px',
+                maxWidth: '48rem',
+              }}
+            >
+              Plan een kennismaking en ontdek hoe Verisight helpt om signalen zichtbaar te maken, prioriteiten scherper
+              te wegen en opvolging concreet te faciliteren.
+            </p>
 
-            <Reveal delay={0.16}>
+            <div
+              className="contact-cta-actions"
+              style={{ alignItems: 'center', display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center' }}
+            >
               <Link
                 href={kennismakingHref}
                 style={{
                   alignItems: 'center',
-                  background: SURFACE.charcoal,
-                  color: '#fff',
+                  background: '#fffdf8',
+                  borderRadius: 999,
+                  color: SURFACE.ink,
                   display: 'inline-flex',
                   fontFamily: bodyFont,
                   fontSize: 15,
                   fontWeight: 600,
-                  gap: 10,
-                  justifyContent: 'space-between',
-                  padding: '16px 22px',
+                  justifyContent: 'center',
+                  minWidth: 236,
+                  padding: '16px 28px',
                   textDecoration: 'none',
                 }}
               >
-                Plan een kennismaking <Arrow />
+                Plan een kennismaking
               </Link>
-            </Reveal>
+              <Link
+                href={exampleHref}
+                style={{
+                  alignItems: 'center',
+                  background: 'transparent',
+                  border: '1px solid rgba(255, 250, 242, 0.22)',
+                  borderRadius: 999,
+                  color: '#fffdf8',
+                  display: 'inline-flex',
+                  fontFamily: bodyFont,
+                  fontSize: 15,
+                  fontWeight: 600,
+                  justifyContent: 'center',
+                  minWidth: 204,
+                  padding: '16px 28px',
+                  textDecoration: 'none',
+                }}
+              >
+                Bekijk voorbeeldoutput
+              </Link>
+            </div>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   )
@@ -2292,7 +2223,6 @@ export function HomePageContent() {
       <ManagementFlowSection />
       <RoutesSection />
       <FirstDeliverySection />
-      <TrustSection />
       <ContactSection />
     </div>
   )
