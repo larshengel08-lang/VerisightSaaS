@@ -266,10 +266,6 @@ function OutputMetric({
   )
 }
 
-function MarqueeBand() {
-  return null
-}
-
 function ProblemSection() {
   return (
     <section
@@ -285,7 +281,7 @@ function ProblemSection() {
           paddingTop: 'clamp(56px, 7vw, 88px)',
         }}
       >
-        <div style={{ maxWidth: 1100 }}>
+        <div style={{ margin: '0 auto', maxWidth: 1180, textAlign: 'center' }}>
           <Reveal>
             <h2
               style={{
@@ -296,11 +292,15 @@ function ProblemSection() {
                 letterSpacing: '-0.055em',
                 lineHeight: 0.93,
                 marginBottom: 28,
-                maxWidth: '15.25ch',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                maxWidth: '18.5ch',
                 textWrap: 'balance',
               }}
             >
-              Veel signalen. Te weinig scherpte in wat eerst aandacht vraagt.
+              Veel signalen. Te weinig scherpte
+              <br />
+              in wat eerst aandacht vraagt.
             </h2>
           </Reveal>
 
@@ -311,6 +311,8 @@ function ProblemSection() {
                 fontSize: 17,
                 lineHeight: 1.72,
                 marginBottom: 56,
+                marginLeft: 'auto',
+                marginRight: 'auto',
                 maxWidth: '54rem',
               }}
             >
@@ -430,7 +432,7 @@ function ManagementFlowSection() {
                 textWrap: 'balance',
               }}
             >
-              Eerst inzicht. Dan duiding. Dan opvolging.
+              Van signaal naar gerichte opvolging
             </h2>
           </Reveal>
           <Reveal delay={0.06}>
@@ -742,6 +744,7 @@ function ManagementFlowSection() {
 
 function HeroSection() {
   const primaryHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero_primary' })
+  const secondaryHref = '/#first-delivery'
   const dashboardBars = [
     { height: '45%', color: '#f8e7dc' },
     { height: '62%', color: '#f3ba8e' },
@@ -825,7 +828,7 @@ function HeroSection() {
                 Plan een kennismaking
               </Link>
               <Link
-                href="/#suite"
+                href={secondaryHref}
                 style={{
                   background: SURFACE.surface,
                   border: `1px solid ${SURFACE.border}`,
@@ -1014,7 +1017,12 @@ function HeroSection() {
                       width: 40,
                     }}
                   >
-                    <span style={{ color: '#fff', fontSize: 20, lineHeight: 1 }}>âš¡</span>
+                    <svg width="17" height="21" viewBox="0 0 17 21" fill="none" aria-hidden>
+                      <path
+                        d="M9.911 0.75L3.489 10.197H7.653L6.723 20.25L13.145 10.803H8.981L9.911 0.75Z"
+                        fill="white"
+                      />
+                    </svg>
                   </div>
                   <div>
                     <h4 style={{ color: '#fff', fontSize: 15, fontWeight: 700, letterSpacing: '.02em', marginBottom: 2, textTransform: 'uppercase' }}>
@@ -1137,6 +1145,8 @@ function HeroSection() {
   )
 }
 
+// Kept intentionally as archived in-file reference; live homepage no longer renders this section.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function SuitePreviewSection() {
   return (
     <section
@@ -1836,7 +1846,7 @@ function RoutesSection() {
   return (
     <section
       style={{
-        background: SURFACE.paperSoft,
+        background: SURFACE.surface,
         borderBottom: `1px solid ${SURFACE.border}`,
         overflow: 'hidden',
         position: 'relative',
@@ -2018,6 +2028,7 @@ function RoutesSection() {
 function FirstDeliverySection() {
   return (
     <section
+      id="first-delivery"
       style={{
         background: SURFACE.surface,
         borderBottom: `1px solid ${SURFACE.border}`,
@@ -2169,7 +2180,7 @@ function TrustSection() {
             <Reveal delay={0.36}>
               <div
                 style={{
-                  background: SURFACE.paperSoft,
+                  background: SURFACE.surfaceSoft,
                   marginTop: 24,
                   padding: '20px 22px',
                 }}
@@ -2201,7 +2212,7 @@ function ContactSection() {
   return (
     <section
       style={{
-        background: `linear-gradient(180deg, ${SURFACE.paper} 0%, ${SURFACE.paperSoft} 100%)`,
+        background: SURFACE.surface,
         overflow: 'hidden',
         padding: 'clamp(56px, 7vw, 92px) 0',
         position: 'relative',
@@ -2275,14 +2286,10 @@ function ContactSection() {
 
 export function HomePageContent() {
   return (
-    <div style={{ background: SURFACE.paper, color: SURFACE.ink }}>
+    <div style={{ background: SURFACE.surface, color: SURFACE.ink }}>
       <HeroSection />
       <ProblemSection />
       <ManagementFlowSection />
-      <>
-        <MarqueeBand />
-        <SuitePreviewSection />
-      </>
       <RoutesSection />
       <FirstDeliverySection />
       <TrustSection />
