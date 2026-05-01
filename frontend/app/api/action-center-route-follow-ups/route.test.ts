@@ -118,6 +118,15 @@ describe('action center route follow-ups route', () => {
           error: null,
         })
       }
+      if (table === 'respondents') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockResolvedValue({
+            data: [{ department: 'Operations' }, { department: 'People' }],
+            error: null,
+          }),
+        }
+      }
       if (table === 'action_center_route_relations') {
         return upsertQuery
       }
@@ -152,5 +161,98 @@ describe('action center route follow-ups route', () => {
       sourceRouteId: 'campaign-1::org-1::department::operations',
       targetRouteId: 'campaign-1::org-1::department::people',
     })
+  })
+
+  it('rejects cross-org follow-up lineage even when the caller owns one side', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'hr-owner-1' } } })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      orgMemberships: [{ org_id: 'org-1', role: 'owner' }],
+      workspaceMemberships: [],
+    })
+
+    let campaignQueryCall = 0
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        campaignQueryCall += 1
+        return createCampaignQuery({
+          data:
+            campaignQueryCall === 1
+              ? { id: 'campaign-1', organization_id: 'org-1' }
+              : { id: 'campaign-2', organization_id: 'org-2' },
+          error: null,
+        })
+      }
+      if (table === 'respondents') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockResolvedValue({
+            data: [{ department: 'Operations' }, { department: 'People' }],
+            error: null,
+          }),
+        }
+      }
+      if (table === 'action_center_route_relations') {
+        return createUpsertQuery({ data: null, error: null })
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        source_campaign_id: 'campaign-1',
+        source_route_scope_value: 'org-1::department::operations',
+        target_campaign_id: 'campaign-2',
+        target_route_scope_value: 'org-2::department::people',
+      }),
+    )
+
+    expect(response.status).toBe(403)
+  })
+
+  it('rejects mismatched source scope values that do not belong to the source campaign', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'hr-owner-1' } } })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      orgMemberships: [{ org_id: 'org-1', role: 'owner' }],
+      workspaceMemberships: [],
+    })
+
+    let campaignQueryCall = 0
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        campaignQueryCall += 1
+        return createCampaignQuery({
+          data: { id: `campaign-${campaignQueryCall}`, organization_id: 'org-1' },
+          error: null,
+        })
+      }
+      if (table === 'respondents') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockResolvedValue({
+            data: [{ department: 'Operations' }],
+            error: null,
+          }),
+        }
+      }
+      if (table === 'action_center_route_relations') {
+        return createUpsertQuery({ data: null, error: null })
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        source_campaign_id: 'campaign-1',
+        source_route_scope_value: 'org-1::department::sales',
+        target_campaign_id: 'campaign-2',
+        target_route_scope_value: 'org-1::department::operations',
+      }),
+    )
+
+    expect(response.status).toBe(400)
   })
 })

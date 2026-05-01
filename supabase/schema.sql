@@ -1924,7 +1924,14 @@ create policy "route_relations_select_visible_to_route_viewers"
         and m.user_id = auth.uid()
         and (
           (m.access_role = 'hr_owner' and m.scope_type = 'org' and m.can_view)
-          or (m.access_role = 'manager_assignee' and m.can_view)
+          or (
+            m.access_role = 'manager_assignee'
+            and m.can_view
+            and (
+              action_center_route_relations.source_route_id like ('%::' || m.scope_value)
+              or action_center_route_relations.target_route_id like ('%::' || m.scope_value)
+            )
+          )
         )
     )
   );

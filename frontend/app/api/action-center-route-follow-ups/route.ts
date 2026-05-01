@@ -1,4 +1,8 @@
 import { NextResponse } from 'next/server'
+import {
+  buildCampaignItemScopeValue,
+  buildDepartmentScopeValue,
+} from '@/lib/action-center-manager-responses'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
 import {
   projectActionCenterRouteFollowUpRelation,
@@ -15,9 +19,18 @@ type FollowUpRequestBody = {
   target_route_scope_value?: string
 }
 
+type RespondentDepartmentRow = {
+  department: string | null
+}
+
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
   return trimmed.length > 0 ? trimmed : null
+}
+
+function normalizeDepartmentLabel(value: string | null | undefined) {
+  const normalized = normalizeText(value)
+  return normalized ? normalized.toLocaleLowerCase('nl-NL') : null
 }
 
 function parseFollowUpInput(input: FollowUpRequestBody | null) {
@@ -52,17 +65,64 @@ async function loadCampaignOrg(adminClient: ReturnType<typeof createAdminClient>
   return data
 }
 
+async function loadVisibleDepartmentLabels(adminClient: ReturnType<typeof createAdminClient>, campaignId: string) {
+  const { data: respondentsRaw } = await adminClient
+    .from('respondents')
+    .select('department')
+    .eq('campaign_id', campaignId)
+
+  return [
+    ...new Set(
+      ((respondentsRaw ?? []) as RespondentDepartmentRow[])
+        .map((row) => normalizeDepartmentLabel(row.department))
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ]
+}
+
+function resolveRouteIdentity(args: {
+  campaignId: string
+  campaignOrgId: string
+  routeScopeValue: string
+  visibleDepartmentLabels: string[]
+}) {
+  const normalizedScopeValue = normalizeText(args.routeScopeValue)
+  if (!normalizedScopeValue) {
+    throw new Error('Ongeldige follow-up route-identiteit.')
+  }
+
+  if (normalizedScopeValue === buildCampaignItemScopeValue(args.campaignOrgId, args.campaignId)) {
+    return {
+      route_id: buildActionCenterRouteId(args.campaignId, normalizedScopeValue),
+      route_scope_type: 'item' as const,
+      route_scope_value: normalizedScopeValue,
+    }
+  }
+
+  const matchesDepartment = args.visibleDepartmentLabels.some(
+    (departmentLabel) => buildDepartmentScopeValue(args.campaignOrgId, departmentLabel) === normalizedScopeValue,
+  )
+
+  if (!matchesDepartment) {
+    throw new Error('Follow-up route bestaat niet voor deze campagne.')
+  }
+
+  return {
+    route_id: buildActionCenterRouteId(args.campaignId, normalizedScopeValue),
+    route_scope_type: 'department' as const,
+    route_scope_value: normalizedScopeValue,
+  }
+}
+
 function buildFollowUpRelation(args: {
-  sourceCampaignId: string
-  sourceRouteScopeValue: string
-  targetCampaignId: string
-  targetRouteScopeValue: string
+  sourceRouteId: string
+  targetRouteId: string
 }): ActionCenterRouteFollowUpRelationRecord {
   const recordedAt = new Date().toISOString()
   return projectActionCenterRouteFollowUpRelation({
     route_relation_type: 'follow-up-from',
-    source_route_id: buildActionCenterRouteId(args.sourceCampaignId, args.sourceRouteScopeValue),
-    target_route_id: buildActionCenterRouteId(args.targetCampaignId, args.targetRouteScopeValue),
+    source_route_id: args.sourceRouteId,
+    target_route_id: args.targetRouteId,
     recorded_at: recordedAt,
     recorded_by_role: 'hr',
   })
@@ -98,23 +158,51 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Source of target route bestaat niet.' }, { status: 400 })
   }
 
+  if (sourceCampaign.organization_id !== targetCampaign.organization_id) {
+    return NextResponse.json({ detail: 'Alleen routes binnen dezelfde organisatie kunnen worden gekoppeld.' }, { status: 403 })
+  }
+
   const hasHrAccess =
     context.isVerisightAdmin ||
     orgMemberships.some(
       (membership) =>
-        (membership.org_id === sourceCampaign.organization_id || membership.org_id === targetCampaign.organization_id) &&
-        membership.role === 'owner',
+        membership.org_id === sourceCampaign.organization_id && membership.role === 'owner',
     )
 
   if (!hasHrAccess) {
     return NextResponse.json({ detail: 'Alleen HR of Verisight kan een vervolgroute koppelen.' }, { status: 403 })
   }
 
+  const [sourceVisibleDepartmentLabels, targetVisibleDepartmentLabels] = await Promise.all([
+    loadVisibleDepartmentLabels(adminClient, parsed.source_campaign_id),
+    loadVisibleDepartmentLabels(adminClient, parsed.target_campaign_id),
+  ])
+
+  let sourceIdentity
+  let targetIdentity
+  try {
+    sourceIdentity = resolveRouteIdentity({
+      campaignId: parsed.source_campaign_id,
+      campaignOrgId: sourceCampaign.organization_id,
+      routeScopeValue: parsed.source_route_scope_value,
+      visibleDepartmentLabels: sourceVisibleDepartmentLabels,
+    })
+    targetIdentity = resolveRouteIdentity({
+      campaignId: parsed.target_campaign_id,
+      campaignOrgId: targetCampaign.organization_id,
+      routeScopeValue: parsed.target_route_scope_value,
+      visibleDepartmentLabels: targetVisibleDepartmentLabels,
+    })
+  } catch (error) {
+    return NextResponse.json(
+      { detail: error instanceof Error ? error.message : 'Ongeldige follow-up route-identiteit.' },
+      { status: 400 },
+    )
+  }
+
   const relation = buildFollowUpRelation({
-    sourceCampaignId: parsed.source_campaign_id,
-    sourceRouteScopeValue: parsed.source_route_scope_value,
-    targetCampaignId: parsed.target_campaign_id,
-    targetRouteScopeValue: parsed.target_route_scope_value,
+    sourceRouteId: sourceIdentity.route_id,
+    targetRouteId: targetIdentity.route_id,
   })
 
   const { data, error } = await adminClient
