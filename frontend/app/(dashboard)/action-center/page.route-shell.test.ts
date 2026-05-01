@@ -5,6 +5,7 @@ import { projectActionCenterCoreSemantics } from "@/lib/action-center-core-seman
 import { buildLiveActionCenterItems } from "@/lib/action-center-live";
 import type { LiveActionCenterCampaignContext } from "@/lib/action-center-live-context";
 import { projectActionCenterRoute } from "@/lib/action-center-route-contract";
+import { projectActionCenterRouteFollowUpRelation } from "@/lib/action-center-route-reopen";
 import type { Campaign, CampaignStats } from "@/lib/types";
 import type { CampaignDeliveryRecord } from "@/lib/ops-delivery";
 import type { PilotLearningCheckpoint, PilotLearningDossier } from "@/lib/pilot-learning";
@@ -166,10 +167,193 @@ function buildLiveContext(): LiveActionCenterCampaignContext {
   };
 }
 
+function buildFollowUpTargetContext(): LiveActionCenterCampaignContext {
+  return {
+    ...buildLiveContext(),
+    campaign: buildCampaign({
+      id: "campaign-pulse",
+      name: "Pulse voorjaar",
+      scan_type: "pulse",
+    }),
+    stats: buildStats({
+      campaign_id: "campaign-pulse",
+      campaign_name: "Pulse voorjaar",
+      scan_type: "pulse",
+    }),
+    deliveryRecord: buildDeliveryRecord({
+      id: "delivery-pulse",
+      campaign_id: "campaign-pulse",
+    }),
+    learningDossier: buildDossier({
+      id: "dossier-pulse",
+      campaign_id: "campaign-pulse",
+      title: "Pulse follow-through voorjaar",
+      scan_type: "pulse",
+      triage_status: "bevestigd",
+      management_action_outcome: "bijstellen",
+      case_public_summary: "Een nieuwe pulse-route staat klaar als heldere vervolghandoff voor dezelfde afdeling.",
+    }),
+    learningCheckpoints: [
+      buildCheckpoint({
+        id: "checkpoint-pulse-review",
+        dossier_id: "dossier-pulse",
+        checkpoint_key: "follow_up_review",
+        owner_label: "HR lead",
+        status: "bevestigd",
+        confirmed_lesson: "De vervolghandoff voor dezelfde afdeling staat open voor de volgende managerstap.",
+      }),
+    ],
+  };
+}
+
+function buildSecondFollowUpTargetContext(): LiveActionCenterCampaignContext {
+  return {
+    ...buildLiveContext(),
+    campaign: buildCampaign({
+      id: "campaign-pulse-2",
+      name: "Pulse zomer",
+      scan_type: "pulse",
+    }),
+    stats: buildStats({
+      campaign_id: "campaign-pulse-2",
+      campaign_name: "Pulse zomer",
+      scan_type: "pulse",
+    }),
+    deliveryRecord: buildDeliveryRecord({
+      id: "delivery-pulse-2",
+      campaign_id: "campaign-pulse-2",
+    }),
+    learningDossier: buildDossier({
+      id: "dossier-pulse-2",
+      campaign_id: "campaign-pulse-2",
+      title: "Tweede pulse follow-through",
+      scan_type: "pulse",
+      triage_status: "bevestigd",
+      management_action_outcome: "bijstellen",
+      case_public_summary: "Een tweede open pulse-route maakt de vervolghandoff in V1 bewust ambigu.",
+    }),
+  };
+}
+
 function getIsoDateDaysFromNow(daysFromNow: number) {
   const date = new Date();
   date.setDate(date.getDate() + daysFromNow);
+  date.setHours(12, 0, 0, 0);
   return date.toISOString().slice(0, 10);
+}
+
+function renderFollowUpAffordanceMarkup(args: {
+  memberRole: "owner" | "member" | "viewer";
+  triageStatus: "bevestigd" | "uitgevoerd";
+  managementActionOutcome: "bijstellen" | "afronden";
+  canAssignManagers: boolean;
+  canRespondToRequests: boolean;
+  workspaceSubtitle: string;
+  withTargetCandidate?: boolean;
+  withDirectActiveSuccessor?: boolean;
+  withAmbiguousTargetCandidates?: boolean;
+  withOptimisticDirectSuccessor?: boolean;
+}) {
+  const sourceContext = {
+    ...buildLiveContext(),
+    memberRole: args.memberRole,
+    learningDossier: buildDossier({
+      triage_status: args.triageStatus,
+      management_action_outcome: args.managementActionOutcome,
+      case_public_summary:
+        args.triageStatus === "uitgevoerd"
+          ? "De eerste route is bewust afgerond en klaar voor een eventuele vervolgroute."
+          : "De eerste route blijft actief en vraagt nog een gerichte vervolgstap.",
+    }),
+  } satisfies LiveActionCenterCampaignContext;
+  const contexts: LiveActionCenterCampaignContext[] = [sourceContext];
+
+  if (args.withTargetCandidate ?? true) {
+    const targetContext = buildFollowUpTargetContext();
+
+    if (args.withDirectActiveSuccessor) {
+      const sourceRoute = projectActionCenterRoute(sourceContext);
+      const targetRoute = projectActionCenterRoute(targetContext);
+      const relation = projectActionCenterRouteFollowUpRelation({
+        route_relation_type: "follow-up-from",
+        source_campaign_id: sourceContext.campaign.id,
+        target_campaign_id: targetContext.campaign.id,
+        source_route_id: sourceRoute.routeId,
+        target_route_id: targetRoute.routeId,
+        trigger_reason: "nieuw-segment-signaal",
+        recorded_at: "2026-04-30T09:00:00.000Z",
+        recorded_by_role: "hr_owner",
+      });
+
+      contexts[0] = {
+        ...sourceContext,
+        routeFollowUpRelations: [relation],
+      };
+      contexts.push({
+        ...targetContext,
+        routeFollowUpRelations: [relation],
+      });
+    } else {
+      contexts.push(targetContext);
+    }
+  }
+
+  let items = buildLiveActionCenterItems(contexts);
+  const item = items.find((candidate) => candidate.coreSemantics.route.campaignId === sourceContext.campaign.id)!;
+
+  if (args.withAmbiguousTargetCandidates) {
+    items = [
+      ...items,
+      ...buildLiveActionCenterItems([buildSecondFollowUpTargetContext()]),
+    ];
+  }
+
+  if (args.withOptimisticDirectSuccessor) {
+    const targetItem = items.find((candidate) => candidate.id !== item.id && candidate.teamId === item.teamId);
+    if (targetItem) {
+      items = items.map((candidate) =>
+        candidate.id === targetItem.id
+          ? {
+              ...candidate,
+              coreSemantics: {
+                ...candidate.coreSemantics,
+                followUpSemantics: {
+                  isDirectSuccessor: true,
+                  lineageLabel: "Vervolg op eerdere route",
+                  triggerReason: "nieuw-campaign-signaal",
+                  triggerReasonLabel: "Nieuw campaign-signaal",
+                  sourceRouteId: item.coreSemantics.route.routeId,
+                },
+              },
+            }
+          : candidate,
+      );
+    }
+  }
+
+  const markup = renderToStaticMarkup(
+    createElement(ActionCenterPreview, {
+      initialItems: items,
+      initialSelectedItemId: item.id,
+      initialView: "actions",
+      fallbackOwnerName: "Admin",
+      ownerOptions: ["Manager Operations", "Manager Support"],
+      managerOptions: [
+        { value: "manager-1", label: "Manager Operations" },
+        { value: "manager-2", label: "Manager Support" },
+      ],
+      workbenchHref: "/action-center/dossier",
+      hideSidebar: true,
+      readOnly: false,
+      canAssignManagers: args.canAssignManagers,
+      canRespondToRequests: args.canRespondToRequests,
+      routeFollowUpEndpoint: "/api/action-center-route-follow-ups",
+      workspaceName: "Action Center",
+      workspaceSubtitle: args.workspaceSubtitle,
+    }),
+  );
+
+  return { item, items, markup };
 }
 
 describe("action center landing shell", () => {
@@ -178,6 +362,150 @@ describe("action center landing shell", () => {
 
     expect(pageSource).toContain("<ActionCenterPreview");
     expect(pageSource).toContain("searchParams");
+    expect(pageSource).toContain('routeFollowUpEndpoint="/api/action-center-route-follow-ups"');
+  });
+
+  it("renders shell markup that should expose the follow-up route trigger affordances", () => {
+    const { item, markup } = renderFollowUpAffordanceMarkup({
+      memberRole: "owner",
+      triageStatus: "uitgevoerd",
+      managementActionOutcome: "afronden",
+      canAssignManagers: true,
+      canRespondToRequests: true,
+      workspaceSubtitle: "Verisight + HR",
+    });
+
+    expect(item.coreSemantics.route.routeStatus).toBe("afgerond");
+    expect(markup).toContain("Start vervolgroute");
+    expect(markup).toContain("Kies manager");
+    expect(markup).toContain("Kies aanleiding");
+    expect(markup).toContain('name="follow-up-manager"');
+    expect(markup).toContain('name="follow-up-trigger-reason"');
+    expect(markup).toContain("Nieuw campaign-signaal");
+    expect(markup).toContain("Nieuw segmentsignaal");
+    expect(markup).toContain("Hernieuwde HR-beoordeling");
+  });
+
+  it("keeps the trigger disabled when a closed route already has a direct active follow-up successor", () => {
+    const { item, items, markup } = renderFollowUpAffordanceMarkup({
+      memberRole: "owner",
+      triageStatus: "uitgevoerd",
+      managementActionOutcome: "afronden",
+      canAssignManagers: true,
+      canRespondToRequests: true,
+      workspaceSubtitle: "Verisight + HR",
+      withDirectActiveSuccessor: true,
+    });
+
+    const directSuccessor = items.find(
+      (candidate) =>
+        candidate.id !== item.id &&
+        candidate.coreSemantics.followUpSemantics.isDirectSuccessor &&
+        candidate.coreSemantics.followUpSemantics.sourceRouteId === item.coreSemantics.route.routeId,
+    );
+
+    expect(item.coreSemantics.route.routeStatus).toBe("afgerond");
+    expect(directSuccessor ? ["open-verzoek", "te-bespreken", "in-uitvoering"].includes(directSuccessor.status) : false).toBe(true);
+    expect(directSuccessor?.coreSemantics.followUpSemantics.triggerReasonLabel).toBe("Nieuw segmentsignaal");
+    expect(markup).toContain("Voor deze gesloten route loopt al een directe actieve vervolgroute (Nieuw segmentsignaal).");
+    expect(markup).not.toContain("Start vervolgroute");
+    expect(markup).not.toContain("Kies manager");
+    expect(markup).not.toContain("Kies aanleiding");
+  });
+
+  it("keeps the trigger disabled when no single same-scope target route can be derived", () => {
+    const { item, markup } = renderFollowUpAffordanceMarkup({
+      memberRole: "owner",
+      triageStatus: "uitgevoerd",
+      managementActionOutcome: "afronden",
+      canAssignManagers: true,
+      canRespondToRequests: true,
+      workspaceSubtitle: "Verisight + HR",
+      withTargetCandidate: false,
+    });
+
+    expect(item.coreSemantics.route.routeStatus).toBe("afgerond");
+    expect(markup).toContain("Nog geen eenduidige open doelroute beschikbaar binnen deze afdeling.");
+    expect(markup).not.toContain("Start vervolgroute");
+    expect(markup).not.toContain("Kies manager");
+    expect(markup).not.toContain("Kies aanleiding");
+  });
+
+  it("keeps the trigger hidden when multiple same-scope targets are open", () => {
+    const { item, markup } = renderFollowUpAffordanceMarkup({
+      memberRole: "owner",
+      triageStatus: "uitgevoerd",
+      managementActionOutcome: "afronden",
+      canAssignManagers: true,
+      canRespondToRequests: true,
+      workspaceSubtitle: "Verisight + HR",
+      withAmbiguousTargetCandidates: true,
+    });
+
+    expect(item.coreSemantics.route.routeStatus).toBe("afgerond");
+    expect(markup).toContain("Er zijn meerdere open doelroutes binnen deze afdeling. Kies in V1 eerst één eenduidige vervolgrichting.");
+    expect(markup).not.toContain("Start vervolgroute");
+    expect(markup).not.toContain("Kies manager");
+    expect(markup).not.toContain("Kies aanleiding");
+  });
+
+  it("keeps the trigger hidden after the target route is locally marked as the direct successor", () => {
+    const { item, items, markup } = renderFollowUpAffordanceMarkup({
+      memberRole: "owner",
+      triageStatus: "uitgevoerd",
+      managementActionOutcome: "afronden",
+      canAssignManagers: true,
+      canRespondToRequests: true,
+      workspaceSubtitle: "Verisight + HR",
+      withOptimisticDirectSuccessor: true,
+    });
+
+    const optimisticSuccessor = items.find(
+      (candidate) =>
+        candidate.id !== item.id &&
+        candidate.coreSemantics.followUpSemantics.isDirectSuccessor &&
+        candidate.coreSemantics.followUpSemantics.sourceRouteId === item.coreSemantics.route.routeId,
+    );
+
+    expect(optimisticSuccessor?.coreSemantics.followUpSemantics.triggerReasonLabel).toBe("Nieuw campaign-signaal");
+    expect(markup).toContain("Voor deze gesloten route loopt al een directe actieve vervolgroute (Nieuw campaign-signaal).");
+    expect(markup).not.toContain("Start vervolgroute");
+    expect(markup).not.toContain("Kies manager");
+    expect(markup).not.toContain("Kies aanleiding");
+  });
+
+  it("keeps follow-up affordances hidden for a closed route without HR or Verisight capabilities", () => {
+    const { item, markup } = renderFollowUpAffordanceMarkup({
+      memberRole: "viewer",
+      triageStatus: "uitgevoerd",
+      managementActionOutcome: "afronden",
+      canAssignManagers: false,
+      canRespondToRequests: false,
+      workspaceSubtitle: "Manager alleen",
+    });
+
+    expect(item.coreSemantics.route.routeStatus).toBe("afgerond");
+    expect(markup).not.toContain("Start vervolgroute");
+    expect(markup).not.toContain("Kies manager");
+    expect(markup).not.toContain("Kies aanleiding");
+    expect(markup).not.toContain("Nieuw campaign-signaal");
+  });
+
+  it("keeps follow-up affordances hidden for non-closed routes even with HR or Verisight capabilities", () => {
+    const { item, markup } = renderFollowUpAffordanceMarkup({
+      memberRole: "owner",
+      triageStatus: "bevestigd",
+      managementActionOutcome: "bijstellen",
+      canAssignManagers: true,
+      canRespondToRequests: true,
+      workspaceSubtitle: "Verisight + HR",
+    });
+
+    expect(item.coreSemantics.route.routeStatus).toBe("in-uitvoering");
+    expect(markup).not.toContain("Start vervolgroute");
+    expect(markup).not.toContain("Kies manager");
+    expect(markup).not.toContain("Kies aanleiding");
+    expect(markup).not.toContain("Nieuw campaign-signaal");
   });
 
   it("renders detail-first review meaning and action frame from grouped core semantics", () => {

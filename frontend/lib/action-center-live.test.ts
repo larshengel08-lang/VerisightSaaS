@@ -5,7 +5,7 @@ import {
   finalizeActionCenterPreviewItem,
   isLiveActionCenterScanType,
 } from './action-center-live'
-import { projectActionCenterRoute } from './action-center-route-contract'
+import { buildActionCenterRouteId, projectActionCenterRoute } from './action-center-route-contract'
 import type { Campaign, CampaignStats } from '@/lib/types'
 import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import type {
@@ -554,6 +554,120 @@ describe('live action center builder', () => {
     )
   })
 
+  it('preserves projected follow-up lineage semantics when preview core semantics recomputes', () => {
+    const seeded = finalizeActionCenterPreviewItem({
+      id: 'local-follow-up',
+      code: 'ACT-2010',
+      title: 'Bestaande vervolgroute',
+      summary: 'Lijstsamenvatting voor de vervolgroute.',
+      reason: 'Afgeleide reviewcopy uit de vorige render.',
+      sourceLabel: 'ExitScan',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerId: 'manager-1',
+      ownerName: 'Manager Operations',
+      ownerRole: 'Manager - Operations',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: 'Manager Operations',
+      priority: 'hoog',
+      status: 'te-bespreken',
+      reviewDate: '2026-05-12',
+      expectedEffect: 'Afgeleid verwacht effect.',
+      reviewReason: 'Afgeleide reviewreden.',
+      reviewOutcome: 'geen-uitkomst',
+      reviewDateLabel: '12 mei',
+      reviewRhythm: 'Tweewekelijks',
+      signalLabel: 'ExitScan - Operations',
+      signalBody: 'Zichtbaar signaal voor de kaart.',
+      nextStep: 'Afgeleide eerste stap uit de vorige render.',
+      peopleCount: 38,
+      updates: [],
+      coreSemantics: {
+        route: {
+          routeId: 'local-follow-up',
+          campaignId: 'local-follow-up',
+          entryStage: 'active',
+          routeOpenedAt: '2026-05-01T09:00:00.000Z',
+          ownerAssignedAt: '2026-05-01T09:00:00.000Z',
+          routeStatus: 'te-bespreken',
+          reviewOutcome: 'geen-uitkomst',
+          reviewCompletedAt: null,
+          outcomeRecordedAt: null,
+          outcomeSummary: null,
+          intervention: null,
+          owner: 'Manager Operations',
+          expectedEffect: null,
+          reviewScheduledFor: '2026-05-12',
+          reviewReason: 'Canonieke previewreviewreden.',
+          managerResponseType: 'schedule',
+          managerResponseNote: 'Nieuwe vervolgroute geopend door HR.',
+          primaryActionThemeKey: null,
+          followThroughMode: 'bounded_response',
+          blockedBy: null,
+        },
+        reviewSemantics: {
+          reviewReason: 'Canonieke previewreviewreden.',
+          reviewQuestion: 'Welke vervolgstap vraagt deze route nu als eerste review?',
+          reviewOutcomeRaw: 'geen-uitkomst',
+          reviewOutcomeVisible: 'geen-uitkomst',
+        },
+        actionProgress: {
+          currentStep: null,
+          nextStep: null,
+          expectedEffect: null,
+        },
+        actionFrame: {
+          whyNow: 'Canonieke previewreviewreden.',
+          firstStep: 'Nog te bepalen in review',
+          owner: 'Manager Operations',
+          expectedEffect: 'Nog te bepalen in review',
+        },
+        resultLoop: {
+          whatWasTried: null,
+          whatWeObserved: 'Zichtbaar signaal voor de kaart.',
+          whatWasDecided: null,
+        },
+        resultProgression: [],
+        decisionHistory: [],
+        followUpSemantics: {
+          isDirectSuccessor: true,
+          lineageLabel: 'Vervolg op eerdere route',
+          triggerReason: 'nieuw-segment-signaal',
+          triggerReasonLabel: 'Nieuw segmentsignaal',
+          sourceRouteId: 'campaign-source::operations',
+        },
+        closingSemantics: {
+          status: 'lopend',
+          summary: null,
+          historicalSummary: null,
+        },
+      },
+    })
+
+    const recomputed = finalizeActionCenterPreviewItem(
+      {
+        ...seeded,
+        updates: [
+          {
+            id: 'update-follow-up-1',
+            author: 'Admin',
+            dateLabel: '1 mei',
+            note: 'Update: vervolgroute is opnieuw ingepland.',
+          },
+        ],
+      },
+      { recomputeCoreSemantics: true },
+    )
+
+    expect(recomputed.coreSemantics.followUpSemantics).toMatchObject({
+      isDirectSuccessor: true,
+      lineageLabel: 'Vervolg op eerdere route',
+      triggerReason: 'nieuw-segment-signaal',
+      triggerReasonLabel: 'Nieuw segmentsignaal',
+      sourceRouteId: 'campaign-source::operations',
+    })
+  })
+
   it('does not promote management_action_outcome into the latest visible update fallback for live items', () => {
     const items = buildLiveActionCenterItems([
       {
@@ -917,5 +1031,162 @@ describe('live action center builder', () => {
     )
     expect(item?.coreSemantics.decisionHistory).toHaveLength(1)
     expect(item?.coreSemantics.decisionHistory[0]?.decisionEntryId).toBe('authored-decision-1')
+  })
+
+  it('projects follow-up lineage and trigger reason labels onto direct successor routes without changing normal open status', () => {
+    const scopeValue = 'org-1::department::operations'
+    const sourceCampaign = buildCampaign({
+      id: 'campaign-source',
+      name: 'Exit maart',
+    })
+    const targetCampaign = buildCampaign({
+      id: 'campaign-target',
+      name: 'Exit april',
+      created_at: '2026-04-18T10:00:00.000Z',
+    })
+    const sourceRouteId = buildActionCenterRouteId(sourceCampaign.id, scopeValue)
+    const targetRouteId = buildActionCenterRouteId(targetCampaign.id, scopeValue)
+
+    const items = buildLiveActionCenterItems([
+      {
+        campaign: sourceCampaign,
+        stats: buildStats({ campaign_id: sourceCampaign.id, campaign_name: sourceCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-source',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: sourceCampaign.id,
+          lifecycle_stage: 'follow_up_decided',
+          first_management_use_confirmed_at: '2026-04-10T08:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: sourceCampaign.id,
+          triage_status: 'uitgevoerd',
+          management_action_outcome: 'afronden',
+          adoption_outcome: 'De vorige route is bewust afgesloten na de review.',
+          case_public_summary: 'De eerdere route is afgesloten en wordt nu historisch bewaard.',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: [
+          {
+            id: 'relation-1',
+            routeRelationType: 'follow-up-from',
+            sourceRouteId,
+            targetRouteId,
+            triggerReason: 'nieuw-segment-signaal',
+            recordedAt: '2026-04-30T09:00:00.000Z',
+            recordedByRole: 'hr_owner',
+            endedAt: null,
+          },
+        ],
+      },
+      {
+        campaign: targetCampaign,
+        stats: buildStats({ campaign_id: targetCampaign.id, campaign_name: targetCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-target',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-30T09:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: targetCampaign.id,
+          lifecycle_stage: 'first_value_reached',
+          first_management_use_confirmed_at: null,
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: targetCampaign.id,
+          title: 'Nieuwe vervolgroute',
+          triage_status: 'bevestigd',
+          expected_first_value: null,
+          first_management_value: null,
+          first_action_taken: null,
+          review_moment: null,
+          management_action_outcome: null,
+        }),
+        learningCheckpoints: [],
+        managerResponse: {
+          id: 'manager-response-1',
+          campaign_id: targetCampaign.id,
+          org_id: 'org-1',
+          route_scope_type: 'department',
+          route_scope_value: scopeValue,
+          manager_user_id: 'manager-target',
+          response_type: 'schedule',
+          response_note: 'Vervolgroute geopend door HR.',
+          review_scheduled_for: '2026-05-14',
+          primary_action_theme_key: null,
+          primary_action_text: null,
+          primary_action_expected_effect: null,
+          primary_action_status: null,
+          created_by: null,
+          updated_by: null,
+          created_at: '2026-04-30T09:00:00.000Z',
+          updated_at: '2026-04-30T09:00:00.000Z',
+        },
+        reviewDecisions: [],
+        routeFollowUpRelations: [
+          {
+            id: 'relation-1',
+            routeRelationType: 'follow-up-from',
+            sourceRouteId,
+            targetRouteId,
+            triggerReason: 'nieuw-segment-signaal',
+            recordedAt: '2026-04-30T09:00:00.000Z',
+            recordedByRole: 'hr_owner',
+            endedAt: null,
+          },
+        ],
+      },
+    ])
+
+    const sourceItem = items.find((item) => item.id === sourceRouteId)
+    const successorItem = items.find((item) => item.id === targetRouteId)
+
+    expect(sourceItem).toMatchObject({
+      status: 'afgerond',
+      coreSemantics: {
+        closingSemantics: {
+          status: 'afgerond',
+        },
+        followUpSemantics: {
+          isDirectSuccessor: false,
+          lineageLabel: null,
+          triggerReason: null,
+          triggerReasonLabel: null,
+        },
+      },
+    })
+    expect(successorItem).toMatchObject({
+      status: 'te-bespreken',
+      coreSemantics: {
+        route: {
+          routeStatus: 'te-bespreken',
+        },
+        followUpSemantics: {
+          isDirectSuccessor: true,
+          lineageLabel: 'Vervolg op eerdere route',
+          triggerReason: 'nieuw-segment-signaal',
+          triggerReasonLabel: 'Nieuw segmentsignaal',
+          sourceRouteId,
+        },
+      },
+    })
   })
 })

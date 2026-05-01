@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
 import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
+import { projectActionCenterRouteFollowUpRelation } from '@/lib/action-center-route-reopen'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   isScopeVisibleToActionCenterContext,
@@ -21,6 +22,19 @@ import type { Campaign, CampaignStats, Organization } from '@/lib/types'
 type RespondentDepartmentRow = {
   campaign_id: string
   department: string | null
+}
+
+type ActionCenterRouteRelationRow = {
+  id: string | null
+  source_campaign_id: string | null
+  target_campaign_id: string | null
+  route_relation_type: string | null
+  source_route_id: string | null
+  target_route_id: string | null
+  trigger_reason: string | null
+  recorded_at: string | null
+  recorded_by_role: string | null
+  ended_at: string | null
 }
 
 function getDisplayName(email: string | null | undefined) {
@@ -102,6 +116,7 @@ export default async function ActionCenterPage({
     { data: deliveryRecordsRaw },
     { data: dossiersRaw },
     { data: managerWorkspaceRowsRaw },
+    { data: routeRelationsRaw },
   ] = await Promise.all([
     orgIds.length > 0
       ? dataClient.from('organizations').select('id, name, slug, contact_email, is_active, created_at').in('id', orgIds)
@@ -126,6 +141,15 @@ export default async function ActionCenterPage({
           )
           .in('org_id', orgIds)
       : Promise.resolve({ data: [] }),
+    orgIds.length > 0
+      ? dataClient
+          .from('action_center_route_relations')
+          .select(
+            'id, source_campaign_id, target_campaign_id, route_relation_type, source_route_id, target_route_id, trigger_reason, recorded_at, recorded_by_role, ended_at',
+          )
+          .in('org_id', orgIds)
+          .eq('route_relation_type', 'follow-up-from')
+      : Promise.resolve({ data: [] }),
   ])
 
   const organizations = (organizationsRaw ?? []) as Organization[]
@@ -141,6 +165,25 @@ export default async function ActionCenterPage({
   const managerWorkspaceRows = (
     context.canManageActionCenterAssignments ? managerWorkspaceRowsRaw ?? [] : currentUserWorkspaceMemberships
   ) as ActionCenterWorkspaceMember[]
+  const routeRelations = ((routeRelationsRaw ?? []) as ActionCenterRouteRelationRow[]).reduce<
+    ReturnType<typeof projectActionCenterRouteFollowUpRelation>[]
+  >((acc, relation) => {
+    const belongsToVisibleCampaign =
+      (relation.source_campaign_id ? campaignIds.includes(relation.source_campaign_id) : false) ||
+      (relation.target_campaign_id ? campaignIds.includes(relation.target_campaign_id) : false)
+
+    if (!belongsToVisibleCampaign) {
+      return acc
+    }
+
+    try {
+      acc.push(projectActionCenterRouteFollowUpRelation(relation))
+    } catch {
+      // Ignore malformed legacy rows so one broken relation does not take down the full Action Center page.
+    }
+
+    return acc
+  }, [])
 
   const { data: respondentsWithDepartmentsRaw } =
     campaignIds.length > 0
@@ -224,6 +267,13 @@ export default async function ActionCenterPage({
       response,
     ]),
   )
+  const routeFollowUpRelationMap = routeRelations.reduce<Record<string, typeof routeRelations>>((acc, relation) => {
+    acc[relation.sourceRouteId] ??= []
+    acc[relation.targetRouteId] ??= []
+    acc[relation.sourceRouteId].push(relation)
+    acc[relation.targetRouteId].push(relation)
+    return acc
+  }, {})
   const respondentDepartmentsByCampaign = respondentsWithDepartments.reduce<Record<string, string[]>>((acc, row) => {
     const departmentLabel = normalizeDepartmentLabel(row.department)
     if (!departmentLabel) return acc
@@ -286,6 +336,7 @@ export default async function ActionCenterPage({
           learningCheckpoints: learningDossier ? (learningCheckpointMap[learningDossier.id] ?? []) : [],
           managerResponse: managerResponseByRouteId.get(routeId) ?? null,
           reviewDecisions: reviewDecisionMap[campaign.id] ?? [],
+          routeFollowUpRelations: routeFollowUpRelationMap[routeId] ?? [],
         }
       })
   })
@@ -368,6 +419,7 @@ export default async function ActionCenterPage({
       managerAssignmentEndpoint="/api/action-center/workspace-members"
       canRespondToRequests={context.canUpdateActionCenter}
       managerResponseEndpoint="/api/action-center-manager-responses"
+      routeFollowUpEndpoint="/api/action-center-route-follow-ups"
       currentUserId={user.id}
       workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}
       workbenchLabel={context.canViewInsights ? 'Open broncampagne' : 'Blijf in Action Center'}

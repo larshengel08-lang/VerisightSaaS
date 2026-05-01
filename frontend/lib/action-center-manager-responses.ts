@@ -11,6 +11,8 @@ import type {
   ActionCenterManagerResponseType,
 } from './pilot-learning'
 
+export type { ActionCenterManagerResponseScopeType } from './pilot-learning'
+
 const RESPONSE_TYPES = new Set<ActionCenterManagerResponseType>(['confirm', 'sharpen', 'schedule', 'watch'])
 const RESPONSE_SCOPE_TYPES = new Set<ActionCenterManagerResponseScopeType>(['department', 'item'])
 const ACTION_STATUSES = new Set<ActionCenterManagerActionStatus>(['active', 'completed', 'abandoned'])
@@ -68,6 +70,19 @@ function normalizeText(value: string | null | undefined) {
   return trimmed.length > 0 ? trimmed : null
 }
 
+function isUuidLike(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+}
+
+export function normalizeCampaignIdentifier(value: string | null | undefined) {
+  const normalized = normalizeText(value)
+  if (!normalized) {
+    return null
+  }
+
+  return isUuidLike(normalized) ? normalized.toLowerCase() : normalized
+}
+
 function normalizeDepartmentLabel(value: string | null | undefined) {
   const normalized = normalizeText(value)
   return normalized ? normalized.toLocaleLowerCase('nl-NL') : null
@@ -84,7 +99,60 @@ export function buildDepartmentScopeValue(orgId: string, departmentLabel: string
 }
 
 export function buildCampaignItemScopeValue(orgId: string, campaignId: string) {
-  return `${orgId}::campaign::${campaignId}`
+  return `${orgId}::campaign::${normalizeCampaignIdentifier(campaignId) ?? ''}`
+}
+
+export function parseActionCenterManagerResponseScopeValue(routeScopeValue: string) {
+  const normalizedRouteScopeValue = normalizeText(routeScopeValue)
+  if (!normalizedRouteScopeValue) {
+    throw new Error('Ongeldige manager response route-identiteit.')
+  }
+
+  const segments = normalizedRouteScopeValue.split('::')
+  if (segments.length !== 3) {
+    throw new Error('Ongeldige manager response route-identiteit.')
+  }
+
+  const [orgId, rawScopeType, scopeKey] = segments
+  if (!orgId || !scopeKey) {
+    throw new Error('Ongeldige manager response route-identiteit.')
+  }
+
+  if (rawScopeType === 'department') {
+    const normalizedDepartmentLabel = normalizeDepartmentLabel(scopeKey)
+    if (!normalizedDepartmentLabel) {
+      throw new Error('Ongeldige manager response route-identiteit.')
+    }
+
+    return {
+      orgId,
+      scopeType: 'department' as const,
+      scopeKey: normalizedDepartmentLabel,
+      canonicalScopeValue: buildDepartmentScopeValue(orgId, normalizedDepartmentLabel),
+    }
+  }
+
+  if (rawScopeType === 'campaign') {
+    const normalizedCampaignId = normalizeCampaignIdentifier(scopeKey)
+    if (!normalizedCampaignId) {
+      throw new Error('Ongeldige manager response route-identiteit.')
+    }
+
+    return {
+      orgId,
+      scopeType: 'item' as const,
+      scopeKey: normalizedCampaignId,
+      canonicalScopeValue: buildCampaignItemScopeValue(orgId, normalizedCampaignId),
+    }
+  }
+
+  throw new Error('Ongeldige manager response route-identiteit.')
+}
+
+export function inferActionCenterManagerResponseScopeType(
+  routeScopeValue: string,
+): ActionCenterManagerResponseScopeType {
+  return parseActionCenterManagerResponseScopeValue(routeScopeValue).scopeType
 }
 
 function isCanonicalRouteScopeForCampaign(args: {
@@ -94,8 +162,14 @@ function isCanonicalRouteScopeForCampaign(args: {
   routeScopeValue: string
   visibleDepartmentLabels: string[]
 }) {
+  const parsedScopeValue = parseActionCenterManagerResponseScopeValue(args.routeScopeValue)
+
   if (args.routeScopeType === 'item') {
-    return args.routeScopeValue === buildCampaignItemScopeValue(args.campaignOrgId, args.campaignId)
+    return (
+      parsedScopeValue.orgId === args.campaignOrgId &&
+      parsedScopeValue.scopeType === 'item' &&
+      parsedScopeValue.canonicalScopeValue === buildCampaignItemScopeValue(args.campaignOrgId, args.campaignId)
+    )
   }
 
   return args.visibleDepartmentLabels.some(
@@ -111,7 +185,7 @@ export function resolveManagerResponseWriteIdentity(args: {
   membership: ManagerAssignmentTruth | null
   isVerisightAdmin: boolean
 }) {
-  const submittedCampaignId = normalizeText(args.submitted.campaign_id)
+  const submittedCampaignId = normalizeCampaignIdentifier(args.submitted.campaign_id)
   const submittedOrgId = normalizeText(args.submitted.org_id)
   const submittedScopeValue = normalizeText(args.submitted.route_scope_value)
   const submittedManagerUserId = normalizeText(args.submitted.manager_user_id)
@@ -218,7 +292,7 @@ export function hasPrimaryManagerAction(
 export function validateActionCenterManagerResponseWriteInput(
   input: Partial<ActionCenterManagerResponseWriteInput> | null | undefined,
 ): ActionCenterManagerResponseWriteInput {
-  const campaignId = normalizeText(input?.campaign_id)
+  const campaignId = normalizeCampaignIdentifier(input?.campaign_id)
   const orgId = normalizeText(input?.org_id)
   const routeScopeType = input?.route_scope_type
   const routeScopeValue = normalizeText(input?.route_scope_value)

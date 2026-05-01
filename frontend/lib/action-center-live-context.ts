@@ -6,6 +6,7 @@ import type {
   PilotLearningCheckpoint,
   PilotLearningDossier,
 } from './pilot-learning'
+import type { ActionCenterRouteFollowUpRelationRecord } from './action-center-route-reopen'
 
 export interface LiveActionCenterCampaignContext {
   campaign: Campaign
@@ -27,4 +28,5 @@ export interface LiveActionCenterCampaignContext {
   learningCheckpoints: PilotLearningCheckpoint[]
   managerResponse?: ActionCenterManagerResponse | null
   reviewDecisions?: ActionCenterReviewDecision[]
+  routeFollowUpRelations?: ActionCenterRouteFollowUpRelationRecord[]
 }

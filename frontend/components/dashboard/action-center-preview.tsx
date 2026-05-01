@@ -12,6 +12,10 @@ import {
   getActionCenterManagerResponseLabel,
   hasPrimaryManagerAction,
 } from '@/lib/action-center-manager-responses'
+import {
+  getActionCenterFollowUpTriggerReasonLabel,
+  type ActionCenterRouteFollowUpTriggerReason,
+} from '@/lib/action-center-route-reopen'
 import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 import type {
   ActionCenterPreviewItem,
@@ -47,6 +51,7 @@ interface Props {
   managerAssignmentEndpoint?: string
   canRespondToRequests?: boolean
   managerResponseEndpoint?: string
+  routeFollowUpEndpoint?: string
   currentUserId?: string | null
   workbenchHref: string
   workbenchLabel?: string
@@ -78,6 +83,16 @@ interface ManagerResponseFormState {
   primaryActionExpectedEffect: string
 }
 
+interface FollowUpRouteFormState {
+  managerUserId: string
+  triggerReason: ActionCenterRouteFollowUpTriggerReason
+}
+
+type FollowUpRouteBlockReason =
+  | 'already-has-direct-active-successor'
+  | 'no-same-scope-target'
+  | 'ambiguous-same-scope-target'
+
 const SIDEBAR_ITEMS: Array<{ key: ActionCenterPreviewView; label: string }> = [
   { key: 'overview', label: 'Overzicht' },
   { key: 'actions', label: 'Acties' },
@@ -87,6 +102,11 @@ const SIDEBAR_ITEMS: Array<{ key: ActionCenterPreviewView; label: string }> = [
 ]
 
 const REVIEW_RHYTHM_OPTIONS = ['Wekelijks', 'Tweewekelijks', 'Maandelijks', 'Per kwartaal']
+const FOLLOW_UP_TRIGGER_REASON_OPTIONS: ActionCenterRouteFollowUpTriggerReason[] = [
+  'nieuw-campaign-signaal',
+  'nieuw-segment-signaal',
+  'hernieuwde-hr-beoordeling',
+]
 
 const DUTCH_SHORT_DATE = new Intl.DateTimeFormat('nl-NL', {
   day: 'numeric',
@@ -315,6 +335,10 @@ function supportsManagerResponseFlow(item: ActionCenterPreviewItem | null) {
   return item?.scopeType === 'department' || item?.scopeType === 'item'
 }
 
+function isClosedRouteStatus(status: ActionCenterPreviewStatus) {
+  return status === 'afgerond' || status === 'gestopt'
+}
+
 function isOpenAttentionStatus(status: ActionCenterPreviewStatus) {
   return status === 'open-verzoek' || status === 'te-bespreken' || status === 'geblokkeerd'
 }
@@ -455,6 +479,120 @@ function buildTeamRows(items: ActionCenterPreviewItem[]) {
   })
 }
 
+function getInitialFollowUpFormState(args: {
+  item: ActionCenterPreviewItem | null
+  assignmentOptions: ActionCenterPreviewManagerOption[]
+}): FollowUpRouteFormState {
+  const selectedOwnerId = args.item?.ownerId ?? null
+  const defaultManagerUserId =
+    (selectedOwnerId &&
+    args.assignmentOptions.some((option) => option.value === selectedOwnerId)
+      ? selectedOwnerId
+      : args.assignmentOptions[0]?.value) ?? ''
+
+  return {
+    managerUserId: defaultManagerUserId,
+    triggerReason: 'nieuw-campaign-signaal',
+  }
+}
+
+function findDirectActiveFollowUpSuccessor(args: {
+  items: ActionCenterPreviewItem[]
+  sourceRouteId: string
+}) {
+  return (
+    args.items.find(
+      (item) =>
+        item.coreSemantics.followUpSemantics?.isDirectSuccessor === true &&
+        item.coreSemantics.followUpSemantics?.sourceRouteId === args.sourceRouteId &&
+        !isClosedRouteStatus(item.status),
+    ) ?? null
+  )
+}
+
+function resolveSameScopeFollowUpTarget(args: {
+  items: ActionCenterPreviewItem[]
+  sourceItem: ActionCenterPreviewItem | null
+}): {
+  targetItem: ActionCenterPreviewItem | null
+  reason: Exclude<FollowUpRouteBlockReason, 'already-has-direct-active-successor'> | null
+} {
+  const sourceItem = args.sourceItem
+  if (!sourceItem) {
+    return { targetItem: null, reason: 'no-same-scope-target' }
+  }
+
+  // V1 only supports department-scoped follow-up handoffs to one clear open route in the same department.
+  const candidates = args.items.filter(
+    (item) =>
+      item.id !== sourceItem.id &&
+      item.orgId === sourceItem.orgId &&
+      item.scopeType === 'department' &&
+      item.scopeType === sourceItem.scopeType &&
+      item.teamId === sourceItem.teamId &&
+      item.coreSemantics.route.campaignId !== sourceItem.coreSemantics.route.campaignId &&
+      !isClosedRouteStatus(item.status) &&
+      item.coreSemantics.followUpSemantics?.isDirectSuccessor !== true,
+  )
+
+  if (candidates.length === 1) {
+    return { targetItem: candidates[0], reason: null }
+  }
+
+  return {
+    targetItem: null,
+    reason: candidates.length === 0 ? 'no-same-scope-target' : 'ambiguous-same-scope-target',
+  }
+}
+
+function getFollowUpRouteBlockMessage(args: {
+  reason: FollowUpRouteBlockReason
+  directSuccessor: ActionCenterPreviewItem | null
+}) {
+  if (args.reason === 'already-has-direct-active-successor') {
+    const triggerReasonLabel = args.directSuccessor?.coreSemantics.followUpSemantics?.triggerReasonLabel
+    return triggerReasonLabel
+      ? `Voor deze gesloten route loopt al een directe actieve vervolgroute (${triggerReasonLabel}).`
+      : 'Voor deze gesloten route loopt al een directe actieve vervolgroute binnen dezelfde afdeling.'
+  }
+
+  if (args.reason === 'ambiguous-same-scope-target') {
+    return 'Er zijn meerdere open doelroutes binnen deze afdeling. Kies in V1 eerst één eenduidige vervolgrichting.'
+  }
+
+  return 'Nog geen eenduidige open doelroute beschikbaar binnen deze afdeling.'
+}
+
+function applyOptimisticFollowUpSuccessor(args: {
+  items: ActionCenterPreviewItem[]
+  sourceRouteId: string
+  targetItemId: string
+  triggerReason: ActionCenterRouteFollowUpTriggerReason
+}) {
+  return args.items.map((item) => {
+    if (item.id !== args.targetItemId) {
+      return item
+    }
+
+    return finalizeActionCenterPreviewItem(
+      {
+        ...item,
+        coreSemantics: {
+          ...item.coreSemantics,
+          followUpSemantics: {
+            isDirectSuccessor: true,
+            lineageLabel: 'Vervolg op eerdere route',
+            triggerReason: args.triggerReason,
+            triggerReasonLabel: getActionCenterFollowUpTriggerReasonLabel(args.triggerReason),
+            sourceRouteId: args.sourceRouteId,
+          },
+        },
+      },
+      { recomputeCoreSemantics: true },
+    )
+  })
+}
+
 export function ActionCenterPreview({
   initialItems,
   initialSelectedItemId = null,
@@ -466,6 +604,7 @@ export function ActionCenterPreview({
   managerAssignmentEndpoint,
   canRespondToRequests = false,
   managerResponseEndpoint,
+  routeFollowUpEndpoint,
   currentUserId = null,
   workbenchHref,
   workbenchLabel = 'Open dossierbron',
@@ -551,10 +690,19 @@ export function ActionCenterPreview({
           })),
     [managerOptions, ownerOptions],
   )
+  const [followUpForm, setFollowUpForm] = useState<FollowUpRouteFormState>(() =>
+    getInitialFollowUpFormState({ item: initialSelectedItem, assignmentOptions }),
+  )
+  const [followUpPending, setFollowUpPending] = useState(false)
+  const [followUpError, setFollowUpError] = useState<string | null>(null)
   const managerLabelByValue = useMemo(
     () => new Map(assignmentOptions.map((option) => [option.value, option.label])),
     [assignmentOptions],
   )
+  useEffect(() => {
+    setFollowUpForm(getInitialFollowUpFormState({ item: selectedItem, assignmentOptions }))
+    setFollowUpError(null)
+  }, [assignmentOptions, selectedItem])
   const teamRows = buildTeamRows(items)
   const selectedTeam = teamRows.find((team) => team.id === selectedTeamId) ?? teamRows[0] ?? null
   const allSources = [...new Set(items.map((item) => item.sourceLabel))]
@@ -593,6 +741,44 @@ export function ActionCenterPreview({
         currentUserId &&
         selectedItem.ownerId === currentUserId,
     )
+  const canRenderFollowUpRoute = Boolean(
+    routeFollowUpEndpoint &&
+      canAssignManagers &&
+      selectedItem?.orgId &&
+      selectedItem.scopeType === 'department' &&
+      isClosedRouteStatus(selectedItem.status),
+  )
+  const directActiveFollowUpSuccessor = useMemo(
+    () =>
+      selectedItem
+        ? findDirectActiveFollowUpSuccessor({
+            items,
+            sourceRouteId: selectedItem.coreSemantics.route.routeId,
+          })
+        : null,
+    [items, selectedItem],
+  )
+  const followUpTargetResolution = useMemo(
+    () =>
+      resolveSameScopeFollowUpTarget({
+        items,
+        sourceItem: selectedItem,
+      }),
+    [items, selectedItem],
+  )
+  const followUpTargetItem = followUpTargetResolution.targetItem
+  const followUpRouteBlockReason = !canRenderFollowUpRoute
+    ? null
+    : directActiveFollowUpSuccessor
+      ? 'already-has-direct-active-successor'
+      : followUpTargetResolution.reason
+  const followUpRouteBlockMessage = followUpRouteBlockReason
+    ? getFollowUpRouteBlockMessage({
+        reason: followUpRouteBlockReason,
+        directSuccessor: directActiveFollowUpSuccessor,
+      })
+    : null
+  const canShowFollowUpRouteAffordance = Boolean(canRenderFollowUpRoute && !followUpRouteBlockReason)
 
   function updateItem(itemId: string, updater: (item: ActionCenterPreviewItem) => ActionCenterPreviewItem) {
     setItems((currentItems) =>
@@ -776,6 +962,61 @@ export function ActionCenterPreview({
       )
     } finally {
       setManagerResponsePending(false)
+    }
+  }
+
+  async function handleFollowUpRouteStart() {
+    if (!selectedItem || !routeFollowUpEndpoint) return
+
+    const managerUserId = followUpForm.managerUserId.trim()
+    if (!managerUserId) {
+      setFollowUpError('Kies eerst een manager voor deze vervolgroute.')
+      return
+    }
+
+    if (!followUpTargetItem) {
+      setFollowUpError('Nog geen doelroute beschikbaar voor deze afdeling.')
+      return
+    }
+
+    setFollowUpPending(true)
+    setFollowUpError(null)
+
+    try {
+      const response = await fetch(routeFollowUpEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          source_campaign_id: selectedItem.coreSemantics.route.campaignId,
+          source_route_scope_value: selectedItem.teamId,
+          target_campaign_id: followUpTargetItem.coreSemantics.route.campaignId,
+          target_route_scope_value: followUpTargetItem.teamId,
+          trigger_reason: followUpForm.triggerReason,
+          manager_user_id: managerUserId,
+        }),
+      })
+      const result = (await response.json().catch(() => null)) as { detail?: string } | null
+
+      if (!response.ok) {
+        throw new Error(result?.detail ?? 'Vervolgroute kon niet worden gestart.')
+      }
+
+      setItems((currentItems) =>
+        applyOptimisticFollowUpSuccessor({
+          items: currentItems,
+          sourceRouteId: selectedItem.coreSemantics.route.routeId,
+          targetItemId: followUpTargetItem.id,
+          triggerReason: followUpForm.triggerReason,
+        }),
+      )
+      setSelectedItemId(followUpTargetItem.id)
+      setActiveView('actions')
+    } catch (error) {
+      setFollowUpError(error instanceof Error ? error.message : 'Vervolgroute kon niet worden gestart.')
+    } finally {
+      setFollowUpPending(false)
     }
   }
 
@@ -1591,6 +1832,93 @@ export function ActionCenterPreview({
                           <LabelValue label="Review-eigenaar" value={getReviewOwnerDisplayName(selectedItem.reviewOwnerName)} />
                         </dl>
                       </div>
+
+                      {canShowFollowUpRouteAffordance ? (
+                        <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+                            Vervolgroute
+                          </p>
+                          <h3 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">
+                            Start vervolgroute
+                          </h3>
+                          <p className="mt-3 text-sm leading-7 text-[#4f6175]">
+                            Open vanuit deze gesloten route een nieuwe HR-handoff binnen dezelfde afdeling.
+                          </p>
+
+                          <div className="mt-5 space-y-5">
+                            <FormField label="Kies manager">
+                              <select
+                                name="follow-up-manager"
+                                value={followUpForm.managerUserId}
+                                onChange={(event) =>
+                                  setFollowUpForm((current) => ({
+                                    ...current,
+                                    managerUserId: event.target.value,
+                                  }))
+                                }
+                                disabled={followUpPending}
+                                className="w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                              >
+                                <option value="">Kies manager</option>
+                                {assignmentOptions.map((option) => (
+                                  <option key={`follow-up-${option.value}`} value={option.value}>
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </FormField>
+
+                            <FormField label="Kies aanleiding">
+                              <div className="space-y-3">
+                                {FOLLOW_UP_TRIGGER_REASON_OPTIONS.map((option) => (
+                                  <label
+                                    key={option}
+                                    className="flex items-start gap-3 rounded-2xl border border-[#e4d9cb] bg-[#fcfaf7] px-4 py-3 text-sm text-[#132033]"
+                                  >
+                                    <input
+                                      type="radio"
+                                      name="follow-up-trigger-reason"
+                                      value={option}
+                                      checked={followUpForm.triggerReason === option}
+                                      onChange={() =>
+                                        setFollowUpForm((current) => ({
+                                          ...current,
+                                          triggerReason: option,
+                                        }))
+                                      }
+                                      disabled={followUpPending}
+                                      className="mt-1 h-4 w-4 border-[#c9bcad] text-[#ff9b4a] focus:ring-[#ff9b4a]"
+                                    />
+                                    <span>{getActionCenterFollowUpTriggerReasonLabel(option)}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </FormField>
+
+                            {followUpError ? (
+                              <p className="rounded-2xl border border-[#f0d9d4] bg-[#fff1ef] px-4 py-3 text-sm text-[#b24a43]">
+                                {followUpError}
+                              </p>
+                            ) : null}
+
+                            <button
+                              type="button"
+                              className="inline-flex min-h-11 items-center rounded-full bg-[#ff9b4a] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                              disabled={followUpPending}
+                              onClick={() => void handleFollowUpRouteStart()}
+                            >
+                              {followUpPending ? 'Vervolgroute starten...' : 'Start vervolgroute'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : canRenderFollowUpRoute && followUpRouteBlockMessage ? (
+                        <div className="rounded-[24px] border border-[#e4d9cb] bg-[#fcfaf7] px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+                            Vervolgroute
+                          </p>
+                          <p className="mt-3 text-sm leading-7 text-[#4f6175]">{followUpRouteBlockMessage}</p>
+                        </div>
+                      ) : null}
 
                       {supportsManagerResponseFlow(selectedItem) ? (
                         <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">

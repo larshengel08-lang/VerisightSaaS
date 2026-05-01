@@ -674,6 +674,27 @@ create table if not exists public.action_center_manager_responses (
   unique (campaign_id, route_scope_type, route_scope_value)
 );
 
+create table if not exists public.action_center_route_relations (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid references public.organizations(id) on delete cascade not null,
+  source_campaign_id uuid references public.campaigns(id) on delete cascade not null,
+  source_route_id text not null,
+  source_route_scope_value text not null,
+  target_campaign_id uuid references public.campaigns(id) on delete cascade not null,
+  target_route_id text not null,
+  target_route_scope_value text not null,
+  route_relation_type text not null
+    check (route_relation_type in ('follow-up-from')),
+  trigger_reason text not null
+    check (trigger_reason in ('nieuw-campaign-signaal', 'nieuw-segment-signaal', 'hernieuwde-hr-beoordeling')),
+  manager_user_id uuid references auth.users(id) on delete set null,
+  recorded_by uuid references auth.users(id) on delete set null,
+  recorded_by_role text not null
+    check (recorded_by_role in ('verisight_admin', 'hr_owner', 'hr_member')),
+  recorded_at timestamptz not null default now(),
+  ended_at timestamptz
+);
+
 -- ============================================================
 -- INDEXES
 -- ============================================================
@@ -697,6 +718,11 @@ create index if not exists idx_action_center_review_decisions_checkpoint on publ
 create index if not exists idx_action_center_review_decisions_recorded_at on public.action_center_review_decisions(decision_recorded_at desc);
 create index if not exists idx_action_center_manager_responses_route on public.action_center_manager_responses(campaign_id, route_scope_type, route_scope_value);
 create index if not exists idx_action_center_manager_responses_manager on public.action_center_manager_responses(manager_user_id);
+create index if not exists idx_action_center_route_relations_source on public.action_center_route_relations(source_route_id);
+create index if not exists idx_action_center_route_relations_target on public.action_center_route_relations(target_route_id);
+create unique index if not exists idx_action_center_route_relations_active_direct_follow_up
+  on public.action_center_route_relations(source_route_id)
+  where route_relation_type = 'follow-up-from' and ended_at is null;
 create index if not exists idx_delivery_records_org on public.campaign_delivery_records(organization_id);
 create index if not exists idx_delivery_records_contact_request on public.campaign_delivery_records(contact_request_id);
 create index if not exists idx_delivery_records_lifecycle on public.campaign_delivery_records(lifecycle_stage);
@@ -720,6 +746,7 @@ alter table public.pilot_learning_dossiers enable row level security;
 alter table public.pilot_learning_checkpoints enable row level security;
 alter table public.action_center_review_decisions enable row level security;
 alter table public.action_center_manager_responses enable row level security;
+alter table public.action_center_route_relations enable row level security;
 
 -- ── Hulpfuncties ─────────────────────────────────────────────────────────────
 
@@ -1170,6 +1197,83 @@ create policy "managers_can_update_action_center_manager_responses"
         and m.access_role = 'manager_assignee'
         and m.scope_type = action_center_manager_responses.route_scope_type
         and m.scope_value = action_center_manager_responses.route_scope_value
+        and m.can_update
+    )
+  );
+
+drop policy if exists "hr_and_admins_can_select_action_center_route_relations" on public.action_center_route_relations;
+drop policy if exists "managers_can_select_action_center_route_relations" on public.action_center_route_relations;
+drop policy if exists "hr_and_admins_can_insert_action_center_route_relations" on public.action_center_route_relations;
+drop policy if exists "hr_and_admins_can_update_action_center_route_relations" on public.action_center_route_relations;
+
+create policy "hr_and_admins_can_select_action_center_route_relations"
+  on public.action_center_route_relations for select
+  using (
+    public.is_verisight_admin_user()
+    or public.is_org_member(org_id)
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_relations.org_id
+        and m.access_role in ('hr_owner', 'hr_member')
+        and m.can_view
+    )
+  );
+
+create policy "managers_can_select_action_center_route_relations"
+  on public.action_center_route_relations for select
+  using (
+    public.is_verisight_admin_user()
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_relations.org_id
+        and m.access_role = 'manager_assignee'
+        and m.scope_value = action_center_route_relations.source_route_scope_value
+        and m.can_view
+    )
+  );
+
+create policy "hr_and_admins_can_insert_action_center_route_relations"
+  on public.action_center_route_relations for insert
+  with check (
+    public.is_verisight_admin_user()
+    or public.is_org_owner(org_id)
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_relations.org_id
+        and m.access_role in ('hr_owner', 'hr_member')
+        and m.can_update
+    )
+  );
+
+create policy "hr_and_admins_can_update_action_center_route_relations"
+  on public.action_center_route_relations for update
+  using (
+    public.is_verisight_admin_user()
+    or public.is_org_owner(org_id)
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_relations.org_id
+        and m.access_role in ('hr_owner', 'hr_member')
+        and m.can_update
+    )
+  )
+  with check (
+    public.is_verisight_admin_user()
+    or public.is_org_owner(org_id)
+    or exists (
+      select 1
+      from public.action_center_workspace_members m
+      where m.user_id = auth.uid()
+        and m.org_id = action_center_route_relations.org_id
+        and m.access_role in ('hr_owner', 'hr_member')
         and m.can_update
     )
   );

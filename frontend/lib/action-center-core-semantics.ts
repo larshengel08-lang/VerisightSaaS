@@ -4,6 +4,11 @@ import type {
   ActionCenterRouteContract,
 } from './action-center-route-contract'
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
+import {
+  getActionCenterFollowUpTriggerReasonLabel,
+  type ActionCenterRouteFollowUpRelationRecord,
+  type ActionCenterRouteFollowUpTriggerReason,
+} from './action-center-route-reopen'
 import type {
   ActionCenterManagerResponse,
   ActionCenterReviewDecision,
@@ -48,11 +53,20 @@ export interface ActionCenterCoreSemantics {
   }
   resultProgression: ActionCenterResultProgressEntry[]
   decisionHistory: ActionCenterDecisionRecord[]
+  followUpSemantics?: ActionCenterProjectedFollowUpSemantics
   closingSemantics: {
     status: ActionCenterClosingStatus
     summary: string | null
     historicalSummary: string | null
   }
+}
+
+export interface ActionCenterProjectedFollowUpSemantics {
+  isDirectSuccessor: boolean
+  lineageLabel: string | null
+  triggerReason: ActionCenterRouteFollowUpTriggerReason | null
+  triggerReasonLabel: string | null
+  sourceRouteId: string | null
 }
 
 export type ActionCenterCoreSemanticsProjectionInput = Pick<
@@ -64,6 +78,7 @@ export type ActionCenterCoreSemanticsProjectionInput = Pick<
   | 'learningCheckpoints'
   | 'reviewDecisions'
   | 'managerResponse'
+  | 'routeFollowUpRelations'
 > & {
   route: ActionCenterRouteContract
   latestVisibleUpdateNote?: string | null
@@ -86,6 +101,7 @@ export interface ActionCenterPreviewCoreSemanticsProjectionInput {
   latestVisibleUpdateNote?: string | null
   route?: ActionCenterRouteContract | null
   managerResponse?: ActionCenterManagerResponse | null
+  followUpSemantics?: ActionCenterProjectedFollowUpSemantics | null
 }
 
 const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
@@ -126,6 +142,7 @@ const ACTION_STEP_PREFIXES = new Set([
   'koppel',
   'vervolg',
 ])
+const FOLLOW_UP_SUCCESSOR_LINEAGE_LABEL = 'Vervolg op eerdere route'
 const HISTORICAL_CLOSEOUT_SIGNAL_PATTERNS = [
   /\bvorige stap\s+(?:is|was|werd)\s+(?:al\s+|reeds\s+)?(?:definitief\s+)?afgerond\b/i,
   /\bvorige stap\s+(?:is|was|werd)\s+(?:al\s+|reeds\s+)?(?:definitief\s+)?afgesloten\b/i,
@@ -149,8 +166,46 @@ function pickFirst(values: Array<string | null | undefined>) {
   return null
 }
 
+function getEmptyFollowUpSemantics(): ActionCenterProjectedFollowUpSemantics {
+  return {
+    isDirectSuccessor: false,
+    lineageLabel: null,
+    triggerReason: null,
+    triggerReasonLabel: null,
+    sourceRouteId: null,
+  }
+}
+
 function getCheckpoint(context: ActionCenterCoreSemanticsProjectionInput, key: PilotLearningCheckpoint['checkpoint_key']) {
   return context.learningCheckpoints.find((checkpoint) => checkpoint.checkpoint_key === key) ?? null
+}
+
+function getDirectSuccessorRelation(
+  routeId: string,
+  relations: ActionCenterRouteFollowUpRelationRecord[] | undefined,
+) {
+  return [...(relations ?? [])]
+    .filter((relation) => relation.targetRouteId === routeId && !normalizeText(relation.endedAt))
+    .sort((left, right) => new Date(right.recordedAt).getTime() - new Date(left.recordedAt).getTime())[0] ?? null
+}
+
+function projectFollowUpSemanticsFromRelation(
+  routeId: string,
+  relations: ActionCenterRouteFollowUpRelationRecord[] | undefined,
+): ActionCenterProjectedFollowUpSemantics {
+  const relation = getDirectSuccessorRelation(routeId, relations)
+
+  if (!relation) {
+    return getEmptyFollowUpSemantics()
+  }
+
+  return {
+    isDirectSuccessor: true,
+    lineageLabel: FOLLOW_UP_SUCCESSOR_LINEAGE_LABEL,
+    triggerReason: relation.triggerReason,
+    triggerReasonLabel: getActionCenterFollowUpTriggerReasonLabel(relation.triggerReason),
+    sourceRouteId: relation.sourceRouteId,
+  }
 }
 
 function getVisibleReviewOutcome(outcome: ActionCenterReviewOutcome): ActionCenterVisibleReviewOutcome {
@@ -530,6 +585,7 @@ export function projectActionCenterPreviewCoreSemantics(
     latestVisibleUpdateNote,
   })
   const closingStatus = getPreviewClosingStatus(route.routeStatus)
+  const followUpSemantics = input.followUpSemantics ?? getEmptyFollowUpSemantics()
 
   return {
     route,
@@ -563,6 +619,7 @@ export function projectActionCenterPreviewCoreSemantics(
     },
     resultProgression,
     decisionHistory,
+    followUpSemantics,
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getPreviewClosingSummaryValues(route, closingStatus)),
@@ -651,6 +708,7 @@ export function projectActionCenterCoreSemantics(
   const latestObservation = getLatestObservation(context, route)
   const latestActionUpdate = getLatestActionUpdate(context)
   const closingStatus = getClosingStatus(context, route)
+  const followUpSemantics = projectFollowUpSemanticsFromRelation(route.routeId, context.routeFollowUpRelations)
   const decisionHistory = buildDecisionHistory({
     route,
     reviewQuestion,
@@ -718,6 +776,7 @@ export function projectActionCenterCoreSemantics(
     },
     resultProgression,
     decisionHistory,
+    followUpSemantics,
     closingSemantics: {
       status: closingStatus,
       summary: getClosingSummary(closingStatus, getLiveClosingSummaryValues(context, route, closingStatus)),
