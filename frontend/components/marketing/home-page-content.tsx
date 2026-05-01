@@ -116,6 +116,27 @@ const problemSignalPoints = [
   },
 ]
 
+const managementFlowSteps = [
+  {
+    step: '1',
+    label: 'Begrijpen',
+    title: 'Dashboard',
+    body: "Laat direct zien waar signalen terugkomen, welke thema's of afdelingen aandacht vragen en wat nu bestuurlijk het meeste gewicht heeft.",
+  },
+  {
+    step: '2',
+    label: 'Prioriteren',
+    title: 'Managementrapport',
+    body: 'Maakt de hoofdboodschap, eerste prioriteit en eerste vervolgrichting bestuurlijk leesbaar — zodat management sneller kan wegen wat eerst telt.',
+  },
+  {
+    step: '3',
+    label: 'Handelen',
+    title: 'Action Center',
+    body: 'Maakt opvolging concreet zodra HR of leiding besluit dat een echte vervolgstap nodig is — van toewijzing aan een manager tot het openen en volgen van acties.',
+  },
+] as const
+
 const trustPrinciples = [
   'Verisight helpt patronen op groepsniveau zichtbaar maken, niet om individuele medewerkers te beoordelen.',
   'Dashboard, samenvatting en eerste opvolging dragen dezelfde managementlijn, zonder dat elk detail overal terug hoeft te komen.',
@@ -352,6 +373,345 @@ function ProblemSection() {
 
           .problem-signal-grid > div:last-child {
             border-bottom: none !important;
+          }
+        }
+      `}</style>
+    </section>
+  )
+}
+
+function ManagementFlowSection() {
+  return (
+    <section
+      style={{
+        background: SURFACE.surface,
+        borderBottom: `1px solid ${SURFACE.border}`,
+      }}
+    >
+      <div
+        style={{
+          ...SHELL,
+          paddingBottom: 'clamp(56px, 7vw, 92px)',
+          paddingTop: 'clamp(56px, 7vw, 92px)',
+        }}
+      >
+        <div style={{ margin: '0 auto', maxWidth: 980, textAlign: 'center' }}>
+          <Reveal>
+            <h2
+              style={{
+                color: SURFACE.ink,
+                fontFamily: displayFont,
+                fontSize: 'clamp(3rem, 5vw, 5rem)',
+                fontWeight: 400,
+                letterSpacing: '-0.05em',
+                lineHeight: 0.94,
+                marginBottom: 30,
+                textWrap: 'balance',
+              }}
+            >
+              Eerst inzicht. Dan duiding. Dan opvolging.
+            </h2>
+          </Reveal>
+          <Reveal delay={0.06}>
+            <p
+              style={{
+                color: SURFACE.text,
+                fontSize: 17,
+                lineHeight: 1.72,
+                margin: '0 auto',
+                maxWidth: '54rem',
+              }}
+            >
+              Verisight brengt analyse en vervolg samen in één heldere managementflow. Zo blijft het niet bij losse
+              signalen of losse rapportage, maar wordt ook de stap naar gerichte opvolging ondersteund.
+            </p>
+          </Reveal>
+        </div>
+
+        <div
+          className="management-flow-grid"
+          style={{
+            alignItems: 'stretch',
+            display: 'grid',
+            gap: 22,
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            marginTop: 56,
+            position: 'relative',
+          }}
+        >
+          <div
+            aria-hidden
+            style={{
+              background: SURFACE.borderSoft,
+              height: 1,
+              left: '16.66%',
+              position: 'absolute',
+              right: '16.66%',
+              top: 66,
+              zIndex: 0,
+            }}
+          />
+
+          {managementFlowSteps.map((item, index) => (
+            <Reveal key={item.title} delay={0.1 + index * 0.05}>
+              <article
+                style={{
+                  background: SURFACE.surface,
+                  border: `1px solid ${SURFACE.borderSoft}`,
+                  borderRadius: 28,
+                  boxShadow: '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)',
+                  minHeight: 408,
+                  padding: '22px 24px 24px',
+                  position: 'relative',
+                  zIndex: 1,
+                }}
+              >
+                <div style={{ alignItems: 'center', display: 'flex', gap: 14, marginBottom: 24 }}>
+                  <div
+                    style={{
+                      alignItems: 'center',
+                      background: SURFACE.ink,
+                      borderRadius: '999px',
+                      color: SURFACE.surface,
+                      display: 'inline-flex',
+                      fontFamily: bodyFont,
+                      fontSize: 15,
+                      fontWeight: 700,
+                      height: 36,
+                      justifyContent: 'center',
+                      width: 36,
+                    }}
+                  >
+                    {item.step}
+                  </div>
+                  <span
+                    style={{
+                      color: SURFACE.ink,
+                      fontFamily: bodyFont,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      letterSpacing: '.14em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                </div>
+
+                <h3
+                  style={{
+                    color: SURFACE.ink,
+                    fontFamily: displayFont,
+                    fontSize: 'clamp(2rem, 2.35vw, 2.6rem)',
+                    fontWeight: 400,
+                    letterSpacing: '-0.035em',
+                    lineHeight: 1.03,
+                    marginBottom: 16,
+                  }}
+                >
+                  {item.title}
+                </h3>
+
+                <p
+                  style={{
+                    color: SURFACE.text,
+                    fontSize: 15.5,
+                    lineHeight: 1.62,
+                    marginBottom: 28,
+                    maxWidth: '25rem',
+                  }}
+                >
+                  {item.body}
+                </p>
+
+                {item.title === 'Dashboard' ? (
+                  <div
+                    style={{
+                      background: '#f2efe8',
+                      border: `1px solid ${SURFACE.borderSoft}`,
+                      borderRadius: 22,
+                      marginTop: 'auto',
+                      padding: '18px 16px 16px',
+                    }}
+                  >
+                    <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginBottom: 16 }}>
+                      {[
+                        ['Behoud', '#cfe7dd'],
+                        ['Onboarding', '#d8e4ea'],
+                        ['Vertrek', '#eaded6'],
+                      ].map(([label, accent]) => (
+                        <div
+                          key={label}
+                          style={{
+                            background: SURFACE.surface,
+                            borderRadius: 14,
+                            padding: '10px 10px 8px',
+                          }}
+                        >
+                          <div
+                            style={{
+                              color: SURFACE.muted,
+                              fontFamily: bodyFont,
+                              fontSize: 10,
+                              fontWeight: 500,
+                              letterSpacing: '.08em',
+                              marginBottom: 10,
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {label}
+                          </div>
+                          <div style={{ background: String(accent), borderRadius: 999, height: 4, width: '100%' }} />
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ alignItems: 'end', display: 'grid', gap: 6, gridTemplateColumns: 'repeat(8, minmax(0, 1fr))' }}>
+                      {[
+                        20, 34, 26, 42, 30, 50, 38, 40,
+                      ].map((height, chartIndex) => (
+                        <div
+                          key={chartIndex}
+                          style={{
+                            background: '#597b74',
+                            borderRadius: '4px 4px 0 0',
+                            height,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {item.title === 'Managementrapport' ? (
+                  <div
+                    style={{
+                      background: '#f2efe8',
+                      border: `1px solid ${SURFACE.borderSoft}`,
+                      borderRadius: 22,
+                      marginTop: 'auto',
+                      padding: '16px 18px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: '#7f7b74',
+                        fontFamily: bodyFont,
+                        fontSize: 10,
+                        fontWeight: 500,
+                        letterSpacing: '.12em',
+                        marginBottom: 10,
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Hoofdboodschap
+                    </div>
+                    <div style={{ background: '#59626d', borderRadius: 999, height: 6, marginBottom: 10, width: '100%' }} />
+                    <div style={{ background: '#cfc9bf', borderRadius: 999, height: 5, marginBottom: 8, width: '86%' }} />
+                    <div style={{ background: '#dcd5cb', borderRadius: 999, height: 5, marginBottom: 16, width: '71%' }} />
+                    <div
+                      style={{
+                        alignItems: 'center',
+                        background: SURFACE.surface,
+                        borderRadius: 16,
+                        color: SURFACE.text,
+                        display: 'flex',
+                        fontFamily: bodyFont,
+                        fontSize: 14,
+                        gap: 10,
+                        padding: '9px 14px',
+                      }}
+                    >
+                      <span
+                        aria-hidden
+                        style={{
+                          background: '#bfe5c7',
+                          borderRadius: 999,
+                          display: 'inline-block',
+                          height: 8,
+                          width: 8,
+                        }}
+                      />
+                      Eerste prioriteit
+                    </div>
+                  </div>
+                ) : null}
+
+                {item.title === 'Action Center' ? (
+                  <div
+                    style={{
+                      background: '#f2efe8',
+                      border: `1px solid ${SURFACE.borderSoft}`,
+                      borderRadius: 22,
+                      marginTop: 'auto',
+                      padding: '14px 14px 16px',
+                    }}
+                  >
+                    {[
+                      ['Bespreek signalen Sales', '#bfe5c7'],
+                      ['Verifieer onboarding', '#e7ded4'],
+                      ['Plan vervolg met team', '#e7ded4'],
+                    ].map(([label, dot], rowIndex) => (
+                      <div
+                        key={label}
+                        style={{
+                          alignItems: 'center',
+                          background: SURFACE.surface,
+                          borderRadius: 16,
+                          color: SURFACE.ink,
+                          display: 'flex',
+                          fontFamily: bodyFont,
+                          fontSize: 14,
+                          gap: 10,
+                          marginTop: rowIndex === 0 ? 0 : 10,
+                          padding: '11px 12px',
+                        }}
+                      >
+                        <span
+                          aria-hidden
+                          style={{
+                            background: String(dot),
+                            border: `1px solid ${rowIndex === 0 ? '#82bb8e' : SURFACE.border}`,
+                            borderRadius: 999,
+                            display: 'inline-block',
+                            height: 12,
+                            width: 12,
+                          }}
+                        />
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delay={0.24}>
+          <p
+            style={{
+              color: SURFACE.text,
+              fontSize: 16,
+              lineHeight: 1.72,
+              margin: '46px auto 0',
+              maxWidth: '58rem',
+              textAlign: 'center',
+            }}
+          >
+            Verisight vult interpretatie of eigenaarschap niet automatisch voor u in. Het helpt signalen zichtbaar
+            maken, prioriteiten wegen en opvolging organiseren in een duidelijke managementflow.
+          </p>
+        </Reveal>
+      </div>
+
+      <style>{`
+        @media (max-width: 1120px) {
+          .management-flow-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .management-flow-grid > div[aria-hidden="true"] {
+            display: none !important;
           }
         }
       `}</style>
@@ -1824,6 +2184,7 @@ export function HomePageContent() {
     <div style={{ background: SURFACE.paper, color: SURFACE.ink }}>
       <HeroSection />
       <ProblemSection />
+      <ManagementFlowSection />
       {SHOW_HOME_INSIGHT_ACTION_DEMO ? (
         <HomeInsightActionDemo />
       ) : (
