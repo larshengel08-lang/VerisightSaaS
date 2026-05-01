@@ -6,7 +6,6 @@ import type {
   ActionCenterDecisionRecord,
   ActionCenterReviewOutcome,
   ActionCenterRouteContract,
-  ActionCenterRouteStatus,
 } from '@/lib/action-center-route-contract'
 import {
   ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS,
@@ -14,25 +13,10 @@ import {
   hasPrimaryManagerAction,
 } from '@/lib/action-center-manager-responses'
 import {
-  projectActionCenterActionReview,
-  type ActionCenterActionOutcome,
-  type ActionCenterActionReviewWriteInput,
-} from '@/lib/action-center-action-reviews'
-import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
-import {
-  projectActionCenterRouteActionCard,
-  type ActionCenterRouteActionWriteInput,
-} from '@/lib/action-center-route-actions'
-import {
-  projectActionCenterRouteCloseout,
-  projectActionCenterRouteCloseoutState,
-  type ActionCenterRouteCloseoutReason,
-  type ActionCenterRouteCloseoutStatus,
-} from '@/lib/action-center-route-closeout'
-import {
-  getActionCenterRouteReopenReasonLabel,
-  projectActionCenterRouteReopen,
+  getActionCenterFollowUpTriggerReasonLabel,
+  type ActionCenterRouteFollowUpTriggerReason,
 } from '@/lib/action-center-route-reopen'
+import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 import type {
   ActionCenterPreviewItem,
   ActionCenterPreviewManagerOption,
@@ -40,21 +24,12 @@ import type {
   ActionCenterPreviewStatus,
   ActionCenterPreviewView,
 } from '@/lib/action-center-preview-model'
-import { summarizeActionCenterRouteActions } from '@/lib/action-center-route-contract'
 import type {
   ActionCenterManagerActionThemeKey,
   ActionCenterManagerResponse,
   ActionCenterManagerResponseType,
 } from '@/lib/pilot-learning'
 import React, { useDeferredValue, useEffect, useMemo, useState } from 'react'
-import {
-  ActionCenterRouteActionEditor,
-  type ActionCenterRouteActionEditorValue,
-} from './action-center-route-action-editor'
-import {
-  ActionCenterActionReviewEditor,
-  type ActionCenterActionReviewEditorValue,
-} from './action-center-action-review-editor'
 
 export type {
   ActionCenterPreviewItem,
@@ -76,24 +51,12 @@ interface Props {
   managerAssignmentEndpoint?: string
   canRespondToRequests?: boolean
   managerResponseEndpoint?: string
-  routeActionEndpoint?: string
-  actionReviewEndpoint?: string
-  canCloseRoutes?: boolean
-  routeCloseoutEndpoint?: string
-  routeReopenEndpoint?: string
   routeFollowUpEndpoint?: string
   currentUserId?: string | null
-  managerOnly?: boolean
   workbenchHref: string
   workbenchLabel?: string
   workspaceName?: string
   workspaceSubtitle?: string
-  overviewSummary?: {
-    routeCount: number
-    actionCount: number
-    reviewCount: number
-    nextReviewDate: string | null
-  }
   readOnly?: boolean
   itemHrefs?: Record<string, string>
   hideSidebar?: boolean
@@ -120,11 +83,15 @@ interface ManagerResponseFormState {
   primaryActionExpectedEffect: string
 }
 
-interface RouteCloseoutFormState {
-  closeoutStatus: ActionCenterRouteCloseoutStatus
-  closeoutReason: ActionCenterRouteCloseoutReason
-  closeoutNote: string
+interface FollowUpRouteFormState {
+  managerUserId: string
+  triggerReason: ActionCenterRouteFollowUpTriggerReason
 }
+
+type FollowUpRouteBlockReason =
+  | 'already-has-direct-active-successor'
+  | 'no-same-scope-target'
+  | 'ambiguous-same-scope-target'
 
 const SIDEBAR_ITEMS: Array<{ key: ActionCenterPreviewView; label: string }> = [
   { key: 'overview', label: 'Overzicht' },
@@ -135,6 +102,11 @@ const SIDEBAR_ITEMS: Array<{ key: ActionCenterPreviewView; label: string }> = [
 ]
 
 const REVIEW_RHYTHM_OPTIONS = ['Wekelijks', 'Tweewekelijks', 'Maandelijks', 'Per kwartaal']
+const FOLLOW_UP_TRIGGER_REASON_OPTIONS: ActionCenterRouteFollowUpTriggerReason[] = [
+  'nieuw-campaign-signaal',
+  'nieuw-segment-signaal',
+  'hernieuwde-hr-beoordeling',
+]
 
 const DUTCH_SHORT_DATE = new Intl.DateTimeFormat('nl-NL', {
   day: 'numeric',
@@ -148,9 +120,6 @@ const DUTCH_LONG_DATE = new Intl.DateTimeFormat('nl-NL', {
 })
 
 const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
-const ROUTE_ACTION_THEME_LABELS = new Map(
-  ACTION_CENTER_MANAGER_RESPONSE_THEME_OPTIONS.map((option) => [option.value, option.label] as const),
-)
 
 function formatShortDate(value: string | null) {
   if (!value) return 'Nog niet gepland'
@@ -220,11 +189,6 @@ function getStatusMeta(status: ActionCenterPreviewStatus) {
       return {
         label: 'Open verzoek',
         pillClass: 'border-[#d5e6fb] bg-[#edf5ff] text-[#335f9c]',
-      }
-    case 'reviewbaar':
-      return {
-        label: 'Reviewbaar',
-        pillClass: 'border-[#ffd9c4] bg-[#fff0e7] text-[#b35a1d]',
       }
     case 'in-uitvoering':
       return {
@@ -304,29 +268,6 @@ function getDecisionLabel(decision: ActionCenterDecision) {
   }
 }
 
-function getRouteCloseoutStatusLabel(status: 'afgerond' | 'gestopt') {
-  return status === 'afgerond' ? 'Afgerond voor nu' : 'Bewust gestopt'
-}
-
-function getRouteCloseoutReasonLabel(reason: string) {
-  switch (reason) {
-    case 'voldoende-opgepakt':
-      return 'Voldoende opgepakt'
-    case 'effect-voldoende-zichtbaar':
-      return 'Effect voldoende zichtbaar'
-    case 'geen-verdere-opvolging-nodig':
-      return 'Geen verdere opvolging nodig'
-    case 'geen-lokale-vervolgstap-nodig':
-      return 'Geen lokale vervolgstap nodig'
-    case 'bewust-niet-voortzetten':
-      return 'Bewust niet voortzetten'
-    case 'elders-opgepakt':
-      return 'Elders opgepakt'
-    default:
-      return reason.replace(/-/g, ' ')
-  }
-}
-
 function compareReviewDate(left: string | null, right: string | null) {
   if (!left && !right) return 0
   if (!left) return 1
@@ -390,80 +331,27 @@ function buildManagerResponseDefaults(item: ActionCenterPreviewItem | null): Man
   }
 }
 
-function buildRouteCloseoutDefaults(item: ActionCenterPreviewItem | null): RouteCloseoutFormState {
-  const closeout = item?.coreSemantics.routeCloseout
-
-  return {
-    closeoutStatus: closeout?.closeoutStatus ?? 'afgerond',
-    closeoutReason: closeout?.closeoutReason ?? 'voldoende-opgepakt',
-    closeoutNote: closeout?.closeoutNote ?? '',
-  }
-}
-
 function supportsManagerResponseFlow(item: ActionCenterPreviewItem | null) {
   return item?.scopeType === 'department' || item?.scopeType === 'item'
 }
 
+function isClosedRouteStatus(status: ActionCenterPreviewStatus) {
+  return status === 'afgerond' || status === 'gestopt'
+}
+
 function isOpenAttentionStatus(status: ActionCenterPreviewStatus) {
-  return status === 'open-verzoek' || status === 'te-bespreken' || status === 'reviewbaar' || status === 'geblokkeerd'
-}
-
-function getRouteActionThemeLabel(themeKey: ActionCenterManagerActionThemeKey) {
-  return ROUTE_ACTION_THEME_LABELS.get(themeKey) ?? themeKey
-}
-
-function getRouteActionStatusLabel(status: 'open' | 'in_review' | 'afgerond' | 'gestopt') {
-  switch (status) {
-    case 'open':
-      return 'Open'
-    case 'in_review':
-      return 'In review'
-    case 'afgerond':
-      return 'Afgerond'
-    case 'gestopt':
-    default:
-      return 'Gestopt'
-  }
-}
-
-function getRouteActionOutcomeLabel(outcome: ActionCenterActionOutcome) {
-  switch (outcome) {
-    case 'effect-zichtbaar':
-      return 'Effect zichtbaar'
-    case 'bijsturen-nodig':
-      return 'Bijsturen nodig'
-    case 'nog-te-vroeg':
-      return 'Nog te vroeg'
-    case 'stoppen':
-    default:
-      return 'Stoppen'
-  }
+  return status === 'open-verzoek' || status === 'te-bespreken' || status === 'geblokkeerd'
 }
 
 function getManagerResponseProjectedStatus(
   currentStatus: ActionCenterPreviewStatus,
   response: ActionCenterManagerResponse,
-): ActionCenterRouteStatus {
+): ActionCenterPreviewStatus {
   if (currentStatus === 'afgerond' || currentStatus === 'gestopt' || currentStatus === 'geblokkeerd') {
     return currentStatus
   }
 
   return hasPrimaryManagerAction(response) ? 'in-uitvoering' : 'te-bespreken'
-}
-
-function getContractRouteStatusFromPreviewStatus(status: ActionCenterPreviewStatus): ActionCenterRouteStatus {
-  switch (status) {
-    case 'reviewbaar':
-      return 'in-uitvoering'
-    case 'open-verzoek':
-    case 'te-bespreken':
-    case 'in-uitvoering':
-    case 'geblokkeerd':
-    case 'afgerond':
-    case 'gestopt':
-    default:
-      return status
-  }
 }
 
 function applyManagerResponseToItem(
@@ -495,199 +383,6 @@ function applyManagerResponseToItem(
       route: nextRoute,
     },
   }
-}
-
-function getPreviewStatusFromActionAggregation(
-  routeStatus: ReturnType<typeof summarizeActionCenterRouteActions>['routeStatus'],
-): ActionCenterPreviewStatus {
-  switch (routeStatus) {
-    case 'reviewbaar':
-      return 'reviewbaar'
-    case 'in-uitvoering':
-      return 'in-uitvoering'
-    case 'afgerond':
-      return 'afgerond'
-    case 'gestopt':
-      return 'gestopt'
-    case 'open-verzoek':
-    default:
-      return 'open-verzoek'
-  }
-}
-
-function countReviewableRouteActions(actions: Array<{ status: 'open' | 'in_review' | 'afgerond' | 'gestopt'; reviewScheduledFor: string }>) {
-  const today = new Date().toISOString().slice(0, 10)
-  return actions.filter(
-    (action) => action.status === 'in_review' || (action.status === 'open' && action.reviewScheduledFor <= today),
-  ).length
-}
-
-function buildRouteActionSummaryText(actions: Array<{ status: 'open' | 'in_review' | 'afgerond' | 'gestopt'; reviewScheduledFor: string }>) {
-  const reviewableCount = countReviewableRouteActions(actions)
-  const completedCount = actions.filter((action) => action.status === 'afgerond').length
-  const parts = [`${actions.length} ${actions.length === 1 ? 'actie' : 'acties'}`]
-
-  if (reviewableCount > 0) {
-    parts.push(`${reviewableCount} reviewbaar`)
-  } else if (completedCount > 0) {
-    parts.push(`${completedCount} afgerond`)
-  } else {
-    parts.push('actief in deze route')
-  }
-
-  return parts.join(' - ')
-}
-
-function mergeActionReviewsIntoRouteCards(
-  cards: ActionCenterPreviewItem['coreSemantics']['routeActionCards'],
-  reviews: Array<ReturnType<typeof projectActionCenterActionReview>>,
-) {
-  return cards.map((card) => {
-    const latestReview =
-      reviews
-        .filter((review) => review.actionId === card.actionId)
-        .sort((left, right) => new Date(right.reviewedAt).getTime() - new Date(left.reviewedAt).getTime())[0] ?? null
-
-    if (!latestReview) {
-      return card
-    }
-
-    return {
-      ...card,
-      latestReview: {
-        reviewedAt: latestReview.reviewedAt,
-        observation: latestReview.observation,
-        actionOutcome: latestReview.actionOutcome,
-        followUpNote: latestReview.followUpNote,
-      },
-    }
-  })
-}
-
-function applyRouteActionCardsToItem(
-  item: ActionCenterPreviewItem,
-  routeActionCards: ActionCenterPreviewItem['coreSemantics']['routeActionCards'],
-) {
-  const aggregation = summarizeActionCenterRouteActions(
-    routeActionCards.map((action) => ({
-      actionId: action.actionId,
-      status: action.status,
-      reviewScheduledFor: action.reviewScheduledFor,
-    })),
-  )
-  const nextStatus = getPreviewStatusFromActionAggregation(aggregation.routeStatus)
-  const nextReviewDate = aggregation.nextReviewScheduledFor
-  const leadAction = routeActionCards[0] ?? null
-
-  return finalizeActionCenterPreviewItem(
-    {
-      ...item,
-      summary: buildRouteActionSummaryText(
-        routeActionCards.map((action) => ({
-          status: action.status,
-          reviewScheduledFor: action.reviewScheduledFor,
-        })),
-      ),
-      status: nextStatus,
-      reviewDate: nextReviewDate,
-      reviewDateLabel: formatShortDate(nextReviewDate),
-      coreSemantics: {
-        ...item.coreSemantics,
-        route: {
-          ...item.coreSemantics.route,
-          routeStatus: getContractRouteStatusFromPreviewStatus(nextStatus),
-          reviewScheduledFor: nextReviewDate,
-          intervention: leadAction?.actionText ?? item.coreSemantics.route.intervention,
-          expectedEffect: leadAction?.expectedEffect ?? item.coreSemantics.route.expectedEffect,
-        },
-        routeActionCards,
-        actionProgress: {
-          ...item.coreSemantics.actionProgress,
-          currentStep: leadAction?.actionText ?? item.coreSemantics.actionProgress.currentStep,
-          expectedEffect: leadAction?.expectedEffect ?? item.coreSemantics.actionProgress.expectedEffect,
-        },
-      },
-    },
-    { recomputeCoreSemantics: false },
-  )
-}
-
-function applyRouteCloseoutToItem(
-  item: ActionCenterPreviewItem,
-  closeout: ReturnType<typeof projectActionCenterRouteCloseout>,
-) {
-  return finalizeActionCenterPreviewItem(
-    {
-      ...item,
-      status: closeout.closeoutStatus,
-      coreSemantics: {
-        ...item.coreSemantics,
-        route: {
-          ...item.coreSemantics.route,
-          routeStatus: closeout.closeoutStatus,
-        },
-        routeCloseout: projectActionCenterRouteCloseoutState({ record: closeout }),
-        closingSemantics: {
-          ...item.coreSemantics.closingSemantics,
-          status: closeout.closeoutStatus,
-          summary: closeout.closeoutNote ?? getRouteCloseoutReasonLabel(closeout.closeoutReason),
-        },
-      },
-    },
-    { recomputeCoreSemantics: false },
-  )
-}
-
-function applyRouteReopenToItem(
-  item: ActionCenterPreviewItem,
-  reopen: ReturnType<typeof projectActionCenterRouteReopen>,
-) {
-  const routeActionCards = item.coreSemantics.routeActionCards
-  const aggregation =
-    routeActionCards.length > 0
-      ? summarizeActionCenterRouteActions(
-          routeActionCards.map((action) => ({
-            actionId: action.actionId,
-            status: action.status,
-            reviewScheduledFor: action.reviewScheduledFor,
-          })),
-        )
-      : null
-  const nextStatus: ActionCenterPreviewStatus =
-    aggregation?.routeStatus === 'reviewbaar'
-      ? 'reviewbaar'
-      : aggregation?.routeStatus === 'in-uitvoering'
-        ? 'in-uitvoering'
-        : item.coreSemantics.route.followThroughMode === 'open_request'
-          ? 'open-verzoek'
-          : item.coreSemantics.route.followThroughMode === 'none'
-            ? 'te-bespreken'
-            : 'te-bespreken'
-
-  return finalizeActionCenterPreviewItem(
-    {
-      ...item,
-      status: nextStatus,
-      coreSemantics: {
-        ...item.coreSemantics,
-        route: {
-          ...item.coreSemantics.route,
-          routeStatus: getContractRouteStatusFromPreviewStatus(nextStatus),
-          reopenedAt: reopen.reopenedAt,
-          reopenedByRole: reopen.reopenedByRole,
-          reopenReason: reopen.reopenReason,
-          isReopened: true,
-          lineageLabel: 'Heropend traject',
-        },
-        lineageSemantics: {
-          ...item.coreSemantics.lineageSemantics,
-          label: 'Heropend traject',
-          summary: `${getActionCenterRouteReopenReasonLabel(reopen.reopenReason)} na eerdere afsluiting`,
-        },
-      },
-    },
-    { recomputeCoreSemantics: true },
-  )
 }
 
 function getViewCopy(view: ActionCenterPreviewView, selectedTitle: string | null) {
@@ -784,6 +479,120 @@ function buildTeamRows(items: ActionCenterPreviewItem[]) {
   })
 }
 
+function getInitialFollowUpFormState(args: {
+  item: ActionCenterPreviewItem | null
+  assignmentOptions: ActionCenterPreviewManagerOption[]
+}): FollowUpRouteFormState {
+  const selectedOwnerId = args.item?.ownerId ?? null
+  const defaultManagerUserId =
+    (selectedOwnerId &&
+    args.assignmentOptions.some((option) => option.value === selectedOwnerId)
+      ? selectedOwnerId
+      : args.assignmentOptions[0]?.value) ?? ''
+
+  return {
+    managerUserId: defaultManagerUserId,
+    triggerReason: 'nieuw-campaign-signaal',
+  }
+}
+
+function findDirectActiveFollowUpSuccessor(args: {
+  items: ActionCenterPreviewItem[]
+  sourceRouteId: string
+}) {
+  return (
+    args.items.find(
+      (item) =>
+        item.coreSemantics.followUpSemantics?.isDirectSuccessor === true &&
+        item.coreSemantics.followUpSemantics?.sourceRouteId === args.sourceRouteId &&
+        !isClosedRouteStatus(item.status),
+    ) ?? null
+  )
+}
+
+function resolveSameScopeFollowUpTarget(args: {
+  items: ActionCenterPreviewItem[]
+  sourceItem: ActionCenterPreviewItem | null
+}): {
+  targetItem: ActionCenterPreviewItem | null
+  reason: Exclude<FollowUpRouteBlockReason, 'already-has-direct-active-successor'> | null
+} {
+  const sourceItem = args.sourceItem
+  if (!sourceItem) {
+    return { targetItem: null, reason: 'no-same-scope-target' }
+  }
+
+  // V1 only supports department-scoped follow-up handoffs to one clear open route in the same department.
+  const candidates = args.items.filter(
+    (item) =>
+      item.id !== sourceItem.id &&
+      item.orgId === sourceItem.orgId &&
+      item.scopeType === 'department' &&
+      item.scopeType === sourceItem.scopeType &&
+      item.teamId === sourceItem.teamId &&
+      item.coreSemantics.route.campaignId !== sourceItem.coreSemantics.route.campaignId &&
+      !isClosedRouteStatus(item.status) &&
+      item.coreSemantics.followUpSemantics?.isDirectSuccessor !== true,
+  )
+
+  if (candidates.length === 1) {
+    return { targetItem: candidates[0], reason: null }
+  }
+
+  return {
+    targetItem: null,
+    reason: candidates.length === 0 ? 'no-same-scope-target' : 'ambiguous-same-scope-target',
+  }
+}
+
+function getFollowUpRouteBlockMessage(args: {
+  reason: FollowUpRouteBlockReason
+  directSuccessor: ActionCenterPreviewItem | null
+}) {
+  if (args.reason === 'already-has-direct-active-successor') {
+    const triggerReasonLabel = args.directSuccessor?.coreSemantics.followUpSemantics?.triggerReasonLabel
+    return triggerReasonLabel
+      ? `Voor deze gesloten route loopt al een directe actieve vervolgroute (${triggerReasonLabel}).`
+      : 'Voor deze gesloten route loopt al een directe actieve vervolgroute binnen dezelfde afdeling.'
+  }
+
+  if (args.reason === 'ambiguous-same-scope-target') {
+    return 'Er zijn meerdere open doelroutes binnen deze afdeling. Kies in V1 eerst één eenduidige vervolgrichting.'
+  }
+
+  return 'Nog geen eenduidige open doelroute beschikbaar binnen deze afdeling.'
+}
+
+function applyOptimisticFollowUpSuccessor(args: {
+  items: ActionCenterPreviewItem[]
+  sourceRouteId: string
+  targetItemId: string
+  triggerReason: ActionCenterRouteFollowUpTriggerReason
+}) {
+  return args.items.map((item) => {
+    if (item.id !== args.targetItemId) {
+      return item
+    }
+
+    return finalizeActionCenterPreviewItem(
+      {
+        ...item,
+        coreSemantics: {
+          ...item.coreSemantics,
+          followUpSemantics: {
+            isDirectSuccessor: true,
+            lineageLabel: 'Vervolg op eerdere route',
+            triggerReason: args.triggerReason,
+            triggerReasonLabel: getActionCenterFollowUpTriggerReasonLabel(args.triggerReason),
+            sourceRouteId: args.sourceRouteId,
+          },
+        },
+      },
+      { recomputeCoreSemantics: true },
+    )
+  })
+}
+
 export function ActionCenterPreview({
   initialItems,
   initialSelectedItemId = null,
@@ -795,18 +604,12 @@ export function ActionCenterPreview({
   managerAssignmentEndpoint,
   canRespondToRequests = false,
   managerResponseEndpoint,
-  routeActionEndpoint,
-  actionReviewEndpoint,
-  canCloseRoutes = false,
-  routeCloseoutEndpoint,
-  routeReopenEndpoint,
+  routeFollowUpEndpoint,
   currentUserId = null,
-  managerOnly = false,
   workbenchHref,
   workbenchLabel = 'Open dossierbron',
   workspaceName,
   workspaceSubtitle = 'Admin-first opvolging',
-  overviewSummary,
   readOnly = false,
   itemHrefs = {},
   hideSidebar = false,
@@ -826,20 +629,6 @@ export function ActionCenterPreview({
   )
   const [managerResponsePending, setManagerResponsePending] = useState(false)
   const [managerResponseError, setManagerResponseError] = useState<string | null>(null)
-  const [routeActionPending, setRouteActionPending] = useState(false)
-  const [routeActionError, setRouteActionError] = useState<string | null>(null)
-  const [showRouteActionEditor, setShowRouteActionEditor] = useState(false)
-  const [showRouteCloseoutEditor, setShowRouteCloseoutEditor] = useState(false)
-  const [routeCloseoutForm, setRouteCloseoutForm] = useState<RouteCloseoutFormState>(() =>
-    buildRouteCloseoutDefaults(initialSelectedItem),
-  )
-  const [routeCloseoutPending, setRouteCloseoutPending] = useState(false)
-  const [routeCloseoutError, setRouteCloseoutError] = useState<string | null>(null)
-  const [routeReopenPending, setRouteReopenPending] = useState(false)
-  const [routeReopenError, setRouteReopenError] = useState<string | null>(null)
-  const [reviewPendingActionId, setReviewPendingActionId] = useState<string | null>(null)
-  const [reviewErrorState, setReviewErrorState] = useState<{ actionId: string; message: string } | null>(null)
-  const [expandedReviewActionId, setExpandedReviewActionId] = useState<string | null>(null)
   const [assignmentError, setAssignmentError] = useState<string | null>(null)
   const [assignmentPendingTeamId, setAssignmentPendingTeamId] = useState<string | null>(null)
   const deferredSearchQuery = useDeferredValue(searchQuery)
@@ -872,12 +661,11 @@ export function ActionCenterPreview({
       if (left.status !== right.status) {
         const rank: Record<ActionCenterPreviewStatus, number> = {
           'geblokkeerd': 0,
-          'reviewbaar': 1,
-          'open-verzoek': 2,
-          'te-bespreken': 3,
-          'in-uitvoering': 4,
-          'afgerond': 5,
-          'gestopt': 6,
+          'open-verzoek': 1,
+          'te-bespreken': 2,
+          'in-uitvoering': 3,
+          'afgerond': 4,
+          'gestopt': 5,
         }
         return rank[left.status] - rank[right.status]
       }
@@ -887,16 +675,8 @@ export function ActionCenterPreview({
 
   const selectedItem = filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? filteredItems[0] ?? items[0] ?? null
   useEffect(() => {
-      setManagerResponseForm(buildManagerResponseDefaults(selectedItem))
-      setManagerResponseError(null)
-      setRouteActionError(null)
-      setRouteCloseoutForm(buildRouteCloseoutDefaults(selectedItem))
-      setRouteCloseoutError(null)
-      setShowRouteCloseoutEditor(false)
-      setRouteReopenError(null)
-      setReviewErrorState(null)
-    setShowRouteActionEditor(false)
-    setExpandedReviewActionId(null)
+    setManagerResponseForm(buildManagerResponseDefaults(selectedItem))
+    setManagerResponseError(null)
   }, [selectedItem])
 
   const selectedItemHref = selectedItem ? (itemHrefs[selectedItem.id] ?? workbenchHref) : workbenchHref
@@ -910,10 +690,19 @@ export function ActionCenterPreview({
           })),
     [managerOptions, ownerOptions],
   )
+  const [followUpForm, setFollowUpForm] = useState<FollowUpRouteFormState>(() =>
+    getInitialFollowUpFormState({ item: initialSelectedItem, assignmentOptions }),
+  )
+  const [followUpPending, setFollowUpPending] = useState(false)
+  const [followUpError, setFollowUpError] = useState<string | null>(null)
   const managerLabelByValue = useMemo(
     () => new Map(assignmentOptions.map((option) => [option.value, option.label])),
     [assignmentOptions],
   )
+  useEffect(() => {
+    setFollowUpForm(getInitialFollowUpFormState({ item: selectedItem, assignmentOptions }))
+    setFollowUpError(null)
+  }, [assignmentOptions, selectedItem])
   const teamRows = buildTeamRows(items)
   const selectedTeam = teamRows.find((team) => team.id === selectedTeamId) ?? teamRows[0] ?? null
   const allSources = [...new Set(items.map((item) => item.sourceLabel))]
@@ -939,7 +728,7 @@ export function ActionCenterPreview({
     .filter((item) => item.reviewDate)
     .sort((left, right) => compareReviewDate(left.reviewDate, right.reviewDate))
     .slice(0, 3)
-  const focusItem = selectedItem ?? visibleDueItems[0] ?? visibleItems[0] ?? null
+  const focusItem = visibleDueItems[0] ?? visibleItems[0] ?? null
   const viewCopy = getViewCopy(activeView, activeView === 'overview' && selectedItem ? null : activeView === 'overview' ? null : selectedItem?.title ?? null)
   const allowLocalDraftEditing = !readOnly && !managerResponseEndpoint
   const canUseManagerResponseFlow =
@@ -948,60 +737,60 @@ export function ActionCenterPreview({
         managerResponseEndpoint &&
         selectedItem?.orgId &&
         supportsManagerResponseFlow(selectedItem) &&
+        selectedItem?.ownerId &&
         currentUserId &&
-        (selectedItem?.ownerId === currentUserId || managerOnly),
+        selectedItem.ownerId === currentUserId,
     )
-  const canUseRouteActionFlow =
-    Boolean(
-      canRespondToRequests &&
-        routeActionEndpoint &&
-        selectedItem?.orgId &&
-        supportsManagerResponseFlow(selectedItem) &&
-        currentUserId &&
-        (selectedItem?.ownerId === currentUserId || managerOnly),
-    )
-  const canUseActionReviewFlow = Boolean(canUseRouteActionFlow && actionReviewEndpoint)
-  const closing = selectedItem?.coreSemantics.closingSemantics ?? null
-  const routeCloseout = selectedItem?.coreSemantics.routeCloseout ?? null
-  const lineage = selectedItem?.coreSemantics.lineageSemantics ?? null
-  const canUseRouteCloseoutFlow =
-    Boolean(
-      canCloseRoutes &&
-        routeCloseoutEndpoint &&
-        selectedItem?.orgId &&
-        selectedItem.scopeType &&
-        !routeCloseout?.closeoutStatus,
-    )
-  const showReadyForCloseoutHint = Boolean(
-    routeCloseout?.readyForCloseout && routeCloseout.closeoutStatus === null,
-  )
-  const canUseRouteReopenFlow = Boolean(
-    canCloseRoutes &&
-      routeReopenEndpoint &&
+  const canRenderFollowUpRoute = Boolean(
+    routeFollowUpEndpoint &&
+      canAssignManagers &&
       selectedItem?.orgId &&
-      selectedItem.scopeType &&
-      routeCloseout?.closeoutStatus,
+      selectedItem.scopeType === 'department' &&
+      isClosedRouteStatus(selectedItem.status),
   )
+  const directActiveFollowUpSuccessor = useMemo(
+    () =>
+      selectedItem
+        ? findDirectActiveFollowUpSuccessor({
+            items,
+            sourceRouteId: selectedItem.coreSemantics.route.routeId,
+          })
+        : null,
+    [items, selectedItem],
+  )
+  const followUpTargetResolution = useMemo(
+    () =>
+      resolveSameScopeFollowUpTarget({
+        items,
+        sourceItem: selectedItem,
+      }),
+    [items, selectedItem],
+  )
+  const followUpTargetItem = followUpTargetResolution.targetItem
+  const followUpRouteBlockReason = !canRenderFollowUpRoute
+    ? null
+    : directActiveFollowUpSuccessor
+      ? 'already-has-direct-active-successor'
+      : followUpTargetResolution.reason
+  const followUpRouteBlockMessage = followUpRouteBlockReason
+    ? getFollowUpRouteBlockMessage({
+        reason: followUpRouteBlockReason,
+        directSuccessor: directActiveFollowUpSuccessor,
+      })
+    : null
+  const canShowFollowUpRouteAffordance = Boolean(canRenderFollowUpRoute && !followUpRouteBlockReason)
 
-  function updateItem(
-    itemId: string,
-    updater: (item: ActionCenterPreviewItem) => ActionCenterPreviewItem,
-    options: { recomputeCoreSemantics?: boolean } = {},
-  ) {
+  function updateItem(itemId: string, updater: (item: ActionCenterPreviewItem) => ActionCenterPreviewItem) {
     setItems((currentItems) =>
       currentItems.map((item) =>
-        item.id === itemId
-          ? finalizeActionCenterPreviewItem(updater(item), {
-              recomputeCoreSemantics: options.recomputeCoreSemantics ?? true,
-            })
-          : item,
+        item.id === itemId ? finalizeActionCenterPreviewItem(updater(item), { recomputeCoreSemantics: true }) : item,
       ),
     )
   }
 
+  const closing = selectedItem?.coreSemantics.closingSemantics ?? null
   const hasClosingPanel =
-      closing !== null && (closing.status !== 'lopend' || Boolean(closing.historicalSummary ?? closing.summary))
-  const routeActionCards = selectedItem?.coreSemantics.routeActionCards ?? []
+    closing !== null && (closing.status !== 'lopend' || Boolean(closing.historicalSummary ?? closing.summary))
 
   function handleCreateAction() {
     if (!createForm.title.trim() || !createForm.teamId) {
@@ -1176,218 +965,58 @@ export function ActionCenterPreview({
     }
   }
 
-  async function handleRouteActionSave(value: ActionCenterRouteActionEditorValue) {
-    if (!selectedItem || !selectedItem.orgId || !supportsManagerResponseFlow(selectedItem) || !routeActionEndpoint) {
+  async function handleFollowUpRouteStart() {
+    if (!selectedItem || !routeFollowUpEndpoint) return
+
+    const managerUserId = followUpForm.managerUserId.trim()
+    if (!managerUserId) {
+      setFollowUpError('Kies eerst een manager voor deze vervolgroute.')
       return
     }
 
-    setRouteActionPending(true)
-    setRouteActionError(null)
+    if (!followUpTargetItem) {
+      setFollowUpError('Nog geen doelroute beschikbaar voor deze afdeling.')
+      return
+    }
+
+    setFollowUpPending(true)
+    setFollowUpError(null)
 
     try {
-      const response = await fetch(routeActionEndpoint, {
+      const response = await fetch(routeFollowUpEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          campaign_id: selectedItem.coreSemantics.route.campaignId,
-          route_scope_type: selectedItem.scopeType,
-          route_scope_value: selectedItem.teamId,
-          manager_user_id: selectedItem.ownerId,
-          primary_action_theme_key: value.themeKey,
-          primary_action_text: value.actionText,
-          primary_action_expected_effect: value.expectedEffect,
-          primary_action_status: 'open',
-          review_scheduled_for: value.reviewScheduledFor,
+          source_campaign_id: selectedItem.coreSemantics.route.campaignId,
+          source_route_scope_value: selectedItem.teamId,
+          target_campaign_id: followUpTargetItem.coreSemantics.route.campaignId,
+          target_route_scope_value: followUpTargetItem.teamId,
+          trigger_reason: followUpForm.triggerReason,
+          manager_user_id: managerUserId,
         }),
       })
-      const result = (await response.json().catch(() => null)) as
-        | { action?: Record<string, unknown>; detail?: string }
-        | null
+      const result = (await response.json().catch(() => null)) as { detail?: string } | null
 
-      if (!response.ok || !result?.action) {
-        throw new Error(result?.detail ?? 'Actie opslaan mislukt.')
+      if (!response.ok) {
+        throw new Error(result?.detail ?? 'Vervolgroute kon niet worden gestart.')
       }
 
-      const savedAction = projectActionCenterRouteActionCard(
-        result.action as Partial<ActionCenterRouteActionWriteInput>,
-      )
-
       setItems((currentItems) =>
-        currentItems.map((item) => {
-          if (item.id !== selectedItem.id) {
-            return item
-          }
-
-          const nextCards = [
-            ...item.coreSemantics.routeActionCards,
-            {
-              actionId: savedAction.actionId,
-              themeKey: savedAction.themeKey,
-              actionText: savedAction.actionText,
-              reviewScheduledFor: savedAction.reviewScheduledFor,
-              expectedEffect: savedAction.expectedEffect,
-              status: savedAction.status,
-              latestReview: null,
-            },
-          ].sort((left, right) => left.reviewScheduledFor.localeCompare(right.reviewScheduledFor))
-
-          return applyRouteActionCardsToItem(item, nextCards)
+        applyOptimisticFollowUpSuccessor({
+          items: currentItems,
+          sourceRouteId: selectedItem.coreSemantics.route.routeId,
+          targetItemId: followUpTargetItem.id,
+          triggerReason: followUpForm.triggerReason,
         }),
       )
-      setShowRouteActionEditor(false)
+      setSelectedItemId(followUpTargetItem.id)
+      setActiveView('actions')
     } catch (error) {
-      setRouteActionError(error instanceof Error ? error.message : 'Actie opslaan mislukt.')
+      setFollowUpError(error instanceof Error ? error.message : 'Vervolgroute kon niet worden gestart.')
     } finally {
-      setRouteActionPending(false)
-    }
-  }
-
-  async function handleActionReviewSave(actionId: string, value: ActionCenterActionReviewEditorValue) {
-    if (!selectedItem || !actionReviewEndpoint) {
-      return
-    }
-
-    setReviewPendingActionId(actionId)
-    setReviewErrorState(null)
-
-    try {
-      const reviewedAt = new Date().toISOString()
-      const response = await fetch(actionReviewEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action_id: actionId,
-          reviewed_at: reviewedAt,
-          observation: value.observation,
-          action_outcome: value.actionOutcome,
-          follow_up_note: value.followUpNote,
-        }),
-      })
-      const result = (await response.json().catch(() => null)) as
-        | { review?: Record<string, unknown>; detail?: string }
-        | null
-
-      if (!response.ok || !result?.review) {
-        throw new Error(result?.detail ?? 'Review opslaan mislukt.')
-      }
-
-      const savedReview = projectActionCenterActionReview(
-        result.review as Partial<ActionCenterActionReviewWriteInput>,
-      )
-
-      setItems((currentItems) =>
-        currentItems.map((item) =>
-          item.id === selectedItem.id
-            ? applyRouteActionCardsToItem(
-                item,
-                mergeActionReviewsIntoRouteCards(item.coreSemantics.routeActionCards, [savedReview]),
-              )
-            : item,
-        ),
-      )
-      setExpandedReviewActionId(null)
-    } catch (error) {
-      setReviewErrorState({
-        actionId,
-        message: error instanceof Error ? error.message : 'Review opslaan mislukt.',
-      })
-    } finally {
-      setReviewPendingActionId(null)
-    }
-  }
-
-  async function handleRouteCloseoutSave() {
-    if (
-      !selectedItem ||
-      !selectedItem.orgId ||
-      !selectedItem.scopeType ||
-      !routeCloseoutEndpoint
-    ) {
-      return
-    }
-
-    setRouteCloseoutPending(true)
-    setRouteCloseoutError(null)
-
-    try {
-      const response = await fetch(routeCloseoutEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          campaign_id: selectedItem.coreSemantics.route.campaignId,
-          route_scope_type: selectedItem.scopeType,
-          route_scope_value: selectedItem.teamId,
-          closeout_status: routeCloseoutForm.closeoutStatus,
-          closeout_reason: routeCloseoutForm.closeoutReason,
-          closeout_note: routeCloseoutForm.closeoutNote.trim() || null,
-        }),
-      })
-      const result = (await response.json().catch(() => null)) as
-        | { closeout?: Record<string, unknown>; detail?: string }
-        | null
-
-      if (!response.ok || !result?.closeout) {
-        throw new Error(result?.detail ?? 'Route closeout opslaan mislukt.')
-      }
-
-      const savedCloseout = projectActionCenterRouteCloseout(result.closeout)
-      setItems((currentItems) =>
-        currentItems.map((item) =>
-          item.id === selectedItem.id ? applyRouteCloseoutToItem(item, savedCloseout) : item,
-        ),
-      )
-      setShowRouteCloseoutEditor(false)
-    } catch (error) {
-      setRouteCloseoutError(error instanceof Error ? error.message : 'Route closeout opslaan mislukt.')
-    } finally {
-      setRouteCloseoutPending(false)
-    }
-  }
-
-  async function handleRouteReopenSave() {
-    if (!selectedItem || !selectedItem.orgId || !selectedItem.scopeType || !routeReopenEndpoint) {
-      return
-    }
-
-    setRouteReopenPending(true)
-    setRouteReopenError(null)
-
-    try {
-      const response = await fetch(routeReopenEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          route_id: selectedItem.id,
-          campaign_id: selectedItem.coreSemantics.route.campaignId,
-          route_scope_type: selectedItem.scopeType,
-          route_scope_value: selectedItem.teamId,
-          reopen_reason: 'te-vroeg-afgesloten',
-        }),
-      })
-      const result = (await response.json().catch(() => null)) as
-        | { reopen?: Record<string, unknown>; detail?: string }
-        | null
-
-      if (!response.ok || !result?.reopen) {
-        throw new Error(result?.detail ?? 'Route heropenen mislukt.')
-      }
-
-      const savedReopen = projectActionCenterRouteReopen(result.reopen)
-      setItems((currentItems) =>
-        currentItems.map((item) => (item.id === selectedItem.id ? applyRouteReopenToItem(item, savedReopen) : item)),
-      )
-    } catch (error) {
-      setRouteReopenError(error instanceof Error ? error.message : 'Route heropenen mislukt.')
-    } finally {
-      setRouteReopenPending(false)
+      setFollowUpPending(false)
     }
   }
 
@@ -1644,14 +1273,6 @@ export function ActionCenterPreview({
                         <p className="mt-4 max-w-xl text-[1rem] leading-8 text-[#4f6175]">
                           Action Center bundelt live opvolging uit campagnes en dossiers tot een eerste overzicht van wat nu aandacht vraagt.
                         </p>
-                        {overviewSummary ? (
-                          <p className="mt-4 text-sm text-[#6d6458]">
-                            {`${overviewSummary.actionCount} actie${overviewSummary.actionCount === 1 ? '' : 's'} binnen ${overviewSummary.routeCount} route${overviewSummary.routeCount === 1 ? '' : 's'}`}
-                            {overviewSummary.nextReviewDate
-                              ? `, eerstvolgende review ${formatShortDate(overviewSummary.nextReviewDate)}.`
-                              : '.'}
-                          </p>
-                        ) : null}
                       </div>
                       <div className="grid gap-3 sm:grid-cols-3 xl:max-w-[34rem] xl:flex-1">
                         <OverviewStat
@@ -2122,130 +1743,6 @@ export function ActionCenterPreview({
                             </div>
                           </div>
 
-                          {routeActionCards.length > 0 ? (
-                            <div>
-                              <div className="flex items-center justify-between gap-3">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">
-                                  Acties in deze route
-                                </p>
-                                <p className="text-sm text-white/46">
-                                  {routeActionCards.length} {routeActionCards.length === 1 ? 'actie' : 'acties'}
-                                </p>
-                              </div>
-                              <div className="mt-3 space-y-3">
-                                {routeActionCards.map((action) => (
-                                  <div
-                                    key={action.actionId}
-                                    className="rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4"
-                                  >
-                                    <div className="flex flex-wrap items-start justify-between gap-3">
-                                      <div>
-                                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
-                                          {getRouteActionThemeLabel(action.themeKey)}
-                                        </p>
-                                        <p className="mt-2 text-base font-semibold text-white/92">
-                                          {action.actionText}
-                                        </p>
-                                        <p className="mt-2 text-sm text-white/58">
-                                          Review {formatLongDate(action.reviewScheduledFor)}
-                                        </p>
-                                      </div>
-                                      <span className="inline-flex items-center rounded-full border border-white/12 bg-white/[0.06] px-3 py-1.5 text-sm font-semibold text-white/76">
-                                        {getRouteActionStatusLabel(action.status)}
-                                      </span>
-                                    </div>
-
-                                    <div className="mt-4 grid gap-3 md:grid-cols-2">
-                                      <RouteFieldCard
-                                        label="Verwacht effect"
-                                        value={action.expectedEffect}
-                                      />
-                                      {action.latestReview ? (
-                                        <RouteFieldCard
-                                          label={`Laatste review (${getRouteActionOutcomeLabel(action.latestReview.actionOutcome)})`}
-                                          value={[
-                                            action.latestReview.observation,
-                                            action.latestReview.followUpNote,
-                                          ].filter(Boolean).join(' ')}
-                                        />
-                                      ) : (
-                                        <RouteFieldCard
-                                          label="Laatste review"
-                                          value="Nog geen review vastgelegd voor deze actie."
-                                        />
-                                      )}
-                                    </div>
-
-                                    {canUseActionReviewFlow && action.status !== 'afgerond' && action.status !== 'gestopt' ? (
-                                      <div className="mt-4">
-                                        {expandedReviewActionId === action.actionId ? (
-                                          <div className="space-y-3">
-                                            <ActionCenterActionReviewEditor
-                                              pending={reviewPendingActionId === action.actionId}
-                                              error={reviewErrorState?.actionId === action.actionId ? reviewErrorState.message : null}
-                                              onSave={(value) => handleActionReviewSave(action.actionId, value)}
-                                            />
-                                            <button
-                                              type="button"
-                                              className="inline-flex min-h-11 items-center rounded-full border border-white/12 bg-white/[0.05] px-4.5 py-2.5 text-sm font-semibold text-white/82 transition hover:bg-white/[0.09]"
-                                              onClick={() => {
-                                                setExpandedReviewActionId(null)
-                                                setReviewErrorState(null)
-                                              }}
-                                            >
-                                              Sluiten
-                                            </button>
-                                          </div>
-                                        ) : (
-                                          <button
-                                            type="button"
-                                            className="inline-flex min-h-11 items-center rounded-full border border-white/12 bg-white/[0.05] px-4.5 py-2.5 text-sm font-semibold text-white/82 transition hover:bg-white/[0.09]"
-                                            onClick={() => {
-                                              setExpandedReviewActionId(action.actionId)
-                                              setReviewErrorState(null)
-                                            }}
-                                          >
-                                            Review toevoegen
-                                          </button>
-                                        )}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ) : null}
-
-                          {canUseRouteActionFlow ? (
-                            showRouteActionEditor ? (
-                              <div className="space-y-3">
-                                <ActionCenterRouteActionEditor
-                                  pending={routeActionPending}
-                                  error={routeActionError}
-                                  onSave={handleRouteActionSave}
-                                />
-                                <button
-                                  type="button"
-                                  className="inline-flex min-h-11 items-center rounded-full border border-white/12 bg-white/[0.05] px-4.5 py-2.5 text-sm font-semibold text-white/82 transition hover:bg-white/[0.09]"
-                                  onClick={() => {
-                                    setShowRouteActionEditor(false)
-                                    setRouteActionError(null)
-                                  }}
-                                >
-                                  Sluiten
-                                </button>
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                className="inline-flex min-h-11 items-center rounded-full border border-white/12 bg-white/[0.05] px-4.5 py-2.5 text-sm font-semibold text-white/82 transition hover:bg-white/[0.09]"
-                                onClick={() => setShowRouteActionEditor(true)}
-                              >
-                                Actie toevoegen
-                              </button>
-                            )
-                          ) : null}
-
                           <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Resultaatlus</p>
                             <div className="mt-3 grid gap-3 md:grid-cols-3">
@@ -2297,171 +1794,6 @@ export function ActionCenterPreview({
                           </div>
                         </div>
 
-                        {lineage?.label ? (
-                          <div className="mt-5 rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">
-                              {lineage.label}
-                            </p>
-                            {lineage.summary ? (
-                              <p className="mt-2 text-sm leading-7 text-white/72">{lineage.summary}</p>
-                            ) : null}
-                          </div>
-                        ) : null}
-
-                        {routeCloseout?.closeoutStatus ? (
-                          <div className="mt-5 rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Route afgesloten</p>
-                            <p className="mt-2 text-sm font-semibold text-white/86">
-                              {getRouteCloseoutStatusLabel(routeCloseout.closeoutStatus)}
-                            </p>
-                            <p className="mt-2 text-sm leading-7 text-white/72">
-                              {getRouteCloseoutReasonLabel(routeCloseout.closeoutReason ?? '')}
-                            </p>
-                            {routeCloseout.closeoutNote ? (
-                              <p className="mt-2 text-sm leading-7 text-white/72">{routeCloseout.closeoutNote}</p>
-                            ) : null}
-                            <p className="mt-3 text-xs uppercase tracking-[0.16em] text-white/40">
-                              {formatLongDate(routeCloseout.closedAt)} · {routeCloseout.closedByRole}
-                            </p>
-                            {canUseRouteReopenFlow ? (
-                              <div className="mt-4 flex flex-wrap gap-3">
-                                <button
-                                  type="button"
-                                  className="inline-flex min-h-11 items-center rounded-full bg-white/10 px-4.5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
-                                  disabled={routeReopenPending}
-                                  onClick={() => void handleRouteReopenSave()}
-                                >
-                                  {routeReopenPending ? 'Heropenen...' : 'Heropen traject'}
-                                </button>
-                              </div>
-                            ) : null}
-                            {routeReopenError ? (
-                              <p className="mt-3 text-sm leading-7 text-[#ffcac2]">{routeReopenError}</p>
-                            ) : null}
-                          </div>
-                        ) : null}
-
-                        {showReadyForCloseoutHint ? (
-                          <div className="mt-5 rounded-[18px] border border-[#ffd7a8] bg-[#fff3e3] px-4 py-4 text-[#132033]">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9a6a2d]">Klaar voor closeout</p>
-                            <p className="mt-2 text-sm leading-7 text-[#6b4b1f]">
-                              Deze route voelt inhoudelijk afgerond: de onderliggende acties zijn gesloten, maar HR kan nog expliciet vastleggen of dit traject voor nu is afgerond of bewust wordt gestopt.
-                            </p>
-                            {canUseRouteCloseoutFlow ? (
-                              <div className="mt-4 flex flex-wrap gap-3">
-                                <button
-                                  type="button"
-                                  className="inline-flex min-h-11 items-center rounded-full bg-[#132033] px-4.5 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.04]"
-                                  onClick={() => setShowRouteCloseoutEditor((current) => !current)}
-                                >
-                                  {showRouteCloseoutEditor ? 'Closeout verbergen' : 'Route afsluiten'}
-                                </button>
-                              </div>
-                            ) : null}
-                          </div>
-                        ) : null}
-
-                        {!showReadyForCloseoutHint && canUseRouteCloseoutFlow ? (
-                          <div className="mt-5 rounded-[18px] border border-[#e5d8c8] bg-white/95 px-4 py-4 text-[#132033]">
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Bestuurlijke afsluiting</p>
-                            <p className="mt-2 text-sm leading-7 text-[#4f6175]">
-                              HR kan deze route expliciet afsluiten zodra het traject bestuurlijk klaar voelt, ook als de onderliggende actielezing nog niet als aparte closeout-attentie is gemarkeerd.
-                            </p>
-                            <div className="mt-4 flex flex-wrap gap-3">
-                              <button
-                                type="button"
-                                className="inline-flex min-h-11 items-center rounded-full bg-[#132033] px-4.5 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.04]"
-                                onClick={() => setShowRouteCloseoutEditor((current) => !current)}
-                              >
-                                {showRouteCloseoutEditor ? 'Closeout verbergen' : 'Route afsluiten'}
-                              </button>
-                            </div>
-                          </div>
-                        ) : null}
-
-                        {showRouteCloseoutEditor && canUseRouteCloseoutFlow ? (
-                          <div className="mt-5 space-y-4 rounded-[18px] border border-[#e5d8c8] bg-white px-4 py-4 text-[#132033]">
-                            <FormField label="Afsluitstatus">
-                              <select
-                                value={routeCloseoutForm.closeoutStatus}
-                                onChange={(event) =>
-                                  setRouteCloseoutForm((current) => ({
-                                    ...current,
-                                    closeoutStatus: event.target.value as ActionCenterRouteCloseoutStatus,
-                                  }))
-                                }
-                                className="w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
-                              >
-                                <option value="afgerond">Afgerond voor nu</option>
-                                <option value="gestopt">Bewust gestopt</option>
-                              </select>
-                            </FormField>
-
-                            <FormField label="Afsluitreden">
-                              <select
-                                value={routeCloseoutForm.closeoutReason}
-                                onChange={(event) =>
-                                  setRouteCloseoutForm((current) => ({
-                                    ...current,
-                                    closeoutReason: event.target.value as ActionCenterRouteCloseoutReason,
-                                  }))
-                                }
-                                className="w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
-                              >
-                                <option value="voldoende-opgepakt">Voldoende opgepakt</option>
-                                <option value="effect-voldoende-zichtbaar">Effect voldoende zichtbaar</option>
-                                <option value="geen-verdere-opvolging-nodig">Geen verdere opvolging nodig</option>
-                                <option value="geen-lokale-vervolgstap-nodig">Geen lokale vervolgstap nodig</option>
-                                <option value="bewust-niet-voortzetten">Bewust niet voortzetten</option>
-                                <option value="elders-opgepakt">Elders opgepakt</option>
-                              </select>
-                            </FormField>
-
-                            <FormField label="Toelichting">
-                              <textarea
-                                value={routeCloseoutForm.closeoutNote}
-                                onChange={(event) =>
-                                  setRouteCloseoutForm((current) => ({
-                                    ...current,
-                                    closeoutNote: event.target.value,
-                                  }))
-                                }
-                                placeholder="Korte bestuurlijke toelichting op het sluiten van deze route."
-                                className="min-h-[100px] w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
-                              />
-                            </FormField>
-
-                            {routeCloseoutError ? (
-                              <div className="rounded-[18px] border border-[#f3c0bc] bg-[#fff1ef] px-4 py-4 text-sm leading-7 text-[#9c3f36]">
-                                {routeCloseoutError}
-                              </div>
-                            ) : null}
-
-                            <div className="flex flex-wrap gap-3">
-                              <button
-                                type="button"
-                                className="inline-flex min-h-11 items-center rounded-full bg-[#132033] px-4.5 py-2.5 text-sm font-semibold text-white transition hover:brightness-[1.04] disabled:cursor-not-allowed disabled:opacity-60"
-                                disabled={routeCloseoutPending}
-                                onClick={() => void handleRouteCloseoutSave()}
-                              >
-                                {routeCloseoutPending ? 'Opslaan...' : 'Closeout opslaan'}
-                              </button>
-                              <button
-                                type="button"
-                                className="inline-flex min-h-11 items-center rounded-full border border-[#ddd3c7] bg-[#fbf8f4] px-4.5 py-2.5 text-sm font-semibold text-[#5f564a] transition hover:border-[#132033] hover:text-[#132033]"
-                                disabled={routeCloseoutPending}
-                                onClick={() => {
-                                  setShowRouteCloseoutEditor(false)
-                                  setRouteCloseoutError(null)
-                                  setRouteCloseoutForm(buildRouteCloseoutDefaults(selectedItem))
-                                }}
-                              >
-                                Annuleren
-                              </button>
-                            </div>
-                          </div>
-                        ) : null}
-
                         {hasClosingPanel && closing ? (
                           <div className="mt-5 rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-4">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Afronding</p>
@@ -2500,6 +1832,93 @@ export function ActionCenterPreview({
                           <LabelValue label="Review-eigenaar" value={getReviewOwnerDisplayName(selectedItem.reviewOwnerName)} />
                         </dl>
                       </div>
+
+                      {canShowFollowUpRouteAffordance ? (
+                        <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+                            Vervolgroute
+                          </p>
+                          <h3 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">
+                            Start vervolgroute
+                          </h3>
+                          <p className="mt-3 text-sm leading-7 text-[#4f6175]">
+                            Open vanuit deze gesloten route een nieuwe HR-handoff binnen dezelfde afdeling.
+                          </p>
+
+                          <div className="mt-5 space-y-5">
+                            <FormField label="Kies manager">
+                              <select
+                                name="follow-up-manager"
+                                value={followUpForm.managerUserId}
+                                onChange={(event) =>
+                                  setFollowUpForm((current) => ({
+                                    ...current,
+                                    managerUserId: event.target.value,
+                                  }))
+                                }
+                                disabled={followUpPending}
+                                className="w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm text-[#132033] outline-none transition focus:border-[#ff9b4a]"
+                              >
+                                <option value="">Kies manager</option>
+                                {assignmentOptions.map((option) => (
+                                  <option key={`follow-up-${option.value}`} value={option.value}>
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </FormField>
+
+                            <FormField label="Kies aanleiding">
+                              <div className="space-y-3">
+                                {FOLLOW_UP_TRIGGER_REASON_OPTIONS.map((option) => (
+                                  <label
+                                    key={option}
+                                    className="flex items-start gap-3 rounded-2xl border border-[#e4d9cb] bg-[#fcfaf7] px-4 py-3 text-sm text-[#132033]"
+                                  >
+                                    <input
+                                      type="radio"
+                                      name="follow-up-trigger-reason"
+                                      value={option}
+                                      checked={followUpForm.triggerReason === option}
+                                      onChange={() =>
+                                        setFollowUpForm((current) => ({
+                                          ...current,
+                                          triggerReason: option,
+                                        }))
+                                      }
+                                      disabled={followUpPending}
+                                      className="mt-1 h-4 w-4 border-[#c9bcad] text-[#ff9b4a] focus:ring-[#ff9b4a]"
+                                    />
+                                    <span>{getActionCenterFollowUpTriggerReasonLabel(option)}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            </FormField>
+
+                            {followUpError ? (
+                              <p className="rounded-2xl border border-[#f0d9d4] bg-[#fff1ef] px-4 py-3 text-sm text-[#b24a43]">
+                                {followUpError}
+                              </p>
+                            ) : null}
+
+                            <button
+                              type="button"
+                              className="inline-flex min-h-11 items-center rounded-full bg-[#ff9b4a] px-4.5 py-2.5 text-sm font-semibold text-[#132033] transition hover:brightness-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                              disabled={followUpPending}
+                              onClick={() => void handleFollowUpRouteStart()}
+                            >
+                              {followUpPending ? 'Vervolgroute starten...' : 'Start vervolgroute'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : canRenderFollowUpRoute && followUpRouteBlockMessage ? (
+                        <div className="rounded-[24px] border border-[#e4d9cb] bg-[#fcfaf7] px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+                            Vervolgroute
+                          </p>
+                          <p className="mt-3 text-sm leading-7 text-[#4f6175]">{followUpRouteBlockMessage}</p>
+                        </div>
+                      ) : null}
 
                       {supportsManagerResponseFlow(selectedItem) ? (
                         <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">

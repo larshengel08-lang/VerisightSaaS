@@ -1,102 +1,101 @@
 import { describe, expect, it } from 'vitest'
 import {
+  getActionCenterFollowUpTriggerReasonLabel,
   projectActionCenterRouteFollowUpRelation,
-  projectActionCenterRouteLifecycle,
-  projectActionCenterRouteReopen,
 } from './action-center-route-reopen'
 
-describe('action center route reopen truth', () => {
-  it('accepts a dedicated reopen event record', () => {
-    const reopen = projectActionCenterRouteReopen({
-      route_id: 'route-1',
-      reopened_at: '2026-05-01T09:00:00.000Z',
-      reopened_by_role: 'hr',
-      reopen_reason: 'te-vroeg-afgesloten',
-    })
-
-    expect(reopen.routeId).toBe('route-1')
-    expect(reopen.reopenReason).toBe('te-vroeg-afgesloten')
+describe('action center route reopen follow-up relation contract', () => {
+  it('throws when trigger_reason is missing on a follow-up relation', () => {
+    expect(() => {
+      projectActionCenterRouteFollowUpRelation({
+        route_relation_type: 'follow-up-from',
+        source_route_id: 'campaign-exit-closed::org-1::department::operations',
+        target_route_id: 'campaign-pulse-open::org-1::department::operations',
+        recorded_at: '2026-04-24T10:00:00.000Z',
+        recorded_by_role: 'hr',
+      })
+    }).toThrow(/trigger_reason/i)
   })
 
-  it('keeps follow-up as a separate relation truth', () => {
+  it('accepts a canonical trigger_reason on a follow-up relation', () => {
     const relation = projectActionCenterRouteFollowUpRelation({
       route_relation_type: 'follow-up-from',
-      source_route_id: 'route-1',
-      target_route_id: 'route-2',
-      recorded_at: '2026-05-01T10:00:00.000Z',
+      source_route_id: 'campaign-exit-closed::org-1::department::operations',
+      target_route_id: 'campaign-pulse-open::org-1::department::operations',
+      trigger_reason: 'nieuw-campaign-signaal',
+      recorded_at: '2026-04-24T10:00:00.000Z',
       recorded_by_role: 'hr',
     })
 
-    expect(relation.routeRelationType).toBe('follow-up-from')
-    expect(relation.sourceRouteId).toBe('route-1')
-    expect(relation.targetRouteId).toBe('route-2')
+    expect(relation.triggerReason).toBe('nieuw-campaign-signaal')
   })
 
-  it('does not allow reopen to masquerade as relation truth', () => {
+  it('accepts another canonical trigger_reason on a follow-up relation', () => {
+    const relation = projectActionCenterRouteFollowUpRelation({
+      route_relation_type: 'follow-up-from',
+      source_route_id: 'campaign-exit-closed::org-1::department::operations',
+      target_route_id: 'campaign-pulse-open::org-1::department::operations',
+      trigger_reason: 'nieuw-segment-signaal',
+      recorded_at: '2026-04-24T10:00:00.000Z',
+      recorded_by_role: 'hr',
+    })
+
+    expect(relation.triggerReason).toBe('nieuw-segment-signaal')
+  })
+
+  it('rejects an invalid trigger_reason on a follow-up relation', () => {
     expect(() =>
       projectActionCenterRouteFollowUpRelation({
-        route_relation_type: 'reopened-from',
-        source_route_id: 'route-1',
-        target_route_id: 'route-1',
-        recorded_at: '2026-05-01T10:00:00.000Z',
+        route_relation_type: 'follow-up-from',
+        source_route_id: 'campaign-exit-closed::org-1::department::operations',
+        target_route_id: 'campaign-pulse-open::org-1::department::operations',
+        trigger_reason: 'onbekend-signaal',
+        recorded_at: '2026-04-24T10:00:00.000Z',
         recorded_by_role: 'hr',
       }),
-    ).toThrow(/route_relation_type/i)
+    ).toThrow(/trigger_reason/i)
   })
 
-  it('derives deterministic precedence from latest closeout and reopen ordering', () => {
-    const closed = projectActionCenterRouteLifecycle({
-      routeCloseout: {
-        routeId: 'route-1',
-        closeoutStatus: 'afgerond',
-        closeoutReason: 'voldoende-opgepakt',
-        closeoutNote: null,
-        closedAt: '2026-05-10T09:00:00.000Z',
-        closedByRole: 'hr',
-      },
-      routeReopens: [],
-    })
-    const reopened = projectActionCenterRouteLifecycle({
-      routeCloseout: {
-        routeId: 'route-1',
-        closeoutStatus: 'afgerond',
-        closeoutReason: 'voldoende-opgepakt',
-        closeoutNote: null,
-        closedAt: '2026-05-10T09:00:00.000Z',
-        closedByRole: 'hr',
-      },
-      routeReopens: [
-        {
-          routeId: 'route-1',
-          reopenedAt: '2026-05-11T09:00:00.000Z',
-          reopenedByRole: 'hr',
-          reopenReason: 'te-vroeg-afgesloten',
-        },
-      ],
-    })
-    const closedAgain = projectActionCenterRouteLifecycle({
-      routeCloseout: {
-        routeId: 'route-1',
-        closeoutStatus: 'gestopt',
-        closeoutReason: 'bewust-niet-voortzetten',
-        closeoutNote: null,
-        closedAt: '2026-05-12T09:00:00.000Z',
-        closedByRole: 'hr',
-      },
-      routeReopens: [
-        {
-          routeId: 'route-1',
-          reopenedAt: '2026-05-11T09:00:00.000Z',
-          reopenedByRole: 'hr',
-          reopenReason: 'te-vroeg-afgesloten',
-        },
-      ],
+  it('rejects an invalid recorded_at timestamp on a follow-up relation', () => {
+    expect(() =>
+      projectActionCenterRouteFollowUpRelation({
+        route_relation_type: 'follow-up-from',
+        source_route_id: 'campaign-exit-closed::org-1::department::operations',
+        target_route_id: 'campaign-pulse-open::org-1::department::operations',
+        trigger_reason: 'nieuw-campaign-signaal',
+        recorded_at: 'geen-datum',
+        recorded_by_role: 'hr',
+      }),
+    ).toThrow(/recorded_at is invalid/i)
+  })
+
+  it('normalizes trimmed whitespace across mixed snake_case and camelCase input', () => {
+    const relation = projectActionCenterRouteFollowUpRelation({
+      route_relation_type: ' follow-up-from ',
+      sourceRouteId: ' campaign-exit-closed::org-1::department::operations ',
+      target_route_id: ' campaign-pulse-open::org-1::department::operations ',
+      triggerReason: ' nieuw-campaign-signaal ',
+      recorded_at: ' 2026-04-24T10:00:00.000Z ',
+      recordedByRole: ' hr ',
     })
 
-    expect(closed.activeCloseout?.closeoutStatus).toBe('afgerond')
-    expect(reopened.activeCloseout).toBeNull()
-    expect(reopened.isCurrentlyReopened).toBe(true)
-    expect(closedAgain.activeCloseout?.closeoutStatus).toBe('gestopt')
-    expect(closedAgain.isCurrentlyReopened).toBe(false)
+    expect(relation).toEqual({
+      id: null,
+      routeRelationType: 'follow-up-from',
+      sourceRouteId: 'campaign-exit-closed::org-1::department::operations',
+      targetRouteId: 'campaign-pulse-open::org-1::department::operations',
+      triggerReason: 'nieuw-campaign-signaal',
+      recordedAt: '2026-04-24T10:00:00.000Z',
+      recordedByRole: 'hr',
+      endedAt: null,
+    })
+  })
+
+  it('returns the expected trigger reason labels', () => {
+    expect(getActionCenterFollowUpTriggerReasonLabel('nieuw-campaign-signaal')).toBe('Nieuw campaign-signaal')
+    expect(getActionCenterFollowUpTriggerReasonLabel('nieuw-segment-signaal')).toBe('Nieuw segmentsignaal')
+    expect(getActionCenterFollowUpTriggerReasonLabel('hernieuwde-hr-beoordeling')).toBe(
+      'Hernieuwde HR-beoordeling',
+    )
   })
 })

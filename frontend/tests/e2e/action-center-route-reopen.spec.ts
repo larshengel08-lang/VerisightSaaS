@@ -1,30 +1,33 @@
 import { expect, test } from '@playwright/test'
-import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
-type RouteReopenPilotArtifact = {
+type ActionCenterPilotArtifact = {
   hrOwner: { email: string; password: string }
-  closeoutRouteContext: { focusItemId: string }
-  followUpRouteContext: { targetFocusItemId: string }
+  followUp?: {
+    sourceCampaignId: string
+    targetCampaignId: string
+    sourceRouteTitle: string
+    scopeLabel: string
+    sourceActionCenterFocusUrl: string
+    targetActionCenterFocusUrl: string
+    triggerReason: string
+    triggerReasonLabel: string
+    manager: {
+      email: string
+      password: string
+      userId: string
+      displayName: string
+      scopeLabel: string
+      scopeValue: string
+    }
+  }
 }
 
 const artifactPath = path.join(process.cwd(), 'tests', 'e2e', '.action-center-pilot.json')
-
-function readPilotArtifact() {
-  if (!existsSync(artifactPath)) {
-    throw new Error('Seeded pilot artifact ontbreekt. Draai eerst scripts/seed-action-center-manager-pilot.mjs.')
-  }
-
-  return JSON.parse(readFileSync(artifactPath, 'utf8')) as RouteReopenPilotArtifact
-}
-
-function reseedPilot() {
-  execFileSync('node', ['./scripts/seed-action-center-manager-pilot.mjs'], {
-    cwd: process.cwd(),
-    stdio: 'inherit',
-  })
-}
+const artifact = existsSync(artifactPath)
+  ? (JSON.parse(readFileSync(artifactPath, 'utf8')) as ActionCenterPilotArtifact)
+  : null
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -40,47 +43,37 @@ async function login(page: import('@playwright/test').Page, email: string, passw
   ])
 }
 
-async function openFocusedRoute(page: import('@playwright/test').Page, focusItemId: string) {
-  await page.goto(`/action-center?focus=${encodeURIComponent(focusItemId)}`)
-  await expect(page).toHaveURL(new RegExp(`focus=${escapeRegExp(encodeURIComponent(focusItemId))}$`))
+test.describe('action center route reopen flow', () => {
+  test.skip(!artifact, 'Seeded pilot artifact ontbreekt. Draai eerst scripts/seed-action-center-manager-pilot.mjs.')
 
-  const openFocusButton = page.getByRole('button', { name: 'Open focusactie' })
-  if (await openFocusButton.isVisible().catch(() => false)) {
-    await openFocusButton.click()
-  }
-}
+  const pilot = artifact as ActionCenterPilotArtifact
 
-test.describe('action center route reopen', () => {
-  let pilot: RouteReopenPilotArtifact
+  test('hr starts a same-scope follow-up route and the source route stays historical', async ({ page }) => {
+    if (!pilot.followUp) {
+      throw new Error('Seed artifact mist followUp-context voor Task 7.')
+    }
 
-  test.beforeAll(() => {
-    reseedPilot()
-    pilot = readPilotArtifact()
-  })
-
-  test('hr can reopen a closed route and see the reopened lineage persist', async ({ page }) => {
     await login(page, pilot.hrOwner.email, pilot.hrOwner.password)
-    await page.waitForURL(/\/dashboard$/)
+    await page.goto(pilot.followUp.sourceActionCenterFocusUrl)
+    await expect(page).toHaveURL(new RegExp(`${escapeRegExp(pilot.followUp.sourceActionCenterFocusUrl)}$`))
+    await page.getByRole('button', { name: /^Acties/ }).click()
 
-    await openFocusedRoute(page, pilot.closeoutRouteContext.focusItemId)
-    await expect(page.getByText('Route afgesloten', { exact: true })).toBeVisible()
-    await page.getByRole('button', { name: 'Heropen traject', exact: true }).click()
+    await expect(page.getByText('Action Center / Acties')).toBeVisible()
+    await expect(page.getByText('Afgerond voor nu', { exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: pilot.followUp.sourceRouteTitle })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Start vervolgroute' })).toBeVisible()
+    await expect(page.getByText('Open vanuit deze gesloten route een nieuwe HR-handoff binnen dezelfde afdeling.')).toBeVisible()
 
-    await expect(page.getByText('Heropend traject', { exact: true })).toBeVisible()
+    await page.getByLabel('Kies manager').selectOption({ label: pilot.followUp.manager.displayName })
+    await page.getByRole('radio', { name: pilot.followUp.triggerReasonLabel, exact: true }).check()
+    await page.getByRole('button', { name: 'Start vervolgroute' }).click()
 
-    await page.goto(`/action-center?focus=${encodeURIComponent(pilot.closeoutRouteContext.focusItemId)}`)
-    await expect(page).toHaveURL(
-      new RegExp(`focus=${escapeRegExp(encodeURIComponent(pilot.closeoutRouteContext.focusItemId))}$`),
-    )
-    await page.getByRole('button', { name: 'Open focusactie', exact: true }).click()
-    await expect(page.getByText('Heropend traject', { exact: true })).toBeVisible()
-  })
+    await expect(page.getByRole('heading', { name: 'Eerste lokale follow-through' })).toBeVisible()
+    await expect(page.getByText(pilot.followUp.scopeLabel, { exact: true }).first()).toBeVisible()
 
-  test('active follow-up route shows compact lineage back to the earlier route', async ({ page }) => {
-    await login(page, pilot.hrOwner.email, pilot.hrOwner.password)
-    await page.waitForURL(/\/dashboard$/)
-
-    await openFocusedRoute(page, pilot.followUpRouteContext.targetFocusItemId)
-    await expect(page.getByText('Vervolg op eerdere route', { exact: true })).toBeVisible()
+    await expect(
+      page.getByText('Voor deze doelroute bestaat al een manager response carrier; overschrijven is in V1 niet toegestaan.'),
+    ).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Eerste lokale follow-through' })).toBeVisible()
   })
 })

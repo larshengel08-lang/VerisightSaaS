@@ -400,6 +400,7 @@ export function finalizeActionCenterPreviewItem(
       latestVisibleUpdateNote,
       route: existingRoute,
       managerResponse: item.managerResponse ?? null,
+      followUpSemantics: item.coreSemantics?.followUpSemantics ?? null,
     })
 
   const reviewReason = coreSemantics.reviewSemantics.reviewReason

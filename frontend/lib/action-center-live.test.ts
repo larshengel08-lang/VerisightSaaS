@@ -3,10 +3,9 @@ import {
   buildActionCenterTelemetryEvents,
   buildLiveActionCenterItems,
   finalizeActionCenterPreviewItem,
-  getLiveActionCenterSummary,
   isLiveActionCenterScanType,
 } from './action-center-live'
-import { projectActionCenterRoute } from './action-center-route-contract'
+import { buildActionCenterRouteId, projectActionCenterRoute } from './action-center-route-contract'
 import type { Campaign, CampaignStats } from '@/lib/types'
 import type { CampaignDeliveryRecord } from '@/lib/ops-delivery'
 import type {
@@ -555,6 +554,120 @@ describe('live action center builder', () => {
     )
   })
 
+  it('preserves projected follow-up lineage semantics when preview core semantics recomputes', () => {
+    const seeded = finalizeActionCenterPreviewItem({
+      id: 'local-follow-up',
+      code: 'ACT-2010',
+      title: 'Bestaande vervolgroute',
+      summary: 'Lijstsamenvatting voor de vervolgroute.',
+      reason: 'Afgeleide reviewcopy uit de vorige render.',
+      sourceLabel: 'ExitScan',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerId: 'manager-1',
+      ownerName: 'Manager Operations',
+      ownerRole: 'Manager - Operations',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: 'Manager Operations',
+      priority: 'hoog',
+      status: 'te-bespreken',
+      reviewDate: '2026-05-12',
+      expectedEffect: 'Afgeleid verwacht effect.',
+      reviewReason: 'Afgeleide reviewreden.',
+      reviewOutcome: 'geen-uitkomst',
+      reviewDateLabel: '12 mei',
+      reviewRhythm: 'Tweewekelijks',
+      signalLabel: 'ExitScan - Operations',
+      signalBody: 'Zichtbaar signaal voor de kaart.',
+      nextStep: 'Afgeleide eerste stap uit de vorige render.',
+      peopleCount: 38,
+      updates: [],
+      coreSemantics: {
+        route: {
+          routeId: 'local-follow-up',
+          campaignId: 'local-follow-up',
+          entryStage: 'active',
+          routeOpenedAt: '2026-05-01T09:00:00.000Z',
+          ownerAssignedAt: '2026-05-01T09:00:00.000Z',
+          routeStatus: 'te-bespreken',
+          reviewOutcome: 'geen-uitkomst',
+          reviewCompletedAt: null,
+          outcomeRecordedAt: null,
+          outcomeSummary: null,
+          intervention: null,
+          owner: 'Manager Operations',
+          expectedEffect: null,
+          reviewScheduledFor: '2026-05-12',
+          reviewReason: 'Canonieke previewreviewreden.',
+          managerResponseType: 'schedule',
+          managerResponseNote: 'Nieuwe vervolgroute geopend door HR.',
+          primaryActionThemeKey: null,
+          followThroughMode: 'bounded_response',
+          blockedBy: null,
+        },
+        reviewSemantics: {
+          reviewReason: 'Canonieke previewreviewreden.',
+          reviewQuestion: 'Welke vervolgstap vraagt deze route nu als eerste review?',
+          reviewOutcomeRaw: 'geen-uitkomst',
+          reviewOutcomeVisible: 'geen-uitkomst',
+        },
+        actionProgress: {
+          currentStep: null,
+          nextStep: null,
+          expectedEffect: null,
+        },
+        actionFrame: {
+          whyNow: 'Canonieke previewreviewreden.',
+          firstStep: 'Nog te bepalen in review',
+          owner: 'Manager Operations',
+          expectedEffect: 'Nog te bepalen in review',
+        },
+        resultLoop: {
+          whatWasTried: null,
+          whatWeObserved: 'Zichtbaar signaal voor de kaart.',
+          whatWasDecided: null,
+        },
+        resultProgression: [],
+        decisionHistory: [],
+        followUpSemantics: {
+          isDirectSuccessor: true,
+          lineageLabel: 'Vervolg op eerdere route',
+          triggerReason: 'nieuw-segment-signaal',
+          triggerReasonLabel: 'Nieuw segmentsignaal',
+          sourceRouteId: 'campaign-source::operations',
+        },
+        closingSemantics: {
+          status: 'lopend',
+          summary: null,
+          historicalSummary: null,
+        },
+      },
+    })
+
+    const recomputed = finalizeActionCenterPreviewItem(
+      {
+        ...seeded,
+        updates: [
+          {
+            id: 'update-follow-up-1',
+            author: 'Admin',
+            dateLabel: '1 mei',
+            note: 'Update: vervolgroute is opnieuw ingepland.',
+          },
+        ],
+      },
+      { recomputeCoreSemantics: true },
+    )
+
+    expect(recomputed.coreSemantics.followUpSemantics).toMatchObject({
+      isDirectSuccessor: true,
+      lineageLabel: 'Vervolg op eerdere route',
+      triggerReason: 'nieuw-segment-signaal',
+      triggerReasonLabel: 'Nieuw segmentsignaal',
+      sourceRouteId: 'campaign-source::operations',
+    })
+  })
+
   it('does not promote management_action_outcome into the latest visible update fallback for live items', () => {
     const items = buildLiveActionCenterItems([
       {
@@ -920,175 +1033,160 @@ describe('live action center builder', () => {
     expect(item?.coreSemantics.decisionHistory[0]?.decisionEntryId).toBe('authored-decision-1')
   })
 
-  it('surfaces a route-facing summary with multiple actions and the next review date', () => {
-    const summary = getLiveActionCenterSummary([
-      {
-        id: 'campaign-exit::operations',
-        sourceLabel: 'ExitScan',
-        ownerSubtitle: 'Operations',
-        status: 'in-uitvoering',
-        reviewDate: '2026-05-19',
-        coreSemantics: {
-          routeActionCards: [
-            {
-              actionId: 'action-1',
-              themeKey: 'leadership',
-              actionText: 'Plan twee teamgesprekken.',
-              reviewScheduledFor: '2026-05-19',
-              expectedEffect: 'Maak zichtbaar of leiderschap het primaire knelpunt is.',
-              status: 'open',
-              latestReview: null,
-            },
-            {
-              actionId: 'action-2',
-              themeKey: 'workload',
-              actionText: 'Leg een bounded herverdeling van piekwerk vast.',
-              reviewScheduledFor: '2026-05-05',
-              expectedEffect: 'Maak zichtbaar of de piekbelasting daalt.',
-              status: 'in_review',
-              latestReview: null,
-            },
-          ],
-        },
-      },
-    ] as Parameters<typeof getLiveActionCenterSummary>[0])
-
-    expect(summary).toMatchObject({
-      actionCount: 2,
-      nextReviewDate: '2026-05-05',
+  it('projects follow-up lineage and trigger reason labels onto direct successor routes without changing normal open status', () => {
+    const scopeValue = 'org-1::department::operations'
+    const sourceCampaign = buildCampaign({
+      id: 'campaign-source',
+      name: 'Exit maart',
     })
-  })
-
-  it('does not count an open request route as a synthetic action when no route action cards exist yet', () => {
-    const summary = getLiveActionCenterSummary([
-      {
-        id: 'campaign-exit::operations',
-        sourceLabel: 'ExitScan',
-        ownerSubtitle: 'Operations',
-        status: 'open-verzoek',
-        reviewDate: null,
-        coreSemantics: {
-          routeActionCards: [],
-        },
-      },
-    ] as Parameters<typeof getLiveActionCenterSummary>[0])
-
-    expect(summary).toMatchObject({
-      routeCount: 1,
-      actionCount: 0,
-      nextReviewDate: null,
+    const targetCampaign = buildCampaign({
+      id: 'campaign-target',
+      name: 'Exit april',
+      created_at: '2026-04-18T10:00:00.000Z',
     })
-  })
+    const sourceRouteId = buildActionCenterRouteId(sourceCampaign.id, scopeValue)
+    const targetRouteId = buildActionCenterRouteId(targetCampaign.id, scopeValue)
 
-  it('shows a ready-for-closeout hint on open routes whose actions are all completed', () => {
     const items = buildLiveActionCenterItems([
       {
-        campaign: buildCampaign(),
-        stats: buildStats(),
+        campaign: sourceCampaign,
+        stats: buildStats({ campaign_id: sourceCampaign.id, campaign_name: sourceCampaign.name }),
         organizationName: 'Acme BV',
-        memberRole: 'owner' as const,
-        scopeType: 'department' as const,
-        scopeValue: 'operations',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
         scopeLabel: 'Operations',
         peopleCount: 38,
         assignedManager: {
-          userId: 'manager-1',
+          userId: 'manager-source',
           displayName: 'Manager Operations',
-          assignedAt: '2026-04-21T08:00:00.000Z',
+          assignedAt: '2026-04-10T08:00:00.000Z',
         },
         deliveryRecord: buildDeliveryRecord({
-          first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+          campaign_id: sourceCampaign.id,
+          lifecycle_stage: 'follow_up_decided',
+          first_management_use_confirmed_at: '2026-04-10T08:00:00.000Z',
         }),
         deliveryCheckpoints: [],
         learningDossier: buildDossier({
-          first_action_taken: null,
-          expected_first_value: null,
-          first_management_value: null,
-          review_moment: null,
+          campaign_id: sourceCampaign.id,
+          triage_status: 'uitgevoerd',
+          management_action_outcome: 'afronden',
+          adoption_outcome: 'De vorige route is bewust afgesloten na de review.',
+          case_public_summary: 'De eerdere route is afgesloten en wordt nu historisch bewaard.',
         }),
         learningCheckpoints: [],
-        reviewDecisions: [] as ActionCenterReviewDecision[],
-        routeActions: [
+        reviewDecisions: [],
+        routeFollowUpRelations: [
           {
-            actionId: 'action-1',
-            routeId: 'campaign-exit::org-1::department::operations',
-            themeKey: 'leadership' as const,
-            actionText: 'Plan twee teamgesprekken over leiderschap en werkdruk.',
-            expectedEffect: 'Maak zichtbaar of leiderschap de werkdrukfrictie versterkt.',
-            reviewScheduledFor: '2026-05-10',
-            status: 'afgerond' as const,
-            createdAt: '2026-04-30T09:00:00.000Z',
-            updatedAt: '2026-05-10T09:00:00.000Z',
+            id: 'relation-1',
+            routeRelationType: 'follow-up-from',
+            sourceRouteId,
+            targetRouteId,
+            triggerReason: 'nieuw-segment-signaal',
+            recordedAt: '2026-04-30T09:00:00.000Z',
+            recordedByRole: 'hr_owner',
+            endedAt: null,
+          },
+        ],
+      },
+      {
+        campaign: targetCampaign,
+        stats: buildStats({ campaign_id: targetCampaign.id, campaign_name: targetCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-target',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-30T09:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: targetCampaign.id,
+          lifecycle_stage: 'first_value_reached',
+          first_management_use_confirmed_at: null,
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: targetCampaign.id,
+          title: 'Nieuwe vervolgroute',
+          triage_status: 'bevestigd',
+          expected_first_value: null,
+          first_management_value: null,
+          first_action_taken: null,
+          review_moment: null,
+          management_action_outcome: null,
+        }),
+        learningCheckpoints: [],
+        managerResponse: {
+          id: 'manager-response-1',
+          campaign_id: targetCampaign.id,
+          org_id: 'org-1',
+          route_scope_type: 'department',
+          route_scope_value: scopeValue,
+          manager_user_id: 'manager-target',
+          response_type: 'schedule',
+          response_note: 'Vervolgroute geopend door HR.',
+          review_scheduled_for: '2026-05-14',
+          primary_action_theme_key: null,
+          primary_action_text: null,
+          primary_action_expected_effect: null,
+          primary_action_status: null,
+          created_by: null,
+          updated_by: null,
+          created_at: '2026-04-30T09:00:00.000Z',
+          updated_at: '2026-04-30T09:00:00.000Z',
+        },
+        reviewDecisions: [],
+        routeFollowUpRelations: [
+          {
+            id: 'relation-1',
+            routeRelationType: 'follow-up-from',
+            sourceRouteId,
+            targetRouteId,
+            triggerReason: 'nieuw-segment-signaal',
+            recordedAt: '2026-04-30T09:00:00.000Z',
+            recordedByRole: 'hr_owner',
+            endedAt: null,
           },
         ],
       },
     ])
 
-    const routeCloseout = (items[0] as { coreSemantics?: { routeCloseout?: { readyForCloseout?: boolean } } } | undefined)
-      ?.coreSemantics?.routeCloseout
+    const sourceItem = items.find((item) => item.id === sourceRouteId)
+    const successorItem = items.find((item) => item.id === targetRouteId)
 
-    expect(routeCloseout?.readyForCloseout).toBe(true)
-  })
-
-  it('keeps a source route closed while surfacing a follow-up route as the active successor', () => {
-    const sourceContext = {
-      campaign: buildCampaign(),
-      stats: buildStats(),
-      organizationName: 'Acme BV',
-      memberRole: 'owner' as const,
-      scopeType: 'department' as const,
-      scopeValue: 'operations-closed',
-      scopeLabel: 'Operations gesloten',
-      peopleCount: 38,
-      assignedManager: {
-        userId: 'manager-1',
-        displayName: 'Manager Operations',
-        assignedAt: '2026-04-21T08:00:00.000Z',
+    expect(sourceItem).toMatchObject({
+      status: 'afgerond',
+      coreSemantics: {
+        closingSemantics: {
+          status: 'afgerond',
+        },
+        followUpSemantics: {
+          isDirectSuccessor: false,
+          lineageLabel: null,
+          triggerReason: null,
+          triggerReasonLabel: null,
+        },
       },
-      deliveryRecord: buildDeliveryRecord({
-        first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
-      }),
-      deliveryCheckpoints: [],
-      learningDossier: buildDossier({
-        first_action_taken: null,
-        expected_first_value: null,
-        review_moment: null,
-      }),
-      learningCheckpoints: [],
-      routeCloseout: {
-        routeId: 'campaign-exit::operations-closed',
-        closeoutStatus: 'afgerond' as const,
-        closeoutReason: 'voldoende-opgepakt' as const,
-        closeoutNote: 'Afgerond voor nu.',
-        closedAt: '2026-05-10T09:00:00.000Z',
-        closedByRole: 'hr' as const,
+    })
+    expect(successorItem).toMatchObject({
+      status: 'te-bespreken',
+      coreSemantics: {
+        route: {
+          routeStatus: 'te-bespreken',
+        },
+        followUpSemantics: {
+          isDirectSuccessor: true,
+          lineageLabel: 'Vervolg op eerdere route',
+          triggerReason: 'nieuw-segment-signaal',
+          triggerReasonLabel: 'Nieuw segmentsignaal',
+          sourceRouteId,
+        },
       },
-    }
-    const targetContext = {
-      ...sourceContext,
-      scopeValue: 'operations-follow-up',
-      scopeLabel: 'Operations vervolg',
-      assignedManager: {
-        userId: 'manager-1',
-        displayName: 'Manager Operations',
-        assignedAt: '2026-05-11T08:00:00.000Z',
-      },
-      followUpFromRelation: {
-        routeRelationType: 'follow-up-from' as const,
-        sourceRouteId: 'campaign-exit::operations-closed',
-        targetRouteId: 'campaign-exit::operations-follow-up',
-        recordedAt: '2026-05-11T08:30:00.000Z',
-        recordedByRole: 'hr' as const,
-      },
-      routeCloseout: null,
-    }
-
-    const items = buildLiveActionCenterItems([sourceContext, targetContext])
-    const sourceItem = items.find((item) => item.id === 'campaign-exit::operations-closed')
-    const targetItem = items.find((item) => item.id === 'campaign-exit::operations-follow-up')
-
-    expect(sourceItem?.status).toBe('afgerond')
-    expect(targetItem?.status).toBe('open-verzoek')
-    expect(targetItem?.coreSemantics.lineageSemantics.label).toBe('Vervolg op eerdere route')
+    })
   })
 })
