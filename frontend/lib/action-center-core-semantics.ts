@@ -11,6 +11,7 @@ import {
   type ActionCenterRouteReopenRecord,
   type ActionCenterRouteFollowUpTriggerReason,
 } from './action-center-route-reopen'
+import { hasPrimaryManagerAction } from './action-center-manager-responses'
 import type { ActionCenterRouteActionRecord } from './action-center-route-actions'
 import type {
   ActionCenterManagerResponse,
@@ -269,6 +270,7 @@ function buildRouteSummary(args: {
   const actionCount = args.routeActionCards.length
   const reviewPressureCount = countReviewPressure(args.routeActionCards)
   const hasManagerResponse = Boolean(args.managerResponse)
+  const hasPrimaryAction = hasPrimaryManagerAction(args.managerResponse)
   const hasCurrentStep = Boolean(args.actionProgress.currentStep)
 
   if (status === 'afgerond') {
@@ -323,27 +325,32 @@ function buildRouteSummary(args: {
       stateLabel,
       overviewSummary:
         actionCount > 0
-          ? `Actieve route met ${actionCount} concrete actie${actionCount === 1 ? '' : 's'} in dezelfde follow-through.`
-          : 'Actieve route waarin de eerste lokale follow-through al loopt.',
-      routeAsk: 'Bewaak of de huidige follow-through scherp, bounded en lokaal uitvoerbaar blijft.',
+          ? `Actieve route met ${actionCount} expliciete actie${actionCount === 1 ? '' : 's'} in dezelfde follow-through.`
+          : hasPrimaryAction
+            ? 'Actieve route met één eerste concrete managerstap, nog zonder rijkere actieroute.'
+            : 'Actieve route waarin de eerste bounded managerstap nu loopt.',
+      routeAsk:
+        actionCount > 0
+          ? 'Houd de actielaag klein en zorg dat review per actie leidend blijft voor verdere uitvoering.'
+          : 'Bewaar deze eerste managerstap klein en maak hem pas rijker als een aparte actielaag echt helpt.',
       progressSummary:
         actionCount > 0
           ? `${actionCount} actie${actionCount === 1 ? '' : 's'} dragen nu de lokale follow-through in deze route.`
-          : hasCurrentStep
-            ? 'De route heeft al een concrete vervolgstap en draait nu in uitvoering.'
-            : 'De route is actief, maar de concrete vervolgcyclus blijft nog licht en bounded.',
+          : hasPrimaryAction || hasCurrentStep
+            ? 'De route heeft al een eerste concrete stap, maar hoeft nog niet meteen uit te groeien tot meerdere acties.'
+            : 'De route is actief, maar blijft bewust op een eerste bounded managerstap en reviewafspraak.',
     }
   }
 
   if (status === 'open-verzoek') {
     return {
       stateLabel,
-      overviewSummary: 'Open route zonder concrete lokale follow-through of reviewcyclus.',
-      routeAsk: 'De manager moet nog de eerste betekenisvolle lokale opvolging en bijbehorende review kiezen.',
+      overviewSummary: 'Open route die nog wacht op de eerste managerstap en het eerste reviewmoment.',
+      routeAsk: 'De manager moet nog klein vastleggen hoe deze route nu als eerste wordt opgepakt en wanneer die stap wordt getoetst.',
       progressSummary:
         hasManagerResponse || hasCurrentStep
-          ? 'Er zijn al eerste signalen van reactie, maar nog geen stabiele routecyclus.'
-          : 'Nog geen concrete actie, reviewcyclus of expliciete follow-through zichtbaar.',
+          ? 'Er zijn al eerste signalen van reactie, maar de eerste managerstap staat nog niet rustig vast.'
+          : 'Nog geen eerste managerstap, concrete actie of rustige reviewafspraak zichtbaar.',
     }
   }
 
@@ -362,15 +369,15 @@ function buildRouteSummary(args: {
   return {
     stateLabel,
     overviewSummary: hasManagerResponse
-      ? 'Open route met eerste managerreactie, maar nog zonder volledig rustige routecyclus.'
+      ? 'Open route met een eerste managerstap en reviewafspraak, maar nog zonder expliciete actieroute.'
       : 'Open route waarbij de eerste expliciete route-read en vervolglijn nog scherp moeten worden.',
     routeAsk: hasManagerResponse
-      ? 'Maak van de eerste reactie een duidelijke vervolglijn of reviewbare routecyclus.'
+      ? 'Bepaal of deze route bewust klein kan blijven, of dat één expliciete concrete actie nu echt helpt.'
       : 'Bepaal eerst welke bounded vervolglijn deze route nu echt vraagt.',
     progressSummary: actionCount > 0
-      ? `${actionCount} actie${actionCount === 1 ? '' : 's'} zijn zichtbaar, maar de route vraagt nog expliciete bestuurlijke duiding.`
+      ? `${actionCount} actie${actionCount === 1 ? '' : 's'} zijn zichtbaar, maar de route vraagt nog expliciete duiding over welke laag nu leidend is.`
       : hasManagerResponse
-        ? 'Er is al een eerste managerreactie, maar de route vraagt nog expliciete vervolgbepaling.'
+        ? 'Er is al een eerste managerstap vastgelegd, maar de route hoeft nog niet rijker te worden dan dit bounded niveau.'
         : 'De route is geopend, maar de concrete vervolglijn is nog niet scherp genoeg vastgelegd.',
   }
 }

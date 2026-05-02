@@ -6,7 +6,7 @@ import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
 import type { ActionCenterManagerResponse } from '@/lib/pilot-learning'
 
 describe('action center route action preview', () => {
-  it('surfaces route action cards and editor controls when a manager can continue inside one route', () => {
+  it('keeps richer action routes semantically distinct even while the manager surface starts from one first step', () => {
     const managerResponse: ActionCenterManagerResponse = {
       id: 'response-1',
       campaign_id: 'campaign-exit',
@@ -100,6 +100,14 @@ describe('action center route action preview', () => {
         },
         resultProgression: [],
         decisionHistory: [],
+        lineageSummary: {
+          overviewLabel: null,
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: null,
+          forwardRouteId: null,
+          detailLabels: [],
+        },
         routeActionCards: [
           {
             actionId: 'action-1',
@@ -148,13 +156,65 @@ describe('action center route action preview', () => {
       }),
     )
 
-    expect(html).toContain('Acties in deze route')
-    expect(html).toContain('Plan twee teamgesprekken over leiderschapsfeedback.')
-    expect(html).toContain('Leg groeigesprekken vast in het volgende teamoverleg.')
-    expect(html).toContain('Leiderschap')
-    expect(html).toContain('Groei en perspectief')
-    expect(html).toContain('Het team noemt groei explicieter dan in de vorige ronde.')
-    expect(html).toContain('Actie toevoegen')
-    expect(html).toContain('Review toevoegen')
+    expect(html).toContain('Actieroute is gestart')
+    expect(html).toContain('Deze route draagt nu 2 expliciete actiekaarten.')
+    expect(html).toContain('Thema van deze eerste concrete stap')
+    expect(html).toContain('Gebruik dit alleen zolang één eerste concrete stap genoeg is.')
+    expect(html).toContain('Plan een eerste teamgesprek over feedbackritme.')
+    expect(html).toContain('Zichtbaar maken of feedbackritme lokaal het vertrekbeeld beïnvloedt.')
+    expect(html).toContain('Managerstap bijwerken')
+  })
+
+  it('keeps the first manager move visibly small before a route grows into explicit actions', () => {
+    const item = finalizeActionCenterPreviewItem({
+      id: 'route-open-request',
+      code: 'ACT-1002',
+      title: 'Nieuwe route voor Operations',
+      summary: 'De route wacht op de eerste lokale managerstap.',
+      reason: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
+      sourceLabel: 'ExitScan',
+      orgId: 'org-1',
+      scopeType: 'department',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerId: 'manager-1',
+      ownerName: 'Manager Operations',
+      ownerRole: 'Manager - Operations',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: 'HR lead',
+      priority: 'hoog',
+      status: 'open-verzoek',
+      reviewDate: null,
+      expectedEffect: null,
+      reviewReason: null,
+      reviewOutcome: 'geen-uitkomst',
+      reviewDateLabel: 'Nog niet gepland',
+      reviewRhythm: 'Maandelijks',
+      signalLabel: 'ExitScan - Operations',
+      signalBody: 'HR heeft de route geopend na een nieuwe scanread.',
+      nextStep: null,
+      peopleCount: 38,
+      updates: [],
+    })
+
+    const html = renderToStaticMarkup(
+      React.createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialView: 'actions',
+        fallbackOwnerName: 'Verisight gebruiker',
+        ownerOptions: ['Manager Operations'],
+        canRespondToRequests: true,
+        managerResponseEndpoint: '/api/action-center-manager-responses',
+        currentUserId: 'manager-1',
+        workbenchHref: '/action-center',
+      }),
+    )
+
+    expect(html).toContain('Eerste managerstap')
+    expect(html).toContain('Hoe pak je deze route als eerste op?')
+    expect(html).toContain('Wat leg je nu klein en reviewbaar vast?')
+    expect(html).toContain('Wanneer toetsen we deze eerste stap?')
+    expect(html).toContain('Leg alleen als dit meteen helpt één eerste concrete stap vast.')
+    expect(html).toContain('Eerste managerstap opslaan')
   })
 })

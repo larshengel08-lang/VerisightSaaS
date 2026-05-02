@@ -490,7 +490,7 @@ describe('live action center builder', () => {
 
     expect(openRequestItem?.coreSemantics.routeSummary).toMatchObject({
       stateLabel: 'Open verzoek',
-      overviewSummary: 'Open route zonder concrete lokale follow-through of reviewcyclus.',
+      overviewSummary: 'Open route die nog wacht op de eerste managerstap en het eerste reviewmoment.',
     })
     expect(reviewableItem?.coreSemantics.routeSummary).toMatchObject({
       stateLabel: 'Reviewbaar',
@@ -706,7 +706,7 @@ describe('live action center builder', () => {
     })
     expect(recomputed.coreSemantics.routeSummary).toMatchObject({
       stateLabel: 'In uitvoering',
-      overviewSummary: 'Actieve route waarin de eerste lokale follow-through al loopt.',
+      overviewSummary: 'Actieve route waarin de eerste bounded managerstap nu loopt.',
     })
     expect(recomputed.coreSemantics.resultLoop.whatWasTried).toBe(
       'Update: eigenaar bevestigd en review opnieuw ingepland.',
