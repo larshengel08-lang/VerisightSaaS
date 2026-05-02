@@ -42,7 +42,7 @@ type ManagerResponseCarrierRow = {
 }
 
 type FollowUpWriteAccess = {
-  recordedByRole: 'verisight_admin' | 'hr_owner' | 'hr_member'
+  recordedByRole: 'verisight_admin' | 'hr'
 }
 
 type ManagerAssignmentRow = {
@@ -235,7 +235,7 @@ async function resolveFollowUpWriteAccess(args: { supabase: SupabaseClient; user
 
   const orgMembership = orgMemberships.find((membership) => membership.org_id === args.orgId) ?? null
   if (orgMembership?.role === 'owner') {
-    return { access: { recordedByRole: 'hr_owner' } satisfies FollowUpWriteAccess, error: null }
+    return { access: { recordedByRole: 'hr' } satisfies FollowUpWriteAccess, error: null }
   }
 
   const hrWorkspaceMembership =
@@ -247,12 +247,9 @@ async function resolveFollowUpWriteAccess(args: { supabase: SupabaseClient; user
     ) ?? null
 
   if (hrWorkspaceMembership) {
-    const recordedByRole: FollowUpWriteAccess['recordedByRole'] =
-      hrWorkspaceMembership.access_role === 'hr_owner' ? 'hr_owner' : 'hr_member'
-
     return {
       access: {
-        recordedByRole,
+        recordedByRole: 'hr',
       } satisfies FollowUpWriteAccess,
       error: null,
     }

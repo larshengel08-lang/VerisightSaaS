@@ -113,6 +113,14 @@ describe('action center preview display helpers', () => {
             reviewCompletedAt: '2026-04-22T09:00:00.000Z',
           },
         ],
+        lineageSummary: {
+          overviewLabel: null,
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: null,
+          forwardRouteId: null,
+          detailLabels: [],
+        },
         closingSemantics: {
           status: 'lopend',
           summary: null,

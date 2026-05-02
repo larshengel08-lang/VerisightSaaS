@@ -120,6 +120,14 @@ describe('action center preview route fields render', () => {
             reviewCompletedAt: '2026-04-24T09:00:00.000Z',
           },
         ],
+        lineageSummary: {
+          overviewLabel: null,
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: null,
+          forwardRouteId: null,
+          detailLabels: [],
+        },
         closingSemantics: {
           status: 'lopend',
           summary: null,
@@ -214,6 +222,14 @@ describe('action center preview route fields render', () => {
         },
         resultProgression: [],
         decisionHistory: [],
+        lineageSummary: {
+          overviewLabel: null,
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: null,
+          forwardRouteId: null,
+          detailLabels: [],
+        },
         closingSemantics: {
           status: 'lopend',
           summary: null,
@@ -328,6 +344,14 @@ describe('action center preview route fields render', () => {
             reviewCompletedAt: '2026-04-28T09:00:00.000Z',
           },
         ],
+        lineageSummary: {
+          overviewLabel: null,
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: null,
+          forwardRouteId: null,
+          detailLabels: [],
+        },
         closingSemantics: {
           status: 'afgerond',
           summary: 'De lokale correctie hield zichtbaar stand.',

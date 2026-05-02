@@ -690,7 +690,7 @@ create table if not exists public.action_center_route_relations (
   manager_user_id uuid references auth.users(id) on delete set null,
   recorded_by uuid references auth.users(id) on delete set null,
   recorded_by_role text not null
-    check (recorded_by_role in ('verisight_admin', 'hr_owner', 'hr_member')),
+    check (recorded_by_role in ('verisight_admin', 'hr', 'hr_owner', 'hr_member')),
   recorded_at timestamptz not null default now(),
   ended_at timestamptz
 );

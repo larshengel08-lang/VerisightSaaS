@@ -8,6 +8,7 @@ type ActionCenterPilotArtifact = {
     sourceCampaignId: string
     targetCampaignId: string
     sourceRouteTitle: string
+    targetRouteTitle: string
     scopeLabel: string
     sourceActionCenterFocusUrl: string
     targetActionCenterFocusUrl: string
@@ -29,8 +30,20 @@ const artifact = existsSync(artifactPath)
   ? (JSON.parse(readFileSync(artifactPath, 'utf8')) as ActionCenterPilotArtifact)
   : null
 
-function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+async function expectFocusUrl(page: import('@playwright/test').Page, relativeUrl: string) {
+  const expected = new URL(relativeUrl, 'http://127.0.0.1')
+  await expect
+    .poll(() => {
+      const current = new URL(page.url())
+      return {
+        pathname: current.pathname,
+        focus: current.searchParams.get('focus'),
+      }
+    })
+    .toEqual({
+      pathname: expected.pathname,
+      focus: expected.searchParams.get('focus'),
+    })
 }
 
 async function login(page: import('@playwright/test').Page, email: string, password: string) {
@@ -48,32 +61,55 @@ test.describe('action center route reopen flow', () => {
 
   const pilot = artifact as ActionCenterPilotArtifact
 
-  test('hr starts a same-scope follow-up route and the source route stays historical', async ({ page }) => {
+  test('hr can start a follow-up route and manager sees the same direct lineage context', async ({ page }) => {
     if (!pilot.followUp) {
       throw new Error('Seed artifact mist followUp-context voor Task 7.')
     }
 
     await login(page, pilot.hrOwner.email, pilot.hrOwner.password)
     await page.goto(pilot.followUp.sourceActionCenterFocusUrl)
-    await expect(page).toHaveURL(new RegExp(`${escapeRegExp(pilot.followUp.sourceActionCenterFocusUrl)}$`))
+    await expectFocusUrl(page, pilot.followUp.sourceActionCenterFocusUrl)
     await page.getByRole('button', { name: /^Acties/ }).click()
 
     await expect(page.getByText('Action Center / Acties')).toBeVisible()
-    await expect(page.getByText('Afgerond voor nu', { exact: true })).toBeVisible()
     await expect(page.getByRole('heading', { name: pilot.followUp.sourceRouteTitle })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Start vervolgroute' })).toBeVisible()
-    await expect(page.getByText('Open vanuit deze gesloten route een nieuwe HR-handoff binnen dezelfde afdeling.')).toBeVisible()
-
-    await page.getByLabel('Kies manager').selectOption({ label: pilot.followUp.manager.displayName })
+    await page.getByLabel('Kies manager').selectOption({ value: pilot.followUp.manager.userId })
     await page.getByRole('radio', { name: pilot.followUp.triggerReasonLabel, exact: true }).check()
-    await page.getByRole('button', { name: 'Start vervolgroute' }).click()
+    const followUpResponsePromise = page.waitForResponse((response) =>
+      response.url().includes('/api/action-center-route-follow-ups') && response.request().method() === 'POST',
+    )
+    await page.getByRole('button', { name: 'Start vervolgroute', exact: true }).click()
+    const followUpResponse = await followUpResponsePromise
+    expect(followUpResponse.status()).toBe(201)
 
-    await expect(page.getByRole('heading', { name: 'Eerste lokale follow-through' })).toBeVisible()
-    await expect(page.getByText(pilot.followUp.scopeLabel, { exact: true }).first()).toBeVisible()
+    await expectFocusUrl(page, pilot.followUp.targetActionCenterFocusUrl)
+    await expect(page.getByRole('heading', { name: pilot.followUp.targetRouteTitle })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Vervolg op eerdere route', exact: true })).toBeVisible()
 
-    await expect(
-      page.getByText('Voor deze doelroute bestaat al een manager response carrier; overschrijven is in V1 niet toegestaan.'),
-    ).toHaveCount(0)
-    await expect(page.getByRole('heading', { name: 'Eerste lokale follow-through' })).toBeVisible()
+    await page.getByRole('button', { name: 'Vervolg op eerdere route', exact: true }).click()
+    await expectFocusUrl(page, pilot.followUp.sourceActionCenterFocusUrl)
+    await expect(page.getByRole('heading', { name: pilot.followUp.sourceRouteTitle })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Later opgevolgd', exact: true })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Later opgevolgd', exact: true }).click()
+    await expectFocusUrl(page, pilot.followUp.targetActionCenterFocusUrl)
+    await expect(page.getByRole('heading', { name: pilot.followUp.targetRouteTitle })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Uitloggen' }).click()
+    await expect(page).toHaveURL(/\/login$/)
+
+    await login(page, pilot.followUp.manager.email, pilot.followUp.manager.password)
+    await page.goto(pilot.followUp.targetActionCenterFocusUrl)
+    await expectFocusUrl(page, pilot.followUp.targetActionCenterFocusUrl)
+    await page.getByRole('button', { name: /^Acties/ }).click()
+
+    await expect(page.getByRole('heading', { name: pilot.followUp.targetRouteTitle })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Vervolg op eerdere route', exact: true })).toBeVisible()
+
+    await page.getByRole('button', { name: 'Vervolg op eerdere route', exact: true }).click()
+    await expectFocusUrl(page, pilot.followUp.sourceActionCenterFocusUrl)
+    await expect(page.getByRole('heading', { name: pilot.followUp.sourceRouteTitle })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Later opgevolgd', exact: true })).toBeVisible()
   })
 })

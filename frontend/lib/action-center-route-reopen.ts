@@ -1,6 +1,12 @@
 import type { ActionCenterRouteCloseoutRecord } from './action-center-route-closeout'
 
-export type ActionCenterRouteReopenRole = 'hr' | 'manager' | 'verisight'
+export type ActionCenterRouteReopenRole =
+  | 'hr'
+  | 'manager'
+  | 'verisight'
+  | 'hr_owner'
+  | 'hr_member'
+  | (string & {})
 
 export type ActionCenterRouteReopenReason =
   | 'te-vroeg-afgesloten'
@@ -9,17 +15,30 @@ export type ActionCenterRouteReopenReason =
   | 'vervolg-nodig'
   | (string & {})
 
-export interface ActionCenterRouteReopenRecord {
-  routeId: string
-  reopenedAt: string
-  reopenedByRole: ActionCenterRouteReopenRole
-  reopenReason: ActionCenterRouteReopenReason
-}
-
 export type ActionCenterRouteFollowUpTriggerReason =
   | 'nieuw-campaign-signaal'
   | 'nieuw-segment-signaal'
   | 'hernieuwde-hr-beoordeling'
+
+export interface ActionCenterRouteReopenRecord {
+  id?: string | null
+  routeId: string
+  reopenedAt: string
+  reopenedByRole: ActionCenterRouteReopenRole
+  reopenReason: ActionCenterRouteReopenReason | null
+}
+
+export interface ActionCenterRouteReopenInput {
+  id?: string | null
+  route_id?: string | null
+  routeId?: string | null
+  reopened_at?: string | null
+  reopenedAt?: string | null
+  reopened_by_role?: string | null
+  reopenedByRole?: string | null
+  reopen_reason?: string | null
+  reopenReason?: string | null
+}
 
 export interface ActionCenterRouteFollowUpRelationRecord {
   id?: string | null
@@ -55,7 +74,13 @@ const FOLLOW_UP_TRIGGER_REASONS = new Set<ActionCenterRouteFollowUpTriggerReason
   'nieuw-segment-signaal',
   'hernieuwde-hr-beoordeling',
 ])
-const REOPEN_ROLES = new Set<ActionCenterRouteReopenRole>(['hr', 'manager', 'verisight'])
+const REOPEN_ROLES = new Set<ActionCenterRouteReopenRole>([
+  'hr',
+  'manager',
+  'verisight',
+  'hr_owner',
+  'hr_member',
+])
 
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''
@@ -83,8 +108,14 @@ function readCanonicalUnknownText(
   )
 }
 
-function readCanonicalText(input: ActionCenterRouteFollowUpRelationInput, snakeKey: keyof ActionCenterRouteFollowUpRelationInput, camelKey: keyof ActionCenterRouteFollowUpRelationInput) {
-  return normalizeText((input[snakeKey] as string | null | undefined) ?? (input[camelKey] as string | null | undefined))
+function readCanonicalText(
+  input: ActionCenterRouteFollowUpRelationInput,
+  snakeKey: keyof ActionCenterRouteFollowUpRelationInput,
+  camelKey: keyof ActionCenterRouteFollowUpRelationInput,
+) {
+  return normalizeText(
+    (input[snakeKey] as string | null | undefined) ?? (input[camelKey] as string | null | undefined),
+  )
 }
 
 export function projectActionCenterRouteFollowUpRelation(
@@ -142,28 +173,36 @@ export function projectActionCenterRouteFollowUpRelation(
 }
 
 export function projectActionCenterRouteReopen(
-  input: Record<string, unknown> | null | undefined,
+  input: ActionCenterRouteReopenInput | Record<string, unknown> | null | undefined,
 ): ActionCenterRouteReopenRecord {
-  const routeId = readCanonicalUnknownText(input, 'route_id', 'routeId')
-  const reopenedAt = readCanonicalUnknownText(input, 'reopened_at', 'reopenedAt')
+  const rawInput = input as Record<string, unknown> | null | undefined
+  const routeId = readCanonicalUnknownText(rawInput, 'route_id', 'routeId')
+  const reopenedAt = readCanonicalUnknownText(rawInput, 'reopened_at', 'reopenedAt')
   const reopenedByRole = readCanonicalUnknownText(
-    input,
+    rawInput,
     'reopened_by_role',
     'reopenedByRole',
   ) as ActionCenterRouteReopenRole | null
   const reopenReason = readCanonicalUnknownText(
-    input,
+    rawInput,
     'reopen_reason',
     'reopenReason',
   ) as ActionCenterRouteReopenReason | null
 
-  if (!routeId || !reopenedAt || !isValidIsoTimestamp(reopenedAt) || !reopenedByRole || !REOPEN_ROLES.has(reopenedByRole) || !reopenReason) {
+  if (
+    !routeId ||
+    !reopenedAt ||
+    !isValidIsoTimestamp(reopenedAt) ||
+    !reopenedByRole ||
+    !REOPEN_ROLES.has(reopenedByRole)
+  ) {
     throw new Error(
-      'Ongeldige action center route reopen input: route_id, reopened_at, reopened_by_role en reopen_reason zijn verplicht.',
+      'Ongeldige action center route reopen input: route_id, reopened_at en reopened_by_role zijn verplicht.',
     )
   }
 
   return {
+    id: normalizeText((input as { id?: string | null } | null | undefined)?.id),
     routeId,
     reopenedAt,
     reopenedByRole,
