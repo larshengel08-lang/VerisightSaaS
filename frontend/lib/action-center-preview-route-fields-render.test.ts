@@ -244,6 +244,200 @@ describe('action center preview route fields render', () => {
     ])
   })
 
+  it('renders a compact bestuurlijke readback block on the overview surface', () => {
+    const activeItem = finalizeActionCenterPreviewItem({
+      id: 'route-readback-open',
+      code: 'ACT-3001',
+      title: 'Operations vraagt een nieuwe stap',
+      summary: 'De route vraagt een nieuwe lokale stap.',
+      reason: 'Werkdruk bleef zichtbaar na de eerste interventie.',
+      sourceLabel: 'ExitScan',
+      orgId: 'org-1',
+      scopeType: 'department',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerId: 'manager-1',
+      ownerName: 'Sanne de Vries',
+      ownerRole: 'Manager - Operations',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: 'Sanne de Vries',
+      priority: 'hoog',
+      status: 'in-uitvoering',
+      reviewDate: '2026-05-12',
+      expectedEffect: 'Zichtbaar maken of de werkdruk lokaal afneemt.',
+      reviewReason: 'De eerste teamreview gaf nog geen stabiele verbetering.',
+      reviewOutcome: 'bijstellen',
+      reviewDateLabel: '12 mei',
+      reviewRhythm: 'Wekelijks',
+      signalLabel: 'ExitScan - Operations',
+      signalBody: 'Werkdruk bleef zichtbaar in hetzelfde team.',
+      nextStep: 'Herplan de teamreview voor volgende week.',
+      peopleCount: 14,
+      updates: [],
+      coreSemantics: {
+        route: {} as never,
+        routeSummary: {
+          stateLabel: 'In uitvoering',
+          overviewSummary: 'De route vraagt een nieuwe lokale stap.',
+          routeAsk: 'Bepaal welke vervolgstap nu verder helpt.',
+          progressSummary: 'Er loopt nu actieve follow-through in deze route.',
+        },
+        reviewSemantics: {} as never,
+        latestDecision: {
+          decisionEntryId: 'decision-1',
+          sourceRouteId: 'route-readback-open',
+          decision: 'bijstellen',
+          decisionReason: 'De eerste teamreview gaf nog geen stabiele verbetering.',
+          nextCheck: 'Toets over een week of de teamdruk zichtbaar daalt.',
+          decisionRecordedAt: '2026-04-25T10:00:00.000Z',
+          reviewCompletedAt: '2026-04-25T09:30:00.000Z',
+        },
+        actionProgress: {
+          currentStep: 'Plan een gerichte teamreview met de manager.',
+          nextStep: 'Herplan de teamreview voor volgende week.',
+          expectedEffect: 'Zichtbaar maken of de werkdruk lokaal afneemt.',
+        },
+        actionFrame: {
+          whyNow: 'Werkdruk bleef zichtbaar na de eerste interventie.',
+          firstStep: 'Plan een gerichte teamreview met de manager.',
+          owner: 'Sanne de Vries',
+          expectedEffect: 'Zichtbaar maken of de werkdruk lokaal afneemt.',
+        },
+        resultLoop: {} as never,
+        resultProgression: [],
+        decisionHistory: [
+          {
+            decisionEntryId: 'decision-1',
+            sourceRouteId: 'route-readback-open',
+            decision: 'bijstellen',
+            decisionReason: 'De eerste teamreview gaf nog geen stabiele verbetering.',
+            nextCheck: 'Toets over een week of de teamdruk zichtbaar daalt.',
+            decisionRecordedAt: '2026-04-25T10:00:00.000Z',
+            reviewCompletedAt: '2026-04-25T09:30:00.000Z',
+          },
+        ],
+        routeActionCards: [],
+        lineageSummary: {
+          overviewLabel: null,
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: null,
+          forwardRouteId: null,
+          detailLabels: [],
+        },
+        followUpSemantics: {
+          isDirectSuccessor: false,
+          lineageLabel: null,
+          triggerReason: null,
+          triggerReasonLabel: null,
+          sourceRouteId: null,
+        },
+        closingSemantics: {
+          status: 'lopend',
+          summary: null,
+          historicalSummary: null,
+        },
+      },
+    })
+
+    const historicalItem = finalizeActionCenterPreviewItem({
+      id: 'route-readback-closed',
+      code: 'ACT-3002',
+      title: 'Eerdere route sloot en kreeg vervolg',
+      summary: 'Deze route sloot historisch en kreeg later een opvolger.',
+      reason: 'De eerdere interventie hoeft niet opnieuw geopend te worden.',
+      sourceLabel: 'Pulse',
+      orgId: 'org-1',
+      scopeType: 'department',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerId: 'manager-2',
+      ownerName: 'Manager Operations',
+      ownerRole: 'Manager - Operations',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: 'HR lead',
+      priority: 'midden',
+      status: 'afgerond',
+      reviewDate: '2026-05-30',
+      expectedEffect: 'Historische route blijft alleen nog bestuurlijke context.',
+      reviewReason: 'Gebruik de oude route alleen nog als context.',
+      reviewOutcome: 'afronden',
+      reviewDateLabel: '30 mei',
+      reviewRhythm: 'Maandelijks',
+      signalLabel: 'Pulse - Operations',
+      signalBody: 'Een nieuwe opvolger nam het traject over.',
+      nextStep: 'Lees alleen nog terug wat eerder is besloten.',
+      peopleCount: 14,
+      updates: [],
+      coreSemantics: {
+        route: {} as never,
+        routeSummary: {
+          stateLabel: 'Afgerond',
+          overviewSummary: 'Historische route die later een directe opvolger kreeg.',
+          routeAsk: 'Lees deze route alleen nog als historische context.',
+          progressSummary: 'Er loopt geen actieve follow-through meer in deze route.',
+        },
+        reviewSemantics: {} as never,
+        latestDecision: null,
+        actionProgress: {
+          currentStep: null,
+          nextStep: null,
+          expectedEffect: null,
+        },
+        actionFrame: {
+          whyNow: 'Gebruik de oude route alleen nog als context.',
+          firstStep: 'Lees alleen nog terug wat eerder is besloten.',
+          owner: 'Manager Operations',
+          expectedEffect: 'Historische route blijft alleen nog bestuurlijke context.',
+        },
+        resultLoop: {} as never,
+        resultProgression: [],
+        decisionHistory: [],
+        routeActionCards: [],
+        lineageSummary: {
+          overviewLabel: 'Later opgevolgd',
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: 'Later opgevolgd',
+          forwardRouteId: 'route-readback-next',
+          detailLabels: ['Later opgevolgd'],
+        },
+        followUpSemantics: {
+          isDirectSuccessor: false,
+          lineageLabel: null,
+          triggerReason: null,
+          triggerReasonLabel: null,
+          sourceRouteId: null,
+        },
+        closingSemantics: {
+          status: 'afgesloten',
+          summary: 'Historische route die later een directe opvolger kreeg.',
+          historicalSummary: 'Gebruik deze route alleen nog als context.',
+        },
+      },
+    })
+
+    const html = renderToStaticMarkup(
+      React.createElement(ActionCenterPreview, {
+        initialItems: [activeItem, historicalItem],
+        fallbackOwnerName: 'Verisight gebruiker',
+        ownerOptions: ['Sanne de Vries', 'Manager Operations'],
+        workbenchHref: '/dashboard',
+        readOnly: true,
+      }),
+    )
+
+    expect(html).toContain('Bestuurlijke teruglezing')
+    expect(html).toContain('Routebeeld')
+    expect(html).toContain('1 open route en 1 gesloten route van 2 zichtbare routes.')
+    expect(html).toContain('Besluitspoor')
+    expect(html).toContain('1 route met expliciet besluitspoor in de huidige selectie.')
+    expect(html).toContain('Vervolg over tijd')
+    expect(html).toContain('0 heropende routes en 1 route met vervolgcontext zichtbaar.')
+    expect(html).toContain('Reviewdruk')
+    expect(html).toContain('2 routes met review in beeld, eerstvolgend 12 mei.')
+  })
+
   it('hides next-check and next-step detail blocks for closing decisions', () => {
     const item = finalizeActionCenterPreviewItem({
       id: 'route-2',

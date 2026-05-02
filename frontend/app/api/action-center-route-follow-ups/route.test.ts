@@ -929,7 +929,7 @@ describe('action center route follow-up API contract', () => {
       target_route_scope_value: 'org-1::department::operations',
       trigger_reason: 'hernieuwde-hr-beoordeling',
       recorded_by: HR_USER_ID,
-      recorded_by_role: 'hr',
+      recorded_by_role: 'hr_member',
       manager_user_id: MANAGER_USER_ID,
       ended_at: null,
     })
@@ -938,6 +938,20 @@ describe('action center route follow-up API contract', () => {
         trigger_reason: 'hernieuwde-hr-beoordeling',
         manager_user_id: MANAGER_USER_ID,
       }),
+    })
+  })
+
+  it('persists hr_owner as the audit role when an org owner starts a follow-up route', async () => {
+    mockState.memberRole = 'owner'
+    mockState.workspaceMemberships = []
+
+    const response = await postFollowUp(buildFollowUpRequest())
+
+    expect(response.status).toBe(201)
+    expect(mockState.insertedRelations).toHaveLength(1)
+    expect(mockState.insertedRelations[0]).toMatchObject({
+      recorded_by_role: 'hr_owner',
+      recorded_by: HR_USER_ID,
     })
   })
 

@@ -1,3 +1,5 @@
+import type { ActionCenterGovernanceActorRole } from './action-center-governance'
+
 export type ActionCenterRouteCloseoutStatus = 'afgerond' | 'gestopt'
 
 export type ActionCenterRouteCloseoutReason =
@@ -8,7 +10,7 @@ export type ActionCenterRouteCloseoutReason =
   | 'bewust-niet-voortzetten'
   | 'elders-opgepakt'
 
-export type ActionCenterRouteCloseoutRole = 'hr' | 'manager'
+export type ActionCenterRouteCloseoutRole = ActionCenterGovernanceActorRole | 'manager'
 
 export interface ActionCenterRouteCloseoutRecord {
   routeId: string
@@ -37,7 +39,14 @@ const CLOSEOUT_REASONS = new Set<ActionCenterRouteCloseoutReason>([
   'bewust-niet-voortzetten',
   'elders-opgepakt',
 ])
-const CLOSEOUT_ROLES = new Set<ActionCenterRouteCloseoutRole>(['hr', 'manager'])
+const CLOSEOUT_ROLES = new Set<ActionCenterRouteCloseoutRole>([
+  'verisight_admin',
+  'verisight',
+  'hr_owner',
+  'hr_member',
+  'hr',
+  'manager',
+])
 
 function normalizeText(value: string | null | undefined) {
   const trimmed = value?.trim() ?? ''

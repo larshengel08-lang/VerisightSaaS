@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
+import { resolveActionCenterHrWriteAccess } from '@/lib/action-center-governance'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import {
   projectActionCenterRouteCloseout,
@@ -146,7 +147,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Niet ingelogd.' }, { status: 401 })
   }
 
-  const { context, orgMemberships } = await loadSuiteAccessContext(supabase, user.id)
+  const { context, orgMemberships, workspaceMemberships } = await loadSuiteAccessContext(supabase, user.id)
   const routeTruth = await loadCloseoutRouteTruth({
     campaignId: parsed.campaign_id,
     routeScopeType: parsed.route_scope_type,
@@ -156,13 +157,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Route closeout route bestaat niet voor deze campagne.' }, { status: 400 })
   }
 
-  const canCloseRoute =
-    context.isVerisightAdmin ||
-    orgMemberships.some(
-      (membership) => membership.org_id === routeTruth.campaign.organization_id && membership.role === 'owner',
-    )
+  const writeAccess = resolveActionCenterHrWriteAccess({
+    context,
+    orgMemberships,
+    workspaceMemberships,
+    orgId: routeTruth.campaign.organization_id,
+  })
 
-  if (!canCloseRoute) {
+  if (!writeAccess.allowed || !writeAccess.auditRole) {
     return NextResponse.json({ detail: 'Alleen HR of Verisight kan deze route afsluiten.' }, { status: 403 })
   }
 
@@ -188,7 +190,7 @@ export async function POST(request: Request) {
     closeout_reason: parsed.closeout_reason,
     closeout_note: parsed.closeout_note,
     closed_at: closedAt,
-    closed_by_role: 'hr',
+    closed_by_role: writeAccess.auditRole,
     created_by: user.id,
     updated_by: user.id,
     updated_at: closedAt,
