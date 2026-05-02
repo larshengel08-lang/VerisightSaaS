@@ -274,6 +274,22 @@ function getSummaryRouteKey(item: ActionCenterPreviewItem) {
   return item.id.replace(/::action-[^:]+$/, '')
 }
 
+export interface ActionCenterWorkspaceReadbackSummary {
+  routeCount: number
+  productCount: number
+  organizationCount: number
+  actionCount: number
+  blockedCount: number
+  reviewCount: number
+  nextReviewDate: string | null
+  activeRouteCount: number
+  closedRouteCount: number
+  decisionRouteCount: number
+  reopenedRouteCount: number
+  followUpVisibleRouteCount: number
+  continuationVisibleRouteCount: number
+}
+
 function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
   const routeBuckets = new Map<
     string,
@@ -288,6 +304,9 @@ function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
         status: 'open' | 'in_review' | 'afgerond' | 'gestopt'
         reviewScheduledFor: string | null
       }>
+      hasDecisionHistory: boolean
+      hasReopenedLineage: boolean
+      hasFollowUpVisibility: boolean
     }
   >()
 
@@ -301,7 +320,17 @@ function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
       routeStatus: item.status,
       fallbackReviewDate: item.reviewDate,
       actions: [],
+      hasDecisionHistory: false,
+      hasReopenedLineage: false,
+      hasFollowUpVisibility: false,
     }
+
+    const hasDecisionHistory =
+      item.coreSemantics.decisionHistory.length > 0 || Boolean(item.coreSemantics.latestDecision)
+    const hasReopenedLineage = item.coreSemantics.lineageSummary.backwardLabel === 'Heropend traject'
+    const hasFollowUpVisibility =
+      item.coreSemantics.lineageSummary.backwardLabel === 'Vervolg op eerdere route' ||
+      item.coreSemantics.lineageSummary.forwardLabel === 'Later opgevolgd'
 
     routeBuckets.set(routeKey, {
       sourceLabel: current.sourceLabel,
@@ -309,6 +338,9 @@ function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
       hasBlockedAction: current.hasBlockedAction || item.status === 'geblokkeerd',
       routeStatus: current.routeStatus,
       fallbackReviewDate: current.fallbackReviewDate,
+      hasDecisionHistory: current.hasDecisionHistory || hasDecisionHistory,
+      hasReopenedLineage: current.hasReopenedLineage || hasReopenedLineage,
+      hasFollowUpVisibility: current.hasFollowUpVisibility || hasFollowUpVisibility,
       actions:
         routeActionCards.length > 0
           ? routeActionCards.map((action) => ({
@@ -333,6 +365,9 @@ function summarizeLiveActionCenterRoutes(items: ActionCenterPreviewItem[]) {
       hasBlockedAction: route.hasBlockedAction,
       routeStatus: routeSummary?.routeStatus ?? route.routeStatus,
       nextReviewDate: routeSummary?.nextReviewScheduledFor ?? route.fallbackReviewDate,
+      hasDecisionHistory: route.hasDecisionHistory,
+      hasReopenedLineage: route.hasReopenedLineage,
+      hasFollowUpVisibility: route.hasFollowUpVisibility,
     }
   })
 }
@@ -562,7 +597,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
     })
 }
 
-export function getLiveActionCenterSummary(items: ActionCenterPreviewItem[]) {
+export function getLiveActionCenterSummary(items: ActionCenterPreviewItem[]): ActionCenterWorkspaceReadbackSummary {
   const routeSummaries = summarizeLiveActionCenterRoutes(items)
   const productLabels = new Set(routeSummaries.map((item) => item.sourceLabel))
   const organizations = new Set(routeSummaries.map((item) => item.ownerSubtitle))
@@ -580,6 +615,14 @@ export function getLiveActionCenterSummary(items: ActionCenterPreviewItem[]) {
     blockedCount: routeSummaries.filter((route) => route.hasBlockedAction).length,
     reviewCount: routeSummaries.filter((route) => route.nextReviewDate).length,
     nextReviewDate,
+    activeRouteCount: routeSummaries.filter((route) => route.routeStatus !== 'afgerond' && route.routeStatus !== 'gestopt').length,
+    closedRouteCount: routeSummaries.filter((route) => route.routeStatus === 'afgerond' || route.routeStatus === 'gestopt').length,
+    decisionRouteCount: routeSummaries.filter((route) => route.hasDecisionHistory).length,
+    reopenedRouteCount: routeSummaries.filter((route) => route.hasReopenedLineage).length,
+    followUpVisibleRouteCount: routeSummaries.filter((route) => route.hasFollowUpVisibility).length,
+    continuationVisibleRouteCount: routeSummaries.filter(
+      (route) => route.hasReopenedLineage || route.hasFollowUpVisibility,
+    ).length,
   }
 }
 

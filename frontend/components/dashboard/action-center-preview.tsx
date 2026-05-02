@@ -17,7 +17,11 @@ import {
   getActionCenterFollowUpTriggerReasonLabel,
   type ActionCenterRouteFollowUpTriggerReason,
 } from '@/lib/action-center-route-reopen'
-import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
+import {
+  finalizeActionCenterPreviewItem,
+  getLiveActionCenterSummary,
+  type ActionCenterWorkspaceReadbackSummary,
+} from '@/lib/action-center-live'
 import type {
   ActionCenterPreviewItem,
   ActionCenterPreviewManagerOption,
@@ -142,6 +146,42 @@ function formatLongDate(value: string | null) {
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return value
   return DUTCH_LONG_DATE.format(parsed)
+}
+
+function formatCountLabel(count: number, singular: string, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`
+}
+
+function getWorkspaceRouteImageSummary(summary: ActionCenterWorkspaceReadbackSummary) {
+  if (summary.routeCount === 0) {
+    return 'Nog geen zichtbare routes in deze workspace.'
+  }
+
+  return `${formatCountLabel(summary.activeRouteCount, 'open route')} en ${formatCountLabel(summary.closedRouteCount, 'gesloten route')} van ${formatCountLabel(summary.routeCount, 'zichtbare route')}.`
+}
+
+function getWorkspaceDecisionTrailSummary(summary: ActionCenterWorkspaceReadbackSummary) {
+  if (summary.decisionRouteCount === 0) {
+    return 'Nog geen routes met expliciet besluitspoor zichtbaar.'
+  }
+
+  return `${formatCountLabel(summary.decisionRouteCount, 'route')} met expliciet besluitspoor in de huidige selectie.`
+}
+
+function getWorkspaceContinuationSummary(summary: ActionCenterWorkspaceReadbackSummary) {
+  if (summary.continuationVisibleRouteCount === 0) {
+    return 'Nog geen heropening of vervolg over tijd zichtbaar.'
+  }
+
+  return `${formatCountLabel(summary.reopenedRouteCount, 'heropende route')} en ${formatCountLabel(summary.followUpVisibleRouteCount, 'route')} met vervolgcontext zichtbaar.`
+}
+
+function getWorkspaceReviewPressureSummary(summary: ActionCenterWorkspaceReadbackSummary) {
+  if (summary.reviewCount === 0 || !summary.nextReviewDate) {
+    return 'Nog geen reviewmomenten zichtbaar in deze selectie.'
+  }
+
+  return `${formatCountLabel(summary.reviewCount, 'route')} met review in beeld, eerstvolgend ${formatShortDate(summary.nextReviewDate)}.`
 }
 
 function getInitials(name: string | null) {
@@ -843,6 +883,7 @@ export function ActionCenterPreview({
   const teamRows = buildTeamRows(items)
   const selectedTeam = teamRows.find((team) => team.id === selectedTeamId) ?? teamRows[0] ?? null
   const allSources = [...new Set(items.map((item) => item.sourceLabel))]
+  const workspaceReadbackSummary = useMemo(() => getLiveActionCenterSummary(items), [items])
   const selectedItemLineage = selectedItem ? buildDetailLineageEntries(selectedItem, previewRouteTitles) : []
   const today = new Date()
   const dueItems = items.filter((item) => isOpenAttentionStatus(item.status))
@@ -1591,27 +1632,21 @@ export function ActionCenterPreview({
                   </section>
 
                   <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Modulewaarheid</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Bestuurlijke teruglezing</p>
                     <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#132033]">
-                      Action Center blijft een eigen suite-module
+                      Wat is over deze zichtbare routes al bestuurlijk leesbaar?
                     </h2>
                     <p className="mt-4 text-sm leading-8 text-[#4f6175]">
                       {readOnly
-                        ? 'Deze landing leest rustig mee met campagnes, uitvoering en bestaande dossiers. Bewerkbare opvolging openen we alleen waar je rol dat al toelaat.'
-                        : 'Voor echte wijzigingen blijft het onderliggende dossier leidend. Deze preview laat dezelfde werkwijze zien zonder extra routes toe te voegen.'}
+                        ? 'Deze readback blijft bewust compact: hoeveel routes nog lopen, waar expliciete besluitmomenten zichtbaar zijn en waar vervolg over tijd al in beeld komt.'
+                        : 'Deze readback blijft bewust compact: routebeeld, besluitspoor, reviewdruk en vervolg over tijd blijven in dezelfde Action Center-overview leesbaar.'}
                     </p>
 
                     <div className="mt-6 space-y-3">
-                      <SignalRow label="Broncampagnes" value={`${allSources.length} actief in deze selectie`} />
-                      <SignalRow label="Omgeving" value={workspaceSubtitle} />
-                      <SignalRow
-                        label="Eigenaarschap"
-                        value={
-                          missingManagerCount > 0
-                            ? `${missingManagerCount} team${missingManagerCount === 1 ? '' : 's'} vragen nog expliciete toewijzing`
-                            : 'Alle zichtbare teams hebben een expliciete manager'
-                        }
-                      />
+                      <SignalRow label="Routebeeld" value={getWorkspaceRouteImageSummary(workspaceReadbackSummary)} />
+                      <SignalRow label="Besluitspoor" value={getWorkspaceDecisionTrailSummary(workspaceReadbackSummary)} />
+                      <SignalRow label="Vervolg over tijd" value={getWorkspaceContinuationSummary(workspaceReadbackSummary)} />
+                      <SignalRow label="Reviewdruk" value={getWorkspaceReviewPressureSummary(workspaceReadbackSummary)} />
                     </div>
 
                     <Link

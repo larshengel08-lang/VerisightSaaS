@@ -6,6 +6,7 @@ import {
   buildActionCenterTelemetryEvents,
   buildLiveActionCenterItems,
   finalizeActionCenterPreviewItem,
+  getLiveActionCenterSummary,
   isLiveActionCenterScanType,
 } from './action-center-live'
 import { buildActionCenterRouteId, projectActionCenterRoute } from './action-center-route-contract'
@@ -499,6 +500,91 @@ describe('live action center builder', () => {
     expect(closedItem?.coreSemantics.routeSummary).toMatchObject({
       stateLabel: 'Afgerond',
       overviewSummary: 'Historische route die later een directe opvolger kreeg.',
+    })
+  })
+
+  it('builds a compact workspace readback summary from visible route truth', () => {
+    const [baseItem] = buildLiveActionCenterItems([buildLiveContext()])
+
+    const decisionItem = {
+      ...baseItem,
+      id: 'route-readback-open',
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        latestDecision: {
+          decisionEntryId: 'decision-readback-1',
+          sourceRouteId: 'route-readback-open',
+          decision: 'bijstellen',
+          decisionReason: 'De eerste bounded stap vroeg nog aanscherping.',
+          nextCheck: 'Bevestig binnen twee weken of de nieuwe managementstap effect heeft.',
+          decisionRecordedAt: '2026-05-01T10:00:00.000Z',
+          reviewCompletedAt: '2026-05-01T09:30:00.000Z',
+        },
+        decisionHistory: [
+          {
+            decisionEntryId: 'decision-readback-1',
+            sourceRouteId: 'route-readback-open',
+            decision: 'bijstellen',
+            decisionReason: 'De eerste bounded stap vroeg nog aanscherping.',
+            nextCheck: 'Bevestig binnen twee weken of de nieuwe managementstap effect heeft.',
+            decisionRecordedAt: '2026-05-01T10:00:00.000Z',
+            reviewCompletedAt: '2026-05-01T09:30:00.000Z',
+          },
+        ],
+      },
+    }
+    const reopenedItem = {
+      ...baseItem,
+      id: 'route-readback-reopen',
+      title: 'Heropende route',
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        lineageSummary: {
+          overviewLabel: 'Heropend traject',
+          backwardLabel: 'Heropend traject',
+          backwardRouteId: null,
+          forwardLabel: null,
+          forwardRouteId: null,
+          detailLabels: ['Heropend traject'],
+        },
+      },
+    }
+    const followedUpItem = {
+      ...baseItem,
+      id: 'route-readback-closed',
+      title: 'Historisch afgesloten route',
+      status: 'afgerond' as const,
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        routeSummary: {
+          stateLabel: 'Afgerond',
+          overviewSummary: 'Historische route die later een directe opvolger kreeg.',
+          routeAsk: 'Lees deze route alleen nog als historische context.',
+          progressSummary: 'Er loopt geen actieve follow-through meer in deze route.',
+        },
+        lineageSummary: {
+          overviewLabel: 'Later opgevolgd',
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: 'Later opgevolgd',
+          forwardRouteId: 'route-readback-next',
+          detailLabels: ['Later opgevolgd'],
+        },
+      },
+    }
+
+    const summary = getLiveActionCenterSummary([decisionItem, reopenedItem, followedUpItem])
+
+    expect(summary).toMatchObject({
+      routeCount: 3,
+      activeRouteCount: 2,
+      closedRouteCount: 1,
+      decisionRouteCount: 1,
+      reopenedRouteCount: 1,
+      followUpVisibleRouteCount: 1,
+      continuationVisibleRouteCount: 2,
+      reviewCount: 3,
+      nextReviewDate: '2026-05-12',
     })
   })
 
