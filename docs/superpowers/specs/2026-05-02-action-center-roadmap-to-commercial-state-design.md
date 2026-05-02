@@ -63,40 +63,75 @@ The product boundary must continue to reject:
 
 ---
 
-## 3. Current Foundation
+## 3. Current Foundation, Split by Reality
 
-The roadmap starts from a foundation that is already materially stronger than a concept phase.
+The roadmap starts from a foundation that is materially stronger than concept phase, but not every capability lives at the same level of truth.
 
-### 3.1 What already exists
+This document must keep three layers separate:
 
-The following capabilities already exist in product truth and should be treated as foundation, not greenfield:
+- **canonical decided**: the semantic direction is intentionally chosen in specs or route contracts
+- **product/runtime present**: a capability is actually present in shipped product behavior and stable enough to build on directly
+- **directional but not yet hardened**: there is strong design direction and some implementation, but the practical pilot-grade shape is not fully settled
+
+This separation exists to prevent three truths from collapsing into one:
+
+- spec-truth
+- prototype-truth
+- runtime-truth
+
+### 3.1 Canonically decided and already safe to treat as foundation
+
+The following are sufficiently decided and sufficiently present that the roadmap should build on them rather than re-open them:
 
 - HR can open a route by assigning a manager
 - a manager can see an open request immediately after assignment
-- manager response writes are server-side hardened
-- one route can carry multiple action cards
-- each action can carry its own review moment
-- routes can be explicitly closed out
-- a closed route can be reopened
-- a closed route can spawn a follow-up route
-- lineage truth exists for reopen and follow-up
-- compact lineage labels now exist for direct predecessor/successor reading
+- manager response writes are server-side hardened against client-forged route identity
+- route closeout exists as an explicit bestuurlijke layer
+- closed routes can reopen as a dedicated route-event truth
+- follow-up can exist as a distinct continuation truth rather than silent route reuse
+- compact one-step lineage reading is the intended read model, not chain exploration
 
-### 3.2 What this means for the roadmap
+### 3.2 Canonically decided, but still requiring product hardening before they count as pilot-grade runtime foundation
+
+The following have clear direction, and some of them already exist in runtime, but they should not yet be treated as fully hardened pilot-grade base capabilities:
+
+- multiple action cards within a route
+- action-bound review as the primary review model
+- manager action creation as the practical standard follow-through move
+- reopen / follow-up / lineage as day-to-day product behavior rather than only semantically correct truth
+
+These capabilities are strong enough to continue from, but not strong enough to talk about as if only cosmetic polish remains.
+
+### 3.3 Directional but still practically open
+
+The following areas should be treated as intentionally moving toward a chosen shape, not as already fully settled:
+
+- the ideal manager action UX
+- how light or structured action review should feel in repeated real use
+- how much route-level summary versus action-level detail is needed in pilots
+- what degree of route-over-time readback is sufficient before reporting becomes too heavy
+
+### 3.4 What this means for the roadmap
 
 The roadmap must not behave as though Action Center is still missing:
 
 - route-open semantics
 - assignment-open visibility
 - closeout
-- reopen
-- follow-up lineage basics
+- the existence of reopen/follow-up direction
 
-Instead, every track below must answer:
+But it also must not overstate as fully stable pilot-foundation:
 
-1. what is already good enough
-2. what remains weak for pilot use
-3. what should be hardened or clarified next
+- multiple action cards as a proven repeated-use operating model
+- action-bound review as already fully landed product practice
+- lineage as already operationally quiet under all real pilot conditions
+- manager action as fully crystallized rather than still being hardened and simplified
+
+Therefore every track below must answer:
+
+1. what is canonically decided
+2. what is actually stable in runtime today
+3. what is directional but still hardening
 4. what must explicitly **not** be rebuilt
 
 ---
@@ -118,6 +153,8 @@ At the pilot-ready state:
 - permissions and writes are trustworthy enough for customer data
 - browser-backed critical flows are stable enough to trust in demos and pilots
 - basic bestuurlijke teruglezing exists without building a heavy analytics product
+
+This end state does **not** assume that every manager-action detail is already perfect today. It assumes the product reaches a state where the chosen manager action model is sufficiently hardened, simplified, and supportable for pilots.
 
 ### 4.2 Pilot operationalization end state
 
@@ -143,13 +180,13 @@ make the route legible as the main bestuurlijke object above actions and reviews
 Why first:
 the semantics already exist, but route meaning is not yet pilot-grade readable.
 
-### Wave 2: Manageractie-Ervaring Verfijnen
+### Wave 2: Manageractie-Semantiek Harden en Ervaring Verfijnen
 
 Goal:
-make manager action creation and review light, clear, and strong enough for repeated use.
+make the manager action model both semantically safe enough and UX-light enough for repeated use.
 
 Why here:
-once the route reads well, the manager execution layer becomes the next adoption bottleneck.
+once the route reads well, the manager execution layer becomes the next adoption bottleneck, but it still needs some product hardening rather than polish alone.
 
 ### Wave 3: Rapportage en Bestuurlijke Teruglezing
 
@@ -157,7 +194,7 @@ Goal:
 let HR and sponsors read what happened over time without turning Action Center into an analytics suite.
 
 Why here:
-only after routes and actions are understandable does retrospective reading create real value.
+retrospective reading creates value only when the trust and operating model are strong enough that the readback reflects dependable product behavior.
 
 ### Wave 4: Governance en Rechten
 
@@ -165,7 +202,7 @@ Goal:
 make authority, role boundaries, and trust sharp enough for external pilots.
 
 Why here:
-parts already exist, but the whole governance layer must be coherent before real customer use.
+parts already exist, but the whole governance layer must be coherent before real customer use. Governance is not a late polish track; it is a near-prerequisite for external pilot trust.
 
 ### Wave 5: Betrouwbare Operatie
 
@@ -173,7 +210,7 @@ Goal:
 make Action Center stable enough to run without constant manual rescue.
 
 Why here:
-stability must harden before pilots scale beyond internal confidence.
+stability is also a near-prerequisite for external pilots. It does not need to wait for reporting depth, but it does need to harden alongside the product core.
 
 ### Wave 6: UX-Volwassenheid
 
@@ -206,16 +243,33 @@ it should be built around a product that is already coherent, not around a movin
 The recommended order is:
 
 1. Routebrede voortgang en samenvatting
-2. Manageractie-ervaring verfijnen
-3. Rapportage en bestuurlijke teruglezing
-4. Governance en rechten
-5. Betrouwbare operatie
+2. Manageractie-semantiek harden en ervaring verfijnen
+3. Governance en rechten
+4. Betrouwbare operatie
+5. Rapportage en bestuurlijke teruglezing
 6. UX-volwassenheid
 7. Inbedding in scan -> route flow
 8. Pilot operationalisering
 
-This is not a hard sequential waterfall. Some infrastructure and governance work can advance in parallel.  
+This is not a hard sequential waterfall. Some governance and operations work should advance in parallel with Waves 1 and 2 rather than after them.  
 But this is the best **primary ordering** for product leverage and pilot-readiness.
+
+### 6.1 Prerequisite and near-prerequisite logic
+
+Before external pilot use, the following must be at least near-pilot-grade:
+
+- authority boundaries on critical writes
+- route closeout / reopen / follow-up trust
+- migration discipline for schema and policy rollout
+- browser-path reliability for the core HR and manager flows
+- support and recovery clarity for critical product failures
+
+That means:
+
+- route readability can move first as the most visible product wave
+- manager action hardening can move immediately after
+- governance and reliable operations must harden in parallel or immediately after, not as optional late cleanup
+- reporting only becomes pilot-meaningful once trust and operations are strong enough that the readback is dependable
 
 ---
 
@@ -235,7 +289,7 @@ Make the route the clear bestuurlijke summary object again.
 - route closeout exists
 - route reopen and follow-up truth exist
 - lineage labels exist
-- action cards exist inside routes
+- action cards exist inside routes, but action-card usage is not yet treated here as universally settled pilot behavior
 
 **Open gaps toward pilot-ready**
 
@@ -255,23 +309,31 @@ Make the route the clear bestuurlijke summary object again.
 - stronger route-level progression language
 - clearer "what is current / what is historical / what needs attention now"
 
-### 7.2 Manageractie-Ervaring Verfijnen
+### 7.2 Manageractie-Semantiek Harden en Ervaring Verfijnen
 
 **Goal**
 
-Make manager action work small, strong, and repeatable.
+Make manager action work small, strong, understandable, and pilot-safe.
 
 **Current basis**
 
-- action cards exist
-- review per action exists
-- routes can carry multiple actions
+- there is a strong chosen direction toward manager-owned action cards
+- action-bound review already exists as the intended model
+- routes can already carry multiple actions in runtime
+
+**Reality check**
+
+- this area is not yet treated as fully crystallized pilot-foundation
+- the current task is not just polish
+- the current task is to harden and simplify the model until it proves quiet enough for real manager use
 
 **Open gaps toward pilot-ready**
 
+- the ideal practical shape of manager action and review still needs product hardening
 - manager action creation still needs lighter UX and stronger defaults
 - review entry needs to feel clearer and less form-heavy
 - action cards should feel operationally useful without becoming task management
+- the product still needs to prove that multiple actions plus action-bound review remain understandable in real repeated pilot use
 
 **Do not re-do**
 
@@ -281,6 +343,7 @@ Make manager action work small, strong, and repeatable.
 
 **Next capability step**
 
+- harden the chosen manager action model before treating it as fully stable pilot default
 - lighter action create flow
 - more readable action cards
 - sharper review prompts and defaults
@@ -328,6 +391,7 @@ Make trust explicit.
 - role boundaries need to be more comprehensively expressed
 - important bestuurlijke writes need clearer auditability
 - some authority models need a cleaner shared explanation
+- pilot gating still needs a clear statement of which writes are authority-safe enough to trust externally
 
 **Do not re-do**
 
@@ -339,6 +403,7 @@ Make trust explicit.
 - fuller role matrix
 - action/review/closeout/follow-up audit expectations
 - clearer governance model around who may do what and why
+- explicit pilot-safe authority gates on the highest-risk write paths
 
 ### 7.5 Betrouwbare Operatie
 
@@ -356,6 +421,7 @@ Make Action Center safe to run repeatedly.
 - migration and policy rollout should become more repeatable
 - health and issue visibility should improve
 - recovery and support paths should become less ad hoc
+- core browser-path reliability still needs to be treated as pilot readiness evidence, not just implementation confidence
 
 **Do not re-do**
 
@@ -367,6 +433,7 @@ Make Action Center safe to run repeatedly.
 - sharper ops playbooks
 - better health evidence
 - clearer deployment and schema rollout expectations
+- explicit recovery and verification routines around the core HR and manager paths
 
 ### 7.6 UX-Volwassenheid
 
@@ -455,12 +522,14 @@ The roadmap is complete when the following are all true:
 
 ### 8.1 Product understanding
 
-A new user can quickly understand:
+A new HR or manager user can understand without hidden guidance:
 
 - why a route exists
 - who is currently responsible
 - what the next meaningful step is
 - whether the route is active, closed, reopened, or followed up
+
+This must be true on the main route overview and route detail surfaces, not only in product demos.
 
 ### 8.2 HR usability
 
@@ -474,6 +543,14 @@ HR can reliably:
 
 without hidden system knowledge.
 
+For first pilots, this specifically means HR can complete the following browser paths without product-team intervention:
+
+- open a route from the post-scan context
+- assign or reassign the responsible manager
+- close a route with explicit closeout truth
+- start a follow-up route from a closed route
+- read the direct predecessor/successor context of that route afterwards
+
 ### 8.3 Manager usability
 
 A manager can:
@@ -482,6 +559,13 @@ A manager can:
 - create an action with low friction
 - complete action-bound review moments
 - avoid getting lost in workflow overhead
+
+For first pilots, this specifically means a manager can complete the following without hidden product knowledge:
+
+- open their assigned route from the Action Center surface
+- understand whether it is a fresh route, a reopened route, or a follow-up route
+- create or continue the next intended action form inside the route
+- complete the bounded review step expected by the current manager-action model
 
 ### 8.4 Bestuurlijke terugleesbaarheid
 
@@ -494,6 +578,13 @@ HR or sponsors can read:
 
 without needing a separate analytics product.
 
+For first pilots, sufficient readback means:
+
+- direct predecessor/successor lineage is readable
+- route-level current state is readable
+- closed versus continued routes are distinguishable
+- HR can explain what happened in a department without reconstructing raw database truth
+
 ### 8.5 Governance trust
 
 Critical writes are:
@@ -502,6 +593,16 @@ Critical writes are:
 - server-validated
 - hard to forge
 - coherent in responsibility
+
+For first pilots, the following write categories must be clearly authority-safe and auditable enough to trust:
+
+- manager response writes
+- route closeout writes
+- route reopen writes
+- follow-up route creation writes
+- manager assignment writes on route-opening paths
+
+Auditability at this stage does not require a full enterprise audit product, but it does require that these actions are attributable and explainable.
 
 ### 8.6 Operational stability
 
@@ -513,6 +614,23 @@ The team can support Action Center without routine firefighting because:
 - issues are visible
 - recovery paths are known
 
+For first pilots, the minimum critical browser paths are:
+
+- HR opens a route
+- manager sees the open request
+- manager saves the intended next-step response/action flow
+- saved state survives reload
+- HR closes a route
+- HR starts a follow-up route
+- manager and HR both read the direct lineage correctly afterwards
+
+For first pilots, the minimum support/ops evidence is:
+
+- a known schema rollout path for Action Center tables and policies
+- a known verification path after rollout
+- a known recovery path when critical route writes fail
+- a known browser regression path for the flows above
+
 ### 8.7 UX confidence
 
 The product feels:
@@ -522,11 +640,20 @@ The product feels:
 - non-experimental
 - commercially credible
 
+At this stage that means:
+
+- no critical dead-end states in the main HR and manager flows
+- no obviously prototype-like route-reading gaps on key surfaces
+- empty, blocked, and closed states read intentionally rather than accidentally
+
 ### 8.8 Commercial clarity
 
 The product can be clearly positioned as:
 
 > the follow-through layer that comes after the scan
+
+This must be true both in product narrative and in the actual route flow.  
+If a user cannot see how the route came from scan truth, the product is not yet commercially ready for pilot framing.
 
 ### 8.9 Pilot operational readiness
 
@@ -538,6 +665,24 @@ Internal teams have enough:
 - support expectations
 
 to run real customer pilots.
+
+At minimum, pilot operational readiness requires:
+
+- a lightweight HR onboarding path
+- a lightweight manager explanation path
+- a support runbook for the core route, closeout, reopen, and follow-up flows
+- a demo narrative that explains Action Center as post-scan follow-through rather than standalone tasking
+
+### 8.10 Go / no-go principle
+
+The pilot-ready decision should not be made on polish sentiment alone.
+
+The product is not pilot-ready if any of the following is still materially unstable:
+
+- authority-safe critical writes
+- core HR/manager browser flows
+- supportable recovery path for broken route behavior
+- basic lineage and route-state readback after continuation
 
 ---
 
