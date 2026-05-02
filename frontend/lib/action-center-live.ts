@@ -388,6 +388,7 @@ export function finalizeActionCenterPreviewItem(
       id: item.id,
       title: item.title,
       status: getPreviewCoreRouteStatus(item.status),
+      surfaceStatus: item.status,
       ownerName: item.ownerName,
       reviewDate: item.reviewDate,
       expectedEffect: reuseExistingRouteTruth ? (existingRoute?.expectedEffect ?? null) : item.expectedEffect,
@@ -483,6 +484,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
       const coreSemantics = projectActionCenterCoreSemantics({
         ...context,
         route,
+        surfaceStatus: status,
         latestVisibleUpdateNote: latestUpdate,
         reviewDecisions: context.reviewDecisions ?? ([] as ActionCenterReviewDecision[]),
         decisionRecords: [],
