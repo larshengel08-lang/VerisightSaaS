@@ -6,11 +6,6 @@ import {
   type CampaignCompositionState,
 } from '@/lib/dashboard/dashboard-state-composition'
 import {
-  type ActionCenterRouteOpenRecord,
-  canOpenActionCenterRoute,
-  hasOpenedActionCenterRoute,
-} from '@/lib/dashboard/open-action-center-route'
-import {
   getDashboardModuleLabel,
   getScanTypeForDashboardModule,
   normalizeDashboardModuleFilter,
@@ -82,19 +77,6 @@ export default async function DashboardHomePage({
     sent_at: string | null
     completed: boolean
   }>
-  const { data: deliveryRecordsRaw } =
-    campaignIds.length > 0
-      ? await supabase
-          .from('campaign_delivery_records')
-          .select('campaign_id, lifecycle_stage, first_management_use_confirmed_at')
-          .in('campaign_id', campaignIds)
-      : { data: [] }
-  const deliveryRecords = (deliveryRecordsRaw ?? []) as Array<
-    { campaign_id: string } & ActionCenterRouteOpenRecord
-  >
-  const deliveryRecordByCampaign = new Map(
-    deliveryRecords.map((record) => [record.campaign_id, record] as const),
-  )
   const invitesNotSentByCampaign = buildInvitesNotSentByCampaign(campaigns, respondentStateRows)
   const campaignEntries = campaigns.map((campaign) => ({
     campaign,
@@ -151,32 +133,6 @@ export default async function DashboardHomePage({
   ]
   const attentionItems = buildOverviewAttentionItems(campaignEntries, primaryLeadEntry).slice(0, 3)
   const blockerItems = buildOverviewBlockerItems(campaignEntries).slice(0, 3)
-  const openFollowUpItems = readableEntries.filter((entry) => {
-    const record = deliveryRecordByCampaign.get(entry.campaign.campaign_id)
-    return record ? canOpenActionCenterRoute(record) : false
-  })
-  const activeFollowUpItems = readableEntries.filter((entry) => {
-    const record = deliveryRecordByCampaign.get(entry.campaign.campaign_id)
-    return record ? hasOpenedActionCenterRoute(record) : false
-  })
-  const unconfirmedFollowUpCount = openFollowUpItems.filter((entry) => {
-    const record = deliveryRecordByCampaign.get(entry.campaign.campaign_id)
-    return record ? !record.first_management_use_confirmed_at : false
-  }).length
-  const followUpPreviewRows = [
-    openFollowUpItems[0]
-      ? { label: 'Open prioriteit', value: openFollowUpItems[0].campaign.campaign_name }
-      : null,
-    activeFollowUpItems[0]
-      ? { label: 'Reviewmoment', value: 'Open in Action Center' }
-      : null,
-    unconfirmedFollowUpCount > 0
-      ? {
-          label: 'Zonder bevestiging',
-          value: `${unconfirmedFollowUpCount} ${unconfirmedFollowUpCount === 1 ? 'route' : 'routes'}`,
-        }
-      : null,
-  ].filter(Boolean) as Array<{ label: string; value: string }>
 
   return (
     <div className="space-y-8">
@@ -320,35 +276,7 @@ export default async function DashboardHomePage({
             </section>
           ) : null}
 
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr),minmax(0,1.08fr)]">
-            <section className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/58 px-5 py-4 shadow-[0_1px_3px_rgba(10,25,47,0.03)] sm:px-6">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
-                  Opvolging preview
-                </p>
-                <Link
-                  href="/action-center"
-                  className="text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
-                >
-                  Open Action Center
-                </Link>
-              </div>
-              <div className="mt-3 space-y-2.5">
-                {followUpPreviewRows.length > 0 ? (
-                  followUpPreviewRows.map((row) => (
-                    <div key={row.label} className="flex items-center justify-between gap-3 text-sm">
-                      <span className="text-[color:var(--dashboard-muted)]">{row.label}</span>
-                      <span className="font-semibold text-[color:var(--dashboard-ink)]">{row.value}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
-                    Nog geen open opvolging.
-                  </p>
-                )}
-              </div>
-            </section>
-
+          {recentOutputEntries.length > 0 ? (
             <section className="space-y-4">
               <div className="flex items-end justify-between gap-3">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-[color:var(--dashboard-muted)]">
@@ -389,7 +317,7 @@ export default async function DashboardHomePage({
                 })}
               </div>
             </section>
-          </div>
+          ) : null}
         </>
       )}
     </div>
