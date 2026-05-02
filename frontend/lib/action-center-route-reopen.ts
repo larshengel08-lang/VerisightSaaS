@@ -1,12 +1,7 @@
+import type { ActionCenterGovernanceActorRole } from './action-center-governance'
 import type { ActionCenterRouteCloseoutRecord } from './action-center-route-closeout'
 
-export type ActionCenterRouteReopenRole =
-  | 'hr'
-  | 'manager'
-  | 'verisight'
-  | 'hr_owner'
-  | 'hr_member'
-  | (string & {})
+export type ActionCenterRouteReopenRole = ActionCenterGovernanceActorRole | 'manager'
 
 export type ActionCenterRouteReopenReason =
   | 'te-vroeg-afgesloten'
@@ -75,6 +70,7 @@ const FOLLOW_UP_TRIGGER_REASONS = new Set<ActionCenterRouteFollowUpTriggerReason
   'hernieuwde-hr-beoordeling',
 ])
 const REOPEN_ROLES = new Set<ActionCenterRouteReopenRole>([
+  'verisight_admin',
   'hr',
   'manager',
   'verisight',

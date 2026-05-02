@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
+import { resolveActionCenterHrWriteAccess } from '@/lib/action-center-governance'
 import {
   projectActionCenterRouteReopen,
   type ActionCenterRouteReopenReason,
@@ -147,7 +148,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Niet ingelogd.' }, { status: 401 })
   }
 
-  const { context, orgMemberships } = await loadSuiteAccessContext(supabase, user.id)
+  const { context, orgMemberships, workspaceMemberships } = await loadSuiteAccessContext(supabase, user.id)
   const routeTruth = await loadRouteTruth({
     campaignId: parsed.campaign_id,
     routeScopeType: parsed.route_scope_type,
@@ -157,13 +158,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ detail: 'Route reopen route bestaat niet voor deze campagne.' }, { status: 400 })
   }
 
-  const canReopenRoute =
-    context.isVerisightAdmin ||
-    orgMemberships.some(
-      (membership) => membership.org_id === routeTruth.campaign.organization_id && membership.role === 'owner',
-    )
+  const writeAccess = resolveActionCenterHrWriteAccess({
+    context,
+    orgMemberships,
+    workspaceMemberships,
+    orgId: routeTruth.campaign.organization_id,
+  })
 
-  if (!canReopenRoute) {
+  if (!writeAccess.allowed || !writeAccess.auditRole) {
     return NextResponse.json({ detail: 'Alleen HR of Verisight kan deze route heropenen.' }, { status: 403 })
   }
 
@@ -187,7 +189,7 @@ export async function POST(request: Request) {
     ...identity,
     reopen_reason: parsed.reopen_reason,
     reopened_at: reopenedAt,
-    reopened_by_role: 'hr',
+    reopened_by_role: writeAccess.auditRole,
     created_by: user.id,
     updated_by: user.id,
     updated_at: reopenedAt,

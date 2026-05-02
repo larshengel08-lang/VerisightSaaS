@@ -116,7 +116,7 @@ describe('action center route reopens route', () => {
         route_scope_value: 'org-1::department::operations',
         reopen_reason: 'te-vroeg-afgesloten',
         reopened_at: '2026-05-21T09:00:00.000Z',
-        reopened_by_role: 'hr',
+        reopened_by_role: 'hr_owner',
       },
       error: null,
     })
@@ -155,7 +155,7 @@ describe('action center route reopens route', () => {
         campaign_id: 'campaign-1',
         org_id: 'org-1',
         reopen_reason: 'te-vroeg-afgesloten',
-        reopened_by_role: 'hr',
+        reopened_by_role: 'hr_owner',
         created_by: 'hr-owner-1',
       }),
     )
@@ -164,7 +164,84 @@ describe('action center route reopens route', () => {
     expect(payload.reopen).toMatchObject({
       routeId: 'campaign-1::org-1::department::operations',
       reopenReason: 'te-vroeg-afgesloten',
-      reopenedByRole: 'hr',
+      reopenedByRole: 'hr_owner',
+    })
+  })
+
+  it('persists the exact HR workspace role for reopen audit truth', async () => {
+    mockGetUser.mockResolvedValue({ data: { user: { id: 'hr-member-1' } } })
+    mockLoadSuiteAccessContext.mockResolvedValue({
+      context: { isVerisightAdmin: false },
+      orgMemberships: [{ org_id: 'org-1', role: 'viewer' }],
+      workspaceMemberships: [
+        {
+          org_id: 'org-1',
+          user_id: 'hr-member-1',
+          display_name: 'HR Member',
+          login_email: 'hr.member@example.com',
+          access_role: 'hr_member',
+          scope_type: 'org',
+          scope_value: 'org-1::org::org-1',
+          can_view: true,
+          can_update: true,
+          can_assign: false,
+          can_schedule_review: true,
+        },
+      ],
+    })
+
+    const insertQuery = createInsertQuery({
+      data: {
+        route_id: 'campaign-1::org-1::department::operations',
+        campaign_id: 'campaign-1',
+        org_id: 'org-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        reopen_reason: 'herbeoordeling',
+        reopened_at: '2026-05-21T09:00:00.000Z',
+        reopened_by_role: 'hr_member',
+      },
+      error: null,
+    })
+
+    mockAdminFrom.mockImplementation((table: string) => {
+      if (table === 'campaigns') {
+        return createCampaignQuery({
+          data: { id: 'campaign-1', organization_id: 'org-1' },
+          error: null,
+        })
+      }
+      if (table === 'respondents') {
+        return createRespondentsQuery({ data: [{ department: 'Operations' }] })
+      }
+      if (table === 'action_center_route_reopens') {
+        return insertQuery
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    })
+
+    const response = await POST(
+      makeRequest({
+        route_id: 'campaign-1::org-1::department::operations',
+        campaign_id: 'campaign-1',
+        route_scope_type: 'department',
+        route_scope_value: 'org-1::department::operations',
+        reopen_reason: 'herbeoordeling',
+      }),
+    )
+
+    expect(response.status).toBe(200)
+    expect(insertQuery.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reopened_by_role: 'hr_member',
+        created_by: 'hr-member-1',
+      }),
+    )
+
+    const payload = await response.json()
+    expect(payload.reopen).toMatchObject({
+      reopenedByRole: 'hr_member',
     })
   })
 })

@@ -9,6 +9,10 @@ import {
   type ActionCenterManagerResponseWriteInput,
 } from '@/lib/action-center-manager-responses'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
+import {
+  type ActionCenterGovernanceWriteRole,
+  resolveActionCenterHrWriteAccess,
+} from '@/lib/action-center-governance'
 import { projectActionCenterRouteFollowUpRelation } from '@/lib/action-center-route-reopen'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
@@ -42,7 +46,7 @@ type ManagerResponseCarrierRow = {
 }
 
 type FollowUpWriteAccess = {
-  recordedByRole: 'verisight_admin' | 'hr'
+  recordedByRole: ActionCenterGovernanceWriteRole
 }
 
 type ManagerAssignmentRow = {
@@ -229,27 +233,17 @@ async function loadManagerAssignment(args: {
 async function resolveFollowUpWriteAccess(args: { supabase: SupabaseClient; userId: string; orgId: string }) {
   const { context, orgMemberships, workspaceMemberships } = await loadSuiteAccessContext(args.supabase, args.userId)
 
-  if (context.isVerisightAdmin) {
-    return { access: { recordedByRole: 'verisight_admin' } satisfies FollowUpWriteAccess, error: null }
-  }
+  const writeAccess = resolveActionCenterHrWriteAccess({
+    context,
+    orgMemberships,
+    workspaceMemberships,
+    orgId: args.orgId,
+  })
 
-  const orgMembership = orgMemberships.find((membership) => membership.org_id === args.orgId) ?? null
-  if (orgMembership?.role === 'owner') {
-    return { access: { recordedByRole: 'hr' } satisfies FollowUpWriteAccess, error: null }
-  }
-
-  const hrWorkspaceMembership =
-    workspaceMemberships.find(
-      (membership) =>
-        membership.org_id === args.orgId &&
-        (membership.access_role === 'hr_owner' || membership.access_role === 'hr_member') &&
-        membership.can_update,
-    ) ?? null
-
-  if (hrWorkspaceMembership) {
+  if (writeAccess.allowed && writeAccess.auditRole) {
     return {
       access: {
-        recordedByRole: 'hr',
+        recordedByRole: writeAccess.auditRole,
       } satisfies FollowUpWriteAccess,
       error: null,
     }
