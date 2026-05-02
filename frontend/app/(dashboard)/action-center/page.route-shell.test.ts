@@ -547,6 +547,31 @@ describe("action center landing shell", () => {
     expect(markup).toContain(item.coreSemantics.actionProgress.expectedEffect ?? "");
   });
 
+  it("renders a compact route summary layer on detail from shared route semantics", () => {
+    const context = buildLiveContext();
+    const [item] = buildLiveActionCenterItems([context]);
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "actions",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+
+    expect(markup).toContain("Route-read");
+    expect(markup).toContain(item.coreSemantics.routeSummary.stateLabel);
+    expect(markup).toContain("Vraagt nu");
+    expect(markup).toContain(item.coreSemantics.routeSummary.routeAsk);
+    expect(markup).toContain("Voortgang");
+    expect(markup).toContain(item.coreSemantics.routeSummary.progressSummary);
+  });
+
   it("renders compact decision history from shared semantics on route detail", () => {
     const context = buildLiveContext();
     const [baseItem] = buildLiveActionCenterItems([context]);
@@ -1063,10 +1088,10 @@ describe("action center landing shell", () => {
     );
 
     expect(markup).toContain("Laatste route-read");
-    expect(markup).toContain("Besluit");
-    expect(markup).toContain("Bijstellen");
-    expect(markup).toContain("Stap");
-    expect(markup).toContain(item.coreSemantics.actionProgress.currentStep ?? "");
+    expect(markup).toContain("Route");
+    expect(markup).toContain(item.coreSemantics.routeSummary.stateLabel);
+    expect(markup).toContain("Lezing");
+    expect(markup).toContain(item.coreSemantics.routeSummary.overviewSummary);
     expect(markup).not.toContain("Laatste beslissing");
     expect(markup).not.toContain("Waarom dit besluit");
     expect(markup).not.toContain("Volgende toets");
@@ -1074,8 +1099,8 @@ describe("action center landing shell", () => {
     expect(markup).not.toContain("Huidige stap");
     expect(markup).not.toContain("Hierna");
     expect(markup).not.toContain("Beslisgeschiedenis");
-    expect((markup.match(/>Stap</g) ?? []).length).toBe(1);
-    expect((markup.match(/>Besluit</g) ?? []).length).toBe(1);
+    expect((markup.match(/>Route</g) ?? []).length).toBe(1);
+    expect((markup.match(/>Lezing</g) ?? []).length).toBe(1);
   });
 
   it("shows only the compact overview lineage label for a follow-up route in overview", () => {

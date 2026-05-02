@@ -1703,6 +1703,12 @@ export function ActionCenterPreview({
                           </div>
                         ) : null}
 
+                        <div className="mt-7 grid gap-4 xl:grid-cols-3">
+                          <RouteSummaryCard label="Route-read" value={selectedItem.coreSemantics.routeSummary.stateLabel} />
+                          <RouteSummaryCard label="Vraagt nu" value={selectedItem.coreSemantics.routeSummary.routeAsk} />
+                          <RouteSummaryCard label="Voortgang" value={selectedItem.coreSemantics.routeSummary.progressSummary} />
+                        </div>
+
                         <div className="mt-7 grid gap-4 lg:grid-cols-[minmax(0,1fr),minmax(0,0.92fr)]">
                           <div className="rounded-[24px] border border-[#eadfce] bg-white px-5 py-5">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Waarom dit nu speelt</p>
@@ -3013,19 +3019,9 @@ function EmptySection({ title, body }: { title: string; body: string }) {
 }
 
 export function buildCompactLandingSummaryLines(item: ActionCenterPreviewItem) {
-  const latestDecision = item.coreSemantics.latestDecision
-  const currentStep = item.coreSemantics.actionProgress.currentStep
-  const managerResponse = item.managerResponse
-
   return [
-    !latestDecision && item.status === 'open-verzoek'
-      ? { label: 'Verzoek', value: 'Wacht op eerste managerreactie' }
-      : null,
-    !latestDecision && managerResponse
-      ? { label: 'Reactie', value: getActionCenterManagerResponseLabel(managerResponse.response_type) }
-      : null,
-    latestDecision ? { label: 'Besluit', value: getDecisionLabel(latestDecision.decision) } : null,
-    currentStep ? { label: 'Stap', value: currentStep } : null,
+    { label: 'Route', value: item.coreSemantics.routeSummary.stateLabel },
+    { label: 'Lezing', value: item.coreSemantics.routeSummary.overviewSummary },
   ]
     .filter((entry): entry is { label: string; value: string } => Boolean(entry?.value))
     .filter((entry, index, entries) => entries.findIndex((candidate) => candidate.value === entry.value) === index)
@@ -3097,6 +3093,15 @@ function buildDetailLineageEntries(
 function RouteFieldCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[18px] border border-[#eadfce] bg-[#fcfaf6] px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
+      <p className="mt-3 text-sm leading-7 text-[#32465d]">{value}</p>
+    </div>
+  )
+}
+
+function RouteSummaryCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[20px] border border-[#eadfce] bg-white px-5 py-5">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
       <p className="mt-3 text-sm leading-7 text-[#32465d]">{value}</p>
     </div>
