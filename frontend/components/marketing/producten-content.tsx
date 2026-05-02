@@ -1,216 +1,383 @@
 'use client'
 
 import Link from 'next/link'
-import { T, AC, FF, SHELL, useInView, Reveal, Arrow, SectionMark } from '@/components/marketing/design-tokens'
+import { AC, Arrow, FF, SHELL, T } from '@/components/marketing/design-tokens'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { buildContactHref } from '@/lib/contact-funnel'
 
-const mainRoutes = [
+const primaryRoutes = [
   {
-    num: '01',
-    tag: 'Vertrek & uitstroom',
     title: 'ExitScan',
-    accent: AC.deep,
-    accentMid: AC.mid,
-    accentFaint: AC.faint,
-    desc: 'Begrijp waarom medewerkers vertrekken en waar gerichte actie het meeste effect heeft. Terugkijkende analyse van vertrek op groepsniveau.',
-    bullets: ['Vertrekredenen op themaniveau', 'Patronen per team of afdeling', 'Eerste handoff voor opvolging inbegrepen'],
+    eyebrow: 'Als vertrek de vraag is',
+    body:
+      'Voor organisaties die scherp willen begrijpen waarom medewerkers vertrekken, welke patronen terugkomen en waar actie het eerst telt.',
+    bullets: [
+      'Kies dit als vertrek al zichtbaar is',
+      'Geeft snel een eerste vertrekbeeld op groepsniveau',
+      'Leidt naar dashboard, rapport en eerste managementbespreking',
+    ],
     href: '/producten/exitscan',
-    chip: 'Kernroute',
+    accent: AC.deep,
+    accentSoft: AC.faint,
   },
   {
-    num: '02',
-    tag: 'Behoud & vroegsignalering',
     title: 'RetentieScan',
-    accent: 'oklch(0.50 0.12 188)' as string,
-    accentMid: 'oklch(0.62 0.10 185)' as string,
-    accentFaint: 'oklch(0.972 0.018 185)' as string,
-    desc: 'Zie eerder waar behoud onder druk staat en welke signalen nu eerst aandacht vragen. Vroegsignalering op groeps- en segmentniveau.',
-    bullets: ['Risicozones per team', 'Stay-intent en vertrekintentie', 'Geen individuele signalen'],
+    eyebrow: 'Als behoud in actieve teams de vraag is',
+    body:
+      'Voor organisaties die eerder willen zien waar behoud onder druk komt te staan, voordat verloop zichtbaar oploopt en het gesprek te laat begint.',
+    bullets: [
+      'Kies dit als u eerder wilt signaleren',
+      'Maakt behoudsdruk zichtbaar op groepsniveau',
+      'Leidt naar dashboard, rapport en eerste managementbespreking',
+    ],
     href: '/producten/retentiescan',
-    chip: 'Kernroute',
-  },
-  {
-    num: '03',
-    tag: 'Portfolioroute',
-    title: 'Combinatie',
-    accent: 'oklch(0.46 0.12 220)' as string,
-    accentMid: 'oklch(0.62 0.10 220)' as string,
-    accentFaint: 'oklch(0.972 0.012 220)' as string,
-    desc: 'Verbind vertrekpatronen en vroegsignalering in een gedeelde leeslijn. Voor organisaties met beide vraagstukken.',
-    bullets: ['ExitScan + RetentieScan', 'Gedeelde leeslijn', 'Geen derde kernproduct'],
-    href: '/producten/combinatie',
-    chip: 'Portfolioroute',
+    accent: 'oklch(0.50 0.12 188)' as string,
+    accentSoft: 'oklch(0.972 0.018 185)' as string,
   },
 ] as const
 
-const boundedPeerRoute = {
-  title: 'Onboarding 30-60-90',
-  label: 'Bounded peer',
-  desc: 'Vroege check voor nieuwe medewerkers op 30, 60 en 90 dagen. Kleiner dan een hoofdroute, maar concreter dan een gewone vervolgronde.',
-  href: '/producten/onboarding-30-60-90',
-  color: 'oklch(.46 .14 72)',
-} as const
+const comparisonColumns = [
+  {
+    title: 'Kies ExitScan als',
+    bullets: [
+      'Vertrek is al zichtbaar of terugkerend',
+      'U wilt begrijpen welke patronen terugkomen',
+      'U wilt een eerste managementbeeld van vertrekredenen en drivers',
+      'U zoekt een eerste handoff voor gesprek en vervolgsturing',
+    ],
+    accent: AC.deep,
+  },
+  {
+    title: 'Kies RetentieScan als',
+    bullets: [
+      'U wilt eerder signaleren voordat verloop oploopt',
+      'U vermoedt behoudsdruk maar ziet nog geen volledig vertrekbeeld',
+      'U wilt groepsniveau vroegsignalering in plaats van terugblik',
+      'U wilt eerder zien waar gesprek en verificatie nodig zijn',
+    ],
+    accent: 'oklch(0.50 0.12 188)' as string,
+  },
+] as const
 
-const followOnRoutes = [
+const deferredRoutes = [
+  {
+    title: 'Onboarding 30-60-90',
+    body: 'Als vroege landing aandacht vraagt',
+    href: '/producten/onboarding-30-60-90',
+  },
   {
     title: 'Pulse',
-    label: 'Vervolgroute',
-    desc: 'Compacte review na een eerste baseline. Kort en gericht zicht op wat nu verschuift.',
+    body: 'Compacte vervolgroute nadat een eerste baseline of managementread al staat.',
     href: '/producten/pulse',
-    color: AC.mid,
   },
   {
     title: 'Leadership Scan',
-    label: 'Managementcontext',
-    desc: 'Begrensde managementsamenvatting wanneer een bestaand people-signaal extra duiding vraagt.',
+    body: 'Begrensde vervolgrichting zodra managementcontext als volgende vraag echt speelt.',
     href: '/producten/leadership-scan',
-    color: 'oklch(.42 .12 290)',
   },
 ] as const
 
 function HeroSection() {
-  const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'products_hero_primary' })
+  const primaryHref = buildContactHref({
+    routeInterest: 'exitscan',
+    ctaSource: 'products_hero_primary',
+  })
+
   return (
-    <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
-      <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`, pointerEvents: 'none' }} />
+    <section
+      style={{
+        background: T.white,
+        borderBottom: `1px solid ${T.rule}`,
+        overflow: 'hidden',
+        padding: 'clamp(52px,6.5vw,80px) 0 clamp(44px,5.5vw,68px)',
+        position: 'relative',
+      }}
+    >
+      <div
+        style={{
+          backgroundImage: `linear-gradient(${T.rule}55 1px,transparent 1px),linear-gradient(90deg,${T.rule}55 1px,transparent 1px)`,
+          backgroundSize: '72px 72px',
+          inset: 0,
+          opacity: 0.32,
+          pointerEvents: 'none',
+          position: 'absolute',
+        }}
+      />
+      <div
+        style={{
+          background: `radial-gradient(circle, ${AC.soft} 0%, transparent 65%)`,
+          height: 480,
+          pointerEvents: 'none',
+          position: 'absolute',
+          right: -40,
+          top: -90,
+          width: 480,
+        }}
+      />
       <div style={{ ...SHELL, position: 'relative' }}>
-        <div style={{ animation: 'slideDownFade .55s cubic-bezier(.16,1,.3,1) .05s both' }}>
-          <SectionMark num="--" label="Twee kernproducten · bounded peer · bewuste vervolgroutes" inView />
-        </div>
-        <div style={{ maxWidth: '68ch' }}>
-          <div style={{ animation: 'slideUpFade .9s cubic-bezier(.16,1,.3,1) .15s both' }}>
-            <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink }}>
-              Kies de route die past<br />
-              <em className="shimmer-text" style={{ fontStyle: 'italic' }}>bij de vraag die nu speelt.</em>
-            </h1>
-          </div>
-          <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
-            <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, margin: '28px 0 36px' }}>
-              ExitScan en RetentieScan zijn de twee hoofdroutes. Daarna komen dashboard, rapport en Action Center in
-              dezelfde omgeving samen, zodat u niet alleen inzicht krijgt, maar ook kunt prioriteren, toewijzen en opvolgen.
-            </p>
-          </div>
-          <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink, transition: 'all .18s cubic-bezier(.4,0,0,1)' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.background = AC.deep }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.background = T.ink }}>
-                Plan een eerste route-inschatting <Arrow />
-            </Link>
-            <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 500, padding: '11px 27px', color: T.inkSoft, border: `1px solid ${T.rule}`, transition: 'all .18s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T.inkMuted }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = T.rule }}>
-              Bekijk tarieven
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function CoreRoutesSection() {
-  const [sRef, sInView] = useInView(.06)
-  return (
-    <section style={{ background: T.paperSoft, padding: 'clamp(56px,7vw,88px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: FF, fontSize: 260, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: .4 }}>02</div>
-      <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
-        <SectionMark num="02" label="Kernproducten" inView={sInView} />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-0" style={{ borderBottom: `1px solid ${T.rule}` }}>
-          {mainRoutes.map((route, i) => (
-            <Reveal key={i} delay={.06 + i * .09}>
-              <div style={{ padding: 'clamp(20px,3vw,40px)', paddingBottom: 36, borderLeft: i > 0 ? `1px solid ${T.rule}` : 'none', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: route.accent }} />
-                <div style={{ marginTop: 12, marginBottom: 20 }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', padding: '3px 9px', background: route.accentFaint, color: route.accent }}>{route.chip}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 14 }}>
-                  <span style={{ fontFamily: FF, fontSize: 11, color: T.inkFaint }}>{route.num}</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: route.accent }}>{route.tag}</span>
-                </div>
-                <div style={{ fontFamily: FF, fontSize: 'clamp(28px,3vw,36px)', fontWeight: 400, color: T.ink, letterSpacing: '-.02em', lineHeight: 1.1, marginBottom: 14 }}>{route.title}</div>
-                <p style={{ fontSize: 13.5, lineHeight: 1.7, color: T.inkSoft, marginBottom: 20 }}>{route.desc}</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
-                  {route.bullets.map((bullet, index) => (
-                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: T.inkSoft }}>
-                      <div style={{ width: 4, height: 4, background: route.accent, flexShrink: 0 }} />
-                      {bullet}
-                    </div>
-                  ))}
-                </div>
-                <Link href={route.href} style={{ fontSize: 13, fontWeight: 600, color: route.accent, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, borderBottom: '1px solid transparent', transition: 'border-color .2s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = route.accent }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = 'transparent' }}>
-                  Bekijk {route.title} <Arrow />
-                </Link>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function FollowOnSection() {
-  const [sRef, sInView] = useInView(.08)
-  return (
-    <section style={{ background: T.white, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: FF, fontSize: 260, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: .4 }}>03</div>
-      <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
-        <SectionMark num="03" label="Bounded peer en vervolg" inView={sInView} />
-        <Reveal delay={.05}>
-          <h2 style={{ fontFamily: FF, fontSize: 'clamp(26px,3vw,38px)', fontWeight: 400, letterSpacing: '-.022em', color: T.ink, marginBottom: 14, lineHeight: 1.1 }}>
-            Eerst een bounded peer, daarna pas kleiner vervolg.
-          </h2>
-          <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 40, maxWidth: '52ch' }}>
-            Onboarding 30-60-90 staat publiek naast de kernroutes als bounded peer. Pulse en Leadership Scan blijven daarna bewust kleiner als vervolgroutes. De gedeelde omgeving blijft wel hetzelfde: eerst inzicht, daarna gerichte opvolging.
+        <div style={{ maxWidth: '70ch' }}>
+          <p
+            style={{
+              color: AC.deep,
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '.18em',
+              marginBottom: 18,
+              textTransform: 'uppercase',
+            }}
+          >
+            Producten
           </p>
-        </Reveal>
-        <Reveal delay={.08}>
-          <div style={{ padding: '24px 26px', borderTop: `1px solid ${T.rule}`, borderBottom: `1px solid ${T.rule}`, background: T.paperSoft }}>
-            <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: boundedPeerRoute.color, marginBottom: 8 }}>{boundedPeerRoute.label}</div>
-            <div style={{ fontFamily: FF, fontSize: 22, fontWeight: 400, color: T.ink, marginBottom: 8 }}>{boundedPeerRoute.title}</div>
-            <p style={{ fontSize: 13, lineHeight: 1.65, color: T.inkMuted, marginBottom: 14, maxWidth: '58ch' }}>{boundedPeerRoute.desc}</p>
-            <Link href={boundedPeerRoute.href} style={{ fontSize: 12.5, fontWeight: 600, color: boundedPeerRoute.color, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              Meer informatie <Arrow />
+          <h1
+            style={{
+              color: T.ink,
+              fontFamily: FF,
+              fontSize: 'clamp(42px,5.5vw,76px)',
+              fontWeight: 400,
+              letterSpacing: '-.032em',
+              lineHeight: 0.97,
+              maxWidth: '11ch',
+            }}
+          >
+            Kies de route die nu het meeste duidelijkheid geeft.
+          </h1>
+          <p
+            style={{
+              color: T.inkSoft,
+              fontSize: 16.5,
+              lineHeight: 1.72,
+              margin: '26px 0 36px',
+              maxWidth: '58ch',
+            }}
+          >
+            Kies ExitScan als u vertrek achteraf wilt begrijpen. Kies RetentieScan als u eerder wilt zien waar
+            behoud onder druk staat. Andere routes komen pas in beeld als de volgende vraag echt speelt.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            <Link
+              href={primaryHref}
+              style={{
+                alignItems: 'center',
+                background: T.ink,
+                color: '#fff',
+                display: 'inline-flex',
+                fontSize: 14.5,
+                fontWeight: 600,
+                gap: 8,
+                padding: '12px 28px',
+                textDecoration: 'none',
+              }}
+            >
+              Toets uw eerste route <Arrow />
+            </Link>
+            <Link
+              href="#route-vergelijking"
+              style={{
+                alignItems: 'center',
+                border: `1px solid ${T.rule}`,
+                color: T.inkSoft,
+                display: 'inline-flex',
+                fontSize: 14.5,
+                fontWeight: 500,
+                gap: 8,
+                padding: '11px 26px',
+                textDecoration: 'none',
+              }}
+            >
+              Vergelijk ExitScan en RetentieScan
             </Link>
           </div>
-        </Reveal>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 0 }}>
-          <div style={{ flex: 1, height: '1px', background: T.rule }} />
-          <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, whiteSpace: 'nowrap', padding: '0 4px' }}>Vervolgroutes</span>
-          <div style={{ flex: 1, height: '1px', background: T.rule }} />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2">
-          {followOnRoutes.map((route, index) => (
-            <Reveal key={index} delay={.08 + index * .07}>
-              <div style={{ padding: '22px 26px', borderTop: `1px solid ${T.rule}`, borderRight: index % 2 === 0 ? `1px solid ${T.rule}` : 'none', transition: 'background .15s' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = T.paperSoft }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}>
-                <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 8 }}>{route.label}</div>
-                <div style={{ fontFamily: FF, fontSize: 20, fontWeight: 400, color: T.ink, marginBottom: 8 }}>{route.title}</div>
-                <p style={{ fontSize: 13, lineHeight: 1.62, color: T.inkMuted, marginBottom: 14 }}>{route.desc}</p>
-                <Link href={route.href} style={{ fontSize: 12.5, fontWeight: 600, color: route.color, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                  Meer informatie <Arrow />
-                </Link>
+      </div>
+    </section>
+  )
+}
+
+function PrimaryRoutesSection() {
+  return (
+    <section style={{ background: T.paperSoft, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(52px,6vw,82px) 0' }}>
+      <div style={SHELL}>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {primaryRoutes.map((route) => (
+            <article
+              key={route.title}
+              style={{
+                background: T.white,
+                border: `1px solid ${T.rule}`,
+                borderTop: `3px solid ${route.accent}`,
+                padding: 'clamp(24px,3vw,34px)',
+              }}
+            >
+              <div
+                style={{
+                  alignItems: 'center',
+                  display: 'inline-flex',
+                  gap: 8,
+                  marginBottom: 18,
+                  padding: '4px 10px',
+                  background: route.accentSoft,
+                  color: route.accent,
+                  fontSize: 9.5,
+                  fontWeight: 700,
+                  letterSpacing: '.16em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {route.eyebrow}
               </div>
-            </Reveal>
+              <h2
+                style={{
+                  color: T.ink,
+                  fontFamily: FF,
+                  fontSize: 'clamp(28px,3vw,38px)',
+                  fontWeight: 400,
+                  letterSpacing: '-.022em',
+                  lineHeight: 1.06,
+                  marginBottom: 14,
+                }}
+              >
+                {route.title}
+              </h2>
+              <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, marginBottom: 22 }}>{route.body}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+                {route.bullets.map((bullet) => (
+                  <div key={bullet} style={{ alignItems: 'center', color: T.inkSoft, display: 'flex', fontSize: 13.5, gap: 10 }}>
+                    <div style={{ width: 4, height: 4, background: route.accent, flexShrink: 0 }} />
+                    {bullet}
+                  </div>
+                ))}
+              </div>
+              <Link
+                href={route.href}
+                style={{
+                  alignItems: 'center',
+                  color: route.accent,
+                  display: 'inline-flex',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  gap: 6,
+                  textDecoration: 'none',
+                }}
+              >
+                Bekijk {route.title} <Arrow />
+              </Link>
+            </article>
           ))}
         </div>
-        <div style={{ borderTop: `1px solid ${T.rule}`, borderBottom: `1px solid ${T.rule}`, padding: '20px 0', marginTop: 0 }}>
-          <Reveal delay={.1}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
-              <p style={{ fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
-                Publiek draait Verisight om twee kernroutes, een kleine portfolioroute en een bewust begrensde
-                vervolgstap binnen dezelfde omgeving.
-              </p>
-              <Link href="/vertrouwen" style={{ fontSize: 13, fontWeight: 600, color: T.teal, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
-                Meer over trust en privacy <Arrow />
+      </div>
+    </section>
+  )
+}
+
+function ComparisonSection() {
+  return (
+    <section
+      id="route-vergelijking"
+      style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(50px,5.6vw,76px) 0' }}
+    >
+      <div style={SHELL}>
+        <h2
+          style={{
+            color: T.ink,
+            fontFamily: FF,
+            fontSize: 'clamp(28px,3.2vw,40px)',
+            fontWeight: 400,
+            letterSpacing: '-.024em',
+            lineHeight: 1.06,
+            marginBottom: 14,
+            maxWidth: '14ch',
+          }}
+        >
+          Welke route past bij uw vraag?
+        </h2>
+        <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.74, marginBottom: 34, maxWidth: '58ch' }}>
+          Gebruik ExitScan als u vertrek wilt duiden nadat het zichtbaar is. Gebruik RetentieScan als u eerder wilt
+          zien waar behoud onder druk komt te staan, voordat verloop zichtbaar oploopt.
+        </p>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {comparisonColumns.map((column) => (
+            <div key={column.title} style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 18 }}>
+              <h3
+                style={{
+                  color: column.accent,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: '.16em',
+                  marginBottom: 16,
+                  textTransform: 'uppercase',
+                }}
+              >
+                {column.title}
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {column.bullets.map((bullet) => (
+                  <div key={bullet} style={{ alignItems: 'flex-start', color: T.inkSoft, display: 'flex', fontSize: 14, gap: 12, lineHeight: 1.66 }}>
+                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: column.accent, flexShrink: 0, marginTop: 9 }} />
+                    {bullet}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function UtilityRoutesSection() {
+  return (
+    <section style={{ background: T.paperSoft, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(50px,5.8vw,76px) 0' }}>
+      <div style={SHELL}>
+        <div
+          style={{
+            background: T.white,
+            border: `1px solid ${T.rule}`,
+            marginBottom: 36,
+            padding: '24px 26px',
+          }}
+        >
+          <div style={{ color: T.inkFaint, fontSize: 9.5, fontWeight: 700, letterSpacing: '.16em', marginBottom: 10, textTransform: 'uppercase' }}>
+            Combinatie
+          </div>
+          <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, marginBottom: 14, maxWidth: '64ch' }}>
+            Alleen relevant wanneer vertrekduiding en vroegsignalering tegelijk bestuurlijk spelen. Meestal begint het
+            gesprek eerst met ExitScan of RetentieScan.
+          </p>
+          <Link href="/producten/combinatie" style={{ color: T.ink, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+            Bekijk de combinatieroute
+          </Link>
+        </div>
+
+        <div style={{ marginBottom: 26 }}>
+          <h2
+            style={{
+              color: T.ink,
+              fontFamily: FF,
+              fontSize: 'clamp(26px,3vw,36px)',
+              fontWeight: 400,
+              letterSpacing: '-.022em',
+              lineHeight: 1.08,
+              marginBottom: 12,
+            }}
+          >
+            Andere routes komen later in beeld
+          </h2>
+          <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, maxWidth: '52ch' }}>
+            Kleinere vervolgroutes worden pas relevant als de volgende vraag echt speelt, niet als eerste productkeuze.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {deferredRoutes.map((route) => (
+            <div key={route.title} style={{ background: T.white, borderTop: `1px solid ${T.rule}`, padding: '20px 0 0' }}>
+              <h3 style={{ color: T.ink, fontFamily: FF, fontSize: 20, fontWeight: 400, marginBottom: 8 }}>{route.title}</h3>
+              <p style={{ color: T.inkMuted, fontSize: 13.5, lineHeight: 1.64, marginBottom: 14 }}>{route.body}</p>
+              <Link href={route.href} style={{ color: T.inkSoft, fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}>
+                Meer informatie
               </Link>
             </div>
-          </Reveal>
+          ))}
         </div>
       </div>
     </section>
@@ -218,10 +385,23 @@ function FollowOnSection() {
 }
 
 function ContactSection() {
-  const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'products_closing_cta' })
+  const href = buildContactHref({
+    routeInterest: 'exitscan',
+    ctaSource: 'products_closing_cta',
+  })
 
   return (
-    <MarketingClosingCta href={kennismakingHref} sectionIndex="04" backdropNumber="04" />
+    <MarketingClosingCta
+      href={href}
+      accentTitle="en RetentieScan?"
+      backdropNumber={null}
+      body="In een eerste gesprek toetsen we welke route nu de juiste eerste stap is en welke vervolgstap pas later nodig is."
+      buttonLabel="Plan een eerste route-inschatting"
+      sectionIndex=""
+      sectionLabel=""
+      showSectionMark={false}
+      title="Twijfelt u tussen ExitScan"
+    />
   )
 }
 
@@ -229,8 +409,9 @@ export function ProductenContent() {
   return (
     <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
       <HeroSection />
-      <CoreRoutesSection />
-      <FollowOnSection />
+      <PrimaryRoutesSection />
+      <ComparisonSection />
+      <UtilityRoutesSection />
       <ContactSection />
     </div>
   )

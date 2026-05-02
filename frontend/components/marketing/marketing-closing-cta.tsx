@@ -13,6 +13,7 @@ interface MarketingClosingCtaProps {
   accentTitle?: string
   body?: string
   buttonLabel?: string
+  note?: string
   showSectionMark?: boolean
 }
 
@@ -26,6 +27,7 @@ export function MarketingClosingCta({
   accentTitle = 'welke route nu het meest logisch is?',
   body = 'Plan een korte kennismaking. Dan ziet u of Verisight past, welke eerste route logisch is en hoe de output er in uw situatie uit kan zien.',
   buttonLabel = 'Plan een kennismaking',
+  note,
   showSectionMark = true,
 }: MarketingClosingCtaProps) {
   return (
@@ -106,6 +108,9 @@ export function MarketingClosingCta({
             >
               {buttonLabel} <Arrow />
             </Link>
+            {note ? (
+              <p style={{ color: T.inkMuted, fontSize: 12.5, lineHeight: 1.65, marginTop: 12 }}>{note}</p>
+            ) : null}
           </div>
         </div>
       </div>

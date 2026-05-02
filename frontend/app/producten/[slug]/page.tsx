@@ -171,10 +171,9 @@ function ExitScanPage() {
     white: '#FFFCF8', navy: 'oklch(0.13 0.032 250)', ink: 'oklch(0.16 0.012 250)',
     inkSoft: 'oklch(0.32 0.010 250)', inkMuted: 'oklch(0.52 0.008 250)',
     inkFaint: 'oklch(0.70 0.006 250)', rule: 'oklch(0.875 0.012 62)',
-    ruleLight: 'oklch(0.918 0.008 62)', teal: 'oklch(0.50 0.12 188)',
-    tealFaint: 'oklch(0.972 0.018 185)',
+    ruleLight: 'oklch(0.918 0.008 62)',
   }
-  const AC = { deep: 'oklch(0.45 0.18 50)', mid: 'oklch(0.76 0.14 53)', soft: 'oklch(0.95 0.045 50)', faint: 'oklch(0.976 0.018 50)' }
+  const AC = { deep: 'oklch(0.45 0.18 50)', mid: 'oklch(0.76 0.14 53)', soft: 'oklch(0.95 0.045 50)' }
   const FF = 'var(--font-fraunces), serif'
   const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
   const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_hero' })
@@ -183,30 +182,24 @@ function ExitScanPage() {
     <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
       <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
       <main>
-        {/* Hero */}
         <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
           <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`, pointerEvents: 'none' }} />
           <div style={{ ...SH, position: 'relative' }}>
-            <div style={{ animation: 'slideDownFade .55s cubic-bezier(.16,1,.3,1) .05s both', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
               <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: AC.deep }}>ExitScan</span>
               <div style={{ flex: 1, height: '1px', background: T.rule, maxWidth: 200 }} />
-              <Link href="/producten" style={{ fontSize: 11, color: T.inkMuted, textDecoration: 'none' }}>← Alle routes</Link>
+              <Link href="/producten" style={{ fontSize: 11, color: T.inkMuted, textDecoration: 'none' }}>Terug naar producten</Link>
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
-                <div style={{ animation: 'slideUpFade .9s cubic-bezier(.16,1,.3,1) .15s both' }}>
-                  <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink }}>
-                    Breng scherp in beeld<br />
-                    <em className="shimmer-text" style={{ fontStyle: 'italic' }}>waarom medewerkers vertrekken.</em>
-                  </h1>
-                </div>
-                <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
-                  <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '26px 0 36px' }}>
-                    Voor een terugkijkende analyse van vertrek op groepsniveau, eerst als baseline en daarna eventueel in een vast ritme.
-                  </p>
-                </div>
-                <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
+                  Begrijp waarom medewerkers vertrekken en waar actie het eerst telt.
+                </h1>
+                <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
+                  Voor organisaties die vertrek niet alleen willen registreren, maar scherp willen begrijpen waar patronen terugkomen en waar actie het eerst effect heeft.
+                </p>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
                     Plan een eerste route-inschatting
                   </a>
@@ -215,10 +208,15 @@ function ExitScanPage() {
                   </Link>
                 </div>
               </div>
-              <div style={{ animation: 'slideRightFade .8s cubic-bezier(.16,1,.3,1) .28s both' }}>
+              <div>
                 <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
-                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>EUR 2.950 · Baseline</div>
-                  {['Dashboard met prioriteiten en factoranalyse', 'Managementrapport voor HR, MT en directie', 'Eerste handoff voor opvolging inbegrepen', 'AVG-conforme dataverwerking'].map((item, i) => (
+                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>EUR 2.950 {'\u2022'} Baseline</div>
+                  {[
+                    'Dashboard met prioriteiten en factoranalyse',
+                    'Managementrapport voor HR, MT en directie',
+                    'Eerste handoff voor opvolging inbegrepen',
+                    'AVG-conforme dataverwerking',
+                  ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: i > 0 ? `1px solid ${T.rule}` : 'none', fontSize: 13, color: T.inkSoft }}>
                       <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 4 }} />
                       {item}
@@ -230,83 +228,102 @@ function ExitScanPage() {
           </div>
         </section>
 
-        {/* Varianten */}
         <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
-            <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Varianten</div>
-            <h2 style={{ fontFamily: FF, fontSize: 'clamp(24px,3vw,34px)', fontWeight: 400, letterSpacing: '-.02em', color: T.ink, marginBottom: 32, lineHeight: 1.1 }}>Start met baseline of kies een ritmeroute.</h2>
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-              {[
-                { label: 'Baseline', accent: AC.deep, points: ['Analyse van recent vertrek, bijvoorbeeld over de afgelopen 12 maanden', 'Geschikt als er al voldoende vertrekinput beschikbaar is', 'Geen actieve respondenten nodig — ex-medewerkers'] },
-                { label: 'Ritmeroute', accent: T.inkMuted, points: ['Doorlopende vervolgroute zodra baseline, proces en eigenaar al staan', 'Geschikt als u actuele uitstroomsignalen wilt blijven volgen', 'Respondenten vullen in rond het moment van vertrek'] },
-              ].map(({ label, accent, points }) => (
-                <div key={label} style={{ padding: '28px', background: T.white, border: `1px solid ${T.rule}`, borderTop: `3px solid ${accent}` }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{label}</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {points.map((p, i) => (
-                      <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
-                        <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
-                        {p}
-                      </div>
-                    ))}
+            <div style={{ marginBottom: 36 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wanneer ExitScan nu de juiste eerste stap is</div>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {[
+                  'Vertrek is al zichtbaar of terugkerend',
+                  'U wilt begrijpen waarom patronen terugkomen',
+                  'U wilt snel zien waar actie of gesprek het eerst telt',
+                  'U zoekt een eerste managementbeeld in plaats van alleen losse exitregistratie',
+                ].map((text) => (
+                  <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
+                    <div style={{ width: 6, height: 6, background: AC.deep, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
+                    <p style={{ fontSize: 14, lineHeight: 1.65, color: T.inkSoft }}>{text}</p>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            </div>
+            <div style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 28 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 14 }}>Varianten</div>
+              <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft, marginBottom: 26, maxWidth: '54ch' }}>
+                Kies eerst of u een scherp vertrekbeeld nodig heeft of juist een terugkerend ritme om vertrek structureel te volgen.
+              </p>
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                {[
+                  {
+                    label: 'Baseline',
+                    accent: AC.deep,
+                    points: [
+                      'Een scherp vertrekbeeld van recent vertrek',
+                      'Geschikt als vertrek al zichtbaar of terugkerend is',
+                      'Geeft een eerste managementbeeld van redenen, drivers en prioriteiten',
+                    ],
+                  },
+                  {
+                    label: 'Ritmeroute',
+                    accent: T.inkMuted,
+                    points: [
+                      'Voor organisaties die vertrek structureel willen blijven volgen',
+                      'Logisch als baseline, proces en ritme al staan',
+                      'Houdt dezelfde leeslijn vast in dashboard en rapport',
+                    ],
+                  },
+                ].map(({ label, accent, points }) => (
+                  <div key={label} style={{ padding: '28px', background: T.white, border: `1px solid ${T.rule}`, borderTop: `3px solid ${accent}` }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{label}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {points.map((p, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
+                          <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
+                          {p}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Wanneer logisch */}
         <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
-            <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wanneer logisch</div>
-            <h2 style={{ fontFamily: FF, fontSize: 'clamp(24px,3vw,34px)', fontWeight: 400, letterSpacing: '-.02em', color: T.ink, marginBottom: 32, lineHeight: 1.1 }}>Wanneer ExitScan logisch is</h2>
-            <div className="grid grid-cols-1 gap-0 sm:grid-cols-2">
-              {[
-                { text: 'Bij structureel verloop dat u wilt begrijpen', num: '01' },
-                { text: 'Bij voorbereiding op een MT-bespreking over uitstroom', num: '02' },
-                { text: 'Bij behoefte aan scherpere stuurinformatie voor HR en management', num: '03' },
-                { text: 'Na een reorganisatie of fusie', num: '04' },
-              ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', gap: 16, padding: '22px 20px', borderTop: `1px solid ${T.rule}`, borderLeft: i % 2 === 1 ? `1px solid ${T.rule}` : 'none' }}>
-                  <span style={{ fontFamily: FF, fontSize: 12, color: T.inkFaint, minWidth: 24 }}>{item.num}</span>
-                  <p style={{ fontSize: 14, color: T.inkSoft, lineHeight: 1.6 }}>{item.text}</p>
-                </div>
-              ))}
+            <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wat u ontvangt</div>
+              <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
+                U krijgt een leeslijn voor dashboard, rapport en eerste managementbespreking, zodat duidelijk wordt wat het vertrekbeeld nu zegt en waar gesprek of actie het eerst telt.
+              </p>
             </div>
-            <div style={{ borderTop: `1px solid ${T.rule}` }} />
-          </div>
-        </section>
-
-        {/* Wat u ontvangt — dark band */}
-        <section style={{ background: T.navy, padding: 'clamp(48px,5.5vw,72px) 0' }}>
-          <div style={{ ...SH }}>
-            <div style={{ display: 'grid', gap: 'clamp(32px,5vw,64px)' }} className="grid grid-cols-1 lg:grid-cols-[1fr_auto]">
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'start' }}>
               <div>
-                <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.mid, marginBottom: 18 }}>Wat u ontvangt</div>
-                <h2 style={{ fontFamily: FF, fontSize: 'clamp(24px,3vw,36px)', fontWeight: 400, letterSpacing: '-.022em', color: '#fff', marginBottom: 24, lineHeight: 1.1 }}>
-                  Dashboard, rapport en toelichting<br />
-                  <em style={{ fontStyle: 'italic', fontWeight: 300, color: 'oklch(.76 .14 53)' }}>in één vaste leeslijn.</em>
-                </h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {['Dashboard met prioriteiten en factoranalyse', 'Managementrapport voor HR, MT en directie, met een eerste managementsessie als vaste vervolgstap', 'Toelichting op de uitkomsten en vervolgstappen', 'AVG-conforme dataverwerking'].map((item, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 16px', background: 'rgba(255,255,255,.05)', fontSize: 13, color: 'rgba(247,245,241,.8)', lineHeight: 1.5 }}>
+                  {[
+                    'Dashboard met eerste vertrekbeeld en prioriteiten',
+                    'Managementrapport met hoofdredenen, drivers en duiding',
+                    'Eerste managementhouvast voor gesprek, verificatie en vervolg',
+                    'Waar relevant: conditionele afdelings- of segmentverdieping bij voldoende respons',
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
                       <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 5 }} />
                       {item}
                     </div>
                   ))}
                 </div>
-                <div id="segment-deep-dive" style={{ marginTop: 24, padding: '18px 20px', border: '1px solid rgba(255,255,255,.12)', background: 'rgba(255,255,255,.04)' }}>
-                  <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkFaint }}>Add-on</span>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginTop: 6, marginBottom: 6 }}>Segment Deep Dive</div>
-                  <p style={{ fontSize: 12.5, color: 'rgba(247,245,241,.6)', lineHeight: 1.6 }}>Verdieping op een specifieke afdeling, functiegroep of locatie. Beschikbaar als er voldoende respondenten en metadata voor zijn.</p>
+                <div id="segment-deep-dive" style={{ marginTop: 22, padding: '18px 20px', border: `1px solid ${T.rule}`, background: T.white }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 8 }}>Afdelings- of segmentverdieping waar relevant</div>
+                  <p style={{ fontSize: 13.5, color: T.inkMuted, lineHeight: 1.65 }}>
+                    Waar voldoende respons en metadata beschikbaar zijn, kan ExitScan het vertrekbeeld ook op afdelings-, functiegroep- of locatieniveau verdiepen.
+                  </p>
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignSelf: 'center', minWidth: 200 }}>
-                <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: T.ink, background: '#fff', whiteSpace: 'nowrap' }}>
-                  Plan suite-demo
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 220 }}>
+                <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: '#fff', background: T.ink, whiteSpace: 'nowrap' }}>
+                  Plan een eerste route-inschatting
                 </a>
-                <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: 'rgba(255,255,255,.6)', border: '1px solid rgba(255,255,255,.2)', whiteSpace: 'nowrap' }}>
+                <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: T.inkSoft, border: `1px solid ${T.rule}`, whiteSpace: 'nowrap' }}>
                   Bekijk tarieven
                 </Link>
               </div>
@@ -318,6 +335,11 @@ function ExitScanPage() {
           href={buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_form' })}
           showSectionMark={false}
           backdropNumber={null}
+          title="Toets of ExitScan"
+          accentTitle="nu de juiste eerste stap is."
+          body="Beschrijf kort welk vertrekvraagstuk nu speelt. Dan toetsen we of ExitScan past, welke variant logisch is en wat u als eerste terugkrijgt."
+          buttonLabel="Plan een eerste route-inschatting"
+          note="U krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
         />
       </main>
       <PublicFooter />
@@ -332,8 +354,7 @@ function RetentionScanPage() {
     inkSoft: 'oklch(0.32 0.010 250)', inkMuted: 'oklch(0.52 0.008 250)',
     inkFaint: 'oklch(0.70 0.006 250)', rule: 'oklch(0.875 0.012 62)',
     ruleLight: 'oklch(0.918 0.008 62)',
-    teal: 'oklch(0.50 0.12 188)', tealMid: 'oklch(0.62 0.10 185)',
-    tealSoft: 'oklch(0.94 0.04 185)', tealFaint: 'oklch(0.972 0.018 185)',
+    teal: 'oklch(0.50 0.12 188)', tealSoft: 'oklch(0.94 0.04 185)', tealFaint: 'oklch(0.972 0.018 185)',
   }
   const FF = 'var(--font-fraunces), serif'
   const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
@@ -343,30 +364,24 @@ function RetentionScanPage() {
     <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
       <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
       <main>
-        {/* Hero */}
         <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
           <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${T.tealFaint} 0%,transparent 65%)`, pointerEvents: 'none' }} />
           <div style={{ ...SH, position: 'relative' }}>
-            <div style={{ animation: 'slideDownFade .55s cubic-bezier(.16,1,.3,1) .05s both', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
               <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: T.teal }}>RetentieScan</span>
               <div style={{ flex: 1, height: '1px', background: T.rule, maxWidth: 200 }} />
-              <Link href="/producten" style={{ fontSize: 11, color: T.inkMuted, textDecoration: 'none' }}>← Alle routes</Link>
+              <Link href="/producten" style={{ fontSize: 11, color: T.inkMuted, textDecoration: 'none' }}>Terug naar producten</Link>
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
               <div>
-                <div style={{ animation: 'slideUpFade .9s cubic-bezier(.16,1,.3,1) .15s both' }}>
-                  <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink }}>
-                    Zie eerder waar<br />
-                    <em style={{ fontStyle: 'italic', color: T.teal }}>behoud begint te schuiven.</em>
-                  </h1>
-                </div>
-                <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
-                  <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '26px 0 36px' }}>
-                    Voor vroegsignalering op behoud op groeps- en segmentniveau, als baseline of in een vast ritme.
-                  </p>
-                </div>
-                <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink, maxWidth: '12ch' }}>
+                  Zie eerder waar behoud onder druk komt te staan en wat nu aandacht vraagt.
+                </h1>
+                <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
+                  Voor organisaties die behoudsdruk eerder willen zien, voordat verloop zichtbaar oploopt en het gesprek te laat begint.
+                </p>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink }}>
                     Plan een eerste route-inschatting
                   </a>
@@ -375,10 +390,15 @@ function RetentionScanPage() {
                   </Link>
                 </div>
               </div>
-              <div style={{ animation: 'slideRightFade .8s cubic-bezier(.16,1,.3,1) .28s both' }}>
+              <div>
                 <div style={{ padding: '28px', background: T.tealFaint, border: `1px solid ${T.tealSoft}` }}>
-                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>EUR 3.450 · Baseline</div>
-                  {['Dashboard met retentiesignaal en factoranalyse', 'Managementrapport voor HR, MT en directie', 'Geen individuele signalen, alleen groepsduiding', 'AVG-conforme dataverwerking'].map((item, i) => (
+                  <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>EUR 3.450 {'\u2022'} Baseline</div>
+                  {[
+                    'Dashboard met retentiesignaal en factoranalyse',
+                    'Managementrapport voor HR, MT en directie',
+                    'Geen individuele signalen, alleen groepsduiding',
+                    'AVG-conforme dataverwerking',
+                  ].map((item, i) => (
                     <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 0', borderTop: i > 0 ? `1px solid ${T.tealSoft}` : 'none', fontSize: 13, color: T.inkSoft }}>
                       <div style={{ width: 4, height: 4, background: T.teal, flexShrink: 0, marginTop: 4 }} />
                       {item}
@@ -390,77 +410,102 @@ function RetentionScanPage() {
           </div>
         </section>
 
-        {/* Wanneer logisch */}
         <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
-            <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wanneer logisch</div>
-            <h2 style={{ fontFamily: FF, fontSize: 'clamp(24px,3vw,34px)', fontWeight: 400, letterSpacing: '-.02em', color: T.ink, marginBottom: 32, lineHeight: 1.1 }}>Wanneer RetentieScan logisch is</h2>
-            <div className="grid grid-cols-1 gap-0 sm:grid-cols-3">
-              {[
-                { text: 'Vroeg signaleren voordat verloop zichtbaar wordt', num: '01' },
-                { text: 'Na een veranderingstraject of reorganisatie', num: '02' },
-                { text: 'Als MT-rapportage nodig is over behoudsdruk en retentiesignalen', num: '03' },
-              ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', gap: 16, padding: '22px 20px', borderTop: `1px solid ${T.rule}`, borderLeft: i > 0 ? `1px solid ${T.rule}` : 'none' }}>
-                  <span style={{ fontFamily: FF, fontSize: 12, color: T.inkFaint, minWidth: 24 }}>{item.num}</span>
-                  <p style={{ fontSize: 14, color: T.inkSoft, lineHeight: 1.6 }}>{item.text}</p>
-                </div>
-              ))}
+            <div style={{ marginBottom: 36 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wanneer RetentieScan nu de juiste eerste stap is</div>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {[
+                  'U wilt eerder zien waar behoud onder druk staat',
+                  'U wilt niet wachten tot verloop zichtbaar oploopt',
+                  'U vermoedt behoudsdruk maar wilt eerst een scherp groepsbeeld',
+                  'U zoekt vroegsignalering voor gesprek en verificatie, niet alleen terugblik',
+                ].map((text) => (
+                  <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
+                    <div style={{ width: 6, height: 6, background: T.teal, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
+                    <p style={{ fontSize: 14, lineHeight: 1.65, color: T.inkSoft }}>{text}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div style={{ borderTop: `1px solid ${T.rule}` }} />
+            <div style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 28 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 14 }}>Varianten</div>
+              <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft, marginBottom: 26, maxWidth: '56ch' }}>
+                Kies eerst of u nu een scherp vroegsignaal nodig heeft of een ritme om behoudsdruk structureel te volgen.
+              </p>
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                {[
+                  {
+                    label: 'Baseline',
+                    accent: T.teal,
+                    points: [
+                      'Een scherp behoudsbeeld voor actieve teams',
+                      'Geschikt als u nu eerst wilt zien waar behoud onder druk staat',
+                      'Geeft een eerste managementbeeld van signalen, drivers en prioriteiten',
+                    ],
+                  },
+                  {
+                    label: 'Ritmeroute',
+                    accent: T.inkMuted,
+                    points: [
+                      'Voor organisaties die behoudsdruk structureel willen blijven volgen',
+                      'Logisch als baseline en eerste opvolging al staan',
+                      'Houdt dezelfde leeslijn vast in dashboard en rapport',
+                    ],
+                  },
+                ].map(({ label, accent, points }) => (
+                  <div key={label} style={{ padding: '28px', background: T.white, border: `1px solid ${T.rule}`, borderTop: `3px solid ${accent}` }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{label}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {points.map((p, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
+                          <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
+                          {p}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Varianten */}
         <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
-            <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Varianten</div>
-            <h2 style={{ fontFamily: FF, fontSize: 'clamp(24px,3vw,34px)', fontWeight: 400, letterSpacing: '-.02em', color: T.ink, marginBottom: 32, lineHeight: 1.1 }}>Start met baseline of kies een ritmeroute.</h2>
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-              {[
-                { label: 'Baseline', accent: T.teal, points: ['Gerichte eerste meting voor actieve medewerkers', 'Geschikt om behoudsdruk en retentiesignalen eerst scherp in beeld te krijgen', 'Sterk als startpunt voor verificatie en prioritering'] },
-                { label: 'Ritmeroute', accent: T.inkMuted, points: ['Herhaalroute zodra baseline en eerste opvolging al staan', 'Geschikt om verschuiving in retentiesignaal en topfactoren te volgen', 'Bewust kleiner dan opnieuw een brede eerste scan'] },
-              ].map(({ label, accent, points }) => (
-                <div key={label} style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}`, borderTop: `3px solid ${accent}` }}>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 16 }}>{label}</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {points.map((p, i) => (
-                      <div key={i} style={{ display: 'flex', gap: 10, fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>
-                        <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
-                        {p}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+            <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wat u ontvangt</div>
+              <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
+                U krijgt een leeslijn voor retentiesignaal, rapport en eerste managementbespreking, zodat snel duidelijk wordt waar behoud bestuurlijk aandacht vraagt.
+              </p>
             </div>
-          </div>
-        </section>
-
-        {/* Wat u ontvangt — dark band */}
-        <section style={{ background: T.navy, padding: 'clamp(48px,5.5vw,72px) 0' }}>
-          <div style={{ ...SH }}>
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'center' }}>
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'start' }}>
               <div>
-                <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 18 }}>Wat u ontvangt</div>
-                <h2 style={{ fontFamily: FF, fontSize: 'clamp(24px,3vw,36px)', fontWeight: 400, letterSpacing: '-.022em', color: '#fff', marginBottom: 24, lineHeight: 1.1 }}>
-                  Dashboard, rapport en toelichting<br />
-                  <em style={{ fontStyle: 'italic', fontWeight: 300, color: 'oklch(.62 .10 185)' }}>in dezelfde leeslijn.</em>
-                </h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {['Dashboard met retentiesignaal en factoranalyse', 'Managementrapport voor HR, MT en directie met een eerste managementsessie als vaste vervolgstap', 'Toelichting op de uitkomsten en vervolgstappen', 'Geen individuele signalen, alleen groepsduiding', 'AVG-conforme dataverwerking'].map((item, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 12, padding: '12px 16px', background: 'rgba(255,255,255,.05)', fontSize: 13, color: 'rgba(247,245,241,.8)', lineHeight: 1.5 }}>
+                  {[
+                    'Dashboard met retentiesignaal en eerste prioriteiten',
+                    'Managementrapport met factoranalyse en duiding',
+                    'Eerste managementhouvast voor gesprek, verificatie en vervolg',
+                    'Waar relevant: conditionele afdelings- of segmentverdieping bij voldoende respons',
+                  ].map((item, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 16px', background: T.paperSoft, border: `1px solid ${T.rule}`, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
                       <div style={{ width: 4, height: 4, background: T.teal, flexShrink: 0, marginTop: 5 }} />
                       {item}
                     </div>
                   ))}
                 </div>
+                <div style={{ marginTop: 22, padding: '18px 20px', border: `1px solid ${T.rule}`, background: T.white }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkFaint, marginBottom: 8 }}>Afdelings- of segmentverdieping waar relevant</div>
+                  <p style={{ fontSize: 13.5, color: T.inkMuted, lineHeight: 1.65 }}>
+                    Waar voldoende respons en metadata beschikbaar zijn, kan RetentieScan behoudsdruk ook op afdelings-, functiegroep- of locatieniveau verdiepen.
+                  </p>
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignSelf: 'center', minWidth: 200 }}>
-                <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: T.ink, background: '#fff', whiteSpace: 'nowrap' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 220 }}>
+                <a href="#kennismaking" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '14px 28px', color: '#fff', background: T.ink, whiteSpace: 'nowrap' }}>
                   Plan een eerste route-inschatting
                 </a>
-                <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: 'rgba(255,255,255,.6)', border: '1px solid rgba(255,255,255,.2)', whiteSpace: 'nowrap' }}>
+                <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 500, padding: '12px 24px', color: T.inkSoft, border: `1px solid ${T.rule}`, whiteSpace: 'nowrap' }}>
                   Bekijk tarieven
                 </Link>
               </div>
@@ -472,6 +517,11 @@ function RetentionScanPage() {
           href={buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_form' })}
           showSectionMark={false}
           backdropNumber={null}
+          title="Toets of RetentieScan"
+          accentTitle="nu de juiste eerste stap is."
+          body="Beschrijf kort waar behoud nu onder druk staat. Dan toetsen we of RetentieScan past, welke variant logisch is en wat u als eerste terugkrijgt."
+          buttonLabel="Plan een eerste route-inschatting"
+          note="U krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
         />
       </main>
       <PublicFooter />

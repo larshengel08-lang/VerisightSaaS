@@ -27,9 +27,9 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     slug: 'exitscan',
     label: 'ExitScan',
     shortLabel: 'ExitScan',
-    tagline: 'Breng scherp in beeld waarom medewerkers vertrekken',
+    tagline: 'Begrijp waarom medewerkers vertrekken en waar actie het eerst telt',
     description:
-      'Analyse van vertrek op basis van terugkerende werkfactoren, vertrekredenen en signalen van werkfrictie voor HR, MT en directie, met een compacte eerste handoff voor opvolging en expliciete leeswijzers over claims, privacy en interpretatie.',
+      'Voor organisaties die vertrek niet alleen willen registreren, maar scherp willen begrijpen waar patronen terugkomen en waar actie het eerst effect heeft.',
     seoTitle: 'ExitScan | Verloopanalyse en vertrekduiding voor HR-teams',
     ogAlt: 'ExitScan productpagina van Verisight',
     serviceType: 'Vertrekduiding en managementrapportage',
@@ -44,9 +44,9 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
     slug: 'retentiescan',
     label: 'RetentieScan',
     shortLabel: 'RetentieScan',
-    tagline: 'Zie eerder waar behoud begint te schuiven',
+    tagline: 'Zie eerder waar behoud onder druk komt te staan en wat nu aandacht vraagt',
     description:
-      'Vroegsignalering op medewerkersbehoud op groeps- en segmentniveau, met retentiesignaal, stay-intent, vertrekintentie en beinvloedbare werkfactoren in dezelfde managementlijn, inclusief compacte bestuurlijke handoff en zonder individuele voorspelling.',
+      'Voor organisaties die behoudsdruk eerder willen zien, voordat verloop zichtbaar oploopt en het gesprek te laat begint.',
     seoTitle: 'RetentieScan | Medewerkersbehoud en vroegsignalering voor HR-teams',
     ogAlt: 'RetentieScan productpagina van Verisight',
     serviceType: 'Vroegsignalering op behoud met retentiesignaal',
