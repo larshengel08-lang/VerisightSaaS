@@ -34,6 +34,24 @@ vi.mock('@/lib/telemetry/store', () => ({
       payload: {},
       createdAt: '2026-04-27T11:00:00.000Z',
     },
+    {
+      id: 'evt_3',
+      eventType: 'action_center_route_opened',
+      orgId: 'org_1',
+      campaignId: 'cmp_1',
+      actorId: 'user_2',
+      payload: {},
+      createdAt: '2026-04-27T11:30:00.000Z',
+    },
+    {
+      id: 'evt_4',
+      eventType: 'action_center_review_scheduled',
+      orgId: 'org_1',
+      campaignId: 'cmp_1',
+      actorId: 'user_2',
+      payload: {},
+      createdAt: '2026-04-27T11:45:00.000Z',
+    },
   ],
 }))
 
@@ -45,6 +63,9 @@ describe('beheer health page', () => {
     expect(html).toContain('Suite health evidence')
     expect(html).toContain('Owner access confirmed')
     expect(html).toContain('Manager denied insights')
+    expect(html).toContain('Action Center pilot-ops')
+    expect(html).toContain('Kritieke flow coverage')
+    expect(html).toContain('Route geopend, Review gepland zichtbaar in de huidige telemetryset.')
     expect(html).toContain('Recente evidence')
   })
 })

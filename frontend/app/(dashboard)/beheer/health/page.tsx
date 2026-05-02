@@ -2,6 +2,10 @@ import React from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { DashboardChip, DashboardHero, DashboardPanel, DashboardSection } from '@/components/dashboard/dashboard-primitives'
+import {
+  getActionCenterOpsEventLabel,
+  summarizeActionCenterOpsHealth,
+} from '@/lib/action-center-ops-health'
 import { countSuiteTelemetryEventRows, getSuiteTelemetryEventLabel } from '@/lib/telemetry/events'
 import { listSuiteTelemetryEventRows } from '@/lib/telemetry/store'
 import { createClient } from '@/lib/supabase/server'
@@ -28,6 +32,7 @@ export default async function HealthPage() {
 
   const rows = await listSuiteTelemetryEventRows()
   const counts = countSuiteTelemetryEventRows(rows)
+  const actionCenterOps = summarizeActionCenterOpsHealth(rows)
 
   return (
     <div className="space-y-6">
@@ -61,6 +66,37 @@ export default async function HealthPage() {
           <DashboardPanel title="Manager denied insights" value={`${counts.manager_denied_insights}`} body="Manager-only persona blijft buiten insight-routes." tone="amber" />
           <DashboardPanel title="Action Center review scheduled" value={`${counts.action_center_review_scheduled}`} body="Reviewmomenten die expliciet gepland zijn." tone="slate" />
           <DashboardPanel title="Action Center closeout recorded" value={`${counts.action_center_closeout_recorded}`} body="Follow-through items met expliciete closeout." tone="slate" />
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
+        title="Action Center pilot-ops"
+        description="Compacte operations-read voor de kritieke Action Center handoff- en closeoutpaden. Bedoeld als bounded supportlaag, niet als full observability stack."
+      >
+        <div className="grid gap-4 lg:grid-cols-4">
+          <DashboardPanel title="Routes geopend" value={`${actionCenterOps.routeOpenedCount}`} body="Aantal zichtbare route-open events in de huidige evidence set." tone="slate" />
+          <DashboardPanel title="Managers toegewezen" value={`${actionCenterOps.ownerAssignedCount}`} body="Eigenaarschap bevestigd via Action Center telemetry." tone="slate" />
+          <DashboardPanel title="Reviews gepland" value={`${actionCenterOps.reviewScheduledCount}`} body="Reviewmomenten die operations direct kan terugvinden." tone="emerald" />
+          <DashboardPanel title="Closeouts vastgelegd" value={`${actionCenterOps.closeoutRecordedCount}`} body="Routes met expliciet bestuurlijk slot in de huidige evidence." tone="slate" />
+        </div>
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Kritieke flow coverage</h3>
+          <p className="mt-3 text-sm text-slate-700">
+            {actionCenterOps.coveredEventTypes.length > 0
+              ? `${actionCenterOps.coveredEventTypes.map(getActionCenterOpsEventLabel).join(', ')} zichtbaar in de huidige telemetryset.`
+              : 'Nog geen Action Center operations-evidence zichtbaar in de huidige telemetryset.'}
+          </p>
+          <p className="mt-2 text-sm text-slate-600">
+            {actionCenterOps.missingEventTypes.length > 0
+              ? `Nog niet zichtbaar: ${actionCenterOps.missingEventTypes.map(getActionCenterOpsEventLabel).join(', ')}.`
+              : 'Alle bounded pilotkritieke Action Center flowstappen zijn minimaal een keer in telemetry terug te lezen.'}
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            Laatste Action Center evidence:{' '}
+            {actionCenterOps.latestEventAt
+              ? new Date(actionCenterOps.latestEventAt).toLocaleString('nl-NL')
+              : 'nog niet aanwezig'}
+          </p>
         </div>
       </DashboardSection>
 
