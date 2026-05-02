@@ -668,9 +668,9 @@ function ManagementFlowSection() {
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'center',
+                      height: 116,
                       marginTop: 'auto',
-                      minHeight: 116,
-                      padding: '14px 14px 16px',
+                      padding: '12px',
                     }}
                   >
                     {[
@@ -687,10 +687,10 @@ function ManagementFlowSection() {
                           color: SURFACE.ink,
                           display: 'flex',
                           fontFamily: bodyFont,
-                          fontSize: 14,
+                          fontSize: 13.5,
                           gap: 10,
-                          marginTop: rowIndex === 0 ? 0 : 10,
-                          padding: '11px 12px',
+                          marginTop: rowIndex === 0 ? 0 : 8,
+                          padding: '8px 10px',
                         }}
                       >
                         <span
@@ -1857,31 +1857,21 @@ function RoutesSection() {
       }}
     >
       <div style={{ ...SHELL, paddingTop: 'clamp(58px, 7vw, 92px)', paddingBottom: 'clamp(58px, 7vw, 92px)', position: 'relative' }}>
-        <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.72fr)] xl:items-end">
-          <div>
-            <Reveal delay={0.04}>
-              <h2
-                style={{
-                  color: SURFACE.ink,
-                  fontFamily: displayFont,
-                  fontSize: 'clamp(3rem, 5vw, 4.85rem)',
-                  fontWeight: 400,
-                  letterSpacing: '-0.05em',
-                  lineHeight: 0.95,
-                  marginBottom: 14,
-                  maxWidth: '11.5ch',
-                }}
-              >
-                Kies de route
-                <br />
-                die past bij uw vraagstuk.
-              </h2>
-            </Reveal>
-          </div>
-          <Reveal delay={0.1}>
-            <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.75, maxWidth: '26rem' }}>
-              Drie hoofdroutes. Aanvullende routes sluiten later aan. Zo blijft de eerste stap overzichtelijk en bestuurlijk logisch.
-            </p>
+        <div style={{ margin: '0 auto', maxWidth: '68rem', textAlign: 'center' }}>
+          <Reveal delay={0.04}>
+            <h2
+              style={{
+                color: SURFACE.ink,
+                fontFamily: displayFont,
+                fontSize: 'clamp(3rem, 5vw, 4.85rem)',
+                fontWeight: 400,
+                letterSpacing: '-0.05em',
+                lineHeight: 0.95,
+                marginBottom: 0,
+              }}
+            >
+              Welke route past het best bij uw situatie?
+            </h2>
           </Reveal>
         </div>
 
@@ -1891,9 +1881,7 @@ function RoutesSection() {
               <article
               key={route.title}
               style={{
-                borderBottom: `1px solid ${SURFACE.border}`,
                 minWidth: 0,
-                paddingBottom: 20,
               }}
             >
               <div
@@ -2032,7 +2020,7 @@ function FirstDeliverySection() {
       }}
     >
       <div style={{ ...SHELL, paddingTop: 'clamp(56px, 7vw, 90px)', paddingBottom: 'clamp(56px, 7vw, 92px)' }}>
-        <div style={{ maxWidth: 1040 }}>
+        <div style={{ margin: '0 auto', maxWidth: 1040, textAlign: 'center' }}>
           <Reveal>
             <h2
               style={{
@@ -2043,14 +2031,13 @@ function FirstDeliverySection() {
                 letterSpacing: '-0.05em',
                 lineHeight: 0.95,
                 marginBottom: 22,
-                maxWidth: '11.5ch',
               }}
             >
               Wat u als eerste krijgt
             </h2>
           </Reveal>
           <Reveal delay={0.05}>
-            <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.78, marginBottom: 40, maxWidth: '58rem' }}>
+            <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.78, margin: '0 auto 40px', maxWidth: '58rem' }}>
               Verisight geeft u geen losse analyse zonder vervolg, maar een eerste managementflow die helpt om sneller
               te begrijpen wat speelt, te bepalen wat eerst telt en gerichte opvolging op gang te brengen.
             </p>
