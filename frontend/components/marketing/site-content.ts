@@ -156,8 +156,7 @@ export const trustItems = [
   'Rapportage op geaggregeerd niveau',
   'Vraagblokken gebaseerd op relevante literatuur',
   'AVG-conform, primaire dataopslag in een EU-regio',
-  'Nederlandse dienst met begeleide productvorm en publieke trustlaag',
-  'Vertrouwelijke verwerking — geen koppeling aan individuen in rapportage',
+  'Geen koppeling aan individuen in rapportage.',
 ] as const
 
 export const trustQuickLinks = [
@@ -211,71 +210,59 @@ export const trustSignalHighlights = [
 
 export const trustVerificationCards = [
   {
-    title: 'Wat je nu publiek kunt verifieren',
-    body: 'Verisight laat publiek zien hoe productkeuze, privacy, rapportlezing en begeleiding zijn ingericht voordat je een demo of gesprek plant.',
+    title: 'Wat u nu publiek kunt verifiëren',
+    body: 'Verisight laat publiek zien hoe productkeuze, privacy en rapportlezing zijn ingericht voordat u een gesprek plant.',
   },
   {
-    title: 'Waar sample-proof bewust stopt',
-    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Onboarding blijft een bounded peer en Pulse plus Leadership Scan blijven bounded vervolgroutes met formele output, maar zonder aparte publieke samplebibliotheek.',
+    title: 'Waar publieke voorbeeldoutput stopt',
+    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Andere routes worden publiek lichter toegelicht en niet als aparte samplebibliotheek uitgewerkt.',
   },
   {
     title: 'Wat management wel ziet',
-    body: 'Een geaggregeerde managementsamenvatting met handoff, topfactoren, hypotheses, prioriteiten en vervolgrichtingen in een vaste leeslijn.',
-  },
-  {
-    title: 'Hoe manager-toegang werkt',
-    body: 'HR kan managers per afdeling toewijzen. Zij loggen in via dezelfde omgeving, maar zien alleen Action Center en geen dashboard- of rapportinzichten.',
+    body: 'Geaggregeerde inzichten, topfactoren, prioriteiten en een eerste richting voor vervolg.',
   },
   {
     title: 'Wat we bewust niet claimen',
-    body: 'Geen individuele voorspelling, geen persoonsgerichte beoordeling, geen brede people-suite en geen bewijsclaims die niet door de repo-basis worden gedragen.',
+    body: 'Geen individuele voorspellingen, geen persoonsgerichte beoordeling en geen bewijsclaims die verder gaan dan de data dragen.',
   },
 ] as const
 
 export const trustHubAnswerCards = [
   {
     title: 'Waar draait de data?',
-    body: 'De primaire database draait in een EU-regio. Voor apphosting en mailverwerking gebruikt Verisight daarnaast publieke subverwerkers die in privacybeleid en DPA staan genoemd.',
+    body: 'De primaire database draait in een EU-regio. Subverwerkers voor hosting en mail staan in privacybeleid en DPA benoemd.',
   },
   {
     title: 'Wat ziet management precies?',
-    body: 'Management ziet groeps- en segmentinzichten, geen individuele signalen. Bij RetentieScan blijven individuele vertrekintentie en persoonsgerichte actieroutes nadrukkelijk buiten beeld.',
+    body: 'Management ziet groeps- en segmentinzichten, geen individuele signalen of persoonsgerichte actieroutes.',
   },
   {
     title: 'Hoe voorkom je schijnprecisie?',
-    body: 'Detailweergave start pas vanaf minimale aantallen, segmenten blijven verborgen bij te kleine groepen en open tekst wordt geanonimiseerd waar dat nodig is.',
-  },
-  {
-    title: 'Hoe lees je de output?',
-    body: 'Verisight gebruikt signalen, hypotheses en managementsamenvattingen als gespreksinput. De output ondersteunt verificatie en prioritering, niet causaliteitsclaims of harde diagnoses.',
-  },
-  {
-    title: 'Hoe werkt manager-toegang?',
-    body: 'HR kan managers per afdeling toewijzen. Zij loggen in via dezelfde omgeving, maar zien alleen Action Center en geen dashboard- of rapportinzichten.',
+    body: 'Detail start pas vanaf minimale aantallen. Kleine segmenten blijven verborgen en open tekst wordt waar nodig geanonimiseerd.',
   },
   {
     title: 'Welke juridische basis is publiek beschikbaar?',
-    body: 'Er zijn publieke pagina\'s voor trust en privacy, privacybeleid, algemene voorwaarden en een standaard DPA-template voor klantorganisaties.',
+    body: 'Er zijn publieke pagina\'s voor trust en privacy, privacybeleid, voorwaarden en een standaard DPA-template.',
   },
   {
-    title: 'Wat voor productvorm koop je?',
-    body: 'Geen self-serve surveytool en geen open consultancytraject, maar een begeleide productvorm met dashboard, rapportage, uitleg en productspecifieke trustgrenzen.',
+    title: 'Wat koopt u precies?',
+    body: 'Geen losse surveytool, maar een afgebakende productvorm met dashboard, rapport en duidelijke interpretatiegrenzen.',
   },
   {
     title: 'Heeft elke route een publiek voorbeeldrapport?',
-    body: 'Nee. Publiek bewijs blijft bewust gekoppeld aan ExitScan en RetentieScan. Vervolgroutes zijn formeel uitgewerkt, maar worden publiek vooral via productpagina, trustlaag en routegrenzen uitgelegd.',
+    body: 'Nee. Publieke voorbeeldoutput blijft bewust beperkt tot ExitScan en RetentieScan.',
   },
 ] as const
 
 export const trustReadingRows = [
   [
-    'Intended use',
+    'Gebruik',
     'Managementduiding, prioritering en gesprek op groepsniveau',
     'Niet als diagnose, individuele voorspelling of performance-oordeel',
   ],
   [
     'Wat management ziet',
-    'Een geaggregeerde managementsamenvatting met handoff, topfactoren, hypotheses, prioriteiten en vervolgrichtingen in een vaste leeslijn',
+    'Dashboard, managementsamenvatting, topfactoren en eerste vervolgrichting.',
     'Niet elke ruwe response, geen persoonsprofielen en geen verborgen black-box score',
   ],
   [
@@ -285,7 +272,7 @@ export const trustReadingRows = [
   ],
   [
     'Bewijsstatus',
-    'Methodisch onderbouwd, intern consistent en zorgvuldig beschermd',
+    'Methodisch onderbouwd en begrensd in wat het wel en niet claimt.',
     'Niet verkopen als extern gevalideerd diagnostisch instrument of bewezen predictor',
   ],
 ] as const
@@ -294,22 +281,22 @@ export const trustSupportCards = [
   {
     title: 'Trust en privacy',
     href: '/vertrouwen',
-    body: 'Publieke due-diligence laag over methodiek, privacy, rapportlezing en buyer reassurance.',
+    body: 'Methodiek, privacy en interpretatiegrenzen.',
   },
   {
     title: 'Privacybeleid',
     href: '/privacy',
-    body: 'Praktische uitleg over persoonsgegevens, subverwerkers, bewaartermijnen en rechten onder de AVG.',
+    body: 'Persoonsgegevens, subverwerkers en rechten onder de AVG.',
   },
   {
     title: 'Verwerkersovereenkomst',
     href: '/dpa',
-    body: 'Standaard DPA-template voor klantorganisaties die de formele verwerkersrol willen toetsen.',
+    body: 'Standaard DPA-template voor klantorganisaties.',
   },
   {
     title: 'Algemene voorwaarden',
     href: '/voorwaarden',
-    body: 'Publieke basis voor dienstvorm, beschikbaarheid, facturatie, rollen en aansprakelijkheid.',
+    body: 'Dienstvorm, beschikbaarheid, facturatie en rollen.',
   },
 ] as const
 

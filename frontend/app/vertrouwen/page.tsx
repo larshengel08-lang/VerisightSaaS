@@ -7,12 +7,12 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Vertrouwen',
   description:
-    'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan, Onboarding 30-60-90, Pulse en Leadership Scan.',
+    'Wat u publiek kunt toetsen voordat u start. Privacy, rapportlezing en productgrenzen van Verisight in een compacte trustlaag.',
   alternates: { canonical: '/vertrouwen' },
   openGraph: {
     title: 'Vertrouwen | Verisight',
     description:
-      'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan, Onboarding 30-60-90, Pulse en Leadership Scan.',
+      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportlezing en productgrenzen van Verisight in een compacte trustlaag.',
     url: 'https://www.verisight.nl/vertrouwen',
     images: ['/opengraph-image'],
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vertrouwen | Verisight',
     description:
-      'Methodiek, privacy en rapportlezing van Verisight. Groepsinzichten met heldere claimsgrenzen voor ExitScan, RetentieScan, Onboarding 30-60-90, Pulse en Leadership Scan.',
+      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportlezing en productgrenzen van Verisight in een compacte trustlaag.',
     images: ['/opengraph-image'],
   },
 }
