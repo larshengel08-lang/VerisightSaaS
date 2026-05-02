@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useMemo, useState } from 'react'
@@ -66,8 +67,15 @@ export function DashboardShellFrame({
           <div className="sticky top-0 flex h-screen w-full flex-col px-4 py-5">
             <div className="px-3 pb-7">
               <Link href="/dashboard" className="flex items-start gap-4">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-[#d4956a] text-sm font-semibold text-[#101418]">
-                  V
+                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full">
+                  <Image
+                    src="/brand/verisight-pulse-logo.svg"
+                    alt="Verisight logo"
+                    width={36}
+                    height={36}
+                    className="h-9 w-9"
+                    priority
+                  />
                 </span>
                 <span className="block">
                   <span className="block font-serif text-[1.1rem] leading-5 text-[#f5f2eb]">Verisight</span>

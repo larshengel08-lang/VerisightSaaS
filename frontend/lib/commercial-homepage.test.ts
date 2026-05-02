@@ -34,7 +34,9 @@ describe('commercial homepage suite opening', () => {
     )
 
     expect(homepageSource).toContain('Zie sneller waar vertrek, behoud of onboarding aandacht vragen')
-    expect(homepageSource).toContain('Verisight helpt HR en leiding signalen zichtbaar maken, prioriteren wat eerst telt en opvolging organiseren in het Action Center.')
+    expect(homepageSource).toContain(
+      'Verisight helpt HR en leiding signalen zichtbaar maken, prioriteren wat eerst telt en opvolging organiseren in het Action Center.',
+    )
     expect(homepageSource).toContain('Plan een kennismaking')
     expect(homepageSource).toContain('Bekijk voorbeeldoutput')
     expect(homepageSource).toContain('Dashboard voor inzicht')
@@ -45,7 +47,9 @@ describe('commercial homepage suite opening', () => {
 
     expect(homepageSource).toContain('Veel signalen. Te weinig scherpte')
     expect(homepageSource).toContain('in wat eerst aandacht vraagt.')
-    expect(homepageSource).toContain('Organisaties zien signalen — rond uitstroom, behoud of vroege landing — maar missen de vertaalslag naar')
+    expect(homepageSource).toContain(
+      'Organisaties zien signalen, rond uitstroom, behoud of vroege landing, maar missen de vertaalslag naar',
+    )
     expect(homepageSource).toContain('een heldere managementprioriteit en concrete opvolging.')
     expect(homepageSource).toContain('Verspreide signalen')
     expect(homepageSource).toContain('Onduidelijke prioriteit')
@@ -65,8 +69,10 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource).toContain('Een Action Center voor georganiseerde opvolging')
     expect(homepageSource).toContain('<FirstDeliverySection />')
     expect(homepageSource).toContain("const secondaryHref = '/#first-delivery'")
-    expect(homepageSource).toContain('Wilt u scherper zien wat aandacht vraagt — en opvolging beter organiseren?')
-    expect(homepageSource).toContain('Plan een kennismaking en ontdek hoe Verisight helpt om signalen zichtbaar te maken, prioriteiten scherper')
+    expect(homepageSource).toContain('Wilt u scherper zien wat aandacht vraagt, en opvolging beter organiseren?')
+    expect(homepageSource).toContain(
+      'Plan een kennismaking en ontdek hoe Verisight helpt om signalen zichtbaar te maken, prioriteiten scherper',
+    )
     expect(homepageSource).toContain('te wegen en opvolging concreet te faciliteren.')
     expect(homepageSource).not.toContain('<TrustSection />')
     expect(homepageSource).not.toContain('Zorgvuldig meten.')

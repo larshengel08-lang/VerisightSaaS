@@ -99,7 +99,7 @@ const routeCards = [
 const problemSignalPoints = [
   {
     title: 'Verspreide signalen',
-    body: 'Signalen rond vertrek, behoud en onboarding zijn er — maar verspreid over gesprekken, systemen en momenten. Geen helder totaalbeeld.',
+    body: 'Signalen rond vertrek, behoud en onboarding zijn er, maar verspreid over gesprekken, systemen en momenten. Geen helder totaalbeeld.',
     accent: SURFACE.amber,
   },
   {
@@ -109,7 +109,7 @@ const problemSignalPoints = [
   },
   {
     title: 'Opvolging blijft te los',
-    body: 'Opvolging wordt daardoor ad hoc, breed of ongericht — terwijl management juist scherpe keuzes en gedeeld eigenaarschap nodig heeft.',
+    body: 'Opvolging wordt daardoor ad hoc, breed of ongericht, terwijl management juist scherpe keuzes en gedeeld eigenaarschap nodig heeft.',
     accent: '#98a4b3',
   },
 ]
@@ -125,13 +125,13 @@ const managementFlowSteps = [
     step: '2',
     label: 'Prioriteren',
     title: 'Managementrapport',
-    body: 'Maakt de hoofdboodschap, eerste prioriteit en eerste vervolgrichting bestuurlijk leesbaar — zodat management sneller kan wegen wat eerst telt.',
+    body: 'Maakt de hoofdboodschap, eerste prioriteit en eerste vervolgrichting bestuurlijk leesbaar, zodat management sneller kan wegen wat eerst telt.',
   },
   {
     step: '3',
     label: 'Handelen',
     title: 'Action Center',
-    body: 'Maakt opvolging concreet zodra HR of leiding besluit dat een echte vervolgstap nodig is — van toewijzing aan een manager tot het openen en volgen van acties.',
+    body: 'Maakt opvolging concreet zodra HR of leiding besluit dat een echte vervolgstap nodig is, van toewijzing aan een manager tot het openen en volgen van acties.',
   },
 ] as const
 
@@ -308,7 +308,7 @@ function ProblemSection() {
                 maxWidth: '54rem',
               }}
             >
-              Organisaties zien signalen — rond uitstroom, behoud of vroege landing — maar missen de vertaalslag naar
+              Organisaties zien signalen, rond uitstroom, behoud of vroege landing, maar missen de vertaalslag naar
               een heldere managementprioriteit en concrete opvolging.
             </p>
           </Reveal>
@@ -2139,7 +2139,7 @@ function ContactSection() {
               style={{
                 color: '#fffdf8',
                 fontFamily: displayFont,
-                fontSize: 'clamp(3rem, 5vw, 4.8rem)',
+                fontSize: 'clamp(2.05rem, 3vw, 2.9rem)',
                 fontWeight: 400,
                 letterSpacing: '-0.05em',
                 lineHeight: 1.02,
@@ -2148,7 +2148,7 @@ function ContactSection() {
                 textWrap: 'balance',
               }}
             >
-              Wilt u scherper zien wat aandacht vraagt — en opvolging beter organiseren?
+              Wilt u scherper zien wat aandacht vraagt, en opvolging beter organiseren?
             </h2>
 
             <p

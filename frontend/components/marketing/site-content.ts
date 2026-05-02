@@ -9,7 +9,7 @@ export const marketingNavLinks = [
 
 export const marketingPrimaryCta = {
   href: buildContactHref({ routeInterest: 'exitscan', ctaSource: 'global_primary_cta' }),
-  label: 'Plan een eerste route-inschatting',
+  label: 'Plan een kennismaking',
 } as const
 
 export const marketingSecondaryCta = {
