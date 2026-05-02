@@ -585,6 +585,10 @@ const artifact = {
     actionCenterUrl: '/action-center',
     actionCenterFocusUrl: `/action-center?focus=${targetRouteId}`,
   },
+  closeoutRouteContext: {
+    focusItemId: targetRouteId,
+    routeTitle: `Open HR doelroute - ${targetCampaign.name}`,
+  },
   followUp: {
     sourceCampaignId: sourceCampaign.id,
     targetCampaignId: targetCampaign.id,
