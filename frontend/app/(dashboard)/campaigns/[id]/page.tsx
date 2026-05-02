@@ -853,6 +853,7 @@ export default async function CampaignPage({ params }: Props) {
       canOpenActionCenterFromDeliveryRecord,
     assessedAt: deliveryRecord?.updated_at ?? stats.created_at,
   });
+  const actionCenterRouteHref = buildActionCenterRouteOpenRedirect(id, "campaign-detail");
   const compositionStateMeta = {
     setup: {
       label: "Nog niet live",
@@ -1999,7 +2000,7 @@ export default async function CampaignPage({ params }: Props) {
     "use server";
 
     const admin = createAdminClient();
-    const actionCenterHref = buildActionCenterRouteOpenRedirect(id);
+    const actionCenterHref = buildActionCenterRouteOpenRedirect(id, "campaign-detail");
     const { data: currentDeliveryRecord, error: loadError } = await admin
       .from("campaign_delivery_records")
       .select("id, lifecycle_stage, first_management_use_confirmed_at")
@@ -2050,23 +2051,28 @@ export default async function CampaignPage({ params }: Props) {
   }
   const actionCenterRouteAction =
     actionCenterBridge.presentation.ctaKind === "open" ? (
-      actionCenterBridge.bridgeState === "candidate" ? (
-        <form action={openActionCenterRoute}>
-          <button
-            type="submit"
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+      <div className="flex flex-col gap-2">
+        {actionCenterBridge.bridgeState === "candidate" ? (
+          <form action={openActionCenterRoute}>
+            <button
+              type="submit"
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
+            >
+              {actionCenterBridge.presentation.ctaLabel}
+            </button>
+          </form>
+        ) : (
+          <Link
+            href={actionCenterRouteHref}
+            className="inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
           >
-            Open in Action Center
-          </button>
-        </form>
-      ) : (
-        <Link
-          href={buildActionCenterRouteOpenRedirect(id)}
-          className="inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50"
-        >
-          Open in Action Center
-        </Link>
-      )
+            {actionCenterBridge.presentation.ctaLabel}
+          </Link>
+        )}
+        <p className="max-w-sm text-sm leading-6 text-slate-500">
+          {actionCenterBridge.presentation.body}
+        </p>
+      </div>
     ) : null;
   const summaryActions = (
     <>

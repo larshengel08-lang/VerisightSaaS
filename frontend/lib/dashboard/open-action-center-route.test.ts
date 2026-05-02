@@ -17,6 +17,9 @@ describe('open action center route', () => {
 
   it('redirects back into action center with the opened campaign in focus', () => {
     expect(buildActionCenterRouteOpenRedirect('cmp-1')).toBe('/action-center?focus=cmp-1')
+    expect(buildActionCenterRouteOpenRedirect('cmp-1', 'campaign-detail')).toBe(
+      '/action-center?focus=cmp-1&source=campaign-detail',
+    )
   })
 
   it('does not reopen a route after lifecycle has already advanced past first management use', () => {
