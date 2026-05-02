@@ -35,8 +35,12 @@ import {
   ManagementReadInfoGrid,
   ManagementReadNarratives,
   ManagementReadSection,
-  ManagementReadStrip,
 } from "@/components/dashboard/management-read-primitives";
+import {
+  ExitDriversPriorityChart,
+  ExitOrgFactorsChart,
+  ExitSdtNeedsChart,
+} from "@/components/dashboard/exit-dashboard-visuals";
 import { DashboardTabs } from "@/components/dashboard/dashboard-tabs";
 import { FactorTable } from "@/components/dashboard/factor-table";
 import { GuidedSelfServePanel } from "@/components/dashboard/guided-self-serve-panel";
@@ -259,7 +263,7 @@ function deriveScopeLabel(respondents: Respondent[]) {
 
 function buildResponseContextNote(totalCompleted: number, completionRate: number) {
   if (totalCompleted >= MIN_N_PATTERNS) {
-    return `Responsbasis van ${completionRate}% is stevig genoeg voor een bestuurlijke eerste lezing. Lees verschillen nog steeds in samenhang met scope en banding.`
+    return `Responsbasis van ${completionRate}% is stevig genoeg voor een eerste lezing. Lees verschillen nog steeds in samenhang met scope en context.`
   }
 
   return `Eerste read is zichtbaar, maar detail blijft nog begrensd. Gebruik de responsbasis van ${completionRate}% vooral om richting te bepalen, niet om al te ver te concluderen.`
@@ -417,14 +421,15 @@ function buildFactorPriorityRows(factorAverages: Record<string, number>) {
       return {
         factor: FACTOR_LABELS[factor] ?? factor,
         score: presentation.scoreDisplay,
+        scoreValue: score,
         signal: presentation.signalDisplay,
         band: presentation.managementLabel,
         note:
           signalScore >= 7
-            ? "Direct prioriteren in de eerste managementread."
+            ? "Vraagt in dit beeld als eerste aandacht."
             : signalScore >= 4.5
-              ? "Eerst bestuurlijk toetsen voordat de route zwaarder wordt."
-              : "Volgen, maar niet als eerste stuurpunt openen.",
+              ? "Eerst toetsen voordat deze factor zwaarder meeweegt."
+              : "Zichtbaar, maar niet de eerste factor om te openen.",
         signalValue: signalScore,
       }
     })
@@ -447,13 +452,14 @@ function buildSdtRows(sdtAverages: {
       return {
         factor: item.label,
         score: `${Number(item.value).toFixed(1)}/10`,
+        scoreValue: Number(item.value),
         signal: `${signalScore.toFixed(1)}/10`,
         band: getManagementBandLabel(signalScore),
         note:
           signalScore >= 7
-            ? "Draagt zelfstandig aan de bestuurlijke leesrichting bij."
+            ? "Draagt duidelijk mee aan het vertrekbeeld."
             : signalScore >= 4.5
-              ? "Relevant als verdiepingslaag naast de primaire organisatiefactoren."
+              ? "Relevant als verdiepingslaag naast de organisatiefactoren."
               : "Ondersteunend, maar niet de eerste driver van dit beeld.",
       }
     })
@@ -2156,10 +2162,58 @@ export default async function CampaignPage({ params }: Props) {
         strongWorkSignalRate,
         distribution: exitDistribution,
       })
+      const topFactorRow = factorPriorityRows[0] ?? null
+      const secondFactorRow = factorPriorityRows[1] ?? null
+      const remainingFactorRows = factorPriorityRows.slice(2)
+      const contextualFactorRows =
+        remainingFactorRows.length > 0 ? remainingFactorRows : factorPriorityRows.slice(0, 4)
+      const strongWorkSignalLabel =
+        strongWorkSignalRate !== null ? `${strongWorkSignalRate}%` : "Nog niet vrij"
+      const responseContextNote = buildResponseContextNote(
+        stats.total_completed,
+        stats.completion_rate_pct ?? 0,
+      )
+      const synthesisCards = [
+        {
+          label: "Hoofdredenen",
+          title: topExitReasonLabel ?? "Dominante vertrekreden nog niet vrij",
+          body:
+            topExitReasonLabel !== null
+              ? "Deze reden geeft de bestuurlijke hoofdrichting van het vertrekbeeld."
+              : "De route heeft nog niet genoeg leesbasis om een dominante vertrekreden stevig vrij te geven.",
+        },
+        {
+          label: "Meespelende factoren",
+          title:
+            topContributingReasonLabel ??
+            secondFactor ??
+            "Meespelende factor nog niet scherp genoeg",
+          body:
+            topContributingReasonLabel || secondFactor
+              ? `${topContributingReasonLabel ?? secondFactor} kleurt mee onder de hoofdreden en hoort daarom in dezelfde managementlezing thuis.`
+              : "Gebruik deze laag pas zodra een tweede factor of contextsignaal zichtbaar genoeg terugkomt.",
+        },
+        {
+          label: "Survey-stemmen",
+          title: `${strongWorkSignalLabel} sterk werksignaal`,
+          body:
+            strongWorkSignalRate !== null
+              ? `In ${strongWorkSignalRate}% van de leesbare responses staat werkfrictie vooraan. Daardoor blijven survey-stemmen vooral relevant als intern werkbeeld, niet als losse casuistiek.`
+              : "Gebruik survey-stemmen hier nog voorzichtig. Het groepsbeeld is nog niet stevig genoeg voor een scherp patroon per stemlaag.",
+        },
+        {
+          label: "Context",
+          title: `${organizationName} · ${scopeLabel}`,
+          body:
+            exitDistribution.total > 0
+              ? `Werkfrictie, trekfactoren en situationele context blijven bestuurlijk los relevant binnen deze scope. Lees ze samen, niet als concurrerende verklaringen.`
+              : "De contextlaag blijft op groepsniveau. Lees het patroon pas steviger zodra voldoende vertrekbeeld zichtbaar is.",
+        },
+      ]
 
       return (
-        <div className="space-y-8">
-          <div className="space-y-3 border-b border-slate-200/80 pb-4">
+        <div className="space-y-10">
+          <div className="space-y-4 border-b border-slate-200/80 pb-5">
             <p className="text-[0.78rem] font-medium tracking-[0.01em] text-slate-500">
               <Link href="/dashboard" className="transition-colors hover:text-slate-700">
                 Overzicht
@@ -2176,107 +2230,313 @@ export default async function CampaignPage({ params }: Props) {
             >
               ← {moduleBackLinkLabel}
             </Link>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="inline-flex rounded-full border border-[#E7D3BF] bg-[#FBF3E7] px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#A96026]">
+                    ExitScan
+                  </span>
+                  <span className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                    {compositionStateMeta.label}
+                  </span>
+                </div>
+                <h1 className="font-serif text-[2.6rem] leading-[0.96] tracking-[-0.055em] text-[color:var(--dashboard-ink)] sm:text-[3.15rem]">
+                  {stats.campaign_name}
+                </h1>
+                <p className="text-sm leading-6 text-slate-600">
+                  {organizationName} · {routePeriodLabel} · {scopeLabel}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">{headerActions}</div>
+            </div>
           </div>
 
-          <ManagementReadHeader
-            tone="exit"
-            productLabel="ExitScan"
-            title={stats.campaign_name}
-            orgLabel={organizationName}
-            periodLabel={routePeriodLabel}
-            scopeLabel={scopeLabel}
-            statusLabel={compositionStateMeta.label}
-            contextLine={`${topFactor ?? "De route"} draagt de eerste bestuurlijke leesrichting. ${strongWorkSignalRate ?? 0}% van de leesbare responses valt in sterk werksignaal, waardoor deze route vooral een intern werkvraagstuk blijft.`}
-            actions={headerActions}
-          />
-
-          <ManagementReadSection eyebrow="Bestuurlijke handoff" title="Wat dit vertrekbeeld nu eerst zegt">
-            <div className="space-y-5">
-              <p className="max-w-4xl text-[1rem] leading-7 text-[color:var(--dashboard-text)]">
-                Het vertrekbeeld vraagt eerst een bestuurlijke lezing van de samenhang tussen {topFactor?.toLowerCase() ?? "de scherpste driver"} en {secondFactor?.toLowerCase() ?? "de tweede laag"}. Deze route duidt en prioriteert, maar vult nog geen eigenaar, reviewmoment of eerste actie voor je in.
+          <section className="space-y-4 border-t border-slate-200/80 pt-6">
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+                Respons
               </p>
-              <ManagementReadInfoGrid
-                items={[
-                  { label: "Sterkste driver", value: topFactor ?? "Nog niet vrij" },
-                  { label: "Dominante vertrekreden", value: topExitReasonLabel ?? "Nog niet vrij" },
-                  { label: "Werkfrictie zichtbaar", value: `${exitDistribution.workPercent}%` },
-                  { label: "Bestuurlijke status", value: compositionStateMeta.label },
-                ]}
-              />
+              <h2 className="font-serif text-[1.95rem] leading-[1.02] tracking-[-0.045em] text-[color:var(--dashboard-ink)]">
+                Respons & leescontext
+              </h2>
             </div>
-          </ManagementReadSection>
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr),minmax(0,1.05fr)] lg:items-start">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  { label: "Respons", value: `${stats.completion_rate_pct ?? 0}%` },
+                  { label: "Uitgenodigd", value: `${stats.total_invited}` },
+                  { label: "Ingevuld", value: `${stats.total_completed}` },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-[18px] bg-[color:var(--dashboard-soft)]/62 px-4 py-4">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                      {item.label}
+                    </p>
+                    <p className="mt-3 text-base font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/62 px-5 py-4 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                {responseContextNote}
+              </div>
+            </div>
+          </section>
 
-          <ManagementReadSection
-            eyebrow="Respons en context"
-            title="Responsbasis en leesdiscipline"
-            note={`n = ${responses.length}. Lees de route altijd in samenhang met de responsbasis en de verdeling van het vertrekbeeld.`}
-          >
-            <ManagementReadStrip
-              items={[
-                { label: "Uitgenodigd", value: `${stats.total_invited}` },
-                { label: "Ingevuld", value: `${stats.total_completed}` },
-                { label: "Respons", value: `${stats.completion_rate_pct ?? 0}%` },
-              ]}
-              note={buildResponseContextNote(stats.total_completed, stats.completion_rate_pct ?? 0)}
-            />
-          </ManagementReadSection>
+          <section className="rounded-[30px] bg-[linear-gradient(180deg,rgba(255,250,245,0.98),rgba(249,242,235,0.94))] px-6 py-6 shadow-[0_18px_40px_rgba(17,24,39,0.06)] sm:px-7 sm:py-7">
+            <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[minmax(0,1.2fr),minmax(340px,0.8fr)]">
+              <div className="space-y-5">
+                <div className="space-y-1">
+                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#A96026]">
+                    Kernbeeld nu
+                  </p>
+                </div>
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <div className="rounded-[22px] border border-[#E7D7C6] bg-white/84 px-4 py-4">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Wat speelt nu
+                    </p>
+                    <p className="mt-3 text-lg font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+                      {topFactor ?? "De scherpste factor is nog niet vrij"}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                      {topFactor
+                        ? `${topFactor} drukt nu het sterkst op het vertrekbeeld en hoort daarom de eerste lezing te openen.`
+                        : "De route is nog niet vrij genoeg om al één dominante factor stevig naar voren te trekken."}
+                    </p>
+                  </div>
+                  <div className="rounded-[22px] border border-[#E7D7C6] bg-white/84 px-4 py-4">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      Scherpste factor(en)
+                    </p>
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">
+                          {topFactorRow?.factor ?? "Nog niet vrij"}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {topFactorRow
+                            ? `${topFactorRow.score} · ${topFactorRow.signal ?? "Geen signaal"}`
+                            : "Nog geen stabiel factorbeeld"}
+                        </p>
+                      </div>
+                      <div className="border-t border-[#EEE4D8] pt-3">
+                        <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">
+                          {secondFactorRow?.factor ?? topExitReasonLabel ?? "Tweede laag nog niet scherp genoeg"}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {secondFactorRow
+                            ? `${secondFactorRow.score} · ${secondFactorRow.signal ?? "Geen signaal"}`
+                            : topExitReasonLabel
+                              ? `Dominante vertrekreden: ${topExitReasonLabel}`
+                              : "Nog geen tweede dragende factor zichtbaar"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-          <ManagementReadSection
-            eyebrow="Frictiescore"
-            title="Frictiescore en verdeling van het vertrekbeeld"
-          >
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <div className="rounded-[24px] border border-[#E7D7C6] bg-white/88 px-5 py-5">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Frictiescore
+                  </p>
+                  <p className="dash-number mt-3 text-[2.3rem] leading-none text-[color:var(--dashboard-ink)]">
+                    {averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet vrij"}
+                  </p>
+                  <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    Dit is het gemiddelde frictieniveau in de leesbare responses. Hoe hoger de score, hoe vaker antwoorden wijzen op spanning of frictie in het werk.
+                  </p>
+                  <div className="mt-3 space-y-2 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    <p>
+                      De score is opgebouwd uit patronen in de antwoorden op groepsniveau, niet uit één losse reden of één individuele response.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-4 border-t border-slate-200/80 pt-6">
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[#2E756E]">
+                Drivers
+              </p>
+              <h2 className="font-serif text-[1.95rem] leading-[1.02] tracking-[-0.045em] text-[color:var(--dashboard-ink)]">
+                Drivers & prioriteitenbeeld
+              </h2>
+              <p className="max-w-4xl text-[1rem] leading-7 text-[color:var(--dashboard-text)]">
+                Deze pagina bundelt SDT-gebaseerde en organisatorische factoren in één prioriteitenbeeld. Daardoor zie je sneller welke thema&apos;s als eerste aandacht vragen.
+              </p>
+            </div>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1.08fr),minmax(320px,0.92fr)]">
+              <ExitDriversPriorityChart rows={factorPriorityRows} />
+              <div className="space-y-4">
+                <ManagementReadDistribution
+                  tone="exit"
+                  label="Vertrekbeeld"
+                  value={`${exitDistribution.workPercent}% werkfrictie`}
+                  narrative="Werkfrictie betekent hier dat antwoorden vooral wijzen naar factoren binnen werk, rol of organisatie. Dit percentage is berekend op basis van de vertrekredenen in de leesbare responses."
+                  segments={exitDistribution.segments}
+                />
+                {[topFactorRow, secondFactorRow].filter(Boolean).map((row, index) => (
+                  <div key={row?.factor} className="rounded-[20px] bg-[color:var(--dashboard-soft)]/58 px-5 py-5">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                      {index === 0 ? "Topfactor 1" : "Topfactor 2"}
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <h3 className="text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+                        {row?.factor}
+                      </h3>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-600">
+                      {row?.score} · {row?.signal ?? "Nog niet vrij"}
+                    </p>
+                    <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                      {row?.note}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="overflow-hidden rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-white/78">
+              <div className="hidden gap-4 border-b border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/72 px-5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)] lg:grid lg:grid-cols-[minmax(0,1.2fr)_108px_128px_minmax(0,1.5fr)]">
+                <span>Factor</span>
+                <span>Score</span>
+                <span>Signaal</span>
+                <span>Lezing</span>
+              </div>
+              <div className="divide-y divide-[color:var(--dashboard-frame-border)]/80">
+                {factorPriorityRows.map((row) => (
+                  <div
+                    key={row.factor}
+                    className="grid gap-3 px-5 py-4 lg:grid-cols-[minmax(0,1.2fr)_108px_128px_minmax(0,1.5fr)] lg:items-start lg:gap-4"
+                  >
+                    <div>
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)] lg:hidden">
+                        Factor
+                      </p>
+                      <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+                        {row.factor}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)] lg:hidden">
+                        Score
+                      </p>
+                      <p className="text-sm font-semibold tabular-nums text-[color:var(--dashboard-ink)]">
+                        {row.score}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)] lg:hidden">
+                        Signaal
+                      </p>
+                      <p className="text-sm font-semibold tabular-nums text-[color:var(--dashboard-ink)]">
+                        {row.signal ?? "Nog niet vrij"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)] lg:hidden">
+                        Lezing
+                      </p>
+                      <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                        {row.note}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-4 border-t border-slate-200/80 pt-6">
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+                Synthese
+              </p>
+              <h2 className="font-serif text-[1.95rem] leading-[1.02] tracking-[-0.045em] text-[color:var(--dashboard-ink)]">
+                Synthese van vertrekbeeld
+              </h2>
+            </div>
             <div className="grid gap-4 xl:grid-cols-2">
-              <ManagementReadDistribution
-                tone="exit"
-                label="Frictiescore"
-                value={averageRiskScore !== null ? `${averageRiskScore.toFixed(1)}/10` : "Nog niet vrij"}
-                narrative={`De banding blijft bestuurlijk relevant: ${stats.band_high} responses vallen in Direct prioriteren, ${stats.band_medium} in Eerst toetsen en ${stats.band_low} in Volgen.`}
-                segments={[
-                  { label: "Direct prioriteren", value: `${stats.band_high}`, percent: stats.total_completed > 0 ? Math.round((stats.band_high / stats.total_completed) * 100) : 0 },
-                  { label: "Eerst toetsen", value: `${stats.band_medium}`, percent: stats.total_completed > 0 ? Math.round((stats.band_medium / stats.total_completed) * 100) : 0 },
-                  { label: "Volgen", value: `${stats.band_low}`, percent: stats.total_completed > 0 ? Math.round((stats.band_low / stats.total_completed) * 100) : 0 },
-                ]}
-              />
-              <ManagementReadDistribution
-                tone="exit"
-                label="Vertrekbeeld"
-                value={`${exitDistribution.workPercent}% werkfrictie`}
-                narrative="Deze verdeling geeft de eerste contextlaag onder het vertrekbeeld. Werkfrictie, andere trekfactoren en situationele context blijven daarom apart bestuurlijk relevant."
-                segments={exitDistribution.segments}
-              />
+              {synthesisCards.map((card) => (
+                <div
+                  key={card.label}
+                  className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-5"
+                >
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                    {card.label}
+                  </p>
+                  <h3 className="mt-3 text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
+                    {card.title}
+                  </h3>
+                  <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                    {card.body}
+                  </p>
+                </div>
+              ))}
             </div>
-          </ManagementReadSection>
+            {exitNarratives.length > 0 ? (
+              <div className="border-t border-slate-200/80 pt-5">
+                <ManagementReadNarratives items={exitNarratives} />
+              </div>
+            ) : null}
+          </section>
 
-          <ManagementReadSection
-            eyebrow="Synthese"
-            title="Signalen in samenhang"
-            note="De synthese blijft een leeslaag. Zij vervangt geen rapportwaarheid en introduceert geen nieuwe commitmentstructuur."
-          >
-            <ManagementReadNarratives items={exitNarratives} />
-          </ManagementReadSection>
+          <section className="space-y-4 border-t border-slate-200/80 pt-6">
+            <div className="space-y-2">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+                Verdieping
+              </p>
+              <h2 className="font-serif text-[1.95rem] leading-[1.02] tracking-[-0.045em] text-[color:var(--dashboard-ink)]">
+                Verdiepingslagen
+              </h2>
+              <p className="max-w-4xl text-[1rem] leading-7 text-[color:var(--dashboard-text)]">
+                SDT, organisatiefactoren en aanvullende context blijven bewust secundair. Ze zijn nuttig voor verdieping, niet voor de eerste lezing.
+              </p>
+            </div>
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr),minmax(0,1fr),minmax(300px,0.82fr)]">
+              <ExitSdtNeedsChart rows={sdtRows} />
+              <ExitOrgFactorsChart rows={contextualFactorRows} />
+              <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-5">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-muted)]">
+                  Aanvullende context
+                </p>
+                <div className="mt-4 space-y-4 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  <div>
+                    <p className="font-semibold text-[color:var(--dashboard-ink)]">
+                      Dominante vertrekreden
+                    </p>
+                    <p className="mt-1">
+                      {topExitReasonLabel ?? "Nog niet stevig genoeg zichtbaar"}
+                    </p>
+                  </div>
+                  <div className="border-t border-[color:var(--dashboard-frame-border)] pt-4">
+                    <p className="font-semibold text-[color:var(--dashboard-ink)]">
+                      Meelezende context
+                    </p>
+                    <p className="mt-1">
+                      {topContributingReasonLabel ??
+                        "Nog geen meelezende contextcode scherp genoeg vrijgegeven"}
+                    </p>
+                  </div>
+                  <div className="border-t border-[color:var(--dashboard-frame-border)] pt-4">
+                    <p className="font-semibold text-[color:var(--dashboard-ink)]">
+                      Signaalzichtbaarheid
+                    </p>
+                    <p className="mt-1">
+                      {signalVisibilityAverage !== null
+                        ? `${signalVisibilityAverage.toFixed(1)}/10 zichtbaar in deze wave.`
+                        : "Nog niet stevig genoeg om als extra zichtbaarheidssignaal te lezen."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
 
-          <ManagementReadSection
-            eyebrow="Drivers"
-            title="Drivers en prioriteitenbeeld"
-            note={`Belevingsscore en aparte signaalwaarde blijven zichtbaar. Banding blijft bestuurlijk relevant als snelle managementlezing.`}
-          >
-            <ManagementReadFactorTable rows={factorPriorityRows} />
-          </ManagementReadSection>
-
-          <ManagementReadSection
-            eyebrow="Verdieping"
-            title="SDT en organisatiefactoren"
-            note="SDT blijft een verdiepende leeslaag naast de organisatiefactoren. Daardoor blijft zichtbaar wat structureel wringt en wat vooral relationeel of motivationeel speelt."
-          >
-            <ManagementReadFactorTable rows={sdtRows} />
-          </ManagementReadSection>
-
-          <ManagementReadBridge
-            tone="exit"
-            title="Van routelezing naar mogelijke vervolgrichting"
-            body="Pas als de bestuurlijke leesrichting stevig genoeg is, hoort commitment thuis in Action Center. Deze routepagina stopt dus bij duiding, prioritering en een lichte brug."
-            action={actionCenterRouteAction}
-          />
         </div>
       )
     }
@@ -2614,12 +2874,16 @@ export default async function CampaignPage({ params }: Props) {
                 }
                 subline={
                   averageRiskScore !== null
-                    ? bandLabels[getRiskBandFromScore(averageRiskScore)]
+                    ? stats.scan_type === "exit"
+                      ? undefined
+                      : bandLabels[getRiskBandFromScore(averageRiskScore)]
                     : undefined
                 }
                 band={
                   averageRiskScore !== null
-                    ? getRiskBandFromScore(averageRiskScore)
+                    ? stats.scan_type === "exit"
+                      ? "neutral"
+                      : getRiskBandFromScore(averageRiskScore)
                     : undefined
                 }
               />
@@ -2630,10 +2894,14 @@ export default async function CampaignPage({ params }: Props) {
                 band="neutral"
               />
               <SignalStatCard
-                label="Risicoband"
+                label={stats.scan_type === "exit" ? "Spreiding in beeld" : "Risicoband"}
                 value={`${dominantPct}%`}
-                subline={`valt nu in ${bandLabels[dominantBand].toLowerCase()}`}
-                band={dominantBand}
+                subline={
+                  stats.scan_type === "exit"
+                    ? "van de responses valt in de grootste zichtbare groep"
+                    : `valt nu in ${bandLabels[dominantBand].toLowerCase()}`
+                }
+                band={stats.scan_type === "exit" ? "neutral" : dominantBand}
               />
               <InsightStatCard
                 label="Sterkste factor"

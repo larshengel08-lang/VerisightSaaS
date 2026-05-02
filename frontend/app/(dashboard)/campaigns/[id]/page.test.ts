@@ -28,22 +28,26 @@ describe('campaign detail management-read guardrails', () => {
   it('keeps route pages in a bestuurlijke read layer and does not default to owner-action-review commitment blocks', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('De pagina bewaakt bewust de grens tussen bestuurlijke duiding en commitment')
-    expect(source).toContain('stopt dus bij duiding, prioritering en een lichte brug')
+    expect(source).toContain('Kernbeeld nu')
+    expect(source).toContain('Frictiescore')
+    expect(source).toContain('Dit is het gemiddelde frictieniveau in de leesbare responses.')
+    expect(source).toContain('Werkfrictie betekent hier dat antwoorden vooral wijzen naar factoren binnen werk, rol of organisatie.')
     expect(source).toContain('hoort pas in Action Center thuis')
     expect(source).not.toContain('wie wat moet doen')
     expect(source).not.toContain('route-eigenaar standaard als inhoudsblok pushen')
   })
 
-  it('preserves report-truth layers such as response basis, banding, factor signal values and SDT', () => {
+  it('preserves report-truth layers such as response basis, factor signal values and SDT', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('Responsbasis en leesdiscipline')
-    expect(source).toContain('Direct prioriteren')
-    expect(source).toContain('Eerst toetsen')
-    expect(source).toContain('Volgen')
+    expect(source).toContain('Respons & leescontext')
+    expect(source).toContain('Frictiescore')
+    expect(source).toContain('signal: presentation.signalDisplay')
+    expect(source).toContain('ExitDriversPriorityChart')
+    expect(source).toContain('ExitSdtNeedsChart')
+    expect(source).toContain('ExitOrgFactorsChart')
     expect(source).toContain('buildFactorPresentation')
-    expect(source).toContain('SDT en organisatiefactoren')
+    expect(source).toContain('Verdiepingslagen')
     expect(source).toContain('n = ${responses.length}')
   })
 
