@@ -67,9 +67,9 @@ const suiteSignalMetrics = [
 ] as const
 
 const suitePriorityRows = [
-  ['01', 'Groei en ontwikkeling blijft achter', 'Operations en Finance', 'Direct', SURFACE.amberSoft, SURFACE.amber],
-  ['02', 'Werkdruk loopt op', 'Piekperiode in Operations', 'Verhoogd', '#f1dfcf', '#9a5b19'],
-  ['03', 'Loopbaanperspectief blijft achter', 'Organisatiebreed signaal', 'Aandacht', SURFACE.tealSoft, SURFACE.teal],
+  ['01', 'Groei en ontwikkeling blijft achter', 'Operations en Finance', 'Direct', SURFACE.amberSoft, SURFACE.text],
+  ['02', 'Werkdruk loopt op', 'Piekperiode in Operations', 'Verhoogd', SURFACE.surfaceSoft, SURFACE.text],
+  ['03', 'Loopbaanperspectief blijft achter', 'Organisatiebreed signaal', 'Aandacht', SURFACE.surfaceSoft, SURFACE.text],
 ] as const
 
 const routeCards = [
@@ -92,7 +92,7 @@ const routeCards = [
     eyebrow: 'Als vroege landing aandacht vraagt',
     title: 'Onboarding 30-60-90',
     body: 'Zie vroeg hoe nieuwe medewerkers landen en waar uitval kan ontstaan.',
-    accent: '#9b5f1e',
+    accent: SURFACE.border,
   },
 ]
 
@@ -100,12 +100,12 @@ const problemSignalPoints = [
   {
     title: 'Verspreide signalen',
     body: 'Signalen rond vertrek, behoud en onboarding zijn er, maar verspreid over gesprekken, systemen en momenten. Geen helder totaalbeeld.',
-    accent: SURFACE.amber,
+    accent: SURFACE.border,
   },
   {
     title: 'Onduidelijke prioriteit',
     body: 'Zonder duidelijke vertaalslag blijft onduidelijk welk signaal eerst geverifieerd, besproken of opgepakt moet worden.',
-    accent: SURFACE.teal,
+    accent: SURFACE.border,
   },
   {
     title: 'Opvolging blijft te los',
@@ -750,22 +750,22 @@ function HeroSection() {
   const primaryHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero_primary' })
   const secondaryHref = '/#first-delivery'
   const dashboardBars = [
-    { height: '45%', color: '#f8e7dc' },
-    { height: '62%', color: '#f3ba8e' },
-    { height: '54%', color: '#ef944f' },
-    { height: '84%', color: SURFACE.teal },
+    { height: '45%', color: SURFACE.surfaceSoft },
+    { height: '62%', color: SURFACE.borderSoft },
+    { height: '54%', color: SURFACE.amberSoft },
+    { height: '84%', color: SURFACE.tealSoft },
     { height: '100%', color: SURFACE.amber },
-    { height: '88%', color: '#327f79' },
-    { height: '70%', color: '#f6a55f' },
+    { height: '88%', color: SURFACE.border },
+    { height: '70%', color: SURFACE.paperSoft },
   ]
   const reportRows = [
     ['Groei en ontwikkeling', '82%', SURFACE.amber],
-    ['Werkdruk in operatie', '54%', SURFACE.teal],
+    ['Werkdruk in operatie', '54%', SURFACE.text],
     ['Loopbaanperspectief', '28%', SURFACE.border],
   ] as const
   const actionItems = [
     ['Herzie mentorshipprogramma', 'Gevolg van: lage onboarding-score', 'Critical', '#d45a51', '#ffdad6'],
-    ['Verifieer werkdruk in Operations', 'Besluit: eerste teamreview', 'Deze week', SURFACE.teal, '#dff2ef'],
+    ['Verifieer werkdruk in Operations', 'Besluit: eerste teamreview', 'Deze week', SURFACE.tealSoft, SURFACE.text],
   ] as const
 
   return (
@@ -897,9 +897,10 @@ function HeroSection() {
                 <span />
                 <span
                   style={{
-                    background: SURFACE.tealSoft,
+                    background: SURFACE.surfaceSoft,
+                    border: `1px solid ${SURFACE.borderSoft}`,
                     borderRadius: 4,
-                    color: SURFACE.teal,
+                    color: SURFACE.text,
                     fontSize: 10,
                     fontWeight: 700,
                     padding: '3px 8px',
@@ -1438,7 +1439,7 @@ function SuitePreviewSection() {
           .suite-motion-progress-fill {
             animation: suite-progress-flow var(--suite-cycle-duration) infinite both;
             animation-timing-function: cubic-bezier(.65, 0, .35, 1);
-            background: linear-gradient(90deg, ${SURFACE.amber} 0%, ${SURFACE.teal} 100%);
+            background: linear-gradient(90deg, ${SURFACE.borderSoft} 0%, ${SURFACE.amber} 100%);
             border-radius: inherit;
             height: 100%;
             left: 0;
@@ -1521,8 +1522,8 @@ function SuitePreviewSection() {
           }
 
           .suite-phase-chip-teal {
-            background: ${SURFACE.tealSoft};
-            color: ${SURFACE.teal};
+            background: ${SURFACE.surfaceSoft};
+            color: ${SURFACE.text};
           }
 
           .suite-phase-chip-dark {
@@ -1589,9 +1590,9 @@ function SuitePreviewSection() {
           }
 
           .suite-ladder-row-active {
-            background: rgba(255, 248, 241, 0.96);
-            border-color: rgba(191, 148, 110, 0.38);
-            box-shadow: inset 0 0 0 1px rgba(185, 87, 31, 0.11);
+            background: rgba(255, 250, 245, 0.92);
+            border-color: ${SURFACE.border};
+            box-shadow: inset 0 0 0 1px rgba(22, 34, 56, 0.04);
           }
 
           .suite-list-index {
@@ -1677,9 +1678,9 @@ function SuitePreviewSection() {
           }
 
           .suite-action-row-primary {
-            background: rgba(255, 248, 241, 0.96);
-            border-color: rgba(191, 148, 110, 0.38);
-            box-shadow: inset 0 0 0 1px rgba(185, 87, 31, 0.11);
+            background: rgba(255, 250, 245, 0.92);
+            border-color: ${SURFACE.border};
+            box-shadow: inset 0 0 0 1px rgba(22, 34, 56, 0.04);
           }
 
           .suite-action-label {
@@ -1718,7 +1719,7 @@ function SuitePreviewSection() {
             background: rgba(244, 221, 208, 0.92);
             border-color: rgba(185, 87, 31, 0.2);
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
-            color: ${SURFACE.amber};
+            color: ${SURFACE.text};
           }
 
           @keyframes suite-track-flow {
@@ -1757,9 +1758,9 @@ function SuitePreviewSection() {
               color: ${SURFACE.text};
             }
             33.34%, 66.5% {
-              background: ${SURFACE.tealSoft};
-              border-color: #cbe7e2;
-              color: ${SURFACE.teal};
+              background: ${SURFACE.surfaceSoft};
+              border-color: ${SURFACE.borderSoft};
+              color: ${SURFACE.ink};
             }
           }
 
@@ -1968,8 +1969,8 @@ function RoutesSection() {
 
           <div className="flex flex-wrap gap-8 xl:justify-end">
             {[
-              ['Pulse', SURFACE.tealSoft, SURFACE.teal],
-              ['Leadership Scan', SURFACE.amberSoft, SURFACE.amber],
+              ['Pulse', SURFACE.surfaceSoft, SURFACE.text],
+              ['Leadership Scan', SURFACE.paperSoft, SURFACE.text],
               ['Combinatie', '#ece7df', SURFACE.ink],
             ].map(([label, bg, color], index) => (
               <Reveal key={label} delay={0.28 + index * 0.05}>
