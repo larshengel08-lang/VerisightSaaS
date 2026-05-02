@@ -5,6 +5,16 @@ import { useRouter } from 'next/navigation'
 import { resendPendingAction } from '@/app/(dashboard)/campaigns/[id]/actions'
 import { buildResendResultMessage } from '@/app/(dashboard)/campaigns/[id]/reminder-feedback'
 import { getCustomerActionPermission } from '@/lib/customer-permissions'
+import {
+  createDefaultParticipantCommunicationConfig,
+  createDefaultReminderConfig,
+  normalizeParticipantCommunicationConfig,
+  normalizeReminderConfig,
+  REMINDER_DELAY_PRESETS,
+  REMINDER_MAX_COUNT_PRESETS,
+  type ParticipantCommunicationConfig,
+  type ReminderConfig,
+} from '@/lib/launch-controls'
 import { type DeliveryMode, type MemberRole, type ScanType } from '@/lib/types'
 
 interface Props {
@@ -75,6 +85,9 @@ export function GuidedSelfServePanel({
   pendingCount,
   remindableCount,
   unsentRespondents,
+  launchDate: initialLaunchDate,
+  participantCommsConfig: initialParticipantCommsConfig,
+  reminderConfig: initialReminderConfig,
   memberRole,
 }: Props) {
   const router = useRouter()
@@ -82,19 +95,47 @@ export function GuidedSelfServePanel({
   const canLaunchInvites = getCustomerActionPermission(memberRole, 'launch_invites')
   const canSendReminders = getCustomerActionPermission(memberRole, 'send_reminders')
 
+  // Upload state
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [previewResult, setPreviewResult] = useState<ImportResponse | null>(null)
   const [importSuccess, setImportSuccess] = useState<ImportResponse | null>(null)
   const [optimisticInviteQueue, setOptimisticInviteQueue] = useState<
     Array<{ token: string; email: string | null }>
   >([])
+
+  // Settings state
+  const [launchDate, setLaunchDate] = useState(initialLaunchDate ?? '')
+  const [participantCommsConfig, setParticipantCommsConfig] =
+    useState<ParticipantCommunicationConfig>(
+      normalizeParticipantCommunicationConfig(
+        initialParticipantCommsConfig ?? createDefaultParticipantCommunicationConfig(),
+      ),
+    )
+  const [reminderConfig, setReminderConfig] = useState<ReminderConfig>(
+    normalizeReminderConfig(initialReminderConfig ?? createDefaultReminderConfig()),
+  )
+
+  // Async state
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState<'preview' | 'import' | 'launch' | 'remind' | null>(null)
+  const [saveBusy, setSaveBusy] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
     setOptimisticInviteQueue([])
   }, [campaignId, unsentRespondents])
+
+  useEffect(() => {
+    setLaunchDate(initialLaunchDate ?? '')
+    setParticipantCommsConfig(
+      normalizeParticipantCommunicationConfig(
+        initialParticipantCommsConfig ?? createDefaultParticipantCommunicationConfig(),
+      ),
+    )
+    setReminderConfig(
+      normalizeReminderConfig(initialReminderConfig ?? createDefaultReminderConfig()),
+    )
+  }, [campaignId, initialLaunchDate, initialParticipantCommsConfig, initialReminderConfig])
 
   const launchableRespondents = useMemo(() => {
     const source = optimisticInviteQueue.length > 0 ? optimisticInviteQueue : unsentRespondents
@@ -159,6 +200,48 @@ export function GuidedSelfServePanel({
       setError('Verbindingsfout tijdens import.')
     } finally {
       setLoading(null)
+    }
+  }
+
+  async function saveSettings() {
+    setError(null)
+    setSaveBusy(true)
+    try {
+      const response = await fetch(`/api/campaigns/${campaignId}/launch-config`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          launch_date: launchDate || null,
+          participant_comms_config: participantCommsConfig,
+          reminder_config: reminderConfig,
+        }),
+      })
+      const payload = (await response.json().catch(() => ({}))) as {
+        detail?: string
+        message?: string
+        launch_date?: string | null
+        participant_comms_config?: unknown
+        reminder_config?: unknown
+      }
+      if (!response.ok) {
+        setError(payload.detail ?? 'Instellingen konden niet worden opgeslagen.')
+        return
+      }
+      setLaunchDate(payload.launch_date ?? '')
+      setParticipantCommsConfig(
+        normalizeParticipantCommunicationConfig(
+          payload.participant_comms_config ?? participantCommsConfig,
+        ),
+      )
+      setReminderConfig(
+        normalizeReminderConfig(payload.reminder_config ?? reminderConfig),
+      )
+      setToast('Instellingen opgeslagen.')
+      setTimeout(() => setToast(null), 3000)
+    } catch {
+      setError('Verbindingsfout tijdens opslaan.')
+    } finally {
+      setSaveBusy(false)
     }
   }
 
@@ -431,32 +514,175 @@ export function GuidedSelfServePanel({
           ) : null}
         </div>
       ) : currentStep === 'launch' ? (
-        /* STATE B: Participants loaded, invites not yet sent */
+        /* STATE B: Settings + start invites */
         <div className="rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] p-5 shadow-[0_1px_3px_rgba(10,25,47,0.03)]">
           <h3 className="text-base font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
             Uitnodigingen starten
           </h3>
           <p className="mt-1 text-sm leading-6 text-[color:var(--dashboard-text)]">
-            {launchableRespondents.length} deelnemer(s) klaar voor uitnodiging. Zodra je start,
-            ontvangen zij de uitnodigingsmail van Verisight.
+            {launchableRespondents.length} deelnemer(s) klaar. Stel communicatie en reminders in
+            voordat je start.
           </p>
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => void startInvites()}
-              disabled={
-                loading !== null || !canLaunchInvites || launchableRespondents.length === 0
-              }
-              className="rounded-full bg-[color:var(--dashboard-rail)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading === 'launch'
-                ? 'Uitnodigingen starten...'
-                : `Start uitnodigingen (${launchableRespondents.length})`}
-            </button>
+
+          <div className="mt-5 space-y-5">
+            {/* Communicatie */}
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+                Communicatie
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-[color:var(--dashboard-ink)]">
+                    Afzendernaam
+                  </span>
+                  <input
+                    type="text"
+                    maxLength={80}
+                    value={participantCommsConfig.senderName}
+                    onChange={(event) =>
+                      setParticipantCommsConfig((current) => ({
+                        ...current,
+                        senderName: event.target.value,
+                      }))
+                    }
+                    placeholder="bijv. HR-afdeling Bedrijfsnaam"
+                    className="w-full rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-sm text-[color:var(--dashboard-ink)] placeholder:text-[color:var(--dashboard-muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--dashboard-accent-strong)]/20"
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-[color:var(--dashboard-ink)]">
+                    Reply-to e-mailadres
+                  </span>
+                  <input
+                    type="email"
+                    maxLength={160}
+                    value={participantCommsConfig.replyToEmail}
+                    onChange={(event) =>
+                      setParticipantCommsConfig((current) => ({
+                        ...current,
+                        replyToEmail: event.target.value,
+                      }))
+                    }
+                    placeholder="bijv. hr@bedrijfsnaam.nl"
+                    className="w-full rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-sm text-[color:var(--dashboard-ink)] placeholder:text-[color:var(--dashboard-muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--dashboard-accent-strong)]/20"
+                  />
+                </label>
+              </div>
+              <label className="block text-sm">
+                <span className="mb-1 block font-medium text-[color:var(--dashboard-ink)]">
+                  Formele startdatum
+                </span>
+                <input
+                  type="date"
+                  value={launchDate}
+                  onChange={(event) => setLaunchDate(event.target.value)}
+                  className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-sm text-[color:var(--dashboard-ink)] focus:outline-none focus:ring-2 focus:ring-[color:var(--dashboard-accent-strong)]/20"
+                />
+              </label>
+            </div>
+
+            {/* Reminders */}
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+                Reminders
+              </p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-[color:var(--dashboard-ink)]">
+                    Reminders
+                  </span>
+                  <select
+                    value={reminderConfig.enabled ? 'aan' : 'uit'}
+                    onChange={(event) =>
+                      setReminderConfig((current) => ({
+                        ...current,
+                        enabled: event.target.value === 'aan',
+                      }))
+                    }
+                    className="w-full rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-sm text-[color:var(--dashboard-ink)] focus:outline-none"
+                  >
+                    <option value="aan">Aan</option>
+                    <option value="uit">Uit</option>
+                  </select>
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-[color:var(--dashboard-ink)]">
+                    Eerste reminder na
+                  </span>
+                  <select
+                    value={String(reminderConfig.firstReminderAfterDays)}
+                    disabled={!reminderConfig.enabled}
+                    onChange={(event) =>
+                      setReminderConfig((current) => ({
+                        ...current,
+                        firstReminderAfterDays: Number(
+                          event.target.value,
+                        ) as ReminderConfig['firstReminderAfterDays'],
+                      }))
+                    }
+                    className="w-full rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-sm text-[color:var(--dashboard-ink)] focus:outline-none disabled:opacity-50"
+                  >
+                    {REMINDER_DELAY_PRESETS.map((preset) => (
+                      <option key={preset} value={preset}>
+                        {preset} dagen
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block font-medium text-[color:var(--dashboard-ink)]">
+                    Maximum reminders
+                  </span>
+                  <select
+                    value={String(reminderConfig.maxReminderCount)}
+                    disabled={!reminderConfig.enabled}
+                    onChange={(event) =>
+                      setReminderConfig((current) => ({
+                        ...current,
+                        maxReminderCount: Number(
+                          event.target.value,
+                        ) as ReminderConfig['maxReminderCount'],
+                      }))
+                    }
+                    className="w-full rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-sm text-[color:var(--dashboard-ink)] focus:outline-none disabled:opacity-50"
+                  >
+                    {REMINDER_MAX_COUNT_PRESETS.map((preset) => (
+                      <option key={preset} value={preset}>
+                        {preset}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-wrap items-center gap-2 border-t border-[color:var(--dashboard-frame-border)] pt-4">
+              <button
+                type="button"
+                onClick={() => void saveSettings()}
+                disabled={saveBusy || loading !== null}
+                className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saveBusy ? 'Opslaan...' : 'Sla instellingen op'}
+              </button>
+              <button
+                type="button"
+                onClick={() => void startInvites()}
+                disabled={
+                  loading !== null || !canLaunchInvites || launchableRespondents.length === 0
+                }
+                className="rounded-full bg-[color:var(--dashboard-rail)] px-5 py-2 text-sm font-semibold text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {loading === 'launch'
+                  ? 'Uitnodigingen starten...'
+                  : `Start uitnodigingen (${launchableRespondents.length})`}
+              </button>
+            </div>
           </div>
         </div>
       ) : (
-        /* STATE C: Live — tracking responses */
+        /* STATE C: Live — response tracking + reminder management */
         <div className="rounded-[24px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] p-5 shadow-[0_1px_3px_rgba(10,25,47,0.03)]">
           <h3 className="text-base font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
             Respons en reminders
@@ -465,6 +691,7 @@ export function GuidedSelfServePanel({
             {totalCompleted} van {totalInvited} respondenten hebben ingevuld
             {pendingCount > 0 ? ` · ${pendingCount} nog uitstaand` : ''}.
           </p>
+
           {remindableCount > 0 ? (
             <div className="mt-4">
               <button
@@ -480,11 +707,92 @@ export function GuidedSelfServePanel({
             </div>
           ) : (
             <p className="mt-3 text-sm text-[color:var(--dashboard-muted)]">
-              {isActive
-                ? 'Geen openstaande reminders op dit moment.'
-                : 'Campagne is gesloten.'}
+              {isActive ? 'Geen openstaande reminders op dit moment.' : 'Campagne is gesloten.'}
             </p>
           )}
+
+          {/* Reminder settings — always editable */}
+          <div className="mt-5 space-y-3 border-t border-[color:var(--dashboard-frame-border)] pt-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--dashboard-muted)]">
+              Reminderinstellingen aanpassen
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <label className="block text-sm">
+                <span className="mb-1 block font-medium text-[color:var(--dashboard-ink)]">
+                  Reminders
+                </span>
+                <select
+                  value={reminderConfig.enabled ? 'aan' : 'uit'}
+                  onChange={(event) =>
+                    setReminderConfig((current) => ({
+                      ...current,
+                      enabled: event.target.value === 'aan',
+                    }))
+                  }
+                  className="w-full rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-sm text-[color:var(--dashboard-ink)] focus:outline-none"
+                >
+                  <option value="aan">Aan</option>
+                  <option value="uit">Uit</option>
+                </select>
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block font-medium text-[color:var(--dashboard-ink)]">
+                  Eerste reminder na
+                </span>
+                <select
+                  value={String(reminderConfig.firstReminderAfterDays)}
+                  disabled={!reminderConfig.enabled}
+                  onChange={(event) =>
+                    setReminderConfig((current) => ({
+                      ...current,
+                      firstReminderAfterDays: Number(
+                        event.target.value,
+                      ) as ReminderConfig['firstReminderAfterDays'],
+                    }))
+                  }
+                  className="w-full rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-sm text-[color:var(--dashboard-ink)] focus:outline-none disabled:opacity-50"
+                >
+                  {REMINDER_DELAY_PRESETS.map((preset) => (
+                    <option key={preset} value={preset}>
+                      {preset} dagen
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm">
+                <span className="mb-1 block font-medium text-[color:var(--dashboard-ink)]">
+                  Maximum reminders
+                </span>
+                <select
+                  value={String(reminderConfig.maxReminderCount)}
+                  disabled={!reminderConfig.enabled}
+                  onChange={(event) =>
+                    setReminderConfig((current) => ({
+                      ...current,
+                      maxReminderCount: Number(
+                        event.target.value,
+                      ) as ReminderConfig['maxReminderCount'],
+                    }))
+                  }
+                  className="w-full rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-sm text-[color:var(--dashboard-ink)] focus:outline-none disabled:opacity-50"
+                >
+                  {REMINDER_MAX_COUNT_PRESETS.map((preset) => (
+                    <option key={preset} value={preset}>
+                      {preset}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <button
+              type="button"
+              onClick={() => void saveSettings()}
+              disabled={saveBusy || loading !== null}
+              className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--dashboard-ink)] transition-colors hover:border-[color:var(--dashboard-accent-soft-border)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saveBusy ? 'Opslaan...' : 'Sla instellingen op'}
+            </button>
+          </div>
         </div>
       )}
 
