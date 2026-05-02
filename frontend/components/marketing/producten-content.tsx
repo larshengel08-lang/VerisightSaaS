@@ -2,8 +2,10 @@
 
 import Link from 'next/link'
 import { AC, Arrow, FF, SHELL, T } from '@/components/marketing/design-tokens'
+import { FollowOnRoutesAccordion } from '@/components/marketing/follow-on-routes-accordion'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { buildContactHref } from '@/lib/contact-funnel'
+import { FOLLOW_ON_ROUTE_CONTENT } from '@/lib/follow-on-route-content'
 
 const primaryRoutes = [
   {
@@ -35,29 +37,6 @@ const primaryRoutes = [
     href: '/producten/retentiescan',
     accent: 'oklch(0.50 0.12 188)' as string,
     accentSoft: 'oklch(0.972 0.018 185)' as string,
-  },
-] as const
-
-const deferredRoutes = [
-  {
-    title: 'Combinatie',
-    body: 'Secundaire route na ExitScan of RetentieScan, alleen voor organisaties waar beide vragen tegelijk actief zijn.',
-    href: '/producten/combinatie',
-  },
-  {
-    title: 'Onboarding 30-60-90',
-    body: 'Als vroege landing aandacht vraagt',
-    href: '/producten/onboarding-30-60-90',
-  },
-  {
-    title: 'Pulse',
-    body: 'Compacte vervolgroute nadat een eerste baseline of managementread al staat.',
-    href: '/producten/pulse',
-  },
-  {
-    title: 'Leadership Scan',
-    body: 'Begrensde vervolgrichting zodra managementcontext als volgende vraag echt speelt.',
-    href: '/producten/leadership-scan',
   },
 ] as const
 
@@ -299,23 +278,7 @@ function UtilityRoutesSection() {
           </p>
         </div>
 
-        <div style={{ borderTop: `1px solid ${T.rule}` }}>
-          {deferredRoutes.map((route) => (
-            <div
-              key={route.title}
-              className="grid grid-cols-1 gap-3 py-4 md:grid-cols-[180px_minmax(0,1fr)_auto] md:items-center md:gap-4"
-              style={{
-                borderBottom: `1px solid ${T.rule}`,
-              }}
-            >
-              <h3 style={{ color: T.ink, fontSize: 14.5, fontWeight: 600 }}>{route.title}</h3>
-              <p style={{ color: T.inkMuted, fontSize: 13.5, lineHeight: 1.64 }}>{route.body}</p>
-              <Link href={route.href} style={{ color: T.inkSoft, fontSize: 12.5, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                Bekijk route
-              </Link>
-            </div>
-          ))}
-        </div>
+        <FollowOnRoutesAccordion routes={FOLLOW_ON_ROUTE_CONTENT} />
       </div>
     </section>
   )

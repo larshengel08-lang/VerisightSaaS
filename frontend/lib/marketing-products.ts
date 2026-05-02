@@ -84,6 +84,23 @@ export const BOUNDED_PEER_MARKETING_PRODUCTS: MarketingProduct[] = [
 
 export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
   {
+    slug: 'combinatie',
+    label: 'Combinatie',
+    shortLabel: 'Combinatie',
+    tagline: 'Gedeelde vervolglijn voor vertrekduiding en behoudsvraag',
+    description:
+      'Bounded vervolgroute voor organisaties waar vertrekduiding en behoudsvraag tegelijk bestuurlijk spelen. Bedoeld als gefaseerde combinatie van ExitScan en RetentieScan, niet als derde eerste instap.',
+    seoTitle: 'Combinatie | Gefaseerde vervolglijn voor ExitScan en RetentieScan',
+    ogAlt: 'Combinatie productpagina van Verisight',
+    serviceType: 'Gefaseerde vervolglijn voor vertrekduiding en behoudsvraag',
+    serviceAudience: 'HR-teams en directies die vertrekduiding en behoudsvraag bewust in één lijn willen verbinden',
+    serviceOutput:
+      'Gefaseerde routekeuze, gedeelde managementlijn en bestuurlijke volgorde voor twee samenhangende kernvragen',
+    status: 'bounded_live',
+    portfolioRole: 'follow_on_route',
+    href: '/producten/combinatie',
+  },
+  {
     slug: 'pulse',
     label: 'Pulse',
     shortLabel: 'Pulse',

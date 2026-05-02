@@ -14,10 +14,12 @@ import { MarketingProofStrip } from '@/components/marketing/marketing-proof-stri
 import { PreviewEvidenceRail } from '@/components/marketing/preview-evidence-rail'
 import { PreviewSlider } from '@/components/marketing/preview-slider'
 import { SampleShowcaseCard } from '@/components/marketing/sample-showcase-card'
+import { FollowOnRoutePage } from '@/components/marketing/follow-on-route-page'
 import { MarketingSection } from '@/components/marketing/marketing-section'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { PublicHeader } from '@/components/marketing/public-header'
 import { buildContactHref } from '@/lib/contact-funnel'
+import { getFollowOnRouteContent } from '@/lib/follow-on-route-content'
 import {
   ALL_MARKETING_PRODUCTS,
   type MarketingProduct,
@@ -90,10 +92,9 @@ export default async function ProductDetailPage({ params }: Props) {
       ))}
       {slug === 'retentiescan' ? <RetentionScanPage /> : null}
       {slug === 'exitscan' ? <ExitScanPage /> : null}
-      {slug === 'pulse' ? <PulsePage /> : null}
-      {slug === 'onboarding-30-60-90' ? <OnboardingPage /> : null}
-      {slug === 'leadership-scan' ? <LeadershipScanPage /> : null}
-      {slug === 'combinatie' ? <CombinatiePage /> : null}
+      {['pulse', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? (
+        <FollowOnRoutePage route={getFollowOnRouteContent(slug)!} />
+      ) : null}
       {!['retentiescan', 'exitscan', 'pulse', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
     </>
   )
