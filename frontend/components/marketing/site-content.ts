@@ -101,7 +101,7 @@ export const homepageUtilityLinks = [
   {
     href: '/aanpak',
     title: 'Bekijk de aanpak',
-    body: 'Lees hoe intake, uitvoering, rapportage en een begeleide vervolgrichting in een productvorm samenkomen.',
+    body: 'Lees hoe routekeuze, uitvoering en eerste output in een compacte productroute samenkomen.',
   },
   {
     href: '/tarieven',
@@ -380,41 +380,38 @@ export const processHighlights = [
 ] as const
 
 export const included = [
-  'Inrichting van de gekozen scan of meetronde',
-  'Assisted onboarding van akkoord tot eerste managementread',
-  'Uitnodigingen en herinneringen voor respondenten',
-  'Dashboard met prioriteiten en managementduiding',
-  'Zelfstandig leesbaar rapport voor HR, MT en directie',
-  'Bestuurlijke handoff voor sponsor, directie of MT',
-  'Privacy-, claims- en interpretatiekaders in gewone taal',
-  'Begeleide productvorm in plaats van losse surveysoftware',
-  'Binnen enkele weken eerste inzichten zonder zwaar implementatietraject',
+  'Inrichting van de gekozen route',
+  'Uitnodigingen en respondentflow waar relevant',
+  'Dashboard en rapport in dezelfde leeslijn',
+  'Samenvatting voor HR, MT of directie',
+  'Privacy en interpretatie in gewone taal',
+  'Compacte productvorm zonder extra toolbeheer',
 ] as const
 
 export const approachSteps = [
   {
-    title: '1. Kennismaking',
-    body: 'We bepalen welke vraag nu het eerst duidelijkheid vraagt en welke route daarvoor het meest logisch is: ExitScan, RetentieScan of een gefaseerde combinatie.',
+    title: '1. Routekeuze',
+    body: 'We bepalen welke route nu het meest logisch is: ExitScan, RetentieScan of pas later een kleinere vervolgroute.',
   },
   {
-    title: '2. Intake en databasis',
-    body: 'We stemmen af welke input nodig is om dashboard en rapport snel leesbaar en zorgvuldig ingericht te krijgen, zonder extra complexiteit voor je team.',
+    title: '2. Setup',
+    body: 'We zetten de gekozen route strak op met de groepen, timing en input die nodig zijn voor een betrouwbare eerste read.',
   },
   {
-    title: '3. Campaign setup',
-    body: 'Verisight richt de campagne in, helpt met respondentimport en zet uitnodigingen en herinneringen klaar, zonder extra toolbeheer voor HR.',
+    title: '3. Uitvoering',
+    body: 'De route gaat live, uitnodigingen lopen waar relevant en de basis wordt bewaakt zonder extra toolbeheer voor uw team.',
   },
   {
-    title: '4. Eerste responses',
-    body: 'De eerste signalen komen zichtbaar binnen zodra responses opbouwen, maar we lezen nog terughoudend zolang het patroonbeeld beperkt is en bereiden tegelijk de klantactivatie voor.',
+    title: '4. Eerste signalen',
+    body: 'De eerste signalen worden zichtbaar zodra de respons opbouwt, maar we blijven terughoudend tot het beeld stevig genoeg is.',
   },
   {
     title: '5. Dashboard en rapport',
-    body: 'Vanaf een bruikbare responsbasis krijg je dashboard, rapport en bestuurlijke handoff in dezelfde managementleeslijn, inclusief uitleg over wat al indicatief is en wat nog niet.',
+    body: 'Zodra het beeld sterk genoeg is, ontvangt u een dashboard en rapport in dezelfde leeslijn, met wat opvalt en wat eerst aandacht vraagt.',
   },
   {
-    title: '6. Eerste managementgesprek',
-    body: 'Samen vertalen we de eerste output naar prioriteiten, verificatievragen en logische vervolgstappen voor HR, sponsor, MT en directie.',
+    title: '6. Eventuele vervolgrichting',
+    body: 'Pas als de volgende vraag echt speelt, wordt een vervolgrichting logisch, zoals een bounded vervolgroute, Action Center of een volgende scan.',
   },
 ] as const
 

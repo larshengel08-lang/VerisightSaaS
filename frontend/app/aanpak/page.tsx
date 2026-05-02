@@ -7,12 +7,12 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Aanpak',
   description:
-    'Van kennismaking tot bruikbaar managementinzicht in gemiddeld drie weken. Heldere stappen, vaste deliverables en een begeleide route zonder open eind.',
+    'Van eerste routekeuze naar dashboard en rapport in enkele weken. Een vaste productroute die snel laat zien welke eerste output u krijgt.',
   alternates: { canonical: '/aanpak' },
   openGraph: {
     title: 'Aanpak | Verisight',
     description:
-      'Van kennismaking tot bruikbaar managementinzicht in gemiddeld drie weken. Heldere stappen, vaste deliverables en een begeleide route zonder open eind.',
+      'Van eerste routekeuze naar dashboard en rapport in enkele weken. Een vaste productroute die snel laat zien welke eerste output u krijgt.',
     url: 'https://www.verisight.nl/aanpak',
     images: ['/opengraph-image'],
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Aanpak | Verisight',
     description:
-      'Van kennismaking tot bruikbaar managementinzicht in gemiddeld drie weken. Heldere stappen, vaste deliverables en een begeleide route zonder open eind.',
+      'Van eerste routekeuze naar dashboard en rapport in enkele weken. Een vaste productroute die snel laat zien welke eerste output u krijgt.',
     images: ['/opengraph-image'],
   },
 }
