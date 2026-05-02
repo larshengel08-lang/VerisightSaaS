@@ -114,7 +114,7 @@ function chooseFollowUpScenario(campaigns, respondents, statsByCampaignId) {
   const candidates = []
   for (const entry of departmentCampaigns.values()) {
     const scopedCampaigns = [...entry.campaigns.values()]
-    if (scopedCampaigns.length !== 2) continue
+    if (scopedCampaigns.length < 2) continue
 
     const targetCandidates = sortCampaignsForTarget(
       scopedCampaigns.filter((campaign) => {
@@ -124,7 +124,7 @@ function chooseFollowUpScenario(campaigns, respondents, statsByCampaignId) {
       statsByCampaignId,
     )
 
-    if (targetCandidates.length === 0) continue
+    if (targetCandidates.length !== 1) continue
 
     const targetCampaign = targetCandidates[0]
     const sourceCampaign =
@@ -282,6 +282,11 @@ async function deleteRouteCloseout(admin, routeId) {
   if (error) throw error
 }
 
+async function deleteRouteReopens(admin, routeId) {
+  const { error } = await admin.from('action_center_route_reopens').delete().eq('route_id', routeId)
+  if (error) throw error
+}
+
 const envPath = existsSync(primaryEnvPath) ? primaryEnvPath : fallbackEnvPath
 if (!existsSync(envPath)) {
   throw new Error(`Geen .env.local gevonden op ${primaryEnvPath} of ${fallbackEnvPath}.`)
@@ -334,7 +339,7 @@ const statsByCampaignId = new Map((campaignStats ?? []).map((campaign) => [campa
 const scenario = chooseFollowUpScenario(campaigns, respondents ?? [], statsByCampaignId)
 if (!scenario) {
   throw new Error(
-    'Kon geen afdeling vinden met precies twee campaigns en exact een bruikbare open doelroute voor de follow-up demo.',
+    'Kon geen afdeling vinden met minstens twee campaigns en precies één bruikbare open doelroute voor de follow-up demo.',
   )
 }
 
@@ -359,6 +364,8 @@ await deleteRouteRelations(admin, sourceRouteId)
 await deleteRouteRelations(admin, targetRouteId)
 await deleteManagerResponseCarrier(admin, sourceCampaign.id, scopeValue)
 await deleteManagerResponseCarrier(admin, targetCampaign.id, scopeValue)
+await deleteRouteReopens(admin, sourceRouteId)
+await deleteRouteReopens(admin, targetRouteId)
 await upsertRouteCloseout(admin, {
   routeId: sourceRouteId,
   campaignId: sourceCampaign.id,
@@ -582,6 +589,7 @@ const artifact = {
     sourceCampaignId: sourceCampaign.id,
     targetCampaignId: targetCampaign.id,
     sourceRouteTitle: `Gesloten HR bronroute - ${sourceCampaign.name}`,
+    targetRouteTitle: `Open HR doelroute - ${targetCampaign.name}`,
     scopeLabel,
     scopeValue,
     sourceRouteId,

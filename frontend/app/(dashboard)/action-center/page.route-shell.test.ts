@@ -365,6 +365,14 @@ describe("action center landing shell", () => {
     expect(pageSource).toContain('routeFollowUpEndpoint="/api/action-center-route-follow-ups"');
   });
 
+  it("loads route reopen rows into the live action-center contexts", () => {
+    const pageSource = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
+
+    expect(pageSource).toContain("action_center_route_reopens");
+    expect(pageSource).toContain("projectActionCenterRouteReopen");
+    expect(pageSource).toContain("routeReopens:");
+  });
+
   it("renders shell markup that should expose the follow-up route trigger affordances", () => {
     const { item, markup } = renderFollowUpAffordanceMarkup({
       memberRole: "owner",
@@ -842,6 +850,43 @@ describe("action center landing shell", () => {
     expect(markup).not.toContain("Beslisgeschiedenis");
     expect((markup.match(/>Stap</g) ?? []).length).toBe(1);
     expect((markup.match(/>Besluit</g) ?? []).length).toBe(1);
+  });
+
+  it("shows only the compact overview lineage label for a follow-up route in overview", () => {
+    const context = buildLiveContext();
+    const [baseItem] = buildLiveActionCenterItems([context]);
+    const item = {
+      ...baseItem,
+      coreSemantics: {
+        ...baseItem.coreSemantics,
+        lineageSummary: {
+          overviewLabel: "Vervolg op eerdere route" as const,
+          backwardLabel: "Vervolg op eerdere route" as const,
+          backwardRouteId: "route-earlier",
+          forwardLabel: "Later opgevolgd" as const,
+          forwardRouteId: "route-later",
+          detailLabels: ["Vervolg op eerdere route", "Later opgevolgd"] as const,
+        },
+      },
+    };
+
+    const markup = renderToStaticMarkup(
+      createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialSelectedItemId: item.id,
+        initialView: "overview",
+        fallbackOwnerName: "Admin",
+        ownerOptions: ["Manager Operations"],
+        workbenchHref: "/action-center/dossier",
+        hideSidebar: true,
+        readOnly: true,
+      }),
+    );
+
+    expect(markup).toContain("Vervolg op eerdere route");
+    expect(markup).not.toContain("Later opgevolgd");
+    expect(markup).not.toContain("Heropend traject");
+    expect((markup.match(/Vervolg op eerdere route/g) ?? []).length).toBe(1);
   });
 
   it("shows team Review < 7 dagen for upcoming reviews within the next week", () => {

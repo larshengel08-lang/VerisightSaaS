@@ -1,4 +1,7 @@
+import React from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
+import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
 import {
   buildActionCenterTelemetryEvents,
   buildLiveActionCenterItems,
@@ -117,6 +120,23 @@ function buildDossier(overrides: Partial<PilotLearningDossier> = {}): PilotLearn
     updated_at: '2026-04-24T10:00:00.000Z',
     ...overrides,
   } as PilotLearningDossier
+}
+
+function buildRouteReopen(
+  overrides: Partial<{
+    id: string | null
+    routeId: string
+    reopenedAt: string
+    reopenedByRole: string
+  }> = {},
+) {
+  return {
+    id: 'reopen-1',
+    routeId: 'campaign-exit::operations',
+    reopenedAt: '2026-05-03T12:00:00.000Z',
+    reopenedByRole: 'hr_owner',
+    ...overrides,
+  }
 }
 
 describe('live action center builder', () => {
@@ -514,6 +534,14 @@ describe('live action center builder', () => {
           whatWeObserved: 'Zichtbaar signaal voor de kaart.',
           whatWasDecided: null,
         },
+        lineageSummary: {
+          overviewLabel: null,
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: null,
+          forwardRouteId: null,
+          detailLabels: [],
+        },
         closingSemantics: {
           status: 'lopend',
           summary: null,
@@ -629,6 +657,14 @@ describe('live action center builder', () => {
         },
         resultProgression: [],
         decisionHistory: [],
+        lineageSummary: {
+          overviewLabel: 'Vervolg op eerdere route',
+          backwardLabel: 'Vervolg op eerdere route',
+          backwardRouteId: 'campaign-source::operations',
+          forwardLabel: null,
+          forwardRouteId: null,
+          detailLabels: ['Vervolg op eerdere route'],
+        },
         followUpSemantics: {
           isDirectSuccessor: true,
           lineageLabel: 'Vervolg op eerdere route',
@@ -659,6 +695,14 @@ describe('live action center builder', () => {
       { recomputeCoreSemantics: true },
     )
 
+    expect(recomputed.coreSemantics.lineageSummary).toMatchObject({
+      overviewLabel: 'Vervolg op eerdere route',
+      backwardLabel: 'Vervolg op eerdere route',
+      backwardRouteId: 'campaign-source::operations',
+      forwardLabel: null,
+      forwardRouteId: null,
+      detailLabels: ['Vervolg op eerdere route'],
+    })
     expect(recomputed.coreSemantics.followUpSemantics).toMatchObject({
       isDirectSuccessor: true,
       lineageLabel: 'Vervolg op eerdere route',
@@ -1165,11 +1209,13 @@ describe('live action center builder', () => {
         closingSemantics: {
           status: 'afgerond',
         },
-        followUpSemantics: {
-          isDirectSuccessor: false,
-          lineageLabel: null,
-          triggerReason: null,
-          triggerReasonLabel: null,
+        lineageSummary: {
+          overviewLabel: 'Later opgevolgd',
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: 'Later opgevolgd',
+          forwardRouteId: targetRouteId,
+          detailLabels: ['Later opgevolgd'],
         },
       },
     })
@@ -1179,14 +1225,828 @@ describe('live action center builder', () => {
         route: {
           routeStatus: 'te-bespreken',
         },
-        followUpSemantics: {
-          isDirectSuccessor: true,
-          lineageLabel: 'Vervolg op eerdere route',
-          triggerReason: 'nieuw-segment-signaal',
-          triggerReasonLabel: 'Nieuw segmentsignaal',
-          sourceRouteId,
+        lineageSummary: {
+          overviewLabel: 'Vervolg op eerdere route',
+          backwardLabel: 'Vervolg op eerdere route',
+          backwardRouteId: sourceRouteId,
+          forwardLabel: null,
+          forwardRouteId: null,
+          detailLabels: ['Vervolg op eerdere route'],
         },
       },
+    })
+  })
+
+  it('uses backward lineage in overview and both lineage labels in detail for a middle route', () => {
+    const scopeValue = 'org-1::department::operations'
+    const previousCampaign = buildCampaign({
+      id: 'campaign-previous',
+      name: 'Exit maart',
+      created_at: '2026-03-10T10:00:00.000Z',
+    })
+    const currentCampaign = buildCampaign({
+      id: 'campaign-current',
+      name: 'Exit april',
+      created_at: '2026-04-10T10:00:00.000Z',
+    })
+    const nextCampaign = buildCampaign({
+      id: 'campaign-next',
+      name: 'Exit mei',
+      created_at: '2026-05-10T10:00:00.000Z',
+    })
+    const previousRouteId = buildActionCenterRouteId(previousCampaign.id, scopeValue)
+    const currentRouteId = buildActionCenterRouteId(currentCampaign.id, scopeValue)
+    const nextRouteId = buildActionCenterRouteId(nextCampaign.id, scopeValue)
+    const sharedRelations = [
+      {
+        id: 'relation-backward',
+        routeRelationType: 'follow-up-from' as const,
+        sourceRouteId: previousRouteId,
+        targetRouteId: currentRouteId,
+        triggerReason: 'nieuw-campaign-signaal' as const,
+        recordedAt: '2026-05-01T09:00:00.000Z',
+        recordedByRole: 'hr_owner',
+        endedAt: null,
+      },
+      {
+        id: 'relation-forward',
+        routeRelationType: 'follow-up-from' as const,
+        sourceRouteId: currentRouteId,
+        targetRouteId: nextRouteId,
+        triggerReason: 'hernieuwde-hr-beoordeling' as const,
+        recordedAt: '2026-05-02T09:00:00.000Z',
+        recordedByRole: 'hr_owner',
+        endedAt: null,
+      },
+    ]
+
+    const items = buildLiveActionCenterItems([
+      {
+        campaign: previousCampaign,
+        stats: buildStats({ campaign_id: previousCampaign.id, campaign_name: previousCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-previous',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-03-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: previousCampaign.id,
+          lifecycle_stage: 'follow_up_decided',
+          first_management_use_confirmed_at: '2026-03-10T08:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: previousCampaign.id,
+          triage_status: 'uitgevoerd',
+          management_action_outcome: 'afronden',
+          case_public_summary: 'De vorige route is afgerond.',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: sharedRelations,
+      },
+      {
+        campaign: currentCampaign,
+        stats: buildStats({ campaign_id: currentCampaign.id, campaign_name: currentCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-current',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: currentCampaign.id,
+          lifecycle_stage: 'first_management_use',
+          first_management_use_confirmed_at: '2026-04-10T08:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: currentCampaign.id,
+          title: 'Middenroute',
+          triage_status: 'bevestigd',
+          management_action_outcome: 'bijstellen',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: sharedRelations,
+      },
+      {
+        campaign: nextCampaign,
+        stats: buildStats({ campaign_id: nextCampaign.id, campaign_name: nextCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-next',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-05-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: nextCampaign.id,
+          lifecycle_stage: 'first_value_reached',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: nextCampaign.id,
+          title: 'Nieuwe vervolgroute',
+          triage_status: 'bevestigd',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: sharedRelations,
+      },
+    ] as Parameters<typeof buildLiveActionCenterItems>[0])
+
+    const currentItem = items.find((item) => item.id === currentRouteId)
+
+    expect(currentItem?.coreSemantics.lineageSummary).toMatchObject({
+      overviewLabel: 'Vervolg op eerdere route',
+      backwardLabel: 'Vervolg op eerdere route',
+      backwardRouteId: previousRouteId,
+      forwardLabel: 'Later opgevolgd',
+      forwardRouteId: nextRouteId,
+      detailLabels: ['Vervolg op eerdere route', 'Later opgevolgd'],
+    })
+  })
+
+  it('renders both backward and forward lineage controls in detail for a middle route', () => {
+    const scopeValue = 'org-1::department::operations'
+    const previousCampaign = buildCampaign({
+      id: 'campaign-previous-detail',
+      name: 'Exit maart',
+      created_at: '2026-03-10T10:00:00.000Z',
+    })
+    const currentCampaign = buildCampaign({
+      id: 'campaign-current-detail',
+      name: 'Exit april',
+      created_at: '2026-04-10T10:00:00.000Z',
+    })
+    const nextCampaign = buildCampaign({
+      id: 'campaign-next-detail',
+      name: 'Exit mei',
+      created_at: '2026-05-10T10:00:00.000Z',
+    })
+    const previousRouteId = buildActionCenterRouteId(previousCampaign.id, scopeValue)
+    const currentRouteId = buildActionCenterRouteId(currentCampaign.id, scopeValue)
+    const nextRouteId = buildActionCenterRouteId(nextCampaign.id, scopeValue)
+    const sharedRelations = [
+      {
+        id: 'relation-backward-detail',
+        routeRelationType: 'follow-up-from' as const,
+        sourceRouteId: previousRouteId,
+        targetRouteId: currentRouteId,
+        triggerReason: 'nieuw-campaign-signaal' as const,
+        recordedAt: '2026-05-01T09:00:00.000Z',
+        recordedByRole: 'hr_owner',
+        endedAt: null,
+      },
+      {
+        id: 'relation-forward-detail',
+        routeRelationType: 'follow-up-from' as const,
+        sourceRouteId: currentRouteId,
+        targetRouteId: nextRouteId,
+        triggerReason: 'hernieuwde-hr-beoordeling' as const,
+        recordedAt: '2026-05-02T09:00:00.000Z',
+        recordedByRole: 'hr_owner',
+        endedAt: null,
+      },
+    ]
+
+    const items = buildLiveActionCenterItems([
+      {
+        campaign: previousCampaign,
+        stats: buildStats({ campaign_id: previousCampaign.id, campaign_name: previousCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-previous-detail',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-03-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: previousCampaign.id,
+          lifecycle_stage: 'follow_up_decided',
+          first_management_use_confirmed_at: '2026-03-10T08:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: previousCampaign.id,
+          triage_status: 'uitgevoerd',
+          management_action_outcome: 'afronden',
+          case_public_summary: 'De vorige route is afgerond.',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: sharedRelations,
+      },
+      {
+        campaign: currentCampaign,
+        stats: buildStats({ campaign_id: currentCampaign.id, campaign_name: currentCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-current-detail',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: currentCampaign.id,
+          lifecycle_stage: 'first_management_use',
+          first_management_use_confirmed_at: '2026-04-10T08:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: currentCampaign.id,
+          title: 'Middenroute detail',
+          triage_status: 'bevestigd',
+          management_action_outcome: 'bijstellen',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: sharedRelations,
+      },
+      {
+        campaign: nextCampaign,
+        stats: buildStats({ campaign_id: nextCampaign.id, campaign_name: nextCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-next-detail',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-05-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: nextCampaign.id,
+          lifecycle_stage: 'first_value_reached',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: nextCampaign.id,
+          title: 'Nieuwe vervolgroute detail',
+          triage_status: 'bevestigd',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: sharedRelations,
+      },
+    ] as Parameters<typeof buildLiveActionCenterItems>[0])
+
+    const html = renderToStaticMarkup(
+      React.createElement(ActionCenterPreview, {
+        initialItems: items,
+        initialSelectedItemId: currentRouteId,
+        initialView: 'actions',
+        fallbackOwnerName: 'Verisight gebruiker',
+        ownerOptions: ['Manager Operations'],
+        workbenchHref: '/dashboard',
+        itemHrefs: {
+          [previousRouteId]: `/dashboard/action-center?focus=${previousRouteId}`,
+          [currentRouteId]: `/dashboard/action-center?focus=${currentRouteId}`,
+          [nextRouteId]: `/dashboard/action-center?focus=${nextRouteId}`,
+        },
+        readOnly: true,
+      }),
+    )
+
+    expect(html).toMatch(
+      /<button[^>]*aria-label="Vervolg op eerdere route"[\s\S]*?<span>Vervolg op eerdere route<\/span>[\s\S]*?Exit follow-through voorjaar/,
+    )
+    expect(html).toMatch(
+      /<button[^>]*aria-label="Later opgevolgd"[\s\S]*?<span>Later opgevolgd<\/span>[\s\S]*?Nieuwe vervolgroute detail/,
+    )
+    expect(html.indexOf('aria-label="Vervolg op eerdere route"')).toBeLessThan(html.indexOf('aria-label="Later opgevolgd"'))
+  })
+
+  it('chooses the most recent forward successor when multiple successor rows exist', () => {
+    const scopeValue = 'org-1::department::operations'
+    const currentCampaign = buildCampaign({
+      id: 'campaign-current-forward',
+      name: 'Exit april',
+      created_at: '2026-04-10T10:00:00.000Z',
+    })
+    const nextOlderCampaign = buildCampaign({
+      id: 'campaign-next-older',
+      name: 'Exit mei oud',
+      created_at: '2026-05-01T10:00:00.000Z',
+    })
+    const nextNewerCampaign = buildCampaign({
+      id: 'campaign-next-newer',
+      name: 'Exit mei nieuw',
+      created_at: '2026-05-10T10:00:00.000Z',
+    })
+    const currentRouteId = buildActionCenterRouteId(currentCampaign.id, scopeValue)
+    const olderForwardRouteId = buildActionCenterRouteId(nextOlderCampaign.id, scopeValue)
+    const newerForwardRouteId = buildActionCenterRouteId(nextNewerCampaign.id, scopeValue)
+    const sharedRelations = [
+      {
+        id: 'relation-forward-older',
+        routeRelationType: 'follow-up-from' as const,
+        sourceRouteId: currentRouteId,
+        targetRouteId: olderForwardRouteId,
+        triggerReason: 'nieuw-campaign-signaal' as const,
+        recordedAt: '2026-05-01T09:00:00.000Z',
+        recordedByRole: 'hr_owner',
+        endedAt: null,
+      },
+      {
+        id: 'relation-forward-newer',
+        routeRelationType: 'follow-up-from' as const,
+        sourceRouteId: currentRouteId,
+        targetRouteId: newerForwardRouteId,
+        triggerReason: 'hernieuwde-hr-beoordeling' as const,
+        recordedAt: '2026-05-03T09:00:00.000Z',
+        recordedByRole: 'hr_owner',
+        endedAt: null,
+      },
+    ]
+
+    const items = buildLiveActionCenterItems([
+      {
+        campaign: currentCampaign,
+        stats: buildStats({ campaign_id: currentCampaign.id, campaign_name: currentCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-current',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: currentCampaign.id,
+          lifecycle_stage: 'follow_up_decided',
+          first_management_use_confirmed_at: '2026-04-10T08:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: currentCampaign.id,
+          triage_status: 'uitgevoerd',
+          management_action_outcome: 'afronden',
+          case_public_summary: 'De route is afgerond en later opgevolgd.',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: sharedRelations,
+      },
+      {
+        campaign: nextOlderCampaign,
+        stats: buildStats({ campaign_id: nextOlderCampaign.id, campaign_name: nextOlderCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-next-older',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-05-01T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: nextOlderCampaign.id,
+          lifecycle_stage: 'first_value_reached',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: nextOlderCampaign.id,
+          title: 'Oudere vervolgroute',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: sharedRelations,
+      },
+      {
+        campaign: nextNewerCampaign,
+        stats: buildStats({ campaign_id: nextNewerCampaign.id, campaign_name: nextNewerCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-next-newer',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-05-03T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: nextNewerCampaign.id,
+          lifecycle_stage: 'first_value_reached',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: nextNewerCampaign.id,
+          title: 'Nieuwere vervolgroute',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: sharedRelations,
+      },
+    ] as Parameters<typeof buildLiveActionCenterItems>[0])
+
+    const currentItem = items.find((item) => item.id === currentRouteId)
+
+    expect(currentItem?.coreSemantics.lineageSummary).toMatchObject({
+      overviewLabel: 'Later opgevolgd',
+      backwardLabel: null,
+      backwardRouteId: null,
+      forwardLabel: 'Later opgevolgd',
+      forwardRouteId: newerForwardRouteId,
+      detailLabels: ['Later opgevolgd'],
+    })
+  })
+
+  it('chooses the most recent backward predecessor when multiple predecessor rows exist', () => {
+    const scopeValue = 'org-1::department::operations'
+    const olderCampaign = buildCampaign({
+      id: 'campaign-prev-older',
+      name: 'Exit februari',
+      created_at: '2026-02-10T10:00:00.000Z',
+    })
+    const newerCampaign = buildCampaign({
+      id: 'campaign-prev-newer',
+      name: 'Exit maart',
+      created_at: '2026-03-10T10:00:00.000Z',
+    })
+    const currentCampaign = buildCampaign({
+      id: 'campaign-current-backward',
+      name: 'Exit april',
+      created_at: '2026-04-10T10:00:00.000Z',
+    })
+    const currentRouteId = buildActionCenterRouteId(currentCampaign.id, scopeValue)
+    const olderRouteId = buildActionCenterRouteId(olderCampaign.id, scopeValue)
+    const newerRouteId = buildActionCenterRouteId(newerCampaign.id, scopeValue)
+    const sharedRelations = [
+      {
+        id: 'relation-backward-older-live',
+        routeRelationType: 'follow-up-from' as const,
+        sourceRouteId: olderRouteId,
+        targetRouteId: currentRouteId,
+        triggerReason: 'nieuw-campaign-signaal' as const,
+        recordedAt: '2026-05-01T09:00:00.000Z',
+        recordedByRole: 'hr_owner',
+        endedAt: null,
+      },
+      {
+        id: 'relation-backward-newer-live',
+        routeRelationType: 'follow-up-from' as const,
+        sourceRouteId: newerRouteId,
+        targetRouteId: currentRouteId,
+        triggerReason: 'hernieuwde-hr-beoordeling' as const,
+        recordedAt: '2026-05-02T09:00:00.000Z',
+        recordedByRole: 'hr_owner',
+        endedAt: null,
+      },
+    ]
+
+    const items = buildLiveActionCenterItems([
+      {
+        campaign: olderCampaign,
+        stats: buildStats({ campaign_id: olderCampaign.id, campaign_name: olderCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-prev-older',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-02-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: olderCampaign.id,
+          lifecycle_stage: 'follow_up_decided',
+          first_management_use_confirmed_at: '2026-02-10T08:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: olderCampaign.id,
+          triage_status: 'uitgevoerd',
+          management_action_outcome: 'afronden',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: sharedRelations,
+      },
+      {
+        campaign: newerCampaign,
+        stats: buildStats({ campaign_id: newerCampaign.id, campaign_name: newerCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-prev-newer',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-03-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: newerCampaign.id,
+          lifecycle_stage: 'follow_up_decided',
+          first_management_use_confirmed_at: '2026-03-10T08:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: newerCampaign.id,
+          triage_status: 'uitgevoerd',
+          management_action_outcome: 'afronden',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: sharedRelations,
+      },
+      {
+        campaign: currentCampaign,
+        stats: buildStats({ campaign_id: currentCampaign.id, campaign_name: currentCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-current-backward',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: currentCampaign.id,
+          lifecycle_stage: 'first_management_use',
+          first_management_use_confirmed_at: '2026-04-10T08:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: currentCampaign.id,
+          triage_status: 'bevestigd',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: sharedRelations,
+      },
+    ] as Parameters<typeof buildLiveActionCenterItems>[0])
+
+    const currentItem = items.find((item) => item.id === currentRouteId)
+
+    expect(currentItem?.coreSemantics.lineageSummary).toMatchObject({
+      overviewLabel: 'Vervolg op eerdere route',
+      backwardLabel: 'Vervolg op eerdere route',
+      backwardRouteId: newerRouteId,
+      forwardLabel: null,
+      forwardRouteId: null,
+      detailLabels: ['Vervolg op eerdere route'],
+    })
+  })
+
+  it('chooses the most recent reopen event in live lineage summaries', () => {
+    const scopeValue = 'org-1::department::operations'
+    const currentCampaign = buildCampaign({
+      id: 'campaign-current-reopen-live',
+      name: 'Exit april',
+      created_at: '2026-04-10T10:00:00.000Z',
+    })
+    const currentRouteId = buildActionCenterRouteId(currentCampaign.id, scopeValue)
+
+    const items = buildLiveActionCenterItems([
+      {
+        campaign: currentCampaign,
+        stats: buildStats({ campaign_id: currentCampaign.id, campaign_name: currentCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-current-reopen',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: currentCampaign.id,
+          lifecycle_stage: 'first_management_use',
+          first_management_use_confirmed_at: '2026-04-10T08:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: currentCampaign.id,
+          triage_status: 'bevestigd',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: [],
+        routeReopens: [
+          buildRouteReopen({
+            id: 'reopen-older-live',
+            routeId: currentRouteId,
+            reopenedAt: '2026-05-01T09:00:00.000Z',
+          }),
+          buildRouteReopen({
+            id: 'reopen-newer-live',
+            routeId: currentRouteId,
+            reopenedAt: '2026-05-03T12:00:00.000Z',
+          }),
+        ],
+      },
+    ] as Parameters<typeof buildLiveActionCenterItems>[0])
+
+    const currentItem = items.find((item) => item.id === currentRouteId)
+
+    expect(currentItem?.coreSemantics.lineageSummary).toMatchObject({
+      overviewLabel: 'Heropend traject',
+      backwardLabel: 'Heropend traject',
+      backwardRouteId: null,
+      forwardLabel: null,
+      forwardRouteId: null,
+      detailLabels: ['Heropend traject'],
+    })
+  })
+
+  it('ignores ended forward successor relations in live lineage summaries', () => {
+    const scopeValue = 'org-1::department::operations'
+    const currentCampaign = buildCampaign({
+      id: 'campaign-current-ended-forward',
+      name: 'Exit april',
+      created_at: '2026-04-10T10:00:00.000Z',
+    })
+    const nextCampaign = buildCampaign({
+      id: 'campaign-next-ended-forward',
+      name: 'Exit mei',
+      created_at: '2026-05-10T10:00:00.000Z',
+    })
+    const currentRouteId = buildActionCenterRouteId(currentCampaign.id, scopeValue)
+    const nextRouteId = buildActionCenterRouteId(nextCampaign.id, scopeValue)
+    const endedRelations = [
+      {
+        id: 'relation-forward-ended',
+        routeRelationType: 'follow-up-from' as const,
+        sourceRouteId: currentRouteId,
+        targetRouteId: nextRouteId,
+        triggerReason: 'nieuw-campaign-signaal' as const,
+        recordedAt: '2026-05-03T09:00:00.000Z',
+        recordedByRole: 'hr_owner',
+        endedAt: '2026-05-04T09:00:00.000Z',
+      },
+    ]
+
+    const items = buildLiveActionCenterItems([
+      {
+        campaign: currentCampaign,
+        stats: buildStats({ campaign_id: currentCampaign.id, campaign_name: currentCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-current',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-10T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: currentCampaign.id,
+          lifecycle_stage: 'follow_up_decided',
+          first_management_use_confirmed_at: '2026-04-10T08:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: currentCampaign.id,
+          triage_status: 'uitgevoerd',
+          management_action_outcome: 'afronden',
+          case_public_summary: 'De route is afgerond zonder actieve opvolger.',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: endedRelations,
+      },
+      {
+        campaign: nextCampaign,
+        stats: buildStats({ campaign_id: nextCampaign.id, campaign_name: nextCampaign.name }),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-next',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-05-03T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          campaign_id: nextCampaign.id,
+          lifecycle_stage: 'first_value_reached',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          campaign_id: nextCampaign.id,
+          title: 'Beeindigde vervolgroute',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: endedRelations,
+      },
+    ] as Parameters<typeof buildLiveActionCenterItems>[0])
+
+    const currentItem = items.find((item) => item.id === currentRouteId)
+
+    expect(currentItem?.coreSemantics.lineageSummary).toEqual({
+      overviewLabel: null,
+      backwardLabel: null,
+      backwardRouteId: null,
+      forwardLabel: null,
+      forwardRouteId: null,
+      detailLabels: [],
+    })
+  })
+
+  it('clears predecessor linkage fields when a reopen reading wins over follow-up history', () => {
+    const scopeValue = 'org-1::department::operations'
+    const routeId = buildActionCenterRouteId('campaign-exit', scopeValue)
+
+    const [item] = buildLiveActionCenterItems([
+      {
+        campaign: buildCampaign(),
+        stats: buildStats(),
+        organizationName: 'Acme BV',
+        memberRole: 'owner',
+        scopeType: 'department',
+        scopeValue,
+        scopeLabel: 'Operations',
+        peopleCount: 38,
+        assignedManager: {
+          userId: 'manager-1',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-21T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          lifecycle_stage: 'first_management_use',
+          first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+        }),
+        deliveryCheckpoints: [],
+        learningDossier: buildDossier({
+          management_action_outcome: 'bijstellen',
+        }),
+        learningCheckpoints: [],
+        reviewDecisions: [],
+        routeFollowUpRelations: [
+          {
+            id: 'relation-backward',
+            routeRelationType: 'follow-up-from',
+            sourceRouteId: 'campaign-older::org-1::department::operations',
+            targetRouteId: routeId,
+            triggerReason: 'nieuw-campaign-signaal',
+            recordedAt: '2026-05-01T10:00:00.000Z',
+            recordedByRole: 'hr_owner',
+            endedAt: null,
+          },
+        ],
+        routeReopens: [
+          buildRouteReopen({
+            routeId,
+            reopenedAt: '2026-05-03T12:00:00.000Z',
+          }),
+        ],
+      },
+    ] as Parameters<typeof buildLiveActionCenterItems>[0])
+
+    expect(item?.coreSemantics.lineageSummary).toMatchObject({
+      overviewLabel: 'Heropend traject',
+      backwardLabel: 'Heropend traject',
+      backwardRouteId: null,
+      detailLabels: ['Heropend traject'],
     })
   })
 })

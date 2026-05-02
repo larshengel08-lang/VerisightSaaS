@@ -290,6 +290,7 @@ export function finalizeActionCenterPreviewItem(
       latestVisibleUpdateNote,
       route: existingRoute,
       managerResponse: item.managerResponse ?? null,
+      lineageSummary: item.coreSemantics?.lineageSummary ?? null,
       followUpSemantics: item.coreSemantics?.followUpSemantics ?? null,
     })
 
@@ -350,6 +351,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
         latestVisibleUpdateNote: latestUpdate,
         reviewDecisions: context.reviewDecisions ?? ([] as ActionCenterReviewDecision[]),
         decisionRecords: [],
+        routeReopens: context.routeReopens,
       })
       const priority = getPriorityFromSignals({
         exceptionStatus: context.deliveryRecord?.exception_status,

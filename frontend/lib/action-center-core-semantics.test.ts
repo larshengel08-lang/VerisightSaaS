@@ -140,6 +140,23 @@ function buildCheckpoint(overrides: Partial<PilotLearningCheckpoint> = {}): Pilo
   } as PilotLearningCheckpoint
 }
 
+function buildRouteReopen(
+  overrides: Partial<{
+    id: string | null
+    routeId: string
+    reopenedAt: string
+    reopenedByRole: string
+  }> = {},
+) {
+  return {
+    id: 'reopen-1',
+    routeId: 'campaign-exit::operations',
+    reopenedAt: '2026-05-03T12:00:00.000Z',
+    reopenedByRole: 'hr_owner',
+    ...overrides,
+  }
+}
+
 function buildContext(args: {
   dossier?: PilotLearningDossier | null
   deliveryRecord?: CampaignDeliveryRecord | null
@@ -147,6 +164,22 @@ function buildContext(args: {
   learningCheckpoints?: PilotLearningCheckpoint[]
   reviewDecisions?: ActionCenterReviewDecision[]
   managerResponse?: ActionCenterManagerResponse | null
+  routeFollowUpRelations?: Array<{
+    id?: string | null
+    routeRelationType: 'follow-up-from'
+    sourceRouteId: string
+    targetRouteId: string
+    triggerReason: 'nieuw-campaign-signaal' | 'nieuw-segment-signaal' | 'hernieuwde-hr-beoordeling'
+    recordedAt: string
+    recordedByRole: string
+    endedAt?: string | null
+  }>
+  routeReopens?: Array<{
+    id?: string | null
+    routeId: string
+    reopenedAt: string
+    reopenedByRole: string
+  }>
 } = {}): ActionCenterCoreSemanticsProjectionInput {
   const liveContext: LiveActionCenterCampaignContext = {
     campaign: buildCampaign(),
@@ -164,6 +197,7 @@ function buildContext(args: {
     learningCheckpoints: args.learningCheckpoints ?? [],
     reviewDecisions: args.reviewDecisions ?? [],
     managerResponse: args.managerResponse ?? null,
+    routeFollowUpRelations: args.routeFollowUpRelations,
   }
 
   return {
@@ -174,8 +208,10 @@ function buildContext(args: {
     learningCheckpoints: liveContext.learningCheckpoints,
     reviewDecisions: liveContext.reviewDecisions,
     managerResponse: liveContext.managerResponse,
+    routeFollowUpRelations: liveContext.routeFollowUpRelations,
+    routeReopens: args.routeReopens,
     route: projectActionCenterRoute(liveContext),
-  }
+  } as ActionCenterCoreSemanticsProjectionInput
 }
 
 describe('action center core semantics', () => {
@@ -396,6 +432,183 @@ describe('action center core semantics', () => {
 
       expect(semantics.latestDecision).toBeNull()
       expect(semantics.decisionHistory).toEqual([])
+    })
+  })
+
+  describe('lineage summaries', () => {
+    it('projects a follow-up route with a backward lineage label', () => {
+      const semantics = projectActionCenterCoreSemantics(buildContext({
+        routeFollowUpRelations: [
+          {
+            id: 'relation-backward',
+            routeRelationType: 'follow-up-from',
+            sourceRouteId: 'campaign-source::operations',
+            targetRouteId: 'campaign-exit::operations',
+            triggerReason: 'nieuw-segment-signaal',
+            recordedAt: '2026-05-01T10:00:00.000Z',
+            recordedByRole: 'hr_owner',
+            endedAt: null,
+          },
+        ],
+      }))
+
+      expect(semantics.lineageSummary).toMatchObject({
+        overviewLabel: 'Vervolg op eerdere route',
+        backwardLabel: 'Vervolg op eerdere route',
+        backwardRouteId: 'campaign-source::operations',
+        forwardLabel: null,
+        forwardRouteId: null,
+        detailLabels: ['Vervolg op eerdere route'],
+      })
+      expect(semantics.followUpSemantics).toMatchObject({
+        isDirectSuccessor: true,
+        lineageLabel: 'Vervolg op eerdere route',
+        triggerReason: 'nieuw-segment-signaal',
+        triggerReasonLabel: 'Nieuw segmentsignaal',
+        sourceRouteId: 'campaign-source::operations',
+      })
+    })
+
+    it('prefers reopen over follow-up for backward lineage', () => {
+      const semantics = projectActionCenterCoreSemantics(buildContext({
+        routeFollowUpRelations: [
+          {
+            id: 'relation-backward',
+            routeRelationType: 'follow-up-from',
+            sourceRouteId: 'campaign-older::operations',
+            targetRouteId: 'campaign-exit::operations',
+            triggerReason: 'nieuw-campaign-signaal',
+            recordedAt: '2026-05-01T10:00:00.000Z',
+            recordedByRole: 'hr_owner',
+            endedAt: null,
+          },
+        ],
+        routeReopens: [
+          buildRouteReopen({
+            routeId: 'campaign-exit::operations',
+            reopenedAt: '2026-05-03T12:00:00.000Z',
+          }),
+        ],
+      }) as ActionCenterCoreSemanticsProjectionInput)
+
+      expect(semantics.lineageSummary).toMatchObject({
+        overviewLabel: 'Heropend traject',
+        backwardLabel: 'Heropend traject',
+        detailLabels: ['Heropend traject'],
+        backwardRouteId: null,
+        forwardLabel: null,
+        forwardRouteId: null,
+      })
+      expect(semantics.followUpSemantics).toMatchObject({
+        isDirectSuccessor: false,
+        lineageLabel: 'Heropend traject',
+        triggerReason: null,
+        triggerReasonLabel: null,
+        sourceRouteId: null,
+      })
+    })
+
+    it('chooses the most recent reopen event when multiple reopen rows exist', () => {
+      const semantics = projectActionCenterCoreSemantics(buildContext({
+        routeReopens: [
+          buildRouteReopen({
+            id: 'reopen-older',
+            routeId: 'campaign-exit::operations',
+            reopenedAt: '2026-05-01T09:00:00.000Z',
+          }),
+          buildRouteReopen({
+            id: 'reopen-newer',
+            routeId: 'campaign-exit::operations',
+            reopenedAt: '2026-05-03T12:00:00.000Z',
+          }),
+        ],
+      }))
+
+      expect(semantics.lineageSummary).toMatchObject({
+        overviewLabel: 'Heropend traject',
+        backwardLabel: 'Heropend traject',
+        backwardRouteId: null,
+        forwardLabel: null,
+        forwardRouteId: null,
+        detailLabels: ['Heropend traject'],
+      })
+      expect(semantics.followUpSemantics).toMatchObject({
+        isDirectSuccessor: false,
+        lineageLabel: 'Heropend traject',
+        triggerReason: null,
+        triggerReasonLabel: null,
+        sourceRouteId: null,
+      })
+    })
+
+    it('chooses the most recent inconsistent backward neighbor deterministically', () => {
+      const semantics = projectActionCenterCoreSemantics(buildContext({
+        routeFollowUpRelations: [
+          {
+            id: 'relation-older',
+            routeRelationType: 'follow-up-from',
+            sourceRouteId: 'campaign-a::operations',
+            targetRouteId: 'campaign-exit::operations',
+            triggerReason: 'nieuw-campaign-signaal',
+            recordedAt: '2026-05-01T08:00:00.000Z',
+            recordedByRole: 'hr_owner',
+            endedAt: null,
+          },
+          {
+            id: 'relation-newer',
+            routeRelationType: 'follow-up-from',
+            sourceRouteId: 'campaign-a2::operations',
+            targetRouteId: 'campaign-exit::operations',
+            triggerReason: 'hernieuwde-hr-beoordeling',
+            recordedAt: '2026-05-01T11:00:00.000Z',
+            recordedByRole: 'hr_owner',
+            endedAt: null,
+          },
+        ],
+      }))
+
+      expect(semantics.lineageSummary).toMatchObject({
+        backwardLabel: 'Vervolg op eerdere route',
+        backwardRouteId: 'campaign-a2::operations',
+      })
+      expect(semantics.followUpSemantics).toMatchObject({
+        sourceRouteId: 'campaign-a2::operations',
+        triggerReason: 'hernieuwde-hr-beoordeling',
+        triggerReasonLabel: 'Hernieuwde HR-beoordeling',
+      })
+    })
+
+    it('ignores ended backward relations for current lineage and successor truth', () => {
+      const semantics = projectActionCenterCoreSemantics(buildContext({
+        routeFollowUpRelations: [
+          {
+            id: 'relation-ended-backward',
+            routeRelationType: 'follow-up-from',
+            sourceRouteId: 'campaign-ended::operations',
+            targetRouteId: 'campaign-exit::operations',
+            triggerReason: 'nieuw-campaign-signaal',
+            recordedAt: '2026-05-04T11:00:00.000Z',
+            recordedByRole: 'hr_owner',
+            endedAt: '2026-05-05T10:00:00.000Z',
+          },
+        ],
+      }))
+
+      expect(semantics.lineageSummary).toEqual({
+        overviewLabel: null,
+        backwardLabel: null,
+        backwardRouteId: null,
+        forwardLabel: null,
+        forwardRouteId: null,
+        detailLabels: [],
+      })
+      expect(semantics.followUpSemantics).toMatchObject({
+        isDirectSuccessor: false,
+        lineageLabel: null,
+        triggerReason: null,
+        triggerReasonLabel: null,
+        sourceRouteId: null,
+      })
     })
   })
 

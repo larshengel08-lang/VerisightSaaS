@@ -929,7 +929,7 @@ describe('action center route follow-up API contract', () => {
       target_route_scope_value: 'org-1::department::operations',
       trigger_reason: 'hernieuwde-hr-beoordeling',
       recorded_by: HR_USER_ID,
-      recorded_by_role: 'hr_member',
+      recorded_by_role: 'hr',
       manager_user_id: MANAGER_USER_ID,
       ended_at: null,
     })

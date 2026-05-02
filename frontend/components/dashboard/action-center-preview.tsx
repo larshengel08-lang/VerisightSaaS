@@ -570,26 +570,64 @@ function applyOptimisticFollowUpSuccessor(args: {
   triggerReason: ActionCenterRouteFollowUpTriggerReason
 }) {
   return args.items.map((item) => {
-    if (item.id !== args.targetItemId) {
-      return item
-    }
-
-    return finalizeActionCenterPreviewItem(
-      {
-        ...item,
-        coreSemantics: {
-          ...item.coreSemantics,
-          followUpSemantics: {
-            isDirectSuccessor: true,
-            lineageLabel: 'Vervolg op eerdere route',
-            triggerReason: args.triggerReason,
-            triggerReasonLabel: getActionCenterFollowUpTriggerReasonLabel(args.triggerReason),
-            sourceRouteId: args.sourceRouteId,
+    if (item.id === args.targetItemId) {
+      return finalizeActionCenterPreviewItem(
+        {
+          ...item,
+          coreSemantics: {
+            ...item.coreSemantics,
+            lineageSummary: {
+              overviewLabel: 'Vervolg op eerdere route',
+              backwardLabel: 'Vervolg op eerdere route',
+              backwardRouteId: args.sourceRouteId,
+              forwardLabel: item.coreSemantics.lineageSummary.forwardLabel,
+              forwardRouteId: item.coreSemantics.lineageSummary.forwardRouteId,
+              detailLabels: [
+                'Vervolg op eerdere route',
+                ...item.coreSemantics.lineageSummary.detailLabels.filter(
+                  (label) => label !== 'Vervolg op eerdere route',
+                ),
+              ],
+            },
+            followUpSemantics: {
+              isDirectSuccessor: true,
+              lineageLabel: 'Vervolg op eerdere route',
+              triggerReason: args.triggerReason,
+              triggerReasonLabel: getActionCenterFollowUpTriggerReasonLabel(args.triggerReason),
+              sourceRouteId: args.sourceRouteId,
+            },
           },
         },
-      },
-      { recomputeCoreSemantics: true },
-    )
+        { recomputeCoreSemantics: true },
+      )
+    }
+
+    if (item.coreSemantics.route.routeId === args.sourceRouteId) {
+      return finalizeActionCenterPreviewItem(
+        {
+          ...item,
+          coreSemantics: {
+            ...item.coreSemantics,
+            lineageSummary: {
+              overviewLabel: item.coreSemantics.lineageSummary.backwardLabel ?? 'Later opgevolgd',
+              backwardLabel: item.coreSemantics.lineageSummary.backwardLabel,
+              backwardRouteId: item.coreSemantics.lineageSummary.backwardRouteId,
+              forwardLabel: 'Later opgevolgd',
+              forwardRouteId: args.targetItemId,
+              detailLabels: [
+                ...(item.coreSemantics.lineageSummary.backwardLabel
+                  ? [item.coreSemantics.lineageSummary.backwardLabel]
+                  : []),
+                'Later opgevolgd',
+              ],
+            },
+          },
+        },
+        { recomputeCoreSemantics: true },
+      )
+    }
+
+    return item
   })
 }
 
@@ -699,6 +737,8 @@ export function ActionCenterPreview({
     () => new Map(assignmentOptions.map((option) => [option.value, option.label])),
     [assignmentOptions],
   )
+  const previewRouteIds = useMemo(() => new Set(items.map((item) => item.id)), [items])
+  const previewRouteTitles = useMemo(() => new Map(items.map((item) => [item.id, item.title] as const)), [items])
   useEffect(() => {
     setFollowUpForm(getInitialFollowUpFormState({ item: selectedItem, assignmentOptions }))
     setFollowUpError(null)
@@ -706,6 +746,7 @@ export function ActionCenterPreview({
   const teamRows = buildTeamRows(items)
   const selectedTeam = teamRows.find((team) => team.id === selectedTeamId) ?? teamRows[0] ?? null
   const allSources = [...new Set(items.map((item) => item.sourceLabel))]
+  const selectedItemLineage = selectedItem ? buildDetailLineageEntries(selectedItem, previewRouteTitles) : []
   const today = new Date()
   const dueItems = items.filter((item) => isOpenAttentionStatus(item.status))
   const openItems = items.filter((item) => item.status !== 'afgerond' && item.status !== 'gestopt')
@@ -1011,12 +1052,21 @@ export function ActionCenterPreview({
           triggerReason: followUpForm.triggerReason,
         }),
       )
-      setSelectedItemId(followUpTargetItem.id)
-      setActiveView('actions')
+      focusActionRoute(followUpTargetItem.id)
     } catch (error) {
       setFollowUpError(error instanceof Error ? error.message : 'Vervolgroute kon niet worden gestart.')
     } finally {
       setFollowUpPending(false)
+    }
+  }
+
+  function focusActionRoute(routeId: string) {
+    setSelectedItemId(routeId)
+    setActiveView('actions')
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.set('focus', routeId)
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
     }
   }
 
@@ -1601,6 +1651,55 @@ export function ActionCenterPreview({
                         </div>
                         <h2 className="mt-5 text-[2rem] font-semibold tracking-[-0.05em] text-[#132033]">{selectedItem.title}</h2>
                         <p className="mt-4 max-w-3xl text-[1rem] leading-8 text-[#4f6175]">{selectedItem.summary}</p>
+                        {selectedItemLineage.length > 0 ? (
+                          <div className="mt-5 flex flex-wrap items-center gap-2.5">
+                            {selectedItemLineage.map((entry) => {
+                              const routeId = entry.routeId
+                              const href = routeId ? (itemHrefs[routeId] ?? null) : null
+                              const isFocusableInPreview = routeId ? previewRouteIds.has(routeId) : false
+                              const className =
+                                'inline-flex min-h-10 items-center rounded-full border border-[#ded3c6] bg-white px-4 py-2 text-sm font-semibold text-[#4a5f74] transition hover:border-[#1a2533] hover:text-[#132033]'
+
+                              if (routeId && isFocusableInPreview) {
+                                return (
+                                  <button
+                                    key={`${selectedItem.id}-${entry.key}`}
+                                    type="button"
+                                    className={className}
+                                    aria-label={entry.label}
+                                    onClick={() => focusActionRoute(routeId)}
+                                  >
+                                    <span>{entry.label}</span>
+                                    {entry.routeTitle ? (
+                                      <span className="ml-2 text-xs font-medium text-[#7d7368]">{entry.routeTitle}</span>
+                                    ) : null}
+                                  </button>
+                                )
+                              }
+
+                              if (href) {
+                                return (
+                                  <Link key={`${selectedItem.id}-${entry.key}`} href={href} className={className} aria-label={entry.label}>
+                                    <span>{entry.label}</span>
+                                    {entry.routeTitle ? (
+                                      <span className="ml-2 text-xs font-medium text-[#7d7368]">{entry.routeTitle}</span>
+                                    ) : null}
+                                  </Link>
+                                )
+                              }
+
+                              return (
+                                <span
+                                  key={`${selectedItem.id}-${entry.key}`}
+                                  className="inline-flex min-h-10 items-center rounded-full border border-[#e6ddd2] bg-[#f7f2ea] px-4 py-2 text-sm font-semibold text-[#7d7368]"
+                                >
+                                  <span>{entry.label}</span>
+                                  {entry.routeTitle ? <span className="ml-2 text-xs font-medium">{entry.routeTitle}</span> : null}
+                                </span>
+                              )
+                            })}
+                          </div>
+                        ) : null}
 
                         <div className="mt-7 grid gap-4 lg:grid-cols-[minmax(0,1fr),minmax(0,0.92fr)]">
                           <div className="rounded-[24px] border border-[#eadfce] bg-white px-5 py-5">
@@ -2933,24 +3032,64 @@ export function buildCompactLandingSummaryLines(item: ActionCenterPreviewItem) {
 
 function CompactLandingSummary({ item }: { item: ActionCenterPreviewItem }) {
   const summaryLines = buildCompactLandingSummaryLines(item)
+  const overviewLineageLabel = item.coreSemantics.lineageSummary.overviewLabel
 
-  if (summaryLines.length === 0) {
+  if (summaryLines.length === 0 && !overviewLineageLabel) {
     return null
   }
 
   return (
     <div className="mt-4 rounded-[18px] border border-[#eadfce] bg-white px-4 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Laatste route-read</p>
-      <div className="mt-3 space-y-2.5">
-        {summaryLines.map((line) => (
-          <div key={`${line.label}-${line.value}`} className="flex items-start justify-between gap-3 text-sm">
-            <span className="shrink-0 font-semibold text-[#7d7368]">{line.label}</span>
-            <span className="text-right leading-6 text-[#42556b]">{line.value}</span>
-          </div>
-        ))}
-      </div>
+      {overviewLineageLabel ? (
+        <p className="mt-3 text-sm leading-6 text-[#7d7368]">{overviewLineageLabel}</p>
+      ) : null}
+      {summaryLines.length > 0 ? (
+        <div className="mt-3 space-y-2.5">
+          {summaryLines.map((line) => (
+            <div key={`${line.label}-${line.value}`} className="flex items-start justify-between gap-3 text-sm">
+              <span className="shrink-0 font-semibold text-[#7d7368]">{line.label}</span>
+              <span className="text-right leading-6 text-[#42556b]">{line.value}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
+}
+
+type ActionCenterDetailLineageEntry = {
+  key: 'backward' | 'forward'
+  label: string
+  routeId: string | null
+  routeTitle: string | null
+}
+
+function buildDetailLineageEntries(
+  item: ActionCenterPreviewItem,
+  routeTitlesById: ReadonlyMap<string, string>,
+): ActionCenterDetailLineageEntry[] {
+  const { backwardLabel, backwardRouteId, forwardLabel, forwardRouteId } = item.coreSemantics.lineageSummary
+  const entries: Array<ActionCenterDetailLineageEntry | null> = [
+    backwardLabel
+      ? {
+          key: 'backward',
+          label: backwardLabel,
+          routeId: backwardRouteId,
+          routeTitle: backwardRouteId ? (routeTitlesById.get(backwardRouteId) ?? null) : null,
+        }
+      : null,
+    forwardLabel
+      ? {
+          key: 'forward',
+          label: forwardLabel,
+          routeId: forwardRouteId,
+          routeTitle: forwardRouteId ? (routeTitlesById.get(forwardRouteId) ?? null) : null,
+        }
+      : null,
+  ]
+
+  return entries.filter((entry): entry is ActionCenterDetailLineageEntry => entry !== null)
 }
 
 function RouteFieldCard({ label, value }: { label: string; value: string }) {

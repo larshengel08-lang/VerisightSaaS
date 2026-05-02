@@ -2,7 +2,10 @@ import { redirect } from 'next/navigation'
 import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
 import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
-import { projectActionCenterRouteFollowUpRelation } from '@/lib/action-center-route-reopen'
+import {
+  projectActionCenterRouteFollowUpRelation,
+  projectActionCenterRouteReopen,
+} from '@/lib/action-center-route-reopen'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   isScopeVisibleToActionCenterContext,
@@ -37,6 +40,20 @@ type ActionCenterRouteRelationRow = {
   ended_at: string | null
 }
 
+type ActionCenterRouteReopenRow = {
+  id: string | null
+  route_id: string | null
+  reopened_at: string | null
+  reopened_by_role: string | null
+}
+
+type ActionCenterScopeRow = {
+  scopeType: 'department' | 'item'
+  scopeValue: string
+  scopeLabel: string
+  peopleCount: number
+}
+
 function getDisplayName(email: string | null | undefined) {
   if (!email) return 'Verisight gebruiker'
   const localPart = email.split('@')[0] ?? 'verisight-gebruiker'
@@ -57,6 +74,36 @@ function buildDepartmentScopeValue(orgId: string, departmentLabel: string) {
 
 function buildCampaignFallbackScopeValue(orgId: string, campaignId: string) {
   return `${orgId}::campaign::${campaignId}`
+}
+
+function buildActionCenterScopes(args: {
+  campaign: Campaign
+  departmentLabels: string[]
+  fallbackPeopleCount: number
+}) {
+  const departmentCounts = args.departmentLabels.reduce<Record<string, number>>((acc, label) => {
+    acc[label] = (acc[label] ?? 0) + 1
+    return acc
+  }, {})
+  const departmentEntries = Object.entries(departmentCounts)
+
+  if (departmentEntries.length > 0) {
+    return departmentEntries.map<ActionCenterScopeRow>(([departmentLabel, peopleCount]) => ({
+      scopeType: 'department',
+      scopeValue: buildDepartmentScopeValue(args.campaign.organization_id, departmentLabel),
+      scopeLabel: departmentLabel,
+      peopleCount,
+    }))
+  }
+
+  return [
+    {
+      scopeType: 'item' as const,
+      scopeValue: buildCampaignFallbackScopeValue(args.campaign.organization_id, args.campaign.id),
+      scopeLabel: args.campaign.name,
+      peopleCount: args.fallbackPeopleCount,
+    },
+  ]
 }
 
 function getManagerAssignment(
@@ -165,6 +212,7 @@ export default async function ActionCenterPage({
   const managerWorkspaceRows = (
     context.canManageActionCenterAssignments ? managerWorkspaceRowsRaw ?? [] : currentUserWorkspaceMemberships
   ) as ActionCenterWorkspaceMember[]
+  const statsByCampaignId = new Map(stats.map((entry) => [entry.campaign_id, entry]))
   const routeRelations = ((routeRelationsRaw ?? []) as ActionCenterRouteRelationRow[]).reduce<
     ReturnType<typeof projectActionCenterRouteFollowUpRelation>[]
   >((acc, relation) => {
@@ -191,12 +239,38 @@ export default async function ActionCenterPage({
       : { data: [] }
 
   const respondentsWithDepartments = (respondentsWithDepartmentsRaw ?? []) as RespondentDepartmentRow[]
+  const respondentDepartmentsByCampaign = respondentsWithDepartments.reduce<Record<string, string[]>>((acc, row) => {
+    const departmentLabel = normalizeDepartmentLabel(row.department)
+    if (!departmentLabel) return acc
+    acc[row.campaign_id] ??= []
+    acc[row.campaign_id].push(departmentLabel)
+    return acc
+  }, {})
+  const visibleScopesByCampaignId = campaigns.reduce<Record<string, ActionCenterScopeRow[]>>((acc, campaign) => {
+    const scopes = buildActionCenterScopes({
+      campaign,
+      departmentLabels: respondentDepartmentsByCampaign[campaign.id] ?? [],
+      fallbackPeopleCount:
+        statsByCampaignId.get(campaign.id)?.total_completed ?? statsByCampaignId.get(campaign.id)?.total_invited ?? 0,
+    }).filter((scope) => isScopeVisibleToActionCenterContext(context, scope.scopeValue))
+
+    if (scopes.length > 0) {
+      acc[campaign.id] = scopes
+    }
+
+    return acc
+  }, {})
+  const visibleRouteIds = campaigns.flatMap((campaign) =>
+    (visibleScopesByCampaignId[campaign.id] ?? []).map((scope) => buildActionCenterRouteId(campaign.id, scope.scopeValue)),
+  )
+  const visibleRouteIdSet = new Set(visibleRouteIds)
 
   const [
     { data: deliveryCheckpointsRaw },
     { data: learningCheckpointsRaw },
     { data: reviewDecisionsRaw },
     { data: managerResponsesRaw },
+    { data: routeReopensRaw },
   ] = await Promise.all([
     deliveryRecords.length > 0
       ? dataClient
@@ -229,12 +303,32 @@ export default async function ActionCenterPage({
           .select('*')
           .in('campaign_id', campaignIds)
       : Promise.resolve({ data: [] }),
+    visibleRouteIds.length > 0
+      ? dataClient
+          .from('action_center_route_reopens')
+          .select('id, route_id, reopened_at, reopened_by_role')
+          .in('route_id', visibleRouteIds)
+      : Promise.resolve({ data: [] }),
   ])
 
   const deliveryCheckpoints = (deliveryCheckpointsRaw ?? []) as CampaignDeliveryCheckpoint[]
   const learningCheckpoints = (learningCheckpointsRaw ?? []) as PilotLearningCheckpoint[]
   const reviewDecisions = (reviewDecisionsRaw ?? []) as ActionCenterReviewDecision[]
   const managerResponses = (managerResponsesRaw ?? []) as ActionCenterManagerResponse[]
+  const routeReopens = ((routeReopensRaw ?? []) as ActionCenterRouteReopenRow[]).reduce<
+    ReturnType<typeof projectActionCenterRouteReopen>[]
+  >((acc, routeReopen) => {
+    try {
+      const parsedRouteReopen = projectActionCenterRouteReopen(routeReopen)
+      if (visibleRouteIdSet.has(parsedRouteReopen.routeId)) {
+        acc.push(parsedRouteReopen)
+      }
+    } catch {
+      // Ignore malformed legacy rows so one broken reopen does not take down the full Action Center page.
+    }
+
+    return acc
+  }, [])
 
   const organizationById = new Map(organizations.map((organization) => [organization.id, organization]))
   const roleByOrgId = orgMemberships.reduce<Record<string, 'owner' | 'member' | 'viewer'>>((acc, membership) => {
@@ -243,7 +337,6 @@ export default async function ActionCenterPage({
     }
     return acc
   }, {})
-  const statsByCampaignId = new Map(stats.map((entry) => [entry.campaign_id, entry]))
   const deliveryRecordByCampaignId = new Map(deliveryRecords.map((record) => [record.campaign_id, record]))
   const deliveryCheckpointMap = deliveryCheckpoints.reduce<Record<string, CampaignDeliveryCheckpoint[]>>((acc, checkpoint) => {
     acc[checkpoint.delivery_record_id] ??= []
@@ -274,41 +367,14 @@ export default async function ActionCenterPage({
     acc[relation.targetRouteId].push(relation)
     return acc
   }, {})
-  const respondentDepartmentsByCampaign = respondentsWithDepartments.reduce<Record<string, string[]>>((acc, row) => {
-    const departmentLabel = normalizeDepartmentLabel(row.department)
-    if (!departmentLabel) return acc
-    acc[row.campaign_id] ??= []
-    acc[row.campaign_id].push(departmentLabel)
+  const routeReopenMap = routeReopens.reduce<Record<string, typeof routeReopens>>((acc, routeReopen) => {
+    acc[routeReopen.routeId] ??= []
+    acc[routeReopen.routeId].push(routeReopen)
     return acc
   }, {})
 
   const liveContexts = campaigns.flatMap((campaign) => {
-    const departmentLabels = respondentDepartmentsByCampaign[campaign.id] ?? []
-    const departmentCounts = departmentLabels.reduce<Record<string, number>>((acc, label) => {
-      acc[label] = (acc[label] ?? 0) + 1
-      return acc
-    }, {})
-    const departmentEntries = Object.entries(departmentCounts)
-    const scopes =
-      departmentEntries.length > 0
-        ? departmentEntries.map(([departmentLabel, peopleCount]) => ({
-            scopeType: 'department' as const,
-            scopeValue: buildDepartmentScopeValue(campaign.organization_id, departmentLabel),
-            scopeLabel: departmentLabel,
-            peopleCount,
-          }))
-        : [
-            {
-              scopeType: 'item' as const,
-              scopeValue: buildCampaignFallbackScopeValue(campaign.organization_id, campaign.id),
-              scopeLabel: campaign.name,
-              peopleCount: statsByCampaignId.get(campaign.id)?.total_completed ?? statsByCampaignId.get(campaign.id)?.total_invited ?? 0,
-            },
-          ]
-
-    return scopes
-      .filter((scope) => isScopeVisibleToActionCenterContext(context, scope.scopeValue))
-      .map((scope) => {
+    return (visibleScopesByCampaignId[campaign.id] ?? []).map((scope) => {
         const deliveryRecord = deliveryRecordByCampaignId.get(campaign.id) ?? null
         const learningDossier = learningDossierByCampaignId.get(campaign.id) ?? null
         const assignment = getManagerAssignment(managerWorkspaceRows, campaign.organization_id, scope.scopeValue)
@@ -337,6 +403,7 @@ export default async function ActionCenterPage({
           managerResponse: managerResponseByRouteId.get(routeId) ?? null,
           reviewDecisions: reviewDecisionMap[campaign.id] ?? [],
           routeFollowUpRelations: routeFollowUpRelationMap[routeId] ?? [],
+          routeReopens: routeReopenMap[routeId] ?? [],
         }
       })
   })

@@ -3,6 +3,23 @@ export type ActionCenterRouteFollowUpTriggerReason =
   | 'nieuw-segment-signaal'
   | 'hernieuwde-hr-beoordeling'
 
+export interface ActionCenterRouteReopenRecord {
+  id?: string | null
+  routeId: string
+  reopenedAt: string
+  reopenedByRole: string
+}
+
+export interface ActionCenterRouteReopenInput {
+  id?: string | null
+  route_id?: string | null
+  routeId?: string | null
+  reopened_at?: string | null
+  reopenedAt?: string | null
+  reopened_by_role?: string | null
+  reopenedByRole?: string | null
+}
+
 export interface ActionCenterRouteFollowUpRelationRecord {
   id?: string | null
   routeRelationType: 'follow-up-from'
@@ -49,6 +66,43 @@ function isValidIsoTimestamp(value: string) {
 
 function readCanonicalText(input: ActionCenterRouteFollowUpRelationInput, snakeKey: keyof ActionCenterRouteFollowUpRelationInput, camelKey: keyof ActionCenterRouteFollowUpRelationInput) {
   return normalizeText((input[snakeKey] as string | null | undefined) ?? (input[camelKey] as string | null | undefined))
+}
+
+function readCanonicalReopenText(
+  input: ActionCenterRouteReopenInput,
+  snakeKey: keyof ActionCenterRouteReopenInput,
+  camelKey: keyof ActionCenterRouteReopenInput,
+) {
+  return normalizeText((input[snakeKey] as string | null | undefined) ?? (input[camelKey] as string | null | undefined))
+}
+
+export function projectActionCenterRouteReopen(input: ActionCenterRouteReopenInput): ActionCenterRouteReopenRecord {
+  const routeId = readCanonicalReopenText(input, 'route_id', 'routeId')
+  const reopenedAt = readCanonicalReopenText(input, 'reopened_at', 'reopenedAt')
+  const reopenedByRole = readCanonicalReopenText(input, 'reopened_by_role', 'reopenedByRole')
+
+  if (!routeId) {
+    throw new Error('route_id is required.')
+  }
+
+  if (!reopenedAt) {
+    throw new Error('reopened_at is required.')
+  }
+
+  if (!isValidIsoTimestamp(reopenedAt)) {
+    throw new Error('reopened_at is invalid.')
+  }
+
+  if (!reopenedByRole) {
+    throw new Error('reopened_by_role is required.')
+  }
+
+  return {
+    id: normalizeText(input.id),
+    routeId,
+    reopenedAt,
+    reopenedByRole,
+  }
 }
 
 export function projectActionCenterRouteFollowUpRelation(
