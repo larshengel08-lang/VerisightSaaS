@@ -106,7 +106,7 @@ async function login(page: import('@playwright/test').Page, email: string, passw
     await expect(page.locator('main').getByText(manager.scopeLabel, { exact: true }).first()).toBeVisible()
 
     await page.getByRole('button', { name: 'Open focusactie' }).click()
-    await expect(page.getByRole('heading', { name: /route staat klaar voor eerste reactie|eerste lokale follow-through/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /eerste managerstap|eerste concrete managerstap|eerste managerstap staat vast|eerste lokale follow-through/i })).toBeVisible()
     await expect(page.getByText('Bevestigen', { exact: true }).first()).toBeVisible()
     await expect(page.getByText('Aanscherpen', { exact: true }).first()).toBeVisible()
     await expect(page.getByText('Inplannen', { exact: true }).first()).toBeVisible()
@@ -135,41 +135,45 @@ async function login(page: import('@playwright/test').Page, email: string, passw
     await page.goto(focusUrl)
     await expect(page).toHaveURL(new RegExp(`${escapeRegExp(focusUrl)}$`))
     await page.getByRole('button', { name: 'Open focusactie' }).click()
-    await expect(page.getByRole('heading', { name: /route staat klaar voor eerste reactie|eerste lokale follow-through/i })).toBeVisible()
+    await expect(page.getByRole('heading', { name: /eerste managerstap|eerste concrete managerstap|eerste managerstap staat vast|eerste lokale follow-through/i })).toBeVisible()
 
     await page.getByRole('button', { name: 'Inplannen', exact: true }).click()
-    await page.getByLabel('Wat is nu de bounded reactie?').fill('We bespreken dit maandag in het teamoverleg en scherpen daarna de eerstvolgende stap aan.')
-    await page.getByLabel('Wanneer reviewen we dit?').fill('2026-05-18')
+    await page.getByLabel('Wat leg je nu klein en reviewbaar vast?').fill('We bespreken dit maandag in het teamoverleg en scherpen daarna de eerstvolgende stap aan.')
+    await page.getByLabel('Wanneer toetsen we deze eerste stap?').fill('2026-05-18')
     await page.getByRole('checkbox').check()
-    await page.getByLabel('Thema').selectOption('leadership')
-    await page.getByLabel('Wat ga je concreet doen?').fill('Plan een kort teamgesprek over feedbackritme en leg een vaste terugkoppeling vast.')
-    await page.getByLabel('Wat moet dit zichtbaar maken?').fill('Binnen twee weken moet duidelijk worden of feedbackafspraken consistenter terugkomen in het team.')
+    await page.getByLabel('Thema van deze eerste concrete stap').selectOption('leadership')
+    await page.getByLabel('Wat is die eerste concrete stap?').fill('Plan een kort teamgesprek over feedbackritme en leg een vaste terugkoppeling vast.')
+    await page.getByLabel('Wat moet deze stap zichtbaar maken?').fill('Binnen twee weken moet duidelijk worden of feedbackafspraken consistenter terugkomen in het team.')
 
-    await page.getByRole('button', { name: 'Managerreactie opslaan' }).click()
+    await page
+      .getByRole('button', { name: /eerste managerstap opslaan|managerstap bijwerken/i })
+      .click()
 
-    await expect(page.getByRole('heading', { name: 'Eerste lokale follow-through' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', {
+        name: /eerste managerstap staat vast|eerste concrete managerstap|eerste lokale follow-through/i,
+      }),
+    ).toBeVisible()
     await expect(page.getByText('Inplannen', { exact: true }).first()).toBeVisible()
     await expect(page.getByText('18 mei 2026')).toBeVisible()
-    await expect(page.getByLabel('Thema')).toHaveValue('leadership')
-    await expect(page.getByLabel('Wat ga je concreet doen?')).toHaveValue(
+    await expect(page.getByLabel('Thema van deze eerste concrete stap')).toHaveValue('leadership')
+    await expect(page.getByLabel('Wat is die eerste concrete stap?')).toHaveValue(
       'Plan een kort teamgesprek over feedbackritme en leg een vaste terugkoppeling vast.',
     )
-    await expect(page.getByLabel('Wat moet dit zichtbaar maken?')).toHaveValue(
+    await expect(page.getByLabel('Wat moet deze stap zichtbaar maken?')).toHaveValue(
       'Binnen twee weken moet duidelijk worden of feedbackafspraken consistenter terugkomen in het team.',
     )
     const savedRouteTitle = (await page.getByRole('heading', { level: 2 }).textContent())?.trim() ?? ''
 
     await page.goto(focusUrl)
     await expect(page).toHaveURL(new RegExp(`${escapeRegExp(focusUrl)}$`))
-    await page
-      .getByRole('button', { name: new RegExp(escapeRegExp(savedRouteTitle), 'i') })
-      .first()
-      .click()
-    await expect(page.getByRole('heading', { name: 'Eerste lokale follow-through' })).toBeVisible()
+    await expect(page.getByText(savedRouteTitle, { exact: true }).first()).toBeVisible()
+    await page.getByRole('button', { name: 'Open focusactie' }).click()
+    await expect(page.getByRole('heading', { name: /eerste concrete managerstap|eerste lokale follow-through/i })).toBeVisible()
     await expect(page.getByText('Inplannen', { exact: true }).first()).toBeVisible()
     await expect(page.getByText('18 mei 2026')).toBeVisible()
-    await expect(page.getByLabel('Thema')).toHaveValue('leadership')
-    await expect(page.getByLabel('Wat ga je concreet doen?')).toHaveValue(
+    await expect(page.getByLabel('Thema van deze eerste concrete stap')).toHaveValue('leadership')
+    await expect(page.getByLabel('Wat is die eerste concrete stap?')).toHaveValue(
       'Plan een kort teamgesprek over feedbackritme en leg een vaste terugkoppeling vast.',
     )
   })

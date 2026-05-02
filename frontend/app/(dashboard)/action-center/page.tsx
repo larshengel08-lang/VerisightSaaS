@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { ActionCenterPreview } from '@/components/dashboard/action-center-preview'
 import { buildLiveActionCenterItems, getLiveActionCenterSummary } from '@/lib/action-center-live'
 import { buildActionCenterRouteId } from '@/lib/action-center-route-contract'
+import { projectActionCenterRouteCloseout } from '@/lib/action-center-route-closeout'
 import {
   projectActionCenterRouteFollowUpRelation,
   projectActionCenterRouteReopen,
@@ -45,6 +46,15 @@ type ActionCenterRouteReopenRow = {
   route_id: string | null
   reopened_at: string | null
   reopened_by_role: string | null
+}
+
+type ActionCenterRouteCloseoutRow = {
+  route_id: string | null
+  closeout_status: string | null
+  closeout_reason: string | null
+  closeout_note: string | null
+  closed_at: string | null
+  closed_by_role: string | null
 }
 
 type ActionCenterScopeRow = {
@@ -272,6 +282,7 @@ export default async function ActionCenterPage({
     { data: reviewDecisionsRaw },
     { data: managerResponsesRaw },
     { data: routeReopensRaw },
+    { data: routeCloseoutsRaw },
   ] = await Promise.all([
     deliveryRecords.length > 0
       ? dataClient
@@ -310,6 +321,12 @@ export default async function ActionCenterPage({
           .select('id, route_id, reopened_at, reopened_by_role')
           .in('route_id', visibleRouteIds)
       : Promise.resolve({ data: [] }),
+    visibleRouteIds.length > 0
+      ? dataClient
+          .from('action_center_route_closeouts')
+          .select('route_id, closeout_status, closeout_reason, closeout_note, closed_at, closed_by_role')
+          .in('route_id', visibleRouteIds)
+      : Promise.resolve({ data: [] }),
   ])
 
   const deliveryCheckpoints = (deliveryCheckpointsRaw ?? []) as CampaignDeliveryCheckpoint[]
@@ -330,6 +347,20 @@ export default async function ActionCenterPage({
 
     return acc
   }, [])
+  const routeCloseoutMap = ((routeCloseoutsRaw ?? []) as ActionCenterRouteCloseoutRow[]).reduce<
+    Record<string, ReturnType<typeof projectActionCenterRouteCloseout>>
+  >((acc, routeCloseout) => {
+    try {
+      const parsedRouteCloseout = projectActionCenterRouteCloseout(routeCloseout)
+      if (visibleRouteIdSet.has(parsedRouteCloseout.routeId)) {
+        acc[parsedRouteCloseout.routeId] = parsedRouteCloseout
+      }
+    } catch {
+      // Ignore malformed legacy closeout rows so one broken record does not take down the full Action Center page.
+    }
+
+    return acc
+  }, {})
 
   const organizationById = new Map(organizations.map((organization) => [organization.id, organization]))
   const roleByOrgId = orgMemberships.reduce<Record<string, 'owner' | 'member' | 'viewer'>>((acc, membership) => {
@@ -403,6 +434,7 @@ export default async function ActionCenterPage({
           learningCheckpoints: learningDossier ? (learningCheckpointMap[learningDossier.id] ?? []) : [],
           managerResponse: managerResponseByRouteId.get(routeId) ?? null,
           reviewDecisions: reviewDecisionMap[campaign.id] ?? [],
+          routeCloseout: routeCloseoutMap[routeId] ?? null,
           routeFollowUpRelations: routeFollowUpRelationMap[routeId] ?? [],
           routeReopens: routeReopenMap[routeId] ?? [],
         }
@@ -489,6 +521,8 @@ export default async function ActionCenterPage({
       managerAssignmentEndpoint="/api/action-center/workspace-members"
       canRespondToRequests={context.canUpdateActionCenter}
       managerResponseEndpoint="/api/action-center-manager-responses"
+      canCloseRoutes={context.canManageActionCenterAssignments}
+      routeCloseoutEndpoint="/api/action-center-route-closeouts"
       routeFollowUpEndpoint="/api/action-center-route-follow-ups"
       currentUserId={user.id}
       workbenchHref={context.canViewInsights ? '/dashboard' : '/action-center'}

@@ -6,6 +6,10 @@ import type {
 import type { LiveActionCenterCampaignContext } from './action-center-live-context'
 import type { ActionCenterActionReviewRecord } from './action-center-action-reviews'
 import {
+  projectActionCenterRouteCloseoutState,
+  type ActionCenterRouteCloseoutProjection,
+} from './action-center-route-closeout'
+import {
   getActionCenterFollowUpTriggerReasonLabel,
   type ActionCenterRouteFollowUpRelationRecord,
   type ActionCenterRouteReopenRecord,
@@ -75,6 +79,7 @@ export interface ActionCenterCoreSemantics {
   }>
   lineageSummary: ActionCenterLineageSummary
   followUpSemantics?: ActionCenterProjectedFollowUpSemantics
+  routeCloseout: ActionCenterRouteCloseoutProjection
   closingSemantics: {
     status: ActionCenterClosingStatus
     summary: string | null
@@ -113,6 +118,7 @@ export type ActionCenterCoreSemanticsProjectionInput = Pick<
   | 'learningCheckpoints'
   | 'reviewDecisions'
   | 'managerResponse'
+  | 'routeCloseout'
   | 'routeActions'
   | 'actionReviews'
   | 'routeFollowUpRelations'
@@ -142,6 +148,7 @@ export interface ActionCenterPreviewCoreSemanticsProjectionInput {
   managerResponse?: ActionCenterManagerResponse | null
   lineageSummary?: ActionCenterLineageSummary | null
   followUpSemantics?: ActionCenterProjectedFollowUpSemantics | null
+  routeCloseout?: ActionCenterRouteCloseoutProjection | null
   surfaceStatus?: ActionCenterPreviewStatus
 }
 
@@ -889,6 +896,11 @@ export function projectActionCenterPreviewCoreSemantics(
   const lineageSummary = input.lineageSummary ?? getEmptyLineageSummary()
   const followUpSemantics = input.followUpSemantics ?? getEmptyFollowUpSemantics()
   const routeActionCards: ActionCenterCoreSemantics['routeActionCards'] = []
+  const routeCloseout =
+    input.routeCloseout ??
+    projectActionCenterRouteCloseoutState({
+      readyForCloseout: false,
+    })
   const closingSemantics: ActionCenterCoreSemantics['closingSemantics'] = {
     status: closingStatus,
     summary: getClosingSummary(closingStatus, getPreviewClosingSummaryValues(route, closingStatus)),
@@ -939,6 +951,7 @@ export function projectActionCenterPreviewCoreSemantics(
     routeActionCards,
     lineageSummary,
     followUpSemantics,
+    routeCloseout,
     closingSemantics,
   }
 }
@@ -1063,6 +1076,10 @@ export function projectActionCenterCoreSemantics(
     routeActions: context.routeActions,
     actionReviews: context.actionReviews,
   })
+  const routeCloseout = projectActionCenterRouteCloseoutState({
+    record: context.routeCloseout ?? null,
+    readyForCloseout: false,
+  })
   const closingSemantics: ActionCenterCoreSemantics['closingSemantics'] = {
     status: closingStatus,
     summary: getClosingSummary(closingStatus, getLiveClosingSummaryValues(context, route, closingStatus)),
@@ -1121,6 +1138,7 @@ export function projectActionCenterCoreSemantics(
     routeActionCards,
     lineageSummary,
     followUpSemantics,
+    routeCloseout,
     closingSemantics,
   }
 }

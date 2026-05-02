@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { existsSync, readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 
 type ActionCenterPilotArtifact = {
@@ -26,9 +27,24 @@ type ActionCenterPilotArtifact = {
 }
 
 const artifactPath = path.join(process.cwd(), 'tests', 'e2e', '.action-center-pilot.json')
-const artifact = existsSync(artifactPath)
-  ? (JSON.parse(readFileSync(artifactPath, 'utf8')) as ActionCenterPilotArtifact)
-  : null
+const seedScriptPath = path.join(process.cwd(), 'scripts', 'seed-action-center-manager-pilot.mjs')
+
+function readArtifact() {
+  return existsSync(artifactPath)
+    ? (JSON.parse(readFileSync(artifactPath, 'utf8')) as ActionCenterPilotArtifact)
+    : null
+}
+
+function reseedPilotArtifact() {
+  if (!existsSync(seedScriptPath)) {
+    throw new Error(`Seed script ontbreekt op ${seedScriptPath}.`)
+  }
+
+  execFileSync(process.execPath, [seedScriptPath], {
+    cwd: process.cwd(),
+    stdio: 'inherit',
+  })
+}
 
 async function expectFocusUrl(page: import('@playwright/test').Page, relativeUrl: string) {
   const expected = new URL(relativeUrl, 'http://127.0.0.1')
@@ -57,11 +73,14 @@ async function login(page: import('@playwright/test').Page, email: string, passw
 }
 
 test.describe('action center route reopen flow', () => {
-  test.skip(!artifact, 'Seeded pilot artifact ontbreekt. Draai eerst scripts/seed-action-center-manager-pilot.mjs.')
-
-  const pilot = artifact as ActionCenterPilotArtifact
-
   test('hr can start a follow-up route and manager sees the same direct lineage context', async ({ page }) => {
+    reseedPilotArtifact()
+
+    const pilot = readArtifact()
+    if (!pilot) {
+      throw new Error('Seeded pilot artifact ontbreekt na reseed.')
+    }
+
     if (!pilot.followUp) {
       throw new Error('Seed artifact mist followUp-context voor Task 7.')
     }
