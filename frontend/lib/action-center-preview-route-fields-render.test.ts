@@ -239,8 +239,8 @@ describe('action center preview route fields render', () => {
     })
 
     expect(buildCompactLandingSummaryLines(item)).toEqual([
-      { label: 'Besluit', value: 'Bijstellen' },
-      { label: 'Stap', value: 'Plan een gerichte teamreview met de manager.' },
+      { label: 'Route', value: 'In uitvoering' },
+      { label: 'Lezing', value: 'De route vraagt een nieuwe lokale stap.' },
     ])
   })
 
