@@ -6,7 +6,6 @@ export function PublicFooter() {
   const productLinks = [
     { href: '/producten/exitscan', label: 'ExitScan' },
     { href: '/producten/retentiescan', label: 'RetentieScan' },
-    { href: '/producten/combinatie', label: 'Combinatie' },
     { href: '/producten/onboarding-30-60-90', label: 'Onboarding 30-60-90' },
     { href: '/producten/pulse', label: 'Pulse' },
     { href: '/producten/leadership-scan', label: 'Leadership Scan' },

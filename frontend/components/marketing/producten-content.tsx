@@ -329,26 +329,6 @@ function UtilityRoutesSection() {
   return (
     <section style={{ background: T.paperSoft, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(50px,5.8vw,76px) 0' }}>
       <div style={SHELL}>
-        <div
-          style={{
-            background: T.white,
-            border: `1px solid ${T.rule}`,
-            marginBottom: 36,
-            padding: '24px 26px',
-          }}
-        >
-          <div style={{ color: T.inkFaint, fontSize: 9.5, fontWeight: 700, letterSpacing: '.16em', marginBottom: 10, textTransform: 'uppercase' }}>
-            Combinatie
-          </div>
-          <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, marginBottom: 14, maxWidth: '64ch' }}>
-            Alleen relevant wanneer vertrekduiding en vroegsignalering tegelijk bestuurlijk spelen. Meestal begint het
-            gesprek eerst met ExitScan of RetentieScan.
-          </p>
-          <Link href="/producten/combinatie" style={{ color: T.ink, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
-            Bekijk de combinatieroute
-          </Link>
-        </div>
-
         <div style={{ marginBottom: 26 }}>
           <h2
             style={{

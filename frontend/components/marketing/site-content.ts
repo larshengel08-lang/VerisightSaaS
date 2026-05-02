@@ -22,7 +22,6 @@ export const marketingFooterLinks = [
   { href: '/producten', label: 'Producten' },
   { href: '/producten/exitscan', label: 'ExitScan' },
   { href: '/producten/retentiescan', label: 'RetentieScan' },
-  { href: '/producten/combinatie', label: 'Combinatie' },
   { href: '/aanpak', label: 'Aanpak' },
   { href: '/tarieven', label: 'Tarieven' },
   { href: '/vertrouwen', label: 'Vertrouwen' },
@@ -53,26 +52,11 @@ export const homepageProductRoutes = [
     accent: 'border-[#DCEFEA] bg-[#F7F5F1]',
     chip: 'Kernroute',
   },
-  {
-    name: 'Combinatie',
-    title: 'Verbind vertrek- en retentieanalyse',
-    body: 'Voor organisaties die beide managementvragen hebben en bewust willen combineren nadat de eerste helder staat.',
-    href: '/producten/combinatie',
-    accent: 'border-[#E5E0D6] bg-[#F7F5F1]',
-    chip: 'Portfolioroute',
-  },
 ] as const
 
 // Keep the existing homepage module contract intact for builds that still
 // import the older split names from main.
-export const homepageCoreProductRoutes = homepageProductRoutes.filter((route) => route.name !== 'Combinatie')
-export const homepagePortfolioRoute = {
-  name: 'Combinatie',
-  label: 'Portfolioroute op aanvraag',
-  title: 'Beide vragen bewust in dezelfde managementlijn',
-  body: 'Voor organisaties die vertrekduiding en behoudsignalering bewust willen verbinden, nadat de eerste route helder staat.',
-  href: '/producten/combinatie',
-} as const
+export const homepageCoreProductRoutes = homepageProductRoutes
 
 export const homepageComparisonRows = [
   [
@@ -84,11 +68,6 @@ export const homepageComparisonRows = [
     'Je wilt eerder zien waar behoud onder druk staat',
     'RetentieScan',
     'Retentiesignaal, stay-intent, bevlogenheid en vertrekintentie op groepsniveau',
-  ],
-  [
-    'Je wilt beide vragen bewust naast elkaar organiseren',
-    'Combinatie',
-    'Twee gerichte producten in een gedeelde managementlijn',
   ],
 ] as const
 
@@ -117,7 +96,7 @@ export const homepageUtilityLinks = [
   {
     href: '/producten',
     title: 'Bekijk de productroutes',
-    body: 'Zie snel wanneer ExitScan, RetentieScan of de combinatie logisch wordt.',
+    body: 'Zie snel wanneer ExitScan of RetentieScan logisch wordt.',
   },
   {
     href: '/aanpak',
@@ -127,7 +106,7 @@ export const homepageUtilityLinks = [
   {
     href: '/tarieven',
     title: 'Bekijk tarieven',
-    body: 'Zie hoe eerste trajecten, vervolgvormen en combinatie commercieel zijn opgebouwd.',
+    body: 'Zie hoe eerste trajecten en vervolgvormen commercieel zijn opgebouwd.',
   },
   {
     href: '/vertrouwen',
@@ -148,12 +127,6 @@ export const productOverviewComparisonRows = [
     'Vroegsignalering op behoud',
     'Waar staat behoud nu onder druk in de actieve populatie?',
     'Voor vroegsignalering en prioritering',
-  ],
-  [
-    'Combinatie',
-    'Portfolio-aanpak',
-    'Hoe verbinden we vertrekduiding en vroegsignalering in een managementlijn?',
-    'Voor organisaties met beide vraagstukken',
   ],
 ] as const
 

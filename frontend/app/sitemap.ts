@@ -27,12 +27,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: 'https://www.verisight.nl/producten/combinatie',
-      lastModified: new Date('2026-04-13'),
-      changeFrequency: 'monthly',
-      priority: 0.8,
-    },
-    {
       url: 'https://www.verisight.nl/producten/pulse',
       lastModified: new Date('2026-04-17'),
       changeFrequency: 'monthly',

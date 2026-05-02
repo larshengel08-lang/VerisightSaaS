@@ -26,18 +26,13 @@ import {
 } from '@/components/marketing/site-content'
 
 describe('Portfolio architecture marketing model', () => {
-  it('keeps a core-first six-route suite with onboarding as bounded peer and only pulse plus leadership as follow-up', () => {
-    const combination = PORTFOLIO_ROUTE_MARKETING_PRODUCTS[0]
+  it('keeps a core-first five-route suite with onboarding as bounded peer and only pulse plus leadership as follow-up', () => {
     const boundedPeerSlugs = BOUNDED_PEER_MARKETING_PRODUCTS.map((product) => product.slug)
     const followOnSlugs = FOLLOW_ON_MARKETING_PRODUCTS.map((product) => product.slug)
     const reservedSlugs = RESERVED_MARKETING_PRODUCTS.map((product) => product.slug)
 
     expect(CORE_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual(['exitscan', 'retentiescan'])
-    expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS).toHaveLength(1)
-    expect(combination.slug).toBe('combinatie')
-    expect(combination.portfolioRole).toBe('portfolio_route')
-    expect(combination.description.toLowerCase()).toContain('portfolioroute')
-    expect(combination.description.toLowerCase()).toContain('derde kernproduct')
+    expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS).toHaveLength(0)
     expect(boundedPeerSlugs).toEqual(['onboarding-30-60-90'])
     expect(BOUNDED_PEER_MARKETING_PRODUCTS.every((product) => product.status === 'bounded_live')).toBe(true)
     expect(BOUNDED_PEER_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'bounded_peer_route')).toBe(true)
@@ -47,7 +42,7 @@ describe('Portfolio architecture marketing model', () => {
     expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => !product.description.toLowerCase().includes('live bounded'))).toBe(true)
     expect(CORE_MARKETING_PRODUCTS.every((product) => product.status === 'core_live')).toBe(true)
     expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS.every((product) => product.status === 'portfolio_live')).toBe(true)
-    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(6)
+    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(5)
     expect(reservedSlugs).toEqual(['mto', 'customer-feedback'])
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.status === 'reserved_future')).toBe(true)
     expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'future_reserved_route')).toBe(
@@ -61,8 +56,8 @@ describe('ExitScan positioning copy', () => {
     const exitProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'exitscan')
 
     expect(exitProduct).toBeTruthy()
-    expect(exitProduct?.description.toLowerCase()).toContain('vertrekduiding')
-    expect(exitProduct?.description.toLowerCase()).toContain('signalen van werkfrictie')
+    expect(exitProduct?.description.toLowerCase()).toContain('patronen terugkomen')
+    expect(exitProduct?.description.toLowerCase()).toContain('waar actie het eerst effect heeft')
     expect(exitProduct?.description.toLowerCase()).not.toContain('voorspeller')
     expect(exitProduct?.description.toLowerCase()).not.toContain('diagnose')
     expect(exitScanDefinition.methodologyText.toLowerCase()).toContain('zonder oorzaken definitief vast te stellen')
@@ -134,8 +129,8 @@ describe('RetentieScan positioning copy', () => {
     const retentionProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'retentiescan')
 
     expect(retentionProduct).toBeTruthy()
-    expect(retentionProduct?.description.toLowerCase()).toContain('groeps')
-    expect(retentionProduct?.description.toLowerCase()).toContain('stay-intent')
+    expect(retentionProduct?.description.toLowerCase()).toContain('behoudsdruk eerder willen zien')
+    expect(retentionProduct?.description.toLowerCase()).toContain('voordat verloop zichtbaar oploopt')
     expect(retentionProduct?.description.toLowerCase()).not.toContain('mto')
     expect(retentionProduct?.description.toLowerCase()).not.toContain('voorspeller')
     expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('geen brede mto')

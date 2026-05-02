@@ -60,22 +60,6 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
 ]
 
 export const PORTFOLIO_ROUTE_MARKETING_PRODUCTS: MarketingProduct[] = [
-  {
-    slug: 'combinatie',
-    label: 'Combinatie',
-    shortLabel: 'Combinatie',
-    tagline: 'Voeg een tweede route pas toe wanneer beide vragen echt spelen',
-    description:
-      'Buyer-facing portfolioroute voor organisaties die ExitScan en RetentieScan bewust naast elkaar willen organiseren, zonder daarvan een derde kernproduct, bundel of all-in pakket te maken.',
-    seoTitle: 'Combinatie | Portfolioroute tussen ExitScan en RetentieScan',
-    ogAlt: 'Combinatiepagina van ExitScan en RetentieScan bij Verisight',
-    serviceType: 'Portfolioroute voor vertrekduiding en vroegsignalering',
-    serviceAudience: 'HR-teams en directies met zowel uitstroom- als behoudsvragen',
-    serviceOutput: 'Twee gerichte routes in een gedeelde managementstructuur',
-    status: 'portfolio_live',
-    portfolioRole: 'portfolio_route',
-    href: '/producten/combinatie',
-  },
 ]
 
 export const BOUNDED_PEER_MARKETING_PRODUCTS: MarketingProduct[] = [

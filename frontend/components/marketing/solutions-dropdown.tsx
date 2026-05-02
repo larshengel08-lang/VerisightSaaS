@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { CORE_MARKETING_PRODUCTS, PORTFOLIO_ROUTE_MARKETING_PRODUCTS } from '@/lib/marketing-products'
+import { CORE_MARKETING_PRODUCTS } from '@/lib/marketing-products'
 
 export function SolutionsDropdown() {
   const [open, setOpen] = useState(false)
@@ -71,31 +71,6 @@ export function SolutionsDropdown() {
                 </div>
               </Link>
             ))}
-
-            <div className="px-3 pb-2 pt-4">
-              <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#9CA3AF]">Portfolioroute</p>
-            </div>
-            {PORTFOLIO_ROUTE_MARKETING_PRODUCTS.map((product) => (
-              <Link
-                key={product.href}
-                href={product.href}
-                onClick={() => setOpen(false)}
-                className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-[#F7F5F1]"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-[#132033] transition-colors group-hover:text-[#3C8D8A]">
-                      {product.label}
-                    </span>
-                    <span className="inline-flex items-center rounded-full bg-[#E5E0D6] px-2 py-0.5 text-[10px] font-medium text-[#4A5563]">
-                      Route
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-xs leading-snug text-[#4A5563]">{product.description}</p>
-                </div>
-              </Link>
-            ))}
-
             <div className="mx-2 mt-2 rounded-lg border border-[#E5E0D6] bg-[#F7F5F1] p-3">
               <Link
                 href="/producten"

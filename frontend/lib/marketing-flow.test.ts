@@ -53,10 +53,9 @@ describe('marketing flow defaults', () => {
   })
 
   it('keeps ExitScan as the first homepage route and RetentieScan as the complement', () => {
-    expect(homepageProductRoutes.map((route) => route.name)).toEqual(['ExitScan', 'RetentieScan', 'Combinatie'])
+    expect(homepageProductRoutes.map((route) => route.name)).toEqual(['ExitScan', 'RetentieScan'])
     expect(homepageProductRoutes[0]?.chip).toBe('Kernroute')
     expect(homepageProductRoutes[1]?.chip).toBe('Kernroute')
-    expect(homepageProductRoutes[2]?.body.toLowerCase()).toContain('nadat de eerste helder staat')
   })
 
   it('keeps homepage utility links aligned with buyer flow and due diligence', () => {
