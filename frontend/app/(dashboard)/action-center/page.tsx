@@ -125,10 +125,11 @@ function getManagerAssignment(
 export default async function ActionCenterPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ focus?: string }>
+  searchParams?: Promise<{ focus?: string; source?: string }>
 }) {
   const params = (await searchParams) ?? {}
   const focusItemId = typeof params.focus === 'string' ? params.focus : null
+  const source = typeof params.source === 'string' ? params.source : null
   const supabase = await createClient()
   const {
     data: { user },
@@ -433,9 +434,11 @@ export default async function ActionCenterPage({
         null)
       : null
   const workspaceSubtitle =
-    summary.productCount > 0
-      ? `Live opvolging over ${summary.productCount} product${summary.productCount === 1 ? '' : 'en'}`
-      : 'Live opvolging'
+    source === 'campaign-detail'
+      ? 'Geopend vanuit campaign detail: hier worden eigenaarschap, eerste managerstap en reviewritme expliciet.'
+      : summary.productCount > 0
+        ? `Live opvolging over ${summary.productCount} product${summary.productCount === 1 ? '' : 'en'}`
+        : 'Live opvolging'
 
   if (items.length === 0) {
     return (

@@ -52,9 +52,9 @@ export function getHrBridgePresentation(args: {
     return {
       label: 'Actieve opvolging',
       tone: 'emerald' as const,
-      body: 'Deze opvolging loopt al in Action Center.',
+      body: 'Deze route loopt al in Action Center. Daar blijven eigenaarschap, eerste managerstap en reviewritme expliciet.',
       ctaKind: 'open' as const,
-      ctaLabel: 'Open in Action Center',
+      ctaLabel: 'Open route in Action Center',
     }
   }
 
@@ -82,9 +82,9 @@ export function getHrBridgePresentation(args: {
     return {
       label: 'Route-kandidaat',
       tone: 'amber' as const,
-      body: 'Dit signaal is klaar om als opvolging te openen.',
+      body: 'Deze campaign-read is scherp genoeg om de vervolgroute in Action Center te openen. Daar leg je eigenaarschap, eerste managerstap en reviewritme vast.',
       ctaKind: 'open' as const,
-      ctaLabel: 'Open in Action Center',
+      ctaLabel: 'Open route in Action Center',
     }
   }
 

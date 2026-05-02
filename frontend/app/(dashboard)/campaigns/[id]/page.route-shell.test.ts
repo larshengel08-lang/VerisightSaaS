@@ -38,4 +38,12 @@ describe('campaign detail first-next-step shell', () => {
     expect(source).toContain("label=\"Sterkste factor\"")
     expect(source).toContain('focusPanelItems')
   })
+
+  it('keeps the campaign-to-action-center handoff explicit instead of a generic module jump', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('buildActionCenterRouteOpenRedirect(id, "campaign-detail")')
+    expect(source).toContain('actionCenterBridge.presentation.ctaLabel')
+    expect(source).toContain('actionCenterBridge.presentation.body')
+  })
 })

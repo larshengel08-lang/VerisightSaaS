@@ -30,8 +30,16 @@ export function buildActionCenterRouteOpenPatch(openedAt: string): {
   }
 }
 
-export function buildActionCenterRouteOpenRedirect(campaignId: string) {
-  return `/action-center?focus=${campaignId}`
+export function buildActionCenterRouteOpenRedirect(
+  campaignId: string,
+  source: 'campaign-detail' | null = null,
+) {
+  const params = new URLSearchParams({ focus: campaignId })
+  if (source) {
+    params.set('source', source)
+  }
+
+  return `/action-center?${params.toString()}`
 }
 
 export function hasOpenedActionCenterRoute(record: ActionCenterRouteOpenRecord) {
