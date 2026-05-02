@@ -315,6 +315,16 @@ function getDecisionLabel(decision: ActionCenterDecision) {
   }
 }
 
+function getHistoricalRouteLabel(item: ActionCenterPreviewItem) {
+  const closingStatus = item.coreSemantics.closingSemantics.status
+
+  if (closingStatus === 'gestopt' || item.status === 'gestopt') {
+    return 'Bewust gestopt'
+  }
+
+  return 'Afgerond voor nu'
+}
+
 function compareReviewDate(left: string | null, right: string | null) {
   if (!left && !right) return 0
   if (!left) return 1
@@ -423,7 +433,8 @@ function getManagerActionSurfaceCopy(item: ActionCenterPreviewItem | null) {
             ? 'Deze route draagt nu een expliciete actiekaart. De eerste managerstap blijft zichtbaar als startcontext; uitvoering en review lopen nu primair via die actie.'
             : `Deze route draagt nu ${actionCardCount} expliciete actiekaarten. De eerste managerstap blijft zichtbaar als startcontext; uitvoering en review lopen nu primair via die acties.`,
         saveLabel: 'Managerstap bijwerken',
-        emptyText: 'Deze route wacht nog op de eerste managerstap.',
+        emptyText:
+          'Deze route wacht nog op een eerste lichte managerreactie. Tot die er is, blijft hij bewust klein en bestuurlijk leesbaar.',
         primaryActionToggle:
           'Gebruik dit alleen zolang één eerste concrete stap genoeg is. Zodra aparte actiekaarten bestaan, wordt die actielaag leidend.',
         readOnlyHint:
@@ -436,7 +447,8 @@ function getManagerActionSurfaceCopy(item: ActionCenterPreviewItem | null) {
         description:
           'Deze route heeft al een eerste concrete managerstap. Pas als er daarna extra parallelle follow-through nodig is, groeit dit door naar expliciete actiekaarten.',
         saveLabel: 'Managerstap bijwerken',
-        emptyText: 'Deze route wacht nog op de eerste managerstap.',
+        emptyText:
+          'Deze route wacht nog op een eerste lichte managerreactie. Tot die er is, blijft hij bewust klein en bestuurlijk leesbaar.',
         primaryActionToggle:
           'Gebruik dit alleen als één eerste concrete stap nu echt helpt. De route hoeft niet meteen rijker te worden dan dit.',
         readOnlyHint:
@@ -449,7 +461,8 @@ function getManagerActionSurfaceCopy(item: ActionCenterPreviewItem | null) {
         description:
           'Deze route heeft al een eerste managerstap en reviewafspraak. Houd de route bewust klein totdat een aparte concrete actie echt helpt.',
         saveLabel: 'Managerstap bijwerken',
-        emptyText: 'Deze route wacht nog op de eerste managerstap.',
+        emptyText:
+          'Deze route wacht nog op een eerste lichte managerreactie. Tot die er is, blijft hij bewust klein en bestuurlijk leesbaar.',
         primaryActionToggle:
           'Leg alleen als dit meteen helpt één eerste concrete stap vast. Zonder die stap blijft de route bewust klein en reviewbaar.',
         readOnlyHint:
@@ -463,7 +476,8 @@ function getManagerActionSurfaceCopy(item: ActionCenterPreviewItem | null) {
         description:
           'HR heeft deze route lokaal geopend. De manager reageert eerst klein: erken wat nu moet gebeuren, leg de eerste bounded stap vast en plan meteen het eerste reviewmoment.',
         saveLabel: 'Eerste managerstap opslaan',
-        emptyText: 'Deze route wacht nog op de eerste managerstap.',
+        emptyText:
+          'Deze route wacht nog op een eerste lichte managerreactie. Tot die er is, blijft hij bewust klein en bestuurlijk leesbaar.',
         primaryActionToggle:
           'Leg alleen als dit meteen helpt één eerste concrete stap vast. Zonder die stap blijft de route bewust klein en reviewbaar.',
         readOnlyHint: null,
@@ -474,7 +488,7 @@ function getManagerActionSurfaceCopy(item: ActionCenterPreviewItem | null) {
 function getRouteSummaryDisplay(item: ActionCenterPreviewItem) {
   return (
     item.coreSemantics.routeSummary ?? {
-      stateLabel: getStatusMeta(item.status).label,
+      stateLabel: isClosedRouteStatus(item.status) ? getHistoricalRouteLabel(item) : getStatusMeta(item.status).label,
       overviewSummary: item.summary || item.reason || 'Nog geen route-read beschikbaar.',
       routeAsk:
         item.reviewReason ||
@@ -483,7 +497,9 @@ function getRouteSummaryDisplay(item: ActionCenterPreviewItem) {
       progressSummary:
         item.nextStep ||
         item.expectedEffect ||
-        'Nog geen compacte voortgangssamenvatting zichtbaar.',
+        (isClosedRouteStatus(item.status)
+          ? 'Deze route is historisch gesloten; extra voortgang is hier niet meer nodig.'
+          : 'Nog geen compacte voortgangssamenvatting zichtbaar.'),
     }
   )
 }
@@ -1951,7 +1967,13 @@ export function ActionCenterPreview({
                               </div>
                             ) : (
                               <div className="mt-3">
-                                <EmptyBlock text="Nog geen expliciete reviewbeslissing vastgelegd in deze route." />
+                                <EmptyBlock
+                                  text={
+                                    isClosedRouteStatus(selectedItem.status)
+                                      ? 'Deze route is al historisch gesloten; een aparte laatste reviewbeslissing hoeft hier niet meer zichtbaar te zijn.'
+                                      : 'Nog geen expliciete reviewbeslissing vastgelegd in deze route.'
+                                  }
+                                />
                               </div>
                             )}
                           </div>
@@ -2008,7 +2030,13 @@ export function ActionCenterPreview({
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Resultaat over tijd</p>
                             <div className="mt-3 space-y-3">
                               {selectedItem.coreSemantics.resultProgression.length === 0 ? (
-                                <EmptyBlock text="Nog geen opeenvolgende resultaatmomenten zichtbaar in deze route." />
+                                <EmptyBlock
+                                  text={
+                                    isClosedRouteStatus(selectedItem.status)
+                                      ? 'Deze route is gesloten zonder extra resultaatmomenten in deze surfacelaag.'
+                                      : 'Nog geen opeenvolgende resultaatmomenten zichtbaar in deze route.'
+                                  }
+                                />
                               ) : (
                                 selectedItem.coreSemantics.resultProgression.map((entry) => (
                                   <ResultProgressionEntry key={entry.resultEntryId} entry={entry} />
@@ -2021,7 +2049,13 @@ export function ActionCenterPreview({
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Beslisgeschiedenis</p>
                             <div className="mt-3 space-y-3">
                               {selectedItem.coreSemantics.decisionHistory.length === 0 ? (
-                                <EmptyBlock text="Nog geen expliciete beslismomenten zichtbaar in deze route." />
+                                <EmptyBlock
+                                  text={
+                                    isClosedRouteStatus(selectedItem.status)
+                                      ? 'Deze route is gesloten zonder extra beslisgeschiedenis in deze surfacelaag.'
+                                      : 'Nog geen expliciete beslismomenten zichtbaar in deze route.'
+                                  }
+                                />
                               ) : (
                                 selectedItem.coreSemantics.decisionHistory.map((entry) => (
                                   <DecisionHistoryEntry key={entry.decisionEntryId} entry={entry} />
@@ -2407,7 +2441,7 @@ export function ActionCenterPreview({
               ) : (
                 <EmptySection
                   title="Nog geen acties beschikbaar"
-                  body="Zodra er zichtbare ExitScan-dossiers zijn, toont deze view automatisch de open opvolging."
+                  body="Zodra er routes live staan, verschijnt hier automatisch de eerstvolgende managerstap, begrensde reactie of actiekaart."
                 />
               )
             ) : null}
@@ -2437,7 +2471,7 @@ export function ActionCenterPreview({
                     <ReviewLane
                       title="Achterstallig"
                       items={overdueReviews}
-                      emptyText="Geen achterstallige reviews meer zichtbaar."
+                      emptyText="In deze selectie staan nu geen achterstallige reviews meer open."
                       onOpen={(item) => {
                         setSelectedItemId(item.id)
                         setActiveView('actions')
@@ -2446,7 +2480,7 @@ export function ActionCenterPreview({
                     <ReviewLane
                       title="Deze week"
                       items={thisWeekReviews}
-                      emptyText="Niets meer voor deze week."
+                      emptyText="Voor deze week staat nu geen nieuw reviewgesprek meer open."
                       onOpen={(item) => {
                         setSelectedItemId(item.id)
                         setActiveView('actions')
@@ -2455,7 +2489,7 @@ export function ActionCenterPreview({
                     <ReviewLane
                       title="Volgende week"
                       items={nextWeekReviews}
-                      emptyText="Nog geen follow-up voor volgende week."
+                      emptyText="Voor volgende week is nog geen nieuw reviewgesprek ingepland."
                       onOpen={(item) => {
                         setSelectedItemId(item.id)
                         setActiveView('actions')
@@ -2472,7 +2506,7 @@ export function ActionCenterPreview({
                       <p className="mt-4 text-[0.98rem] leading-8 text-white/72">
                         {upcomingReviews[0]
                           ? `Het eerstvolgende gesprek valt op ${upcomingReviews[0].reviewDateLabel} en blijft gekoppeld aan hetzelfde dossier en dezelfde eigenaar.`
-                          : 'Zodra er reviewdata live staan, verschijnt hier automatisch het eerstvolgende gesprek.'}
+                          : 'Deze selectie heeft nu geen open reviewvenster. Zodra een route een nieuwe hercheck vraagt, verschijnt het eerstvolgende gesprek hier automatisch.'}
                       </p>
 
                       <div className="mt-6 space-y-4 border-t border-white/10 pt-6">
@@ -3178,7 +3212,9 @@ function CompactLandingSummary({ item }: { item: ActionCenterPreviewItem }) {
 
   return (
     <div className="mt-4 rounded-[18px] border border-[#eadfce] bg-white px-4 py-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Laatste route-read</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+        {isClosedRouteStatus(item.status) ? 'Historische route-read' : 'Laatste route-read'}
+      </p>
       {overviewLineageLabel ? (
         <p className="mt-3 text-sm leading-6 text-[#7d7368]">{overviewLineageLabel}</p>
       ) : null}
