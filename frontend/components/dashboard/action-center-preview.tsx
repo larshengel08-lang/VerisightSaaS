@@ -89,6 +89,12 @@ interface FollowUpRouteFormState {
   triggerReason: ActionCenterRouteFollowUpTriggerReason
 }
 
+type ManagerActionPhase =
+  | 'awaiting-first-move'
+  | 'bounded-response'
+  | 'first-concrete-action'
+  | 'action-cards'
+
 type FollowUpRouteBlockReason =
   | 'already-has-direct-active-successor'
   | 'no-same-scope-target'
@@ -322,7 +328,7 @@ function buildManagerResponseDefaults(item: ActionCenterPreviewItem | null): Man
     responseNote:
       response?.response_note ??
       (item?.status === 'open-verzoek'
-        ? 'We pakken dit op via een eerste bounded follow-through in het team.'
+        ? 'We pakken dit eerst klein op in het team en toetsen daarna of een concretere stap nodig is.'
         : ''),
     reviewScheduledFor: response?.review_scheduled_for ?? item?.reviewDate ?? '',
     includePrimaryAction: hasPrimaryAction,
@@ -353,6 +359,93 @@ function getManagerResponseProjectedStatus(
   }
 
   return hasPrimaryManagerAction(response) ? 'in-uitvoering' : 'te-bespreken'
+}
+
+function getManagerActionPhase(item: ActionCenterPreviewItem | null): ManagerActionPhase {
+  if (!item) return 'awaiting-first-move'
+  if ((item.coreSemantics.routeActionCards?.length ?? 0) > 0) return 'action-cards'
+  if (hasPrimaryManagerAction(item.managerResponse)) return 'first-concrete-action'
+  if (item.managerResponse) return 'bounded-response'
+  return 'awaiting-first-move'
+}
+
+function getManagerActionSurfaceCopy(item: ActionCenterPreviewItem | null) {
+  const phase = getManagerActionPhase(item)
+  const actionCardCount = item?.coreSemantics.routeActionCards?.length ?? 0
+
+  switch (phase) {
+    case 'action-cards':
+      return {
+        eyebrow: 'Actieroute',
+        title: 'Actieroute is gestart',
+        description:
+          actionCardCount === 1
+            ? 'Deze route draagt nu een expliciete actiekaart. De eerste managerstap blijft zichtbaar als startcontext; uitvoering en review lopen nu primair via die actie.'
+            : `Deze route draagt nu ${actionCardCount} expliciete actiekaarten. De eerste managerstap blijft zichtbaar als startcontext; uitvoering en review lopen nu primair via die acties.`,
+        saveLabel: 'Managerstap bijwerken',
+        emptyText: 'Deze route wacht nog op de eerste managerstap.',
+        primaryActionToggle:
+          'Gebruik dit alleen zolang één eerste concrete stap genoeg is. Zodra aparte actiekaarten bestaan, wordt die actielaag leidend.',
+        readOnlyHint:
+          'Uitvoering loopt nu via de actiekaarten in deze route. Deze eerste managerstap blijft alleen zichtbaar als startcontext.',
+      }
+    case 'first-concrete-action':
+      return {
+        eyebrow: 'Managerstap',
+        title: 'Eerste concrete managerstap',
+        description:
+          'Deze route heeft al een eerste concrete managerstap. Pas als er daarna extra parallelle follow-through nodig is, groeit dit door naar expliciete actiekaarten.',
+        saveLabel: 'Managerstap bijwerken',
+        emptyText: 'Deze route wacht nog op de eerste managerstap.',
+        primaryActionToggle:
+          'Gebruik dit alleen als één eerste concrete stap nu echt helpt. De route hoeft niet meteen rijker te worden dan dit.',
+        readOnlyHint:
+          'De route heeft al een eerste concrete managerstap, maar blijft nog bewust kleiner dan een rijkere actieroute.',
+      }
+    case 'bounded-response':
+      return {
+        eyebrow: 'Managerstap',
+        title: 'Eerste managerstap staat vast',
+        description:
+          'Deze route heeft al een eerste managerstap en reviewafspraak. Houd de route bewust klein totdat een aparte concrete actie echt helpt.',
+        saveLabel: 'Managerstap bijwerken',
+        emptyText: 'Deze route wacht nog op de eerste managerstap.',
+        primaryActionToggle:
+          'Leg alleen als dit meteen helpt één eerste concrete stap vast. Zonder die stap blijft de route bewust klein en reviewbaar.',
+        readOnlyHint:
+          'Nog geen aparte concrete actie vastgelegd; deze route blijft bewust klein tot een expliciete actielaag echt helpt.',
+      }
+    case 'awaiting-first-move':
+    default:
+      return {
+        eyebrow: 'Open verzoek',
+        title: 'Eerste managerstap',
+        description:
+          'HR heeft deze route lokaal geopend. De manager reageert eerst klein: erken wat nu moet gebeuren, leg de eerste bounded stap vast en plan meteen het eerste reviewmoment.',
+        saveLabel: 'Eerste managerstap opslaan',
+        emptyText: 'Deze route wacht nog op de eerste managerstap.',
+        primaryActionToggle:
+          'Leg alleen als dit meteen helpt één eerste concrete stap vast. Zonder die stap blijft de route bewust klein en reviewbaar.',
+        readOnlyHint: null,
+      }
+  }
+}
+
+function getRouteSummaryDisplay(item: ActionCenterPreviewItem) {
+  return (
+    item.coreSemantics.routeSummary ?? {
+      stateLabel: getStatusMeta(item.status).label,
+      overviewSummary: item.summary || item.reason || 'Nog geen route-read beschikbaar.',
+      routeAsk:
+        item.reviewReason ||
+        item.reason ||
+        'Bepaal welke eerste bounded vervolgstap deze route nu echt vraagt.',
+      progressSummary:
+        item.nextStep ||
+        item.expectedEffect ||
+        'Nog geen compacte voortgangssamenvatting zichtbaar.',
+    }
+  )
 }
 
 function applyManagerResponseToItem(
@@ -714,6 +807,8 @@ export function ActionCenterPreview({
     })
 
   const selectedItem = filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? filteredItems[0] ?? items[0] ?? null
+  const managerActionSurfaceCopy = getManagerActionSurfaceCopy(selectedItem)
+  const selectedRouteSummary = selectedItem ? getRouteSummaryDisplay(selectedItem) : null
   useEffect(() => {
     setManagerResponseForm(buildManagerResponseDefaults(selectedItem))
     setManagerResponseError(null)
@@ -1703,6 +1798,12 @@ export function ActionCenterPreview({
                           </div>
                         ) : null}
 
+                        <div className="mt-7 grid gap-4 xl:grid-cols-3">
+                          <RouteSummaryCard label="Route-read" value={selectedRouteSummary?.stateLabel ?? 'Nog geen route-read'} />
+                          <RouteSummaryCard label="Vraagt nu" value={selectedRouteSummary?.routeAsk ?? 'Nog te bepalen'} />
+                          <RouteSummaryCard label="Voortgang" value={selectedRouteSummary?.progressSummary ?? 'Nog geen voortgangssamenvatting'} />
+                        </div>
+
                         <div className="mt-7 grid gap-4 lg:grid-cols-[minmax(0,1fr),minmax(0,0.92fr)]">
                           <div className="rounded-[24px] border border-[#eadfce] bg-white px-5 py-5">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Waarom dit nu speelt</p>
@@ -2024,24 +2125,18 @@ export function ActionCenterPreview({
                       {supportsManagerResponseFlow(selectedItem) ? (
                         <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
-                            {selectedItem.status === 'open-verzoek' && !selectedItem.managerResponse
-                              ? 'Open verzoek'
-                              : 'Managerreactie'}
+                            {managerActionSurfaceCopy.eyebrow}
                           </p>
                           <h3 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">
-                            {selectedItem.status === 'open-verzoek' && !selectedItem.managerResponse
-                              ? 'Route staat klaar voor eerste reactie'
-                              : 'Eerste lokale follow-through'}
+                            {managerActionSurfaceCopy.title}
                           </h3>
                           <p className="mt-3 text-sm leading-7 text-[#4f6175]">
-                            {selectedItem.status === 'open-verzoek' && !selectedItem.managerResponse
-                              ? 'HR heeft deze route lokaal geopend. De manager hoeft niet opnieuw te bewijzen dat dit thema speelt, maar reageert klein: bevestigen, aanscherpen, inplannen of begrenzen.'
-                              : 'Deze route draagt al een eerste managerreactie. Alleen als een echte lokale interventie nodig is, hangt daar in deze fase maximaal één primaire actie aan.'}
+                            {managerActionSurfaceCopy.description}
                           </p>
 
                           {canUseManagerResponseFlow ? (
                             <div className="mt-5 space-y-5">
-                              <FormField label="Eerste reactie">
+                              <FormField label="Hoe pak je deze route als eerste op?">
                                 <div className="grid gap-3 sm:grid-cols-2">
                                   {(['confirm', 'sharpen', 'schedule', 'watch'] as ActionCenterManagerResponseType[]).map((option) => (
                                     <button
@@ -2065,7 +2160,7 @@ export function ActionCenterPreview({
                                 </div>
                               </FormField>
 
-                              <FormField label="Wat is nu de bounded reactie?">
+                              <FormField label="Wat leg je nu klein en reviewbaar vast?">
                                 <textarea
                                   value={managerResponseForm.responseNote}
                                   onChange={(event) =>
@@ -2074,12 +2169,12 @@ export function ActionCenterPreview({
                                       responseNote: event.target.value,
                                     }))
                                   }
-                                  placeholder="Bijv. eerst bespreken in het weekoverleg, of gericht aanscherpen wat de eerstvolgende stap moet zijn."
+                                  placeholder="Bijv. eerst bespreken in het weekoverleg, of gericht vastleggen wat de eerstvolgende lokale stap moet zijn."
                                   className="min-h-[110px] w-full rounded-2xl border border-[#ddd3c7] bg-[#fbf8f4] px-4 py-3 text-sm leading-7 text-[#132033] outline-none transition focus:border-[#ff9b4a]"
                                 />
                               </FormField>
 
-                              <FormField label="Wanneer reviewen we dit?">
+                              <FormField label="Wanneer toetsen we deze eerste stap?">
                                 <input
                                   type="date"
                                   value={managerResponseForm.reviewScheduledFor}
@@ -2106,13 +2201,17 @@ export function ActionCenterPreview({
                                   className="mt-1 h-4 w-4 rounded border-[#d6cbbb] text-[#132033]"
                                 />
                                 <span className="leading-7">
-                                  Voeg alleen als nodig één primaire lokale stap toe. Zonder deze stap blijft de route bewust klein en reviewbaar.
+                                  {managerActionSurfaceCopy.primaryActionToggle}
                                 </span>
                               </label>
 
                               {managerResponseForm.includePrimaryAction ? (
                                 <div className="space-y-4 rounded-[20px] border border-[#ece4d8] bg-[#fcfaf7] px-4 py-4">
-                                  <FormField label="Thema">
+                                  <p className="text-sm leading-7 text-[#4f6175]">
+                                    Deze extra stap maakt de route concreter, maar houdt de uitvoering nog steeds klein totdat aparte actiekaarten echt helpen.
+                                  </p>
+
+                                  <FormField label="Thema van deze eerste concrete stap">
                                     <select
                                       value={managerResponseForm.primaryActionThemeKey}
                                       onChange={(event) =>
@@ -2132,7 +2231,7 @@ export function ActionCenterPreview({
                                     </select>
                                   </FormField>
 
-                                  <FormField label="Wat ga je concreet doen?">
+                                  <FormField label="Wat is die eerste concrete stap?">
                                     <textarea
                                       value={managerResponseForm.primaryActionText}
                                       onChange={(event) =>
@@ -2146,7 +2245,7 @@ export function ActionCenterPreview({
                                     />
                                   </FormField>
 
-                                  <FormField label="Wat moet dit zichtbaar maken?">
+                                  <FormField label="Wat moet deze stap zichtbaar maken?">
                                     <textarea
                                       value={managerResponseForm.primaryActionExpectedEffect}
                                       onChange={(event) =>
@@ -2174,20 +2273,20 @@ export function ActionCenterPreview({
                                 disabled={managerResponsePending}
                                 onClick={() => void handleManagerResponseSave()}
                               >
-                                {managerResponsePending ? 'Opslaan...' : 'Managerreactie opslaan'}
+                                {managerResponsePending ? 'Opslaan...' : managerActionSurfaceCopy.saveLabel}
                               </button>
                             </div>
                           ) : selectedItem.managerResponse ? (
                             <div className="mt-5 space-y-3">
                               <SummaryRow
-                                label="Reactie"
+                                label="Managerstap"
                                 value={getActionCenterManagerResponseLabel(selectedItem.managerResponse.response_type)}
                               />
                               <SummaryRow
-                                label="Review"
+                                label="Reviewmoment"
                                 value={formatLongDate(selectedItem.managerResponse.review_scheduled_for)}
                               />
-                              <SignalRow label="Toelichting" value={selectedItem.managerResponse.response_note} />
+                              <SignalRow label="Bounded stap" value={selectedItem.managerResponse.response_note} />
                               {selectedItem.managerResponse.primary_action_theme_key ? (
                                 <SignalRow
                                   label="Thema"
@@ -2204,10 +2303,21 @@ export function ActionCenterPreview({
                                   value={selectedItem.managerResponse.primary_action_text}
                                 />
                               ) : null}
+                              {selectedItem.managerResponse.primary_action_expected_effect ? (
+                                <SignalRow
+                                  label="Zichtbaar effect"
+                                  value={selectedItem.managerResponse.primary_action_expected_effect}
+                                />
+                              ) : null}
+                              {managerActionSurfaceCopy.readOnlyHint ? (
+                                <p className="rounded-[18px] border border-[#ece4d8] bg-[#fcfaf7] px-4 py-4 text-sm leading-7 text-[#4f6175]">
+                                  {managerActionSurfaceCopy.readOnlyHint}
+                                </p>
+                              ) : null}
                             </div>
                           ) : (
                             <div className="mt-5">
-                              <EmptyBlock text="Deze route wacht nog op de eerste lichte managerreactie." />
+                              <EmptyBlock text={managerActionSurfaceCopy.emptyText} />
                             </div>
                           )}
                         </div>
@@ -3013,19 +3123,10 @@ function EmptySection({ title, body }: { title: string; body: string }) {
 }
 
 export function buildCompactLandingSummaryLines(item: ActionCenterPreviewItem) {
-  const latestDecision = item.coreSemantics.latestDecision
-  const currentStep = item.coreSemantics.actionProgress.currentStep
-  const managerResponse = item.managerResponse
-
+  const routeSummary = getRouteSummaryDisplay(item)
   return [
-    !latestDecision && item.status === 'open-verzoek'
-      ? { label: 'Verzoek', value: 'Wacht op eerste managerreactie' }
-      : null,
-    !latestDecision && managerResponse
-      ? { label: 'Reactie', value: getActionCenterManagerResponseLabel(managerResponse.response_type) }
-      : null,
-    latestDecision ? { label: 'Besluit', value: getDecisionLabel(latestDecision.decision) } : null,
-    currentStep ? { label: 'Stap', value: currentStep } : null,
+    { label: 'Route', value: routeSummary.stateLabel },
+    { label: 'Lezing', value: routeSummary.overviewSummary },
   ]
     .filter((entry): entry is { label: string; value: string } => Boolean(entry?.value))
     .filter((entry, index, entries) => entries.findIndex((candidate) => candidate.value === entry.value) === index)
@@ -3097,6 +3198,15 @@ function buildDetailLineageEntries(
 function RouteFieldCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[18px] border border-[#eadfce] bg-[#fcfaf6] px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
+      <p className="mt-3 text-sm leading-7 text-[#32465d]">{value}</p>
+    </div>
+  )
+}
+
+function RouteSummaryCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[20px] border border-[#eadfce] bg-white px-5 py-5">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
       <p className="mt-3 text-sm leading-7 text-[#32465d]">{value}</p>
     </div>

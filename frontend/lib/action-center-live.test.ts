@@ -139,6 +139,38 @@ function buildRouteReopen(
   }
 }
 
+function buildLiveContext(
+  overrides: Partial<Parameters<typeof buildLiveActionCenterItems>[0][number]> = {},
+): Parameters<typeof buildLiveActionCenterItems>[0][number] {
+  return {
+    campaign: buildCampaign(),
+    stats: buildStats(),
+    organizationName: 'Acme BV',
+    memberRole: 'owner',
+    scopeType: 'department',
+    scopeValue: 'operations',
+    scopeLabel: 'Operations',
+    peopleCount: 38,
+    assignedManager: null,
+    deliveryRecord: buildDeliveryRecord({
+      lifecycle_stage: 'first_management_use',
+      first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
+      next_step: 'Plan eerste managementgesprek met HR en sponsor.',
+      customer_handoff_note: 'Vertrekduiding is nu scherp genoeg voor een eerste MT-read.',
+    }),
+    deliveryCheckpoints: [],
+    learningDossier: buildDossier({
+      expected_first_value: 'Maak zichtbaar welk vertrekpatroon nu eerst bestuurlijke aandacht vraagt.',
+      first_management_value: 'Welke vertrekduiding vraagt nu als eerste managementeigenaarschap?',
+      review_moment: '2026-05-12',
+      management_action_outcome: 'bijstellen',
+    }),
+    learningCheckpoints: [],
+    reviewDecisions: [] as ActionCenterReviewDecision[],
+    ...overrides,
+  } as Parameters<typeof buildLiveActionCenterItems>[0][number]
+}
+
 describe('live action center builder', () => {
   it('accepts the current live product family as supported action-center carriers', () => {
     expect(isLiveActionCenterScanType('exit')).toBe(true)
@@ -385,6 +417,91 @@ describe('live action center builder', () => {
     })
   })
 
+  it('projects route summary semantics for open requests, review pressure, and historical closed routes', () => {
+    const [openRequestItem] = buildLiveActionCenterItems([
+      buildLiveContext({
+        assignedManager: {
+          userId: 'manager-open',
+          displayName: 'Manager Operations',
+          assignedAt: '2026-04-22T08:00:00.000Z',
+        },
+        deliveryRecord: buildDeliveryRecord({
+          lifecycle_stage: 'first_value_reached',
+          first_management_use_confirmed_at: null,
+          next_step: null,
+          customer_handoff_note: 'De route staat klaar voor de eerste managementread.',
+        }),
+        learningDossier: buildDossier({
+          expected_first_value: null,
+          first_management_value: null,
+          first_action_taken: null,
+          review_moment: null,
+          management_action_outcome: 'geen-uitkomst',
+        }),
+      }),
+    ])
+    const [reviewableItem] = buildLiveActionCenterItems([
+      buildLiveContext({
+        routeActions: [
+          {
+            actionId: 'action-reviewable',
+            routeId: buildActionCenterRouteId('campaign-exit', 'operations'),
+            themeKey: 'workload',
+            actionText: 'Plan een bounded herverdeling van piekwerk.',
+            expectedEffect: 'Maak zichtbaar of de piekbelasting binnen twee weken daalt.',
+            reviewScheduledFor: '2026-01-05',
+            status: 'open',
+            createdAt: '2026-05-01T09:00:00.000Z',
+            updatedAt: '2026-05-01T09:00:00.000Z',
+          },
+        ],
+      }),
+    ])
+    const [closedItem] = buildLiveActionCenterItems([
+      buildLiveContext({
+        learningDossier: buildDossier({
+          triage_status: 'uitgevoerd',
+          management_action_outcome: 'afronden',
+          next_route: 'Gebruik het vervolgtraject voor nieuw lokaal ritme.',
+          case_public_summary: 'De eerdere route is historisch afgerond.',
+        }),
+        routeFollowUpRelations: [
+          {
+            id: 'follow-up-1',
+            campaignId: 'campaign-exit',
+            orgId: 'org-1',
+            routeRelationType: 'follow-up-from',
+            sourceRouteId: buildActionCenterRouteId('campaign-exit', 'operations'),
+            sourceCampaignId: 'campaign-exit',
+            sourceRouteScopeValue: 'operations',
+            targetRouteId: 'campaign-next::org-1::department::operations',
+            targetCampaignId: 'campaign-next',
+            targetRouteScopeValue: 'operations',
+            triggerReason: 'hernieuwde-hr-beoordeling',
+            managerUserId: 'manager-next',
+            recordedAt: '2026-05-15T09:00:00.000Z',
+            recordedByRole: 'hr_owner',
+            recordedBy: 'user-1',
+            endedAt: null,
+          },
+        ],
+      }),
+    ])
+
+    expect(openRequestItem?.coreSemantics.routeSummary).toMatchObject({
+      stateLabel: 'Open verzoek',
+      overviewSummary: 'Open route die nog wacht op de eerste managerstap en het eerste reviewmoment.',
+    })
+    expect(reviewableItem?.coreSemantics.routeSummary).toMatchObject({
+      stateLabel: 'Reviewbaar',
+      overviewSummary: 'Actieve route waarbij 1 reviewmoment nu aandacht vraagt.',
+    })
+    expect(closedItem?.coreSemantics.routeSummary).toMatchObject({
+      stateLabel: 'Afgerond',
+      overviewSummary: 'Historische route die later een directe opvolger kreeg.',
+    })
+  })
+
   it('finalizes local preview items with derived core semantics and synchronized open signals', () => {
     const item = finalizeActionCenterPreviewItem({
       id: 'local-1',
@@ -424,6 +541,10 @@ describe('live action center builder', () => {
 
     expect(item.coreSemantics.actionFrame.firstStep).toBe('Eerste vervolgstap vastleggen en reviewdatum bevestigen.')
     expect(item.coreSemantics.actionFrame.owner).toBe('Nog niet toegewezen')
+    expect(item.coreSemantics.routeSummary).toMatchObject({
+      stateLabel: 'Te bespreken',
+      overviewSummary: 'Open route waarbij de eerste expliciete route-read en vervolglijn nog scherp moeten worden.',
+    })
     expect(item.reason).toBe(item.coreSemantics.reviewSemantics.reviewReason)
     expect(item.nextStep).toBe(item.coreSemantics.actionFrame.firstStep)
     expect(item.openSignals).toEqual(['owner_missing', 'review_due'])
@@ -517,6 +638,12 @@ describe('live action center builder', () => {
           reviewReason: 'Canonieke previewreviewreden.',
           blockedBy: null,
         },
+        routeSummary: {
+          stateLabel: 'Te bespreken',
+          overviewSummary: 'Open route waarbij de eerste expliciete route-read en vervolglijn nog scherp moeten worden.',
+          routeAsk: 'Bepaal eerst welke bounded vervolglijn deze route nu echt vraagt.',
+          progressSummary: 'De route is geopend, maar de concrete vervolglijn is nog niet scherp genoeg vastgelegd.',
+        },
         reviewSemantics: {
           reviewReason: 'Canonieke previewreviewreden.',
           reviewQuestion: 'Canoniek previeweffect.',
@@ -576,6 +703,10 @@ describe('live action center builder', () => {
       owner: 'Manager Operations',
       reviewScheduledFor: '2026-05-12',
       routeStatus: 'in-uitvoering',
+    })
+    expect(recomputed.coreSemantics.routeSummary).toMatchObject({
+      stateLabel: 'In uitvoering',
+      overviewSummary: 'Actieve route waarin de eerste bounded managerstap nu loopt.',
     })
     expect(recomputed.coreSemantics.resultLoop.whatWasTried).toBe(
       'Update: eigenaar bevestigd en review opnieuw ingepland.',
@@ -671,6 +802,12 @@ describe('live action center builder', () => {
           triggerReason: 'nieuw-segment-signaal',
           triggerReasonLabel: 'Nieuw segmentsignaal',
           sourceRouteId: 'campaign-source::operations',
+        },
+        routeSummary: {
+          stateLabel: 'Te bespreken',
+          overviewSummary: 'Open route waarbij de eerste expliciete route-read en vervolglijn nog scherp moeten worden.',
+          routeAsk: 'Bepaal eerst welke bounded vervolglijn deze route nu echt vraagt.',
+          progressSummary: 'De route is geopend, maar de concrete vervolglijn is nog niet scherp genoeg vastgelegd.',
         },
         closingSemantics: {
           status: 'lopend',

@@ -11,6 +11,7 @@ import {
   type ActionCenterRouteReopenRecord,
   type ActionCenterRouteFollowUpTriggerReason,
 } from './action-center-route-reopen'
+import { hasPrimaryManagerAction } from './action-center-manager-responses'
 import type { ActionCenterRouteActionRecord } from './action-center-route-actions'
 import type {
   ActionCenterManagerResponse,
@@ -25,12 +26,19 @@ import {
   type ActionCenterResultProgressEntry,
 } from './action-center-decision-history'
 import { getActionCenterDecisionProfile } from './action-center-review-decisions'
+import type { ActionCenterPreviewStatus } from './action-center-preview-model'
 
 export type ActionCenterVisibleReviewOutcome = Exclude<ActionCenterReviewOutcome, 'opschalen'>
 export type ActionCenterClosingStatus = 'lopend' | 'afgerond' | 'gestopt'
 
 export interface ActionCenterCoreSemantics {
   route: ActionCenterRouteContract
+  routeSummary: {
+    stateLabel: string
+    overviewSummary: string
+    routeAsk: string
+    progressSummary: string
+  }
   reviewSemantics: {
     reviewReason: string
     reviewQuestion: string
@@ -113,6 +121,7 @@ export type ActionCenterCoreSemanticsProjectionInput = Pick<
   route: ActionCenterRouteContract
   latestVisibleUpdateNote?: string | null
   decisionRecords?: ActionCenterDecisionRecord[]
+  surfaceStatus?: ActionCenterPreviewStatus
 }
 
 export interface ActionCenterPreviewCoreSemanticsProjectionInput {
@@ -133,6 +142,7 @@ export interface ActionCenterPreviewCoreSemanticsProjectionInput {
   managerResponse?: ActionCenterManagerResponse | null
   lineageSummary?: ActionCenterLineageSummary | null
   followUpSemantics?: ActionCenterProjectedFollowUpSemantics | null
+  surfaceStatus?: ActionCenterPreviewStatus
 }
 
 const UNASSIGNED_OWNER_LABEL = 'Nog niet toegewezen'
@@ -217,6 +227,158 @@ function getEmptyLineageSummary(): ActionCenterLineageSummary {
     forwardLabel: null,
     forwardRouteId: null,
     detailLabels: [],
+  }
+}
+
+function getSurfaceStatusLabel(status: ActionCenterPreviewStatus | null | undefined) {
+  switch (status) {
+    case 'open-verzoek':
+      return 'Open verzoek'
+    case 'reviewbaar':
+      return 'Reviewbaar'
+    case 'in-uitvoering':
+      return 'In uitvoering'
+    case 'afgerond':
+      return 'Afgerond'
+    case 'gestopt':
+      return 'Gestopt'
+    case 'geblokkeerd':
+      return 'Geblokkeerd'
+    case 'te-bespreken':
+    default:
+      return 'Te bespreken'
+  }
+}
+
+function countReviewPressure(routeActionCards: ActionCenterCoreSemantics['routeActionCards']) {
+  const today = new Date().toISOString().slice(0, 10)
+  return routeActionCards.filter(
+    (action) => action.status === 'in_review' || (action.status === 'open' && action.reviewScheduledFor <= today),
+  ).length
+}
+
+function buildRouteSummary(args: {
+  surfaceStatus: ActionCenterPreviewStatus | ActionCenterRouteContract['routeStatus'] | null | undefined
+  routeActionCards: ActionCenterCoreSemantics['routeActionCards']
+  managerResponse: ActionCenterManagerResponse | null | undefined
+  closingSemantics: ActionCenterCoreSemantics['closingSemantics']
+  lineageSummary: ActionCenterLineageSummary
+  actionProgress: ActionCenterCoreSemantics['actionProgress']
+}) {
+  const status = args.surfaceStatus ?? 'te-bespreken'
+  const stateLabel = getSurfaceStatusLabel(status)
+  const actionCount = args.routeActionCards.length
+  const reviewPressureCount = countReviewPressure(args.routeActionCards)
+  const hasManagerResponse = Boolean(args.managerResponse)
+  const hasPrimaryAction = hasPrimaryManagerAction(args.managerResponse)
+  const hasCurrentStep = Boolean(args.actionProgress.currentStep)
+
+  if (status === 'afgerond') {
+    return {
+      stateLabel,
+      overviewSummary:
+        args.lineageSummary.forwardLabel === FOLLOWED_UP_LATER_LINEAGE_LABEL
+          ? 'Historische route die later een directe opvolger kreeg.'
+          : 'Historische route die voor nu bestuurlijk is afgerond.',
+      routeAsk: 'Lees deze route als afgerond traject en gebruik hem alleen nog als bestuurlijke context.',
+      progressSummary:
+        args.closingSemantics.summary ??
+        (actionCount > 0
+          ? `${actionCount} actie${actionCount === 1 ? '' : 's'} liepen binnen deze route voordat hij sloot.`
+          : 'Er loopt geen actieve follow-through meer in deze route.'),
+    }
+  }
+
+  if (status === 'gestopt') {
+    return {
+      stateLabel,
+      overviewSummary:
+        args.lineageSummary.forwardLabel === FOLLOWED_UP_LATER_LINEAGE_LABEL
+          ? 'Historische route die later via een opvolger opnieuw is opgepakt.'
+          : 'Historische route die bewust is gestopt.',
+      routeAsk: 'Lees deze route als gestopt traject en niet meer als actieve follow-through.',
+      progressSummary:
+        args.closingSemantics.summary ??
+        'De route draagt geen actieve follow-through meer en blijft alleen historisch leesbaar.',
+    }
+  }
+
+  if (status === 'reviewbaar') {
+    return {
+      stateLabel,
+      overviewSummary:
+        reviewPressureCount > 0
+          ? `Actieve route waarbij ${reviewPressureCount} reviewmoment${reviewPressureCount === 1 ? '' : 'en'} nu aandacht vraagt.`
+          : 'Actieve route die nu expliciete teruglezing en review vraagt.',
+      routeAsk: 'Kijk nu expliciet terug op de lopende follow-through en bepaal wat de route daarna vraagt.',
+      progressSummary:
+        reviewPressureCount > 0
+          ? `${reviewPressureCount} actie${reviewPressureCount === 1 ? '' : 's'} of reviewmoment${reviewPressureCount === 1 ? '' : 'en'} vragen nu expliciete teruglezing.`
+          : actionCount > 0
+            ? `${actionCount} actie${actionCount === 1 ? '' : 's'} dragen deze route, maar reviewdruk wint nu van uitvoering.`
+            : 'De route voelt actief, maar vraagt eerst een review voordat verdere uitvoering logisch wordt.',
+    }
+  }
+
+  if (status === 'in-uitvoering') {
+    return {
+      stateLabel,
+      overviewSummary:
+        actionCount > 0
+          ? `Actieve route met ${actionCount} expliciete actie${actionCount === 1 ? '' : 's'} in dezelfde follow-through.`
+          : hasPrimaryAction
+            ? 'Actieve route met één eerste concrete managerstap, nog zonder rijkere actieroute.'
+            : 'Actieve route waarin de eerste bounded managerstap nu loopt.',
+      routeAsk:
+        actionCount > 0
+          ? 'Houd de actielaag klein en zorg dat review per actie leidend blijft voor verdere uitvoering.'
+          : 'Bewaar deze eerste managerstap klein en maak hem pas rijker als een aparte actielaag echt helpt.',
+      progressSummary:
+        actionCount > 0
+          ? `${actionCount} actie${actionCount === 1 ? '' : 's'} dragen nu de lokale follow-through in deze route.`
+          : hasPrimaryAction || hasCurrentStep
+            ? 'De route heeft al een eerste concrete stap, maar hoeft nog niet meteen uit te groeien tot meerdere acties.'
+            : 'De route is actief, maar blijft bewust op een eerste bounded managerstap en reviewafspraak.',
+    }
+  }
+
+  if (status === 'open-verzoek') {
+    return {
+      stateLabel,
+      overviewSummary: 'Open route die nog wacht op de eerste managerstap en het eerste reviewmoment.',
+      routeAsk: 'De manager moet nog klein vastleggen hoe deze route nu als eerste wordt opgepakt en wanneer die stap wordt getoetst.',
+      progressSummary:
+        hasManagerResponse || hasCurrentStep
+          ? 'Er zijn al eerste signalen van reactie, maar de eerste managerstap staat nog niet rustig vast.'
+          : 'Nog geen eerste managerstap, concrete actie of rustige reviewafspraak zichtbaar.',
+    }
+  }
+
+  if (status === 'geblokkeerd') {
+    return {
+      stateLabel,
+      overviewSummary: 'Open route waarbij een blokkade de volgende betekenisvolle stap tegenhoudt.',
+      routeAsk: 'Maak eerst de blokkade expliciet voordat verdere lokale opvolging zinvol wordt.',
+      progressSummary:
+        actionCount > 0
+          ? 'Er is al follow-through zichtbaar, maar de routelezing wordt nu door blokkade bepaald.'
+          : 'De route draagt nog geen stabiele follow-through zolang de blokkade niet is opgehelderd.',
+    }
+  }
+
+  return {
+    stateLabel,
+    overviewSummary: hasManagerResponse
+      ? 'Open route met een eerste managerstap en reviewafspraak, maar nog zonder expliciete actieroute.'
+      : 'Open route waarbij de eerste expliciete route-read en vervolglijn nog scherp moeten worden.',
+    routeAsk: hasManagerResponse
+      ? 'Bepaal of deze route bewust klein kan blijven, of dat één expliciete concrete actie nu echt helpt.'
+      : 'Bepaal eerst welke bounded vervolglijn deze route nu echt vraagt.',
+    progressSummary: actionCount > 0
+      ? `${actionCount} actie${actionCount === 1 ? '' : 's'} zijn zichtbaar, maar de route vraagt nog expliciete duiding over welke laag nu leidend is.`
+      : hasManagerResponse
+        ? 'Er is al een eerste managerstap vastgelegd, maar de route hoeft nog niet rijker te worden dan dit bounded niveau.'
+        : 'De route is geopend, maar de concrete vervolglijn is nog niet scherp genoeg vastgelegd.',
   }
 }
 
@@ -726,9 +888,24 @@ export function projectActionCenterPreviewCoreSemantics(
   const closingStatus = getPreviewClosingStatus(route.routeStatus)
   const lineageSummary = input.lineageSummary ?? getEmptyLineageSummary()
   const followUpSemantics = input.followUpSemantics ?? getEmptyFollowUpSemantics()
+  const routeActionCards: ActionCenterCoreSemantics['routeActionCards'] = []
+  const closingSemantics: ActionCenterCoreSemantics['closingSemantics'] = {
+    status: closingStatus,
+    summary: getClosingSummary(closingStatus, getPreviewClosingSummaryValues(route, closingStatus)),
+    historicalSummary: null,
+  }
+  const routeSummary = buildRouteSummary({
+    surfaceStatus: input.surfaceStatus ?? input.status,
+    routeActionCards,
+    managerResponse: input.managerResponse ?? null,
+    closingSemantics,
+    lineageSummary,
+    actionProgress,
+  })
 
   return {
     route,
+    routeSummary,
     reviewSemantics: {
       reviewReason: reviewReason ?? REVIEW_REASON_FALLBACK,
       reviewQuestion: reviewQuestion ?? REVIEW_QUESTION_FALLBACK,
@@ -759,14 +936,10 @@ export function projectActionCenterPreviewCoreSemantics(
     },
     resultProgression,
     decisionHistory,
-    routeActionCards: [],
+    routeActionCards,
     lineageSummary,
     followUpSemantics,
-    closingSemantics: {
-      status: closingStatus,
-      summary: getClosingSummary(closingStatus, getPreviewClosingSummaryValues(route, closingStatus)),
-      historicalSummary: null,
-    },
+    closingSemantics,
   }
 }
 
@@ -886,9 +1059,27 @@ export function projectActionCenterCoreSemantics(
       derivedExpectedEffect,
     suppressNextStepFallback: latestDecisionProfile?.hidesNextStep ?? false,
   })
+  const routeActionCards = buildRouteActionCards({
+    routeActions: context.routeActions,
+    actionReviews: context.actionReviews,
+  })
+  const closingSemantics: ActionCenterCoreSemantics['closingSemantics'] = {
+    status: closingStatus,
+    summary: getClosingSummary(closingStatus, getLiveClosingSummaryValues(context, route, closingStatus)),
+    historicalSummary: closingStatus === 'lopend' ? getHistoricalCloseoutSummary(context) : null,
+  }
+  const routeSummarySemantics = buildRouteSummary({
+    surfaceStatus: context.surfaceStatus ?? route.routeStatus,
+    routeActionCards,
+    managerResponse: context.managerResponse ?? null,
+    closingSemantics,
+    lineageSummary,
+    actionProgress,
+  })
 
   return {
     route,
+    routeSummary: routeSummarySemantics,
     reviewSemantics: {
       reviewReason: reviewReason ?? REVIEW_REASON_FALLBACK,
       reviewQuestion: reviewQuestion ?? REVIEW_QUESTION_FALLBACK,
@@ -927,16 +1118,9 @@ export function projectActionCenterCoreSemantics(
     },
     resultProgression,
     decisionHistory,
-    routeActionCards: buildRouteActionCards({
-      routeActions: context.routeActions,
-      actionReviews: context.actionReviews,
-    }),
+    routeActionCards,
     lineageSummary,
     followUpSemantics,
-    closingSemantics: {
-      status: closingStatus,
-      summary: getClosingSummary(closingStatus, getLiveClosingSummaryValues(context, route, closingStatus)),
-      historicalSummary: closingStatus === 'lopend' ? getHistoricalCloseoutSummary(context) : null,
-    },
+    closingSemantics,
   }
 }
