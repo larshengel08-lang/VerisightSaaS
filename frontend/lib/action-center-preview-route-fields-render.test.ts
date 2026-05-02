@@ -376,4 +376,110 @@ describe('action center preview route fields render', () => {
     expect(html).not.toContain('Volgende toets')
     expect(html).not.toContain('Hierna')
   })
+
+  it('renders historical route empty states as intentional instead of missing data', () => {
+    const item = finalizeActionCenterPreviewItem({
+      id: 'route-3',
+      code: 'ACT-1003',
+      title: 'Historische route',
+      summary: 'De route is bestuurlijk gesloten.',
+      reason: 'Het effect bleef zichtbaar.',
+      sourceLabel: 'ExitScan',
+      orgId: 'org-1',
+      scopeType: 'department',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerId: 'manager-1',
+      ownerName: 'Manager Operations',
+      ownerRole: 'Manager - Operations',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: 'HR lead',
+      priority: 'laag',
+      status: 'afgerond',
+      reviewDate: null,
+      expectedEffect: null,
+      reviewReason: null,
+      reviewOutcome: 'afronden',
+      reviewDateLabel: 'Nog niet gepland',
+      reviewRhythm: 'Maandelijks',
+      signalLabel: 'ExitScan - Exit voorjaar',
+      signalBody: 'De lokale correctie hield zichtbaar stand.',
+      nextStep: 'Nog niet van toepassing',
+      peopleCount: 38,
+      updates: [],
+      coreSemantics: {
+        route: {
+          campaignId: 'campaign-exit',
+          entryStage: 'active',
+          routeOpenedAt: '2026-04-20T09:00:00.000Z',
+          ownerAssignedAt: '2026-04-21T08:00:00.000Z',
+          routeStatus: 'afgerond',
+          reviewOutcome: 'afronden',
+          reviewCompletedAt: '2026-04-28T09:00:00.000Z',
+          outcomeRecordedAt: '2026-04-28T09:00:00.000Z',
+          outcomeSummary: 'De lokale correctie hield zichtbaar stand.',
+          intervention: null,
+          owner: 'Manager Operations',
+          expectedEffect: null,
+          reviewScheduledFor: null,
+          reviewReason: null,
+          blockedBy: null,
+        },
+        latestDecision: null,
+        actionProgress: {
+          currentStep: null,
+          nextStep: null,
+          expectedEffect: null,
+        },
+        reviewSemantics: {
+          reviewReason: null,
+          reviewQuestion: null,
+          reviewOutcomeRaw: 'afronden',
+          reviewOutcomeVisible: 'afronden',
+        },
+        actionFrame: {
+          whyNow: 'Het effect bleef zichtbaar.',
+          firstStep: null,
+          owner: 'Manager Operations',
+          expectedEffect: null,
+        },
+        resultLoop: {
+          whatWasTried: null,
+          whatWeObserved: null,
+          whatWasDecided: null,
+        },
+        resultProgression: [],
+        decisionHistory: [],
+        lineageSummary: {
+          overviewLabel: 'Later opgevolgd',
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: 'Later opgevolgd',
+          forwardRouteId: 'route-4',
+          detailLabels: ['Later opgevolgd'],
+        },
+        closingSemantics: {
+          status: 'afgerond',
+          summary: 'Afgerond voor nu',
+          historicalSummary: 'Deze route is bestuurlijk afgesloten.',
+        },
+      },
+    })
+
+    const html = renderToStaticMarkup(
+      React.createElement(ActionCenterPreview, {
+        initialItems: [item],
+        initialView: 'actions',
+        fallbackOwnerName: 'Verisight gebruiker',
+        ownerOptions: ['Manager Operations'],
+        workbenchHref: '/dashboard',
+        readOnly: true,
+      }),
+    )
+
+    expect(html).toContain('Afgerond voor nu')
+    expect(html).toContain('Deze route is al historisch gesloten; een aparte laatste reviewbeslissing hoeft hier niet meer zichtbaar te zijn.')
+    expect(html).toContain('Deze route is gesloten zonder extra resultaatmomenten in deze surfacelaag.')
+    expect(html).toContain('Deze route is gesloten zonder extra beslisgeschiedenis in deze surfacelaag.')
+  })
 })

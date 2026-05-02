@@ -269,6 +269,16 @@ function getDecisionLabel(decision: ActionCenterDecision) {
   }
 }
 
+function getHistoricalRouteLabel(item: ActionCenterPreviewItem) {
+  const closingStatus = item.coreSemantics.closingSemantics.status
+
+  if (closingStatus === 'gestopt' || item.status === 'gestopt') {
+    return 'Bewust gestopt'
+  }
+
+  return 'Afgerond voor nu'
+}
+
 function compareReviewDate(left: string | null, right: string | null) {
   if (!left && !right) return 0
   if (!left) return 1
@@ -1815,7 +1825,13 @@ export function ActionCenterPreview({
                               </div>
                             ) : (
                               <div className="mt-3">
-                                <EmptyBlock text="Nog geen expliciete reviewbeslissing vastgelegd in deze route." />
+                                <EmptyBlock
+                                  text={
+                                    isClosedRouteStatus(selectedItem.status)
+                                      ? 'Deze route is al historisch gesloten; een aparte laatste reviewbeslissing hoeft hier niet meer zichtbaar te zijn.'
+                                      : 'Nog geen expliciete reviewbeslissing vastgelegd in deze route.'
+                                  }
+                                />
                               </div>
                             )}
                           </div>
@@ -1872,7 +1888,13 @@ export function ActionCenterPreview({
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Resultaat over tijd</p>
                             <div className="mt-3 space-y-3">
                               {selectedItem.coreSemantics.resultProgression.length === 0 ? (
-                                <EmptyBlock text="Nog geen opeenvolgende resultaatmomenten zichtbaar in deze route." />
+                                <EmptyBlock
+                                  text={
+                                    isClosedRouteStatus(selectedItem.status)
+                                      ? 'Deze route is gesloten zonder extra resultaatmomenten in deze surfacelaag.'
+                                      : 'Nog geen opeenvolgende resultaatmomenten zichtbaar in deze route.'
+                                  }
+                                />
                               ) : (
                                 selectedItem.coreSemantics.resultProgression.map((entry) => (
                                   <ResultProgressionEntry key={entry.resultEntryId} entry={entry} />
@@ -1885,7 +1907,13 @@ export function ActionCenterPreview({
                             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Beslisgeschiedenis</p>
                             <div className="mt-3 space-y-3">
                               {selectedItem.coreSemantics.decisionHistory.length === 0 ? (
-                                <EmptyBlock text="Nog geen expliciete beslismomenten zichtbaar in deze route." />
+                                <EmptyBlock
+                                  text={
+                                    isClosedRouteStatus(selectedItem.status)
+                                      ? 'Deze route is gesloten zonder extra beslisgeschiedenis in deze surfacelaag.'
+                                      : 'Nog geen expliciete beslismomenten zichtbaar in deze route.'
+                                  }
+                                />
                               ) : (
                                 selectedItem.coreSemantics.decisionHistory.map((entry) => (
                                   <DecisionHistoryEntry key={entry.decisionEntryId} entry={entry} />
@@ -2207,7 +2235,7 @@ export function ActionCenterPreview({
                             </div>
                           ) : (
                             <div className="mt-5">
-                              <EmptyBlock text="Deze route wacht nog op de eerste lichte managerreactie." />
+                              <EmptyBlock text="Deze route wacht nog op een eerste lichte managerreactie. Tot die er is, blijft hij bewust klein en bestuurlijk leesbaar." />
                             </div>
                           )}
                         </div>
@@ -2262,7 +2290,7 @@ export function ActionCenterPreview({
               ) : (
                 <EmptySection
                   title="Nog geen acties beschikbaar"
-                  body="Zodra er zichtbare ExitScan-dossiers zijn, toont deze view automatisch de open opvolging."
+                  body="Zodra er routes live staan, verschijnt hier automatisch de eerstvolgende managerstap, begrensde reactie of actiekaart."
                 />
               )
             ) : null}
@@ -2292,7 +2320,7 @@ export function ActionCenterPreview({
                     <ReviewLane
                       title="Achterstallig"
                       items={overdueReviews}
-                      emptyText="Geen achterstallige reviews meer zichtbaar."
+                      emptyText="In deze selectie staan nu geen achterstallige reviews meer open."
                       onOpen={(item) => {
                         setSelectedItemId(item.id)
                         setActiveView('actions')
@@ -2301,7 +2329,7 @@ export function ActionCenterPreview({
                     <ReviewLane
                       title="Deze week"
                       items={thisWeekReviews}
-                      emptyText="Niets meer voor deze week."
+                      emptyText="Voor deze week staat nu geen nieuw reviewgesprek meer open."
                       onOpen={(item) => {
                         setSelectedItemId(item.id)
                         setActiveView('actions')
@@ -2310,7 +2338,7 @@ export function ActionCenterPreview({
                     <ReviewLane
                       title="Volgende week"
                       items={nextWeekReviews}
-                      emptyText="Nog geen follow-up voor volgende week."
+                      emptyText="Voor volgende week is nog geen nieuw reviewgesprek ingepland."
                       onOpen={(item) => {
                         setSelectedItemId(item.id)
                         setActiveView('actions')
@@ -2327,7 +2355,7 @@ export function ActionCenterPreview({
                       <p className="mt-4 text-[0.98rem] leading-8 text-white/72">
                         {upcomingReviews[0]
                           ? `Het eerstvolgende gesprek valt op ${upcomingReviews[0].reviewDateLabel} en blijft gekoppeld aan hetzelfde dossier en dezelfde eigenaar.`
-                          : 'Zodra er reviewdata live staan, verschijnt hier automatisch het eerstvolgende gesprek.'}
+                          : 'Deze selectie heeft nu geen open reviewvenster. Zodra een route een nieuwe hercheck vraagt, verschijnt het eerstvolgende gesprek hier automatisch.'}
                       </p>
 
                       <div className="mt-6 space-y-4 border-t border-white/10 pt-6">
@@ -3018,6 +3046,9 @@ export function buildCompactLandingSummaryLines(item: ActionCenterPreviewItem) {
   const managerResponse = item.managerResponse
 
   return [
+    !latestDecision && !currentStep && isClosedRouteStatus(item.status)
+      ? { label: 'Stand', value: getHistoricalRouteLabel(item) }
+      : null,
     !latestDecision && item.status === 'open-verzoek'
       ? { label: 'Verzoek', value: 'Wacht op eerste managerreactie' }
       : null,
@@ -3042,7 +3073,9 @@ function CompactLandingSummary({ item }: { item: ActionCenterPreviewItem }) {
 
   return (
     <div className="mt-4 rounded-[18px] border border-[#eadfce] bg-white px-4 py-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Laatste route-read</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+        {isClosedRouteStatus(item.status) ? 'Historische route-read' : 'Laatste route-read'}
+      </p>
       {overviewLineageLabel ? (
         <p className="mt-3 text-sm leading-6 text-[#7d7368]">{overviewLineageLabel}</p>
       ) : null}

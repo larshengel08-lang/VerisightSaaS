@@ -134,4 +134,94 @@ describe('action center preview display helpers', () => {
       { label: 'Stap', value: 'Leg eigenaar en eerste correctie in het MT-overleg vast.' },
     ])
   })
+
+  it('keeps historical routes readable even when they no longer expose a current step or decision', () => {
+    const item = {
+      id: 'route-closed',
+      code: 'ACT-1002',
+      title: 'Historische route',
+      summary: 'Deze route is bestuurlijk afgesloten.',
+      reason: 'Het effect bleef zichtbaar.',
+      sourceLabel: 'ExitScan',
+      teamId: 'operations',
+      teamLabel: 'Operations',
+      ownerName: 'Manager Operations',
+      ownerRole: 'Manager - Operations',
+      ownerSubtitle: 'Operations',
+      reviewOwnerName: 'HR lead',
+      priority: 'laag',
+      status: 'afgerond',
+      reviewDate: null,
+      expectedEffect: null,
+      reviewReason: null,
+      reviewOutcome: 'afronden',
+      reviewDateLabel: 'Nog niet gepland',
+      reviewRhythm: 'Maandelijks',
+      signalLabel: 'ExitScan - Exit voorjaar',
+      signalBody: 'De lokale correctie hield zichtbaar stand.',
+      nextStep: 'Nog niet van toepassing',
+      peopleCount: 38,
+      openSignals: [],
+      updates: [],
+      coreSemantics: {
+        route: {
+          campaignId: 'campaign-exit',
+          entryStage: 'active',
+          routeOpenedAt: '2026-04-20T09:00:00.000Z',
+          ownerAssignedAt: '2026-04-21T08:00:00.000Z',
+          routeStatus: 'afgerond',
+          reviewOutcome: 'afronden',
+          reviewCompletedAt: '2026-04-28T09:00:00.000Z',
+          outcomeRecordedAt: '2026-04-28T09:00:00.000Z',
+          outcomeSummary: 'De lokale correctie hield zichtbaar stand.',
+          intervention: null,
+          owner: 'Manager Operations',
+          expectedEffect: null,
+          reviewScheduledFor: null,
+          reviewReason: null,
+          blockedBy: null,
+        },
+        latestDecision: null,
+        actionProgress: {
+          currentStep: null,
+          nextStep: null,
+          expectedEffect: null,
+        },
+        reviewSemantics: {
+          reviewReason: null,
+          reviewQuestion: null,
+          reviewOutcomeRaw: 'afronden',
+          reviewOutcomeVisible: 'afronden',
+        },
+        actionFrame: {
+          whyNow: 'Het effect bleef zichtbaar.',
+          firstStep: null,
+          owner: 'Manager Operations',
+          expectedEffect: null,
+        },
+        resultLoop: {
+          whatWasTried: null,
+          whatWeObserved: null,
+          whatWasDecided: null,
+        },
+        resultProgression: [],
+        decisionHistory: [],
+        lineageSummary: {
+          overviewLabel: null,
+          backwardLabel: null,
+          backwardRouteId: null,
+          forwardLabel: null,
+          forwardRouteId: null,
+          detailLabels: [],
+        },
+        closingSemantics: {
+          status: 'afgerond',
+          summary: 'Afgerond voor nu',
+          historicalSummary: 'Deze route is bestuurlijk afgesloten.',
+        },
+      },
+    } satisfies ActionCenterPreviewItem
+
+    expect(buildCompactLandingSummaryLines(item)).toEqual([{ label: 'Stand', value: 'Afgerond voor nu' }])
+  })
 })
