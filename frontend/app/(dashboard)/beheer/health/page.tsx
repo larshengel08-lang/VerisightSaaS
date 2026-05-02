@@ -101,6 +101,59 @@ export default async function HealthPage() {
       </DashboardSection>
 
       <DashboardSection
+        title="Pilot operationalisering"
+        description="Kleine interne readinesslaag voor onboarding, support en go / no-go. Dit vervangt geen productverificatie, maar maakt de pilotmotion wel herhaalbaar."
+      >
+        <div className="grid gap-4 lg:grid-cols-3">
+          <DashboardPanel
+            title="Pilot playbook"
+            value="HR + manager"
+            body="Compacte uitleg van positioning, onboarding-light en de kritieke supportflow na scantruth."
+            tone="slate"
+          />
+          <DashboardPanel
+            title="Readiness checklist"
+            value="Go / no-go"
+            body="Bounded gate voor browserflows, authority-safe writes, lineage/readback en support/recovery."
+            tone="emerald"
+          />
+          <DashboardPanel
+            title="Commercial story"
+            value="Post-scan"
+            body="Action Center blijft de follow-throughlaag na scanuitkomsten, geen standalone tasking-product."
+            tone="slate"
+          />
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Pilotkritieke flow</h3>
+            <ul className="mt-4 space-y-2 text-sm text-slate-700">
+              <li>HR opent een route vanuit de post-scan handoff.</li>
+              <li>Manager ziet de open route en kan de bedoelde volgende stap opslaan.</li>
+              <li>Reload behoudt de opgeslagen state.</li>
+              <li>HR kan closeout, vervolg en lineage daarna nog bestuurlijk teruglezen.</li>
+            </ul>
+          </div>
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-6">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Pilotdocs</h3>
+            <p className="mt-3 text-sm text-slate-700">
+              Gebruik deze twee bounded documenten voor onboarding-light, support en go / no-go.
+            </p>
+            <div className="mt-4 space-y-3 text-sm text-slate-700">
+              <p className="font-semibold text-slate-900">Action Center pilot playbook</p>
+              <p className="rounded-2xl bg-slate-50 px-4 py-3 font-mono text-xs text-slate-600">
+                docs/ops/ACTION_CENTER_PILOT_PLAYBOOK.md
+              </p>
+              <p className="font-semibold text-slate-900">Action Center pilot readiness checklist</p>
+              <p className="rounded-2xl bg-slate-50 px-4 py-3 font-mono text-xs text-slate-600">
+                docs/ops/ACTION_CENTER_PILOT_READINESS_CHECKLIST.md
+              </p>
+            </div>
+          </div>
+        </div>
+      </DashboardSection>
+
+      <DashboardSection
         title="Recente evidence"
         description="De laatste bounded telemetryevents uit de live suite. Dit vervangt de oude sampletelling."
       >
