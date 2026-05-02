@@ -247,7 +247,7 @@ function ExitScanPage() {
               </div>
             </div>
             <div style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 28 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 14 }}>Varianten</div>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 14 }}>Kies baseline of ritmeroute</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft, marginBottom: 26, maxWidth: '54ch' }}>
                 Kies eerst of u een scherp vertrekbeeld nodig heeft of juist een terugkerend ritme om vertrek structureel te volgen.
               </p>
@@ -294,7 +294,7 @@ function ExitScanPage() {
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wat u ontvangt</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
-                U krijgt een leeslijn voor dashboard, rapport en eerste managementbespreking, zodat duidelijk wordt wat het vertrekbeeld nu zegt en waar gesprek of actie het eerst telt.
+                U krijgt een leeslijn voor dashboard, rapport en eerste managementbespreking.
               </p>
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'start' }}>
@@ -429,7 +429,7 @@ function RetentionScanPage() {
               </div>
             </div>
             <div style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 28 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 14 }}>Varianten</div>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 14 }}>Kies baseline of ritmeroute</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft, marginBottom: 26, maxWidth: '56ch' }}>
                 Kies eerst of u nu een scherp vroegsignaal nodig heeft of een ritme om behoudsdruk structureel te volgen.
               </p>
@@ -476,7 +476,7 @@ function RetentionScanPage() {
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wat u ontvangt</div>
               <p style={{ fontSize: 15, lineHeight: 1.72, color: T.inkSoft }}>
-                U krijgt een leeslijn voor retentiesignaal, rapport en eerste managementbespreking, zodat snel duidelijk wordt waar behoud bestuurlijk aandacht vraagt.
+                U krijgt een leeslijn voor retentiesignaal, rapport en eerste managementbespreking.
               </p>
             </div>
             <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'start' }}>

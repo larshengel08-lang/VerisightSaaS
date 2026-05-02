@@ -12,9 +12,10 @@ const primaryRoutes = [
     body:
       'Voor organisaties die scherp willen begrijpen waarom medewerkers vertrekken, welke patronen terugkomen en waar actie het eerst telt.',
     bullets: [
-      'Kies dit als vertrek al zichtbaar is',
-      'Geeft snel een eerste vertrekbeeld op groepsniveau',
-      'Leidt naar dashboard, rapport en eerste managementbespreking',
+      'Vertrek is al zichtbaar of terugkerend',
+      'U wilt begrijpen welke patronen terugkomen',
+      'U wilt een eerste managementbeeld van vertrekredenen en drivers',
+      'U zoekt een eerste handoff voor gesprek en vervolgsturing',
     ],
     href: '/producten/exitscan',
     accent: AC.deep,
@@ -22,13 +23,14 @@ const primaryRoutes = [
   },
   {
     title: 'RetentieScan',
-    eyebrow: 'Als behoud in actieve teams de vraag is',
+    eyebrow: 'Als behoud de vraag is',
     body:
       'Voor organisaties die eerder willen zien waar behoud onder druk komt te staan, voordat verloop zichtbaar oploopt en het gesprek te laat begint.',
     bullets: [
-      'Kies dit als u eerder wilt signaleren',
-      'Maakt behoudsdruk zichtbaar op groepsniveau',
-      'Leidt naar dashboard, rapport en eerste managementbespreking',
+      'U wilt eerder signaleren voordat verloop oploopt',
+      'U vermoedt behoudsdruk maar ziet nog geen volledig vertrekbeeld',
+      'U wilt groepsniveau vroegsignalering in plaats van terugblik',
+      'U wilt eerder zien waar gesprek en verificatie nodig zijn',
     ],
     href: '/producten/retentiescan',
     accent: 'oklch(0.50 0.12 188)' as string,
@@ -36,30 +38,12 @@ const primaryRoutes = [
   },
 ] as const
 
-const comparisonColumns = [
-  {
-    title: 'Kies ExitScan als',
-    bullets: [
-      'Vertrek is al zichtbaar of terugkerend',
-      'U wilt begrijpen welke patronen terugkomen',
-      'U wilt een eerste managementbeeld van vertrekredenen en drivers',
-      'U zoekt een eerste handoff voor gesprek en vervolgsturing',
-    ],
-    accent: AC.deep,
-  },
-  {
-    title: 'Kies RetentieScan als',
-    bullets: [
-      'U wilt eerder signaleren voordat verloop oploopt',
-      'U vermoedt behoudsdruk maar ziet nog geen volledig vertrekbeeld',
-      'U wilt groepsniveau vroegsignalering in plaats van terugblik',
-      'U wilt eerder zien waar gesprek en verificatie nodig zijn',
-    ],
-    accent: 'oklch(0.50 0.12 188)' as string,
-  },
-] as const
-
 const deferredRoutes = [
+  {
+    title: 'Combinatie',
+    body: 'Secundaire route na ExitScan of RetentieScan, alleen voor organisaties waar beide vragen tegelijk actief zijn.',
+    href: '/producten/combinatie',
+  },
   {
     title: 'Onboarding 30-60-90',
     body: 'Als vroege landing aandacht vraagt',
@@ -184,7 +168,7 @@ function HeroSection() {
                 textDecoration: 'none',
               }}
             >
-              Vergelijk ExitScan en RetentieScan
+              Bekijk ExitScan en RetentieScan
             </Link>
           </div>
         </div>
@@ -195,8 +179,31 @@ function HeroSection() {
 
 function PrimaryRoutesSection() {
   return (
-    <section style={{ background: T.paperSoft, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(52px,6vw,82px) 0' }}>
+    <section
+      id="route-vergelijking"
+      style={{ background: T.paperSoft, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(52px,6vw,82px) 0' }}
+    >
       <div style={SHELL}>
+        <div style={{ marginBottom: 30 }}>
+          <h2
+            style={{
+              color: T.ink,
+              fontFamily: FF,
+              fontSize: 'clamp(28px,3.2vw,40px)',
+              fontWeight: 400,
+              letterSpacing: '-.024em',
+              lineHeight: 1.06,
+              marginBottom: 14,
+              maxWidth: '14ch',
+            }}
+          >
+            Welke route past bij uw vraag?
+          </h2>
+          <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.74, maxWidth: '58ch' }}>
+            Kies ExitScan als u vertrek wilt duiden. Kies RetentieScan als u eerder wilt zien waar behoud onder druk
+            staat.
+          </p>
+        </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {primaryRoutes.map((route) => (
             <article
@@ -269,62 +276,6 @@ function PrimaryRoutesSection() {
   )
 }
 
-function ComparisonSection() {
-  return (
-    <section
-      id="route-vergelijking"
-      style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(50px,5.6vw,76px) 0' }}
-    >
-      <div style={SHELL}>
-        <h2
-          style={{
-            color: T.ink,
-            fontFamily: FF,
-            fontSize: 'clamp(28px,3.2vw,40px)',
-            fontWeight: 400,
-            letterSpacing: '-.024em',
-            lineHeight: 1.06,
-            marginBottom: 14,
-            maxWidth: '14ch',
-          }}
-        >
-          Welke route past bij uw vraag?
-        </h2>
-        <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.74, marginBottom: 34, maxWidth: '58ch' }}>
-          Gebruik ExitScan als u vertrek wilt duiden nadat het zichtbaar is. Gebruik RetentieScan als u eerder wilt
-          zien waar behoud onder druk komt te staan, voordat verloop zichtbaar oploopt.
-        </p>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {comparisonColumns.map((column) => (
-            <div key={column.title} style={{ borderTop: `1px solid ${T.rule}`, paddingTop: 18 }}>
-              <h3
-                style={{
-                  color: column.accent,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: '.16em',
-                  marginBottom: 16,
-                  textTransform: 'uppercase',
-                }}
-              >
-                {column.title}
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {column.bullets.map((bullet) => (
-                  <div key={bullet} style={{ alignItems: 'flex-start', color: T.inkSoft, display: 'flex', fontSize: 14, gap: 12, lineHeight: 1.66 }}>
-                    <div style={{ width: 5, height: 5, borderRadius: '50%', background: column.accent, flexShrink: 0, marginTop: 9 }} />
-                    {bullet}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
 function UtilityRoutesSection() {
   return (
     <section style={{ background: T.paperSoft, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(50px,5.8vw,76px) 0' }}>
@@ -344,17 +295,23 @@ function UtilityRoutesSection() {
             Andere routes komen later in beeld
           </h2>
           <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, maxWidth: '52ch' }}>
-            Kleinere vervolgroutes worden pas relevant als de volgende vraag echt speelt, niet als eerste productkeuze.
+            Pas als de volgende vraag echt speelt, komen kleinere vervolgroutes in beeld.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div style={{ borderTop: `1px solid ${T.rule}` }}>
           {deferredRoutes.map((route) => (
-            <div key={route.title} style={{ background: T.white, borderTop: `1px solid ${T.rule}`, padding: '20px 0 0' }}>
-              <h3 style={{ color: T.ink, fontFamily: FF, fontSize: 20, fontWeight: 400, marginBottom: 8 }}>{route.title}</h3>
-              <p style={{ color: T.inkMuted, fontSize: 13.5, lineHeight: 1.64, marginBottom: 14 }}>{route.body}</p>
-              <Link href={route.href} style={{ color: T.inkSoft, fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}>
-                Meer informatie
+            <div
+              key={route.title}
+              className="grid grid-cols-1 gap-3 py-4 md:grid-cols-[180px_minmax(0,1fr)_auto] md:items-center md:gap-4"
+              style={{
+                borderBottom: `1px solid ${T.rule}`,
+              }}
+            >
+              <h3 style={{ color: T.ink, fontSize: 14.5, fontWeight: 600 }}>{route.title}</h3>
+              <p style={{ color: T.inkMuted, fontSize: 13.5, lineHeight: 1.64 }}>{route.body}</p>
+              <Link href={route.href} style={{ color: T.inkSoft, fontSize: 12.5, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                Bekijk route
               </Link>
             </div>
           ))}
@@ -390,7 +347,6 @@ export function ProductenContent() {
     <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
       <HeroSection />
       <PrimaryRoutesSection />
-      <ComparisonSection />
       <UtilityRoutesSection />
       <ContactSection />
     </div>
