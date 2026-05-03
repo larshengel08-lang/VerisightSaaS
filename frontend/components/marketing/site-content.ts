@@ -367,38 +367,39 @@ export const processHighlights = [
 ] as const
 
 export const included = [
-  'Inrichting van de gekozen route',
+  'Compacte inrichting van de gekozen route',
   'Uitnodigingen en respondentflow waar relevant',
   'Dashboard en rapport in dezelfde leeslijn',
-  'Samenvatting voor HR, MT of directie',
+  'Samenvatting voor HR en management',
   'Privacy en interpretatie in gewone taal',
-  'Compacte productvorm zonder extra toolbeheer',
+  'Eerste opvolging waar de situatie daarom vraagt',
+  'Geen extra toolbeheer voor uw team',
 ] as const
 
 export const approachSteps = [
   {
-    title: '1. Routekeuze',
-    body: 'We bepalen welke route nu het meest logisch is: ExitScan, RetentieScan of pas later een kleinere vervolgroute.',
+    title: '1. Juiste route kiezen',
+    body: 'We bepalen welke route nu het meeste duidelijkheid geeft: ExitScan, RetentieScan of pas later een kleinere vervolgstap.',
   },
   {
-    title: '2. Setup',
-    body: 'We zetten de gekozen route strak op met de groepen, timing en input die nodig zijn voor een betrouwbare eerste read.',
+    title: '2. Compact opzetten',
+    body: 'We zetten de gekozen route op met de groepen, timing en input die nodig zijn voor een betrouwbare eerste lezing.',
   },
   {
-    title: '3. Uitvoering',
-    body: 'De route gaat live, uitnodigingen lopen waar relevant en de basis wordt bewaakt zonder extra toolbeheer voor uw team.',
+    title: '3. Route laten lopen',
+    body: 'De route gaat live en de basis wordt bewaakt, zonder extra toolbeheer voor uw team.',
   },
   {
-    title: '4. Eerste signalen',
-    body: 'De eerste signalen worden zichtbaar zodra de respons opbouwt, maar we blijven terughoudend tot het beeld stevig genoeg is.',
+    title: '4. Eerste signalen zichtbaar',
+    body: 'Zodra de respons opbouwt, worden de eerste signalen zichtbaar. We blijven terughoudend tot het beeld stevig genoeg is.',
   },
   {
-    title: '5. Dashboard en rapport',
-    body: 'Zodra het beeld sterk genoeg is, ontvangt u een dashboard en rapport in dezelfde leeslijn, met wat opvalt en wat eerst aandacht vraagt.',
+    title: '5. Dashboard en rapport lezen',
+    body: 'Als het beeld sterk genoeg is, ziet u in dashboard en rapport wat opvalt, wat eerst telt en waar gesprek nodig is.',
   },
   {
-    title: '6. Eventuele vervolgrichting',
-    body: 'Pas als de volgende vraag echt speelt, wordt een vervolgrichting logisch, zoals een bounded vervolgroute, Action Center of een volgende scan.',
+    title: '6. Eerste opvolging organiseren',
+    body: 'Waar relevant helpt Verisight om de eerste opvolging zichtbaar te maken, met eigenaar, eerste stap en reviewmoment.',
   },
 ] as const
 
