@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import {
   MarketingHeroIntro,
   MarketingHeroStage,
@@ -24,6 +24,7 @@ import {
   getMarketingProductBySlug,
   isActiveMarketingProduct,
   isCoreMarketingProduct,
+  isFollowOnMarketingProduct,
 } from '@/lib/marketing-products'
 import { getPrimarySampleShowcaseAsset } from '@/lib/sample-showcase-assets'
 
@@ -33,7 +34,9 @@ const exitSampleAsset = getPrimarySampleShowcaseAsset('exit')
 const retentionSampleAsset = getPrimarySampleShowcaseAsset('retention')
 
 export async function generateStaticParams() {
-  return ALL_MARKETING_PRODUCTS.map((product) => ({ slug: product.slug }))
+  return ALL_MARKETING_PRODUCTS
+    .filter((p) => p.portfolioRole !== 'follow_on_route' && p.portfolioRole !== 'portfolio_route')
+    .map((product) => ({ slug: product.slug }))
 }
 
 export async function generateMetadata({ params }: Props) {
@@ -77,6 +80,13 @@ export default async function ProductDetailPage({ params }: Props) {
 
   if (!product) notFound()
 
+  // Combinatie is no longer a buyer-facing route
+  if (product.portfolioRole === 'portfolio_route') notFound()
+
+  // Bounded follow-on routes are not standalone buyer-facing pages — redirect to
+  // the products overview where they are correctly contextualised as follow-ons.
+  if (isFollowOnMarketingProduct(product)) redirect('/producten')
+
   const structuredData = getProductStructuredData(product)
 
   return (
@@ -90,12 +100,7 @@ export default async function ProductDetailPage({ params }: Props) {
       ))}
       {slug === 'retentiescan' ? <RetentionScanPage /> : null}
       {slug === 'exitscan' ? <ExitScanPage /> : null}
-      {slug === 'pulse' ? <PulsePage /> : null}
-      {slug === 'teamscan' ? <TeamScanPage /> : null}
-      {slug === 'onboarding-30-60-90' ? <OnboardingPage /> : null}
-      {slug === 'leadership-scan' ? <LeadershipScanPage /> : null}
-      {slug === 'combinatie' ? <CombinatiePage /> : null}
-      {!['retentiescan', 'exitscan', 'pulse', 'teamscan', 'onboarding-30-60-90', 'leadership-scan', 'combinatie'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
+      {!['retentiescan', 'exitscan'].includes(slug) ? <UpcomingProductPage slug={slug} /> : null}
     </>
   )
 }
@@ -296,11 +301,6 @@ function ExitScanPage() {
                       {item}
                     </div>
                   ))}
-                </div>
-                <div id="segment-deep-dive" style={{ marginTop: 24, padding: '18px 20px', border: '1px solid rgba(255,255,255,.12)', background: 'rgba(255,255,255,.04)' }}>
-                  <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkFaint }}>Add-on</span>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginTop: 6, marginBottom: 6 }}>Segment Deep Dive</div>
-                  <p style={{ fontSize: 12.5, color: 'rgba(247,245,241,.6)', lineHeight: 1.6 }}>Verdieping op een specifieke afdeling, functiegroep of locatie. Beschikbaar als er voldoende respondenten en metadata voor zijn.</p>
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignSelf: 'center', minWidth: 200 }}>

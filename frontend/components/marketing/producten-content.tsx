@@ -30,18 +30,6 @@ const mainRoutes = [
     href: '/producten/retentiescan',
     chip: 'Kernroute',
   },
-  {
-    num: '03',
-    tag: 'Portfolioroute',
-    title: 'Combinatie',
-    accent: 'oklch(0.46 0.12 220)' as string,
-    accentMid: 'oklch(0.62 0.10 220)' as string,
-    accentFaint: 'oklch(0.972 0.012 220)' as string,
-    desc: 'Verbind vertrekduiding en vroegsignalering in een gedeelde managementtaal. Voor organisaties met beide vraagstukken.',
-    bullets: ['ExitScan + RetentieScan', 'Gedeelde managementlijn', 'Geen derde kernproduct'],
-    href: '/producten/combinatie',
-    chip: 'Portfolioroute',
-  },
 ] as const
 
 const followOnRoutes = [
@@ -71,7 +59,7 @@ function HeroSection() {
           </div>
           <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
             <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, margin: '28px 0 36px' }}>
-              ExitScan helpt vertrek achteraf begrijpen. RetentieScan helpt eerder signaleren waar behoud onder druk staat. Combinatie en vervolgroutes blijven bewust kleiner.
+              ExitScan helpt vertrek achteraf begrijpen. RetentieScan helpt eerder signaleren waar behoud onder druk staat. Vervolgroutes blijven bewust kleiner.
             </p>
           </div>
           <div style={{ animation: 'slideUpFade .7s cubic-bezier(.16,1,.3,1) .44s both', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -100,7 +88,7 @@ function CoreRoutesSection() {
       <div style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: FF, fontSize: 260, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: .4 }}>02</div>
       <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
         <SectionMark num="02" label="Kernproducten" inView={sInView} />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-0" style={{ borderBottom: `1px solid ${T.rule}` }}>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-0" style={{ borderBottom: `1px solid ${T.rule}` }}>
           {mainRoutes.map((route, i) => (
             <Reveal key={i} delay={.06 + i * .09}>
               <div style={{ padding: 'clamp(20px,3vw,40px)', paddingBottom: 36, borderLeft: i > 0 ? `1px solid ${T.rule}` : 'none', position: 'relative' }}>
@@ -177,7 +165,7 @@ function FollowOnSection() {
           <Reveal delay={.1}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
               <p style={{ fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
-                Buyer-facing blijft Verisight draaien om twee kernproducten en een bewust opgebouwde portfolioroute.
+                Buyer-facing blijft Verisight draaien om twee kernproducten met bewuste, kleinere vervolgroutes.
               </p>
               <Link href="/vertrouwen" style={{ fontSize: 13, fontWeight: 600, color: T.teal, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                 Meer over trust en privacy <Arrow />
