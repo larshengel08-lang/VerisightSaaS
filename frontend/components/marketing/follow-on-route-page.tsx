@@ -1,13 +1,7 @@
 import Link from 'next/link'
-import { MarketingCalloutBand } from '@/components/marketing/marketing-callout-band'
-import {
-  MarketingHeroIntro,
-  MarketingHeroStage,
-  MarketingHeroSupport,
-} from '@/components/marketing/marketing-hero'
-import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
-import { MarketingSection } from '@/components/marketing/marketing-section'
-import { SectionHeading } from '@/components/marketing/section-heading'
+import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
+import { PublicFooter } from '@/components/marketing/public-footer'
+import { PublicHeader } from '@/components/marketing/public-header'
 import { buildContactHref } from '@/lib/contact-funnel'
 import type { FollowOnRouteContent } from '@/lib/follow-on-route-content'
 
@@ -16,147 +10,383 @@ interface FollowOnRoutePageProps {
 }
 
 export function FollowOnRoutePage({ route }: FollowOnRoutePageProps) {
-  const isCombination = route.slug === 'combinatie'
+  const palette = getRoutePalette(route.slug)
+  const ctaHref = buildContactHref({
+    routeInterest: route.routeInterest,
+    ctaSource: `product_${route.slug}_hero`,
+  })
 
   return (
-    <MarketingPageShell
-      theme={isCombination ? 'combination' : 'support'}
-      pageType="product"
-      ctaHref={buildContactHref({
-        routeInterest: route.routeInterest,
-        ctaSource: `product_${route.slug}_primary_cta`,
-      })}
-      ctaLabel="Plan een kennismaking"
-      heroIntro={
-        <MarketingHeroIntro>
-          <p className={`marketing-hero-eyebrow ${isCombination ? 'text-[#3C8D8A]' : 'text-[#8A6B2F]'}`}>{route.title}</p>
-          <h1 className="marketing-hero-title marketing-hero-title-detail font-display text-[var(--ink)]">
-            {route.heroTitle}
-          </h1>
-          <p className="marketing-hero-copy text-[var(--text)]">{route.heroBody}</p>
-        </MarketingHeroIntro>
-      }
-      heroStage={
-        <MarketingHeroStage className="h-full">
-          <div className="space-y-5">
-            <span className="marketing-stage-tag border border-white/12 bg-white/6 text-[#DCEFEA]">Begrensde vervolgronde</span>
-            <div className="rounded-[1.25rem] border border-white/10 bg-white/5 px-5 py-5">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[#DCEFEA]">Korte positionering</p>
-              <p className="mt-3 text-sm leading-7 text-slate-200">{route.positioning}</p>
-            </div>
-            <div className="space-y-3">
-              {route.whenLogical.map((item) => (
-                <div
-                  key={item}
-                  className="rounded-[1.15rem] border border-white/10 bg-white/5 px-4 py-3 text-sm leading-7 text-slate-200"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        </MarketingHeroStage>
-      }
-      heroSupport={
-        <MarketingHeroSupport>
-          <div className="marketing-support-note">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Wat u krijgt</p>
-            <p className="mt-2 text-sm leading-7 text-[var(--text)]">{route.whatYouGet[0]}</p>
-          </div>
-          <div className="marketing-support-note">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Waarom later</p>
-            <p className="mt-2 text-sm leading-7 text-[var(--text)]">{route.whyLater}</p>
-          </div>
-          <div className="marketing-link-grid">
-            <Link
-              href={route.relatedRouteHref}
-              className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
-            >
-              {route.relatedRouteLabel}
-            </Link>
-            <Link
-              href="/producten"
-              className="marketing-link-card text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950"
-            >
-              Bekijk alle routes
-            </Link>
-          </div>
-        </MarketingHeroSupport>
-      }
-    >
-      <MarketingSection tone="surface">
-        <SectionHeading
-          eyebrow="Wanneer logisch"
-          title={`Gebruik ${route.title} pas wanneer de volgende vraag echt smaller en gerichter is.`}
-          description={route.positioning}
-        />
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="marketing-panel p-7 md:p-8">
-            <ul className="space-y-4">
-              {route.whenLogical.map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm leading-7 text-[var(--text)]">
-                  <span className={`mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full ${isCombination ? 'bg-[#3C8D8A]' : 'bg-[#8A6B2F]'}`} />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+    <div style={{ background: palette.paper, color: palette.ink, overflowX: 'hidden' }}>
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
+      <main>
+        <section
+          style={{
+            background: palette.white,
+            padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)',
+            borderBottom: `1px solid ${palette.rule}`,
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
           <div
-            className={`marketing-route-card-dark ${
-              isCombination
-                ? 'bg-[linear-gradient(180deg,#1b2e45_0%,#132033_100%)]'
-                : 'bg-[linear-gradient(180deg,#3F2B08_0%,#241507_100%)]'
-            }`}
-          >
-            <p className={`text-[0.68rem] font-semibold uppercase tracking-[0.18em] ${isCombination ? 'text-[#DCEFEA]' : 'text-[#F6E7C1]'}`}>
-              Waarom later
-            </p>
-            <h2 className="mt-4 text-[clamp(1.7rem,2.7vw,2.4rem)] font-light leading-[1.08] tracking-[-0.03em] text-[#F7F5F1]">
-              Geen eerste kernroute.
-            </h2>
-            <p className="mt-4 text-sm leading-7 text-[rgba(247,245,241,0.76)]">{route.whyLater}</p>
-            <div className="mt-6 rounded-[1.15rem] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-7 text-[rgba(247,245,241,0.84)]">
-              Start dus eerst scherper met ExitScan of RetentieScan wanneer die kernvraag nog niet helder is.
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              backgroundImage: `linear-gradient(${palette.rule}60 1px,transparent 1px),linear-gradient(90deg,${palette.rule}60 1px,transparent 1px)`,
+              backgroundSize: '72px 72px',
+              opacity: 0.35,
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: -80,
+              right: -60,
+              width: 500,
+              height: 500,
+              background: `radial-gradient(circle,${palette.accentSoft} 0%,transparent 65%)`,
+              pointerEvents: 'none',
+            }}
+          />
+          <div style={{ ...SHELL, position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  letterSpacing: '.18em',
+                  textTransform: 'uppercase',
+                  color: palette.accent,
+                }}
+              >
+                {route.title}
+              </span>
+              <div style={{ flex: 1, height: '1px', background: palette.rule, maxWidth: 200 }} />
+              <Link href="/producten" style={{ fontSize: 11, color: palette.inkMuted, textDecoration: 'none' }}>
+                Terug naar producten
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_360px] items-start">
+              <div>
+                <h1
+                  style={{
+                    fontFamily: FF,
+                    fontWeight: 400,
+                    fontSize: 'clamp(42px,5.5vw,76px)',
+                    lineHeight: 0.97,
+                    letterSpacing: '-.032em',
+                    color: palette.ink,
+                    maxWidth: '12ch',
+                  }}
+                >
+                  {route.heroTitle}
+                </h1>
+                <p
+                  style={{
+                    fontSize: 16.5,
+                    lineHeight: 1.72,
+                    color: palette.inkSoft,
+                    maxWidth: '48ch',
+                    margin: '26px 0 36px',
+                  }}
+                >
+                  {route.heroBody}
+                </p>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <a
+                    href="#kennismaking"
+                    style={{
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      fontSize: 14.5,
+                      fontWeight: 600,
+                      padding: '12px 28px',
+                      color: '#fff',
+                      background: palette.ink,
+                    }}
+                  >
+                    Plan een eerste route-inschatting
+                  </a>
+                  <Link
+                    href="/producten"
+                    style={{
+                      textDecoration: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      fontSize: 14,
+                      fontWeight: 500,
+                      padding: '11px 24px',
+                      color: palette.inkSoft,
+                      border: `1px solid ${palette.rule}`,
+                    }}
+                  >
+                    Bekijk producten
+                  </Link>
+                </div>
+              </div>
+              <div>
+                <div style={{ padding: '28px', background: palette.paperSoft, border: `1px solid ${palette.rule}` }}>
+                  <div
+                    style={{
+                      fontSize: 9.5,
+                      fontWeight: 600,
+                      letterSpacing: '.14em',
+                      textTransform: 'uppercase',
+                      color: palette.accent,
+                      marginBottom: 16,
+                    }}
+                  >
+                    Begrensde vervolgronde
+                  </div>
+                  {[
+                    route.rowSummary,
+                    route.whatYouGet[0],
+                    route.whyLater,
+                  ].map((item, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 10,
+                        padding: '9px 0',
+                        borderTop: i > 0 ? `1px solid ${palette.rule}` : 'none',
+                        fontSize: 13,
+                        color: palette.inkSoft,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      <div style={{ width: 4, height: 4, background: palette.accentSoftDot, flexShrink: 0, marginTop: 5 }} />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </MarketingSection>
+        </section>
 
-      <MarketingSection tone="tint">
-        <SectionHeading eyebrow="Wat u ontvangt" title={`Wat ${route.title} concreet oplevert.`} description={route.receiveIntro} />
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
-          {route.whatYouGet.map((item) => (
-            <div key={item} className="marketing-feature-card">
-              <p className="text-sm leading-7 text-[var(--text)]">{item}</p>
+        <section style={{ background: palette.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${palette.rule}` }}>
+          <div style={SHELL}>
+            <div style={{ marginBottom: 36 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: palette.accent, marginBottom: 16 }}>
+                Wanneer logisch
+              </div>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {route.whenLogical.map((text) => (
+                  <div
+                    key={text}
+                    style={{
+                      alignItems: 'flex-start',
+                      background: palette.white,
+                      border: `1px solid ${palette.rule}`,
+                      display: 'flex',
+                      gap: 12,
+                      padding: '18px 20px',
+                    }}
+                  >
+                    <div style={{ width: 6, height: 6, background: palette.accent, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
+                    <p style={{ fontSize: 14, lineHeight: 1.65, color: palette.inkSoft }}>{text}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-      </MarketingSection>
+            <div style={{ borderTop: `1px solid ${palette.rule}`, paddingTop: 28 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: palette.accent, marginBottom: 14 }}>
+                Waarom later
+              </div>
+              <p style={{ fontSize: 15, lineHeight: 1.72, color: palette.inkSoft, marginBottom: 26, maxWidth: '54ch' }}>
+                {route.whyLater}
+              </p>
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                {[
+                  {
+                    label: 'Begrensde vervolgronde',
+                    accent: palette.accent,
+                    points: [
+                      route.positioning,
+                      route.whenLogical[0],
+                      route.whenLogical[1],
+                    ],
+                  },
+                  {
+                    label: 'Geen eerste kernroute',
+                    accent: palette.inkMuted,
+                    points: [
+                      route.whyLater,
+                      `Gebruik ${route.title} pas zodra de volgende vraag smaller en gerichter wordt.`,
+                      `Start eerst scherper met ${route.relatedRouteLabel.replace('Bekijk ', '')} als de kernvraag nog niet helder staat.`,
+                    ],
+                  },
+                ].map(({ label, accent, points }) => (
+                  <div
+                    key={label}
+                    style={{
+                      padding: '28px',
+                      background: palette.white,
+                      border: `1px solid ${palette.rule}`,
+                      borderTop: `3px solid ${accent}`,
+                    }}
+                  >
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: palette.ink, marginBottom: 16 }}>{label}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {points.map((p) => (
+                        <div key={p} style={{ display: 'flex', gap: 10, fontSize: 13, color: palette.inkSoft, lineHeight: 1.6 }}>
+                          <div style={{ width: 4, height: 4, background: accent, flexShrink: 0, marginTop: 5 }} />
+                          {p}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <MarketingSection tone="plain">
-        <div className="marketing-panel-soft rounded-[1.5rem] border border-[var(--border)] bg-white/80 p-7 md:p-8">
-          <p className="text-[0.84rem] font-medium uppercase tracking-[0.18em] text-[var(--petrol)]">Bounded vervolg</p>
-          <h2 className="mt-3 text-[clamp(2rem,3vw,3rem)] font-light leading-[1.03] tracking-[-0.04em] text-[var(--ink)]">
-            Deze route komt pas in beeld nadat een eerste managementvraag al richting heeft gekregen.
-          </h2>
-          <p className="mt-4 max-w-[60rem] text-[1rem] leading-8 text-[var(--text)]">{route.whyLater}</p>
-        </div>
-      </MarketingSection>
+        <section style={{ background: palette.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${palette.rule}` }}>
+          <div style={SHELL}>
+            <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
+              <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: palette.accent, marginBottom: 16 }}>
+                Wat u ontvangt
+              </div>
+              <p style={{ fontSize: 15, lineHeight: 1.72, color: palette.inkSoft }}>{route.receiveIntro}</p>
+            </div>
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_auto]" style={{ alignItems: 'start' }}>
+              <div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {route.whatYouGet.map((item, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: 'flex',
+                        gap: 12,
+                        padding: '14px 16px',
+                        background: palette.paperSoft,
+                        border: `1px solid ${palette.rule}`,
+                        fontSize: 13.5,
+                        color: palette.inkSoft,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      <div style={{ width: 4, height: 4, background: palette.accentSoftDot, flexShrink: 0, marginTop: 5 }} />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+                <div id="bounded-route-note" style={{ marginTop: 22, padding: '18px 20px', border: `1px solid ${palette.rule}`, background: palette.white }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: palette.inkFaint, marginBottom: 8 }}>
+                    Begrensde vervolgronde
+                  </div>
+                  <p style={{ fontSize: 13.5, color: palette.inkMuted, lineHeight: 1.65 }}>{route.whyLater}</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minWidth: 220 }}>
+                <a
+                  href="#kennismaking"
+                  style={{
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 7,
+                    fontSize: 14,
+                    fontWeight: 600,
+                    padding: '14px 28px',
+                    color: '#fff',
+                    background: palette.ink,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Plan een eerste route-inschatting
+                </a>
+                <Link
+                  href="/producten"
+                  style={{
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    padding: '12px 24px',
+                    color: palette.inkSoft,
+                    border: `1px solid ${palette.rule}`,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Bekijk producten
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <MarketingSection tone="surface">
-        <MarketingCalloutBand
-          eyebrow="Volgende stap"
-          title={`Toets of ${route.title} nu de volgende logische route is.`}
+        <MarketingClosingCta
+          href={buildContactHref({ routeInterest: route.routeInterest, ctaSource: `product_${route.slug}_form` })}
+          showSectionMark={false}
+          backdropNumber={null}
+          title={`Toets of ${route.title}`}
+          accentTitle="nu de juiste vervolgstap is."
           body={route.ctaBody}
-          primaryHref={buildContactHref({
-            routeInterest: route.routeInterest,
-            ctaSource: `product_${route.slug}_closing_cta`,
-          })}
-          primaryLabel="Plan een kennismaking"
-          secondaryHref="/producten"
-          secondaryLabel="Bekijk alle routes"
+          buttonLabel="Plan een eerste route-inschatting"
+          note="U krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
         />
-      </MarketingSection>
-    </MarketingPageShell>
+      </main>
+      <PublicFooter />
+    </div>
   )
+}
+
+const FF = 'var(--font-fraunces), serif'
+const SHELL = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
+
+function getRoutePalette(slug: FollowOnRouteContent['slug']) {
+  const base = {
+    paper: 'oklch(0.978 0.010 62)',
+    paperSoft: 'oklch(0.956 0.018 60)',
+    white: '#FFFCF8',
+    ink: 'oklch(0.16 0.012 250)',
+    inkSoft: 'oklch(0.32 0.010 250)',
+    inkMuted: 'oklch(0.52 0.008 250)',
+    inkFaint: 'oklch(0.70 0.006 250)',
+    rule: 'oklch(0.875 0.012 62)',
+    accentSoftDot: 'oklch(0.76 0.14 53)',
+  }
+
+  if (slug === 'leadership-scan') {
+    return {
+      ...base,
+      accent: 'oklch(0.50 0.12 188)',
+      accentSoft: 'oklch(0.972 0.018 185)',
+    }
+  }
+
+  if (slug === 'pulse') {
+    return {
+      ...base,
+      accent: 'oklch(0.45 0.15 85)',
+      accentSoft: 'oklch(0.965 0.03 95)',
+      accentSoftDot: 'oklch(0.78 0.13 88)',
+    }
+  }
+
+  if (slug === 'combinatie') {
+    return {
+      ...base,
+      accent: 'oklch(0.45 0.10 225)',
+      accentSoft: 'oklch(0.962 0.02 230)',
+      accentSoftDot: 'oklch(0.72 0.08 225)',
+    }
+  }
+
+  return {
+    ...base,
+    accent: 'oklch(0.45 0.18 50)',
+    accentSoft: 'oklch(0.95 0.045 50)',
+  }
 }

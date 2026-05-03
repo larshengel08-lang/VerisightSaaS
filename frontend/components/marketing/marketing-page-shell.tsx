@@ -17,16 +17,11 @@ interface MarketingPageShellProps {
 }
 
 const themeMap: Record<MarketingPageTheme, string> = {
-  neutral:
-    'bg-[radial-gradient(circle_at_top_left,rgba(220,239,234,0.85)_0%,transparent_24%),radial-gradient(circle_at_bottom_right,rgba(27,46,69,0.08)_0%,transparent_28%),linear-gradient(180deg,#f7f5f1_0%,#f7f5f1_38%,#ffffff_100%)]',
-  exit:
-    'bg-[radial-gradient(circle_at_top_left,rgba(60,141,138,0.14)_0%,transparent_24%),radial-gradient(circle_at_bottom_right,rgba(27,46,69,0.08)_0%,transparent_26%),linear-gradient(180deg,#f7f5f1_0%,#f4f7f6_42%,#ffffff_100%)]',
-  retention:
-    'bg-[radial-gradient(circle_at_top_left,rgba(220,239,234,0.95)_0%,transparent_24%),radial-gradient(circle_at_bottom_right,rgba(35,75,87,0.08)_0%,transparent_26%),linear-gradient(180deg,#f7f5f1_0%,#f2f8f6_42%,#ffffff_100%)]',
-  combination:
-    'bg-[radial-gradient(circle_at_top_left,rgba(220,239,234,0.9)_0%,transparent_24%),radial-gradient(circle_at_bottom_right,rgba(27,46,69,0.08)_0%,transparent_26%),linear-gradient(180deg,#f7f5f1_0%,#f4f7f6_42%,#ffffff_100%)]',
-  support:
-    'bg-[radial-gradient(circle_at_top_left,rgba(220,239,234,0.45)_0%,transparent_24%),radial-gradient(circle_at_bottom_right,rgba(27,46,69,0.05)_0%,transparent_26%),linear-gradient(180deg,#f7f5f1_0%,#f6f5f2_44%,#ffffff_100%)]',
+  neutral: 'bg-[#FFFCF8]',
+  exit: 'bg-[#FFFCF8]',
+  retention: 'bg-[#FFFCF8]',
+  combination: 'bg-[#FFFCF8]',
+  support: 'bg-[#FFFCF8]',
 }
 
 export function MarketingPageShell({

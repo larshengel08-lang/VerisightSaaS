@@ -92,7 +92,7 @@ html {
 
 body {
   margin: 0;
-  background: var(--background);
+  background: #FFFCF8;
   color: var(--foreground);
   font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
   text-rendering: optimizeLegibility;
@@ -168,11 +168,11 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-section-surface {
-    background: var(--bg);
+    background: #FFFCF8;
   }
 
   .marketing-section-tint {
-    background: var(--surface);
+    background: #FFFCF8;
   }
 
   .marketing-section-dark {
@@ -888,7 +888,7 @@ details > summary::-webkit-details-marker {
 
   .marketing-detail-hero {
     border-bottom: 1px solid var(--border);
-    background: var(--bg);
+    background: #FFFCF8;
   }
 
   .marketing-detail-hero-shell {

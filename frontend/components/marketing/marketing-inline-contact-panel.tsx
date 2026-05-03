@@ -26,10 +26,10 @@ export function MarketingInlineContactPanel({
   return (
     <div
       id={id}
-      className="marketing-panel overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[linear-gradient(180deg,#fffdf9_0%,#fbfaf8_100%)] p-7 md:p-10"
+      className="marketing-panel overflow-hidden rounded-[1.5rem] border border-[var(--border)] bg-[linear-gradient(180deg,#fffdf9_0%,#fbfaf8_100%)] p-6 md:p-8"
     >
       <div className="mx-auto max-w-[980px]">
-        <div className="mb-8 max-w-[42rem] border-b border-[var(--border)] pb-5">
+        <div className="mb-6 max-w-[40rem] pb-1">
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">{eyebrow}</p>
             {badge != null && (
@@ -38,12 +38,12 @@ export function MarketingInlineContactPanel({
               </div>
             )}
           </div>
-          <h2 className="mt-4 text-[clamp(2rem,3vw,3rem)] font-light leading-[1.04] tracking-[-0.03em] text-[var(--ink)]">
+          <h2 className="mt-3 text-[clamp(1.85rem,2.6vw,2.65rem)] font-light leading-[1.04] tracking-[-0.03em] text-[var(--ink)]">
             {title}
           </h2>
-          <p className="mt-4 max-w-[38rem] text-[1rem] leading-7 text-[var(--text)]">{body}</p>
+          <p className="mt-3 max-w-[36rem] text-[0.95rem] leading-7 text-[var(--text)]">{body}</p>
         </div>
-        <div className="rounded-[1.7rem] border border-[var(--border)] bg-white p-5 shadow-[0_24px_60px_rgba(22,34,56,0.08)] sm:p-7 md:p-8">
+        <div className="rounded-[1.45rem] border border-[var(--border)] bg-white p-5 shadow-[0_16px_34px_rgba(22,34,56,0.05)] sm:p-6 md:p-7">
           <Suspense
             fallback={
               <div className="rounded-[1.6rem] border border-[var(--border)] bg-[var(--surface)] p-6 text-sm leading-7 text-[var(--text)]">
@@ -55,6 +55,7 @@ export function MarketingInlineContactPanel({
               surface="light"
               defaultRouteInterest={defaultRouteInterest}
               defaultCtaSource={defaultCtaSource}
+              variant="simplified"
               questionPlaceholder={contactQuestionPlaceholder}
             />
           </Suspense>

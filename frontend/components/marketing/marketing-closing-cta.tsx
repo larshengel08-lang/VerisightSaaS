@@ -30,6 +30,7 @@ export function MarketingClosingCta({
   note,
   showSectionMark = true,
 }: MarketingClosingCtaProps) {
+  void backdropNumber
   return (
     <section
       id={id}
@@ -40,28 +41,6 @@ export function MarketingClosingCta({
         position: 'relative',
       }}
     >
-      {backdropNumber ? (
-        <div
-          aria-hidden
-          style={{
-            color: T.rule,
-            fontFamily: FF,
-            fontSize: 'clamp(160px, 25vw, 320px)',
-            fontWeight: 400,
-            lineHeight: 1,
-            opacity: 0.38,
-            pointerEvents: 'none',
-            position: 'absolute',
-            right: 'clamp(-8px, 3vw, 20px)',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            userSelect: 'none',
-          }}
-        >
-          {backdropNumber}
-        </div>
-      ) : null}
-
       <div style={{ ...SHELL, position: 'relative' }}>
         {showSectionMark ? <SectionMark num={sectionIndex} label={sectionLabel} inView /> : null}
 
@@ -117,5 +96,4 @@ export function MarketingClosingCta({
     </section>
   )
 }
-
 const ACcent = 'oklch(0.45 0.18 50)'

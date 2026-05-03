@@ -35,6 +35,7 @@ interface ContactFormProps {
   defaultRouteInterest?: ContactRouteInterest
   defaultCtaSource?: string
   mode?: 'full' | 'compact'
+  variant?: 'default' | 'simplified'
   questionPlaceholder?: string
 }
 
@@ -61,6 +62,7 @@ export function ContactForm({
   defaultRouteInterest = 'exitscan',
   defaultCtaSource = 'website_contact_form',
   mode = 'full',
+  variant = 'default',
   questionPlaceholder,
 }: ContactFormProps) {
   const searchParams = useSearchParams()
@@ -76,6 +78,7 @@ export function ContactForm({
 
   const isLight = surface === 'light'
   const isCompact = mode === 'compact'
+  const isSimplified = variant === 'simplified'
 
   useEffect(() => {
     const sourceFromQuery = searchParams.get('cta_source')
@@ -200,9 +203,13 @@ export function ContactForm({
   const buttonClass = isLight
     ? 'bg-[#3C8D8A] hover:bg-[#2d6e6b]'
     : 'bg-[#3C8D8A] hover:bg-[#2d6e6b]'
-  const panelSpacingClass = isCompact ? 'mb-5 rounded-[1.35rem] px-4 py-4 leading-6 sm:px-5 sm:py-5 sm:leading-7' : 'mb-4 rounded-[1.2rem] px-0 py-0 leading-7'
-  const fieldGridClass = isCompact ? 'grid gap-4 sm:grid-cols-2' : 'grid gap-5 sm:grid-cols-2'
-  const fieldClass = `block min-w-0 w-full rounded-2xl border px-4 ${isCompact ? 'py-2.5 sm:py-3' : 'py-3'} text-sm outline-none transition focus:ring-2 ${inputClass}`
+  const panelSpacingClass = isCompact
+    ? 'mb-5 rounded-[1.35rem] px-4 py-4 leading-6 sm:px-5 sm:py-5 sm:leading-7'
+    : isSimplified
+      ? 'mb-2 rounded-[1.2rem] px-0 py-0 leading-7'
+      : 'mb-4 rounded-[1.2rem] px-0 py-0 leading-7'
+  const fieldGridClass = isCompact ? 'grid gap-4 sm:grid-cols-2' : isSimplified ? 'grid gap-4 sm:grid-cols-2' : 'grid gap-5 sm:grid-cols-2'
+  const fieldClass = `block min-w-0 w-full rounded-2xl border px-4 ${isCompact || isSimplified ? 'py-2.5 sm:py-3' : 'py-3'} text-sm outline-none transition focus:ring-2 ${inputClass}`
   const billingReadinessCopy = getBillingReadinessCopy({
     contractSigned: false,
     paymentMethodConfirmed: false,
@@ -210,15 +217,17 @@ export function ContactForm({
 
   return (
     <form onSubmit={handleSubmit} className={shellClass}>
-      <div className={panelSpacingClass}>
-        <p className={`text-sm ${isLight ? 'text-slate-700' : 'text-slate-200'} ${isCompact ? 'leading-6' : 'leading-7'}`}>
-          {isCompact
-            ? 'Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke eerste output daarna logisch is.'
-            : 'Gebruik dit formulier om te bepalen welke eerste route nu het best past en welke eerste output daarna logisch is.'}
-        </p>
-      </div>
+      {!isSimplified ? (
+        <div className={panelSpacingClass}>
+          <p className={`text-sm ${isLight ? 'text-slate-700' : 'text-slate-200'} ${isCompact ? 'leading-6' : 'leading-7'}`}>
+            {isCompact
+              ? 'Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke eerste output daarna logisch is.'
+              : 'Gebruik dit formulier om te bepalen welke eerste route nu het best past en welke eerste output daarna logisch is.'}
+          </p>
+        </div>
+      ) : null}
 
-      {!isCompact ? (
+      {!isCompact && !isSimplified ? (
         <div className="mb-6 grid gap-3 sm:grid-cols-3">
           {contactTrustSignals.map((signal) => (
             <span
@@ -298,27 +307,29 @@ export function ContactForm({
           </select>
         </div>
 
-        <div className={isCompact ? '' : 'sm:col-span-2'}>
-          <label htmlFor="routeInterest" className={`mb-2 block text-sm font-medium ${labelClass}`}>
-            {isCompact ? 'Primaire managementvraag' : 'Welke route lijkt nu het best te passen?'}
-          </label>
-          <select
-            id="routeInterest"
-            required
-            value={form.routeInterest}
-            onChange={(event) => updateField('routeInterest', normalizeContactRouteInterest(event.target.value))}
-            className={fieldClass}
-          >
-            {CONTACT_ROUTE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label} - {option.description}
-              </option>
-            ))}
-          </select>
-        </div>
+        {!isSimplified ? (
+          <div className={isCompact ? '' : 'sm:col-span-2'}>
+            <label htmlFor="routeInterest" className={`mb-2 block text-sm font-medium ${labelClass}`}>
+              {isCompact ? 'Primaire managementvraag' : 'Welke route lijkt nu het best te passen?'}
+            </label>
+            <select
+              id="routeInterest"
+              required
+              value={form.routeInterest}
+              onChange={(event) => updateField('routeInterest', normalizeContactRouteInterest(event.target.value))}
+              className={fieldClass}
+            >
+              {CONTACT_ROUTE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label} - {option.description}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
 
         {!isCompact ? (
-          <div className="sm:col-span-2">
+          <div className={isSimplified ? '' : 'sm:col-span-2'}>
             <label htmlFor="desiredTiming" className={`mb-2 block text-sm font-medium ${labelClass}`}>
               Wanneer wil je de eerste stap zetten?
             </label>
@@ -339,20 +350,26 @@ export function ContactForm({
         ) : null}
       </div>
 
-      <div className={isCompact ? 'mt-4' : 'mt-5'}>
+      <div className={isCompact ? 'mt-4' : isSimplified ? 'mt-4' : 'mt-5'}>
         <label htmlFor="currentQuestion" className={`mb-2 block text-sm font-medium ${labelClass}`}>
-          {isCompact ? 'Korte toelichting (optioneel)' : 'Wat wil je nu vooral begrijpen van behoud of uitstroom?'}
+          {isCompact
+            ? 'Korte toelichting (optioneel)'
+            : isSimplified
+              ? 'Wat vraagt nu het eerst duidelijkheid?'
+              : 'Wat wil je nu vooral begrijpen van behoud of uitstroom?'}
         </label>
         <textarea
           id="currentQuestion"
           required={!isCompact}
-          rows={isCompact ? 2 : 5}
+          rows={isCompact ? 2 : isSimplified ? 4 : 5}
           value={form.currentQuestion}
           onChange={(event) => updateField('currentQuestion', event.target.value)}
-          className={`block min-w-0 w-full rounded-2xl border px-4 ${isCompact ? 'py-2.5 sm:py-3' : 'py-3'} text-sm outline-none transition focus:ring-2 ${inputClass}`}
+          className={`block min-w-0 w-full rounded-2xl border px-4 ${isCompact || isSimplified ? 'py-2.5 sm:py-3' : 'py-3'} text-sm outline-none transition focus:ring-2 ${inputClass}`}
           placeholder={
             isCompact
               ? 'Optioneel: licht kort toe wat nu bestuurlijke aandacht vraagt.'
+              : isSimplified
+                ? 'Beschrijf kort wat nu het eerst aandacht of duidelijkheid vraagt.'
               : (questionPlaceholder ?? 'Beschrijf kort wat u nu vooral wilt begrijpen of waar de vraag vastloopt.')
           }
         />
@@ -399,7 +416,7 @@ export function ContactForm({
         <div className={`mt-5 rounded-[1.5rem] border px-5 py-4 text-sm ${errorClass}`}>{errorMessage}</div>
       ) : null}
 
-      <div className="mt-6 flex flex-col gap-4 border-t border-[var(--border)] pt-5 sm:mt-7 sm:pt-6">
+      <div className={`flex flex-col gap-4 ${isSimplified ? 'mt-5 pt-4' : 'mt-6 border-t border-[var(--border)] pt-5 sm:mt-7 sm:pt-6'}`}>
         <button
           type="submit"
           disabled={loading}
@@ -407,7 +424,7 @@ export function ContactForm({
         >
               {loading ? 'Route-inschatting wordt verstuurd...' : 'Plan een eerste route-inschatting'}
         </button>
-        {!isCompact ? <p className={`text-xs leading-6 ${helperClass}`}>{billingReadinessCopy}</p> : null}
+        {!isCompact && !isSimplified ? <p className={`text-xs leading-6 ${helperClass}`}>{billingReadinessCopy}</p> : null}
       </div>
 
       <p className={`mt-4 text-[11px] leading-6 sm:text-xs ${helperClass}`}>

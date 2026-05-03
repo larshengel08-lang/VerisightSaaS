@@ -181,28 +181,9 @@ function SectionLabel({ index, label }: { index: string; label: string }) {
 }
 
 function BackdropNumber({ value, tone = 'warm' }: { value: string; tone?: 'warm' | 'cool' }) {
-  const color = tone === 'cool' ? 'rgba(22, 34, 56, 0.04)' : 'rgba(185, 87, 31, 0.07)'
-
-  return (
-    <div
-      aria-hidden
-      style={{
-        color,
-        fontFamily: displayFont,
-        fontSize: 'clamp(12rem, 22vw, 24rem)',
-        fontWeight: 300,
-        letterSpacing: '-0.08em',
-        lineHeight: 0.8,
-        pointerEvents: 'none',
-        position: 'absolute',
-        right: '-2vw',
-        top: '20%',
-        userSelect: 'none',
-      }}
-    >
-      {value}
-    </div>
-  )
+  void value
+  void tone
+  return null
 }
 
 function Arrow() {

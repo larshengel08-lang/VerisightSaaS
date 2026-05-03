@@ -7,6 +7,8 @@ import { MarketingClosingCta } from '@/components/marketing/marketing-closing-ct
 import { buildContactHref } from '@/lib/contact-funnel'
 import { FOLLOW_ON_ROUTE_CONTENT } from '@/lib/follow-on-route-content'
 
+const EXPANDABLE_FOLLOW_ON_ROUTE_CONTENT = FOLLOW_ON_ROUTE_CONTENT.filter((route) => route.slug !== 'combinatie')
+
 const primaryRoutes = [
   {
     title: 'ExitScan',
@@ -78,7 +80,7 @@ function HeroSection() {
         }}
       />
       <div style={{ ...SHELL, position: 'relative' }}>
-        <div style={{ maxWidth: '70ch' }}>
+        <div style={{ maxWidth: '70ch', margin: '0 auto', textAlign: 'center' }}>
           <p
             style={{
               color: AC.deep,
@@ -100,6 +102,7 @@ function HeroSection() {
               letterSpacing: '-.032em',
               lineHeight: 0.97,
               maxWidth: '11ch',
+              margin: '0 auto',
             }}
           >
             Kies de route die nu het meeste duidelijkheid geeft.
@@ -111,12 +114,14 @@ function HeroSection() {
               lineHeight: 1.72,
               margin: '26px 0 36px',
               maxWidth: '58ch',
+              marginLeft: 'auto',
+              marginRight: 'auto',
             }}
           >
             Kies ExitScan als u vertrek achteraf wilt begrijpen. Kies RetentieScan als u eerder wilt zien waar
             behoud onder druk staat. Andere routes komen pas in beeld als de volgende vraag echt speelt.
           </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             <Link
               href={primaryHref}
               style={{
@@ -160,10 +165,10 @@ function PrimaryRoutesSection() {
   return (
     <section
       id="route-vergelijking"
-      style={{ background: T.paperSoft, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(52px,6vw,82px) 0' }}
+      style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(52px,6vw,82px) 0' }}
     >
       <div style={SHELL}>
-        <div style={{ marginBottom: 30 }}>
+        <div style={{ marginBottom: 30, textAlign: 'center' }}>
           <h2
             style={{
               color: T.ink,
@@ -174,11 +179,13 @@ function PrimaryRoutesSection() {
               lineHeight: 1.06,
               marginBottom: 14,
               maxWidth: '14ch',
+              marginLeft: 'auto',
+              marginRight: 'auto',
             }}
           >
             Welke route past bij uw vraag?
           </h2>
-          <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.74, maxWidth: '58ch' }}>
+          <p style={{ color: T.inkSoft, fontSize: 15, lineHeight: 1.74, maxWidth: '58ch', margin: '0 auto' }}>
             Kies ExitScan als u vertrek wilt duiden. Kies RetentieScan als u eerder wilt zien waar behoud onder druk
             staat.
           </p>
@@ -257,9 +264,9 @@ function PrimaryRoutesSection() {
 
 function UtilityRoutesSection() {
   return (
-    <section style={{ background: T.paperSoft, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(50px,5.8vw,76px) 0' }}>
+    <section style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(50px,5.8vw,76px) 0' }}>
       <div style={SHELL}>
-        <div style={{ marginBottom: 26 }}>
+        <div style={{ marginBottom: 26, textAlign: 'center' }}>
           <h2
             style={{
               color: T.ink,
@@ -269,16 +276,18 @@ function UtilityRoutesSection() {
               letterSpacing: '-.022em',
               lineHeight: 1.08,
               marginBottom: 12,
+              marginLeft: 'auto',
+              marginRight: 'auto',
             }}
           >
             Andere routes komen later in beeld
           </h2>
-          <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, maxWidth: '52ch' }}>
+          <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, maxWidth: '52ch', margin: '0 auto' }}>
             Pas als de volgende vraag echt speelt, komen kleinere vervolgroutes in beeld.
           </p>
         </div>
 
-        <FollowOnRoutesAccordion routes={FOLLOW_ON_ROUTE_CONTENT} />
+        <FollowOnRoutesAccordion routes={EXPANDABLE_FOLLOW_ON_ROUTE_CONTENT} />
       </div>
     </section>
   )

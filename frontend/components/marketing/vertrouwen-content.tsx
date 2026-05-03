@@ -127,31 +127,13 @@ function VerificationSection() {
   return (
     <section
       style={{
-        background: T.paperSoft,
+        background: T.white,
         padding: 'clamp(56px,7vw,88px) 0',
         borderBottom: `1px solid ${T.rule}`,
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      <div
-        style={{
-          position: 'absolute',
-          right: -20,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          fontFamily: FF,
-          fontSize: 260,
-          fontWeight: 400,
-          color: T.rule,
-          lineHeight: 1,
-          pointerEvents: 'none',
-          userSelect: 'none',
-          opacity: 0.4,
-        }}
-      >
-        02
-      </div>
       <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
         <Reveal delay={0.05}>
           <h2
@@ -196,24 +178,6 @@ function ReadingGuideSection() {
         overflow: 'hidden',
       }}
     >
-      <div
-        style={{
-          position: 'absolute',
-          left: -20,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          fontFamily: FF,
-          fontSize: 260,
-          fontWeight: 400,
-          color: T.rule,
-          lineHeight: 1,
-          pointerEvents: 'none',
-          userSelect: 'none',
-          opacity: 0.4,
-        }}
-      >
-        03
-      </div>
       <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
         <Reveal delay={0.05}>
           <h2
@@ -290,31 +254,13 @@ function PrivacySection() {
   return (
     <section
       style={{
-        background: T.paperSoft,
+        background: T.white,
         padding: 'clamp(52px,6vw,80px) 0',
         borderBottom: `1px solid ${T.rule}`,
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      <div
-        style={{
-          position: 'absolute',
-          right: -20,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          fontFamily: FF,
-          fontSize: 260,
-          fontWeight: 400,
-          color: T.rule,
-          lineHeight: 1,
-          pointerEvents: 'none',
-          userSelect: 'none',
-          opacity: 0.4,
-        }}
-      >
-        04
-      </div>
       <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
         <Reveal delay={0.05}>
           <h2
