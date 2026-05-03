@@ -38,7 +38,7 @@ export function MarketingPageShell({
   const showSupport = Boolean(heroSupport)
 
   return (
-    <div className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
+    <div className="min-h-screen bg-[#FFFCF8] text-[var(--ink)]">
       <PublicHeader ctaHref={ctaHref} ctaLabel={ctaLabel} />
       <main>
         <section
