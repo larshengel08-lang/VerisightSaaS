@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { T, AC, FF, SHELL, useInView, Reveal, Arrow, SectionMark } from '@/components/marketing/design-tokens'
-import { MarketingInlineContactPanel } from '@/components/marketing/marketing-inline-contact-panel'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const corePricing = [
@@ -40,7 +39,6 @@ const followOnRows = [
   ['ExitScan ritmeroute', 'Op aanvraag', 'Logisch vervolg na eerste baseline wanneer proces, volume en eigenaarschap al staan.'],
   ['RetentieScan ritmeroute', 'Op aanvraag', 'Doorlopende vervolgvorm wanneer vroegsignalering structureel onderdeel van de managementcyclus wordt.'],
   ['Pulse', 'Op aanvraag', 'Compacte reviewlaag na een eerste kernroute of baseline, geen nieuwe eerste instap.'],
-  ['TeamScan', 'Op aanvraag', 'Bounded lokale verdieping nadat een breder signaal al zichtbaar is.'],
   ['Onboarding 30-60-90', 'Op aanvraag', 'Gerichte lifecycle-check wanneer vroege landing van nieuwe medewerkers centraal staat.'],
   ['Leadership Scan', 'Op aanvraag', 'Begrensde managementread nadat een bestaand people-signaal eerst duiding of verificatie vraagt.'],
 ] as const
@@ -90,8 +88,7 @@ function HeroSection() {
 function CorePricingSection() {
   const [sRef, sInView] = useInView(.08)
   return (
-    <section style={{ background: T.paperSoft, padding: 'clamp(56px,7vw,88px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', right: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: FF, fontSize: 260, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: .4 }}>02</div>
+    <section style={{ background: T.white, padding: 'clamp(56px,7vw,88px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
       <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
         <SectionMark num="02" label="Kernproducten" inView={sInView} />
         <Reveal delay={.05}>
@@ -137,7 +134,6 @@ function FollowOnSection() {
   const [sRef, sInView] = useInView(.08)
   return (
     <section style={{ background: T.white, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', left: -20, top: '50%', transform: 'translateY(-50%)', fontFamily: FF, fontSize: 260, fontWeight: 400, color: T.rule, lineHeight: 1, pointerEvents: 'none', userSelect: 'none', opacity: .4 }}>03</div>
       <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
         <SectionMark num="03" label="Vervolg en add-ons" inView={sInView} />
         <Reveal delay={.05}>
@@ -208,22 +204,6 @@ function CtaBand() {
 }
 
 // ── ⑤ Contact ─────────────────────────────────────────────────────
-function ContactSection() {
-  return (
-    <section id="kennismaking" style={{ background: T.paperSoft, padding: 'clamp(52px,6vw,80px) 0' }}>
-      <div style={{ ...SHELL, maxWidth: 820 }}>
-        <MarketingInlineContactPanel
-          eyebrow="Plan kennismaking"
-          title="Vertel kort welke managementvraag nu speelt."
-          body="In circa 20 minuten krijgt u helderheid over productkeuze, aanpak, timing, privacy en prijs."
-          defaultRouteInterest="exitscan"
-          defaultCtaSource="pricing_form"
-        />
-      </div>
-    </section>
-  )
-}
-
 export function TarievenContent() {
   return (
     <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
@@ -231,7 +211,6 @@ export function TarievenContent() {
       <CorePricingSection />
       <FollowOnSection />
       <CtaBand />
-      <ContactSection />
     </div>
   )
 }
