@@ -31,7 +31,7 @@ describe('campaign detail management-read guardrails', () => {
     expect(source).toContain('Kernbeeld nu')
     expect(source).toContain('Frictiescore')
     expect(source).toContain('Dit is het gemiddelde frictieniveau in de leesbare responses.')
-    expect(source).toContain('Werkfrictie betekent hier dat antwoorden vooral wijzen naar factoren binnen werk, rol of organisatie.')
+    expect(source).toContain('Werkfrictie laat de richting van het beeld zien.')
     expect(source).toContain('hoort pas in Action Center thuis')
     expect(source).not.toContain('wie wat moet doen')
     expect(source).not.toContain('route-eigenaar standaard als inhoudsblok pushen')
@@ -42,6 +42,9 @@ describe('campaign detail management-read guardrails', () => {
 
     expect(source).toContain('Respons & leescontext')
     expect(source).toContain('Frictiescore')
+    expect(source).toContain('Verdeling van vertrekbeeld')
+    expect(source).toContain('Survey-stemmen')
+    expect(source).toContain('buildExitSurveyVoices')
     expect(source).toContain('signal: presentation.signalDisplay')
     expect(source).toContain('ExitDriversPriorityChart')
     expect(source).toContain('ExitSdtNeedsChart')

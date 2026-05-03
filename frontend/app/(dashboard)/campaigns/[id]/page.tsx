@@ -300,6 +300,32 @@ function buildExitPictureDistribution(responses: SurveyResponse[]) {
   }
 }
 
+function buildExitSurveyVoices(responses: SurveyResponse[]) {
+  const sanitize = (value: string) =>
+    value
+      .replace(/\s+/g, " ")
+      .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[verwijderd]")
+      .replace(/https?:\/\/\S+/gi, "[link verwijderd]")
+      .replace(/\+?\d[\d\s().-]{7,}\d/g, "[verwijderd]")
+      .trim()
+
+  const seen = new Set<string>()
+
+  return responses
+    .map((response) =>
+      sanitize(response.open_text_raw?.trim() || response.open_text_analysis?.trim() || ""),
+    )
+    .filter((text) => text.length >= 24)
+    .filter((text) => {
+      const normalized = text.toLowerCase()
+      if (seen.has(normalized)) return false
+      seen.add(normalized)
+      return true
+    })
+    .slice(0, 2)
+    .map((text) => (text.length > 180 ? `${text.slice(0, 177).trimEnd()}...` : text))
+}
+
 function buildExitNarratives(args: {
   topFactorLabel: string | null
   secondFactorLabel: string | null
@@ -2162,8 +2188,6 @@ export default async function CampaignPage({ params }: Props) {
         strongWorkSignalRate,
         distribution: exitDistribution,
       })
-      const topFactorRow = factorPriorityRows[0] ?? null
-      const secondFactorRow = factorPriorityRows[1] ?? null
       const remainingFactorRows = factorPriorityRows.slice(2)
       const contextualFactorRows =
         remainingFactorRows.length > 0 ? remainingFactorRows : factorPriorityRows.slice(0, 4)
@@ -2210,6 +2234,7 @@ export default async function CampaignPage({ params }: Props) {
               : "De contextlaag blijft op groepsniveau. Lees het patroon pas steviger zodra voldoende vertrekbeeld zichtbaar is.",
         },
       ]
+      const exitSurveyVoices = buildExitSurveyVoices(responses)
 
       return (
         <div className="space-y-10">
@@ -2312,21 +2337,21 @@ export default async function CampaignPage({ params }: Props) {
                     <div className="mt-3 space-y-3">
                       <div>
                         <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">
-                          {topFactorRow?.factor ?? "Nog niet vrij"}
+                          {factorPriorityRows[0]?.factor ?? "Nog niet vrij"}
                         </p>
                         <p className="mt-1 text-sm text-slate-600">
-                          {topFactorRow
-                            ? `${topFactorRow.score} · ${topFactorRow.signal ?? "Geen signaal"}`
+                          {factorPriorityRows[0]
+                            ? `${factorPriorityRows[0].score} · ${factorPriorityRows[0].signal ?? "Geen signaal"}`
                             : "Nog geen stabiel factorbeeld"}
                         </p>
                       </div>
                       <div className="border-t border-[#EEE4D8] pt-3">
                         <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">
-                          {secondFactorRow?.factor ?? topExitReasonLabel ?? "Tweede laag nog niet scherp genoeg"}
+                          {factorPriorityRows[1]?.factor ?? topExitReasonLabel ?? "Tweede laag nog niet scherp genoeg"}
                         </p>
                         <p className="mt-1 text-sm text-slate-600">
-                          {secondFactorRow
-                            ? `${secondFactorRow.score} · ${secondFactorRow.signal ?? "Geen signaal"}`
+                          {factorPriorityRows[1]
+                            ? `${factorPriorityRows[1].score} · ${factorPriorityRows[1].signal ?? "Geen signaal"}`
                             : topExitReasonLabel
                               ? `Dominante vertrekreden: ${topExitReasonLabel}`
                               : "Nog geen tweede dragende factor zichtbaar"}
@@ -2350,6 +2375,9 @@ export default async function CampaignPage({ params }: Props) {
                   </p>
                   <div className="mt-3 space-y-2 text-sm leading-6 text-[color:var(--dashboard-text)]">
                     <p>
+                      Zie dit als de sterkte van het beeld: niet waar het vandaan komt, maar hoe zwaar de frictie gemiddeld naar voren komt.
+                    </p>
+                    <p>
                       De score is opgebouwd uit patronen in de antwoorden op groepsniveau, niet uit één losse reden of één individuele response.
                     </p>
                   </div>
@@ -2372,81 +2400,80 @@ export default async function CampaignPage({ params }: Props) {
             </div>
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1.08fr),minmax(320px,0.92fr)]">
               <ExitDriversPriorityChart rows={factorPriorityRows} />
-              <div className="space-y-4">
+              <div>
                 <ManagementReadDistribution
                   tone="exit"
                   label="Vertrekbeeld"
                   value={`${exitDistribution.workPercent}% werkfrictie`}
-                  narrative="Werkfrictie betekent hier dat antwoorden vooral wijzen naar factoren binnen werk, rol of organisatie. Dit percentage is berekend op basis van de vertrekredenen in de leesbare responses."
+                  narrative="Werkfrictie laat de richting van het beeld zien. Dit percentage betekent dat de meeste leesbare responses vooral wijzen naar factoren in werk, rol of organisatie, niet naar een externe trekfactor of alleen situatie."
                   segments={exitDistribution.segments}
                 />
-                {[topFactorRow, secondFactorRow].filter(Boolean).map((row, index) => (
-                  <div key={row?.factor} className="rounded-[20px] bg-[color:var(--dashboard-soft)]/58 px-5 py-5">
-                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-                      {index === 0 ? "Topfactor 1" : "Topfactor 2"}
-                    </p>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <h3 className="text-[1.08rem] font-semibold tracking-[-0.03em] text-[color:var(--dashboard-ink)]">
-                        {row?.factor}
-                      </h3>
-                    </div>
-                    <p className="mt-2 text-sm text-slate-600">
-                      {row?.score} · {row?.signal ?? "Nog niet vrij"}
-                    </p>
-                    <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
-                      {row?.note}
-                    </p>
-                  </div>
-                ))}
               </div>
             </div>
             <div className="overflow-hidden rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-white/78">
-              <div className="hidden gap-4 border-b border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/72 px-5 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)] lg:grid lg:grid-cols-[minmax(0,1.2fr)_108px_128px_minmax(0,1.5fr)]">
-                <span>Factor</span>
-                <span>Score</span>
-                <span>Signaal</span>
-                <span>Lezing</span>
+              <div className="border-b border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-soft)]/72 px-5 py-3">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                  Factoren
+                </p>
+                <p className="mt-1 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  Rangorde op basis van lagere beleving en hoger signaal.
+                </p>
               </div>
               <div className="divide-y divide-[color:var(--dashboard-frame-border)]/80">
-                {factorPriorityRows.map((row) => (
-                  <div
-                    key={row.factor}
-                    className="grid gap-3 px-5 py-4 lg:grid-cols-[minmax(0,1.2fr)_108px_128px_minmax(0,1.5fr)] lg:items-start lg:gap-4"
-                  >
-                    <div>
-                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)] lg:hidden">
-                        Factor
-                      </p>
-                      <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
-                        {row.factor}
-                      </p>
+                {factorPriorityRows.map((row, index) => {
+                  const severityWidth = Math.max(12, Math.min(100, (row.signalValue / 10) * 100))
+                  const severityTone =
+                    index === 0
+                      ? "bg-[#C36A29]"
+                      : index === 1
+                        ? "bg-[#D19422]"
+                        : index === 2
+                          ? "bg-[#D8A96B]"
+                          : "bg-[#D8CBB8]"
+
+                  return (
+                    <div
+                      key={row.factor}
+                      className="grid gap-3 px-5 py-4 lg:grid-cols-[58px_minmax(0,1.15fr)_180px_180px] lg:items-center lg:gap-5"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-[1.1rem] font-semibold tabular-nums text-[color:var(--dashboard-ink)]">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <div className="hidden h-10 w-1.5 overflow-hidden rounded-full bg-[color:var(--dashboard-soft)] lg:block">
+                          <div
+                            className={`w-full rounded-full ${severityTone}`}
+                            style={{ height: `${severityWidth}%`, marginTop: `${100 - severityWidth}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <p className="text-sm font-semibold tracking-[-0.02em] text-[color:var(--dashboard-ink)]">
+                          {row.factor}
+                        </p>
+                        <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                          {row.note}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                          Beleving
+                        </p>
+                        <p className="mt-1 text-sm font-semibold tabular-nums text-[color:var(--dashboard-ink)]">
+                          {row.score}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                          Signaal
+                        </p>
+                        <p className="mt-1 text-sm font-semibold tabular-nums text-[color:var(--dashboard-ink)]">
+                          {row.signal ?? "Nog niet vrij"}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)] lg:hidden">
-                        Score
-                      </p>
-                      <p className="text-sm font-semibold tabular-nums text-[color:var(--dashboard-ink)]">
-                        {row.score}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)] lg:hidden">
-                        Signaal
-                      </p>
-                      <p className="text-sm font-semibold tabular-nums text-[color:var(--dashboard-ink)]">
-                        {row.signal ?? "Nog niet vrij"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)] lg:hidden">
-                        Lezing
-                      </p>
-                      <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
-                        {row.note}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           </section>
@@ -2477,6 +2504,81 @@ export default async function CampaignPage({ params }: Props) {
                   </p>
                 </div>
               ))}
+            </div>
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr),minmax(0,1.05fr)]">
+              <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-5">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                  Verdeling van vertrekbeeld
+                </p>
+                <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  Zo zie je hoe het leesbare vertrekbeeld verdeeld is tussen werkfrictie, trekfactoren en situationele context.
+                </p>
+                <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-white/85">
+                  {exitDistribution.segments.map((segment, index) => {
+                    const fillTone =
+                      index === 0 ? "bg-[#C36A29]" : index === 1 ? "bg-[#D7A16B]" : "bg-[#D9D3CA]"
+
+                    return (
+                      <div
+                        key={`stack-${segment.label}`}
+                        className={fillTone}
+                        style={{ width: `${Math.max(0, Math.min(100, segment.percent))}%` }}
+                      />
+                    )
+                  })}
+                </div>
+                <div className="mt-4 space-y-3">
+                  {exitDistribution.segments.map((segment, index) => {
+                    const fillTone =
+                      index === 0 ? "bg-[#C36A29]" : index === 1 ? "bg-[#D7A16B]" : "bg-[#D9D3CA]"
+
+                    return (
+                      <div key={segment.label} className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-3 text-sm text-slate-700">
+                          <span>{segment.label}</span>
+                          <span className="font-semibold text-[color:var(--dashboard-ink)]">
+                            {segment.value}
+                          </span>
+                        </div>
+                        <div className="h-2.5 overflow-hidden rounded-full bg-white/85">
+                          <div
+                            className={`h-full rounded-full ${fillTone}`}
+                            style={{ width: `${Math.max(0, Math.min(100, segment.percent))}%` }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className="rounded-[20px] bg-[color:var(--dashboard-soft)]/52 px-5 py-5">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                  Survey-stemmen
+                </p>
+                <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
+                  Korte anonieme stemmen uit de open antwoorden, zodat zichtbaar blijft dat er echte signalen onder het beeld liggen.
+                </p>
+                <div className="mt-4 space-y-3">
+                  {exitSurveyVoices.length > 0 ? (
+                    exitSurveyVoices.map((voice, index) => (
+                      <div key={`${index}-${voice}`} className="rounded-[16px] bg-white/85 px-4 py-4">
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                          Anonieme stem {index + 1}
+                        </p>
+                        <p className="mt-2 text-sm italic leading-6 text-[color:var(--dashboard-text)]">
+                          &quot;{voice}&quot;
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-[16px] bg-white/85 px-4 py-4">
+                      <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                        Nog geen open antwoorden scherp genoeg vrijgegeven voor een compacte stemlaag.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
             {exitNarratives.length > 0 ? (
               <div className="border-t border-slate-200/80 pt-5">
