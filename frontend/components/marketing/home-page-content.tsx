@@ -899,7 +899,7 @@ function HeroSection() {
                 }}
               >
                 <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 18 }}>
-                  <p style={{ color: '#8f968f', fontSize: 8.8, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+                  <p style={{ color: '#9ca29b', fontSize: 8.4, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
                     Dashboard
                   </p>
                   <span
@@ -908,7 +908,7 @@ function HeroSection() {
                       border: `1px solid ${SURFACE.borderSoft}`,
                       borderRadius: 999,
                       color: SURFACE.text,
-                      fontSize: 9,
+                      fontSize: 8.6,
                       fontWeight: 700,
                       padding: '4px 8px',
                     }}
@@ -960,11 +960,11 @@ function HeroSection() {
                       style={{
                         background: 'rgba(255,255,255,0.56)',
                         border: `1px solid ${SURFACE.borderSoft}`,
-                        borderRadius: 14,
-                        padding: '11px 12px',
+                        borderRadius: 13,
+                        padding: '10px 11px',
                       }}
                     >
-                      <p style={{ color: '#8f968f', fontSize: 8.8, fontWeight: 700, letterSpacing: '.13em', marginBottom: 5, textTransform: 'uppercase' }}>
+                      <p style={{ color: '#9ca29b', fontSize: 8.4, fontWeight: 700, letterSpacing: '.12em', marginBottom: 4, textTransform: 'uppercase' }}>
                         {label}
                       </p>
                       <p style={{ color: SURFACE.ink, fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{value}</p>
@@ -980,7 +980,7 @@ function HeroSection() {
                   border: `1px solid ${SURFACE.borderSoft}`,
                   borderRadius: 18,
                   boxShadow: '0 18px 42px rgba(22, 34, 56, 0.09)',
-                  minHeight: 272,
+                  minHeight: 264,
                   overflow: 'hidden',
                   padding: '24px 24px 22px',
                   position: 'absolute',
@@ -991,7 +991,7 @@ function HeroSection() {
                 }}
               >
                 <div style={{ borderBottom: `1px solid ${SURFACE.border}`, marginBottom: 18, paddingBottom: 12 }}>
-                  <p style={{ color: '#8f968f', fontSize: 8.8, fontWeight: 700, letterSpacing: '.15em', marginBottom: 9, textTransform: 'uppercase' }}>
+                  <p style={{ color: '#9ca29b', fontSize: 8.4, fontWeight: 700, letterSpacing: '.12em', marginBottom: 8, textTransform: 'uppercase' }}>
                     Managementrapport
                   </p>
                   <h3
@@ -1002,9 +1002,9 @@ function HeroSection() {
                       fontWeight: 600,
                       letterSpacing: '-0.04em',
                       lineHeight: 0.96,
-                    marginBottom: 5,
-                    textWrap: 'balance',
-                  }}
+                      marginBottom: 5,
+                      textWrap: 'balance',
+                    }}
                   >
                     Eerste leeslijn voor management
                   </h3>
@@ -1031,8 +1031,8 @@ function HeroSection() {
                     fontSize: 12.5,
                     fontWeight: 500,
                     lineHeight: 1.55,
-                    marginTop: 18,
-                    paddingTop: 14,
+                    marginTop: 16,
+                    paddingTop: 12,
                   }}
                 >
                   Wat valt op, wat telt eerst, welke stap ligt nu voor?
@@ -1046,15 +1046,15 @@ function HeroSection() {
                   borderRadius: 24,
                   boxShadow: '0 24px 48px rgba(13, 17, 24, 0.24)',
                   color: '#fff',
-                  padding: '22px 22px 18px',
+                  padding: '20px 20px 16px',
                   position: 'absolute',
                   right: 26,
-                  top: 316,
+                  top: 324,
                   width: 372,
                   zIndex: 30,
                 }}
               >
-                <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 16 }}>
+                <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 14 }}>
                   <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
                     <div
                       style={{
@@ -1080,7 +1080,7 @@ function HeroSection() {
                       <h4 style={{ color: '#fff', fontSize: 17, fontWeight: 700, letterSpacing: '.01em', marginBottom: 3 }}>
                         Action Center
                       </h4>
-                      <p style={{ color: 'rgba(255,255,255,0.56)', fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10.4, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
                         Van prioriteit naar opvolging
                       </p>
                     </div>
@@ -1102,37 +1102,37 @@ function HeroSection() {
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gap: 9, marginBottom: 14 }}>
+                <div style={{ display: 'grid', gap: 8, marginBottom: 12 }}>
                   {actionItems.map(([title, body, badge, dotColor, badgeBg]) => (
                     <div
                       key={title}
                       style={{
                         alignItems: 'center',
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        borderRadius: 13,
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.045)',
+                        borderRadius: 12,
                         display: 'grid',
-                        gap: 8,
+                        gap: 7,
                         gridTemplateColumns: 'minmax(0,1fr) auto',
-                        padding: '11px 12px',
+                        padding: '9px 11px',
                       }}
                     >
                       <div style={{ alignItems: 'center', display: 'flex', gap: 10, minWidth: 0 }}>
                         <span style={{ background: dotColor, borderRadius: 999, flexShrink: 0, height: 7, width: 7 }} />
                         <div style={{ minWidth: 0 }}>
-                          <p style={{ color: '#fff', fontSize: 13.5, fontWeight: 600, marginBottom: 1 }}>{title}</p>
-                          <p style={{ color: 'rgba(255,255,255,0.46)', fontSize: 10.8, lineHeight: 1.35 }}>{body}</p>
+                          <p style={{ color: '#fff', fontSize: 13.2, fontWeight: 600, marginBottom: 1 }}>{title}</p>
+                          <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 10.2, lineHeight: 1.3 }}>{body}</p>
                         </div>
                       </div>
                       <span
                         style={{
-                          background: 'rgba(255,255,255,0.06)',
-                          border: `1px solid ${badgeBg}33`,
+                          background: 'rgba(255,255,255,0.05)',
+                          border: `1px solid ${badgeBg}26`,
                           borderRadius: 999,
                           color: badgeBg,
-                          fontSize: 8.6,
+                          fontSize: 8.2,
                           fontWeight: 700,
-                          padding: '4px 8px',
+                          padding: '3px 7px',
                           textTransform: 'uppercase',
                           whiteSpace: 'nowrap',
                         }}
@@ -1151,7 +1151,7 @@ function HeroSection() {
                     borderRadius: 14,
                     display: 'flex',
                     justifyContent: 'space-between',
-                    padding: '11px 13px',
+                    padding: '10px 12px',
                   }}
                 >
                   <div>
