@@ -864,9 +864,9 @@ function HeroSection() {
               <div
                 style={{
                   background: '#fbf5ee',
-                  border: `1px solid ${SURFACE.borderSoft}`,
+                  border: '1px solid rgba(217, 206, 191, 0.72)',
                   borderRadius: 18,
-                  boxShadow: '0 16px 36px rgba(22, 34, 56, 0.06)',
+                  boxShadow: '0 12px 28px rgba(22, 34, 56, 0.04)',
                   height: 322,
                   overflow: 'hidden',
                   padding: '26px 28px 22px',
@@ -877,7 +877,7 @@ function HeroSection() {
                   zIndex: 10,
                 }}
               >
-                <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 18 }}>
+                <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
                   <p style={{ color: '#9ca29b', fontSize: 8.4, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
                     Dashboard
                   </p>
@@ -896,16 +896,42 @@ function HeroSection() {
                   </span>
                 </div>
 
+                <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginBottom: 12 }}>
+                  {[
+                    ['Behoud', '+3,1'],
+                    ['Werkdruk', '6,1'],
+                    ['Groei', '7,8'],
+                  ].map(([label, value]) => (
+                    <div
+                      key={label}
+                      style={{
+                        background: 'rgba(255,255,255,0.48)',
+                        border: `1px solid ${SURFACE.borderSoft}`,
+                        borderRadius: 12,
+                        padding: '8px 10px 7px',
+                      }}
+                    >
+                      <p style={{ color: '#a4aaa4', fontSize: 8, fontWeight: 700, letterSpacing: '.11em', marginBottom: 3, textTransform: 'uppercase' }}>
+                        {label}
+                      </p>
+                      <p style={{ color: SURFACE.ink, fontSize: 12.4, fontWeight: 600 }}>{value}</p>
+                    </div>
+                  ))}
+                </div>
+
                 <div
                   style={{
                     background: 'linear-gradient(180deg, rgba(255,255,255,0.42) 0%, rgba(245,236,228,0.65) 100%)',
-                    border: `1px solid ${SURFACE.borderSoft}`,
+                    border: '1px solid rgba(217, 206, 191, 0.76)',
                     borderRadius: 16,
                     height: 186,
                     marginBottom: 16,
                     padding: '18px 18px 16px',
                   }}
                 >
+                  <div style={{ color: '#9ca29b', fontSize: 8.2, fontWeight: 700, letterSpacing: '.1em', marginBottom: 10, textTransform: 'uppercase' }}>
+                    Behoud · trend
+                  </div>
                   <div style={{ alignItems: 'flex-end', display: 'flex', gap: 9, height: 106, marginBottom: 18, opacity: 0.72 }}>
                     {dashboardBars.map((bar) => (
                       <div
@@ -956,9 +982,9 @@ function HeroSection() {
               <div
                 style={{
                   background: '#fef8f1',
-                  border: `1px solid ${SURFACE.borderSoft}`,
+                  border: '1px solid rgba(217, 206, 191, 0.92)',
                   borderRadius: 18,
-                  boxShadow: '0 18px 42px rgba(22, 34, 56, 0.09)',
+                  boxShadow: '0 16px 34px rgba(22, 34, 56, 0.08)',
                   minHeight: 264,
                   overflow: 'hidden',
                   padding: '24px 24px 22px',
@@ -977,17 +1003,17 @@ function HeroSection() {
                     style={{
                       color: SURFACE.ink,
                       fontFamily: displayFont,
-                      fontSize: 'clamp(1.8rem, 2.3vw, 2.35rem)',
+                      fontSize: 'clamp(1.62rem, 2.1vw, 2.12rem)',
                       fontWeight: 600,
                       letterSpacing: '-0.04em',
-                      lineHeight: 0.96,
+                      lineHeight: 1.06,
                       marginBottom: 5,
                       textWrap: 'balance',
                     }}
                   >
                     Eerste leeslijn voor management
                   </h3>
-                  <p style={{ color: SURFACE.muted, fontSize: 12.5, lineHeight: 1.55 }}>
+                  <p style={{ color: SURFACE.text, fontSize: 12.6, lineHeight: 1.58 }}>
                     Wat valt op, wat telt eerst en welke vraag ligt nu voor?
                   </p>
                 </div>
@@ -1028,7 +1054,7 @@ function HeroSection() {
                   padding: '18px 19px 14px',
                   position: 'absolute',
                   right: 26,
-                  top: 332,
+                  top: 302,
                   width: 372,
                   zIndex: 30,
                 }}
@@ -1067,10 +1093,10 @@ function HeroSection() {
                   <span
                     style={{
                       background: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.14)',
                       borderRadius: 999,
                       color: '#fff',
-                      fontSize: 9,
+                      fontSize: 9.2,
                       fontWeight: 700,
                       padding: '4px 9px',
                       textTransform: 'uppercase',
@@ -1105,13 +1131,13 @@ function HeroSection() {
                       </div>
                       <span
                         style={{
-                          background: 'rgba(255,255,255,0.05)',
-                          border: `1px solid ${badgeBg}26`,
+                          background: 'rgba(255,255,255,0.07)',
+                          border: `1px solid ${badgeBg}52`,
                           borderRadius: 999,
-                          color: badgeBg,
-                          fontSize: 7.8,
+                          color: badgeBg === SURFACE.text ? '#f3eee7' : badgeBg,
+                          fontSize: 8.4,
                           fontWeight: 700,
-                          padding: '3px 6px',
+                          padding: '3px 7px',
                           textTransform: 'uppercase',
                           whiteSpace: 'nowrap',
                         }}
