@@ -731,13 +731,13 @@ function HeroSection() {
   const primaryHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_hero_primary' })
   const secondaryHref = '/#first-delivery'
   const dashboardBars = [
-    { height: '45%', color: SURFACE.surfaceSoft },
-    { height: '62%', color: SURFACE.borderSoft },
-    { height: '54%', color: SURFACE.amberSoft },
-    { height: '84%', color: SURFACE.tealSoft },
-    { height: '100%', color: SURFACE.amber },
-    { height: '88%', color: SURFACE.border },
-    { height: '70%', color: SURFACE.paperSoft },
+    { height: '36%', color: SURFACE.surfaceSoft },
+    { height: '52%', color: '#d7cdbf' },
+    { height: '44%', color: '#e6cdb9' },
+    { height: '72%', color: '#d9e9e5' },
+    { height: '88%', color: '#c98d54' },
+    { height: '76%', color: '#d0c3b1' },
+    { height: '58%', color: '#efe4d8' },
   ]
   const reportRows = [
     ['Groei en ontwikkeling', '82%', SURFACE.amber],
@@ -745,8 +745,9 @@ function HeroSection() {
     ['Loopbaanperspectief', '28%', SURFACE.border],
   ] as const
   const actionItems = [
-    ['Herzie mentorshipprogramma', 'Gevolg van: lage onboarding-score', 'Critical', '#d45a51', '#ffdad6'],
-    ['Verifieer werkdruk in Operations', 'Besluit: eerste teamreview', 'Deze week', SURFACE.tealSoft, SURFACE.text],
+    ['Herzie mentorshipprogramma', 'Na lage onboarding-score', 'Critical', '#d45a51', '#ffdad6'],
+    ['Verifieer werkdruk in Operations', 'Eerste teamreview', 'Deze week', SURFACE.tealSoft, SURFACE.text],
+    ['Plan leiderschapsgesprek', 'Wijs eigenaar toe', 'In review', '#d6c3ab', '#f7e7d4'],
   ] as const
 
   return (
@@ -759,7 +760,7 @@ function HeroSection() {
       }}
     >
       <div style={{ ...SHELL, paddingTop: 'clamp(74px, 8vw, 120px)', paddingBottom: 'clamp(70px, 8vw, 104px)', position: 'relative' }}>
-        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_640px]">
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,560px)] lg:gap-10">
           <div style={{ maxWidth: 560 }}>
               <div className="marketing-home-hero-reveal-1" style={{ marginBottom: 18 }}>
               <h1
@@ -858,272 +859,326 @@ function HeroSection() {
               </div>
           </div>
 
-            <div className="marketing-home-hero-reveal-visual relative hidden h-[620px] translate-x-[42px] select-none lg:block">
-            <div
-              style={{
-                background: SURFACE.surface,
-                border: `1px solid ${SURFACE.borderSoft}`,
-                borderRadius: 8,
-                boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
-                height: 286,
-                padding: '24px 28px',
-                position: 'absolute',
-                right: -6,
-                top: 0,
-                width: 452,
-                zIndex: 10,
-              }}
-            >
-              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 28 }}>
-                <span />
-                <span
-                  style={{
-                    background: SURFACE.surfaceSoft,
-                    border: `1px solid ${SURFACE.borderSoft}`,
-                    borderRadius: 4,
-                    color: SURFACE.text,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    padding: '3px 8px',
-                  }}
-                >
-                  +12%
-                </span>
-              </div>
+            <div className="marketing-home-hero-reveal-visual relative hidden h-[532px] select-none lg:block">
 
-              <div style={{ alignItems: 'flex-end', display: 'flex', gap: 10, height: 132, marginBottom: 28 }}>
-                {dashboardBars.map((bar) => (
-                  <div
-                    key={`${bar.height}-${bar.color}`}
-                    style={{
-                      background: bar.color,
-                      borderRadius: '2px 2px 0 0',
-                      flex: 1,
-                      height: bar.height,
-                    }}
-                  />
-                ))}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div style={{ background: SURFACE.paperSoft, borderRadius: 999, height: 10, width: '100%' }} />
-                <div style={{ background: SURFACE.paperSoft, borderRadius: 999, height: 10, width: '68%' }} />
-              </div>
-            </div>
-
-            <div
-              style={{
-                background: '#fef8f1',
-                border: `1px solid ${SURFACE.borderSoft}`,
-                borderRadius: 4,
-                boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
-                height: 360,
-                overflow: 'hidden',
-                padding: '30px 32px',
-                position: 'absolute',
-                left: 30,
-                top: 118,
-                width: 438,
-                zIndex: 20,
-              }}
-            >
-              <div style={{ borderBottom: `1px solid ${SURFACE.border}`, marginBottom: 22, paddingBottom: 14 }}>
-                <h3
-                  style={{
-                    color: SURFACE.ink,
-                    fontFamily: displayFont,
-                    fontSize: 'clamp(2.2rem, 2.7vw, 3rem)',
-                    fontWeight: 600,
-                    letterSpacing: '-0.035em',
-                    lineHeight: 0.98,
-                    marginBottom: 6,
-                    textWrap: 'balance',
-                  }}
-                >
-                  Exit-analyse Q3
-                </h3>
-                <p style={{ color: SURFACE.muted, fontSize: 12.5, lineHeight: 1.5 }}>
-                  Redenen van Vertrek - Senior Staff
-                </p>
-              </div>
-
-              <div style={{ display: 'grid', gap: 14 }}>
-                {reportRows.map(([label, value, color]) => (
-                  <div key={label} style={{ alignItems: 'center', display: 'grid', gap: 14, gridTemplateColumns: 'minmax(0,1fr) 132px' }}>
-                    <span style={{ color: SURFACE.ink, fontSize: 14, fontWeight: 500 }}>{label}</span>
-                    <div style={{ background: color === SURFACE.border ? SURFACE.borderSoft : `${color}20`, borderRadius: 999, height: 4, overflow: 'hidden' }}>
-                      <div style={{ background: color, borderRadius: 999, height: '100%', width: value }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <p
+              <div
                 style={{
-                  borderLeft: `2px solid ${SURFACE.amber}`,
-                  color: SURFACE.ink,
-                  fontFamily: displayFont,
-                  fontSize: 18,
-                  fontStyle: 'italic',
-                  lineHeight: 1.65,
-                  marginTop: 32,
-                  paddingLeft: 16,
+                  background: '#fbf5ee',
+                  border: '1px solid rgba(217, 206, 191, 0.72)',
+                  borderRadius: 18,
+                  boxShadow: '0 12px 28px rgba(22, 34, 56, 0.04)',
+                  height: 322,
+                  overflow: 'hidden',
+                  padding: '26px 28px 22px',
+                  position: 'absolute',
+                  right: 12,
+                  top: 8,
+                  width: 500,
+                  zIndex: 10,
                 }}
               >
-                &ldquo;Op groepsniveau wordt zichtbaar wat nu prioriteit vraagt, zodat opvolging bestuurlijk eenvoudiger wordt.&rdquo;
-              </p>
-            </div>
-
-            <div
-              style={{
-                background: SURFACE.charcoal,
-                border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: 18,
-                boxShadow: '0 14px 34px rgba(13, 17, 24, 0.18)',
-                color: '#fff',
-                left: -28,
-                padding: '24px 28px 22px',
-                position: 'absolute',
-                top: 346,
-                width: 470,
-                zIndex: 30,
-              }}
-            >
-              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
-                <div style={{ alignItems: 'center', display: 'flex', gap: 14 }}>
-                  <div
+                <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <p style={{ color: '#9ca29b', fontSize: 8.4, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+                    Dashboard
+                  </p>
+                  <span
                     style={{
-                      alignItems: 'center',
-                      background: SURFACE.amber,
-                      borderRadius: 10,
-                      boxShadow: '0 10px 22px rgba(185, 87, 31, 0.18)',
-                      display: 'flex',
-                      height: 40,
-                      justifyContent: 'center',
-                      width: 40,
+                      background: '#f5ede5',
+                      border: `1px solid ${SURFACE.borderSoft}`,
+                      borderRadius: 999,
+                      color: SURFACE.text,
+                      fontSize: 8.6,
+                      fontWeight: 700,
+                      padding: '4px 8px',
                     }}
                   >
-                    <svg width="17" height="21" viewBox="0 0 17 21" fill="none" aria-hidden>
-                      <path
-                        d="M9.911 0.75L3.489 10.197H7.653L6.723 20.25L13.145 10.803H8.981L9.911 0.75Z"
-                        fill="white"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 style={{ color: '#fff', fontSize: 15, fontWeight: 700, letterSpacing: '.02em', marginBottom: 2, textTransform: 'uppercase' }}>
-                      Action Center
-                    </h4>
-                    <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase' }}>
-                      Prioriteit-gestuurde opvolging
-                    </p>
-                  </div>
+                    Trendbeeld
+                  </span>
                 </div>
-                <span
-                  style={{
-                    background: 'rgba(255,255,255,0.08)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 6,
-                    color: '#fff',
-                    fontSize: 10,
-                    fontWeight: 700,
-                    padding: '4px 8px',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  3 taken
-                </span>
-              </div>
 
-              <div style={{ display: 'grid', gap: 2, marginBottom: 18 }}>
-                {actionItems.map(([title, body, badge, dotColor, badgeBg]) => (
-                  <div
-                    key={title}
-                    style={{
-                      alignItems: 'center',
-                      borderBottom: '1px solid rgba(255,255,255,0.08)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      padding: '14px 0',
-                    }}
-                  >
-                    <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
-                      <span style={{ background: dotColor, borderRadius: 999, flexShrink: 0, height: 6, width: 6 }} />
-                      <div>
-                        <p style={{ color: '#fff', fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{title}</p>
-                        <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11.5 }}>{body}</p>
-                      </div>
-                    </div>
-                    <span
+                <div style={{ display: 'grid', gap: 8, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginBottom: 12 }}>
+                  {[
+                    ['Behoud', '+3,1'],
+                    ['Werkdruk', '6,1'],
+                    ['Groei', '7,8'],
+                  ].map(([label, value]) => (
+                    <div
+                      key={label}
                       style={{
-                        background: 'rgba(255,255,255,0.08)',
-                        border: `1px solid ${badgeBg}30`,
-                        borderRadius: 6,
-                        color: badgeBg,
-                        fontSize: 10,
-                        fontWeight: 700,
-                        padding: '4px 8px',
-                        textTransform: 'uppercase',
+                        background: 'rgba(255,255,255,0.48)',
+                        border: `1px solid ${SURFACE.borderSoft}`,
+                        borderRadius: 12,
+                        padding: '8px 10px 7px',
                       }}
                     >
-                      {badge}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', paddingTop: 4 }}>
-                <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
-                  <div
-                    style={{
-                      alignItems: 'center',
-                      background: SURFACE.teal,
-                      borderRadius: 999,
-                      color: '#fff',
-                      display: 'flex',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      height: 28,
-                      justifyContent: 'center',
-                      width: 28,
-                    }}
-                  >
-                    JD
-                  </div>
-                  <p style={{ color: 'rgba(255,255,255,0.78)', fontSize: 12 }}>
-                    J. de Wit <span style={{ color: 'rgba(255,255,255,0.38)' }}>Â· VP Talent</span>
-                  </p>
+                      <p style={{ color: '#a4aaa4', fontSize: 8, fontWeight: 700, letterSpacing: '.11em', marginBottom: 3, textTransform: 'uppercase' }}>
+                        {label}
+                      </p>
+                      <p style={{ color: SURFACE.ink, fontSize: 12.4, fontWeight: 600 }}>{value}</p>
+                    </div>
+                  ))}
                 </div>
+
                 <div
                   style={{
-                    background: '#fff',
-                    borderRadius: 8,
-                    color: SURFACE.ink,
-                    fontSize: 11.5,
-                    fontWeight: 700,
-                    padding: '10px 16px',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.42) 0%, rgba(245,236,228,0.65) 100%)',
+                    border: '1px solid rgba(217, 206, 191, 0.76)',
+                    borderRadius: 16,
+                    height: 186,
+                    marginBottom: 16,
+                    padding: '18px 18px 16px',
                   }}
                 >
-                  Beheer opvolging
+                  <div style={{ color: '#9ca29b', fontSize: 8.2, fontWeight: 700, letterSpacing: '.1em', marginBottom: 10, textTransform: 'uppercase' }}>
+                    Behoud · trend
+                  </div>
+                  <div style={{ alignItems: 'flex-end', display: 'flex', gap: 9, height: 106, marginBottom: 18, opacity: 0.72 }}>
+                    {dashboardBars.map((bar) => (
+                      <div
+                        key={`${bar.height}-${bar.color}`}
+                        style={{
+                          background: bar.color,
+                          borderRadius: '6px 6px 0 0',
+                          flex: 1,
+                          height: bar.height,
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  <div style={{ display: 'grid', gap: 10, gridTemplateColumns: '1.2fr .8fr' }}>
+                    <div style={{ background: '#efe5d9', borderRadius: 999, height: 9 }} />
+                    <div style={{ background: '#efe5d9', borderRadius: 999, height: 9, width: '74%' }} />
+                    <div style={{ background: '#f1e8de', borderRadius: 999, height: 9, width: '88%' }} />
+                    <div style={{ background: '#f1e8de', borderRadius: 999, height: 9, width: '58%' }} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+                  {[
+                    ['Groei', '7,8', 'Prioriteit'],
+                    ['Werkdruk', '6,1', 'Verhoogd'],
+                    ['Behoud', '+3,1', 'Volgen'],
+                  ].map(([label, value, note]) => (
+                    <div
+                      key={label}
+                      style={{
+                        background: 'rgba(255,255,255,0.56)',
+                        border: `1px solid ${SURFACE.borderSoft}`,
+                        borderRadius: 13,
+                        padding: '10px 11px',
+                      }}
+                    >
+                      <p style={{ color: '#9ca29b', fontSize: 8.4, fontWeight: 700, letterSpacing: '.12em', marginBottom: 4, textTransform: 'uppercase' }}>
+                        {label}
+                      </p>
+                      <p style={{ color: SURFACE.ink, fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{value}</p>
+                      <p style={{ color: SURFACE.muted, fontSize: 10.5 }}>{note}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
 
-            <div
-              aria-hidden
-              style={{
-                background: 'rgba(245, 232, 220, 0.6)',
-                borderRadius: '999px',
-                filter: 'blur(100px)',
-                height: '120%',
-                left: '50%',
-                position: 'absolute',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '120%',
-                zIndex: 0,
-              }}
-            />
+              <div
+                style={{
+                  background: '#fef8f1',
+                  border: '1px solid rgba(217, 206, 191, 0.92)',
+                  borderRadius: 18,
+                  boxShadow: '0 16px 34px rgba(22, 34, 56, 0.08)',
+                  minHeight: 264,
+                  overflow: 'hidden',
+                  padding: '24px 24px 22px',
+                  position: 'absolute',
+                  left: 28,
+                  top: 130,
+                  width: 350,
+                  zIndex: 20,
+                }}
+              >
+                <div style={{ borderBottom: `1px solid ${SURFACE.border}`, marginBottom: 18, paddingBottom: 12 }}>
+                  <p style={{ color: '#9ca29b', fontSize: 8.4, fontWeight: 700, letterSpacing: '.12em', marginBottom: 8, textTransform: 'uppercase' }}>
+                    Managementrapport
+                  </p>
+                  <h3
+                    style={{
+                      color: SURFACE.ink,
+                      fontFamily: displayFont,
+                      fontSize: 'clamp(1.62rem, 2.1vw, 2.12rem)',
+                      fontWeight: 600,
+                      letterSpacing: '-0.04em',
+                      lineHeight: 1.06,
+                      marginBottom: 5,
+                      textWrap: 'balance',
+                    }}
+                  >
+                    Eerste leeslijn voor management
+                  </h3>
+                  <p style={{ color: SURFACE.text, fontSize: 12.6, lineHeight: 1.58 }}>
+                    Wat valt op, wat telt eerst en welke vraag ligt nu voor?
+                  </p>
+                </div>
+
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {reportRows.map(([label, value, color]) => (
+                    <div key={label} style={{ alignItems: 'center', display: 'grid', gap: 12, gridTemplateColumns: 'minmax(0,1fr) 110px' }}>
+                      <span style={{ color: SURFACE.ink, fontSize: 13.5, fontWeight: 500 }}>{label}</span>
+                      <div style={{ background: color === SURFACE.border ? SURFACE.borderSoft : `${color}20`, borderRadius: 999, height: 4, overflow: 'hidden' }}>
+                        <div style={{ background: color, borderRadius: 999, height: '100%', width: value }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div
+                  style={{
+                    borderTop: `1px solid ${SURFACE.borderSoft}`,
+                    color: SURFACE.text,
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    lineHeight: 1.55,
+                    marginTop: 14,
+                    paddingTop: 11,
+                  }}
+                >
+                  Wat valt op, wat telt eerst, welke stap ligt nu voor?
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: '#0f131a',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 24,
+                  boxShadow: '0 24px 48px rgba(13, 17, 24, 0.24)',
+                  color: '#fff',
+                  padding: '18px 19px 14px',
+                  position: 'absolute',
+                  right: 26,
+                  top: 302,
+                  width: 372,
+                  zIndex: 30,
+                }}
+              >
+                <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 14 }}>
+                  <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
+                    <div
+                      style={{
+                        alignItems: 'center',
+                        background: SURFACE.amber,
+                        borderRadius: 12,
+                        boxShadow: '0 12px 24px rgba(185, 87, 31, 0.2)',
+                        display: 'flex',
+                        flexShrink: 0,
+                        height: 42,
+                        justifyContent: 'center',
+                        width: 42,
+                      }}
+                    >
+                      <svg width="17" height="21" viewBox="0 0 17 21" fill="none" aria-hidden>
+                        <path
+                          d="M9.911 0.75L3.489 10.197H7.653L6.723 20.25L13.145 10.803H8.981L9.911 0.75Z"
+                          fill="white"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 style={{ color: '#fff', fontSize: 17, fontWeight: 700, letterSpacing: '.01em', marginBottom: 3 }}>
+                        Action Center
+                      </h4>
+                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10.4, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+                        Van prioriteit naar opvolging
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    style={{
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.14)',
+                      borderRadius: 999,
+                      color: '#fff',
+                      fontSize: 9.2,
+                      fontWeight: 700,
+                      padding: '4px 9px',
+                      textTransform: 'uppercase',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    3 acties open
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gap: 7, marginBottom: 10 }}>
+                  {actionItems.map(([title, body, badge, dotColor, badgeBg]) => (
+                    <div
+                      key={title}
+                      style={{
+                        alignItems: 'center',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.045)',
+                        borderRadius: 11,
+                        display: 'grid',
+                        gap: 6,
+                        gridTemplateColumns: 'minmax(0,1fr) auto',
+                        padding: '8px 10px',
+                      }}
+                    >
+                      <div style={{ alignItems: 'center', display: 'flex', gap: 10, minWidth: 0 }}>
+                        <span style={{ background: dotColor, borderRadius: 999, flexShrink: 0, height: 7, width: 7 }} />
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ color: '#fff', fontSize: 13.1, fontWeight: 600, marginBottom: 1 }}>{title}</p>
+                          <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 9.8, lineHeight: 1.25 }}>{body}</p>
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          background: 'rgba(255,255,255,0.07)',
+                          border: `1px solid ${badgeBg}52`,
+                          borderRadius: 999,
+                          color: badgeBg === SURFACE.text ? '#f3eee7' : badgeBg,
+                          fontSize: 8.4,
+                          fontWeight: 700,
+                          padding: '3px 7px',
+                          textTransform: 'uppercase',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {badge}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div
+                  style={{
+                    alignItems: 'center',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: 14,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '9px 11px',
+                  }}
+                >
+                  <div>
+                    <p style={{ color: 'rgba(255,255,255,0.46)', fontSize: 9, fontWeight: 700, letterSpacing: '.12em', marginBottom: 4, textTransform: 'uppercase' }}>
+                      Status
+                    </p>
+                    <p style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>2 acties toegewezen, 1 in review</p>
+                  </div>
+                  <div
+                    style={{
+                      background: '#fff',
+                      borderRadius: 999,
+                      color: SURFACE.ink,
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      padding: '8px 12px',
+                    }}
+                  >
+                    Open opvolging
+                  </div>
+                </div>
+              </div>
             </div>
         </div>
       </div>
