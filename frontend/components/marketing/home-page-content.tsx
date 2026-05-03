@@ -859,28 +859,7 @@ function HeroSection() {
               </div>
           </div>
 
-            <div className="marketing-home-hero-reveal-visual relative hidden h-[548px] select-none lg:block">
-              <div
-                aria-hidden
-                style={{
-                  background: 'radial-gradient(circle at 42% 36%, rgba(245, 232, 220, 0.72), rgba(255, 252, 249, 0.22) 56%, transparent 76%)',
-                  borderRadius: 36,
-                  inset: '4% 2% 6% 6%',
-                  position: 'absolute',
-                  zIndex: 0,
-                }}
-              />
-
-              <div
-                aria-hidden
-                style={{
-                  border: `1px solid ${SURFACE.borderSoft}`,
-                  borderRadius: 34,
-                  inset: 0,
-                  position: 'absolute',
-                  zIndex: 1,
-                }}
-              />
+            <div className="marketing-home-hero-reveal-visual relative hidden h-[532px] select-none lg:block">
 
               <div
                 style={{
@@ -892,9 +871,9 @@ function HeroSection() {
                   overflow: 'hidden',
                   padding: '26px 28px 22px',
                   position: 'absolute',
-                  right: 0,
-                  top: 18,
-                  width: 488,
+                  right: 12,
+                  top: 8,
+                  width: 500,
                   zIndex: 10,
                 }}
               >
@@ -984,9 +963,9 @@ function HeroSection() {
                   overflow: 'hidden',
                   padding: '24px 24px 22px',
                   position: 'absolute',
-                  left: 18,
-                  top: 138,
-                  width: 338,
+                  left: 28,
+                  top: 130,
+                  width: 350,
                   zIndex: 20,
                 }}
               >
@@ -1031,8 +1010,8 @@ function HeroSection() {
                     fontSize: 12.5,
                     fontWeight: 500,
                     lineHeight: 1.55,
-                    marginTop: 16,
-                    paddingTop: 12,
+                    marginTop: 14,
+                    paddingTop: 11,
                   }}
                 >
                   Wat valt op, wat telt eerst, welke stap ligt nu voor?
@@ -1046,10 +1025,10 @@ function HeroSection() {
                   borderRadius: 24,
                   boxShadow: '0 24px 48px rgba(13, 17, 24, 0.24)',
                   color: '#fff',
-                  padding: '20px 20px 16px',
+                  padding: '18px 19px 14px',
                   position: 'absolute',
                   right: 26,
-                  top: 324,
+                  top: 332,
                   width: 372,
                   zIndex: 30,
                 }}
@@ -1102,7 +1081,7 @@ function HeroSection() {
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gap: 8, marginBottom: 12 }}>
+                <div style={{ display: 'grid', gap: 7, marginBottom: 10 }}>
                   {actionItems.map(([title, body, badge, dotColor, badgeBg]) => (
                     <div
                       key={title}
@@ -1110,18 +1089,18 @@ function HeroSection() {
                         alignItems: 'center',
                         background: 'rgba(255,255,255,0.02)',
                         border: '1px solid rgba(255,255,255,0.045)',
-                        borderRadius: 12,
+                        borderRadius: 11,
                         display: 'grid',
-                        gap: 7,
+                        gap: 6,
                         gridTemplateColumns: 'minmax(0,1fr) auto',
-                        padding: '9px 11px',
+                        padding: '8px 10px',
                       }}
                     >
                       <div style={{ alignItems: 'center', display: 'flex', gap: 10, minWidth: 0 }}>
                         <span style={{ background: dotColor, borderRadius: 999, flexShrink: 0, height: 7, width: 7 }} />
                         <div style={{ minWidth: 0 }}>
-                          <p style={{ color: '#fff', fontSize: 13.2, fontWeight: 600, marginBottom: 1 }}>{title}</p>
-                          <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 10.2, lineHeight: 1.3 }}>{body}</p>
+                          <p style={{ color: '#fff', fontSize: 13.1, fontWeight: 600, marginBottom: 1 }}>{title}</p>
+                          <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 9.8, lineHeight: 1.25 }}>{body}</p>
                         </div>
                       </div>
                       <span
@@ -1130,9 +1109,9 @@ function HeroSection() {
                           border: `1px solid ${badgeBg}26`,
                           borderRadius: 999,
                           color: badgeBg,
-                          fontSize: 8.2,
+                          fontSize: 7.8,
                           fontWeight: 700,
-                          padding: '3px 7px',
+                          padding: '3px 6px',
                           textTransform: 'uppercase',
                           whiteSpace: 'nowrap',
                         }}
@@ -1151,7 +1130,7 @@ function HeroSection() {
                     borderRadius: 14,
                     display: 'flex',
                     justifyContent: 'space-between',
-                    padding: '10px 12px',
+                    padding: '9px 11px',
                   }}
                 >
                   <div>
