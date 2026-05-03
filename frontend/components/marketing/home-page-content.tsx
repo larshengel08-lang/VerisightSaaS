@@ -745,9 +745,9 @@ function HeroSection() {
     ['Loopbaanperspectief', '28%', SURFACE.border],
   ] as const
   const actionItems = [
-    ['Herzie mentorshipprogramma', 'Gevolg van: lage onboarding-score', 'Critical', '#d45a51', '#ffdad6'],
-    ['Verifieer werkdruk in Operations', 'Besluit: eerste teamreview', 'Deze week', SURFACE.tealSoft, SURFACE.text],
-    ['Plan leiderschapsgesprek', 'Koppel prioriteit aan eigenaar', 'In review', '#d6c3ab', '#f7e7d4'],
+    ['Herzie mentorshipprogramma', 'Na lage onboarding-score', 'Critical', '#d45a51', '#ffdad6'],
+    ['Verifieer werkdruk in Operations', 'Eerste teamreview', 'Deze week', SURFACE.tealSoft, SURFACE.text],
+    ['Plan leiderschapsgesprek', 'Wijs eigenaar toe', 'In review', '#d6c3ab', '#f7e7d4'],
   ] as const
 
   return (
@@ -898,8 +898,8 @@ function HeroSection() {
                   zIndex: 10,
                 }}
               >
-                <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-                  <p style={{ color: SURFACE.muted, fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase' }}>
+                <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: 18 }}>
+                  <p style={{ color: '#8f968f', fontSize: 8.8, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase' }}>
                     Dashboard
                   </p>
                   <span
@@ -908,9 +908,9 @@ function HeroSection() {
                       border: `1px solid ${SURFACE.borderSoft}`,
                       borderRadius: 999,
                       color: SURFACE.text,
-                      fontSize: 10,
+                      fontSize: 9,
                       fontWeight: 700,
-                      padding: '4px 9px',
+                      padding: '4px 8px',
                     }}
                   >
                     Trendbeeld
@@ -923,7 +923,7 @@ function HeroSection() {
                     border: `1px solid ${SURFACE.borderSoft}`,
                     borderRadius: 16,
                     height: 186,
-                    marginBottom: 18,
+                    marginBottom: 16,
                     padding: '18px 18px 16px',
                   }}
                 >
@@ -951,10 +951,10 @@ function HeroSection() {
 
                 <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
                   {[
-                    ['Groei', 'Prioriteit'],
-                    ['Werkdruk', 'Verhoogd'],
-                    ['Behoud', 'Volgen'],
-                  ].map(([label, value]) => (
+                    ['Groei', '7,8', 'Prioriteit'],
+                    ['Werkdruk', '6,1', 'Verhoogd'],
+                    ['Behoud', '+3,1', 'Volgen'],
+                  ].map(([label, value, note]) => (
                     <div
                       key={label}
                       style={{
@@ -964,10 +964,11 @@ function HeroSection() {
                         padding: '11px 12px',
                       }}
                     >
-                      <p style={{ color: SURFACE.muted, fontSize: 10, fontWeight: 700, letterSpacing: '.14em', marginBottom: 6, textTransform: 'uppercase' }}>
+                      <p style={{ color: '#8f968f', fontSize: 8.8, fontWeight: 700, letterSpacing: '.13em', marginBottom: 5, textTransform: 'uppercase' }}>
                         {label}
                       </p>
-                      <p style={{ color: SURFACE.ink, fontSize: 12.5, fontWeight: 600 }}>{value}</p>
+                      <p style={{ color: SURFACE.ink, fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{value}</p>
+                      <p style={{ color: SURFACE.muted, fontSize: 10.5 }}>{note}</p>
                     </div>
                   ))}
                 </div>
@@ -990,7 +991,7 @@ function HeroSection() {
                 }}
               >
                 <div style={{ borderBottom: `1px solid ${SURFACE.border}`, marginBottom: 18, paddingBottom: 12 }}>
-                  <p style={{ color: SURFACE.muted, fontSize: 10, fontWeight: 700, letterSpacing: '.18em', marginBottom: 10, textTransform: 'uppercase' }}>
+                  <p style={{ color: '#8f968f', fontSize: 8.8, fontWeight: 700, letterSpacing: '.15em', marginBottom: 9, textTransform: 'uppercase' }}>
                     Managementrapport
                   </p>
                   <h3
@@ -1001,9 +1002,9 @@ function HeroSection() {
                       fontWeight: 600,
                       letterSpacing: '-0.04em',
                       lineHeight: 0.96,
-                      marginBottom: 4,
-                      textWrap: 'balance',
-                    }}
+                    marginBottom: 5,
+                    textWrap: 'balance',
+                  }}
                   >
                     Eerste leeslijn voor management
                   </h3>
@@ -1023,20 +1024,19 @@ function HeroSection() {
                   ))}
                 </div>
 
-                <p
+                <div
                   style={{
-                    borderLeft: `2px solid ${SURFACE.amber}`,
-                    color: SURFACE.ink,
-                    fontFamily: displayFont,
-                    fontSize: 16,
-                    fontStyle: 'italic',
-                    lineHeight: 1.58,
-                    marginTop: 22,
-                    paddingLeft: 14,
+                    borderTop: `1px solid ${SURFACE.borderSoft}`,
+                    color: SURFACE.text,
+                    fontSize: 12.5,
+                    fontWeight: 500,
+                    lineHeight: 1.55,
+                    marginTop: 18,
+                    paddingTop: 14,
                   }}
                 >
-                  &ldquo;Niet alles tegelijk, maar eerst zichtbaar maken waar de eerste prioriteit ligt.&rdquo;
-                </p>
+                  Wat valt op, wat telt eerst, welke stap ligt nu voor?
+                </div>
               </div>
 
               <div
@@ -1046,15 +1046,15 @@ function HeroSection() {
                   borderRadius: 24,
                   boxShadow: '0 24px 48px rgba(13, 17, 24, 0.24)',
                   color: '#fff',
-                  padding: '24px 24px 22px',
+                  padding: '22px 22px 18px',
                   position: 'absolute',
                   right: 26,
-                  top: 298,
+                  top: 316,
                   width: 372,
                   zIndex: 30,
                 }}
               >
-                <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
+                <div style={{ alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 16 }}>
                   <div style={{ alignItems: 'center', display: 'flex', gap: 12 }}>
                     <div
                       style={{
@@ -1077,7 +1077,7 @@ function HeroSection() {
                       </svg>
                     </div>
                     <div>
-                      <h4 style={{ color: '#fff', fontSize: 17, fontWeight: 700, letterSpacing: '.01em', marginBottom: 4 }}>
+                      <h4 style={{ color: '#fff', fontSize: 17, fontWeight: 700, letterSpacing: '.01em', marginBottom: 3 }}>
                         Action Center
                       </h4>
                       <p style={{ color: 'rgba(255,255,255,0.56)', fontSize: 11, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase' }}>
@@ -1091,9 +1091,9 @@ function HeroSection() {
                       border: '1px solid rgba(255,255,255,0.08)',
                       borderRadius: 999,
                       color: '#fff',
-                      fontSize: 10,
+                      fontSize: 9,
                       fontWeight: 700,
-                      padding: '5px 10px',
+                      padding: '4px 9px',
                       textTransform: 'uppercase',
                       whiteSpace: 'nowrap',
                     }}
@@ -1102,7 +1102,7 @@ function HeroSection() {
                   </span>
                 </div>
 
-                <div style={{ display: 'grid', gap: 10, marginBottom: 18 }}>
+                <div style={{ display: 'grid', gap: 9, marginBottom: 14 }}>
                   {actionItems.map(([title, body, badge, dotColor, badgeBg]) => (
                     <div
                       key={title}
@@ -1110,18 +1110,18 @@ function HeroSection() {
                         alignItems: 'center',
                         background: 'rgba(255,255,255,0.03)',
                         border: '1px solid rgba(255,255,255,0.06)',
-                        borderRadius: 14,
+                        borderRadius: 13,
                         display: 'grid',
-                        gap: 10,
+                        gap: 8,
                         gridTemplateColumns: 'minmax(0,1fr) auto',
-                        padding: '12px 13px',
+                        padding: '11px 12px',
                       }}
                     >
                       <div style={{ alignItems: 'center', display: 'flex', gap: 10, minWidth: 0 }}>
                         <span style={{ background: dotColor, borderRadius: 999, flexShrink: 0, height: 7, width: 7 }} />
                         <div style={{ minWidth: 0 }}>
-                          <p style={{ color: '#fff', fontSize: 13.5, fontWeight: 600, marginBottom: 2 }}>{title}</p>
-                          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11.5, lineHeight: 1.45 }}>{body}</p>
+                          <p style={{ color: '#fff', fontSize: 13.5, fontWeight: 600, marginBottom: 1 }}>{title}</p>
+                          <p style={{ color: 'rgba(255,255,255,0.46)', fontSize: 10.8, lineHeight: 1.35 }}>{body}</p>
                         </div>
                       </div>
                       <span
@@ -1130,9 +1130,9 @@ function HeroSection() {
                           border: `1px solid ${badgeBg}33`,
                           borderRadius: 999,
                           color: badgeBg,
-                          fontSize: 9.5,
+                          fontSize: 8.6,
                           fontWeight: 700,
-                          padding: '5px 9px',
+                          padding: '4px 8px',
                           textTransform: 'uppercase',
                           whiteSpace: 'nowrap',
                         }}
@@ -1151,11 +1151,11 @@ function HeroSection() {
                     borderRadius: 14,
                     display: 'flex',
                     justifyContent: 'space-between',
-                    padding: '12px 14px',
+                    padding: '11px 13px',
                   }}
                 >
                   <div>
-                    <p style={{ color: 'rgba(255,255,255,0.46)', fontSize: 10, fontWeight: 700, letterSpacing: '.12em', marginBottom: 5, textTransform: 'uppercase' }}>
+                    <p style={{ color: 'rgba(255,255,255,0.46)', fontSize: 9, fontWeight: 700, letterSpacing: '.12em', marginBottom: 4, textTransform: 'uppercase' }}>
                       Status
                     </p>
                     <p style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>2 acties toegewezen, 1 in review</p>
@@ -1165,9 +1165,9 @@ function HeroSection() {
                       background: '#fff',
                       borderRadius: 999,
                       color: SURFACE.ink,
-                      fontSize: 11,
+                      fontSize: 10.5,
                       fontWeight: 700,
-                      padding: '9px 13px',
+                      padding: '8px 12px',
                     }}
                   >
                     Open opvolging
