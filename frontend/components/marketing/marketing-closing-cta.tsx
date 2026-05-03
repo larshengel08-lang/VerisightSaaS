@@ -35,7 +35,7 @@ export function MarketingClosingCta({
     <section
       id={id}
       style={{
-        background: `linear-gradient(180deg, ${T.paper} 0%, ${T.paperSoft} 100%)`,
+        background: T.white,
         overflow: 'hidden',
         padding: 'clamp(56px, 7vw, 92px) 0',
         position: 'relative',

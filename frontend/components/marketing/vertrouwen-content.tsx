@@ -341,7 +341,7 @@ function ContactSection() {
       title="Toets of Verisight"
       accentTitle="nu past."
       body="In een kort gesprek toetsen we productkeuze, privacy, timing en wat u als eerste terugkrijgt."
-      buttonLabel="Plan een eerste route-inschatting"
+      buttonLabel="Plan een kennismaking"
       showSectionMark={false}
     />
   )
@@ -349,7 +349,7 @@ function ContactSection() {
 
 export function VertrouwenContent() {
   return (
-    <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
+    <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
       <HeroSection />
       <VerificationSection />
       <ReadingGuideSection />

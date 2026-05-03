@@ -34,36 +34,19 @@ const displayFont = 'var(--font-fraunces), Georgia, serif'
 
 export default function KennismakingPage() {
   return (
-    <div className="min-h-screen bg-[#f7eee7]">
-      <PublicHeader ctaHref="#kennismaking" ctaLabel="Plan een eerste route-inschatting" />
+    <div className="min-h-screen bg-[#FFFCF8]">
+      <PublicHeader ctaHref="#kennismaking" ctaLabel="Plan een kennismaking" />
       <main id="hoofdinhoud">
         <section
           style={{
             background:
-              'radial-gradient(circle at top right, rgba(244, 221, 208, 0.7) 0%, rgba(244, 221, 208, 0) 28%), linear-gradient(180deg, #fffdf9 0%, #f7eee7 100%)',
+              'radial-gradient(circle at top right, rgba(244, 221, 208, 0.55) 0%, rgba(244, 221, 208, 0) 28%), #FFFCF8',
             borderBottom: '1px solid #d9cebf',
             overflow: 'hidden',
             position: 'relative',
           }}
         >
           <div style={{ ...shellStyle, paddingTop: 'clamp(58px, 6.5vw, 92px)', paddingBottom: 'clamp(48px, 6vw, 70px)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 22 }}>
-              <span style={{ color: '#97a0ab', fontSize: 11 }}>01</span>
-              <span
-                style={{
-                  color: '#78818a',
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '.18em',
-                  textTransform: 'uppercase',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                Eerste intake
-              </span>
-              <div style={{ flex: 1, height: 1, background: '#d9cebf' }} />
-            </div>
-
             <div style={{ maxWidth: 760, minWidth: 0 }}>
               <h1
                 style={{

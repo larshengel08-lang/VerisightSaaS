@@ -175,7 +175,7 @@ function FollowOnSection() {
 function CtaBand() {
   const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'pricing_closing_cta' })
   return (
-    <section style={{ background: T.paperBlush, padding: 'clamp(48px,5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+    <section style={{ background: T.white, padding: 'clamp(48px,5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
       <div style={{ ...SHELL }}>
         <Reveal delay={.05}>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto] items-center">
@@ -226,7 +226,7 @@ function ContactSection() {
 
 export function TarievenContent() {
   return (
-    <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
+    <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
       <HeroSection />
       <CorePricingSection />
       <FollowOnSection />

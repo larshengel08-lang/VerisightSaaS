@@ -89,16 +89,8 @@ export function Arrow() {
 }
 
 export function SectionMark({ num, label, inView = true }: { num: string; label: string; inView?: boolean }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
-      <span style={{ fontFamily: FF, fontSize: 11, fontWeight: 400, color: T.inkFaint, letterSpacing: '.03em', minWidth: 18 }}>{num}</span>
-      <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: T.inkMuted, whiteSpace: 'nowrap' }}>{label}</span>
-      <div style={{
-        flex: 1, height: '1px', background: T.rule, transformOrigin: 'left',
-        transform: inView ? 'scaleX(1)' : 'scaleX(0)',
-        opacity: inView ? 1 : 0,
-        transition: 'transform .9s cubic-bezier(.4,0,0,1) .1s, opacity .4s ease .1s',
-      }} />
-    </div>
-  )
+  void num
+  void label
+  void inView
+  return null
 }

@@ -30,7 +30,7 @@ function HeroSection() {
               <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 600, padding: '12px 28px', color: '#fff', background: T.ink, transition: 'all .18s cubic-bezier(.4,0,0,1)' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLElement).style.background = AC.deep }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'none'; (e.currentTarget as HTMLElement).style.background = T.ink }}>
-              Plan een eerste route-inschatting <Arrow />
+              Plan een kennismaking <Arrow />
               </Link>
               <Link href="/tarieven" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14.5, fontWeight: 500, padding: '11px 27px', color: T.inkSoft, border: `1px solid ${T.rule}`, transition: 'all .18s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T.inkMuted; (e.currentTarget as HTMLElement).style.color = T.ink }}
@@ -166,7 +166,7 @@ function FirstValueSection() {
     { threshold: '≥ 10 responses', text: 'Het beeld wordt stevig genoeg om te zien wat opvalt en of een vervolgrichting later logisch wordt.' },
   ]
   return (
-    <section style={{ background: T.paperBlush, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
+    <section style={{ background: T.white, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
       <div style={{ ...SHELL, position: 'relative' }}>
         <SectionMark num="04" label="Eerste waarde" inView />
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[280px_1fr] lg:gap-20 items-start">
@@ -212,14 +212,14 @@ function ContactSection() {
       title="Toets eerst"
       accentTitle="welke route nu het meest logisch is."
       body="Plan een korte kennismaking. Dan ziet u welke eerste route past en wat u daarna kunt verwachten."
-      buttonLabel="Plan een eerste route-inschatting"
+      buttonLabel="Plan een kennismaking"
     />
   )
 }
 
 export function AanpakContent() {
   return (
-    <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
+    <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
       <HeroSection />
       <ProcessSection />
       <RolesSection />

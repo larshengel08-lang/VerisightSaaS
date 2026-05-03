@@ -305,7 +305,7 @@ function ContactSection() {
       accentTitle="en RetentieScan?"
       backdropNumber={null}
       body="In een eerste gesprek toetsen we welke route nu de juiste eerste stap is en welke vervolgstap pas later nodig is."
-      buttonLabel="Plan een eerste route-inschatting"
+      buttonLabel="Plan een kennismaking"
       sectionIndex=""
       sectionLabel=""
       showSectionMark={false}
@@ -316,7 +316,7 @@ function ContactSection() {
 
 export function ProductenContent() {
   return (
-    <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
+    <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
       <HeroSection />
       <PrimaryRoutesSection />
       <UtilityRoutesSection />

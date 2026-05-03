@@ -17,8 +17,8 @@ export function FollowOnRoutePage({ route }: FollowOnRoutePageProps) {
   })
 
   return (
-    <div style={{ background: palette.paper, color: palette.ink, overflowX: 'hidden' }}>
-      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
+    <div style={{ background: palette.white, color: palette.ink, overflowX: 'hidden' }}>
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
       <main>
         <section
           style={{
@@ -109,7 +109,7 @@ export function FollowOnRoutePage({ route }: FollowOnRoutePageProps) {
                       background: palette.ink,
                     }}
                   >
-                    Plan een eerste route-inschatting
+                    Plan een kennismaking
                   </a>
                   <Link
                     href="/producten"
@@ -170,7 +170,7 @@ export function FollowOnRoutePage({ route }: FollowOnRoutePageProps) {
           </div>
         </section>
 
-        <section style={{ background: palette.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${palette.rule}` }}>
+        <section style={{ background: palette.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${palette.rule}` }}>
           <div style={SHELL}>
             <div style={{ marginBottom: 36 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: palette.accent, marginBottom: 16 }}>
@@ -302,7 +302,7 @@ export function FollowOnRoutePage({ route }: FollowOnRoutePageProps) {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  Plan een eerste route-inschatting
+                    Plan een kennismaking
                 </a>
                 <Link
                   href="/producten"
@@ -333,7 +333,7 @@ export function FollowOnRoutePage({ route }: FollowOnRoutePageProps) {
           title={`Toets of ${route.title}`}
           accentTitle="nu de juiste vervolgstap is."
           body={route.ctaBody}
-          buttonLabel="Plan een eerste route-inschatting"
+          buttonLabel="Plan een kennismaking"
           note="U krijgt eerst een route-inschatting, geen verplicht uitgebreid traject."
         />
       </main>
