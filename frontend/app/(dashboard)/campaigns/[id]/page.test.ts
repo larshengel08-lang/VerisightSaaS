@@ -1,67 +1,93 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
-describe('campaign detail management-read guardrails', () => {
-  it('keeps campaign detail the only surface that can open a new action center route', () => {
-    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
-    const normalizedSource = source.replaceAll('"', "'")
+const componentSource = () =>
+  readFileSync(
+    new URL('../../../../components/dashboard/exit-product-dashboard.tsx', import.meta.url),
+    'utf8',
+  )
 
-    expect(source).toContain('Open in Action Center')
-    expect(source).toContain('canOpenActionCenterRoute(deliveryRecord)')
-    expect(source).toContain('first_management_use_confirmed_at')
-    expect(normalizedSource).toContain(".select('id, lifecycle_stage, first_management_use_confirmed_at')")
+describe('exit dashboard analytics guardrails', () => {
+  it('keeps the ExitScan dashboard free from owner, action, review, workflow and setup language', () => {
+    const source = componentSource().toLowerCase()
+    const forbiddenTerms = [
+      'eerste eigenaar',
+      'route-eigenaar',
+      'eigenaar',
+      'eerste actie',
+      'eerste stap',
+      'reviewmoment',
+      'review plannen',
+      'manager toegewezen',
+      'action center',
+      'workflow',
+      'opvolgactie',
+      'start actie',
+      'maak actie',
+      'follow-on',
+      'uitvoerflow',
+      'livegang',
+      'importeren',
+      'uitnodigingen beheren',
+      'reminderactie',
+      'setup',
+    ]
+
+    for (const term of forbiddenTerms) {
+      expect(source).not.toContain(term)
+    }
   })
 
-  it('builds dedicated report-faithful read layers for exit and retention instead of reusing generic dashboard detail structure', () => {
-    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+  it('renders the agreed ExitScan analytical IA in the expected order', () => {
+    const source = componentSource()
+    const orderedHeadings = [
+      'Sterkste signaal',
+      'Waarom dit telt',
+      'Hoofdreden van vertrekbeeld',
+      'Meespelende factoren',
+      'Responscontext',
+      'Topfactoren',
+      'Verdeling van het vertrekbeeld',
+      'Diepere driverlaag',
+      'SDT-laag',
+      'Uitgebreide factorlaag',
+      'Methodische leesgrenzen',
+    ]
 
-    expect(source).toContain('ManagementReadHeader')
-    expect(source).toContain('ManagementReadSection')
-    expect(source).toContain('ManagementReadFactorTable')
-    expect(source).toContain('ManagementReadBridge')
-    expect(source).toContain("stats.scan_type === \"exit\"")
-    expect(source).toContain("stats.scan_type === \"retention\"")
-    expect(source).toContain('buildExitPictureDistribution')
-    expect(source).toContain('buildRetentionSignalSegments')
+    let previousIndex = -1
+    for (const heading of orderedHeadings) {
+      const index = source.indexOf(heading)
+      expect(index, `${heading} ontbreekt`).toBeGreaterThan(-1)
+      expect(index, `${heading} staat buiten volgorde`).toBeGreaterThan(previousIndex)
+      previousIndex = index
+    }
   })
 
-  it('keeps route pages in a bestuurlijke read layer and does not default to owner-action-review commitment blocks', () => {
-    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+  it('does not rely on mockdata or silent 0-fallbacks for meaningful dashboard values', () => {
+    const source = componentSource()
 
-    expect(source).toContain('Kernbeeld nu')
-    expect(source).toContain('Frictiescore')
-    expect(source).toContain('Dit is het gemiddelde frictieniveau in de leesbare responses.')
-    expect(source).toContain('Werkfrictie laat de richting van het beeld zien.')
-    expect(source).toContain('hoort pas in Action Center thuis')
-    expect(source).not.toContain('wie wat moet doen')
-    expect(source).not.toContain('route-eigenaar standaard als inhoudsblok pushen')
+    expect(source).not.toContain('?? 0')
+    expect(source.toLowerCase()).not.toContain('mock')
+    expect(source.toLowerCase()).not.toContain('placeholder')
+    expect(source).toContain('Nog niet beschikbaar')
+    expect(source).toContain('Onvoldoende data')
   })
 
-  it('preserves report-truth layers such as response basis, factor signal values and SDT', () => {
-    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+  it('keeps the visible ExitScan shell free from mojibake and uses a neutral score label', () => {
+    const source = componentSource()
 
-    expect(source).toContain('Respons & leescontext')
-    expect(source).toContain('Frictiescore')
-    expect(source).toContain('Verdeling van vertrekbeeld')
-    expect(source).toContain('Survey-stemmen')
-    expect(source).toContain('buildExitSurveyVoices')
-    expect(source).toContain('signal: presentation.signalDisplay')
-    expect(source).toContain('ExitDriversPriorityChart')
+    expect(source).not.toContain('Ã')
+    expect(source).not.toContain('Â')
+    expect(source).not.toContain('â')
+    expect(source).not.toContain('�')
+    expect(source).toContain('Gemiddelde signaalscore')
+    expect(source).not.toContain('Frictiescore')
+  })
+
+  it('renders the SDT layer only when real rows are available', () => {
+    const source = componentSource()
+
+    expect(source).toContain('sdtRows.length > 0')
     expect(source).toContain('ExitSdtNeedsChart')
-    expect(source).toContain('ExitOrgFactorsChart')
-    expect(source).toContain('buildFactorPresentation')
-    expect(source).toContain('Verdiepingslagen')
-    expect(source).toContain('n = ${responses.length}')
-  })
-
-  it('keeps the deeper generic campaign shell available for bounded routes and utility layers', () => {
-    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
-    const normalizedSource = source.replaceAll('"', "'")
-
-    expect(source).toContain('showClientExecutionFlow')
-    expect(source).toContain('Operatie, respondenten en uitvoering')
-    expect(normalizedSource).toContain("familyRoleLabel: 'Kernroute'")
-    expect(normalizedSource).toContain("familyRoleLabel: 'Begrensde peer-route'")
-    expect(normalizedSource).toContain("familyRoleLabel: 'Begrensde support-route'")
   })
 })

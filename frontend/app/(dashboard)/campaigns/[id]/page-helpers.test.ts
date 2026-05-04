@@ -102,7 +102,7 @@ describe('dashboard page helpers field semantics', () => {
     expect(panels[2]?.body).toContain('aanvullende signalen')
   })
 
-  it('keeps exit helper openings centered on frictiescore with werkfrictie as duiding', () => {
+  it('keeps exit helper openings centered on average signal language with werkfrictie as duiding', () => {
     const hero = buildHeroDescription({
       scanType: 'exit',
       isActive: false,
@@ -121,9 +121,9 @@ describe('dashboard page helpers field semantics', () => {
       topFactor: 'Leiderschap',
     })
 
-    expect(hero).toContain('Frictiescore')
+    expect(hero).toContain('gemiddelde signaalscore')
     expect(hero).toContain('werkfrictie')
-    expect(nextStep).toContain('Frictiescore')
+    expect(nextStep).toContain('gemiddelde signaalscore')
     expect(nextStep).toContain('werkfrictie')
   })
 })
