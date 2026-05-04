@@ -3030,6 +3030,17 @@ export default async function CampaignPage({ params }: Props) {
             aside={<DashboardChip label="Klantuitvoering" tone="slate" />}
             variant="quiet"
           >
+            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3">
+              <p className="text-sm leading-6 text-slate-700">
+                Gebruik Routebeheer voor livegang, respons, output-readiness en blokkades zonder de analytische dashboardlaag te openen.
+              </p>
+              <Link
+                href={`/campaigns/${id}/beheer`}
+                className="inline-flex items-center rounded-full bg-[#2DD4BF] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-95"
+              >
+                Routebeheer openen
+              </Link>
+            </div>
             <GuidedSelfServePanel
               campaignId={id}
               scanType={stats.scan_type}
