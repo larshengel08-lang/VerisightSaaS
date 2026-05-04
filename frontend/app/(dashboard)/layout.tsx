@@ -41,6 +41,7 @@ export default async function DashboardLayout({
   return (
     <DashboardShellFrame
       isAdmin={context.isVerisightAdmin}
+      canManageActionCenterAssignments={context.canManageActionCenterAssignments}
       shellMode={context.managerOnly ? 'action_center_only' : 'full'}
       userEmail={user.email ?? ''}
       acceptedCount={acceptedCount}
