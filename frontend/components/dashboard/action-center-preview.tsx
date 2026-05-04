@@ -71,6 +71,7 @@ interface Props {
   readOnly?: boolean
   itemHrefs?: Record<string, string>
   hideSidebar?: boolean
+  boundedOverviewOnly?: boolean
 }
 
 interface CreateActionFormState {
@@ -855,6 +856,7 @@ export function ActionCenterPreview({
   readOnly = false,
   itemHrefs = {},
   hideSidebar = false,
+  boundedOverviewOnly = false,
 }: Props) {
   const initialSelectedItem =
     initialItems.find((item) => item.id === initialSelectedItemId) ?? initialItems[0] ?? null
@@ -1426,6 +1428,7 @@ export function ActionCenterPreview({
         onClick: () => setActiveView(item.key),
       }))
     : []
+  const showBoundedOverviewOnly = boundedOverviewOnly && activeView === 'overview'
 
   return (
     <div
@@ -1553,7 +1556,7 @@ export function ActionCenterPreview({
                 ) : null}
               </div>
             </div>
-            {hideSidebar ? (
+            {hideSidebar && !boundedOverviewOnly ? (
               <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-[#eee6da] pt-4">
                 {headerTabs.map((item) => (
                   <button
@@ -1589,46 +1592,88 @@ export function ActionCenterPreview({
                   <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                     <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
                       <div className="max-w-2xl">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Managementritme</p>
-                        <h2 className="mt-3 text-[2rem] font-semibold tracking-[-0.05em] text-[#132033]">Wat moet nu gelezen en opgepakt worden?</h2>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">
+                          {showBoundedOverviewOnly ? 'Overzicht' : 'Managementritme'}
+                        </p>
+                        <h2 className="mt-3 text-[2rem] font-semibold tracking-[-0.05em] text-[#132033]">
+                          {showBoundedOverviewOnly ? 'Wat vraagt nu aandacht?' : 'Wat moet nu gelezen en opgepakt worden?'}
+                        </h2>
                         <p className="mt-4 max-w-xl text-[1rem] leading-8 text-[#4f6175]">
-                          Action Center bundelt live opvolging uit campagnes en dossiers tot een eerste overzicht van wat nu aandacht vraagt.
+                          {showBoundedOverviewOnly
+                            ? 'Overzicht van managementopvolging en acties.'
+                            : 'Action Center bundelt live opvolging uit campagnes en dossiers tot een eerste overzicht van wat nu aandacht vraagt.'}
                         </p>
                       </div>
-                      <div className="grid gap-3 sm:grid-cols-3 xl:max-w-[34rem] xl:flex-1">
-                        <OverviewStat
-                          label="Nu bespreken"
-                          value={`${dueItems.length}`}
-                          detail={`${items.filter((item) => item.status === 'te-bespreken').length} klaar voor gesprek`}
-                          accent="amber"
-                        />
-                        <OverviewStat
-                          label="Review < 14 dagen"
-                          value={`${overdueReviews.length + thisWeekReviews.length + nextWeekReviews.length}`}
-                          detail={`${overdueReviews.length} achterstallig`}
-                          accent="red"
-                        />
-                        <OverviewStat
-                          label="Eigenaarschap gedekt"
-                          value={`${ownerCoverageCount}`}
-                          detail={teamRows.length > 0 ? `van ${teamRows.length} teams expliciet gekoppeld` : 'nog geen teams zichtbaar'}
-                          accent="teal"
-                        />
+                      <div className={`grid gap-3 ${showBoundedOverviewOnly ? 'sm:grid-cols-2 xl:grid-cols-4' : 'sm:grid-cols-3 xl:max-w-[34rem] xl:flex-1'}`}>
+                        {showBoundedOverviewOnly ? (
+                          <>
+                            <OverviewStat
+                              label="Actieve routes"
+                              value={`${workspaceReadbackSummary.activeRouteCount}`}
+                              detail={`${workspaceReadbackSummary.routeCount} zichtbare routes`}
+                              accent="teal"
+                            />
+                            <OverviewStat
+                              label="Te bespreken / reviewbaar"
+                              value={`${items.filter((item) => item.status === 'te-bespreken' || item.status === 'reviewbaar').length}`}
+                              detail={`${overdueReviews.length + thisWeekReviews.length} reviews nu of deze week`}
+                              accent="amber"
+                            />
+                            <OverviewStat
+                              label="Geblokkeerd"
+                              value={`${workspaceReadbackSummary.blockedCount}`}
+                              detail={`${items.filter((item) => item.status === 'geblokkeerd').length} zichtbare blokkades`}
+                              accent="red"
+                            />
+                            <OverviewStat
+                              label="Afgerond"
+                              value={`${workspaceReadbackSummary.closedRouteCount}`}
+                              detail={`${workspaceReadbackSummary.closedRouteCount} routes met vastgelegd resultaat`}
+                              accent="slate"
+                            />
+                          </>
+                        ) : null}
+                        {showBoundedOverviewOnly ? null : (
+                          <>
+                            <OverviewStat
+                              label="Nu bespreken"
+                              value={`${dueItems.length}`}
+                              detail={`${items.filter((item) => item.status === 'te-bespreken').length} klaar voor gesprek`}
+                              accent="amber"
+                            />
+                            <OverviewStat
+                              label="Review < 14 dagen"
+                              value={`${overdueReviews.length + thisWeekReviews.length + nextWeekReviews.length}`}
+                              detail={`${overdueReviews.length} achterstallig`}
+                              accent="red"
+                            />
+                            <OverviewStat
+                              label="Eigenaarschap gedekt"
+                              value={`${ownerCoverageCount}`}
+                              detail={teamRows.length > 0 ? `van ${teamRows.length} teams expliciet gekoppeld` : 'nog geen teams zichtbaar'}
+                              accent="teal"
+                            />
+                          </>
+                        )}
                       </div>
                     </div>
 
                     <div className="mt-8 flex items-center justify-between gap-3 border-t border-[#ece4d8] pt-6">
                       <div>
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Nu in beeld</p>
-                        <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">Eerste managementflow</h3>
+                        <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">
+                          {showBoundedOverviewOnly ? 'Acties en opvolging' : 'Eerste managementflow'}
+                        </h3>
                       </div>
-                      <button
-                        type="button"
-                        className="text-sm font-semibold text-[#4a5f74] transition hover:text-[#132033]"
-                        onClick={() => setActiveView('actions')}
-                      >
-                        Open alle acties
-                      </button>
+                      {showBoundedOverviewOnly ? null : (
+                        <button
+                          type="button"
+                          className="text-sm font-semibold text-[#4a5f74] transition hover:text-[#132033]"
+                          onClick={() => setActiveView('actions')}
+                        >
+                          Open alle acties
+                        </button>
+                      )}
                     </div>
                     <div className="mt-2 divide-y divide-[#ece4d8]">
                       {visibleItems.slice(0, 4).map((item) => (
@@ -1667,7 +1712,9 @@ export function ActionCenterPreview({
                   </section>
 
                   <aside className="rounded-[30px] bg-[#182231] px-7 py-7 text-white shadow-[0_22px_56px_rgba(19,32,51,0.18)]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Aanbevolen focus</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">
+                      {showBoundedOverviewOnly ? 'Wat vraagt nu aandacht?' : 'Aanbevolen focus'}
+                    </p>
                     <h2 className="mt-3 text-[1.8rem] font-semibold tracking-[-0.045em]">
                       {focusItem?.title ?? 'Action Center ritme staat klaar'}
                     </h2>
@@ -1698,13 +1745,13 @@ export function ActionCenterPreview({
                         onClick={() => {
                           if (focusItem) {
                             setSelectedItemId(focusItem.id)
-                            setActiveView('actions')
-                          } else {
+                            setActiveView(showBoundedOverviewOnly ? 'overview' : 'actions')
+                          } else if (!showBoundedOverviewOnly) {
                             setActiveView('actions')
                           }
                         }}
                       >
-                        Open focusactie
+                        {showBoundedOverviewOnly ? 'Open detail' : 'Open focusactie'}
                       </button>
                       <Link
                         href={focusItem ? (itemHrefs[focusItem.id] ?? workbenchHref) : workbenchHref}
@@ -1764,33 +1811,36 @@ export function ActionCenterPreview({
                     </div>
                   </section>
 
-                  <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Bestuurlijke teruglezing</p>
-                    <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#132033]">
-                      Wat is over deze zichtbare routes al bestuurlijk leesbaar?
-                    </h2>
-                    <p className="mt-4 text-sm leading-8 text-[#4f6175]">
-                      {readOnly
-                        ? 'Deze readback blijft bewust compact: hoeveel routes nog lopen, waar expliciete besluitmomenten zichtbaar zijn en waar vervolg over tijd al in beeld komt.'
-                        : 'Deze readback blijft bewust compact: routebeeld, besluitspoor, reviewdruk en vervolg over tijd blijven in dezelfde Action Center-overview leesbaar.'}
-                    </p>
+                  {showBoundedOverviewOnly ? null : (
+                    <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Bestuurlijke teruglezing</p>
+                      <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#132033]">
+                        Wat is over deze zichtbare routes al bestuurlijk leesbaar?
+                      </h2>
+                      <p className="mt-4 text-sm leading-8 text-[#4f6175]">
+                        {readOnly
+                          ? 'Deze readback blijft bewust compact: hoeveel routes nog lopen, waar expliciete besluitmomenten zichtbaar zijn en waar vervolg over tijd al in beeld komt.'
+                          : 'Deze readback blijft bewust compact: routebeeld, besluitspoor, reviewdruk en vervolg over tijd blijven in dezelfde Action Center-overview leesbaar.'}
+                      </p>
 
-                    <div className="mt-6 space-y-3">
-                      <SignalRow label="Routebeeld" value={getWorkspaceRouteImageSummary(workspaceReadbackSummary)} />
-                      <SignalRow label="Besluitspoor" value={getWorkspaceDecisionTrailSummary(workspaceReadbackSummary)} />
-                      <SignalRow label="Vervolg over tijd" value={getWorkspaceContinuationSummary(workspaceReadbackSummary)} />
-                      <SignalRow label="Reviewdruk" value={getWorkspaceReviewPressureSummary(workspaceReadbackSummary)} />
-                    </div>
+                      <div className="mt-6 space-y-3">
+                        <SignalRow label="Routebeeld" value={getWorkspaceRouteImageSummary(workspaceReadbackSummary)} />
+                        <SignalRow label="Besluitspoor" value={getWorkspaceDecisionTrailSummary(workspaceReadbackSummary)} />
+                        <SignalRow label="Vervolg over tijd" value={getWorkspaceContinuationSummary(workspaceReadbackSummary)} />
+                        <SignalRow label="Reviewdruk" value={getWorkspaceReviewPressureSummary(workspaceReadbackSummary)} />
+                      </div>
 
-                    <Link
-                      href={workbenchHref}
-                      className="mt-6 inline-flex rounded-full border border-[#ded3c6] bg-white px-4 py-2 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
-                    >
-                      {workbenchLabel}
-                    </Link>
-                  </section>
+                      <Link
+                        href={workbenchHref}
+                        className="mt-6 inline-flex rounded-full border border-[#ded3c6] bg-white px-4 py-2 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
+                      >
+                        {workbenchLabel}
+                      </Link>
+                    </section>
+                  )}
                 </div>
 
+                {showBoundedOverviewOnly ? null : (
                 <section className="rounded-[28px] border border-[#e4d9cb] bg-white shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                   <div className="flex flex-col gap-4 border-b border-[#ece4d8] px-7 py-6 lg:flex-row lg:items-end lg:justify-between">
                     <div>
@@ -1871,6 +1921,7 @@ export function ActionCenterPreview({
                     </div>
                   </div>
                 </section>
+                )}
               </div>
             ) : null}
 
