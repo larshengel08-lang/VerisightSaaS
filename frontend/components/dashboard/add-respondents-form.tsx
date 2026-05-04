@@ -8,7 +8,13 @@ import {
   getInviteDefaultForDeliveryMode,
   normalizeDeliveryMode,
 } from '@/lib/implementation-readiness'
-import { hasCampaignAddOn, REPORT_ADD_ON_LABELS, SCAN_TYPE_LABELS, type Campaign, type Organization } from '@/lib/types'
+import {
+  hasCampaignAddOn,
+  REPORT_ADD_ON_LABELS,
+  SCAN_TYPE_LABELS,
+  type Campaign,
+  type Organization,
+} from '@/lib/types'
 import { CLIENT_FILE_SPEC } from '@/lib/client-onboarding'
 import {
   getDefaultCampaignId,
@@ -72,11 +78,11 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
 
   const [campaignId, setCampaignId] = useState(getDefaultCampaignId(campaigns))
   const selectedCampaign = useMemo(
-    () => campaigns.find(campaign => campaign.id === campaignId) ?? null,
+    () => campaigns.find((campaign) => campaign.id === campaignId) ?? null,
     [campaignId, campaigns],
   )
   const organizationById = useMemo(
-    () => Object.fromEntries(organizations.map(organization => [organization.id, organization.name])),
+    () => Object.fromEntries(organizations.map((organization) => [organization.id, organization.name])),
     [organizations],
   )
   const selectedDeliveryMode = normalizeDeliveryMode(selectedCampaign?.delivery_mode)
@@ -131,31 +137,32 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
       return
     }
 
-    const respondents = mode === 'emails'
-      ? emails.map(email => ({
-          email,
-          department: department || null,
-          role_level: roleLevel || null,
-          exit_month: exitMonth || null,
-          annual_salary_eur: salary ? parseFloat(salary) : null,
-        }))
-      : Array.from({ length: count }, () => ({
-          email: null,
-          department: department || null,
-          role_level: roleLevel || null,
-          exit_month: exitMonth || null,
-          annual_salary_eur: salary ? parseFloat(salary) : null,
-        }))
+    const respondents =
+      mode === 'emails'
+        ? emails.map((email) => ({
+            email,
+            department: department || null,
+            role_level: roleLevel || null,
+            exit_month: exitMonth || null,
+            annual_salary_eur: salary ? parseFloat(salary) : null,
+          }))
+        : Array.from({ length: count }, () => ({
+            email: null,
+            department: department || null,
+            role_level: roleLevel || null,
+            exit_month: exitMonth || null,
+            annual_salary_eur: salary ? parseFloat(salary) : null,
+          }))
 
     const { createClient } = await import('@/lib/supabase/client')
     const supabase = createClient()
-    const rows = respondents.map(r => ({
+    const rows = respondents.map((respondent) => ({
       campaign_id: campaignId,
-      department: r.department,
-      role_level: r.role_level,
-      exit_month: r.exit_month,
-      annual_salary_eur: r.annual_salary_eur,
-      email: r.email,
+      department: respondent.department,
+      role_level: respondent.role_level,
+      exit_month: respondent.exit_month,
+      annual_salary_eur: respondent.annual_salary_eur,
+      email: respondent.email,
     }))
 
     const { data, error: supabaseError } = await supabase
@@ -248,13 +255,15 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
     !hasPreviewErrors &&
     previewResult.valid_rows > 0 &&
     previewResult.launch_blocked !== true
-  const previewMissingDepartmentCount = previewResult?.preview_rows.filter(row => !row.department?.trim()).length ?? 0
-  const previewMissingRoleLevelCount = previewResult?.preview_rows.filter(row => !row.role_level?.trim()).length ?? 0
+  const previewMissingDepartmentCount =
+    previewResult?.preview_rows.filter((row) => !row.department?.trim()).length ?? 0
+  const previewMissingRoleLevelCount =
+    previewResult?.preview_rows.filter((row) => !row.role_level?.trim()).length ?? 0
 
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-        <p className="font-semibold mb-1">Rol van Verisight en rol van de klant</p>
+        <p className="mb-1 font-semibold">Rol van Verisight en rol van de klant</p>
         <p className="text-blue-800">
           Deze setup is voor Verisight-beheerders. De klant levert een respondentbestand aan; Verisight zet de
           campagne op, controleert de import en verstuurt uitnodigingen. Daarna krijgt de organisatie toegang tot
@@ -292,21 +301,22 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
 
       <form onSubmit={handleManualSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-gray-700">
             Campaign <span className="text-red-500">*</span>
           </label>
           <select
             value={campaignId}
-            onChange={e => {
+            onChange={(e) => {
               setCampaignId(e.target.value)
               resetFeedback()
               resetUploadState()
             }}
             className={selectCls}
           >
-            {campaigns.map(campaign => (
+            {campaigns.map((campaign) => (
               <option key={campaign.id} value={campaign.id}>
-                {organizationById[campaign.organization_id] ?? 'Onbekende organisatie'} — {campaign.name} ({SCAN_TYPE_LABELS[campaign.scan_type]})
+                {organizationById[campaign.organization_id] ?? 'Onbekende organisatie'} — {campaign.name} (
+                {SCAN_TYPE_LABELS[campaign.scan_type]})
                 {campaign.is_active ? '' : ' — gearchiveerd'}
               </option>
             ))}
@@ -321,104 +331,116 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                 : 'border-amber-100 bg-amber-50 text-amber-950'
             }`}
           >
-            <p className="font-semibold mb-1">
-              {SCAN_TYPE_LABELS[selectedCampaign.scan_type]} {getDeliveryModeLabel(selectedDeliveryMode, selectedCampaign.scan_type)}
+            <p className="mb-1 font-semibold">
+              {SCAN_TYPE_LABELS[selectedCampaign.scan_type]}{' '}
+              {getDeliveryModeLabel(selectedDeliveryMode, selectedCampaign.scan_type)}
             </p>
             <p>{getDeliveryModeDescription(selectedDeliveryMode, selectedCampaign.scan_type)}</p>
             <p className="mt-2 text-xs">
-              Standaard invite-instelling voor deze route: {uploadSendInvites ? 'direct uitnodigen na gecontroleerde import' : 'eerst klaarzetten, daarna bewust uitnodigen'}.
+              Standaard invite-instelling voor deze route:{' '}
+              {uploadSendInvites
+                ? 'direct uitnodigen na gecontroleerde import'
+                : 'eerst klaarzetten, daarna bewust uitnodigen'}
+              .
             </p>
           </div>
         ) : null}
 
-        {hasSegmentDeepDive && (
+        {hasSegmentDeepDive ? (
           <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-            <p className="font-semibold mb-1">{REPORT_ADD_ON_LABELS.segment_deep_dive} staat aan voor deze campaign</p>
+            <p className="mb-1 font-semibold">{REPORT_ADD_ON_LABELS.segment_deep_dive} staat aan voor deze campaign</p>
             <p className="text-blue-800">
-              Voor deze rapportverdieping zijn <code className="font-mono">department</code> en <code className="font-mono">role_level</code>
-              {' '}sterk aanbevolen. Diensttijd wordt al uit de survey gehaald; de rest van de segmentanalyse valt of staat met nette metadata per respondent.
+              Voor deze rapportverdieping zijn <code className="font-mono">department</code> en{' '}
+              <code className="font-mono">role_level</code> sterk aanbevolen. Diensttijd wordt al uit de survey gehaald;
+              de rest van de segmentanalyse valt of staat met nette metadata per respondent.
             </p>
             <p className="mt-2 text-blue-800">
-              Aan te leveren Excel-kolommen: <code className="font-mono">email</code> (verplicht), <code className="font-mono">department</code> en <code className="font-mono">role_level</code> (sterk aanbevolen), <code className="font-mono">annual_salary_eur</code> (optioneel).
+              Aan te leveren Excel-kolommen: <code className="font-mono">email</code> (verplicht),{' '}
+              <code className="font-mono">department</code> en <code className="font-mono">role_level</code> (sterk
+              aanbevolen), <code className="font-mono">annual_salary_eur</code> (optioneel).
             </p>
             <p className="mt-2 text-blue-800">
-              Gebruik bij retrospectieve batches ook <code className="font-mono">exit_month</code> in formaat <code className="font-mono">YYYY-MM</code>, zodat recency en recall bias beter te duiden zijn in het rapport.
+              Gebruik bij retrospectieve batches ook <code className="font-mono">exit_month</code> in formaat{' '}
+              <code className="font-mono">YYYY-MM</code>, zodat recency en recall bias beter te duiden zijn in het
+              rapport.
             </p>
           </div>
-        )}
+        ) : null}
 
-        {selectedCampaign?.scan_type === 'retention' && (
+        {selectedCampaign?.scan_type === 'retention' ? (
           <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
-            <p className="font-semibold mb-1">RetentieScan: minimale datadiscipline voor v1.1</p>
+            <p className="mb-1 font-semibold">RetentieScan: minimale datadiscipline voor v1.1</p>
             <p className="text-emerald-900">
-              Lever voor RetentieScan bij voorkeur altijd <code className="font-mono">email</code>, <code className="font-mono">department</code> en <code className="font-mono">role_level</code> aan.
-              Zonder afdeling en functieniveau wordt niet alleen het dashboard beperkter, maar ook de latere validatie van segmentverschillen en pragmatische follow-up.
+              Lever voor RetentieScan bij voorkeur altijd <code className="font-mono">email</code>,{' '}
+              <code className="font-mono">department</code> en <code className="font-mono">role_level</code> aan.
+              Zonder afdeling en functieniveau wordt niet alleen het dashboard beperkter, maar ook de latere validatie
+              van segmentverschillen en pragmatische follow-up.
             </p>
             <p className="mt-2 text-emerald-900">
-              Zet na de baseline ook een follow-up bestand klaar met team- of segmentuitkomsten zoals uitstroom, verzuim of vervolgmeting. Gebruik hiervoor het template <code className="font-mono">data/templates/retentionscan_followup_outcomes_template.csv</code>.
+              Zet na de baseline ook een follow-up bestand klaar met team- of segmentuitkomsten zoals uitstroom,
+              verzuim of vervolgmeting. Gebruik hiervoor het template{' '}
+              <code className="font-mono">data/templates/retentionscan_followup_outcomes_template.csv</code>.
             </p>
           </div>
-        )}
+        ) : null}
 
-        {mode === 'emails' && (
+        {mode === 'emails' ? (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               E-mailadressen <span className="text-red-500">*</span>
               <span className="ml-1 text-xs font-normal text-gray-400">(één per regel of komma-gescheiden)</span>
             </label>
             <textarea
               value={emailInput}
-              onChange={e => setEmailInput(e.target.value)}
+              onChange={(e) => setEmailInput(e.target.value)}
               placeholder={'anne@bedrijf.nl\nkarim@bedrijf.nl\nsanne@bedrijf.nl'}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {emailInput && (
-              <p className="text-xs text-gray-400 mt-1">
-                {parseEmails(emailInput).length} e-mailadres(sen) herkend
-              </p>
-            )}
+            {emailInput ? (
+              <p className="mt-1 text-xs text-gray-400">{parseEmails(emailInput).length} e-mailadres(sen) herkend</p>
+            ) : null}
           </div>
-        )}
+        ) : null}
 
-        {mode === 'bulk' && (
+        {mode === 'bulk' ? (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Aantal links</label>
+            <label className="mb-1 block text-sm font-medium text-gray-700">Aantal links</label>
             <input
               type="number"
               min={1}
               max={200}
               value={count}
-              onChange={e => setCount(parseInt(e.target.value, 10))}
+              onChange={(e) => setCount(parseInt(e.target.value, 10))}
               className={inputCls}
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="mt-1 text-xs text-gray-400">
               Er worden {count} anonieme survey-links gegenereerd. De klant verstuurt deze dan zelf.
             </p>
           </div>
-        )}
+        ) : null}
 
-        {mode !== 'upload' && (
+        {mode !== 'upload' ? (
           <>
             <div className={`grid gap-3 pt-1 ${isExitCampaign ? 'sm:grid-cols-4' : 'sm:grid-cols-3'}`}>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Afdeling <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Afdeling <span className="text-xs font-normal text-gray-400">(optioneel)</span>
                 </label>
                 <input
                   type="text"
                   value={department}
-                  onChange={e => setDepartment(e.target.value)}
+                  onChange={(e) => setDepartment(e.target.value)}
                   placeholder="Operations"
                   className={inputCls}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Niveau <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Niveau <span className="text-xs font-normal text-gray-400">(optioneel)</span>
                 </label>
-                <select value={roleLevel} onChange={e => setRoleLevel(e.target.value)} className={selectCls}>
-                  {ROLE_LEVELS.map(option => (
+                <select value={roleLevel} onChange={(e) => setRoleLevel(e.target.value)} className={selectCls}>
+                  {ROLE_LEVELS.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -427,26 +449,26 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
               </div>
               {isExitCampaign ? (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Exitmaand <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Exitmaand <span className="text-xs font-normal text-gray-400">(optioneel)</span>
                   </label>
                   <input
                     type="month"
                     value={exitMonth}
-                    onChange={e => setExitMonth(e.target.value)}
+                    onChange={(e) => setExitMonth(e.target.value)}
                     className={inputCls}
                   />
                 </div>
               ) : null}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Bruto jaarsalaris € <span className="text-gray-400 text-xs font-normal">(optioneel)</span>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Bruto jaarsalaris € <span className="text-xs font-normal text-gray-400">(optioneel)</span>
                 </label>
                 <input
                   type="number"
                   min={0}
                   value={salary}
-                  onChange={e => setSalary(e.target.value)}
+                  onChange={(e) => setSalary(e.target.value)}
                   placeholder="55000"
                   className={inputCls}
                 />
@@ -455,40 +477,48 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
 
             <button type="submit" disabled={loading !== null} className={btnCls}>
               {loading === 'submit'
-                ? 'Bezig…'
+                ? 'Bezig...'
                 : mode === 'emails'
                   ? `Uitnodigingen versturen (${parseEmails(emailInput).length || '?'})`
                   : `${count} links genereren`}
             </button>
           </>
-        )}
+        ) : null}
       </form>
 
-      {mode === 'upload' && (
-        <div className="rounded-xl border border-gray-200 p-4 space-y-4">
+      {mode === 'upload' ? (
+        <div className="space-y-4 rounded-xl border border-gray-200 p-4">
           <div>
-            <p className="text-sm font-semibold text-gray-800 mb-1">Upload respondentbestand</p>
-            <p className="text-xs text-gray-500 leading-relaxed">
+            <p className="mb-1 text-sm font-semibold text-gray-800">Upload respondentbestand</p>
+            <p className="text-xs leading-relaxed text-gray-500">
               Gebruik één rij per respondent met minimaal een kolom <code className="font-mono">email</code>. Optioneel
               kun je <code className="font-mono">department</code>, <code className="font-mono">role_level</code>
-              {isExitCampaign ? <>, <code className="font-mono">exit_month</code></> : null} en <code className="font-mono">annual_salary_eur</code> meesturen. Upload een <code className="font-mono">.csv</code>
-              {' '}of <code className="font-mono">.xlsx</code> bestand.
+              {isExitCampaign ? <>, <code className="font-mono">exit_month</code></> : null} en{' '}
+              <code className="font-mono">annual_salary_eur</code> meesturen. Upload een{' '}
+              <code className="font-mono">.csv</code> of <code className="font-mono">.xlsx</code> bestand.
             </p>
-            <p className="mt-2 text-xs text-gray-500 leading-relaxed">
-              Lever minimaal {CLIENT_FILE_SPEC.minimumParticipants} deelnemers aan en gebruik alleen herkenbare standaardkolommen.
+            <p className="mt-2 text-xs leading-relaxed text-gray-500">
+              Lever minimaal {CLIENT_FILE_SPEC.minimumParticipants} deelnemers aan en gebruik alleen herkenbare
+              standaardkolommen.
             </p>
-            {selectedCampaign?.scan_type === 'retention' && (
+            {selectedCampaign?.scan_type === 'retention' ? (
               <p className="mt-2 text-xs leading-relaxed text-emerald-800">
-                Voor RetentieScan v1.1-validatie zijn <code className="font-mono">department</code> en <code className="font-mono">role_level</code> de aanbevolen standaard. Daarmee kunnen we later betrouwbaarheid, segmentverschillen en pragmatische follow-up veel netter toetsen.
+                Voor RetentieScan v1.1-validatie zijn <code className="font-mono">department</code> en{' '}
+                <code className="font-mono">role_level</code> de aanbevolen standaard. Daarmee kunnen we later
+                betrouwbaarheid, segmentverschillen en pragmatische follow-up veel netter toetsen.
               </p>
-            )}
-            {hasSegmentDeepDive && (
+            ) : null}
+            {hasSegmentDeepDive ? (
               <p className="mt-2 text-xs leading-relaxed text-blue-800">
-                Voor {REPORT_ADD_ON_LABELS.segment_deep_dive.toLowerCase()} zijn ingevulde kolommen <code className="font-mono">department</code>
-                {' '}en <code className="font-mono">role_level</code> sterk aanbevolen. Zonder die velden blijft het rapport beperkter op subgroepniveau.
-                Gebruik bij voorkeur exact deze kolommen: <code className="font-mono">email</code>, <code className="font-mono">department</code>, <code className="font-mono">role_level</code>, <code className="font-mono">exit_month</code>, <code className="font-mono">annual_salary_eur</code>.
+                Voor {REPORT_ADD_ON_LABELS.segment_deep_dive.toLowerCase()} zijn ingevulde kolommen{' '}
+                <code className="font-mono">department</code> en <code className="font-mono">role_level</code> sterk
+                aanbevolen. Zonder die velden blijft het rapport beperkter op subgroepniveau. Gebruik bij voorkeur exact
+                deze kolommen: <code className="font-mono">email</code>,{' '}
+                <code className="font-mono">department</code>, <code className="font-mono">role_level</code>,{' '}
+                <code className="font-mono">exit_month</code>,{' '}
+                <code className="font-mono">annual_salary_eur</code>.
               </p>
-            )}
+            ) : null}
             <div className="mt-3 flex flex-wrap gap-3 text-xs font-medium">
               <a
                 href="/templates/verisight-respondenten-template.xlsx"
@@ -505,17 +535,18 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                 Download CSV-template
               </a>
             </div>
-            {selectedCampaign?.scan_type === 'retention' && (
+            {selectedCampaign?.scan_type === 'retention' ? (
               <p className="mt-2 text-xs text-gray-500">
-                Voor follow-up uitkomsten gebruik je daarna het CSV-template <code className="font-mono">retentionscan_followup_outcomes_template.csv</code> uit de repo.
+                Voor follow-up uitkomsten gebruik je daarna het CSV-template{' '}
+                <code className="font-mono">retentionscan_followup_outcomes_template.csv</code> uit de repo.
               </p>
-            )}
+            ) : null}
           </div>
 
           <input
             type="file"
             accept=".csv,.xlsx"
-            onChange={e => {
+            onChange={(e) => {
               const nextFile = e.target.files?.[0] ?? null
               setUploadFile(nextFile)
               resetFeedback()
@@ -528,7 +559,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
             <input
               type="checkbox"
               checked={uploadSendInvites}
-              onChange={e => setUploadSendInvites(e.target.checked)}
+              onChange={(e) => setUploadSendInvites(e.target.checked)}
               className="mt-0.5 rounded"
             />
             <span>
@@ -548,23 +579,23 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
               disabled={loading !== null || !uploadFile}
               className={btnCls}
             >
-              {loading === 'preview' ? 'Bestand controleren…' : 'Bestand controleren'}
+              {loading === 'preview' ? 'Bestand controleren...' : 'Bestand controleren'}
             </button>
-            {canImportPreview && (
+            {canImportPreview ? (
               <button
                 type="button"
                 onClick={() => void requestImport(false)}
                 disabled={loading !== null}
-                className="bg-gray-900 hover:bg-black disabled:opacity-50 text-white text-sm font-semibold py-2.5 px-5 rounded-lg transition-colors"
+                className="rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-black disabled:opacity-50"
               >
-                {loading === 'import' ? 'Importeren…' : `Importeer ${previewResult.valid_rows} respondenten`}
+                {loading === 'import' ? 'Importeren...' : `Importeer ${previewResult.valid_rows} respondenten`}
               </button>
-            )}
+            ) : null}
           </div>
 
-          {previewResult && (
-            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3">
-              <div className="grid sm:grid-cols-4 gap-3 text-sm">
+          {previewResult ? (
+            <div className="space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <div className="grid gap-3 text-sm sm:grid-cols-4">
                 <ImportMetric label="Rijen" value={previewResult.total_rows} />
                 <ImportMetric label="Geldig" value={previewResult.valid_rows} />
                 <ImportMetric label="Fouten" value={previewResult.invalid_rows} />
@@ -581,9 +612,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                 <p className="font-semibold">{previewResult.readiness_label}</p>
                 <p className="mt-1 leading-6">{previewResult.recovery_hint}</p>
                 {previewResult.ignored_columns.length > 0 ? (
-                  <p className="mt-2 text-xs leading-5">
-                    Niet herkend: {previewResult.ignored_columns.join(', ')}.
-                  </p>
+                  <p className="mt-2 text-xs leading-5">Niet herkend: {previewResult.ignored_columns.join(', ')}.</p>
                 ) : null}
               </div>
 
@@ -598,11 +627,11 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                 </div>
               ) : null}
 
-              {previewResult.preview_rows.length > 0 && (
+              {previewResult.preview_rows.length > 0 ? (
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-2">Preview van geldige rijen</p>
+                  <p className="mb-2 text-xs font-semibold text-gray-600">Preview van geldige rijen</p>
                   <div className="overflow-x-auto">
-                    <table className="min-w-full text-xs border border-gray-200 rounded-lg overflow-hidden">
+                    <table className="min-w-full overflow-hidden rounded-lg border border-gray-200 text-xs">
                       <thead className="bg-white text-gray-500">
                         <tr>
                           <th className="px-2 py-2 text-left">Rij</th>
@@ -613,7 +642,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                         </tr>
                       </thead>
                       <tbody>
-                        {previewResult.preview_rows.map(row => (
+                        {previewResult.preview_rows.map((row) => (
                           <tr key={`${row.row_number}-${row.email}`} className="border-t border-gray-200 bg-white">
                             <td className="px-2 py-2">{row.row_number}</td>
                             <td className="px-2 py-2 font-mono">{row.email}</td>
@@ -626,7 +655,7 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                     </table>
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {!hasPreviewErrors && previewResult.preview_rows.length > 0 ? (
                 <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-xs leading-6 text-slate-700">
@@ -638,42 +667,40 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                   </p>
                   {selectedCampaign?.scan_type === 'retention' || hasSegmentDeepDive ? (
                     <p className="mt-1">
-                      Metadata-alert: {previewMissingDepartmentCount} rij(en) zonder <code className="font-mono">department</code> en {previewMissingRoleLevelCount} rij(en) zonder <code className="font-mono">role_level</code>.
+                      Metadata-alert: {previewMissingDepartmentCount} rij(en) zonder{' '}
+                      <code className="font-mono">department</code> en {previewMissingRoleLevelCount} rij(en) zonder{' '}
+                      <code className="font-mono">role_level</code>.
                     </p>
                   ) : null}
                 </div>
               ) : null}
 
-              {previewResult.errors.length > 0 && (
+              {previewResult.errors.length > 0 ? (
                 <div>
-                  <p className="text-xs font-semibold text-red-700 mb-2">Fouten die je eerst moet oplossen</p>
+                  <p className="mb-2 text-xs font-semibold text-red-700">Fouten die je eerst moet oplossen</p>
                   <ul className="space-y-1 text-xs text-red-700">
-                    {previewResult.errors.slice(0, 12).map(issue => (
+                    {previewResult.errors.slice(0, 12).map((issue) => (
                       <li key={`${issue.row_number}-${issue.field}-${issue.message}`}>
                         Rij {issue.row_number} — {issue.field}: {issue.message}
                       </li>
                     ))}
                   </ul>
-                  {previewResult.errors.length > 12 && (
-                    <p className="text-xs text-red-600 mt-2">
-                      + {previewResult.errors.length - 12} extra fout(en)
-                    </p>
-                  )}
+                  {previewResult.errors.length > 12 ? (
+                    <p className="mt-2 text-xs text-red-600">+ {previewResult.errors.length - 12} extra fout(en)</p>
+                  ) : null}
                 </div>
-              )}
+              ) : null}
             </div>
-          )}
+          ) : null}
         </div>
-      )}
+      ) : null}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
-      {result && (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-4 space-y-3">
+      {result ? (
+        <div className="space-y-3 rounded-xl border border-green-200 bg-green-50 p-4">
           <div>
-            <p className="text-sm font-semibold text-green-800 mb-1">
-              {result.tokens.length} respondenten aangemaakt
-            </p>
+            <p className="mb-1 text-sm font-semibold text-green-800">{result.tokens.length} respondenten aangemaakt</p>
             {mode === 'bulk' ? (
               <p className="text-sm text-green-700">
                 Anonieme survey-links zijn gegenereerd. Deel deze links rechtstreeks met de klant of intern team.
@@ -683,28 +710,28 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
                 {result.emailsSent} uitnodigingsmail{result.emailsSent !== 1 ? 's' : ''} verstuurd
               </p>
             ) : (
-              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2 mt-2">
+              <p className="mt-2 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
                 E-mails konden niet worden verstuurd. Kopieer de links hieronder als alternatief.
               </p>
             )}
           </div>
 
-          {(mode === 'bulk' || result.emailsSent === 0) && (
+          {mode === 'bulk' || result.emailsSent === 0 ? (
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-1">Survey-links:</p>
+              <p className="mb-1 text-xs font-medium text-gray-500">Survey-links:</p>
               <textarea
                 readOnly
-                className="w-full font-mono text-xs bg-white border border-gray-200 rounded-lg p-3 h-28 resize-none focus:outline-none"
-                value={result.tokens.map(token => `${API_BASE}/survey/${token}`).join('\n')}
+                className="h-28 w-full resize-none rounded-lg border border-gray-200 bg-white p-3 font-mono text-xs focus:outline-none"
+                value={result.tokens.map((token) => `${API_BASE}/survey/${token}`).join('\n')}
               />
             </div>
-          )}
+          ) : null}
         </div>
-      )}
+      ) : null}
 
-      {importSuccess && (
+      {importSuccess ? (
         <div className="rounded-xl border border-green-200 bg-green-50 p-4">
-          <p className="text-sm font-semibold text-green-800 mb-1">
+          <p className="mb-1 text-sm font-semibold text-green-800">
             {importSuccess.imported} respondenten geïmporteerd
           </p>
           <p className="text-sm text-green-700">
@@ -713,12 +740,15 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
               : 'Respondenten zijn toegevoegd zonder directe uitnodiging.'}
           </p>
           <p className="mt-2 text-xs text-green-800">
-            Volgende stap: {uploadSendInvites ? 'controleer campagnestatus en klantactivatie.' : 'verstuur uitnodigingen pas nadat timing en contactmoment bevestigd zijn.'}
+            Volgende stap:{' '}
+            {uploadSendInvites
+              ? 'controleer campagnestatus en klantactivatie.'
+              : 'verstuur uitnodigingen pas nadat timing en contactmoment bevestigd zijn.'}
           </p>
         </div>
-      )}
+      ) : null}
 
-      <p className="text-xs text-gray-400 leading-relaxed">
+      <p className="text-xs leading-relaxed text-gray-400">
         E-mailadressen worden uitsluitend gebruikt voor uitnodiging en herinneringen. In het dashboard draait het om
         groepsinzichten; individuele e-mailadressen worden daar niet getoond.
       </p>
@@ -741,10 +771,8 @@ function ModeButton({
     <button
       type="button"
       onClick={() => onClick(value)}
-      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-        current === value
-          ? 'bg-blue-600 text-white'
-          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+        current === value ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
       }`}
     >
       {label}
@@ -761,6 +789,9 @@ function ImportMetric({ label, value }: { label: string; value: number }) {
   )
 }
 
-const inputCls = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
-const selectCls = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white'
-const btnCls = 'bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold py-2.5 px-5 rounded-lg transition-colors'
+const inputCls =
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+const selectCls =
+  'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+const btnCls =
+  'rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50'
