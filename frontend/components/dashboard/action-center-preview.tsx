@@ -26,6 +26,7 @@ import {
   getLiveActionCenterSummary,
   type ActionCenterWorkspaceReadbackSummary,
 } from '@/lib/action-center-live'
+import { buildActionCenterTeamRows } from '@/lib/action-center-teams-view'
 import type {
   ActionCenterPreviewItem,
   ActionCenterPreviewManagerOption,
@@ -33,6 +34,7 @@ import type {
   ActionCenterPreviewStatus,
   ActionCenterPreviewView,
 } from '@/lib/action-center-preview-model'
+import { ActionCenterTeamsView } from '@/components/dashboard/action-center-teams-view'
 import type {
   ActionCenterManagerActionThemeKey,
   ActionCenterManagerResponse,
@@ -624,63 +626,6 @@ function getViewCopy(view: ActionCenterPreviewView, selectedTitle: string | null
   }
 }
 
-function buildTeamRows(items: ActionCenterPreviewItem[]) {
-  const now = new Date()
-  const rows = new Map<
-    string,
-    {
-      id: string
-      orgId: string | null
-      scopeType: 'department' | 'item' | 'org'
-      label: string
-      peopleCount: number
-      currentManagerId: string | null | undefined
-      currentManagerName: string | null
-      openActions: number
-      reviewSoonCount: number
-      hasOwnerGap: boolean
-    }
-  >()
-
-  for (const item of items) {
-    const current = rows.get(item.teamId) ?? {
-      id: item.teamId,
-      orgId: item.orgId ?? null,
-      scopeType: item.scopeType ?? 'department',
-      label: item.teamLabel,
-      peopleCount: item.peopleCount,
-      currentManagerId: item.ownerId,
-      currentManagerName: item.ownerName,
-      openActions: 0,
-      reviewSoonCount: 0,
-      hasOwnerGap: false,
-    }
-
-    current.peopleCount = Math.max(current.peopleCount, item.peopleCount)
-    if (!current.currentManagerId && item.ownerId) {
-      current.currentManagerId = item.ownerId
-    }
-    if (!current.currentManagerName && item.ownerName) {
-      current.currentManagerName = item.ownerName
-    }
-    if (item.status !== 'afgerond' && item.status !== 'gestopt') {
-      current.openActions += 1
-    }
-    if (getReviewBucket(item.reviewDate, now) === 'deze-week') {
-      current.reviewSoonCount += 1
-    }
-    if (!item.ownerName) {
-      current.hasOwnerGap = true
-    }
-    rows.set(item.teamId, current)
-  }
-
-  return [...rows.values()].sort((left, right) => {
-    if (right.openActions !== left.openActions) return right.openActions - left.openActions
-    return left.label.localeCompare(right.label)
-  })
-}
-
 function getInitialFollowUpFormState(args: {
   item: ActionCenterPreviewItem | null
   assignmentOptions: ActionCenterPreviewManagerOption[]
@@ -959,7 +904,7 @@ export function ActionCenterPreview({
     setFollowUpForm(getInitialFollowUpFormState({ item: selectedItem, assignmentOptions }))
     setFollowUpError(null)
   }, [assignmentOptions, selectedItem])
-  const teamRows = buildTeamRows(items)
+  const teamRows = buildActionCenterTeamRows(items)
   const selectedTeam = teamRows.find((team) => team.id === selectedTeamId) ?? teamRows[0] ?? null
   const allSources = [...new Set(items.map((item) => item.sourceLabel))]
   const workspaceReadbackSummary = useMemo(() => getLiveActionCenterSummary(items), [items])
@@ -982,10 +927,6 @@ export function ActionCenterPreview({
   const ownerCoverageCount = teamRows.length - missingManagerCount
   const selectedTeamItems = items.filter((item) => item.teamId === selectedTeam?.id)
   const teamOpenItems = selectedTeamItems.filter((item) => item.status !== 'afgerond' && item.status !== 'gestopt')
-  const teamReviewItems = selectedTeamItems
-    .filter((item) => item.reviewDate)
-    .sort((left, right) => compareReviewDate(left.reviewDate, right.reviewDate))
-    .slice(0, 3)
   const focusItem = visibleDueItems[0] ?? visibleItems[0] ?? null
   const viewCopy = getViewCopy(activeView, activeView === 'overview' && selectedItem ? null : activeView === 'overview' ? null : selectedItem?.title ?? null)
   const allowLocalDraftEditing = !readOnly && !managerResponseEndpoint
@@ -2956,127 +2897,16 @@ export function ActionCenterPreview({
             ) : null}
 
             {activeView === 'teams' ? (
-              selectedTeam ? (
-                <div className="space-y-8">
-                  <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
-                    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                      <div className="max-w-2xl">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Teamcontext</p>
-                        <h2 className="mt-3 text-[1.9rem] font-semibold tracking-[-0.05em] text-[#132033]">{selectedTeam.label}</h2>
-                        <p className="mt-4 text-[1rem] leading-8 text-[#4f6175]">
-                          Deze teamread houdt de managementflow compact: wat staat nog open, welke reviews komen eraan en wie is hier de expliciete eigenaar?
-                        </p>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <OverviewStat label="Open acties" value={`${teamOpenItems.length}`} detail="zichtbaar in deze teamcontext" accent="amber" />
-                        <OverviewStat label="Review < 7 dagen" value={`${selectedTeam.reviewSoonCount}`} detail="vragen snel gesprek" accent="red" />
-                        <OverviewStat label="Mensen" value={`${selectedTeam.peopleCount}`} detail="in deze scope" accent="teal" />
-                      </div>
-                    </div>
-                  </section>
-
-                  <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr),minmax(320px,0.78fr)]">
-                    <section className="rounded-[28px] border border-[#e4d9cb] bg-white px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
-                      <div className="flex items-center justify-between gap-3 border-b border-[#ece4d8] pb-5">
-                        <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Open teamacties</p>
-                          <h3 className="mt-2 text-[1.4rem] font-semibold tracking-[-0.03em] text-[#132033]">Wat ligt nu nog op tafel?</h3>
-                        </div>
-                        <p className="text-sm text-[#736b60]">{teamOpenItems.length} actief</p>
-                      </div>
-                      <div className="mt-6 space-y-4">
-                        {teamOpenItems.length === 0 ? (
-                          <EmptyBlock text="Voor dit team staan nu geen open opvolgacties meer zichtbaar." />
-                        ) : (
-                          teamOpenItems.map((item) => (
-                            <button
-                              key={item.id}
-                              type="button"
-                              className="flex w-full items-start justify-between gap-4 rounded-[22px] border border-[#ebe1d5] bg-[#fcfaf7] px-5 py-5 text-left transition hover:border-[#d7cab9]"
-                              onClick={() => {
-                                setSelectedItemId(item.id)
-                                setActiveView('actions')
-                              }}
-                            >
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d6458]">
-                                  <MiniTag>{item.sourceLabel}</MiniTag>
-                                  <span>{getPriorityMeta(item.priority).label}</span>
-                                  <span className="text-[#b2a496]">/</span>
-                                  <span>{getOwnerDisplayName(item.ownerName)}</span>
-                                </div>
-                                <p className="mt-3 text-[1.08rem] font-semibold tracking-[-0.02em] text-[#132033]">{item.title}</p>
-                                <p className="mt-2 text-sm text-[#5d6f84]">
-                                  Review {item.reviewDateLabel}, ritme {item.reviewRhythm}
-                                </p>
-                              </div>
-                              <StatusPill status={item.status} />
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    </section>
-
-                    <section className="space-y-6">
-                      <div className="rounded-[30px] bg-[#182231] px-7 py-7 text-white shadow-[0_22px_56px_rgba(19,32,51,0.18)]">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Teamverantwoordelijke</p>
-                        <div className="mt-5 flex items-center gap-4">
-                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/8 text-xl font-semibold">
-                            {getInitials(getTeamManagerDisplayName(selectedTeam.currentManagerName))}
-                          </div>
-                          <div>
-                            <p className="text-[1.4rem] font-semibold tracking-[-0.03em]">
-                              {getTeamManagerDisplayName(selectedTeam.currentManagerName)}
-                            </p>
-                            <p className="mt-1 text-sm text-white/58">Manager - {selectedTeam.label}</p>
-                          </div>
-                        </div>
-                        <div className="mt-6 grid grid-cols-3 gap-4">
-                          <DarkMetric label="Open" value={`${teamOpenItems.length}`} accent="text-white" />
-                          <DarkMetric label="Review < 7d" value={`${selectedTeam.reviewSoonCount}`} accent="text-[#ffb16e]" />
-                          <DarkMetric
-                            label="Geblokkeerd"
-                            value={`${teamOpenItems.filter((item) => item.status === 'geblokkeerd').length}`}
-                            accent="text-white"
-                          />
-                        </div>
-                        <p className="mt-6 text-sm leading-7 text-white/72">
-                          Deze teamrail blijft onderdeel van dezelfde omgeving en leest dus altijd mee met eigenaarschap en reviewplanning.
-                        </p>
-                      </div>
-
-                      <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Te bespreken deze week</p>
-                        <div className="mt-4 space-y-4">
-                          {teamReviewItems.length === 0 ? (
-                            <EmptyBlock text="Geen reviews meer gepland voor dit team in de huidige selectie." />
-                          ) : (
-                            teamReviewItems.map((item) => (
-                              <button
-                                key={item.id}
-                                type="button"
-                                className="w-full rounded-[18px] border border-[#efe7dc] bg-[#fcfaf7] px-4 py-4 text-left transition hover:border-[#d7cab9]"
-                                onClick={() => {
-                                  setSelectedItemId(item.id)
-                                  setActiveView('actions')
-                                }}
-                              >
-                                <p className="font-semibold text-[#132033]">{item.title}</p>
-                                <p className="mt-1 text-sm text-[#5d6f84]">Volgende bespreking {item.reviewDateLabel}</p>
-                              </button>
-                            ))
-                          )}
-                        </div>
-                      </div>
-                    </section>
-                  </div>
-                </div>
-              ) : (
-                <EmptySection
-                  title="Nog geen teamcontext beschikbaar"
-                  body="Zodra ExitScan-dossiers aan een teamcontext zijn gekoppeld, verschijnt hier de compacte teamweergave."
-                />
-              )
+              <ActionCenterTeamsView
+                items={filteredItems}
+                selectedTeamId={selectedTeamId}
+                onSelectTeam={setSelectedTeamId}
+                onNavigateToActions={(itemId) => {
+                  setSelectedItemId(itemId)
+                  setActiveView('actions')
+                }}
+                canAssignManagers={canAssignManagers}
+              />
             ) : null}
           </div>
         </div>
