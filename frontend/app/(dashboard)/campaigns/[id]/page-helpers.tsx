@@ -134,6 +134,10 @@ export function buildHeroDescription({
     return `Bekijk eerst het retentiesignaal, de respons en de laagst scorende thema's.`
   }
 
+  if (scanType === 'exit') {
+    return `Bekijk eerst de gemiddelde signaalscore, de respons en de sterkste werkfrictie in dit vertrekbeeld.`
+  }
+
   if (scanType === 'pulse') {
     return `Deze Pulse laat een compacte managementread zien van werkbeleving en geselecteerde werkfactoren. Lees de uitkomst als bounded reviewlaag voor dit meetmoment, met alleen een beperkte vergelijking naar de vorige vergelijkbare Pulse. Huidig ${scanDefinition.signalLabelLower}: ${averageRiskScore?.toFixed(1) ?? '-'} /10.`
   }
@@ -360,8 +364,8 @@ export function buildNextStepBody({
   }
 
   return topFactor
-    ? `Gebruik Frictiescore als openingssignaal en ${topFactor.toLowerCase()} als eerste werkfrictiespoor om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
-    : 'Gebruik Frictiescore als openingssignaal en werkfrictie als verklarende laag om het eerstvolgende verbetergesprek te richten.'
+    ? `Gebruik de gemiddelde signaalscore als openingssignaal en ${topFactor.toLowerCase()} als eerste werkfrictiespoor om te bepalen waar management eerst moet doorvragen en welke verbeteractie binnen 30-90 dagen het meest logisch is.`
+    : 'Gebruik de gemiddelde signaalscore als openingssignaal en werkfrictie als verklarende laag om het eerstvolgende verbetergesprek te richten.'
 }
 
 export function getDisclosureDefaults({
