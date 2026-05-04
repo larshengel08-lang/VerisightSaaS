@@ -154,9 +154,6 @@ function HeroSection() {
                   <span style={{ fontSize: 13.5, fontWeight: 600, color: T.ink }}>{item.label}</span>
                 </div>
               ))}
-              <div style={{ marginTop: 18, fontSize: 11.5, color: T.inkMuted, fontStyle: 'italic' }}>
-                Verdieping wordt pas relevant als de volgende vraag echt speelt.
-              </div>
             </div>
           </div>
         </div>
@@ -205,14 +202,28 @@ function ProcessSection() {
                   padding: '28px 28px',
                   borderTop: `1px solid ${T.rule}`,
                   borderLeft: i % 3 > 0 ? `1px solid ${T.rule}` : 'none',
-                  background: i === 0 ? AC.faint : 'transparent',
+                  background: i === 0 || i === 5 ? AC.faint : 'transparent',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 16 }}>
-                  <span style={{ fontFamily: FF, fontSize: 13, color: i === 0 ? AC.deep : T.inkFaint, fontWeight: 400 }}>
+                  <span
+                    style={{
+                      fontFamily: FF,
+                      fontSize: 13,
+                      color: i === 0 || i === 5 ? AC.deep : T.inkFaint,
+                      fontWeight: 400,
+                    }}
+                  >
                     {`0${i + 1}`}
                   </span>
-                  <span style={{ width: 28, height: '1px', background: i === 0 ? AC.mid : T.rule, flexShrink: 0 }} />
+                  <span
+                    style={{
+                      width: 28,
+                      height: '1px',
+                      background: i === 0 || i === 5 ? AC.mid : T.rule,
+                      flexShrink: 0,
+                    }}
+                  />
                 </div>
                 <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 8 }}>
                   {step.title.replace(/^\d+\.\s*/, '')}

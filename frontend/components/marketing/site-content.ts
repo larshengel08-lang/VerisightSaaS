@@ -399,7 +399,7 @@ export const approachSteps = [
   },
   {
     title: '6. Eerste opvolging organiseren',
-    body: 'Waar relevant helpt Verisight om de eerste opvolging zichtbaar te maken, met eigenaar, eerste stap en reviewmoment.',
+    body: 'Organiseer en borg vervolgacties in Action Center door managers eigenaar te maken van zelf gecreëerde actiepunten, per aandachtspunt.',
   },
 ] as const
 
