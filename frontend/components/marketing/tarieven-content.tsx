@@ -10,12 +10,12 @@ const corePricing = [
     price: 'EUR 2.950',
     accent: AC.deep,
     accentFaint: AC.faint,
-    body: 'De standaard eerste instap voor terugkijkende vertrekduiding en een professioneel managementrapport over uitstroom.',
+    body: 'De standaard eerste stap voor organisaties die vertrek scherp willen begrijpen en daar direct bruikbare output voor nodig hebben.',
     bullets: [
-      'Inrichting exit-campagne en respondentflow',
-      'Dashboard en managementrapport',
-      'Toelichting op de uitkomsten',
-      'Bestuurlijke handoff inbegrepen',
+      'Inrichting van de route en respondentflow',
+      'Dashboard en rapport',
+      'Toelichting en eerste vervolgstap',
+      'Eerste bespreking en vervolg inbegrepen',
     ],
     href: '/producten/exitscan',
   },
@@ -24,11 +24,11 @@ const corePricing = [
     price: 'EUR 3.450',
     accent: T.teal,
     accentFaint: T.tealFaint,
-    body: 'Gerichte baseline om behoudsdruk eerder zichtbaar te maken, met extra nadruk op privacy en groepsduiding.',
+    body: 'De eerste stap voor organisaties die eerder willen zien waar behoud onder druk staat, zonder individuele signalen naar management.',
     bullets: [
-      'Retentiesignaal, stay-intent en vertrekintentie',
-      'Dashboard en managementrapport',
-      'Gerichte managementduiding',
+      'Retentiesignaal, stay-intent en vertrekintentie op groepsniveau',
+      'Dashboard en rapport',
+      'Eerste duiding voor HR en management',
       'Geen individuele signalen naar management',
     ],
     href: '/producten/retentiescan',
@@ -36,11 +36,12 @@ const corePricing = [
 ] as const
 
 const followOnRows = [
-  ['ExitScan ritmeroute', 'Op aanvraag', 'Logisch vervolg na eerste baseline wanneer proces, volume en eigenaarschap al staan.'],
-  ['RetentieScan ritmeroute', 'Op aanvraag', 'Doorlopende vervolgvorm wanneer vroegsignalering structureel onderdeel van de managementcyclus wordt.'],
-  ['Pulse', 'Op aanvraag', 'Compacte reviewlaag na een eerste kernroute of baseline, geen nieuwe eerste instap.'],
-  ['Onboarding 30-60-90', 'Op aanvraag', 'Gerichte lifecycle-check wanneer vroege landing van nieuwe medewerkers centraal staat.'],
-  ['Leadership Scan', 'Op aanvraag', 'Begrensde managementread nadat een bestaand people-signaal eerst duiding of verificatie vraagt.'],
+  ['ExitScan ritmeroute', 'Op aanvraag', 'Logisch vervolg na een eerste baseline, wanneer de eerste route staat en u vaker wilt blijven meten.'],
+  ['RetentieScan ritmeroute', 'Op aanvraag', 'Logisch vervolg wanneer vroegsignalering een vast onderdeel van het ritme wordt.'],
+  ['Segment Deep Dive', 'Op aanvraag', 'Extra segmentanalyse als de groep groot genoeg is voor een zorgvuldige lezing.'],
+  ['Onboarding 30-60-90', 'Op aanvraag', 'Gerichte vervolgronde wanneer de eerste maanden van nieuwe medewerkers extra aandacht vragen.'],
+  ['Pulse', 'Op aanvraag', 'Compacte vervolgronde na een eerste route, niet als nieuwe eerste stap.'],
+  ['Leadership Scan', 'Op aanvraag', 'Gerichte vervolgronde als een bestaand signaal extra duiding of verificatie vraagt.'],
 ] as const
 
 // ── ① Hero ────────────────────────────────────────────────────────
@@ -58,12 +59,12 @@ function HeroSection() {
             <div style={{ animation: 'slideUpFade .9s cubic-bezier(.16,1,.3,1) .15s both' }}>
               <h1 style={{ fontFamily: FF, fontWeight: 400, fontSize: 'clamp(42px,5.5vw,76px)', lineHeight: .97, letterSpacing: '-.032em', color: T.ink }}>
                 Transparante prijs.<br />
-                <em className="shimmer-text" style={{ fontStyle: 'italic' }}>Heldere scope.</em>
+                <em className="shimmer-text" style={{ fontStyle: 'italic' }}>Heldere eerste stap.</em>
               </h1>
             </div>
             <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
               <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '46ch', margin: '28px 0 0' }}>
-                U koopt een gerichte route met vaste output, geen licentie. ExitScan en RetentieScan vormen de twee kerninstappen.
+                U koopt geen licentie, maar een duidelijke eerste stap met dashboard, rapport en waar relevant eerste opvolging. Zo blijft de prijs compact, terwijl de uitkomst direct bruikbaar is voor HR en management.
               </p>
             </div>
           </div>
@@ -76,7 +77,7 @@ function HeroSection() {
                 </div>
               ))}
             </div>
-            <div style={{ marginTop: 14, fontSize: 11, color: T.inkMuted, fontStyle: 'italic' }}>Per traject, geen licenties. Vervolgroutes bewust kleiner.</div>
+            <div style={{ marginTop: 14, fontSize: 11, color: T.inkMuted, fontStyle: 'italic' }}>Per traject, geen licenties. Vervolg komt pas in beeld als de volgende vraag echt speelt.</div>
           </div>
         </div>
       </div>
@@ -93,10 +94,10 @@ function CorePricingSection() {
         <SectionMark num="02" label="Kernproducten" inView={sInView} />
         <Reveal delay={.05}>
           <h2 style={{ fontFamily: FF, fontSize: 'clamp(28px,3.5vw,42px)', fontWeight: 400, letterSpacing: '-.026em', color: T.ink, marginBottom: 14, lineHeight: 1.06 }}>
-            De eerste koop blijft helder.
+            De eerste koop blijft eenvoudig.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 44, maxWidth: '50ch' }}>
-            ExitScan en RetentieScan zijn de twee buyer-facing kernproducten. De prijsopbouw is bedoeld om de eerste route duidelijk te houden.
+            ExitScan en RetentieScan zijn de twee kernproducten. Zo blijft de eerste keuze overzichtelijk, terwijl dashboard, rapport en eerste opvolging direct in dezelfde lijn meekomen.
           </p>
         </Reveal>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -118,7 +119,7 @@ function CorePricingSection() {
                 <Link href={item.href} style={{ fontSize: 13, fontWeight: 600, color: item.accent, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, borderBottom: `1px solid transparent`, transition: 'border-color .2s' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = item.accent }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderBottomColor = 'transparent' }}>
-                  Meer over deze route <Arrow />
+                  {item.label.startsWith('ExitScan') ? 'Meer over ExitScan' : 'Meer over RetentieScan'} <Arrow />
                 </Link>
               </div>
             </Reveal>
@@ -135,19 +136,19 @@ function FollowOnSection() {
   return (
     <section style={{ background: T.white, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
       <div ref={sRef} style={{ ...SHELL, position: 'relative' }}>
-        <SectionMark num="03" label="Vervolg en add-ons" inView={sInView} />
+        <SectionMark num="03" label="Vervolg en verdieping" inView={sInView} />
         <Reveal delay={.05}>
           <h2 style={{ fontFamily: FF, fontSize: 'clamp(26px,3vw,38px)', fontWeight: 400, letterSpacing: '-.022em', color: T.ink, marginBottom: 14, lineHeight: 1.1 }}>
-            Kleinere routes na de eerste kernroute.
+            Vervolg komt pas later in beeld.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 40, maxWidth: '52ch' }}>
-            De vervolglaag blijft bewust bounded. Vervolgprijzen blijven logisch in verhouding tot de eerste managementvraag.
+            Onboarding, Pulse en Leadership Scan zijn kleinere vervolgstappen. Ze komen pas in beeld als de eerste route loopt en de volgende vraag echt speelt.
           </p>
         </Reveal>
         <Reveal delay={.1}>
           <div style={{ border: `1px solid ${T.rule}`, overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '220px 120px 1fr', background: T.paperSoft, borderBottom: `1px solid ${T.rule}` }}>
-              {['Route', 'Prijsanker', 'Wanneer logisch'].map((h, i) => (
+              {['Route', 'Prijs', 'Wanneer logisch'].map((h, i) => (
                 <div key={i} style={{ padding: '12px 18px', fontSize: 10, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkMuted }}>{h}</div>
               ))}
             </div>
@@ -178,17 +179,17 @@ function CtaBand() {
             <div>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 12 }}>Prijs in context</div>
               <h2 style={{ fontFamily: FF, fontSize: 'clamp(22px,2.8vw,32px)', fontWeight: 400, letterSpacing: '-.02em', color: T.ink, lineHeight: 1.15, marginBottom: 12 }}>
-                Twijfelt u welke eerste route commercieel en inhoudelijk het best past?
+                Twijfelt u welke eerste route nu het best past?
               </h2>
               <p style={{ fontSize: 14, lineHeight: 1.7, color: T.inkSoft, maxWidth: '52ch' }}>
-                Gebruik het kennismakingsgesprek om eerst de kernroute, timing en privacygrenzen logisch te bepalen. Zo blijft de offerte kleiner, helderder en beter verdedigbaar.
+                Gebruik het kennismakingsgesprek om route, timing en privacy kort te toetsen. Zo blijft de eerste stap overzichtelijk en weet u wat u direct terugkrijgt.
               </p>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '12px 26px', color: '#fff', background: T.ink, transition: 'all .18s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = AC.deep }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.ink }}>
-                Plan een kennismaking <Arrow />
+                Plan een eerste route-inschatting <Arrow />
               </Link>
               <Link href="/aanpak" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}`, transition: 'all .18s' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = T.inkMuted }}
