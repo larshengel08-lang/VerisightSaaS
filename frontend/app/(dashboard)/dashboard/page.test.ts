@@ -39,42 +39,58 @@ const campaigns: CampaignStats[] = [
 ]
 
 describe('dashboard home UX guardrails', () => {
-  it('keeps the overview route focused on HR regie with one dominant lead line and lighter supporting sections', () => {
+  it('renders the overview route as a cockpit with explicit triage buckets and sections', () => {
     const pageSource = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(pageSource).toContain('highlightLabel={index === 0 ? \'Nu eerst\' : undefined}')
-    expect(pageSource).toContain('Ook aandacht')
-    expect(pageSource).toContain('Actieve routes')
-    expect(pageSource).toContain('Wat nu leesbaar is')
-    expect(pageSource).toContain('Wat blokkeert')
-    expect(pageSource).toContain('Opvolging preview')
-    expect(pageSource).toContain('OverviewRouteRow')
-    expect(pageSource).not.toContain('OverviewLeadCard')
-    expect(pageSource).not.toContain('Overige actieve routes')
-    expect(pageSource).not.toContain('Portfolio samenvatting')
-    expect(pageSource).not.toContain('Aanbevolen focus')
+    expect(pageSource).toContain('Dashboard overview')
+    expect(pageSource).toContain('Cockpit')
+    expect(pageSource).toContain('ACTIE NODIG')
+    expect(pageSource).toContain('BIJNA KLAAR')
+    expect(pageSource).toContain('LIVE EN LEESBAAR')
+    expect(pageSource).toContain('GEBLOKKEERD / NIET GESTART')
+    expect(pageSource).toContain('Nu eerst')
+    expect(pageSource).toContain('Geblokkeerd / niet gestart')
+    expect(pageSource).toContain('Recente afgeronde routes')
+    expect(pageSource).toContain('WAAROM')
+    expect(pageSource).toContain('VOLGENDE STAP')
   })
 
-  it('keeps overview language compact and bounded instead of turning the page into a mini action surface', () => {
+  it('drops the old flat overview IA and keeps product boundaries sharp', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('Wat nu leesbaar is, wat blokkeert en waar opvolging openstaat.')
-    expect(source).toContain('Dashboard beschikbaar.')
-    expect(source).toContain('Eerste read beschikbaar.')
-    expect(source).toContain('Nog geen open opvolging.')
-    expect(source).not.toContain('Welke route nu het eerst logisch is.')
+    expect(source).not.toContain('Ook aandacht')
+    expect(source).not.toContain('Actieve routes')
+    expect(source).not.toContain('Wat nu leesbaar is')
+    expect(source).not.toContain('Wat blokkeert')
+    expect(source).not.toContain('OverviewLeadCard')
+    expect(source).not.toContain('Overige actieve routes')
+    expect(source).not.toContain('Portfolio samenvatting')
+    expect(source).not.toContain('Aanbevolen focus')
+    expect(source).not.toContain('factor-breakdown')
+    expect(source).not.toContain('setupwizard')
   })
 
-  it('keeps action center as a light bridge instead of reintroducing commitment structure on overview', () => {
+  it('keeps access boundaries and route scope intact on overview', () => {
     const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
 
-    expect(source).toContain('Opvolging preview')
-    expect(source).toContain('canOpenActionCenterRoute')
-    expect(source).toContain('first_management_use_confirmed_at')
-    expect(source).toContain('Open Action Center')
-    expect(source).toContain('Open prioriteit')
-    expect(source).toContain('Zonder bevestiging')
-    expect(source).not.toContain('Actieve opvolging')
+    expect(source).toContain("if (context.managerOnly) redirect('/action-center')")
+    expect(source).toContain("const requestedModuleFilter = normalizeDashboardModuleFilter(")
+    expect(source).toContain("const requestedStatusFilter = normalizeDashboardStatusFilter(")
+    expect(source).toContain("if (state === 'ready_to_launch' || state === 'running' || state === 'sparse') return 'action_needed'")
+    expect(source).toContain(".filter((entry) => entry.state === 'setup')")
+    expect(source).toContain('Geen routes met deze status.')
+    expect(source).not.toContain('Accepteren')
+    expect(source).not.toContain('Afwijzen')
+    expect(source).not.toContain('Toewijzen')
+    expect(source).not.toContain('Reviewmoment')
+  })
+
+  it('keeps signal scoring out of the visible overview card metrics', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('MetricBlock label="RESPONS" value={item.responseValue} compact')
+    expect(source).not.toContain('MetricBlock label={item.signalLabel.toUpperCase()}')
+    expect(source).not.toContain('signalValue:')
   })
 
   it('allows the seeded HR demo campaign to override the default overview focus route', () => {
