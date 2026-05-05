@@ -51,6 +51,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
 
+from backend import database as backend_database
 from backend.database import DATABASE_URL, check_db_connection, get_db, init_db
 from backend.email import send_contact_request_result, send_hr_notification, send_survey_invite
 from backend.models import Campaign, ContactRequest, Organization, OrganizationSecret, Respondent, SurveyResponse
@@ -174,6 +175,8 @@ async def lifespan(app: FastAPI):
     # Bij PostgreSQL/Supabase beheert schema.sql de tabellen
     if _IS_SQLITE:
         init_db()
+    else:
+        backend_database._repair_contact_request_schema()
     yield
 
 
