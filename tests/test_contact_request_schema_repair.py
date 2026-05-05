@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 
 from backend.database import _repair_contact_request_schema
 from backend.main import app
-from backend.models import ContactRequest
+from backend.models import CampaignDeliveryRecord, ContactRequest, PilotLearningDossier
 
 
 def test_contact_request_schema_repair_upgrades_legacy_table(monkeypatch):
@@ -60,3 +61,15 @@ def test_startup_repairs_contact_request_schema_for_non_sqlite(monkeypatch):
         pass
 
     assert calls == ["repair"]
+
+
+def test_contact_request_ids_stay_string_based_on_postgres():
+    dialect = postgresql.dialect()
+
+    contact_id_type = ContactRequest.__table__.c.id.type.compile(dialect=dialect)
+    delivery_fk_type = CampaignDeliveryRecord.__table__.c.contact_request_id.type.compile(dialect=dialect)
+    dossier_fk_type = PilotLearningDossier.__table__.c.contact_request_id.type.compile(dialect=dialect)
+
+    assert contact_id_type.lower() != "uuid"
+    assert delivery_fk_type.lower() != "uuid"
+    assert dossier_fk_type.lower() != "uuid"
