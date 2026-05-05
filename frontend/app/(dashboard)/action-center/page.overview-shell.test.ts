@@ -15,5 +15,6 @@ describe('action center bounded overview shell', () => {
     expect(previewSource).toContain('Te bespreken / reviewbaar')
     expect(previewSource).toContain('Geblokkeerd')
     expect(previewSource).toContain('Afgerond')
+    expect(previewSource).not.toContain('accent="slate"')
   })
 })
