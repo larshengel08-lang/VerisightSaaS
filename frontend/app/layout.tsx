@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { IBM_Plex_Sans, Fraunces, Newsreader } from 'next/font/google'
+import { SiteAnalytics } from '@/components/marketing/site-analytics'
 import './globals.css'
 
 const ibmPlexSans = IBM_Plex_Sans({
@@ -26,6 +27,8 @@ const newsreader = Newsreader({
   display: 'swap',
   variable: '--font-newsreader',
 })
+
+const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION
 
 export const metadata: Metadata = {
   title: {
@@ -63,6 +66,11 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: googleSiteVerification
+    ? {
+        google: googleSiteVerification,
+      }
+    : undefined,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -96,6 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
         {children}
+        <SiteAnalytics />
       </body>
     </html>
   )

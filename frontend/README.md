@@ -34,3 +34,19 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Gratis analytics voor verisight.nl
+
+De marketing-site ondersteunt drie gratis analytics-ingangen via `frontend/.env.local` of je productie-env:
+
+```bash
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+GOOGLE_SITE_VERIFICATION=jouw-google-site-verification-code
+NEXT_PUBLIC_CLOUDFLARE_BEACON_TOKEN=jouw-cloudflare-beacon-token
+```
+
+- `NEXT_PUBLIC_GA_MEASUREMENT_ID`: zet GA4 aan op alle routes.
+- `GOOGLE_SITE_VERIFICATION`: voegt de Search Console verificatie-meta-tag toe.
+- `NEXT_PUBLIC_CLOUDFLARE_BEACON_TOKEN`: zet Cloudflare Web Analytics aan.
+
+Laat een variabele leeg of weg als je die dienst nog niet wilt activeren.
