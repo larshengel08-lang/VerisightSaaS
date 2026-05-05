@@ -1570,7 +1570,7 @@ export function ActionCenterPreview({
                               label="Afgerond"
                               value={`${workspaceReadbackSummary.closedRouteCount}`}
                               detail={`${workspaceReadbackSummary.closedRouteCount} routes met vastgelegd resultaat`}
-                              accent="slate"
+                              accent="teal"
                             />
                           </>
                         ) : null}
