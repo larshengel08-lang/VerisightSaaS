@@ -79,7 +79,7 @@ function HeroSection() {
                   fontWeight: 600,
                   padding: '12px 28px',
                   color: '#fff',
-                  background: T.ink,
+                  background: AC.deep,
                   transition: 'all .18s cubic-bezier(.4,0,0,1)',
                 }}
                 onMouseEnter={(e) => {
@@ -88,7 +88,7 @@ function HeroSection() {
                 }}
                 onMouseLeave={(e) => {
                   ;(e.currentTarget as HTMLElement).style.transform = 'none'
-                  ;(e.currentTarget as HTMLElement).style.background = T.ink
+                  ;(e.currentTarget as HTMLElement).style.background = AC.deep
                 }}
               >
                 Toets uw eerste route <Arrow />

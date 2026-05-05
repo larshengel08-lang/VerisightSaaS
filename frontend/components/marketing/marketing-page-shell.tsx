@@ -17,11 +17,11 @@ interface MarketingPageShellProps {
 }
 
 const themeMap: Record<MarketingPageTheme, string> = {
-  neutral: 'bg-[#FFFCF8]',
-  exit: 'bg-[#FFFCF8]',
-  retention: 'bg-[#FFFCF8]',
-  combination: 'bg-[#FFFCF8]',
-  support: 'bg-[#FFFCF8]',
+  neutral: 'bg-[#F7F5F1]',
+  exit: 'bg-[#F7F5F1]',
+  retention: 'bg-[#F7F5F1]',
+  combination: 'bg-[#F7F5F1]',
+  support: 'bg-[#F7F5F1]',
 }
 
 export function MarketingPageShell({
@@ -38,7 +38,7 @@ export function MarketingPageShell({
   const showSupport = Boolean(heroSupport)
 
   return (
-    <div className="min-h-screen bg-[#FFFCF8] text-[var(--ink)]">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <PublicHeader ctaHref={ctaHref} ctaLabel={ctaLabel} />
       <main>
         <section

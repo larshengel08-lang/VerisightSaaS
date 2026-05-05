@@ -188,8 +188,8 @@ export function ContactForm({
 
   const labelClass = isLight ? 'text-slate-700' : 'text-slate-200'
   const inputClass = isLight
-    ? 'border-slate-200 bg-slate-50 text-slate-950 placeholder:text-slate-400 focus:border-[#3C8D8A] focus:ring-[#3C8D8A]/25'
-    : 'border-white/10 bg-slate-950/40 text-white placeholder:text-slate-400 focus:border-[#DCEFEA] focus:ring-[#3C8D8A]/30'
+    ? 'border-[#E5E0D6] bg-white text-slate-950 placeholder:text-slate-400 focus:border-[#C96A4B] focus:ring-[#C96A4B]/20'
+    : 'border-white/10 bg-slate-950/40 text-white placeholder:text-slate-400 focus:border-[#F3E4DA] focus:ring-[#C96A4B]/30'
   const helperClass = isLight ? 'text-slate-500' : 'text-slate-300'
   const successClass = isLight
     ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
@@ -201,8 +201,8 @@ export function ContactForm({
     ? 'border-amber-200 bg-amber-50 text-amber-900'
     : 'border-amber-400/30 bg-amber-400/10 text-amber-100'
   const buttonClass = isLight
-    ? 'bg-[#3C8D8A] hover:bg-[#2d6e6b]'
-    : 'bg-[#3C8D8A] hover:bg-[#2d6e6b]'
+    ? 'bg-[#C96A4B] hover:bg-[#B85D41]'
+    : 'bg-[#C96A4B] hover:bg-[#B85D41]'
   const panelSpacingClass = isCompact
     ? 'mb-5 rounded-[1.35rem] px-4 py-4 leading-6 sm:px-5 sm:py-5 sm:leading-7'
     : isSimplified
@@ -232,7 +232,7 @@ export function ContactForm({
           {contactTrustSignals.map((signal) => (
             <span
               key={signal}
-              className={`rounded-2xl px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.14em] ${isLight ? 'border border-[#E5E0D6] bg-[#fbf8f3] text-slate-600' : 'border border-white/10 bg-white/5 text-slate-200'}`}
+              className={`rounded-2xl px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.14em] ${isLight ? 'border border-[#E5E0D6] bg-[#F3E4DA] text-[#4A5563]' : 'border border-white/10 bg-white/5 text-slate-200'}`}
             >
               {signal}
             </span>

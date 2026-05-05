@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { PublicFooter } from '@/components/marketing/public-footer'
 import { PublicHeader } from '@/components/marketing/public-header'
+import { AC, T } from '@/components/marketing/design-tokens'
 import { buildContactHref } from '@/lib/contact-funnel'
 import type { FollowOnRouteContent } from '@/lib/follow-on-route-content'
 
@@ -106,7 +107,7 @@ export function FollowOnRoutePage({ route }: FollowOnRoutePageProps) {
                       fontWeight: 600,
                       padding: '12px 28px',
                       color: '#fff',
-                      background: palette.ink,
+                      background: palette.accent,
                     }}
                   >
                     Plan een kennismaking
@@ -298,7 +299,7 @@ export function FollowOnRoutePage({ route }: FollowOnRoutePageProps) {
                     fontWeight: 600,
                     padding: '14px 28px',
                     color: '#fff',
-                    background: palette.ink,
+                    background: palette.accent,
                     whiteSpace: 'nowrap',
                   }}
                 >
@@ -347,46 +348,18 @@ const SHELL = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48p
 
 function getRoutePalette(slug: FollowOnRouteContent['slug']) {
   const base = {
-    paper: 'oklch(0.978 0.010 62)',
-    paperSoft: 'oklch(0.956 0.018 60)',
-    white: '#FFFCF8',
-    ink: 'oklch(0.16 0.012 250)',
-    inkSoft: 'oklch(0.32 0.010 250)',
-    inkMuted: 'oklch(0.52 0.008 250)',
-    inkFaint: 'oklch(0.70 0.006 250)',
-    rule: 'oklch(0.875 0.012 62)',
-    accentSoftDot: 'oklch(0.76 0.14 53)',
+    paper: T.paper,
+    paperSoft: T.paperSoft,
+    white: T.white,
+    ink: T.ink,
+    inkSoft: T.inkSoft,
+    inkMuted: T.inkMuted,
+    inkFaint: T.inkFaint,
+    rule: T.rule,
+    accentSoftDot: AC.mid,
+    accent: AC.deep,
+    accentSoft: AC.soft,
   }
 
-  if (slug === 'leadership-scan') {
-    return {
-      ...base,
-      accent: 'oklch(0.50 0.12 188)',
-      accentSoft: 'oklch(0.972 0.018 185)',
-    }
-  }
-
-  if (slug === 'pulse') {
-    return {
-      ...base,
-      accent: 'oklch(0.45 0.15 85)',
-      accentSoft: 'oklch(0.965 0.03 95)',
-      accentSoftDot: 'oklch(0.78 0.13 88)',
-    }
-  }
-
-  if (slug === 'combinatie') {
-    return {
-      ...base,
-      accent: 'oklch(0.45 0.10 225)',
-      accentSoft: 'oklch(0.962 0.02 230)',
-      accentSoftDot: 'oklch(0.72 0.08 225)',
-    }
-  }
-
-  return {
-    ...base,
-    accent: 'oklch(0.45 0.18 50)',
-    accentSoft: 'oklch(0.95 0.045 50)',
-  }
+  return base
 }

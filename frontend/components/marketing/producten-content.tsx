@@ -37,8 +37,8 @@ const primaryRoutes = [
       'U wilt eerder zien waar gesprek en verificatie nodig zijn',
     ],
     href: '/producten/retentiescan',
-    accent: 'oklch(0.50 0.12 188)' as string,
-    accentSoft: 'oklch(0.972 0.018 185)' as string,
+    accent: AC.deep,
+    accentSoft: AC.faint,
   },
 ] as const
 
@@ -126,7 +126,7 @@ function HeroSection() {
               href={primaryHref}
               style={{
                 alignItems: 'center',
-                background: T.ink,
+                background: AC.deep,
                 color: '#fff',
                 display: 'inline-flex',
                 fontSize: 14.5,

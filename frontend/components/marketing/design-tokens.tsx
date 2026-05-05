@@ -4,29 +4,29 @@ import { useState, useEffect, useRef } from 'react'
 
 // ── Design tokens ─────────────────────────────────────────────────
 export const T = {
-  paper:      'oklch(0.978 0.010 62)',
-  paperSoft:  'oklch(0.956 0.018 60)',
-  paperBlush: 'oklch(0.962 0.025 32)',
-  white:      '#FFFCF8',
-  navy:       'oklch(0.13 0.032 250)',
-  ink:        'oklch(0.16 0.012 250)',
-  inkSoft:    'oklch(0.32 0.010 250)',
-  inkMuted:   'oklch(0.52 0.008 250)',
-  inkFaint:   'oklch(0.70 0.006 250)',
-  rule:       'oklch(0.875 0.012 62)',
-  ruleLight:  'oklch(0.918 0.008 62)',
-  teal:       'oklch(0.50 0.12 188)',
-  tealMid:    'oklch(0.62 0.10 185)',
-  tealSoft:   'oklch(0.94 0.04 185)',
-  tealFaint:  'oklch(0.972 0.018 185)',
+  paper:      '#F7F5F1',
+  paperSoft:  '#FAF8F4',
+  paperBlush: '#F3E4DA',
+  white:      '#FFFFFF',
+  navy:       '#132033',
+  ink:        '#132033',
+  inkSoft:    '#4A5563',
+  inkMuted:   '#6B7280',
+  inkFaint:   '#9AA3AE',
+  rule:       '#E5E0D6',
+  ruleLight:  '#F0EBE2',
+  teal:       '#7A908B',
+  tealMid:    '#90A29F',
+  tealSoft:   '#E8F0EE',
+  tealFaint:  '#F4F8F7',
 } as const
 
 export const AC = {
-  deep:  'oklch(0.45 0.18 50)',
-  mid:   'oklch(0.76 0.14 53)',
-  light: 'oklch(0.86 0.10 55)',
-  soft:  'oklch(0.95 0.045 50)',
-  faint: 'oklch(0.976 0.018 50)',
+  deep:  '#C96A4B',
+  mid:   '#D9886E',
+  light: '#E8B7A6',
+  soft:  '#F3E4DA',
+  faint: '#FAF1EC',
 } as const
 
 export const FF = 'var(--font-fraunces), serif'

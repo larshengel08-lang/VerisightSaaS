@@ -5,23 +5,23 @@ import { Reveal } from '@/components/marketing/design-tokens'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const SURFACE = {
-  paper: '#f4e8df',
-  paperSoft: '#f7eee7',
-  surface: '#fffdf9',
-  surfaceSoft: '#fbf7f2',
-  border: '#d9cebf',
-  borderSoft: '#e8ddd0',
-  ink: '#162238',
-  text: '#4e5d6f',
-  muted: '#78818a',
-  subtle: '#97a0ab',
-  teal: '#1f958a',
-  tealSoft: '#dff2ef',
-  amber: '#b9571f',
-  amberSoft: '#f4ddd0',
-  amberGlow: '#e39a63',
-  charcoal: '#0d1118',
-  charcoalSoft: '#181e27',
+  paper: '#F7F5F1',
+  paperSoft: '#FAF8F4',
+  surface: '#FFFFFF',
+  surfaceSoft: '#F7F5F1',
+  border: '#E5E0D6',
+  borderSoft: '#F0EBE2',
+  ink: '#132033',
+  text: '#4A5563',
+  muted: '#6B7280',
+  subtle: '#9AA3AE',
+  teal: '#7A908B',
+  tealSoft: '#E8F0EE',
+  amber: '#C96A4B',
+  amberSoft: '#F3E4DA',
+  amberGlow: '#B85D41',
+  charcoal: '#132033',
+  charcoalSoft: '#1C2A3D',
 } as const
 
 const SHELL = {
@@ -863,8 +863,8 @@ function HeroSection() {
 
               <div
                 style={{
-                  background: '#fbf5ee',
-                  border: '1px solid rgba(217, 206, 191, 0.72)',
+                  background: SURFACE.paper,
+                  border: `1px solid ${SURFACE.border}`,
                   borderRadius: 18,
                   boxShadow: '0 12px 28px rgba(22, 34, 56, 0.04)',
                   height: 322,
@@ -883,7 +883,7 @@ function HeroSection() {
                   </p>
                   <span
                     style={{
-                      background: '#f5ede5',
+                      background: SURFACE.paperSoft,
                       border: `1px solid ${SURFACE.borderSoft}`,
                       borderRadius: 999,
                       color: SURFACE.text,
@@ -921,8 +921,8 @@ function HeroSection() {
 
                 <div
                   style={{
-                    background: 'linear-gradient(180deg, rgba(255,255,255,0.42) 0%, rgba(245,236,228,0.65) 100%)',
-                    border: '1px solid rgba(217, 206, 191, 0.76)',
+                    background: `linear-gradient(180deg, rgba(255,255,255,0.42) 0%, ${SURFACE.paperSoft} 100%)`,
+                    border: `1px solid ${SURFACE.border}`,
                     borderRadius: 16,
                     height: 186,
                     marginBottom: 16,
@@ -981,8 +981,8 @@ function HeroSection() {
 
               <div
                 style={{
-                  background: '#fef8f1',
-                  border: '1px solid rgba(217, 206, 191, 0.92)',
+                  background: SURFACE.surface,
+                  border: `1px solid ${SURFACE.border}`,
                   borderRadius: 18,
                   boxShadow: '0 16px 34px rgba(22, 34, 56, 0.08)',
                   minHeight: 264,
@@ -1046,7 +1046,7 @@ function HeroSection() {
 
               <div
                 style={{
-                  background: '#0f131a',
+                  background: SURFACE.charcoal,
                   border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: 24,
                   boxShadow: '0 24px 48px rgba(13, 17, 24, 0.24)',
@@ -2196,9 +2196,9 @@ function ContactSection() {
                 href={kennismakingHref}
                 style={{
                   alignItems: 'center',
-                  background: '#fffdf8',
+                  background: SURFACE.amber,
                   borderRadius: 999,
-                  color: SURFACE.ink,
+                  color: '#fff',
                   display: 'inline-flex',
                   fontFamily: bodyFont,
                   fontSize: 15,

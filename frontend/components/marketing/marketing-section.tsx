@@ -10,7 +10,7 @@ interface MarketingSectionProps {
 }
 
 const toneClassMap: Record<MarketingSectionTone, string> = {
-  plain: 'bg-[#FFFCF8]',
+  plain: 'bg-white',
   surface: 'marketing-section-surface',
   tint: 'marketing-section-tint',
   dark: 'marketing-section-dark',

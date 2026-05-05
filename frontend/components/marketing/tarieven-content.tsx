@@ -186,9 +186,9 @@ function CtaBand() {
               </p>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '12px 26px', color: '#fff', background: T.ink, transition: 'all .18s' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = AC.deep }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = T.ink }}>
+              <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '12px 26px', color: '#fff', background: AC.deep, transition: 'all .18s' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = AC.mid }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = AC.deep }}>
                 Plan een eerste route-inschatting <Arrow />
               </Link>
               <Link href="/aanpak" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}`, transition: 'all .18s' }}
