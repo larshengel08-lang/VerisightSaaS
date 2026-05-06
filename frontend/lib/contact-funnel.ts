@@ -20,20 +20,20 @@ export const CONTACT_ROUTE_OPTIONS = [
   {
     value: 'onboarding',
     label: 'Onboarding 30-60-90',
-    description: 'We willen vroeg zien hoe nieuwe medewerkers landen zonder daar een brede lifecycle-suite van te maken.',
-    firstStepLabel: 'een bounded peer onboarding-route naast de kernproducten',
+    description: 'We willen de eerste maanden van nieuwe medewerkers als eerste managementvraag openen.',
+    firstStepLabel: 'Onboarding 30-60-90 Baseline',
   },
   {
     value: 'pulse',
     label: 'Pulse',
     description: 'Na een eerste baseline of managementread willen we compact herchecken wat nu verschuift.',
-    firstStepLabel: 'een bounded Pulse vervolgroute na een eerste baseline of managementread',
+    firstStepLabel: 'een compacte Pulse-vervolgroute na een eerste baseline of managementread',
   },
   {
     value: 'leadership',
     label: 'Leadership Scan',
     description: 'Na een bestaand people-signaal willen we bepalen welke managementcontext eerst duiding vraagt.',
-    firstStepLabel: 'een bounded Leadership Scan follow-on route na een bestaand signaal',
+    firstStepLabel: 'een gerichte Leadership Scan-vervolgroute na een bestaand signaal',
   },
   {
     value: 'nog-onzeker',
@@ -288,9 +288,9 @@ export function getContactQualificationGuidance({
       status: 'bounded_peer_review',
       recommendedCoreRoute,
       followOnCandidateRoute: 'onboarding',
-      headline: 'Onboarding 30-60-90 blijft een bounded peer naast de kernroutes.',
-      detail: `We behandelen onboarding als een eigen lifecycle-check voor nieuwe medewerkers. De route hoeft niet eerst te worden teruggeduwd naar een gewone follow-up, maar we toetsen wel bewust of een smallere onboardingread past of dat ${getContactRouteLabel(recommendedCoreRoute)} inhoudelijk logischer blijft.`,
-      operatorSummary: `Onboarding is genoemd als bounded peer; toets direct de lifecycle-vraag, maar check ook of ${getContactRouteLabel(recommendedCoreRoute)} toch de sterkere eerste managementroute is.`,
+      headline: 'Onboarding 30-60-90 blijft een gerichte eerste route naast de kernroutes.',
+      detail: `We behandelen onboarding als een specifiekere eerste route voor nieuwe medewerkers. De route hoeft niet eerst te worden teruggeduwd naar een gewone follow-up, maar we toetsen wel bewust of onboarding nu echt de eerste managementvraag is of dat ${getContactRouteLabel(recommendedCoreRoute)} inhoudelijk logischer blijft.`,
+      operatorSummary: `Onboarding is genoemd als gerichte eerste route; toets direct of de eerste maanden van nieuwe medewerkers nu echt de eerste managementvraag zijn, en check anders of ${getContactRouteLabel(recommendedCoreRoute)} sterker past.`,
     }
   }
 
@@ -299,9 +299,9 @@ export function getContactQualificationGuidance({
       status: 'bounded_follow_on_review',
       recommendedCoreRoute,
       followOnCandidateRoute,
-      headline: `${getContactRouteLabel(followOnCandidateRoute)} blijft een bounded vervolgrichting.`,
+      headline: `${getContactRouteLabel(followOnCandidateRoute)} blijft een gerichte vervolgrichting.`,
       detail: `We behandelen dit pas als logische vervolgstap nadat intake bevestigt dat er al een bestaand signaal, baseline of eerdere managementread staat. Tot die bevestiging blijft ${getContactRouteLabel(recommendedCoreRoute)} de veiligste eerste routekaderschets.`,
-      operatorSummary: `${getContactRouteLabel(followOnCandidateRoute)} is genoemd als bounded follow-on route; verifieer bestaand signaal en toets eerst of ${getContactRouteLabel(recommendedCoreRoute)} al stevig staat.`,
+      operatorSummary: `${getContactRouteLabel(followOnCandidateRoute)} is genoemd als gerichte vervolgrichting; verifieer bestaand signaal en toets eerst of ${getContactRouteLabel(recommendedCoreRoute)} al stevig staat.`,
     }
   }
 
@@ -311,7 +311,7 @@ export function getContactQualificationGuidance({
       recommendedCoreRoute,
       followOnCandidateRoute,
       headline: `${getContactRouteLabel(followOnCandidateRoute)} openen we niet als vlakke eerste intake-route.`,
-      detail: `Zonder expliciet bestaand signaal of eerdere baseline vernauwen we deze aanvraag eerst richting ${getContactRouteLabel(recommendedCoreRoute)}. Daarna bepalen we pas of ${getContactRouteLabel(followOnCandidateRoute)} echt logisch is als bounded vervolgroute.`,
+      detail: `Zonder expliciet bestaand signaal of eerdere baseline vernauwen we deze aanvraag eerst richting ${getContactRouteLabel(recommendedCoreRoute)}. Daarna bepalen we pas of ${getContactRouteLabel(followOnCandidateRoute)} echt logisch is als vervolgrichting.`,
       operatorSummary: `${getContactRouteLabel(followOnCandidateRoute)} is nog te vroeg als eerste route; vernauw de intake eerst richting ${getContactRouteLabel(recommendedCoreRoute)} en leg daarna pas een eventuele follow-on vast.`,
     }
   }
@@ -333,7 +333,7 @@ export function getContactQualificationGuidance({
       recommendedCoreRoute,
       followOnCandidateRoute: null,
       headline: 'RetentieScan lijkt nu de logische eerste route.',
-      detail: `De vraag leest als een vroeg behouds- of stay-intent vraagstuk op groepsniveau. Daardoor mag RetentieScan in intake als eerste route worden getoetst, met ${normalizedTiming === 'zo-snel-mogelijk' ? 'hoge urgentie' : 'bounded eerste verificatie'} als uitgangspunt.`,
+      detail: `De vraag leest als een vroeg behouds- of stay-intent vraagstuk op groepsniveau. Daardoor mag RetentieScan in intake als eerste route worden getoetst, met ${normalizedTiming === 'zo-snel-mogelijk' ? 'hoge urgentie' : 'een gerichte eerste verificatie'} als uitgangspunt.`,
       operatorSummary: 'Vroege behoudsvraag zichtbaar; toets RetentieScan als primaire route en bevestig dat het niet alsnog vooral om vertrekduiding achteraf gaat.',
     }
   }

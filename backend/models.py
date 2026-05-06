@@ -68,6 +68,27 @@ class GUID(TypeDecorator):
         return str(value)
 
 
+class StringGUID(TypeDecorator):
+    """String-based UUID storage for legacy tables that use VARCHAR(36) on Postgres."""
+
+    impl = CHAR
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        return dialect.type_descriptor(CHAR(36))
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        parsed = value if isinstance(value, uuid.UUID) else uuid.UUID(str(value))
+        return str(parsed)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return str(value)
+
+
 # ---------------------------------------------------------------------------
 # Organization (tenant)
 # ---------------------------------------------------------------------------
@@ -276,7 +297,7 @@ class SurveyResponse(Base):
 class ContactRequest(Base):
     __tablename__ = "contact_requests"
 
-    id: Mapped[str] = mapped_column(GUID(), primary_key=True, default=_uuid)
+    id: Mapped[str] = mapped_column(StringGUID(), primary_key=True, default=_uuid)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
     work_email: Mapped[str] = mapped_column(String(255), nullable=False)
     organization: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -339,7 +360,7 @@ class CampaignDeliveryRecord(Base):
         unique=True,
     )
     contact_request_id: Mapped[str | None] = mapped_column(
-        GUID(),
+        StringGUID(),
         ForeignKey("contact_requests.id", ondelete="SET NULL"),
         nullable=True,
     )
@@ -414,7 +435,7 @@ class PilotLearningDossier(Base):
         nullable=True,
     )
     contact_request_id: Mapped[str | None] = mapped_column(
-        GUID(),
+        StringGUID(),
         ForeignKey("contact_requests.id", ondelete="SET NULL"),
         nullable=True,
     )

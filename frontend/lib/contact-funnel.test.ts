@@ -51,7 +51,7 @@ describe('contact qualification guidance', () => {
     expect(guidance.detail.toLowerCase()).toContain('bestaand signaal')
   })
 
-  it('keeps onboarding as a bounded peer wanneer de vraag direct over nieuwe medewerkers gaat', () => {
+  it('keeps onboarding as a specific first route wanneer de vraag direct over nieuwe medewerkers gaat', () => {
     const guidance = getContactQualificationGuidance({
       routeInterest: 'onboarding',
       desiredTiming: 'deze-maand',
@@ -61,7 +61,7 @@ describe('contact qualification guidance', () => {
     expect(guidance.status).toBe('bounded_peer_review')
     expect(guidance.recommendedCoreRoute).toBe('exitscan')
     expect(guidance.followOnCandidateRoute).toBe('onboarding')
-    expect(guidance.headline.toLowerCase()).toContain('bounded peer')
+    expect(guidance.headline.toLowerCase()).toContain('gerichte eerste route')
   })
 
   it('reframes follow-on routes back to a core route when no earlier signal is present', () => {

@@ -156,7 +156,7 @@ type DeliveryAutoSignalArgs = {
   hasEnoughData: boolean
   activeClientAccessCount: number
   pendingClientInviteCount: number
-  importReady: boolean
+  importReady: boolean | null
 }
 
 export const DELIVERY_LIFECYCLE_OPTIONS: Array<{ value: DeliveryLifecycleStage; label: string }> = [
@@ -483,7 +483,7 @@ export function buildDeliveryAutoSignals({
             : 'Nog geen gekoppelde lead of intakeharde handoff zichtbaar.',
         },
     import_qa:
-      importReady
+      importReady === true
         ? {
             autoState: 'ready',
             summary:
@@ -491,13 +491,18 @@ export function buildDeliveryAutoSignals({
                 ? 'Het deelnemersbestand is gecontroleerd en 1 deelnemer staat vrijgegeven voor launch.'
                 : `Het deelnemersbestand is gecontroleerd en ${totalInvited} deelnemers staan vrijgegeven voor launch.`,
           }
-        : {
-            autoState: 'not_ready',
-            summary:
-              totalInvited > 0
-                ? 'Het deelnemersbestand is nog niet vrijgegeven voor launch.'
-                : 'Nog geen gecontroleerd deelnemersbestand beschikbaar.',
-          },
+        : importReady === false
+          ? {
+              autoState: 'not_ready',
+              summary:
+                totalInvited > 0
+                  ? 'Het deelnemersbestand is nog niet vrijgegeven voor launch.'
+                  : 'Nog geen gecontroleerd deelnemersbestand beschikbaar.',
+            }
+          : {
+              autoState: 'unknown',
+              summary: 'Importstatus is nog niet bekend.',
+            },
     invite_readiness:
       totalInvited === 0
         ? {

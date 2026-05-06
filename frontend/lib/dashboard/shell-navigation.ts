@@ -153,12 +153,14 @@ export function getActiveModuleFromLocation(
 
 export function buildDashboardShellNavigation({
   isAdmin,
+  canManageActionCenterAssignments = false,
   shellMode = 'full',
   currentCampaignPath,
   campaigns,
   portfolioCounts,
 }: {
   isAdmin: boolean
+  canManageActionCenterAssignments?: boolean
   shellMode?: DashboardShellMode
   currentCampaignPath: string | null
   campaigns: DashboardShellCampaignRef[]
@@ -233,28 +235,44 @@ export function buildDashboardShellNavigation({
     ]
   })
 
-  const admin: DashboardShellNavItem[] = isAdmin
-    ? [
-        {
-          label: 'Setup',
-          detail: 'Organisaties, campaignsetup en launchdiscipline.',
-          href: '/beheer',
-          disabled: false,
-        },
-        {
-          label: 'Leads',
-          detail: 'Sales-to-delivery context en contactaanvragen.',
-          href: '/beheer/contact-aanvragen',
-          disabled: false,
-        },
-        {
-          label: 'Action Center bron',
-          detail: 'Broncampagnes en opvolging beheren.',
-          href: '/beheer/klantlearnings',
-          disabled: false,
-        },
-      ]
-    : []
+  const admin: DashboardShellNavItem[] = [
+    ...(isAdmin
+      ? [
+          {
+            label: 'Setup',
+            detail: 'Organisaties, campaignsetup en launchdiscipline.',
+            href: '/beheer',
+            disabled: false,
+          },
+        ]
+      : []),
+    ...(canManageActionCenterAssignments
+      ? [
+          {
+            label: 'Managers',
+            detail: 'Manager assignment en scopegebonden Action Center-toegang.',
+            href: '/beheer/managers',
+            disabled: false,
+          },
+        ]
+      : []),
+    ...(isAdmin
+      ? [
+          {
+            label: 'Leads',
+            detail: 'Sales-to-delivery context en contactaanvragen.',
+            href: '/beheer/contact-aanvragen',
+            disabled: false,
+          },
+          {
+            label: 'Action Center bron',
+            detail: 'Broncampagnes en opvolging beheren.',
+            href: '/beheer/klantlearnings',
+            disabled: false,
+          },
+        ]
+      : []),
+  ]
 
   return {
     modules,
@@ -276,6 +294,7 @@ export function getDashboardShellCurrentLabel(pathname: string) {
   if (pathname.startsWith('/reports')) return 'Rapporten'
   if (pathname.startsWith('/action-center')) return 'Action Center'
   if (pathname.startsWith('/campaigns/')) return 'Campagnedetail'
+  if (pathname.startsWith('/beheer/managers')) return 'Managers'
   if (pathname.startsWith('/beheer/contact-aanvragen')) return 'Leadcontext'
   if (pathname.startsWith('/beheer/klantlearnings')) return 'Action Center'
   if (pathname.startsWith('/beheer')) return 'Setup en beheer'

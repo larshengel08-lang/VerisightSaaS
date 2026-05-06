@@ -2,16 +2,16 @@
 
 :root {
   /* Brand tokens — Stitch-aligned palette */
-  --ink:        #1b1c19;
-  --navy:       #0a192f;
-  --petrol:     #234b57;
-  --bg:         #fbf9f4;
-  --surface:    #ffffff;
-  --teal:       #3a7f7d;
-  --teal-light: #e4f0ed;
-  --text:       #44474d;
-  --muted:      #75777e;
-  --border:     #ded6ca;
+  --ink:        #132033;
+  --navy:       #132033;
+  --petrol:     #132033;
+  --bg:         #F7F5F1;
+  --surface:    #FFFFFF;
+  --teal:       #C96A4B;
+  --teal-light: #F3E4DA;
+  --text:       #4A5563;
+  --muted:      #6B7280;
+  --border:     #E5E0D6;
 
   /* Legacy compat */
   --background: var(--surface);
@@ -23,31 +23,31 @@
   --marketing-hero-space: clamp(3.5rem, 5.5vw, 5.75rem);
 
   /* Shadows */
-  --marketing-shadow-soft: 0 16px 38px rgba(19, 32, 51, 0.05);
-  --marketing-shadow-strong: 0 24px 56px rgba(19, 32, 51, 0.09);
+  --marketing-shadow-soft: 0 14px 32px rgba(19, 32, 51, 0.04);
+  --marketing-shadow-strong: 0 22px 48px rgba(19, 32, 51, 0.08);
   --dashboard-shadow-soft: 0 12px 30px rgba(19, 32, 51, 0.05);
   --dashboard-shadow-strong: 0 18px 38px rgba(19, 32, 51, 0.08);
   --dashboard-shadow-card: 0 1px 6px rgba(19, 32, 51, 0.04);
 
   /* Brand accent — copper (Stitch-aligned) */
-  --brand-accent-deep:  #6b3a12;
-  --brand-accent-mid:   #904d10;
-  --brand-accent-soft:  #fff3e6;
+  --brand-accent-deep:  #C96A4B;
+  --brand-accent-mid:   #B85D41;
+  --brand-accent-soft:  #F3E4DA;
 
   /* Dashboard canvas & surfaces — Stitch-aligned */
-  --dashboard-canvas:        #fbf9f4;
-  --dashboard-surface:       #ffffff;
-  --dashboard-soft:          #f5f3ee;
+  --dashboard-canvas:        #F7F5F1;
+  --dashboard-surface:       #FFFFFF;
+  --dashboard-soft:          #FAF8F4;
   --dashboard-rail:          #0a192f;
-  --dashboard-frame-border:  rgba(10, 25, 47, 0.10);
-  --dashboard-ink:           #1b1c19;
-  --dashboard-text:          #44474d;
-  --dashboard-muted:         #75777e;
-  --dashboard-accent-soft:   #fff3e6;
-  --dashboard-accent-soft-border: #e8c9a0;
-  --dashboard-accent-strong: #904d10;
-  --dashboard-blue-soft:     #f2f6f8;
-  --dashboard-amber-soft:    #fff8ed;
+  --dashboard-frame-border:  rgba(19, 32, 51, 0.08);
+  --dashboard-ink:           #132033;
+  --dashboard-text:          #4A5563;
+  --dashboard-muted:         #6B7280;
+  --dashboard-accent-soft:   #F3E4DA;
+  --dashboard-accent-soft-border: #E8B7A6;
+  --dashboard-accent-strong: #C96A4B;
+  --dashboard-blue-soft:     #F4F8F7;
+  --dashboard-amber-soft:    #FAF1EC;
   --dashboard-topbar-strong: rgba(255, 255, 255, 0.97);
 
   /* Dashboard layout — sharper radii (Stitch direction) */
@@ -92,7 +92,7 @@ html {
 
 body {
   margin: 0;
-  background: #FFFCF8;
+  background: var(--bg);
   color: var(--foreground);
   font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
   text-rendering: optimizeLegibility;
@@ -168,11 +168,11 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-section-surface {
-    background: #FFFCF8;
+    background: var(--surface);
   }
 
   .marketing-section-tint {
-    background: #FFFCF8;
+    background: var(--bg);
   }
 
   .marketing-section-dark {
@@ -400,7 +400,7 @@ details > summary::-webkit-details-marker {
 
   .marketing-feature-card {
     border: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 245, 241, 0.98) 100%);
+    background: var(--surface);
     box-shadow: var(--marketing-shadow-soft);
     border-radius: 1.35rem;
     padding: 1.35rem;
@@ -415,7 +415,7 @@ details > summary::-webkit-details-marker {
 
   .marketing-route-card {
     border: 1px solid var(--border);
-    background: linear-gradient(180deg, #ffffff 0%, #fbfaf8 100%);
+    background: var(--surface);
     box-shadow: var(--marketing-shadow-soft);
     border-radius: 1.5rem;
     padding: 1.5rem;
@@ -465,7 +465,7 @@ details > summary::-webkit-details-marker {
   .marketing-proof-frame {
     overflow: hidden;
     border: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 245, 241, 0.92) 100%);
+    background: var(--surface);
     box-shadow: var(--marketing-shadow-soft);
     border-radius: 1.75rem;
   }
@@ -696,12 +696,12 @@ details > summary::-webkit-details-marker {
     justify-content: center;
     font-family: var(--font-body);
     border-radius: 9999px;
-    background: var(--teal);
+    background: var(--brand-accent-deep);
     padding: 0.8rem 1.5rem;
     font-size: 0.9rem;
     font-weight: 600;
     color: white;
-    box-shadow: 0 16px 40px rgba(60, 141, 138, 0.18);
+    box-shadow: 0 14px 30px rgba(201, 106, 75, 0.18);
     transition:
       transform 180ms ease,
       background-color 180ms ease,
@@ -710,8 +710,8 @@ details > summary::-webkit-details-marker {
 
   .marketing-button-primary:hover {
     transform: translateY(-1px);
-    background: #2d6e6b;
-    box-shadow: 0 20px 44px rgba(60, 141, 138, 0.24);
+    background: var(--brand-accent-mid);
+    box-shadow: 0 16px 36px rgba(201, 106, 75, 0.22);
   }
 
   .marketing-button-primary-warm {
@@ -720,12 +720,12 @@ details > summary::-webkit-details-marker {
     justify-content: center;
     font-family: var(--font-body);
     border-radius: 9999px;
-    background: #d97706;
+    background: var(--brand-accent-deep);
     padding: 0.8rem 1.5rem;
     font-size: 0.9rem;
     font-weight: 600;
     color: white;
-    box-shadow: 0 16px 40px rgba(217, 119, 6, 0.2);
+    box-shadow: 0 14px 30px rgba(201, 106, 75, 0.18);
     transition:
       transform 180ms ease,
       background-color 180ms ease,
@@ -734,8 +734,8 @@ details > summary::-webkit-details-marker {
 
   .marketing-button-primary-warm:hover {
     transform: translateY(-1px);
-    background: #b45309;
-    box-shadow: 0 20px 44px rgba(217, 119, 6, 0.24);
+    background: var(--brand-accent-mid);
+    box-shadow: 0 16px 36px rgba(201, 106, 75, 0.22);
   }
 
   .marketing-button-secondary {
@@ -749,7 +749,7 @@ details > summary::-webkit-details-marker {
     padding: 0.8rem 1.5rem;
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--text);
+    color: var(--ink);
     transition:
       border-color 180ms ease,
       color 180ms ease,
@@ -758,7 +758,7 @@ details > summary::-webkit-details-marker {
 
   .marketing-button-secondary:hover {
     transform: translateY(-1px);
-    border-color: var(--teal);
+    border-color: var(--ink);
     color: var(--ink);
   }
 
@@ -814,12 +814,12 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-nav-link:hover {
-    background: var(--bg);
+    background: rgba(247, 245, 241, 0.72);
     color: var(--ink);
   }
 
   .marketing-nav-link-active {
-    background: var(--bg);
+    background: rgba(247, 245, 241, 0.9);
     font-weight: 500;
     color: var(--ink);
   }
@@ -1011,8 +1011,8 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-footer {
-    border-top: 1px solid #20344d;
-    background: linear-gradient(180deg, var(--ink) 0%, #16263c 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--navy);
     color: var(--bg);
   }
 
@@ -1028,15 +1028,15 @@ details > summary::-webkit-details-marker {
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--teal);
+    color: #F3E4DA;
   }
 
   .marketing-footer-copy {
-    color: rgba(247, 245, 241, 0.65);
+    color: rgba(255, 255, 255, 0.74);
   }
 
   .marketing-footer-link {
-    color: rgba(247, 245, 241, 0.65);
+    color: rgba(255, 255, 255, 0.74);
     transition: color 180ms ease;
   }
 
@@ -1047,14 +1047,14 @@ details > summary::-webkit-details-marker {
   .marketing-footer-chip {
     display: inline-flex;
     border-radius: 9999px;
-    border: 1px solid rgba(247, 245, 241, 0.12);
-    background: rgba(247, 245, 241, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(243, 228, 218, 0.08);
     padding: 0.5rem 1rem;
     font-size: 0.72rem;
     font-weight: 600;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(247, 245, 241, 0.7);
+    color: rgba(255, 255, 255, 0.78);
   }
 
   .marketing-shell .grid > * {

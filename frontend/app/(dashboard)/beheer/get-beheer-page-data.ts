@@ -1,109 +1,326 @@
-import type { Campaign, CampaignStats, OrgInvite, Organization } from '@/lib/types'
+import type { CampaignDeliveryCheckpoint, DeliveryCheckpointKey, DeliveryExceptionStatus } from '@/lib/ops-delivery'
+import { getDeliveryCheckpointTitle } from '@/lib/ops-delivery'
+import type { Campaign, OrgInvite, Organization } from '@/lib/types'
 
-interface BeheerPageData {
+type SupabaseClientLike = Awaited<ReturnType<typeof import('@/lib/supabase/server').createClient>>
+
+type DeliveryRecordRow = {
+  id: string
+  campaign_id: string
+  lifecycle_stage: string
+  exception_status: DeliveryExceptionStatus | string
+  next_step: string | null
+  campaigns:
+    | { id: string; name: string; scan_type: Campaign['scan_type'] }
+    | Array<{ id: string; name: string; scan_type: Campaign['scan_type'] }>
+    | null
+}
+
+type DeliveryCheckpointRow = Pick<
+  CampaignDeliveryCheckpoint,
+  'id' | 'delivery_record_id' | 'checkpoint_key' | 'manual_state' | 'exception_status' | 'last_auto_summary'
+>
+
+export type SetupBlockerItem = {
+  id: string
+  category: string
+  impactLabel: string | null
+  title: string
+  description: string
+  actionHref: string | null
+}
+
+export interface BeheerPageData {
+  organizationsAvailable: boolean
+  campaignsAvailable: boolean
+  accessAvailable: boolean
+  deliveryAvailable: boolean
   orgs: Organization[]
   activeOrgs: Organization[]
   archivedOrgs: Organization[]
   campaigns: Campaign[]
+  topCampaigns: Campaign[]
+  remainingCampaignCount: number
   campaignCountByOrg: Record<string, number>
-  respondentCount: number
-  clientAccessCount: number
-  campaignStats: CampaignStats[]
+  respondentCount: number | null
+  clientAccessCount: number | null
   invites: OrgInvite[]
-  pendingInviteCount: number
-  step1Done: boolean
-  step2Done: boolean
-  step3Done: boolean
-  step4Done: boolean
+  pendingInviteCount: number | null
+  activeCampaignCount: number | null
+  blockedDeliveriesCount: number | null
+  setupBlockers: SetupBlockerItem[]
+  dataImportAlert: SetupBlockerItem | null
 }
 
-export async function getBeheerPageData(supabase: Awaited<ReturnType<typeof import('@/lib/supabase/server').createClient>>, userId: string): Promise<BeheerPageData> {
-  const { data: memberships } = await supabase
+export function mapExceptionToCategory(checkpointKey: DeliveryCheckpointKey): string | null {
+  switch (checkpointKey) {
+    case 'implementation_intake':
+    case 'invite_readiness':
+      return 'CAMPAGNES'
+    case 'import_qa':
+      return 'DATA & IMPORT'
+    case 'client_activation':
+      return 'TOEGANG & ROLLEN'
+    case 'first_value':
+    case 'report_delivery':
+    case 'first_management_use':
+      return null
+    default:
+      return null
+  }
+}
+
+export function mapCheckpointToActionHref(checkpointKey: DeliveryCheckpointKey): string | null {
+  switch (checkpointKey) {
+    case 'implementation_intake':
+    case 'invite_readiness':
+      return '/beheer#campagnes'
+    case 'import_qa':
+      return '/beheer#data-import'
+    case 'client_activation':
+      return '/beheer#toegang'
+    case 'first_value':
+    case 'report_delivery':
+    case 'first_management_use':
+      return null
+    default:
+      return null
+  }
+}
+
+export function mapExceptionToImpactLabel(
+  exceptionStatus: DeliveryExceptionStatus | null | undefined,
+): string | null {
+  switch (exceptionStatus) {
+    case 'blocked':
+      return 'KAN NIET VERDER'
+    case 'needs_operator_recovery':
+      return 'OPERATOR INGREEP NODIG'
+    case 'awaiting_client_input':
+      return 'WACHT OP KLANTINPUT'
+    case 'awaiting_external_delivery':
+      return 'WACHT OP EXTERNE STAP'
+    case 'none':
+    default:
+      return null
+  }
+}
+
+export function getCampaignStatusLabel(campaigns: Array<Pick<Campaign, 'is_active'>>) {
+  if (campaigns.length === 0) return 'Geen campaigns'
+  return campaigns.some((campaign) => campaign.is_active) ? 'Actief' : 'Geen actieve campaigns'
+}
+
+function normalizeInviteRows(invitesRaw: unknown) {
+  const rows = Array.isArray(invitesRaw) ? invitesRaw : []
+  return rows.map((invite) => {
+    const typedInvite = invite as OrgInvite
+    return {
+      ...typedInvite,
+      organizations: Array.isArray(typedInvite.organizations)
+        ? typedInvite.organizations[0]
+        : typedInvite.organizations,
+    }
+  }) as OrgInvite[]
+}
+
+function getCampaignFromDeliveryRecord(record: DeliveryRecordRow) {
+  return Array.isArray(record.campaigns) ? record.campaigns[0] ?? null : record.campaigns
+}
+
+function buildSetupBlockers(
+  deliveryRecords: DeliveryRecordRow[],
+  deliveryCheckpoints: DeliveryCheckpointRow[],
+) {
+  const recordById = Object.fromEntries(
+    deliveryRecords.map((record) => [record.id, record] as const),
+  )
+
+  return deliveryCheckpoints
+    .filter((checkpoint) => {
+      const key = checkpoint.checkpoint_key as DeliveryCheckpointKey
+      return (
+        mapExceptionToCategory(key) !== null &&
+        (checkpoint.exception_status !== 'none' || checkpoint.manual_state === 'pending')
+      )
+    })
+    .map((checkpoint) => {
+      const key = checkpoint.checkpoint_key as DeliveryCheckpointKey
+      const record = recordById[checkpoint.delivery_record_id]
+      const campaign = record ? getCampaignFromDeliveryRecord(record) : null
+      const titlePrefix = campaign?.name ? `${campaign.name} / ` : ''
+
+      return {
+        id: checkpoint.id,
+        category: mapExceptionToCategory(key) ?? 'Onbekend',
+        impactLabel: mapExceptionToImpactLabel(
+          checkpoint.exception_status as DeliveryExceptionStatus,
+        ),
+        title: `${titlePrefix}${getDeliveryCheckpointTitle(key)}`,
+        description:
+          record?.next_step?.trim() ||
+          checkpoint.last_auto_summary?.trim() ||
+          'Geen omschrijving beschikbaar',
+        actionHref: mapCheckpointToActionHref(key),
+      } satisfies SetupBlockerItem
+    })
+}
+
+export async function getBeheerPageData(
+  supabase: SupabaseClientLike,
+  userId: string,
+): Promise<BeheerPageData> {
+  const membershipsResult = await supabase
     .from('org_members')
     .select('organizations(*)')
     .eq('user_id', userId)
 
-  const orgs = (memberships?.flatMap(membership => membership.organizations).filter(Boolean) ?? []) as Organization[]
-  const activeOrgs = orgs.filter(org => org.is_active)
-  const archivedOrgs = orgs.filter(org => !org.is_active)
+  const organizationsAvailable = !membershipsResult.error
+  const orgs = organizationsAvailable
+    ? ((membershipsResult.data
+        ?.flatMap((membership) => membership.organizations)
+        .filter(Boolean) ?? []) as Organization[])
+    : []
+  const activeOrgs = orgs.filter((org) => org.is_active)
+  const archivedOrgs = orgs.filter((org) => !org.is_active)
+  const orgIds = orgs.map((org) => org.id)
 
-  const orgIds = orgs.map(org => org.id)
-  const { data: campaignsRaw } = orgIds.length
-    ? await supabase
-        .from('campaigns')
-        .select('*')
-        .in('organization_id', orgIds)
-        .order('created_at', { ascending: false })
-    : { data: [] }
-
-  const campaigns = (campaignsRaw ?? []) as Campaign[]
+  const campaignsResult =
+    organizationsAvailable && orgIds.length > 0
+      ? await supabase
+          .from('campaigns')
+          .select('*')
+          .in('organization_id', orgIds)
+          .order('created_at', { ascending: false })
+      : null
+  const campaignsAvailable = organizationsAvailable && (!campaignsResult || !campaignsResult.error)
+  const campaigns = campaignsAvailable
+    ? ((campaignsResult?.data ?? []) as Campaign[])
+    : []
+  const topCampaigns = campaigns.slice(0, 3)
+  const remainingCampaignCount = Math.max(0, campaigns.length - topCampaigns.length)
   const campaignCountByOrg = campaigns.reduce<Record<string, number>>((acc, campaign) => {
     acc[campaign.organization_id] = (acc[campaign.organization_id] ?? 0) + 1
     return acc
   }, {})
+  const activeCampaignCount = campaignsAvailable
+    ? campaigns.filter((campaign) => campaign.is_active).length
+    : null
 
-  const campaignIds = campaigns.map(campaign => campaign.id)
-  const { count: respondentCountRaw } = campaignIds.length
-    ? await supabase
-        .from('respondents')
-        .select('id', { count: 'exact', head: true })
-        .in('campaign_id', campaignIds)
-    : { count: 0 }
+  const campaignIds = campaigns.map((campaign) => campaign.id)
 
-  const { count: clientAccessCountRaw } = orgIds.length
-    ? await supabase
-        .from('org_members')
-        .select('id', { count: 'exact', head: true })
-        .in('org_id', orgIds)
-        .neq('user_id', userId)
-    : { count: 0 }
+  const respondentCountResult =
+    campaignsAvailable && campaignIds.length > 0
+      ? await supabase
+          .from('respondents')
+          .select('id', { count: 'exact', head: true })
+          .in('campaign_id', campaignIds)
+      : null
+  const respondentCount =
+    !campaignsAvailable
+      ? null
+      : campaignIds.length === 0
+        ? 0
+        : !respondentCountResult || respondentCountResult.error
+          ? null
+          : respondentCountResult.count ?? null
 
-  const { data: campaignStatsRaw } = orgIds.length
-    ? await supabase
-        .from('campaign_stats')
-        .select('*')
-        .in('organization_id', orgIds)
-        .order('created_at', { ascending: false })
-    : { data: [] }
+  const clientAccessCountResult =
+    organizationsAvailable && orgIds.length > 0
+      ? await supabase
+          .from('org_members')
+          .select('id', { count: 'exact', head: true })
+          .in('org_id', orgIds)
+          .neq('user_id', userId)
+      : null
 
-  const campaignStats = (campaignStatsRaw ?? []) as CampaignStats[]
+  const invitesResult =
+    organizationsAvailable && orgIds.length > 0
+      ? await supabase
+          .from('org_invites')
+          .select(
+            'id, org_id, email, full_name, role, invited_by, invited_at, accepted_at, organizations(id, name)',
+          )
+          .in('org_id', orgIds)
+          .order('accepted_at', { ascending: true, nullsFirst: true })
+          .order('invited_at', { ascending: false })
+      : null
 
-  const { data: invitesRaw } = orgIds.length
-    ? await supabase
-        .from('org_invites')
-        .select('id, org_id, email, full_name, role, invited_by, invited_at, accepted_at, organizations(id, name)')
-        .in('org_id', orgIds)
-        .order('accepted_at', { ascending: true, nullsFirst: true })
-        .order('invited_at', { ascending: false })
-    : { data: [] }
+  const accessAvailable =
+    organizationsAvailable &&
+    (!clientAccessCountResult || !clientAccessCountResult.error) &&
+    (!invitesResult || !invitesResult.error)
 
-  const invites = (invitesRaw ?? []).map(invite => ({
-    ...invite,
-    organizations: Array.isArray(invite.organizations) ? invite.organizations[0] : invite.organizations,
-  })) as OrgInvite[]
+  const clientAccessCount =
+    !accessAvailable
+      ? null
+      : orgIds.length === 0
+        ? 0
+        : clientAccessCountResult?.count ?? null
+  const invites = accessAvailable ? normalizeInviteRows(invitesResult?.data) : []
+  const pendingInviteCount = accessAvailable
+    ? invites.filter((invite) => !invite.accepted_at).length
+    : null
 
-  const respondentCount = respondentCountRaw ?? 0
-  const clientAccessCount = clientAccessCountRaw ?? 0
-  const pendingInviteCount = invites.filter(invite => !invite.accepted_at).length
-  const step1Done = activeOrgs.length > 0
-  const step2Done = campaigns.some(campaign => campaign.is_active)
-  const step3Done = respondentCount > 0
-  const step4Done = step2Done && (clientAccessCount > 0 || invites.length > 0)
+  const deliveryRecordsResult =
+    campaignsAvailable && campaignIds.length > 0
+      ? await supabase
+          .from('campaign_delivery_records')
+          .select('id, campaign_id, lifecycle_stage, exception_status, next_step, campaigns(id, name, scan_type)')
+          .in('campaign_id', campaignIds)
+          .order('updated_at', { ascending: false })
+      : null
+
+  const deliveryRecords =
+    campaignsAvailable && deliveryRecordsResult && !deliveryRecordsResult.error
+      ? ((deliveryRecordsResult.data ?? []) as DeliveryRecordRow[])
+      : []
+
+  const deliveryRecordIds = deliveryRecords.map((record) => record.id)
+  const deliveryCheckpointsResult =
+    campaignsAvailable && deliveryRecordIds.length > 0
+      ? await supabase
+          .from('campaign_delivery_checkpoints')
+          .select('id, delivery_record_id, checkpoint_key, manual_state, exception_status, last_auto_summary')
+          .in('delivery_record_id', deliveryRecordIds)
+      : null
+
+  const deliveryAvailable =
+    campaignsAvailable &&
+    (!deliveryRecordsResult || !deliveryRecordsResult.error) &&
+    (!deliveryCheckpointsResult || !deliveryCheckpointsResult.error)
+
+  const deliveryCheckpoints =
+    deliveryAvailable
+      ? ((deliveryCheckpointsResult?.data ?? []) as DeliveryCheckpointRow[])
+      : []
+
+  const blockedDeliveriesCount = deliveryAvailable
+    ? deliveryRecords.filter((record) => record.exception_status !== 'none').length
+    : null
+  const setupBlockers = deliveryAvailable ? buildSetupBlockers(deliveryRecords, deliveryCheckpoints) : []
+  const dataImportAlert =
+    setupBlockers.find((item) => item.category === 'DATA & IMPORT') ?? setupBlockers[0] ?? null
 
   return {
+    organizationsAvailable,
+    campaignsAvailable,
+    accessAvailable,
+    deliveryAvailable,
     orgs,
     activeOrgs,
     archivedOrgs,
     campaigns,
+    topCampaigns,
+    remainingCampaignCount,
     campaignCountByOrg,
     respondentCount,
     clientAccessCount,
-    campaignStats,
     invites,
     pendingInviteCount,
-    step1Done,
-    step2Done,
-    step3Done,
-    step4Done,
+    activeCampaignCount,
+    blockedDeliveriesCount,
+    setupBlockers,
+    dataImportAlert,
   }
 }

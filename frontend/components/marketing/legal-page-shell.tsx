@@ -35,7 +35,7 @@ export function LegalPageShell({
             aria-hidden
             className="pointer-events-none absolute -right-16 top-[-5rem] h-[30rem] w-[30rem]"
             style={{
-              background: 'radial-gradient(circle, rgba(58,127,125,0.10) 0%, transparent 65%)',
+              background: 'radial-gradient(circle, rgba(201,106,75,0.10) 0%, transparent 65%)',
             }}
           />
 

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { T, FF, SHELL, useInView, Reveal, Arrow, SectionMark } from '@/components/marketing/design-tokens'
+import { T, AC, FF, SHELL, useInView, Reveal, Arrow, SectionMark } from '@/components/marketing/design-tokens'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { buildContactHref } from '@/lib/contact-funnel'
 import {
@@ -63,7 +63,7 @@ function HeroSection() {
               >
                 Wat u publiek kunt toetsen
                 <br />
-                <em style={{ fontStyle: 'italic', color: T.teal }}>voordat u start.</em>
+                <em style={{ fontStyle: 'italic', color: AC.deep }}>voordat u start.</em>
               </h1>
             </div>
             <div style={{ animation: 'slideUpFade .8s cubic-bezier(.16,1,.3,1) .3s both' }}>
@@ -82,14 +82,14 @@ function HeroSection() {
             </div>
           </div>
           <div style={{ animation: 'slideRightFade .8s cubic-bezier(.16,1,.3,1) .28s both' }}>
-            <div style={{ padding: '28px', background: T.tealFaint, border: `1px solid ${T.tealSoft}` }}>
+            <div style={{ padding: '28px', background: AC.soft, border: `1px solid ${AC.light}` }}>
               <div
                 style={{
                   fontSize: 9.5,
                   fontWeight: 600,
                   letterSpacing: '.14em',
                   textTransform: 'uppercase',
-                  color: T.teal,
+                  color: AC.deep,
                   marginBottom: 16,
                 }}
               >
@@ -109,7 +109,7 @@ function HeroSection() {
                     lineHeight: 1.5,
                   }}
                 >
-                  <div style={{ width: 4, height: 4, background: T.teal, flexShrink: 0, marginTop: 5 }} />
+                  <div style={{ width: 4, height: 4, background: AC.deep, flexShrink: 0, marginTop: 5 }} />
                   {item}
                 </div>
               ))}
@@ -193,7 +193,7 @@ function ReadingGuideSection() {
           >
             Gebruik Verisight als gespreksinput,
             <br />
-            <em style={{ fontStyle: 'italic', color: T.teal }}>niet als diagnose.</em>
+            <em style={{ fontStyle: 'italic', color: AC.deep }}>niet als diagnose.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 36, maxWidth: '50ch' }}>
             Deze pagina laat dezelfde interpretatiegrenzen zien als rapport en dashboard.
@@ -276,7 +276,7 @@ function PrivacySection() {
           >
             Snelle antwoorden op
             <br />
-            <em style={{ fontStyle: 'italic', color: T.teal }}>voorspelbare vragen.</em>
+            <em style={{ fontStyle: 'italic', color: AC.deep }}>voorspelbare vragen.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 32, maxWidth: '50ch' }}>
             Zo kunt u de basis toetsen voordat er een gesprek plaatsvindt.
@@ -317,7 +317,7 @@ function PrivacySection() {
               >
                 <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 4 }}>{card.title}</div>
                 <p style={{ fontSize: 12.5, lineHeight: 1.55, color: T.inkSoft, marginBottom: 10 }}>{card.body}</p>
-                <span style={{ fontSize: 12, fontWeight: 600, color: T.teal, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: AC.deep, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                   Bekijken <Arrow />
                 </span>
               </Link>
@@ -341,7 +341,7 @@ function ContactSection() {
       title="Toets of Verisight"
       accentTitle="nu past."
       body="In een kort gesprek toetsen we productkeuze, privacy, timing en wat u als eerste terugkrijgt."
-      buttonLabel="Plan een eerste route-inschatting"
+      buttonLabel="Plan een kennismaking"
       showSectionMark={false}
     />
   )
@@ -349,7 +349,7 @@ function ContactSection() {
 
 export function VertrouwenContent() {
   return (
-    <div style={{ background: T.paper, color: T.ink, overflowX: 'hidden' }}>
+    <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
       <HeroSection />
       <VerificationSection />
       <ReadingGuideSection />

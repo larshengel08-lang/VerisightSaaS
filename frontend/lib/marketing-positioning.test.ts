@@ -4,174 +4,137 @@ import {
   CORE_MARKETING_PRODUCTS,
   FOLLOW_ON_MARKETING_PRODUCTS,
   LIVE_MARKETING_PRODUCTS,
-  PORTFOLIO_ROUTE_MARKETING_PRODUCTS,
   RESERVED_MARKETING_PRODUCTS,
+  SECONDARY_FIRST_BUY_MARKETING_PRODUCTS,
 } from '@/lib/marketing-products'
-import { exitScanDefinition } from '@/lib/products/exit/definition'
-import { retentionScanDefinition } from '@/lib/products/retention/definition'
 import {
-  expansionTriggerCards,
-  faqs,
-  homepageUtilityLinks,
-  marketingLegalLinks,
-  marketingNavLinks,
+  approachSteps,
+  customerLifecycleStages,
+  included,
   pricingAddOns,
-  pricingChoiceGuide,
-  pricingFollowOnRoutes,
-  pricingFaqs,
   pricingCards,
+  pricingChoiceGuide,
+  pricingFaqs,
+  pricingFollowOnRoutes,
   pricingLifecycleLadder,
-  productOverviewComparisonRows,
-  trustItems,
+  productFollowOnRouteRows,
+  productPrimaryRouteCards,
+  productSecondaryFirstBuyRoute,
 } from '@/components/marketing/site-content'
 
-describe('Portfolio architecture marketing model', () => {
-  it('keeps a core-first five-route suite with onboarding as bounded peer and only pulse plus leadership as follow-up', () => {
-    const boundedPeerSlugs = BOUNDED_PEER_MARKETING_PRODUCTS.map((product) => product.slug)
-    const followOnSlugs = FOLLOW_ON_MARKETING_PRODUCTS.map((product) => product.slug)
-    const reservedSlugs = RESERVED_MARKETING_PRODUCTS.map((product) => product.slug)
-
+describe('baseline-first commercial model', () => {
+  it('keeps ExitScan and RetentieScan as the two core first-buy routes', () => {
     expect(CORE_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual(['exitscan', 'retentiescan'])
-    expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS).toHaveLength(0)
-    expect(boundedPeerSlugs).toEqual(['onboarding-30-60-90'])
-    expect(BOUNDED_PEER_MARKETING_PRODUCTS.every((product) => product.status === 'bounded_live')).toBe(true)
-    expect(BOUNDED_PEER_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'bounded_peer_route')).toBe(true)
-    expect(followOnSlugs).toEqual(['pulse', 'leadership-scan'])
-    expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.status === 'bounded_live')).toBe(true)
-    expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'follow_on_route')).toBe(true)
-    expect(FOLLOW_ON_MARKETING_PRODUCTS.every((product) => !product.description.toLowerCase().includes('live bounded'))).toBe(true)
-    expect(CORE_MARKETING_PRODUCTS.every((product) => product.status === 'core_live')).toBe(true)
-    expect(PORTFOLIO_ROUTE_MARKETING_PRODUCTS.every((product) => product.status === 'portfolio_live')).toBe(true)
-    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(5)
-    expect(reservedSlugs).toEqual(['mto', 'customer-feedback'])
-    expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.status === 'reserved_future')).toBe(true)
-    expect(RESERVED_MARKETING_PRODUCTS.every((product) => product.portfolioRole === 'future_reserved_route')).toBe(
-      true,
-    )
+    expect(productPrimaryRouteCards.map((route) => route.title)).toEqual(['ExitScan', 'RetentieScan'])
+  })
+
+  it('keeps onboarding visible as a smaller secondary first-buy route', () => {
+    expect(SECONDARY_FIRST_BUY_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual(['onboarding-30-60-90'])
+    expect(BOUNDED_PEER_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual(['onboarding-30-60-90'])
+    expect(SECONDARY_FIRST_BUY_MARKETING_PRODUCTS[0]?.portfolioRole).toBe('secondary_first_buy_route')
+    expect(productSecondaryFirstBuyRoute.href).toBe('/producten/onboarding-30-60-90')
+  })
+
+  it('keeps pulse, leadership and combinatie as later follow-on routes', () => {
+    expect(FOLLOW_ON_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual([
+      'combinatie',
+      'pulse',
+      'leadership-scan',
+    ])
+    expect(productFollowOnRouteRows.map(([title]) => title)).toEqual([
+      'ExitScan Live Start',
+      'Reviewcadans',
+      'Pulse',
+      'Leadership Scan',
+      'Combinatie',
+    ])
+  })
+
+  it('keeps the live portfolio limited to two core routes, one secondary first-buy and three later follow-ons', () => {
+    expect(LIVE_MARKETING_PRODUCTS).toHaveLength(6)
+    expect(RESERVED_MARKETING_PRODUCTS.map((product) => product.slug)).toEqual(['mto', 'customer-feedback'])
   })
 })
 
-describe('ExitScan positioning copy', () => {
-  it('keeps ExitScan framed as vertrekduiding instead of a hard diagnosis', () => {
-    const exitProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'exitscan')
-
-    expect(exitProduct).toBeTruthy()
-    expect(exitProduct?.description.toLowerCase()).toContain('patronen terugkomen')
-    expect(exitProduct?.description.toLowerCase()).toContain('waar actie het eerst effect heeft')
-    expect(exitProduct?.description.toLowerCase()).not.toContain('voorspeller')
-    expect(exitProduct?.description.toLowerCase()).not.toContain('diagnose')
-    expect(exitScanDefinition.methodologyText.toLowerCase()).toContain('zonder oorzaken definitief vast te stellen')
-    expect(exitScanDefinition.methodologyText.toLowerCase()).toContain('eerdere signalering')
-    expect(exitScanDefinition.whatItIsText.toLowerCase()).toContain('groepsniveau')
-    expect(exitScanDefinition.whatItIsNotText.toLowerCase()).toContain('geen diagnose')
-    expect(exitScanDefinition.evidenceStatusText.toLowerCase()).toContain('niet extern gevalideerd')
-    expect(exitScanDefinition.signalHelp.toLowerCase()).toContain('managementsamenvatting')
+describe('baseline-first pricing hierarchy', () => {
+  it('anchors all first buys as baselines from EUR 4.500', () => {
+    expect(pricingCards.map((card) => card.eyebrow)).toEqual([
+      'ExitScan Baseline',
+      'RetentieScan Baseline',
+      'Onboarding 30-60-90 Baseline',
+    ])
+    expect(pricingCards.every((card) => card.price === 'vanaf EUR 4.500')).toBe(true)
+    expect(pricingCards.every((card) => card.bullets.join(' | ') === 'Intake | Scan | Dashboard | Managementrapport')).toBe(true)
   })
 
-  it('keeps the portfolio distinction between ExitScan and RetentieScan explicit', () => {
-    const exitRow = productOverviewComparisonRows.find((row) => row[0] === 'ExitScan')
-    const differenceFaq = faqs.find(([question]) => question === 'Wat is het verschil tussen ExitScan en RetentieScan?')
-
-    expect(exitRow?.[2].toLowerCase()).toContain('vertrekbeeld')
-    expect(exitRow?.[2].toLowerCase()).toContain('werkfactoren')
-    expect(exitRow?.[1].toLowerCase()).toContain('vertrekduiding')
-    expect(differenceFaq?.[1].toLowerCase()).toContain('vertrek achteraf duiden')
-    expect(differenceFaq?.[1].toLowerCase()).toContain('eerder zien waar behoud op groepsniveau onder druk staat')
+  it('keeps Action Center Start as the only public optional expansion', () => {
+    expect(pricingAddOns).toEqual([
+      [
+        'Action Center Start',
+        'vanaf EUR 1.250',
+        'Optionele uitbreiding voor een gekozen opvolgscope, een of enkele owners, beperkte actieopvolging, zichtbare status en een reviewmoment.',
+      ],
+    ])
   })
 
-  it('keeps visible trust navigation and quick links available for first-time buyers', () => {
-    expect(marketingNavLinks.map((link) => link.href)).toContain('/vertrouwen')
-    expect(marketingLegalLinks.map((link) => link.href)).toContain('/vertrouwen')
-    expect(homepageUtilityLinks.map((link) => link.href)).toContain('/vertrouwen')
-    expect(trustItems.some((item) => item.toLowerCase().includes('eu-regio'))).toBe(true)
-    expect(trustItems.some((item) => item.toLowerCase().includes('nederlandse dienst'))).toBe(true)
+  it('keeps live, review cadence and bounded routes below the main pricing cards', () => {
+    expect(pricingFollowOnRoutes.map((route) => route.title)).toEqual([
+      'ExitScan Live Start',
+      'Reviewcadans',
+      'Pulse',
+      'Leadership Scan',
+      'Combinatie',
+    ])
+    expect(pricingFollowOnRoutes.every((route) => route.price === 'op aanvraag')).toBe(true)
   })
 
-  it('keeps ExitScan framed as the default first route in commercial conversations', () => {
-    const freePilotFaq = pricingFaqs.find(([question]) => question === 'Waarom starten jullie niet met een gratis pilot?')
-    const exitBaselineCard = pricingCards.find((card) => card.eyebrow === 'ExitScan Baseline')
-    const exitLiveRoute = pricingFollowOnRoutes.find((route) => route.title === 'ExitScan ritmeroute')
-    const combinationRoute = pricingChoiceGuide.find(([title]) => title === 'Combinatie op aanvraag')
-    const exitLifecycle = pricingLifecycleLadder.find((route) => route.route === 'ExitScan')
-
-    expect(exitBaselineCard?.price).toBe('EUR 2.950')
-    expect(exitLiveRoute?.fit.toLowerCase()).toContain('quote-only')
-    expect(exitLiveRoute?.bullets.join(' ').toLowerCase()).toContain('geen self-serve')
-    expect(combinationRoute?.[1].toLowerCase()).toContain('eerste route helder staat')
-    expect(exitLifecycle?.firstSale.toLowerCase()).toContain('standaard eerste koop')
-    expect(exitLifecycle?.expansion.toLowerCase()).toContain('retentiescan baseline')
-    expect(freePilotFaq?.[1].toLowerCase()).toContain('betaald baseline-traject')
-    expect(freePilotFaq?.[1].toLowerCase()).toContain('echte urgentie')
-  })
-
-  it('keeps expansion framed as a value-based follow-up instead of a loose upsell', () => {
-    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('eerste route al heeft geleid'))).toBe(true)
-    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('eerste vervolgrichting'))).toBe(true)
-    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('terugkijkt op voortgang'))).toBe(true)
-    expect(expansionTriggerCards.some((card) => card.body.toLowerCase().includes('upsell'))).toBe(true)
-  })
-
-  it('keeps Pulse framed as a bounded review route instead of a diagnostic layer', () => {
-    const pulseProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'pulse')
-
-    expect(pulseProduct).toBeTruthy()
-    const pulseOutput = pulseProduct?.serviceOutput?.toLowerCase() ?? ''
-    expect(pulseOutput).toContain('begrensde vergelijkingsduiding')
-    expect(pulseOutput).toContain('hercheckmoment')
-    expect(pulseOutput).not.toContain('owner')
-    expect(pulseOutput).not.toContain('reviewgrens')
-    expect(pulseOutput).not.toContain('delta-uitleg')
+  it('keeps the pricing guide focused on the three first-buy routes', () => {
+    expect(pricingChoiceGuide.map(([title]) => title)).toEqual([
+      'ExitScan Baseline',
+      'RetentieScan Baseline',
+      'Onboarding 30-60-90 Baseline',
+    ])
   })
 })
 
-describe('RetentieScan positioning copy', () => {
-  it('keeps RetentieScan framed as a group-level early signal instead of an MTO or predictor', () => {
-    const retentionProduct = LIVE_MARKETING_PRODUCTS.find((product) => product.slug === 'retentiescan')
-
-    expect(retentionProduct).toBeTruthy()
-    expect(retentionProduct?.description.toLowerCase()).toContain('behoudsdruk eerder willen zien')
-    expect(retentionProduct?.description.toLowerCase()).toContain('voordat verloop zichtbaar oploopt')
-    expect(retentionProduct?.description.toLowerCase()).not.toContain('mto')
-    expect(retentionProduct?.description.toLowerCase()).not.toContain('voorspeller')
-    expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('geen brede mto')
-    expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('geen individuele voorspeller')
-    expect(retentionScanDefinition.whatItIsText.toLowerCase()).toContain('groeps- en segmentniveau')
-    expect(retentionScanDefinition.whatItIsNotText.toLowerCase()).toContain('performance-instrument')
-    expect(retentionScanDefinition.privacyBoundaryText.toLowerCase()).toContain('individuele signalen')
-    expect(retentionScanDefinition.evidenceStatusText.toLowerCase()).toContain('v1-werkmodel')
-    expect(retentionScanDefinition.signalHelp.toLowerCase()).toContain('samenvattend groepssignaal')
-    expect(retentionScanDefinition.signalHelp.toLowerCase()).toContain('eerst verificatie')
-    expect(retentionScanDefinition.methodologyText.toLowerCase()).toContain('aanvullende signalen rond behoud')
+describe('baseline-first routeflow copy', () => {
+  it('keeps the aanpak flow at route choice, baseline, review and later rhythm', () => {
+    expect(approachSteps.map((step) => step.title)).toEqual([
+      '1. Juiste route kiezen',
+      '2. Baseline uitvoeren',
+      '3. Dashboard en managementrapport',
+      '4. Review en eerste vervolgrichting',
+      '5. Action Center Start optioneel',
+      '6. Later ritme of herijking',
+    ])
   })
 
-  it('keeps retention faq copy explicit about group insight and non-predictive use', () => {
-    const mtoFaq = faqs.find(([question]) => question === 'Is RetentieScan gewoon een MTO?')
-    const scoreFaq = faqs.find(([question]) => question === 'Ziet management individuele retention-scores?')
-    const predictorFaq = faqs.find(([question]) => question === 'Is RetentieScan een gevalideerde vertrekvoorspeller?')
-    const pricingFaq = pricingFaqs.find(([question]) => question === 'Waarom is RetentieScan niet goedkoper dan ExitScan?')
-    const rhythmFaq = pricingFaqs.find(
-      ([question]) => question === 'Hoe verhouden RetentieScan ritmeroute en compacte vervolgmeting zich tot elkaar?',
-    )
-    const retentionRhythm = pricingFollowOnRoutes.find((route) => route.title === 'RetentieScan ritmeroute')
-    const compactFollowUp = pricingAddOns.find(([title]) => title === 'Compacte retentie vervolgmeting')
-
-    expect(mtoFaq?.[1].toLowerCase()).toContain('smaller en scherper')
-    expect(mtoFaq?.[1].toLowerCase()).toContain('groeps- en segmentniveau')
-    expect(mtoFaq?.[1].toLowerCase()).toContain('stay-intent')
-    expect(scoreFaq?.[1].toLowerCase()).toContain('groeps- en segmentinzichten')
-    expect(scoreFaq?.[1].toLowerCase()).toContain('performance-sturing')
-    expect(predictorFaq?.[1].toLowerCase()).toContain('verificatie en prioritering')
-    expect(pricingFaq?.[1].toLowerCase()).toContain('eigen managementverhaal')
-    expect(rhythmFaq?.[1].toLowerCase()).toContain('vaste buyer-facing vervolgvorm')
-    expect(retentionRhythm?.price).toBe('vanaf EUR 4.950')
-    expect(compactFollowUp?.[2].toLowerCase()).toContain('parallel hoofdpackage')
+  it('keeps included value compact and baseline-first', () => {
+    expect(included).toEqual([
+      'Intake en compacte baseline-opzet',
+      'Scan en respondentflow waar relevant',
+      'Dashboard en managementrapport',
+      'Review van wat opvalt en wat eerst telt',
+      'Privacy en interpretatie in gewone taal',
+      'Optionele opvolging pas als de gekozen scope daarom vraagt',
+      'Geen extra toolbeheer voor uw team',
+    ])
   })
 
-  it('keeps RetentieScan repeat and ExitScan expansion paths explicit', () => {
-    const retentionLifecycle = pricingLifecycleLadder.find((route) => route.route === 'RetentieScan')
+  it('keeps lifecycle and pricing ladders aligned to baseline first, then action center, then rhythm', () => {
+    expect(customerLifecycleStages.map((stage) => stage.title)).toEqual([
+      '1. Eerste routekeuze',
+      '2. Baseline als vaste eerste stap',
+      '3. Review opent de vervolgrichting',
+      '4. Action Center Start optioneel',
+      '5. Ritme of tweede route later',
+    ])
+    expect(pricingLifecycleLadder.every((route) => route.nextStep.includes('Action Center Start'))).toBe(true)
+  })
 
-    expect(retentionLifecycle?.firstSale.toLowerCase()).toContain('actieve behoudsvraag')
-    expect(retentionLifecycle?.nextStep.toLowerCase()).toContain('vaste buyer-facing vervolgvorm')
-    expect(retentionLifecycle?.expansion.toLowerCase()).toContain('exitscan baseline')
+  it('keeps pricing FAQ copy aligned to the new add-on and follow-on framing', () => {
+    expect(pricingFaqs.some(([question]) => question === 'Is Action Center Start standaard onderdeel van elke baseline?')).toBe(true)
+    expect(pricingFaqs.some(([question]) => question === 'Wanneer wordt ExitScan Live Start logisch?')).toBe(true)
+    expect(pricingFaqs.some(([question]) => question === 'Waarom staat Reviewcadans niet tussen de hoofdkaarten?')).toBe(true)
   })
 })

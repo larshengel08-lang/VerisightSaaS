@@ -12,10 +12,10 @@ const toneMap = {
     card: 'border-slate-200 bg-white',
     title: 'text-slate-950',
     body: 'text-slate-600',
-    accent: 'text-[#3C8D8A]',
+    accent: 'text-[#C96A4B]',
     subcard: 'border-slate-200 bg-slate-50',
     link:
-      'border-[#E5E0D6] bg-[#F7F5F1] text-[#4A5563] hover:border-[#3C8D8A] hover:bg-white hover:text-[#132033]',
+      'border-[#E5E0D6] bg-[#F7F5F1] text-[#4A5563] hover:border-[#C96A4B] hover:bg-white hover:text-[#132033]',
   },
   dark: {
     card: 'border-white/10 bg-white/5',

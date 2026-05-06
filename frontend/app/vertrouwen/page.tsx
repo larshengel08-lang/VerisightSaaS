@@ -41,7 +41,7 @@ export default function VertrouwenPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <div className="min-h-screen">
-      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een eerste route-inschatting" />
+      <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
         <main id="hoofdinhoud">
           <VertrouwenContent />
         </main>

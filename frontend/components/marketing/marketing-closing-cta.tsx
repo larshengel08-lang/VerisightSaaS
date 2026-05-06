@@ -35,7 +35,7 @@ export function MarketingClosingCta({
     <section
       id={id}
       style={{
-        background: `linear-gradient(180deg, ${T.paper} 0%, ${T.paperSoft} 100%)`,
+        background: T.paper,
         overflow: 'hidden',
         padding: 'clamp(56px, 7vw, 92px) 0',
         position: 'relative',
@@ -74,7 +74,7 @@ export function MarketingClosingCta({
               href={href}
               style={{
                 alignItems: 'center',
-                background: T.ink,
+                background: ACcent,
                 color: '#fff',
                 display: 'inline-flex',
                 fontSize: 15,
@@ -96,4 +96,4 @@ export function MarketingClosingCta({
     </section>
   )
 }
-const ACcent = 'oklch(0.45 0.18 50)'
+const ACcent = '#C96A4B'

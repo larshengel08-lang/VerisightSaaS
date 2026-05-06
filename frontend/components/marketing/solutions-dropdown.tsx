@@ -60,10 +60,10 @@ export function SolutionsDropdown() {
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-[#132033] transition-colors group-hover:text-[#3C8D8A]">
+                    <span className="text-sm font-medium text-[#132033] transition-colors group-hover:text-[#C96A4B]">
                       {product.label}
                     </span>
-                    <span className="inline-flex items-center rounded-full bg-[#DCEFEA] px-2 py-0.5 text-[10px] font-medium text-[#3C8D8A]">
+                    <span className="inline-flex items-center rounded-full bg-[#F3E4DA] px-2 py-0.5 text-[10px] font-medium text-[#C96A4B]">
                       Kern
                     </span>
                   </div>
@@ -75,7 +75,7 @@ export function SolutionsDropdown() {
               <Link
                 href="/producten"
                 onClick={() => setOpen(false)}
-                className="text-sm font-medium text-[#132033] transition-colors hover:text-[#3C8D8A]"
+                className="text-sm font-medium text-[#132033] transition-colors hover:text-[#C96A4B]"
               >
                 Bekijk alle producten →
               </Link>

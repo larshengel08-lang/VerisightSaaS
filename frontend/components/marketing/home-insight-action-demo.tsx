@@ -5,22 +5,22 @@ import { useInView } from '@/components/marketing/design-tokens'
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
-  ink:       '#101a2b',
-  inkSoft:   '#1e2d44',
-  paper:     '#FFFCF8',
-  paperWarm: '#FDF4EC',
-  rule:      '#e8ddd0',
-  ruleSoft:  '#f0e8de',
-  text:      '#4a5568',
-  muted:     '#8892a0',
-  amber:     '#c4661f',
-  amberDeep: '#9b4d15',
-  amberSoft: '#f4ddd0',
-  amberLine: '#e0b898',
-  teal:      '#1f958a',
-  tealDeep:  '#178078',
-  tealSoft:  '#dff2ef',
-  tealLine:  '#9dd0cb',
+  ink:       '#132033',
+  inkSoft:   '#1C2A3D',
+  paper:     '#FFFFFF',
+  paperWarm: '#F7F5F1',
+  rule:      '#E5E0D6',
+  ruleSoft:  '#F0EBE2',
+  text:      '#4A5563',
+  muted:     '#6B7280',
+  amber:     '#C96A4B',
+  amberDeep: '#B85D41',
+  amberSoft: '#F3E4DA',
+  amberLine: '#E8B7A6',
+  teal:      '#C96A4B',
+  tealDeep:  '#B85D41',
+  tealSoft:  '#F3E4DA',
+  tealLine:  '#E8B7A6',
 } as const
 
 const FF  = 'var(--font-fraunces), Georgia, serif'

@@ -20,6 +20,7 @@ type PortfolioCounts = Record<DashboardPortfolioView, number>
 
 export function DashboardShellFrame({
   isAdmin,
+  canManageActionCenterAssignments,
   shellMode,
   userEmail,
   acceptedCount,
@@ -28,6 +29,7 @@ export function DashboardShellFrame({
   children,
 }: {
   isAdmin: boolean
+  canManageActionCenterAssignments: boolean
   shellMode: DashboardShellMode
   userEmail: string
   acceptedCount: number
@@ -44,12 +46,13 @@ export function DashboardShellFrame({
     () =>
       buildDashboardShellNavigation({
         isAdmin,
+        canManageActionCenterAssignments,
         shellMode,
         currentCampaignPath,
         campaigns,
         portfolioCounts,
       }),
-    [campaigns, currentCampaignPath, isAdmin, portfolioCounts, shellMode],
+    [campaigns, canManageActionCenterAssignments, currentCampaignPath, isAdmin, portfolioCounts, shellMode],
   )
   const isActionCenter = pathname.startsWith('/action-center')
   const accountLabel = userEmail.split('@')[1]?.split('.')[0] ?? 'Verisight'

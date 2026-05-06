@@ -1140,7 +1140,7 @@ describe("action center landing shell", () => {
     expect((markup.match(/Vervolg op eerdere route/g) ?? []).length).toBe(1);
   });
 
-  it("shows team Review < 7 dagen for upcoming reviews within the next week", () => {
+  it("shows the agreed team review labels for upcoming reviews within the next week", () => {
     const context = buildLiveContext();
     const [item] = buildLiveActionCenterItems([
       {
@@ -1164,8 +1164,10 @@ describe("action center landing shell", () => {
       }),
     );
 
-    expect(markup).toContain("Review &lt; 7 dagen");
-    expect(markup).toMatch(/Review &lt; 7 dagen<\/p><\/div><p[^>]*>1<\/p>/);
+    expect(markup).toContain("Review eerstvolgt");
+    expect(markup).toContain("binnen 7 dagen");
+    expect(markup).toContain("Review deze week");
+    expect(markup).toContain(`Volgende bespreking ${item.reviewDateLabel}`);
   });
 
   it("requires preview items to carry canonical core semantics as one grouped field", () => {

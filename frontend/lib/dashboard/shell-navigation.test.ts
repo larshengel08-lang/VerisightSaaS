@@ -115,6 +115,7 @@ describe('dashboard shell navigation', () => {
   it('keeps admin links separate from buyer overview navigation', () => {
     const navigation = buildDashboardShellNavigation({
       isAdmin: true,
+      canManageActionCenterAssignments: true,
       shellMode: 'full',
       currentCampaignPath: null,
       campaigns: [...campaigns],
@@ -130,10 +131,32 @@ describe('dashboard shell navigation', () => {
       key: 'overview',
       href: '/dashboard',
     })
-    expect(navigation.admin.map((item) => item.label)).toEqual(['Setup', 'Leads', 'Action Center bron'])
+    expect(navigation.admin.map((item) => item.label)).toEqual(['Setup', 'Managers', 'Leads', 'Action Center bron'])
     expect(navigation.modules[3]).toMatchObject({
       key: 'onboarding',
       href: '/dashboard?module=onboarding',
+    })
+  })
+
+  it('shows the managers beheer entry for customer owners who may manage action center assignments', () => {
+    const navigation = buildDashboardShellNavigation({
+      isAdmin: false,
+      canManageActionCenterAssignments: true,
+      shellMode: 'full',
+      currentCampaignPath: null,
+      campaigns: [...campaigns],
+      portfolioCounts: {
+        ready: 3,
+        building: 1,
+        setup: 0,
+        closed: 2,
+      },
+    })
+
+    expect(navigation.admin.map((item) => item.label)).toEqual(['Managers'])
+    expect(navigation.admin[0]).toMatchObject({
+      label: 'Managers',
+      href: '/beheer/managers',
     })
   })
 
