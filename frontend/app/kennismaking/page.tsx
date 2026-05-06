@@ -47,7 +47,7 @@ export default function KennismakingPage() {
           }}
         >
           <div style={{ ...shellStyle, paddingTop: 'clamp(58px, 6.5vw, 92px)', paddingBottom: 'clamp(48px, 6vw, 70px)' }}>
-            <div style={{ maxWidth: 760, minWidth: 0 }}>
+            <div style={{ maxWidth: 1080, minWidth: 0, margin: '0 auto', textAlign: 'center' }}>
               <h1
                 style={{
                   color: '#162238',
@@ -57,18 +57,17 @@ export default function KennismakingPage() {
                   letterSpacing: '-0.05em',
                   lineHeight: 0.92,
                   marginBottom: 16,
-                  maxWidth: '8.8ch',
                 }}
               >
                 Vertel kort
                 <br />
-                <span style={{ color: '#b9571f', fontStyle: 'italic', fontWeight: 300 }}>
+                <span style={{ color: '#162238', fontStyle: 'italic', fontWeight: 300 }}>
                   toets welke eerste route
                 </span>
                 <br />
                 nu past.
               </h1>
-              <p style={{ color: '#4e5d6f', fontSize: 16, lineHeight: 1.8, maxWidth: '33rem' }}>
+              <p style={{ color: '#4e5d6f', fontSize: 16, lineHeight: 1.8, maxWidth: '33rem', margin: '0 auto' }}>
                 In circa 20 minuten krijgt u helderheid over de juiste route, timing, privacy, prijs en de eerste output die daarbij past.
               </p>
             </div>
@@ -76,12 +75,12 @@ export default function KennismakingPage() {
             <div style={{ marginTop: 30, maxWidth: 1140 }}>
               <MarketingInlineContactPanel
                 badge={null}
-                body="Gebruik dit formulier om snel te bepalen welke eerste route nu het best past en welke eerste output daarna logisch is."
+                body=""
                 defaultCtaSource="kennismaking_page_form"
                 defaultRouteInterest="exitscan"
-                eyebrow="Eerste intake"
+                eyebrow=""
                 id="kennismaking"
-                title="Plan een korte intake."
+                title=""
               />
             </div>
           </div>
