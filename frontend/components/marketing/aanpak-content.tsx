@@ -74,16 +74,16 @@ function HeroSection() {
                 color: T.ink,
               }}
             >
-              Van routekeuze naar
+              Van eerste stap naar
               <br />
               <em className="shimmer-text" style={{ fontStyle: 'italic' }}>
-                baseline, review en opvolging.
+                bruikbare uitkomst.
               </em>
             </h1>
             <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '28px 0 36px' }}>
-              Verisight helpt eerst bepalen welke route nu het meeste duidelijkheid geeft. Daarna volgt normaal een
-              baseline naar dashboard, managementrapport en review. Pas als de gekozen opvolging zichtbaar geborgd
-              moet worden, komt Action Center Start erbij.
+              Verisight helpt eerst bepalen welke eerste stap nu het meeste duidelijkheid geeft. Daarna volgt een
+              compacte route naar dashboard, rapport en eerste opvolging, zodat snel zichtbaar wordt wat speelt en wat
+              als eerste aandacht vraagt.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <Link
@@ -133,12 +133,12 @@ function HeroSection() {
                   marginBottom: 18,
                 }}
               >
-                Baseline-first routeflow
+                Compacte eerste stap
               </div>
               {[
                 { step: 'Stap 1', label: 'Juiste route kiezen' },
-                { step: 'Stap 2', label: 'Baseline, dashboard en managementrapport' },
-                { step: 'Stap 3', label: 'Review en optionele opvolging' },
+                { step: 'Stap 2', label: 'Eerste signalen zichtbaar' },
+                { step: 'Stap 3', label: 'Dashboard, rapport en eerste opvolging' },
               ].map((item, index) => (
                 <div
                   key={item.step}
@@ -184,8 +184,8 @@ function ProcessSection() {
             Zo loopt de route baseline-first.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '52ch' }}>
-            De route begint met de juiste keuze en een baseline. Daarna volgen dashboard, managementrapport en review.
-            Action Center Start komt alleen in beeld als opvolging bewust zichtbaar geborgd moet worden.
+            U kiest eerst de juiste stap. Daarna loopt die compact door naar dashboard, rapport en waar relevant
+            eerste opvolging.
           </p>
         </div>
 
@@ -239,23 +239,22 @@ function RolesSection() {
               Uw rol blijft compact.
             </h2>
             <p style={{ fontSize: 14, lineHeight: 1.72, color: T.inkSoft, marginBottom: 28 }}>
-              U bevestigt route en timing, levert de benodigde input aan en gebruikt dashboard, managementrapport en
-              review als compacte leeslijn. Alleen waar relevant komt daar Action Center Start bij als zichtbare
-              opvolglaag.
+              U bevestigt de timing, levert de benodigde input aan en gebruikt dashboard, rapport en eerste opvolging
+              als compacte leeslijn voor HR en management.
             </p>
 
             {[
               {
                 title: 'Route en timing bevestigen',
-                body: 'U bevestigt welke route nu loopt, voor welke groepen en met welke baseline de eerste vraag geopend wordt.',
+                body: 'U bevestigt welke stap nu loopt, voor welke groepen en wanneer de eerste lezing wordt opgebouwd.',
               },
               {
                 title: 'Benodigde input aanleveren',
-                body: 'U levert de input aan die nodig is om de baseline zorgvuldig en compact te laten lopen.',
+                body: 'U levert de input aan die nodig is om de route zorgvuldig en compact te laten lopen.',
               },
               {
-                title: 'Output en review gebruiken',
-                body: 'U gebruikt dashboard, managementrapport en review om te zien wat opvalt, wat eerst telt en of zichtbare opvolging nu nodig is.',
+                title: 'Uitkomsten gebruiken',
+                body: 'U gebruikt dashboard, rapport en waar relevant Action Center om te zien wat opvalt, wat eerst telt en wie wat oppakt.',
               },
             ].map((item, index) => (
               <div key={item.title} style={{ display: 'flex', gap: 18, padding: '20px 0', borderTop: `1px solid ${T.rule}` }}>
@@ -306,15 +305,15 @@ function FirstValueSection() {
   const items = [
     {
       threshold: 'Baseline',
-      text: 'De eerste waarde zit in een scherpe eerste lezing van wat nu speelt, zonder de route meteen breder of zwaarder te maken.',
+      text: 'De route loopt en de eerste signalen worden zichtbaar, maar we trekken nog geen harde conclusies.',
     },
     {
       threshold: 'Dashboard en rapport',
-      text: 'De eerste bruikbare weergave wordt zichtbaar in dashboard en managementrapport, met wat opvalt en wat eerst telt.',
+      text: 'De eerste bruikbare weergave wordt zichtbaar in dashboard en rapport.',
     },
     {
       threshold: 'Review',
-      text: 'In review bepaalt u of de eerste vervolgrichting genoeg is, of dat Action Center Start of later ritme echt logisch wordt.',
+      text: 'Het beeld wordt stevig genoeg om te zien wat opvalt, wat eerst telt en of eerste opvolging nodig is.',
     },
   ]
 
@@ -341,8 +340,8 @@ function FirstValueSection() {
               </em>
             </h2>
             <p style={{ fontSize: 13.5, lineHeight: 1.7, color: T.inkSoft }}>
-              De eerste waarde zit in baseline, dashboard, managementrapport en review. Pas als de volgende vraag
-              echt speelt, wordt extra opvolging of ritme breder nodig.
+              De eerste waarde zit in dashboard, rapport en een eerste leesbare vervolgstap. Pas als de volgende vraag
+              echt speelt, wordt extra verdieping breder nodig.
             </p>
           </div>
 
@@ -388,7 +387,7 @@ function ContactSection() {
       showSectionMark={false}
       title="Toets welke eerste route"
       accentTitle="nu het meeste duidelijkheid geeft."
-      body="In een korte kennismaking toetsen we welke baseline past, wat u als eerste terugkrijgt en of Action Center Start of later ritme pas daarna logisch wordt."
+      body="In een korte kennismaking toetsen we welke stap past, welke eerste uitkomst u krijgt en wanneer vervolg logisch wordt."
       buttonLabel="Plan een eerste route-inschatting"
     />
   )

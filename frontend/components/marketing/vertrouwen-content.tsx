@@ -76,8 +76,8 @@ function HeroSection() {
                   margin: '28px 0 0',
                 }}
               >
-                Verisight laat publiek zien hoe privacy, rapportlezing en productgrenzen zijn ingericht, zodat u de basis
-                kunt toetsen voordat een traject start.
+                Verisight laat publiek zien hoe privacy, rapportage en wat u wel en niet terugziet zijn ingericht, zodat
+                u de basis kunt toetsen voordat een traject start.
               </p>
             </div>
           </div>
@@ -191,12 +191,12 @@ function ReadingGuideSection() {
               lineHeight: 1.1,
             }}
           >
-            Gebruik Verisight als gespreksinput,
+            Gebruik Verisight als hulpmiddel voor gesprek en besluitvorming,
             <br />
             <em style={{ fontStyle: 'italic', color: AC.deep }}>niet als diagnose.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 36, maxWidth: '50ch' }}>
-            Deze pagina laat dezelfde interpretatiegrenzen zien als rapport en dashboard.
+            Deze pagina laat zien hoe u rapport en dashboard verstandig leest.
           </p>
         </Reveal>
         <Reveal delay={0.1}>

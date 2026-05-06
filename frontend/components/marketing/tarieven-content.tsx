@@ -74,8 +74,7 @@ function HeroSection() {
             </h1>
             <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '28px 0 0' }}>
               U koopt geen licentie, maar een duidelijke eerste stap met dashboard, rapport en waar relevant eerste
-              opvolging. Zo blijft de investering helder, terwijl de uitkomst direct bruikbaar is voor HR en
-              management.
+              opvolging. Zo blijft de investering helder, terwijl de uitkomst direct bruikbaar is in de organisatie.
             </p>
           </div>
           <div>
@@ -132,9 +131,9 @@ function FirstBuySection() {
             Uw eerste route blijft overzichtelijk.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '56ch' }}>
-            ExitScan Baseline en RetentieScan Baseline zijn de twee hoofdinstappen. Onboarding 30-60-90 Baseline blijft
-            een gerichtere startroute. Review hoort inhoudelijk bij de baseline, maar staat niet als zwaar extra
-            line-item op de hoofdkaart.
+            ExitScan Baseline en RetentieScan Baseline zijn de twee hoofdkeuzes. Onboarding 30-60-90 Baseline blijft
+            een gerichtere eerste route. Review hoort inhoudelijk bij de baseline, maar staat niet als zwaar extra
+            onderdeel op de hoofdkaart.
           </p>
         </div>
 
@@ -181,7 +180,7 @@ function FirstBuySection() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-start">
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 12 }}>
-                Gerichte startroute
+                Gerichte eerste route
               </div>
               <h3
                 style={{
@@ -246,7 +245,7 @@ function OptionalExpansionSection() {
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '54ch' }}>
             Action Center Start is publiek zichtbaar als optionele uitbreiding na of naast een baseline. Het blijft
-            begrensd tot een gekozen opvolgscope en leest niet als brede workflowlaag.
+            compact rond een gekozen opvolgthema en leest niet als brede werkomgeving.
           </p>
         </div>
 
@@ -273,8 +272,8 @@ function OptionalExpansionSection() {
             <div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 22 }}>
                 {[
-                  'Gekozen opvolgscope',
-                  'Een of enkele owners of managers',
+                  'Een gekozen opvolgthema',
+                  'Een of enkele verantwoordelijken of managers',
                   'Beperkte actieopvolging met zichtbare status',
                   'Reviewmoment zonder brede workflowclaim',
                 ].map((bullet) => (

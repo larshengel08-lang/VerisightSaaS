@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { marketingLegalLinks } from '@/components/marketing/site-content'
 import { Wordmark } from '@/components/marketing/wordmark'
 
@@ -26,13 +26,13 @@ export function PublicFooter() {
             People, Patterns, Priorities
           </p>
           <p className="marketing-footer-copy mt-4 max-w-sm text-sm leading-7">
-            Verisight helpt HR en management zien wat speelt, bepalen wat eerst telt en eerste opvolging organiseren in
-            dashboard, rapport en Action Center.
+            Verisight helpt organisaties sneller zien wat speelt, wat eerst aandacht vraagt en hoe eerste opvolging
+            concreet wordt.
           </p>
           <p className="mt-5 text-xs uppercase tracking-[0.12em] text-[rgba(247,245,241,0.5)]">
             Voor organisaties met 200+ medewerkers
           </p>
-          <div className="marketing-footer-chip mt-6">Een omgeving voor inzicht, prioriteit en opvolging</div>
+          <div className="marketing-footer-chip mt-6">Van eerste inzicht naar concrete opvolging</div>
         </div>
 
         <div>

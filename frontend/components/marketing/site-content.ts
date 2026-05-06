@@ -101,17 +101,17 @@ export const homepageUtilityLinks = [
   {
     href: '/aanpak',
     title: 'Bekijk de aanpak',
-    body: 'Lees hoe routekeuze, uitvoering en eerste output in een compacte productroute samenkomen.',
+    body: 'Lees hoe de eerste stap doorloopt naar dashboard, rapport en eerste opvolging.',
   },
   {
     href: '/tarieven',
     title: 'Bekijk tarieven',
-    body: 'Zie hoe eerste trajecten en vervolgvormen commercieel zijn opgebouwd.',
+    body: 'Zie hoe eerste stappen, uitbreiding en later vervolg zijn opgebouwd.',
   },
   {
     href: '/vertrouwen',
     title: 'Bekijk trust en privacy',
-    body: 'Controleer publiek hoe methodiek, privacy, rapportlezing en DPA zijn ingericht.',
+    body: 'Controleer publiek hoe privacy, rapportage en DPA zijn ingericht.',
   },
 ] as const
 
@@ -211,14 +211,14 @@ export const trustSignalHighlights = [
 export const trustVerificationCards = [
   {
     title: 'Wat u nu publiek kunt verifiëren',
-    body: 'Verisight laat publiek zien hoe productkeuze, privacy en rapportlezing zijn ingericht voordat u een gesprek plant.',
+    body: 'Verisight laat publiek zien hoe privacy, rapportage en de eerste stap zijn ingericht voordat u een gesprek plant.',
   },
   {
     title: 'Waar publieke voorbeeldoutput stopt',
     body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Andere routes worden publiek lichter toegelicht en niet als aparte samplebibliotheek uitgewerkt.',
   },
   {
-    title: 'Wat management wel ziet',
+    title: 'Wat u in rapport en dashboard terugziet',
     body: 'Geaggregeerde inzichten, topfactoren, prioriteiten en een eerste richting voor vervolg.',
   },
   {
@@ -233,8 +233,8 @@ export const trustHubAnswerCards = [
     body: 'De primaire database draait in een EU-regio. Subverwerkers voor hosting en mail staan in privacybeleid en DPA benoemd.',
   },
   {
-    title: 'Wat ziet management precies?',
-    body: 'Management ziet groeps- en segmentinzichten, geen individuele signalen of persoonsgerichte actieroutes.',
+    title: 'Wat ziet u precies terug?',
+    body: 'U ziet groeps- en segmentinzichten, geen individuele signalen of persoonsgerichte actieroutes.',
   },
   {
     title: 'Hoe voorkom je schijnprecisie?',
@@ -246,7 +246,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Wat koopt u precies?',
-    body: 'Geen losse surveytool, maar een afgebakende productvorm met dashboard, rapport en duidelijke interpretatiegrenzen.',
+    body: 'Geen losse tool, maar een duidelijke aanpak met dashboard, rapport en heldere grenzen in hoe u de uitkomsten gebruikt.',
   },
   {
     title: 'Heeft elke route een publiek voorbeeldrapport?',
@@ -257,12 +257,12 @@ export const trustHubAnswerCards = [
 export const trustReadingRows = [
   [
     'Gebruik',
-    'Managementduiding, prioritering en gesprek op groepsniveau',
+    'Samenvatting, prioriteiten en gesprek op groepsniveau',
     'Niet als diagnose, individuele voorspelling of performance-oordeel',
   ],
   [
-    'Wat management ziet',
-    'Dashboard, managementsamenvatting, topfactoren en eerste vervolgrichting.',
+    'Wat u terugziet',
+    'Dashboard, samenvatting, topfactoren en eerste vervolgrichting.',
     'Niet elke ruwe response, geen persoonsprofielen en geen verborgen black-box score',
   ],
   [
@@ -271,9 +271,9 @@ export const trustReadingRows = [
     'Niet doen alsof kleine groepen of open tekst zonder terughoudendheid veilig te lezen zijn',
   ],
   [
-    'Bewijsstatus',
+    'Wat de uitkomsten wel en niet zeggen',
     'Methodisch onderbouwd en begrensd in wat het wel en niet claimt.',
-    'Niet verkopen als extern gevalideerd diagnostisch instrument of bewezen predictor',
+    'Niet verkopen als volledig diagnostisch instrument of bewezen voorspeller',
   ],
 ] as const
 
@@ -281,7 +281,7 @@ export const trustSupportCards = [
   {
     title: 'Trust en privacy',
     href: '/vertrouwen',
-    body: 'Methodiek, privacy en interpretatiegrenzen.',
+    body: 'Methodiek, privacy en hoe u de uitkomsten leest.',
   },
   {
     title: 'Privacybeleid',
@@ -370,36 +370,36 @@ export const included = [
   'Intake en compacte baseline-opzet',
   'Scan en respondentflow waar relevant',
   'Dashboard en managementrapport',
-  'Review van wat opvalt en wat eerst telt',
+  'Samenvatting voor HR en management',
   'Privacy en interpretatie in gewone taal',
-  'Optionele opvolging pas als de gekozen scope daarom vraagt',
+  'Eerste opvolging waar de situatie daarom vraagt',
   'Geen extra toolbeheer voor uw team',
 ] as const
 
 export const approachSteps = [
   {
     title: '1. Juiste route kiezen',
-    body: 'We bepalen welke managementvraag nu als eerste geopend moet worden en kiezen daarop de meest logische route.',
+    body: 'We bepalen welke stap nu het meeste duidelijkheid geeft: vertrek, behoud of onboarding.',
   },
   {
-    title: '2. Baseline uitvoeren',
-    body: 'De route start normaal met een baseline die de gekozen vraag compact opent met intake, scan en respondentflow.',
+    title: '2. Compact opzetten',
+    body: 'We zetten de gekozen stap op met de timing, groepen en input die nodig zijn voor een betrouwbare eerste uitkomst.',
   },
   {
-    title: '3. Dashboard en managementrapport',
-    body: 'Zodra de baseline staat, ziet u in dashboard en managementrapport wat opvalt, wat eerst telt en waar gesprek nodig is.',
+    title: '3. Route laten lopen',
+    body: 'De route gaat live en de basis wordt bewaakt, zonder extra toolbeheer voor uw team.',
   },
   {
-    title: '4. Review en eerste vervolgrichting',
-    body: 'Review hoort inhoudelijk bij de baseline en helpt bepalen welke eerste vervolgrichting logisch is zonder de eerste stap zwaarder te maken.',
+    title: '4. Eerste signalen zichtbaar',
+    body: 'Zodra de respons opbouwt, worden de eerste signalen zichtbaar. We blijven terughoudend tot het beeld stevig genoeg is.',
   },
   {
-    title: '5. Action Center Start optioneel',
-    body: 'Als een gekozen opvolgscope zichtbaar geborgd moet worden, voegen we Action Center Start toe voor een of enkele owners, status en reviewmoment.',
+    title: '5. Dashboard en rapport lezen',
+    body: 'Als het beeld sterk genoeg is, ziet u in dashboard en rapport wat opvalt, wat eerst telt en waar gesprek nodig is.',
   },
   {
-    title: '6. Later ritme of herijking',
-    body: 'Pas daarna worden reviewcadans, Live Start of een latere vervolgronde logisch als dezelfde vraag opnieuw gevolgd moet worden.',
+    title: '6. Eerste opvolging organiseren',
+    body: 'Waar relevant helpt Verisight om de eerste opvolging zichtbaar te maken, met duidelijke acties en verantwoordelijkheden.',
   },
 ] as const
 

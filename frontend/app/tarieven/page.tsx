@@ -7,12 +7,12 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Tarieven',
   description:
-    'Vaste tarieven per scanvorm. ExitScan vanaf EUR 2.950, RetentieScan vanaf EUR 3.450 en bounded vervolgroutes alleen wanneer die echt logisch worden.',
+    'Transparante prijzen voor ExitScan, RetentieScan en vervolgstappen. Zo blijft de eerste keuze helder en weet u wat u direct terugkrijgt.',
   alternates: { canonical: '/tarieven' },
   openGraph: {
     title: 'Tarieven | Verisight',
     description:
-      'Vaste tarieven per scanvorm. ExitScan vanaf EUR 2.950, RetentieScan vanaf EUR 3.450 en bounded vervolgroutes alleen wanneer die echt logisch worden.',
+      'Transparante prijzen voor ExitScan, RetentieScan en vervolgstappen. Zo blijft de eerste keuze helder en weet u wat u direct terugkrijgt.',
     url: 'https://www.verisight.nl/tarieven',
     images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Verisight tarieven voor ExitScan en RetentieScan' }],
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Tarieven | Verisight',
     description:
-      'Vaste tarieven per scanvorm. ExitScan vanaf EUR 2.950, RetentieScan vanaf EUR 3.450 en bounded vervolgroutes alleen wanneer die echt logisch worden.',
+      'Transparante prijzen voor ExitScan, RetentieScan en vervolgstappen. Zo blijft de eerste keuze helder en weet u wat u direct terugkrijgt.',
     images: ['/opengraph-image'],
   },
 }
