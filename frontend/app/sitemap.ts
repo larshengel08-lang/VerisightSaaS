@@ -1,6 +1,33 @@
 import { MetadataRoute } from 'next'
+import { getAllInsights } from '@/lib/insights'
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const insights = getAllInsights()
+  const newestInsightDate =
+    insights.reduce<Date | null>((latest, post) => {
+      const candidate = new Date(post.publishedAt ?? post.generatedAt)
+      if (!latest || candidate > latest) {
+        return candidate
+      }
+
+      return latest
+    }, null) ?? new Date('2026-05-06')
+
+  const insightEntries: MetadataRoute.Sitemap = [
+    {
+      url: 'https://www.verisight.nl/inzichten',
+      lastModified: newestInsightDate,
+      changeFrequency: 'weekly',
+      priority: 0.78,
+    },
+    ...insights.map((post) => ({
+      url: `https://www.verisight.nl/inzichten/${post.slug}`,
+      lastModified: new Date(post.publishedAt ?? post.generatedAt),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
+  ]
+
   return [
     {
       url: 'https://www.verisight.nl',
@@ -98,5 +125,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'yearly',
       priority: 0.4,
     },
+    ...insightEntries,
   ]
 }
