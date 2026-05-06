@@ -7,12 +7,12 @@ import { buildContactHref } from '@/lib/contact-funnel'
 export const metadata: Metadata = {
   title: 'Vertrouwen',
   description:
-    'Wat u publiek kunt toetsen voordat u start. Privacy, rapportlezing en productgrenzen van Verisight in een compacte trustlaag.',
+    'Wat u publiek kunt toetsen voordat u start. Privacy, rapportage en duidelijke grenzen in wat Verisight laat zien.',
   alternates: { canonical: '/vertrouwen' },
   openGraph: {
     title: 'Vertrouwen | Verisight',
     description:
-      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportlezing en productgrenzen van Verisight in een compacte trustlaag.',
+      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportage en duidelijke grenzen in wat Verisight laat zien.',
     url: 'https://www.verisight.nl/vertrouwen',
     images: ['/opengraph-image'],
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vertrouwen | Verisight',
     description:
-      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportlezing en productgrenzen van Verisight in een compacte trustlaag.',
+      'Wat u publiek kunt toetsen voordat u start. Privacy, rapportage en duidelijke grenzen in wat Verisight laat zien.',
     images: ['/opengraph-image'],
   },
 }

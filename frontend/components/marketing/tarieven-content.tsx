@@ -74,8 +74,7 @@ function HeroSection() {
             </h1>
             <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '28px 0 0' }}>
               U koopt geen licentie, maar een duidelijke eerste stap met dashboard, rapport en waar relevant eerste
-              opvolging. Zo blijft de investering helder, terwijl de uitkomst direct bruikbaar is voor HR en
-              management.
+              opvolging. Zo blijft de investering helder, terwijl de uitkomst direct bruikbaar is in de organisatie.
             </p>
           </div>
           <div>
@@ -132,9 +131,8 @@ function FirstBuySection() {
             Uw eerste route blijft overzichtelijk.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '56ch' }}>
-            ExitScan Baseline en RetentieScan Baseline zijn de twee hoofdinstappen. Onboarding 30-60-90 Baseline blijft
-            een gerichtere startroute. Review hoort inhoudelijk bij de baseline, maar staat niet als zwaar extra
-            line-item op de hoofdkaart.
+            ExitScan en RetentieScan zijn de twee hoofdkeuzes. Onboarding 30-60-90 blijft een gerichtere eerste stap.
+            Review hoort bij de route, maar staat niet als zware extra regel op de hoofdkaart.
           </p>
         </div>
 
@@ -181,7 +179,7 @@ function FirstBuySection() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-start">
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 12 }}>
-                Gerichte startroute
+                Gerichte eerste stap
               </div>
               <h3
                 style={{
@@ -242,11 +240,11 @@ function OptionalExpansionSection() {
               lineHeight: 1.08,
             }}
           >
-            Action Center Start blijft begrensd.
+            Action Center Start blijft compact.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '54ch' }}>
-            Action Center Start is publiek zichtbaar als optionele uitbreiding na of naast een baseline. Het blijft
-            begrensd tot een gekozen opvolgscope en leest niet als brede workflowlaag.
+            Action Center Start is een optionele uitbreiding na een eerste route. Het blijft klein gehouden rond een
+            gekozen opvolgthema en leest niet als breed platformverhaal.
           </p>
         </div>
 
@@ -273,10 +271,10 @@ function OptionalExpansionSection() {
             <div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 22 }}>
                 {[
-                  'Gekozen opvolgscope',
-                  'Een of enkele owners of managers',
+                  'Een gekozen opvolgthema',
+                  'Een of enkele verantwoordelijken',
                   'Beperkte actieopvolging met zichtbare status',
-                  'Reviewmoment zonder brede workflowclaim',
+                  'Een vast terugkijkmoment zonder breed platformverhaal',
                 ].map((bullet) => (
                   <div key={bullet} style={{ display: 'flex', gap: 10, fontSize: 13.5, lineHeight: 1.65, color: 'rgba(255,255,255,0.82)', padding: '12px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
                     <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 7 }} />
@@ -317,8 +315,8 @@ function FollowOnSection() {
             Later vervolg blijft lager en rustiger.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '54ch' }}>
-            Live Start, Reviewcadans en latere vervolgroutes komen pas in beeld nadat de eerste baseline en review al
-            richting hebben gegeven.
+            Live Start, Reviewcadans en latere vervolgroutes komen pas in beeld nadat de eerste route al richting heeft
+            gegeven.
           </p>
         </div>
 

@@ -101,17 +101,17 @@ export const homepageUtilityLinks = [
   {
     href: '/aanpak',
     title: 'Bekijk de aanpak',
-    body: 'Lees hoe routekeuze, uitvoering en eerste output in een compacte productroute samenkomen.',
+    body: 'Lees hoe de eerste stap compact doorloopt naar rapport, uitkomst en opvolging.',
   },
   {
     href: '/tarieven',
     title: 'Bekijk tarieven',
-    body: 'Zie hoe eerste trajecten en vervolgvormen commercieel zijn opgebouwd.',
+    body: 'Zie hoe de eerste stap en later vervolg commercieel zijn opgebouwd.',
   },
   {
     href: '/vertrouwen',
     title: 'Bekijk trust en privacy',
-    body: 'Controleer publiek hoe methodiek, privacy, rapportlezing en DPA zijn ingericht.',
+    body: 'Controleer publiek hoe privacy, rapportage en DPA zijn ingericht.',
   },
 ] as const
 
@@ -211,19 +211,19 @@ export const trustSignalHighlights = [
 export const trustVerificationCards = [
   {
     title: 'Wat u nu publiek kunt verifiëren',
-    body: 'Verisight laat publiek zien hoe productkeuze, privacy en rapportlezing zijn ingericht voordat u een gesprek plant.',
+    body: 'Verisight laat publiek zien hoe privacy, rapportage en de eerste stap zijn ingericht voordat u een gesprek plant.',
   },
   {
     title: 'Waar publieke voorbeeldoutput stopt',
-    body: 'ExitScan en RetentieScan dragen de publieke voorbeeldrapporten. Andere routes worden publiek lichter toegelicht en niet als aparte samplebibliotheek uitgewerkt.',
+    body: 'Publieke voorbeeldrapporten blijven bewust beperkt tot ExitScan en RetentieScan. Andere routes lichten we publiek compacter toe.',
   },
   {
-    title: 'Wat management wel ziet',
+    title: 'Wat u in rapport en dashboard terugziet',
     body: 'Geaggregeerde inzichten, topfactoren, prioriteiten en een eerste richting voor vervolg.',
   },
   {
     title: 'Wat we bewust niet claimen',
-    body: 'Geen individuele voorspellingen, geen persoonsgerichte beoordeling en geen bewijsclaims die verder gaan dan de data dragen.',
+    body: 'Geen individuele voorspellingen, geen persoonsgerichte beoordeling en geen claims die verder gaan dan de data dragen.',
   },
 ] as const
 
@@ -233,8 +233,8 @@ export const trustHubAnswerCards = [
     body: 'De primaire database draait in een EU-regio. Subverwerkers voor hosting en mail staan in privacybeleid en DPA benoemd.',
   },
   {
-    title: 'Wat ziet management precies?',
-    body: 'Management ziet groeps- en segmentinzichten, geen individuele signalen of persoonsgerichte actieroutes.',
+    title: 'Wat ziet u precies terug?',
+    body: 'U ziet groeps- en segmentinzichten, geen individuele signalen of persoonsgerichte actieroutes.',
   },
   {
     title: 'Hoe voorkom je schijnprecisie?',
@@ -246,7 +246,7 @@ export const trustHubAnswerCards = [
   },
   {
     title: 'Wat koopt u precies?',
-    body: 'Geen losse surveytool, maar een afgebakende productvorm met dashboard, rapport en duidelijke interpretatiegrenzen.',
+    body: 'Geen losse tool, maar een duidelijke aanpak met dashboard, rapport en heldere grenzen in hoe u de uitkomsten gebruikt.',
   },
   {
     title: 'Heeft elke route een publiek voorbeeldrapport?',
@@ -257,12 +257,12 @@ export const trustHubAnswerCards = [
 export const trustReadingRows = [
   [
     'Gebruik',
-    'Managementduiding, prioritering en gesprek op groepsniveau',
+    'Samenvatting, prioriteiten en gesprek op groepsniveau',
     'Niet als diagnose, individuele voorspelling of performance-oordeel',
   ],
   [
-    'Wat management ziet',
-    'Dashboard, managementsamenvatting, topfactoren en eerste vervolgrichting.',
+    'Wat u terugziet',
+    'Dashboard, samenvatting, topfactoren en een eerste vervolgrichting.',
     'Niet elke ruwe response, geen persoonsprofielen en geen verborgen black-box score',
   ],
   [
@@ -271,9 +271,9 @@ export const trustReadingRows = [
     'Niet doen alsof kleine groepen of open tekst zonder terughoudendheid veilig te lezen zijn',
   ],
   [
-    'Bewijsstatus',
+    'Wat de uitkomsten wel en niet zeggen',
     'Methodisch onderbouwd en begrensd in wat het wel en niet claimt.',
-    'Niet verkopen als extern gevalideerd diagnostisch instrument of bewezen predictor',
+    'Niet verkopen als volledig diagnostisch instrument of bewezen voorspeller',
   ],
 ] as const
 
@@ -281,7 +281,7 @@ export const trustSupportCards = [
   {
     title: 'Trust en privacy',
     href: '/vertrouwen',
-    body: 'Methodiek, privacy en interpretatiegrenzen.',
+    body: 'Privacy, rapportage en hoe u de uitkomsten leest.',
   },
   {
     title: 'Privacybeleid',
@@ -367,38 +367,38 @@ export const processHighlights = [
 ] as const
 
 export const included = [
-  'Intake en compacte baseline-opzet',
+  'Intake en compacte eerste opzet',
   'Scan en respondentflow waar relevant',
-  'Dashboard en managementrapport',
-  'Review van wat opvalt en wat eerst telt',
+  'Dashboard en rapport',
+  'Bespreking van wat opvalt en wat eerst telt',
   'Privacy en interpretatie in gewone taal',
-  'Optionele opvolging pas als de gekozen scope daarom vraagt',
+  'Optionele opvolging pas als een gekozen aandachtspunt daarom vraagt',
   'Geen extra toolbeheer voor uw team',
 ] as const
 
 export const approachSteps = [
   {
-    title: '1. Juiste route kiezen',
-    body: 'We bepalen welke managementvraag nu als eerste geopend moet worden en kiezen daarop de meest logische route.',
+    title: '1. Juiste eerste stap kiezen',
+    body: 'We bepalen welke vraag nu het eerst geopend moet worden en kiezen daarop de meest logische eerste stap.',
   },
   {
-    title: '2. Baseline uitvoeren',
-    body: 'De route start normaal met een baseline die de gekozen vraag compact opent met intake, scan en respondentflow.',
+    title: '2. Eerste meting uitvoeren',
+    body: 'De route start normaal met een eerste meting die de gekozen vraag compact opent met intake, scan en respondentflow.',
   },
   {
-    title: '3. Dashboard en managementrapport',
-    body: 'Zodra de baseline staat, ziet u in dashboard en managementrapport wat opvalt, wat eerst telt en waar gesprek nodig is.',
+    title: '3. Dashboard en rapport',
+    body: 'Zodra de eerste meting staat, ziet u in dashboard en rapport wat opvalt, wat eerst telt en waar gesprek nodig is.',
   },
   {
-    title: '4. Review en eerste vervolgrichting',
-    body: 'Review hoort inhoudelijk bij de baseline en helpt bepalen welke eerste vervolgrichting logisch is zonder de eerste stap zwaarder te maken.',
+    title: '4. Eerste bespreking en vervolgrichting',
+    body: 'De eerste bespreking helpt bepalen welke vervolgrichting logisch is zonder de eerste stap zwaarder te maken.',
   },
   {
     title: '5. Action Center Start optioneel',
-    body: 'Als een gekozen opvolgscope zichtbaar geborgd moet worden, voegen we Action Center Start toe voor een of enkele owners, status en reviewmoment.',
+    body: 'Als een gekozen aandachtspunt concreet opgevolgd moet worden, voegen we Action Center Start toe voor een of enkele verantwoordelijken, zichtbare status en een vast terugkijkmoment.',
   },
   {
-    title: '6. Later ritme of herijking',
+    title: '6. Later vervolg of herijking',
     body: 'Pas daarna worden reviewcadans, Live Start of een latere vervolgronde logisch als dezelfde vraag opnieuw gevolgd moet worden.',
   },
 ] as const
@@ -520,36 +520,36 @@ export const pricingCards = [
     eyebrow: 'ExitScan Baseline',
     price: 'vanaf EUR 4.500',
     description:
-      'De standaard eerste stap voor organisaties die vertrek eerst scherp willen begrijpen en daarvoor een compacte managementread nodig hebben.',
+      'De standaard eerste stap voor organisaties die vertrek eerst scherp willen begrijpen en daarvoor direct een helder rapport nodig hebben.',
     bullets: [
       'Intake',
       'Scan',
       'Dashboard',
-      'Managementrapport',
+      'Rapport',
     ],
   },
   {
     eyebrow: 'RetentieScan Baseline',
     price: 'vanaf EUR 4.500',
     description:
-      'De eerste stap voor organisaties die eerder willen zien waar behoud onder druk staat, zonder individuele signalen naar management te trekken.',
+      'De eerste stap voor organisaties die eerder willen zien waar behoud onder druk staat, zonder individuele signalen naar management.',
     bullets: [
       'Intake',
       'Scan',
       'Dashboard',
-      'Managementrapport',
+      'Rapport',
     ],
   },
   {
     eyebrow: 'Onboarding 30-60-90 Baseline',
     price: 'vanaf EUR 4.500',
     description:
-      'Een kleinere, gerichte startroute voor organisaties die juist in de eerste maanden van nieuwe medewerkers sneller helderheid nodig hebben.',
+      'Een gerichtere eerste stap voor organisaties die juist in de eerste maanden van nieuwe medewerkers sneller helderheid nodig hebben.',
     bullets: [
       'Intake',
       'Scan',
       'Dashboard',
-      'Managementrapport',
+      'Rapport',
     ],
   },
 ] as const
@@ -560,7 +560,7 @@ export const pricingFollowOnRoutes = [
     price: 'op aanvraag',
     fit: 'Later vervolg na baseline',
     description:
-      'Voor organisaties die uitstroom niet alleen eenmalig willen duiden, maar daarna doorlopend willen blijven volgen zodra baseline en review al staan.',
+      'Voor organisaties die uitstroom niet alleen eenmalig willen duiden, maar daarna doorlopend willen blijven volgen zodra de eerste route al staat.',
     bullets: [
       'Geen extra startroute naast de baseline',
       'Pas logisch als proces en eigenaar al staan',
@@ -572,7 +572,7 @@ export const pricingFollowOnRoutes = [
     price: 'op aanvraag',
     fit: 'Later vervolg na baseline',
     description:
-      'Voor organisaties die de gekozen route later in een vast reviewritme willen herijken nadat de eerste baseline en opvolgrichting al staan.',
+      'Voor organisaties die de gekozen route later in een vast terugkijkritme willen herijken nadat de eerste route en opvolgrichting al staan.',
     bullets: [
       'Geen hoofdkaart boven de fold',
       'Past na eerste managementwaarde',
@@ -596,7 +596,7 @@ export const pricingFollowOnRoutes = [
     price: 'op aanvraag',
     fit: 'Bounded vervolgroute',
     description:
-      'Gerichte vervolgronde als een bestaand people-signaal extra duiding vraagt rond managementcontext, niet als brede leiderschapsinstap.',
+      'Gerichte vervolgronde als een bestaand people-signaal extra duiding vraagt, niet als brede leiderschapsinstap.',
     bullets: [
       'Komt pas na een bestaand signaal in beeld',
       'Blijft op groepsniveau en beperkt in scope',
