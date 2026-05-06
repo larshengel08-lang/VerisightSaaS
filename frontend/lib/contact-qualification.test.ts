@@ -26,7 +26,7 @@ describe('contact qualification visibility summary', () => {
     expect(summary.recommendationLabel).toContain('RetentieScan')
   })
 
-  it('treats onboarding as a bounded peer instead of a flat first route', () => {
+  it('treats onboarding as a gerichte eerste route instead of a flat first route', () => {
     const summary = buildContactQualificationVisibilitySummary({
       routeInterest: 'onboarding',
       desiredTiming: 'dit-kwartaal',
@@ -34,7 +34,7 @@ describe('contact qualification visibility summary', () => {
     })
 
     expect(summary.tone).toBe('amber')
-    expect(summary.headline.toLowerCase()).toContain('bounded peer')
+    expect(summary.headline.toLowerCase()).toContain('gerichte eerste route')
     expect(summary.routeReviewLabel).toContain('Onboarding 30-60-90')
     expect(summary.nextAction.toLowerCase()).toContain('checkpoint')
   })

@@ -85,12 +85,12 @@ describe('marketing flow defaults', () => {
     expect(getContactRouteLabel('exitscan')).toBe('ExitScan')
     expect(getContactRouteLabel('retentiescan')).toBe('RetentieScan')
     expect(getContactFirstStepLabel('combinatie')).toBe('een gefaseerde combinatieroute')
-    expect(getContactFirstStepLabel('onboarding')).toContain('bounded peer')
+    expect(getContactFirstStepLabel('onboarding')).toContain('Onboarding 30-60-90 Baseline')
     expect(getContactFirstStepLabel('pulse')).toContain('na een eerste baseline')
     expect(getContactFirstStepLabel('leadership')).toContain('na een bestaand signaal')
   })
 
-  it('keeps the contact route ordering core-first with onboarding as bounded peer and pulse plus leadership as follow-up', () => {
+  it('keeps the contact route ordering core-first with onboarding as a gerichte eerste route and pulse plus leadership as follow-up', () => {
     expect(CONTACT_ROUTE_OPTIONS.map((option) => option.value)).toEqual([
       'exitscan',
       'retentiescan',
@@ -111,7 +111,7 @@ describe('marketing flow defaults', () => {
     )
   })
 
-  it('keeps onboarding qualified as a bounded peer instead of reframing it as a gewone follow-up', () => {
+  it('keeps onboarding qualified as a gerichte eerste route instead of reframing it as a gewone follow-up', () => {
     const onboardingGuidance = getContactQualificationGuidance({
       routeInterest: 'onboarding',
       desiredTiming: 'orienterend',
@@ -121,6 +121,6 @@ describe('marketing flow defaults', () => {
     expect(onboardingGuidance.status).toBe('bounded_peer_review')
     expect(onboardingGuidance.recommendedCoreRoute).toBe('exitscan')
     expect(onboardingGuidance.followOnCandidateRoute).toBe('onboarding')
-    expect(onboardingGuidance.headline.toLowerCase()).toContain('bounded peer')
+    expect(onboardingGuidance.headline.toLowerCase()).toContain('gerichte eerste route')
   })
 })

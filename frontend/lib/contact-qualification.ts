@@ -89,7 +89,7 @@ export function buildContactQualificationVisibilitySummary({
     case 'bounded_peer_review':
       return {
         tone: 'amber',
-        headline: 'Onboarding blijft hier een bounded peer, geen gewone vervolgronde.',
+        headline: 'Onboarding blijft hier een gerichte eerste route, geen gewone vervolgronde.',
         detail: `${guidance.detail} Gewenste timing: ${timingLabel}.`,
         recommendationLabel: `Kernroute-check: ${recommendedRouteLabel}`,
         routeReviewLabel: `Geselecteerd: ${selectedRouteLabel}`,

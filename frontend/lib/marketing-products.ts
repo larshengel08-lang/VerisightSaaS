@@ -1,6 +1,7 @@
-export type MarketingProductStatus = 'core_live' | 'portfolio_live' | 'bounded_live' | 'reserved_future'
+export type MarketingProductStatus = 'core_live' | 'secondary_live' | 'portfolio_live' | 'bounded_live' | 'reserved_future'
 export type MarketingProductPortfolioRole =
   | 'core_product'
+  | 'secondary_first_buy_route'
   | 'portfolio_route'
   | 'bounded_peer_route'
   | 'follow_on_route'
@@ -62,25 +63,27 @@ export const CORE_MARKETING_PRODUCTS: MarketingProduct[] = [
 export const PORTFOLIO_ROUTE_MARKETING_PRODUCTS: MarketingProduct[] = [
 ]
 
-export const BOUNDED_PEER_MARKETING_PRODUCTS: MarketingProduct[] = [
+export const SECONDARY_FIRST_BUY_MARKETING_PRODUCTS: MarketingProduct[] = [
   {
     slug: 'onboarding-30-60-90',
     label: 'Onboarding 30-60-90',
     shortLabel: 'Onboarding 30-60-90',
-    tagline: 'Vroege lifecycle-check voor nieuwe medewerkers',
+    tagline: 'Gerichte startroute voor de eerste maanden van nieuwe medewerkers',
     description:
-      'Bounded peer-route voor een assisted single-checkpoint onboardingread. Bedoeld om vroege landing en eerste frictie zichtbaar te maken, zonder daarvan een derde hoofdproduct of brede lifecycle-suite te maken.',
+      'Gerichte startroute voor organisaties die juist in de eerste maanden van nieuwe medewerkers sneller helderheid nodig hebben, zonder Onboarding tot derde kernroute te maken.',
     seoTitle: 'Onboarding 30-60-90 | Vroege lifecycle-check voor nieuwe medewerkers',
     ogAlt: 'Onboarding 30-60-90 productpagina van Verisight',
-    serviceType: 'Assisted single-checkpoint onboardingread',
-    serviceAudience: 'HR-teams en directies die een vroege onboardingcheck buyer-facing willen openen',
+    serviceType: 'Onboarding baseline voor vroege landing en eerste uitval',
+    serviceAudience: 'HR-teams en directies die onboarding als eerste managementvraag willen openen',
     serviceOutput:
-      'Checkpointsignaal, owner, eerste actie en bounded managementhandoff zonder brede journey-claims',
-    status: 'bounded_live',
-    portfolioRole: 'bounded_peer_route',
+      'Dashboard, managementrapport, vroege landingsduiding en eerste vervolgrichting voor de eerste 30, 60 en 90 dagen',
+    status: 'secondary_live',
+    portfolioRole: 'secondary_first_buy_route',
     href: '/producten/onboarding-30-60-90',
   },
 ]
+
+export const BOUNDED_PEER_MARKETING_PRODUCTS = SECONDARY_FIRST_BUY_MARKETING_PRODUCTS
 
 export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
   {
@@ -89,7 +92,7 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     shortLabel: 'Combinatie',
     tagline: 'Gedeelde vervolglijn voor vertrekduiding en behoudsvraag',
     description:
-      'Bounded vervolgroute voor organisaties waar vertrekduiding en behoudsvraag tegelijk bestuurlijk spelen. Bedoeld als gefaseerde combinatie van ExitScan en RetentieScan, niet als derde eerste instap.',
+      'Gerichte vervolgronde voor organisaties waar vertrekduiding en behoudsvraag tegelijk bestuurlijk spelen. Bedoeld als gefaseerde combinatie van ExitScan en RetentieScan, niet als derde eerste instap.',
     seoTitle: 'Combinatie | Gefaseerde vervolglijn voor ExitScan en RetentieScan',
     ogAlt: 'Combinatie productpagina van Verisight',
     serviceType: 'Gefaseerde vervolglijn voor vertrekduiding en behoudsvraag',
@@ -106,7 +109,7 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     shortLabel: 'Pulse',
     tagline: 'Compacte reviewmetingen na eerste baseline of managementread',
     description:
-      'Bounded vervolgroute voor kortere reviewmetingen nadat een eerste baseline, managementread of eerste actie al staat. Bedoeld voor ritme, effectcheck en managementreview, niet als derde brede instap.',
+      'Compacte vervolgronde voor kortere reviewmetingen nadat een eerste baseline, managementread of eerste actie al staat. Bedoeld voor ritme, effectcheck en managementreview, niet als derde brede instap.',
     seoTitle: 'Pulse | Compacte reviewmetingen na eerste baseline of managementread',
     ogAlt: 'Pulse productpagina van Verisight',
     serviceType: 'Compacte reviewmeting na eerste baseline of managementread',
@@ -123,13 +126,13 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
     shortLabel: 'Leadership Scan',
     tagline: 'Begrensde managementread na een bestaand signaal',
     description:
-      'Bounded vervolgroute voor een group-level leadershipread nadat een bestaand people-signaal al zichtbaar is. Bedoeld voor managementcontext en eerste verificatie, niet voor named leaders, 360 of performanceframing.',
+      'Gerichte vervolgronde voor een group-level leadershipread nadat een bestaand people-signaal al zichtbaar is. Bedoeld voor managementcontext en eerste verificatie, niet voor named leaders, 360 of performanceframing.',
     seoTitle: 'Leadership Scan | Begrensde managementread na een bestaand signaal',
     ogAlt: 'Leadership Scan productpagina van Verisight',
     serviceType: 'Group-level leadershipread na een bestaand signaal',
-    serviceAudience: 'HR-teams en directies die managementcontext bounded willen duiden',
+    serviceAudience: 'HR-teams en directies die managementcontext gericht willen duiden',
     serviceOutput:
-      'Geaggregeerde leadershipread, managementhandoff en bounded first action zonder named leader readouts',
+      'Geaggregeerde leadershipread, managementhandoff en een eerste gerichte vervolgstap zonder named leader readouts',
     status: 'bounded_live',
     portfolioRole: 'follow_on_route',
     href: '/producten/leadership-scan',
@@ -139,7 +142,7 @@ export const FOLLOW_ON_MARKETING_PRODUCTS: MarketingProduct[] = [
 export const LIVE_MARKETING_PRODUCTS: MarketingProduct[] = [
   ...CORE_MARKETING_PRODUCTS,
   ...PORTFOLIO_ROUTE_MARKETING_PRODUCTS,
-  ...BOUNDED_PEER_MARKETING_PRODUCTS,
+  ...SECONDARY_FIRST_BUY_MARKETING_PRODUCTS,
   ...FOLLOW_ON_MARKETING_PRODUCTS,
 ]
 
@@ -188,5 +191,5 @@ export function isFollowOnMarketingProduct(product: MarketingProduct) {
 }
 
 export function isBoundedPeerMarketingProduct(product: MarketingProduct) {
-  return product.portfolioRole === 'bounded_peer_route'
+  return product.portfolioRole === 'secondary_first_buy_route' || product.portfolioRole === 'bounded_peer_route'
 }
