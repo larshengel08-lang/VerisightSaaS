@@ -30,9 +30,12 @@ function shouldFallbackToSupabase(status: number) {
 
 async function storeContactRequestViaSupabase(payload: ContactPayload) {
   const admin = createAdminClient()
+  const createdAt = new Date().toISOString()
   const { data, error } = await admin
     .from('contact_requests')
     .insert({
+      id: crypto.randomUUID(),
+      created_at: createdAt,
       name: payload.name,
       work_email: payload.work_email,
       organization: payload.organization,
