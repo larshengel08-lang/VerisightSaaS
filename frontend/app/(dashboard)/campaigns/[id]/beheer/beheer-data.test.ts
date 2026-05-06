@@ -86,6 +86,13 @@ describe('routebeheer source integration', () => {
     expect(source).toContain('/campaigns/${id}/beheer')
   })
 
+  it('keeps the routebeheer bridge visible in admin view instead of hiding it behind the non-admin execution flag', () => {
+    const source = readFileSync(new URL('../page.tsx', import.meta.url), 'utf8')
+
+    expect(source).toContain('const showClientExecutionFlow = compositionState !== "closed";')
+    expect(source).not.toContain('const showClientExecutionFlow =\n    !isVerisightAdmin && compositionState !== "closed";')
+  })
+
   it('does not silently coerce unknown import readiness into a false auto-signal', () => {
     const source = readFileSync(new URL('./beheer-data.ts', import.meta.url), 'utf8')
 
