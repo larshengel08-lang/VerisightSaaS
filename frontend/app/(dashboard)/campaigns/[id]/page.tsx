@@ -832,8 +832,7 @@ export default async function CampaignPage({ params }: Props) {
     hasEnoughData,
   });
   const activationState = buildResponseActivationState(stats.total_completed);
-  const showClientExecutionFlow =
-    !isVerisightAdmin && compositionState !== "closed";
+  const showClientExecutionFlow = compositionState !== "closed";
   const showManagementOutput = isManagementVisibleState(compositionState);
   const showDeeperInsights =
     compositionState === "full" || compositionState === "closed";
