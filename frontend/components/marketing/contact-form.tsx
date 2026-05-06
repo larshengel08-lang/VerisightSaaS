@@ -7,8 +7,6 @@ import { contactTrustSignals } from '@/components/marketing/site-content'
 import {
   CONTACT_DESIRED_TIMING_OPTIONS,
   CONTACT_ROUTE_OPTIONS,
-  getContactDesiredTimingLabel,
-  getContactFirstStepLabel,
   getContactRouteLabel,
   inferRouteInterestFromSource,
   normalizeContactCtaSource,
@@ -41,9 +39,6 @@ interface ContactFormProps {
 
 interface SuccessState {
   leadId: string | null
-  routeLabel: string
-  firstStepLabel: string
-  desiredTimingLabel: string
 }
 
 const initialState: FormState = {
@@ -73,7 +68,6 @@ export function ContactForm({
   const [ctaSource, setCtaSource] = useState(normalizeContactCtaSource(defaultCtaSource))
   const [loading, setLoading] = useState(false)
   const [successState, setSuccessState] = useState<SuccessState | null>(null)
-  const [warningMessage, setWarningMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const isLight = surface === 'light'
@@ -108,7 +102,6 @@ export function ContactForm({
     event.preventDefault()
     setLoading(true)
     setSuccessState(null)
-    setWarningMessage(null)
     setErrorMessage(null)
 
     if (
@@ -155,21 +148,9 @@ export function ContactForm({
         return
       }
 
-      const routeLabel = getContactRouteLabel(form.routeInterest)
-      const firstStepLabel = getContactFirstStepLabel(form.routeInterest)
-      const desiredTimingLabel = getContactDesiredTimingLabel(form.desiredTiming)
       setSuccessState({
         leadId: payload.lead_id ?? null,
-        routeLabel,
-        firstStepLabel,
-        desiredTimingLabel,
       })
-      if (payload.notification_sent === false) {
-        const reference = payload.lead_id ? ` Referentie: ${payload.lead_id}.` : ''
-        setWarningMessage(
-          `${payload.warning ?? 'Je aanvraag is opgeslagen, maar de e-mailnotificatie liep vast.'}${reference} Je aanvraag blijft wel veilig geregistreerd in Verisight.`,
-        )
-      }
       setForm((current) => ({
         ...initialState,
         routeInterest: current.routeInterest,
@@ -197,9 +178,6 @@ export function ContactForm({
   const errorClass = isLight
     ? 'border-red-200 bg-red-50 text-red-800'
     : 'border-red-400/30 bg-red-400/10 text-red-100'
-  const warningClass = isLight
-    ? 'border-amber-200 bg-amber-50 text-amber-900'
-    : 'border-amber-400/30 bg-amber-400/10 text-amber-100'
   const buttonClass = isLight
     ? 'bg-[#C96A4B] hover:bg-[#B85D41]'
     : 'bg-[#C96A4B] hover:bg-[#B85D41]'
@@ -389,27 +367,8 @@ export function ContactForm({
 
       {successState ? (
         <div className={`mt-5 rounded-[1.5rem] border px-5 py-5 text-sm ${successClass}`}>
-          <p className="font-semibold">Route-inschatting aangevraagd.</p>
-          <div className="mt-2 space-y-2 leading-7">
-            <p>
-              We reageren meestal binnen 1 werkdag met een eerste route-inschatting voor{' '}
-              <span className="font-semibold">{successState.routeLabel}</span> en of{' '}
-              <span className="font-semibold">{successState.firstStepLabel}</span> nu logisch is.
-            </p>
-            <p>
-              In de intake toetsen we jullie managementvraag, gewenste timing (
-              <span className="font-semibold">{successState.desiredTimingLabel}</span>) en welke intake of
-              databasis nodig is om vlot naar dashboard, rapport, Action Center en eerste waarde te gaan.
-            </p>
-            <p>Een vervolgroute of combinatieroute wordt pas concreet zodra de eerste route en eerste managementwaarde helder zijn.</p>
-            <p>In deze stap krijg je nog geen live inrichting of definitieve offerte zonder intake.</p>
-            {successState.leadId ? <p className="text-xs opacity-80">Referentie: {successState.leadId}.</p> : null}
-          </div>
+          <p className="font-semibold">Geslaagd</p>
         </div>
-      ) : null}
-
-      {warningMessage ? (
-        <div className={`mt-5 rounded-[1.5rem] border px-5 py-4 text-sm ${warningClass}`}>{warningMessage}</div>
       ) : null}
 
       {errorMessage ? (
