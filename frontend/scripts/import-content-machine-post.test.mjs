@@ -170,6 +170,36 @@ describe('content-machine insight importer', () => {
     })
   })
 
+  it('surfaces a clear permission hint when GitHub returns 404 for PR creation', async () => {
+    const plan = buildImportPlan({
+      packageDir: '/tmp/20260506-onboarding-retentie',
+      repoRoot: '/repo/frontend',
+      post: buildPost(),
+      bodyMarkdown: '## Intro',
+      publishedAt: '2026-05-06',
+    })
+    const exec = vi.fn((command, args) => {
+      if (command === 'git' && args[0] === 'remote') {
+        return 'https://github.com/verisight/verisight-saas.git\n'
+      }
+
+      return ''
+    })
+    const fetchImpl = vi.fn(async () => ({
+      ok: false,
+      status: 404,
+      text: async () => '{"message":"Not Found"}',
+    }))
+
+    await expect(
+      createPullRequest(plan, {
+        exec,
+        fetchImpl,
+        env: { GITHUB_TOKEN: 'github-token' },
+      }),
+    ).rejects.toThrow(/does not have permission to open pull requests/i)
+  })
+
   it('imports the package, writes the markdown file, and prepares git and GitHub API publication', async () => {
     const repoRoot = createTempDirectory()
     const packageDir = createTempDirectory()
