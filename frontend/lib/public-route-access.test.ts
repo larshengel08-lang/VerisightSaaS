@@ -17,6 +17,8 @@ describe('public route access', () => {
     expect(isPublicRoutePath('/examples')).toBe(true)
     expect(isPublicRoutePath('/examples/voorbeeldrapport_verisight.pdf')).toBe(true)
     expect(isPublicRoutePath('/oplossingen/verloop-analyse')).toBe(true)
+    expect(isPublicRoutePath('/inzichten')).toBe(true)
+    expect(isPublicRoutePath('/inzichten/effectief-luisteren-als-sleutel-tot-beter-leiderschap')).toBe(true)
     expect(isPublicApiRoutePath('/api/contact')).toBe(true)
     expect(isPublicApiRoutePath('/api/contact/submit')).toBe(true)
     expect(isPublicRoutePath('/dashboard')).toBe(false)
