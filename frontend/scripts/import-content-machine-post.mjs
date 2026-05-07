@@ -221,6 +221,21 @@ export function parseGitHubRepo(remoteUrl) {
   throw new Error(`Unsupported GitHub origin URL: ${normalized}`)
 }
 
+async function formatPullRequestCreationError(response, owner, repo) {
+  const failureBody = await response.text()
+
+  if (response.status === 404) {
+    return [
+      `GitHub pull request creation failed (404) for ${owner}/${repo}.`,
+      'The token can likely read the repository, but it does not have permission to open pull requests.',
+      'Ensure GITHUB_TOKEN or GH_TOKEN has pull request write access for this repository.',
+      `GitHub response: ${failureBody}`,
+    ].join(' ')
+  }
+
+  return `GitHub pull request creation failed (${response.status}): ${failureBody}`
+}
+
 export async function createPullRequest(plan, options = {}) {
   const { exec = execFileSync, fetchImpl = fetch, env = process.env } = options
   const token = readGithubToken(env)
@@ -249,8 +264,7 @@ export async function createPullRequest(plan, options = {}) {
   })
 
   if (!response.ok) {
-    const failureBody = await response.text()
-    throw new Error(`GitHub pull request creation failed (${response.status}): ${failureBody}`)
+    throw new Error(await formatPullRequestCreationError(response, owner, repo))
   }
 
   return response.json()
