@@ -377,8 +377,12 @@ if (isDirectRun) {
     .then((plan) => {
       if (plan?.pullRequest?.mode === 'manual') {
         console.warn(plan.pullRequest.reason)
-        console.log(`Open PR manually: ${plan.pullRequest.url}`)
       }
+      console.log(JSON.stringify({
+        branchName: plan?.branchName ?? null,
+        targetPath: plan?.targetPath ?? null,
+        pullRequest: plan?.pullRequest ?? null,
+      }))
     })
     .catch((error) => {
       console.error(error instanceof Error ? error.message : String(error))
