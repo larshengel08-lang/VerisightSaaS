@@ -490,9 +490,15 @@ function buildCockpitRouteItem(entry: CampaignHomeEntry): CockpitRouteItem {
     why: getWhyCopy(entry),
     nextStep: ctaLabel,
     ctaLabel,
-    ctaHref: `/campaigns/${entry.campaign.campaign_id}`,
+    ctaHref: getCtaHrefForState(entry.state, entry.campaign.campaign_id),
     responseValue: completionValue,
   }
+}
+
+export function getCtaHrefForState(state: CampaignCompositionState, campaignId: string) {
+  if (state === 'partial' || state === 'full') return `/campaigns/${campaignId}`
+  if (state === 'closed') return `/campaigns/${campaignId}`
+  return `/campaigns/${campaignId}/beheer`
 }
 
 function getToneForBucket(bucket: CockpitBucket): OverviewRouteTone {
