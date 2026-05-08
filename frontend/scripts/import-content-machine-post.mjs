@@ -186,9 +186,31 @@ export function assertInsightTargetDoesNotExist(plan, options = {}) {
   }
 }
 
+export function getCurrentBranch(repoRoot, options = {}) {
+  const { exec = execFileSync } = options
+  const branchOutput =
+    exec('git', ['branch', '--show-current'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: 'pipe',
+    }) ?? ''
+
+  const branchName = String(branchOutput).trim()
+  if (!branchName) {
+    throw new Error('Could not determine the current git branch before publishing.')
+  }
+
+  return branchName
+}
+
 export function preparePublicationBranch(plan, options = {}) {
   const { exec = execFileSync, stdio = 'inherit' } = options
   exec('git', ['switch', '-c', plan.branchName, 'main'], { cwd: plan.repoRoot, stdio })
+}
+
+export function restoreWorkingBranch(repoRoot, branchName, options = {}) {
+  const { exec = execFileSync, stdio = 'inherit' } = options
+  exec('git', ['switch', branchName], { cwd: repoRoot, stdio })
 }
 
 export function readGithubToken(env = process.env) {
@@ -219,6 +241,11 @@ export function parseGitHubRepo(remoteUrl) {
   }
 
   throw new Error(`Unsupported GitHub origin URL: ${normalized}`)
+}
+
+export function buildPullRequestUrl(plan, remoteUrl) {
+  const { owner, repo } = parseGitHubRepo(remoteUrl)
+  return `https://github.com/${owner}/${repo}/pull/new/${plan.branchName}`
 }
 
 export async function createPullRequest(plan, options = {}) {
@@ -266,7 +293,35 @@ export async function runPublicationPlan(plan, options = {}) {
     { cwd: plan.repoRoot, stdio },
   )
   exec('git', ['push', '-u', 'origin', plan.branchName], { cwd: plan.repoRoot, stdio })
-  await createPullRequest(plan, options)
+  const remoteUrl =
+    exec('git', ['remote', 'get-url', 'origin'], {
+      cwd: plan.repoRoot,
+      encoding: 'utf8',
+      stdio: 'pipe',
+    }) ?? ''
+
+  try {
+    const pullRequest = await createPullRequest(plan, options)
+    return {
+      mode: 'automatic',
+      remoteUrl: String(remoteUrl).trim(),
+      url: pullRequest?.html_url ?? buildPullRequestUrl(plan, remoteUrl),
+      pullRequest,
+    }
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      /Set GITHUB_TOKEN or GH_TOKEN before publishing insights to GitHub\./.test(error.message)
+    ) {
+      return {
+        mode: 'manual',
+        remoteUrl: String(remoteUrl).trim(),
+        url: buildPullRequestUrl(plan, remoteUrl),
+        reason: error.message,
+      }
+    }
+    throw error
+  }
 }
 
 export async function importContentMachinePost(options) {
@@ -288,11 +343,17 @@ export async function importContentMachinePost(options) {
 
   assertCleanWorkingTree(plan.repoRoot, { exec })
   assertInsightTargetDoesNotExist(plan, { fsImpl })
+  const originalBranch = getCurrentBranch(plan.repoRoot, { exec })
   preparePublicationBranch(plan, { exec, stdio })
   writeInsightDocument(plan, { fsImpl })
-  await runPublicationPlan(plan, options)
+  const pullRequest = await runPublicationPlan(plan, options)
+  restoreWorkingBranch(plan.repoRoot, originalBranch, { exec, stdio })
 
-  return plan
+  return {
+    ...plan,
+    originalBranch,
+    pullRequest,
+  }
 }
 
 export async function main(argv = process.argv.slice(2)) {
@@ -312,8 +373,19 @@ const isDirectRun =
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 
 if (isDirectRun) {
-  main().catch((error) => {
-    console.error(error instanceof Error ? error.message : String(error))
-    process.exit(1)
-  })
+  main()
+    .then((plan) => {
+      if (plan?.pullRequest?.mode === 'manual') {
+        console.warn(plan.pullRequest.reason)
+      }
+      console.log(JSON.stringify({
+        branchName: plan?.branchName ?? null,
+        targetPath: plan?.targetPath ?? null,
+        pullRequest: plan?.pullRequest ?? null,
+      }))
+    })
+    .catch((error) => {
+      console.error(error instanceof Error ? error.message : String(error))
+      process.exit(1)
+    })
 }
