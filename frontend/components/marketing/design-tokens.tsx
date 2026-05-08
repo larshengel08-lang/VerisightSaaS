@@ -65,7 +65,7 @@ export function useInView(threshold = 0.12) {
 export function Reveal({
   children, delay = 0, from = 'up' as 'up' | 'right' | 'none', threshold = 0.1,
 }: {
-  children: React.ReactNode; delay?: number; from?: 'up' | 'right' | 'none'; threshold?: number
+  children?: React.ReactNode; delay?: number; from?: 'up' | 'right' | 'none'; threshold?: number
 }) {
   const [ref, inView] = useInView(threshold)
   const tr = { up: 'translateY(22px)', right: 'translateX(24px)', none: 'none' }
