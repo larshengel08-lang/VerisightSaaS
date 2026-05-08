@@ -109,7 +109,7 @@ const problemSignalPoints = [
   },
   {
     title: 'Opvolging blijft te los',
-    body: 'Opvolging wordt daardoor ad hoc, breed of ongericht, terwijl management juist scherpe keuzes en gedeeld eigenaarschap nodig heeft.',
+    body: 'Opvolging wordt daardoor ad hoc, breed of ongericht, terwijl de organisatie juist scherpe keuzes en gedeeld eigenaarschap nodig heeft.',
     accent: '#98a4b3',
   },
 ]
@@ -125,36 +125,36 @@ const managementFlowSteps = [
     step: '2',
     label: 'Prioriteren',
     title: 'Managementrapport',
-    body: 'Maakt de hoofdboodschap, eerste prioriteit en eerste vervolgrichting bestuurlijk leesbaar, zodat management sneller kan wegen wat eerst telt.',
+    body: 'Maakt de hoofdboodschap, eerste prioriteit en eerste vervolgrichting leesbaar, zodat de organisatie sneller kan wegen wat eerst telt.',
   },
   {
     step: '3',
     label: 'Handelen',
     title: 'Action Center',
-    body: 'Maakt opvolging concreet zodra HR of leiding besluit dat een echte vervolgstap nodig is, van toewijzing aan een manager tot het openen en volgen van acties.',
+    body: 'Maakt opvolging concreet. Van toewijzing aan een manager tot het openen en volgen van acties.',
   },
 ] as const
 
 const firstDeliveryItems = [
   {
     index: '01',
-    title: 'Een dashboard met hoofdbeeld en prioriteiten',
-    body: 'Zodat direct zichtbaar wordt waar signalen terugkomen en wat bestuurlijk aandacht vraagt.',
+    title: 'Intake en afbakening',
+    body: 'We bepalen de eerste managementvraag, scope en route.',
   },
   {
     index: '02',
-    title: 'Een managementrapport met duiding en vervolgrichting',
-    body: 'Zodat management sneller begrijpt wat de kern is en welke eerste vraag of keuze voorligt.',
+    title: 'Scan of dataverzameling',
+    body: 'We verzamelen de signalen binnen de gekozen route.',
   },
   {
     index: '03',
-    title: 'Een gerichte bespreking van wat eerst telt',
-    body: 'Zodat signalen niet blijven hangen in interpretatie, maar leiden tot scherpere weging en besluitvorming.',
+    title: 'Dashboard en managementrapport',
+    body: 'U krijgt een zelfstandig leesbaar hoofdbeeld met prioriteit en eerste vervolgrichting.',
   },
   {
     index: '04',
-    title: 'Een Action Center voor georganiseerde opvolging',
-    body: 'Zodat vervolg niet in losse afspraken verdwijnt, maar zichtbaar, toegewezen en concreet wordt.',
+    title: 'Review',
+    body: 'We bespreken wat eerst aandacht vraagt en welke vervolgstap logisch is.',
   },
 ] as const
 
@@ -289,8 +289,8 @@ function ProblemSection() {
                 maxWidth: '54rem',
               }}
             >
-              Organisaties zien signalen, rond uitstroom, behoud of vroege landing, maar missen de vertaalslag naar
-              een heldere managementprioriteit en concrete opvolging.
+              Organisaties zien signalen rond uitstroom, behoud of vroege landing, maar missen de vertaalslag naar een
+              heldere prioriteit en concrete opvolging.
             </p>
           </Reveal>
         </div>
@@ -696,19 +696,6 @@ function ManagementFlowSection() {
         </div>
 
         <Reveal delay={0.24}>
-          <p
-            style={{
-              color: SURFACE.text,
-              fontSize: 16,
-              lineHeight: 1.72,
-              margin: '46px auto 0',
-              maxWidth: '58rem',
-              textAlign: 'center',
-            }}
-          >
-            Verisight vult interpretatie of eigenaarschap niet automatisch voor u in. Het helpt signalen zichtbaar
-            maken, prioriteiten wegen en opvolging organiseren in een duidelijke managementflow.
-          </p>
         </Reveal>
       </div>
 
@@ -790,7 +777,7 @@ function HeroSection() {
                   maxWidth: '32rem',
                 }}
               >
-                Verisight helpt HR en leiding signalen zichtbaar maken, prioriteren wat eerst telt en opvolging organiseren in het Action Center.
+                Verisight helpt organisaties signalen zichtbaar maken, prioriteren en opvolging organiseren in het Action Center.
               </p>
 
               <div
@@ -1011,7 +998,7 @@ function HeroSection() {
                       textWrap: 'balance',
                     }}
                   >
-                    Eerste leeslijn voor management
+                    Wat vraagt nu aandacht?
                   </h3>
                   <p style={{ color: SURFACE.text, fontSize: 12.6, lineHeight: 1.58 }}>
                     Wat valt op, wat telt eerst en welke vraag ligt nu voor?
@@ -1981,43 +1968,7 @@ function RoutesSection() {
             paddingTop: 26,
           }}
         >
-          <div>
-            <Reveal delay={0.22}>
-              <p
-                style={{
-                  color: SURFACE.muted,
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: '.18em',
-                  marginBottom: 12,
-                  textTransform: 'uppercase',
-                }}
-              >
-                Vervolgvragen
-              </p>
-            </Reveal>
-            <Reveal delay={0.26}>
-              <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.75, maxWidth: '38rem' }}>
-                Pulse voor compacte vervolgmetingen, Leadership Scan voor extra managementcontext en een combinatieroute wanneer meerdere vragen tegelijk spelen.
-              </p>
-            </Reveal>
-          </div>
-
-          <div className="flex flex-wrap gap-8 xl:justify-end">
-            {[
-              ['Pulse', SURFACE.surfaceSoft, SURFACE.text],
-              ['Leadership Scan', SURFACE.paperSoft, SURFACE.text],
-              ['Combinatie', '#ece7df', SURFACE.ink],
-            ].map(([label, bg, color], index) => (
-              <Reveal key={label} delay={0.28 + index * 0.05}>
-                <div style={{ minWidth: 132 }}>
-                <div style={{ background: String(bg), color: String(color), display: 'inline-block', fontFamily: bodyFont, fontSize: 11, fontWeight: 700, letterSpacing: '.14em', marginBottom: 10, padding: '5px 10px', textTransform: 'uppercase' }}>
-                  {label}
-                </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          <div />
         </div>
 
         <div style={{ marginTop: 34 }}>
@@ -2070,7 +2021,7 @@ function FirstDeliverySection() {
                 marginBottom: 22,
               }}
             >
-              Wat u als eerste krijgt
+              Wat u krijgt in de Baseline
             </h2>
           </Reveal>
           <Reveal delay={0.05}>

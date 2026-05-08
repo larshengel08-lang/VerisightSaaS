@@ -147,7 +147,7 @@ function VerificationSection() {
               lineHeight: 1.06,
             }}
           >
-            Wat u publiek kunt verifiëren
+            Zo weet u vooraf waar u aan toe bent
           </h2>
         </Reveal>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -191,9 +191,9 @@ function ReadingGuideSection() {
               lineHeight: 1.1,
             }}
           >
-            Gebruik Verisight als hulpmiddel voor gesprek en besluitvorming,
+            Verisight helpt gesprekken scherper maken,
             <br />
-            <em style={{ fontStyle: 'italic', color: AC.deep }}>niet als diagnose.</em>
+            <em style={{ fontStyle: 'italic', color: AC.deep }}>zonder automatisch oordeel.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 36, maxWidth: '50ch' }}>
             Deze pagina laat zien hoe u rapport en dashboard verstandig leest.
@@ -209,7 +209,7 @@ function ReadingGuideSection() {
                 borderBottom: `1px solid ${T.rule}`,
               }}
             >
-              {['Thema', 'Wat u wel ziet', 'Wat u er niet van moet maken'].map((h, i) => (
+              {['Thema', 'Wat u kunt gebruiken', 'Waar de grens ligt'].map((h, i) => (
                 <div
                   key={i}
                   style={{
@@ -279,7 +279,7 @@ function PrivacySection() {
             <em style={{ fontStyle: 'italic', color: AC.deep }}>voorspelbare vragen.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 32, maxWidth: '50ch' }}>
-            Zo kunt u de basis toetsen voordat er een gesprek plaatsvindt.
+            Zo ziet u vooraf hoe Verisight met data, privacy en output omgaat.
           </p>
         </Reveal>
         <div className="grid grid-cols-1 gap-0 md:grid-cols-2 xl:grid-cols-3">
@@ -338,8 +338,8 @@ function ContactSection() {
       sectionIndex="05"
       sectionLabel="Eerste route-inschatting"
       backdropNumber={null}
-      title="Toets of Verisight"
-      accentTitle="nu past."
+      title="Ontdek of Verisight"
+      accentTitle="past bij uw vraag."
       body="In een kort gesprek toetsen we productkeuze, privacy, timing en wat u als eerste terugkrijgt."
       buttonLabel="Plan een kennismaking"
       showSectionMark={false}

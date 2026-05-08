@@ -67,12 +67,11 @@ export function OnboardingSecondaryPage() {
                     maxWidth: '12ch',
                   }}
                 >
-                  Open onboarding als gerichte eerste route wanneer vroege landing nu de echte vraag is.
+                  Nieuwe medewerkers sneller goed laten landen
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
-                  Onboarding 30-60-90 Baseline is een gerichte eerste route. De route blijft kleiner en specifieker
-                  dan ExitScan en RetentieScan, maar is wel een volwaardige baseline wanneer juist de eerste 30, 60 en
-                  90 dagen sneller helderheid vragen.
+                  Voor organisaties die vroeg willen zien of nieuwe medewerkers goed landen — en waar eerste frictie
+                  aandacht vraagt voordat die uitgroeit tot uitval, verloop of langdurige onzekerheid.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <a
@@ -111,13 +110,13 @@ export function OnboardingSecondaryPage() {
               <div>
                 <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>
-                    Gerichte startroute
+                    Voor vragen rond de eerste 30, 60 en 90 dagen
                   </div>
                   {[
                     'Vanaf EUR 4.500 als baseline',
                     'Dashboard en managementrapport als eerste output',
-                    'Voor vroege landing, eerste frictie en eerste uitval',
-                    'Kleiner en specifieker dan ExitScan of RetentieScan',
+                    'Maakt vroege frictie in rol, team en leiding zichtbaar',
+                    'Startpunt wanneer onboarding nu de belangrijkste vraag is',
                   ].map((item, index) => (
                     <div
                       key={item}

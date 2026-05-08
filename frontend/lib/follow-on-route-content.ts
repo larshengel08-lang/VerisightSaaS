@@ -41,13 +41,13 @@ export const FOLLOW_ON_ROUTE_CONTENT: readonly FollowOnRouteContent[] = [
   {
     slug: 'leadership-scan',
     title: leadershipProduct.label,
-    rowSummary: 'Als managementcontext de volgende echte vraag wordt.',
+    rowSummary: 'Wanneer signalen vooral vragen oproepen over aansturing of leiding.',
     positioning:
-      'Leadership Scan is een gerichte managementroute die pas logisch wordt wanneer bestaande signalen vragen oproepen over aansturing, leiderschap of managementcontext.',
+      'Leadership Scan helpt gericht kijken naar aansturing, verwachtingen en leidinggevende context wanneer een eerdere baseline laat zien dat daar de vervolgvraag ligt.',
     whenLogical: [
-      'Er al een eerste people-read staat en de volgende vraag verschuift naar managementcontext.',
-      'Bestaande signalen vragen om duiding rond aansturing, verwachtingen of leidingomgeving.',
-      'De volgende stap gaat over managementcontext op groepsniveau, niet om een brede cultuur- of leiderschapsbelofte.',
+      'Er ligt al een eerste baseline of managementread.',
+      'De vervolgvraag gaat vooral over aansturing, verwachtingen of leidinggevende context.',
+      'De scope blijft groepsgericht en wordt geen brede leiderschaps- of cultuurdiagnose.',
     ],
     whatYouGet: [
       'Een begrensde managementread rond leiderschapscontext en wat daarin nu opvalt.',
@@ -72,13 +72,13 @@ export const FOLLOW_ON_ROUTE_CONTENT: readonly FollowOnRouteContent[] = [
   {
     slug: 'pulse',
     title: pulseProduct.label,
-    rowSummary: 'Compacte vervolgroute nadat een eerste baseline of managementread al staat.',
+    rowSummary: 'Voor een compacte hercheck nadat de eerste vraag scherp is.',
     positioning:
-      'Pulse is een compacte herhaalroute die pas logisch wordt nadat al een eerste baseline, managementread of vervolgstap is bepaald.',
+      'Pulse is bedoeld om een gekozen aandachtspunt compact te blijven volgen, zonder opnieuw een brede baseline te starten.',
     whenLogical: [
-      'Er al een eerste baseline of managementread staat die u gericht wilt opvolgen.',
-      'Compact volgen belangrijker is dan opnieuw breed duiden.',
-      'De volgende vraag gaat over beweging en hercheck, niet over een nieuwe eerste people-read.',
+      'Er is al een baseline of managementread.',
+      'U wilt één gekozen aandachtspunt volgen.',
+      'Een compacte hercheck is logischer dan opnieuw breed meten.',
     ],
     whatYouGet: [
       'Een korte vervolgmeting met compacte managementread.',
@@ -102,13 +102,13 @@ export const FOLLOW_ON_ROUTE_CONTENT: readonly FollowOnRouteContent[] = [
   {
     slug: 'combinatie',
     title: combinationProduct.label,
-    rowSummary: 'Alleen logisch wanneer vertrek en behoud tegelijk bestuurlijk spelen.',
+    rowSummary: 'Wanneer vertrek en behoud tegelijk aandacht vragen.',
     positioning:
-      'Combinatie is een uitzonderlijke vervolgroute die pas logisch wordt wanneer vertrekduiding en behoudsvraag tegelijk bestuurlijk spelen.',
+      'Combinatie is alleen logisch wanneer vertrek én behoud tegelijk belangrijk zijn en niet goed in één losse route te vangen zijn.',
     whenLogical: [
-      'ExitScan of RetentieScan al als eerste route scherp staat.',
-      'Vertrekduiding en behoudsvraag tegelijk aandacht vragen in dezelfde managementlijn.',
-      'De volgende stap gaat over een gefaseerde combinatie van twee samenhangende vragen.',
+      'ExitScan of RetentieScan heeft de eerste vraag al scherp gemaakt.',
+      'Vertrek en behoud vragen tegelijk om aandacht.',
+      'De vervolgstap vraagt om een gefaseerde combinatie, niet om een bundelverkoop.',
     ],
     whatYouGet: [
       'Een gefaseerde routekeuze over twee samenhangende managementvragen.',

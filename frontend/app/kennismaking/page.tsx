@@ -56,20 +56,11 @@ export default function KennismakingPage() {
                   fontWeight: 400,
                   letterSpacing: '-0.05em',
                   lineHeight: 0.92,
-                  marginBottom: 16,
+                  marginBottom: 0,
                 }}
               >
-                Vertel kort
-                <br />
-                <span style={{ color: '#162238', fontStyle: 'italic', fontWeight: 300 }}>
-                  toets welke eerste route
-                </span>
-                <br />
-                nu past.
+                Plan een kennismaking
               </h1>
-              <p style={{ color: '#4e5d6f', fontSize: 16, lineHeight: 1.8, maxWidth: '33rem', margin: '0 auto' }}>
-                In circa 20 minuten krijgt u helderheid over de juiste route, timing, privacy, prijs en de eerste output die daarbij past.
-              </p>
             </div>
 
             <div style={{ marginTop: 30, maxWidth: 1140 }}>

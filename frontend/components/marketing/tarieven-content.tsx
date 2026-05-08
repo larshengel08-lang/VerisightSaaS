@@ -73,10 +73,10 @@ function HeroSection() {
                 Heldere eerste stap.
               </em>
             </h1>
-            <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '28px 0 0' }}>
-              U koopt geen licentie, maar een duidelijke eerste stap met dashboard, rapport en waar relevant eerste
-              opvolging. Zo blijft de investering helder, terwijl de uitkomst direct bruikbaar is in de organisatie.
-            </p>
+          <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '28px 0 0' }}>
+            U start met een duidelijke Baseline: intake, scan, dashboard en managementrapport. Daarna kiest u pas of
+            opvolging of ritme nodig is. Zo blijft de eerste koop overzichtelijk en direct bruikbaar.
+          </p>
             </div>
           </Reveal>
           <Reveal delay={0.08} from="right">
@@ -135,12 +135,11 @@ function FirstBuySection() {
               lineHeight: 1.06,
             }}
           >
-            Uw eerste route blijft overzichtelijk.
+            Start met één duidelijke Baseline.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '56ch' }}>
-            ExitScan Baseline en RetentieScan Baseline zijn de twee hoofdkeuzes. Onboarding 30-60-90 Baseline blijft
-            een gerichtere eerste route. Review hoort inhoudelijk bij de baseline, maar staat niet als zwaar extra
-            onderdeel op de hoofdkaart.
+            U kiest eerst de managementvraag: vertrek, behoud of onboarding. Verisight vertaalt die vraag naar een
+            Baseline met dashboard, managementrapport en een compacte review van de eerste vervolgrichting.
           </p>
           </div>
         </Reveal>
@@ -253,11 +252,12 @@ function OptionalExpansionSection() {
               lineHeight: 1.08,
             }}
           >
-            Action Center Start blijft begrensd.
+            Borg opvolging alleen als daar aanleiding voor is.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '54ch' }}>
-            Action Center Start is publiek zichtbaar als optionele uitbreiding na of naast een baseline. Het blijft
-            compact rond een gekozen opvolgthema en leest niet als brede werkomgeving.
+            Na een Baseline kunt u Action Center Start toevoegen om één gekozen vervolgrichting zichtbaar te houden:
+            wie pakt dit op, wat loopt er en wanneer kijken we terug? Het blijft begrensd en is geen breed
+            workflowplatform.
           </p>
           </div>
         </Reveal>
@@ -286,10 +286,10 @@ function OptionalExpansionSection() {
             <div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 22 }}>
                 {[
-                  'Een gekozen opvolgthema',
-                  'Een of enkele verantwoordelijken of managers',
-                  'Beperkte actieopvolging met zichtbare status',
-                  'Reviewmoment zonder brede workflowclaim',
+                  'Eén gekozen vervolgrichting',
+                  'Beperkte manager- of eigenaartoegang',
+                  'Zichtbare status en één reviewmoment',
+                  'Geen breed workflowplatform',
                 ].map((bullet) => (
                   <div key={bullet} style={{ display: 'flex', gap: 10, fontSize: 13.5, lineHeight: 1.65, color: 'rgba(255,255,255,0.82)', padding: '12px 14px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}>
                     <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 7 }} />
@@ -298,7 +298,7 @@ function OptionalExpansionSection() {
                 ))}
               </div>
               <Link href={href} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '12px 24px', color: '#fff', background: AC.deep }}>
-                Toets of Action Center Start logisch is <Arrow />
+                Bespreek Action Center Start <Arrow />
               </Link>
             </div>
           </div>
@@ -329,11 +329,11 @@ function FollowOnSection() {
               lineHeight: 1.1,
             }}
           >
-            Later vervolg blijft lager en rustiger.
+            Verder bouwen kan, maar pas na de eerste Baseline.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '54ch' }}>
-            Live Start, Reviewcadans en latere vervolgroutes komen pas in beeld nadat de eerste baseline en review al
-            richting hebben gegeven.
+            Na de eerste Baseline kunt u gericht kiezen of dezelfde vraag structureel gevolgd, herijkt of verdiept moet
+            worden. Zo blijft de eerste koop licht.
           </p>
           </div>
         </Reveal>

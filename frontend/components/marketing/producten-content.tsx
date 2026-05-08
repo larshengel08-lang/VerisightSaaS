@@ -83,19 +83,6 @@ function HeroSection() {
           >
             Kies de route die nu het meeste duidelijkheid geeft.
           </h1>
-          <p
-            style={{
-              color: T.inkSoft,
-              fontSize: 16.5,
-              lineHeight: 1.72,
-              margin: '26px auto 36px',
-              maxWidth: '60ch',
-            }}
-          >
-            ExitScan Baseline en RetentieScan Baseline blijven de twee hoofdinstappen. Onboarding 30-60-90
-            Baseline is een gerichtere startroute. Action Center Start en latere vervolgroutes komen pas daarna in
-            beeld.
-          </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
             <Link
               href={primaryHref}
@@ -261,11 +248,11 @@ function SecondaryFirstBuySection() {
               marginBottom: 12,
             }}
           >
-            Onboarding blijft een gerichte startroute.
+            Nieuwe medewerkers sneller goed laten landen
           </h2>
           <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, maxWidth: '54ch', margin: '0 auto' }}>
-            Onboarding 30-60-90 Baseline blijft zichtbaar als specifiekere eerste route: gerichter dan ExitScan en
-            RetentieScan, maar wel een volwaardige start wanneer onboarding nu de eerste vraag is.
+            Onboarding 30-60-90 Baseline helpt zichtbaar maken waar nieuwe medewerkers in de eerste maanden vastlopen:
+            in rol, leiding, team of werkcontext. Geschikt wanneer onboarding nu de belangrijkste managementvraag is.
           </p>
           </div>
         </Reveal>
@@ -438,7 +425,7 @@ function ActionCenterStartSection() {
                   textDecoration: 'none',
                 }}
               >
-                Toets of Action Center Start logisch is <Arrow />
+                Bespreek Action Center <Arrow />
               </Link>
             </div>
           </div>
@@ -466,11 +453,11 @@ function LaterRoutesSection() {
               marginBottom: 12,
             }}
           >
-            Vervolg en verdieping komen pas later in beeld.
+            Verder bouwen kan na de eerste Baseline
           </h2>
           <p style={{ color: T.inkSoft, fontSize: 14.5, lineHeight: 1.72, maxWidth: '56ch', margin: '0 auto' }}>
-            Live Start, Reviewcadans en latere vervolgroutes komen pas in beeld nadat de eerste route al richting
-            heeft gegeven.
+            Na de eerste Baseline kunt u gericht kiezen of dezelfde vraag structureel gevolgd, herijkt of verdiept moet
+            worden. Zo blijft de eerste koop licht en wordt vervolg pas toegevoegd wanneer het echt nodig is.
           </p>
           </div>
         </Reveal>
@@ -517,7 +504,7 @@ function LaterRoutesSection() {
         </div>
 
         <Reveal delay={0.12}>
-          <FollowOnRoutesAccordion routes={FOLLOW_ON_ROUTE_CONTENT} />
+          <FollowOnRoutesAccordion routes={FOLLOW_ON_ROUTE_CONTENT.filter((route) => route.slug !== 'combinatie')} />
         </Reveal>
       </div>
     </section>

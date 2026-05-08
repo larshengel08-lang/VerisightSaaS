@@ -7,8 +7,6 @@ export function PublicFooter() {
     { href: '/producten/exitscan', label: 'ExitScan' },
     { href: '/producten/retentiescan', label: 'RetentieScan' },
     { href: '/producten/onboarding-30-60-90', label: 'Onboarding 30-60-90' },
-    { href: '/producten/pulse', label: 'Pulse' },
-    { href: '/producten/leadership-scan', label: 'Leadership Scan' },
   ]
 
   const navLinks = [
