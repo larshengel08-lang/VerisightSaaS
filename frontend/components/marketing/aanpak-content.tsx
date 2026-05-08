@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { AC, Arrow, FF, SHELL, T } from '@/components/marketing/design-tokens'
+import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-tokens'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import { buildContactHref } from '@/lib/contact-funnel'
 import { approachSteps, included } from '@/components/marketing/site-content'
@@ -51,7 +51,8 @@ function HeroSection() {
       />
       <div style={{ ...SHELL, position: 'relative' }}>
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_390px] lg:gap-20 items-start">
-          <div>
+          <Reveal>
+            <div>
             <p
               style={{
                 color: AC.deep,
@@ -119,10 +120,12 @@ function HeroSection() {
                 Bekijk producten
               </Link>
             </div>
-          </div>
+            </div>
+          </Reveal>
 
-          <div>
-            <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
+          <Reveal delay={0.08} from="right">
+            <div>
+              <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
               <div
                 style={{
                   fontSize: 10,
@@ -154,8 +157,9 @@ function HeroSection() {
                   <span style={{ fontSize: 13.5, fontWeight: 600, color: T.ink }}>{item.label}</span>
                 </div>
               ))}
+              </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -166,7 +170,8 @@ function ProcessSection() {
   return (
     <section style={{ background: T.white, padding: 'clamp(56px,7vw,88px) 0', borderBottom: `1px solid ${T.rule}` }}>
       <div style={SHELL}>
-        <div style={{ marginBottom: 32 }}>
+        <Reveal>
+          <div style={{ marginBottom: 32 }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 12 }}>
             Procesroute
           </div>
@@ -187,30 +192,32 @@ function ProcessSection() {
             U kiest eerst de juiste stap. Daarna loopt die compact door naar dashboard, rapport en waar relevant
             eerste opvolging.
           </p>
-        </div>
+          </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 gap-0 md:grid-cols-2 xl:grid-cols-3">
           {normalizedApproachSteps.map((step, index) => (
-            <div
-              key={step.title}
-              style={{
-                padding: '28px',
-                borderTop: `1px solid ${T.rule}`,
-                borderLeft: index % 3 > 0 ? `1px solid ${T.rule}` : 'none',
-                background: index === 1 || index === 4 ? AC.faint : 'transparent',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 16 }}>
-                <span style={{ fontFamily: FF, fontSize: 13, color: index === 1 || index === 4 ? AC.deep : T.inkFaint }}>
-                  {`0${index + 1}`}
-                </span>
-                <span style={{ width: 28, height: '1px', background: index === 1 || index === 4 ? AC.mid : T.rule, flexShrink: 0 }} />
+            <Reveal key={step.title} delay={index * 0.06}>
+              <div
+                style={{
+                  padding: '28px',
+                  borderTop: `1px solid ${T.rule}`,
+                  borderLeft: index % 3 > 0 ? `1px solid ${T.rule}` : 'none',
+                  background: index === 1 || index === 4 ? AC.faint : 'transparent',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 16 }}>
+                  <span style={{ fontFamily: FF, fontSize: 13, color: index === 1 || index === 4 ? AC.deep : T.inkFaint }}>
+                    {`0${index + 1}`}
+                  </span>
+                  <span style={{ width: 28, height: '1px', background: index === 1 || index === 4 ? AC.mid : T.rule, flexShrink: 0 }} />
+                </div>
+                <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 8 }}>
+                  {step.title.replace(/^\d+\.\s*/, '')}
+                </div>
+                <p style={{ fontSize: 13, lineHeight: 1.65, color: T.inkSoft }}>{step.body}</p>
               </div>
-              <div style={{ fontSize: 13.5, fontWeight: 600, color: T.ink, marginBottom: 8 }}>
-                {step.title.replace(/^\d+\.\s*/, '')}
-              </div>
-              <p style={{ fontSize: 13, lineHeight: 1.65, color: T.inkSoft }}>{step.body}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
         <div style={{ borderTop: `1px solid ${T.rule}` }} />
@@ -224,7 +231,8 @@ function RolesSection() {
     <section style={{ background: T.white, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}` }}>
       <div style={SHELL}>
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16 items-start">
-          <div>
+          <Reveal>
+            <div>
             <h2
               style={{
                 fontFamily: FF,
@@ -268,9 +276,11 @@ function RolesSection() {
               </div>
             ))}
             <div style={{ borderTop: `1px solid ${T.rule}` }} />
-          </div>
+            </div>
+          </Reveal>
 
-          <div style={{ background: T.paperSoft, border: `1px solid ${T.rule}`, padding: '32px' }}>
+          <Reveal delay={0.08} from="right">
+            <div style={{ background: T.paperSoft, border: `1px solid ${T.rule}`, padding: '32px' }}>
             <div
               style={{
                 fontSize: 10,
@@ -294,7 +304,8 @@ function RolesSection() {
                 </div>
               ))}
             </div>
-          </div>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -321,7 +332,8 @@ function FirstValueSection() {
     <section style={{ background: T.white, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}` }}>
       <div style={SHELL}>
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[280px_1fr] lg:gap-20 items-start">
-          <div>
+          <Reveal>
+            <div>
             <h2
               style={{
                 fontFamily: FF,
@@ -343,29 +355,32 @@ function FirstValueSection() {
               De eerste waarde zit in dashboard, rapport en een eerste leesbare vervolgstap. Pas als de volgende vraag
               echt speelt, wordt extra verdieping breder nodig.
             </p>
-          </div>
+            </div>
+          </Reveal>
 
           <div>
             {items.map((item, index) => (
-              <div key={item.threshold} style={{ display: 'flex', gap: 20, padding: '22px 0', borderTop: `1px solid ${T.rule}`, alignItems: 'flex-start' }}>
-                <div style={{ minWidth: 136, flexShrink: 0 }}>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 700,
-                      letterSpacing: '.06em',
-                      padding: '4px 10px',
-                      background: index === 2 ? AC.faint : T.paperSoft,
-                      color: index === 2 ? AC.deep : T.inkMuted,
-                      border: `1px solid ${index === 2 ? AC.soft : T.rule}`,
-                      display: 'inline-block',
-                    }}
-                  >
-                    {item.threshold}
-                  </span>
+              <Reveal key={item.threshold} delay={index * 0.06}>
+                <div style={{ display: 'flex', gap: 20, padding: '22px 0', borderTop: `1px solid ${T.rule}`, alignItems: 'flex-start' }}>
+                  <div style={{ minWidth: 136, flexShrink: 0 }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: '.06em',
+                        padding: '4px 10px',
+                        background: index === 2 ? AC.faint : T.paperSoft,
+                        color: index === 2 ? AC.deep : T.inkMuted,
+                        border: `1px solid ${index === 2 ? AC.soft : T.rule}`,
+                        display: 'inline-block',
+                      }}
+                    >
+                      {item.threshold}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 13.5, color: T.inkSoft, lineHeight: 1.65, paddingTop: 3 }}>{item.text}</p>
                 </div>
-                <p style={{ fontSize: 13.5, color: T.inkSoft, lineHeight: 1.65, paddingTop: 3 }}>{item.text}</p>
-              </div>
+              </Reveal>
             ))}
             <div style={{ borderTop: `1px solid ${T.rule}` }} />
           </div>

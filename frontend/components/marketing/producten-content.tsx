@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { AC, Arrow, FF, SHELL, T } from '@/components/marketing/design-tokens'
+import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-tokens'
 import { FollowOnRoutesAccordion } from '@/components/marketing/follow-on-routes-accordion'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import {
@@ -55,7 +55,8 @@ function HeroSection() {
         }}
       />
       <div style={{ ...SHELL, position: 'relative' }}>
-        <div style={{ maxWidth: '72ch', margin: '0 auto', textAlign: 'center' }}>
+        <Reveal>
+          <div style={{ maxWidth: '72ch', margin: '0 auto', textAlign: 'center' }}>
           <p
             style={{
               color: AC.deep,
@@ -129,7 +130,8 @@ function HeroSection() {
               Bekijk de hoofdinstappen
             </Link>
           </div>
-        </div>
+          </div>
+        </Reveal>
       </div>
     </section>
   )
@@ -142,7 +144,8 @@ function PrimaryRoutesSection() {
       style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(52px,6vw,82px) 0' }}
     >
       <div style={SHELL}>
-        <div style={{ marginBottom: 30, textAlign: 'center' }}>
+        <Reveal>
+          <div style={{ marginBottom: 30, textAlign: 'center' }}>
           <h2
             style={{
               color: T.ink,
@@ -163,18 +166,19 @@ function PrimaryRoutesSection() {
             Kies ExitScan Baseline als u vertrek wilt duiden. Kies RetentieScan Baseline als u eerder wilt zien waar
             behoud onder druk staat.
           </p>
-        </div>
+          </div>
+        </Reveal>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {productPrimaryRouteCards.map((route) => (
-            <article
-              key={route.title}
-              style={{
-                background: T.white,
-                border: `1px solid ${T.rule}`,
-                borderTop: `3px solid ${route.accent}`,
-                padding: 'clamp(24px,3vw,34px)',
-              }}
-            >
+          {productPrimaryRouteCards.map((route, index) => (
+            <Reveal key={route.title} delay={index * 0.06}>
+              <article
+                style={{
+                  background: T.white,
+                  border: `1px solid ${T.rule}`,
+                  borderTop: `3px solid ${route.accent}`,
+                  padding: 'clamp(24px,3vw,34px)',
+                }}
+              >
               <div
                 style={{
                   alignItems: 'center',
@@ -231,7 +235,8 @@ function PrimaryRoutesSection() {
               >
                 Bekijk {route.title} <Arrow />
               </Link>
-            </article>
+              </article>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -243,7 +248,8 @@ function SecondaryFirstBuySection() {
   return (
     <section style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(48px,5.5vw,72px) 0' }}>
       <div style={SHELL}>
-        <div style={{ marginBottom: 24, textAlign: 'center' }}>
+        <Reveal>
+          <div style={{ marginBottom: 24, textAlign: 'center' }}>
           <h2
             style={{
               color: T.ink,
@@ -261,15 +267,17 @@ function SecondaryFirstBuySection() {
             Onboarding 30-60-90 Baseline blijft zichtbaar als specifiekere eerste route: gerichter dan ExitScan en
             RetentieScan, maar wel een volwaardige start wanneer onboarding nu de eerste vraag is.
           </p>
-        </div>
+          </div>
+        </Reveal>
 
-        <article
-          style={{
-            background: T.paperSoft,
-            border: `1px solid ${T.rule}`,
-            padding: 'clamp(24px,3vw,34px)',
-          }}
-        >
+        <Reveal delay={0.08}>
+          <article
+            style={{
+              background: T.paperSoft,
+              border: `1px solid ${T.rule}`,
+              padding: 'clamp(24px,3vw,34px)',
+            }}
+          >
           <div
             style={{
               alignItems: 'center',
@@ -341,7 +349,8 @@ function SecondaryFirstBuySection() {
               ))}
             </div>
           </div>
-        </article>
+          </article>
+        </Reveal>
       </div>
     </section>
   )
@@ -353,14 +362,15 @@ function ActionCenterStartSection() {
   return (
     <section style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(48px,5.5vw,72px) 0' }}>
       <div style={SHELL}>
-        <article
-          style={{
-            background: T.ink,
-            border: `1px solid ${T.ink}`,
-            color: '#fff',
-            padding: 'clamp(28px,3.5vw,40px)',
-          }}
-        >
+        <Reveal>
+          <article
+            style={{
+              background: T.ink,
+              border: `1px solid ${T.ink}`,
+              color: '#fff',
+              padding: 'clamp(28px,3.5vw,40px)',
+            }}
+          >
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-start">
             <div>
               <div
@@ -432,7 +442,8 @@ function ActionCenterStartSection() {
               </Link>
             </div>
           </div>
-        </article>
+          </article>
+        </Reveal>
       </div>
     </section>
   )
@@ -442,7 +453,8 @@ function LaterRoutesSection() {
   return (
     <section style={{ background: T.white, borderBottom: `1px solid ${T.rule}`, padding: 'clamp(50px,5.8vw,76px) 0' }}>
       <div style={SHELL}>
-        <div style={{ marginBottom: 26, textAlign: 'center' }}>
+        <Reveal>
+          <div style={{ marginBottom: 26, textAlign: 'center' }}>
           <h2
             style={{
               color: T.ink,
@@ -460,18 +472,19 @@ function LaterRoutesSection() {
             Live Start, Reviewcadans en latere vervolgroutes komen pas in beeld nadat de eerste route al richting
             heeft gegeven.
           </p>
-        </div>
+          </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" style={{ marginBottom: 28 }}>
-          {laterFollowOnForms.map(([title, body]) => (
-            <article
-              key={title}
-              style={{
-                background: T.paperSoft,
-                border: `1px solid ${T.rule}`,
-                padding: '24px 24px 22px',
-              }}
-            >
+          {laterFollowOnForms.map(([title, body], index) => (
+            <Reveal key={title} delay={index * 0.06}>
+              <article
+                style={{
+                  background: T.paperSoft,
+                  border: `1px solid ${T.rule}`,
+                  padding: '24px 24px 22px',
+                }}
+              >
               <div
                 style={{
                   color: T.inkMuted,
@@ -498,11 +511,14 @@ function LaterRoutesSection() {
                 {title}
               </h3>
               <p style={{ color: T.inkSoft, fontSize: 14, lineHeight: 1.68 }}>{body}</p>
-            </article>
+              </article>
+            </Reveal>
           ))}
         </div>
 
-        <FollowOnRoutesAccordion routes={FOLLOW_ON_ROUTE_CONTENT} />
+        <Reveal delay={0.12}>
+          <FollowOnRoutesAccordion routes={FOLLOW_ON_ROUTE_CONTENT} />
+        </Reveal>
       </div>
     </section>
   )

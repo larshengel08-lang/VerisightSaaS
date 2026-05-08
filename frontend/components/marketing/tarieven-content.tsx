@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { AC, Arrow, FF, SHELL, T } from '@/components/marketing/design-tokens'
+import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-tokens'
 import { buildContactHref } from '@/lib/contact-funnel'
 import { pricingAddOns, pricingCards, pricingFollowOnRoutes } from '@/components/marketing/site-content'
 
@@ -43,7 +43,8 @@ function HeroSection() {
       />
       <div style={{ ...SHELL, position: 'relative' }}>
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_420px] lg:gap-16 items-start">
-          <div>
+          <Reveal>
+            <div>
             <p
               style={{
                 color: AC.deep,
@@ -76,33 +77,38 @@ function HeroSection() {
               U koopt geen licentie, maar een duidelijke eerste stap met dashboard, rapport en waar relevant eerste
               opvolging. Zo blijft de investering helder, terwijl de uitkomst direct bruikbaar is in de organisatie.
             </p>
-          </div>
-          <div>
+            </div>
+          </Reveal>
+          <Reveal delay={0.08} from="right">
+            <div>
             <div style={{ display: 'grid', gap: 10 }}>
-              {pricingCards.map((item) => (
-                <div key={item.eyebrow} style={{ padding: '18px 20px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
-                  <div
-                    style={{
-                      fontSize: 9.5,
-                      fontWeight: 600,
-                      letterSpacing: '.12em',
-                      textTransform: 'uppercase',
-                      color: AC.deep,
-                      marginBottom: 6,
-                    }}
-                  >
-                    {item.eyebrow}
+              {pricingCards.map((item, index) => (
+                <Reveal key={item.eyebrow} delay={index * 0.05}>
+                  <div style={{ padding: '18px 20px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
+                    <div
+                      style={{
+                        fontSize: 9.5,
+                        fontWeight: 600,
+                        letterSpacing: '.12em',
+                        textTransform: 'uppercase',
+                        color: AC.deep,
+                        marginBottom: 6,
+                      }}
+                    >
+                      {item.eyebrow}
+                    </div>
+                    <div style={{ fontFamily: FF, fontSize: 28, fontWeight: 400, color: T.ink, letterSpacing: '-.02em' }}>
+                      {item.price}
+                    </div>
                   </div>
-                  <div style={{ fontFamily: FF, fontSize: 28, fontWeight: 400, color: T.ink, letterSpacing: '-.02em' }}>
-                    {item.price}
-                  </div>
-                </div>
+                </Reveal>
               ))}
             </div>
             <div style={{ marginTop: 14, fontSize: 11, color: T.inkMuted, fontStyle: 'italic' }}>
               Per traject, geen licenties. Vervolg komt pas in beeld als de volgende vraag echt speelt.
             </div>
-          </div>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -113,7 +119,8 @@ function FirstBuySection() {
   return (
     <section style={{ background: T.white, padding: 'clamp(56px,7vw,88px) 0', borderBottom: `1px solid ${T.rule}` }}>
       <div style={SHELL}>
-        <div style={{ marginBottom: 34 }}>
+        <Reveal>
+          <div style={{ marginBottom: 34 }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 12 }}>
             Uw startpunt
           </div>
@@ -135,19 +142,20 @@ function FirstBuySection() {
             een gerichtere eerste route. Review hoort inhoudelijk bij de baseline, maar staat niet als zwaar extra
             onderdeel op de hoofdkaart.
           </p>
-        </div>
+          </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" style={{ marginBottom: 24 }}>
-          {primaryPricingCards.map((item) => (
-            <article
-              key={item.eyebrow}
-              style={{
-                background: T.white,
-                border: `1px solid ${T.rule}`,
-                borderTop: `3px solid ${AC.deep}`,
-                padding: '34px',
-              }}
-            >
+          {primaryPricingCards.map((item, index) => (
+            <Reveal key={item.eyebrow} delay={index * 0.06}>
+              <article
+                style={{
+                  background: T.white,
+                  border: `1px solid ${T.rule}`,
+                  borderTop: `3px solid ${AC.deep}`,
+                  padding: '34px',
+                }}
+              >
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 12 }}>
                 {item.eyebrow}
               </div>
@@ -166,17 +174,19 @@ function FirstBuySection() {
               <Link href={item.eyebrow.startsWith('ExitScan') ? '/producten/exitscan' : '/producten/retentiescan'} style={{ fontSize: 13, fontWeight: 600, color: AC.deep, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 {item.eyebrow.startsWith('ExitScan') ? 'Meer over ExitScan' : 'Meer over RetentieScan'} <Arrow />
               </Link>
-            </article>
+              </article>
+            </Reveal>
           ))}
         </div>
 
-        <article
-          style={{
-            background: T.paperSoft,
-            border: `1px solid ${T.rule}`,
-            padding: '30px 32px',
-          }}
-        >
+        <Reveal delay={0.1}>
+          <article
+            style={{
+              background: T.paperSoft,
+              border: `1px solid ${T.rule}`,
+              padding: '30px 32px',
+            }}
+          >
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-start">
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 12 }}>
@@ -214,7 +224,8 @@ function FirstBuySection() {
               ))}
             </div>
           </div>
-        </article>
+          </article>
+        </Reveal>
       </div>
     </section>
   )
@@ -226,7 +237,8 @@ function OptionalExpansionSection() {
   return (
     <section style={{ background: T.white, padding: 'clamp(50px,5.8vw,76px) 0', borderBottom: `1px solid ${T.rule}` }}>
       <div style={SHELL}>
-        <div style={{ marginBottom: 28 }}>
+        <Reveal>
+          <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 12 }}>
             Optionele uitbreiding
           </div>
@@ -247,16 +259,18 @@ function OptionalExpansionSection() {
             Action Center Start is publiek zichtbaar als optionele uitbreiding na of naast een baseline. Het blijft
             compact rond een gekozen opvolgthema en leest niet als brede werkomgeving.
           </p>
-        </div>
+          </div>
+        </Reveal>
 
-        <article
-          style={{
-            background: T.ink,
-            border: `1px solid ${T.ink}`,
-            color: '#fff',
-            padding: '34px',
-          }}
-        >
+        <Reveal delay={0.08}>
+          <article
+            style={{
+              background: T.ink,
+              border: `1px solid ${T.ink}`,
+              color: '#fff',
+              padding: '34px',
+            }}
+          >
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start">
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.mid, marginBottom: 12 }}>
@@ -288,7 +302,8 @@ function OptionalExpansionSection() {
               </Link>
             </div>
           </div>
-        </article>
+          </article>
+        </Reveal>
       </div>
     </section>
   )
@@ -298,7 +313,8 @@ function FollowOnSection() {
   return (
     <section style={{ background: T.white, padding: 'clamp(52px,6vw,80px) 0', borderBottom: `1px solid ${T.rule}` }}>
       <div style={SHELL}>
-        <div style={{ marginBottom: 28 }}>
+        <Reveal>
+          <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 12 }}>
             Vervolg op aanvraag
           </div>
@@ -319,9 +335,11 @@ function FollowOnSection() {
             Live Start, Reviewcadans en latere vervolgroutes komen pas in beeld nadat de eerste baseline en review al
             richting hebben gegeven.
           </p>
-        </div>
+          </div>
+        </Reveal>
 
-        <div style={{ border: `1px solid ${T.rule}`, overflow: 'hidden' }}>
+        <Reveal delay={0.08}>
+          <div style={{ border: `1px solid ${T.rule}`, overflow: 'hidden' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '220px 140px 1fr', background: T.paperSoft, borderBottom: `1px solid ${T.rule}` }}>
             {['Route', 'Prijs', 'Wanneer logisch'].map((heading) => (
               <div key={heading} style={{ padding: '12px 18px', fontSize: 10, fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: T.inkMuted }}>
@@ -336,7 +354,8 @@ function FollowOnSection() {
               <div style={{ padding: '14px 18px', fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>{route.description}</div>
             </div>
           ))}
-        </div>
+          </div>
+        </Reveal>
       </div>
     </section>
   )
@@ -349,7 +368,8 @@ function CtaBand() {
     <section style={{ background: T.white, padding: 'clamp(48px,5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
       <div style={SHELL}>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_auto] items-center">
-          <div>
+          <Reveal>
+            <div>
             <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: T.inkMuted, marginBottom: 12 }}>
               Prijs in context
             </div>
@@ -360,15 +380,18 @@ function CtaBand() {
               Gebruik het kennismakingsgesprek om route, timing en privacy kort te toetsen. Zo blijft de eerste stap
               overzichtelijk en weet u wat u direct terugkrijgt.
             </p>
-          </div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            </div>
+          </Reveal>
+          <Reveal delay={0.08} from="right">
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Link href={ctaHref} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '12px 26px', color: '#fff', background: AC.deep }}>
               Plan een eerste route-inschatting <Arrow />
             </Link>
             <Link href="/aanpak" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 500, padding: '11px 24px', color: T.inkSoft, border: `1px solid ${T.rule}` }}>
               Bekijk de aanpak
             </Link>
-          </div>
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>
