@@ -85,7 +85,7 @@ describe('inzichten index route', () => {
 
     const markup = renderToStaticMarkup(route.default())
 
-    expect(markup).toContain('Laatste inzichten voor HR en management')
+    expect(markup).toContain('Scherpere duiding bij vertrek, behoud en opvolging')
     expect(markup).toContain('data-page-type="overview"')
     expect(markup).toContain('data-post-count="2"')
     expect(markup).toContain('onboarding-frictie-eerder-signaleren|retentiesignalen-op-tijd-zien')
