@@ -179,6 +179,9 @@ describe('content-machine insight importer', () => {
       if (command === 'git' && args[0] === 'status') {
         return ''
       }
+      if (command === 'git' && args[0] === 'branch') {
+        return 'main\n'
+      }
       if (command === 'git' && args[0] === 'remote') {
         return 'https://github.com/verisight/verisight-saas.git\n'
       }
@@ -213,19 +216,71 @@ describe('content-machine insight importer', () => {
     const importedSource = readFileSync(importedPath, 'utf8')
 
     expect(plan.targetPath).toBe(importedPath)
+    expect(plan.originalBranch).toBe('main')
     expect(importedSource).toContain('title: "Waarom onboarding retentie vroeg voorspelt"')
     expect(importedSource).toContain('## Intro')
     expect(exec.mock.calls).toEqual([
       ['git', ['status', '--short'], { cwd: repoRoot, encoding: 'utf8', stdio: 'pipe' }],
+      ['git', ['branch', '--show-current'], { cwd: repoRoot, encoding: 'utf8', stdio: 'pipe' }],
       ['git', ['switch', '-c', 'content-machine/waarom-onboarding-retentie-vroeg-voorspelt-2026-05-06', 'main'], { cwd: repoRoot, stdio: 'inherit' }],
       ['git', ['add', '--', path.join('content', 'insights', 'waarom-onboarding-retentie-vroeg-voorspelt.md')], { cwd: repoRoot, stdio: 'inherit' }],
       ['git', ['commit', '--only', path.join('content', 'insights', 'waarom-onboarding-retentie-vroeg-voorspelt.md'), '-m', 'feat: publish insight waarom-onboarding-retentie-vroeg-voorspelt'], { cwd: repoRoot, stdio: 'inherit' }],
       ['git', ['push', '-u', 'origin', 'content-machine/waarom-onboarding-retentie-vroeg-voorspelt-2026-05-06'], { cwd: repoRoot, stdio: 'inherit' }],
       ['git', ['remote', 'get-url', 'origin'], { cwd: repoRoot, encoding: 'utf8', stdio: 'pipe' }],
+      ['git', ['remote', 'get-url', 'origin'], { cwd: repoRoot, encoding: 'utf8', stdio: 'pipe' }],
+      ['git', ['switch', 'main'], { cwd: repoRoot, stdio: 'inherit' }],
     ])
     expect(fetchImpl).toHaveBeenCalledTimes(1)
   })
 
+  it('treats missing GitHub token as non-blocking after a successful push', async () => {
+    const repoRoot = createTempDirectory()
+    const packageDir = createTempDirectory()
+    const post = buildPost()
+    const bodyMarkdown = '## Intro\n\nDit is de body.'
+    const exec = vi.fn((command, args) => {
+      if (command === 'git' && args[0] === 'status') {
+        return ''
+      }
+      if (command === 'git' && args[0] === 'branch') {
+        return 'main\n'
+      }
+      if (command === 'git' && args[0] === 'remote') {
+        return 'https://github.com/verisight/verisight-saas.git\n'
+      }
+
+      return undefined
+    })
+
+    mkdirSync(path.join(repoRoot, 'content', 'insights'), { recursive: true })
+    writeFileSync(path.join(packageDir, 'post.json'), JSON.stringify(post, null, 2), 'utf8')
+    writeFileSync(path.join(packageDir, 'body.md'), bodyMarkdown, 'utf8')
+
+    const plan = await importContentMachinePost({
+      packageDir,
+      repoRoot,
+      publishedAt: '2026-05-06',
+      exec,
+      env: {},
+    })
+
+    expect(plan.pullRequest).toMatchObject({
+      mode: 'manual',
+      url: 'https://github.com/verisight/verisight-saas/pull/new/content-machine/waarom-onboarding-retentie-vroeg-voorspelt-2026-05-06',
+    })
+    expect(plan.pullRequest.reason).toMatch(/GITHUB_TOKEN or GH_TOKEN/)
+    expect(plan.originalBranch).toBe('main')
+    expect(exec.mock.calls).toEqual([
+      ['git', ['status', '--short'], { cwd: repoRoot, encoding: 'utf8', stdio: 'pipe' }],
+      ['git', ['branch', '--show-current'], { cwd: repoRoot, encoding: 'utf8', stdio: 'pipe' }],
+      ['git', ['switch', '-c', 'content-machine/waarom-onboarding-retentie-vroeg-voorspelt-2026-05-06', 'main'], { cwd: repoRoot, stdio: 'inherit' }],
+      ['git', ['add', '--', path.join('content', 'insights', 'waarom-onboarding-retentie-vroeg-voorspelt.md')], { cwd: repoRoot, stdio: 'inherit' }],
+      ['git', ['commit', '--only', path.join('content', 'insights', 'waarom-onboarding-retentie-vroeg-voorspelt.md'), '-m', 'feat: publish insight waarom-onboarding-retentie-vroeg-voorspelt'], { cwd: repoRoot, stdio: 'inherit' }],
+      ['git', ['push', '-u', 'origin', 'content-machine/waarom-onboarding-retentie-vroeg-voorspelt-2026-05-06'], { cwd: repoRoot, stdio: 'inherit' }],
+      ['git', ['remote', 'get-url', 'origin'], { cwd: repoRoot, encoding: 'utf8', stdio: 'pipe' }],
+      ['git', ['switch', 'main'], { cwd: repoRoot, stdio: 'inherit' }],
+    ])
+  })
   it('fails before branch setup and writing when the repo is dirty', async () => {
     const repoRoot = createTempDirectory()
     const packageDir = createTempDirectory()
