@@ -158,6 +158,12 @@ const firstDeliveryItems = [
   },
 ] as const
 
+const optionalActionCenterItem = {
+  index: '05',
+  title: 'Optioneel: Action Center',
+  body: 'Als na de Baseline een vervolgstap nodig is, kunt u Action Center Start toevoegen voor één gekozen opvolgscope, beperkte manager-/eigenaartoegang, zichtbare status en één reviewmoment.',
+} as const
+
 function SectionLabel({ index, label }: { index: string; label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 26 }}>
@@ -2032,9 +2038,9 @@ function FirstDeliverySection() {
           </Reveal>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-          {firstDeliveryItems.map((item, index) => (
-            <Reveal key={item.title} delay={0.08 + index * 0.04}>
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            {firstDeliveryItems.map((item, index) => (
+              <Reveal key={item.title} delay={0.08 + index * 0.04}>
               <article
                 style={{
                   background: SURFACE.surface,
@@ -2075,13 +2081,61 @@ function FirstDeliverySection() {
                   </div>
                 </div>
               </article>
+              </Reveal>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
+            <Reveal delay={0.26}>
+              <article
+                style={{
+                  background: 'transparent',
+                  border: `1.5px dashed ${SURFACE.border}`,
+                  borderRadius: 28,
+                  maxWidth: 760,
+                  minHeight: 132,
+                  padding: '28px 28px 26px',
+                  width: '100%',
+                }}
+              >
+                <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '56px minmax(0, 1fr)' }}>
+                  <span
+                    style={{
+                      color: SURFACE.subtle,
+                      fontFamily: displayFont,
+                      fontSize: 24,
+                      letterSpacing: '-0.03em',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {optionalActionCenterItem.index}
+                  </span>
+                  <div>
+                    <h3
+                      style={{
+                        color: SURFACE.ink,
+                        fontFamily: displayFont,
+                        fontSize: 'clamp(1.7rem, 2.1vw, 2.2rem)',
+                        fontWeight: 400,
+                        letterSpacing: '-0.035em',
+                        lineHeight: 1.08,
+                        marginBottom: 10,
+                      }}
+                    >
+                      {optionalActionCenterItem.title}
+                    </h3>
+                    <p style={{ color: SURFACE.text, fontSize: 15, lineHeight: 1.72, maxWidth: '42rem' }}>
+                      {optionalActionCenterItem.body}
+                    </p>
+                  </div>
+                </div>
+              </article>
             </Reveal>
-          ))}
+          </div>
         </div>
-      </div>
-    </section>
-  )
-}
+      </section>
+    )
+  }
 
 function ContactSection() {
   const kennismakingHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'homepage_final_cta' })
