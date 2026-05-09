@@ -243,7 +243,7 @@ function buildDashboardAction(
         label: 'Naar setup',
         description: 'Open beheer om respondentimport, launchcontrole en livegang af te ronden.',
         available: true,
-        href: '/beheer',
+        href: `/campaigns/${campaign.campaign_id}/beheer`,
       }
     }
 
