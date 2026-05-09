@@ -8,6 +8,11 @@ import { pricingAddOns, pricingCards, pricingFollowOnRoutes } from '@/components
 const primaryPricingCards = pricingCards.filter((card) => card.eyebrow !== 'Onboarding 30-60-90 Baseline')
 const onboardingPricingCard = pricingCards.find((card) => card.eyebrow === 'Onboarding 30-60-90 Baseline')!
 const actionCenterStartCard = pricingAddOns[0]
+const actionCenterLabel = actionCenterStartCard[0].replace(' Start', '')
+
+function formatFollowOnTitle(title: string) {
+  return title === 'ExitScan Live Start' ? 'Exitscan Live' : title
+}
 
 function HeroSection() {
   return (
@@ -255,7 +260,7 @@ function OptionalExpansionSection() {
             Borg opvolging alleen als daar aanleiding voor is.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '54ch' }}>
-            Na een Baseline kunt u Action Center Start toevoegen om één gekozen vervolgrichting zichtbaar te houden:
+            Na een Baseline kunt u {actionCenterLabel} toevoegen om één gekozen vervolgrichting zichtbaar te houden:
             wie pakt dit op, wat loopt er en wanneer kijken we terug? Het blijft begrensd en is geen breed
             workflowplatform.
           </p>
@@ -274,13 +279,13 @@ function OptionalExpansionSection() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start">
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.mid, marginBottom: 12 }}>
-                {actionCenterStartCard[0]}
+                {actionCenterLabel}
               </div>
               <div style={{ fontFamily: FF, fontSize: 'clamp(2rem,3vw,2.8rem)', fontWeight: 400, letterSpacing: '-.025em', marginBottom: 12 }}>
                 {actionCenterStartCard[1]}
               </div>
               <p style={{ fontSize: 14.5, lineHeight: 1.72, color: 'rgba(255,255,255,0.8)', maxWidth: '46ch' }}>
-                {actionCenterStartCard[2]}
+                {actionCenterStartCard[2].replace('Action Center Start', actionCenterLabel)}
               </p>
             </div>
             <div>
@@ -298,7 +303,7 @@ function OptionalExpansionSection() {
                 ))}
               </div>
               <Link href={href} style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 600, padding: '12px 24px', color: '#fff', background: AC.deep }}>
-                Bespreek Action Center Start <Arrow />
+                Bespreek {actionCenterLabel} <Arrow />
               </Link>
             </div>
           </div>
@@ -348,8 +353,8 @@ function FollowOnSection() {
             ))}
           </div>
           {pricingFollowOnRoutes.map((route, index) => (
-            <div key={route.title} style={{ display: 'grid', gridTemplateColumns: '220px 140px 1fr', borderTop: index > 0 ? `1px solid ${T.rule}` : 'none' }}>
-              <div style={{ padding: '14px 18px', fontSize: 13.5, fontWeight: 600, color: T.ink }}>{route.title}</div>
+            <div key={formatFollowOnTitle(route.title)} style={{ display: 'grid', gridTemplateColumns: '220px 140px 1fr', borderTop: index > 0 ? `1px solid ${T.rule}` : 'none' }}>
+              <div style={{ padding: '14px 18px', fontSize: 13.5, fontWeight: 600, color: T.ink }}>{formatFollowOnTitle(route.title)}</div>
               <div style={{ padding: '14px 18px', fontSize: 13, color: T.inkMuted }}>{route.price}</div>
               <div style={{ padding: '14px 18px', fontSize: 13, color: T.inkSoft, lineHeight: 1.6 }}>{route.description}</div>
             </div>
