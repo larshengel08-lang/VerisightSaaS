@@ -56,6 +56,17 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource).not.toContain('Vervolgvragen')
   })
 
+  it('marks Action Center as an optional extension in the management flow section', () => {
+    const homepageSource = fs.readFileSync(
+      path.join(process.cwd(), 'components', 'marketing', 'home-page-content.tsx'),
+      'utf8',
+    )
+
+    expect(homepageSource).toContain('Optionele uitbreiding')
+    expect(homepageSource).toContain('Toe te voegen na of naast een eerste scan')
+    expect(homepageSource).toContain('minHeight: item.cardMinHeight ?? 408')
+  })
+
   it('does not render the homepage insights rail anymore', () => {
     const homepageSource = fs.readFileSync(
       path.join(process.cwd(), 'components', 'marketing', 'home-page-content.tsx'),

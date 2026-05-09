@@ -112,24 +112,39 @@ const problemSignalPoints = [
   },
 ]
 
-const managementFlowSteps = [
+type ManagementFlowStep = {
+  step: string
+  label: string
+  title: string
+  body: string
+  cardMinHeight?: number
+  optionalLabel?: string
+  optionalMicrocopy?: string
+}
+
+const managementFlowSteps: readonly ManagementFlowStep[] = [
   {
     step: '1',
     label: 'Begrijpen',
     title: 'Dashboard',
     body: "Laat direct zien waar signalen terugkomen, welke thema's of afdelingen aandacht vragen en wat nu bestuurlijk het meeste gewicht heeft.",
+    cardMinHeight: 432,
   },
   {
     step: '2',
     label: 'Prioriteren',
     title: 'Managementrapport',
     body: 'Maakt de hoofdboodschap, eerste prioriteit en eerste vervolgrichting leesbaar, zodat de organisatie sneller kan wegen wat eerst telt.',
+    cardMinHeight: 432,
   },
   {
     step: '3',
     label: 'Handelen',
     title: 'Action Center',
     body: 'Maakt opvolging concreet. Van toewijzing aan een manager tot het openen en volgen van acties.',
+    cardMinHeight: 432,
+    optionalLabel: 'Optionele uitbreiding',
+    optionalMicrocopy: 'Toe te voegen na of naast een eerste scan',
   },
 ] as const
 
@@ -463,18 +478,18 @@ function ManagementFlowSection() {
 
           {managementFlowSteps.map((item, index) => (
             <Reveal key={item.title} delay={0.1 + index * 0.05}>
-              <article
-                style={{
-                  background: SURFACE.surface,
-                  border: `1px solid ${SURFACE.borderSoft}`,
-                  borderRadius: 28,
-                  boxShadow: '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)',
-                  minHeight: 408,
-                  padding: '22px 24px 24px',
-                  position: 'relative',
-                  zIndex: 1,
-                }}
-              >
+                <article
+                  style={{
+                    background: SURFACE.surface,
+                    border: `1px solid ${SURFACE.borderSoft}`,
+                    borderRadius: 28,
+                    boxShadow: '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)',
+                    minHeight: item.cardMinHeight ?? 408,
+                    padding: '22px 24px 24px',
+                    position: 'relative',
+                    zIndex: 1,
+                  }}
+                >
                 <div style={{ alignItems: 'center', display: 'flex', gap: 14, marginBottom: 24 }}>
                   <div
                     style={{
@@ -529,11 +544,30 @@ function ManagementFlowSection() {
                     marginBottom: 28,
                     maxWidth: '25rem',
                   }}
-                >
-                  {item.body}
-                </p>
+                  >
+                    {item.body}
+                  </p>
 
-                {item.title === 'Dashboard' ? (
+                  {item.optionalLabel ? (
+                    <div style={{ marginBottom: 18 }}>
+                      <p
+                        style={{
+                          color: SURFACE.amber,
+                          fontFamily: bodyFont,
+                          fontSize: 10.5,
+                          fontWeight: 700,
+                          letterSpacing: '.14em',
+                          marginBottom: 6,
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        {item.optionalLabel}
+                      </p>
+                      <p style={{ color: SURFACE.muted, fontSize: 13.5, lineHeight: 1.55 }}>{item.optionalMicrocopy}</p>
+                    </div>
+                  ) : null}
+
+                  {item.title === 'Dashboard' ? (
                   <div
                     style={{
                       background: '#f2efe8',
