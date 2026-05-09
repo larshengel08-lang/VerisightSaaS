@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { selectLeadOverviewCampaign, selectPrimaryOverviewCampaign } from '@/lib/dashboard/overview-focus'
 import type { CampaignStats } from '@/lib/types'
-import { getCtaHrefForState } from './page'
+import { getCtaHrefForState } from './cta-href'
 
 const campaigns: CampaignStats[] = [
   {
@@ -84,6 +84,12 @@ describe('dashboard home UX guardrails', () => {
     expect(source).not.toContain('Afwijzen')
     expect(source).not.toContain('Toewijzen')
     expect(source).not.toContain('Reviewmoment')
+  })
+
+  it('does not leak helper exports from the Next.js page module', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).not.toContain('export function getCtaHrefForState')
   })
 
   it('keeps signal scoring out of the visible overview card metrics', () => {
