@@ -65,6 +65,7 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource).toContain('Optionele uitbreiding')
     expect(homepageSource).toContain('Toe te voegen na of naast een eerste scan')
     expect(homepageSource).toContain('minHeight: item.cardMinHeight ?? 408')
+    expect(homepageSource).toContain("display: item.optionalLabel ? 'grid' : 'block'")
   })
 
   it('does not render the homepage insights rail anymore', () => {

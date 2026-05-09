@@ -478,6 +478,31 @@ function ManagementFlowSection() {
 
           {managementFlowSteps.map((item, index) => (
             <Reveal key={item.title} delay={0.1 + index * 0.05}>
+              <div
+                style={{
+                  display: item.optionalLabel ? 'grid' : 'block',
+                  gap: 10,
+                }}
+              >
+                {item.optionalLabel ? (
+                  <div style={{ paddingLeft: 6 }}>
+                    <p
+                      style={{
+                        color: SURFACE.amber,
+                        fontFamily: bodyFont,
+                        fontSize: 10.5,
+                        fontWeight: 700,
+                        letterSpacing: '.14em',
+                        marginBottom: 6,
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {item.optionalLabel}
+                    </p>
+                    <p style={{ color: SURFACE.muted, fontSize: 13.5, lineHeight: 1.55 }}>{item.optionalMicrocopy}</p>
+                  </div>
+                ) : null}
+
                 <article
                   style={{
                     background: SURFACE.surface,
@@ -548,29 +573,10 @@ function ManagementFlowSection() {
                     {item.body}
                   </p>
 
-                  {item.optionalLabel ? (
-                    <div style={{ marginBottom: 18 }}>
-                      <p
-                        style={{
-                          color: SURFACE.amber,
-                          fontFamily: bodyFont,
-                          fontSize: 10.5,
-                          fontWeight: 700,
-                          letterSpacing: '.14em',
-                          marginBottom: 6,
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {item.optionalLabel}
-                      </p>
-                      <p style={{ color: SURFACE.muted, fontSize: 13.5, lineHeight: 1.55 }}>{item.optionalMicrocopy}</p>
-                    </div>
-                  ) : null}
-
                   {item.title === 'Dashboard' ? (
-                  <div
-                    style={{
-                      background: '#f2efe8',
+                    <div
+                      style={{
+                        background: '#f2efe8',
                       border: `1px solid ${SURFACE.borderSoft}`,
                       borderRadius: 22,
                       display: 'flex',
@@ -734,10 +740,11 @@ function ManagementFlowSection() {
                         />
                         {label}
                       </div>
-                    ))}
-                  </div>
-                ) : null}
-              </article>
+                      ))}
+                    </div>
+                  ) : null}
+                </article>
+              </div>
             </Reveal>
           ))}
         </div>
