@@ -1,8 +1,6 @@
 import Link from 'next/link'
 import { Reveal } from '@/components/marketing/design-tokens'
 import { buildContactHref } from '@/lib/contact-funnel'
-import { InsightRail } from '@/components/marketing/insight-rail'
-import { getAllInsights } from '@/lib/insights'
 
 const SURFACE = {
   paper: '#F7F5F1',
@@ -2245,8 +2243,6 @@ function ContactSection() {
 }
 
 export function HomePageContent() {
-  const latestInsights = getAllInsights().slice(0, 3)
-
   return (
     <div style={{ background: SURFACE.surface, color: SURFACE.ink }}>
       <HeroSection />
@@ -2254,13 +2250,6 @@ export function HomePageContent() {
       <ManagementFlowSection />
       <RoutesSection />
       <FirstDeliverySection />
-      <InsightRail
-        posts={latestInsights}
-        title="Laatste inzichten"
-        intro="Korte, inhoudelijke artikelen die onboarding, behoud en uitstroom vertalen naar heldere managementvragen."
-        viewAllHref="/inzichten"
-        viewAllLabel="Bekijk alle inzichten"
-      />
       <ContactSection />
     </div>
   )

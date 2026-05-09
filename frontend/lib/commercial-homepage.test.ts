@@ -54,4 +54,15 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource).toContain('Review')
     expect(homepageSource).not.toContain('Vervolgvragen')
   })
+
+  it('does not render the homepage insights rail anymore', () => {
+    const homepageSource = fs.readFileSync(
+      path.join(process.cwd(), 'components', 'marketing', 'home-page-content.tsx'),
+      'utf8',
+    )
+
+    expect(homepageSource).not.toContain('<InsightRail')
+    expect(homepageSource).not.toContain('Laatste inzichten')
+    expect(homepageSource).not.toContain('Bekijk alle inzichten')
+  })
 })
