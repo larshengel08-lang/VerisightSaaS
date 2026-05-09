@@ -40,3 +40,24 @@ describe('RetentieScan product page background treatment', () => {
     expect(retentionScanSource).not.toContain("background: `radial-gradient(circle,${T.tealFaint} 0%,transparent 65%)`")
   })
 })
+
+describe('ExitScan and RetentieScan card treatment', () => {
+  it('uses the newer homepage-like card system instead of old top-stripe comparison cards', () => {
+    const pageSource = fs.readFileSync(
+      path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),
+      'utf8',
+    )
+
+    const exitScanSource = pageSource.split('function RetentionScanPage()')[0]
+    const retentionScanSource = pageSource
+      .split('function RetentionScanPage()')[1]
+      .split('function PulsePage()')[0]
+
+    expect(exitScanSource).not.toContain("borderTop: `3px solid ${accent}`")
+    expect(retentionScanSource).not.toContain("borderTop: `3px solid ${accent}`")
+    expect(exitScanSource).toContain("borderRadius: 28")
+    expect(retentionScanSource).toContain("borderRadius: 28")
+    expect(exitScanSource).toContain("const cardShadow = '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)'")
+    expect(retentionScanSource).toContain("const cardShadow = '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)'")
+  })
+})
