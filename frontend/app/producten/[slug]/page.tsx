@@ -171,7 +171,7 @@ function getProductStructuredData(product: MarketingProduct) {
 function ExitScanPage() {
   const T = {
     paper: 'oklch(0.978 0.010 62)', paperSoft: 'oklch(0.956 0.018 60)',
-    white: '#FFFCF8', navy: 'oklch(0.13 0.032 250)', ink: 'oklch(0.16 0.012 250)',
+    white: '#FFFFFF', page: '#FFFFFF', navy: 'oklch(0.13 0.032 250)', ink: 'oklch(0.16 0.012 250)',
     inkSoft: 'oklch(0.32 0.010 250)', inkMuted: 'oklch(0.52 0.008 250)',
     inkFaint: 'oklch(0.70 0.006 250)', rule: 'oklch(0.875 0.012 62)',
     ruleLight: 'oklch(0.918 0.008 62)',
@@ -182,12 +182,10 @@ function ExitScanPage() {
   const ctaHref = buildContactHref({ routeInterest: 'exitscan', ctaSource: 'product_exit_hero' })
 
   return (
-    <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
+    <div style={{ background: T.page, color: T.ink, overflowX: 'hidden' }}>
       <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
       <main>
-        <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
-          <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`, pointerEvents: 'none' }} />
+        <section style={{ background: T.page, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ ...SH, position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
               <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: AC.deep }}>ExitScan</span>
@@ -231,7 +229,7 @@ function ExitScanPage() {
           </div>
         </section>
 
-        <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+        <section style={{ background: T.page, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ marginBottom: 36 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wanneer ExitScan nu de juiste eerste stap is</div>
@@ -292,7 +290,7 @@ function ExitScanPage() {
           </div>
         </section>
 
-        <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+        <section style={{ background: T.page, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Wat u ontvangt</div>
@@ -353,7 +351,7 @@ function ExitScanPage() {
 function RetentionScanPage() {
   const T = {
     paper: 'oklch(0.978 0.010 62)', paperSoft: 'oklch(0.956 0.018 60)',
-    white: '#FFFCF8', navy: 'oklch(0.13 0.032 250)', ink: 'oklch(0.16 0.012 250)',
+    white: '#FFFFFF', page: '#FFFFFF', navy: 'oklch(0.13 0.032 250)', ink: 'oklch(0.16 0.012 250)',
     inkSoft: 'oklch(0.32 0.010 250)', inkMuted: 'oklch(0.52 0.008 250)',
     inkFaint: 'oklch(0.70 0.006 250)', rule: 'oklch(0.875 0.012 62)',
     ruleLight: 'oklch(0.918 0.008 62)',
@@ -364,12 +362,10 @@ function RetentionScanPage() {
   const ctaHref = buildContactHref({ routeInterest: 'retentiescan', ctaSource: 'product_retention_hero' })
 
   return (
-    <div style={{ background: T.white, color: T.ink, overflowX: 'hidden' }}>
+    <div style={{ background: T.page, color: T.ink, overflowX: 'hidden' }}>
       <PublicHeader ctaHref={ctaHref} ctaLabel="Plan een kennismaking" />
       <main>
-        <section style={{ background: T.white, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`, backgroundSize: '72px 72px', opacity: .35 }} />
-          <div style={{ position: 'absolute', top: -80, right: -60, width: 500, height: 500, background: `radial-gradient(circle,${T.tealFaint} 0%,transparent 65%)`, pointerEvents: 'none' }} />
+        <section style={{ background: T.page, padding: 'clamp(52px,6.5vw,80px) 0 clamp(48px,6vw,72px)', borderBottom: `1px solid ${T.rule}`, position: 'relative', overflow: 'hidden' }}>
           <div style={{ ...SH, position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
               <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: T.teal }}>RetentieScan</span>
@@ -413,7 +409,7 @@ function RetentionScanPage() {
           </div>
         </section>
 
-        <section style={{ background: T.paperSoft, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+        <section style={{ background: T.page, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ marginBottom: 36 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wanneer RetentieScan nu de juiste eerste stap is</div>
@@ -474,7 +470,7 @@ function RetentionScanPage() {
           </div>
         </section>
 
-        <section style={{ background: T.white, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
+        <section style={{ background: T.page, padding: 'clamp(48px,5.5vw,72px) 0', borderBottom: `1px solid ${T.rule}` }}>
           <div style={{ ...SH }}>
             <div style={{ maxWidth: '64ch', marginBottom: 30 }}>
               <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Wat u ontvangt</div>
