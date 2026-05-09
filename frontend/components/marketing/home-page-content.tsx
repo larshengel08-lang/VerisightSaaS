@@ -133,7 +133,14 @@ const managementFlowSteps = [
   },
 ] as const
 
-const firstDeliveryItems = [
+type FirstDeliveryItem = {
+  index: string
+  title: string
+  body: string
+  minHeight?: number
+}
+
+const firstDeliveryItems: readonly FirstDeliveryItem[] = [
   {
     index: '01',
     title: 'Intake en afbakening',
