@@ -148,11 +148,13 @@ const firstDeliveryItems = [
     index: '03',
     title: 'Dashboard en managementrapport',
     body: 'U krijgt een zelfstandig leesbaar hoofdbeeld met prioriteit en eerste vervolgrichting.',
+    minHeight: 220,
   },
   {
     index: '04',
     title: 'Review',
     body: 'We bespreken wat eerst aandacht vraagt en welke vervolgstap logisch is.',
+    minHeight: 220,
   },
 ] as const
 
@@ -2039,16 +2041,16 @@ function FirstDeliverySection() {
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
             {firstDeliveryItems.map((item, index) => (
               <Reveal key={item.title} delay={0.08 + index * 0.04}>
-              <article
-                style={{
-                  background: SURFACE.surface,
-                  border: `1px solid ${SURFACE.borderSoft}`,
-                  borderRadius: 28,
-                  boxShadow: '0 10px 24px rgba(22, 34, 56, 0.06), 0 2px 5px rgba(22, 34, 56, 0.04)',
-                  minHeight: 132,
-                  padding: '28px 28px 26px',
-                }}
-              >
+                <article
+                  style={{
+                    background: SURFACE.surface,
+                    border: `1px solid ${SURFACE.borderSoft}`,
+                    borderRadius: 28,
+                    boxShadow: '0 10px 24px rgba(22, 34, 56, 0.06), 0 2px 5px rgba(22, 34, 56, 0.04)',
+                    minHeight: item.minHeight ?? 132,
+                    padding: '28px 28px 26px',
+                  }}
+                >
                 <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '56px minmax(0, 1fr)' }}>
                   <span
                     style={{

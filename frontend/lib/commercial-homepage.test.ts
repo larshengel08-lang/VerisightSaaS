@@ -52,6 +52,7 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource).toContain('Scan of dataverzameling')
     expect(homepageSource).toContain('Dashboard en managementrapport')
     expect(homepageSource).toContain('Review')
+    expect(homepageSource).toContain('minHeight: item.minHeight ?? 132')
     expect(homepageSource).not.toContain('Vervolgvragen')
   })
 
