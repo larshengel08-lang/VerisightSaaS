@@ -171,6 +171,25 @@ describe('dashboard and pdf availability', () => {
     expect(setupCard?.primaryAction.reason).toContain('Nog niet leesbaar')
   })
 
+  it('sends admin setup campaigns directly to the campaign-specific routebeheer page', () => {
+    const setupCampaign = buildCampaign({
+      campaign_id: 'setup-1',
+      campaign_name: 'ExitScan nieuw',
+      total_invited: 0,
+      total_completed: 0,
+      completion_rate_pct: 0,
+      avg_risk_score: null,
+      avg_signal_score: null,
+    })
+
+    const model = buildDashboardHomeModel({ campaigns: [setupCampaign], isAdmin: true })
+    const setupCard = model.groups.flatMap((group) => group.campaigns).find((card) => card.campaign.campaign_id === 'setup-1')
+
+    expect(setupCard?.primaryAction.available).toBe(true)
+    expect(setupCard?.primaryAction.kind).toBe('setup')
+    expect(setupCard?.primaryAction.href).toBe('/campaigns/setup-1/beheer')
+  })
+
   it('keeps the dashboard-versus-pdf choice explicit but compact in the recommendation model', () => {
     const model = buildDashboardHomeModel({
       campaigns: [buildCampaign({ campaign_id: 'ready-1' })],
