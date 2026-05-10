@@ -1,31 +1,21 @@
 import type { Metadata } from 'next'
-import { IBM_Plex_Sans, Fraunces, Newsreader } from 'next/font/google'
+import { Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google'
 import { SiteAnalytics } from '@/components/marketing/site-analytics'
 import './globals.css'
 
-const ibmPlexSans = IBM_Plex_Sans({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
-  variable: '--font-ibm-plex-sans',
+  variable: '--font-plus-jakarta',
 })
 
-const fraunces = Fraunces({
+const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
-  weight: 'variable',
+  weight: ['600', '700'],
   style: ['normal', 'italic'],
-  axes: ['opsz'],
   display: 'swap',
-  variable: '--font-fraunces',
-})
-
-const newsreader = Newsreader({
-  subsets: ['latin'],
-  weight: 'variable',
-  style: ['normal', 'italic'],
-  axes: ['opsz'],
-  display: 'swap',
-  variable: '--font-newsreader',
+  variable: '--font-playfair',
 })
 
 const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION
@@ -98,7 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="nl">
-      <body className={`${ibmPlexSans.variable} ${fraunces.variable} ${newsreader.variable} font-[family-name:var(--font-ibm-plex-sans)] bg-[--bg] antialiased`}>
+      <body className={`${plusJakartaSans.variable} ${playfairDisplay.variable} font-[family-name:var(--font-plus-jakarta)] bg-[--bg] antialiased`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

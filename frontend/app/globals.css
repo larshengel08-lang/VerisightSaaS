@@ -2,65 +2,71 @@
 
 :root {
   /* Brand tokens — Stitch-aligned palette */
-  --ink:        #132033;
-  --navy:       #132033;
-  --petrol:     #132033;
-  --bg:         #F7F5F1;
+  --ink:        #051625;
+  --navy:       #1B2B3A;
+  --petrol:     #1B2B3A;
+  --bg:         #FBF9FA;
+  --bg-alt:     #F5F3F4;
   --surface:    #FFFFFF;
-  --teal:       #C96A4B;
-  --teal-light: #F3E4DA;
-  --text:       #4A5563;
-  --muted:      #6B7280;
-  --border:     #E5E0D6;
+  --surface-low:#F5F3F4;
+  --surface-mid:#EFEDEE;
+  --teal:       #C05A44;
+  --teal-light: #F3E1DC;
+  --text:       #1B1C1D;
+  --muted:      #43474C;
+  --meta:       #5A6B7D;
+  --border:     #E5E1D8;
+  --border-strong:#CFC9BF;
 
   /* Legacy compat */
   --background: var(--surface);
   --foreground: var(--ink);
 
   /* Layout */
-  --marketing-shell: 84rem;
-  --marketing-section-space: clamp(4rem, 6vw, 6.5rem);
-  --marketing-hero-space: clamp(3.5rem, 5.5vw, 5.75rem);
+  --marketing-shell: 80rem;
+  --marketing-section-space: clamp(4rem, 7vw, 5.5rem);
+  --marketing-hero-space: clamp(4rem, 6vw, 6rem);
+  --marketing-page-padding-x: clamp(1rem, 3.5vw, 3rem);
 
   /* Shadows */
-  --marketing-shadow-soft: 0 14px 32px rgba(19, 32, 51, 0.04);
-  --marketing-shadow-strong: 0 22px 48px rgba(19, 32, 51, 0.08);
-  --dashboard-shadow-soft: 0 12px 30px rgba(19, 32, 51, 0.05);
-  --dashboard-shadow-strong: 0 18px 38px rgba(19, 32, 51, 0.08);
-  --dashboard-shadow-card: 0 1px 6px rgba(19, 32, 51, 0.04);
+  --marketing-shadow-soft: 0 16px 40px rgba(27, 43, 58, 0.04);
+  --marketing-shadow-strong: 0 24px 56px rgba(27, 43, 58, 0.06);
+  --dashboard-shadow-soft: 0 16px 40px rgba(27, 43, 58, 0.04);
+  --dashboard-shadow-strong: 0 24px 56px rgba(27, 43, 58, 0.06);
+  --dashboard-shadow-card: none;
 
   /* Brand accent — copper (Stitch-aligned) */
-  --brand-accent-deep:  #C96A4B;
-  --brand-accent-mid:   #B85D41;
-  --brand-accent-soft:  #F3E4DA;
+  --brand-accent-deep:  #C05A44;
+  --brand-accent-mid:   #A94D3B;
+  --brand-accent-soft:  #F3E1DC;
 
   /* Dashboard canvas & surfaces — Stitch-aligned */
-  --dashboard-canvas:        #F7F5F1;
+  --dashboard-canvas:        #FBF9FA;
   --dashboard-surface:       #FFFFFF;
-  --dashboard-soft:          #FAF8F4;
+  --dashboard-soft:          #F5F3F4;
   --dashboard-rail:          #0a192f;
-  --dashboard-frame-border:  rgba(19, 32, 51, 0.08);
-  --dashboard-ink:           #132033;
-  --dashboard-text:          #4A5563;
-  --dashboard-muted:         #6B7280;
-  --dashboard-accent-soft:   #F3E4DA;
-  --dashboard-accent-soft-border: #E8B7A6;
-  --dashboard-accent-strong: #C96A4B;
-  --dashboard-blue-soft:     #F4F8F7;
-  --dashboard-amber-soft:    #FAF1EC;
+  --dashboard-frame-border:  rgba(27, 43, 58, 0.08);
+  --dashboard-ink:           #051625;
+  --dashboard-text:          #1B1C1D;
+  --dashboard-muted:         #5A6B7D;
+  --dashboard-accent-soft:   #F3E1DC;
+  --dashboard-accent-soft-border: rgba(192, 90, 68, 0.18);
+  --dashboard-accent-strong: #C05A44;
+  --dashboard-blue-soft:     #F5F3F4;
+  --dashboard-amber-soft:    #F5F3F4;
   --dashboard-topbar-strong: rgba(255, 255, 255, 0.97);
 
   /* Dashboard layout — sharper radii (Stitch direction) */
   --dashboard-sidebar-width: 260px;
   --dashboard-radius-card: 0.5rem;
-  --dashboard-radius-hero: 0.5rem;
+  --dashboard-radius-hero: 0.75rem;
   --dashboard-radius-chip: 9999px;
 
   /* Risk band colors */
   --risk-high:     #C65B52;
-  --risk-mid:      #C88C20;
+  --risk-mid:      #D39A2F;
   --risk-low:      #2E7C6D;
-  --risk-neutral:  #8A7D6E;
+  --risk-neutral:  #5A6B7D;
 }
 
 @theme inline {
@@ -75,9 +81,9 @@
   --color-text-body: var(--text);
   --color-muted: var(--muted);
   --color-border-warm: var(--border);
-  --font-sans: var(--font-ibm-plex-sans), system-ui, sans-serif;
-  --font-body: var(--font-ibm-plex-sans), system-ui, sans-serif;
-  --font-display: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-plus-jakarta), system-ui, sans-serif;
+  --font-body: var(--font-plus-jakarta), system-ui, sans-serif;
+  --font-display: var(--font-playfair), Georgia, serif;
 }
 
 html {
@@ -94,7 +100,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--foreground);
-  font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
+  font-family: var(--font-plus-jakarta), system-ui, sans-serif;
   text-rendering: optimizeLegibility;
   overflow-x: clip;
 }
@@ -112,8 +118,9 @@ input:focus-visible,
 textarea:focus-visible,
 select:focus-visible,
 summary:focus-visible {
-  outline: 2px solid var(--teal);
-  outline-offset: 3px;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(192, 90, 68, 0.18);
+  border-radius: 6px;
 }
 
 ::selection {
@@ -160,7 +167,7 @@ details > summary::-webkit-details-marker {
   .marketing-shell {
     margin-inline: auto;
     width: min(100%, var(--marketing-shell));
-    padding-inline: clamp(1.25rem, 3vw, 2.5rem);
+    padding-inline: var(--marketing-page-padding-x);
   }
 
   .marketing-section {
@@ -188,8 +195,8 @@ details > summary::-webkit-details-marker {
   .marketing-panel {
     border: 1px solid var(--border);
     background: var(--surface);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 0.875rem;
+    box-shadow: none;
+    border-radius: 0.5rem;
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -197,9 +204,9 @@ details > summary::-webkit-details-marker {
 
   .marketing-panel-soft {
     border: 1px solid var(--border);
-    background: var(--bg);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 0.875rem;
+    background: var(--surface-low);
+    box-shadow: none;
+    border-radius: 0.5rem;
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -209,7 +216,7 @@ details > summary::-webkit-details-marker {
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: var(--navy);
     box-shadow: var(--marketing-shadow-strong);
-    border-radius: 0.875rem;
+    border-radius: 0.75rem;
     color: var(--bg);
     width: 100%;
     min-width: 0;
@@ -222,7 +229,7 @@ details > summary::-webkit-details-marker {
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: var(--navy);
     box-shadow: var(--marketing-shadow-strong);
-    border-radius: 0.875rem;
+    border-radius: 0.75rem;
     color: var(--bg);
     width: 100%;
     min-width: 0;
@@ -234,7 +241,7 @@ details > summary::-webkit-details-marker {
     position: absolute;
     inset: 1px;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: calc(0.875rem - 1px);
+    border-radius: calc(0.75rem - 1px);
     pointer-events: none;
   }
 
@@ -305,7 +312,7 @@ details > summary::-webkit-details-marker {
   .marketing-hero-copy {
     max-width: 41rem;
     font-size: 1rem;
-    line-height: 1.9;
+    line-height: 1.75;
   }
 
   .marketing-hero-cta-row {
@@ -331,10 +338,10 @@ details > summary::-webkit-details-marker {
 
   .marketing-support-note {
     border: 1px solid var(--border);
-    background: var(--surface);
-    border-radius: 1rem;
+    background: var(--surface-low);
+    border-radius: 0.5rem;
     padding: 1rem 1.15rem;
-    box-shadow: var(--marketing-shadow-soft);
+    box-shadow: none;
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -348,9 +355,9 @@ details > summary::-webkit-details-marker {
   .marketing-link-card {
     border: 1px solid var(--border);
     background: var(--surface);
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     padding: 0.95rem 1rem;
-    box-shadow: var(--marketing-shadow-soft);
+    box-shadow: none;
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -401,31 +408,31 @@ details > summary::-webkit-details-marker {
   .marketing-feature-card {
     border: 1px solid var(--border);
     background: var(--surface);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1.35rem;
+    box-shadow: none;
+    border-radius: 0.5rem;
     padding: 1.35rem;
   }
 
   .marketing-stat-card {
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 1.35rem;
+    border-radius: 0.5rem;
     padding: 1rem 1rem 1.1rem;
   }
 
   .marketing-route-card {
     border: 1px solid var(--border);
     background: var(--surface);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1.5rem;
+    box-shadow: none;
+    border-radius: 0.5rem;
     padding: 1.5rem;
   }
 
   .marketing-route-card-dark {
     border: 1px solid rgba(255, 255, 255, 0.08);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 100%);
+    background: var(--navy);
     box-shadow: var(--marketing-shadow-strong);
-    border-radius: 1.5rem;
+    border-radius: 0.75rem;
     padding: 1.5rem;
   }
 
@@ -466,8 +473,8 @@ details > summary::-webkit-details-marker {
     overflow: hidden;
     border: 1px solid var(--border);
     background: var(--surface);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1.75rem;
+    box-shadow: none;
+    border-radius: 0.5rem;
   }
 
   .marketing-divider-title {
@@ -493,8 +500,8 @@ details > summary::-webkit-details-marker {
     position: relative;
     border: 1px solid var(--border);
     background: var(--surface);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1.5rem;
+    box-shadow: none;
+    border-radius: 0.5rem;
     padding: 1.5rem;
   }
 
@@ -504,8 +511,8 @@ details > summary::-webkit-details-marker {
     inset: 0 auto auto 0;
     width: 100%;
     height: 4px;
-    background: linear-gradient(90deg, var(--teal) 0%, rgba(60, 141, 138, 0.16) 100%);
-    border-radius: 1.5rem 1.5rem 0 0;
+    background: var(--accent);
+    border-radius: 0.5rem 0.5rem 0 0;
   }
 
   .dashboard-shell {
@@ -601,7 +608,7 @@ details > summary::-webkit-details-marker {
   }
 
   .dash-number {
-    font-family: var(--font-ibm-plex-sans), system-ui, sans-serif;
+    font-family: var(--font-plus-jakarta), system-ui, sans-serif;
     font-weight: 600;
     letter-spacing: -0.04em;
   }
@@ -643,7 +650,7 @@ details > summary::-webkit-details-marker {
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--teal);
+    color: var(--accent);
   }
 
   .marketing-text-title-lg {
@@ -695,23 +702,23 @@ details > summary::-webkit-details-marker {
     align-items: center;
     justify-content: center;
     font-family: var(--font-body);
-    border-radius: 9999px;
+    border-radius: 0.375rem;
     background: var(--brand-accent-deep);
-    padding: 0.8rem 1.5rem;
+    padding: 0.875rem 1.375rem;
     font-size: 0.9rem;
     font-weight: 600;
     color: white;
-    box-shadow: 0 14px 30px rgba(201, 106, 75, 0.18);
     transition:
       transform 180ms ease,
       background-color 180ms ease,
-      box-shadow 180ms ease;
+      border-color 180ms ease;
+    border: 1px solid var(--brand-accent-deep);
   }
 
   .marketing-button-primary:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     background: var(--brand-accent-mid);
-    box-shadow: 0 16px 36px rgba(201, 106, 75, 0.22);
+    border-color: var(--brand-accent-mid);
   }
 
   .marketing-button-primary-warm {
@@ -719,23 +726,23 @@ details > summary::-webkit-details-marker {
     align-items: center;
     justify-content: center;
     font-family: var(--font-body);
-    border-radius: 9999px;
+    border-radius: 0.375rem;
     background: var(--brand-accent-deep);
-    padding: 0.8rem 1.5rem;
+    padding: 0.875rem 1.375rem;
     font-size: 0.9rem;
     font-weight: 600;
     color: white;
-    box-shadow: 0 14px 30px rgba(201, 106, 75, 0.18);
     transition:
       transform 180ms ease,
       background-color 180ms ease,
-      box-shadow 180ms ease;
+      border-color 180ms ease;
+    border: 1px solid var(--brand-accent-deep);
   }
 
   .marketing-button-primary-warm:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     background: var(--brand-accent-mid);
-    box-shadow: 0 16px 36px rgba(201, 106, 75, 0.22);
+    border-color: var(--brand-accent-mid);
   }
 
   .marketing-button-secondary {
@@ -743,10 +750,10 @@ details > summary::-webkit-details-marker {
     align-items: center;
     justify-content: center;
     font-family: var(--font-body);
-    border-radius: 9999px;
+    border-radius: 0.375rem;
     border: 1px solid var(--border);
     background: var(--surface);
-    padding: 0.8rem 1.5rem;
+    padding: 0.875rem 1.375rem;
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--ink);
@@ -757,7 +764,7 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-button-secondary:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     border-color: var(--ink);
     color: var(--ink);
   }
@@ -767,10 +774,10 @@ details > summary::-webkit-details-marker {
     align-items: center;
     justify-content: center;
     font-family: var(--font-body);
-    border-radius: 9999px;
+    border-radius: 0.375rem;
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(255, 255, 255, 0.06);
-    padding: 0.8rem 1.5rem;
+    padding: 0.875rem 1.375rem;
     font-size: 0.9rem;
     font-weight: 600;
     color: rgba(247, 245, 241, 0.9);
@@ -782,7 +789,7 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-button-secondary-dark:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     border-color: rgba(255, 255, 255, 0.18);
     background: rgba(255, 255, 255, 0.1);
     color: white;
@@ -804,7 +811,7 @@ details > summary::-webkit-details-marker {
 
   .marketing-nav-link {
     font-family: var(--font-body);
-    border-radius: 9999px;
+    border-radius: 0.375rem;
     padding: 0.5rem 0.75rem;
     font-size: 0.9rem;
     color: var(--text);
@@ -843,7 +850,7 @@ details > summary::-webkit-details-marker {
     align-items: center;
     justify-content: center;
     font-family: var(--font-body);
-    border-radius: 9999px;
+    border-radius: 0.375rem;
     border: 1px solid var(--border);
     background: var(--surface);
     color: var(--text);
@@ -856,11 +863,11 @@ details > summary::-webkit-details-marker {
 
   .marketing-mobile-menu {
     margin-top: 1rem;
-    border-radius: 1rem;
+    border-radius: 0.75rem;
     border: 1px solid var(--border);
     background: var(--surface);
     padding: 1rem;
-    box-shadow: 0 24px 60px rgba(19, 32, 51, 0.08);
+    box-shadow: var(--marketing-shadow-soft);
   }
 
   .marketing-mobile-nav-link {
@@ -888,7 +895,7 @@ details > summary::-webkit-details-marker {
 
   .marketing-detail-hero {
     border-bottom: 1px solid var(--border);
-    background: #FFFCF8;
+    background: var(--bg);
   }
 
   .marketing-detail-hero-shell {
@@ -900,7 +907,7 @@ details > summary::-webkit-details-marker {
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--teal);
+    color: var(--accent);
   }
 
   .marketing-detail-title {
@@ -943,22 +950,22 @@ details > summary::-webkit-details-marker {
   .marketing-detail-panel {
     border: 1px solid var(--border);
     background: var(--surface);
-    box-shadow: var(--marketing-shadow-soft);
-    border-radius: 1rem;
+    box-shadow: none;
+    border-radius: 0.5rem;
     padding: 1.25rem;
   }
 
   .marketing-detail-panel-soft {
     border: 1px solid var(--border);
-    background: var(--bg);
-    border-radius: 1rem;
+    background: var(--surface-low);
+    border-radius: 0.5rem;
     padding: 1.25rem;
   }
 
   .marketing-detail-dark-card {
     border: 1px solid rgba(255, 255, 255, 0.12);
     background: rgba(247, 245, 241, 0.06);
-    border-radius: 1rem;
+    border-radius: 0.75rem;
     padding: 1.25rem;
   }
 
@@ -984,7 +991,7 @@ details > summary::-webkit-details-marker {
     width: 0.38rem;
     flex-shrink: 0;
     border-radius: 9999px;
-    background: var(--teal);
+    background: var(--accent);
   }
 
   .marketing-detail-list-item-light {
@@ -992,7 +999,7 @@ details > summary::-webkit-details-marker {
   }
 
   .marketing-detail-list-item-light::before {
-    background: var(--teal);
+    background: var(--accent);
   }
 
   .marketing-detail-grid {

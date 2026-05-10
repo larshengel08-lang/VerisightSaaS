@@ -33,13 +33,13 @@ export function PublicHeader({
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-white">
+    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--bg)]/95 backdrop-blur">
       <div className="marketing-shell py-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="flex flex-col gap-0.5">
               <Wordmark size="md" showTagline={false} />
-              <span className="pl-px text-[8px] font-bold tracking-[0.18em] uppercase text-[rgba(19,32,51,0.36)] [font-family:var(--font-ibm-plex-sans)]">
+              <span className="pl-px text-[8px] font-bold tracking-[0.18em] uppercase text-[rgba(27,43,58,0.42)] [font-family:var(--font-plus-jakarta)]">
                 People, Patterns, Priorities
               </span>
             </div>

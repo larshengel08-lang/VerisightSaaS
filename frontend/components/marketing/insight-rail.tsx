@@ -25,19 +25,21 @@ export function InsightRail({
   }
 
   return (
-    <section className="border-y border-[var(--border)] bg-[#F7F5F1]">
+    <section className="border-y border-[var(--border)] bg-[var(--bg-alt)]">
       <div className="marketing-shell py-16 md:py-20">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{eyebrow}</p>
-            <h2 className="mt-4 text-[clamp(2.2rem,4vw,3.5rem)] leading-[0.98] text-[var(--ink)]">{title}</h2>
-            {intro ? <p className="mt-4 max-w-2xl text-base leading-8 text-[var(--text)]">{intro}</p> : null}
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--meta)]">{eyebrow}</p>
+            <h2 className="mt-4 font-display text-[clamp(2.15rem,3.8vw,3.4rem)] leading-[1.02] text-[var(--ink)]">
+              {title}
+            </h2>
+            {intro ? <p className="mt-4 max-w-2xl text-base leading-[1.75] text-[var(--muted)]">{intro}</p> : null}
           </div>
 
           {viewAllHref && viewAllLabel ? (
             <Link
               href={viewAllHref}
-              className="inline-flex items-center rounded-full border border-[var(--border)] bg-white px-5 py-3 text-sm font-semibold text-[var(--ink)] transition-colors hover:border-[var(--ink)]"
+              className="marketing-button-secondary"
             >
               {viewAllLabel}
             </Link>
