@@ -3,33 +3,33 @@ import { Reveal } from '@/components/marketing/design-tokens'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const SURFACE = {
-  paper: '#F7F5F1',
-  paperSoft: '#FAF8F4',
+  paper: '#FBF9FA',
+  paperSoft: '#F5F3F4',
   surface: '#FFFFFF',
-  surfaceSoft: '#F7F5F1',
-  border: '#E5E0D6',
-  borderSoft: '#F0EBE2',
-  ink: '#132033',
-  text: '#4A5563',
-  muted: '#6B7280',
-  subtle: '#9AA3AE',
-  teal: '#7A908B',
-  tealSoft: '#E8F0EE',
-  amber: '#C96A4B',
-  amberSoft: '#F3E4DA',
-  amberGlow: '#B85D41',
-  charcoal: '#132033',
-  charcoalSoft: '#1C2A3D',
+  surfaceSoft: '#F5F3F4',
+  border: '#E5E1D8',
+  borderSoft: '#EFEDEE',
+  ink: '#051625',
+  text: '#1B1C1D',
+  muted: '#43474C',
+  subtle: '#5A6B7D',
+  teal: '#C05A44',
+  tealSoft: '#F3E1DC',
+  amber: '#C05A44',
+  amberSoft: '#F3E1DC',
+  amberGlow: '#A94D3B',
+  charcoal: '#051625',
+  charcoalSoft: '#1B2B3A',
 } as const
 
 const SHELL = {
   margin: '0 auto',
-  maxWidth: 1240,
+  maxWidth: 1280,
   padding: '0 clamp(20px, 4vw, 48px)',
 } as const
 
-const displayFont = 'var(--font-fraunces), Georgia, serif'
-const bodyFont = 'var(--font-ibm-plex-sans), system-ui, sans-serif'
+const displayFont = 'var(--font-playfair), Georgia, serif'
+const bodyFont = 'var(--font-plus-jakarta), system-ui, sans-serif'
 
 const heroTrustItems = [
   'Dashboard voor inzicht \u2022 Managementrapport voor duiding \u2022 Action Center voor opvolging',
@@ -517,8 +517,8 @@ function ManagementFlowSection() {
                   style={{
                     background: SURFACE.surface,
                     border: `1px solid ${SURFACE.borderSoft}`,
-                    borderRadius: 28,
-                    boxShadow: '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)',
+                    borderRadius: 8,
+                    boxShadow: 'none',
                     minHeight: item.cardMinHeight ?? 408,
                     padding: '22px 24px 24px',
                     position: 'relative',
@@ -834,9 +834,9 @@ function HeroSection() {
               <p
                 className="marketing-home-hero-reveal-2"
                 style={{
-                  color: SURFACE.text,
-                  fontSize: 17,
-                  lineHeight: 1.6,
+                  color: SURFACE.muted,
+                  fontSize: 18,
+                  lineHeight: 1.72,
                   marginBottom: 28,
                   maxWidth: '32rem',
                 }}
@@ -852,7 +852,8 @@ function HeroSection() {
                 href={primaryHref}
                 style={{
                   background: SURFACE.amber,
-                  borderRadius: 2,
+                  border: `1px solid ${SURFACE.amber}`,
+                  borderRadius: 6,
                   color: '#fff',
                   display: 'inline-flex',
                   fontFamily: bodyFont,
@@ -869,7 +870,7 @@ function HeroSection() {
                 style={{
                   background: SURFACE.surface,
                   border: `1px solid ${SURFACE.border}`,
-                  borderRadius: 2,
+                  borderRadius: 6,
                   color: SURFACE.ink,
                   display: 'inline-flex',
                   fontFamily: bodyFont,
@@ -916,8 +917,8 @@ function HeroSection() {
                 style={{
                   background: SURFACE.paper,
                   border: `1px solid ${SURFACE.border}`,
-                  borderRadius: 18,
-                  boxShadow: '0 12px 28px rgba(22, 34, 56, 0.04)',
+                  borderRadius: 8,
+                  boxShadow: 'none',
                   height: 322,
                   overflow: 'hidden',
                   padding: '26px 28px 22px',
@@ -958,7 +959,7 @@ function HeroSection() {
                       style={{
                         background: 'rgba(255,255,255,0.48)',
                         border: `1px solid ${SURFACE.borderSoft}`,
-                        borderRadius: 12,
+                        borderRadius: 8,
                         padding: '8px 10px 7px',
                       }}
                     >
@@ -972,9 +973,9 @@ function HeroSection() {
 
                 <div
                   style={{
-                    background: `linear-gradient(180deg, rgba(255,255,255,0.42) 0%, ${SURFACE.paperSoft} 100%)`,
+                    background: SURFACE.surfaceSoft,
                     border: `1px solid ${SURFACE.border}`,
-                    borderRadius: 16,
+                    borderRadius: 8,
                     height: 186,
                     marginBottom: 16,
                     padding: '18px 18px 16px',
@@ -1016,7 +1017,7 @@ function HeroSection() {
                       style={{
                         background: 'rgba(255,255,255,0.56)',
                         border: `1px solid ${SURFACE.borderSoft}`,
-                        borderRadius: 13,
+                        borderRadius: 8,
                         padding: '10px 11px',
                       }}
                     >
@@ -1034,8 +1035,8 @@ function HeroSection() {
                 style={{
                   background: SURFACE.surface,
                   border: `1px solid ${SURFACE.border}`,
-                  borderRadius: 18,
-                  boxShadow: '0 16px 34px rgba(22, 34, 56, 0.08)',
+                  borderRadius: 8,
+                  boxShadow: '0 24px 56px rgba(27, 43, 58, 0.06)',
                   minHeight: 264,
                   overflow: 'hidden',
                   padding: '24px 24px 22px',
@@ -1099,8 +1100,8 @@ function HeroSection() {
                 style={{
                   background: SURFACE.charcoal,
                   border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 24,
-                  boxShadow: '0 24px 48px rgba(13, 17, 24, 0.24)',
+                  borderRadius: 12,
+                  boxShadow: '0 24px 56px rgba(5, 22, 37, 0.22)',
                   color: '#fff',
                   padding: '18px 19px 14px',
                   position: 'absolute',
@@ -1116,8 +1117,8 @@ function HeroSection() {
                       style={{
                         alignItems: 'center',
                         background: SURFACE.amber,
-                        borderRadius: 12,
-                        boxShadow: '0 12px 24px rgba(185, 87, 31, 0.2)',
+                        borderRadius: 8,
+                        boxShadow: 'none',
                         display: 'flex',
                         flexShrink: 0,
                         height: 42,
@@ -2103,8 +2104,8 @@ function FirstDeliverySection() {
                   style={{
                     background: SURFACE.surface,
                     border: `1px solid ${SURFACE.borderSoft}`,
-                    borderRadius: 28,
-                    boxShadow: '0 10px 24px rgba(22, 34, 56, 0.06), 0 2px 5px rgba(22, 34, 56, 0.04)',
+                    borderRadius: 8,
+                    boxShadow: 'none',
                     minHeight: item.minHeight ?? 132,
                     padding: '28px 28px 26px',
                   }}
@@ -2149,7 +2150,7 @@ function FirstDeliverySection() {
                 style={{
                   background: 'transparent',
                   border: `1.5px dashed ${SURFACE.border}`,
-                  borderRadius: 28,
+                  borderRadius: 8,
                   maxWidth: 760,
                   minHeight: 132,
                   padding: '28px 28px 26px',
@@ -2212,10 +2213,10 @@ function ContactSection() {
         <Reveal>
           <div
             style={{
-              background:
-                'radial-gradient(circle at left bottom, rgba(21, 101, 88, 0.34) 0%, rgba(21, 101, 88, 0) 28%), linear-gradient(135deg, #0d1724 0%, #122133 56%, #162634 100%)',
-              borderRadius: 38,
-              boxShadow: '0 22px 48px rgba(13, 23, 36, 0.16)',
+              background: SURFACE.charcoal,
+              border: '1px solid rgba(255,255,255,0.08)',
+              borderRadius: 12,
+              boxShadow: '0 24px 56px rgba(5, 22, 37, 0.22)',
               margin: '0 auto',
               maxWidth: 1200,
               padding: 'clamp(40px, 6vw, 72px) clamp(26px, 5vw, 64px)',
@@ -2260,7 +2261,7 @@ function ContactSection() {
                 style={{
                   alignItems: 'center',
                   background: SURFACE.amber,
-                  borderRadius: 999,
+                  borderRadius: 6,
                   color: '#fff',
                   display: 'inline-flex',
                   fontFamily: bodyFont,
@@ -2280,7 +2281,7 @@ function ContactSection() {
                   alignItems: 'center',
                   background: 'transparent',
                   border: '1px solid rgba(255, 250, 242, 0.22)',
-                  borderRadius: 999,
+                  borderRadius: 6,
                   color: '#fffdf8',
                   display: 'inline-flex',
                   fontFamily: bodyFont,

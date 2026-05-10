@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {}
   }
 
-  const title = `${post.title} | Inzichten | Verisight`
+  const title = `${post.title} | Inzichten`
   const description = post.metaDescription
   const canonical = `/inzichten/${post.slug}`
 
@@ -86,24 +86,24 @@ export default async function InsightArticlePage({ params }: Props) {
         ctaLabel={marketingPrimaryCta.label}
         heroIntro={
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Inzichten</p>
-            <h1 className="mt-4 max-w-4xl text-[clamp(2.8rem,5vw,4.8rem)] leading-[0.95] text-[var(--ink)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--meta)]">Inzichten</p>
+            <h1 className="mt-4 max-w-[12ch] text-balance font-display text-[clamp(2.35rem,8.8vw,4.8rem)] leading-[1.03] text-[var(--ink)]">
               {post.title}
             </h1>
-            <p className="mt-6 max-w-3xl text-lg leading-8 text-[var(--text)]">{post.metaDescription}</p>
+            <p className="mt-6 max-w-3xl text-lg leading-[1.8] text-[var(--muted)]">{post.metaDescription}</p>
           </div>
         }
         heroSupport={
-          <div className="space-y-4 rounded-[28px] border border-[var(--border)] bg-white p-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Artikelcontext</p>
-            <div className="space-y-3 text-sm leading-7 text-[var(--text)]">
+          <div className="space-y-4 rounded-[8px] border border-[var(--border)] bg-[var(--surface-low)] p-6">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--meta)]">Artikelcontext</p>
+            <div className="space-y-3 text-sm leading-[1.75] text-[var(--muted)]">
               <p>{post.category}</p>
               <p>{publishedLabel}</p>
               <p>{post.readingMinutes} min leestijd</p>
             </div>
             <a
               href={post.ctaTarget}
-              className="inline-flex items-center rounded-full border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--ink)] transition-colors hover:border-[var(--ink)]"
+              className="marketing-button-secondary"
             >
               {post.ctaLabel}
             </a>

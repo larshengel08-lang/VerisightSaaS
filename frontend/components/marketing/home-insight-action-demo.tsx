@@ -23,8 +23,8 @@ const C = {
   tealLine:  '#E8B7A6',
 } as const
 
-const FF  = 'var(--font-fraunces), Georgia, serif'
-const FN  = 'var(--font-ibm-plex-sans), system-ui, sans-serif'
+const FF  = 'var(--font-playfair), Georgia, serif'
+const FN  = 'var(--font-plus-jakarta), system-ui, sans-serif'
 const SH  = { margin: '0 auto', maxWidth: 1240, padding: '0 clamp(20px, 4vw, 48px)' } as const
 
 const CARD_RADIUS  = 20

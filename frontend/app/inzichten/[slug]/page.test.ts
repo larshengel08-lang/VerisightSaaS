@@ -112,7 +112,7 @@ describe('inzichten article route', () => {
 
     expect(metadata.alternates?.canonical).toBe('/inzichten/waarom-onboarding-retentie-vroeg-voorspelt')
     expect(metadata.openGraph?.type).toBe('article')
-    expect(metadata.title).toBe('Waarom onboarding retentie vroeg voorspelt | Inzichten | Verisight')
+    expect(metadata.title).toBe('Waarom onboarding retentie vroeg voorspelt | Inzichten')
   })
 
   it('renders the route shell with article context and excludes the current post from related insights', async () => {

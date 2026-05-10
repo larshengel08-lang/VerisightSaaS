@@ -4,33 +4,33 @@ import { useState, useEffect, useRef } from 'react'
 
 // ── Design tokens ─────────────────────────────────────────────────
 export const T = {
-  paper:      '#F7F5F1',
-  paperSoft:  '#FAF8F4',
-  paperBlush: '#F3E4DA',
+  paper:      '#FBF9FA',
+  paperSoft:  '#F5F3F4',
+  paperBlush: '#F3E1DC',
   white:      '#FFFFFF',
-  navy:       '#132033',
-  ink:        '#132033',
-  inkSoft:    '#4A5563',
-  inkMuted:   '#6B7280',
-  inkFaint:   '#9AA3AE',
-  rule:       '#E5E0D6',
-  ruleLight:  '#F0EBE2',
-  teal:       '#7A908B',
-  tealMid:    '#90A29F',
-  tealSoft:   '#E8F0EE',
-  tealFaint:  '#F4F8F7',
+  navy:       '#1B2B3A',
+  ink:        '#051625',
+  inkSoft:    '#1B1C1D',
+  inkMuted:   '#43474C',
+  inkFaint:   '#5A6B7D',
+  rule:       '#E5E1D8',
+  ruleLight:  '#EFEDEE',
+  teal:       '#C05A44',
+  tealMid:    '#A94D3B',
+  tealSoft:   '#F3E1DC',
+  tealFaint:  '#F5F3F4',
 } as const
 
 export const AC = {
-  deep:  '#C96A4B',
-  mid:   '#D9886E',
+  deep:  '#C05A44',
+  mid:   '#A94D3B',
   light: '#E8B7A6',
-  soft:  '#F3E4DA',
-  faint: '#FAF1EC',
+  soft:  '#F3E1DC',
+  faint: '#F5F3F4',
 } as const
 
-export const FF = 'var(--font-fraunces), serif'
-export const SHELL = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' } as const
+export const FF = 'var(--font-playfair), serif'
+export const SHELL = { maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,3.5vw,48px)' } as const
 
 // ── Hooks ─────────────────────────────────────────────────────────
 export function useInView(threshold = 0.12) {

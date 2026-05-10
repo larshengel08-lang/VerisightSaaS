@@ -177,7 +177,7 @@ function ExitScanPage() {
     ruleLight: 'oklch(0.918 0.008 62)',
   }
     const AC = { deep: 'oklch(0.45 0.18 50)', mid: 'oklch(0.76 0.14 53)', soft: 'oklch(0.95 0.045 50)' }
-    const FF = 'var(--font-fraunces), serif'
+const FF = 'var(--font-playfair), serif'
     const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
     const cardShadow = '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)'
     const featureCardStyle = {
@@ -370,7 +370,7 @@ function RetentionScanPage() {
     ruleLight: 'oklch(0.918 0.008 62)',
     teal: 'oklch(0.50 0.12 188)', tealSoft: 'oklch(0.94 0.04 185)', tealFaint: 'oklch(0.972 0.018 185)',
   }
-    const FF = 'var(--font-fraunces), serif'
+const FF = 'var(--font-playfair), serif'
     const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
     const cardShadow = '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)'
     const featureCardStyle = {

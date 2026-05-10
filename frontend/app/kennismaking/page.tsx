@@ -30,7 +30,7 @@ const shellStyle = {
   padding: '0 clamp(20px, 4vw, 48px)',
 } as const
 
-const displayFont = 'var(--font-fraunces), Georgia, serif'
+const displayFont = 'var(--font-playfair), Georgia, serif'
 
 export default function KennismakingPage() {
   return (
