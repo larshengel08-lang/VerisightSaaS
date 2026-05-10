@@ -168,7 +168,7 @@ function FirstBuySection() {
                 {item.eyebrow}
               </div>
               <div style={{ fontFamily: FF, fontSize: 'clamp(2rem,4vw,3rem)', fontWeight: 400, letterSpacing: '-.03em', color: T.ink, marginBottom: 14, lineHeight: 1 }}>
-                {item.price}
+                {formatPricingPrice(item.price)}
               </div>
               <p style={{ fontSize: 13.5, lineHeight: 1.7, color: T.inkSoft, marginBottom: 24 }}>{item.description}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
@@ -214,7 +214,7 @@ function FirstBuySection() {
                 {onboardingPricingCard.eyebrow}
               </h3>
               <div style={{ fontFamily: FF, fontSize: 'clamp(1.7rem,3vw,2.4rem)', fontWeight: 400, color: T.ink, marginBottom: 14 }}>
-                {onboardingPricingCard.price}
+                {formatPricingPrice(onboardingPricingCard.price)}
               </div>
               <p style={{ fontSize: 14.5, lineHeight: 1.72, color: T.inkSoft, marginBottom: 16 }}>
                 {onboardingPricingCard.description}
