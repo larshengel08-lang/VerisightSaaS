@@ -168,6 +168,8 @@ export default async function DashboardHomePage({
   const showClosedSection = closedItems.length > 0 && requestedStatusFilter === 'all'
   const filterEmptyMessage = hasStatusFilter && !showBlockedSection && filteredTriageItems.length === 0
   const contextLabel = moduleLabel ?? 'Alle routes'
+  const activeStatusLabel = getStatusFilterLabel(requestedStatusFilter)
+  const hasActiveFilters = requestedModuleFilter !== null || requestedStatusFilter !== 'all'
 
   return (
     <div className="space-y-8">
@@ -194,7 +196,7 @@ export default async function DashboardHomePage({
         )
       ) : (
         <>
-          <header className="space-y-6 border-b border-[color:var(--dashboard-frame-border)] pb-6">
+          <header className="space-y-5 border-b border-[color:var(--dashboard-frame-border)] pb-6">
             {requestedModuleFilter ? (
               <Link
                 href={buildDashboardOverviewHref({ statusFilter: requestedStatusFilter })}
@@ -203,7 +205,7 @@ export default async function DashboardHomePage({
                 Terug naar alle routes
               </Link>
             ) : null}
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+            <div className="space-y-5">
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="inline-flex rounded-full bg-[color:var(--dashboard-accent-soft)] px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-[color:var(--dashboard-accent-strong)]">
@@ -211,55 +213,76 @@ export default async function DashboardHomePage({
                   </span>
                   <span className="text-sm font-medium text-[color:var(--dashboard-muted)]">{contextLabel}</span>
                 </div>
-                <div className="space-y-2">
-                  <h1 className="font-serif text-[2.25rem] leading-[0.95] tracking-[-0.05em] text-[color:var(--dashboard-ink)] sm:text-[2.8rem]">
-                    Dashboard overview
-                  </h1>
-                  <p className="max-w-3xl text-[0.98rem] leading-7 text-[color:var(--dashboard-text)]">
-                    Bekijk welke routes aandacht vragen en ga direct naar de juiste vervolglaag.
-                  </p>
-                </div>
+                <h1 className="font-serif text-[2.25rem] leading-[0.95] tracking-[-0.05em] text-[color:var(--dashboard-ink)] sm:text-[2.8rem]">
+                  Dashboard overview
+                </h1>
+                <p className="max-w-3xl text-[0.98rem] leading-7 text-[color:var(--dashboard-text)]">
+                  Bekijk welke routes aandacht vragen en ga direct naar de juiste vervolglaag.
+                </p>
               </div>
-              <div className="space-y-3 xl:max-w-[26rem] xl:text-right">
-                <div className="space-y-2">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-                    Product
-                  </p>
-                  <div className="flex flex-wrap gap-2 xl:justify-end">
-                    <FilterPill
-                      href={buildDashboardOverviewHref({ statusFilter: requestedStatusFilter })}
-                      active={requestedModuleFilter === null}
-                      label="Alle routes"
-                    />
-                    {productFilters.map((filterKey) => (
-                      <FilterPill
-                        key={filterKey}
-                        href={buildDashboardOverviewHref({
-                          moduleFilter: filterKey,
-                          statusFilter: requestedStatusFilter,
-                        })}
-                        active={requestedModuleFilter === filterKey}
-                        label={getDashboardModuleLabel(filterKey)}
-                      />
-                    ))}
+              <div className="rounded-[20px] border border-[color:var(--dashboard-frame-border)] bg-[color:var(--dashboard-surface)] px-4 py-4 shadow-[0_1px_3px_rgba(15,23,42,0.03)] sm:px-5">
+                <div className="flex flex-col gap-3 border-b border-[color:var(--dashboard-frame-border)] pb-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-1.5">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                      Filters
+                    </p>
+                    <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
+                      <span className="font-semibold text-[color:var(--dashboard-ink)]">Actief:</span>{' '}
+                      {activeStatusLabel} · {contextLabel}
+                    </p>
                   </div>
+                  {hasActiveFilters ? (
+                    <Link
+                      href="/dashboard"
+                      className="inline-flex text-sm font-semibold text-[color:var(--dashboard-accent-strong)] transition-colors hover:text-[color:var(--dashboard-ink)]"
+                    >
+                      Wis filters
+                    </Link>
+                  ) : (
+                    <span className="text-sm text-[color:var(--dashboard-muted)]">Geen extra filters actief</span>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-                    Status
-                  </p>
-                  <div className="flex flex-wrap gap-2 xl:justify-end">
-                    {STATUS_FILTERS.map((filter) => (
+                <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1.35fr),minmax(0,1fr)]">
+                  <div className="space-y-2">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                      Status
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {STATUS_FILTERS.map((filter) => (
+                        <FilterPill
+                          key={filter.key}
+                          href={buildDashboardOverviewHref({
+                            moduleFilter: requestedModuleFilter,
+                            statusFilter: filter.key,
+                          })}
+                          active={requestedStatusFilter === filter.key}
+                          label={filter.label}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
+                      Product
+                    </p>
+                    <div className="flex flex-wrap gap-2">
                       <FilterPill
-                        key={filter.key}
-                        href={buildDashboardOverviewHref({
-                          moduleFilter: requestedModuleFilter,
-                          statusFilter: filter.key,
-                        })}
-                        active={requestedStatusFilter === filter.key}
-                        label={filter.label}
+                        href={buildDashboardOverviewHref({ statusFilter: requestedStatusFilter })}
+                        active={requestedModuleFilter === null}
+                        label="Alle routes"
                       />
-                    ))}
+                      {productFilters.map((filterKey) => (
+                        <FilterPill
+                          key={filterKey}
+                          href={buildDashboardOverviewHref({
+                            moduleFilter: filterKey,
+                            statusFilter: requestedStatusFilter,
+                          })}
+                          active={requestedModuleFilter === filterKey}
+                          label={getDashboardModuleLabel(filterKey)}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -362,6 +385,10 @@ function normalizeDashboardStatusFilter(value: string | undefined): CockpitStatu
   }
 
   return 'all'
+}
+
+function getStatusFilterLabel(filter: CockpitStatusFilter) {
+  return STATUS_FILTERS.find((item) => item.key === filter)?.label ?? 'Alle statussen'
 }
 
 function buildDashboardOverviewHref(args: {
