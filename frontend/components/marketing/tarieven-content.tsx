@@ -14,6 +14,10 @@ function formatFollowOnTitle(title: string) {
   return title === 'ExitScan Live Start' ? 'Exitscan Live' : title
 }
 
+function formatPricingPrice(price: string) {
+  return price === 'vanaf EUR 4.500' ? '€4.499' : price
+}
+
 function HeroSection() {
   return (
     <section
@@ -103,7 +107,7 @@ function HeroSection() {
                       {item.eyebrow}
                     </div>
                     <div style={{ fontFamily: FF, fontSize: 28, fontWeight: 400, color: T.ink, letterSpacing: '-.02em' }}>
-                      {item.price}
+                      {formatPricingPrice(item.price)}
                     </div>
                   </div>
                 </Reveal>

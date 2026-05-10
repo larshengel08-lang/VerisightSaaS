@@ -148,6 +148,8 @@ const managementFlowSteps: readonly ManagementFlowStep[] = [
   },
 ] as const
 
+const MANAGEMENT_FLOW_OPTIONAL_SLOT_HEIGHT = 62
+
 type FirstDeliveryItem = {
   index: string
   title: string
@@ -480,28 +482,36 @@ function ManagementFlowSection() {
             <Reveal key={item.title} delay={0.1 + index * 0.05}>
               <div
                 style={{
-                  display: item.optionalLabel ? 'grid' : 'block',
+                  display: 'grid',
                   gap: 10,
+                  gridTemplateRows: `${MANAGEMENT_FLOW_OPTIONAL_SLOT_HEIGHT}px 1fr`,
                 }}
               >
-                {item.optionalLabel ? (
-                  <div style={{ paddingLeft: 6 }}>
-                    <p
-                      style={{
-                        color: SURFACE.amber,
-                        fontFamily: bodyFont,
-                        fontSize: 10.5,
-                        fontWeight: 700,
-                        letterSpacing: '.14em',
-                        marginBottom: 6,
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {item.optionalLabel}
-                    </p>
-                    <p style={{ color: SURFACE.muted, fontSize: 13.5, lineHeight: 1.55 }}>{item.optionalMicrocopy}</p>
-                  </div>
-                ) : null}
+                <div
+                  aria-hidden={!item.optionalLabel}
+                  style={{
+                    minHeight: MANAGEMENT_FLOW_OPTIONAL_SLOT_HEIGHT,
+                    paddingLeft: 6,
+                    visibility: item.optionalLabel ? 'visible' : 'hidden',
+                  }}
+                >
+                  <p
+                    style={{
+                      color: SURFACE.amber,
+                      fontFamily: bodyFont,
+                      fontSize: 10.5,
+                      fontWeight: 700,
+                      letterSpacing: '.14em',
+                      marginBottom: 6,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {item.optionalLabel ?? 'Optionele uitbreiding'}
+                  </p>
+                  <p style={{ color: SURFACE.muted, fontSize: 13.5, lineHeight: 1.55 }}>
+                    {item.optionalMicrocopy ?? 'Toe te voegen na of naast een eerste scan'}
+                  </p>
+                </div>
 
                 <article
                   style={{

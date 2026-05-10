@@ -65,7 +65,9 @@ describe('commercial homepage suite opening', () => {
     expect(homepageSource).toContain('Optionele uitbreiding')
     expect(homepageSource).toContain('Toe te voegen na of naast een eerste scan')
     expect(homepageSource).toContain('minHeight: item.cardMinHeight ?? 408')
-    expect(homepageSource).toContain("display: item.optionalLabel ? 'grid' : 'block'")
+    expect(homepageSource).toContain('const MANAGEMENT_FLOW_OPTIONAL_SLOT_HEIGHT = 62')
+    expect(homepageSource).toContain("gridTemplateRows: `${MANAGEMENT_FLOW_OPTIONAL_SLOT_HEIGHT}px 1fr`")
+    expect(homepageSource).toContain("visibility: item.optionalLabel ? 'visible' : 'hidden'")
   })
 
   it('does not render the homepage insights rail anymore', () => {

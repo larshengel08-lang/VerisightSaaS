@@ -223,7 +223,7 @@ function ExitScanPage() {
                 </div>
                 <div>
                   <div style={{ ...featureCardStyle, padding: '28px' }}>
-                    <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>EUR 2.950 {'\u2022'} Baseline</div>
+                    <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>Baseline</div>
                     {[
                       'Dashboard met prioriteiten en factoranalyse',
                       'Managementrapport voor HR, MT en directie',
@@ -416,7 +416,7 @@ function RetentionScanPage() {
                 </div>
                 <div>
                   <div style={{ ...featureCardStyle, padding: '28px' }}>
-                    <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>EUR 3.450 {'\u2022'} Baseline</div>
+                    <div style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', color: T.teal, marginBottom: 16 }}>Baseline</div>
                     {[
                       'Dashboard met retentiesignaal en factoranalyse',
                       'Managementrapport voor HR, MT en directie',

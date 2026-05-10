@@ -6,6 +6,18 @@ import { AC, FF, T } from '@/components/marketing/design-tokens'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const SHELL = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
+const cardShadow = '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)'
+const featureCardStyle = {
+  background: T.white,
+  border: `1px solid ${T.rule}`,
+  borderRadius: 28,
+  boxShadow: cardShadow,
+} as const
+const rowCardStyle = {
+  background: T.paperSoft,
+  border: `1px solid ${T.rule}`,
+  borderRadius: 22,
+} as const
 
 export function OnboardingSecondaryPage() {
   const ctaHref = buildContactHref({ routeInterest: 'onboarding', ctaSource: 'product_onboarding_hero' })
@@ -23,27 +35,6 @@ export function OnboardingSecondaryPage() {
             overflow: 'hidden',
           }}
         >
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              pointerEvents: 'none',
-              backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`,
-              backgroundSize: '72px 72px',
-              opacity: 0.35,
-            }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              top: -80,
-              right: -60,
-              width: 500,
-              height: 500,
-              background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`,
-              pointerEvents: 'none',
-            }}
-          />
           <div style={{ ...SHELL, position: 'relative' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 52 }}>
               <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '.18em', textTransform: 'uppercase', color: AC.deep }}>
@@ -70,7 +61,7 @@ export function OnboardingSecondaryPage() {
                   Nieuwe medewerkers sneller goed laten landen
                 </h1>
                 <p style={{ fontSize: 16.5, lineHeight: 1.72, color: T.inkSoft, maxWidth: '48ch', margin: '26px 0 36px' }}>
-                  Voor organisaties die vroeg willen zien of nieuwe medewerkers goed landen — en waar eerste frictie
+                  Voor organisaties die vroeg willen zien of nieuwe medewerkers goed landen en waar eerste frictie
                   aandacht vraagt voordat die uitgroeit tot uitval, verloop of langdurige onzekerheid.
                 </p>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
@@ -108,12 +99,11 @@ export function OnboardingSecondaryPage() {
                 </div>
               </div>
               <div>
-                <div style={{ padding: '28px', background: T.paperSoft, border: `1px solid ${T.rule}` }}>
+                <div style={{ ...featureCardStyle, padding: '28px' }}>
                   <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: AC.deep, marginBottom: 16 }}>
                     Voor vragen rond de eerste 30, 60 en 90 dagen
                   </div>
                   {[
-                    'Vanaf EUR 4.500 als baseline',
                     'Dashboard en managementrapport als eerste output',
                     'Maakt vroege frictie in rol, team en leiding zichtbaar',
                     'Startpunt wanneer onboarding nu de belangrijkste vraag is',
@@ -154,7 +144,7 @@ export function OnboardingSecondaryPage() {
                   'Vroege landing, eerste frictie of eerste uitval zijn nu urgenter dan brede uitstroom of behoudsdruk.',
                   'U zoekt een volwaardige baseline, maar wel kleiner en specifieker dan de twee kernroutes.',
                 ].map((text) => (
-                  <div key={text} style={{ alignItems: 'flex-start', background: T.white, border: `1px solid ${T.rule}`, display: 'flex', gap: 12, padding: '18px 20px' }}>
+                  <div key={text} style={{ ...featureCardStyle, alignItems: 'flex-start', display: 'flex', gap: 12, padding: '20px 22px' }}>
                     <div style={{ width: 6, height: 6, background: AC.deep, borderRadius: '50%', flexShrink: 0, marginTop: 9 }} />
                     <p style={{ fontSize: 14, lineHeight: 1.65, color: T.inkSoft }}>{text}</p>
                   </div>
@@ -176,7 +166,8 @@ export function OnboardingSecondaryPage() {
                   'Een compacte review van wat nu opvalt en wat eerst telt.',
                   'Een kleinere, gerichte startroute die onboarding opent zonder brede lifecycle-suite.',
                 ].map((item) => (
-                  <div key={item} style={{ padding: '18px 20px', border: `1px solid ${T.rule}`, background: T.paperSoft, fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
+                  <div key={item} style={{ ...rowCardStyle, display: 'flex', gap: 12, padding: '16px 18px', fontSize: 13.5, color: T.inkSoft, lineHeight: 1.6 }}>
+                    <div style={{ width: 4, height: 4, background: AC.mid, flexShrink: 0, marginTop: 5 }} />
                     {item}
                   </div>
                 ))}

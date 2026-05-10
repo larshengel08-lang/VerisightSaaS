@@ -18,6 +18,18 @@ describe('ExitScan product page background treatment', () => {
     expect(exitScanSource).not.toContain("backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`")
     expect(exitScanSource).not.toContain("background: `radial-gradient(circle,${AC.soft} 0%,transparent 65%)`")
   })
+
+  it('keeps pricing off the ExitScan hero card so tarieven stays the only public price surface', () => {
+    const pageSource = fs.readFileSync(
+      path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),
+      'utf8',
+    )
+
+    const exitScanSource = pageSource.split('function RetentionScanPage()')[0]
+
+    expect(exitScanSource).not.toContain("EUR 2.950 {'\\u2022'} Baseline")
+    expect(exitScanSource).toContain('>Baseline</div>')
+  })
 })
 
 describe('RetentieScan product page background treatment', () => {
@@ -38,6 +50,20 @@ describe('RetentieScan product page background treatment', () => {
     expect(retentionScanSource).not.toContain("<section style={{ background: T.white")
     expect(retentionScanSource).not.toContain("backgroundImage: `linear-gradient(${T.rule}60 1px,transparent 1px),linear-gradient(90deg,${T.rule}60 1px,transparent 1px)`")
     expect(retentionScanSource).not.toContain("background: `radial-gradient(circle,${T.tealFaint} 0%,transparent 65%)`")
+  })
+
+  it('keeps pricing off the RetentieScan hero card so tarieven stays the only public price surface', () => {
+    const pageSource = fs.readFileSync(
+      path.join(process.cwd(), 'app', 'producten', '[slug]', 'page.tsx'),
+      'utf8',
+    )
+
+    const retentionScanSource = pageSource
+      .split('function RetentionScanPage()')[1]
+      .split('function PulsePage()')[0]
+
+    expect(retentionScanSource).not.toContain("EUR 3.450 {'\\u2022'} Baseline")
+    expect(retentionScanSource).toContain('>Baseline</div>')
   })
 })
 
