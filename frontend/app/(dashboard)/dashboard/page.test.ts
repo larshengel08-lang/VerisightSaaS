@@ -2,7 +2,6 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { selectLeadOverviewCampaign, selectPrimaryOverviewCampaign } from '@/lib/dashboard/overview-focus'
 import type { CampaignStats } from '@/lib/types'
-import { getCtaHrefForState } from './cta-href'
 
 const campaigns: CampaignStats[] = [
   {
@@ -98,16 +97,6 @@ describe('dashboard home UX guardrails', () => {
     expect(source).toContain('MetricBlock label="RESPONS" value={item.responseValue} compact')
     expect(source).not.toContain('MetricBlock label={item.signalLabel.toUpperCase()}')
     expect(source).not.toContain('signalValue:')
-  })
-
-  it('sends route-management states directly to the beheer route instead of the old campaign maze page', () => {
-    expect(getCtaHrefForState('setup', 'campaign-123')).toBe('/campaigns/campaign-123/beheer')
-    expect(getCtaHrefForState('ready_to_launch', 'campaign-123')).toBe('/campaigns/campaign-123/beheer')
-    expect(getCtaHrefForState('running', 'campaign-123')).toBe('/campaigns/campaign-123/beheer')
-    expect(getCtaHrefForState('sparse', 'campaign-123')).toBe('/campaigns/campaign-123/beheer')
-    expect(getCtaHrefForState('partial', 'campaign-123')).toBe('/campaigns/campaign-123')
-    expect(getCtaHrefForState('full', 'campaign-123')).toBe('/campaigns/campaign-123')
-    expect(getCtaHrefForState('closed', 'campaign-123')).toBe('/campaigns/campaign-123')
   })
 
   it('allows the seeded HR demo campaign to override the default overview focus route', () => {

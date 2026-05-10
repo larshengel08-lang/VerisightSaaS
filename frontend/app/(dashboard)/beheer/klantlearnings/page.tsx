@@ -15,6 +15,7 @@ import {
 } from '@/lib/action-center-exit'
 import {
   DashboardPanel,
+  DashboardDisclosure,
   DashboardSection,
 } from '@/components/dashboard/dashboard-primitives'
 import { finalizeActionCenterPreviewItem } from '@/lib/action-center-live'
@@ -511,19 +512,30 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
         title="Dossierlog en bounded opvolging"
         description="Bewuste delta ten opzichte van de preview: de echte dossierbron blijft zichtbaar onder de nieuwe surface, zodat admin-first opvolging en dossierbron op current main bij elkaar blijven."
       >
-        <PilotLearningWorkbench
-          orgs={exitOrgs}
-          campaigns={exitCampaigns}
-          campaignStats={exitCampaignStats}
-          leads={exitLeads as ContactRequestRecord[]}
-          dossiers={exitDossiers}
-          checkpoints={exitCheckpoints}
-          reviewDecisions={reviewDecisions}
-          activeClientAccessByOrg={exitActiveClientAccessByOrg}
-          pendingClientInvitesByOrg={exitPendingClientInvitesByOrg}
-          initialLeadId={initialExitLeadId}
-          initialCampaignId={initialExitCampaignId}
-        />
+        <DashboardDisclosure
+          surface="ops"
+          title="Open dossierbron"
+          description="Gebruik deze werkvloer alleen wanneer je echt in checkpoints, dossierbron of campaignkoppelingen moet werken."
+          badge={
+            <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--bg)] px-3 py-1 text-xs font-medium text-[color:var(--text)]">
+              {exitDossiers.length} dossiers
+            </span>
+          }
+        >
+          <PilotLearningWorkbench
+            orgs={exitOrgs}
+            campaigns={exitCampaigns}
+            campaignStats={exitCampaignStats}
+            leads={exitLeads as ContactRequestRecord[]}
+            dossiers={exitDossiers}
+            checkpoints={exitCheckpoints}
+            reviewDecisions={reviewDecisions}
+            activeClientAccessByOrg={exitActiveClientAccessByOrg}
+            pendingClientInvitesByOrg={exitPendingClientInvitesByOrg}
+            initialLeadId={initialExitLeadId}
+            initialCampaignId={initialExitCampaignId}
+          />
+        </DashboardDisclosure>
       </DashboardSection>
     </div>
   )

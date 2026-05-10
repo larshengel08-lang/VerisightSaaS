@@ -11,8 +11,8 @@ describe('admin color semantics', () => {
       'utf8',
     )
 
-    expect(primitivesSource).toContain("blue: 'border-[#dfe6ea] bg-[#fbfcfd]'")
-    expect(primitivesSource).toContain("blue: 'text-[color:var(--text)]'")
+    expect(primitivesSource).toContain('blue: "border-[#dfe6ea] bg-[#fbfcfd]"')
+    expect(primitivesSource).toContain('blue: "text-[color:var(--text)]"')
 
     expect(beheerSource).toContain("tone: setupProgressCount === 4 ? 'emerald' : 'amber'")
     expect(beheerSource).toContain("tone={openFollowUpCount > 0 ? 'amber' : 'slate'}")
@@ -22,8 +22,8 @@ describe('admin color semantics', () => {
 
     expect(contactSource).toContain("tone: Object.keys(linkedCampaignsByLead).length > 0 ? 'slate' : 'slate'")
 
-    expect(learningsSource).toContain("tone: leadLinkedDossiers > 0 ? 'slate' : 'slate'")
-    expect(learningsSource).toContain("tone: campaignLinkedDossiers > 0 ? 'slate' : 'slate'")
-    expect(learningsSource).toContain("tone={leads.length > 0 ? 'slate' : 'slate'}")
+    expect(learningsSource).toContain("surface=\"ops\"")
+    expect(learningsSource).toContain("title=\"Ontbrekende configuratie\" body={configError} tone=\"amber\"")
+    expect(learningsSource).toContain("title=\"Backendfout\" body={loadError} tone=\"amber\"")
   })
 })

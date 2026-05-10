@@ -37,6 +37,7 @@ export function DashboardShellFrame({
   campaigns: DashboardShellCampaignRef[]
   children: React.ReactNode
 }) {
+  void canManageActionCenterAssignments
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
@@ -46,22 +47,33 @@ export function DashboardShellFrame({
     () =>
       buildDashboardShellNavigation({
         isAdmin,
-        canManageActionCenterAssignments,
         shellMode,
         currentCampaignPath,
         campaigns,
         portfolioCounts,
       }),
-    [campaigns, canManageActionCenterAssignments, currentCampaignPath, isAdmin, portfolioCounts, shellMode],
+    [campaigns, currentCampaignPath, isAdmin, portfolioCounts, shellMode],
   )
   const isActionCenter = pathname.startsWith('/action-center')
+  const actionCenterView = searchParams.get('view')
   const accountLabel = userEmail.split('@')[1]?.split('.')[0] ?? 'Verisight'
   const accountName = accountLabel.charAt(0).toUpperCase() + accountLabel.slice(1)
   const mobileItems = isActionCenter ? ACTION_CENTER_NAV : [...navigation.modules, ...navigation.admin]
   const showReportsQuickLink = shellMode === 'full' && !isActionCenter
-  const activeAcHref = ACTION_CENTER_NAV.find(
-    (item) => pathname === item.href || pathname.startsWith(item.href + '/'),
-  )?.href ?? '/action-center'
+  const activeAcHref = ACTION_CENTER_NAV.find((item) => {
+    const itemUrl = new URL(item.href, 'http://localhost')
+    const itemView = itemUrl.searchParams.get('view')
+
+    if (!pathname.startsWith('/action-center')) {
+      return false
+    }
+
+    if (!itemView) {
+      return !actionCenterView
+    }
+
+    return actionCenterView === itemView
+  })?.href ?? '/action-center'
 
   return (
     <div className="min-h-screen bg-[color:var(--bg)] text-[color:var(--ink)]">
@@ -198,7 +210,12 @@ export function DashboardShellFrame({
                   {mobileItems.map((item) => {
                     const href = item.href
                     const disabled = 'disabled' in item ? item.disabled : false
-                    const isActive = 'key' in item ? item.key === activeModule : pathname === item.href || pathname.startsWith(item.href + '/')
+                    const isActive =
+                      'key' in item
+                        ? item.key === activeModule
+                        : isActionCenter
+                          ? href === activeAcHref
+                          : pathname === item.href || pathname.startsWith(item.href + '/')
 
                     if (!href || disabled) {
                       return (

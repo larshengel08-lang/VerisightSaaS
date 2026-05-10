@@ -26,7 +26,6 @@ import {
   getLiveActionCenterSummary,
   type ActionCenterWorkspaceReadbackSummary,
 } from '@/lib/action-center-live'
-import { buildActionCenterTeamRows } from '@/lib/action-center-teams-view'
 import type {
   ActionCenterPreviewItem,
   ActionCenterPreviewManagerOption,
@@ -34,7 +33,6 @@ import type {
   ActionCenterPreviewStatus,
   ActionCenterPreviewView,
 } from '@/lib/action-center-preview-model'
-import { ActionCenterTeamsView } from '@/components/dashboard/action-center-teams-view'
 import type {
   ActionCenterManagerActionThemeKey,
   ActionCenterManagerResponse,
@@ -627,6 +625,63 @@ function getViewCopy(view: ActionCenterPreviewView, selectedTitle: string | null
   }
 }
 
+function buildTeamRows(items: ActionCenterPreviewItem[]) {
+  const now = new Date()
+  const rows = new Map<
+    string,
+    {
+      id: string
+      orgId: string | null
+      scopeType: 'department' | 'item' | 'org'
+      label: string
+      peopleCount: number
+      currentManagerId: string | null | undefined
+      currentManagerName: string | null
+      openActions: number
+      reviewSoonCount: number
+      hasOwnerGap: boolean
+    }
+  >()
+
+  for (const item of items) {
+    const current = rows.get(item.teamId) ?? {
+      id: item.teamId,
+      orgId: item.orgId ?? null,
+      scopeType: item.scopeType ?? 'department',
+      label: item.teamLabel,
+      peopleCount: item.peopleCount,
+      currentManagerId: item.ownerId,
+      currentManagerName: item.ownerName,
+      openActions: 0,
+      reviewSoonCount: 0,
+      hasOwnerGap: false,
+    }
+
+    current.peopleCount = Math.max(current.peopleCount, item.peopleCount)
+    if (!current.currentManagerId && item.ownerId) {
+      current.currentManagerId = item.ownerId
+    }
+    if (!current.currentManagerName && item.ownerName) {
+      current.currentManagerName = item.ownerName
+    }
+    if (item.status !== 'afgerond' && item.status !== 'gestopt') {
+      current.openActions += 1
+    }
+    if (getReviewBucket(item.reviewDate, now) === 'deze-week') {
+      current.reviewSoonCount += 1
+    }
+    if (!item.ownerName) {
+      current.hasOwnerGap = true
+    }
+    rows.set(item.teamId, current)
+  }
+
+  return [...rows.values()].sort((left, right) => {
+    if (right.openActions !== left.openActions) return right.openActions - left.openActions
+    return left.label.localeCompare(right.label)
+  })
+}
+
 function getInitialFollowUpFormState(args: {
   item: ActionCenterPreviewItem | null
   assignmentOptions: ActionCenterPreviewManagerOption[]
@@ -803,8 +858,8 @@ export function ActionCenterPreview({
   hideSidebar = false,
   boundedOverviewOnly = false,
 }: Props) {
-  const initialSelectedItem =
-    initialItems.find((item) => item.id === initialSelectedItemId) ?? initialItems[0] ?? null
+  const explicitlySelectedInitialItem = initialItems.find((item) => item.id === initialSelectedItemId) ?? null
+  const initialSelectedItem = explicitlySelectedInitialItem ?? (boundedOverviewOnly ? null : initialItems[0] ?? null)
   const [items, setItems] = useState(() => initialItems.map((item) => finalizeActionCenterPreviewItem(item)))
   const [activeView, setActiveView] = useState<ActionCenterPreviewView>(initialView)
   const [selectedItemId, setSelectedItemId] = useState(initialSelectedItem?.id ?? null)
@@ -827,13 +882,19 @@ export function ActionCenterPreview({
   const deferredSearchQuery = useDeferredValue(searchQuery)
 
   useEffect(() => {
-    if (!selectedItemId && items[0]) {
+    if (!boundedOverviewOnly && !selectedItemId && items[0]) {
       setSelectedItemId(items[0].id)
     }
     if (!selectedTeamId && items[0]) {
       setSelectedTeamId(items[0].teamId)
     }
-  }, [items, selectedItemId, selectedTeamId])
+  }, [boundedOverviewOnly, items, selectedItemId, selectedTeamId])
+
+  useEffect(() => {
+    if (boundedOverviewOnly && activeView !== 'overview') {
+      setActiveView('overview')
+    }
+  }, [activeView, boundedOverviewOnly])
 
   const normalizedQuery = deferredSearchQuery.trim().toLowerCase()
   const filteredItems = items
@@ -867,7 +928,11 @@ export function ActionCenterPreview({
       return compareReviewDate(left.reviewDate, right.reviewDate)
     })
 
-  const selectedItem = filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? filteredItems[0] ?? items[0] ?? null
+  const selectedItem = selectedItemId
+    ? filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? null
+    : boundedOverviewOnly
+      ? null
+      : filteredItems[0] ?? items[0] ?? null
   const managerActionSurfaceCopy = getManagerActionSurfaceCopy(selectedItem)
   const selectedRouteSummary = selectedItem ? getRouteSummaryDisplay(selectedItem) : null
   useEffect(() => {
@@ -906,7 +971,7 @@ export function ActionCenterPreview({
     setFollowUpForm(getInitialFollowUpFormState({ item: selectedItem, assignmentOptions }))
     setFollowUpError(null)
   }, [assignmentOptions, selectedItem])
-  const teamRows = buildActionCenterTeamRows(items)
+  const teamRows = buildTeamRows(items)
   const selectedTeam = teamRows.find((team) => team.id === selectedTeamId) ?? teamRows[0] ?? null
   const allSources = [...new Set(items.map((item) => item.sourceLabel))]
   const workspaceReadbackSummary = useMemo(() => getLiveActionCenterSummary(items), [items])
@@ -929,8 +994,22 @@ export function ActionCenterPreview({
   const ownerCoverageCount = teamRows.length - missingManagerCount
   const selectedTeamItems = items.filter((item) => item.teamId === selectedTeam?.id)
   const teamOpenItems = selectedTeamItems.filter((item) => item.status !== 'afgerond' && item.status !== 'gestopt')
+  const teamReviewItems = selectedTeamItems
+    .filter((item) => item.reviewDate)
+    .sort((left, right) => compareReviewDate(left.reviewDate, right.reviewDate))
+    .slice(0, 3)
   const focusItem = visibleDueItems[0] ?? visibleItems[0] ?? null
   const viewCopy = getViewCopy(activeView, activeView === 'overview' && selectedItem ? null : activeView === 'overview' ? null : selectedItem?.title ?? null)
+  const overviewStatusCounts = useMemo(
+    () => ({
+      activeRoutes: workspaceReadbackSummary.activeRouteCount,
+      reviewReady: items.filter((item) => item.status === 'te-bespreken' || item.status === 'reviewbaar').length,
+      blocked: workspaceReadbackSummary.blockedCount,
+      unavailable: null as number | null,
+      closed: workspaceReadbackSummary.closedRouteCount,
+    }),
+    [items, workspaceReadbackSummary.activeRouteCount, workspaceReadbackSummary.blockedCount, workspaceReadbackSummary.closedRouteCount],
+  )
   const allowLocalDraftEditing = !readOnly && !managerResponseEndpoint
   const canUseManagerResponseFlow =
     Boolean(
@@ -1351,7 +1430,7 @@ export function ActionCenterPreview({
     }
   }, [missingManagerCount, openItems.length, overdueReviews.length, selectedTeam, teamOpenItems.length, thisWeekReviews.length])
 
-  const headerTabs = hideSidebar
+  const headerTabs = hideSidebar && !boundedOverviewOnly
     ? SIDEBAR_ITEMS.map((item) => ({
         key: item.key,
         label: item.label,
@@ -1369,7 +1448,6 @@ export function ActionCenterPreview({
         onClick: () => setActiveView(item.key),
       }))
     : []
-  const showBoundedOverviewOnly = boundedOverviewOnly && activeView === 'overview'
 
   return (
     <div
@@ -1380,7 +1458,8 @@ export function ActionCenterPreview({
       }
     >
       <div className={`flex flex-col lg:flex-row ${hideSidebar ? '' : 'min-h-[980px]'}`}>
-        <aside className={`flex w-full shrink-0 flex-col bg-[#182231] text-[#f6f1e9] lg:w-[286px] ${hideSidebar ? 'hidden' : ''}`}>
+        {!hideSidebar ? (
+        <aside className="flex w-full shrink-0 flex-col bg-[#182231] text-[#f6f1e9] lg:w-[286px]">
           <div className="border-b border-white/6 px-6 py-6">
             <Link href="/dashboard" className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#ff9b4a] text-base font-semibold text-[#182231]">
@@ -1451,14 +1530,19 @@ export function ActionCenterPreview({
             </div>
           </div>
         </aside>
+        ) : null}
 
         <div className="min-w-0 flex-1">
           <div className={`border-b border-[#e6ddd2] px-6 py-6 ${hideSidebar ? 'bg-[#fcfaf7]' : 'bg-[#f7f2ea]'}`}>
             <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8b8174]">{viewCopy.eyebrow}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8b8174]">
+                  {boundedOverviewOnly ? 'Action Center' : viewCopy.eyebrow}
+                </p>
                 <p className="mt-3 text-sm text-[#8b8174]">
-                  {activeView === 'overview'
+                  {boundedOverviewOnly
+                    ? 'Action Center / Overzicht'
+                    : activeView === 'overview'
                     ? 'Suite / Action Center'
                     : activeView === 'actions'
                       ? 'Action Center / Acties'
@@ -1470,9 +1554,13 @@ export function ActionCenterPreview({
                   {activeView === 'actions' && selectedItem ? ` / ${selectedItem.code}` : ''}
                 </p>
                 <h1 className="mt-3 text-[2.6rem] font-semibold tracking-[-0.055em] text-[#132033]">
-                  {viewCopy.title}
+                  {boundedOverviewOnly ? 'Action Center' : viewCopy.title}
                 </h1>
-                <p className="mt-4 max-w-3xl text-[1.02rem] leading-8 text-[#42556b]">{viewCopy.description}</p>
+                <p className="mt-4 max-w-3xl text-[1.02rem] leading-8 text-[#42556b]">
+                  {boundedOverviewOnly
+                    ? 'Overzicht van managementopvolging en acties.'
+                    : viewCopy.description}
+                </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -1497,7 +1585,7 @@ export function ActionCenterPreview({
                 ) : null}
               </div>
             </div>
-            {hideSidebar && !boundedOverviewOnly ? (
+            {hideSidebar && headerTabs.length > 0 ? (
               <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-[#eee6da] pt-4">
                 {headerTabs.map((item) => (
                   <button
@@ -1528,93 +1616,57 @@ export function ActionCenterPreview({
 
           <div className="px-6 py-6">
             {activeView === 'overview' ? (
+              boundedOverviewOnly ? (
+                <ActionCenterBoundedOverview
+                  visibleItems={visibleItems}
+                  blockedItems={visibleItems.filter((item) => item.status === 'geblokkeerd').slice(0, 4)}
+                  upcomingReviews={upcomingReviews}
+                  overviewStatusCounts={overviewStatusCounts}
+                  selectedItem={selectedItem}
+                  onSelectItem={setSelectedItemId}
+                  selectedItemHref={selectedItemHref}
+                  workbenchLabel={workbenchLabel}
+                />
+              ) : (
               <div className="space-y-8">
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr),minmax(320px,0.95fr)]">
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr),minmax(320px,0.85fr)]">
                   <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                     <div className="flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
                       <div className="max-w-2xl">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">
-                          {showBoundedOverviewOnly ? 'Overzicht' : 'Managementritme'}
-                        </p>
-                        <h2 className="mt-3 text-[2rem] font-semibold tracking-[-0.05em] text-[#132033]">
-                          {showBoundedOverviewOnly ? 'Wat vraagt nu aandacht?' : 'Wat moet nu gelezen en opgepakt worden?'}
-                        </h2>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Managementritme</p>
+                        <h2 className="mt-3 text-[2rem] font-semibold tracking-[-0.05em] text-[#132033]">Wat vraagt nu als eerste opvolging?</h2>
                         <p className="mt-4 max-w-xl text-[1rem] leading-8 text-[#4f6175]">
-                          {showBoundedOverviewOnly
-                            ? 'Overzicht van managementopvolging en acties.'
-                            : 'Action Center bundelt live opvolging uit campagnes en dossiers tot een eerste overzicht van wat nu aandacht vraagt.'}
+                          Gebruik deze lijst als eerste werklaag. Hier zie je welke routes nu open staan, wie eraan hangt en welke reviewdruk als eerste meespeelt.
                         </p>
                       </div>
-                      <div className={`grid gap-3 ${showBoundedOverviewOnly ? 'sm:grid-cols-2 xl:grid-cols-4' : 'sm:grid-cols-3 xl:max-w-[34rem] xl:flex-1'}`}>
-                        {showBoundedOverviewOnly ? (
-                          <>
-                            <OverviewStat
-                              label="Actieve routes"
-                              value={`${workspaceReadbackSummary.activeRouteCount}`}
-                              detail={`${workspaceReadbackSummary.routeCount} zichtbare routes`}
-                              accent="teal"
-                            />
-                            <OverviewStat
-                              label="Te bespreken / reviewbaar"
-                              value={`${items.filter((item) => item.status === 'te-bespreken' || item.status === 'reviewbaar').length}`}
-                              detail={`${overdueReviews.length + thisWeekReviews.length} reviews nu of deze week`}
-                              accent="amber"
-                            />
-                            <OverviewStat
-                              label="Geblokkeerd"
-                              value={`${workspaceReadbackSummary.blockedCount}`}
-                              detail={`${items.filter((item) => item.status === 'geblokkeerd').length} zichtbare blokkades`}
-                              accent="red"
-                            />
-                            <OverviewStat
-                              label="Afgerond"
-                              value={`${workspaceReadbackSummary.closedRouteCount}`}
-                              detail={`${workspaceReadbackSummary.closedRouteCount} routes met vastgelegd resultaat`}
-                              accent="teal"
-                            />
-                          </>
-                        ) : null}
-                        {showBoundedOverviewOnly ? null : (
-                          <>
-                            <OverviewStat
-                              label="Nu bespreken"
-                              value={`${dueItems.length}`}
-                              detail={`${items.filter((item) => item.status === 'te-bespreken').length} klaar voor gesprek`}
-                              accent="amber"
-                            />
-                            <OverviewStat
-                              label="Review < 14 dagen"
-                              value={`${overdueReviews.length + thisWeekReviews.length + nextWeekReviews.length}`}
-                              detail={`${overdueReviews.length} achterstallig`}
-                              accent="red"
-                            />
-                            <OverviewStat
-                              label="Eigenaarschap gedekt"
-                              value={`${ownerCoverageCount}`}
-                              detail={teamRows.length > 0 ? `van ${teamRows.length} teams expliciet gekoppeld` : 'nog geen teams zichtbaar'}
-                              accent="teal"
-                            />
-                          </>
-                        )}
+                      <div className="grid gap-3 sm:grid-cols-2 xl:max-w-[24rem] xl:flex-1">
+                        <OverviewStat
+                          label="Nu bespreken"
+                          value={`${dueItems.length}`}
+                          detail={`${items.filter((item) => item.status === 'te-bespreken').length} klaar voor gesprek`}
+                          accent="amber"
+                        />
+                        <OverviewStat
+                          label="Review < 14 dagen"
+                          value={`${overdueReviews.length + thisWeekReviews.length + nextWeekReviews.length}`}
+                          detail={`${overdueReviews.length} achterstallig`}
+                          accent="red"
+                        />
                       </div>
                     </div>
 
                     <div className="mt-8 flex items-center justify-between gap-3 border-t border-[#ece4d8] pt-6">
                       <div>
                         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Nu in beeld</p>
-                        <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">
-                          {showBoundedOverviewOnly ? 'Acties en opvolging' : 'Eerste managementflow'}
-                        </h3>
+                        <h3 className="mt-2 text-[1.35rem] font-semibold tracking-[-0.03em] text-[#132033]">Eerste werklijst</h3>
                       </div>
-                      {showBoundedOverviewOnly ? null : (
-                        <button
-                          type="button"
-                          className="text-sm font-semibold text-[#4a5f74] transition hover:text-[#132033]"
-                          onClick={() => setActiveView('actions')}
-                        >
-                          Open alle acties
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        className="text-sm font-semibold text-[#4a5f74] transition hover:text-[#132033]"
+                        onClick={() => setActiveView('actions')}
+                      >
+                        Open actielijst
+                      </button>
                     </div>
                     <div className="mt-2 divide-y divide-[#ece4d8]">
                       {visibleItems.slice(0, 4).map((item) => (
@@ -1653,9 +1705,7 @@ export function ActionCenterPreview({
                   </section>
 
                   <aside className="rounded-[30px] bg-[#182231] px-7 py-7 text-white shadow-[0_22px_56px_rgba(19,32,51,0.18)]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">
-                      {showBoundedOverviewOnly ? 'Wat vraagt nu aandacht?' : 'Aanbevolen focus'}
-                    </p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Nu in focus</p>
                     <h2 className="mt-3 text-[1.8rem] font-semibold tracking-[-0.045em]">
                       {focusItem?.title ?? 'Action Center ritme staat klaar'}
                     </h2>
@@ -1672,10 +1722,11 @@ export function ActionCenterPreview({
                     </div>
 
                     <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.04] px-5 py-5">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Volgende stap</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/48">Waarom dit nu voorligt</p>
                       <p className="mt-3 text-base leading-7 text-white/86">
-                        {focusItem?.coreSemantics.actionFrame.firstStep ??
-                          'De eerste review en eigenaar worden automatisch zichtbaar zodra een dossier live staat.'}
+                        {focusItem?.coreSemantics.reviewSemantics.reviewReason ??
+                          focusItem?.reason ??
+                          'Zodra live opvolging zichtbaar is, landt hier automatisch de route die het eerst gesprek of verificatie vraagt.'}
                       </p>
                     </div>
 
@@ -1686,13 +1737,13 @@ export function ActionCenterPreview({
                         onClick={() => {
                           if (focusItem) {
                             setSelectedItemId(focusItem.id)
-                            setActiveView(showBoundedOverviewOnly ? 'overview' : 'actions')
-                          } else if (!showBoundedOverviewOnly) {
+                            setActiveView('actions')
+                          } else {
                             setActiveView('actions')
                           }
                         }}
                       >
-                        {showBoundedOverviewOnly ? 'Open detail' : 'Open focusactie'}
+                        Open focusactie
                       </button>
                       <Link
                         href={focusItem ? (itemHrefs[focusItem.id] ?? workbenchHref) : workbenchHref}
@@ -1701,87 +1752,48 @@ export function ActionCenterPreview({
                         {workbenchLabel}
                       </Link>
                     </div>
+
+                    <div className="mt-6 border-t border-white/10 pt-6">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Komende reviews</p>
+                      <div className="mt-4 space-y-2">
+                        {upcomingReviews.length === 0 ? (
+                          <div className="rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-4 text-sm leading-6 text-white/68">
+                            Nog geen reviewmomenten zichtbaar in deze selectie.
+                          </div>
+                        ) : (
+                          upcomingReviews.slice(0, 3).map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className="flex w-full items-start justify-between gap-4 rounded-[16px] border border-white/10 bg-white/[0.03] px-4 py-3.5 text-left transition hover:bg-white/[0.06]"
+                              onClick={() => {
+                                setSelectedItemId(item.id)
+                                setActiveView('reviews')
+                              }}
+                            >
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-white">{item.title}</p>
+                                <p className="mt-1 text-sm text-white/60">{getOwnerDisplayName(item.ownerName)}</p>
+                              </div>
+                              <span className="shrink-0 text-sm font-semibold text-[#ffb16e]">{item.reviewDateLabel}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-6 border-t border-white/10 pt-6">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">Leesbeeld in deze selectie</p>
+                      <div className="mt-4 space-y-3">
+                        <SignalRow label="Routebeeld" value={getWorkspaceRouteImageSummary(workspaceReadbackSummary)} dark />
+                        <SignalRow label="Besluitspoor" value={getWorkspaceDecisionTrailSummary(workspaceReadbackSummary)} dark />
+                        <SignalRow label="Vervolg over tijd" value={getWorkspaceContinuationSummary(workspaceReadbackSummary)} dark />
+                        <SignalRow label="Reviewdruk" value={getWorkspaceReviewPressureSummary(workspaceReadbackSummary)} dark />
+                      </div>
+                    </div>
                   </aside>
                 </div>
 
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr),minmax(320px,0.9fr)]">
-                  <section className="rounded-[28px] border border-[#e4d9cb] bg-white px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
-                    <div className="flex flex-col gap-5 border-b border-[#ece4d8] pb-6 lg:flex-row lg:items-end lg:justify-between">
-                      <div>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Reviewvenster</p>
-                        <h2 className="mt-2 text-[1.5rem] font-semibold tracking-[-0.04em] text-[#132033]">Komende 14 dagen</h2>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <ReviewWindowStat label="Achterstallig" value={`${overdueReviews.length}`} tone="red" />
-                        <ReviewWindowStat label="Deze week" value={`${thisWeekReviews.length}`} tone="amber" />
-                        <ReviewWindowStat label="Volgende week" value={`${nextWeekReviews.length}`} tone="slate" />
-                      </div>
-                    </div>
-
-                    <div className="mt-6 space-y-4">
-                      {upcomingReviews.length === 0 ? (
-                        <EmptyBlock text="Zodra reviewmomenten gepland zijn, komen ze hier automatisch in Action Center." />
-                      ) : (
-                        upcomingReviews.map((item) => (
-                          <button
-                            key={item.id}
-                            type="button"
-                            className="flex w-full items-start gap-4 rounded-[22px] border border-transparent px-1 py-2 text-left transition hover:border-[#ece4d8] hover:bg-[#fcfaf7]"
-                            onClick={() => {
-                              setSelectedItemId(item.id)
-                              setActiveView('reviews')
-                            }}
-                          >
-                            <div className="min-w-[72px] rounded-[18px] bg-[#fbf3ef] px-3 py-3 text-center text-[#d2574b]">
-                              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Review</p>
-                              <p className="mt-1 text-xl font-semibold">{item.reviewDateLabel}</p>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-[1.02rem] font-semibold leading-7 text-[#132033]">{item.title}</p>
-                                <p className="mt-1 text-sm text-[#6d6458]">
-                                  {getOwnerDisplayName(item.ownerName)} / {item.reviewRhythm}
-                                </p>
-                            </div>
-                            <div className="hidden text-right text-sm text-[#8b8174] xl:block">
-                              <p>{item.teamLabel}</p>
-                              <p className="mt-1">{item.sourceLabel}</p>
-                            </div>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  </section>
-
-                  {showBoundedOverviewOnly ? null : (
-                    <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Bestuurlijke teruglezing</p>
-                      <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#132033]">
-                        Wat is over deze zichtbare routes al bestuurlijk leesbaar?
-                      </h2>
-                      <p className="mt-4 text-sm leading-8 text-[#4f6175]">
-                        {readOnly
-                          ? 'Deze readback blijft bewust compact: hoeveel routes nog lopen, waar expliciete besluitmomenten zichtbaar zijn en waar vervolg over tijd al in beeld komt.'
-                          : 'Deze readback blijft bewust compact: routebeeld, besluitspoor, reviewdruk en vervolg over tijd blijven in dezelfde Action Center-overview leesbaar.'}
-                      </p>
-
-                      <div className="mt-6 space-y-3">
-                        <SignalRow label="Routebeeld" value={getWorkspaceRouteImageSummary(workspaceReadbackSummary)} />
-                        <SignalRow label="Besluitspoor" value={getWorkspaceDecisionTrailSummary(workspaceReadbackSummary)} />
-                        <SignalRow label="Vervolg over tijd" value={getWorkspaceContinuationSummary(workspaceReadbackSummary)} />
-                        <SignalRow label="Reviewdruk" value={getWorkspaceReviewPressureSummary(workspaceReadbackSummary)} />
-                      </div>
-
-                      <Link
-                        href={workbenchHref}
-                        className="mt-6 inline-flex rounded-full border border-[#ded3c6] bg-white px-4 py-2 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
-                      >
-                        {workbenchLabel}
-                      </Link>
-                    </section>
-                  )}
-                </div>
-
-                {showBoundedOverviewOnly ? null : (
                 <section className="rounded-[28px] border border-[#e4d9cb] bg-white shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
                   <div className="flex flex-col gap-4 border-b border-[#ece4d8] px-7 py-6 lg:flex-row lg:items-end lg:justify-between">
                     <div>
@@ -1862,8 +1874,8 @@ export function ActionCenterPreview({
                     </div>
                   </div>
                 </section>
-                )}
               </div>
+              )
             ) : null}
 
             {activeView === 'actions' ? (
@@ -2948,16 +2960,127 @@ export function ActionCenterPreview({
             ) : null}
 
             {activeView === 'teams' ? (
-              <ActionCenterTeamsView
-                items={filteredItems}
-                selectedTeamId={selectedTeamId}
-                onSelectTeam={setSelectedTeamId}
-                onNavigateToActions={(itemId) => {
-                  setSelectedItemId(itemId)
-                  setActiveView('actions')
-                }}
-                canAssignManagers={canAssignManagers}
-              />
+              selectedTeam ? (
+                <div className="space-y-8">
+                  <section className="rounded-[28px] border border-[#e4d9cb] bg-[#fcfaf7] px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                      <div className="max-w-2xl">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8d8377]">Teamcontext</p>
+                        <h2 className="mt-3 text-[1.9rem] font-semibold tracking-[-0.05em] text-[#132033]">{selectedTeam.label}</h2>
+                        <p className="mt-4 text-[1rem] leading-8 text-[#4f6175]">
+                          Deze teamread houdt de managementflow compact: wat staat nog open, welke reviews komen eraan en wie is hier de expliciete eigenaar?
+                        </p>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <OverviewStat label="Open acties" value={`${teamOpenItems.length}`} detail="zichtbaar in deze teamcontext" accent="amber" />
+                        <OverviewStat label="Review < 7 dagen" value={`${selectedTeam.reviewSoonCount}`} detail="vragen snel gesprek" accent="red" />
+                        <OverviewStat label="Mensen" value={`${selectedTeam.peopleCount}`} detail="in deze scope" accent="teal" />
+                      </div>
+                    </div>
+                  </section>
+
+                  <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr),minmax(320px,0.78fr)]">
+                    <section className="rounded-[28px] border border-[#e4d9cb] bg-white px-7 py-7 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                      <div className="flex items-center justify-between gap-3 border-b border-[#ece4d8] pb-5">
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Open teamacties</p>
+                          <h3 className="mt-2 text-[1.4rem] font-semibold tracking-[-0.03em] text-[#132033]">Wat ligt nu nog op tafel?</h3>
+                        </div>
+                        <p className="text-sm text-[#736b60]">{teamOpenItems.length} actief</p>
+                      </div>
+                      <div className="mt-6 space-y-4">
+                        {teamOpenItems.length === 0 ? (
+                          <EmptyBlock text="Voor dit team staan nu geen open opvolgacties meer zichtbaar." />
+                        ) : (
+                          teamOpenItems.map((item) => (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className="flex w-full items-start justify-between gap-4 rounded-[22px] border border-[#ebe1d5] bg-[#fcfaf7] px-5 py-5 text-left transition hover:border-[#d7cab9]"
+                              onClick={() => {
+                                setSelectedItemId(item.id)
+                                setActiveView('actions')
+                              }}
+                            >
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d6458]">
+                                  <MiniTag>{item.sourceLabel}</MiniTag>
+                                  <span>{getPriorityMeta(item.priority).label}</span>
+                                  <span className="text-[#b2a496]">/</span>
+                                  <span>{getOwnerDisplayName(item.ownerName)}</span>
+                                </div>
+                                <p className="mt-3 text-[1.08rem] font-semibold tracking-[-0.02em] text-[#132033]">{item.title}</p>
+                                <p className="mt-2 text-sm text-[#5d6f84]">
+                                  Review {item.reviewDateLabel}, ritme {item.reviewRhythm}
+                                </p>
+                              </div>
+                              <StatusPill status={item.status} />
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </section>
+
+                    <section className="space-y-6">
+                      <div className="rounded-[30px] bg-[#182231] px-7 py-7 text-white shadow-[0_22px_56px_rgba(19,32,51,0.18)]">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/45">Teamverantwoordelijke</p>
+                        <div className="mt-5 flex items-center gap-4">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/8 text-xl font-semibold">
+                            {getInitials(getTeamManagerDisplayName(selectedTeam.currentManagerName))}
+                          </div>
+                          <div>
+                            <p className="text-[1.4rem] font-semibold tracking-[-0.03em]">
+                              {getTeamManagerDisplayName(selectedTeam.currentManagerName)}
+                            </p>
+                            <p className="mt-1 text-sm text-white/58">Manager - {selectedTeam.label}</p>
+                          </div>
+                        </div>
+                        <div className="mt-6 grid grid-cols-3 gap-4">
+                          <DarkMetric label="Open" value={`${teamOpenItems.length}`} accent="text-white" />
+                          <DarkMetric label="Review < 7d" value={`${selectedTeam.reviewSoonCount}`} accent="text-[#ffb16e]" />
+                          <DarkMetric
+                            label="Geblokkeerd"
+                            value={`${teamOpenItems.filter((item) => item.status === 'geblokkeerd').length}`}
+                            accent="text-white"
+                          />
+                        </div>
+                        <p className="mt-6 text-sm leading-7 text-white/72">
+                          Deze teamrail blijft onderdeel van dezelfde omgeving en leest dus altijd mee met eigenaarschap en reviewplanning.
+                        </p>
+                      </div>
+
+                      <div className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6 shadow-[0_12px_36px_rgba(19,32,51,0.06)]">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Te bespreken deze week</p>
+                        <div className="mt-4 space-y-4">
+                          {teamReviewItems.length === 0 ? (
+                            <EmptyBlock text="Geen reviews meer gepland voor dit team in de huidige selectie." />
+                          ) : (
+                            teamReviewItems.map((item) => (
+                              <button
+                                key={item.id}
+                                type="button"
+                                className="w-full rounded-[18px] border border-[#efe7dc] bg-[#fcfaf7] px-4 py-4 text-left transition hover:border-[#d7cab9]"
+                                onClick={() => {
+                                  setSelectedItemId(item.id)
+                                  setActiveView('actions')
+                                }}
+                              >
+                                <p className="font-semibold text-[#132033]">{item.title}</p>
+                                <p className="mt-1 text-sm text-[#5d6f84]">Volgende bespreking {item.reviewDateLabel}</p>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </div>
+              ) : (
+                <EmptySection
+                  title="Nog geen teamcontext beschikbaar"
+                  body="Zodra ExitScan-dossiers aan een teamcontext zijn gekoppeld, verschijnt hier de compacte teamweergave."
+                />
+              )
             ) : null}
           </div>
         </div>
@@ -3145,28 +3268,271 @@ function SidebarGroup({
   )
 }
 
-function OverviewStat({
+function ActionCenterBoundedOverview({
+  visibleItems,
+  blockedItems,
+  upcomingReviews,
+  overviewStatusCounts,
+  selectedItem,
+  onSelectItem,
+  selectedItemHref,
+  workbenchLabel,
+}: {
+  visibleItems: ActionCenterPreviewItem[]
+  blockedItems: ActionCenterPreviewItem[]
+  upcomingReviews: ActionCenterPreviewItem[]
+  overviewStatusCounts: {
+    activeRoutes: number
+    reviewReady: number
+    blocked: number
+    unavailable: number | null
+    closed: number
+  }
+  selectedItem: ActionCenterPreviewItem | null
+  onSelectItem: (itemId: string) => void
+  selectedItemHref: string
+  workbenchLabel: string
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-3 md:grid-cols-3">
+        <ActionCenterBoundedCounter
+          label="Actieve routes"
+          value={`${overviewStatusCounts.activeRoutes}`}
+          detail="Nog in opvolging"
+          tone="teal"
+        />
+        <ActionCenterBoundedCounter
+          label="Aandacht nu"
+          value={`${overviewStatusCounts.reviewReady + overviewStatusCounts.blocked}`}
+          detail={`${overviewStatusCounts.blocked} geblokkeerd / ${overviewStatusCounts.reviewReady} reviewbaar`}
+          tone="red"
+        />
+        <ActionCenterBoundedCounter
+          label="Komende reviews"
+          value={`${upcomingReviews.length}`}
+          detail={upcomingReviews.length > 0 ? "In de huidige selectie" : "Nog niets gepland"}
+          tone="slate"
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-[#ebe1d5] pb-4 text-sm text-[#6d6458]">
+        <span>{overviewStatusCounts.closed} afgerond</span>
+        {typeof overviewStatusCounts.unavailable === 'number' ? (
+          <span>{overviewStatusCounts.unavailable} nog niet beschikbaar</span>
+        ) : null}
+        <span>{visibleItems.length} zichtbare route{visibleItems.length === 1 ? '' : 's'}</span>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr),minmax(320px,0.95fr)]">
+        <section className="rounded-[24px] border border-[#e4d9cb] bg-white">
+          <div className="grid xl:grid-cols-[minmax(0,2.6fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] gap-4 border-b border-[#ebe1d5] bg-[#faf6f0] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">
+            <span>Route</span>
+            <span>Eigenaar</span>
+            <span>Status</span>
+            <span>Volgende review</span>
+          </div>
+          <div className="divide-y divide-[#ebe1d5]">
+            {visibleItems.length === 0 ? (
+              <div className="p-6">
+                <EmptyBlock text="Geen zichtbare follow-through items in deze selectie." />
+              </div>
+            ) : (
+              visibleItems.map((item) => (
+                <ActionCenterBoundedRow
+                  key={item.id}
+                  item={item}
+                  selected={selectedItem?.id === item.id}
+                  onSelect={() => onSelectItem(item.id)}
+                />
+              ))
+            )}
+          </div>
+        </section>
+
+        <div className="space-y-6">
+          <aside className="rounded-[24px] border border-[#e4d9cb] bg-[#fcfaf7] px-6 py-6">
+            <div>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Nu signalen</p>
+                        <span className="text-xs text-[#7d7368]">{blockedItems.length} geblokkeerd</span>
+                      </div>
+              <div className="mt-4 space-y-3">
+                {blockedItems.length === 0 ? (
+                  <EmptyBlock text="Er staan nu geen geblokkeerde routes in deze selectie." />
+                ) : (
+                  blockedItems.slice(0, 3).map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="w-full rounded-[16px] border border-[#efe4d9] bg-white px-4 py-4 text-left transition hover:border-[#d2574b]"
+                      onClick={() => onSelectItem(item.id)}
+                    >
+                      <p className="text-sm font-semibold text-[#132033]">{item.title}</p>
+                      <p className="mt-1 text-sm text-[#6d6458]">{item.teamLabel}</p>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 border-t border-[#ebe1d5] pt-6">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Komende reviews</p>
+                <span className="text-xs text-[#7d7368]">{upcomingReviews.length}</span>
+              </div>
+              <div className="mt-4 space-y-2">
+                {upcomingReviews.length === 0 ? (
+                  <EmptyBlock text="Nog geen reviewmomenten zichtbaar in deze selectie." />
+                ) : (
+                  upcomingReviews.slice(0, 4).map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="flex w-full items-start justify-between gap-4 rounded-[16px] border border-[#ebe1d5] bg-white px-4 py-3.5 text-left transition hover:border-[#cdbfae]"
+                      onClick={() => onSelectItem(item.id)}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-[#132033]">{item.title}</p>
+                        <p className="mt-1 text-sm text-[#6d6458]">{getOwnerDisplayName(item.ownerName)}</p>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold text-[#5a7088]">{item.reviewDateLabel}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          </aside>
+
+          <section className="rounded-[24px] border border-[#e4d9cb] bg-white px-6 py-6">
+            {selectedItem ? (
+              <>
+                <div className="flex flex-wrap items-center gap-3">
+                  <StatusPill status={selectedItem.status} />
+                  <span className="text-sm font-semibold text-[#5a7088]">{selectedItem.code}</span>
+                </div>
+                <h2 className="mt-4 text-[1.55rem] font-semibold tracking-[-0.04em] text-[#132033]">{selectedItem.title}</h2>
+                <div className="mt-5 grid gap-3 text-sm text-[#42556b] sm:grid-cols-2">
+                  <BoundedDetailCard label="Eigenaar" value={getOwnerDisplayName(selectedItem.ownerName)} />
+                  <BoundedDetailCard label="Team" value={selectedItem.teamLabel} />
+                  <BoundedDetailCard label="Volgende review" value={selectedItem.reviewDateLabel} />
+                  <BoundedDetailCard label="Mensen" value={`${selectedItem.peopleCount}`} />
+                </div>
+                <div className="mt-6 border-t border-[#ebe1d5] pt-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Waarom dit nu aandacht vraagt</p>
+                  <p className="mt-3 text-sm leading-7 text-[#42556b]">
+                    {selectedItem.coreSemantics.reviewSemantics.reviewReason || selectedItem.reason}
+                  </p>
+                </div>
+                <div className="mt-5 border-t border-[#ebe1d5] pt-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Volgende stap in deze route</p>
+                  <p className="mt-3 text-sm leading-7 text-[#42556b]">
+                    {selectedItem.coreSemantics.actionFrame.firstStep || selectedItem.nextStep}
+                  </p>
+                </div>
+                <Link
+                  href={selectedItemHref}
+                  className="mt-5 inline-flex min-h-11 items-center rounded-full border border-[#ded3c6] bg-[#fcfaf7] px-4.5 py-2.5 text-sm font-semibold text-[#1a2533] transition hover:border-[#1a2533]"
+                >
+                  {workbenchLabel}
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Gekozen route</p>
+                <h2 className="mt-3 text-[1.45rem] font-semibold tracking-[-0.04em] text-[#132033]">Kies eerst een route</h2>
+                <p className="mt-3 text-sm leading-7 text-[#42556b]">
+                  Selecteer een item uit de lijst om status, scope, eigenaar en reviewdiscipline in detail te zien.
+                </p>
+              </>
+            )}
+          </section>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ActionCenterBoundedCounter({
   label,
   value,
   detail,
-  accent,
+  tone,
 }: {
   label: string
   value: string
   detail: string
-  accent: 'amber' | 'red' | 'teal'
+  tone: 'teal' | 'amber' | 'red' | 'slate'
 }) {
-  const accentClass =
-    accent === 'amber' ? 'bg-[#ff9b4a]' : accent === 'red' ? 'bg-[#ef6e64]' : 'bg-[#70b7aa]'
+  const toneClass =
+    tone === 'teal'
+      ? 'bg-[#70b7aa]'
+      : tone === 'amber'
+        ? 'bg-[#ff9b4a]'
+        : tone === 'red'
+          ? 'bg-[#ef6e64]'
+          : 'bg-[#9b9387]'
 
   return (
-    <div className="rounded-[18px] border border-[#e6ddd2] bg-white px-4 py-3.5">
+    <div className="rounded-[18px] border border-[#e6ddd2] bg-white px-4 py-4">
       <div className="flex items-center gap-2">
-        <span className={`h-2.5 w-2.5 rounded-full ${accentClass}`} />
+        <span className={`h-2.5 w-2.5 rounded-full ${toneClass}`} />
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7d7368]">{label}</p>
       </div>
       <p className="dash-number mt-3 text-[1.95rem] font-semibold tracking-[-0.05em] text-[#132033]">{value}</p>
       <p className="mt-1 text-sm text-[#6d6458]">{detail}</p>
+    </div>
+  )
+}
+
+function ActionCenterBoundedRow({
+  item,
+  selected,
+  onSelect,
+}: {
+  item: ActionCenterPreviewItem
+  selected: boolean
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      className={`grid w-full gap-4 px-6 py-4 text-left transition hover:bg-[#fcfaf7] xl:grid-cols-[minmax(0,2.6fr)_minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] ${
+        item.status === 'geblokkeerd' ? 'border-l-4 border-l-[#d2574b]' : ''
+      } ${selected ? 'bg-[#fcfaf7]' : 'bg-white'}`}
+      onClick={onSelect}
+    >
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d6458]">
+          <MiniTag>{item.sourceLabel}</MiniTag>
+          <PriorityInline priority={item.priority} />
+          <span className="text-[#b2a496]">/</span>
+          <span>{item.teamLabel}</span>
+        </div>
+        <p className="mt-3 text-[1.02rem] font-semibold leading-7 text-[#132033]">{item.title}</p>
+        <p className="mt-2 text-sm leading-6 text-[#4f6175]">{item.summary}</p>
+      </div>
+      <div className="text-sm text-[#132033]">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3ece3] text-xs font-semibold text-[#5f564a]">
+            {getInitials(getOwnerDisplayName(item.ownerName))}
+          </span>
+          <span className="font-semibold">{getOwnerDisplayName(item.ownerName)}</span>
+        </div>
+      </div>
+      <div>
+        <StatusPill status={item.status} />
+      </div>
+      <div className="text-sm font-semibold text-[#5a7088]">{item.reviewDateLabel}</div>
+    </button>
+  )
+}
+
+function BoundedDetailCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[16px] bg-[#fcfaf7] px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
+      <p className="mt-2 text-sm font-semibold text-[#132033]">{value}</p>
     </div>
   )
 }
@@ -3240,6 +3606,32 @@ function ReviewLane({
   )
 }
 
+function OverviewStat({
+  label,
+  value,
+  detail,
+  accent,
+}: {
+  label: string
+  value: string
+  detail: string
+  accent: 'amber' | 'red' | 'teal'
+}) {
+  const accentClass =
+    accent === 'amber' ? 'bg-[#ff9b4a]' : accent === 'red' ? 'bg-[#ef6e64]' : 'bg-[#70b7aa]'
+
+  return (
+    <div className="rounded-[18px] border border-[#e6ddd2] bg-white px-4 py-3.5">
+      <div className="flex items-center gap-2">
+        <span className={`h-2.5 w-2.5 rounded-full ${accentClass}`} />
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#7d7368]">{label}</p>
+      </div>
+      <p className="dash-number mt-3 text-[1.95rem] font-semibold tracking-[-0.05em] text-[#132033]">{value}</p>
+      <p className="mt-1 text-sm text-[#6d6458]">{detail}</p>
+    </div>
+  )
+}
+
 function PriorityInline({ priority }: { priority: ActionCenterPreviewPriority }) {
   const meta = getPriorityMeta(priority)
   return <span className="text-[#d05f3f]">{meta.label}</span>
@@ -3299,11 +3691,17 @@ function FocusSummaryRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-function SignalRow({ label, value }: { label: string; value: string }) {
+function SignalRow({ label, value, dark = false }: { label: string; value: string; dark?: boolean }) {
   return (
-    <div className="rounded-[18px] border border-[#e6ddd2] bg-white px-4 py-4">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">{label}</p>
-      <p className="mt-2 text-sm leading-7 text-[#42556b]">{value}</p>
+    <div
+      className={
+        dark
+          ? 'rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-4'
+          : 'rounded-[18px] border border-[#e6ddd2] bg-white px-4 py-4'
+      }
+    >
+      <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${dark ? 'text-white/45' : 'text-[#8d8377]'}`}>{label}</p>
+      <p className={`mt-2 text-sm leading-7 ${dark ? 'text-white/78' : 'text-[#42556b]'}`}>{value}</p>
     </div>
   )
 }

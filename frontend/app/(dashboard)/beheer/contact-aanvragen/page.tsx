@@ -50,6 +50,7 @@ export default async function ContactAanvragenPage() {
 
   const { rows, configError, loadError } = await getContactRequestsForAdmin(50)
   const pendingCount = rows.filter((row) => !row.notification_sent).length
+  const hasSourceIssue = Boolean(configError || loadError)
   const { data: linkedDeliveryRaw } = orgIds.length
     ? await supabase
         .from('campaign_delivery_records')
@@ -79,6 +80,12 @@ export default async function ContactAanvragenPage() {
     })
     return acc
   }, {})
+  const summaryAnchors = hasSourceIssue
+    ? [
+        { id: 'bronstatus', label: 'Bronstatus' },
+        { id: 'leadlijst', label: 'Leadlijst' },
+      ]
+    : [{ id: 'leadlijst', label: 'Leadlijst' }]
 
   return (
     <div className="space-y-6">
@@ -86,7 +93,7 @@ export default async function ContactAanvragenPage() {
         surface="ops"
         eyebrow="Adminroute voor website-aanvragen"
         title="Operationele leadtriage"
-        description="Werk direct de triage, handoff en learningstatus bij voor nieuwe website-aanvragen. Deze adminroute blijft utilitair: routecontext, gewenste timing, notificatiestatus en vervolgstap staan voorop."
+        description="Werk de triage, handoff en learningstatus bij voor nieuwe website-aanvragen. Routecontext, gewenste timing, notificatiestatus en vervolgstap staan hier voorop."
         tone="slate"
         meta={
           <>
@@ -132,9 +139,7 @@ export default async function ContactAanvragenPage() {
               <span className="font-semibold"> notificatie</span>, <span className="font-semibold">handoff</span> en
               <span className="font-semibold"> foutreden</span>.
             </p>
-            <p className="text-xs text-slate-500">
-              Geen buyer-facing dashboardframing hier; gebruik per rij de actieknop om buyer-vraag, trustfrictie en eerste hypothese meteen in het learningdossier te zetten.
-            </p>
+            <p className="text-xs text-slate-500">Gebruik per rij de actieknop om de intake direct in het learningdossier te landen.</p>
           </div>
         }
       />
@@ -161,33 +166,25 @@ export default async function ContactAanvragenPage() {
             tone: Object.keys(linkedCampaignsByLead).length > 0 ? 'slate' : 'slate',
           },
         ]}
-        anchors={[
-          { id: 'issues', label: 'Issues' },
-          { id: 'leadlijst', label: 'Leadlijst' },
-        ]}
+        anchors={summaryAnchors}
       />
 
-      {configError ? (
+      {hasSourceIssue ? (
         <DashboardSection
-          id="issues"
+          id="bronstatus"
           surface="ops"
-          eyebrow="Config"
-          title="Leadinput niet beschikbaar"
-          description="De adminroute is bereikbaar, maar de backend kan de aanvragen nog niet server-side ophalen."
+          eyebrow="Bronstatus"
+          title="Leadinput is nog niet volledig bruikbaar"
+          description="De adminroute zelf werkt, maar de bronlaag onder de intake is nog niet volledig beschikbaar. Gebruik deze statuslaag alleen om te zien wat de triage nu nog blokkeert."
         >
-          <DashboardPanel surface="ops" title="Ontbrekende configuratie" body={configError} tone="amber" />
-        </DashboardSection>
-      ) : null}
-
-      {loadError ? (
-        <DashboardSection
-          id={configError ? undefined : 'issues'}
-          surface="ops"
-          eyebrow="Load"
-          title="Aanvragen konden niet worden geladen"
-          description="De adminroute werkt, maar de backendrespons was niet bruikbaar voor operationele triage."
-        >
-          <DashboardPanel surface="ops" title="Backendfout" body={loadError} tone="amber" />
+          <div className="grid gap-4 lg:grid-cols-2">
+            {configError ? (
+              <DashboardPanel surface="ops" title="Ontbrekende configuratie" body={configError} tone="amber" />
+            ) : null}
+            {loadError ? (
+              <DashboardPanel surface="ops" title="Backendfout" body={loadError} tone="amber" />
+            ) : null}
+          </div>
         </DashboardSection>
       ) : null}
 

@@ -11,6 +11,7 @@ describe("reports route shell", () => {
     expect(source).toContain("Klaar voor bespreking");
     expect(source).toContain("Open campagnedetail");
     expect(source).toContain("Action Center");
+    expect(source).not.toContain("Van rapport naar opvolging");
   });
 
   it("keeps filtering and library access tied to real report readiness", () => {
@@ -29,7 +30,7 @@ describe("reports route shell", () => {
     const source = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
 
     expect(source).toContain("getReportEntryBridge");
-    expect(source).toContain("Ga naar campaign detail");
+    expect(source).toContain("Open campagnedetail");
     expect(source).not.toContain("getReportEntryHref");
     expect(source).not.toContain('entry.bridgeState === "active"');
     expect(source).not.toContain("open nog niets direct vanuit deze bibliotheek");

@@ -28,21 +28,6 @@ const CATEGORY_OPTIONS: Array<{ key: ReportLibraryCategory; label: string }> = [
   { key: "cohort", label: "Cohort" },
 ];
 
-const REPORT_FLOW_STEPS = [
-  {
-    title: "Samenvatting",
-    body: "Gebruik dashboard en rapport samen om te bepalen welk patroon nu telt en welke conclusie nog te vroeg is.",
-  },
-  {
-    title: "Eerste stap",
-    body: "Leg de eerste eigenaar en eerste stap vast zodra het rapport een echt managementgesprek opent. Zo blijft de output niet hangen in alleen inzicht.",
-  },
-  {
-    title: "Reviewmoment",
-    body: "Koppel het rapport altijd aan een reviewmoment in Action Center. Dan blijft opvolging zichtbaar en controleerbaar.",
-  },
-];
-
 function normalizeCategory(
   value: string | string[] | undefined,
 ): ReportLibraryCategory {
@@ -138,8 +123,8 @@ export default async function ReportsPage({
     <div className="space-y-8">
       <DashboardHero
         eyebrow="Rapportbibliotheek"
-        title="Klaar voor het overleg."
-        description="Gebruik rapporten als compacte samenvatting voor overleg: eerst wat nu telt, daarna wie verder oppakt en welke opvolging logisch is. Geen ruwe data-dump, wel duidelijke output in dezelfde familie als dashboard en Action Center."
+        title="Rapporten die nu leesbaar zijn."
+        description="Open alleen de rapporten die al genoeg basis hebben voor een goed gesprek. Deze bibliotheek blijft compact: wat is leesbaar, voor welk type gesprek en via welke campagne open je de onderliggende route."
         tone="slate"
         variant="editorial"
         meta={
@@ -227,7 +212,7 @@ export default async function ReportsPage({
                 Wanneer de rapportlaag opent
               </p>
               <p className="text-sm leading-6 text-[color:var(--dashboard-text)]">
-                Rapporten verschijnen pas als een campagne genoeg respons en duiding heeft om goed te kunnen bespreken.
+                Rapporten verschijnen pas als een campagne genoeg respons en duiding heeft om goed te kunnen lezen.
               </p>
             </div>
           )
@@ -236,8 +221,8 @@ export default async function ReportsPage({
 
       <DashboardSection
         eyebrow="Bibliotheek"
-        title="Rapporten klaar voor bespreking"
-        description="Open alleen rapporten die al genoeg basis hebben voor een goed gesprek. De rapporten blijven gekoppeld aan echte campagnes en sluiten direct aan op dashboard en Action Center."
+        title="Wat nu leesbaar is"
+        description="Open de rapportlaag alleen waar het beeld al stevig genoeg is. De bibliotheek blijft gekoppeld aan echte campagnes en maakt snel zichtbaar welk type output voor je klaarstaat."
         variant="quiet"
         aside={
           <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
@@ -328,23 +313,20 @@ export default async function ReportsPage({
 
             <aside className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[linear-gradient(180deg,rgba(248,247,243,0.96),rgba(243,240,235,0.82))] px-5 py-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-muted)]">
-                Toegang en ritme
+                Leescontext
               </p>
               <p className="mt-3 text-[1.35rem] font-semibold leading-tight tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
-                Wanneer deze bibliotheek echt opent.
+                Wanneer deze bibliotheek opent.
               </p>
               <div className="mt-5 space-y-4 text-sm leading-6 text-[color:var(--dashboard-text)]">
                 <div className="border-b border-[color:var(--dashboard-frame-border)]/70 pb-4">
-                  Rapporten verschijnen pas als een campagne genoeg respons en duiding heeft om goed te kunnen bespreken.
+                  Rapporten verschijnen pas als een campagne genoeg respons en duiding heeft om goed te kunnen lezen.
                 </div>
                 <div className="border-b border-[color:var(--dashboard-frame-border)]/70 pb-4">
-                  De lijst blijft gekoppeld aan echte campagnes, niet aan losse
-                  exports of handmatige bundels.
+                  De lijst blijft gekoppeld aan echte campagnes, niet aan losse exports of handmatige bundels.
                 </div>
                 <div>
-                  Ga naar campaign detail bij een route-kandidaat. Open
-                  actieve opvolging vanuit deze bibliotheek direct in Action
-                  Center.
+                  Open eerst de campaign detailpagina als je context nodig hebt. Gebruik Action Center pas wanneer een route al in opvolging staat.
                 </div>
               </div>
             </aside>
@@ -358,49 +340,6 @@ export default async function ReportsPage({
         )}
       </DashboardSection>
 
-      <DashboardSection
-        eyebrow="Vervolg"
-        title="Van rapport naar opvolging"
-        description="Een rapport is geen eindpunt. Gebruik het om de samenvatting te delen en leg daarna in Action Center vast wie verder oppakt, wat de eerste stap is en wanneer het onderwerp terugkomt."
-        variant="quiet"
-      >
-        <div className="grid gap-6 xl:grid-cols-[minmax(280px,0.7fr),minmax(0,1fr)]">
-          <div className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-[linear-gradient(180deg,rgba(240,246,245,0.96),rgba(232,241,238,0.78))] px-5 py-5 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[color:var(--dashboard-accent-strong)]">
-              Rapportdoel
-            </p>
-            <p className="mt-3 text-[1.45rem] font-semibold leading-tight tracking-[-0.04em] text-[color:var(--dashboard-ink)]">
-              Een rapport is het begin van de opvolging.
-            </p>
-            <p className="mt-3 text-sm leading-6 text-[color:var(--dashboard-text)]">
-              De rapportlaag bundelt wat bestuurlijk telt. Daarna hoort de
-              opvolging expliciet terug te landen in Action Center, met
-              eigenaar, eerste stap en reviewmoment.
-            </p>
-          </div>
-
-          <ol className="rounded-xl border border-[color:var(--dashboard-frame-border)] bg-white/82 shadow-[0_12px_28px_rgba(17,24,39,0.05)]">
-            {REPORT_FLOW_STEPS.map((step, index) => (
-              <li
-                key={step.title}
-                className="grid gap-3 border-b border-[color:var(--dashboard-frame-border)]/70 px-5 py-5 last:border-b-0 sm:grid-cols-[72px,minmax(0,1fr)]"
-              >
-                <div className="text-[1.9rem] font-semibold leading-none tracking-[-0.04em] text-[color:var(--dashboard-accent-strong)]">
-                  {String(index + 1).padStart(2, "0")}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-[color:var(--dashboard-ink)]">
-                    {step.title}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--dashboard-text)]">
-                    {step.body}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </DashboardSection>
     </div>
   );
 }

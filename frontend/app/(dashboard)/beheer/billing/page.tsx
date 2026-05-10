@@ -1,7 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { DashboardChip, DashboardHero, DashboardPanel, DashboardSection } from '@/components/dashboard/dashboard-primitives'
+import { DashboardChip, DashboardDisclosure, DashboardHero, DashboardPanel, DashboardSection } from '@/components/dashboard/dashboard-primitives'
 import {
   getBillingReadinessCopy,
   getBillingRegistryStatusLabel,
@@ -45,7 +45,7 @@ export default async function BillingPage() {
         tone="slate"
         eyebrow="Billing en self-serve"
         title="Billing registry"
-        description="Maak contract-, betaal- en activatiewaarheid expliciet zonder checkout-first fictie. Dit blijft een admin-only operating surface voor assisted suite-activatie."
+        description="Gebruik deze route als compacte registry voor contract, betaalwijze en launch-readiness. Dit blijft een bounded adminlaag, geen commerciële of checkout-surface."
         meta={
           <>
             <DashboardChip surface="ops" label={`${summary.readyCount} launch-ready`} tone="emerald" />
@@ -62,18 +62,11 @@ export default async function BillingPage() {
         }
       />
 
-      <DashboardSection title="Bounded runtime truth" description={readinessCopy}>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <DashboardPanel
-            title="Registryregels"
-            body="Contract en betaalwijze worden intern bevestigd voordat assisted launch readiness groen wordt. Deze page leest nu direct uit de live billing_registry."
-            tone="slate"
-          />
-          <DashboardPanel
-            title="Klantsignaal"
-            body="Customer-facing readiness signal blijft bewust compact en niet-transactioneel."
-            tone="emerald"
-          />
+      <DashboardSection title="Bounded runtime truth" description="Gebruik deze laag alleen om billingwaarheid en assisted launch-readiness snel te bevestigen.">
+        <div className="grid gap-4 lg:grid-cols-3">
+          <DashboardPanel title="Launch-ready" value={`${summary.readyCount}`} body="Organisaties met contract en betaalwijze op orde." tone="emerald" />
+          <DashboardPanel title="Nog assisted te bevestigen" value={`${summary.pendingCount}`} body="Rows waar contract of betaalstap nog openstaat." tone="amber" />
+          <DashboardPanel title="Readinessregel" body={readinessCopy} tone="slate" />
         </div>
       </DashboardSection>
 
@@ -81,37 +74,44 @@ export default async function BillingPage() {
         title="Actuele billing registry"
         description="Live assisted registry zonder seat- of planlogica. De status hieronder komt direct uit de huidige billing_registry-tabel."
       >
-        <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-              <tr>
-                <th className="px-5 py-4">Organisatie</th>
-                <th className="px-5 py-4">Juridische naam</th>
-                <th className="px-5 py-4">Contract</th>
-                <th className="px-5 py-4">Billing</th>
-                <th className="px-5 py-4">Betaalwijze</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {registryRows.map((row) => (
-                <tr key={row.orgId}>
-                  <td className="px-5 py-4 font-medium text-slate-900">{row.organizationName ?? row.legalCustomerName}</td>
-                  <td className="px-5 py-4 text-slate-600">{row.legalCustomerName}</td>
-                  <td className="px-5 py-4 text-slate-600">{getContractStateLabel(row.contractState)}</td>
-                  <td className="px-5 py-4 text-slate-600">{getBillingRegistryStatusLabel(row.billingState)}</td>
-                  <td className="px-5 py-4 text-slate-600">{row.paymentMethodConfirmed ? 'Bevestigd' : 'Openstaand'}</td>
-                </tr>
-              ))}
-              {registryRows.length === 0 ? (
+        <DashboardDisclosure
+          surface="ops"
+          title="Open billing registry"
+          description="Gebruik de volledige tabel alleen wanneer je een specifieke organisatie of assisted launch-ready row wilt nalopen."
+          badge={<DashboardChip surface="ops" label={`${registryRows.length} rows`} tone="slate" />}
+        >
+          <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white">
+            <table className="min-w-full divide-y divide-slate-200 text-sm">
+              <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                 <tr>
-                  <td className="px-5 py-5 text-slate-500" colSpan={5}>
-                    Nog geen live billing registryregels. Seed of assisted intake vult deze surface zodra een eerste suite-traject wordt klaargezet.
-                  </td>
+                  <th className="px-5 py-4">Organisatie</th>
+                  <th className="px-5 py-4">Juridische naam</th>
+                  <th className="px-5 py-4">Contract</th>
+                  <th className="px-5 py-4">Billing</th>
+                  <th className="px-5 py-4">Betaalwijze</th>
                 </tr>
-              ) : null}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {registryRows.map((row) => (
+                  <tr key={row.orgId}>
+                    <td className="px-5 py-4 font-medium text-slate-900">{row.organizationName ?? row.legalCustomerName}</td>
+                    <td className="px-5 py-4 text-slate-600">{row.legalCustomerName}</td>
+                    <td className="px-5 py-4 text-slate-600">{getContractStateLabel(row.contractState)}</td>
+                    <td className="px-5 py-4 text-slate-600">{getBillingRegistryStatusLabel(row.billingState)}</td>
+                    <td className="px-5 py-4 text-slate-600">{row.paymentMethodConfirmed ? 'Bevestigd' : 'Openstaand'}</td>
+                  </tr>
+                ))}
+                {registryRows.length === 0 ? (
+                  <tr>
+                    <td className="px-5 py-5 text-slate-500" colSpan={5}>
+                      Nog geen live billing registryregels. Seed of assisted intake vult deze surface zodra een eerste suite-traject wordt klaargezet.
+                    </td>
+                  </tr>
+                ) : null}
+              </tbody>
+            </table>
+          </div>
+        </DashboardDisclosure>
       </DashboardSection>
     </div>
   )

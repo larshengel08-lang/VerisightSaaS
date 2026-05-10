@@ -356,6 +356,28 @@ function renderFollowUpAffordanceMarkup(args: {
   return { item, items, markup };
 }
 
+function renderOverviewMarkup() {
+  const contexts = [buildLiveContext(), buildFollowUpTargetContext()];
+  const items = buildLiveActionCenterItems(contexts);
+
+  return renderToStaticMarkup(
+    createElement(ActionCenterPreview, {
+      initialItems: items,
+      initialView: "overview",
+      fallbackOwnerName: "Admin",
+      ownerOptions: ["Manager Operations", "Manager Support"],
+      workbenchHref: "/dashboard",
+      workbenchLabel: "Open broncampagne",
+      workspaceName: "Action Center",
+      workspaceSubtitle: "Live opvolging",
+      hideSidebar: true,
+      readOnly: true,
+      boundedOverviewOnly: true,
+      itemHrefs: Object.fromEntries(items.map((item) => [item.id, `/campaigns/${item.coreSemantics.route.campaignId}`])),
+    }),
+  );
+}
+
 describe("action center landing shell", () => {
   it("keeps a thin shell around the preview and route params", () => {
     const pageSource = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
@@ -363,6 +385,31 @@ describe("action center landing shell", () => {
     expect(pageSource).toContain("<ActionCenterPreview");
     expect(pageSource).toContain("searchParams");
     expect(pageSource).toContain('routeFollowUpEndpoint="/api/action-center-route-follow-ups"');
+    expect(pageSource).toContain("hideSidebar");
+    expect(pageSource).toContain("readOnly");
+    expect(pageSource).toContain("boundedOverviewOnly");
+  });
+
+  it("renders the route as a bounded overview cockpit instead of a broad workflow suite", () => {
+    const markup = renderOverviewMarkup();
+
+    expect(markup).toContain("Action Center");
+    expect(markup).toContain("Overzicht van managementopvolging en acties.");
+    expect(markup).toContain("Actieve routes");
+    expect(markup).toContain("Te bespreken / reviewbaar");
+    expect(markup).toContain("Geblokkeerd");
+    expect(markup).toContain("Niet beschikbaar");
+    expect(markup).toContain("Afgerond");
+    expect(markup).toContain("Wat vraagt nu aandacht?");
+    expect(markup).toContain("Komende reviews");
+
+    expect(markup).not.toContain("Bestuurlijke teruglezing");
+    expect(markup).not.toContain("Managers en toewijzing");
+    expect(markup).not.toContain("Open alle acties");
+    expect(markup).not.toContain("Open managers");
+    expect(markup).not.toContain("Actie aanmaken");
+    expect(markup).not.toContain("Action Center / Reviewmomenten");
+    expect(markup).not.toContain("Mijn teams");
   });
 
   it("loads route reopen rows into the live action-center contexts", () => {
@@ -1140,7 +1187,7 @@ describe("action center landing shell", () => {
     expect((markup.match(/Vervolg op eerdere route/g) ?? []).length).toBe(1);
   });
 
-  it("shows the agreed team review labels for upcoming reviews within the next week", () => {
+  it("shows team Review < 7 dagen for upcoming reviews within the next week", () => {
     const context = buildLiveContext();
     const [item] = buildLiveActionCenterItems([
       {
@@ -1164,10 +1211,8 @@ describe("action center landing shell", () => {
       }),
     );
 
-    expect(markup).toContain("Review eerstvolgt");
-    expect(markup).toContain("binnen 7 dagen");
-    expect(markup).toContain("Review deze week");
-    expect(markup).toContain(`Volgende bespreking ${item.reviewDateLabel}`);
+    expect(markup).toContain("Review &lt; 7 dagen");
+    expect(markup).toMatch(/Review &lt; 7 dagen<\/p><\/div><p[^>]*>1<\/p>/);
   });
 
   it("requires preview items to carry canonical core semantics as one grouped field", () => {

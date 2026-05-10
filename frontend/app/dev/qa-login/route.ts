@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 type AcceptanceFixture = {
   fixture?: {
@@ -9,6 +10,8 @@ type AcceptanceFixture = {
     password?: string
   }
 }
+
+type QaPersona = 'hr' | 'admin'
 
 function isLocalDevRequest(request: NextRequest) {
   const hostname = request.nextUrl.hostname
@@ -69,6 +72,25 @@ function getSafeNextPath(request: NextRequest) {
   return requestedNext
 }
 
+function getRequestedPersona(request: NextRequest): QaPersona {
+  const persona = request.nextUrl.searchParams.get('persona')
+  return persona === 'admin' ? 'admin' : 'hr'
+}
+
+async function syncQaPersona(userId: string, persona: QaPersona) {
+  const admin = createAdminClient()
+  const isAdmin = persona === 'admin'
+
+  const { error } = await admin
+    .from('profiles')
+    .update({ is_verisight_admin: isAdmin })
+    .eq('id', userId)
+
+  if (error) {
+    throw new Error(`QA persona sync mislukt: ${error.message}`)
+  }
+}
+
 export async function GET(request: NextRequest) {
   if (!isLocalDevRequest(request)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -91,6 +113,7 @@ export async function GET(request: NextRequest) {
   }
 
   const targetPath = getSafeNextPath(request)
+  const persona = getRequestedPersona(request)
   const response = NextResponse.redirect(new URL(targetPath, request.url))
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
@@ -107,7 +130,7 @@ export async function GET(request: NextRequest) {
   })
 
   const { email, password } = await getQaCredentials()
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   })
@@ -118,6 +141,17 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     )
   }
+
+  const userId = data.user?.id
+
+  if (!userId) {
+    return NextResponse.json(
+      { error: 'QA login gaf geen gebruiker terug' },
+      { status: 500 },
+    )
+  }
+
+  await syncQaPersona(userId, persona)
 
   return response
 }
