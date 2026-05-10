@@ -18,6 +18,7 @@ export const PUBLIC_ROUTES = [
   '/tarieven',
   '/oplossingen',
   '/examples',
+  '/dev/qa-login',
 ] as const
 
 export const PUBLIC_API_ROUTES = ['/api/contact'] as const
