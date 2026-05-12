@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-tokens'
-import { FollowOnRoutesAccordion } from '@/components/marketing/follow-on-routes-accordion'
 import { MarketingClosingCta } from '@/components/marketing/marketing-closing-cta'
 import {
   actionCenterStartPositioning,
@@ -11,11 +10,10 @@ import {
   productSecondaryFirstBuyRoute,
 } from '@/components/marketing/site-content'
 import { buildContactHref } from '@/lib/contact-funnel'
-import { FOLLOW_ON_ROUTE_CONTENT } from '@/lib/follow-on-route-content'
 
-const laterFollowOnForms = productFollowOnRouteRows.filter(
-  ([title]) => title === 'ExitScan Live Start' || title === 'Reviewcadans',
-)
+const laterFollowOnForms = productFollowOnRouteRows
+  .filter(([title]) => title === 'ExitScan Live Start')
+  .map(([, body]) => ['Exitscan Live', body] as const)
 
 function HeroSection() {
   const primaryHref = buildContactHref({
@@ -462,13 +460,14 @@ function LaterRoutesSection() {
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" style={{ marginBottom: 28 }}>
+        <div style={{ marginBottom: 28, marginLeft: 'auto', marginRight: 'auto', maxWidth: 720 }}>
           {laterFollowOnForms.map(([title, body], index) => (
             <Reveal key={title} delay={index * 0.06}>
               <article
                 style={{
                   background: T.paperSoft,
                   border: `1px solid ${T.rule}`,
+                  borderRadius: 28,
                   padding: '24px 24px 22px',
                 }}
               >
@@ -502,10 +501,6 @@ function LaterRoutesSection() {
             </Reveal>
           ))}
         </div>
-
-        <Reveal delay={0.12}>
-          <FollowOnRoutesAccordion routes={FOLLOW_ON_ROUTE_CONTENT.filter((route) => route.slug !== 'combinatie')} />
-        </Reveal>
       </div>
     </section>
   )
