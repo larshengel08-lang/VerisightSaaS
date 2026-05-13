@@ -15,13 +15,13 @@ Deze spec verandert **niet**:
 
 - productlogica
 - permissies
-- routehiërarchie
+- routehierarchie
 - inhoudelijke capabilities
 - data- of backendgedrag
 
 Deze spec verandert **wel**:
 
-- informatiehiërarchie
+- informatiehierarchie
 - paginaritme
 - prioriteit van blokken
 - mate van uitleg/interpretatie
@@ -110,10 +110,10 @@ Toegestane inhoud:
 
 Niet-toegestane inhoud als dominante UI-laag:
 
-- verklarende alinea’s
+- verklarende alineas
 - managementduiding
 - route-interpretatie
-- “waarom dit belangrijk is”-copy
+- "waarom dit belangrijk is"-copy
 - AI-achtige samenvattingen
 
 ## Primary Job To Be Done
@@ -143,7 +143,43 @@ De pagina wordt in deze volgorde opgebouwd:
 5. **Output & afronding**
 6. **Logboek / controle**
 
-Deze hiërarchie vervangt de huidige zwaardere opbouw met meerdere losse status- en uitlegblokken bovenaan.
+Deze hierarchie vervangt de huidige zwaardere opbouw met meerdere losse status- en uitlegblokken bovenaan.
+
+## Deterministic Mapping From Current Lifecycle To 5 Phases
+
+De nieuwe 5-fasenstructuur is een **presentatielaag**, geen nieuwe operationele lifecycle.
+
+De huidige guided-self-serve state blijft canoniek voor:
+
+- `phase`
+- `nextAction`
+- blockers
+- statusvolgorde
+
+De HR-pagina groepeert die bestaande state alleen opnieuw in vijf zichtbare fasen.
+
+### Canonical mapping table
+
+| Existing guided-self-serve phase | HR Routebeheer phase |
+| --- | --- |
+| `participant_data_required` | `Doelgroep klaarzetten` |
+| `import_validation_required` | `Doelgroep klaarzetten` |
+| `launch_date_required` | `Communicatie instellen` |
+| `communication_ready` | `Communicatie instellen` |
+| `ready_to_invite` | `Live zetten & volgen` |
+| `survey_running` | `Live zetten & volgen` |
+| `dashboard_active` | `Output beoordelen` |
+| `first_next_step_available` | `Output beoordelen` |
+| `closed` | `Afronden & controleren` |
+
+### Mapping rule
+
+- De implementatie mag geen nieuwe fase-interpretatie uit vrije tekst afleiden.
+- De zichtbare HR-fase wordt uitsluitend bepaald via bovenstaande mapping.
+- `Nu doen` gebruikt de bestaande guided-self-serve `nextAction` als primaire waarheid.
+- Blockers blijven uit de bestaande state komen en worden alleen gegroepeerd onder de bijbehorende HR-fase.
+
+Dit voorkomt dat de nieuwe UI ongemerkt nieuwe productlogica introduceert.
 
 ## Section Design
 
@@ -168,6 +204,9 @@ Niet tonen:
 - uitgebreide beschrijving van de route
 - why-copy
 - voortgangsduiding in proza
+
+Route-instellingen worden **niet** als los groot blok bovenaan teruggebracht.
+De routekop toont alleen feitelijke metadata.
 
 ### 2. Nu doen
 
@@ -202,11 +241,29 @@ Niet doen:
 
 Alleen bij een echte blocker mag deze regel zwaarder aanvoelen, maar nog steeds binnen dezelfde compacte componentvorm.
 
+### Nu doen priority rule
+
+`Nu doen` krijgt altijd exact een primaire actie.
+
+De prioriteit is deterministisch:
+
+1. gebruik de bestaande guided-self-serve `nextAction`
+2. koppel die `nextAction` aan de HR-fase via de canonical mapping table
+3. toon overige blockers of parallelle open punten alleen in fase-status of fase-detail
+
+Er wordt dus **geen tweede eigen prioriteringslaag** voor `Nu doen` ontworpen.
+
+Als meerdere blockers tegelijk bestaan:
+
+- `Nu doen` blijft het ene bestaande primaire `nextAction`
+- overige open punten blijven zichtbaar in het fase-overzicht of in het fase-detail
+- blockers overschrijven `Nu doen` niet op basis van nieuwe UI-logica
+
 ### 3. Compact fase-overzicht
 
 Doel:
 
-- in één scan laten zien waar de route staat
+- in een scan laten zien waar de route staat
 - HR laten kiezen welke fase aandacht nodig heeft
 
 Eigenschappen:
@@ -219,7 +276,7 @@ Per fase toont dit overzicht alleen:
 
 - fasenaam
 - status
-- één korte feitregel
+- een korte feitregel
 
 Voorbeeld:
 
@@ -231,7 +288,7 @@ Voorbeeld:
 
 Doel:
 
-- alleen na expliciete klik context en acties tonen voor één fase
+- alleen na expliciete klik context en acties tonen voor een fase
 
 Gedrag:
 
@@ -252,6 +309,9 @@ Geen:
 - lange toelichting
 - interpretatieve statuscopy
 
+De fase-detaillaag is de enige plek waar fase-specifieke acties en statuscontext verder uitwerken.
+De overzichtslagen blijven compact.
+
 ### 5. Output & afronding
 
 Doel:
@@ -270,6 +330,20 @@ Toon alleen:
 - rapport beschikbaar of niet
 - afrondingsstatus op hoofdlijn
 - acties zoals `Open dashboard` of `Open rapport`
+
+### Ownership boundary with Phase 4
+
+Om dubbele UI-truth te voorkomen, geldt:
+
+- **Output & afronding** is een altijd zichtbare samenvattingslaag
+- **Fase 4 - Output beoordelen** is de enige fase waarin output-readiness inhoudelijk wordt uitgewerkt
+
+Concreet:
+
+- de vaste output-sectie toont alleen globale beschikbaarheid en directe open-acties
+- fase 4 toont de detailstatus van readiness
+- fase 4 blijft leidend voor outputgerelateerde detailcontext
+- de vaste output-sectie mag geen tweede eigen readiness-verhaal, extra statuscopy of duplicaatknoppen introduceren
 
 ### 6. Logboek / controle
 
@@ -295,7 +369,7 @@ De HR-versie van `Routebeheer` gebruikt exact deze 5 fasen:
 4. **Output beoordelen**
 5. **Afronden & controleren**
 
-### Fase 1 — Doelgroep klaarzetten
+### Fase 1 - Doelgroep klaarzetten
 
 Doel:
 
@@ -312,7 +386,7 @@ Acties:
 - deelnemers uploaden
 - import controleren
 
-### Fase 2 — Communicatie instellen
+### Fase 2 - Communicatie instellen
 
 Doel:
 
@@ -328,8 +402,23 @@ Acties:
 
 - uitnodiging instellen
 - reminder instellen
+- route-instellingen bekijken
 
-### Fase 3 — Live zetten & volgen
+### Plaats van route-instellingen
+
+De capability `route-instellingen terugvinden` blijft behouden en krijgt een expliciete plek:
+
+- als **secundaire actie binnen fase 2 - Communicatie instellen**
+
+Daarmee blijft deze capability logisch vindbaar op de plek waar launchdatum, timing en communicatiestructuur relevant zijn.
+
+Route-instellingen komen dus:
+
+- niet terug als losse dominante kaart bovenaan
+- niet terug als aparte hoofdsectie
+- wel terug als gerichte secundaire actie in de fase waar HR er operationeel iets aan heeft
+
+### Fase 3 - Live zetten & volgen
 
 Doel:
 
@@ -346,7 +435,7 @@ Acties:
 - deelnemers uitnodigen
 - reminder versturen / opvolgen
 
-### Fase 4 — Output beoordelen
+### Fase 4 - Output beoordelen
 
 Doel:
 
@@ -363,7 +452,7 @@ Acties:
 - open dashboard
 - open rapport
 
-### Fase 5 — Afronden & controleren
+### Fase 5 - Afronden & controleren
 
 Doel:
 
