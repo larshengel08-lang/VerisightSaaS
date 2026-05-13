@@ -253,7 +253,7 @@ describe('routebeheer data helpers', () => {
     expect(mapGuidedPhaseToHrRoutePhase('import_validation_required')).toBe('doelgroep')
     expect(mapGuidedPhaseToHrRoutePhase('launch_date_required')).toBe('communicatie')
     expect(mapGuidedPhaseToHrRoutePhase('communication_ready')).toBe('communicatie')
-    expect(mapGuidedPhaseToHrRoutePhase('ready_to_invite')).toBe('communicatie')
+    expect(mapGuidedPhaseToHrRoutePhase('ready_to_invite')).toBe('live')
     expect(mapGuidedPhaseToHrRoutePhase('survey_running')).toBe('live')
     expect(mapGuidedPhaseToHrRoutePhase('dashboard_active')).toBe('output')
     expect(mapGuidedPhaseToHrRoutePhase('first_next_step_available')).toBe('output')
@@ -274,10 +274,12 @@ describe('routebeheer data helpers', () => {
       importReady: true,
     })
 
-    expect(buildHrRouteBeheerNowDoing(guidedState)).toEqual({
+    expect(buildHrRouteBeheerNowDoing({ guidedState, campaignId: 'campaign-1' })).toEqual({
+      label: 'Nu doen',
       phaseKey: 'communicatie',
       title: guidedState.nextAction.title,
       body: guidedState.nextAction.body,
+      href: '/campaigns/campaign-1/beheer?fase=communicatie#fase-detail',
     })
   })
 })
@@ -308,16 +310,17 @@ describe('routebeheer source integration', () => {
 
   it('keeps the operational route free from analytical or action-center detail imports', () => {
     const source = readFileSync(new URL('./route-beheer-components.tsx', import.meta.url), 'utf8')
+    const phaseSource = readFileSync(new URL('./route-beheer-phase-sections.tsx', import.meta.url), 'utf8')
+    const combined = `${source}\n${phaseSource}`
 
-    expect(source).toContain('Livegang')
-    expect(source).toContain('Respons')
-    expect(source).toContain('Dashboard leesbaarheid')
-    expect(source).toContain('Eerstvolgende stap')
-    expect(source).not.toContain('Frictiescore')
-    expect(source).not.toContain('SDT')
-    expect(source).not.toContain('buildExitNarratives')
-    expect(source).not.toContain('buildRetentionNarratives')
-    expect(source).not.toContain('ActionPlaybook')
+    expect(combined).toContain('Nu doen')
+    expect(combined).toContain('Output & afronding')
+    expect(combined).toContain('Logboek / controle')
+    expect(combined).not.toContain('Frictiescore')
+    expect(combined).not.toContain('SDT')
+    expect(combined).not.toContain('buildExitNarratives')
+    expect(combined).not.toContain('buildRetentionNarratives')
+    expect(combined).not.toContain('ActionPlaybook')
   })
 
   it('keeps output summary compact while output detail remains owned by the output phase', async () => {

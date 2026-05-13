@@ -4,19 +4,34 @@ import { createClient } from '@/lib/supabase/server'
 import { loadSuiteAccessContext } from '@/lib/suite-access-server'
 import { fetchRouteBeheerData } from './beheer-data'
 import {
-  RouteBeheerBlockerPanel,
   RouteBeheerHeader,
-  RouteBeheerLifecycleSection,
-  RouteBeheerSectionsWrapper,
-  RouteBeheerStatusCards,
+  RouteBeheerStructuredBody,
 } from './route-beheer-components'
+import type { HrRouteBeheerPhaseKey } from './beheer-data'
 
 interface Props {
   params: Promise<{ id: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
-export default async function RouteBeheerPage({ params }: Props) {
+function normalizeSelectedPhase(value: string | string[] | undefined): HrRouteBeheerPhaseKey | null {
+  if (typeof value !== 'string') return null
+
+  switch (value) {
+    case 'doelgroep':
+    case 'communicatie':
+    case 'live':
+    case 'output':
+    case 'afronding':
+      return value
+    default:
+      return null
+  }
+}
+
+export default async function RouteBeheerPage({ params, searchParams }: Props) {
   const { id } = await params
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
   const supabase = await createClient()
   const {
     data: { user },
@@ -50,10 +65,10 @@ export default async function RouteBeheerPage({ params }: Props) {
   return (
     <div className="space-y-6">
       <RouteBeheerHeader data={data} />
-      <RouteBeheerStatusCards data={data} />
-      <RouteBeheerBlockerPanel blockers={data.blockers} />
-      <RouteBeheerLifecycleSection data={data} />
-      <RouteBeheerSectionsWrapper data={data} />
+      <RouteBeheerStructuredBody
+        data={data}
+        initialSelectedPhaseKey={normalizeSelectedPhase(resolvedSearchParams?.fase)}
+      />
     </div>
   )
 }
