@@ -19,6 +19,13 @@ const PHASE_TITLES: Record<HrRouteBeheerPhaseKey, string> = {
   output: 'Output beoordelen',
   afronding: 'Afronden & controleren',
 }
+const PHASE_DETAIL_IDS: Record<HrRouteBeheerPhaseKey, string> = {
+  doelgroep: 'deelnemers-en-importstatus',
+  communicatie: 'route-instellingen',
+  live: 'uitnodigingen-en-respons',
+  output: 'dashboard-rapportstatus',
+  afronding: 'status-en-logboek',
+}
 const NOW_DOING_LABEL = 'Nu doen'
 const ROUTE_SETTINGS_CTA_LABEL = 'Bekijk instellingen'
 
@@ -166,7 +173,7 @@ export function RouteBeheerPhaseWorkspace(args: {
 
 function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPageData; detail: HrRouteBeheerPhaseDetail }) {
   return (
-    <div className="space-y-4">
+    <div id={PHASE_DETAIL_IDS[detail.key]} className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
@@ -227,7 +234,7 @@ function RouteBeheerPhaseDetailContent({ data, detail }: { data: RouteBeheerPage
             />
           ) : (
             <span className="text-sm text-[color:var(--text)]">
-              Open rapport zodra de eerste dashboardread beschikbaar is.
+              Rapport nog niet beschikbaar.
             </span>
           )}
         </div>

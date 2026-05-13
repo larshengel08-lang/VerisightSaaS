@@ -30,7 +30,7 @@ const phases: HrRouteBeheerPhaseSummary[] = [
     key: 'communicatie',
     label: 'Communicatie instellen',
     status: 'open',
-    body: 'Uitnodiging ontbreekt, reminder niet ingesteld',
+    body: 'Route en startdatum',
     link: { label: 'Open communicatie', href: '/campaigns/cmp-1/beheer#route-instellingen' },
   },
 ]
@@ -40,7 +40,7 @@ const phaseDetails: HrRouteBeheerPhaseDetail[] = [
     key: 'communicatie',
     label: 'Communicatie instellen',
     status: 'open',
-    body: 'Route-instellingen en launchafspraken blijven in deze communicatie-fase gebundeld.',
+    body: 'Route en startdatum',
     items: [
       { label: 'Route', value: 'ExitScan / Baseline / Q3 2026' },
       { label: 'Startdatum', value: '10 mei 2026' },
@@ -98,6 +98,7 @@ describe('routebeheer phase sections', () => {
     expect(markup).toContain('Open uitnodiging')
     expect(markup).toContain('Bekijk instellingen')
     expect(markup).toContain('10 mei 2026')
+    expect(markup).not.toContain('launchafspraken')
   })
 
   it('keeps the always-visible output summary compact and action-only', () => {
@@ -108,12 +109,12 @@ describe('routebeheer phase sections', () => {
           reportReady: false,
           dashboardHref: '/campaigns/cmp-1',
           reportHref: null,
-          label: 'Dashboard beschikbaar, rapport nog niet beschikbaar',
+          label: 'Dashboard / rapportstatus',
         },
       }),
     )
 
-    expect(markup).toContain('Dashboard beschikbaar, rapport nog niet beschikbaar')
+    expect(markup).toContain('Dashboard / rapportstatus')
     expect(markup).toContain('href="/campaigns/cmp-1"')
     expect(markup).not.toContain('readiness')
   })

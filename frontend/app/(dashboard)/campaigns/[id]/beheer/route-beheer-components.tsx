@@ -65,7 +65,7 @@ export function RouteBeheerStructuredBody(args: {
       <DashboardSection
         id="route-fasen"
         title="Routefasen"
-        description="Bekijk per fase wat klaar is en wat nog aandacht vraagt."
+        description="Kies een fase voor details."
         eyebrow="Fasen"
         surface="ops"
         tone="slate"

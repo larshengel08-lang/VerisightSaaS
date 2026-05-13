@@ -16,6 +16,8 @@ describe('routebeheer page guardrails', () => {
     expect(combined).not.toContain('RouteBeheerBlockerPanel')
     expect(combined).not.toContain('Beheer livegang, respons en output-readiness voor deze route.')
     expect(combined).not.toContain('Route vraagt nu operationele aandacht')
+    expect(combined).not.toContain('Bekijk per fase wat klaar is en wat nog aandacht vraagt.')
+    expect(combined).not.toContain('Open rapport zodra de eerste dashboardread beschikbaar is.')
     expect(combined).not.toContain('Frictiescore')
     expect(combined).not.toContain('factoren')
     expect(combined).not.toContain('SDT')
@@ -25,13 +27,18 @@ describe('routebeheer page guardrails', () => {
   })
 
   it('keeps routebeheer labels clean and preserves the approved instellingen CTA', () => {
+    const dataSource = readFileSync(new URL('./beheer-data.ts', import.meta.url), 'utf8')
     const componentSource = readFileSync(new URL('./route-beheer-components.tsx', import.meta.url), 'utf8')
     const phaseSource = readFileSync(new URL('./route-beheer-phase-sections.tsx', import.meta.url), 'utf8')
-    const combined = `${componentSource}\n${phaseSource}`
+    const combined = `${dataSource}\n${componentSource}\n${phaseSource}`
 
     expect(combined).toContain('Bekijk instellingen')
-    expect(combined).not.toContain('Ã')
-    expect(combined).not.toContain('ï¿½')
+    expect(combined).toContain('Route en startdatum')
+    expect(combined).toContain('Uitnodigingen en respons')
+    expect(combined).toContain('Dashboard / rapportstatus')
+    expect(combined).toContain('Status en logboek')
+    expect(combined).not.toContain('Ãƒ')
+    expect(combined).not.toContain('Ã¯Â¿Â½')
   })
 
   it('reuses the existing campaign access boundary instead of inventing a new route role model', () => {

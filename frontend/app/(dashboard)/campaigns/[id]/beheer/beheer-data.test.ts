@@ -279,7 +279,29 @@ describe('routebeheer data helpers', () => {
       phaseKey: 'communicatie',
       title: guidedState.nextAction.title,
       body: guidedState.nextAction.body,
-      href: '/campaigns/campaign-1/beheer?fase=communicatie#fase-detail',
+      href: '/campaigns/campaign-1/beheer?fase=communicatie#route-instellingen',
+    })
+  })
+
+  it('sends output-oriented now-doing links to the actual dashboard destination', () => {
+    const guidedState = buildGuidedSelfServeState({
+      isActive: true,
+      totalInvited: 12,
+      totalCompleted: 4,
+      invitesNotSent: 0,
+      hasMinDisplay: true,
+      hasEnoughData: false,
+      importQaConfirmed: true,
+      launchTimingConfirmed: true,
+      communicationReady: true,
+      importReady: true,
+    })
+
+    expect(buildHrRouteBeheerNowDoing({ guidedState, campaignId: 'campaign-1' })).toMatchObject({
+      phaseKey: 'output',
+      title: guidedState.nextAction.title,
+      body: guidedState.nextAction.body,
+      href: '/campaigns/campaign-1',
     })
   })
 })
@@ -335,18 +357,18 @@ describe('routebeheer source integration', () => {
       reportReady: true,
       dashboardHref: '/campaigns/campaign-1',
       reportHref: '/reports',
-      label: 'Dashboard leesbaar / Rapport beschikbaar',
+      label: 'Dashboard / rapportstatus',
     })
 
     expect(data?.phaseSummaries.find((phase) => phase.key === 'output')).toMatchObject({
       key: 'output',
       status: 'current',
-      body: 'Dashboard leesbaar / Rapport beschikbaar',
+      body: 'Dashboard / rapportstatus',
     })
     expect(data?.phaseDetails.find((phase) => phase.key === 'output')).toMatchObject({
       key: 'output',
       status: 'current',
-      body: data?.readabilityBody,
+      body: 'Dashboard / rapportstatus',
     })
   })
 
@@ -366,6 +388,7 @@ describe('routebeheer source integration', () => {
     ])
     expect(data?.phaseDetails.find((phase) => phase.key === 'communicatie')).toMatchObject({
       key: 'communicatie',
+      body: 'Route en startdatum',
       items: [
         { label: 'Route', value: data?.routeSettingsLabel },
         { label: 'Startdatum', value: '10 mei 2026' },
