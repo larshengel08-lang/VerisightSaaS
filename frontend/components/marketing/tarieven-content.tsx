@@ -114,7 +114,7 @@ function HeroSection() {
               ))}
             </div>
             <div style={{ marginTop: 14, fontSize: 11, color: T.inkMuted, fontStyle: 'italic' }}>
-              Per traject, geen licenties. Vervolg komt pas in beeld als de volgende vraag echt speelt.
+              Een volledige Scan-campagne, inclusief setup, rapportage en begeleiding. Maatwerk op aanvraag.
             </div>
             </div>
           </Reveal>
