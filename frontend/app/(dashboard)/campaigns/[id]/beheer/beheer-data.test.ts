@@ -289,6 +289,23 @@ describe('routebeheer source integration', () => {
     expect(source).not.toContain('importReady: importReady === true')
   })
 
+  it('keeps a visible routebeheer entrypoint in the dashboard launcher for setup-heavy campaigns', () => {
+    const launcherSource = readFileSync(
+      new URL('../../../dashboard/home-launcher.ts', import.meta.url),
+      'utf8',
+    )
+
+    expect(launcherSource).toContain('href: `/campaigns/${campaign.campaign_id}/beheer`')
+  })
+
+  it('keeps routebeheer restricted to HR-capable users instead of manager-only action center access', () => {
+    const pageSource = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(pageSource).toContain('if (!context.canViewInsights)')
+    expect(pageSource).toContain('SuiteAccessDenied')
+    expect(pageSource).toContain('Jouw login opent alleen Action Center voor toegewezen teams.')
+  })
+
   it('keeps the operational route free from analytical or action-center detail imports', () => {
     const source = readFileSync(new URL('./route-beheer-components.tsx', import.meta.url), 'utf8')
 
