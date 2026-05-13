@@ -384,8 +384,8 @@ export function mapGuidedPhaseToHrRoutePhase(phase: GuidedSelfServePhase): HrRou
       return 'doelgroep'
     case 'launch_date_required':
     case 'communication_ready':
-      return 'communicatie'
     case 'ready_to_invite':
+      return 'communicatie'
     case 'survey_running':
       return 'live'
     case 'dashboard_active':

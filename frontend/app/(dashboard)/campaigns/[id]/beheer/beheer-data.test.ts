@@ -253,7 +253,7 @@ describe('routebeheer data helpers', () => {
     expect(mapGuidedPhaseToHrRoutePhase('import_validation_required')).toBe('doelgroep')
     expect(mapGuidedPhaseToHrRoutePhase('launch_date_required')).toBe('communicatie')
     expect(mapGuidedPhaseToHrRoutePhase('communication_ready')).toBe('communicatie')
-    expect(mapGuidedPhaseToHrRoutePhase('ready_to_invite')).toBe('live')
+    expect(mapGuidedPhaseToHrRoutePhase('ready_to_invite')).toBe('communicatie')
     expect(mapGuidedPhaseToHrRoutePhase('survey_running')).toBe('live')
     expect(mapGuidedPhaseToHrRoutePhase('dashboard_active')).toBe('output')
     expect(mapGuidedPhaseToHrRoutePhase('first_next_step_available')).toBe('output')
