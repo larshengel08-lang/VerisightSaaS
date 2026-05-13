@@ -21,12 +21,50 @@ import type { CampaignAuditEventRecord } from '@/lib/campaign-audit'
 import { getCustomerActionPermission } from '@/lib/customer-permissions'
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>
+type GuidedSelfServePhase = ReturnType<typeof buildGuidedSelfServeState>['phase']
 
 export type RouteBeheerLifecycleStep = {
   key: 'setup' | 'doelgroep' | 'uitnodigingen' | 'respons' | 'output' | 'afgerond'
   label: string
   status: 'done' | 'current' | 'pending'
   sublabel: string
+}
+
+export type HrRouteBeheerPhaseKey =
+  | 'doelgroep'
+  | 'communicatie'
+  | 'live'
+  | 'output'
+  | 'afronding'
+
+export type HrRouteBeheerPhaseStatus = 'done' | 'current' | 'open'
+
+export interface HrRouteBeheerActionLink {
+  label: string
+  href: string
+}
+
+export interface HrRouteBeheerPhaseSummary {
+  key: HrRouteBeheerPhaseKey
+  label: string
+  status: HrRouteBeheerPhaseStatus
+  body: string
+  link: HrRouteBeheerActionLink | null
+}
+
+export interface HrRouteBeheerPhaseDetail {
+  key: HrRouteBeheerPhaseKey
+  label: string
+  status: HrRouteBeheerPhaseStatus
+  body: string
+  items: Array<{ label: string; value: string }>
+  links: HrRouteBeheerActionLink[]
+}
+
+export interface HrRouteBeheerNowDoing {
+  phaseKey: HrRouteBeheerPhaseKey
+  title: string
+  body: string
 }
 
 export interface RouteBeheerPageData {
@@ -56,6 +94,16 @@ export interface RouteBeheerPageData {
   blockers: string[]
   lifecycleStage: DeliveryLifecycleStage | null
   lifecycleSteps: RouteBeheerLifecycleStep[]
+  nowDoing: HrRouteBeheerNowDoing | null
+  phaseSummaries: HrRouteBeheerPhaseSummary[]
+  phaseDetails: HrRouteBeheerPhaseDetail[]
+  outputSummary: {
+    dashboardReady: boolean
+    reportReady: boolean
+    dashboardHref: string
+    reportHref: string | null
+    label: string
+  }
   respondentCount: number
   routeSettingsLabel: string
   routeSettingsBody: string
@@ -85,6 +133,22 @@ const LIFECYCLE_LABELS: Record<RouteBeheerLifecycleStep['key'], string> = {
   respons: 'Respons',
   output: 'Output',
   afgerond: 'Afgerond',
+}
+
+const HR_ROUTE_PHASE_ORDER: HrRouteBeheerPhaseKey[] = [
+  'doelgroep',
+  'communicatie',
+  'live',
+  'output',
+  'afronding',
+]
+
+const HR_ROUTE_PHASE_LABELS: Record<HrRouteBeheerPhaseKey, string> = {
+  doelgroep: 'Doelgroep',
+  communicatie: 'Communicatie',
+  live: 'Live',
+  output: 'Output',
+  afronding: 'Afronding',
 }
 
 export function formatRoutePeriodLabel(campaignName: string, createdAt: string) {
@@ -311,6 +375,201 @@ function filterOperationalBlockers(snapshot: ReturnType<typeof buildDeliveryGove
   ].filter((item, index, items) => item.trim().length > 0 && items.indexOf(item) === index)
 }
 
+export function mapGuidedPhaseToHrRoutePhase(phase: GuidedSelfServePhase): HrRouteBeheerPhaseKey {
+  switch (phase) {
+    case 'participant_data_required':
+    case 'import_validation_required':
+      return 'doelgroep'
+    case 'launch_date_required':
+    case 'communication_ready':
+    case 'ready_to_invite':
+      return 'communicatie'
+    case 'survey_running':
+      return 'live'
+    case 'dashboard_active':
+    case 'first_next_step_available':
+      return 'output'
+    case 'closed':
+      return 'afronding'
+    default:
+      return 'doelgroep'
+  }
+}
+
+function getHrRouteBeheerPhaseStatus(
+  key: HrRouteBeheerPhaseKey,
+  currentPhase: HrRouteBeheerPhaseKey,
+): HrRouteBeheerPhaseStatus {
+  const currentIndex = HR_ROUTE_PHASE_ORDER.indexOf(currentPhase)
+  const phaseIndex = HR_ROUTE_PHASE_ORDER.indexOf(key)
+
+  if (phaseIndex < currentIndex) return 'done'
+  if (phaseIndex === currentIndex) return 'current'
+  return 'open'
+}
+
+export function buildHrRouteBeheerNowDoing(
+  guidedState: Pick<ReturnType<typeof buildGuidedSelfServeState>, 'phase' | 'nextAction'>,
+): HrRouteBeheerNowDoing {
+  return {
+    phaseKey: mapGuidedPhaseToHrRoutePhase(guidedState.phase),
+    title: guidedState.nextAction.title,
+    body: guidedState.nextAction.body,
+  }
+}
+
+export function buildHrRouteBeheerPhaseSummary(args: {
+  key: HrRouteBeheerPhaseKey
+  status: HrRouteBeheerPhaseStatus
+  campaignId: string
+  respondentCount: number
+  totalCompleted: number
+  totalInvited: number
+  outputSummary: RouteBeheerPageData['outputSummary']
+}) {
+  switch (args.key) {
+    case 'doelgroep':
+      return {
+        key: args.key,
+        label: HR_ROUTE_PHASE_LABELS[args.key],
+        status: args.status,
+        body: `${args.respondentCount} deelnemers geimporteerd`,
+        link: { label: 'Open doelgroep', href: `/campaigns/${args.campaignId}#operatie` },
+      } satisfies HrRouteBeheerPhaseSummary
+    case 'communicatie':
+      return {
+        key: args.key,
+        label: HR_ROUTE_PHASE_LABELS[args.key],
+        status: args.status,
+        body: 'Route en launchafspraken staan in deze fase bij elkaar.',
+        link: { label: 'Bekijk communicatie', href: '#route-instellingen' },
+      } satisfies HrRouteBeheerPhaseSummary
+    case 'live':
+      return {
+        key: args.key,
+        label: HR_ROUTE_PHASE_LABELS[args.key],
+        status: args.status,
+        body: `${args.totalCompleted}/${args.totalInvited} ingevuld`,
+        link: { label: 'Open uitnodigingen', href: '#beheer-onderdelen' },
+      } satisfies HrRouteBeheerPhaseSummary
+    case 'output':
+      return {
+        key: args.key,
+        label: HR_ROUTE_PHASE_LABELS[args.key],
+        status: args.status,
+        body: args.outputSummary.label,
+        link: { label: 'Open dashboard', href: args.outputSummary.dashboardHref },
+      } satisfies HrRouteBeheerPhaseSummary
+    case 'afronding':
+      return {
+        key: args.key,
+        label: HR_ROUTE_PHASE_LABELS[args.key],
+        status: args.status,
+        body: args.status === 'current' ? 'Campagne gesloten' : 'Nog niet afgerond',
+        link: null,
+      } satisfies HrRouteBeheerPhaseSummary
+    default:
+      return {
+        key: args.key,
+        label: HR_ROUTE_PHASE_LABELS[args.key],
+        status: args.status,
+        body: '',
+        link: null,
+      } satisfies HrRouteBeheerPhaseSummary
+  }
+}
+
+function buildHrRouteBeheerPhaseDetail(args: {
+  key: HrRouteBeheerPhaseKey
+  status: HrRouteBeheerPhaseStatus
+  campaignId: string
+  routeSettingsLabel: string
+  routeSettingsBody: string
+  respondentCount: number
+  totalCompleted: number
+  totalInvited: number
+  pendingCount: number
+  outputSummary: RouteBeheerPageData['outputSummary']
+  outputStatusLabel: string
+  readabilityBody: string
+  isActive: boolean
+  latestAuditSummary: string | null
+}) {
+  switch (args.key) {
+    case 'doelgroep':
+      return {
+        key: args.key,
+        label: HR_ROUTE_PHASE_LABELS[args.key],
+        status: args.status,
+        body: 'Controleer hier of de doelgroep compleet en bruikbaar in de route staat.',
+        items: [{ label: 'Geimporteerd', value: `${args.respondentCount} deelnemers` }],
+        links: [{ label: 'Open doelgroep', href: `/campaigns/${args.campaignId}#operatie` }],
+      } satisfies HrRouteBeheerPhaseDetail
+    case 'communicatie':
+      return {
+        key: args.key,
+        label: HR_ROUTE_PHASE_LABELS[args.key],
+        status: args.status,
+        body: 'Route-instellingen en launchafspraken blijven in deze communicatie-fase gebundeld.',
+        items: [
+          { label: 'Route', value: args.routeSettingsLabel },
+          { label: 'Startdatum', value: args.routeSettingsBody.replace('Startdatum: ', '') },
+        ],
+        links: [{ label: 'Bekijk instellingen', href: '#route-meta' }],
+      } satisfies HrRouteBeheerPhaseDetail
+    case 'live':
+      return {
+        key: args.key,
+        label: HR_ROUTE_PHASE_LABELS[args.key],
+        status: args.status,
+        body: 'Volg hier uitnodigingen, openstaande respons en het actuele verloop van de route.',
+        items: [
+          { label: 'Respons', value: `${args.totalCompleted}/${args.totalInvited} ingevuld` },
+          { label: 'Openstaand', value: `${args.pendingCount}` },
+        ],
+        links: [{ label: 'Ga naar beheeronderdelen', href: '#beheer-onderdelen' }],
+      } satisfies HrRouteBeheerPhaseDetail
+    case 'output':
+      return {
+        key: args.key,
+        label: HR_ROUTE_PHASE_LABELS[args.key],
+        status: args.status,
+        body: args.readabilityBody,
+        items: [
+          { label: 'Status', value: args.outputStatusLabel },
+          { label: 'Dashboard', value: args.outputSummary.dashboardReady ? 'Beschikbaar' : 'Nog niet' },
+          { label: 'Rapport', value: args.outputSummary.reportReady ? 'Beschikbaar' : 'Nog niet' },
+        ],
+        links: [
+          { label: 'Open dashboard', href: args.outputSummary.dashboardHref },
+          ...(args.outputSummary.reportHref
+            ? [{ label: 'Open rapporten', href: args.outputSummary.reportHref }]
+            : []),
+        ],
+      } satisfies HrRouteBeheerPhaseDetail
+    case 'afronding':
+      return {
+        key: args.key,
+        label: HR_ROUTE_PHASE_LABELS[args.key],
+        status: args.status,
+        body: args.isActive
+          ? 'De route loopt nog; afronding volgt pas na sluiting en nette close-out.'
+          : 'De route is gesloten en kan alleen nog terugkijken op output en logboek.',
+        items: [{ label: 'Laatste logregel', value: args.latestAuditSummary ?? 'Geen activiteit' }],
+        links: [{ label: 'Bekijk logboek', href: `/campaigns/${args.campaignId}#operatie` }],
+      } satisfies HrRouteBeheerPhaseDetail
+    default:
+      return {
+        key: args.key,
+        label: HR_ROUTE_PHASE_LABELS[args.key],
+        status: args.status,
+        body: '',
+        items: [],
+        links: [],
+      } satisfies HrRouteBeheerPhaseDetail
+  }
+}
+
 export async function fetchRouteBeheerData(args: {
   campaignId: string
   supabase: SupabaseLike
@@ -485,6 +744,48 @@ export async function fetchRouteBeheerData(args: {
   ]
     .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
     .join(' / ')
+  const routeSettingsBody = getRouteSettingsBody({
+    launchDate: deliveryRecord?.launch_date ?? deliveryRecord?.launch_confirmed_at ?? null,
+    createdAt: campaign?.created_at ?? stats.created_at,
+  })
+  const outputSummary = {
+    dashboardReady: hasMinDisplay,
+    reportReady: hasMinDisplay,
+    dashboardHref: `/campaigns/${campaignId}`,
+    reportHref: hasMinDisplay ? '/reports' : null,
+    label: hasMinDisplay ? 'Dashboard leesbaar / Rapport beschikbaar' : 'Nog onvoldoende data',
+  } satisfies RouteBeheerPageData['outputSummary']
+  const currentHrPhase = mapGuidedPhaseToHrRoutePhase(guidedState.phase)
+  const nowDoing = buildHrRouteBeheerNowDoing(guidedState)
+  const phaseSummaries = HR_ROUTE_PHASE_ORDER.map((key) =>
+    buildHrRouteBeheerPhaseSummary({
+      key,
+      status: getHrRouteBeheerPhaseStatus(key, currentHrPhase),
+      campaignId,
+      respondentCount: respondents.length,
+      totalCompleted: stats.total_completed,
+      totalInvited: stats.total_invited,
+      outputSummary,
+    }),
+  )
+  const phaseDetails = HR_ROUTE_PHASE_ORDER.map((key) =>
+    buildHrRouteBeheerPhaseDetail({
+      key,
+      status: getHrRouteBeheerPhaseStatus(key, currentHrPhase),
+      campaignId,
+      routeSettingsLabel,
+      routeSettingsBody,
+      respondentCount: respondents.length,
+      totalCompleted: stats.total_completed,
+      totalInvited: stats.total_invited,
+      pendingCount,
+      outputSummary,
+      outputStatusLabel: outputSummary.label,
+      readabilityBody: readability.body,
+      isActive: stats.is_active,
+      latestAuditSummary: auditEvents[0]?.summary ?? null,
+    }),
+  )
 
   return {
     campaignId,
@@ -519,15 +820,15 @@ export async function fetchRouteBeheerData(args: {
       hasMinDisplay,
       hasEnoughData,
     }),
+    nowDoing,
+    phaseSummaries,
+    phaseDetails,
+    // Keep this compact and always visible. Richer output explanation stays owned by the output phase detail.
+    outputSummary,
     respondentCount: respondents.length,
     routeSettingsLabel,
-    routeSettingsBody: getRouteSettingsBody({
-      launchDate: deliveryRecord?.launch_date ?? deliveryRecord?.launch_confirmed_at ?? null,
-      createdAt: campaign?.created_at ?? stats.created_at,
-    }),
-    outputStatusLabel: hasMinDisplay
-      ? 'Dashboard leesbaar / Rapport beschikbaar'
-      : 'Nog onvoldoende data',
+    routeSettingsBody,
+    outputStatusLabel: outputSummary.label,
     latestAuditSummary: auditEvents[0]?.summary ?? null,
     reportAvailable: hasMinDisplay,
     canExecuteCampaign,
