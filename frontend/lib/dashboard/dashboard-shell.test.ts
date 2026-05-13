@@ -27,7 +27,7 @@ describe('dashboard shell config', () => {
     })
 
     expect(config.mode).toBe('admin')
-    expect(config.accountLabel).toBe('Verisight beheer')
+    expect(config.accountLabel).toBe('Loep beheer')
     expect(config.bannerText).toBeNull()
     expect(config.navigation.some((item) => item.href === '/beheer/klantlearnings')).toBe(true)
     expect(config.currentLabel).toBe('Leadcontext')

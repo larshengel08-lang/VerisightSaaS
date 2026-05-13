@@ -944,7 +944,7 @@ function ViewerEmptyState() {
     <DashboardSection
       eyebrow="Wachten op livegang"
       title="Jouw dashboard wordt voorbereid"
-      description="Verisight zet de campaign op, controleert de import en activeert daarna automatisch dit overzicht."
+      description="Loep zet de campaign op, controleert de import en activeert daarna automatisch dit overzicht."
     >
       <div className="space-y-4">
         <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--bg)] px-4 py-5 text-sm leading-6 text-[color:var(--text)]">
@@ -952,7 +952,7 @@ function ViewerEmptyState() {
         </div>
         <div className="grid gap-3 md:grid-cols-3">
           {[
-            'Verisight beheert organisatie, campagne en respondentimport.',
+            'Loep beheert organisatie, campagne en respondentimport.',
             'Jij krijgt daarna toegang tot het juiste dashboard en rapport.',
             'De eerste managementwaarde zit in lezen, duiden en prioriteren, niet in technische setup.',
           ].map((item, index) => (

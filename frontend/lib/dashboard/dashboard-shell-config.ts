@@ -64,7 +64,7 @@ export function getDashboardShellConfig({
 
   return {
     mode,
-    accountLabel: isAdmin ? 'Verisight beheer' : 'Klantdashboard',
+    accountLabel: isAdmin ? 'Loep beheer' : 'Klantdashboard',
     modeLabel: isAdmin ? 'Beheerweergave · sobere operationslaag' : 'Klantweergave · premium begeleide uitvoering',
     currentLabel: getDashboardCurrentLabel(pathname),
     bannerText:

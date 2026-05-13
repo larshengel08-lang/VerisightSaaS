@@ -263,9 +263,9 @@ export function AddRespondentsForm({ campaigns, organizations }: Props) {
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-        <p className="mb-1 font-semibold">Rol van Verisight en rol van de klant</p>
+        <p className="mb-1 font-semibold">Rol van Loep en rol van de klant</p>
         <p className="text-blue-800">
-          Deze setup is voor Verisight-beheerders. De klant levert een respondentbestand aan; Verisight zet de
+          Deze setup is voor Loep-beheerders. De klant levert een respondentbestand aan; Loep zet de
           campagne op, controleert de import en verstuurt uitnodigingen. Daarna krijgt de organisatie toegang tot
           het eigen dashboard en rapport.
         </p>

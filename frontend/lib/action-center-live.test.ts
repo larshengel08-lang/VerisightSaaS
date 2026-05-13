@@ -209,7 +209,7 @@ describe('live action center builder', () => {
     const exitDelivery = buildDeliveryRecord({
       lifecycle_stage: 'first_management_use',
       first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
-      operator_owner: 'Verisight delivery',
+      operator_owner: 'Loep delivery',
       next_step: 'Plan eerste managementgesprek met HR en sponsor.',
       customer_handoff_note: 'Vertrekduiding is nu scherp genoeg voor een eerste MT-read.',
     })
@@ -952,7 +952,7 @@ describe('live action center builder', () => {
           first_management_use_confirmed_at: '2026-04-20T09:00:00.000Z',
           next_step: 'Plan het vervolggesprek met HR en operations.',
           customer_handoff_note: null,
-          operator_owner: 'Verisight delivery',
+          operator_owner: 'Loep delivery',
           operator_notes: null,
         }),
         deliveryCheckpoints: [],
@@ -993,7 +993,7 @@ describe('live action center builder', () => {
       contact_request_id: null,
       lifecycle_stage: 'first_management_use',
       exception_status: 'none',
-      operator_owner: 'Verisight delivery',
+      operator_owner: 'Loep delivery',
       next_step: 'Plan follow-up.',
       operator_notes: null,
       customer_handoff_note: null,
@@ -1745,7 +1745,7 @@ describe('live action center builder', () => {
         initialItems: items,
         initialSelectedItemId: currentRouteId,
         initialView: 'actions',
-        fallbackOwnerName: 'Verisight gebruiker',
+        fallbackOwnerName: 'Loep gebruiker',
         ownerOptions: ['Manager Operations'],
         workbenchHref: '/dashboard',
         itemHrefs: {

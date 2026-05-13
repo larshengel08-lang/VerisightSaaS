@@ -11,10 +11,10 @@ function getReviewOrganizationName(organizationNames: string[]) {
   }
 
   if (organizationNames.length > 1) {
-    return 'Verisight organisaties'
+    return 'Loep organisaties'
   }
 
-  return 'Verisight organisatie'
+  return 'Loep organisatie'
 }
 
 export default async function ActionCenterReviewmomentenPage() {

@@ -32,9 +32,9 @@ export function isActionCenterGovernanceActorRole(
 export function getActionCenterGovernanceActorRoleLabel(role: ActionCenterGovernanceActorRole) {
   switch (role) {
     case 'verisight_admin':
-      return 'Verisight admin'
+      return 'Loep admin'
     case 'verisight':
-      return 'Verisight'
+      return 'Loep'
     case 'hr_owner':
       return 'HR owner'
     case 'hr_member':

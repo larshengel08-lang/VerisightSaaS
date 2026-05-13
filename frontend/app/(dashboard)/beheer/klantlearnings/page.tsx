@@ -305,7 +305,7 @@ export default async function KlantLearningsPage({ searchParams }: Props) {
   const initialExitCampaignId = exitCampaigns.some((campaign) => campaign.id === initialCampaignId)
     ? initialCampaignId
     : null
-  const fallbackOwnerName = 'Verisight beheer'
+  const fallbackOwnerName = 'Loep beheer'
   const previewItems: ActionCenterPreviewItem[] = exitDossiers.map((dossier, index) => {
     const dossierCheckpoints = checkpointsByDossier[dossier.id] ?? []
     const managementCheckpoint =

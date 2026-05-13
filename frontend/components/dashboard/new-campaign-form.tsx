@@ -215,7 +215,7 @@ export function NewCampaignForm({ orgs }: Props) {
                       : 'Leadership Scan start in deze wave altijd als baseline. Eerst bewijzen we een geaggregeerde managementread zonder named leaders, hierarchy of 360-logica.'}
         </p>
         <p className="mt-2 text-xs text-slate-500">
-          Deze setup blijft assisted: Verisight beheert campaign, importcontrole en activatie; de klant levert input en gebruikt daarna dashboard en rapport.
+          Deze setup blijft assisted: Loep beheert campaign, importcontrole en activatie; de klant levert input en gebruikt daarna dashboard en rapport.
         </p>
       </div>
 

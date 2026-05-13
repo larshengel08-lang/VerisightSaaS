@@ -11,7 +11,7 @@ describe('beheer admin alignment', () => {
     expect(source).toContain('surface="ops"')
     expect(source).toContain('Operationele setup')
     expect(source).toContain('Werkbanken en standaardlagen')
-    expect(source).toContain('Werkvolgorde voor Verisight')
+    expect(source).toContain('Werkvolgorde voor Loep')
     expect(source).toContain('Open deliverylaag')
     expect(source).toContain('Gebruik dit overzicht voor organisatie-setup, campaign-setup')
     expect(source).toContain('Billing registry')

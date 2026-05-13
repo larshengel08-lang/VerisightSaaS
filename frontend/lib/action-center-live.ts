@@ -478,7 +478,7 @@ export function buildLiveActionCenterItems(contexts: LiveActionCenterCampaignCon
       const definition = getScanDefinition(context.campaign.scan_type)
       const defaults = SCAN_DEFAULTS[context.campaign.scan_type]
       const avgSignal = context.stats?.avg_signal_score ?? context.stats?.avg_risk_score ?? null
-      const fallbackAuthor = context.organizationName || 'Verisight'
+      const fallbackAuthor = context.organizationName || 'Loep'
       const routeActions = context.routeActions ?? []
       const actionReviews = context.actionReviews ?? []
       const actionAggregation =

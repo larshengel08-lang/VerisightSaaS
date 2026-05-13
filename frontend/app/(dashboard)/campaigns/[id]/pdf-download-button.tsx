@@ -45,7 +45,7 @@ export function PdfDownloadButton({ campaignId, campaignName, scanType }: Props)
       const objectUrl = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = objectUrl
-      link.download = `Verisight_${campaignName.replace(/ /g, '_')}.pdf`
+      link.download = `Loep_${campaignName.replace(/ /g, '_')}.pdf`
       link.click()
       URL.revokeObjectURL(objectUrl)
     } catch {

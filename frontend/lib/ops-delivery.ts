@@ -287,7 +287,7 @@ export function getDeliveryOperatingGuide(scanType: ScanType): DeliveryOperating
   const sharedRoles: DeliveryOperatingRole[] = [
     {
       title: 'Delivery-owner',
-      owner: 'Verisight delivery',
+      owner: 'Loep delivery',
       responsibility: 'Bewaakt launch discipline, deliverystart, open blockers en de eerstvolgende stap.',
     },
     {
@@ -300,7 +300,7 @@ export function getDeliveryOperatingGuide(scanType: ScanType): DeliveryOperating
     },
     {
       title: 'Follow-up beslisser',
-      owner: 'Verisight + klant owner',
+      owner: 'Loep + klant owner',
       responsibility: 'Kiest bewust of de route doorgaat, bounded vervolgt, verdiept, pauzeert of stopt.',
     },
   ]
@@ -413,7 +413,7 @@ export function getDeliveryOperatingGuide(scanType: ScanType): DeliveryOperating
     {
       status: 'needs_operator_recovery',
       title: 'Operator recovery nodig',
-      owner: 'Verisight delivery',
+      owner: 'Loep delivery',
       responseWindow: 'Binnen 1 werkdag herstelpad',
       escalationRule: 'Escaleer als herstel niet binnen het afgesproken reviewmoment of de eerstvolgende deliverystap kan landen.',
     },

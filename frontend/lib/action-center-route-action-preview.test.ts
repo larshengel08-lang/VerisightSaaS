@@ -145,7 +145,7 @@ describe('action center route action preview', () => {
       React.createElement(ActionCenterPreview, {
         initialItems: [item],
         initialView: 'actions',
-        fallbackOwnerName: 'Verisight gebruiker',
+        fallbackOwnerName: 'Loep gebruiker',
         ownerOptions: ['Manager Operations'],
         canRespondToRequests: true,
         managerResponseEndpoint: '/api/action-center-manager-responses',
@@ -201,7 +201,7 @@ describe('action center route action preview', () => {
       React.createElement(ActionCenterPreview, {
         initialItems: [item],
         initialView: 'actions',
-        fallbackOwnerName: 'Verisight gebruiker',
+        fallbackOwnerName: 'Loep gebruiker',
         ownerOptions: ['Manager Operations'],
         canRespondToRequests: true,
         managerResponseEndpoint: '/api/action-center-manager-responses',

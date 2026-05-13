@@ -32,7 +32,7 @@ export default async function RouteBeheerPage({ params }: Props) {
     return (
       <SuiteAccessDenied
         title="Je ziet hier geen routebeheer"
-        description="Jouw login opent alleen Action Center voor toegewezen teams. Routebeheer, campagnedetails en rapporten blijven zichtbaar voor HR en Verisight."
+        description="Jouw login opent alleen Action Center voor toegewezen teams. Routebeheer, campagnedetails en rapporten blijven zichtbaar voor HR en Loep."
       />
     )
   }

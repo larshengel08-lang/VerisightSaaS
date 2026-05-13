@@ -58,7 +58,7 @@ export default async function ReportsPage({
     return (
       <SuiteAccessDenied
         title="Je ziet hier geen rapporten"
-        description="Jouw login opent alleen Action Center. Rapporten, survey-inzichten en campagnedetails blijven zichtbaar voor HR en Verisight."
+        description="Jouw login opent alleen Action Center. Rapporten, survey-inzichten en campagnedetails blijven zichtbaar voor HR en Loep."
       />
     );
   }

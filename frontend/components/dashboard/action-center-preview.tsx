@@ -1466,7 +1466,7 @@ export function ActionCenterPreview({
                 V
               </div>
               <div>
-                <p className="text-[1.05rem] font-semibold tracking-[-0.02em]">Verisight</p>
+                <p className="text-[1.05rem] font-semibold tracking-[-0.02em]">Loep</p>
                 <p className="text-sm text-white/55">Duiding &amp; opvolging</p>
               </div>
             </Link>
@@ -2234,7 +2234,7 @@ export function ActionCenterPreview({
                             Route afsluiten
                           </h3>
                           <p className="mt-3 text-sm leading-7 text-[#4f6175]">
-                            Gebruik deze stap als HR of Verisight wanneer deze route bestuurlijk dicht kan, zonder de historische lezing te verliezen.
+                            Gebruik deze stap als HR of Loep wanneer deze route bestuurlijk dicht kan, zonder de historische lezing te verliezen.
                           </p>
 
                           {routeCloseoutPanelOpen ? (
@@ -3094,7 +3094,7 @@ export function ActionCenterPreview({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8d8377]">Nieuwe actie</p>
                 <h2 className="mt-2 text-[2rem] font-semibold tracking-[-0.05em] text-[#132033]">Actie aanmaken</h2>
                 <p className="mt-3 text-base leading-8 text-[#4f6175]">
-                  Koppel een concrete vervolgstap aan een Verisight-signaal of bestaand dossier in Action Center.
+                  Koppel een concrete vervolgstap aan een Loep-signaal of bestaand dossier in Action Center.
                 </p>
               </div>
               <button

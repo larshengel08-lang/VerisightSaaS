@@ -248,7 +248,7 @@ export function RouteBeheerSectionCards({ data }: { data: RouteBeheerPageData })
             />
           ) : (
             <p className="text-sm leading-6 text-[color:var(--text)]">
-              Alleen de klant owner of Verisight kan uitnodigingen en herinneringen hier verder uitvoeren.
+              Alleen de klant owner of Loep kan uitnodigingen en herinneringen hier verder uitvoeren.
             </p>
           )}
         </div>

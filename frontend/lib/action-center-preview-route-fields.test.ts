@@ -49,7 +49,7 @@ describe('action center preview route fields', () => {
       React.createElement(ActionCenterPreview, {
         initialItems: [item],
         initialView: 'actions',
-        fallbackOwnerName: 'Verisight gebruiker',
+        fallbackOwnerName: 'Loep gebruiker',
         ownerOptions: ['Manager Operations'],
         workbenchHref: '/dashboard',
         readOnly: true,
@@ -195,7 +195,7 @@ describe('action center preview route fields', () => {
       React.createElement(ActionCenterPreview, {
         initialItems: [item],
         initialView: 'actions',
-        fallbackOwnerName: 'Verisight gebruiker',
+        fallbackOwnerName: 'Loep gebruiker',
         ownerOptions: ['Manager Operations'],
         canRespondToRequests: true,
         managerResponseEndpoint: '/api/action-center-manager-responses',

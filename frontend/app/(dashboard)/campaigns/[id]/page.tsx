@@ -544,7 +544,7 @@ export default async function CampaignPage({ params }: Props) {
     return (
       <SuiteAccessDenied
         title="Je ziet hier geen campagnedetail"
-        description="Jouw login opent alleen Action Center voor toegewezen teams. Surveyresultaten, campagnedetails en rapporten blijven zichtbaar voor HR en Verisight."
+        description="Jouw login opent alleen Action Center voor toegewezen teams. Surveyresultaten, campagnedetails en rapporten blijven zichtbaar voor HR en Loep."
       />
     );
   }
@@ -3797,7 +3797,7 @@ export default async function CampaignPage({ params }: Props) {
             }
             description={
               showClientExecutionFlow
-                ? "Gebruik deze laag om deelnemers, uitnodigingen en respons netjes te volgen. Productsetup, campagne-inrichting en uitvoercontrole blijven bij Verisight."
+                ? "Gebruik deze laag om deelnemers, uitnodigingen en respons netjes te volgen. Productsetup, campagne-inrichting en uitvoercontrole blijven bij Loep."
                 : "Alles onder deze lijn ondersteunt uitvoering en beheer. De managementhoofdlijn blijft hierboven compact en bestuurlijk."
             }
             aside={

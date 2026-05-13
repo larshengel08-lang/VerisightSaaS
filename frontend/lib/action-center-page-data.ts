@@ -390,7 +390,7 @@ export async function getActionCenterPageData({
       return {
         campaign,
         stats: statsByCampaignId.get(campaign.id) ?? null,
-        organizationName: organizationById.get(campaign.organization_id)?.name ?? 'Verisight organisatie',
+        organizationName: organizationById.get(campaign.organization_id)?.name ?? 'Loep organisatie',
         memberRole: roleByOrgId[campaign.organization_id] ?? null,
         scopeType: scope.scopeType,
         scopeValue: scope.scopeValue,

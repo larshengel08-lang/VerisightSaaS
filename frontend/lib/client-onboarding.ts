@@ -31,7 +31,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
   {
     key: 'route',
     title: 'Route en intake',
-    owner: 'Verisight',
+    owner: 'Loep',
     boundary: 'buyer-facing',
     outcome: 'Heldere productroute, timing en eerste managementvraag.',
     customerAction: 'Deel context, urgentie en beoogde sponsor of contactpersoon.',
@@ -39,7 +39,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
   {
     key: 'implementation',
     title: 'Implementation intake',
-    owner: 'Verisight',
+    owner: 'Loep',
     boundary: 'handoff',
     outcome: 'Datavoorwaarden, scanperiode, metadata en klantverwachting staan scherp.',
     customerAction: 'Bevestig doelgroep, scanmodus, contactpersoon en beschikbare metadata.',
@@ -47,7 +47,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
   {
     key: 'setup',
     title: 'Campagne-opzet',
-    owner: 'Verisight',
+    owner: 'Loep',
     boundary: 'internal',
     outcome: 'Organisatie en campagne staan correct klaar voor uitvoering.',
     customerAction: 'Geen toolsetup; alleen validatie van naam, timing en doelgroep waar nodig.',
@@ -55,7 +55,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
   {
     key: 'import',
     title: 'Respondentimport en uitnodigingen',
-    owner: 'Verisight',
+    owner: 'Loep',
     boundary: 'internal',
     outcome: 'Bestand is gecontroleerd, respondenten staan klaar en de uitnodigingen zijn veilig gestart.',
     customerAction: 'Lever een bruikbaar respondentbestand aan volgens productspecifieke kolommen.',
@@ -63,7 +63,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
   {
     key: 'activation',
     title: 'Klantactivatie',
-    owner: 'Verisight',
+    owner: 'Loep',
     boundary: 'client',
     outcome: 'De klant kan inloggen en krijgt het juiste dashboard en de juiste campaign vrijgegeven voor een eerste read.',
     customerAction: 'Activeer account en open daarna de vrijgegeven campaign of het juiste dashboard voor de eerste read.',
@@ -79,7 +79,7 @@ export const CANONICAL_ONBOARDING_PHASES = [
   {
     key: 'report',
     title: 'Rapportuitleg',
-    owner: 'Verisight',
+    owner: 'Loep',
     boundary: 'shared',
     outcome: 'Rapport en dashboard vertellen hetzelfde managementverhaal.',
     customerAction: 'Gebruik rapport en dashboard samen voor bestuurlijke duiding en terugkoppeling.',

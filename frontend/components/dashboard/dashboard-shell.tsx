@@ -56,7 +56,7 @@ export function DashboardShellFrame({
   )
   const isActionCenter = pathname.startsWith('/action-center')
   const actionCenterView = searchParams.get('view')
-  const accountLabel = userEmail.split('@')[1]?.split('.')[0] ?? 'Verisight'
+  const accountLabel = userEmail.split('@')[1]?.split('.')[0] ?? 'Loep'
   const accountName = accountLabel.charAt(0).toUpperCase() + accountLabel.slice(1)
   const mobileItems = isActionCenter ? ACTION_CENTER_NAV : [...navigation.modules, ...navigation.admin]
   const showReportsQuickLink = shellMode === 'full' && !isActionCenter
@@ -85,7 +85,7 @@ export function DashboardShellFrame({
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-full">
                   <Image
                     src="/brand/verisight-pulse-logo.svg"
-                    alt="Verisight logo"
+                    alt="Loep logo"
                     width={36}
                     height={36}
                     className="h-9 w-9"
@@ -93,9 +93,9 @@ export function DashboardShellFrame({
                   />
                 </span>
                 <span className="block">
-                  <span className="block font-serif text-[1.1rem] leading-5 text-[#f5f2eb]">Verisight</span>
+                  <span className="block font-serif text-[1.1rem] leading-5 text-[#f5f2eb]">Loep</span>
                   <span className="mt-0.5 block text-[0.72rem] uppercase tracking-[0.24em] text-[#8fa1b3]">
-                    People Suite
+                    People, Patterns, Priorities
                   </span>
                 </span>
               </Link>
@@ -260,8 +260,8 @@ export function DashboardShellFrame({
 
           <footer className="border-t border-[color:var(--dashboard-frame-border)] px-4 py-4 text-xs text-[color:var(--dashboard-muted)] sm:px-6">
             {shellMode === 'action_center_only'
-              ? 'Verisight Action Center voor managers in dezelfde omgeving'
-              : 'Verisight dashboard, rapporten en Action Center in één omgeving'}
+              ? 'Loep Action Center voor managers in dezelfde omgeving'
+              : 'Loep dashboard, rapporten en Action Center in één omgeving'}
           </footer>
         </div>
       </div>

@@ -217,7 +217,7 @@ export default async function BeheerPage() {
         tone="slate"
         eyebrow="Adminroute voor setup"
         title="Operationele setup"
-        description="Gebruik dit overzicht voor organisatie-setup, campaign-setup, respondentimport en klantactivatie. Buyer-facing dashboards blijven apart; dit scherm houdt Verisight-werk, handoff en open operationele acties compact scanbaar."
+        description="Gebruik dit overzicht voor organisatie-setup, campaign-setup, respondentimport en klantactivatie. Buyer-facing dashboards blijven apart; dit scherm houdt Loep-werk, handoff en open operationele acties compact scanbaar."
         meta={
           <>
             <DashboardChip surface="ops" label={`${activeOrgs.length} actieve organisatie${activeOrgs.length === 1 ? '' : 's'}`} />
@@ -257,7 +257,7 @@ export default async function BeheerPage() {
         }
         aside={
           <div className="space-y-3 text-sm text-slate-700">
-            <p className="font-semibold text-slate-950">Werkvolgorde voor Verisight</p>
+            <p className="font-semibold text-slate-950">Werkvolgorde voor Loep</p>
             <p>1. Organisatie, 2. campaign, 3. import en uitnodiging, 4. klanttoegang bevestigen.</p>
             <p className="text-xs leading-5 text-slate-500">
               Gebruik beheer eerst als schakelpagina. De zwaardere werkbanken open je pas wanneer daar echt werk ligt.
@@ -537,7 +537,7 @@ export default async function BeheerPage() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Assisted setupvolgorde</p>
-                  <p className="mt-1 text-lg font-semibold tracking-[-0.02em] text-slate-950">Werkvolgorde voor Verisight</p>
+                  <p className="mt-1 text-lg font-semibold tracking-[-0.02em] text-slate-950">Werkvolgorde voor Loep</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <StepBadge n={1} label="Organisatie" done={step1Done} />
@@ -677,7 +677,7 @@ export default async function BeheerPage() {
                   surface="ops"
                   eyebrow="Input"
                   title="Import blijft assisted"
-                  body="Gebruik een klantbestand met e-mailadressen en optionele segmentvelden. Verisight doet QA en verzending; de klant blijft verantwoordelijk voor correcte input en respons."
+                  body="Gebruik een klantbestand met e-mailadressen en optionele segmentvelden. Loep doet QA en verzending; de klant blijft verantwoordelijk voor correcte input en respons."
                   tone="slate"
                 />
 

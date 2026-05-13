@@ -55,7 +55,7 @@ function buildDeliveryRecord(overrides: Partial<CampaignDeliveryRecord> = {}): C
     contact_request_id: null,
     lifecycle_stage: "first_management_use",
     exception_status: "none",
-    operator_owner: "Verisight delivery",
+    operator_owner: "Loep delivery",
     next_step: "Leg de eerste bounded opvolgstap vast.",
     operator_notes: "De eerste managementread staat klaar voor follow-through.",
     customer_handoff_note: "De managementread is klaar voor een eerste bounded follow-through.",
@@ -427,7 +427,7 @@ describe("action center landing shell", () => {
       managementActionOutcome: "afronden",
       canAssignManagers: true,
       canRespondToRequests: true,
-      workspaceSubtitle: "Verisight + HR",
+      workspaceSubtitle: "Loep + HR",
     });
 
     expect(item.coreSemantics.route.routeStatus).toBe("afgerond");
@@ -448,7 +448,7 @@ describe("action center landing shell", () => {
       managementActionOutcome: "afronden",
       canAssignManagers: true,
       canRespondToRequests: true,
-      workspaceSubtitle: "Verisight + HR",
+      workspaceSubtitle: "Loep + HR",
       withDirectActiveSuccessor: true,
     });
 
@@ -475,7 +475,7 @@ describe("action center landing shell", () => {
       managementActionOutcome: "afronden",
       canAssignManagers: true,
       canRespondToRequests: true,
-      workspaceSubtitle: "Verisight + HR",
+      workspaceSubtitle: "Loep + HR",
       withTargetCandidate: false,
     });
 
@@ -493,7 +493,7 @@ describe("action center landing shell", () => {
       managementActionOutcome: "afronden",
       canAssignManagers: true,
       canRespondToRequests: true,
-      workspaceSubtitle: "Verisight + HR",
+      workspaceSubtitle: "Loep + HR",
       withAmbiguousTargetCandidates: true,
     });
 
@@ -511,7 +511,7 @@ describe("action center landing shell", () => {
       managementActionOutcome: "afronden",
       canAssignManagers: true,
       canRespondToRequests: true,
-      workspaceSubtitle: "Verisight + HR",
+      workspaceSubtitle: "Loep + HR",
       withOptimisticDirectSuccessor: true,
     });
 
@@ -553,7 +553,7 @@ describe("action center landing shell", () => {
       managementActionOutcome: "bijstellen",
       canAssignManagers: true,
       canRespondToRequests: true,
-      workspaceSubtitle: "Verisight + HR",
+      workspaceSubtitle: "Loep + HR",
     });
 
     expect(item.coreSemantics.route.routeStatus).toBe("in-uitvoering");

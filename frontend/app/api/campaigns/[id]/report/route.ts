@@ -87,7 +87,7 @@ export async function GET(_request: Request, { params }: Context) {
     headers: {
       'Content-Type': 'application/pdf',
       'Content-Disposition': backendResponse.headers.get('content-disposition') ??
-        `attachment; filename="Verisight_${campaign.name.replace(/ /g, '_')}.pdf"`,
+        `attachment; filename="Loep_${campaign.name.replace(/ /g, '_')}.pdf"`,
       'Cache-Control': 'no-store',
     },
   })
