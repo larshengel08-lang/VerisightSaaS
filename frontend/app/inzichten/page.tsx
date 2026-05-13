@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MarketingPageShell } from '@/components/marketing/marketing-page-shell'
@@ -8,21 +8,21 @@ import { getAllInsights } from '@/lib/insights'
 
 export const metadata: Metadata = {
   title: 'Inzichten',
-  description: 'Verdiepende inzichten over vertrek, behoud, duiding en opvolging binnen dezelfde wereld als Verisight.',
+  description: 'Verdiepende inzichten over vertrek, behoud, duiding en opvolging binnen dezelfde wereld als Loep.',
   alternates: {
     canonical: '/inzichten',
   },
   openGraph: {
     type: 'website',
-    title: 'Inzichten | Verisight',
-    description: 'Verdiepende inzichten over vertrek, behoud, duiding en opvolging binnen dezelfde wereld als Verisight.',
+    title: 'Inzichten | Loep',
+    description: 'Verdiepende inzichten over vertrek, behoud, duiding en opvolging binnen dezelfde wereld als Loep.',
     url: 'https://www.verisight.nl/inzichten',
     images: ['/opengraph-image'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Inzichten | Verisight',
-    description: 'Verdiepende inzichten over vertrek, behoud, duiding en opvolging binnen dezelfde wereld als Verisight.',
+    title: 'Inzichten | Loep',
+    description: 'Verdiepende inzichten over vertrek, behoud, duiding en opvolging binnen dezelfde wereld als Loep.',
     images: ['/opengraph-image'],
   },
 }
@@ -44,7 +44,7 @@ export default function InsightsIndexPage() {
           <p className="mt-6 max-w-3xl text-lg leading-[1.8] text-[var(--muted)]">
             Hier leest u verdiepende artikelen die helpen scherper te kijken naar vertrek, behoud, prioriteiten en
             eerste opvolging. Rustige duiding, compact gebracht en duidelijk verbonden aan dezelfde wereld als
-            Verisight.
+            Loep.
           </p>
         </div>
       }
@@ -60,7 +60,7 @@ export default function InsightsIndexPage() {
             href="/aanpak"
             className="marketing-button-secondary mt-6"
           >
-            Bekijk hoe Verisight werkt
+            Bekijk hoe Loep werkt
           </Link>
         </div>
       }
@@ -69,3 +69,4 @@ export default function InsightsIndexPage() {
     </MarketingPageShell>
   )
 }
+

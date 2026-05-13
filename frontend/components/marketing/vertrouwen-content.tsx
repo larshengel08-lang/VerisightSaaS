@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { T, AC, FF, SHELL, useInView, Reveal, Arrow, SectionMark } from '@/components/marketing/design-tokens'
@@ -76,7 +76,7 @@ function HeroSection() {
                   margin: '28px 0 0',
                 }}
               >
-                Verisight laat publiek zien hoe privacy, rapportage en wat u wel en niet terugziet zijn ingericht, zodat
+                Loep laat publiek zien hoe privacy, rapportage en wat u wel en niet terugziet zijn ingericht, zodat
                 u de basis kunt toetsen voordat een traject start.
               </p>
             </div>
@@ -191,7 +191,7 @@ function ReadingGuideSection() {
               lineHeight: 1.1,
             }}
           >
-            Verisight helpt gesprekken scherper maken,
+            Loep helpt gesprekken scherper maken,
             <br />
             <em style={{ fontStyle: 'italic', color: AC.deep }}>zonder automatisch oordeel.</em>
           </h2>
@@ -279,7 +279,7 @@ function PrivacySection() {
             <em style={{ fontStyle: 'italic', color: AC.deep }}>voorspelbare vragen.</em>
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, marginBottom: 32, maxWidth: '50ch' }}>
-            Zo ziet u vooraf hoe Verisight met data, privacy en output omgaat.
+            Zo ziet u vooraf hoe Loep met data, privacy en output omgaat.
           </p>
         </Reveal>
         <div className="grid grid-cols-1 gap-0 md:grid-cols-2 xl:grid-cols-3">
@@ -338,7 +338,7 @@ function ContactSection() {
       sectionIndex="05"
       sectionLabel="Eerste route-inschatting"
       backdropNumber={null}
-      title="Ontdek of Verisight"
+      title="Ontdek of Loep"
       accentTitle="past bij uw vraag."
       body="In een kort gesprek toetsen we productkeuze, privacy, timing en wat u als eerste terugkrijgt."
       buttonLabel="Plan een kennismaking"
@@ -358,3 +358,4 @@ export function VertrouwenContent() {
     </div>
   )
 }
+

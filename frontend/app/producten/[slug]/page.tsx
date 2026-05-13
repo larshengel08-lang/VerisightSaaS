@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import {
@@ -48,12 +48,12 @@ export async function generateMetadata({ params }: Props) {
   const url = `https://www.verisight.nl${product.href}`
   const imageAlt =
     isActiveMarketingProduct(product)
-      ? product.ogAlt ?? `${product.label} productpagina van Verisight`
-      : `${product.label} als gereserveerde future route bij Verisight`
+      ? product.ogAlt ?? `${product.label} productpagina van Loep`
+      : `${product.label} als gereserveerde future route bij Loep`
   const imageUrl = `${product.href}/opengraph-image`
 
   return {
-    title: product.seoTitle ?? `${product.label} | Verisight`,
+    title: product.seoTitle ?? `${product.label} | Loep`,
     description,
     alternates: {
       canonical: product.href,
@@ -61,13 +61,13 @@ export async function generateMetadata({ params }: Props) {
     openGraph: {
       type: 'website',
       url,
-      title: product.seoTitle ?? `${product.label} | Verisight`,
+      title: product.seoTitle ?? `${product.label} | Loep`,
       description,
       images: [{ url: imageUrl, width: 1200, height: 630, alt: imageAlt }],
     },
     twitter: {
       card: 'summary_large_image',
-      title: product.seoTitle ?? `${product.label} | Verisight`,
+      title: product.seoTitle ?? `${product.label} | Loep`,
       description,
       images: [imageUrl],
     },
@@ -109,12 +109,12 @@ function getProductStructuredData(product: MarketingProduct) {
   const webpageSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: product.seoTitle ?? `${product.label} | Verisight`,
+    name: product.seoTitle ?? `${product.label} | Loep`,
     description: product.description,
     url: fullUrl,
     isPartOf: {
       '@type': 'WebSite',
-      name: 'Verisight',
+      name: 'Loep',
       url: 'https://www.verisight.nl',
     },
     primaryImageOfPage: imageUrl,
@@ -145,7 +145,7 @@ function getProductStructuredData(product: MarketingProduct) {
     image: imageUrl,
     provider: {
       '@type': 'Organization',
-      name: 'Verisight',
+      name: 'Loep',
       url: 'https://www.verisight.nl',
     },
     areaServed: { '@type': 'Country', name: 'Nederland' },
@@ -177,7 +177,7 @@ function ExitScanPage() {
     ruleLight: 'oklch(0.918 0.008 62)',
   }
     const AC = { deep: 'oklch(0.45 0.18 50)', mid: 'oklch(0.76 0.14 53)', soft: 'oklch(0.95 0.045 50)' }
-const FF = 'var(--font-playfair), serif'
+const FF = 'var(--font-inter-tight), serif'
     const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
     const cardShadow = '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)'
     const featureCardStyle = {
@@ -370,7 +370,7 @@ function RetentionScanPage() {
     ruleLight: 'oklch(0.918 0.008 62)',
     teal: 'oklch(0.50 0.12 188)', tealSoft: 'oklch(0.94 0.04 185)', tealFaint: 'oklch(0.972 0.018 185)',
   }
-const FF = 'var(--font-playfair), serif'
+const FF = 'var(--font-inter-tight), serif'
     const SH = { maxWidth: 1200, margin: '0 auto', padding: '0 clamp(20px,4vw,48px)' }
     const cardShadow = '0 10px 28px rgba(22, 34, 56, 0.06), 0 2px 6px rgba(22, 34, 56, 0.04)'
     const featureCardStyle = {
@@ -1138,7 +1138,7 @@ function OnboardingPage() {
                 [
                   'Startpunt',
                   'Wanneer een vroege managementvraag openstaat over hoe nieuwe medewerkers nu landen in een checkpoint.',
-                  'Wanneer Verisight een klant technisch en operationeel live helpt gaan.',
+                  'Wanneer Loep een klant technisch en operationeel live helpt gaan.',
                 ],
                 [
                   'Wat je leest',
@@ -1652,7 +1652,7 @@ function UpcomingProductPage({ slug }: { slug: string }) {
           </span>
           <h2 className="mt-6 text-3xl font-semibold text-slate-950">{product.tagline}</h2>
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600">
-            Deze productpagina is bewust gereserveerd binnen de bredere productstructuur. Daardoor kan Verisight later
+            Deze productpagina is bewust gereserveerd binnen de bredere productstructuur. Daardoor kan Loep later
             groeien zonder dat de huidige kernportfolio opnieuw op de schop hoeft of nu al productverwarring krijgt.
           </p>
         </div>
@@ -1660,3 +1660,4 @@ function UpcomingProductPage({ slug }: { slug: string }) {
     </MarketingPageShell>
   )
 }
+

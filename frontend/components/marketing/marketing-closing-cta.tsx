@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { Arrow, FF, SHELL, T, SectionMark } from '@/components/marketing/design-tokens'
@@ -25,7 +25,7 @@ export function MarketingClosingCta({
   backdropNumber = sectionIndex,
   title = 'Wilt u zien',
   accentTitle = 'welke route nu het meest logisch is?',
-  body = 'Plan een korte kennismaking. Dan ziet u of Verisight past, welke eerste route logisch is en hoe de output er in uw situatie uit kan zien.',
+  body = 'Plan een korte kennismaking. Dan ziet u of Loep past, welke eerste route logisch is en hoe de output er in uw situatie uit kan zien.',
   buttonLabel = 'Plan een kennismaking',
   note,
   showSectionMark = true,
@@ -97,3 +97,4 @@ export function MarketingClosingCta({
   )
 }
 const ACcent = '#C96A4B'
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 import Link from 'next/link'
@@ -18,11 +18,11 @@ export default function GlobalError({ error, reset }: Props) {
       <div className="w-full max-w-md text-center">
 
         <Link href="/" className="inline-block text-2xl font-bold text-blue-600 tracking-tight mb-10">
-          Verisight
+          Loep
         </Link>
 
         <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
-          ⚠️
+          âš ï¸
         </div>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-3">Er is iets misgegaan</h1>
@@ -42,7 +42,7 @@ export default function GlobalError({ error, reset }: Props) {
             href="/dashboard"
             className="bg-white hover:bg-gray-50 text-gray-700 font-semibold px-6 py-2.5 rounded-lg text-sm border border-gray-200 transition-colors"
           >
-            ← Naar dashboard
+            â† Naar dashboard
           </Link>
         </div>
 
@@ -53,3 +53,4 @@ export default function GlobalError({ error, reset }: Props) {
     </div>
   )
 }
+

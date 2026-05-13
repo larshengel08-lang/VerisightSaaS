@@ -1,25 +1,25 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { Reveal } from '@/components/marketing/design-tokens'
 import { buildContactHref } from '@/lib/contact-funnel'
 
 const SURFACE = {
-  paper: '#FBF9FA',
-  paperSoft: '#F5F3F4',
+  paper: '#F4F1EA',
+  paperSoft: '#EEE8DE',
   surface: '#FFFFFF',
-  surfaceSoft: '#F5F3F4',
-  border: '#E5E1D8',
-  borderSoft: '#EFEDEE',
-  ink: '#051625',
-  text: '#1B1C1D',
-  muted: '#43474C',
-  subtle: '#5A6B7D',
-  teal: '#C05A44',
-  tealSoft: '#F3E1DC',
-  amber: '#C05A44',
-  amberSoft: '#F3E1DC',
-  amberGlow: '#A94D3B',
-  charcoal: '#051625',
-  charcoalSoft: '#1B2B3A',
+  surfaceSoft: '#F7F4EE',
+  border: 'rgba(13,27,42,0.15)',
+  borderSoft: 'rgba(13,27,42,0.10)',
+  ink: '#0D1B2A',
+  text: '#0D1B2A',
+  muted: '#4A6070',
+  subtle: '#6A7783',
+  teal: '#E8A020',
+  tealSoft: 'rgba(232,160,32,0.12)',
+  amber: '#E8A020',
+  amberSoft: 'rgba(232,160,32,0.12)',
+  amberGlow: '#B07A10',
+  charcoal: '#0D1B2A',
+  charcoalSoft: '#1A2D40',
 } as const
 
 const SHELL = {
@@ -28,8 +28,8 @@ const SHELL = {
   padding: '0 clamp(20px, 4vw, 48px)',
 } as const
 
-const displayFont = 'var(--font-playfair), Georgia, serif'
-const bodyFont = 'var(--font-plus-jakarta), system-ui, sans-serif'
+const displayFont = 'var(--font-inter-tight), Inter, sans-serif'
+const bodyFont = 'var(--font-inter), system-ui, sans-serif'
 
 const heroTrustItems = [
   'Dashboard voor inzicht \u2022 Managementrapport voor duiding \u2022 Action Center voor opvolging',
@@ -448,7 +448,7 @@ function ManagementFlowSection() {
                 maxWidth: '54rem',
               }}
             >
-              Verisight brengt analyse en vervolg samen in één heldere managementflow. Zo blijft het niet bij losse
+              Loep brengt analyse en vervolg samen in één heldere managementflow. Zo blijft het niet bij losse
               signalen of losse rapportage, maar wordt ook de stap naar gerichte opvolging ondersteund.
             </p>
           </Reveal>
@@ -841,7 +841,7 @@ function HeroSection() {
                   maxWidth: '32rem',
                 }}
               >
-                Verisight helpt organisaties signalen zichtbaar maken, prioriteren en opvolging organiseren in het Action Center.
+                Loep helpt organisaties signalen zichtbaar maken, prioriteren en opvolging organiseren in het Action Center.
               </p>
 
               <div
@@ -1291,7 +1291,7 @@ function SuitePreviewSection() {
                   maxWidth: '33rem',
                 }}
               >
-                Verisight brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie vast te leggen.
+                Loep brengt signalen samen in dashboard, samenvatting en rapport, en helpt vervolgens om prioriteit, eigenaar en eerste actie vast te leggen.
               </p>
             </Reveal>
 
@@ -2091,7 +2091,7 @@ function FirstDeliverySection() {
           </Reveal>
           <Reveal delay={0.05}>
             <p style={{ color: SURFACE.text, fontSize: 16, lineHeight: 1.78, margin: '0 auto 40px', maxWidth: '58rem' }}>
-              Verisight geeft u geen losse analyse zonder vervolg, maar een eerste managementflow die helpt om sneller
+              Loep geeft u geen losse analyse zonder vervolg, maar een eerste managementflow die helpt om sneller
               te begrijpen wat speelt, te bepalen wat eerst telt en gerichte opvolging op gang te brengen.
             </p>
           </Reveal>
@@ -2248,7 +2248,7 @@ function ContactSection() {
                 maxWidth: '48rem',
               }}
             >
-              Plan een kennismaking en ontdek hoe Verisight helpt om signalen zichtbaar te maken, prioriteiten scherper
+              Plan een kennismaking en ontdek hoe Loep helpt om signalen zichtbaar te maken, prioriteiten scherper
               te wegen en opvolging concreet te faciliteren.
             </p>
 
@@ -2315,5 +2315,6 @@ export function HomePageContent() {
     </div>
   )
 }
+
 
 

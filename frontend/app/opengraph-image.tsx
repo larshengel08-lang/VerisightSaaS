@@ -1,4 +1,4 @@
-import { ImageResponse } from 'next/og'
+﻿import { ImageResponse } from 'next/og'
 
 export const size = {
   width: 1200,
@@ -18,9 +18,9 @@ export default function OpenGraphImage() {
           position: 'relative',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          background: 'linear-gradient(145deg, #f8fbff 0%, #ffffff 48%, #eef6ff 100%)',
+          background: 'linear-gradient(145deg, #f4f1ea 0%, #ffffff 48%, #efe8dc 100%)',
           padding: '56px',
-          color: '#0f172a',
+          color: '#0d1b2a',
           fontFamily: 'Inter, Arial, sans-serif',
         }}
       >
@@ -32,7 +32,7 @@ export default function OpenGraphImage() {
             width: '320px',
             height: '320px',
             borderRadius: '999px',
-            background: '#dbeafe',
+            background: 'rgba(232,160,32,0.18)',
             opacity: 0.95,
           }}
         />
@@ -44,7 +44,7 @@ export default function OpenGraphImage() {
             width: '360px',
             height: '360px',
             borderRadius: '999px',
-            background: '#d1fae5',
+            background: 'rgba(13,27,42,0.08)',
             opacity: 0.85,
           }}
         />
@@ -59,8 +59,8 @@ export default function OpenGraphImage() {
                 padding: '12px 18px',
                 borderRadius: '999px',
                 background: '#ffffff',
-                border: '2px solid #dbeafe',
-                color: '#2563eb',
+                border: '2px solid rgba(232,160,32,0.26)',
+                color: '#B07A10',
                 fontSize: '22px',
                 fontWeight: 700,
               }}
@@ -70,7 +70,7 @@ export default function OpenGraphImage() {
                   width: '12px',
                   height: '12px',
                   borderRadius: '999px',
-                  background: '#2563eb',
+                  background: '#E8A020',
                 }}
               />
               ExitScan + RetentieScan
@@ -78,11 +78,11 @@ export default function OpenGraphImage() {
             <div style={{ fontSize: '74px', fontWeight: 700, lineHeight: 1.02 }}>
               Kies eerst de juiste route.
             </div>
-            <div style={{ fontSize: '34px', lineHeight: 1.3, color: '#334155' }}>
+            <div style={{ fontSize: '34px', lineHeight: 1.3, color: '#4A6070' }}>
               Begrijp waarom mensen gingen of zie eerder waar behoud onder druk staat.
             </div>
-            <div style={{ fontSize: '26px', lineHeight: 1.5, color: '#475569' }}>
-              Verisight levert twee duidelijke producten met dashboard, rapport en managementduiding in dezelfde taal.
+            <div style={{ fontSize: '26px', lineHeight: 1.5, color: '#4A6070' }}>
+              Loep levert twee duidelijke producten met dashboard, rapport en managementduiding in dezelfde taal.
             </div>
           </div>
 
@@ -93,13 +93,13 @@ export default function OpenGraphImage() {
                 flexDirection: 'column',
                 gap: '12px',
                 borderRadius: '30px',
-                background: '#0d1b2e',
+                background: '#0D1B2A',
                 color: '#ffffff',
                 padding: '28px',
                 boxShadow: '0 24px 70px rgba(15, 23, 42, 0.18)',
               }}
             >
-              <div style={{ fontSize: '20px', textTransform: 'uppercase', letterSpacing: '0.14em', color: '#93c5fd' }}>
+              <div style={{ fontSize: '20px', textTransform: 'uppercase', letterSpacing: '0.14em', color: '#F2C76F' }}>
                 Voor HR-teams
               </div>
               <div style={{ fontSize: '30px', fontWeight: 700, lineHeight: 1.2 }}>
@@ -114,20 +114,20 @@ export default function OpenGraphImage() {
                 gap: '10px',
                 borderRadius: '28px',
                 background: '#ffffff',
-                border: '2px solid #dbeafe',
+                border: '2px solid rgba(13,27,42,0.12)',
                 padding: '24px',
               }}
             >
-              <div style={{ fontSize: '18px', textTransform: 'uppercase', letterSpacing: '0.14em', color: '#64748b' }}>
+              <div style={{ fontSize: '18px', textTransform: 'uppercase', letterSpacing: '0.14em', color: '#6A7783' }}>
                 Live routes
               </div>
-              <div style={{ fontSize: '24px', lineHeight: 1.3, color: '#0f172a' }}>
+              <div style={{ fontSize: '24px', lineHeight: 1.3, color: '#0D1B2A' }}>
                 ExitScan
               </div>
-              <div style={{ fontSize: '24px', lineHeight: 1.3, color: '#059669' }}>
+              <div style={{ fontSize: '24px', lineHeight: 1.3, color: '#B07A10' }}>
                 RetentieScan
               </div>
-              <div style={{ fontSize: '22px', lineHeight: 1.3, color: '#0284c7' }}>
+              <div style={{ fontSize: '22px', lineHeight: 1.3, color: '#4A6070' }}>
                 Combinatie
               </div>
             </div>
@@ -148,15 +148,16 @@ export default function OpenGraphImage() {
                 width: '18px',
                 height: '18px',
                 borderRadius: '999px',
-                background: '#2563eb',
+                background: '#E8A020',
               }}
             />
-            <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a' }}>www.verisight.nl</div>
+            <div style={{ fontSize: '28px', fontWeight: 700, color: '#0D1B2A' }}>www.verisight.nl</div>
           </div>
-          <div style={{ fontSize: '24px', color: '#334155' }}>ExitScan en RetentieScan voor HR-teams</div>
+          <div style={{ fontSize: '24px', color: '#4A6070' }}>ExitScan en RetentieScan voor HR-teams</div>
         </div>
       </div>
     ),
     size,
   )
 }
+

@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import Link from 'next/link'
 import type { InsightPost } from '@/lib/insights'
 import { formatInsightDateLabel } from './insight-card'
@@ -75,7 +75,7 @@ export function InsightsIndexContent({ posts }: { posts: InsightPost[] }) {
                   helderder te maken.
                 </p>
                 <p>
-                  Daardoor blijft ook deze pagina dicht bij dezelfde Verisight-wereld: eerst begrijpen wat speelt,
+                  Daardoor blijft ook deze pagina dicht bij dezelfde Loep-wereld: eerst begrijpen wat speelt,
                   daarna bepalen wat eerst telt.
                 </p>
               </div>
@@ -105,7 +105,7 @@ export function InsightsIndexContent({ posts }: { posts: InsightPost[] }) {
                 href="/aanpak"
                 className="marketing-button-secondary"
               >
-                Bekijk hoe Verisight werkt
+                Bekijk hoe Loep werkt
               </Link>
             </div>
 
@@ -152,3 +152,4 @@ export function InsightsIndexContent({ posts }: { posts: InsightPost[] }) {
     </>
   )
 }
+

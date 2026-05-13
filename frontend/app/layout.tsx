@@ -68,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     '@type': 'Organization',
     name: 'Loep',
     url: 'https://www.verisight.nl',
-    logo: 'https://www.verisight.nl/verisight-wordmark.svg',
+    logo: 'https://www.verisight.nl/icon.svg',
     description:
       'Loep helpt HR-teams bij organisaties met 200 tot 1.000 medewerkers om vertrek te duiden met ExitScan en behoud eerder zichtbaar te maken met RetentieScan.',
     areaServed: {

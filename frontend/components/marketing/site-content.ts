@@ -1,4 +1,4 @@
-import { buildContactHref } from '@/lib/contact-funnel'
+﻿import { buildContactHref } from '@/lib/contact-funnel'
 
 export const marketingNavLinks = [
   { href: '/producten', label: 'Producten' },
@@ -136,7 +136,7 @@ export const comparisonCards = [
   {
     title: 'Gerichte scan, geen brede vragenlijst',
     description:
-      'Verisight is opgebouwd rondom een specifieke managementvraag — niet een generieke tool die achteraf betekenis moet krijgen.',
+      'Loep is opgebouwd rondom een specifieke managementvraag — niet een generieke tool die achteraf betekenis moet krijgen.',
     outcome: 'U koopt een gerichte route, geen open instrument.',
   },
   {
@@ -165,7 +165,7 @@ export const trustQuickLinks = [
   {
     href: '/vertrouwen',
     label: 'Methodiek en vertrouwelijkheid',
-    body: 'Hoe Verisight is opgebouwd en wat u ervan kunt verwachten.',
+    body: 'Hoe Loep is opgebouwd en wat u ervan kunt verwachten.',
   },
   {
     href: '/privacy',
@@ -202,7 +202,7 @@ export const trustSignalHighlights = [
   },
   {
     title: 'Begeleide productvorm',
-    body: 'Verisight biedt een strakke productvorm met intake, uitvoering, rapportage en begeleide vervolgstappen, in plaats van losse surveysoftware of open consultancy.',
+    body: 'Loep biedt een strakke productvorm met intake, uitvoering, rapportage en begeleide vervolgstappen, in plaats van losse surveysoftware of open consultancy.',
   },
   {
     title: 'Publiek verifieerbare basis',
@@ -213,7 +213,7 @@ export const trustSignalHighlights = [
 export const trustVerificationCards = [
   {
     title: 'Zo weet u vooraf waar u aan toe bent',
-    body: 'U kunt vooraf zien hoe Verisight omgaat met privacy, rapportage en de eerste stap naar een Baseline.',
+    body: 'U kunt vooraf zien hoe Loep omgaat met privacy, rapportage en de eerste stap naar een Baseline.',
   },
   {
     title: 'Waar publieke voorbeeldoutput stopt',
@@ -288,7 +288,7 @@ export const trustSupportCards = [
   {
     title: 'Privacybeleid',
     href: '/privacy',
-    body: 'Hoe Verisight persoonsgegevens, subverwerkers en AVG-rechten behandelt.',
+    body: 'Hoe Loep persoonsgegevens, subverwerkers en AVG-rechten behandelt.',
   },
   {
     title: 'Verwerkersovereenkomst',
@@ -341,7 +341,7 @@ export const outcomeCards = [
   ],
   [
     'Geen extra toolbeheer',
-    'Verisight begeleidt de uitvoering, zodat jouw team niet ook nog een nieuwe surveytool hoeft in te richten of te beheren.',
+    'Loep begeleidt de uitvoering, zodat jouw team niet ook nog een nieuwe surveytool hoeft in te richten of te beheren.',
   ],
   [
     'Privacy by design',
@@ -401,7 +401,7 @@ export const approachSteps = [
   },
   {
     title: '6. Eerste opvolging organiseren',
-    body: 'Waar relevant helpt Verisight om de eerste opvolging zichtbaar te maken, met duidelijke acties en verantwoordelijkheden.',
+    body: 'Waar relevant helpt Loep om de eerste opvolging zichtbaar te maken, met duidelijke acties en verantwoordelijkheden.',
   },
 ] as const
 
@@ -735,7 +735,7 @@ export const pricingFaqs = [
   ],
   [
     'Waarom starten jullie niet met een gratis pilot?',
-    'Omdat Verisight bedoeld is als serieuze eerste stap met een duidelijke baseline, een eerste managementread en een concrete vervolgrichting. Een betaald eerste traject voorkomt vrijblijvende validatie zonder besluitvorming.',
+    'Omdat Loep bedoeld is als serieuze eerste stap met een duidelijke baseline, een eerste managementread en een concrete vervolgrichting. Een betaald eerste traject voorkomt vrijblijvende validatie zonder besluitvorming.',
   ],
   [
     'Is Action Center Start standaard onderdeel van elke baseline?',
@@ -763,7 +763,7 @@ export const pricingFaqs = [
   ],
   [
     'Beloof je hiermee lager verloop?',
-    'Nee. Verisight verkoopt geen garantie op lager verloop, maar scherpere duiding, betere prioritering en een sterkere basis voor managementbeslissingen op groepsniveau.',
+    'Nee. Loep verkoopt geen garantie op lager verloop, maar scherpere duiding, betere prioritering en een sterkere basis voor managementbeslissingen op groepsniveau.',
   ],
 ] as const
 
@@ -793,7 +793,7 @@ export const faqs = [
     'Voor v1 is een baseline logisch als startpunt. Daarna kun je periodiek herhalen, bijvoorbeeld per kwartaal of halfjaar, als je gericht wilt volgen of acties effect hebben.',
   ],
   [
-    'Is Verisight een tool of een dienst?',
+    'Is Loep een tool of een dienst?',
     'Het is een begeleide dienst met software. Je krijgt dashboard en rapportage, zonder self-service implementatie of losse consultancy zonder productvorm.',
   ],
 ] as const
@@ -814,4 +814,5 @@ export const faqSchema = {
     acceptedAnswer: { '@type': 'Answer', text: answer },
   })),
 }
+
 

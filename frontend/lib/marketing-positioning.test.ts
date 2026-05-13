@@ -84,7 +84,7 @@ describe('spreadsheet-driven trust copy', () => {
     expect(trustVerificationCards).toEqual([
       {
         title: 'Zo weet u vooraf waar u aan toe bent',
-        body: 'U kunt vooraf zien hoe Verisight omgaat met privacy, rapportage en de eerste stap naar een Baseline.',
+        body: 'U kunt vooraf zien hoe Loep omgaat met privacy, rapportage en de eerste stap naar een Baseline.',
       },
       {
         title: 'Waar publieke voorbeeldoutput stopt',
@@ -120,7 +120,7 @@ describe('spreadsheet-driven trust copy', () => {
 
     expect(trustSupportCards.map((card) => card.body)).toEqual([
       'Methodiek, privacy en verantwoord gebruik van uitkomsten.',
-      'Hoe Verisight persoonsgegevens, subverwerkers en AVG-rechten behandelt.',
+      'Hoe Loep persoonsgegevens, subverwerkers en AVG-rechten behandelt.',
       'Standaard verwerkersovereenkomst voor klantorganisaties.',
       'Voorwaarden over dienstvorm, beschikbaarheid, facturatie en rollen.',
     ])

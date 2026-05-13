@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 
 export default function NotFound() {
   return (
@@ -7,12 +7,12 @@ export default function NotFound() {
 
         {/* Logo */}
         <Link href="/" className="inline-block text-2xl font-bold text-blue-600 tracking-tight mb-10">
-          Verisight
+          Loep
         </Link>
 
         {/* Icon */}
         <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
-          🔍
+          ðŸ”
         </div>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-3">Pagina niet gevonden</h1>
@@ -26,10 +26,10 @@ export default function NotFound() {
             href="/dashboard"
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors"
           >
-            ← Naar dashboard
+            â† Naar dashboard
           </Link>
           <a
-            href="mailto:hallo@verisight.nl"
+            href="mailto:hallo@getloep.nl"
             className="bg-white hover:bg-gray-50 text-gray-700 font-semibold px-6 py-2.5 rounded-lg text-sm border border-gray-200 transition-colors"
           >
             Contact opnemen
@@ -37,9 +37,10 @@ export default function NotFound() {
         </div>
 
         <p className="text-xs text-gray-400 mt-10">
-          Foutcode 404 · <Link href="/" className="hover:text-gray-600 transition-colors">Verisight</Link>
+          Foutcode 404 · <Link href="/" className="hover:text-gray-600 transition-colors">Loep</Link>
         </p>
       </div>
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
@@ -37,7 +37,7 @@ export default function ForgotPasswordPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl font-bold text-blue-600 tracking-tight">
-            Verisight
+            Loep
           </Link>
           <p className="mt-2 text-sm text-gray-500">Wachtwoord herstellen</p>
         </div>
@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
           {submitted ? (
             <div className="text-center">
               <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-                ✉️
+                âœ‰ï¸
               </div>
               <h1 className="text-lg font-semibold text-gray-900 mb-2">E-mail verzonden</h1>
               <p className="text-sm text-gray-500 leading-relaxed">
@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
                 href="/login"
                 className="inline-block mt-6 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors"
               >
-                ← Terug naar inloggen
+                â† Terug naar inloggen
               </Link>
             </div>
           ) : (
@@ -104,10 +104,11 @@ export default function ForgotPasswordPage() {
 
         <p className="text-center text-xs text-gray-400 mt-4">
           <Link href="/login" className="text-blue-600 hover:underline">
-            ← Terug naar inloggen
+            â† Terug naar inloggen
           </Link>
         </p>
       </div>
     </div>
   )
 }
+

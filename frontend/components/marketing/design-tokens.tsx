@@ -4,32 +4,32 @@ import { useState, useEffect, useRef } from 'react'
 
 // ── Design tokens ─────────────────────────────────────────────────
 export const T = {
-  paper:      '#FBF9FA',
-  paperSoft:  '#F5F3F4',
-  paperBlush: '#F3E1DC',
+  paper:      '#F4F1EA',
+  paperSoft:  '#EEE8DE',
+  paperBlush: '#F2EBE1',
   white:      '#FFFFFF',
-  navy:       '#1B2B3A',
-  ink:        '#051625',
-  inkSoft:    '#1B1C1D',
-  inkMuted:   '#43474C',
-  inkFaint:   '#5A6B7D',
-  rule:       '#E5E1D8',
-  ruleLight:  '#EFEDEE',
-  teal:       '#C05A44',
-  tealMid:    '#A94D3B',
-  tealSoft:   '#F3E1DC',
-  tealFaint:  '#F5F3F4',
+  navy:       '#0D1B2A',
+  ink:        '#0D1B2A',
+  inkSoft:    '#4A6070',
+  inkMuted:   '#6A7783',
+  inkFaint:   '#8B95A0',
+  rule:       'rgba(13,27,42,0.15)',
+  ruleLight:  'rgba(13,27,42,0.10)',
+  teal:       '#E8A020',
+  tealMid:    '#D3921D',
+  tealSoft:   'rgba(232,160,32,0.12)',
+  tealFaint:  'rgba(232,160,32,0.08)',
 } as const
 
 export const AC = {
-  deep:  '#C05A44',
-  mid:   '#A94D3B',
-  light: '#E8B7A6',
-  soft:  '#F3E1DC',
-  faint: '#F5F3F4',
+  deep:  '#B07A10',
+  mid:   '#E8A020',
+  light: '#F2C76F',
+  soft:  'rgba(232,160,32,0.12)',
+  faint: 'rgba(232,160,32,0.08)',
 } as const
 
-export const FF = 'var(--font-playfair), serif'
+export const FF = 'var(--font-inter-tight), Inter, sans-serif'
 export const SHELL = { maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,3.5vw,48px)' } as const
 
 // ── Hooks ─────────────────────────────────────────────────────────

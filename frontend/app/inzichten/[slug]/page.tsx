@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { InsightArticleContent } from '@/components/marketing/insight-article-content'
@@ -66,11 +66,11 @@ export default async function InsightArticlePage({ params }: Props) {
     mainEntityOfPage: `https://www.verisight.nl/inzichten/${post.slug}`,
     author: {
       '@type': 'Organization',
-      name: 'Verisight',
+      name: 'Loep',
     },
     publisher: {
       '@type': 'Organization',
-      name: 'Verisight',
+      name: 'Loep',
     },
     articleSection: post.category,
     keywords: [post.focusKeyword, post.category],
@@ -115,3 +115,4 @@ export default async function InsightArticlePage({ params }: Props) {
     </>
   )
 }
+

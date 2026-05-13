@@ -37,7 +37,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="text-2xl font-bold text-blue-600 tracking-tight">
-            Verisight
+            Loep
           </Link>
           <p className="mt-2 text-sm text-gray-500">Toegang voor klanten, beheerders en managers in Action Center</p>
         </div>
@@ -100,7 +100,7 @@ export default function LoginPage() {
 
         <p className="text-center text-xs text-gray-400 mt-4">
           Nog geen toegang of moet jouw organisatie nog worden ingericht?{' '}
-          <a href="mailto:hallo@verisight.nl" className="text-blue-600 hover:underline">
+          <a href="mailto:hallo@getloep.nl" className="text-blue-600 hover:underline">
             Neem contact op
           </a>
         </p>
@@ -114,9 +114,10 @@ export default function LoginPage() {
           Activatie betekent hier niet alleen je mail openen of een wachtwoord kiezen, maar ook dat het juiste dashboard en de juiste campagne voor jou klaarstaan.
         </p>
         <p className="text-center text-xs text-gray-400 mt-3">
-          Verisight v2.0 · Vertrouwelijk platform
+          Loep v2.0 · Vertrouwelijk platform
         </p>
       </div>
     </div>
   )
 }
+

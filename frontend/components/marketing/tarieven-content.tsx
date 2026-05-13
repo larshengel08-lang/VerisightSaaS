@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { AC, Arrow, FF, Reveal, SHELL, T } from '@/components/marketing/design-tokens'
@@ -147,7 +147,7 @@ function FirstBuySection() {
             Start met één duidelijke Baseline.
           </h2>
           <p style={{ fontSize: 15, lineHeight: 1.7, color: T.inkSoft, maxWidth: '56ch' }}>
-            U kiest eerst de managementvraag: vertrek, behoud of onboarding. Verisight vertaalt die vraag naar een
+            U kiest eerst de managementvraag: vertrek, behoud of onboarding. Loep vertaalt die vraag naar een
             Baseline met dashboard, managementrapport en een compacte review van de eerste vervolgrichting.
           </p>
           </div>
@@ -418,3 +418,4 @@ export function TarievenContent() {
     </div>
   )
 }
+

@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 
 interface WordmarkProps {
   href?: string
@@ -16,22 +15,53 @@ export function Wordmark({
   light = false,
   className = '',
 }: WordmarkProps) {
-  const imageSize =
-    size === 'sm'
-      ? { width: 260, height: 60 }
-      : { width: 320, height: 74 }
+  const textSize = size === 'sm' ? 'clamp(2.1rem, 2.8vw, 2.6rem)' : 'clamp(2.45rem, 3.4vw, 3.15rem)'
+  const textColor = light ? '#FFFFFF' : 'var(--ink)'
+  const taglineColor = light ? 'rgba(255,255,255,0.68)' : 'rgba(13,27,42,0.46)'
 
   return (
     <Link href={href} className={`inline-flex flex-col items-start leading-none ${className}`}>
-      <Image
-        src={showTagline ? '/verisight-wordmark.svg' : '/verisight-logo-text.svg'}
-        alt="Verisight"
-        width={imageSize.width}
-        height={imageSize.height}
-        className={size === 'sm' ? 'h-auto w-[220px] sm:w-[240px]' : 'h-auto w-[250px] sm:w-[290px]'}
-        style={light ? { filter: 'brightness(0) invert(1)' } : undefined}
-        priority
-      />
+      <span
+        aria-label="Loep"
+        style={{
+          alignItems: 'baseline',
+          color: textColor,
+          display: 'inline-flex',
+          fontFamily: 'var(--font-inter-tight), Inter, sans-serif',
+          fontSize: textSize,
+          fontWeight: 800,
+          letterSpacing: '-0.06em',
+          lineHeight: 0.92,
+        }}
+      >
+        Loep
+        <span
+          aria-hidden
+          style={{
+            background: 'var(--brand-accent-mid)',
+            borderRadius: '999px',
+            display: 'inline-block',
+            height: size === 'sm' ? 8 : 10,
+            marginLeft: size === 'sm' ? 6 : 7,
+            width: size === 'sm' ? 8 : 10,
+          }}
+        />
+      </span>
+      {showTagline ? (
+        <span
+          style={{
+            color: taglineColor,
+            fontFamily: 'var(--font-inter), system-ui, sans-serif',
+            fontSize: '0.58rem',
+            fontWeight: 700,
+            letterSpacing: '0.18em',
+            marginTop: 6,
+            textTransform: 'uppercase',
+          }}
+        >
+          People, Patterns, Priorities
+        </span>
+      ) : null}
     </Link>
   )
 }

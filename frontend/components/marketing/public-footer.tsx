@@ -24,8 +24,8 @@ export function PublicFooter() {
             People, Patterns, Priorities
           </p>
           <p className="marketing-footer-copy mt-4 max-w-sm text-sm leading-7">
-            Verisight helpt organisaties sneller zien wat speelt, wat eerst aandacht vraagt en hoe eerste opvolging
-            concreet wordt.
+            Loep helpt organisaties sneller zien wat speelt, wat eerst aandacht vraagt en hoe eerste opvolging concreet
+            wordt.
           </p>
           <p className="mt-5 text-xs uppercase tracking-[0.12em] text-[rgba(247,245,241,0.5)]">
             Voor organisaties met 200+ medewerkers
@@ -66,15 +66,15 @@ export function PublicFooter() {
               </Link>
             ))}
           </div>
-          <a href="mailto:hallo@verisight.nl" className="marketing-footer-link mt-6 block text-sm">
-            hallo@verisight.nl
+          <a href="mailto:hallo@getloep.nl" className="marketing-footer-link mt-6 block text-sm">
+            hallo@getloep.nl
           </a>
         </div>
       </div>
 
       <div className="border-t border-[rgba(247,245,241,0.08)]">
         <div className="marketing-shell flex flex-col gap-2 py-5 text-xs text-[rgba(247,245,241,0.5)] sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} Verisight. Alle rechten voorbehouden.</p>
+          <p>&copy; {new Date().getFullYear()} Loep. Alle rechten voorbehouden.</p>
           <p>Geen trackingcookies op de marketingsite.</p>
         </div>
       </div>

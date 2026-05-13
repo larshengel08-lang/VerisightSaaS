@@ -1,4 +1,4 @@
-import { ImageResponse } from 'next/og'
+﻿import { ImageResponse } from 'next/og'
 import { notFound } from 'next/navigation'
 import { getMarketingProductBySlug } from '@/lib/marketing-products'
 
@@ -181,7 +181,7 @@ export default async function OpenGraphImage({ params }: Props) {
               }}
             >
               <div style={{ fontSize: '20px', textTransform: 'uppercase', letterSpacing: '0.14em', color: '#93c5fd' }}>
-                Verisight
+                Loep
               </div>
               <div style={{ fontSize: '30px', fontWeight: 700, lineHeight: 1.2 }}>
                 {product.serviceOutput ?? 'Dashboard en managementrapport'}
@@ -227,10 +227,11 @@ export default async function OpenGraphImage({ params }: Props) {
             />
             <div style={{ fontSize: '28px', fontWeight: 700, color: '#0f172a' }}>www.verisight.nl</div>
           </div>
-          <div style={{ fontSize: '24px', color: '#334155' }}>Verisight productroutes voor HR-teams</div>
+          <div style={{ fontSize: '24px', color: '#334155' }}>Loep productroutes voor HR-teams</div>
         </div>
       </div>
     ),
     size,
   )
 }
+

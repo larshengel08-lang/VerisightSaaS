@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import {
@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product) return {}
 
   return {
-    title: product.seoTitle ?? `${product.label} | Verisight`,
+    title: product.seoTitle ?? `${product.label} | Loep`,
     description: product.description,
   }
 }
@@ -76,7 +76,7 @@ export default async function SolutionPage({ params }: Props) {
           description: solutionPage.description,
           url: `https://www.verisight.nl${solutionPage.canonical}`,
           inLanguage: 'nl-NL',
-          isPartOf: { '@type': 'WebSite', name: 'Verisight', url: 'https://www.verisight.nl' },
+          isPartOf: { '@type': 'WebSite', name: 'Loep', url: 'https://www.verisight.nl' },
           about: { '@type': 'Service', name: solutionPage.productLabel, url: `https://www.verisight.nl${solutionPage.productHref}` },
         },
         {
@@ -273,3 +273,4 @@ export default async function SolutionPage({ params }: Props) {
 
   notFound()
 }
+

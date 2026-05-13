@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
 import { Fragment, startTransition, useState } from 'react'
 import { useInView } from '@/components/marketing/design-tokens'
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Design tokens â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const C = {
   ink:       '#132033',
   inkSoft:   '#1C2A3D',
@@ -23,8 +23,8 @@ const C = {
   tealLine:  '#E8B7A6',
 } as const
 
-const FF  = 'var(--font-playfair), Georgia, serif'
-const FN  = 'var(--font-plus-jakarta), system-ui, sans-serif'
+const FF  = 'var(--font-inter-tight), Georgia, serif'
+const FN  = 'var(--font-inter), system-ui, sans-serif'
 const SH  = { margin: '0 auto', maxWidth: 1240, padding: '0 clamp(20px, 4vw, 48px)' } as const
 
 const CARD_RADIUS  = 20
@@ -47,7 +47,7 @@ const STEPS: { view: DemoView; n: number; label: string; mod: 'db' | 'ac' }[] = 
   { view: 'action-detail',      n: 4, label: 'Review',      mod: 'ac' },
 ]
 
-// ─── Shared primitives ────────────────────────────────────────────────────────
+// â”€â”€â”€ Shared primitives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Arrow() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
@@ -127,7 +127,7 @@ function CtaButton({
   )
 }
 
-// ─── Pipeline nav — connectors between buttons for equal spacing ──────────────
+// â”€â”€â”€ Pipeline nav â€” connectors between buttons for equal spacing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function PipelineNav({ view, goTo }: { view: DemoView; goTo: (v: DemoView) => void }) {
   const current = STEPS.findIndex(s => s.view === view)
   return (
@@ -184,7 +184,7 @@ function PipelineNav({ view, goTo }: { view: DemoView; goTo: (v: DemoView) => vo
   )
 }
 
-// ─── Shared module header strip ───────────────────────────────────────────────
+// â”€â”€â”€ Shared module header strip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ModuleHeader({
   module, sub, status, tone = 'amber',
 }: {
@@ -207,7 +207,7 @@ function ModuleHeader({
   )
 }
 
-// ─── State 1: Zien — Overview dashboard ──────────────────────────────────────
+// â”€â”€â”€ State 1: Zien â€” Overview dashboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function State1({ goTo }: { goTo: (v: DemoView) => void }) {
   const kpis = [
     { label: 'Respons',              value: '45',  total: '70' },
@@ -307,7 +307,7 @@ function State1({ goTo }: { goTo: (v: DemoView) => void }) {
   )
 }
 
-// ─── State 2: Prioriteren — Factor deep-dive ─────────────────────────────────
+// â”€â”€â”€ State 2: Prioriteren â€” Factor deep-dive â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function State2({ goTo }: { goTo: (v: DemoView) => void }) {
   const factors = [
     { label: 'Groei en ontwikkeling', pct: 72, tone: 'green' as const },
@@ -362,7 +362,7 @@ function State2({ goTo }: { goTo: (v: DemoView) => void }) {
           </div>
         </div>
 
-        {/* Handoff strip — light, matching card background */}
+        {/* Handoff strip â€” light, matching card background */}
         <div style={{
           alignItems: 'center',
           borderTop: `1px solid ${C.rule}`,
@@ -385,7 +385,7 @@ function State2({ goTo }: { goTo: (v: DemoView) => void }) {
   )
 }
 
-// ─── State 3: Handelen — Action Center opvolging ──────────────────────────────
+// â”€â”€â”€ State 3: Handelen â€” Action Center opvolging â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function State3({ goTo }: { goTo: (v: DemoView) => void }) {
   const rows: [string, string][] = [
     ['Status',   'Voor review'],
@@ -441,7 +441,7 @@ function State3({ goTo }: { goTo: (v: DemoView) => void }) {
   )
 }
 
-// ─── State 4: Review — dashboard review-actie checklist ──────────────────────
+// â”€â”€â”€ State 4: Review â€” dashboard review-actie checklist â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function State4({ goTo }: { goTo: (v: DemoView) => void }) {
   const items: { done: boolean; title: string; body: string }[] = [
     { done: true,  title: 'Exitdata geanalyseerd',       body: 'Patroon na maand zes bevestigd in Q2-data Operations.' },
@@ -557,7 +557,7 @@ function State4({ goTo }: { goTo: (v: DemoView) => void }) {
   )
 }
 
-// ─── Root ─────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Root â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function HomeInsightActionDemo() {
   const [view, setView] = useState<DemoView>('dashboard-overview')
   const isAction = view === 'action-overview' || view === 'action-detail'
@@ -574,7 +574,7 @@ export function HomeInsightActionDemo() {
         position: 'relative',
       }}
     >
-      {/* Ambient glow — static */}
+      {/* Ambient glow â€” static */}
       <div aria-hidden style={{
         background: 'radial-gradient(ellipse at top right, rgba(228,154,99,.12) 0%, transparent 54%)',
         inset: 0, pointerEvents: 'none', position: 'absolute',
@@ -614,7 +614,7 @@ export function HomeInsightActionDemo() {
         }}>
           <div style={{ minHeight: 52 }}>
             <Label>
-              {isAction ? 'Action Center' : 'Dashboard'} · Verisight suite
+              {isAction ? 'Action Center' : 'Dashboard'} · Loep suite
             </Label>
             <p style={{
               color: C.ink,
@@ -644,3 +644,4 @@ export function HomeInsightActionDemo() {
     </section>
   )
 }
+

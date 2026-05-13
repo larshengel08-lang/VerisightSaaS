@@ -37,7 +37,7 @@ describe('commercial homepage suite opening', () => {
 
     expect(homepageSource).toContain('Zie sneller waar vertrek, behoud of onboarding aandacht vragen')
     expect(homepageSource).toContain(
-      'Verisight helpt organisaties signalen zichtbaar maken, prioriteren en opvolging organiseren in het Action Center.',
+      'Loep helpt organisaties signalen zichtbaar maken, prioriteren en opvolging organiseren in het Action Center.',
     )
     expect(homepageSource).toContain('Wat vraagt nu aandacht?')
     expect(homepageSource).toContain('Veel signalen. Te weinig scherpte')
