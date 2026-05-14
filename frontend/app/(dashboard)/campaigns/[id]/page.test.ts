@@ -22,6 +22,16 @@ describe('exit dashboard analytics guardrails', () => {
     expect(source).not.toContain('Uitvoering')
   })
 
+  it('does not keep the old tabs as the primary HR results structure', () => {
+    const source = readFileSync(new URL('./page.tsx', import.meta.url), 'utf8')
+
+    expect(source).not.toContain('DashboardTabs')
+    expect(source).not.toContain("label: 'Overzicht'")
+    expect(source).not.toContain("label: 'Onderbouwing'")
+    expect(source).not.toContain("label: 'Actie'")
+    expect(source).not.toContain("label: 'Campagne'")
+  })
+
   it('keeps the ExitScan dashboard free from owner, action, review, workflow and setup language', () => {
     const source = componentSource().toLowerCase()
     const forbiddenTerms = [
