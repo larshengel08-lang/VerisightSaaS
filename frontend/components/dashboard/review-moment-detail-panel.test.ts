@@ -6,6 +6,47 @@ import { ReviewMomentDetailPanel } from './review-moment-detail-panel'
 import { buildActionCenterEntryHref } from '@/lib/action-center-entry'
 import type { ActionCenterPreviewItem } from '@/lib/action-center-preview-model'
 
+function createReviewMomentItem(overrides: Partial<ActionCenterPreviewItem> = {}) {
+  return {
+    id: 'cmp-exit-1::org-1::department::operations',
+    code: 'AC-1',
+    title: 'Begrens verloop in operations',
+    summary: 'Compacte route',
+    reason: 'Lees terug',
+    sourceLabel: 'ExitScan',
+    orgId: 'org-1',
+    scopeType: 'department',
+    teamId: 'operations',
+    teamLabel: 'Operations',
+    ownerId: 'manager-1',
+    ownerName: 'Mila Jansen',
+    ownerRole: 'Manager',
+    ownerSubtitle: 'Operations',
+    reviewOwnerName: 'Mila Jansen',
+    priority: 'hoog',
+    status: 'reviewbaar',
+    reviewDate: '2026-05-28',
+    expectedEffect: null,
+    reviewReason: 'Toets effect',
+    reviewOutcome: 'geen-uitkomst',
+    reviewDateLabel: '28 mei',
+    reviewRhythm: 'Tweewekelijks',
+    signalLabel: 'Open review',
+    signalBody: 'Open review',
+    nextStep: 'Open review',
+    peopleCount: 12,
+    coreSemantics: {
+      route: {
+        routeId: 'cmp-exit-1::org-1::department::operations',
+        campaignId: 'cmp-exit-1',
+      },
+    },
+    openSignals: [],
+    updates: [],
+    ...overrides,
+  } as ActionCenterPreviewItem
+}
+
 describe('review moment detail panel entry links', () => {
   it('uses the shared Action Center entry helper for focused review landing', () => {
     const source = readFileSync(new URL('./review-moment-detail-panel.tsx', import.meta.url), 'utf8')
@@ -62,6 +103,7 @@ describe('review moment detail panel entry links', () => {
       createElement(ReviewMomentDetailPanel, {
         item,
         urgency: 'this-week',
+        canDownloadInviteArtifact: true,
       }),
     )
 
@@ -74,71 +116,67 @@ describe('review moment detail panel invite CTA', () => {
   it('keeps the invite CTA bounded to the review-invite route', () => {
     const source = readFileSync(new URL('./review-moment-detail-panel.tsx', import.meta.url), 'utf8')
 
+    expect(source).toContain('buildReviewInviteDownloadHref')
     expect(source).toContain('/api/action-center-review-invites?reviewItemId=')
+    expect(source).toContain('canDownloadInviteArtifact')
     expect(source).toContain('Download .ics')
     expect(source).not.toContain('Verstuur uitnodiging')
   })
 
-  it('renders the ics link only when a review date exists', () => {
-    const item = {
-      id: 'cmp-exit-1::org-1::department::operations',
-      code: 'AC-1',
-      title: 'Begrens verloop in operations',
-      summary: 'Compacte route',
-      reason: 'Lees terug',
-      sourceLabel: 'ExitScan',
-      orgId: 'org-1',
-      scopeType: 'department',
-      teamId: 'operations',
-      teamLabel: 'Operations',
-      ownerId: 'manager-1',
-      ownerName: 'Mila Jansen',
-      ownerRole: 'Manager',
-      ownerSubtitle: 'Operations',
-      reviewOwnerName: 'Mila Jansen',
-      priority: 'hoog',
-      status: 'reviewbaar',
-      reviewDate: '2026-05-28',
-      expectedEffect: null,
-      reviewReason: 'Toets effect',
-      reviewOutcome: 'geen-uitkomst',
-      reviewDateLabel: '28 mei',
-      reviewRhythm: 'Tweewekelijks',
-      signalLabel: 'Open review',
-      signalBody: 'Open review',
-      nextStep: 'Open review',
-      peopleCount: 12,
-      coreSemantics: {
-        route: {
-          routeId: 'cmp-exit-1::org-1::department::operations',
-          campaignId: 'cmp-exit-1',
-        },
-      },
-      openSignals: [],
-      updates: [],
-    } as ActionCenterPreviewItem
+  it('renders the exact ics href when the review is open, dated, and allowed', () => {
+    const item = createReviewMomentItem()
+    const expectedHref =
+      '/api/action-center-review-invites?reviewItemId=cmp-exit-1%3A%3Aorg-1%3A%3Adepartment%3A%3Aoperations&amp;mode=request&amp;format=ics'
 
-    const markupWithDate = renderToStaticMarkup(
+    const markup = renderToStaticMarkup(
       createElement(ReviewMomentDetailPanel, {
         urgency: 'this-week',
         item,
+        canDownloadInviteArtifact: true,
       }),
     )
 
-    const markupWithoutDate = renderToStaticMarkup(
+    expect(markup).toContain(`href="${expectedHref}"`)
+    expect(markup).toContain('Download .ics')
+  })
+
+  it('hides the ics link when a review date is missing', () => {
+    const markup = renderToStaticMarkup(
       createElement(ReviewMomentDetailPanel, {
         urgency: 'this-week',
-        item: {
-          ...item,
+        item: createReviewMomentItem({
           reviewDate: null,
-        },
+        }),
+        canDownloadInviteArtifact: true,
       }),
     )
 
-    expect(markupWithDate).toContain('Download .ics')
-    expect(markupWithDate).toContain('reviewItemId=cmp-exit-1%3A%3Aorg-1%3A%3Adepartment%3A%3Aoperations')
-    expect(markupWithDate).toContain('mode=request')
-    expect(markupWithDate).toContain('format=ics')
-    expect(markupWithoutDate).not.toContain('Download .ics')
+    expect(markup).not.toContain('Download .ics')
+  })
+
+  it('hides the ics link for closed review statuses', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ReviewMomentDetailPanel, {
+        urgency: 'completed',
+        item: createReviewMomentItem({
+          status: 'afgerond',
+        }),
+        canDownloadInviteArtifact: true,
+      }),
+    )
+
+    expect(markup).not.toContain('Download .ics')
+  })
+
+  it('hides the ics link when invite artifact access is denied', () => {
+    const markup = renderToStaticMarkup(
+      createElement(ReviewMomentDetailPanel, {
+        urgency: 'this-week',
+        item: createReviewMomentItem(),
+        canDownloadInviteArtifact: false,
+      }),
+    )
+
+    expect(markup).not.toContain('Download .ics')
   })
 })

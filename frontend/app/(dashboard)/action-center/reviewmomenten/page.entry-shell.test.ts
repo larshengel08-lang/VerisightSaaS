@@ -8,5 +8,7 @@ describe('action center reviewmomenten entry shell', () => {
     expect(source).toContain('ReviewMomentPageClient')
     expect(source).toContain('getActionCenterPageData')
     expect(source).toContain('computeReviewMomentGovernanceCounts')
+    expect(source).toContain('context.canScheduleActionCenterReview')
+    expect(source).toContain('canDownloadInviteArtifact={context.canScheduleActionCenterReview}')
   })
 })

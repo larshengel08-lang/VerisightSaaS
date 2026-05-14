@@ -39,12 +39,25 @@ function buildReviewInviteDownloadHref(reviewItemId: string) {
   return `/api/action-center-review-invites?reviewItemId=${encodeURIComponent(reviewItemId)}&mode=request&format=ics`
 }
 
+function canRenderReviewInviteDownload(
+  item: ActionCenterPreviewItem,
+  canDownloadInviteArtifact: boolean,
+) {
+  if (!canDownloadInviteArtifact || !item.reviewDate) {
+    return false
+  }
+
+  return item.status !== 'afgerond' && item.status !== 'gestopt'
+}
+
 export function ReviewMomentDetailPanel({
   item,
   urgency,
+  canDownloadInviteArtifact,
 }: {
   item: ActionCenterPreviewItem | null
   urgency: ReviewMomentUrgency | null
+  canDownloadInviteArtifact: boolean
 }) {
   if (!item) {
     return (
@@ -104,7 +117,7 @@ export function ReviewMomentDetailPanel({
         >
           Bekijk gekoppelde opvolging
         </Link>
-        {item.reviewDate ? (
+        {canRenderReviewInviteDownload(item, canDownloadInviteArtifact) ? (
           <Link
             href={buildReviewInviteDownloadHref(item.id)}
             className="rounded-full border border-[color:var(--dashboard-frame-border)] bg-white px-3 py-2 text-xs font-semibold text-[color:var(--dashboard-ink)] transition hover:bg-[color:var(--dashboard-muted-surface)]"

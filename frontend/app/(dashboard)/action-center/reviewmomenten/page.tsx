@@ -56,6 +56,7 @@ export default async function ActionCenterReviewmomentenPage() {
       governanceCounts={computeReviewMomentGovernanceCounts(pageData.items, now)}
       organizationName={getReviewOrganizationName(pageData.organizationNames)}
       lastUpdated={now.toISOString()}
+      canDownloadInviteArtifact={context.canScheduleActionCenterReview}
     />
   )
 }

@@ -46,11 +46,13 @@ export function ReviewMomentPageClient({
   governanceCounts,
   organizationName,
   lastUpdated,
+  canDownloadInviteArtifact,
 }: {
   items: ActionCenterPreviewItem[]
   governanceCounts: ReviewMomentGovernanceCounts
   organizationName: string
   lastUpdated: string
+  canDownloadInviteArtifact: boolean
 }) {
   const [statusFilter, setStatusFilter] = useState<'all' | ActionCenterPreviewStatus>('all')
   const [scopeFilter, setScopeFilter] = useState<string>('all')
@@ -230,7 +232,11 @@ export function ReviewMomentPageClient({
           ) : null}
         </div>
         <div id="review-detail" className="xl:sticky xl:top-[8rem] xl:self-start">
-          <ReviewMomentDetailPanel item={selectedItem} urgency={selectedUrgency} />
+          <ReviewMomentDetailPanel
+            item={selectedItem}
+            urgency={selectedUrgency}
+            canDownloadInviteArtifact={canDownloadInviteArtifact}
+          />
         </div>
       </div>
 
