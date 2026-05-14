@@ -1,74 +1,104 @@
 import { describe, expect, it } from 'vitest'
 import { buildActionCenterEntryHref } from '@/lib/action-center-entry'
+import type { ActionCenterRouteStatus } from '@/lib/action-center-route-contract'
+import type { ScanType } from '@/lib/types'
 import {
   actionCenterBaseUrl,
   buildActionCenterReviewInviteDraft,
+  getActionCenterReviewInviteEligibility,
+  type ActionCenterReviewInviteContext,
 } from '@/lib/action-center-review-invite'
 
 describe('action center review invite draft contract', () => {
-  const baseInput = {
+  const baseContext: ActionCenterReviewInviteContext = {
     actionCenterOrigin: 'https://app.verisight.nl',
     campaignId: 'campaign-exit-q2',
     campaignName: 'ExitScan Q2',
     managerEmail: 'manager@example.com',
+    managerName: 'M. Manager',
     phase: 1,
     reviewDate: '2026-05-20',
     reviewItemId: 'review-item-42',
-    routeStatus: 'in-uitvoering' as const,
-    scanType: 'exit' as const,
+    routeId: 'route-42',
+    routeStatus: 'in-uitvoering',
+    scanType: 'exit',
     scopeLabel: 'Operations',
   }
 
-  it('builds a bounded email-ics organizer draft with an absolute Action Center link', () => {
-    const result = buildActionCenterReviewInviteDraft(baseInput)
+  it('reports an eligible ExitScan review invite context', () => {
+    expect(getActionCenterReviewInviteEligibility(baseContext)).toEqual({
+      ok: true,
+      reason: null,
+    })
+  })
 
-    expect(result).toEqual({
-      eligible: true,
-      draft: {
-        campaignId: 'campaign-exit-q2',
-        reviewItemId: 'review-item-42',
-        reviewDate: '2026-05-20',
-        managerEmail: 'manager@example.com',
-        subject: 'Reviewmoment ExitScan Q2 / Operations',
-        actionCenterUrl: `${actionCenterBaseUrl('https://app.verisight.nl')}${buildActionCenterEntryHref({
-          focus: 'review-item-42',
-          view: 'reviews',
-          source: 'notification',
-        })}`,
-        deliveryModel: {
-          channel: 'email-ics',
-          mode: 'organizer',
-          nativeMicrosoftRequired: false,
-        },
-        writePolicy: {
-          calendarRsvp: 'hint-only',
-          canonicalReviewState: 'action-center-only',
-        },
-        emailText: expect.stringContaining(
-          'Leg reviewuitkomst en vervolg alleen in Action Center vast.',
-        ),
-        emailHtml: expect.stringContaining(
-          'Leg reviewuitkomst en vervolg alleen in Action Center vast.',
-        ),
+  it('builds a bounded email-ics organizer draft with an absolute Action Center link', () => {
+    const draft = buildActionCenterReviewInviteDraft(baseContext)
+
+    expect(draft).toEqual({
+      reviewItemId: 'review-item-42',
+      routeId: 'route-42',
+      campaignId: 'campaign-exit-q2',
+      recipientEmail: 'manager@example.com',
+      recipientName: 'M. Manager',
+      subject: 'Reviewmoment ExitScan Q2 / Operations',
+      actionCenterHref: `${actionCenterBaseUrl('https://app.verisight.nl')}${buildActionCenterEntryHref({
+        focus: 'review-item-42',
+        view: 'reviews',
+        source: 'notification',
+      })}`,
+      reviewDate: '2026-05-20',
+      deliveryModel: {
+        channel: 'email-ics',
+        organizerMode: 'organizer',
+        nativeMicrosoftRequired: false,
       },
+      writePolicy: {
+        calendarRsvp: 'hint-only',
+        canonicalReviewState: 'action-center-only',
+      },
+      emailText: expect.stringContaining(
+        'Leg reviewuitkomst en vervolg alleen in Action Center vast.',
+      ),
+      emailHtml: expect.stringContaining(
+        'Leg reviewuitkomst en vervolg alleen in Action Center vast.',
+      ),
     })
 
-    if (result.eligible) {
-      expect(result.draft.emailText).toContain(result.draft.actionCenterUrl)
-      expect(result.draft.emailHtml).toContain(result.draft.actionCenterUrl)
-      expect(result.draft.emailHtml).toContain('href=')
-    }
+    expect(draft.emailText).toContain(draft.actionCenterHref)
+    expect(draft.emailHtml).toContain(draft.actionCenterHref)
+    expect(draft.emailHtml).toContain('href=')
   })
 
   it.each([
     {
-      name: 'unsupported scan type outside ExitScan phase 1',
-      override: { scanType: 'retention' as const },
+      name: 'unsupported scan type outside ExitScan',
+      override: { scanType: 'retention' as ScanType },
+      reason: 'unsupported-scan-type',
+    },
+    {
+      name: 'non-phase-1 ExitScan',
+      override: { phase: 2 },
       reason: 'unsupported-scan-type',
     },
     {
       name: 'missing review date',
       override: { reviewDate: null },
+      reason: 'missing-review-date',
+    },
+    {
+      name: 'blank review date',
+      override: { reviewDate: '   ' },
+      reason: 'missing-review-date',
+    },
+    {
+      name: 'non-iso review date',
+      override: { reviewDate: '2026/05/20' },
+      reason: 'missing-review-date',
+    },
+    {
+      name: 'invalid iso review date',
+      override: { reviewDate: '2026-02-30' },
       reason: 'missing-review-date',
     },
     {
@@ -78,32 +108,41 @@ describe('action center review invite draft contract', () => {
     },
     {
       name: 'closed route for afgerond',
-      override: { routeStatus: 'afgerond' as const },
+      override: { routeStatus: 'afgerond' as ActionCenterRouteStatus },
       reason: 'closed-route',
     },
     {
       name: 'closed route for gestopt',
-      override: { routeStatus: 'gestopt' as const },
+      override: { routeStatus: 'gestopt' as ActionCenterRouteStatus },
       reason: 'closed-route',
     },
     {
-      name: 'non-phase-1 ExitScan',
-      override: { phase: 2 },
-      reason: 'unsupported-scan-type',
+      name: 'closed route with whitespace and casing drift',
+      override: { routeStatus: ' Afgerond ' as unknown as ActionCenterRouteStatus },
+      reason: 'closed-route',
     },
   ])('returns $reason for $name', ({ override, reason }) => {
     expect(
-      buildActionCenterReviewInviteDraft({
-        ...baseInput,
+      getActionCenterReviewInviteEligibility({
+        ...baseContext,
         ...override,
       }),
     ).toEqual({
-      eligible: false,
+      ok: false,
       reason,
     })
   })
 
+  it('throws when building a draft for an ineligible context', () => {
+    expect(() =>
+      buildActionCenterReviewInviteDraft({
+        ...baseContext,
+        reviewDate: 'not-a-date',
+      }),
+    ).toThrow('missing-review-date')
+  })
+
   it('normalizes the Action Center origin before composing the absolute URL', () => {
-    expect(actionCenterBaseUrl('https://app.verisight.nl///')).toBe('https://app.verisight.nl')
+    expect(actionCenterBaseUrl(' https://app.verisight.nl/path/// ')).toBe('https://app.verisight.nl')
   })
 })

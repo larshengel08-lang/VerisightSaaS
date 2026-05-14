@@ -1,4 +1,6 @@
 import { buildActionCenterEntryHref } from '@/lib/action-center-entry'
+import type { ActionCenterRouteStatus } from '@/lib/action-center-route-contract'
+import type { ScanType } from '@/lib/types'
 
 export type ActionCenterReviewInviteEligibilityReason =
   | 'unsupported-scan-type'
@@ -6,47 +8,41 @@ export type ActionCenterReviewInviteEligibilityReason =
   | 'missing-manager-email'
   | 'closed-route'
 
-export interface ActionCenterReviewInviteDraft {
+export interface ActionCenterReviewInviteContext {
+  actionCenterOrigin: string
   campaignId: string
+  campaignName: string
+  managerEmail: string | null
+  managerName: string | null
+  phase: number
+  reviewDate: string | null
   reviewItemId: string
-  reviewDate: string
-  managerEmail: string
+  routeId: string
+  routeStatus: ActionCenterRouteStatus | null
+  scanType: ScanType | null
+  scopeLabel: string
+}
+
+export interface ActionCenterReviewInviteDraft {
+  reviewItemId: string
+  routeId: string
+  campaignId: string
+  recipientEmail: string
+  recipientName: string
   subject: string
-  actionCenterUrl: string
+  actionCenterHref: string
+  emailText: string
+  emailHtml: string
+  reviewDate: string
   deliveryModel: {
     channel: 'email-ics'
-    mode: 'organizer'
+    organizerMode: 'organizer'
     nativeMicrosoftRequired: false
   }
   writePolicy: {
     calendarRsvp: 'hint-only'
     canonicalReviewState: 'action-center-only'
   }
-  emailText: string
-  emailHtml: string
-}
-
-export type ActionCenterReviewInviteDraftResult =
-  | {
-      eligible: true
-      draft: ActionCenterReviewInviteDraft
-    }
-  | {
-      eligible: false
-      reason: ActionCenterReviewInviteEligibilityReason
-    }
-
-export interface BuildActionCenterReviewInviteDraftInput {
-  actionCenterOrigin: string
-  campaignId: string
-  campaignName: string
-  managerEmail: string | null
-  phase: number
-  reviewDate: string | null
-  reviewItemId: string
-  routeStatus: string | null
-  scanType: string
-  scopeLabel: string
 }
 
 function normalizeText(value: string | null | undefined) {
@@ -54,92 +50,129 @@ function normalizeText(value: string | null | undefined) {
   return trimmed.length > 0 ? trimmed : null
 }
 
-function isClosedRoute(routeStatus: string | null | undefined) {
-  return routeStatus === 'afgerond' || routeStatus === 'gestopt'
+function normalizeLowerText(value: string | null | undefined) {
+  return normalizeText(value)?.toLowerCase() ?? null
 }
 
-function isPhaseOneExitScan(scanType: string | null | undefined, phase: number) {
-  return normalizeText(scanType)?.toLowerCase() === 'exit' && phase === 1
+function isClosedRoute(routeStatus: string | null | undefined) {
+  const normalizedStatus = normalizeLowerText(routeStatus)
+  return normalizedStatus === 'afgerond' || normalizedStatus === 'gestopt'
+}
+
+function isSupportedScanType(scanType: string | null | undefined, phase: number) {
+  return normalizeLowerText(scanType) === 'exit' && phase === 1
+}
+
+function getNormalizedIsoDate(value: string | null | undefined) {
+  const normalized = normalizeText(value)
+  if (!normalized) return null
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(normalized)) return null
+
+  const parsed = new Date(`${normalized}T00:00:00.000Z`)
+  if (Number.isNaN(parsed.getTime())) return null
+
+  return parsed.toISOString().slice(0, 10) === normalized ? normalized : null
 }
 
 export function actionCenterBaseUrl(origin: string) {
-  const parsed = new URL(origin)
+  const parsed = new URL(origin.trim())
   return parsed.origin
 }
 
-export function buildActionCenterReviewInviteDraft(
-  input: BuildActionCenterReviewInviteDraftInput,
-): ActionCenterReviewInviteDraftResult {
-  if (!isPhaseOneExitScan(input.scanType, input.phase)) {
+export function getActionCenterReviewInviteEligibility(
+  context: ActionCenterReviewInviteContext,
+): {
+  ok: true
+  reason: null
+} | {
+  ok: false
+  reason: ActionCenterReviewInviteEligibilityReason
+} {
+  if (!isSupportedScanType(context.scanType, context.phase)) {
     return {
-      eligible: false,
+      ok: false,
       reason: 'unsupported-scan-type',
     }
   }
 
-  const reviewDate = normalizeText(input.reviewDate)
-  if (!reviewDate) {
+  if (!getNormalizedIsoDate(context.reviewDate)) {
     return {
-      eligible: false,
+      ok: false,
       reason: 'missing-review-date',
     }
   }
 
-  const managerEmail = normalizeText(input.managerEmail)
-  if (!managerEmail) {
+  if (!normalizeText(context.managerEmail)) {
     return {
-      eligible: false,
+      ok: false,
       reason: 'missing-manager-email',
     }
   }
 
-  if (isClosedRoute(input.routeStatus)) {
+  if (isClosedRoute(context.routeStatus)) {
     return {
-      eligible: false,
+      ok: false,
       reason: 'closed-route',
     }
   }
 
-  const actionCenterUrl = new URL(
+  return {
+    ok: true,
+    reason: null,
+  }
+}
+
+export function buildActionCenterReviewInviteDraft(
+  context: ActionCenterReviewInviteContext,
+): ActionCenterReviewInviteDraft {
+  const eligibility = getActionCenterReviewInviteEligibility(context)
+  if (!eligibility.ok) {
+    throw new Error(eligibility.reason)
+  }
+
+  const reviewDate = getNormalizedIsoDate(context.reviewDate)
+  const recipientEmail = normalizeText(context.managerEmail)
+  if (!reviewDate || !recipientEmail) {
+    throw new Error('Action Center review invite eligibility drifted during draft construction.')
+  }
+
+  const actionCenterHref = new URL(
     buildActionCenterEntryHref({
-      focus: input.reviewItemId,
+      focus: context.reviewItemId,
       view: 'reviews',
       source: 'notification',
     }),
-    `${actionCenterBaseUrl(input.actionCenterOrigin)}/`,
+    `${actionCenterBaseUrl(context.actionCenterOrigin)}/`,
   ).toString()
 
-  const subject = `Reviewmoment ${input.campaignName} / ${input.scopeLabel}`
   const instruction = 'Leg reviewuitkomst en vervolg alleen in Action Center vast.'
-  const emailText = [
-    `Open dit reviewmoment in Action Center: ${actionCenterUrl}`,
-    instruction,
-  ].join('\n\n')
-  const emailHtml = [
-    `<p>Open dit reviewmoment in <a href="${actionCenterUrl}">Action Center</a>.</p>`,
-    `<p>${instruction}</p>`,
-  ].join('')
+  const subject = `Reviewmoment ${context.campaignName} / ${context.scopeLabel}`
 
   return {
-    eligible: true,
-    draft: {
-      campaignId: input.campaignId,
-      reviewItemId: input.reviewItemId,
-      reviewDate,
-      managerEmail,
-      subject,
-      actionCenterUrl,
-      deliveryModel: {
-        channel: 'email-ics',
-        mode: 'organizer',
-        nativeMicrosoftRequired: false,
-      },
-      writePolicy: {
-        calendarRsvp: 'hint-only',
-        canonicalReviewState: 'action-center-only',
-      },
-      emailText,
-      emailHtml,
+    reviewItemId: context.reviewItemId,
+    routeId: context.routeId,
+    campaignId: context.campaignId,
+    recipientEmail,
+    recipientName: normalizeText(context.managerName) ?? '',
+    subject,
+    actionCenterHref,
+    emailText: [
+      `Open dit reviewmoment in Action Center: ${actionCenterHref}`,
+      instruction,
+    ].join('\n\n'),
+    emailHtml: [
+      `<p>Open dit reviewmoment in <a href="${actionCenterHref}">Action Center</a>.</p>`,
+      `<p>${instruction}</p>`,
+    ].join(''),
+    reviewDate,
+    deliveryModel: {
+      channel: 'email-ics',
+      organizerMode: 'organizer',
+      nativeMicrosoftRequired: false,
+    },
+    writePolicy: {
+      calendarRsvp: 'hint-only',
+      canonicalReviewState: 'action-center-only',
     },
   }
 }
