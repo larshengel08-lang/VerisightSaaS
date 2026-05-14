@@ -77,6 +77,7 @@ interface Props {
   itemHrefs?: Record<string, string>
   hideSidebar?: boolean
   boundedOverviewOnly?: boolean
+  allowEmptyInitialSelection?: boolean
 }
 
 interface CreateActionFormState {
@@ -862,9 +863,11 @@ export function ActionCenterPreview({
   itemHrefs = {},
   hideSidebar = false,
   boundedOverviewOnly = false,
+  allowEmptyInitialSelection = false,
 }: Props) {
   const explicitlySelectedInitialItem = initialItems.find((item) => item.id === initialSelectedItemId) ?? null
-  const initialSelectedItem = explicitlySelectedInitialItem ?? (boundedOverviewOnly ? null : initialItems[0] ?? null)
+  const initialSelectedItem =
+    explicitlySelectedInitialItem ?? (boundedOverviewOnly || allowEmptyInitialSelection ? null : initialItems[0] ?? null)
   const [items, setItems] = useState(() => initialItems.map((item) => finalizeActionCenterPreviewItem(item)))
   const [activeView, setActiveView] = useState<ActionCenterPreviewView>(initialView)
   const [selectedItemId, setSelectedItemId] = useState(initialSelectedItem?.id ?? null)
@@ -887,13 +890,13 @@ export function ActionCenterPreview({
   const deferredSearchQuery = useDeferredValue(searchQuery)
 
   useEffect(() => {
-    if (!boundedOverviewOnly && !selectedItemId && items[0]) {
+    if (!boundedOverviewOnly && !allowEmptyInitialSelection && !selectedItemId && items[0]) {
       setSelectedItemId(items[0].id)
     }
     if (!selectedTeamId && items[0]) {
       setSelectedTeamId(items[0].teamId)
     }
-  }, [boundedOverviewOnly, items, selectedItemId, selectedTeamId])
+  }, [allowEmptyInitialSelection, boundedOverviewOnly, items, selectedItemId, selectedTeamId])
 
   useEffect(() => {
     if (boundedOverviewOnly && activeView !== 'overview') {
@@ -935,7 +938,7 @@ export function ActionCenterPreview({
 
   const selectedItem = selectedItemId
     ? filteredItems.find((item) => item.id === selectedItemId) ?? items.find((item) => item.id === selectedItemId) ?? null
-    : boundedOverviewOnly
+    : boundedOverviewOnly || allowEmptyInitialSelection
       ? null
       : filteredItems[0] ?? items[0] ?? null
   const managerActionSurfaceCopy = getManagerActionSurfaceCopy(selectedItem)
@@ -1647,7 +1650,10 @@ export function ActionCenterPreview({
                   upcomingReviews={upcomingReviews}
                   overviewStatusCounts={overviewStatusCounts}
                   selectedItem={selectedItem}
-                  onSelectItem={setSelectedItemId}
+                  onSelectItem={(itemId) => {
+                    setSelectedItemId(itemId)
+                    replaceEntryUrl({ focus: itemId, view: 'overview' })
+                  }}
                   selectedItemHref={selectedItemHref}
                   workbenchLabel={workbenchLabel}
                 />
@@ -2717,8 +2723,12 @@ export function ActionCenterPreview({
                 </div>
               ) : (
                 <EmptySection
-                  title="Nog geen acties beschikbaar"
-                  body="Zodra er routes live staan, verschijnt hier automatisch de eerstvolgende managerstap, begrensde reactie of actiekaart."
+                  title={allowEmptyInitialSelection ? 'Kies eerst een route' : 'Nog geen acties beschikbaar'}
+                  body={
+                    allowEmptyInitialSelection
+                      ? 'Voor deze campagne zijn meerdere zichtbare routes gevonden. Kies eerst de juiste afdeling of route om de actiecontext te openen.'
+                      : 'Zodra er routes live staan, verschijnt hier automatisch de eerstvolgende managerstap, begrensde reactie of actiekaart.'
+                  }
                 />
               )
             ) : null}

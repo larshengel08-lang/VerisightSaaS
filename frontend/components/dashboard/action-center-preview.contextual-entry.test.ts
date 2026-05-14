@@ -54,5 +54,6 @@ describe('action center preview contextual entry sync', () => {
 
     expect(source).toContain('buildContextualEntryHref')
     expect(source).toContain("setContextualView('reviews', { focus: item.id })")
+    expect(source).toContain("replaceEntryUrl({ focus: itemId, view: 'overview' })")
   })
 })

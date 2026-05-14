@@ -385,6 +385,8 @@ describe("action center landing shell", () => {
     expect(pageSource).toContain("view?: string");
     expect(pageSource).toContain("resolveActionCenterEntryParams");
     expect(pageSource).toContain("initialView={entry.view}");
+    expect(pageSource).toContain("boundedOverviewOnly={entry.view === 'overview'}");
+    expect(pageSource).toContain("allowEmptyInitialSelection={hasAmbiguousCampaignFocus}");
     expect(pageSource).toContain("source === 'campaign-detail'");
     expect(pageSource).toContain("source === 'review-moments'");
   });

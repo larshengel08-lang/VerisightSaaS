@@ -490,12 +490,15 @@ export default async function ActionCenterPage({
   const itemHrefs = context.canViewInsights
     ? Object.fromEntries(items.map((item) => [item.id, `/campaigns/${item.coreSemantics.route.campaignId}`]))
     : {}
+  const focusedItemId = focusItemId ? (items.find((item) => item.id === focusItemId)?.id ?? null) : null
+  const matchingCampaignItems = focusItemId
+    ? items.filter((item) => item.coreSemantics.route.campaignId === focusItemId)
+    : []
+  const hasAmbiguousCampaignFocus = focusedItemId === null && matchingCampaignItems.length > 1
   const initialSelectedItemId =
-    focusItemId
-      ? (items.find((item) => item.id === focusItemId)?.id ??
-        items.find((item) => item.coreSemantics.route.campaignId === focusItemId)?.id ??
-        null)
-      : items[0]?.id ?? null
+    focusedItemId ??
+    (matchingCampaignItems.length === 1 ? (matchingCampaignItems[0]?.id ?? null) : null) ??
+    (hasAmbiguousCampaignFocus ? null : (items[0]?.id ?? null))
   const workspaceSubtitle =
     source === 'campaign-detail'
       ? 'Geopend vanuit campaign detail: hier worden eigenaarschap, eerste managerstap en reviewritme expliciet.'
@@ -565,7 +568,8 @@ export default async function ActionCenterPage({
       readOnly
       itemHrefs={itemHrefs}
       hideSidebar
-      boundedOverviewOnly
+      boundedOverviewOnly={entry.view === 'overview'}
+      allowEmptyInitialSelection={hasAmbiguousCampaignFocus}
     />
   )
 }
